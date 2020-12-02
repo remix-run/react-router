@@ -1,13 +1,13 @@
-import * as React from 'react';
-import { act, create as createTestRenderer } from 'react-test-renderer';
-import { MemoryRouter as Router, Outlet, Routes, Route } from 'react-router';
+import * as React from "react";
+import { act, create as createTestRenderer } from "react-test-renderer";
+import { MemoryRouter as Router, Outlet, Routes, Route } from "react-router";
 
-describe('nested /', () => {
-  it('matches them depth-first', () => {
+describe("nested /", () => {
+  it("matches them depth-first", () => {
     let renderer;
     act(() => {
       renderer = createTestRenderer(
-        <Router initialEntries={['/']}>
+        <Router initialEntries={["/"]}>
           <Routes>
             <Route path="/" element={<First />}>
               <Route path="/" element={<Second />}>
@@ -53,12 +53,12 @@ describe('nested /', () => {
   }
 });
 
-describe('routes with identical paths', () => {
-  it('matches them in order', () => {
+describe("routes with identical paths", () => {
+  it("matches them in order", () => {
     let renderer;
     act(() => {
       renderer = createTestRenderer(
-        <Router initialEntries={['/home']}>
+        <Router initialEntries={["/home"]}>
           <Routes>
             <Route path="/home" element={<First />} />
             <Route path="/home" element={<Second />} />

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   BrowserHistory,
   HashHistory,
@@ -7,7 +7,7 @@ import {
   createBrowserHistory,
   createHashHistory,
   createPath
-} from 'history';
+} from "history";
 import {
   MemoryRouter,
   Navigate,
@@ -31,12 +31,12 @@ import {
   matchRoutes,
   matchPath,
   resolvePath
-} from 'react-router';
+} from "react-router";
 
 function warning(cond: boolean, message: string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
-    if (typeof console !== 'undefined') console.warn(message);
+    if (typeof console !== "undefined") console.warn(message);
 
     try {
       // Welcome to debugging React Router!
@@ -154,7 +154,7 @@ function isModifiedEvent(event: React.MouseEvent) {
 }
 
 export interface LinkProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
+  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
   replace?: boolean;
   state?: State;
   to: To;
@@ -178,7 +178,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       if (
         !event.defaultPrevented && // onClick prevented default
         event.button === 0 && // Ignore everything but left clicks
-        (!target || target === '_self') && // Let browser handle "target=_blank" etc.
+        (!target || target === "_self") && // Let browser handle "target=_blank" etc.
         !isModifiedEvent(event) // Ignore clicks with modifier keys
       ) {
         event.preventDefault();
@@ -218,11 +218,11 @@ export interface NavLinkProps extends LinkProps {
 export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   function NavLinkWithRef(
     {
-      'aria-current': ariaCurrentProp = 'page',
-      activeClassName = 'active',
+      "aria-current": ariaCurrentProp = "page",
+      activeClassName = "active",
       activeStyle,
       caseSensitive = false,
-      className: classNameProp = '',
+      className: classNameProp = "",
       end = false,
       style: styleProp,
       to,
@@ -247,7 +247,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
     let className = [classNameProp, isActive ? activeClassName : null]
       .filter(Boolean)
-      .join(' ');
+      .join(" ");
     let style = { ...styleProp, ...(isActive ? activeStyle : null) };
 
     return (
@@ -305,7 +305,7 @@ export function usePrompt(message: string, when = true) {
  */
 export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   warning(
-    typeof URLSearchParams !== 'undefined',
+    typeof URLSearchParams !== "undefined",
     `You cannot use the \`useSearchParams\` hook in a browser that does not ` +
       `support the URLSearchParams API. If you need to support Internet ` +
       `Explorer 11, we recommend you load a polyfill such as ` +
@@ -339,7 +339,7 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
       nextInit: URLSearchParamsInit,
       navigateOptions?: { replace?: boolean; state?: State }
     ) => {
-      navigate('?' + createSearchParams(nextInit), navigateOptions);
+      navigate("?" + createSearchParams(nextInit), navigateOptions);
     },
     [navigate]
   );
@@ -377,10 +377,10 @@ export type URLSearchParamsInit =
  *   });
  */
 export function createSearchParams(
-  init: URLSearchParamsInit = ''
+  init: URLSearchParamsInit = ""
 ): URLSearchParams {
   return new URLSearchParams(
-    typeof init === 'string' ||
+    typeof init === "string" ||
     Array.isArray(init) ||
     init instanceof URLSearchParams
       ? init

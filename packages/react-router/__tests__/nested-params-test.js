@@ -1,15 +1,15 @@
-import * as React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
+import * as React from "react";
+import { create as createTestRenderer } from "react-test-renderer";
 import {
   MemoryRouter as Router,
   Outlet,
   Routes,
   Route,
   useParams
-} from 'react-router';
+} from "react-router";
 
-describe('nested routes', () => {
-  it('gets all params from parent routes', () => {
+describe("nested routes", () => {
+  it("gets all params from parent routes", () => {
     function Users() {
       return (
         <div>
@@ -57,7 +57,7 @@ describe('nested routes', () => {
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={['/users/michael/courses/routing']}>
+      <Router initialEntries={["/users/michael/courses/routing"]}>
         <Routes>
           <Route path="users" element={<Users />}>
             <Route path=":username/*" element={<User />} />

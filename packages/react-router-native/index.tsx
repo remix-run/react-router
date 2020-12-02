@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   Alert,
   BackHandler,
@@ -6,7 +6,7 @@ import {
   Linking,
   TouchableHighlight,
   TouchableHighlightProps
-} from 'react-native';
+} from "react-native";
 import {
   MemoryRouter,
   MemoryRouterProps,
@@ -31,9 +31,9 @@ import {
   useParams,
   useResolvedPath,
   useRoutes
-} from 'react-router';
-import { State, To } from 'history';
-import URLSearchParams from '@ungap/url-search-params';
+} from "react-router";
+import { State, To } from "history";
+import URLSearchParams from "@ungap/url-search-params";
 
 ////////////////////////////////////////////////////////////////////////////////
 // RE-EXPORTS
@@ -128,8 +128,8 @@ export function Prompt({ message, when }: PromptProps) {
 // HOOKS
 ////////////////////////////////////////////////////////////////////////////////
 
-const HardwareBackPressEventType = 'hardwareBackPress';
-const URLEventType = 'url';
+const HardwareBackPressEventType = "hardwareBackPress";
+const URLEventType = "url";
 
 /**
  * Enables support for the hardware back button on Android.
@@ -200,7 +200,7 @@ export function useDeepLinking() {
 }
 
 function trimScheme(url: string) {
-  return url.replace(/^.*?:\/\//, '');
+  return url.replace(/^.*?:\/\//, "");
 }
 
 /**
@@ -209,10 +209,10 @@ function trimScheme(url: string) {
 export function usePrompt(message: string, when = true) {
   let blocker = React.useCallback(
     tx => {
-      Alert.alert('Confirm', message, [
-        { text: 'Cancel', onPress() {} },
+      Alert.alert("Confirm", message, [
+        { text: "Cancel", onPress() {} },
         {
-          text: 'OK',
+          text: "OK",
           onPress() {
             tx.retry();
           }
@@ -250,7 +250,7 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   let navigate = useNavigate();
   let setSearchParams = React.useCallback(
     (nextInit, navigateOpts) => {
-      navigate('?' + createSearchParams(nextInit), navigateOpts);
+      navigate("?" + createSearchParams(nextInit), navigateOpts);
     },
     [navigate]
   );
@@ -288,10 +288,10 @@ export type URLSearchParamsInit =
  *   });
  */
 export function createSearchParams(
-  init: URLSearchParamsInit = ''
+  init: URLSearchParamsInit = ""
 ): URLSearchParams {
   return new URLSearchParams(
-    typeof init === 'string' ||
+    typeof init === "string" ||
     Array.isArray(init) ||
     init instanceof URLSearchParams
       ? init

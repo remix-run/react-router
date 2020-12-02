@@ -1,11 +1,11 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
-import { Router, Routes, Route, useNavigate } from 'react-router';
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { act } from "react-dom/test-utils";
+import { Router, Routes, Route, useNavigate } from "react-router";
 
 function createMockHistory(initialLocation) {
   return {
-    action: 'POP',
+    action: "POP",
     location: initialLocation,
     createHref() {},
     push() {},
@@ -18,10 +18,10 @@ function createMockHistory(initialLocation) {
   };
 }
 
-describe('navigate', () => {
+describe("navigate", () => {
   let node;
   beforeEach(() => {
-    node = document.createElement('div');
+    node = document.createElement("div");
     document.body.appendChild(node);
   });
 
@@ -30,13 +30,13 @@ describe('navigate', () => {
     node = null;
   });
 
-  describe('by default', () => {
-    it('calls history.push()', () => {
+  describe("by default", () => {
+    it("calls history.push()", () => {
       function Home() {
         let navigate = useNavigate();
 
         function handleClick() {
-          navigate('/about');
+          navigate("/about");
         }
 
         return (
@@ -52,11 +52,11 @@ describe('navigate', () => {
       }
 
       let history = createMockHistory({
-        pathname: '/home',
-        search: '',
-        hash: ''
+        pathname: "/home",
+        search: "",
+        hash: ""
       });
-      let spy = jest.spyOn(history, 'push');
+      let spy = jest.spyOn(history, "push");
 
       act(() => {
         ReactDOM.render(
@@ -74,24 +74,24 @@ describe('navigate', () => {
         );
       });
 
-      let button = node.querySelector('button');
+      let button = node.querySelector("button");
       expect(button).not.toBeNull();
 
       act(() => {
-        button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
       expect(spy).toHaveBeenCalled();
     });
   });
 
-  describe('with { replace: true }', () => {
-    it('calls history.replace()', () => {
+  describe("with { replace: true }", () => {
+    it("calls history.replace()", () => {
       function Home() {
         let navigate = useNavigate();
 
         function handleClick() {
-          navigate('/about', { replace: true });
+          navigate("/about", { replace: true });
         }
 
         return (
@@ -107,11 +107,11 @@ describe('navigate', () => {
       }
 
       let history = createMockHistory({
-        pathname: '/home',
-        search: '',
-        hash: ''
+        pathname: "/home",
+        search: "",
+        hash: ""
       });
-      let spy = jest.spyOn(history, 'replace');
+      let spy = jest.spyOn(history, "replace");
 
       act(() => {
         ReactDOM.render(
@@ -129,11 +129,11 @@ describe('navigate', () => {
         );
       });
 
-      let button = node.querySelector('button');
+      let button = node.querySelector("button");
       expect(button).not.toBeNull();
 
       act(() => {
-        button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
       expect(spy).toHaveBeenCalled();

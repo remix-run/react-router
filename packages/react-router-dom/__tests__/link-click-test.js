@@ -1,12 +1,12 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
-import { MemoryRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { act } from "react-dom/test-utils";
+import { MemoryRouter as Router, Routes, Route, Link } from "react-router-dom";
 
-describe('A <Link> click', () => {
+describe("A <Link> click", () => {
   let node;
   beforeEach(() => {
-    node = document.createElement('div');
+    node = document.createElement("div");
     document.body.appendChild(node);
   });
 
@@ -15,7 +15,7 @@ describe('A <Link> click', () => {
     node = null;
   });
 
-  it('navigates to the new page', () => {
+  it("navigates to the new page", () => {
     function Home() {
       return (
         <div>
@@ -31,7 +31,7 @@ describe('A <Link> click', () => {
 
     act(() => {
       ReactDOM.render(
-        <Router initialEntries={['/home']}>
+        <Router initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
             <Route path="about" element={<About />} />
@@ -41,12 +41,12 @@ describe('A <Link> click', () => {
       );
     });
 
-    let anchor = node.querySelector('a');
+    let anchor = node.querySelector("a");
     expect(anchor).not.toBeNull();
 
     act(() => {
       anchor.dispatchEvent(
-        new MouseEvent('click', {
+        new MouseEvent("click", {
           view: window,
           bubbles: true,
           cancelable: true
@@ -54,13 +54,13 @@ describe('A <Link> click', () => {
       );
     });
 
-    let h1 = node.querySelector('h1');
+    let h1 = node.querySelector("h1");
     expect(h1).not.toBeNull();
-    expect(h1.textContent).toEqual('About');
+    expect(h1.textContent).toEqual("About");
   });
 
-  describe('when preventDefault is used on the click handler', () => {
-    it('stays on the same page', () => {
+  describe("when preventDefault is used on the click handler", () => {
+    it("stays on the same page", () => {
       function Home() {
         function handleClick(event) {
           event.preventDefault();
@@ -82,7 +82,7 @@ describe('A <Link> click', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -92,12 +92,12 @@ describe('A <Link> click', () => {
         );
       });
 
-      let anchor = node.querySelector('a');
+      let anchor = node.querySelector("a");
       expect(anchor).not.toBeNull();
 
       act(() => {
         anchor.dispatchEvent(
-          new MouseEvent('click', {
+          new MouseEvent("click", {
             view: window,
             bubbles: true,
             cancelable: true
@@ -105,14 +105,14 @@ describe('A <Link> click', () => {
         );
       });
 
-      let h1 = node.querySelector('h1');
+      let h1 = node.querySelector("h1");
       expect(h1).not.toBeNull();
-      expect(h1.textContent).toEqual('Home');
+      expect(h1.textContent).toEqual("Home");
     });
   });
 
-  describe('with a right click', () => {
-    it('stays on the same page', () => {
+  describe("with a right click", () => {
+    it("stays on the same page", () => {
       function Home() {
         return (
           <div>
@@ -128,7 +128,7 @@ describe('A <Link> click', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -138,14 +138,14 @@ describe('A <Link> click', () => {
         );
       });
 
-      let anchor = node.querySelector('a');
+      let anchor = node.querySelector("a");
       expect(anchor).not.toBeNull();
 
       act(() => {
         // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
         let RightMouseButton = 2;
         anchor.dispatchEvent(
-          new MouseEvent('click', {
+          new MouseEvent("click", {
             view: window,
             bubbles: true,
             cancelable: true,
@@ -154,14 +154,14 @@ describe('A <Link> click', () => {
         );
       });
 
-      let h1 = node.querySelector('h1');
+      let h1 = node.querySelector("h1");
       expect(h1).not.toBeNull();
-      expect(h1.textContent).toEqual('Home');
+      expect(h1.textContent).toEqual("Home");
     });
   });
 
-  describe('when the link is supposed to open in a new window', () => {
-    it('stays on the same page', () => {
+  describe("when the link is supposed to open in a new window", () => {
+    it("stays on the same page", () => {
       function Home() {
         return (
           <div>
@@ -179,7 +179,7 @@ describe('A <Link> click', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -189,12 +189,12 @@ describe('A <Link> click', () => {
         );
       });
 
-      let anchor = node.querySelector('a');
+      let anchor = node.querySelector("a");
       expect(anchor).not.toBeNull();
 
       act(() => {
         anchor.dispatchEvent(
-          new MouseEvent('click', {
+          new MouseEvent("click", {
             view: window,
             bubbles: true,
             cancelable: true
@@ -202,14 +202,14 @@ describe('A <Link> click', () => {
         );
       });
 
-      let h1 = node.querySelector('h1');
+      let h1 = node.querySelector("h1");
       expect(h1).not.toBeNull();
-      expect(h1.textContent).toEqual('Home');
+      expect(h1.textContent).toEqual("Home");
     });
   });
 
-  describe('when the modifier keys are used', () => {
-    it('stays on the same page', () => {
+  describe("when the modifier keys are used", () => {
+    it("stays on the same page", () => {
       function Home() {
         return (
           <div>
@@ -225,7 +225,7 @@ describe('A <Link> click', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -235,12 +235,12 @@ describe('A <Link> click', () => {
         );
       });
 
-      let anchor = node.querySelector('a');
+      let anchor = node.querySelector("a");
       expect(anchor).not.toBeNull();
 
       act(() => {
         anchor.dispatchEvent(
-          new MouseEvent('click', {
+          new MouseEvent("click", {
             view: window,
             bubbles: true,
             cancelable: true,
@@ -250,9 +250,9 @@ describe('A <Link> click', () => {
         );
       });
 
-      let h1 = node.querySelector('h1');
+      let h1 = node.querySelector("h1");
       expect(h1).not.toBeNull();
-      expect(h1.textContent).toEqual('Home');
+      expect(h1.textContent).toEqual("Home");
     });
   });
 });

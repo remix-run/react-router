@@ -1,14 +1,14 @@
-import * as React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
+import * as React from "react";
+import { create as createTestRenderer } from "react-test-renderer";
 import {
   MemoryRouter as Router,
   Outlet,
   Routes,
   Route,
   useParams
-} from 'react-router';
+} from "react-router";
 
-describe('<Routes> with a basename', () => {
+describe("<Routes> with a basename", () => {
   function User() {
     let { userId } = useParams();
     return (
@@ -29,9 +29,9 @@ describe('<Routes> with a basename', () => {
     </Route>
   );
 
-  it('does not match when the URL pathname does not start with that base', () => {
+  it("does not match when the URL pathname does not start with that base", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={['/app/users/michael/dashboard']}>
+      <Router initialEntries={["/app/users/michael/dashboard"]}>
         <Routes basename="/base">{userRoute}</Routes>
       </Router>
     );
@@ -39,9 +39,9 @@ describe('<Routes> with a basename', () => {
     expect(renderer.toJSON()).toBeNull();
   });
 
-  it('matches when the URL pathname starts with that base', () => {
+  it("matches when the URL pathname starts with that base", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={['/app/users/michael/dashboard']}>
+      <Router initialEntries={["/app/users/michael/dashboard"]}>
         <Routes basename="/app">{userRoute}</Routes>
       </Router>
     );

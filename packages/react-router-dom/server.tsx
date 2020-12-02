@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   Action,
   Location,
@@ -6,8 +6,8 @@ import {
   To,
   createPath,
   parsePath
-} from 'history';
-import { Router } from 'react-router-dom';
+} from "history";
+import { Router } from "react-router-dom";
 
 export interface StaticRouterProps {
   children?: React.ReactNode;
@@ -20,24 +20,24 @@ export interface StaticRouterProps {
  */
 export function StaticRouter({
   children,
-  location: loc = '/'
+  location: loc = "/"
 }: StaticRouterProps) {
-  if (typeof loc === 'string') {
+  if (typeof loc === "string") {
     loc = parsePath(loc);
   }
 
   let action = Action.Pop;
   let location: Location = {
-    pathname: loc.pathname || '/',
-    search: loc.search || '',
-    hash: loc.hash || '',
+    pathname: loc.pathname || "/",
+    search: loc.search || "",
+    hash: loc.hash || "",
     state: loc.state || null,
-    key: loc.key || 'default'
+    key: loc.key || "default"
   };
 
   let staticNavigator = {
     createHref(to: To) {
-      return typeof to === 'string' ? to : createPath(to);
+      return typeof to === "string" ? to : createPath(to);
     },
     push(to: To) {
       throw new Error(

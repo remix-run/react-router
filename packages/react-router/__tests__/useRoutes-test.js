@@ -1,9 +1,9 @@
-import * as React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
-import { MemoryRouter as Router, useRoutes } from 'react-router';
+import * as React from "react";
+import { create as createTestRenderer } from "react-test-renderer";
+import { MemoryRouter as Router, useRoutes } from "react-router";
 
-describe('useRoutes', () => {
-  it('returns the matching element from a route config', () => {
+describe("useRoutes", () => {
+  it("returns the matching element from a route config", () => {
     function RoutesRenderer({ routes }) {
       return useRoutes(routes);
     }
@@ -17,12 +17,12 @@ describe('useRoutes', () => {
     }
 
     let routes = [
-      { path: 'home', element: <Home /> },
-      { path: 'about', element: <About /> }
+      { path: "home", element: <Home /> },
+      { path: "about", element: <About /> }
     ];
 
     let renderer = createTestRenderer(
-      <Router initialEntries={['/home']}>
+      <Router initialEntries={["/home"]}>
         <RoutesRenderer routes={routes} />
       </Router>
     );

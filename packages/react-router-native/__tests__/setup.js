@@ -1,4 +1,4 @@
-jest.mock('react-native/Libraries/Linking/Linking', () => {
+jest.mock("react-native/Libraries/Linking/Linking", () => {
   return {
     addEventListener: jest.fn(),
     removeEventListener: jest.fn(),

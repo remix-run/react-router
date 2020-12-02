@@ -1,10 +1,10 @@
-import * as React from 'react';
-import { act, create as createTestRenderer } from 'react-test-renderer';
-import { MemoryRouter as Router, Outlet, Routes, Route } from 'react-router';
+import * as React from "react";
+import { act, create as createTestRenderer } from "react-test-renderer";
+import { MemoryRouter as Router, Outlet, Routes, Route } from "react-router";
 
-describe('Descendant <Routes> splat matching', () => {
-  describe('when the parent route path ends with /*', () => {
-    it('works', () => {
+describe("Descendant <Routes> splat matching", () => {
+  describe("when the parent route path ends with /*", () => {
+    it("works", () => {
       function ReactFundamentals() {
         return <h1>React Fundamentals</h1>;
       }
@@ -35,7 +35,7 @@ describe('Descendant <Routes> splat matching', () => {
       let renderer;
       act(() => {
         renderer = createTestRenderer(
-          <Router initialEntries={['/courses/react/react-fundamentals']}>
+          <Router initialEntries={["/courses/react/react-fundamentals"]}>
             <Routes>
               <Route path="courses" element={<Courses />}>
                 <Route path="react/*" element={<ReactCourses />} />

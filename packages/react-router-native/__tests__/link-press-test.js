@@ -1,17 +1,17 @@
-import * as React from 'react';
-import { act, create as createTestRenderer } from 'react-test-renderer';
-import { Text, TouchableHighlight, View } from 'react-native';
+import * as React from "react";
+import { act, create as createTestRenderer } from "react-test-renderer";
+import { Text, TouchableHighlight, View } from "react-native";
 import {
   Link,
   NativeRouter as Router,
   Routes,
   Route
-} from 'react-router-native';
+} from "react-router-native";
 
-import { press } from './utils.js';
+import { press } from "./utils.js";
 
-describe('A <Link> press', () => {
-  it('navigates to the new view', () => {
+describe("A <Link> press", () => {
+  it("navigates to the new view", () => {
     function Home() {
       return (
         <View>
@@ -34,7 +34,7 @@ describe('A <Link> press', () => {
     let renderer;
     act(() => {
       renderer = createTestRenderer(
-        <Router initialEntries={['/home']}>
+        <Router initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
             <Route path="about" element={<About />} />
@@ -55,7 +55,7 @@ describe('A <Link> press', () => {
     expect(renderer.toJSON()).toMatchSnapshot();
   });
 
-  it('calls the custom onPress handler', () => {
+  it("calls the custom onPress handler", () => {
     let spy = jest.fn();
 
     function Home() {
@@ -80,7 +80,7 @@ describe('A <Link> press', () => {
     let renderer;
     act(() => {
       renderer = createTestRenderer(
-        <Router initialEntries={['/home']}>
+        <Router initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
             <Route path="about" element={<About />} />
@@ -102,8 +102,8 @@ describe('A <Link> press', () => {
     expect(spy).toHaveBeenCalledWith(pressEvent);
   });
 
-  describe('when event.preventDefault() is used in the onPress handler', () => {
-    it('does not navigate to the new view', () => {
+  describe("when event.preventDefault() is used in the onPress handler", () => {
+    it("does not navigate to the new view", () => {
       function Home() {
         return (
           <View>
@@ -131,7 +131,7 @@ describe('A <Link> press', () => {
       let renderer;
       act(() => {
         renderer = createTestRenderer(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />

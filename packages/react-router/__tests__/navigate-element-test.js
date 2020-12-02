@@ -1,12 +1,12 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
-import { MemoryRouter as Router, Navigate, Routes, Route } from 'react-router';
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { act } from "react-dom/test-utils";
+import { MemoryRouter as Router, Navigate, Routes, Route } from "react-router";
 
-describe('navigate using an element', () => {
+describe("navigate using an element", () => {
   let node;
   beforeEach(() => {
-    node = document.createElement('div');
+    node = document.createElement("div");
     document.body.appendChild(node);
   });
 
@@ -15,8 +15,8 @@ describe('navigate using an element', () => {
     node = null;
   });
 
-  describe('with an absolute href', () => {
-    it('navigates to the correct URL', () => {
+  describe("with an absolute href", () => {
+    it("navigates to the correct URL", () => {
       function Home() {
         return <Navigate to="/about" />;
       }
@@ -27,7 +27,7 @@ describe('navigate using an element', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -41,8 +41,8 @@ describe('navigate using an element', () => {
     });
   });
 
-  describe('with a relative href', () => {
-    it('navigates to the correct URL', () => {
+  describe("with a relative href", () => {
+    it("navigates to the correct URL", () => {
       function Home() {
         return <Navigate to="../about" />;
       }
@@ -53,7 +53,7 @@ describe('navigate using an element', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />

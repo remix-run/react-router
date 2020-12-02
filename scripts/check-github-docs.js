@@ -1,9 +1,9 @@
-import chalk from 'chalk';
-import cheerio from 'cheerio';
-import fetch from 'node-fetch';
+import chalk from "chalk";
+import cheerio from "cheerio";
+import fetch from "node-fetch";
 
 function getPageUrl(url) {
-  if (typeof url === 'string') url = new URL(url);
+  if (typeof url === "string") url = new URL(url);
   // Use the URL w/out the hash.
   return new URL(url.origin + url.pathname + url.search);
 }
@@ -52,16 +52,16 @@ async function getPageAnchorsAndLinks(page) {
   // GH puts all user-generated markdown in a <div class="markdown-body">
   let isGitHubMarkdown = false;
   let selectorContext = undefined;
-  if (page.url.hostname === 'github.com') {
-    let $markdownBody = $('.markdown-body');
+  if (page.url.hostname === "github.com") {
+    let $markdownBody = $(".markdown-body");
     if ($markdownBody.length > 0) {
       isGitHubMarkdown = true;
-      selectorContext = '.markdown-body';
+      selectorContext = ".markdown-body";
     }
   }
 
-  $('[id]', selectorContext).each((index, a) => {
-    let id = $(a).attr('id');
+  $("[id]", selectorContext).each((index, a) => {
+    let id = $(a).attr("id");
 
     // GH prefixes the ids of links that point to themselves with the
     // string "user-content-", so you end up with links like
@@ -69,15 +69,15 @@ async function getPageAnchorsAndLinks(page) {
     // GH makes these links work by using JavaScript to adjust the page's scroll
     // position when the URL fragment id matches an anchor with the "user-content-"
     // prefix, so just treat this link as if it had the correct id to begin with
-    if (isGitHubMarkdown && id.startsWith('user-content-')) {
-      id = id.replace(/^user-content-/, '');
+    if (isGitHubMarkdown && id.startsWith("user-content-")) {
+      id = id.replace(/^user-content-/, "");
     }
 
     page.anchors.push({ id, text: $(a).text() });
   });
 
-  $('a[href]', selectorContext).each((index, a) => {
-    let to = new URL($(a).attr('href'), page.url);
+  $("a[href]", selectorContext).each((index, a) => {
+    let to = new URL($(a).attr("href"), page.url);
     page.links.push({ to, text: $(a).text() });
   });
 }
@@ -135,20 +135,20 @@ async function checkPageLinks(page, options = {}, checkedPages = []) {
 }
 
 const startPage = createPage(
-  'https://github.com/ReactTraining/react-router/tree/dev/docs'
+  "https://github.com/ReactTraining/react-router/tree/dev/docs"
 );
 
 checkPageLinks(startPage, {
   shouldCheckPage(page) {
     return (
-      page.url.hostname === 'github.com' &&
+      page.url.hostname === "github.com" &&
       /^\/ReactTraining\/react-router\/(tree|blob)\/dev\/docs/i.test(
         page.url.pathname
       )
     );
   },
   shouldCheckLink(link) {
-    return link.to.hash !== '#TODO';
+    return link.to.hash !== "#TODO";
   }
 }).then(checkedPages => {
   checkedPages.forEach(page => {
@@ -164,13 +164,13 @@ checkPageLinks(startPage, {
       console.log(
         chalk.red(
           `Found ${brokenLinks.length} broken link${
-            brokenLinks.length === 1 ? '' : 's'
+            brokenLinks.length === 1 ? "" : "s"
           } at ${url} (out of ${checkedLinks.length} total):`
         )
       );
 
       brokenLinks.forEach(link => {
-        console.log('  ' + link.to);
+        console.log("  " + link.to);
       });
     }
   });

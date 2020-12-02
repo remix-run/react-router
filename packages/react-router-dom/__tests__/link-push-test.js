@@ -1,16 +1,16 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
-import { Router, Routes, Route, Link } from 'react-router-dom';
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { act } from "react-dom/test-utils";
+import { Router, Routes, Route, Link } from "react-router-dom";
 
-function createHref({ pathname = '/', search = '', hash = '' }) {
+function createHref({ pathname = "/", search = "", hash = "" }) {
   return pathname + search + hash;
 }
 
-function createMockHistory({ pathname = '/', search = '', hash = '' }) {
+function createMockHistory({ pathname = "/", search = "", hash = "" }) {
   let location = { pathname, search, hash };
   return {
-    action: 'POP',
+    action: "POP",
     location,
     createHref,
     push() {},
@@ -23,10 +23,10 @@ function createMockHistory({ pathname = '/', search = '', hash = '' }) {
   };
 }
 
-describe('Link push and replace', () => {
+describe("Link push and replace", () => {
   let node;
   beforeEach(() => {
-    node = document.createElement('div');
+    node = document.createElement("div");
     document.body.appendChild(node);
   });
 
@@ -35,8 +35,8 @@ describe('Link push and replace', () => {
     node = null;
   });
 
-  describe('to a different pathname, when it is clicked', () => {
-    it('performs a push', () => {
+  describe("to a different pathname, when it is clicked", () => {
+    it("performs a push", () => {
       function Home() {
         return (
           <div>
@@ -46,8 +46,8 @@ describe('Link push and replace', () => {
         );
       }
 
-      let history = createMockHistory({ pathname: '/home' });
-      let spy = jest.spyOn(history, 'push');
+      let history = createMockHistory({ pathname: "/home" });
+      let spy = jest.spyOn(history, "push");
 
       act(() => {
         ReactDOM.render(
@@ -64,12 +64,12 @@ describe('Link push and replace', () => {
         );
       });
 
-      let anchor = node.querySelector('a');
+      let anchor = node.querySelector("a");
       expect(anchor).not.toBeNull();
 
       act(() => {
         anchor.dispatchEvent(
-          new MouseEvent('click', {
+          new MouseEvent("click", {
             view: window,
             bubbles: true,
             cancelable: true
@@ -79,17 +79,17 @@ describe('Link push and replace', () => {
 
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
-          pathname: '/about',
-          search: '',
-          hash: ''
+          pathname: "/about",
+          search: "",
+          hash: ""
         }),
         undefined
       );
     });
   });
 
-  describe('to a different search string, when it is clicked', () => {
-    it('performs a push (with the existing pathname)', () => {
+  describe("to a different search string, when it is clicked", () => {
+    it("performs a push (with the existing pathname)", () => {
       function Home() {
         return (
           <div>
@@ -99,8 +99,8 @@ describe('Link push and replace', () => {
         );
       }
 
-      let history = createMockHistory({ pathname: '/home' });
-      let spy = jest.spyOn(history, 'push');
+      let history = createMockHistory({ pathname: "/home" });
+      let spy = jest.spyOn(history, "push");
 
       act(() => {
         ReactDOM.render(
@@ -117,12 +117,12 @@ describe('Link push and replace', () => {
         );
       });
 
-      let anchor = node.querySelector('a');
+      let anchor = node.querySelector("a");
       expect(anchor).not.toBeNull();
 
       act(() => {
         anchor.dispatchEvent(
-          new MouseEvent('click', {
+          new MouseEvent("click", {
             view: window,
             bubbles: true,
             cancelable: true
@@ -132,17 +132,17 @@ describe('Link push and replace', () => {
 
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
-          pathname: '/home',
-          search: '?name=michael',
-          hash: ''
+          pathname: "/home",
+          search: "?name=michael",
+          hash: ""
         }),
         undefined
       );
     });
   });
 
-  describe('to a different hash, when it is clicked', () => {
-    it('performs a push (with the existing pathname)', () => {
+  describe("to a different hash, when it is clicked", () => {
+    it("performs a push (with the existing pathname)", () => {
       function Home() {
         return (
           <div>
@@ -152,8 +152,8 @@ describe('Link push and replace', () => {
         );
       }
 
-      let history = createMockHistory({ pathname: '/home' });
-      let spy = jest.spyOn(history, 'push');
+      let history = createMockHistory({ pathname: "/home" });
+      let spy = jest.spyOn(history, "push");
 
       act(() => {
         ReactDOM.render(
@@ -170,12 +170,12 @@ describe('Link push and replace', () => {
         );
       });
 
-      let anchor = node.querySelector('a');
+      let anchor = node.querySelector("a");
       expect(anchor).not.toBeNull();
 
       act(() => {
         anchor.dispatchEvent(
-          new MouseEvent('click', {
+          new MouseEvent("click", {
             view: window,
             bubbles: true,
             cancelable: true
@@ -185,17 +185,17 @@ describe('Link push and replace', () => {
 
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
-          pathname: '/home',
-          search: '',
-          hash: '#bio'
+          pathname: "/home",
+          search: "",
+          hash: "#bio"
         }),
         undefined
       );
     });
   });
 
-  describe('to the same page, when it is clicked', () => {
-    it('performs a replace', () => {
+  describe("to the same page, when it is clicked", () => {
+    it("performs a replace", () => {
       function Home() {
         return (
           <div>
@@ -209,8 +209,8 @@ describe('Link push and replace', () => {
         return <h1>About</h1>;
       }
 
-      let history = createMockHistory({ pathname: '/home' });
-      let spy = jest.spyOn(history, 'replace');
+      let history = createMockHistory({ pathname: "/home" });
+      let spy = jest.spyOn(history, "replace");
 
       act(() => {
         ReactDOM.render(
@@ -228,12 +228,12 @@ describe('Link push and replace', () => {
         );
       });
 
-      let anchor = node.querySelector('a');
+      let anchor = node.querySelector("a");
       expect(anchor).not.toBeNull();
 
       act(() => {
         anchor.dispatchEvent(
-          new MouseEvent('click', {
+          new MouseEvent("click", {
             view: window,
             bubbles: true,
             cancelable: true
@@ -243,9 +243,9 @@ describe('Link push and replace', () => {
 
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
-          pathname: '/home',
-          search: '',
-          hash: ''
+          pathname: "/home",
+          search: "",
+          hash: ""
         }),
         undefined
       );

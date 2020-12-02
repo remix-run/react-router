@@ -1,18 +1,18 @@
-import * as React from 'react';
-import { Linking, Text, View } from 'react-native';
-import { act, create as createTestRenderer } from 'react-test-renderer';
+import * as React from "react";
+import { Linking, Text, View } from "react-native";
+import { act, create as createTestRenderer } from "react-test-renderer";
 import {
   NativeRouter as Router,
   Routes,
   Route,
   useDeepLinking
-} from 'react-router-native';
+} from "react-router-native";
 
-import { MockEvent, mockPromiseThatResolvesImmediatelyWith } from './utils.js';
+import { MockEvent, mockPromiseThatResolvesImmediatelyWith } from "./utils.js";
 
-describe('deep linking', () => {
-  describe('when there is no initial URL', () => {
-    it('stays on the initial route', () => {
+describe("deep linking", () => {
+  describe("when there is no initial URL", () => {
+    it("stays on the initial route", () => {
       Linking.getInitialURL.mockImplementation(() => {
         return mockPromiseThatResolvesImmediatelyWith();
       });
@@ -37,7 +37,7 @@ describe('deep linking', () => {
       let renderer;
       act(() => {
         renderer = createTestRenderer(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -52,10 +52,10 @@ describe('deep linking', () => {
     });
   });
 
-  describe('when there is an initial URL', () => {
-    it('navigates to the matching route', () => {
+  describe("when there is an initial URL", () => {
+    it("navigates to the matching route", () => {
       Linking.getInitialURL.mockImplementation(() => {
-        return mockPromiseThatResolvesImmediatelyWith('app:///about');
+        return mockPromiseThatResolvesImmediatelyWith("app:///about");
       });
 
       function Home() {
@@ -78,7 +78,7 @@ describe('deep linking', () => {
       let renderer;
       act(() => {
         renderer = createTestRenderer(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -94,19 +94,19 @@ describe('deep linking', () => {
   });
 
   describe('when a "url" event happens', () => {
-    it('navigates to the matching route', () => {
+    it("navigates to the matching route", () => {
       Linking.getInitialURL.mockImplementation(() => {
         return mockPromiseThatResolvesImmediatelyWith();
       });
 
       let listeners = [];
       Linking.addEventListener.mockImplementation((type, listener) => {
-        if (type !== 'url') throw new Error(`Invalid event type: ${type}`);
+        if (type !== "url") throw new Error(`Invalid event type: ${type}`);
         listeners.push(listener);
       });
 
       function changeURL(url) {
-        let event = new MockEvent('url', { url });
+        let event = new MockEvent("url", { url });
         listeners.forEach(listener => listener(event));
       }
 
@@ -130,7 +130,7 @@ describe('deep linking', () => {
       let renderer;
       act(() => {
         renderer = createTestRenderer(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -142,7 +142,7 @@ describe('deep linking', () => {
       expect(renderer.toJSON()).toMatchSnapshot();
 
       act(() => {
-        changeURL('app:///about');
+        changeURL("app:///about");
       });
 
       expect(renderer.toJSON()).toMatchSnapshot();

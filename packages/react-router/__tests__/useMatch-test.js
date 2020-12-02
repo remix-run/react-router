@@ -1,13 +1,13 @@
-import * as React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
-import { MemoryRouter as Router, Routes, Route, useMatch } from 'react-router';
+import * as React from "react";
+import { create as createTestRenderer } from "react-test-renderer";
+import { MemoryRouter as Router, Routes, Route, useMatch } from "react-router";
 
-describe('useMatch', () => {
-  describe('when the path matches the current URL', () => {
-    it('returns the match', () => {
+describe("useMatch", () => {
+  describe("when the path matches the current URL", () => {
+    it("returns the match", () => {
       let match;
       function Layout() {
-        match = useMatch('home');
+        match = useMatch("home");
         return null;
       }
 
@@ -20,7 +20,7 @@ describe('useMatch', () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={['/home']}>
+        <Router initialEntries={["/home"]}>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route path="/home" element={<Home />} />
@@ -31,18 +31,18 @@ describe('useMatch', () => {
       );
 
       expect(match).toMatchObject({
-        path: 'home',
-        pathname: '/home',
+        path: "home",
+        pathname: "/home",
         params: {}
       });
     });
   });
 
-  describe('when the path does not match the current URL', () => {
-    it('returns null', () => {
+  describe("when the path does not match the current URL", () => {
+    it("returns null", () => {
       let match;
       function Layout() {
-        match = useMatch('about');
+        match = useMatch("about");
         return null;
       }
 
@@ -55,7 +55,7 @@ describe('useMatch', () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={['/home']}>
+        <Router initialEntries={["/home"]}>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route path="/home" element={<Home />} />

@@ -1,19 +1,19 @@
-import * as React from 'react';
-import { act, create as createTestRenderer } from 'react-test-renderer';
-import { MemoryRouter as Router, Outlet, Routes, Route } from 'react-router';
+import * as React from "react";
+import { act, create as createTestRenderer } from "react-test-renderer";
+import { MemoryRouter as Router, Outlet, Routes, Route } from "react-router";
 
-describe('Descendant <Routes>', () => {
+describe("Descendant <Routes>", () => {
   let consoleWarn;
   beforeEach(() => {
-    consoleWarn = jest.spyOn(console, 'warn').mockImplementation();
+    consoleWarn = jest.spyOn(console, "warn").mockImplementation();
   });
 
   afterEach(() => {
     consoleWarn.mockRestore();
   });
 
-  describe('when the parent route path does not have a trailing *', () => {
-    it('warns once when you visit the parent route', () => {
+  describe("when the parent route path does not have a trailing *", () => {
+    it("warns once when you visit the parent route", () => {
       function ReactFundamentals() {
         return <h1>React Fundamentals</h1>;
       }
@@ -51,7 +51,7 @@ describe('Descendant <Routes>', () => {
 
       act(() => {
         createTestRenderer(
-          <Router initialEntries={['/courses/react']}>
+          <Router initialEntries={["/courses/react"]}>
             <Routes>
               <Route path="courses" element={<Courses />}>
                 <Route path="react" element={<ReactCourses />} />
@@ -63,13 +63,13 @@ describe('Descendant <Routes>', () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn).toHaveBeenCalledWith(
-        expect.stringContaining('child routes will never render')
+        expect.stringContaining("child routes will never render")
       );
     });
   });
 
-  describe('when the parent route has a trailing *', () => {
-    it('does not warn when you visit the parent route', () => {
+  describe("when the parent route has a trailing *", () => {
+    it("does not warn when you visit the parent route", () => {
       function ReactFundamentals() {
         return <h1>React Fundamentals</h1>;
       }
@@ -100,7 +100,7 @@ describe('Descendant <Routes>', () => {
 
       act(() => {
         createTestRenderer(
-          <Router initialEntries={['/courses/react']}>
+          <Router initialEntries={["/courses/react"]}>
             <Routes>
               <Route path="courses" element={<Courses />}>
                 <Route path="react/*" element={<ReactCourses />} />

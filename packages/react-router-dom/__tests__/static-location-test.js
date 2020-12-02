@@ -1,11 +1,11 @@
-import * as React from 'react';
-import * as ReactDOMServer from 'react-dom/server';
-import { Routes, Route, useLocation } from 'react-router-dom';
-import { StaticRouter as Router } from 'react-router-dom/server';
+import * as React from "react";
+import * as ReactDOMServer from "react-dom/server";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { StaticRouter as Router } from "react-router-dom/server";
 
-describe('A <StaticRouter>', () => {
-  describe('with a string location prop', () => {
-    it('parses the location into an object', () => {
+describe("A <StaticRouter>", () => {
+  describe("with a string location prop", () => {
+    it("parses the location into an object", () => {
       let location;
       function LocationChecker(props) {
         location = useLocation();
@@ -21,17 +21,17 @@ describe('A <StaticRouter>', () => {
       );
 
       expect(location).toMatchObject({
-        pathname: '/the/path',
-        search: '?the=query',
-        hash: '#the-hash',
+        pathname: "/the/path",
+        search: "?the=query",
+        hash: "#the-hash",
         state: {},
         key: expect.any(String)
       });
     });
   });
 
-  describe('with an object location prop', () => {
-    it('adds missing properties', () => {
+  describe("with an object location prop", () => {
+    it("adds missing properties", () => {
       let location;
       function LocationChecker(props) {
         location = useLocation();
@@ -39,7 +39,7 @@ describe('A <StaticRouter>', () => {
       }
 
       ReactDOMServer.renderToStaticMarkup(
-        <Router location={{ pathname: '/the/path', search: '?the=query' }}>
+        <Router location={{ pathname: "/the/path", search: "?the=query" }}>
           <Routes>
             <Route path="/the/path" element={<LocationChecker />} />
           </Routes>
@@ -47,9 +47,9 @@ describe('A <StaticRouter>', () => {
       );
 
       expect(location).toMatchObject({
-        pathname: '/the/path',
-        search: '?the=query',
-        hash: '',
+        pathname: "/the/path",
+        search: "?the=query",
+        hash: "",
         state: {},
         key: expect.any(String)
       });

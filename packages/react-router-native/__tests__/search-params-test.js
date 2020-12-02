@@ -1,21 +1,21 @@
-import * as React from 'react';
-import { View, Text, TextInput } from 'react-native';
-import { act, create as createTestRenderer } from 'react-test-renderer';
+import * as React from "react";
+import { View, Text, TextInput } from "react-native";
+import { act, create as createTestRenderer } from "react-test-renderer";
 import {
   NativeRouter as Router,
   Routes,
   Route,
   useSearchParams
-} from 'react-router-native';
+} from "react-router-native";
 
-describe('useSearchParams', () => {
+describe("useSearchParams", () => {
   function SearchForm({ children, onSubmit }) {
     return <View>{children}</View>;
   }
 
   function SearchPage() {
-    let [searchParams, setSearchParams] = useSearchParams({ q: '' });
-    let [query, setQuery] = React.useState(searchParams.get('q'));
+    let [searchParams, setSearchParams] = useSearchParams({ q: "" });
+    let [query, setQuery] = React.useState(searchParams.get("q"));
 
     function handleSubmit() {
       setSearchParams({ q: query });
@@ -23,7 +23,7 @@ describe('useSearchParams', () => {
 
     return (
       <View>
-        <Text>The current query is "{searchParams.get('q')}".</Text>
+        <Text>The current query is "{searchParams.get("q")}".</Text>
 
         <SearchForm onSubmit={handleSubmit}>
           <TextInput value={query} onChangeText={setQuery} />
@@ -32,11 +32,11 @@ describe('useSearchParams', () => {
     );
   }
 
-  it('reads and writes the search string', () => {
+  it("reads and writes the search string", () => {
     let renderer;
     act(() => {
       renderer = createTestRenderer(
-        <Router initialEntries={['/search?q=Michael+Jackson']}>
+        <Router initialEntries={["/search?q=Michael+Jackson"]}>
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
@@ -48,7 +48,7 @@ describe('useSearchParams', () => {
 
     act(() => {
       let textInput = renderer.root.findByType(TextInput);
-      textInput.props.onChangeText('Ryan Florence');
+      textInput.props.onChangeText("Ryan Florence");
     });
 
     act(() => {

@@ -1,18 +1,18 @@
-import * as React from 'react';
-import { render } from 'react-dom';
-import { act } from 'react-dom/test-utils';
+import * as React from "react";
+import { render } from "react-dom";
+import { act } from "react-dom/test-utils";
 import {
   MemoryRouter as Router,
   Routes,
   Route,
   useSearchParams
-} from 'react-router-dom';
+} from "react-router-dom";
 
-describe('useSearchParams', () => {
+describe("useSearchParams", () => {
   function SearchPage() {
     let queryRef = React.useRef();
-    let [searchParams, setSearchParams] = useSearchParams({ q: '' });
-    let query = searchParams.get('q');
+    let [searchParams, setSearchParams] = useSearchParams({ q: "" });
+    let query = searchParams.get("q");
 
     function handleSubmit(event) {
       event.preventDefault();
@@ -32,7 +32,7 @@ describe('useSearchParams', () => {
 
   let node;
   beforeEach(() => {
-    node = document.createElement('div');
+    node = document.createElement("div");
     document.body.appendChild(node);
   });
 
@@ -41,10 +41,10 @@ describe('useSearchParams', () => {
     node = null;
   });
 
-  it('reads and writes the search string', () => {
+  it("reads and writes the search string", () => {
     act(() => {
       render(
-        <Router initialEntries={['/search?q=Michael+Jackson']}>
+        <Router initialEntries={["/search?q=Michael+Jackson"]}>
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
@@ -53,18 +53,18 @@ describe('useSearchParams', () => {
       );
     });
 
-    let form = node.querySelector('form');
+    let form = node.querySelector("form");
     expect(form).toBeDefined();
 
-    let queryInput = node.querySelector('input[name=q]');
+    let queryInput = node.querySelector("input[name=q]");
     expect(queryInput).toBeDefined();
 
     expect(node.innerHTML).toMatch(/The current query is "Michael Jackson"/);
 
     act(() => {
-      queryInput.value = 'Ryan Florence';
+      queryInput.value = "Ryan Florence";
       form.dispatchEvent(
-        new Event('submit', { bubbles: true, cancelable: true })
+        new Event("submit", { bubbles: true, cancelable: true })
       );
     });
 

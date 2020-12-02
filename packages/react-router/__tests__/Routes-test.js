@@ -1,15 +1,15 @@
-import * as React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
-import { MemoryRouter as Router, Routes, Route } from 'react-router';
+import * as React from "react";
+import { create as createTestRenderer } from "react-test-renderer";
+import { MemoryRouter as Router, Routes, Route } from "react-router";
 
-describe('A <Routes>', () => {
-  it('renders the first route that matches the URL', () => {
+describe("A <Routes>", () => {
+  it("renders the first route that matches the URL", () => {
     function Home() {
       return <h1>Home</h1>;
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={['/']}>
+      <Router initialEntries={["/"]}>
         <Routes>
           <Route path="/" element={<Home />} />
         </Routes>
@@ -19,7 +19,7 @@ describe('A <Routes>', () => {
     expect(renderer.toJSON()).toMatchSnapshot();
   });
 
-  it('does not render a 2nd route that also matches the URL', () => {
+  it("does not render a 2nd route that also matches the URL", () => {
     function Home() {
       return <h1>Home</h1>;
     }
@@ -29,7 +29,7 @@ describe('A <Routes>', () => {
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={['/home']}>
+      <Router initialEntries={["/home"]}>
         <Routes>
           <Route path="/home" element={<Home />} />
           <Route path="/home" element={<Dashboard />} />
@@ -40,13 +40,13 @@ describe('A <Routes>', () => {
     expect(renderer.toJSON()).toMatchSnapshot();
   });
 
-  it('renders with non-element children', () => {
+  it("renders with non-element children", () => {
     function Home() {
       return <h1>Home</h1>;
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={['/']}>
+      <Router initialEntries={["/"]}>
         <Routes>
           <Route path="/" element={<Home />} />
           {false}
@@ -58,7 +58,7 @@ describe('A <Routes>', () => {
     expect(renderer.toJSON()).toMatchSnapshot();
   });
 
-  it('renders with React.Fragment children', () => {
+  it("renders with React.Fragment children", () => {
     function Home() {
       return <h1>Home</h1>;
     }
@@ -68,7 +68,7 @@ describe('A <Routes>', () => {
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={['/admin']}>
+      <Router initialEntries={["/admin"]}>
         <Routes>
           <Route path="/" element={<Home />} />
           <React.Fragment>

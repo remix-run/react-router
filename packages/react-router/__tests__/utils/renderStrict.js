@@ -1,7 +1,7 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 
-let StrictMode = function(props) {
+let StrictMode = function (props) {
   return props.children || null;
 };
 

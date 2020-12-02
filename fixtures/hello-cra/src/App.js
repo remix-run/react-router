@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 import {
   BrowserRouter as Router,
@@ -7,7 +7,7 @@ import {
   Link,
   Outlet,
   useParams
-} from 'react-router-dom';
+} from "react-router-dom";
 
 function Home() {
   return (

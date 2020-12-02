@@ -1,15 +1,15 @@
-import * as React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
-import { MemoryRouter as Router, Routes, Route } from 'react-router';
+import * as React from "react";
+import { create as createTestRenderer } from "react-test-renderer";
+import { MemoryRouter as Router, Routes, Route } from "react-router";
 
-describe('A <Route>', () => {
-  it('renders its `element` prop', () => {
+describe("A <Route>", () => {
+  it("renders its `element` prop", () => {
     function Home() {
       return <h1>Home</h1>;
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={['/home']}>
+      <Router initialEntries={["/home"]}>
         <Routes>
           <Route path="home" element={<Home />} />
         </Routes>
@@ -23,13 +23,13 @@ describe('A <Route>', () => {
     `);
   });
 
-  it('renders its child routes when no `element` prop is given', () => {
+  it("renders its child routes when no `element` prop is given", () => {
     function Home() {
       return <h1>Home</h1>;
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={['/app/home']}>
+      <Router initialEntries={["/app/home"]}>
         <Routes>
           <Route path="app">
             <Route path="home" element={<Home />} />

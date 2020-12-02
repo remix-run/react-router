@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   Action,
   Blocker,
@@ -13,7 +13,7 @@ import {
   Transition,
   createMemoryHistory,
   parsePath
-} from 'history';
+} from "history";
 
 const readOnly: <T extends unknown>(obj: T) => T = __DEV__
   ? obj => Object.freeze(obj)
@@ -26,7 +26,7 @@ function invariant(cond: boolean, message: string): void {
 function warning(cond: boolean, message: string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
-    if (typeof console !== 'undefined') console.warn(message);
+    if (typeof console !== "undefined") console.warn(message);
 
     try {
       // Welcome to debugging React Router!
@@ -63,7 +63,7 @@ function warningOnce(key: string, cond: boolean, message: string) {
  */
 export type Navigator = Omit<
   History,
-  'action' | 'location' | 'back' | 'forward' | 'listen'
+  "action" | "location" | "back" | "forward" | "listen"
 >;
 
 const LocationContext = React.createContext<LocationContextObject>({
@@ -78,13 +78,13 @@ interface LocationContextObject {
 }
 
 if (__DEV__) {
-  LocationContext.displayName = 'Location';
+  LocationContext.displayName = "Location";
 }
 
 const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
   params: readOnly<Params>({}),
-  pathname: '',
+  pathname: "",
   route: null
 });
 
@@ -96,7 +96,7 @@ interface RouteContextObject {
 }
 
 if (__DEV__) {
-  RouteContext.displayName = 'Route';
+  RouteContext.displayName = "Route";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -259,7 +259,7 @@ export interface RoutesProps {
  * @see https://reactrouter.com/api/Routes
  */
 export function Routes({
-  basename = '',
+  basename = "",
   children
 }: RoutesProps): React.ReactElement | null {
   let routes = createRoutesFromChildren(children);
@@ -420,7 +420,7 @@ export function useNavigate(): NavigateFunction {
   let navigate: NavigateFunction = React.useCallback(
     (to: To | number, options: { replace?: boolean; state?: State } = {}) => {
       if (activeRef.current) {
-        if (typeof to === 'number') {
+        if (typeof to === "number") {
           navigator.go(to);
         } else {
           let path = resolvePath(to, pathname);
@@ -483,7 +483,7 @@ export function useResolvedPath(to: To): Path {
  */
 export function useRoutes(
   partialRoutes: PartialRouteObject[],
-  basename = ''
+  basename = ""
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -501,7 +501,7 @@ export function useRoutes(
 
 function useRoutes_(
   routes: RouteObject[],
-  basename = ''
+  basename = ""
 ): React.ReactElement | null {
   let {
     route: parentRoute,
@@ -516,7 +516,7 @@ function useRoutes_(
     let parentPath = parentRoute && parentRoute.path;
     warningOnce(
       parentPathname,
-      !parentRoute || parentRoute.path.endsWith('*'),
+      !parentRoute || parentRoute.path.endsWith("*"),
       `You rendered descendant <Routes> (or called \`useRoutes\`) at ` +
         `"${parentPathname}" (under <Route path="${parentPath}">) but the ` +
         `parent route path has no trailing "*". This means if you navigate ` +
@@ -574,7 +574,7 @@ export function createRoutesFromArray(
 ): RouteObject[] {
   return array.map(partialRoute => {
     let route: RouteObject = {
-      path: partialRoute.path || '/',
+      path: partialRoute.path || "/",
       caseSensitive: partialRoute.caseSensitive === true,
       element: partialRoute.element || <Outlet />
     };
@@ -616,7 +616,7 @@ export function createRoutesFromChildren(
     }
 
     let route: RouteObject = {
-      path: element.props.path || '/',
+      path: element.props.path || "/",
       caseSensitive: element.props.caseSensitive === true,
       // Default behavior is to just render the element that was given. This
       // permits people to use any element they prefer, not just <Route> (though
@@ -677,7 +677,7 @@ export function generatePath(path: string, params: Params = {}): string {
       return params[key];
     })
     .replace(/\/*\*$/, _ =>
-      params['*'] == null ? '' : params['*'].replace(/^\/*/, '/')
+      params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
     );
 }
 
@@ -689,17 +689,17 @@ export function generatePath(path: string, params: Params = {}): string {
 export function matchRoutes(
   routes: RouteObject[],
   location: string | PartialLocation,
-  basename = ''
+  basename = ""
 ): RouteMatch[] | null {
-  if (typeof location === 'string') {
+  if (typeof location === "string") {
     location = parsePath(location);
   }
 
-  let pathname = location.pathname || '/';
+  let pathname = location.pathname || "/";
   if (basename) {
-    let base = basename.replace(/^\/*/, '/').replace(/\/+$/, '');
+    let base = basename.replace(/^\/*/, "/").replace(/\/+$/, "");
     if (pathname.startsWith(base)) {
-      pathname = pathname === base ? '/' : pathname.slice(base.length);
+      pathname = pathname === base ? "/" : pathname.slice(base.length);
     } else {
       // Pathname does not start with the basename, no match.
       return null;
@@ -727,7 +727,7 @@ export interface RouteMatch {
 function flattenRoutes(
   routes: RouteObject[],
   branches: RouteBranch[] = [],
-  parentPath = '',
+  parentPath = "",
   parentRoutes: RouteObject[] = [],
   parentIndexes: number[] = []
 ): RouteBranch[] {
@@ -777,10 +777,10 @@ const dynamicSegmentValue = 2;
 const emptySegmentValue = 1;
 const staticSegmentValue = 10;
 const splatPenalty = -2;
-const isSplat = (s: string) => s === '*';
+const isSplat = (s: string) => s === "*";
 
 function computeScore(path: string): number {
-  let segments = path.split('/');
+  let segments = path.split("/");
   let initialScore = segments.length;
   if (segments.some(isSplat)) {
     initialScore += splatPenalty;
@@ -793,7 +793,7 @@ function computeScore(path: string): number {
         score +
         (paramRe.test(segment)
           ? dynamicSegmentValue
-          : segment === ''
+          : segment === ""
           ? emptySegmentValue
           : staticSegmentValue),
       initialScore
@@ -827,16 +827,16 @@ function matchRouteBranch(
   pathname: string
 ): RouteMatch[] | null {
   let routes = branch[1];
-  let matchedPathname = '/';
+  let matchedPathname = "/";
   let matchedParams: Params = {};
 
   let matches: RouteMatch[] = [];
   for (let i = 0; i < routes.length; ++i) {
     let route = routes[i];
     let remainingPathname =
-      matchedPathname === '/'
+      matchedPathname === "/"
         ? pathname
-        : pathname.slice(matchedPathname.length) || '/';
+        : pathname.slice(matchedPathname.length) || "/";
     let routeMatch = matchPath(
       {
         path: route.path,
@@ -871,7 +871,7 @@ export function matchPath(
   pattern: PathPattern,
   pathname: string
 ): PathMatch | null {
-  if (typeof pattern === 'string') {
+  if (typeof pattern === "string") {
     pattern = { path: pattern };
   }
 
@@ -904,30 +904,30 @@ function compilePath(
 ): [RegExp, string[]] {
   let keys: string[] = [];
   let source =
-    '^(' +
+    "^(" +
     path
-      .replace(/^\/*/, '/') // Make sure it has a leading /
-      .replace(/\/?\*?$/, '') // Ignore trailing / and /*, we'll handle it below
-      .replace(/[\\.*+^$?{}|()[\]]/g, '\\$&') // Escape special regex chars
+      .replace(/^\/*/, "/") // Make sure it has a leading /
+      .replace(/\/?\*?$/, "") // Ignore trailing / and /*, we'll handle it below
+      .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
       .replace(/:(\w+)/g, (_: string, key: string) => {
         keys.push(key);
-        return '([^\\/]+)';
+        return "([^\\/]+)";
       }) +
-    ')';
+    ")";
 
-  if (path.endsWith('*')) {
-    if (path.endsWith('/*')) {
-      source += '\\/?'; // Don't include the / in params['*']
+  if (path.endsWith("*")) {
+    if (path.endsWith("/*")) {
+      source += "\\/?"; // Don't include the / in params['*']
     }
-    keys.push('*');
-    source += '(.*)';
+    keys.push("*");
+    source += "(.*)";
   } else if (end) {
-    source += '\\/?';
+    source += "\\/?";
   }
 
-  if (end) source += '$';
+  if (end) source += "$";
 
-  let flags = caseSensitive ? undefined : 'i';
+  let flags = caseSensitive ? undefined : "i";
   let matcher = new RegExp(source, flags);
 
   return [matcher, keys];
@@ -953,37 +953,37 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
  *
  * @see https://reactrouter.com/api/resolvePath
  */
-export function resolvePath(to: To, fromPathname = '/'): Path {
-  let { pathname: toPathname, search = '', hash = '' } =
-    typeof to === 'string' ? parsePath(to) : to;
+export function resolvePath(to: To, fromPathname = "/"): Path {
+  let { pathname: toPathname, search = "", hash = "" } =
+    typeof to === "string" ? parsePath(to) : to;
 
   let pathname = toPathname
     ? resolvePathname(
         toPathname,
-        toPathname.startsWith('/') ? '/' : fromPathname
+        toPathname.startsWith("/") ? "/" : fromPathname
       )
     : fromPathname;
 
   return { pathname, search, hash };
 }
 
-const trimTrailingSlashes = (path: string) => path.replace(/\/+$/, '');
-const normalizeSlashes = (path: string) => path.replace(/\/\/+/g, '/');
-const joinPaths = (paths: string[]) => normalizeSlashes(paths.join('/'));
-const splitPath = (path: string) => normalizeSlashes(path).split('/');
+const trimTrailingSlashes = (path: string) => path.replace(/\/+$/, "");
+const normalizeSlashes = (path: string) => path.replace(/\/\/+/g, "/");
+const joinPaths = (paths: string[]) => normalizeSlashes(paths.join("/"));
+const splitPath = (path: string) => normalizeSlashes(path).split("/");
 
 function resolvePathname(toPathname: string, fromPathname: string): string {
   let segments = splitPath(trimTrailingSlashes(fromPathname));
   let relativeSegments = splitPath(toPathname);
 
   relativeSegments.forEach(segment => {
-    if (segment === '..') {
+    if (segment === "..") {
       // Keep the root "" segment so the pathname starts at /
       if (segments.length > 1) segments.pop();
-    } else if (segment !== '.') {
+    } else if (segment !== ".") {
       segments.push(segment);
     }
   });
 
-  return segments.length > 1 ? joinPaths(segments) : '/';
+  return segments.length > 1 ? joinPaths(segments) : "/";
 }

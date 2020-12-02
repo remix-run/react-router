@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
+import * as React from "react";
+import { create as createTestRenderer } from "react-test-renderer";
 import {
   MemoryRouter as Router,
   Outlet,
@@ -7,46 +7,46 @@ import {
   Route,
   useParams,
   useRoutes
-} from 'react-router';
+} from "react-router";
 
-describe('route matching', () => {
-  describe('using a route config object', () => {
+describe("route matching", () => {
+  describe("using a route config object", () => {
     function RoutesRenderer({ routes }) {
       return useRoutes(routes);
     }
 
     let routes = [
       {
-        path: 'courses',
+        path: "courses",
         element: <Courses />,
         children: [
           {
-            path: ':id',
+            path: ":id",
             element: <Course />,
-            children: [{ path: 'grades', element: <CourseGrades /> }]
+            children: [{ path: "grades", element: <CourseGrades /> }]
           },
-          { path: 'new', element: <NewCourse /> },
-          { path: '/', element: <CoursesIndex /> },
-          { path: '*', element: <CoursesNotFound /> }
+          { path: "new", element: <NewCourse /> },
+          { path: "/", element: <CoursesIndex /> },
+          { path: "*", element: <CoursesNotFound /> }
         ]
       },
       {
-        path: 'courses',
+        path: "courses",
         element: <Landing />,
         children: [
-          { path: 'react-fundamentals', element: <ReactFundamentals /> },
-          { path: 'advanced-react', element: <AdvancedReact /> },
-          { path: '*', element: <NeverRender /> }
+          { path: "react-fundamentals", element: <ReactFundamentals /> },
+          { path: "advanced-react", element: <AdvancedReact /> },
+          { path: "*", element: <NeverRender /> }
         ]
       },
-      { path: '/', element: <Home /> },
-      { path: '*', element: <NotFound /> }
+      { path: "/", element: <Home /> },
+      { path: "*", element: <NotFound /> }
     ];
 
     describeRouteMatching(<RoutesRenderer routes={routes} />);
   });
 
-  describe('using <Routes> with <Route> elements', () => {
+  describe("using <Routes> with <Route> elements", () => {
     let routes = (
       <Routes>
         <Route path="courses" element={<Courses />}>
@@ -70,7 +70,7 @@ describe('route matching', () => {
     describeRouteMatching(routes);
   });
 
-  describe('using <Routes> and the *secret menu*', () => {
+  describe("using <Routes> and the *secret menu*", () => {
     let routes = (
       <Routes>
         <Courses path="courses">
@@ -96,15 +96,15 @@ describe('route matching', () => {
 
   function describeRouteMatching(routes) {
     let testPaths = [
-      '/courses',
-      '/courses/routing',
-      '/courses/routing/grades',
-      '/courses/new',
-      '/courses/not/found',
-      '/courses/react-fundamentals',
-      '/courses/advanced-react',
-      '/',
-      '/not-found'
+      "/courses",
+      "/courses/routing",
+      "/courses/routing/grades",
+      "/courses/new",
+      "/courses/not/found",
+      "/courses/react-fundamentals",
+      "/courses/advanced-react",
+      "/",
+      "/not-found"
     ];
 
     testPaths.forEach(path => {
@@ -184,6 +184,6 @@ describe('route matching', () => {
   }
 
   function NeverRender() {
-    throw new Error('NeverRender should ... uh ... never render');
+    throw new Error("NeverRender should ... uh ... never render");
   }
 });

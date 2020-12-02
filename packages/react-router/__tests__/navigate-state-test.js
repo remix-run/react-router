@@ -1,18 +1,18 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { act } from "react-dom/test-utils";
 import {
   MemoryRouter as Router,
   Routes,
   Route,
   useNavigate,
   useLocation
-} from 'react-router';
+} from "react-router";
 
-describe('navigate state', () => {
+describe("navigate state", () => {
   let node;
   beforeEach(() => {
-    node = document.createElement('div');
+    node = document.createElement("div");
     document.body.appendChild(node);
   });
 
@@ -21,13 +21,13 @@ describe('navigate state', () => {
     node = null;
   });
 
-  describe('by default', () => {
-    it('does not use any state', () => {
+  describe("by default", () => {
+    it("does not use any state", () => {
       function Home() {
         let navigate = useNavigate();
 
         function handleClick() {
-          navigate('../about');
+          navigate("../about");
         }
 
         return (
@@ -46,7 +46,7 @@ describe('navigate state', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -56,11 +56,11 @@ describe('navigate state', () => {
         );
       });
 
-      let button = node.querySelector('button');
+      let button = node.querySelector("button");
       expect(button).not.toBeNull();
 
       act(() => {
-        button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
       expect(location).toBeDefined();
@@ -70,14 +70,14 @@ describe('navigate state', () => {
     });
   });
 
-  describe('with { state }', () => {
-    it('sets state on the next location', () => {
+  describe("with { state }", () => {
+    it("sets state on the next location", () => {
       function Home() {
         let navigate = useNavigate();
-        let state = { from: 'home' };
+        let state = { from: "home" };
 
         function handleClick() {
-          navigate('../about', { state });
+          navigate("../about", { state });
         }
 
         return (
@@ -96,7 +96,7 @@ describe('navigate state', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={['/home']}>
+          <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -106,16 +106,16 @@ describe('navigate state', () => {
         );
       });
 
-      let button = node.querySelector('button');
+      let button = node.querySelector("button");
       expect(button).not.toBeNull();
 
       act(() => {
-        button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
       expect(location).toBeDefined();
       expect(location).toMatchObject({
-        state: { from: 'home' }
+        state: { from: "home" }
       });
     });
   });

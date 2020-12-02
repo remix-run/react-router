@@ -1,19 +1,19 @@
-import * as React from 'react';
-import * as ReactDOMServer from 'react-dom/server';
-import { Navigate, Routes, Route } from 'react-router-dom';
-import { StaticRouter as Router } from 'react-router-dom/server';
+import * as React from "react";
+import * as ReactDOMServer from "react-dom/server";
+import { Navigate, Routes, Route } from "react-router-dom";
+import { StaticRouter as Router } from "react-router-dom/server";
 
-describe('A <Navigate> in a <StaticRouter>', () => {
+describe("A <Navigate> in a <StaticRouter>", () => {
   let consoleWarn;
   beforeEach(() => {
-    consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
     consoleWarn.mockRestore();
   });
 
-  it('warns about using on the initial render', () => {
+  it("warns about using on the initial render", () => {
     function Home() {
       return <Navigate to="/somewhere-else?the=query" />;
     }
@@ -27,7 +27,7 @@ describe('A <Navigate> in a <StaticRouter>', () => {
     );
 
     expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringMatching('<Navigate> must not be used on the initial render')
+      expect.stringMatching("<Navigate> must not be used on the initial render")
     );
   });
 });

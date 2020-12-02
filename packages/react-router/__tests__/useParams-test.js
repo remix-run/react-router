@@ -1,16 +1,16 @@
-import * as React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
+import * as React from "react";
+import { create as createTestRenderer } from "react-test-renderer";
 import {
   MemoryRouter as Router,
   Outlet,
   Routes,
   Route,
   useParams
-} from 'react-router';
+} from "react-router";
 
-describe('useParams', () => {
+describe("useParams", () => {
   describe("when the route isn't matched", () => {
-    it('returns an empty object', () => {
+    it("returns an empty object", () => {
       let params;
       function Home() {
         params = useParams();
@@ -18,18 +18,18 @@ describe('useParams', () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={['/home']}>
+        <Router initialEntries={["/home"]}>
           <Home />
         </Router>
       );
 
-      expect(typeof params).toBe('object');
+      expect(typeof params).toBe("object");
       expect(Object.keys(params)).toHaveLength(0);
     });
   });
 
-  describe('when the path has no params', () => {
-    it('returns an empty object', () => {
+  describe("when the path has no params", () => {
+    it("returns an empty object", () => {
       let params;
       function Home() {
         params = useParams();
@@ -37,20 +37,20 @@ describe('useParams', () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={['/home']}>
+        <Router initialEntries={["/home"]}>
           <Routes>
             <Route path="/home" element={<Home />} />
           </Routes>
         </Router>
       );
 
-      expect(typeof params).toBe('object');
+      expect(typeof params).toBe("object");
       expect(Object.keys(params)).toHaveLength(0);
     });
   });
 
-  describe('when the path has some params', () => {
-    it('returns an object of the URL params', () => {
+  describe("when the path has some params", () => {
+    it("returns an object of the URL params", () => {
       let params;
       function BlogPost() {
         params = useParams();
@@ -58,21 +58,21 @@ describe('useParams', () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={['/blog/react-router']}>
+        <Router initialEntries={["/blog/react-router"]}>
           <Routes>
             <Route path="/blog/:slug" element={<BlogPost />} />
           </Routes>
         </Router>
       );
 
-      expect(typeof params).toBe('object');
+      expect(typeof params).toBe("object");
       expect(params).toMatchObject({
-        slug: 'react-router'
+        slug: "react-router"
       });
     });
 
-    describe('a child route', () => {
-      it('returns a combined hash of the parent and child params', () => {
+    describe("a child route", () => {
+      it("returns a combined hash of the parent and child params", () => {
         let params;
 
         function Course() {
@@ -90,7 +90,7 @@ describe('useParams', () => {
         }
 
         createTestRenderer(
-          <Router initialEntries={['/users/mjackson/courses/react-router']}>
+          <Router initialEntries={["/users/mjackson/courses/react-router"]}>
             <Routes>
               <Route path="users/:username" element={<UserDashboard />}>
                 <Route path="courses/:course" element={<Course />} />
@@ -99,17 +99,17 @@ describe('useParams', () => {
           </Router>
         );
 
-        expect(typeof params).toBe('object');
+        expect(typeof params).toBe("object");
         expect(params).toMatchObject({
-          username: 'mjackson',
-          course: 'react-router'
+          username: "mjackson",
+          course: "react-router"
         });
       });
     });
   });
 
-  describe('when the path has percent-encoded params', () => {
-    it('returns an object of the decoded params', () => {
+  describe("when the path has percent-encoded params", () => {
+    it("returns an object of the decoded params", () => {
       let params;
       function BlogPost() {
         params = useParams();
@@ -117,22 +117,22 @@ describe('useParams', () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={['/blog/react%20router']}>
+        <Router initialEntries={["/blog/react%20router"]}>
           <Routes>
             <Route path="/blog/:slug" element={<BlogPost />} />
           </Routes>
         </Router>
       );
 
-      expect(typeof params).toBe('object');
+      expect(typeof params).toBe("object");
       expect(params).toMatchObject({
-        slug: 'react router'
+        slug: "react router"
       });
     });
   });
 
-  describe('when the path has a + character', () => {
-    it('returns an object of the decoded params', () => {
+  describe("when the path has a + character", () => {
+    it("returns an object of the decoded params", () => {
       let params;
       function BlogPost() {
         params = useParams();
@@ -140,31 +140,31 @@ describe('useParams', () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={['/blog/react+router+is%20awesome']}>
+        <Router initialEntries={["/blog/react+router+is%20awesome"]}>
           <Routes>
             <Route path="/blog/:slug" element={<BlogPost />} />
           </Routes>
         </Router>
       );
 
-      expect(typeof params).toBe('object');
+      expect(typeof params).toBe("object");
       expect(params).toMatchObject({
-        slug: 'react+router+is awesome'
+        slug: "react+router+is awesome"
       });
     });
   });
 
-  describe('when the path has a malformed param', () => {
+  describe("when the path has a malformed param", () => {
     let consoleWarn;
     beforeEach(() => {
-      consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
     });
 
     afterEach(() => {
       consoleWarn.mockRestore();
     });
 
-    it('returns the raw value and warns', () => {
+    it("returns the raw value and warns", () => {
       let params;
       function BlogPost() {
         params = useParams();
@@ -172,20 +172,20 @@ describe('useParams', () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={['/blog/react%2router']}>
+        <Router initialEntries={["/blog/react%2router"]}>
           <Routes>
             <Route path="/blog/:slug" element={<BlogPost />} />
           </Routes>
         </Router>
       );
 
-      expect(typeof params).toBe('object');
+      expect(typeof params).toBe("object");
       expect(params).toMatchObject({
-        slug: 'react%2router'
+        slug: "react%2router"
       });
 
       expect(consoleWarn).toHaveBeenCalledWith(
-        expect.stringMatching('malformed URL segment')
+        expect.stringMatching("malformed URL segment")
       );
     });
   });

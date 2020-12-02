@@ -1,14 +1,14 @@
-import * as React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
+import * as React from "react";
+import { create as createTestRenderer } from "react-test-renderer";
 import {
   MemoryRouter as Router,
   Routes,
   Route,
   useLocation
-} from 'react-router';
+} from "react-router";
 
-describe('useLocation', () => {
-  it('returns the current location object', () => {
+describe("useLocation", () => {
+  it("returns the current location object", () => {
     let location;
     function Home() {
       location = useLocation();
@@ -16,18 +16,18 @@ describe('useLocation', () => {
     }
 
     createTestRenderer(
-      <Router initialEntries={['/home?the=search#the-hash']}>
+      <Router initialEntries={["/home?the=search#the-hash"]}>
         <Routes>
           <Route path="/home" element={<Home />} />
         </Routes>
       </Router>
     );
 
-    expect(typeof location).toBe('object');
+    expect(typeof location).toBe("object");
     expect(location).toMatchObject({
-      pathname: '/home',
-      search: '?the=search',
-      hash: '#the-hash'
+      pathname: "/home",
+      search: "?the=search",
+      hash: "#the-hash"
     });
   });
 });

@@ -1,14 +1,14 @@
-import * as React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
+import * as React from "react";
+import { create as createTestRenderer } from "react-test-renderer";
 import {
   MemoryRouter as Router,
   Routes,
   Route,
   useNavigate
-} from 'react-router';
+} from "react-router";
 
-describe('useNavigate', () => {
-  it('returns the navigate function', () => {
+describe("useNavigate", () => {
+  it("returns the navigate function", () => {
     let navigate;
     function Home() {
       navigate = useNavigate();
@@ -16,7 +16,7 @@ describe('useNavigate', () => {
     }
 
     createTestRenderer(
-      <Router initialEntries={['/home']}>
+      <Router initialEntries={["/home"]}>
         <Routes>
           <Route path="/home" element={<Home />} />
         </Routes>

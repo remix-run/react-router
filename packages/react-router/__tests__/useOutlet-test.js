@@ -1,16 +1,16 @@
-import * as React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
-import { MemoryRouter as Router, Routes, Route, useOutlet } from 'react-router';
+import * as React from "react";
+import { create as createTestRenderer } from "react-test-renderer";
+import { MemoryRouter as Router, Routes, Route, useOutlet } from "react-router";
 
-describe('useOutlet', () => {
-  describe('when there is no child route', () => {
-    it('returns null', () => {
+describe("useOutlet", () => {
+  describe("when there is no child route", () => {
+    it("returns null", () => {
       function Home() {
         return useOutlet();
       }
 
       let renderer = createTestRenderer(
-        <Router initialEntries={['/home']}>
+        <Router initialEntries={["/home"]}>
           <Routes>
             <Route path="/home" element={<Home />} />
           </Routes>
@@ -21,8 +21,8 @@ describe('useOutlet', () => {
     });
   });
 
-  describe('when there is a child route', () => {
-    it('returns an element', () => {
+  describe("when there is a child route", () => {
+    it("returns an element", () => {
       function Users() {
         return useOutlet();
       }
@@ -32,7 +32,7 @@ describe('useOutlet', () => {
       }
 
       let renderer = createTestRenderer(
-        <Router initialEntries={['/users/profile']}>
+        <Router initialEntries={["/users/profile"]}>
           <Routes>
             <Route path="users" element={<Users />}>
               <Route path="profile" element={<Profile />} />
