@@ -22,7 +22,6 @@
     "@rollup/plugin-commonjs": "^11.0.1",
     "@rollup/plugin-node-resolve": "^7.0.0",
     "@rollup/plugin-replace": "^2.2.1",
-    "@types/prop-types": "*",
     "@types/react": "*",
     "@types/react-dom": "*",
     "@types/react-native": "*",

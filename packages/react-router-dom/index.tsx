@@ -1,11 +1,9 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import {
   BrowserHistory,
   HashHistory,
   State,
   To,
-  Update,
   createBrowserHistory,
   createHashHistory,
   createPath
@@ -86,6 +84,11 @@ export {
 // COMPONENTS
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface BrowserRouterProps {
+  children?: React.ReactNode;
+  window?: Window;
+}
+
 /**
  * A <Router> for use in web browsers. Provides the cleanest URLs.
  */
@@ -96,59 +99,12 @@ export function BrowserRouter({ children, window }: BrowserRouterProps) {
   }
 
   let history = historyRef.current;
-  let [state, dispatch] = React.useReducer(
-    (_: Update, action: Update) => action,
-    {
-      action: history.action,
-      location: history.location
-    }
-  );
+  let [state, setState] = React.useState({
+    action: history.action,
+    location: history.location
+  });
 
-  React.useLayoutEffect(() => history.listen(dispatch), [history]);
-
-  return (
-    <Router
-      children={children}
-      action={state.action}
-      location={state.location}
-      navigator={history}
-    />
-  );
-}
-
-export interface BrowserRouterProps {
-  children?: React.ReactNode;
-  window?: Window;
-}
-
-if (__DEV__) {
-  BrowserRouter.displayName = 'BrowserRouter';
-  BrowserRouter.propTypes = {
-    children: PropTypes.node,
-    window: PropTypes.object
-  };
-}
-
-/**
- * A <Router> for use in web browsers. Stores the location in the hash
- * portion of the URL so it is not sent to the server.
- */
-export function HashRouter({ children, window }: HashRouterProps) {
-  let historyRef = React.useRef<HashHistory>();
-  if (historyRef.current == null) {
-    historyRef.current = createHashHistory({ window });
-  }
-
-  let history = historyRef.current;
-  let [state, dispatch] = React.useReducer(
-    (_: Update, action: Update) => action,
-    {
-      action: history.action,
-      location: history.location
-    }
-  );
-
-  React.useLayoutEffect(() => history.listen(dispatch), [history]);
+  React.useLayoutEffect(() => history.listen(setState), [history]);
 
   return (
     <Router
@@ -165,16 +121,43 @@ export interface HashRouterProps {
   window?: Window;
 }
 
-if (__DEV__) {
-  HashRouter.displayName = 'HashRouter';
-  HashRouter.propTypes = {
-    children: PropTypes.node,
-    window: PropTypes.object
-  };
+/**
+ * A <Router> for use in web browsers. Stores the location in the hash
+ * portion of the URL so it is not sent to the server.
+ */
+export function HashRouter({ children, window }: HashRouterProps) {
+  let historyRef = React.useRef<HashHistory>();
+  if (historyRef.current == null) {
+    historyRef.current = createHashHistory({ window });
+  }
+
+  let history = historyRef.current;
+  let [state, setState] = React.useState({
+    action: history.action,
+    location: history.location
+  });
+
+  React.useLayoutEffect(() => history.listen(setState), [history]);
+
+  return (
+    <Router
+      children={children}
+      action={state.action}
+      location={state.location}
+      navigator={history}
+    />
+  );
 }
 
 function isModifiedEvent(event: React.MouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
+}
+
+export interface LinkProps
+  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
+  replace?: boolean;
+  state?: State;
+  to: To;
 }
 
 /**
@@ -222,29 +205,11 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   }
 );
 
-export interface LinkProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
-  replace?: boolean;
-  state?: State;
-  to: To;
-}
-
-if (__DEV__) {
-  Link.displayName = 'Link';
-  Link.propTypes = {
-    onClick: PropTypes.func,
-    replace: PropTypes.bool,
-    state: PropTypes.object,
-    target: PropTypes.string,
-    to: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.shape({
-        pathname: PropTypes.string,
-        search: PropTypes.string,
-        hash: PropTypes.string
-      })
-    ]).isRequired
-  };
+export interface NavLinkProps extends LinkProps {
+  activeClassName?: string;
+  activeStyle?: object;
+  caseSensitive?: boolean;
+  end?: boolean;
 }
 
 /**
@@ -298,38 +263,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   }
 );
 
-export interface NavLinkProps extends LinkProps {
-  activeClassName?: string;
-  activeStyle?: object;
-  caseSensitive?: boolean;
-  end?: boolean;
-}
-
-if (__DEV__) {
-  NavLink.displayName = 'NavLink';
-  NavLink.propTypes = {
-    ...Link.propTypes,
-    'aria-current': PropTypes.oneOf([
-      'page',
-      'step',
-      'location',
-      'date',
-      'time',
-      'true'
-    ]),
-    activeClassName: PropTypes.string,
-    activeStyle: PropTypes.object,
-    className: PropTypes.string,
-    style: PropTypes.object,
-    to: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.shape({
-        pathname: PropTypes.string,
-        search: PropTypes.string,
-        hash: PropTypes.string
-      })
-    ]).isRequired
-  };
+export interface PromptProps {
+  message: string;
+  when?: boolean;
 }
 
 /**
@@ -342,19 +278,6 @@ if (__DEV__) {
 export function Prompt({ message, when }: PromptProps) {
   usePrompt(message, when);
   return null;
-}
-
-export interface PromptProps {
-  message: string;
-  when?: boolean;
-}
-
-if (__DEV__) {
-  Prompt.displayName = 'Prompt';
-  Prompt.propTypes = {
-    message: PropTypes.string,
-    when: PropTypes.bool
-  };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -383,13 +306,14 @@ export function usePrompt(message: string, when = true) {
 export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   warning(
     typeof URLSearchParams !== 'undefined',
-    'You cannot use the `useSearchParams` hook in a browser that does not' +
-      ' support the URLSearchParams API. If you need to support Internet Explorer 11,' +
-      ' we recommend you load a polyfill such as https://github.com/ungap/url-search-params' +
-      '\n\n' +
-      "If you're unsure how to load polyfills, we recommend you check out https://polyfill.io/v3/" +
-      ' which provides some recommendations about how to load polyfills only for users that' +
-      ' need them, instead of for every user.'
+    `You cannot use the \`useSearchParams\` hook in a browser that does not ` +
+      `support the URLSearchParams API. If you need to support Internet ` +
+      `Explorer 11, we recommend you load a polyfill such as ` +
+      `https://github.com/ungap/url-search-params\n\n` +
+      `If you're unsure how to load polyfills, we recommend you check out ` +
+      `https://polyfill.io/v3/ which provides some recommendations about how ` +
+      `to load polyfills only for users that need them, instead of for every ` +
+      `user.`
   );
 
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
@@ -422,6 +346,14 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
 
   return [searchParams, setSearchParams] as const;
 }
+
+export type ParamKeyValuePair = [string, string];
+
+export type URLSearchParamsInit =
+  | string
+  | ParamKeyValuePair[]
+  | Record<string, string | string[]>
+  | URLSearchParams;
 
 /**
  * Creates a URLSearchParams object using the given initializer.
@@ -460,10 +392,3 @@ export function createSearchParams(
         }, [] as ParamKeyValuePair[])
   );
 }
-
-export type ParamKeyValuePair = [string, string];
-export type URLSearchParamsInit =
-  | string
-  | ParamKeyValuePair[]
-  | Record<string, string | string[]>
-  | URLSearchParams;
