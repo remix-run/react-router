@@ -27,7 +27,9 @@ export default function QueryParamsExample() {
 // A custom hook that builds on useLocation to parse
 // the query string for you.
 function useQuery() {
-  return new URLSearchParams(useLocation().search);
+  const { search } = useLocation();
+
+  return React.useMemo(() => new URLSearchParams(search), [search]);
 }
 
 function QueryParamsDemo() {
