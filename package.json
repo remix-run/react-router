@@ -44,7 +44,7 @@
     "warning": "^3.0.0"
   },
   "peerDependencies": {
-    "react": "^0.14.0 || ^15.0.0 || ^16.0.0"
+    "react": "^16.6.0"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",

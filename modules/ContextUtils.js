@@ -82,10 +82,6 @@ export function ContextSubscriber(name) {
   const unsubscribeKey = `${contextName}/unsubscribe`
 
   const config = {
-    contextTypes: {
-      [contextName]: contextProviderShape
-    },
-
     getInitialState() {
       if (!this.context[contextName]) {
         return {}

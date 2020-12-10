@@ -8,12 +8,18 @@ import getRouteParams from './getRouteParams'
 import { ContextProvider } from './ContextUtils'
 import { isReactChildren } from './RouteUtils'
 
+export const RouterContextMain = React.createContext({
+  router: null
+})
+
+RouterContextMain.displayName = 'RouterContextMain'
+
 /**
  * A <RouterContext> renders the component tree for a given router state
  * and sets the history object and the current location in context.
  */
-const RouterContext = createReactClass({
-  displayName: 'RouterContext',
+const RouterContextWrapper = createReactClass({
+  displayName: 'RouterContextWrapper',
 
   mixins: [ ContextProvider('router') ],
 
@@ -29,16 +35,6 @@ const RouterContext = createReactClass({
   getDefaultProps() {
     return {
       createElement: React.createElement
-    }
-  },
-
-  childContextTypes: {
-    router: object.isRequired
-  },
-
-  getChildContext() {
-    return {
-      router: this.props.router
     }
   },
 
@@ -102,9 +98,12 @@ const RouterContext = createReactClass({
       'The root route must render a single element'
     )
 
-    return element
+    return (
+      <RouterContextMain.Provider value={{ router: this.props.router }}>
+        <React.Fragment>{element}</React.Fragment>
+      </RouterContextMain.Provider>)
   }
 
 })
 
-export default RouterContext
+export default RouterContextWrapper

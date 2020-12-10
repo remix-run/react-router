@@ -2,11 +2,11 @@ import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from '../createMemoryHistory'
-import { routerShape } from '../PropTypes'
 import execSteps from './execSteps'
 import Router from '../Router'
 import Route from '../Route'
 import match from '../match'
+import { RouterContextMain } from '../RouterContext'
 
 describe('When a router enters a branch', function () {
   let
@@ -44,9 +44,7 @@ describe('When a router enters a branch', function () {
       }
     }
 
-    NewsFeed.contextTypes = {
-      router: routerShape.isRequired
-    }
+    NewsFeed.contextType = RouterContextMain
 
     class Inbox extends Component {
       render() {
@@ -73,9 +71,7 @@ describe('When a router enters a branch', function () {
       }
     }
 
-    User.contextTypes = {
-      router: routerShape.isRequired
-    }
+    User.contextType = RouterContextMain
 
     NewsFeedRoute = {
       path: 'news',
