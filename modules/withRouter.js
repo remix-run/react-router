@@ -2,7 +2,6 @@ import invariant from 'invariant'
 import React from 'react'
 import createReactClass from 'create-react-class'
 import hoistStatics from 'hoist-non-react-statics'
-import { ContextSubscriber } from './ContextUtils'
 import { routerShape } from './PropTypes'
 import { RouterContextMain } from './RouterContext'
 
@@ -15,8 +14,6 @@ export default function withRouter(WrappedComponent, options) {
 
   const WithRouter = createReactClass({
     displayName: 'WithRouter',
-
-    mixins: [ ContextSubscriber('router') ],
 
     statics: {
       contextType: RouterContextMain

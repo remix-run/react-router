@@ -5,7 +5,6 @@ import createReactClass from 'create-react-class'
 import { array, func, object } from 'prop-types'
 
 import getRouteParams from './getRouteParams'
-import { ContextProvider } from './ContextUtils'
 import { isReactChildren } from './RouteUtils'
 
 export const RouterContextMain = React.createContext({
@@ -20,8 +19,6 @@ RouterContextMain.displayName = 'RouterContextMain'
  */
 const RouterContextWrapper = createReactClass({
   displayName: 'RouterContextWrapper',
-
-  mixins: [ ContextProvider('router') ],
 
   propTypes: {
     router: object.isRequired,
