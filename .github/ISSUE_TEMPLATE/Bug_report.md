@@ -14,7 +14,7 @@ The issue tracker is meant for bug reports only. This isn't the best place for u
 - Check out the list of frequently asked questions: https://github.com/ReactTraining/react-router/blob/master/FAQ.md
 - Explore examples: https://reacttraining.com/react-router/web/example/basic
 - Look for/ask questions on Stack Overflow: https://stackoverflow.com/questions/ask?tags=react-router
-- Ask in chat: https://discord.gg/0ZcbPKXt5bYaNQ46
+- Ask in chat: https://discord.gg/6RyV8n8yyM
 
 Think you found a bug?
 ======================
