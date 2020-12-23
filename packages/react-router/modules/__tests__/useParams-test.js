@@ -1,3 +1,4 @@
+import { beforeEach, describe } from "jest-circus";
 import React from "react";
 import ReactDOM from "react-dom";
 import { MemoryRouter, Route, useParams, useRouteMatch } from "react-router";
@@ -117,6 +118,76 @@ describe("useParams", () => {
 
       expect(typeof params).toBe("object");
       expect(Object.keys(params)).toHaveLength(0);
+    });
+  });
+
+  describe("when the Route path is an array of routes order matters.", () => {
+    let params;
+    function HomePage() {
+      params = useParams();
+      return null;
+    }
+    beforeEach(() => (params = undefined));
+
+    test("the route param isn't matched going from root path to nested route path", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/id-not-found"]}>
+          <Route
+            path={["/", "/:id", "/nested/:id", "/nested/again/:id"]}
+            children={() => <HomePage />}
+          />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(typeof params).toBe("object");
+      expect(Object.keys(params)).toHaveLength(0);
+    });
+
+    test("the route param isn't matched going from root path to deep-nested route path", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/nested/nested-not-found"]}>
+          <Route
+            path={["/", "/:id", "/nested/:id", "/nested/again/:id"]}
+            children={() => <HomePage />}
+          />
+        </MemoryRouter>,
+        node
+      );
+      expect(typeof params).toBe("object");
+      expect(Object.keys(params)).toHaveLength(0);
+    });
+
+    test("the route param is matched going from nested route path to root path", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/id-found"]}>
+          <Route
+            path={["/nested/again/:id", "/nested/:id", "/:id", "/"]}
+            children={() => <HomePage />}
+          />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(typeof params).toBe("object");
+      expect(Object.keys(params)).toHaveLength(1);
+      expect(params.id).toBe("id-found");
+    });
+
+    test("the route param is matched going from deep-nested route path to root path", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/nested/nested-found"]}>
+          <Route
+            path={["/nested/again/:id", "/nested/:id", "/:id", "/"]}
+            children={() => <HomePage />}
+          />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(typeof params).toBe("object");
+      expect(Object.keys(params)).toHaveLength(1);
+      expect(params.id).toBe("nested-found");
     });
   });
 });
