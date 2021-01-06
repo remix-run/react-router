@@ -468,7 +468,7 @@ export function useParams(): Params {
  *
  * @see https://reactrouter.com/api/useRouterPath
  */
-export function useRoutesPath(): String {
+export function useRoutesPath(): string {
   return React.useContext(RouteContext).pathname;
 }
 
