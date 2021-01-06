@@ -58,7 +58,7 @@ export function useStaticContext(path) {
   if (__DEV__) {
     invariant(
       typeof useContext === "function",
-      "You must use React >= 16.8 in order to use useRouteMatch()"
+      "You must use React >= 16.8 in order to use useStaticContext()"
     );
   }
 
