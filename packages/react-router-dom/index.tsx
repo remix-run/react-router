@@ -28,6 +28,7 @@ import {
   createRoutesFromArray,
   createRoutesFromChildren,
   generatePath,
+  useRoutePathname,
   matchRoutes,
   matchPath,
   resolvePath
