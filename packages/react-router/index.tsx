@@ -466,9 +466,9 @@ export function useParams(): Params {
  /**
  * Returns the pathname element under current router context.
  *
- * @see https://reactrouter.com/api/useRouterPath
+ * @see https://reactrouter.com/api/useRoutePathname
  */
-export function useRoutesPath(): string {
+export function useRoutePathname(): string {
   return React.useContext(RouteContext).pathname;
 }
 
