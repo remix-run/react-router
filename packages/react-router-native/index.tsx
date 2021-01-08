@@ -26,6 +26,7 @@ import {
   useInRouterContext,
   useLocation,
   useMatch,
+  useRoutePathname,
   useNavigate,
   useOutlet,
   useParams,
