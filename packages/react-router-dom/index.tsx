@@ -74,6 +74,7 @@ export {
   useLocation,
   useMatch,
   useNavigate,
+  useRoutePathname,
   useOutlet,
   useParams,
   useResolvedPath,
