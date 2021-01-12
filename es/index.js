@@ -24,7 +24,7 @@ export { _Route as Route };
 export { createRoutes } from './RouteUtils';
 import _RouterContext from './RouterContext';
 export { _RouterContext as RouterContext };
-
+export { RouterContextMain } from './RouterContext';
 export { locationShape, routerShape } from './PropTypes';
 import _match from './match';
 export { _match as match };

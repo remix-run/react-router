@@ -79,7 +79,7 @@ export function ContextProvider(name) {
 }
 
 export function ContextSubscriber(name) {
-  var _contextTypes, _config2;
+  var _config2;
 
   var contextName = makeContextName(name);
   var lastRenderedEventIndexKey = contextName + '/lastRenderedEventIndex';
@@ -87,8 +87,6 @@ export function ContextSubscriber(name) {
   var unsubscribeKey = contextName + '/unsubscribe';
 
   var config = (_config2 = {
-    contextTypes: (_contextTypes = {}, _contextTypes[contextName] = contextProviderShape, _contextTypes),
-
     getInitialState: function getInitialState() {
       var _ref2;
 
