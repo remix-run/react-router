@@ -30,6 +30,25 @@ describe('useSearchParams', () => {
     );
   }
 
+  function SearchUpdaterPage({ getId }) {
+    let [searchParams, setSearchParams] = useSearchParams();
+    let query = searchParams.get('q');
+    let id = searchParams.get('id');
+
+    React.useEffect(() => {
+      setSearchParams(prev => {
+        prev.set('id', getId());
+        return prev;
+      });
+    }, [setSearchParams, getId]);
+
+    return (
+      <div>
+        The current query is "{query}" with id "{id}".
+      </div>
+    );
+  }
+
   let node;
   beforeEach(() => {
     node = document.createElement('div');
@@ -69,5 +88,28 @@ describe('useSearchParams', () => {
     });
 
     expect(node.innerHTML).toMatch(/The current query is "Ryan Florence"/);
+  });
+
+  it('append to search string using setSearchParams updater', () => {
+    const getId = jest.fn(() => '1');
+
+    act(() => {
+      render(
+        <Router initialEntries={['/search?q=Michael+Jackson']}>
+          <Routes>
+            <Route
+              path="search"
+              element={<SearchUpdaterPage getId={getId} />}
+            />
+          </Routes>
+        </Router>,
+        node
+      );
+    });
+
+    expect(node.innerHTML).toMatch(
+      /The current query is "Michael Jackson" with id "1"/
+    );
+    expect(getId).toHaveBeenCalledTimes(1);
   });
 });
