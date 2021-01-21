@@ -144,8 +144,20 @@ describe("matchPath", () => {
         exact: true,
         strict: false
       });
+      const result3 = matchPath("/one/two", {
+        path: "/one/two/",
+        exact: false,
+        strict: false
+      });
+      const result4 = matchPath("/one/two", {
+        path: "/one/two/",
+        exact: true,
+        strict: false
+      });
 
       expect(result1).toBe(result2);
+      expect(result1 !== result3).toBe(true);
+      expect(result1 !== result4).toBe(true);
     });
   });
 });
