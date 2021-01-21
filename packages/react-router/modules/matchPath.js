@@ -25,6 +25,9 @@ function compilePath(path, options) {
 /**
  * Public API for matching a URL pathname to a path.
  */
+
+let matchPathCache = {};
+
 function matchPath(pathname, options = {}) {
   if (typeof options === "string" || Array.isArray(options)) {
     options = { path: options };
@@ -32,9 +35,13 @@ function matchPath(pathname, options = {}) {
 
   const { path, exact = false, strict = false, sensitive = false } = options;
 
+  const cacheKey = `${pathname}${path}${exact}${strict}${sensitive}`;
+  if (matchPathCache[cacheKey]) return matchPathCache[cacheKey];
+  matchPathCache = {}; // cache only last result
+
   const paths = [].concat(path);
 
-  return paths.reduce((matched, path) => {
+  const result = paths.reduce((matched, path) => {
     if (!path && path !== "") return null;
     if (matched) return matched;
 
@@ -62,6 +69,8 @@ function matchPath(pathname, options = {}) {
       }, {})
     };
   }, null);
+  matchPathCache[cacheKey] = result;
+  return result;
 }
 
 export default matchPath;

@@ -132,5 +132,20 @@ describe("matchPath", () => {
       expect(!!trueFalse).toBe(true);
       expect(!!falseTrue).toBe(false);
     });
+
+    it("memoize last result of matchPath", () => {
+      const result1 = matchPath("/one/two", {
+        path: "/one/two/",
+        exact: true,
+        strict: false
+      });
+      const result2 = matchPath("/one/two", {
+        path: "/one/two/",
+        exact: true,
+        strict: false
+      });
+
+      expect(result1).toBe(result2);
+    });
   });
 });
