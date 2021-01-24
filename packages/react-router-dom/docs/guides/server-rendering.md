@@ -17,7 +17,7 @@ Rendering on the server is a bit different since it's all stateless. The basic i
 </StaticRouter>
 ```
 
-When you render a [`<Redirect>`][redirect] on the client, the browser history changes state and we get the new screen. In a static server environment we can't change the app state. Instead, we use the `context` prop to find out what the result of rendering was. If we find a `context.url`, then we know the app redirected. This allows us to send a proper redirect from the server.
+When you render a [`<Redirect>`][redirect] on the client, the browser history changes state and we get the new screen. In a static server environment, we can't change the app state. Instead, we use the `context` prop to find out what the result of rendering was. If we find a `context.url`, then we know the app is redirected. This allows us to send a proper redirect from the server.
 
 ```jsx
 const context = {};
@@ -232,12 +232,12 @@ routes.some(route => {
 });
 
 Promise.all(promises).then(data => {
-  // do something w/ the data so the client
+  // do something with the data so the client
   // can access it then render the app
 });
 ```
 
-And finally, the client will need to pick up the data. Again, we aren't in the business of prescribing a data loading pattern for your app, but these are the touch points you'll need to implement.
+And finally, the client will need to pick up the data. Again, we aren't in the business of prescribing a data loading pattern for your app, but these are the touchpoints you'll need to implement.
 
 You might be interested in our [React Router Config][rrc] package to assist with data loading and server rendering with static route configs.
 
