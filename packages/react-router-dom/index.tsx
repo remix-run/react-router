@@ -319,16 +319,9 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
 
   let location = useLocation();
-  let locationRef = React.useRef<typeof location>(location);
-  locationRef.current = location;
 
-  let currentSearchRef = React.useRef<string | null>(null);
-  React.useEffect(() => {
-    currentSearchRef.current = null;
-  }, [location]);
-
-  let searchParams = React.useMemo(() => {
-    let searchParams = createSearchParams(location.search);
+  let createParams = React.useCallback((search: string) => {
+    let searchParams = createSearchParams(search);
 
     for (let key of defaultSearchParamsRef.current.keys()) {
       if (!searchParams.has(key)) {
@@ -339,7 +332,17 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
     }
 
     return searchParams;
-  }, [location.search]);
+  }, []);
+
+  let [params, setParams] = React.useState<URLSearchParams>(() =>
+    createParams(location.search)
+  );
+
+  let currentLocationSearchRef = React.useRef<string>(location.search);
+  React.useEffect(() => {
+    setParams(createParams(location.search));
+    currentLocationSearchRef.current = location.search;
+  }, [location, createParams]);
 
   let navigate = useNavigate();
   let setSearchParams = React.useCallback(
@@ -349,21 +352,20 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
         | ((params: URLSearchParams) => URLSearchParamsInit),
       navigateOptions?: { replace?: boolean; state?: State }
     ) => {
-      const location = locationRef.current;
-
-      const currentSearch = currentSearchRef.current ?? location.search;
       const next =
         typeof nextInit === 'function'
-          ? createSearchParams(nextInit(createSearchParams(currentSearch)))
+          ? createSearchParams(
+              nextInit(createSearchParams(currentLocationSearchRef.current))
+            )
           : createSearchParams(nextInit);
-      currentSearchRef.current = next.toString();
+      currentLocationSearchRef.current = next.toString();
 
       navigate('?' + next, navigateOptions);
     },
     [navigate]
   );
 
-  return [searchParams, setSearchParams] as const;
+  return [params, setSearchParams] as const;
 }
 
 export type ParamKeyValuePair = [string, string];
