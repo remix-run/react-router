@@ -91,8 +91,10 @@ if (__DEV__) {
     exact: PropTypes.bool,
     location: PropTypes.object,
     path: PropTypes.oneOfType([
+      PropTypes.func,
       PropTypes.string,
-      PropTypes.arrayOf(PropTypes.string)
+      PropTypes.arrayOf(PropTypes.string),
+      PropTypes.arrayOf(PropTypes.func)
     ]),
     render: PropTypes.func,
     sensitive: PropTypes.bool,
