@@ -322,6 +322,11 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   let locationRef = React.useRef<typeof location>(location);
   locationRef.current = location;
 
+  let currentSearchRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    currentSearchRef.current = null;
+  }, [location]);
+
   let searchParams = React.useMemo(() => {
     let searchParams = createSearchParams(location.search);
 
@@ -337,7 +342,6 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   }, [location.search]);
 
   let navigate = useNavigate();
-
   let setSearchParams = React.useCallback(
     (
       nextInit:
@@ -347,10 +351,12 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
     ) => {
       const location = locationRef.current;
 
+      const currentSearch = currentSearchRef.current ?? location.search;
       const next =
         typeof nextInit === 'function'
-          ? createSearchParams(nextInit(createSearchParams(location.search)))
+          ? createSearchParams(nextInit(createSearchParams(currentSearch)))
           : createSearchParams(nextInit);
+      currentSearchRef.current = next.toString();
 
       navigate('?' + next, navigateOptions);
     },
