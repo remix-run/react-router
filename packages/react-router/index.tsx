@@ -347,7 +347,7 @@ export function useInRouterContext(): boolean {
  *
  * @see https://reactrouter.com/api/useLocation
  */
-export function useLocation<S extends State = State>(): Location<S> {
+export function useLocation<S extends State = State>(): Location<S | null> {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -355,7 +355,7 @@ export function useLocation<S extends State = State>(): Location<S> {
     `useLocation() may be used only in the context of a <Router> component.`
   );
 
-  return React.useContext(LocationContext).location as Location<S>;
+  return React.useContext(LocationContext).location as Location<S | null>;
 }
 
 /**
