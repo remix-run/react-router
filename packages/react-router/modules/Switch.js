@@ -18,25 +18,19 @@ class Switch extends React.Component {
 
           const location = this.props.location || context.location;
 
-          let element, match;
+          let match;
 
-          // We use React.Children.forEach instead of React.Children.toArray().find()
-          // here because toArray adds keys to all child elements and we do not want
-          // to trigger an unmount/remount for two <Route>s that render the same
-          // component at different URLs.
-          React.Children.forEach(this.props.children, child => {
-            if (match == null && React.isValidElement(child)) {
-              element = child;
+          const element = this.props.children.find(child => {
+            const path = child.props.path || child.props.from;
 
-              const path = child.props.path || child.props.from;
+            if (!React.isValidElement(child)) return false;
+            if (!path) return true;
 
-              match = path
-                ? matchPath(location.pathname, { ...child.props, path })
-                : context.match;
-            }
+            match = matchPath(location.pathname, { ...child.props, path });
+            return match;
           });
 
-          return match
+          return element
             ? React.cloneElement(element, { location, computedMatch: match })
             : null;
         }}
