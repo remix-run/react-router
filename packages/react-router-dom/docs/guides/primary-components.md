@@ -99,7 +99,7 @@ ReactDOM.render(
 
 One important thing to note is that a `<Route path>` matches the **beginning** of the URL, not the whole thing. So a `<Route path="/">` will **always** match the URL. Because of this, we typically put this `<Route>` last in our `<Switch>`. Another possible solution is to use `<Route exact path="/">` which **does** match the entire URL.
 
-Note: Although React Router does support rendering `<Route>` elements outside of a `<Switch>`, as of version 5.1 we recommend you use [the `useRouteMatch` hook](#TODO) instead. Additionally, we do not recommend you render a `<Route>` without a `path` and instead suggest you use [a hook](#TODO) to get access to whatever variables you need.
+Note: Although React Router does support rendering `<Route>` elements outside of a `<Switch>`, as of version 5.1 we recommend you use [the `useRouteMatch` hook](/packages/react-router/docs/api/hooks.md#useroutematch) instead. Additionally, we do not recommend you render a `<Route>` without a `path` and instead suggest you use [a hook](/packages/react-router/docs/api/hooks.md) to get access to whatever variables you need.
 
 ## Navigation (or Route Changers)
 
