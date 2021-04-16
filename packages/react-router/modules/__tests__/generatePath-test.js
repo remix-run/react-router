@@ -65,4 +65,16 @@ describe("generatePath", () => {
       );
     });
   });
+
+  describe("passes through generator options", () => {
+    it("passes provided encode to path-to-regexp generator", () => {
+      const pattern = "/view/:id";
+      const params = { id: "123#шеллы" };
+
+      const generated = generatePath(pattern, params, {
+        encode: encodeURIComponent
+      });
+      expect(generated).toBe("/view/123%23%D1%88%D0%B5%D0%BB%D0%BB%D1%8B");
+    });
+  });
 });

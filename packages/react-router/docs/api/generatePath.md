@@ -24,7 +24,15 @@ The second argument is an object with corresponding params for the pattern to us
 
 If provided params and path don't match, an error will be thrown:
 
+## compileOptions: object
+
+The third argument is an object that will be passed to the `path-to-regexp` [compile function](https://github.com/pillarjs/path-to-regexp#compile-reverse-path-to-regexp).
+
 ```js
-generatePath("/user/:id/:entity(posts|comments)", { id: 1 });
-// TypeError: Expected "entity" to be defined
+generatePath(
+  "/user/:id",
+  { id: `123#test?` },
+  { encode: encodeURIComponent }
+);
+// Will return "/user/123%23test%3f"
 ```
