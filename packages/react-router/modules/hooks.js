@@ -5,7 +5,7 @@ import RouterContext from "./RouterContext.js";
 import HistoryContext from "./HistoryContext.js";
 import matchPath from "./matchPath.js";
 
-const useContext = React.useContext;
+const { useContext, useMemo } = React;
 
 export function useHistory() {
   if (__DEV__) {
@@ -44,12 +44,17 @@ export function useParams() {
 export function useRouteMatch(path) {
   if (__DEV__) {
     invariant(
-      typeof useContext === "function",
+      typeof useContext === "function" && typeof useMemo === "function",
       "You must use React >= 16.8 in order to use useRouteMatch()"
     );
   }
 
   const location = useLocation();
   const match = useContext(RouterContext).match;
-  return path ? matchPath(location.pathname, path) : match;
+  const pathMatch = useMemo(
+    () => (path ? matchPath(location.pathname, path) : null),
+    [location.pathname, path]
+  );
+
+  return path ? pathMatch : match;
 }
