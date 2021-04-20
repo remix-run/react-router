@@ -29,6 +29,12 @@ export function useLocation() {
   return useContext(RouterContext).location;
 }
 
+export function useSearchParams() {
+  const location = useLocation();
+
+  return Object.fromEntries(new URLSearchParams(location.search));
+}
+
 export function useParams() {
   if (__DEV__) {
     invariant(
