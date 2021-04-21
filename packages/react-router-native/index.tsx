@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import {
   Alert,
   BackHandler,
@@ -70,6 +69,8 @@ export {
 // COMPONENTS
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface NativeRouterProps extends MemoryRouterProps {}
+
 /**
  * A <Router> that runs on React Native.
  */
@@ -77,11 +78,11 @@ export function NativeRouter(props: NativeRouterProps) {
   return <MemoryRouter {...props} />;
 }
 
-export interface NativeRouterProps extends MemoryRouterProps {}
-
-if (__DEV__) {
-  NativeRouter.displayName = 'NativeRouter';
-  NativeRouter.propTypes = MemoryRouter.propTypes;
+export interface LinkProps extends TouchableHighlightProps {
+  onPress?: (event: GestureResponderEvent) => void;
+  replace?: boolean;
+  state?: State;
+  to: To;
 }
 
 /**
@@ -106,21 +107,9 @@ export function Link({
   return <TouchableHighlight {...rest} onPress={handlePress} />;
 }
 
-export interface LinkProps extends TouchableHighlightProps {
-  onPress?: (event: GestureResponderEvent) => void;
-  replace?: boolean;
-  state?: State;
-  to: To;
-}
-
-if (__DEV__) {
-  Link.displayName = 'Link';
-  Link.propTypes = {
-    onPress: PropTypes.func,
-    replace: PropTypes.bool,
-    state: PropTypes.object,
-    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
-  };
+export interface PromptProps {
+  message: string;
+  when?: boolean;
 }
 
 /**
@@ -133,19 +122,6 @@ if (__DEV__) {
 export function Prompt({ message, when }: PromptProps) {
   usePrompt(message, when);
   return null;
-}
-
-export interface PromptProps {
-  message: string;
-  when?: boolean;
-}
-
-if (__DEV__) {
-  Prompt.displayName = 'Prompt';
-  Prompt.propTypes = {
-    message: PropTypes.string,
-    when: PropTypes.bool
-  };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,6 +258,14 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   return [searchParams, setSearchParams];
 }
 
+export type ParamKeyValuePair = [string, string];
+
+export type URLSearchParamsInit =
+  | string
+  | ParamKeyValuePair[]
+  | Record<string, string | string[]>
+  | URLSearchParams;
+
 /**
  * Creates a URLSearchParams object using the given initializer.
  *
@@ -319,10 +303,3 @@ export function createSearchParams(
         }, [] as ParamKeyValuePair[])
   );
 }
-
-export type ParamKeyValuePair = [string, string];
-export type URLSearchParamsInit =
-  | string
-  | ParamKeyValuePair[]
-  | Record<string, string | string[]>
-  | URLSearchParams;

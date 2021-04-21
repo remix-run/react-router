@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import {
   Action,
   Blocker,
@@ -12,7 +11,6 @@ import {
   State,
   To,
   Transition,
-  Update,
   createMemoryHistory,
   parsePath
 } from 'history';
@@ -43,11 +41,7 @@ function warning(cond: boolean, message: string): void {
 }
 
 const alreadyWarned: Record<string, boolean> = {};
-function warningOnce(
-  key: string,
-  cond: boolean,
-  message: string
-) {
+function warningOnce(key: string, cond: boolean, message: string) {
   if (!cond && !alreadyWarned[key]) {
     alreadyWarned[key] = true;
     warning(false, message);
@@ -109,6 +103,12 @@ if (__DEV__) {
 // COMPONENTS
 ///////////////////////////////////////////////////////////////////////////////
 
+export interface MemoryRouterProps {
+  children?: React.ReactNode;
+  initialEntries?: InitialEntry[];
+  initialIndex?: number;
+}
+
 /**
  * A <Router> that stores all entries in memory.
  *
@@ -125,15 +125,12 @@ export function MemoryRouter({
   }
 
   let history = historyRef.current;
-  let [state, dispatch] = React.useReducer(
-    (_: Update, action: Update) => action,
-    {
-      action: history.action,
-      location: history.location
-    }
-  );
+  let [state, setState] = React.useState({
+    action: history.action,
+    location: history.location
+  });
 
-  React.useLayoutEffect(() => history.listen(dispatch), [history]);
+  React.useLayoutEffect(() => history.listen(setState), [history]);
 
   return (
     <Router
@@ -145,30 +142,10 @@ export function MemoryRouter({
   );
 }
 
-export interface MemoryRouterProps {
-  children?: React.ReactNode;
-  initialEntries?: InitialEntry[];
-  initialIndex?: number;
-}
-
-if (__DEV__) {
-  MemoryRouter.displayName = 'MemoryRouter';
-  MemoryRouter.propTypes = {
-    children: PropTypes.node,
-    initialEntries: PropTypes.arrayOf(
-      PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.shape({
-          pathname: PropTypes.string,
-          search: PropTypes.string,
-          hash: PropTypes.string,
-          state: PropTypes.object,
-          key: PropTypes.string
-        })
-      ])
-    ),
-    initialIndex: PropTypes.number
-  };
+export interface NavigateProps {
+  to: To;
+  replace?: boolean;
+  state?: State;
 }
 
 /**
@@ -203,42 +180,22 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
   return null;
 }
 
-export interface NavigateProps {
-  to: To;
-  replace?: boolean;
-  state?: State;
-}
-
-if (__DEV__) {
-  Navigate.displayName = 'Navigate';
-  Navigate.propTypes = {
-    to: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.shape({
-        pathname: PropTypes.string,
-        search: PropTypes.string,
-        hash: PropTypes.string
-      })
-    ]).isRequired,
-    replace: PropTypes.bool,
-    state: PropTypes.object
-  };
-}
+export interface OutletProps {}
 
 /**
  * Renders the child route's element, if there is one.
  *
  * @see https://reactrouter.com/api/Outlet
  */
-export function Outlet(): React.ReactElement | null {
+export function Outlet(_props: OutletProps): React.ReactElement | null {
   return useOutlet();
 }
 
-export interface OutletProps {}
-
-if (__DEV__) {
-  Outlet.displayName = 'Outlet';
-  Outlet.propTypes = {};
+export interface RouteProps {
+  caseSensitive?: boolean;
+  children?: React.ReactNode;
+  element?: React.ReactElement | null;
+  path?: string;
 }
 
 /**
@@ -252,21 +209,12 @@ export function Route({
   return element;
 }
 
-export interface RouteProps {
-  caseSensitive?: boolean;
+export interface RouterProps {
+  action?: Action;
   children?: React.ReactNode;
-  element?: React.ReactElement | null;
-  path?: string;
-}
-
-if (__DEV__) {
-  Route.displayName = 'Route';
-  Route.propTypes = {
-    caseSensitive: PropTypes.bool,
-    children: PropTypes.node,
-    element: PropTypes.element,
-    path: PropTypes.string
-  };
+  location: Location;
+  navigator: Navigator;
+  static?: boolean;
 }
 
 /**
@@ -299,29 +247,9 @@ export function Router({
   );
 }
 
-export interface RouterProps {
-  action?: Action;
+export interface RoutesProps {
+  basename?: string;
   children?: React.ReactNode;
-  location: Location;
-  navigator: Navigator;
-  static?: boolean;
-}
-
-if (__DEV__) {
-  Router.displayName = 'Router';
-  Router.propTypes = {
-    children: PropTypes.node,
-    action: PropTypes.oneOf(['POP', 'PUSH', 'REPLACE']),
-    location: PropTypes.object.isRequired,
-    navigator: PropTypes.shape({
-      createHref: PropTypes.func.isRequired,
-      push: PropTypes.func.isRequired,
-      replace: PropTypes.func.isRequired,
-      go: PropTypes.func.isRequired,
-      block: PropTypes.func.isRequired
-    }).isRequired,
-    static: PropTypes.bool
-  };
 }
 
 /**
@@ -336,19 +264,6 @@ export function Routes({
 }: RoutesProps): React.ReactElement | null {
   let routes = createRoutesFromChildren(children);
   return useRoutes_(routes, basename);
-}
-
-export interface RoutesProps {
-  basename?: string;
-  children?: React.ReactNode;
-}
-
-if (__DEV__) {
-  Routes.displayName = 'Routes';
-  Routes.propTypes = {
-    basename: PropTypes.string,
-    children: PropTypes.node
-  };
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -470,8 +385,13 @@ type PathPattern =
  * The interface for the navigate() function returned from useNavigate().
  */
 export interface NavigateFunction {
-  (to: To, options?: { replace?: boolean; state?: State }): void;
+  (to: To, options?: NavigateOptions): void;
   (delta: number): void;
+}
+
+export interface NavigateOptions {
+  replace?: boolean;
+  state?: State;
 }
 
 /**
@@ -597,12 +517,13 @@ function useRoutes_(
     warningOnce(
       parentPathname,
       !parentRoute || parentRoute.path.endsWith('*'),
-      `You rendered descendant <Routes> (or called \`useRoutes\`) at "${parentPathname}"` +
-        ` (under <Route path="${parentPath}">) but the parent route path has no trailing "*".` +
-        ` This means if you navigate deeper, the parent won't match anymore and therefore` +
-        ` the child routes will never render.` +
-        `\n\n` +
-        `Please change the parent <Route path="${parentPath}"> to <Route path="${parentPath}/*">.`
+      `You rendered descendant <Routes> (or called \`useRoutes\`) at ` +
+        `"${parentPathname}" (under <Route path="${parentPath}">) but the ` +
+        `parent route path has no trailing "*". This means if you navigate ` +
+        `deeper, the parent won't match anymore and therefore the child ` +
+        `routes will never render.\n\n` +
+        `Please change the parent <Route path="${parentPath}"> to <Route ` +
+        `path="${parentPath}/*">.`
     );
   }
 

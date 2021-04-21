@@ -1,5 +1,4 @@
 import * as React from 'react';
-import * as PropTypes from 'prop-types';
 import {
   Action,
   Location,
@@ -9,6 +8,11 @@ import {
   parsePath
 } from 'history';
 import { Router } from 'react-router-dom';
+
+export interface StaticRouterProps {
+  children?: React.ReactNode;
+  location?: string | PartialLocation;
+}
 
 /**
  * A <Router> that may not transition to any other location. This is useful
@@ -86,26 +90,4 @@ export function StaticRouter({
       static={true}
     />
   );
-}
-
-export interface StaticRouterProps {
-  children?: React.ReactNode;
-  location?: string | PartialLocation;
-}
-
-if (__DEV__) {
-  StaticRouter.displayName = 'StaticRouter';
-  StaticRouter.propTypes = {
-    children: PropTypes.node,
-    location: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.shape({
-        pathname: PropTypes.string,
-        search: PropTypes.string,
-        hash: PropTypes.string,
-        state: PropTypes.object,
-        key: PropTypes.string
-      })
-    ])
-  };
 }
