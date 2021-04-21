@@ -1,0 +1,17 @@
+{
+  "exclude": ["__tests__/**/*"],
+  "compilerOptions": {
+    "lib": ["ES2019"],
+    "target": "ES2019",
+
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+
+    "declaration": true,
+    "emitDeclarationOnly": true,
+
+    "outDir": "../../build/node_modules/@remix-run/serve",
+    "rootDir": "."
+  }
+}
