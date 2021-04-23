@@ -7,13 +7,14 @@
 import * as path from "path";
 import signalExit from "signal-exit";
 import prettyMs from "pretty-ms";
+import WebSocket from "ws";
+
 import { BuildMode, isBuildMode, BuildTarget } from "../build";
 import * as compiler from "../compiler";
 import * as compiler2 from "../compiler2";
-import { readConfig } from "../config";
 import type { RemixConfig } from "../config";
+import { readConfig } from "../config";
 import { startDevServer } from "../server";
-import WebSocket from "ws";
 
 /**
  * Runs the build for a Remix app with the old rollup compiler
@@ -151,12 +152,14 @@ export function run2(remixRoot: string): Promise<void> {
  * Runs the built-in remix app server and dev asset server
  */
 export async function run3(remixRoot: string) {
-  if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
+  // TODO: Warn about the need to install @remix-run/serve if it isn't there?
+  let { createApp } = require("@remix-run/serve");
+
   let config = await readConfig(remixRoot);
-  let getAppServer = require("@remix-run/serve/app");
+  let mode = process.env.NODE_ENV || "development";
   let port = process.env.PORT || 3000;
 
-  getAppServer(config.serverBuildDirectory).listen(port, () => {
+  createApp(config.serverBuildDirectory, mode).listen(port, () => {
     console.log(`Remix App Server started at http://localhost:${port}`);
   });
 

@@ -1,18 +1,25 @@
-import path from "path";
-import getServer from "./app";
+import express from "express";
+import compression from "compression";
+import morgan from "morgan";
+import { createRequestHandler } from "@remix-run/express";
 
-let port = process.env.PORT || 3000;
+export function createApp(buildPath: string, mode = "production") {
+  let app = express();
 
-let buildPath = process.argv[2];
-if (!buildPath) {
-  console.log(
-    `Please pass in the directory of your Remix server build directory:
+  app.use(compression());
+  app.use(morgan("tiny"));
+  app.use(express.static("public", { immutable: true, maxAge: "1y" }));
 
-    remix-serve ./build`
+  app.all(
+    "*",
+    mode === "production"
+      ? createRequestHandler({ build: require(buildPath), mode })
+      : (req, res, next) => {
+          // require cache is purged in @remix-run/dev where the file watcher is
+          let build = require(buildPath);
+          return createRequestHandler({ build, mode })(req, res, next);
+        }
   );
-} else {
-  let resolovedBuildPath = path.resolve(process.cwd(), buildPath);
-  getServer(resolovedBuildPath).listen(port, () => {
-    console.log(`Remix App Server started on port ${port}`);
-  });
+
+  return app;
 }

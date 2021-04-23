@@ -4,19 +4,17 @@
   "version": "0.16.3",
   "repository": "https://github.com/remix-run/remix",
   "bin": {
-    "remix-serve": "index.js"
+    "remix-serve": "cli.js"
   },
   "dependencies": {
     "@remix-run/express": "0.16.3",
+    "compression": "^1.7.4",
     "express": "^4.17.1",
-    "morgan": "^1.10.0",
-    "compression": "^1.7.4"
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.9",
-    "@types/supertest": "^2.0.10",
-    "@types/morgan": "^1.9.2",
     "@types/compression": "^1.7.0",
-    "supertest": "^6.0.1"
+    "@types/express": "^4.17.9",
+    "@types/morgan": "^1.9.2"
   }
 }
