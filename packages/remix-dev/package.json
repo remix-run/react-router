@@ -34,6 +34,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "sharp": "^0.27.1",
     "signal-exit": "^3.0.3",
+    "tmp": "^0.2.1",
     "ws": "^7.4.5"
   },
   "devDependencies": {
@@ -43,6 +44,7 @@
     "@types/morgan": "^1.9.2",
     "@types/sharp": "^0.27.1",
     "@types/signal-exit": "^3.0.0",
+    "@types/tmp": "^0.2.0",
     "@types/ws": "^7.4.1",
     "semver": "^7.3.4"
   }
