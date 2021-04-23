@@ -11,8 +11,7 @@
     "history": "^5.0.0",
     "jsesc": "^3.0.1",
     "node-fetch": "^2.6.1",
-    "react-router-dom": "^6.0.0-beta.0",
-    "tmp": "^0.2.1"
+    "react-router-dom": "^6.0.0-beta.0"
   },
   "peerDependencies": {
     "react": ">=16.8",
@@ -20,8 +19,7 @@
   },
   "devDependencies": {
     "@types/cookie-signature": "^1.0.3",
-    "@types/jsesc": "^2.5.1",
-    "@types/tmp": "^0.2.0"
+    "@types/jsesc": "^2.5.1"
   },
   "sideEffects": false
 }
