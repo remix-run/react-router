@@ -1,7 +1,7 @@
 {
   "name": "@remix-run/dev",
   "description": "Dev tools and CLI for Remix",
-  "version": "0.16.3",
+  "version": "0.16.4",
   "repository": "https://github.com/remix-run/remix",
   "bin": {
     "remix": "cli.js"
