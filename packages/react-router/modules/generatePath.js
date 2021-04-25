@@ -7,6 +7,7 @@ let cacheCount = 0;
 function compilePath(path) {
   if (cache[path]) return cache[path];
 
+  // The compile function will return a function for transforming parameters into a valid path:
   const generator = pathToRegexp.compile(path);
 
   if (cacheCount < cacheLimit) {
@@ -14,6 +15,7 @@ function compilePath(path) {
     cacheCount++;
   }
 
+  // 返回 url 路径
   return generator;
 }
 
@@ -21,7 +23,9 @@ function compilePath(path) {
  * Public API for generating a URL pathname from a path and parameters.
  */
 function generatePath(path = "/", params = {}) {
-  return path === "/" ? path : compilePath(path)(params, { pretty: true });
+  return path === "/" ? path : compilePath(path)(params, {
+    pretty: true
+  });
 }
 
 export default generatePath;

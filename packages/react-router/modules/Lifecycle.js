@@ -2,6 +2,7 @@ import React from "react";
 
 class Lifecycle extends React.Component {
   componentDidMount() {
+    // this 调用，入参 this
     if (this.props.onMount) this.props.onMount.call(this, this);
   }
 
