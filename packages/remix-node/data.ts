@@ -4,7 +4,17 @@ import type { ServerBuild } from "./build";
 import type { Request } from "./fetch";
 import { Response } from "./fetch";
 import { json } from "./responses";
-import type { AppLoadContext } from "./routes";
+
+/**
+ * An object of arbitrary for route loaders and actions provided by the
+ * server's `getLoadContext()` function.
+ */
+export type AppLoadContext = any;
+
+/**
+ * Data for a route that was returned from a `loader()`.
+ */
+export type AppData = any;
 
 export async function loadRouteData(
   build: ServerBuild,
@@ -72,4 +82,20 @@ function isResponse(value: any): value is Response {
     typeof value.headers === "object" &&
     typeof value.body !== "undefined"
   );
+}
+
+export function extractData(response: Response): Promise<AppData> {
+  let contentType = response.headers.get("Content-Type");
+
+  if (contentType && /\bapplication\/json\b/.test(contentType)) {
+    return response.json();
+  }
+
+  // What other data types do we need to handle here? What other kinds of
+  // responses are people going to be returning from their loaders?
+  // - application/x-www-form-urlencoded ?
+  // - multipart/form-data ?
+  // - binary (audio/video) ?
+
+  return response.text();
 }

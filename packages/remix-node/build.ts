@@ -2,6 +2,9 @@ import type { EntryContext, AssetsManifest } from "./entry";
 import type { Headers, Request, Response } from "./fetch";
 import type { ServerRouteManifest } from "./routes";
 
+/**
+ * The output of the compiler for the server build.
+ */
 export interface ServerBuild {
   entry: {
     module: ServerEntryModule;

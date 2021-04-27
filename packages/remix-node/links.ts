@@ -1,5 +1,5 @@
 /**
- * Remix Link descriptor, an object representation of the HTML `<link>` element.
+ * Represents a `<link>` element.
  *
  * WHATWG Specification: https://html.spec.whatwg.org/multipage/semantics.html#the-link-element
  */

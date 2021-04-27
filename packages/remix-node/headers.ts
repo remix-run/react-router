@@ -1,11 +1,12 @@
 import type { ServerBuild } from "./build";
 import type { Response } from "./fetch";
 import { Headers } from "./fetch";
-import type { ServerRouteMatch } from "./match";
+import type { ServerRoute } from "./routes";
+import type { RouteMatch } from "./routeMatching";
 
 export function getDocumentHeaders(
   build: ServerBuild,
-  matches: ServerRouteMatch[],
+  matches: RouteMatch<ServerRoute>[],
   routeLoaderResponses: Response[]
 ): Headers {
   return matches.reduce((parentHeaders, match, index) => {

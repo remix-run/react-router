@@ -1,15 +1,21 @@
+import type { AppLoadContext } from "./data";
 import { loadRouteData, callRouteAction } from "./data";
+import type { ComponentDidCatchEmulator } from "./errors";
+import { serializeError } from "./errors";
 import type { ServerBuild } from "./build";
-import type { ComponentDidCatchEmulator, EntryContext } from "./entry";
-import * as entry from "./entry";
+import type { EntryContext } from "./entry";
+import { createEntryMatches, createEntryRouteModules } from "./entry";
 import type { Request } from "./fetch";
 import { Response } from "./fetch";
 import { getDocumentHeaders } from "./headers";
-import type { ServerRouteMatch } from "./match";
-import { createRoutes, matchRoutes } from "./match";
+import type { RouteMatch } from "./routeMatching";
+import { matchServerRoutes } from "./routeMatching";
 import { ServerMode, isServerMode } from "./mode";
-import type { AppLoadContext, ServerRoute } from "./routes";
+import type { ServerRoute } from "./routes";
+import { createRoutes } from "./routes";
+import { createRouteData } from "./routeData";
 import { json } from "./responses";
+import { createServerHandoffString } from "./serverHandoff";
 
 /**
  * The main request handler for a Remix server. This handler runs in the context
@@ -44,12 +50,12 @@ async function handleDataRequest(
 ): Promise<Response> {
   let url = new URL(request.url);
 
-  let matches = matchRoutes(routes, url.pathname);
+  let matches = matchServerRoutes(routes, url.pathname);
   if (!matches) {
     return jsonError(`No route matches URL "${url.pathname}"`, 404);
   }
 
-  let routeMatch: ServerRouteMatch;
+  let routeMatch: RouteMatch<ServerRoute>;
   if (isActionRequest(request)) {
     routeMatch = matches[matches.length - 1];
   } else {
@@ -87,7 +93,7 @@ async function handleDataRequest(
           routeMatch.params
         );
   } catch (error) {
-    return json(entry.serializeError(error), {
+    return json(serializeError(error), {
       status: 500,
       headers: {
         "X-Remix-Error": "unfortunately, yes"
@@ -123,7 +129,7 @@ async function handleDocumentRequest(
 ): Promise<Response> {
   let url = new URL(request.url);
 
-  let matches = matchRoutes(routes, url.pathname);
+  let matches = matchServerRoutes(routes, url.pathname);
   if (!matches) {
     // TODO: Provide a default 404 page
     throw new Error(
@@ -188,7 +194,7 @@ async function handleDocumentRequest(
         );
       }
 
-      componentDidCatchEmulator.error = entry.serializeError(response);
+      componentDidCatchEmulator.error = serializeError(response);
       routeLoaderResults[index] = json(null, { status: 500 });
     } else if (isRedirectResponse(response)) {
       return response;
@@ -212,19 +218,19 @@ async function handleDocumentRequest(
 
   let serverEntryModule = build.entry.module;
   let headers = getDocumentHeaders(build, matches, routeLoaderResponses);
-  let entryMatches = entry.createMatches(matches, build.assets.routes);
-  let routeData = await entry.createRouteData(matches, routeLoaderResponses);
-  let routeModules = entry.createRouteModules(build.routes);
+  let entryMatches = createEntryMatches(matches, build.assets.routes);
+  let routeData = await createRouteData(matches, routeLoaderResponses);
+  let routeModules = createEntryRouteModules(build.routes);
   let serverHandoff = {
     matches: entryMatches,
     componentDidCatchEmulator,
     routeData
   };
-  let serverEntryContext: EntryContext = {
+  let entryContext: EntryContext = {
     ...serverHandoff,
     manifest: build.assets,
     routeModules,
-    serverHandoffString: entry.createServerHandoffString(serverHandoff)
+    serverHandoffString: createServerHandoffString(serverHandoff)
   };
 
   let response: Response | Promise<Response>;
@@ -233,7 +239,7 @@ async function handleDocumentRequest(
       request,
       statusCode,
       headers,
-      serverEntryContext
+      entryContext
     );
   } catch (error) {
     if (serverMode !== ServerMode.Test) {
@@ -251,17 +257,15 @@ async function handleDocumentRequest(
     // now. I'm okay with tracking our position in the route tree while
     // rendering, that's pretty much how hooks work 😂)
     componentDidCatchEmulator.trackBoundaries = false;
-    componentDidCatchEmulator.error = entry.serializeError(error);
-    serverEntryContext.serverHandoffString = entry.createServerHandoffString(
-      serverHandoff
-    );
+    componentDidCatchEmulator.error = serializeError(error);
+    entryContext.serverHandoffString = createServerHandoffString(serverHandoff);
 
     try {
       response = serverEntryModule.default(
         request,
         statusCode,
         headers,
-        serverEntryContext
+        entryContext
       );
     } catch (error) {
       if (serverMode !== ServerMode.Test) {
