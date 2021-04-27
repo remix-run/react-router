@@ -13,6 +13,8 @@ export { createCookie, isCookie } from "./cookies";
 
 export type { AppLoadContext, AppData } from "./data";
 
+export type { EntryContext } from "./entry";
+
 export type {
   HeadersInit,
   RequestInfo,
