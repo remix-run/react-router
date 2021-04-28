@@ -1,4 +1,3 @@
-import fs from "fs";
 import path from "path";
 import type {
   ExternalOption,
@@ -12,7 +11,6 @@ import type {
   TreeshakingOptions
 } from "rollup";
 import * as rollup from "rollup";
-import alias from "@rollup/plugin-alias";
 import babel from "@rollup/plugin-babel";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
@@ -252,16 +250,6 @@ function getBuildPlugins({ mode, target }: Required<BuildOptions>): Plugin[] {
       }
     })
   ];
-
-  if (target === BuildTarget.Browser) {
-    plugins.push(
-      alias({
-        entries: [
-          { find: "@remix-run/react", replacement: "@remix-run/react/browser" }
-        ]
-      })
-    );
-  }
 
   plugins.push(
     clientServer({ target }),
