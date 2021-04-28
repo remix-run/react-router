@@ -1,350 +1,518 @@
-import path from "path";
-import type {
-  ExternalOption,
-  InputOption,
-  InputOptions,
-  OutputOptions,
-  Plugin,
-  RollupBuild,
-  RollupError,
-  RollupOutput,
-  TreeshakingOptions
-} from "rollup";
-import * as rollup from "rollup";
-import babel from "@rollup/plugin-babel";
-import commonjs from "@rollup/plugin-commonjs";
-import json from "@rollup/plugin-json";
-import nodeResolve from "@rollup/plugin-node-resolve";
-import replace from "@rollup/plugin-replace";
-import { terser } from "rollup-plugin-terser";
+import { promises as fsp } from "fs";
+import * as path from "path";
+import { builtinModules as nodeBuiltins } from "module";
+import * as esbuild from "esbuild";
+import debounce from "lodash.debounce";
+import chokidar from "chokidar";
 
 import { BuildMode, BuildTarget } from "./build";
 import type { RemixConfig } from "./config";
-import { isImportHint } from "./compiler/importHints";
-import { ignorePackages } from "./compiler/browserIgnore";
+import { readConfig } from "./config";
+import invariant from "./invariant";
+import { warnOnce } from "./warnings";
+import { createAssetsManifest } from "./compiler/assets";
+import { getAppDependencies } from "./compiler/dependencies";
+import { loaders, getLoaderForFile } from "./compiler/loaders";
+import { getRouteModuleExportsCached } from "./compiler/routes";
+import { writeFileSafe } from "./compiler/utils/fs";
 
-import assetsManifest from "./compiler/rollup/assetsManifest";
-import clientServer from "./compiler/rollup/clientServer";
-import css from "./compiler/rollup/css";
-import img from "./compiler/rollup/img";
-import mdx from "./compiler/rollup/mdx";
-import remixConfig from "./compiler/rollup/remixConfig";
-import remixInputs from "./compiler/rollup/remixInputs";
-import routeModules from "./compiler/rollup/routeModules";
-import serverManifest from "./compiler/rollup/serverManifest";
-import url from "./compiler/rollup/url";
-import watchDirectory from "./compiler/rollup/watchDirectory";
+// When we build Remix, this shim file is copied directly into the output
+// directory in the same place relative to this file. It is eventually injected
+// as a source file when building the app.
+const reactShim = path.resolve(__dirname, "compiler/shims/react.ts");
 
-export interface RemixBuild extends RollupBuild {
-  options: Required<BuildOptions>;
+interface BuildConfig {
+  mode: BuildMode;
+  target: BuildTarget;
 }
 
-export function createBuild(
-  rollupBuild: RollupBuild,
-  options: Required<BuildOptions>
-): RemixBuild {
-  let build = (rollupBuild as unknown) as RemixBuild;
-  build.options = options;
-  return build;
+function defaultWarningHandler(message: string, key: string) {
+  warnOnce(false, message, key);
 }
 
-export interface BuildOptions {
-  mode?: BuildMode;
-  target?: BuildTarget;
+function defaultErrorHandler(message: string) {
+  console.error(message);
 }
 
-/**
- * Runs the build.
- */
+interface BuildOptions extends Partial<BuildConfig> {
+  onWarning?(message: string, key: string): void;
+  onError?(message: string): void;
+}
+
 export async function build(
   config: RemixConfig,
   {
     mode = BuildMode.Production,
-    target = BuildTarget.Server
+    target = BuildTarget.Node14,
+    onWarning = defaultWarningHandler,
+    onError = defaultErrorHandler
   }: BuildOptions = {}
-): Promise<RemixBuild> {
-  let buildOptions = { mode, target };
-  let plugins = [
-    remixConfig({ rootDir: config.rootDirectory }),
-    ...getBuildPlugins(buildOptions)
-  ];
-
-  let rollupBuild = await rollup.rollup({
-    external: getExternalOption(target),
-    treeshake: getTreeshakeOption(target),
-    onwarn: getOnWarnOption(target),
-    plugins
-  });
-
-  return createBuild(rollupBuild, buildOptions);
+): Promise<void> {
+  await buildEverything(config, { mode, target, onWarning, onError });
 }
 
-export interface WatchOptions extends BuildOptions {
-  onBuildStart?: () => void;
-  onBuildEnd?: (build: RemixBuild) => void;
-  onError?: (error: RollupError) => void;
+interface WatchOptions extends BuildOptions {
+  onRebuildStart?(): void;
+  onRebuildFinish?(): void;
+  onFileCreated?(file: string): void;
+  onFileChanged?(file: string): void;
+  onFileDeleted?(file: string): void;
 }
 
-/**
- * Runs the build in watch mode.
- */
-export function watch(
+export async function watch(
   config: RemixConfig,
   {
     mode = BuildMode.Development,
-    target = BuildTarget.Browser,
-    onBuildStart,
-    onBuildEnd,
-    onError
+    target = BuildTarget.Node14,
+    onWarning = defaultWarningHandler,
+    onError = defaultErrorHandler,
+    onRebuildStart,
+    onRebuildFinish,
+    onFileCreated,
+    onFileChanged,
+    onFileDeleted
   }: WatchOptions = {}
-): () => void {
-  let buildOptions = { mode, target };
-  let plugins = [
-    remixConfig({ rootDir: config.rootDirectory }),
-    // Watch for newly created route files.
-    watchDirectory({ dir: config.appDirectory }),
-    ...getBuildPlugins(buildOptions)
-  ];
+): Promise<() => void> {
+  let options = { mode, target, onWarning, onError, incremental: true };
+  let [browserBuild, serverBuild] = await buildEverything(config, options);
 
-  let watcher = rollup.watch({
-    external: getExternalOption(target),
-    treeshake: getTreeshakeOption(target),
-    onwarn: getOnWarnOption(target),
-    plugins,
-    watch: {
-      buildDelay: 100,
-      // Skip the write here and do it in a callback instead. This gives us
-      // a more consistent interface between `build` and `watch`. Both of them
-      // give you access to the raw build and let you do the generate/write
-      // step separately.
-      skipWrite: true
-    }
-  });
-
-  watcher.on("event", async event => {
-    if (event.code === "ERROR") {
-      if (onError) {
-        onError(event.error);
-      } else {
-        console.error(event.error);
-      }
-    } else if (event.code === "BUNDLE_START") {
-      if (onBuildStart) onBuildStart();
-    } else if (event.code === "BUNDLE_END") {
-      if (onBuildEnd) {
-        let rollupBuild = event.result;
-        onBuildEnd(createBuild(rollupBuild, buildOptions));
-      }
-    }
-  });
-
-  return () => {
-    watcher.close();
-  };
-}
-
-/**
- * Creates an in-memory build. This is useful in both the asset server and the
- * main server in dev mode to avoid writing the builds to disk.
- */
-export function generate(build: RemixBuild): Promise<RollupOutput> {
-  return build.generate(getOutputOptions(build));
-}
-
-/**
- * Writes the build to disk.
- */
-export function write(build: RemixBuild, dir: string): Promise<RollupOutput> {
-  return build.write({ ...getOutputOptions(build), dir });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function isLocalModuleId(id: string): boolean {
-  return (
-    // This is a relative id that hasn't been resolved yet, e.g. "./App"
-    id.startsWith(".") ||
-    // This is an absolute filesystem path that has already been resolved, e.g.
-    // "/path/to/node_modules/react/index.js"
-    path.isAbsolute(id)
-  );
-}
-
-function getExternalOption(target: string): ExternalOption | undefined {
-  return target === BuildTarget.Server
-    ? (id: string) =>
-        // Exclude non-local module identifiers from the server bundles.
-        // This includes identifiers like "react" which will be resolved
-        // dynamically at runtime using require().
-        !isLocalModuleId(id) && !isImportHint(id)
-    : // Exclude packages we know we don't want in the browser bundles.
-      // These *should* be stripped from the browser bundles anyway when
-      // tree-shaking kicks in, so making them external just saves Rollup
-      // some time having to load and parse them and their dependencies.
-      ignorePackages;
-}
-
-function getInputOption(config: RemixConfig, target: BuildTarget): InputOption {
-  let input: InputOption = {};
-
-  if (target === BuildTarget.Browser) {
-    input["entry.client"] = path.resolve(
-      config.appDirectory,
-      config.entryClientFile
-    );
-  } else if (target === BuildTarget.Server) {
-    input["entry.server"] = path.resolve(
-      config.appDirectory,
-      config.entryServerFile
-    );
+  async function disposeBuilders() {
+    await Promise.all([
+      browserBuild.rebuild?.dispose(),
+      serverBuild.rebuild?.dispose()
+    ]);
   }
 
-  for (let key of Object.keys(config.routes)) {
-    let route = config.routes[key];
-    input[route.id] = path.resolve(config.appDirectory, route.file);
-  }
+  let restartBuilders = debounce(async (newConfig?: RemixConfig) => {
+    await disposeBuilders();
+    config = newConfig || (await readConfig(config.rootDirectory));
+    if (onRebuildStart) onRebuildStart();
+    let builders = await buildEverything(config, options);
+    if (onRebuildFinish) onRebuildFinish();
+    browserBuild = builders[0];
+    serverBuild = builders[1];
+  }, 500);
 
-  return input;
-}
+  let rebuildEverything = debounce(async () => {
+    if (onRebuildStart) onRebuildStart();
+    await Promise.all([
+      browserBuild.rebuild!().then(build =>
+        generateManifests(config, build.metafile!)
+      ),
+      serverBuild.rebuild!()
+    ]);
+    if (onRebuildFinish) onRebuildFinish();
+  }, 100);
 
-function getTreeshakeOption(
-  target: BuildTarget
-): TreeshakingOptions | undefined {
-  return target === BuildTarget.Browser
-    ? // When building for the browser, we need to be very aggressive with code
-      // removal so we can be sure all imports of server-only code are removed.
-      {
-        moduleSideEffects(id) {
-          // Allow node_modules to have side effects. Everything else (all app
-          // modules) should be pure. This allows weird dependencies like
-          // "firebase/auth" to have side effects.
-          return /\bnode_modules\b/.test(id);
-        }
-      }
-    : undefined;
-}
-
-function getOnWarnOption(
-  target: BuildTarget
-): InputOptions["onwarn"] | undefined {
-  return target === BuildTarget.Browser
-    ? (warning, warn) => {
-        if (warning.code === "EMPTY_BUNDLE") {
-          // Ignore "Generated an empty chunk: blah" warnings when building for
-          // the browser. There may be quite a few of them because we are
-          // aggressively removing server-only packages from the build.
-          // TODO: Can we get Rollup to avoid generating these chunks entirely?
-          return;
-        }
-
-        warn(warning);
-      }
-    : undefined;
-}
-
-function getBuildPlugins({ mode, target }: Required<BuildOptions>): Plugin[] {
-  let plugins: Plugin[] = [
-    remixInputs({
-      getInput(config) {
-        return getInputOption(config, target);
+  let watcher = chokidar
+    .watch(config.appDirectory, {
+      persistent: true,
+      ignoreInitial: true,
+      awaitWriteFinish: {
+        stabilityThreshold: 100,
+        pollInterval: 100
       }
     })
-  ];
+    .on("error", error => console.error(error))
+    .on("change", async file => {
+      if (onFileChanged) onFileChanged(file);
+      await rebuildEverything();
+    })
+    .on("add", async file => {
+      if (onFileCreated) onFileCreated(file);
+      let newConfig = await readConfig(config.rootDirectory);
+      if (isEntryPoint(newConfig, file)) {
+        await restartBuilders(newConfig);
+      } else {
+        await rebuildEverything();
+      }
+    })
+    .on("unlink", async file => {
+      if (onFileDeleted) onFileDeleted(file);
+      if (isEntryPoint(config, file)) {
+        await restartBuilders();
+      } else {
+        await rebuildEverything();
+      }
+    });
 
-  plugins.push(
-    clientServer({ target }),
-    mdx(),
-    routeModules({ target }),
-    json(),
-    img({ target }),
-    css({ target, mode }),
-    url({ target }),
-    babel({
-      babelHelpers: "bundled",
-      configFile: false,
-      exclude: /node_modules/,
-      extensions: [".md", ".mdx", ".js", ".jsx", ".ts", ".tsx"],
-      presets: [
-        ["@babel/preset-react", { runtime: "automatic" }],
-        // TODO: Different targets for browsers vs. node.
-        ["@babel/preset-env", { bugfixes: true, targets: { node: "12" } }],
-        [
-          "@babel/preset-typescript",
-          {
-            allExtensions: true,
-            isTSX: true
-          }
-        ]
-      ]
-    }),
-    nodeResolve({
-      browser: target === BuildTarget.Browser,
-      extensions: [".js", ".json", ".jsx", ".ts", ".tsx"],
-      preferBuiltins: target !== BuildTarget.Browser
-    }),
-    commonjs()
-  );
-
-  if (target !== BuildTarget.Server) {
-    plugins.push(
-      replace({
-        preventAssignment: true,
-        values: {
-          "process.env.NODE_ENV": JSON.stringify(mode)
-        }
-      })
-    );
-  }
-
-  if (target !== BuildTarget.Server && mode === BuildMode.Production) {
-    plugins.push(terser({ ecma: 2017 }));
-  }
-
-  if (target === BuildTarget.Browser) {
-    plugins.push(assetsManifest());
-  } else if (target === BuildTarget.Server) {
-    plugins.push(serverManifest());
-  }
-
-  return plugins;
+  return async () => {
+    await watcher.close();
+    await disposeBuilders();
+  };
 }
 
-function getOutputOptions(build: RemixBuild): OutputOptions {
-  let { mode, target } = build.options;
+function isEntryPoint(config: RemixConfig, file: string) {
+  let appFile = path.relative(config.appDirectory, file);
 
+  if (
+    appFile === config.entryClientFile ||
+    appFile === config.entryServerFile
+  ) {
+    return true;
+  }
+  for (let key in config.routes) {
+    if (appFile === config.routes[key].file) return true;
+  }
+
+  return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+async function buildEverything(
+  config: RemixConfig,
+  options: Required<BuildOptions> & { incremental?: boolean }
+): Promise<esbuild.BuildResult[]> {
+  // TODO:
+  // When building for node, we build both the browser and server builds in
+  // parallel and emit the asset manifest as a separate file in the output
+  // directory.
+  // When building for Cloudflare Workers, we need to run the browser and server
+  // builds serially so we can inline the asset manifest into the server build
+  // in a single JavaScript file.
+
+  let browserBuildPromise = createBrowserBuild(config, options);
+  let serverBuildPromise = createServerBuild(config, options);
+
+  return Promise.all([
+    browserBuildPromise.then(async build => {
+      await generateManifests(config, build.metafile!);
+      return build;
+    }),
+    serverBuildPromise
+  ]);
+}
+
+async function createBrowserBuild(
+  config: RemixConfig,
+  options: BuildOptions & { incremental?: boolean }
+): Promise<esbuild.BuildResult> {
+  // For the browser build, exclude node built-ins that don't have a
+  // browser-safe alternative installed in node_modules. Nothing should
+  // *actually* be external in the browser build (we want to bundle all deps) so
+  // this is really just making sure we don't accidentally have any dependencies
+  // on node built-ins in browser bundles.
+  let dependencies = Object.keys(await getAppDependencies(config));
+  let externals = nodeBuiltins.filter(mod => !dependencies.includes(mod));
+
+  let entryPoints: esbuild.BuildOptions["entryPoints"] = {
+    "entry.client": path.resolve(config.appDirectory, config.entryClientFile)
+  };
+  for (let id of Object.keys(config.routes)) {
+    // All route entry points are virtual modules that will be loaded by the
+    // browserEntryPointsPlugin. This allows us to tree-shake server-only code
+    // that we don't want to run in the browser (i.e. action & loader).
+    entryPoints[id] =
+      path.resolve(config.appDirectory, config.routes[id].file) + "?browser";
+  }
+
+  return esbuild.build({
+    entryPoints,
+    outdir: config.assetsBuildDirectory,
+    platform: "browser",
+    format: "esm",
+    external: externals,
+    inject: [reactShim],
+    loader: loaders,
+    bundle: true,
+    splitting: true,
+    metafile: true,
+    incremental: options.incremental,
+    minify: options.mode === BuildMode.Production,
+    entryNames: "[dir]/[name]-[hash]",
+    chunkNames: "_shared/[name]-[hash]",
+    assetNames: "_assets/[name]-[hash]",
+    publicPath: config.publicPath,
+    define: {
+      "process.env.NODE_ENV": JSON.stringify(options.mode)
+    },
+    plugins: [
+      browserRouteModulesPlugin(config, /\?browser$/),
+      emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/)
+    ]
+  });
+}
+
+async function createServerBuild(
+  config: RemixConfig,
+  options: Required<BuildOptions> & { incremental?: boolean }
+): Promise<esbuild.BuildResult> {
+  let dependencies = Object.keys(await getAppDependencies(config));
+
+  return esbuild.build({
+    stdin: {
+      contents: getServerEntryPointModule(config, options),
+      resolveDir: config.serverBuildDirectory
+    },
+    outfile: path.resolve(config.serverBuildDirectory, "index.js"),
+    platform: "node",
+    format: "cjs",
+    target: options.target,
+    inject: [reactShim],
+    loader: loaders,
+    bundle: true,
+    incremental: options.incremental,
+    // The server build needs to know how to generate asset URLs for imports
+    // of CSS and other files.
+    assetNames: "_assets/[name]-[hash]",
+    publicPath: config.publicPath,
+    plugins: [
+      serverRouteModulesPlugin(config),
+      emptyModulesPlugin(config, /\.client(\.[jt]sx?)?$/),
+      manualExternalsPlugin((id, importer) => {
+        // assets.json is external because this build runs in parallel with the
+        // browser build and it's not there yet.
+        if (id === "./assets.json" && importer === "<stdin>") return true;
+
+        // Mark all bare imports as external. They will be require()'d at
+        // runtime from node_modules.
+        if (isBareModuleId(id)) {
+          let packageName = getNpmPackageName(id);
+          if (
+            !/\bnode_modules\b/.test(importer) &&
+            !nodeBuiltins.includes(packageName) &&
+            !dependencies.includes(packageName)
+          ) {
+            options.onWarning(
+              `The path "${id}" is imported in ` +
+                `${path.relative(process.cwd(), importer)} but ` +
+                `${packageName} is not listed in your package.json dependencies. ` +
+                `Did you forget to install it?`,
+              packageName
+            );
+          }
+          return true;
+        }
+
+        return false;
+      })
+    ]
+  });
+}
+
+function isBareModuleId(id: string): boolean {
+  return !id.startsWith(".") && !path.isAbsolute(id);
+}
+
+function getNpmPackageName(id: string): string {
+  let split = id.split("/");
+  let packageName = split[0];
+  if (packageName.startsWith("@")) packageName += `/${split[1]}`;
+  return packageName;
+}
+
+async function generateManifests(
+  config: RemixConfig,
+  metafile: esbuild.Metafile
+): Promise<string[]> {
+  let assetsManifest = await createAssetsManifest(config, metafile);
+
+  let filename = `manifest-${assetsManifest.version.toUpperCase()}.js`;
+  assetsManifest.url = config.publicPath + filename;
+
+  return Promise.all([
+    writeFileSafe(
+      path.join(config.assetsBuildDirectory, filename),
+      `window.__remixManifest=${JSON.stringify(assetsManifest)}`
+    ),
+    writeFileSafe(
+      path.join(config.serverBuildDirectory, "assets.json"),
+      JSON.stringify(assetsManifest, null, 2)
+    )
+  ]);
+}
+
+function getServerEntryPointModule(
+  config: RemixConfig,
+  options: BuildOptions
+): string {
+  switch (options.target) {
+    case BuildTarget.Node14:
+      return `
+import * as entryServer from ${JSON.stringify(
+        path.resolve(config.appDirectory, config.entryServerFile)
+      )};
+${Object.keys(config.routes)
+  .map((key, index) => {
+    let route = config.routes[key];
+    return `import * as route${index} from ${JSON.stringify(
+      path.resolve(config.appDirectory, route.file)
+    )};`;
+  })
+  .join("\n")}
+export { default as assets } from "./assets.json";
+export const entry = { module: entryServer };
+export const routes = {
+  ${Object.keys(config.routes)
+    .map((key, index) => {
+      let route = config.routes[key];
+      return `${JSON.stringify(key)}: {
+    id: ${JSON.stringify(route.id)},
+    parentId: ${JSON.stringify(route.parentId)},
+    path: ${JSON.stringify(route.path)},
+    caseSensitive: ${JSON.stringify(route.caseSensitive)},
+    module: route${index}
+  }`;
+    })
+    .join(",\n  ")}
+};`;
+    default:
+      throw new Error(
+        `Cannot generate server entry point module for target: ${options.target}`
+      );
+  }
+}
+
+type Route = RemixConfig["routes"][string];
+
+const browserSafeRouteExports: { [name: string]: boolean } = {
+  ErrorBoundary: true,
+  default: true,
+  handle: true,
+  links: true,
+  meta: true
+};
+
+/**
+ * This plugin loads route modules for the browser build, using module shims
+ * that re-export only the route module exports that are safe for the browser.
+ */
+function browserRouteModulesPlugin(
+  config: RemixConfig,
+  suffixMatcher: RegExp
+): esbuild.Plugin {
   return {
-    format: target === BuildTarget.Server ? "cjs" : "esm",
-    exports: target === BuildTarget.Server ? "named" : undefined,
-    assetFileNames:
-      mode === BuildMode.Production && target === BuildTarget.Browser
-        ? "[name]-[hash][extname]"
-        : "[name][extname]",
-    chunkFileNames: "_shared/[name]-[hash].js",
-    entryFileNames:
-      mode === BuildMode.Production && target === BuildTarget.Browser
-        ? "[name]-[hash].js"
-        : "[name].js",
-    manualChunks(id) {
-      return getNpmPackageName(id);
+    name: "browser-route-modules",
+    async setup(build) {
+      let routesByFile: Map<string, Route> = Object.keys(config.routes).reduce(
+        (map, key) => {
+          let route = config.routes[key];
+          map.set(path.resolve(config.appDirectory, route.file), route);
+          return map;
+        },
+        new Map()
+      );
+
+      build.onResolve({ filter: suffixMatcher }, args => {
+        return { path: args.path, namespace: "browser-route-module" };
+      });
+
+      build.onLoad(
+        { filter: suffixMatcher, namespace: "browser-route-module" },
+        async args => {
+          let file = args.path.replace(suffixMatcher, "");
+          let route = routesByFile.get(file);
+          invariant(route, `Cannot get route by path: ${args.path}`);
+
+          let exports = (
+            await getRouteModuleExportsCached(config, route.id)
+          ).filter(ex => !!browserSafeRouteExports[ex]);
+          let spec = exports.length > 0 ? `{ ${exports.join(", ")} }` : "*";
+          let contents = `export ${spec} from ${JSON.stringify(file)};`;
+
+          return {
+            contents,
+            resolveDir: path.dirname(file),
+            loader: "js"
+          };
+        }
+      );
     }
   };
 }
 
-function getNpmPackageName(id: string): string | undefined {
-  let pieces = id.split(path.sep);
-  let index = pieces.lastIndexOf("node_modules");
+/**
+ * This plugin substitutes an empty module for any modules in the `app`
+ * directory that match the given `filter`.
+ */
+function emptyModulesPlugin(
+  config: RemixConfig,
+  filter: RegExp
+): esbuild.Plugin {
+  return {
+    name: "empty-modules",
+    setup(build) {
+      build.onResolve({ filter }, args => {
+        let resolved = path.resolve(args.resolveDir, args.path);
+        if (
+          // Limit this behavior to modules found in only the `app` directory.
+          // This allows node_modules to use the `.server.js` and `.client.js`
+          // naming conventions with different semantics.
+          resolved.startsWith(config.appDirectory)
+        ) {
+          return { path: args.path, namespace: "empty-module" };
+        }
+      });
 
-  if (index !== -1 && pieces.length > index + 1) {
-    let packageName = pieces[index + 1];
-
-    if (packageName.startsWith("@") && pieces.length > index + 2) {
-      packageName =
-        // S3 hates @folder, so we switch it to __
-        packageName.replace("@", "__") + "/" + pieces[index + 2];
+      build.onLoad({ filter: /.*/, namespace: "empty-module" }, () => {
+        return {
+          // Use an empty CommonJS module here instead of ESM to avoid "No
+          // matching export" errors in esbuild for stuff that is imported
+          // from this file.
+          contents: "module.exports = {};",
+          loader: "js"
+        };
+      });
     }
+  };
+}
 
-    return packageName;
-  }
+/**
+ * This plugin loads route modules for the server build.
+ */
+function serverRouteModulesPlugin(config: RemixConfig): esbuild.Plugin {
+  return {
+    name: "server-route-modules",
+    setup(build) {
+      let routeFiles = new Set(
+        Object.keys(config.routes).map(key =>
+          path.resolve(config.appDirectory, config.routes[key].file)
+        )
+      );
 
-  return undefined;
+      build.onResolve({ filter: /.*/ }, args => {
+        if (routeFiles.has(args.path)) {
+          return { path: args.path, namespace: "route-module" };
+        }
+      });
+
+      build.onLoad({ filter: /.*/, namespace: "route-module" }, async args => {
+        let file = args.path;
+        let contents = await fsp.readFile(file, "utf-8");
+
+        // Default to `export {}` if the file is empty so esbuild interprets
+        // this file as ESM instead of CommonJS with `default: {}`. This helps
+        // in development when creating new files.
+        // See https://github.com/evanw/esbuild/issues/1043
+        if (!/\S/.test(contents)) {
+          return { contents: "export {}", loader: "js" };
+        }
+
+        return {
+          contents,
+          resolveDir: path.dirname(file),
+          loader: getLoaderForFile(file)
+        };
+      });
+    }
+  };
+}
+
+/**
+ * This plugin marks paths external using a callback function.
+ */
+function manualExternalsPlugin(
+  isExternal: (id: string, importer: string) => boolean
+): esbuild.Plugin {
+  return {
+    name: "manual-externals",
+    setup(build) {
+      build.onResolve({ filter: /.*/ }, args => {
+        if (isExternal(args.path, args.importer)) {
+          return { path: args.path, external: true };
+        }
+      });
+    }
+  };
 }

@@ -1,72 +1,14 @@
-////////////////////////////////////////////////////////////////////////////////
-// In 0.17
-//
-// - fn run3() -> fn run()
-// - fn watch2() -> fn dev()
-// - fn build2() -> fn build()
 import * as path from "path";
 import signalExit from "signal-exit";
 import prettyMs from "pretty-ms";
 import WebSocket from "ws";
 
-import { BuildMode, isBuildMode, BuildTarget } from "../build";
+import { BuildMode, isBuildMode } from "../build";
 import * as compiler from "../compiler";
-import * as compiler2 from "../compiler2";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
-import { startDevServer } from "../server";
 
-/**
- * Runs the build for a Remix app with the old rollup compiler
- */
-export async function build(remixRoot: string, mode?: string) {
-  let buildMode = isBuildMode(mode) ? mode : BuildMode.Production;
-
-  console.log(`Building Remix app for ${buildMode}...`);
-
-  let config = await readConfig(remixRoot);
-
-  await Promise.all([
-    compiler.write(
-      await compiler.build(config, {
-        mode: buildMode,
-        target: BuildTarget.Server
-      }),
-      config.serverBuildDirectory
-    ),
-    compiler.write(
-      await compiler.build(config, {
-        mode: buildMode,
-        target: BuildTarget.Browser
-      }),
-      config.assetsBuildDirectory
-    )
-  ]);
-
-  console.log("done!");
-}
-
-/**
- * Runs the old rollup dev watcher.
- */
-export async function run(remixRoot: string) {
-  let config = await readConfig(remixRoot);
-
-  startDevServer(config, {
-    onListen() {
-      console.log(
-        `Remix dev server running on port ${config.devServerPort}...`
-      );
-    }
-  });
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Runs the new esbuild compiler
- */
-export async function build2(
+export async function build(
   remixRoot: string,
   modeArg?: string
 ): Promise<void> {
@@ -76,15 +18,12 @@ export async function build2(
 
   let start = Date.now();
   let config = await readConfig(remixRoot);
-  await compiler2.build(config, { mode: mode });
+  await compiler.build(config, { mode: mode });
 
   console.log(`Built in ${prettyMs(Date.now() - start)}`);
 }
 
-/**
- * Watches with the new esbuild compiler
- */
-export async function watch2(
+export async function watch(
   remixRootOrConfig: string | RemixConfig,
   modeArg?: string,
   onRebuildStart?: () => void
@@ -114,7 +53,7 @@ export async function watch2(
   }
 
   signalExit(
-    await compiler2.watch(config, {
+    await compiler.watch(config, {
       mode,
       // TODO: esbuild compiler just blows up on syntax errors in the app
       // onError(errorMessage) {
@@ -144,26 +83,19 @@ export async function watch2(
   console.log(`💿 Built in ${prettyMs(Date.now() - start)}`);
 }
 
-export function run2(remixRoot: string): Promise<void> {
-  return watch2(remixRoot);
-}
-
-/**
- * Runs the built-in remix app server and dev asset server
- */
-export async function run3(remixRoot: string) {
+export async function run(remixRoot: string, modeArg?: string) {
   // TODO: Warn about the need to install @remix-run/serve if it isn't there?
   let { createApp } = require("@remix-run/serve");
 
   let config = await readConfig(remixRoot);
-  let mode = process.env.NODE_ENV || "development";
+  let mode = isBuildMode(modeArg) ? modeArg : BuildMode.Development;
   let port = process.env.PORT || 3000;
 
   createApp(config.serverBuildDirectory, mode).listen(port, () => {
     console.log(`Remix App Server started at http://localhost:${port}`);
   });
 
-  watch2(config, BuildMode.Development, () => {
+  watch(config, mode, () => {
     purgeAppRequireCache(config.serverBuildDirectory);
   });
 }

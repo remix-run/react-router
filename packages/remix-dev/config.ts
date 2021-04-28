@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import type { MdxOptions } from "@mdx-js/mdx";
 
 import { loadModule } from "./modules";
 import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
@@ -62,11 +61,6 @@ export interface AppConfig {
    * The port number to use for the dev server. Defaults to 8002.
    */
   devServerPort?: number;
-
-  /**
-   * Options to use when compiling MDX.
-   */
-  mdx?: MdxOptions;
 }
 
 /**
@@ -127,11 +121,6 @@ export interface RemixConfig {
    * The port number to use for the dev (asset) server.
    */
   devServerPort: number;
-
-  /**
-   * Options to use when compiling MDX.
-   */
-  mdx?: MdxOptions;
 }
 
 /**
@@ -227,7 +216,6 @@ export async function readConfig(
     entryClientFile,
     entryServerFile,
     devServerPort,
-    mdx: appConfig.mdx,
     assetsBuildDirectory,
     publicPath,
     rootDirectory,
