@@ -210,6 +210,7 @@ async function createBrowserBuild(
   return esbuild.build({
     entryPoints,
     outdir: config.assetsBuildDirectory,
+    platform: "browser",
     format: "esm",
     external: externals,
     inject: [reactShim],
@@ -245,8 +246,8 @@ async function createServerBuild(
       resolveDir: config.serverBuildDirectory
     },
     outfile: path.resolve(config.serverBuildDirectory, "index.js"),
-    format: "cjs",
     platform: "node",
+    format: "cjs",
     target: options.target,
     inject: [reactShim],
     loader: loaders,
@@ -263,10 +264,6 @@ async function createServerBuild(
         // assets.json is external because this build runs in parallel with the
         // browser build and it's not there yet.
         if (id === "./assets.json" && importer === "<stdin>") return true;
-
-        // We need to bundle @remix-run/react because it is ESM and we can't
-        // require it from the CommonJS output.
-        if (id === "@remix-run/react") return false;
 
         // Mark all bare imports as external. They will be require()'d at
         // runtime from node_modules.

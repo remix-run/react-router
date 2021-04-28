@@ -21,5 +21,8 @@
     "@types/cookie-signature": "^1.0.3",
     "@types/jsesc": "^2.5.1"
   },
+  "scripts": {
+    "postinstall": "remix-setup server=@remix-run/node"
+  },
   "sideEffects": false
 }
