@@ -314,7 +314,7 @@ async function generateManifests(
   return Promise.all([
     writeFileSafe(
       path.join(config.assetsBuildDirectory, filename),
-      `window.__remixManifest=${JSON.stringify(assetsManifest)}`
+      `window.__remixManifest=${JSON.stringify(assetsManifest)};`
     ),
     writeFileSafe(
       path.join(config.serverBuildDirectory, "assets.json"),

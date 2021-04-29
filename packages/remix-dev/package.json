@@ -9,7 +9,7 @@
   "dependencies": {
     "cacache": "^15.0.5",
     "chokidar": "^3.5.1",
-    "esbuild": "0.11.4",
+    "esbuild": "0.11.16",
     "lodash.debounce": "^4.0.8",
     "meow": "^7.1.1",
     "pretty-ms": "^7.0.1",
