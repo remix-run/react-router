@@ -2,7 +2,7 @@
   "name": "@remix-run/serve",
   "description": "Production application server for Remix",
   "version": "0.17.0",
-  "repository": "https://github.com/remix-run/remix",
+  "repository": "https://github.com/remix-run/packages",
   "bin": {
     "remix-serve": "cli.js"
   },
