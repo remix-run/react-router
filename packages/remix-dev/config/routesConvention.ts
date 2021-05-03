@@ -4,10 +4,7 @@ import * as path from "path";
 import type { RouteManifest, DefineRouteFunction } from "./routes";
 import { defineRoutes, createRouteId } from "./routes";
 
-/**
- * All file extensions we support for route modules.
- */
-export const routeModuleExts = [".js", ".jsx", ".md", ".mdx", ".ts", ".tsx"];
+const routeModuleExts = [".js", ".jsx", ".ts", ".tsx"];
 
 export function isRouteModuleFile(filename: string): boolean {
   return routeModuleExts.includes(path.extname(filename));
@@ -25,15 +22,28 @@ export function isRouteModuleFile(filename: string): boolean {
  * with a path of `gists/:username`.
  */
 export function defineConventionalRoutes(appDir: string): RouteManifest {
-  let files: {
-    [routeId: string]: string;
-  } = {};
+  let files: { [routeId: string]: string } = {};
 
+  // First, find all route modules in app/routes
+  visitFiles(path.join(appDir, "routes"), file => {
+    let routeId = createRouteId(path.join("routes", file));
+
+    if (isRouteModuleFile(file)) {
+      files[routeId] = path.join("routes", file);
+    } else {
+      throw new Error(
+        `Invalid route module file: ${path.join(appDir, "routes", file)}`
+      );
+    }
+  });
+
+  let routeIds = Object.keys(files).sort(byLongestFirst);
+
+  // Then, recurse through all routes using the public defineRoutes() API
   function defineNestedRoutes(
     defineRoute: DefineRouteFunction,
     parentId?: string
   ): void {
-    let routeIds = Object.keys(files);
     let childRouteIds = routeIds.filter(
       id => findParentRouteId(routeIds, id) === parentId
     );
@@ -50,19 +60,6 @@ export function defineConventionalRoutes(appDir: string): RouteManifest {
     }
   }
 
-  // First, find all route modules in app/routes
-  visitFiles(path.join(appDir, "routes"), file => {
-    let routeId = createRouteId(path.join("routes", file));
-
-    if (isRouteModuleFile(file)) {
-      files[routeId] = path.join("routes", file);
-    } else {
-      throw new Error(
-        `Invalid route module file: ${path.join(appDir, "routes", file)}`
-      );
-    }
-  });
-
   return defineRoutes(defineNestedRoutes);
 }
 
@@ -75,16 +72,7 @@ function findParentRouteId(
   routeIds: string[],
   childRouteId: string
 ): string | undefined {
-  return (
-    routeIds
-      .slice(0)
-      .sort(byLongestFirst)
-      // FIXME: this will probably break with two routes like foo/ and foo-bar/,
-      // we use `startsWith` with we also need to factor in the segment `/`
-      // boundaries. There are bugs in React Router NavLink with this too.
-      // Probably need to ditch all uses of `startsWith` in route matching.
-      .find(id => childRouteId.startsWith(`${id}/`))
-  );
+  return routeIds.find(id => childRouteId.startsWith(`${id}/`));
 }
 
 function byLongestFirst(a: string, b: string): number {
