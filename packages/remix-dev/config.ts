@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { loadModule } from "./modules";
 import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
 import { defineRoutes } from "./config/routes";
 import { defineConventionalRoutes } from "./config/routesConvention";
@@ -144,7 +143,7 @@ export async function readConfig(
 
   let appConfig: AppConfig;
   try {
-    appConfig = loadModule(configFile);
+    appConfig = require(configFile);
   } catch (error) {
     console.error(`Error loading Remix config in ${configFile}`);
     console.error(error);
