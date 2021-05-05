@@ -2,7 +2,7 @@ import * as path from "path";
 
 async function run() {
   try {
-    await require("remix/setup").installMagicExports(
+    await require("remix/magic").installMagicExports(
       path.resolve(__dirname, "..", "magicExports")
     );
   } catch (error) {

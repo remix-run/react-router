@@ -21,8 +21,5 @@
     "@types/cookie-signature": "^1.0.3",
     "@types/jsesc": "^2.5.1"
   },
-  "scripts": {
-    "postinstall": "node ./scripts/postinstall.js"
-  },
   "sideEffects": false
 }
