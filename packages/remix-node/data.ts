@@ -60,11 +60,18 @@ export async function callRouteAction(
 
   let result = await routeModule.action({ request, context, params });
 
+  if (typeof result === "string") {
+    return new Response("", {
+      status: 303,
+      headers: { Location: result }
+    });
+  }
+
   if (!isResponse(result) || result.headers.get("Location") == null) {
     throw new Error(
       `You made a ${request.method} request to ${request.url} but did not return ` +
-        `a redirect. Please \`return redirect(newUrl)\` from your \`action\` ` +
-        `function to avoid reposts when users click the back button.`
+        `a redirect. Please \`return newUrlString\` or \`return redirect(newUrl)\` from ` +
+        `your \`action\` function to avoid reposts when users click the back button.`
     );
   }
 
