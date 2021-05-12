@@ -5,8 +5,7 @@ import { serializeError } from "./errors";
 import type { ServerBuild } from "./build";
 import type { EntryContext } from "./entry";
 import { createEntryMatches, createEntryRouteModules } from "./entry";
-import type { Request } from "./fetch";
-import { Response } from "./fetch";
+import { Response, Request } from "./fetch";
 import { getDocumentHeaders } from "./headers";
 import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
@@ -16,6 +15,7 @@ import { createRoutes } from "./routes";
 import { createRouteData } from "./routeData";
 import { json } from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
+import { RequestInit } from "node-fetch";
 
 /**
  * The main request handler for a Remix server. This handler runs in the context
@@ -75,20 +75,22 @@ async function handleDataRequest(
     routeMatch = match;
   }
 
+  let clonedRequest = await stripDataParam(request);
+
   let response: Response;
   try {
     response = isActionRequest(request)
       ? await callRouteAction(
           build,
           routeMatch.route.id,
-          request,
+          clonedRequest,
           loadContext,
           routeMatch.params
         )
       : await loadRouteData(
           build,
           routeMatch.route.id,
-          request,
+          clonedRequest,
           loadContext,
           routeMatch.params
         );
@@ -302,4 +304,17 @@ const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
 
 function isRedirectResponse(response: Response): boolean {
   return redirectStatusCodes.has(response.status);
+}
+
+async function stripDataParam(og: Request) {
+  let url = new URL(og.url);
+  url.searchParams.delete("_data");
+  let init: RequestInit = {
+    method: og.method,
+    headers: og.headers
+  };
+  if (og.method.toLowerCase() !== "get") {
+    init.body = await og.text();
+  }
+  return new Request(url, init);
 }
