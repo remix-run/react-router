@@ -57,6 +57,20 @@ describe("readConfig", () => {
             "parentId": "root",
             "path": "*",
           },
+          "routes/action-errors": Object {
+            "caseSensitive": false,
+            "file": "routes/action-errors.jsx",
+            "id": "routes/action-errors",
+            "parentId": "root",
+            "path": "action-errors",
+          },
+          "routes/action-errors-self-boundary": Object {
+            "caseSensitive": false,
+            "file": "routes/action-errors-self-boundary.jsx",
+            "id": "routes/action-errors-self-boundary",
+            "parentId": "root",
+            "path": "action-errors-self-boundary",
+          },
           "routes/empty": Object {
             "caseSensitive": false,
             "file": "routes/empty.jsx",

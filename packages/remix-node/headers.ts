@@ -11,8 +11,9 @@ export function getDocumentHeaders(
 ): Headers {
   return matches.reduce((parentHeaders, match, index) => {
     let routeModule = build.routes[match.route.id].module;
-    let loaderResponse = routeLoaderResponses[index];
-    let loaderHeaders = loaderResponse.headers;
+    let loaderHeaders = routeLoaderResponses[index]
+      ? routeLoaderResponses[index].headers
+      : new Headers();
 
     let headers = new Headers(
       routeModule.headers

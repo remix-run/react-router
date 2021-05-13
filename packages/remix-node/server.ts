@@ -1,6 +1,7 @@
 import type { AppLoadContext } from "./data";
 import { loadRouteData, callRouteAction } from "./data";
 import type { ComponentDidCatchEmulator } from "./errors";
+
 import { serializeError } from "./errors";
 import type { ServerBuild } from "./build";
 import type { EntryContext } from "./entry";
@@ -140,21 +141,6 @@ async function handleDocumentRequest(
     );
   }
 
-  if (isActionRequest(request)) {
-    let leafMatch = matches[matches.length - 1];
-    let response = await callRouteAction(
-      build,
-      leafMatch.route.id,
-      request,
-      loadContext,
-      leafMatch.params
-    );
-
-    // TODO: How do we handle errors here?
-
-    return response;
-  }
-
   let componentDidCatchEmulator: ComponentDidCatchEmulator = {
     trackBoundaries: true,
     renderBoundaryRouteId: null,
@@ -162,11 +148,43 @@ async function handleDocumentRequest(
     error: undefined
   };
 
-  // Run all data loaders in parallel. Await them in series below.
-  // Note: This code is a little weird due to the way unhandled promise
-  // rejections are handled in node. We use a .catch() handler on each
-  // promise to avoid the warning, then handle errors manually afterwards.
-  let routeLoaderPromises: Promise<Response | Error>[] = matches.map(match =>
+  let actionErrored: boolean = false;
+
+  if (isActionRequest(request)) {
+    let leafMatch = matches[matches.length - 1];
+    try {
+      let response = await callRouteAction(
+        build,
+        leafMatch.route.id,
+        request,
+        loadContext,
+        leafMatch.params
+      );
+
+      return response;
+    } catch (error) {
+      actionErrored = true;
+      let withBoundaries = getMatchesUpToDeepestErrorBoundary(matches);
+      componentDidCatchEmulator.loaderBoundaryRouteId =
+        withBoundaries[withBoundaries.length - 1].route.id;
+      componentDidCatchEmulator.error = serializeError(error);
+    }
+  }
+
+  let matchesToLoad = actionErrored
+    ? getMatchesUpToDeepestErrorBoundary(
+        // get rid of the action, we know we don't want to call it's loader
+        matches.slice(0, -1)
+      )
+    : matches;
+
+  // Run all data loaders in parallel. Await them in series below.  Note: This
+  // code is a little weird due to the way unhandled promise rejections are
+  // handled in node. We use a .catch() handler on each promise to avoid the
+  // warning, then handle errors manually afterwards.
+  let routeLoaderPromises: Promise<
+    Response | Error
+  >[] = matchesToLoad.map(match =>
     loadRouteData(
       build,
       match.route.id,
@@ -178,12 +196,31 @@ async function handleDocumentRequest(
 
   let routeLoaderResults = await Promise.all(routeLoaderPromises);
   for (let [index, response] of routeLoaderResults.entries()) {
+    let route = matches[index].route;
+    let routeModule = build.routes[route.id].module;
+
+    // Rare case where an action throws an error, and then when we try to render
+    // the action's page to tell the user about the the error, a loader above
+    // the action route *also* threw an error or tried to redirect!
+    //
+    // Instead of rendering the loader error or redirecting like usual, we
+    // ignore the loader error or redirect because the action error was first
+    // and is higher priority to surface.  Perhaps the action error is the
+    // reason the loader blows up now! It happened first and is more important
+    // to address.
+    //
+    // We just give up and move on with rendering the error as deeply as we can,
+    // which is the previous iteration of this loop
+    if (
+      actionErrored &&
+      (response instanceof Error || isRedirectResponse(response))
+    ) {
+      break;
+    }
+
     if (componentDidCatchEmulator.error) {
       continue;
     }
-
-    let route = matches[index].route;
-    let routeModule = build.routes[route.id].module;
 
     if (routeModule.ErrorBoundary) {
       componentDidCatchEmulator.loaderBoundaryRouteId = route.id;
@@ -212,16 +249,29 @@ async function handleDocumentRequest(
     response => response.status !== 200
   );
 
-  let statusCode = notOkResponse
+  let statusCode = actionErrored
+    ? 500
+    : notOkResponse
     ? notOkResponse.status
     : matches[matches.length - 1].route.id === "routes/404"
     ? 404
     : 200;
 
+  let renderableMatches = getRenderableMatches(
+    matches,
+    componentDidCatchEmulator
+  );
   let serverEntryModule = build.entry.module;
-  let headers = getDocumentHeaders(build, matches, routeLoaderResponses);
-  let entryMatches = createEntryMatches(matches, build.assets.routes);
-  let routeData = await createRouteData(matches, routeLoaderResponses);
+  let headers = getDocumentHeaders(
+    build,
+    renderableMatches,
+    routeLoaderResponses
+  );
+  let entryMatches = createEntryMatches(renderableMatches, build.assets.routes);
+  let routeData = await createRouteData(
+    renderableMatches,
+    routeLoaderResponses
+  );
   let routeModules = createEntryRouteModules(build.routes);
   let serverHandoff = {
     matches: entryMatches,
@@ -250,14 +300,12 @@ async function handleDocumentRequest(
 
     statusCode = 500;
 
-    // Go again, this time with the componentDidCatch emulation. Remember, the
-    // routes `componentDidCatch.routeId` because we can't know that here. (Well
-    // ... maybe we could, we could search the error.stack lines for the first
-    // file matching the id of a route from the route manifest, but that would
-    // require us to have source maps installed so the filenames don't get
-    // changed when we bundle, and just feels a little too shakey for me right
-    // now. I'm okay with tracking our position in the route tree while
-    // rendering, that's pretty much how hooks work 😂)
+    // Go again, this time with the componentDidCatch emulation. As it rendered
+    // last time we mutated `componentDidCatch.routeId` for the last rendered
+    // route, now we know where to render the error boundary (feels a little
+    // hacky but that's how hooks work). This tells the emulator to stop
+    // tracking the `routeId` as we render because we already have an error to
+    // render.
     componentDidCatchEmulator.trackBoundaries = false;
     componentDidCatchEmulator.error = serializeError(error);
     entryContext.serverHandoffString = createServerHandoffString(serverHandoff);
@@ -275,7 +323,6 @@ async function handleDocumentRequest(
       }
 
       // Good grief folks, get your act together 😂!
-      // TODO: Something is wrong in serverEntryModule, use the default root error handler
       response = new Response(`Unexpected Server Error\n\n${error.message}`, {
         status: 500,
         headers: {
@@ -317,4 +364,50 @@ async function stripDataParam(og: Request) {
     init.body = await og.text();
   }
   return new Request(url, init);
+}
+
+// This ensures we only load the data for the routes above an action error
+function getMatchesUpToDeepestErrorBoundary(
+  matches: RouteMatch<ServerRoute>[]
+) {
+  let deepestErrorBoundaryIndex: number = -1;
+
+  matches.forEach((match, index) => {
+    if (match.route.module.ErrorBoundary) {
+      deepestErrorBoundaryIndex = index;
+    }
+  });
+
+  if (deepestErrorBoundaryIndex === -1) {
+    // no route error boundaries, don't need to call any loaders
+    return [];
+  }
+
+  return matches.slice(0, deepestErrorBoundaryIndex + 1);
+}
+
+// This prevents `<Outlet/>` from rendering anything below where the error threw
+// TODO: maybe do this in <RemixErrorBoundary + context>
+function getRenderableMatches(
+  matches: RouteMatch<ServerRoute>[],
+  componentDidCatchEmulator: ComponentDidCatchEmulator
+) {
+  // no error, no worries
+  if (!componentDidCatchEmulator.error) {
+    return matches;
+  }
+
+  let lastRenderableIndex: number = -1;
+
+  matches.forEach((match, index) => {
+    let id = match.route.id;
+    if (
+      componentDidCatchEmulator.renderBoundaryRouteId === id ||
+      componentDidCatchEmulator.loaderBoundaryRouteId === id
+    ) {
+      lastRenderableIndex = index;
+    }
+  });
+
+  return matches.slice(0, lastRenderableIndex + 1);
 }
