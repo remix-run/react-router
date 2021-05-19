@@ -20,8 +20,12 @@ function compilePath(path) {
 /**
  * Public API for generating a URL pathname from a path and parameters.
  */
-function generatePath(path = "/", params = {}) {
-  return path === "/" ? path : compilePath(path)(params, { pretty: true });
+function generatePath(
+  path = "/",
+  params = {},
+  pathFunctionOptions = { pretty: true }
+) {
+  return path === "/" ? path : compilePath(path)(params, pathFunctionOptions);
 }
 
 export default generatePath;
