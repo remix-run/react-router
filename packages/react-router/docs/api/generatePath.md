@@ -35,7 +35,7 @@ The third argument is an object with a single parameter used within `path-to-reg
 
 These functions are:
 
-- [encodeURIComponentPretty](https://github.com/pillarjs/path-to-regexp/blob/a99ec3c149e8c1d91fa533aa54d3ee7e34449bb3/index.js#L120) which is slightly modified [encodeURI](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI) function with escaped characters of `/`, `?`, and `#`
+- [encodeURIComponentPretty](https://github.com/pillarjs/path-to-regexp/blob/a99ec3c149e8c1d91fa533aa54d3ee7e34449bb3/index.js#L120) which is a slightly modified [encodeURI](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI) function with escaped characters of `/`, `?`, and `#`
 
 - [encodeURIComponent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) function
 
