@@ -128,7 +128,7 @@ export function MemoryRouter({
   }
 
   // @ts-ignore
-  let [isPending, startTransition] = React.unstable_useTransition({
+  let [isPending, startTransition] = React.useTransition({
     timeoutMs
   });
 

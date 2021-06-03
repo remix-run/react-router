@@ -15,8 +15,8 @@
   },
   "peerDependencies": {
     "history": ">=5",
-    "react": "0.0.0-experimental-269dd6ec5",
-    "react-dom": "0.0.0-experimental-269dd6ec5"
+    "react": "0.0.0-experimental-a8964649b",
+    "react-dom": "0.0.0-experimental-a8964649b"
   },
   "sideEffects": false,
   "keywords": [

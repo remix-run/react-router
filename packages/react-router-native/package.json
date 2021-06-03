@@ -14,7 +14,7 @@
   },
   "peerDependencies": {
     "history": ">=5",
-    "react": "0.0.0-experimental-269dd6ec5",
+    "react": "0.0.0-experimental-a8964649b",
     "react-native": ">=0.44"
   },
   "devDependencies": {

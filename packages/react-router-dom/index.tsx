@@ -102,7 +102,7 @@ export function BrowserRouter({
   }
 
   // @ts-ignore
-  let [isPending, startTransition] = React.unstable_useTransition({
+  let [isPending, startTransition] = React.useTransition({
     timeoutMs
   });
 
@@ -166,7 +166,7 @@ export function HashRouter({
   }
 
   // @ts-ignore
-  let [isPending, startTransition] = React.unstable_useTransition({
+  let [isPending, startTransition] = React.useTransition({
     timeoutMs
   });
 
