@@ -49,7 +49,7 @@
     "prompt-confirm": "^2.0.4",
     "react": "0.0.0-experimental-a8964649b",
     "react-dom": "0.0.0-experimental-a8964649b",
-    "react-test-renderer": "0.0.0-experimental-a8964649b",
+    "react-test-renderer": "0.0.0-experimental-1a2d79250",
     "rollup": "^1.27.9",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-copy": "^3.1.0",

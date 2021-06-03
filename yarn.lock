@@ -6551,10 +6551,10 @@ react-dom@0.0.0-experimental-a8964649b:
     object-assign "^4.1.1"
     scheduler "0.0.0-experimental-a8964649b"
 
-react-is@0.0.0-experimental-a8964649b:
-  version "0.0.0-experimental-a8964649b"
-  resolved "https://registry.yarnpkg.com/react-is/-/react-is-0.0.0-experimental-a8964649b.tgz#e29d78a4e8ef8d0561f1b132ac4c1b12ee0042b0"
-  integrity sha512-Gikml9Niy5At7A9F/CfFCTpr6OlyJM4LGktRszJ6qrM1BsGUjBXHLoYkdzFCsGf+LAazL53ftaN+5CMlbb3s9w==
+react-is@0.0.0-experimental-1a2d79250:
+  version "0.0.0-experimental-1a2d79250"
+  resolved "https://registry.yarnpkg.com/react-is/-/react-is-0.0.0-experimental-1a2d79250.tgz#344cb83e231f284632c114bb86cc474ee34dfeb0"
+  integrity sha512-CfmVgp8wfpC1t+AWyYOH0Y9BTngHDkHJALFTnHtheskBCWWqFnl+dO1hX5D2V2xagJM38dTo+yP3bV6uYo5Hcg==
 
 react-is@^16.12.0, react-is@^16.8.1, react-is@^16.8.4:
   version "16.13.1"
@@ -6609,15 +6609,15 @@ react-shallow-renderer@^16.13.1:
     object-assign "^4.1.1"
     react-is "^16.12.0"
 
-react-test-renderer@0.0.0-experimental-a8964649b:
-  version "0.0.0-experimental-a8964649b"
-  resolved "https://registry.yarnpkg.com/react-test-renderer/-/react-test-renderer-0.0.0-experimental-a8964649b.tgz#dc4a901e0a5c3ae6d3abc3d90e9bedc05b146560"
-  integrity sha512-DwaJd1zyJa37jrZ+CqjScR5ZXioaZ8YReMtj5SKEnRb4Eoi99rbMXv3f7wxjyRoFSL/b/LY2QuMu2296u2qitw==
+react-test-renderer@0.0.0-experimental-1a2d79250:
+  version "0.0.0-experimental-1a2d79250"
+  resolved "https://registry.yarnpkg.com/react-test-renderer/-/react-test-renderer-0.0.0-experimental-1a2d79250.tgz#b1b0d249da612f69d5ed856ae391dc7f7a702698"
+  integrity sha512-GqOyaUDwbr0817erqehLQ7AGH0C8QochpMd+uddq8tfD5TImvT3VHtFff/Pyhzp/+aqGcIFZp0DrdaY9bdnIpg==
   dependencies:
     object-assign "^4.1.1"
-    react-is "0.0.0-experimental-a8964649b"
+    react-is "0.0.0-experimental-1a2d79250"
     react-shallow-renderer "^16.13.1"
-    scheduler "0.0.0-experimental-a8964649b"
+    scheduler "0.0.0-experimental-1a2d79250"
 
 react@0.0.0-experimental-a8964649b:
   version "0.0.0-experimental-a8964649b"
@@ -7094,6 +7094,14 @@ sax@^1.2.1, sax@^1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
+
+scheduler@0.0.0-experimental-1a2d79250:
+  version "0.0.0-experimental-1a2d79250"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-experimental-1a2d79250.tgz#aed7d93d68045b3404db0df4799cf63db11df148"
+  integrity sha512-bdOv17kJZPKgDQnIbjUaJCb7+htn4hh7/7ooEKQ+c/hctpdpWje04VfLNGjK9PAKBDl0tj6pI6fEtCC3a4ZNuA==
+  dependencies:
+    loose-envify "^1.1.0"
+    object-assign "^4.1.1"
 
 scheduler@0.0.0-experimental-a8964649b:
   version "0.0.0-experimental-a8964649b"
