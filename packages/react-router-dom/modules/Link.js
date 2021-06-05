@@ -101,7 +101,7 @@ const Link = forwardRef(
             href,
             navigate() {
               const location = resolveToLocation(to, context.location);
-              const isDuplicateNavigation = createPath(context.location) === createPath(location);
+              const isDuplicateNavigation = createPath(context.location) === createPath(normalizeToLocation(location));
               const method = (replace || isDuplicateNavigation) ? history.replace : history.push;
 
               method(location);
