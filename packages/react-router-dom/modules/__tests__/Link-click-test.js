@@ -44,6 +44,38 @@ describe("<Link> click events", () => {
     expect(memoryHistory.push).toBeCalledWith(to);
   });
 
+  it("calls history.replace on duplicate navigation", () => {
+    const clickHandler = jest.fn();
+    const to = "/the/path?the=query#the-hash";
+
+    renderStrict(
+      <Router history={memoryHistory}>
+        <Link to={to} onClick={clickHandler}>
+          link
+        </Link>
+      </Router>,
+      node
+    );
+
+    const a = node.querySelector("a");
+    TestUtils.Simulate.click(a, {
+      defaultPrevented: false,
+      button: 0
+    });
+
+    TestUtils.Simulate.click(a, {
+      defaultPrevented: false,
+      button: 0
+    });
+
+
+    expect(clickHandler).toBeCalledTimes(2);
+    expect(memoryHistory.push).toBeCalledTimes(1);
+    expect(memoryHistory.push).toBeCalledWith(to);
+    expect(memoryHistory.replace).toBeCalledTimes(1);
+    expect(memoryHistory.replace).toBeCalledWith(to);
+  });
+
   it("calls onClick eventhandler and history.push with function `to` prop", () => {
     const memoryHistoryFoo = createMemoryHistory({
       initialEntries: ["/foo"]
