@@ -29,7 +29,7 @@ const ShowTheLocationWithRouter = withRouter(ShowTheLocation);
 
 #### Important Note
 
-`withRouter` does not subscribe to location changes like React Redux's `connect` does for state changes. Instead, re-renders after location changes propagate out from the `<Router>` component. This means that `withRouter` does _not_ re-render on route transitions unless its parent component re-renders.
+`withRouter` does not subscribe to location changes like React Redux's `connect` does for state changes. Instead, re-renders after location changes propagate out from the `<Router>` component. This means that `withRouter` does _not_ re-render on route transitions unless it`s parent component re-renders.
 
 #### Static Methods and Properties
 
