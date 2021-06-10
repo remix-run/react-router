@@ -14,7 +14,7 @@
   },
   "peerDependencies": {
     "history": ">=5",
-    "react": "0.0.0-experimental-a8964649b"
+    "react": "18.0.0-alpha-aecb3b6d1"
   },
   "sideEffects": false,
   "keywords": [
