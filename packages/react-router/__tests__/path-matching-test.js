@@ -1,4 +1,4 @@
-import { matchRoutes } from 'react-router';
+import { matchRoutes, matchPath } from 'react-router';
 
 describe('path matching', () => {
   function pickPaths(routes, pathname) {
@@ -178,23 +178,31 @@ describe('path matching with a basename', () => {
 });
 
 describe('path matching with splats', () => {
-  test('splat after /', () => {
-    let routes = [{ path: 'users/:id/files/*' }];
-    let match = matchRoutes(routes, '/users/mj/files/secrets.md');
+  describe('path after /', () => {
+    let path = 'users/:id/files/*';
+    it('matches when no other characters come before the /', () => {
+      let match = matchPath(path, '/users/mj/files/secrets.md');
 
-    expect(match).not.toBeNull();
-    expect(match[0]).toMatchObject({
-      params: { id: 'mj', '*': 'secrets.md' },
-      pathname: '/users/mj/files'
+      expect(match).not.toBeNull();
+      expect(match).toMatchObject({
+        params: { id: 'mj', '*': 'secrets.md' },
+        pathname: '/users/mj/files'
+      });
+    });
+
+    it('does not match when other characters come before the /', () => {
+      let match = matchPath(path, '/users/mj/filessss/secrets.md');
+
+      expect(match).toBeNull();
     });
   });
 
   test('splat after something other than /', () => {
-    let routes = [{ path: 'users/:id/files-*' }];
-    let match = matchRoutes(routes, '/users/mj/files-secrets.md');
+    let path = 'users/:id/files-*';
+    let match = matchPath(path, '/users/mj/files-secrets.md');
 
     expect(match).not.toBeNull();
-    expect(match[0]).toMatchObject({
+    expect(match).toMatchObject({
       pathname: '/users/mj/files-',
       params: { id: 'mj', '*': 'secrets.md' }
     });
