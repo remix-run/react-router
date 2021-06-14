@@ -24,8 +24,9 @@ interface AssetsManifest {
       caseSensitive?: boolean;
       module: string;
       imports?: string[];
-      hasAction?: boolean;
-      hasLoader?: boolean;
+      hasAction: boolean;
+      hasLoader: boolean;
+      hasErrorBoundary: boolean;
     };
   };
 }
@@ -90,7 +91,8 @@ export async function createAssetsManifest(
         module: resolveUrl(key),
         imports: resolveImports(output.imports),
         hasAction: sourceExports.includes("action"),
-        hasLoader: sourceExports.includes("loader")
+        hasLoader: sourceExports.includes("loader"),
+        hasErrorBoundary: sourceExports.includes("ErrorBoundary")
       };
     }
   }

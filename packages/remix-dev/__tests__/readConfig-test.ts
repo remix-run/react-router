@@ -71,6 +71,13 @@ describe("readConfig", () => {
             "parentId": "root",
             "path": "action-errors-self-boundary",
           },
+          "routes/actions": Object {
+            "caseSensitive": false,
+            "file": "routes/actions.tsx",
+            "id": "routes/actions",
+            "parentId": "root",
+            "path": "actions",
+          },
           "routes/blog/hello-world": Object {
             "caseSensitive": false,
             "file": "routes/blog/hello-world.mdx",
@@ -105,6 +112,13 @@ describe("readConfig", () => {
             "id": "routes/empty",
             "parentId": "root",
             "path": "empty",
+          },
+          "routes/fetchers": Object {
+            "caseSensitive": false,
+            "file": "routes/fetchers.tsx",
+            "id": "routes/fetchers",
+            "parentId": "root",
+            "path": "fetchers",
           },
           "routes/gists": Object {
             "caseSensitive": false,
