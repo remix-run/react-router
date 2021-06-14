@@ -7,9 +7,12 @@ import type { RouteMatch } from "./routeMatching";
 export function getDocumentHeaders(
   build: ServerBuild,
   matches: RouteMatch<ServerRoute>[],
-  routeLoaderResponses: Response[]
+  routeLoaderResponses: Response[],
+  actionResponse?: Response
 ): Headers {
-  return matches.reduce((parentHeaders, match, index) => {
+  let actionHeaders = actionResponse?.headers || new Headers();
+
+  let finalHeaders = matches.reduce((parentHeaders, match, index) => {
     let routeModule = build.routes[match.route.id].module;
     let loaderHeaders = routeLoaderResponses[index]
       ? routeLoaderResponses[index].headers
@@ -17,7 +20,7 @@ export function getDocumentHeaders(
 
     let headers = new Headers(
       routeModule.headers
-        ? routeModule.headers({ loaderHeaders, parentHeaders })
+        ? routeModule.headers({ loaderHeaders, parentHeaders, actionHeaders })
         : undefined
     );
 
@@ -28,6 +31,10 @@ export function getDocumentHeaders(
 
     return headers;
   }, new Headers());
+
+  prependCookies(finalHeaders, actionHeaders);
+
+  return finalHeaders;
 }
 
 function prependCookies(parentHeaders: Headers, childHeaders: Headers): void {

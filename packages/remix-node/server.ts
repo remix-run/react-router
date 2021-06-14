@@ -13,7 +13,7 @@ import { matchServerRoutes } from "./routeMatching";
 import { ServerMode, isServerMode } from "./mode";
 import type { ServerRoute } from "./routes";
 import { createRoutes } from "./routes";
-import { createRouteData } from "./routeData";
+import { createActionData, createRouteData } from "./routeData";
 import { json } from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
 import { RequestInit } from "node-fetch";
@@ -149,19 +149,21 @@ async function handleDocumentRequest(
   };
 
   let actionErrored: boolean = false;
+  let actionResponse: Response | undefined;
 
   if (isActionRequest(request)) {
     let leafMatch = matches[matches.length - 1];
     try {
-      let response = await callRouteAction(
+      actionResponse = await callRouteAction(
         build,
         leafMatch.route.id,
-        request,
+        request.clone(),
         loadContext,
         leafMatch.params
       );
-
-      return response;
+      if (isRedirectResponse(actionResponse)) {
+        return actionResponse;
+      }
     } catch (error) {
       actionErrored = true;
       let withBoundaries = getMatchesUpToDeepestErrorBoundary(matches);
@@ -173,7 +175,10 @@ async function handleDocumentRequest(
 
   let matchesToLoad = actionErrored
     ? getMatchesUpToDeepestErrorBoundary(
-        // get rid of the action, we know we don't want to call it's loader
+        // get rid of the action, we don't want to call it's loader either
+        // because we'll be rendering the error boundary, if you can get access
+        // to the loader data in the error boundary then how the heck is it
+        // supposed to deal with errors in the loader, too?
         matches.slice(0, -1)
       )
     : matches;
@@ -265,18 +270,23 @@ async function handleDocumentRequest(
   let headers = getDocumentHeaders(
     build,
     renderableMatches,
-    routeLoaderResponses
+    routeLoaderResponses,
+    actionResponse
   );
   let entryMatches = createEntryMatches(renderableMatches, build.assets.routes);
   let routeData = await createRouteData(
     renderableMatches,
     routeLoaderResponses
   );
+  let actionData = actionResponse
+    ? await createActionData(actionResponse)
+    : undefined;
   let routeModules = createEntryRouteModules(build.routes);
   let serverHandoff = {
     matches: entryMatches,
     componentDidCatchEmulator,
-    routeData
+    routeData,
+    actionData
   };
   let entryContext: EntryContext = {
     ...serverHandoff,
