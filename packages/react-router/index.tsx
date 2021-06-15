@@ -884,7 +884,7 @@ export function matchPath(
   let matchedPathname = match[1];
   let values = match.slice(2);
   let params = paramNames.reduce((memo, paramName, index) => {
-    memo[paramName] = safelyDecodeURIComponent(values[index], paramName);
+    memo[paramName] = safelyDecodeURIComponent(values[index] || '', paramName);
     return memo;
   }, {} as Params);
 
