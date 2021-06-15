@@ -149,7 +149,7 @@ describe('useParams', () => {
 
       expect(typeof params).toBe('object');
       expect(params).toMatchObject({
-        slug: 'react router is awesome'
+        slug: 'react+router+is awesome'
       });
     });
   });

@@ -935,7 +935,7 @@ function compilePath(
 
 function safelyDecodeURIComponent(value: string, paramName: string) {
   try {
-    return decodeURIComponent(value.replace(/\+/g, ' '));
+    return decodeURIComponent(value);
   } catch (error) {
     warning(
       false,
