@@ -7,7 +7,7 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let args = process.argv.slice(2);
 
-let targetPackage = args.find((arg) => !arg.startsWith("-"));
+let targetPackage = args.find(arg => !arg.startsWith("-"));
 let allPackages = fs.readdirSync(path.resolve(dirname, "../packages"));
 
 let jestArgs = ["--projects"];
@@ -28,5 +28,5 @@ if (args.includes("-u")) {
 
 execSync(`jest ${jestArgs.join(" ")}`, {
   env: process.env,
-  stdio: "inherit",
+  stdio: "inherit"
 });

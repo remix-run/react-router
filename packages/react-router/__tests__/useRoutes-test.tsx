@@ -18,7 +18,7 @@ describe("useRoutes", () => {
 
     let routes = [
       { path: "home", element: <Home /> },
-      { path: "about", element: <About /> },
+      { path: "about", element: <About /> }
     ];
 
     let renderer = createTestRenderer(
