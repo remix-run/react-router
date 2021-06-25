@@ -85,5 +85,8 @@
     "build/react-router-dom/umd/react-router-dom.production.min.js": {
       "none": "7 kB"
     }
+  },
+  "prettier": {
+    "trailingComma": "none"
   }
 }
