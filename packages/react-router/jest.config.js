@@ -1,7 +1,7 @@
 module.exports = {
-  testMatch: ["**/__tests__/*-test.js"],
+  testMatch: ['**/__tests__/*-test.[jt]s?(x)'],
   transform: {
-    "\\.js$": "./jest-transformer.js"
+    '\\.[jt]sx?$': './jest-transformer.js'
   },
   globals: {
     __DEV__: true
