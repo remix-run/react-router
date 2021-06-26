@@ -9,7 +9,7 @@ import {
 
 describe("useLocation", () => {
   it("returns the current location object", () => {
-    let location;
+    let location: ReturnType<typeof useLocation>;
     function Home() {
       location = useLocation();
       return <h1>Home</h1>;

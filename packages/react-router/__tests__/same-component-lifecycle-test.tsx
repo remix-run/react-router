@@ -4,7 +4,7 @@ import { act } from "react-dom/test-utils";
 import { MemoryRouter as Router, Routes, Route } from "react-router";
 
 describe("when the same component is mounted by two different routes", () => {
-  let node;
+  let node: HTMLDivElement;
   beforeEach(() => {
     node = document.createElement("div");
     document.body.appendChild(node);

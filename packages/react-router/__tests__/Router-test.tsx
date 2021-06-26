@@ -4,7 +4,7 @@ import { createMemoryHistory } from "history";
 import { Router } from "react-router";
 
 describe("A <Router>", () => {
-  let consoleError;
+  let consoleError: jest.SpyInstance;
   beforeEach(() => {
     consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
   });

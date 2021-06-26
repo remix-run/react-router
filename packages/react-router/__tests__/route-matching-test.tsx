@@ -122,7 +122,7 @@ describe("route matching", () => {
     return renderer.toJSON();
   }
 
-  function Courses() {
+  function Courses(props: Props) {
     return (
       <div>
         <h1>Courses</h1>
@@ -131,7 +131,7 @@ describe("route matching", () => {
     );
   }
 
-  function Course() {
+  function Course(props: Props) {
     let { id } = useParams();
 
     return (
@@ -142,23 +142,23 @@ describe("route matching", () => {
     );
   }
 
-  function CourseGrades() {
+  function CourseGrades(props: Props) {
     return <p>Course Grades</p>;
   }
 
-  function NewCourse() {
+  function NewCourse(props: Props) {
     return <p>New Course</p>;
   }
 
-  function CoursesIndex() {
+  function CoursesIndex(props: Props) {
     return <p>All Courses</p>;
   }
 
-  function CoursesNotFound() {
+  function CoursesNotFound(props: Props) {
     return <p>Course Not Found</p>;
   }
 
-  function Landing() {
+  function Landing(props: Props) {
     return (
       <p>
         <h1>Welcome to React Training</h1>
@@ -167,23 +167,28 @@ describe("route matching", () => {
     );
   }
 
-  function ReactFundamentals() {
+  function ReactFundamentals(props: Props) {
     return <p>React Fundamentals</p>;
   }
 
-  function AdvancedReact() {
+  function AdvancedReact(props: Props) {
     return <p>Advanced React</p>;
   }
 
-  function Home() {
+  function Home(props: Props) {
     return <p>Home</p>;
   }
 
-  function NotFound() {
+  function NotFound(props: Props) {
     return <p>Not Found</p>;
   }
 
-  function NeverRender() {
+  function NeverRender(props: Props): React.ReactElement {
     throw new Error("NeverRender should ... uh ... never render");
   }
 });
+
+interface Props {
+  children?: React.ReactNode;
+  path?: string;
+}
