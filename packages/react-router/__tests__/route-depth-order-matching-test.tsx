@@ -1,10 +1,11 @@
 import * as React from "react";
 import { act, create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Outlet, Routes, Route } from "react-router";
+import type { ReactTestRenderer } from "react-test-renderer";
 
 describe("nested /", () => {
   it("matches them depth-first", () => {
-    let renderer;
+    let renderer: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
         <Router initialEntries={["/"]}>

@@ -11,7 +11,7 @@ import {
 describe("useHref", () => {
   describe("to a child route", () => {
     it("returns the correct href", () => {
-      let href;
+      let href: string;
       function Courses() {
         href = useHref("advanced-react");
         return <h1>Courses</h1>;
@@ -30,7 +30,7 @@ describe("useHref", () => {
 
     describe("when the URL has a trailing slash", () => {
       it("returns the correct href", () => {
-        let href;
+        let href: string;
         function Courses() {
           href = useHref("advanced-react");
           return <h1>Courses</h1>;
@@ -50,7 +50,7 @@ describe("useHref", () => {
 
     describe("when the href has a trailing slash", () => {
       it("returns the correct href", () => {
-        let href;
+        let href: string;
         function Courses() {
           href = useHref("advanced-react/");
           return <h1>Courses</h1>;
@@ -71,7 +71,7 @@ describe("useHref", () => {
 
   describe("to a sibling route", () => {
     it("returns the correct href", () => {
-      let href;
+      let href: string;
       function Courses() {
         href = useHref("../about");
         return <h1>Courses</h1>;
@@ -90,7 +90,7 @@ describe("useHref", () => {
 
     describe("when the URL has a trailing slash", () => {
       it("returns the correct href", () => {
-        let href;
+        let href: string;
         function Courses() {
           href = useHref("../about");
           return <h1>Courses</h1>;
@@ -110,7 +110,7 @@ describe("useHref", () => {
 
     describe("when the href has a trailing slash", () => {
       it("returns the correct href", () => {
-        let href;
+        let href: string;
         function Courses() {
           href = useHref("../about/");
           return <h1>Courses</h1>;
@@ -131,7 +131,7 @@ describe("useHref", () => {
 
   describe("to a parent route", () => {
     it("returns the correct href", () => {
-      let href;
+      let href: string;
       function AdvancedReact() {
         href = useHref("..");
         return <h1>Advanced React</h1>;
@@ -150,7 +150,7 @@ describe("useHref", () => {
 
     describe("when the URL has a trailing slash", () => {
       it("returns the correct href", () => {
-        let href;
+        let href: string;
         function AdvancedReact() {
           href = useHref("..");
           return <h1>Advanced React</h1>;
@@ -173,7 +173,7 @@ describe("useHref", () => {
 
     describe("when the href has a trailing slash", () => {
       it("returns the correct href", () => {
-        let href;
+        let href: string;
         function AdvancedReact() {
           href = useHref("../");
           return <h1>Advanced React</h1>;
@@ -206,7 +206,7 @@ describe("useHref", () => {
         );
       }
 
-      let href;
+      let href: string;
       function ReactFundamentals() {
         href = useHref("../../../courses");
         return <p>React Fundamentals</p>;
@@ -230,7 +230,7 @@ describe("useHref", () => {
 
     describe("and no additional segments", () => {
       it("links to the root /", () => {
-        let href;
+        let href: string;
         function Home() {
           href = useHref("../../..");
           return <h1>Home</h1>;

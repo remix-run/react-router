@@ -5,12 +5,11 @@ import {
   MemoryRouter as Router,
   Routes,
   Route,
-  useNavigate,
-  useLocation
+  useNavigate
 } from "react-router";
 
-describe("navigate state", () => {
-  let node;
+describe("navigate", () => {
+  let node: HTMLDivElement;
   beforeEach(() => {
     node = document.createElement("div");
     document.body.appendChild(node);
@@ -21,8 +20,56 @@ describe("navigate state", () => {
     node = null;
   });
 
-  describe("by default", () => {
-    it("does not use any state", () => {
+  describe("with an absolute href", () => {
+    it("navigates to the correct URL", () => {
+      function Home() {
+        let navigate = useNavigate();
+
+        function handleClick() {
+          navigate("/about");
+        }
+
+        return (
+          <div>
+            <h1>Home</h1>
+            <button onClick={handleClick}>click me</button>
+          </div>
+        );
+      }
+
+      function About() {
+        return <h1>About</h1>;
+      }
+
+      act(() => {
+        ReactDOM.render(
+          <Router initialEntries={["/home"]}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+              <Route path="about" element={<About />} />
+            </Routes>
+          </Router>,
+          node
+        );
+      });
+
+      expect(node.innerHTML).toMatchInlineSnapshot(
+        `"<div><h1>Home</h1><button>click me</button></div>"`
+      );
+
+      let button = node.querySelector("button");
+      expect(button).not.toBeNull();
+
+      act(() => {
+        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+
+      expect(node.innerHTML).toMatchInlineSnapshot(`"<h1>About</h1>"`);
+    });
+  });
+
+  describe("with a relative href", () => {
+    it("navigates to the correct URL", () => {
       function Home() {
         let navigate = useNavigate();
 
@@ -38,9 +85,7 @@ describe("navigate state", () => {
         );
       }
 
-      let location;
       function About() {
-        location = useLocation();
         return <h1>About</h1>;
       }
 
@@ -56,55 +101,9 @@ describe("navigate state", () => {
         );
       });
 
-      let button = node.querySelector("button");
-      expect(button).not.toBeNull();
-
-      act(() => {
-        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      });
-
-      expect(location).toBeDefined();
-      expect(location).toMatchObject({
-        state: null
-      });
-    });
-  });
-
-  describe("with { state }", () => {
-    it("sets state on the next location", () => {
-      function Home() {
-        let navigate = useNavigate();
-        let state = { from: "home" };
-
-        function handleClick() {
-          navigate("../about", { state });
-        }
-
-        return (
-          <div>
-            <h1>Home</h1>
-            <button onClick={handleClick}>click me</button>
-          </div>
-        );
-      }
-
-      let location;
-      function About() {
-        location = useLocation();
-        return <h1>About</h1>;
-      }
-
-      act(() => {
-        ReactDOM.render(
-          <Router initialEntries={["/home"]}>
-            <Routes>
-              <Route path="home" element={<Home />} />
-              <Route path="about" element={<About />} />
-            </Routes>
-          </Router>,
-          node
-        );
-      });
+      expect(node.innerHTML).toMatchInlineSnapshot(
+        `"<div><h1>Home</h1><button>click me</button></div>"`
+      );
 
       let button = node.querySelector("button");
       expect(button).not.toBeNull();
@@ -113,10 +112,7 @@ describe("navigate state", () => {
         button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
-      expect(location).toBeDefined();
-      expect(location).toMatchObject({
-        state: { from: "home" }
-      });
+      expect(node.innerHTML).toMatchInlineSnapshot(`"<h1>About</h1>"`);
     });
   });
 });
