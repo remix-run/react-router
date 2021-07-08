@@ -489,11 +489,6 @@ export function useResolvedPath(to: To): Path {
   return React.useMemo(() => resolvePath(to, pathname), [to, pathname]);
 }
 
-interface RoutesOptions {
-  basename?: string;
-  location?: Location;
-}
-
 /**
  * Returns the element of the route that matched the current location, prepared
  * with the correct context to render the remainder of the route tree. Route

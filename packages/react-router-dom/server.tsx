@@ -14,6 +14,11 @@ export interface StaticRouterProps {
   location?: string | PartialLocation;
 }
 
+export interface StaticRouterProps {
+  children?: React.ReactNode;
+  location?: string | PartialLocation;
+}
+
 /**
  * A <Router> that may not transition to any other location. This is useful
  * on the server where there is no stateful UI.
