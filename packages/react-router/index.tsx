@@ -517,7 +517,7 @@ export function useRoutes(
 
 function useRoutes_(
   routes: RouteObject[],
-  { basename = '', location }: RoutesOptions = {}
+  { basename = "", location }: RoutesOptions = {}
 ): React.ReactElement | null {
   let {
     route: parentRoute,

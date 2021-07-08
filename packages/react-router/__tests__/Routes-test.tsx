@@ -11,7 +11,7 @@ describe("A <Routes>", () => {
     return <h1>Admin</h1>;
   }
 
-  it('renders the first route that matches the URL', () => {
+  it("renders the first route that matches the URL", () => {
     let renderer = createTestRenderer(
       <Router initialEntries={["/"]}>
         <Routes>
