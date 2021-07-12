@@ -24,10 +24,36 @@ function evalChildrenDev(children, props, path) {
   return value || null;
 }
 
+function deepEqual(x, y) {
+  if (x === y) return true;
+
+  if (
+    typeof x === "object" &&
+    x !== null &&
+    typeof y === "object" &&
+    y !== null
+  ) {
+    const xKeys = Object.keys(x);
+    const yKeys = Object.keys(y);
+
+    if (xKeys.length !== yKeys.length) return false;
+
+    for (const key of xKeys) {
+      if (!(yKeys.includes(key) && deepEqual(x[key], y[key]))) return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * The public API for matching a single path and rendering.
  */
 class Route extends React.Component {
+  _prevMatch = null;
+
   render() {
     return (
       <RouterContext.Consumer>
@@ -35,11 +61,14 @@ class Route extends React.Component {
           invariant(context, "You should not use <Route> outside a <Router>");
 
           const location = this.props.location || context.location;
-          const match = this.props.computedMatch
+          let match = this.props.computedMatch
             ? this.props.computedMatch // <Switch> already computed the match for us
             : this.props.path
             ? matchPath(location.pathname, this.props)
             : context.match;
+          // Reuse the same object if possible so that optimizations like React.PureComponent or React.memo won't be broken
+          match = deepEqual(match, this._prevMatch) ? this._prevMatch : match;
+          this._prevMatch = match;
 
           const props = { ...context, location, match };
 

@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState, useEffect, memo } from "react";
 import ReactDOM from "react-dom";
 import { createMemoryHistory as createHistory } from "history";
 import { MemoryRouter, Router, Route } from "react-router";
 
 import renderStrict from "./utils/renderStrict.js";
+import { act } from "react-dom/test-utils";
 
 describe("A <Route>", () => {
   const node = document.createElement("div");
@@ -535,6 +536,44 @@ describe("A <Route>", () => {
       );
 
       expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it("should not break optimizations like React.PureComponent or React.memo by passing a different object every time", () => {
+      const SubRoute = jest.fn(function SubRoute(props) {
+        return (
+          <div>
+            some very expensive contents for subpath:
+            {props.match.params.subPath}
+          </div>
+        );
+      });
+      const MemorizedSubRoute = memo(SubRoute);
+
+      function MainRoute() {
+        const [text, setText] = useState("default text");
+        useEffect(() => {
+          setText("updated text");
+        }, []);
+
+        return (
+          <div>
+            <div>some common widget with text: {text}</div>
+            <Route path="/:subpath" component={MemorizedSubRoute} />
+          </div>
+        );
+      }
+
+      act(() => {
+        renderStrict(
+          <MemoryRouter initialEntries={["/one"]}>
+            <Route path="/" component={MainRoute} />
+          </MemoryRouter>,
+          node
+        );
+      });
+
+      // When MainRoute updates, but the URL haven't changed, should not pass a different props.match object and force SubRoute to re-render
+      expect(SubRoute).toHaveBeenCalledTimes(1);
     });
   });
 
