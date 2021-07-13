@@ -1,0 +1,6 @@
+
+blank_issues_enabled: false
+contact_links:
+    - name: 🤔 Support/Usage Question
+      url: https://stackoverflow.com/questions/tagged/react-router  
+      about: This is a bug tracker, not a support system. For usage questions, please use Stack Overflow where there are a lot more people ready to help you out. Thanks!
