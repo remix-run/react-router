@@ -4,7 +4,7 @@ import { Navigate, Routes, Route } from "react-router-dom";
 import { StaticRouter as Router } from "react-router-dom/server";
 
 describe("A <Navigate> in a <StaticRouter>", () => {
-  let consoleWarn;
+  let consoleWarn: jest.SpyInstance<void, any>;
   beforeEach(() => {
     consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
   });

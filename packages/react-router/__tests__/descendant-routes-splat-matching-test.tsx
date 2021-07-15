@@ -1,6 +1,7 @@
 import * as React from "react";
 import { act, create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Outlet, Routes, Route } from "react-router";
+import type { ReactTestRenderer } from "react-test-renderer";
 
 describe("Descendant <Routes> splat matching", () => {
   describe("when the parent route path ends with /*", () => {
@@ -32,7 +33,7 @@ describe("Descendant <Routes> splat matching", () => {
         );
       }
 
-      let renderer;
+      let renderer: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/courses/react/react-fundamentals"]}>

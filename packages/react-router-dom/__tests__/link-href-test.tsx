@@ -1,6 +1,7 @@
 import * as React from "react";
 import { act, create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Routes, Route, Link } from "react-router-dom";
+import type { ReactTestRenderer } from "react-test-renderer";
 
 describe("Link href", () => {
   describe("absolute", () => {
@@ -14,7 +15,7 @@ describe("Link href", () => {
         );
       }
 
-      let renderer;
+      let renderer: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -43,7 +44,7 @@ describe("Link href", () => {
         );
       }
 
-      let renderer;
+      let renderer: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -72,7 +73,7 @@ describe("Link href", () => {
         );
       }
 
-      let renderer;
+      let renderer: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -101,7 +102,7 @@ describe("Link href", () => {
         );
       }
 
-      let renderer;
+      let renderer: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>

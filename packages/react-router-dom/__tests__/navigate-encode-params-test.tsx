@@ -10,7 +10,7 @@ import {
 } from "react-router-dom";
 
 describe("navigate with params", () => {
-  let node;
+  let node: HTMLDivElement;
   beforeEach(() => {
     node = document.createElement("div");
     document.body.appendChild(node);

@@ -3,7 +3,7 @@ import { act, create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Outlet, Routes, Route } from "react-router";
 
 describe("Descendant <Routes>", () => {
-  let consoleWarn;
+  let consoleWarn: jest.SpyInstance<void, any>;
   beforeEach(() => {
     consoleWarn = jest.spyOn(console, "warn").mockImplementation();
   });
