@@ -4,7 +4,7 @@ import { act } from "react-dom/test-utils";
 import { MemoryRouter as Router, Navigate, Routes, Route } from "react-router";
 
 describe("navigate using an element", () => {
-  let node;
+  let node: HTMLDivElement;
   beforeEach(() => {
     node = document.createElement("div");
     document.body.appendChild(node);

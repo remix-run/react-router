@@ -2,13 +2,14 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
 import { Router, Routes, Route, Link } from "react-router-dom";
+import type { History } from "history";
 
-function createHref({ pathname = "/", search = "", hash = "" }) {
+function createHref({ pathname = "/", search = "", hash = "" }): string {
   return pathname + search + hash;
 }
 
 function createMockHistory({ pathname = "/", search = "", hash = "" }) {
-  let location = { pathname, search, hash };
+  let location: Partial<History["location"]> = { pathname, search, hash };
   return {
     action: "POP",
     location,
@@ -18,13 +19,17 @@ function createMockHistory({ pathname = "/", search = "", hash = "" }) {
     go() {},
     back() {},
     forward() {},
-    listen() {},
-    block() {}
-  };
+    listen() {
+      return () => {};
+    },
+    block() {
+      return () => {};
+    }
+  } as History;
 }
 
 describe("Link push and replace", () => {
-  let node;
+  let node: HTMLDivElement;
   beforeEach(() => {
     node = document.createElement("div");
     document.body.appendChild(node);

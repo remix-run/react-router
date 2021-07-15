@@ -687,7 +687,7 @@ export function generatePath(path: string, params: Params = {}): string {
  * @see https://reactrouter.com/api/matchRoutes
  */
 export function matchRoutes(
-  routes: RouteObject[],
+  routes: PartialRouteObject[],
   location: string | PartialLocation,
   basename = ""
 ): RouteMatch[] | null {
@@ -725,13 +725,20 @@ export interface RouteMatch {
 }
 
 function flattenRoutes(
-  routes: RouteObject[],
+  routes: PartialRouteObject[],
   branches: RouteBranch[] = [],
   parentPath = "",
   parentRoutes: RouteObject[] = [],
   parentIndexes: number[] = []
 ): RouteBranch[] {
-  routes.forEach((route, index) => {
+  (routes as RouteObject[]).forEach((route, index) => {
+    route = {
+      ...route,
+      path: route.path || "/",
+      caseSensitive: !!route.caseSensitive,
+      element: route.element
+    };
+
     let path = joinPaths([parentPath, route.path]);
     let routes = parentRoutes.concat(route);
     let indexes = parentIndexes.concat(index);
