@@ -1,9 +1,9 @@
 # Migrating React Router v5 to v6
 
-*Note: This document is still a work in progress! The migration process from
+_Note: This document is still a work in progress! The migration process from
 React Router v5 to v6 isn't yet as smooth as we would like it to be. We are
 planning on backporting several of v6's new APIs to v5 to make it smoother, and
-this guide will keep improving as we continue to gather feedback.*
+this guide will keep improving as we continue to gather feedback._
 
 React Router version 6 introduces several powerful new features, as well as
 improved compatibility with the latest versions of React. It also introduces a
@@ -58,9 +58,7 @@ come back later and pick up where you left off.
 
 It will be easier to make the switch to React Router v6 if you upgrade to v5.1
 first. In v5.1, we released an enhancement to the handling of `<Route children>`
-elements that will help smooth the transition to v6. Instead of using `<Route
-component>` and `<Route render>` props, just use regular element `<Route
-children>` everywhere and use hooks to access the router's internal state.
+elements that will help smooth the transition to v6. Instead of using `<Route component>` and `<Route render>` props, just use regular element `<Route children>` everywhere and use hooks to access the router's internal state.
 
 ```js
 // v4 and v5 before 5.1
@@ -73,11 +71,9 @@ function User({ id }) {
   <Route path="/about" component={About} />
   <Route
     path="/users/:id"
-    render={
-      ({ match }) => <User id={match.params.id} />
-    }
+    render={({ match }) => <User id={match.params.id} />}
   />
-</Switch>
+</Switch>;
 
 // v5.1 preferred style
 function User() {
@@ -86,11 +82,15 @@ function User() {
 }
 
 <Switch>
-  <Route exact path="/"><Home /></Route>
-  <Route path="/about"><About /></Route>
+  <Route exact path="/">
+    <Home />
+  </Route>
+  <Route path="/about">
+    <About />
+  </Route>
   {/* Can also use a named `children` prop */}
   <Route path="/users/:id" children={<User />} />
-</Switch>
+</Switch>;
 ```
 
 You can read more about v5.1's hooks API and the rationale behind the move to
@@ -129,7 +129,7 @@ pick this guide back up when you're ready to continue.
 **Heads up:** This is the biggest step in the migration and will probably take
 the most time and effort.
 
-For this step, you'll need to install React Router v6 and the history library, 
+For this step, you'll need to install React Router v6 and the history library,
 which is now a peer dependency. If you're managing dependencies via npm:
 
 ```
@@ -168,14 +168,24 @@ put them in the child route's component.
 
 ```js
 // This is a React Router v5 app
-import { BrowserRouter, Switch, Route, Link, useRouteMatch } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Switch,
+  Route,
+  Link,
+  useRouteMatch
+} from "react-router-dom";
 
 function App() {
   return (
     <BrowserRouter>
       <Switch>
-        <Route exact path="/"><Home /></Route>
-        <Route path="/users"><Users /></Route>
+        <Route exact path="/">
+          <Home />
+        </Route>
+        <Route path="/users">
+          <Users />
+        </Route>
       </Switch>
     </BrowserRouter>
   );
@@ -194,8 +204,12 @@ function Users() {
       </nav>
 
       <Switch>
-        <Route path={`${match.path}/me`}><OwnUserProfile /></Route>
-        <Route path={`${match.path}/:id`}><UserProfile /></Route>
+        <Route path={`${match.path}/me`}>
+          <OwnUserProfile />
+        </Route>
+        <Route path={`${match.path}/:id`}>
+          <UserProfile />
+        </Route>
       </Switch>
     </div>
   );
@@ -206,7 +220,7 @@ This is the same app in v6:
 
 ```js
 // This is a React Router v6 app
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 function App() {
   return (
@@ -258,18 +272,15 @@ In the section about upgrading to v5.1, I promised you we'd discuss the
 advantages of using regular elements instead of components (or element types)
 for rendering. Let's take a quick break from upgrading and talk about that now.
 
-For starters, we see React itself taking the lead here with the `<Suspense
-fallback={<Spinner />}>` API. The `fallback` prop takes a React element, not a
+For starters, we see React itself taking the lead here with the `<Suspense fallback={<Spinner />}>` API. The `fallback` prop takes a React element, not a
 component. This lets you easily pass whatever props you want to your `<Spinner>`
 from the component that renders it.
 
 Using elements instead of components means we don't have to provide a
 `passProps`-style API so you can get the props you need to your elements. For
 example, in a component-based API there is no good way to pass props to the
-`<Profile>` element that is rendered when `<Route path=":userId"
-component={Profile} />` matches. Most React libraries who take this approach end
-up with either an API like `<Route component={Profile} passProps={{ animate:
-true }} />` or use a render prop or higher-order component.
+`<Profile>` element that is rendered when `<Route path=":userId" component={Profile} />` matches. Most React libraries who take this approach end
+up with either an API like `<Route component={Profile} passProps={{ animate: true }} />` or use a render prop or higher-order component.
 
 Also, I'm not sure if you noticed this but in v4 and v5, `Route`'s rendering API
 became rather large. It went something like this:
@@ -347,15 +358,14 @@ function DeepComponent() {
 // Aaaaaaaaand we're done here.
 ```
 
-Another important reason for using the `element` prop in v6 is that `<Route
-children>` is reserved for nesting routes. This is one of people's favorite
+Another important reason for using the `element` prop in v6 is that `<Route children>` is reserved for nesting routes. This is one of people's favorite
 features from v3 and @reach/router, and we're bringing it back in v6. Taking
 the code in the previous example one step further, we can hoist all `<Route>`
 elements into a single route config:
 
 ```js
 // This is a React Router v6 app
-import { BrowserRouter, Routes, Route, Link, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Outlet } from "react-router-dom";
 
 function App() {
   return (
@@ -380,7 +390,7 @@ function Users() {
 
       <Outlet />
     </div>
-  )
+  );
 }
 ```
 
@@ -447,7 +457,7 @@ One other thing to notice is that all path matching in v6 ignores the trailing
 slash on the URL. In fact, `<Route strict>` has been removed and has no effect
 in v6. **This does not mean that you can't use trailing slashes if you need
 to.** Your app can decide to use trailing slashes or not, you just can't
-render two different UIs *client-side* at `<Route path="edit">` and
+render two different UIs _client-side_ at `<Route path="edit">` and
 `<Route path="edit/">`. You can still render two different UIs at those URLs,
 but you'll have to do it server-side.
 
@@ -456,8 +466,7 @@ but you'll have to do it server-side.
 In v5, a `<Link to>` value that does not begin with `/` was ambiguous; it depends
 on what the current URL is. For example, if the current URL is `/users`, a v5
 `<Link to="me">` would render a `<a href="/me">`. However, if the current URL
-has a trailing slash, like `/users/`, the same `<Link to="me">` would render `<a
-href="/users/me">`. This makes it difficult to predict how links will behave, so
+has a trailing slash, like `/users/`, the same `<Link to="me">` would render `<a href="/users/me">`. This makes it difficult to predict how links will behave, so
 in v5 we recommended that you build links from the root URL (using `match.url`)
 and not use relative `<Link to>` values.
 
@@ -510,19 +519,20 @@ instead of using React elements, you're going to love this.
 function App() {
   let element = useRoutes([
     // These are the same as the props you provide to <Route>
-    { path: '/', element: <Home /> },
-    { path: 'dashboard', element: <Dashboard /> },
-    { path: 'invoices',
+    { path: "/", element: <Home /> },
+    { path: "dashboard", element: <Dashboard /> },
+    {
+      path: "invoices",
       element: <Invoices />,
       // Nested routes use a children property, which is also
       // the same as <Route>
       children: [
-        { path: ':id', element: <Invoice /> },
-        { path: 'sent', element: <SentInvoices /> }
+        { path: ":id", element: <Invoice /> },
+        { path: "sent", element: <SentInvoices /> }
       ]
     },
     // Not found routes work as you'd expect
-    { path: '*', element: <NotFound /> }
+    { path: "*", element: <NotFound /> }
   ]);
 
   // The returned element will render the entire element
@@ -550,12 +560,12 @@ needs.
 
 ```js
 // This is a React Router v5 app
-import { useHistory } from 'react-router-dom';
+import { useHistory } from "react-router-dom";
 
 function App() {
   let history = useHistory();
   function handleClick() {
-    history.push('/home')
+    history.push("/home");
   }
   return (
     <div>
@@ -571,12 +581,12 @@ this means changing `useHistory` to `useNavigate` and changing the
 
 ```js
 // This is a React Router v6 app
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 function App() {
   let navigate = useNavigate();
   function handleClick() {
-    navigate('/home')
+    navigate("/home");
   }
   return (
     <div>
@@ -595,7 +605,7 @@ If you prefer to use a declarative API for navigation (ala v5's `Redirect`
 component), v6 provides a `Navigate` component. Use it like:
 
 ```js
-import { Navigate } from 'react-router-dom';
+import { Navigate } from "react-router-dom";
 
 function App() {
   return <Navigate to="/home" replace state={state} />;
@@ -609,7 +619,7 @@ stack. For example, here is some code using v5's `useHistory` hook:
 
 ```js
 // This is a React Router v5 app
-import { useHistory } from 'react-router-dom';
+import { useHistory } from "react-router-dom";
 
 function App() {
   const { go, goBack, goForward } = useHistory();
@@ -629,7 +639,7 @@ Here is the equivalent app with v6:
 
 ```js
 // This is a React Router v6 app
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 function App() {
   const navigate = useNavigate();
@@ -647,7 +657,7 @@ function App() {
 
 Again, one of the main reasons we are moving from using the `history` API
 directly to the `navigate` API is to provide better compatibility with React
-suspense.  React Router v6 uses the `useTransition` hook at the root of your
+suspense. React Router v6 uses the `useTransition` hook at the root of your
 component hierarchy. This lets us provide a smoother experience when user
 interaction needs to interrupt a pending route transition, for example when they
 click a link to another route while a previously-clicked link is still loading.
@@ -655,12 +665,12 @@ The `navigate` API is aware of the internal pending transition state and will
 do a REPLACE instead of a PUSH onto the history stack, so the user doesn't end
 up with pages in their history that never actually loaded.
 
-*Note: The `<Redirect>` element from v5 is no longer supported as part of your
+_Note: The `<Redirect>` element from v5 is no longer supported as part of your
 route config (inside a `<Routes>`). This is due to upcoming changes in React
 that make it unsafe to alter the state of the router during the initial render.
 If you need to redirect immediately, you can either a) do it on your server
 (probably the best solution) or b) render a `<Navigate>` element in your route
-component. However, recognize that the navigation will happen in a `useEffect`.*
+component. However, recognize that the navigation will happen in a `useEffect`._
 
 Aside from suspense compatibility, `navigate`, like `Link`, supports relative
 navigation. For example:
@@ -668,16 +678,20 @@ navigation. For example:
 ```jsx
 // assuming we are at `/stuff`
 function SomeForm() {
-  let navigate = useNavigate()
+  let navigate = useNavigate();
   return (
-    <form onSubmit={async (event) => {
-      let newRecord = await saveDataFromForm(event.target)
-      // you can build up the URL yourself
-      navigate(`/stuff/${newRecord.id}`)
-      // or navigate relative, just like Link
-      navigate(`${newRecord.id}`)
-    }}>{/* ... */}</form>
-  )
+    <form
+      onSubmit={async event => {
+        let newRecord = await saveDataFromForm(event.target);
+        // you can build up the URL yourself
+        navigate(`/stuff/${newRecord.id}`);
+        // or navigate relative, just like Link
+        navigate(`${newRecord.id}`);
+      }}
+    >
+      {/* ... */}
+    </form>
+  );
 }
 ```
 
@@ -693,9 +707,9 @@ The `StaticRouter` component has moved into a new bundle:
 
 ```js
 // change
-import { StaticRouter } from 'react-router-dom';
+import { StaticRouter } from "react-router-dom";
 // to
-import { StaticRouter } from 'react-router-dom/server';
+import { StaticRouter } from "react-router-dom/server";
 ```
 
 This change was made both to follow more closely the convention established by
@@ -704,7 +718,7 @@ the `react-dom` package and to help users understand better what a
 
 ## Move `basename` from `<Router>` to `<Routes>`
 
-This is a simple change of moving the prop. The `basename` behavior has remained the same. It is used to indicate the base URL for all locations. 
+This is a simple change of moving the prop. The `basename` behavior has remained the same. It is used to indicate the base URL for all locations.
 
 ```jsx
 // change

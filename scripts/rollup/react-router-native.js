@@ -9,7 +9,7 @@ const PRETTY = !!process.env.PRETTY;
 const SOURCE_DIR = "packages/react-router-native";
 const OUTPUT_DIR = "build/react-router-native";
 
-export default function () {
+export default function reactRouterNative() {
   const modules = [
     {
       input: `${SOURCE_DIR}/index.tsx`,

@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-let StrictMode: React.FC = function(props) {
+let StrictMode: React.FC = function (props) {
   return props.children || (null as any);
 };
 

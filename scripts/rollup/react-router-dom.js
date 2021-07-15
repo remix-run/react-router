@@ -13,7 +13,7 @@ const PRETTY = !!process.env.PRETTY;
 const SOURCE_DIR = "packages/react-router-dom";
 const OUTPUT_DIR = "build/react-router-dom";
 
-export default function () {
+export default function reactRouterDOM() {
   // JS modules for bundlers
   const modules = [
     {
