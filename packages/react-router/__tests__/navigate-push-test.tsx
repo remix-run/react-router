@@ -2,24 +2,31 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
 import { Router, Routes, Route, useNavigate } from "react-router";
+import type { History } from "history";
 
-function createMockHistory(initialLocation) {
+function createMockHistory(initialLocation: Partial<History["location"]>) {
   return {
     action: "POP",
     location: initialLocation,
-    createHref() {},
+    createHref() {
+      return "";
+    },
     push() {},
     replace() {},
     go() {},
     back() {},
     forward() {},
-    listen() {},
-    block() {}
-  };
+    listen() {
+      return () => {};
+    },
+    block() {
+      return () => {};
+    }
+  } as History;
 }
 
 describe("navigate", () => {
-  let node;
+  let node: HTMLDivElement;
   beforeEach(() => {
     node = document.createElement("div");
     document.body.appendChild(node);
