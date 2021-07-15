@@ -10,11 +10,11 @@ import {
 
 describe("useSearchParams", () => {
   function SearchPage() {
-    let queryRef = React.useRef();
+    let queryRef = React.useRef<HTMLInputElement>();
     let [searchParams, setSearchParams] = useSearchParams({ q: "" });
     let query = searchParams.get("q");
 
-    function handleSubmit(event) {
+    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
       event.preventDefault();
       setSearchParams({ q: queryRef.current.value });
     }
@@ -30,7 +30,7 @@ describe("useSearchParams", () => {
     );
   }
 
-  let node;
+  let node: HTMLDivElement;
   beforeEach(() => {
     node = document.createElement("div");
     document.body.appendChild(node);
@@ -56,7 +56,7 @@ describe("useSearchParams", () => {
     let form = node.querySelector("form");
     expect(form).toBeDefined();
 
-    let queryInput = node.querySelector("input[name=q]");
+    let queryInput = node.querySelector<HTMLInputElement>("input[name=q]");
     expect(queryInput).toBeDefined();
 
     expect(node.innerHTML).toMatch(/The current query is "Michael Jackson"/);

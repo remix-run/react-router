@@ -1,7 +1,8 @@
 import { matchRoutes } from "react-router";
+import type { PartialRouteObject } from "react-router";
 
 describe("path matching", () => {
-  function pickPaths(routes, pathname) {
+  function pickPaths(routes: PartialRouteObject[], pathname: string) {
     let matches = matchRoutes(routes, { pathname });
     return matches ? matches.map(match => match.route.path) : null;
   }

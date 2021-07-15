@@ -4,7 +4,7 @@ import { act } from "react-dom/test-utils";
 import { MemoryRouter as Router, Routes, Route, Link } from "react-router-dom";
 
 describe("A <Link> click", () => {
-  let node;
+  let node: HTMLDivElement;
   beforeEach(() => {
     node = document.createElement("div");
     document.body.appendChild(node);
@@ -62,7 +62,7 @@ describe("A <Link> click", () => {
   describe("when preventDefault is used on the click handler", () => {
     it("stays on the same page", () => {
       function Home() {
-        function handleClick(event) {
+        function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
           event.preventDefault();
         }
 
