@@ -11,22 +11,17 @@ mean you can't use the router. Assuming you can actually use hooks (you're on
 React 16.8+), you just need a wrapper.
 
 ```js
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 function withRouter(Component) {
-   function ComponentWithRouterProp(props) {
-     let location = useLocation();
-     let navigate = useNavigate();
-     let params = useParams();
-     return (
-       <Component
-         {...props}
-         router={{ location, navigate, params }}
-       />
-     );
-   }
+  function ComponentWithRouterProp(props) {
+    let location = useLocation();
+    let navigate = useNavigate();
+    let params = useParams();
+    return <Component {...props} router={{ location, navigate, params }} />;
+  }
 
-   return ComponentWithRouterProp;
+  return ComponentWithRouterProp;
 }
 ```
 
@@ -36,21 +31,17 @@ We mentioned this [in the migration guide from v5 to
 v6](advanced-guides/migrating-5-to-6.md#advantages-of-route-element), but it's worth
 repeating here.
 
-In React Router v6 we switched from using v5's `<Route component>` and `<Route
-render>` APIs to `<Route element>`. Why is that?
+In React Router v6 we switched from using v5's `<Route component>` and `<Route render>` APIs to `<Route element>`. Why is that?
 
-For starters, we see React itself taking the lead here with the `<Suspense
-fallback={<Spinner />}>` API. The `fallback` prop takes a React **element**, not
+For starters, we see React itself taking the lead here with the `<Suspense fallback={<Spinner />}>` API. The `fallback` prop takes a React **element**, not
 a **component**. This lets you easily pass whatever props you want to your
 `<Spinner>` from the component that renders it.
 
 Using elements instead of components means we don't have to provide a
 `passProps`-style API so you can get the props you need to your elements. For
 example, in a component-based API there is no good way to pass props to the
-`<Profile>` element that is rendered when `<Route path=":userId"
-component={Profile} />` matches. Most React libraries who take this approach end
-up with either an API like `<Route component={Profile} passProps={{ animate:
-true }} />` or use a render prop or higher-order component.
+`<Profile>` element that is rendered when `<Route path=":userId" component={Profile} />` matches. Most React libraries who take this approach end
+up with either an API like `<Route component={Profile} passProps={{ animate: true }} />` or use a render prop or higher-order component.
 
 Also, `Route`'s rendering API in v5 was rather large. As we worked on v4/5, the
 conversation went something like this:
@@ -128,8 +119,7 @@ function DeepComponent() {
 // Aaaaaaaaand we're done here.
 ```
 
-Another important reason for using the `element` prop in v6 is that `<Route
-children>` is reserved for nesting routes. You can read more about this in [the
+Another important reason for using the `element` prop in v6 is that `<Route children>` is reserved for nesting routes. You can read more about this in [the
 guide about getting started](installation/getting-started.md#nested-routes) with v6.
 
 ## How do I add a No Match (404) Route in react-router v6?

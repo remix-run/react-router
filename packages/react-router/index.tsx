@@ -492,9 +492,10 @@ export function useRoutes(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
-  let routes = React.useMemo(() => createRoutesFromArray(partialRoutes), [
-    partialRoutes
-  ]);
+  let routes = React.useMemo(
+    () => createRoutesFromArray(partialRoutes),
+    [partialRoutes]
+  );
 
   return useRoutes_(routes, basename);
 }
@@ -530,11 +531,10 @@ function useRoutes_(
   basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
 
   let location = useLocation() as Location;
-  let matches = React.useMemo(() => matchRoutes(routes, location, basename), [
-    location,
-    routes,
-    basename
-  ]);
+  let matches = React.useMemo(
+    () => matchRoutes(routes, location, basename),
+    [location, routes, basename]
+  );
 
   if (!matches) {
     // TODO: Warn about nothing matching, suggest using a catch-all route.
@@ -954,8 +954,11 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
  * @see https://reactrouter.com/api/resolvePath
  */
 export function resolvePath(to: To, fromPathname = "/"): Path {
-  let { pathname: toPathname, search = "", hash = "" } =
-    typeof to === "string" ? parsePath(to) : to;
+  let {
+    pathname: toPathname,
+    search = "",
+    hash = ""
+  } = typeof to === "string" ? parsePath(to) : to;
 
   let pathname = toPathname
     ? resolvePathname(

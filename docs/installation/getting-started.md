@@ -18,18 +18,14 @@ Once you have React Router installed and running, come back and continue with th
 
 ## Introduction
 
-The heart of React Router is the concept of a *route*. A route represents a "page" in your app (or a "view" if you're on React Native). React Router represents routes internally with URLs, also called "locations". React Router lets you declare React elements that it renders when the user visits a route. 
+The heart of React Router is the concept of a _route_. A route represents a "page" in your app (or a "view" if you're on React Native). React Router represents routes internally with URLs, also called "locations". React Router lets you declare React elements that it renders when the user visits a route.
 
 A simple web app with two pages, "home" and "about" might look something like this:
 
 ```tsx
-import React from 'react';
-import ReactDOM from 'react-dom';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route
-} from 'react-router-dom';
+import React from "react";
+import ReactDOM from "react-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
@@ -43,18 +39,19 @@ function App() {
   );
 }
 
-ReactDOM.render((
+ReactDOM.render(
   <Router>
     <App />
-  </Router>
-), document.getElementById('app'));
+  </Router>,
+  document.getElementById("app")
+);
 ```
 
 The [`<Router>` element](../api-reference.md#router) provides information about the current [location](../api-reference.md#location) to the rest of its descendants. This example uses a [`<BrowserRouter>`](../api-reference.md#browserrouter). You should only ever render a single `<Router>` at or near the root of your component hierarchy.
 
 The [`<Routes>` element](../api-reference.md#routes) is where you declare what routes you have and what element each [`<Route>` element](../api-reference.md#route) renders when the location matches its `path`.
 
-The remaining examples in this guide assume you are importing React and rendering an `<App>` element inside a `<Router>`, but to be brief we'll just show the `<Routes>` you'll need for that example. 
+The remaining examples in this guide assume you are importing React and rendering an `<App>` element inside a `<Router>`, but to be brief we'll just show the `<Routes>` you'll need for that example.
 
 <a name="navigation"></a>
 
@@ -63,15 +60,14 @@ The remaining examples in this guide assume you are importing React and renderin
 React Router provides [a `Link` component](../api-reference.md#link) that you can use to let the user [navigate](../api-reference.md#navigation) around the app.
 
 ```tsx
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link } from "react-router-dom";
 
 function Home() {
   return (
     <div>
       <h1>Home</h1>
       <nav>
-        <Link to="/">Home</Link> |{' '}
-        <Link to="about">About</Link>
+        <Link to="/">Home</Link> | <Link to="about">About</Link>
       </nav>
     </div>
   );
@@ -101,7 +97,7 @@ function App() {
 You can use dynamic `:id`-style segments in your `<Route path>` to extract values that you can use to fetch data or render something in your app. The [`useParams` hook](../api-reference.md#useparams) returns an object of key/value pairs of URL parameters.
 
 ```tsx
-import { Routes, Route, useParams } from 'react-router-dom';
+import { Routes, Route, useParams } from "react-router-dom";
 
 function Invoice() {
   let { invoiceId } = useParams();
@@ -126,7 +122,7 @@ When determining which route to render, the `Routes` element picks the route wit
 For example, a route with `path="invoices/sent"` may match only `/invoices/sent`, so it is more specific than `path="invoices/:invoiceId"` which matches any URL that begins with `/invoices` (`/invoices/123`, `/invoices/cupcakes`, etc). You can organize your code however you'd like and put the routes in whatever order makes the most sense to you.
 
 ```tsx
-import { Routes, Route, useParams } from 'react-router-dom';
+import { Routes, Route, useParams } from "react-router-dom";
 
 function Invoice() {
   let { invoiceId } = useParams();
@@ -154,7 +150,7 @@ function App() {
 Routes may be nested inside one another, and their paths will nest too. Components that are used higher in the route hierarchy may render [an `<Outlet>` element](../api-reference.md#outlet) to render their child routes.
 
 ```tsx
-import { Routes, Route, Outlet } from 'react-router-dom';
+import { Routes, Route, Outlet } from "react-router-dom";
 
 function Invoices() {
   return (
@@ -194,14 +190,14 @@ function App() {
 Notice in the example above how nested route paths build on their parent path. This nesting behavior can be really useful for creating [navigation](../api-reference.md#navigation) and layouts where the surrounding UI remains consistent while the inner content changes between routes.
 
 ```tsx
-import { Routes, Route, Link, Outlet } from 'react-router-dom';
+import { Routes, Route, Link, Outlet } from "react-router-dom";
 
 function Layout() {
   return (
     <div>
       <h1>Welcome to the app!</h1>
       <nav>
-        <Link to="invoices">Invoices</Link> |{' '}
+        <Link to="invoices">Invoices</Link> |{" "}
         <Link to="dashboard">Dashboard</Link>
       </nav>
       <div className="content">
@@ -238,7 +234,7 @@ function App() {
 Relative `<Link to>` values (that do not begin with a `/`) are relative to the path of the route that rendered them. The two links below will link to `/dashboard/invoices` and `/dashboard/team` because they're rendered inside of `<Dashboard>`. This is really nice when you change a parent's URL or re-arrange your components because all of your links automatically update.
 
 ```tsx
-import { Routes, Route, Link, Outlet } from 'react-router-dom';
+import { Routes, Route, Link, Outlet } from "react-router-dom";
 
 function Home() {
   return <h1>Home</h1>;
@@ -249,8 +245,7 @@ function Dashboard() {
     <div>
       <h1>Dashboard</h1>
       <nav>
-        <Link to="invoices">Invoices</Link>{" "}
-        <Link to="team">Team</Link>
+        <Link to="invoices">Invoices</Link> <Link to="team">Team</Link>
       </nav>
       <hr />
       <Outlet />
@@ -356,11 +351,10 @@ function App() {
 
 ## Descendant Routes
 
-You can render [a `<Routes>` element](../api-reference.md#routes) anywhere you need one, including deep within the component tree of another `<Routes>`. These will work just the same as any other `<Routes>`, except they will automatically build on the path of the route that rendered them. If you do this, *make sure to put a \* at the end of the parent route's path*. Otherwise the parent route won't match the URL when it is longer than the parent route's path, and your descendant `<Routes>` won't ever show up.
-
+You can render [a `<Routes>` element](../api-reference.md#routes) anywhere you need one, including deep within the component tree of another `<Routes>`. These will work just the same as any other `<Routes>`, except they will automatically build on the path of the route that rendered them. If you do this, _make sure to put a \* at the end of the parent route's path_. Otherwise the parent route won't match the URL when it is longer than the parent route's path, and your descendant `<Routes>` won't ever show up.
 
 ```tsx
-function Dashboard(){
+function Dashboard() {
   return (
     <div>
       <p>Look, more routes!</p>
@@ -398,8 +392,8 @@ function Invoices() {
     <div>
       <NewInvoiceForm
         onSubmit={async event => {
-          let newInvoice = await createInvoice(event.target)
-          navigate(`/invoices/${newInvoice.id}`)
+          let newInvoice = await createInvoice(event.target);
+          navigate(`/invoices/${newInvoice.id}`);
         }}
       />
     </div>

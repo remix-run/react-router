@@ -26,13 +26,13 @@ You can use the `useSearchParams` hook anywhere you need to work with the
 search/query parameters.
 
 ```js
-import * as React from 'react';
-import { useSearchParams } from 'react-router-dom';
+import * as React from "react";
+import { useSearchParams } from "react-router-dom";
 
 function SearchPage() {
   let queryRef = React.useRef();
-  let [searchParams, setSearchParams] = useSearchParams({ q: '' });
-  let query = searchParams.get('q');
+  let [searchParams, setSearchParams] = useSearchParams({ q: "" });
+  let query = searchParams.get("q");
 
   // Use the form's "submit" event to persist
   // the query to the browser's address bar
@@ -70,19 +70,16 @@ as possible. For this reason, we always try to use APIs that are built-in to
 browsers if we can.
 
 ```js
-import React from 'react';
-import { useLocation } from 'react-router-dom';
+import React from "react";
+import { useLocation } from "react-router-dom";
 
-import qs from 'query-string';
+import qs from "query-string";
 
 // First, create our custom hook. We memoize the result of parsing the search
 // string here so we don't have to re-parse it every time the hook is used.
 function useQuery() {
   let location = useLocation();
-  return React.useMemo(
-    () => qs.parse(location.search),
-    [location.search]
-  );
+  return React.useMemo(() => qs.parse(location.search), [location.search]);
 }
 
 // Then, assuming a <SearchResults> element is rendered at a URL like
@@ -90,8 +87,6 @@ function useQuery() {
 function SearchResults() {
   let { q } = useQuery();
 
-  return (
-    <p>The query is "{q}".</p>
-  );
+  return <p>The query is "{q}".</p>;
 }
 ```

@@ -8,4 +8,4 @@ We have guides for the following libraries:
 - [Mocha](testing-with-mocha.md)
 
 Whatever you end up using, try to avoid testing React Router itself. That's our
-responsibility, and it's one we take seriously! 
+responsibility, and it's one we take seriously!
