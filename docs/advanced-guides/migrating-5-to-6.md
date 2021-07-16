@@ -66,14 +66,18 @@ function User({ id }) {
   // ...
 }
 
-<Switch>
-  <Route exact path="/" component={Home} />
-  <Route path="/about" component={About} />
-  <Route
-    path="/users/:id"
-    render={({ match }) => <User id={match.params.id} />}
-  />
-</Switch>;
+function App() {
+  return (
+    <Switch>
+      <Route exact path="/" component={Home} />
+      <Route path="/about" component={About} />
+      <Route
+        path="/users/:id"
+        render={({ match }) => <User id={match.params.id} />}
+      />
+    </Switch>
+  );
+}
 
 // v5.1 preferred style
 function User() {
@@ -81,16 +85,20 @@ function User() {
   // ...
 }
 
-<Switch>
-  <Route exact path="/">
-    <Home />
-  </Route>
-  <Route path="/about">
-    <About />
-  </Route>
-  {/* Can also use a named `children` prop */}
-  <Route path="/users/:id" children={<User />} />
-</Switch>;
+function App() {
+  return (
+    <Switch>
+      <Route exact path="/">
+        <Home />
+      </Route>
+      <Route path="/about">
+        <About />
+      </Route>
+      {/* Can also use a named `children` prop */}
+      <Route path="/users/:id" children={<User />} />
+    </Switch>
+  );
+}
 ```
 
 You can read more about v5.1's hooks API and the rationale behind the move to
