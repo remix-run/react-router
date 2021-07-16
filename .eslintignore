@@ -1,3 +1,4 @@
 /build/
 /fixtures/
 node_modules/
+/docs/api
