@@ -1,7 +1,11 @@
 import { execSync } from "child_process";
 
+const packages = ["react-router", "react-router-dom", "react-router-native"];
+
 execSync(
-  `typedoc --ignoreCompilerErrors --includeDeclarations --excludeExternals --out docs/api build`,
+  `typedoc ${packages
+    .map(pkg => `packages/${pkg}/index.tsx`)
+    .join(" ")} --out docs/api --name "React Router"`,
   {
     env: process.env,
     stdio: "inherit"
