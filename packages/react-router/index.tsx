@@ -69,11 +69,12 @@ export type Navigator = Omit<
 const LocationContext = React.createContext<LocationContextObject>({
   static: false
 });
+const NavigatorContext = React.createContext<Navigator | null>(null)
+
 
 interface LocationContextObject {
   action?: Action;
   location?: Location;
-  navigator?: Navigator;
   static: boolean;
 }
 
@@ -129,7 +130,6 @@ export function MemoryRouter({
     action: history.action,
     location: history.location
   });
-
   React.useLayoutEffect(() => history.listen(setState), [history]);
 
   return (
@@ -159,7 +159,7 @@ export interface NavigateProps {
  */
 export function Navigate({ to, replace, state }: NavigateProps): null {
   invariant(
-    useInRouterContext(),
+    useInNavigatorContext(),
     // TODO: This error is probably because they somehow have 2 versions of
     // the router loaded. We can help them understand how to avoid that.
     `<Navigate> may be used only in the context of a <Router> component.`
@@ -239,11 +239,18 @@ export function Router({
       ` You never need more than one.`
   );
 
+  const locationPop = React.useMemo(() => ({ action, location, static: staticProp }), [action, location, staticProp])
+
   return (
-    <LocationContext.Provider
-      children={children}
-      value={{ action, location, navigator, static: staticProp }}
-    />
+    <NavigatorContext.Provider
+      value={navigator}
+    >
+      <LocationContext.Provider
+        value={locationPop}
+      >
+        {children}
+      </LocationContext.Provider>
+     </NavigatorContext.Provider>
   );
 }
 
@@ -278,13 +285,13 @@ export function Routes({
  */
 export function useBlocker(blocker: Blocker, when = true): void {
   invariant(
-    useInRouterContext(),
+    useInNavigatorContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
     `useBlocker() may be used only in the context of a <Router> component.`
   );
 
-  let navigator = React.useContext(LocationContext).navigator as Navigator;
+  let navigator = React.useContext(NavigatorContext) as Navigator;
 
   React.useEffect(() => {
     if (!when) return;
@@ -316,16 +323,24 @@ export function useBlocker(blocker: Blocker, when = true): void {
  */
 export function useHref(to: To): string {
   invariant(
-    useInRouterContext(),
+    useInNavigatorContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
     `useHref() may be used only in the context of a <Router> component.`
   );
 
-  let navigator = React.useContext(LocationContext).navigator as Navigator;
+  let navigator = React.useContext(NavigatorContext) as Navigator;
   let path = useResolvedPath(to);
 
   return navigator.createHref(path);
+}
+
+function useInLocationContext(){
+  return React.useContext(LocationContext).location != null;
+}
+
+function useInNavigatorContext(){
+  return React.useContext(NavigatorContext)!=null
 }
 
 /**
@@ -334,7 +349,9 @@ export function useHref(to: To): string {
  * @see https://reactrouter.com/api/useInRouterContext
  */
 export function useInRouterContext(): boolean {
-  return React.useContext(LocationContext).location != null;
+  const locationContext = useInLocationContext()
+  const navigatorContext = useInNavigatorContext()
+  return locationContext && navigatorContext;
 }
 
 /**
@@ -349,7 +366,7 @@ export function useInRouterContext(): boolean {
  */
 export function useLocation(): Location {
   invariant(
-    useInRouterContext(),
+    useInLocationContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
     `useLocation() may be used only in the context of a <Router> component.`
@@ -367,7 +384,7 @@ export function useLocation(): Location {
  */
 export function useMatch(pattern: PathPattern): PathMatch | null {
   invariant(
-    useInRouterContext(),
+    useInLocationContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
     `useMatch() may be used only in the context of a <Router> component.`
@@ -402,14 +419,13 @@ export interface NavigateOptions {
  */
 export function useNavigate(): NavigateFunction {
   invariant(
-    useInRouterContext(),
+    useInNavigatorContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
     `useNavigate() may be used only in the context of a <Router> component.`
   );
 
-  let locationContext = React.useContext(LocationContext);
-  let navigator = locationContext.navigator as Navigator;
+  let navigator = React.useContext(NavigatorContext) as Navigator;
   let { pathname } = React.useContext(RouteContext);
 
   let activeRef = React.useRef(false);
@@ -486,7 +502,7 @@ export function useRoutes(
   basename = ""
 ): React.ReactElement | null {
   invariant(
-    useInRouterContext(),
+    useInLocationContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
     `useRoutes() may be used only in the context of a <Router> component.`
