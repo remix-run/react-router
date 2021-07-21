@@ -22,9 +22,9 @@ describe("nested /", () => {
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>
-        First 
+        First
         <div>
-          Second 
+          Second
           <div>
             Third
           </div>
@@ -56,7 +56,7 @@ describe("nested /", () => {
 
 describe("routes with identical paths", () => {
   it("matches them in order", () => {
-    let renderer;
+    let renderer: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
         <Router initialEntries={["/home"]}>

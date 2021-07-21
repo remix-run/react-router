@@ -7,8 +7,8 @@ import {
   Routes,
   Route
 } from "react-router-native";
-
 import { press } from "./utils.js";
+import type { ReactTestRenderer } from "react-test-renderer";
 
 describe("A <Link> press", () => {
   it("navigates to the new view", () => {
@@ -31,7 +31,7 @@ describe("A <Link> press", () => {
       );
     }
 
-    let renderer;
+    let renderer: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
         <Router initialEntries={["/home"]}>
@@ -77,7 +77,7 @@ describe("A <Link> press", () => {
       );
     }
 
-    let renderer;
+    let renderer: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
         <Router initialEntries={["/home"]}>
@@ -128,7 +128,7 @@ describe("A <Link> press", () => {
         );
       }
 
-      let renderer;
+      let renderer: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
