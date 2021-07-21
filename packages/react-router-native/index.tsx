@@ -11,6 +11,7 @@ import {
   MemoryRouter,
   MemoryRouterProps,
   Navigate,
+  NavigateOptions,
   Outlet,
   Route,
   Router,
@@ -79,6 +80,7 @@ export function NativeRouter(props: NativeRouterProps) {
 }
 
 export interface LinkProps extends TouchableHighlightProps {
+  children?: React.ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
   replace?: boolean;
   state?: State;
@@ -229,7 +231,9 @@ export function usePrompt(message: string, when = true) {
  * A convenient wrapper for accessing individual query parameters via the
  * URLSearchParams interface.
  */
-export function useSearchParams(defaultInit?: URLSearchParamsInit) {
+export function useSearchParams(
+  defaultInit?: URLSearchParamsInit
+): [URLSearchParams, SetURLSearchParams] {
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
 
   let location = useLocation();
@@ -248,7 +252,7 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   }, [location.search]);
 
   let navigate = useNavigate();
-  let setSearchParams = React.useCallback(
+  let setSearchParams: SetURLSearchParams = React.useCallback(
     (nextInit, navigateOpts) => {
       navigate("?" + createSearchParams(nextInit), navigateOpts);
     },
@@ -257,6 +261,11 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
 
   return [searchParams, setSearchParams];
 }
+
+type SetURLSearchParams = (
+  nextInit?: URLSearchParamsInit | undefined,
+  navigateOpts?: NavigateOptions | undefined
+) => void;
 
 export type ParamKeyValuePair = [string, string];
 

@@ -1,5 +1,11 @@
+import type { ReactTestInstance } from "react-test-renderer";
+
 export class MockEvent {
-  constructor(type, extraProps) {
+  type: string;
+  defaultPrevented: boolean;
+  [k: string]: any;
+
+  constructor(type: string, extraProps?: any) {
     this.type = type;
     this.defaultPrevented = false;
     Object.assign(this, extraProps);
@@ -9,7 +15,10 @@ export class MockEvent {
   }
 }
 
-export function press(element, extraProps) {
+export function press(
+  element: React.ReactElement | ReactTestInstance,
+  extraProps?: any
+) {
   if (!element.props.onPress) {
     throw new Error(`Missing onPress prop for element in press(element)`);
   }
@@ -18,10 +27,10 @@ export function press(element, extraProps) {
   return event;
 }
 
-export function mockPromiseThatResolvesImmediatelyWith(value) {
+export function mockPromiseThatResolvesImmediatelyWith<T = void>(value?: T) {
   return {
     then(callback) {
       callback(value);
     }
-  };
+  } as Promise<T>;
 }

@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Linking, Text, View } from "react-native";
+import { mocked } from "ts-jest/utils";
+import { Linking as _Linking, Text, View } from "react-native";
 import { act, create as createTestRenderer } from "react-test-renderer";
 import {
   NativeRouter as Router,
@@ -7,14 +8,17 @@ import {
   Route,
   useDeepLinking
 } from "react-router-native";
-
 import { MockEvent, mockPromiseThatResolvesImmediatelyWith } from "./utils.js";
+import type { ReactTestRenderer } from "react-test-renderer";
+
+// Ensures TypeScript understands that Linking is a mock
+const Linking = mocked(_Linking);
 
 describe("deep linking", () => {
   describe("when there is no initial URL", () => {
     it("stays on the initial route", () => {
       Linking.getInitialURL.mockImplementation(() => {
-        return mockPromiseThatResolvesImmediatelyWith();
+        return mockPromiseThatResolvesImmediatelyWith() as Promise<string>;
       });
 
       function Home() {
@@ -34,7 +38,7 @@ describe("deep linking", () => {
         );
       }
 
-      let renderer;
+      let renderer: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -55,7 +59,9 @@ describe("deep linking", () => {
   describe("when there is an initial URL", () => {
     it("navigates to the matching route", () => {
       Linking.getInitialURL.mockImplementation(() => {
-        return mockPromiseThatResolvesImmediatelyWith("app:///about");
+        return mockPromiseThatResolvesImmediatelyWith(
+          "app:///about"
+        ) as Promise<string>;
       });
 
       function Home() {
@@ -75,7 +81,7 @@ describe("deep linking", () => {
         );
       }
 
-      let renderer;
+      let renderer: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -96,7 +102,7 @@ describe("deep linking", () => {
   describe('when a "url" event happens', () => {
     it("navigates to the matching route", () => {
       Linking.getInitialURL.mockImplementation(() => {
-        return mockPromiseThatResolvesImmediatelyWith();
+        return mockPromiseThatResolvesImmediatelyWith() as Promise<string>;
       });
 
       let listeners = [];
@@ -127,7 +133,7 @@ describe("deep linking", () => {
         );
       }
 
-      let renderer;
+      let renderer: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>

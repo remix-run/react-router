@@ -7,6 +7,7 @@ import {
   Route,
   useSearchParams
 } from "react-router-native";
+import type { ReactTestRenderer } from "react-test-renderer";
 
 describe("useSearchParams", () => {
   function SearchForm({ children, onSubmit }) {
@@ -33,7 +34,7 @@ describe("useSearchParams", () => {
   }
 
   it("reads and writes the search string", () => {
-    let renderer;
+    let renderer: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
         <Router initialEntries={["/search?q=Michael+Jackson"]}>
