@@ -18,7 +18,7 @@ describe("deep linking", () => {
   describe("when there is no initial URL", () => {
     it("stays on the initial route", () => {
       Linking.getInitialURL.mockImplementation(() => {
-        return mockPromiseThatResolvesImmediatelyWith() as Promise<string>;
+        return mockPromiseThatResolvesImmediatelyWith<string>();
       });
 
       function Home() {
@@ -59,9 +59,7 @@ describe("deep linking", () => {
   describe("when there is an initial URL", () => {
     it("navigates to the matching route", () => {
       Linking.getInitialURL.mockImplementation(() => {
-        return mockPromiseThatResolvesImmediatelyWith(
-          "app:///about"
-        ) as Promise<string>;
+        return mockPromiseThatResolvesImmediatelyWith("app:///about");
       });
 
       function Home() {
@@ -102,7 +100,7 @@ describe("deep linking", () => {
   describe('when a "url" event happens', () => {
     it("navigates to the matching route", () => {
       Linking.getInitialURL.mockImplementation(() => {
-        return mockPromiseThatResolvesImmediatelyWith() as Promise<string>;
+        return mockPromiseThatResolvesImmediatelyWith<string>();
       });
 
       let listeners = [];
