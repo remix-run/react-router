@@ -14,5 +14,5 @@ module.exports = {
   modulePaths: [
     "<rootDir>/node_modules" // for react-native
   ],
-  setupFiles: ["<rootDir>/__tests__/setup.js"]
+  setupFiles: ["<rootDir>/__tests__/setup.ts"]
 };

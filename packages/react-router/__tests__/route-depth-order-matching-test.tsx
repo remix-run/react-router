@@ -22,9 +22,9 @@ describe("nested /", () => {
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>
-        First
+        First 
         <div>
-          Second
+          Second 
           <div>
             Third
           </div>

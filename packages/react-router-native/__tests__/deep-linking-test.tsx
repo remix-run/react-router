@@ -8,7 +8,7 @@ import {
   Route,
   useDeepLinking
 } from "react-router-native";
-import { MockEvent, mockPromiseThatResolvesImmediatelyWith } from "./utils.js";
+import { MockEvent, mockPromiseThatResolvesImmediatelyWith } from "./utils";
 import type { ReactTestRenderer } from "react-test-renderer";
 
 // Ensures TypeScript understands that Linking is a mock

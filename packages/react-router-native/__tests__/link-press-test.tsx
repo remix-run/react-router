@@ -7,7 +7,7 @@ import {
   Routes,
   Route
 } from "react-router-native";
-import { press } from "./utils.js";
+import { press } from "./utils";
 import type { ReactTestRenderer } from "react-test-renderer";
 
 describe("A <Link> press", () => {
