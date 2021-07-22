@@ -87,7 +87,7 @@ let anchorRef = React.createRef()
 If you would like utilize your own navigation component, you can simply do so by passing it through the `component` prop.
 
 ```jsx
-const FancyLink = React.forwardRef((props, ref) => (
+const FancyLink = React.forwardRef(({ navigate, ...props }, ref) => (
   <a ref={ref} {...props}>💅 {props.children}</a>
 ))
 
