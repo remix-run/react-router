@@ -23,7 +23,6 @@ export default function reactRouterNative() {
         "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose",
         "@ungap/url-search-params",
         "history",
-        "prop-types",
         "react",
         "react-native",
         "react-router"

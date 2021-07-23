@@ -9,9 +9,6 @@
   "module": "index.js",
   "types": "index.d.ts",
   "unpkg": "umd/react-router.production.min.js",
-  "dependencies": {
-    "prop-types": "^15.7.2"
-  },
   "peerDependencies": {
     "history": ">=5",
     "react": ">=16.8"

@@ -10,7 +10,6 @@
   "types": "index.d.ts",
   "unpkg": "umd/react-router-dom.production.min.js",
   "dependencies": {
-    "prop-types": "^15.7.2",
     "react-router": "6.0.0-beta.0"
   },
   "peerDependencies": {
