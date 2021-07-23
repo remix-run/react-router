@@ -1,6 +1,7 @@
 MIT License
 
-Copyright (c) React Training 2016-2019
+Copyright (c) React Training 2015-2019
+Copyright (c) Remix Software 2020-2021
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
