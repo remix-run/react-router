@@ -62,7 +62,10 @@ export default function reactRouter({ watch }) {
           presets: ["@babel/preset-modules", "@babel/preset-react"],
           plugins: ["babel-plugin-dev-expression"]
         }),
-        replace({ "process.env.NODE_ENV": JSON.stringify("development") }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("development") }
+        })
         // compiler()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     },
@@ -94,11 +97,12 @@ export default function reactRouter({ watch }) {
               }
             ]
           ],
-          plugins: [
-            "babel-plugin-dev-expression"
-          ]
+          plugins: ["babel-plugin-dev-expression"]
         }),
-        replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("production") }
+        }),
         // compiler(),
         terser({ ecma: 8, safari10: true })
       ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
@@ -127,7 +131,10 @@ export default function reactRouter({ watch }) {
           ],
           plugins: ["babel-plugin-dev-expression"]
         }),
-        replace({ "process.env.NODE_ENV": JSON.stringify("development") }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("development") }
+        })
         // compiler()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     },
@@ -149,11 +156,12 @@ export default function reactRouter({ watch }) {
             ["@babel/preset-env", { loose: true }],
             "@babel/preset-react"
           ],
-          plugins: [
-            "babel-plugin-dev-expression"
-          ]
+          plugins: ["babel-plugin-dev-expression"]
         }),
-        replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("production") }
+        }),
         // compiler(),
         terser()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
