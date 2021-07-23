@@ -347,7 +347,7 @@ export function useInRouterContext(): boolean {
  *
  * @see https://reactrouter.com/api/useLocation
  */
-export function useLocation(): Location {
+export function useLocation<S extends State = State>(): Location<S> {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
