@@ -32,7 +32,6 @@ export default function reactRouter({ watch }) {
           ],
           plugins: ["babel-plugin-dev-expression"]
         }),
-        // compiler(),
         copy({
           targets: [
             { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
@@ -66,7 +65,6 @@ export default function reactRouter({ watch }) {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") }
         })
-        // compiler()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     },
     {
@@ -135,7 +133,6 @@ export default function reactRouter({ watch }) {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") }
         })
-        // compiler()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     },
     {
@@ -176,9 +173,7 @@ export default function reactRouter({ watch }) {
         file: `${OUTPUT_DIR}/main.js`,
         format: "cjs"
       },
-      plugins: [
-        // compiler()
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
+      plugins: [].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     }
   ];
 
