@@ -1,6 +1,6 @@
 import babel from "rollup-plugin-babel";
 import commonjs from "@rollup/plugin-commonjs";
-import compiler from "@ampproject/rollup-plugin-closure-compiler";
+// import compiler from "@ampproject/rollup-plugin-closure-compiler";
 import copy from "rollup-plugin-copy";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import prettier from "rollup-plugin-prettier";
@@ -34,7 +34,7 @@ export default function reactRouter({ watch }) {
           ],
           plugins: ["babel-plugin-dev-expression"]
         }),
-        compiler(),
+        // compiler(),
         copy({
           targets: [
             { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
@@ -65,7 +65,7 @@ export default function reactRouter({ watch }) {
           plugins: ["babel-plugin-dev-expression"]
         }),
         replace({ "process.env.NODE_ENV": JSON.stringify("development") }),
-        compiler()
+        // compiler()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     },
     {
@@ -107,7 +107,7 @@ export default function reactRouter({ watch }) {
           ]
         }),
         replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
-        compiler(),
+        // compiler(),
         terser({ ecma: 8, safari10: true })
       ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     }
@@ -138,7 +138,7 @@ export default function reactRouter({ watch }) {
         replace({ "process.env.NODE_ENV": JSON.stringify("development") }),
         nodeResolve(), // for prop-types
         commonjs(), // for prop-types
-        compiler()
+        // compiler()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     },
     {
@@ -170,7 +170,7 @@ export default function reactRouter({ watch }) {
           ]
         }),
         replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
-        compiler(),
+        // compiler(),
         terser()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     }
@@ -184,7 +184,9 @@ export default function reactRouter({ watch }) {
         file: `${OUTPUT_DIR}/main.js`,
         format: "cjs"
       },
-      plugins: [compiler()].concat(PRETTY ? prettier({ parser: "babel" }) : [])
+      plugins: [
+        // compiler()
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     }
   ];
 

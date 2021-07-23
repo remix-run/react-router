@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
-    "@ampproject/rollup-plugin-closure-compiler": "^0.21.0",
+    "@ampproject/rollup-plugin-closure-compiler": "^0.26.0",
     "@babel/core": "^7.7.4",
     "@babel/preset-env": "^7.7.4",
     "@babel/preset-modules": "^0.1.2",

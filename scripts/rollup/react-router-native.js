@@ -1,5 +1,5 @@
 import babel from "rollup-plugin-babel";
-import compiler from "@ampproject/rollup-plugin-closure-compiler";
+// import compiler from "@ampproject/rollup-plugin-closure-compiler";
 import copy from "rollup-plugin-copy";
 import prettier from "rollup-plugin-prettier";
 
@@ -44,7 +44,7 @@ export default function reactRouterNative() {
           ],
           plugins: ["babel-plugin-dev-expression"]
         }),
-        compiler(),
+        // compiler(),
         copy({
           targets: [
             { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
