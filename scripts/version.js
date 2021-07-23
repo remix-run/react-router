@@ -40,13 +40,7 @@ function getNextVersion(currentVersion, givenVersion, prereleaseId) {
     );
   }
 
-  let nextVersion;
-  if (givenVersion === "experimental") {
-    let hash = execSync(`git rev-parse --short HEAD`).toString().trim();
-    nextVersion = `0.0.0-experimental-${hash}`;
-  } else {
-    nextVersion = semver.inc(currentVersion, givenVersion, prereleaseId);
-  }
+  let nextVersion = semver.inc(currentVersion, givenVersion, prereleaseId);
 
   invariant(nextVersion != null, `Invalid version specifier: ${givenVersion}`);
 
