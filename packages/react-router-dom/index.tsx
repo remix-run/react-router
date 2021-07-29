@@ -1,13 +1,5 @@
 import * as React from "react";
-import {
-  BrowserHistory,
-  HashHistory,
-  State,
-  To,
-  createBrowserHistory,
-  createHashHistory,
-  createPath
-} from "history";
+import { createBrowserHistory, createHashHistory, createPath } from "history";
 import {
   MemoryRouter,
   Navigate,
@@ -32,6 +24,7 @@ import {
   matchPath,
   resolvePath
 } from "react-router";
+import type { BrowserHistory, HashHistory, State, To } from "history";
 
 function warning(cond: boolean, message: string): void {
   if (!cond) {
@@ -79,6 +72,23 @@ export {
   useResolvedPath,
   useRoutes
 };
+
+export type {
+  MemoryRouterProps,
+  NavigateFunction,
+  NavigateOptions,
+  NavigateProps,
+  Navigator,
+  OutletProps,
+  Params,
+  PartialRouteObject,
+  PathMatch,
+  RouteMatch,
+  RouteObject,
+  RouteProps,
+  RouterProps,
+  RoutesProps
+} from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////
 // COMPONENTS
