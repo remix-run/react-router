@@ -734,14 +734,14 @@ The term "location" in React Router refers to [the `Location` interface](https:/
   <summary>Type declaration</summary>
 
 ```tsx
-declare function matchRoutes(
-  routes: RouteObject[],
+declare function matchRoutes<P = {}>(
+  routes: RouteObject<P>[],
   location: string | PartialLocation,
   basename: string = ""
-): RouteMatch[] | null;
+): RouteMatch<P>[] | null;
 
-interface RouteMatch {
-  route: RouteObject;
+interface RouteMatch<P = {}> {
+  route: RouteObject<P>;
   pathname: string;
   params: Params;
 }
@@ -752,6 +752,8 @@ interface RouteMatch {
 `matchRoutes` runs the route matching algorithm for a set of routes against a given [`location`](#location) to see which routes (if any) match. If it finds a match, an array of `RouteMatch` objects is returned, one for each route that matched.
 
 This is the heart of React Router's matching algorithm. It is used internally by [`useRoutes`](#useroutes) and the [`<Routes>` component](#routes) to determine which routes match the current location. It can also be useful in some situations where you want to manually match a set of routes.
+
+The `P` generic allows you to type additional properties to the route, i.e. `name` or `icon`. This is especially helpful when building navigation from a routes object that is compatible with the [`useRoutes`](#useroutes) hook.
 
 <a name="matchpath"></a>
 

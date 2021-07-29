@@ -492,10 +492,9 @@ export function useRoutes(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
-  let routes = React.useMemo(
-    () => createRoutesFromArray(partialRoutes),
-    [partialRoutes]
-  );
+  let routes = React.useMemo(() => createRoutesFromArray(partialRoutes), [
+    partialRoutes
+  ]);
 
   return useRoutes_(routes, basename);
 }
@@ -531,10 +530,11 @@ function useRoutes_(
   basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
 
   let location = useLocation() as Location;
-  let matches = React.useMemo(
-    () => matchRoutes(routes, location, basename),
-    [location, routes, basename]
-  );
+  let matches = React.useMemo(() => matchRoutes(routes, location, basename), [
+    location,
+    routes,
+    basename
+  ]);
 
   if (!matches) {
     // TODO: Warn about nothing matching, suggest using a catch-all route.
@@ -646,24 +646,24 @@ export type Params = Record<string, string>;
  * A route object represents a logical route, with (optionally) its child
  * routes organized in a tree-like structure.
  */
-export interface RouteObject {
-  caseSensitive: boolean;
-  children?: RouteObject[];
+export type RouteObject<P = {}> = {
+  caseSensitive?: boolean;
+  children?: RouteObject<P>[];
   element: React.ReactNode;
   path: string;
-}
+} & P;
 
 /**
  * A "partial route" object is usually supplied by the user and may omit
  * certain properties of a real route object such as `path` and `element`,
  * which have reasonable defaults.
  */
-export interface PartialRouteObject {
+export type PartialRouteObject<P = {}> = {
   caseSensitive?: boolean;
-  children?: PartialRouteObject[];
+  children?: PartialRouteObject<P>[];
   element?: React.ReactNode;
   path?: string;
-}
+} & P;
 
 /**
  * Returns a path with params interpolated.
@@ -686,11 +686,11 @@ export function generatePath(path: string, params: Params = {}): string {
  *
  * @see https://reactrouter.com/api/matchRoutes
  */
-export function matchRoutes(
-  routes: PartialRouteObject[],
+export function matchRoutes<P = {}>(
+  routes: PartialRouteObject<P>[],
   location: string | PartialLocation,
   basename = ""
-): RouteMatch[] | null {
+): RouteMatch<P>[] | null {
   if (typeof location === "string") {
     location = parsePath(location);
   }
@@ -712,26 +712,26 @@ export function matchRoutes(
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
     // TODO: Match on search, state too?
-    matches = matchRouteBranch(branches[i], pathname);
+    matches = matchRouteBranch<P>(branches[i], pathname);
   }
 
   return matches;
 }
 
-export interface RouteMatch {
-  route: RouteObject;
+export interface RouteMatch<P = {}> {
+  route: RouteObject<P>;
   pathname: string;
   params: Params;
 }
 
-function flattenRoutes(
-  routes: PartialRouteObject[],
-  branches: RouteBranch[] = [],
+function flattenRoutes<P = {}>(
+  routes: PartialRouteObject<P>[],
+  branches: RouteBranch<P>[] = [],
   parentPath = "",
-  parentRoutes: RouteObject[] = [],
+  parentRoutes: RouteObject<P>[] = [],
   parentIndexes: number[] = []
-): RouteBranch[] {
-  (routes as RouteObject[]).forEach((route, index) => {
+): RouteBranch<P>[] {
+  (routes as RouteObject<P>[]).forEach((route, index) => {
     route = {
       ...route,
       path: route.path || "/",
@@ -756,7 +756,7 @@ function flattenRoutes(
   return branches;
 }
 
-type RouteBranch = [string, RouteObject[], number[]];
+type RouteBranch<P = {}> = [string, RouteObject<P>[], number[]];
 
 function rankRouteBranches(branches: RouteBranch[]): void {
   let pathScores = branches.reduce<Record<string, number>>((memo, [path]) => {
@@ -829,15 +829,15 @@ function stableSort(array: any[], compareItems: (a: any, b: any) => number) {
   array.sort((a, b) => compareItems(a, b) || copy.indexOf(a) - copy.indexOf(b));
 }
 
-function matchRouteBranch(
-  branch: RouteBranch,
+function matchRouteBranch<P = {}>(
+  branch: RouteBranch<P>,
   pathname: string
-): RouteMatch[] | null {
+): RouteMatch<P>[] | null {
   let routes = branch[1];
   let matchedPathname = "/";
   let matchedParams: Params = {};
 
-  let matches: RouteMatch[] = [];
+  let matches: RouteMatch<P>[] = [];
   for (let i = 0; i < routes.length; ++i) {
     let route = routes[i];
     let remainingPathname =
@@ -961,11 +961,8 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
  * @see https://reactrouter.com/api/resolvePath
  */
 export function resolvePath(to: To, fromPathname = "/"): Path {
-  let {
-    pathname: toPathname,
-    search = "",
-    hash = ""
-  } = typeof to === "string" ? parsePath(to) : to;
+  let { pathname: toPathname, search = "", hash = "" } =
+    typeof to === "string" ? parsePath(to) : to;
 
   let pathname = toPathname
     ? resolvePathname(
