@@ -51,7 +51,7 @@ function AnimationApp() {
             the old location as it animates out.
           */}
           <CSSTransition
-            key={location.key}
+            key={location.pathname}
             classNames="fade"
             timeout={300}
           >
