@@ -46,7 +46,8 @@ export async function getRouteModuleExports(
     platform: "neutral",
     format: "esm",
     metafile: true,
-    write: false
+    write: false,
+    logLevel: "silent"
   });
   let metafile = result.metafile!;
 

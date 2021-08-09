@@ -30,13 +30,31 @@ function defaultWarningHandler(message: string, key: string) {
   warnOnce(false, message, key);
 }
 
-function defaultErrorHandler(message: string) {
-  console.error(message);
+function defaultBuildFailureHandler(failure: Error | esbuild.BuildFailure) {
+  if ("warnings" in failure || "errors" in failure) {
+    if (failure.warnings) {
+      let messages = esbuild.formatMessagesSync(failure.warnings, {
+        kind: "warning",
+        color: true
+      });
+      console.warn(...messages);
+    }
+
+    if (failure.errors) {
+      let messages = esbuild.formatMessagesSync(failure.errors, {
+        kind: "error",
+        color: true
+      });
+      console.error(...messages);
+    }
+  }
+
+  console.error(failure?.message || "An unknown build error occured");
 }
 
 interface BuildOptions extends Partial<BuildConfig> {
   onWarning?(message: string, key: string): void;
-  onError?(message: string): void;
+  onBuildFailure?(failure: Error | esbuild.BuildFailure): void;
 }
 
 export async function build(
@@ -45,10 +63,15 @@ export async function build(
     mode = BuildMode.Production,
     target = BuildTarget.Node14,
     onWarning = defaultWarningHandler,
-    onError = defaultErrorHandler
+    onBuildFailure = defaultBuildFailureHandler
   }: BuildOptions = {}
 ): Promise<void> {
-  await buildEverything(config, { mode, target, onWarning, onError });
+  await buildEverything(config, {
+    mode,
+    target,
+    onWarning,
+    onBuildFailure
+  });
 }
 
 interface WatchOptions extends BuildOptions {
@@ -65,7 +88,7 @@ export async function watch(
     mode = BuildMode.Development,
     target = BuildTarget.Node14,
     onWarning = defaultWarningHandler,
-    onError = defaultErrorHandler,
+    onBuildFailure = defaultBuildFailureHandler,
     onRebuildStart,
     onRebuildFinish,
     onFileCreated,
@@ -73,13 +96,19 @@ export async function watch(
     onFileDeleted
   }: WatchOptions = {}
 ): Promise<() => void> {
-  let options = { mode, target, onWarning, onError, incremental: true };
+  let options = {
+    mode,
+    target,
+    onBuildFailure,
+    onWarning,
+    incremental: true
+  };
   let [browserBuild, serverBuild] = await buildEverything(config, options);
 
   async function disposeBuilders() {
     await Promise.all([
-      browserBuild.rebuild?.dispose(),
-      serverBuild.rebuild?.dispose()
+      browserBuild?.rebuild?.dispose(),
+      serverBuild?.rebuild?.dispose()
     ]);
   }
 
@@ -95,12 +124,29 @@ export async function watch(
 
   let rebuildEverything = debounce(async () => {
     if (onRebuildStart) onRebuildStart();
+
+    if (!browserBuild || !serverBuild) {
+      await disposeBuilders();
+
+      try {
+        [browserBuild, serverBuild] = await buildEverything(config, options);
+        if (onRebuildFinish) onRebuildFinish();
+      } catch (err) {
+        onBuildFailure(err);
+      }
+      return;
+    }
+
     await Promise.all([
+      // If we get here and can't call rebuild something went wrong and we
+      // should probably blow as it's not really recoverable.
       browserBuild.rebuild!().then(build =>
         generateManifests(config, build.metafile!)
       ),
       serverBuild.rebuild!()
-    ]);
+    ]).catch(err => {
+      onBuildFailure(err);
+    });
     if (onRebuildFinish) onRebuildFinish();
   }, 100);
 
@@ -163,7 +209,7 @@ function isEntryPoint(config: RemixConfig, file: string) {
 async function buildEverything(
   config: RemixConfig,
   options: Required<BuildOptions> & { incremental?: boolean }
-): Promise<esbuild.BuildResult[]> {
+): Promise<(esbuild.BuildResult | undefined)[]> {
   // TODO:
   // When building for node, we build both the browser and server builds in
   // parallel and emit the asset manifest as a separate file in the output
@@ -181,7 +227,10 @@ async function buildEverything(
       return build;
     }),
     serverBuildPromise
-  ]);
+  ]).catch(err => {
+    options.onBuildFailure(err);
+    return [undefined, undefined];
+  });
 }
 
 async function createBrowserBuild(
@@ -216,6 +265,7 @@ async function createBrowserBuild(
     inject: [reactShim],
     loader: loaders,
     bundle: true,
+    logLevel: "silent",
     splitting: true,
     metafile: true,
     incremental: options.incremental,
@@ -252,6 +302,7 @@ async function createServerBuild(
     inject: [reactShim],
     loader: loaders,
     bundle: true,
+    logLevel: "silent",
     incremental: options.incremental,
     // The server build needs to know how to generate asset URLs for imports
     // of CSS and other files.
@@ -406,9 +457,21 @@ function browserRouteModulesPlugin(
           let route = routesByFile.get(file);
           invariant(route, `Cannot get route by path: ${args.path}`);
 
-          let exports = (
-            await getRouteModuleExportsCached(config, route.id)
-          ).filter(ex => !!browserSafeRouteExports[ex]);
+          let exports;
+          try {
+            exports = (
+              await getRouteModuleExportsCached(config, route.id)
+            ).filter(ex => !!browserSafeRouteExports[ex]);
+          } catch (error) {
+            return {
+              errors: [
+                {
+                  text: error.message,
+                  pluginName: "browser-route-module"
+                }
+              ]
+            };
+          }
           let spec = exports.length > 0 ? `{ ${exports.join(", ")} }` : "*";
           let contents = `export ${spec} from ${JSON.stringify(file)};`;
 

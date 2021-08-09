@@ -78,7 +78,8 @@ export async function createAssetsManifest(
         module: resolveUrl(key),
         imports: resolveImports(output.imports)
       };
-    } else {
+      // Only parse routes otherwise dynamic imports can fall into here and fail the build
+    } else if (output.entryPoint.startsWith("browser-route-module:")) {
       let route = routesByFile.get(entryPointFile);
       invariant(route, `Cannot get route for entry point ${output.entryPoint}`);
       let sourceExports = await getRouteModuleExportsCached(config, route.id);

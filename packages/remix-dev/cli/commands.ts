@@ -55,10 +55,6 @@ export async function watch(
   signalExit(
     await compiler.watch(config, {
       mode,
-      // TODO: esbuild compiler just blows up on syntax errors in the app
-      // onError(errorMessage) {
-      //   console.error(errorMessage);
-      // },
       onRebuildStart() {
         start = Date.now();
         onRebuildStart && onRebuildStart();
