@@ -66,6 +66,23 @@ export {
   useRoutes
 };
 
+export type {
+  MemoryRouterProps,
+  NavigateFunction,
+  NavigateOptions,
+  NavigateProps,
+  Navigator,
+  OutletProps,
+  Params,
+  PartialRouteObject,
+  PathMatch,
+  RouteMatch,
+  RouteObject,
+  RouteProps,
+  RouterProps,
+  RoutesProps
+} from "react-router";
+
 ////////////////////////////////////////////////////////////////////////////////
 // COMPONENTS
 ////////////////////////////////////////////////////////////////////////////////
