@@ -19,7 +19,7 @@ const readOnly: <T extends unknown>(obj: T) => T = __DEV__
   ? obj => Object.freeze(obj)
   : obj => obj;
 
-function invariant(cond: boolean, message: string): void {
+function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);
 }
 
@@ -66,6 +66,8 @@ export type Navigator = Omit<
   "action" | "location" | "back" | "forward" | "listen"
 >;
 
+const NavigatorContext = React.createContext<Navigator>(null!);
+
 const LocationContext = React.createContext<LocationContextObject>({
   static: false
 });
@@ -73,7 +75,6 @@ const LocationContext = React.createContext<LocationContextObject>({
 interface LocationContextObject {
   action?: Action;
   location?: Location;
-  navigator?: Navigator;
   static: boolean;
 }
 
@@ -240,10 +241,12 @@ export function Router({
   );
 
   return (
-    <LocationContext.Provider
-      children={children}
-      value={{ action, location, navigator, static: staticProp }}
-    />
+    <NavigatorContext.Provider value={navigator}>
+      <LocationContext.Provider
+        children={children}
+        value={{ action, location, static: staticProp }}
+      />
+    </NavigatorContext.Provider>
   );
 }
 
@@ -284,7 +287,7 @@ export function useBlocker(blocker: Blocker, when = true): void {
     `useBlocker() may be used only in the context of a <Router> component.`
   );
 
-  let navigator = React.useContext(LocationContext).navigator as Navigator;
+  let navigator = React.useContext(NavigatorContext);
 
   React.useEffect(() => {
     if (!when) return;
@@ -322,7 +325,7 @@ export function useHref(to: To): string {
     `useHref() may be used only in the context of a <Router> component.`
   );
 
-  let navigator = React.useContext(LocationContext).navigator as Navigator;
+  let navigator = React.useContext(NavigatorContext);
   let path = useResolvedPath(to);
 
   return navigator.createHref(path);
@@ -408,8 +411,7 @@ export function useNavigate(): NavigateFunction {
     `useNavigate() may be used only in the context of a <Router> component.`
   );
 
-  let locationContext = React.useContext(LocationContext);
-  let navigator = locationContext.navigator as Navigator;
+  let navigator = React.useContext(NavigatorContext);
   let { pathname } = React.useContext(RouteContext);
 
   let activeRef = React.useRef(false);
