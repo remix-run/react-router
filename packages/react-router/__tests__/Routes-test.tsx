@@ -1,6 +1,8 @@
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Routes, Route } from "react-router";
+import { act } from "react-dom/test-utils";
 
 describe("A <Routes>", () => {
   it("renders the first route that matches the URL", () => {
@@ -79,5 +81,27 @@ describe("A <Routes>", () => {
     );
 
     expect(renderer.toJSON()).toMatchSnapshot();
+  });
+
+  it("Uses the `location` prop instead of context location`", () => {
+    let node = document.createElement("div");
+    document.body.appendChild(node);
+
+    act(() => {
+      ReactDOM.render(
+        <Router initialEntries={["/one"]}>
+          <Routes location={{ pathname: "/two" }}>
+            <Route path="/one" element={<h1>one</h1>} />
+            <Route path="/two" element={<h1>two</h1>} />
+          </Routes>
+        </Router>,
+        node
+      );
+    });
+
+    expect(node.innerHTML).toMatch(/two/);
+
+    // cleanup
+    document.body.removeChild(node);
   });
 });

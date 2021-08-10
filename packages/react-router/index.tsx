@@ -250,6 +250,7 @@ export function Router({
 export interface RoutesProps {
   basename?: string;
   children?: React.ReactNode;
+  location?: Partial<Location>;
 }
 
 /**
@@ -260,10 +261,11 @@ export interface RoutesProps {
  */
 export function Routes({
   basename = "",
-  children
+  children,
+  location
 }: RoutesProps): React.ReactElement | null {
   let routes = createRoutesFromChildren(children);
-  return useRoutes_(routes, basename);
+  return useRoutes_(routes, basename, location);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -483,7 +485,8 @@ export function useResolvedPath(to: To): Path {
  */
 export function useRoutes(
   partialRoutes: PartialRouteObject[],
-  basename = ""
+  basename = "",
+  locationProp?: Partial<Location>
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -497,12 +500,13 @@ export function useRoutes(
     [partialRoutes]
   );
 
-  return useRoutes_(routes, basename);
+  return useRoutes_(routes, basename, locationProp);
 }
 
 function useRoutes_(
   routes: RouteObject[],
-  basename = ""
+  basename = "",
+  locationProp?: Partial<Location>
 ): React.ReactElement | null {
   let {
     route: parentRoute,
@@ -530,7 +534,12 @@ function useRoutes_(
 
   basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
 
-  let location = useLocation() as Location;
+  let contextLocation = useLocation() as Location;
+  let location = React.useMemo(() => {
+    return locationProp
+      ? { ...contextLocation, ...locationProp }
+      : contextLocation;
+  }, [locationProp, contextLocation]);
   let matches = React.useMemo(
     () => matchRoutes(routes, location, basename),
     [location, routes, basename]
