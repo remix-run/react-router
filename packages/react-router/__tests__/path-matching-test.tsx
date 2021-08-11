@@ -185,7 +185,7 @@ describe("path matching with splats", () => {
 
     it("finds the correct match", () => {
       expect(match).not.toBeNull();
-      expect(match[0]).toMatchObject({
+      expect(match?.[0]).toMatchObject({
         pathname: "/users/mj/files",
         params: { id: "mj", "*": "secrets.md" }
       });
@@ -204,7 +204,7 @@ describe("path matching with splats", () => {
     let match = matchRoutes(routes, "/users/mj/files-secrets.md");
 
     expect(match).not.toBeNull();
-    expect(match[0]).toMatchObject({
+    expect(match?.[0]).toMatchObject({
       pathname: "/users/mj/files-",
       params: { id: "mj", "*": "secrets.md" }
     });
@@ -217,11 +217,11 @@ describe("path matching with splats", () => {
     let match = matchRoutes(routes, "/users/mj/files/secrets.md");
 
     expect(match).not.toBeNull();
-    expect(match[0]).toMatchObject({
+    expect(match?.[0]).toMatchObject({
       pathname: "/users/mj/files",
       params: { id: "mj", "*": "secrets.md" }
     });
-    expect(match[1]).toMatchObject({
+    expect(match?.[1]).toMatchObject({
       pathname: "/users/mj/files/secrets.md",
       params: { id: "mj" }
     });
@@ -234,15 +234,15 @@ describe("path matching with splats", () => {
     let match = matchRoutes(routes, "/one/two/three");
 
     expect(match).not.toBeNull();
-    expect(match[0]).toMatchObject({
+    expect(match?.[0]).toMatchObject({
       pathname: "/",
       params: { "*": "/one/two/three" }
     });
-    expect(match[1]).toMatchObject({
+    expect(match?.[1]).toMatchObject({
       pathname: "/",
       params: { "*": "/one/two/three" }
     });
-    expect(match[2]).toMatchObject({
+    expect(match?.[2]).toMatchObject({
       pathname: "/",
       params: { "*": "/one/two/three" }
     });

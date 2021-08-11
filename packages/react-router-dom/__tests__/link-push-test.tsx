@@ -37,7 +37,7 @@ describe("Link push and replace", () => {
 
   afterEach(() => {
     document.body.removeChild(node);
-    node = null;
+    node = null!;
   });
 
   describe("to a different pathname, when it is clicked", () => {
@@ -73,7 +73,7 @@ describe("Link push and replace", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor.dispatchEvent(
+        anchor?.dispatchEvent(
           new MouseEvent("click", {
             view: window,
             bubbles: true,
@@ -126,7 +126,7 @@ describe("Link push and replace", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor.dispatchEvent(
+        anchor?.dispatchEvent(
           new MouseEvent("click", {
             view: window,
             bubbles: true,
@@ -179,7 +179,7 @@ describe("Link push and replace", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor.dispatchEvent(
+        anchor?.dispatchEvent(
           new MouseEvent("click", {
             view: window,
             bubbles: true,
@@ -237,7 +237,7 @@ describe("Link push and replace", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor.dispatchEvent(
+        anchor?.dispatchEvent(
           new MouseEvent("click", {
             view: window,
             bubbles: true,

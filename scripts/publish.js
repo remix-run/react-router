@@ -8,6 +8,11 @@ import semver from "semver";
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(dirname, "..");
 
+/**
+ * @param {*} cond
+ * @param {string} message
+ * @returns {asserts cond}
+ */
 function invariant(cond, message) {
   if (!cond) throw new Error(message);
 }

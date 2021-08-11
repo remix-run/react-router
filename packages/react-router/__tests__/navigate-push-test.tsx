@@ -34,7 +34,7 @@ describe("navigate", () => {
 
   afterEach(() => {
     document.body.removeChild(node);
-    node = null;
+    node = null!;
   });
 
   describe("by default", () => {
@@ -85,7 +85,7 @@ describe("navigate", () => {
       expect(button).not.toBeNull();
 
       act(() => {
-        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
       expect(spy).toHaveBeenCalled();
@@ -140,7 +140,7 @@ describe("navigate", () => {
       expect(button).not.toBeNull();
 
       act(() => {
-        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
       expect(spy).toHaveBeenCalled();

@@ -12,7 +12,7 @@ describe("when the same component is mounted by two different routes", () => {
 
   afterEach(() => {
     document.body.removeChild(node);
-    node = null;
+    node = null!;
   });
 
   it("mounts only once", () => {

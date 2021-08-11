@@ -18,7 +18,7 @@ describe("navigate with params", () => {
 
   afterEach(() => {
     document.body.removeChild(node);
-    node = null;
+    node = null!;
   });
 
   describe("when navigate params are not already encoded", () => {

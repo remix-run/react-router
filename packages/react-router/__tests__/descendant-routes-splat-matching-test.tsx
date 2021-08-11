@@ -33,7 +33,7 @@ describe("Descendant <Routes> splat matching", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/courses/react/react-fundamentals"]}>

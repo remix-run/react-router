@@ -17,7 +17,7 @@ describe("navigate", () => {
 
   afterEach(() => {
     document.body.removeChild(node);
-    node = null;
+    node = null!;
   });
 
   describe("with an absolute href", () => {
@@ -61,7 +61,7 @@ describe("navigate", () => {
       expect(button).not.toBeNull();
 
       act(() => {
-        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
       expect(node.innerHTML).toMatchInlineSnapshot(`"<h1>About</h1>"`);
@@ -109,7 +109,7 @@ describe("navigate", () => {
       expect(button).not.toBeNull();
 
       act(() => {
-        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
       expect(node.innerHTML).toMatchInlineSnapshot(`"<h1>About</h1>"`);

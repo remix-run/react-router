@@ -21,7 +21,7 @@ describe("NavLink", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -52,7 +52,7 @@ describe("NavLink", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -84,7 +84,7 @@ describe("NavLink", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -112,7 +112,7 @@ describe("NavLink", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -147,7 +147,7 @@ describe("NavLink", () => {
           return <div>Child</div>;
         }
 
-        let renderer: ReactTestRenderer;
+        let renderer!: ReactTestRenderer;
         act(() => {
           renderer = createTestRenderer(
             <Router initialEntries={["/home/child"]}>
@@ -181,7 +181,7 @@ describe("NavLink", () => {
           return <div>Child</div>;
         }
 
-        let renderer: ReactTestRenderer;
+        let renderer!: ReactTestRenderer;
         act(() => {
           renderer = createTestRenderer(
             <Router initialEntries={["/home/child"]}>
@@ -219,7 +219,7 @@ describe("NavLink", () => {
           return <div>Child</div>;
         }
 
-        let renderer: ReactTestRenderer;
+        let renderer!: ReactTestRenderer;
         act(() => {
           renderer = createTestRenderer(
             <Router initialEntries={["/home/child"]}>
@@ -257,7 +257,7 @@ describe("NavLink", () => {
           return <div>Child</div>;
         }
 
-        let renderer: ReactTestRenderer;
+        let renderer!: ReactTestRenderer;
         act(() => {
           renderer = createTestRenderer(
             <Router initialEntries={["/home/child"]}>
@@ -293,7 +293,7 @@ describe("NavLink", () => {
           );
         }
 
-        let renderer: ReactTestRenderer;
+        let renderer!: ReactTestRenderer;
         act(() => {
           renderer = createTestRenderer(
             <Router initialEntries={["/Home"]}>
@@ -321,7 +321,7 @@ describe("NavLink", () => {
           );
         }
 
-        let renderer: ReactTestRenderer;
+        let renderer!: ReactTestRenderer;
         act(() => {
           renderer = createTestRenderer(
             <Router initialEntries={["/Home"]}>
@@ -353,7 +353,7 @@ describe("NavLink", () => {
           );
         }
 
-        let renderer: ReactTestRenderer;
+        let renderer!: ReactTestRenderer;
         act(() => {
           renderer = createTestRenderer(
             <Router initialEntries={["/Home"]}>
@@ -385,7 +385,7 @@ describe("NavLink", () => {
           );
         }
 
-        let renderer: ReactTestRenderer;
+        let renderer!: ReactTestRenderer;
         act(() => {
           renderer = createTestRenderer(
             <Router initialEntries={["/Home"]}>
@@ -420,7 +420,7 @@ describe("NavLink under a Routes with a basename", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/app/home"]}>
@@ -451,7 +451,7 @@ describe("NavLink under a Routes with a basename", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/app/home"]}>
@@ -483,7 +483,7 @@ describe("NavLink under a Routes with a basename", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/app/home"]}>
@@ -511,7 +511,7 @@ describe("NavLink under a Routes with a basename", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/app/home"]}>

@@ -5,7 +5,7 @@ import type { ReactTestRenderer } from "react-test-renderer";
 
 describe("nested /", () => {
   it("matches them depth-first", () => {
-    let renderer: ReactTestRenderer;
+    let renderer!: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
         <Router initialEntries={["/"]}>
@@ -56,7 +56,7 @@ describe("nested /", () => {
 
 describe("routes with identical paths", () => {
   it("matches them in order", () => {
-    let renderer: ReactTestRenderer;
+    let renderer!: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
         <Router initialEntries={["/home"]}>

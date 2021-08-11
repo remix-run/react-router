@@ -18,7 +18,7 @@ describe("navigate state", () => {
 
   afterEach(() => {
     document.body.removeChild(node);
-    node = null;
+    node = null!;
   });
 
   describe("by default", () => {
@@ -38,7 +38,7 @@ describe("navigate state", () => {
         );
       }
 
-      let location: ReturnType<typeof useLocation>;
+      let location!: ReturnType<typeof useLocation>;
       function About() {
         location = useLocation();
         return <h1>About</h1>;
@@ -60,7 +60,7 @@ describe("navigate state", () => {
       expect(button).not.toBeNull();
 
       act(() => {
-        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
       expect(location).toBeDefined();
@@ -88,7 +88,7 @@ describe("navigate state", () => {
         );
       }
 
-      let location: ReturnType<typeof useLocation>;
+      let location!: ReturnType<typeof useLocation>;
       function About() {
         location = useLocation();
         return <h1>About</h1>;
@@ -110,7 +110,7 @@ describe("navigate state", () => {
       expect(button).not.toBeNull();
 
       act(() => {
-        button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
 
       expect(location).toBeDefined();

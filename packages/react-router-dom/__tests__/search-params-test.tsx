@@ -10,19 +10,20 @@ import {
 
 describe("useSearchParams", () => {
   function SearchPage() {
-    let queryRef = React.useRef<HTMLInputElement>();
+    let queryRef = React.useRef<HTMLInputElement>(null);
     let [searchParams, setSearchParams] = useSearchParams({ q: "" });
-    let query = searchParams.get("q");
+    let query = searchParams.get("q")!;
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
       event.preventDefault();
-      setSearchParams({ q: queryRef.current.value });
+      if (queryRef.current) {
+        setSearchParams({ q: queryRef.current.value });
+      }
     }
 
     return (
       <div>
         <p>The current query is "{query}".</p>
-
         <form onSubmit={handleSubmit}>
           <input name="q" defaultValue={query} ref={queryRef} />
         </form>
@@ -38,7 +39,7 @@ describe("useSearchParams", () => {
 
   afterEach(() => {
     document.body.removeChild(node);
-    node = null;
+    node = null!;
   });
 
   it("reads and writes the search string", () => {
@@ -53,10 +54,10 @@ describe("useSearchParams", () => {
       );
     });
 
-    let form = node.querySelector("form");
+    let form = node.querySelector("form")!;
     expect(form).toBeDefined();
 
-    let queryInput = node.querySelector<HTMLInputElement>("input[name=q]");
+    let queryInput = node.querySelector<HTMLInputElement>("input[name=q]")!;
     expect(queryInput).toBeDefined();
 
     expect(node.innerHTML).toMatch(/The current query is "Michael Jackson"/);

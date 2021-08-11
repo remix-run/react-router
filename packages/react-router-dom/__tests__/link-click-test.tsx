@@ -12,7 +12,7 @@ describe("A <Link> click", () => {
 
   afterEach(() => {
     document.body.removeChild(node);
-    node = null;
+    node = null!;
   });
 
   it("navigates to the new page", () => {
@@ -45,7 +45,7 @@ describe("A <Link> click", () => {
     expect(anchor).not.toBeNull();
 
     act(() => {
-      anchor.dispatchEvent(
+      anchor?.dispatchEvent(
         new MouseEvent("click", {
           view: window,
           bubbles: true,
@@ -56,7 +56,7 @@ describe("A <Link> click", () => {
 
     let h1 = node.querySelector("h1");
     expect(h1).not.toBeNull();
-    expect(h1.textContent).toEqual("About");
+    expect(h1?.textContent).toEqual("About");
   });
 
   describe("when preventDefault is used on the click handler", () => {
@@ -96,7 +96,7 @@ describe("A <Link> click", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor.dispatchEvent(
+        anchor?.dispatchEvent(
           new MouseEvent("click", {
             view: window,
             bubbles: true,
@@ -107,7 +107,7 @@ describe("A <Link> click", () => {
 
       let h1 = node.querySelector("h1");
       expect(h1).not.toBeNull();
-      expect(h1.textContent).toEqual("Home");
+      expect(h1?.textContent).toEqual("Home");
     });
   });
 
@@ -144,7 +144,7 @@ describe("A <Link> click", () => {
       act(() => {
         // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
         let RightMouseButton = 2;
-        anchor.dispatchEvent(
+        anchor?.dispatchEvent(
           new MouseEvent("click", {
             view: window,
             bubbles: true,
@@ -156,7 +156,7 @@ describe("A <Link> click", () => {
 
       let h1 = node.querySelector("h1");
       expect(h1).not.toBeNull();
-      expect(h1.textContent).toEqual("Home");
+      expect(h1?.textContent).toEqual("Home");
     });
   });
 
@@ -193,7 +193,7 @@ describe("A <Link> click", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor.dispatchEvent(
+        anchor?.dispatchEvent(
           new MouseEvent("click", {
             view: window,
             bubbles: true,
@@ -204,7 +204,7 @@ describe("A <Link> click", () => {
 
       let h1 = node.querySelector("h1");
       expect(h1).not.toBeNull();
-      expect(h1.textContent).toEqual("Home");
+      expect(h1?.textContent).toEqual("Home");
     });
   });
 
@@ -239,7 +239,7 @@ describe("A <Link> click", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor.dispatchEvent(
+        anchor?.dispatchEvent(
           new MouseEvent("click", {
             view: window,
             bubbles: true,
@@ -252,7 +252,7 @@ describe("A <Link> click", () => {
 
       let h1 = node.querySelector("h1");
       expect(h1).not.toBeNull();
-      expect(h1.textContent).toEqual("Home");
+      expect(h1?.textContent).toEqual("Home");
     });
   });
 });

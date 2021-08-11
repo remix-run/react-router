@@ -12,7 +12,7 @@ describe("navigate using an element", () => {
 
   afterEach(() => {
     document.body.removeChild(node);
-    node = null;
+    node = null!;
   });
 
   describe("with an absolute href", () => {

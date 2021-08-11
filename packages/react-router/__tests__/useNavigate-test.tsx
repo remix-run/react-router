@@ -6,10 +6,11 @@ import {
   Route,
   useNavigate
 } from "react-router";
+import type { NavigateFunction } from "react-router";
 
 describe("useNavigate", () => {
   it("returns the navigate function", () => {
-    let navigate;
+    let navigate!: NavigateFunction;
     function Home() {
       navigate = useNavigate();
       return null;

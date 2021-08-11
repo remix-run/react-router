@@ -10,13 +10,18 @@ import {
 import type { ReactTestRenderer } from "react-test-renderer";
 
 describe("useSearchParams", () => {
-  function SearchForm({ children, onSubmit }) {
+  function SearchForm({
+    children
+  }: {
+    children: React.ReactNode;
+    onSubmit?: any;
+  }) {
     return <View>{children}</View>;
   }
 
   function SearchPage() {
     let [searchParams, setSearchParams] = useSearchParams({ q: "" });
-    let [query, setQuery] = React.useState(searchParams.get("q"));
+    let [query, setQuery] = React.useState(searchParams.get("q")!);
 
     function handleSubmit() {
       setSearchParams({ q: query });
@@ -34,7 +39,7 @@ describe("useSearchParams", () => {
   }
 
   it("reads and writes the search string", () => {
-    let renderer: ReactTestRenderer;
+    let renderer!: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
         <Router initialEntries={["/search?q=Michael+Jackson"]}>

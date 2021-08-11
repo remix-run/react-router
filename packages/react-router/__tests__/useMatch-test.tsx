@@ -1,11 +1,12 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Routes, Route, useMatch } from "react-router";
+import type { PathMatch } from "react-router";
 
 describe("useMatch", () => {
   describe("when the path matches the current URL", () => {
     it("returns the match", () => {
-      let match;
+      let match: PathMatch | null = null;
       function Layout() {
         match = useMatch("home");
         return null;

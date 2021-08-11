@@ -15,7 +15,7 @@ describe("Link href", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -44,7 +44,7 @@ describe("Link href", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -73,7 +73,7 @@ describe("Link href", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -102,7 +102,7 @@ describe("Link href", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
@@ -131,7 +131,7 @@ describe("Link href", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/app/home"]}>

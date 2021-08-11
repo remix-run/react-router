@@ -8,10 +8,12 @@ import {
   useParams,
   useRoutes
 } from "react-router";
+import type { PartialRouteObject } from "react-router";
+import type { InitialEntry } from "history";
 
 describe("route matching", () => {
   describe("using a route config object", () => {
-    function RoutesRenderer({ routes }) {
+    function RoutesRenderer({ routes }: { routes: PartialRouteObject[] }) {
       return useRoutes(routes);
     }
 
@@ -94,7 +96,7 @@ describe("route matching", () => {
     describeRouteMatching(routes);
   });
 
-  function describeRouteMatching(routes) {
+  function describeRouteMatching(routes: React.ReactNode) {
     let testPaths = [
       "/courses",
       "/courses/routing",
@@ -114,7 +116,7 @@ describe("route matching", () => {
     });
   }
 
-  function renderRoutes(children, entry) {
+  function renderRoutes(children: React.ReactNode, entry: InitialEntry) {
     let renderer = createTestRenderer(
       <Router initialEntries={[entry]} children={children} />
     );
@@ -122,7 +124,7 @@ describe("route matching", () => {
     return renderer.toJSON();
   }
 
-  function Courses(props: Props) {
+  function Courses(_: Props) {
     return (
       <div>
         <h1>Courses</h1>
@@ -131,7 +133,7 @@ describe("route matching", () => {
     );
   }
 
-  function Course(props: Props) {
+  function Course(_: Props) {
     let { id } = useParams();
 
     return (
@@ -142,23 +144,23 @@ describe("route matching", () => {
     );
   }
 
-  function CourseGrades(props: Props) {
+  function CourseGrades(_: Props) {
     return <p>Course Grades</p>;
   }
 
-  function NewCourse(props: Props) {
+  function NewCourse(_: Props) {
     return <p>New Course</p>;
   }
 
-  function CoursesIndex(props: Props) {
+  function CoursesIndex(_: Props) {
     return <p>All Courses</p>;
   }
 
-  function CoursesNotFound(props: Props) {
+  function CoursesNotFound(_: Props) {
     return <p>Course Not Found</p>;
   }
 
-  function Landing(props: Props) {
+  function Landing(_: Props) {
     return (
       <p>
         <h1>Welcome to React Training</h1>
@@ -167,23 +169,23 @@ describe("route matching", () => {
     );
   }
 
-  function ReactFundamentals(props: Props) {
+  function ReactFundamentals(_: Props) {
     return <p>React Fundamentals</p>;
   }
 
-  function AdvancedReact(props: Props) {
+  function AdvancedReact(_: Props) {
     return <p>Advanced React</p>;
   }
 
-  function Home(props: Props) {
+  function Home(_: Props) {
     return <p>Home</p>;
   }
 
-  function NotFound(props: Props) {
+  function NotFound(_: Props) {
     return <p>Not Found</p>;
   }
 
-  function NeverRender(props: Props): React.ReactElement {
+  function NeverRender(_: Props): React.ReactElement {
     throw new Error("NeverRender should ... uh ... never render");
   }
 });

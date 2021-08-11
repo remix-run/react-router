@@ -31,7 +31,7 @@ describe("A <Link> press", () => {
       );
     }
 
-    let renderer: ReactTestRenderer;
+    let renderer!: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
         <Router initialEntries={["/home"]}>
@@ -77,7 +77,7 @@ describe("A <Link> press", () => {
       );
     }
 
-    let renderer: ReactTestRenderer;
+    let renderer!: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
         <Router initialEntries={["/home"]}>
@@ -128,7 +128,7 @@ describe("A <Link> press", () => {
         );
       }
 
-      let renderer: ReactTestRenderer;
+      let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
           <Router initialEntries={["/home"]}>
