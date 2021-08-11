@@ -989,7 +989,7 @@ export function resolvePath(to: To, fromPathname = "/", basename = ""): Path {
         toPathname,
         toPathname.startsWith("/")
           ? basename
-            ? `/${basename}`
+            ? normalizeSlashes(`/${basename}`)
             : "/"
           : fromPathname
       )

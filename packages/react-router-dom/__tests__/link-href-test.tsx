@@ -120,8 +120,8 @@ describe("Link href", () => {
     });
   });
 
-  describe('basename', () => {
-    it('is correct', () => {
+  describe("basename", () => {
+    it("is correct", () => {
       function Home() {
         return (
           <div>
@@ -131,10 +131,10 @@ describe("Link href", () => {
         );
       }
 
-      let renderer;
+      let renderer: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
-          <Router initialEntries={['/app/home']}>
+          <Router initialEntries={["/app/home"]}>
             <Routes basename="/app">
               <Route path="home" element={<Home />} />
             </Routes>
@@ -142,10 +142,10 @@ describe("Link href", () => {
         );
       });
 
-      let anchor = renderer.root.findByType('a');
+      let anchor = renderer.root.findByType("a");
 
       expect(anchor).not.toBeNull();
-      expect(anchor.props.href).toEqual('/app/about');
+      expect(anchor.props.href).toEqual("/app/about");
     });
   });
 });
