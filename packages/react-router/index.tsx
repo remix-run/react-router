@@ -86,6 +86,7 @@ const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
   params: readOnly<Params>({}),
   pathname: "",
+  basename: "",
   route: null
 });
 
@@ -93,6 +94,7 @@ interface RouteContextObject {
   outlet: React.ReactElement | null;
   params: Params;
   pathname: string;
+  basename: string;
   route: RouteObject | null;
 }
 
@@ -414,7 +416,7 @@ export function useNavigate(): NavigateFunction {
   );
 
   let navigator = React.useContext(NavigatorContext);
-  let { pathname } = React.useContext(RouteContext);
+  let { pathname, basename } = React.useContext(RouteContext);
 
   let activeRef = React.useRef(false);
   React.useEffect(() => {
@@ -427,7 +429,7 @@ export function useNavigate(): NavigateFunction {
         if (typeof to === "number") {
           navigator.go(to);
         } else {
-          let path = resolvePath(to, pathname);
+          let path = resolvePath(to, pathname, basename);
           (!!options.replace ? navigator.replace : navigator.push)(
             path,
             options.state
@@ -441,7 +443,7 @@ export function useNavigate(): NavigateFunction {
         );
       }
     },
-    [navigator, pathname]
+    [basename, navigator, pathname]
   );
 
   return navigate;
@@ -473,8 +475,11 @@ export function useParams(): Params {
  * @see https://reactrouter.com/api/useResolvedPath
  */
 export function useResolvedPath(to: To): Path {
-  let { pathname } = React.useContext(RouteContext);
-  return React.useMemo(() => resolvePath(to, pathname), [to, pathname]);
+  let { pathname, basename } = React.useContext(RouteContext);
+  return React.useMemo(
+    () => resolvePath(to, pathname, basename),
+    [to, pathname, basename]
+  );
 }
 
 /**
@@ -561,6 +566,7 @@ function useRoutes_(
           outlet,
           params: readOnly<Params>({ ...parentParams, ...params }),
           pathname: joinPaths([basename, pathname]),
+          basename,
           route
         }}
       />
@@ -971,7 +977,7 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
  *
  * @see https://reactrouter.com/api/resolvePath
  */
-export function resolvePath(to: To, fromPathname = "/"): Path {
+export function resolvePath(to: To, fromPathname = "/", basename = ""): Path {
   let {
     pathname: toPathname,
     search = "",
@@ -981,7 +987,11 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
   let pathname = toPathname
     ? resolvePathname(
         toPathname,
-        toPathname.startsWith("/") ? "/" : fromPathname
+        toPathname.startsWith("/")
+          ? basename
+            ? normalizeSlashes(`/${basename}`)
+            : "/"
+          : fromPathname
       )
     : fromPathname;
 
