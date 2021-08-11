@@ -83,6 +83,26 @@ export type {
   RoutesProps
 } from "react-router";
 
+///////////////////////////////////////////////////////////////////////////////
+// DANGER! PLEASE READ ME!
+// We provide these exports as an escape hatch in the event that you need any
+// routing data that we don't provide an explicit API for. With that said, we
+// want to cover your use case if we can, so if you feel the need to use these
+// we want to hear from you. Let us know what you're building and we'll do our
+// best to make sure we can support you!
+//
+// We consider these exports an implementation detail and do not guarantee
+// against any breaking changes, regardless of the semver release. Use with
+// extreme caution and only if you understand the consequences. Godspeed.
+///////////////////////////////////////////////////////////////////////////////
+
+/** @internal */
+export {
+  UNSAFE_NavigatorContext,
+  UNSAFE_LocationContext,
+  UNSAFE_RouteContext
+} from "react-router";
+
 ////////////////////////////////////////////////////////////////////////////////
 // COMPONENTS
 ////////////////////////////////////////////////////////////////////////////////
