@@ -17,11 +17,18 @@ function invariant(cond, message) {
   if (!cond) throw new Error(message);
 }
 
+/**
+ * @returns {string}
+ */
 function getTaggedVersion() {
   let output = execSync("git tag --list --points-at HEAD").toString();
   return output.replace(/^v|\n+$/g, "");
 }
 
+/**
+ * @param {string} packageName
+ * @param {string|number} version
+ */
 async function ensureBuildVersion(packageName, version) {
   let file = path.join(rootDir, "build", packageName, "package.json");
   let json = await jsonfile.readFile(file);
@@ -31,6 +38,10 @@ async function ensureBuildVersion(packageName, version) {
   );
 }
 
+/**
+ * @param {string} packageName
+ * @param {string} tag
+ */
 function publishBuild(packageName, tag) {
   let buildDir = path.join(rootDir, "build", packageName);
   console.log();
@@ -39,6 +50,9 @@ function publishBuild(packageName, tag) {
   execSync(`npm publish ${buildDir} --tag ${tag}`, { stdio: "inherit" });
 }
 
+/**
+ * @returns {Promise<1 | 0>}
+ */
 async function run() {
   try {
     // 0. Ensure we are in CI. We don't do this manually

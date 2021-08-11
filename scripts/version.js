@@ -1,7 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
-
 import chalk from "chalk";
 import Confirm from "prompt-confirm";
 import jsonfile from "jsonfile";
@@ -10,10 +9,19 @@ import semver from "semver";
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(dirname, "..");
 
+/**
+ * @param {string} packageName
+ * @returns {string}
+ */
 function packageJson(packageName) {
   return path.join(rootDir, "packages", packageName, "package.json");
 }
 
+/**
+ * @param {*} cond
+ * @param {string} message
+ * @returns {asserts cond}
+ */
 function invariant(cond, message) {
   if (!cond) throw new Error(message);
 }
@@ -27,6 +35,12 @@ function ensureCleanWorkingDirectory() {
   );
 }
 
+/**
+ * @param {string} currentVersion
+ * @param {string} givenVersion
+ * @param {string} [prereleaseId]
+ * @returns {string}
+ */
 function getNextVersion(currentVersion, givenVersion, prereleaseId) {
   invariant(
     givenVersion != null,
@@ -47,18 +61,29 @@ function getNextVersion(currentVersion, givenVersion, prereleaseId) {
   return nextVersion;
 }
 
+/**
+ * @param {string} question
+ * @returns {Promise<string>}
+ */
 async function prompt(question) {
   let confirm = new Confirm(question);
   let answer = await confirm.run();
   return answer;
 }
 
+/**
+ * @param {string} packageName
+ */
 async function getPackageVersion(packageName) {
   let file = packageJson(packageName);
   let json = await jsonfile.readFile(file);
   return json.version;
 }
 
+/**
+ * @param {string} packageName
+ * @param {(json: string) => any} transform
+ */
 async function updatePackageConfig(packageName, transform) {
   let file = packageJson(packageName);
   let json = await jsonfile.readFile(file);

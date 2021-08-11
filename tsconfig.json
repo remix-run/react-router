@@ -17,11 +17,6 @@
     "stripInternal": true,
     "jsx": "react"
   },
-  "files": [
-    "packages/react-router/index.tsx",
-    "packages/react-router-dom/index.tsx",
-    "packages/react-router-dom/server.tsx",
-    "packages/react-router-native/index.tsx"
-  ],
-  "include": ["types/global.d.ts"]
+  "include": ["packages/**/*", "types/*"],
+  "exclude": ["**/*.*.snap"]
 }
