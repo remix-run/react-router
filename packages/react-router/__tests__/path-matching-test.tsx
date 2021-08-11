@@ -179,14 +179,23 @@ describe("path matching with a basename", () => {
 });
 
 describe("path matching with splats", () => {
-  test("splat after /", () => {
+  describe("splat after /", () => {
     let routes = [{ path: "users/:id/files/*" }];
     let match = matchRoutes(routes, "/users/mj/files/secrets.md");
 
-    expect(match).not.toBeNull();
-    expect(match[0]).toMatchObject({
-      params: { id: "mj", "*": "secrets.md" },
-      pathname: "/users/mj/files"
+    it("finds the correct match", () => {
+      expect(match).not.toBeNull();
+      expect(match[0]).toMatchObject({
+        pathname: "/users/mj/files",
+        params: { id: "mj", "*": "secrets.md" }
+      });
+    });
+
+    describe("when other characters come before the /", () => {
+      it("does not find a match", () => {
+        let match = matchRoutes(routes, "/users/mj/filesssss/secrets.md");
+        expect(match).toBeNull();
+      });
     });
   });
 

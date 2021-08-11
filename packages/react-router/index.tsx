@@ -908,7 +908,7 @@ export function matchPath(
   let matchedPathname = match[1];
   let values = match.slice(2);
   let params = paramNames.reduce((memo, paramName, index) => {
-    memo[paramName] = safelyDecodeURIComponent(values[index], paramName);
+    memo[paramName] = safelyDecodeURIComponent(values[index] || "", paramName);
     return memo;
   }, {} as Params);
 
@@ -941,10 +941,11 @@ function compilePath(
 
   if (path.endsWith("*")) {
     if (path.endsWith("/*")) {
-      source += "\\/?"; // Don't include the / in params['*']
+      source += "(?:\\/(.+)|\\/?)"; // Don't include the / in params['*']
+    } else {
+      source += "(.*)";
     }
     keys.push("*");
-    source += "(.*)";
   } else if (end) {
     source += "\\/?";
   }
