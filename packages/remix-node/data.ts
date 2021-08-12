@@ -34,7 +34,7 @@ export async function loadRouteData(
   if (result === undefined) {
     throw new Error(
       `You defined a loader for route "${routeId}" but didn't return ` +
-        `anything from your \`loader\` function. Please return a value or \`null\`.`
+        `anything from your \`loader\` function. We can't do everything for you! 😅`
     );
   }
 
@@ -60,14 +60,25 @@ export async function callRouteAction(
 
   let result = await routeModule.action({ request, context, params });
 
-  if (result === undefined) {
+  if (typeof result === "string") {
+    return new Response("", {
+      status: 303,
+      headers: { Location: result }
+    });
+  }
+
+  if (!isResponse(result) || result.headers.get("Location") == null) {
     throw new Error(
-      `You defined an action for route "${routeId}" but didn't return ` +
-        `anything from your \`action\` function. Please return a value or \`null\`.`
+      `You made a ${request.method} request to ${request.url} but did not return ` +
+        `a redirect. Please \`return newUrlString\` or \`return redirect(newUrl)\` from ` +
+        `your \`action\` function to avoid reposts when users click the back button.`
     );
   }
 
-  return isResponse(result) ? result : json(result);
+  return new Response("", {
+    status: 303,
+    headers: result.headers
+  });
 }
 
 function isResponse(value: any): value is Response {

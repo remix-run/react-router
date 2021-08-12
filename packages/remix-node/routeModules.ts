@@ -31,11 +31,9 @@ export type ErrorBoundaryComponent = ComponentType<{ error: Error }>;
  * will be merged with (and take precedence over) headers from parent routes.
  */
 export interface HeadersFunction {
-  (args: {
-    loaderHeaders: Headers;
-    parentHeaders: Headers;
-    actionHeaders: Headers;
-  }): Headers | HeadersInit;
+  (args: { loaderHeaders: Headers; parentHeaders: Headers }):
+    | Headers
+    | HeadersInit;
 }
 
 /**
