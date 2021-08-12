@@ -422,8 +422,7 @@ const browserSafeRouteExports: { [name: string]: boolean } = {
   default: true,
   handle: true,
   links: true,
-  meta: true,
-  shouldReload: true
+  meta: true
 };
 
 /**

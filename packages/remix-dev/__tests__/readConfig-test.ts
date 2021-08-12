@@ -148,13 +148,6 @@ describe("readConfig", () => {
             "parentId": "root",
             "path": "methods",
           },
-          "routes/pending-forms": Object {
-            "caseSensitive": false,
-            "file": "routes/pending-forms.tsx",
-            "id": "routes/pending-forms",
-            "parentId": "root",
-            "path": "pending-forms",
-          },
           "routes/prefs": Object {
             "caseSensitive": false,
             "file": "routes/prefs.tsx",

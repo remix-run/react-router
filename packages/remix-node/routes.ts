@@ -14,9 +14,8 @@ interface Route {
 }
 
 export interface EntryRoute extends Route {
-  hasAction: boolean;
-  hasLoader: boolean;
-  hasErrorBoundary: boolean;
+  hasAction?: boolean;
+  hasLoader?: boolean;
   imports?: string[];
   module: string;
 }

@@ -16,9 +16,9 @@ export interface RouteModules<RouteModule> {
  */
 export interface ActionFunction {
   (args: { request: Request; context: AppLoadContext; params: Params }):
-    | Promise<Response | AppData>
+    | Promise<Response | string>
     | Response
-    | AppData;
+    | string;
 }
 
 /**
