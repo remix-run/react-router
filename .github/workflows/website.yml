@@ -1,0 +1,41 @@
+name: website
+on:
+  push:
+    branches: [website]
+
+jobs:
+  website:
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+
+      - name: Test
+        run: yarn test & yarn size
+
+      - name: Setup
+        run: |
+          echo "Deploying website to https://reactrouter.com/"
+          openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv -in website-deploy-key.enc -out website-deploy-key -d
+          chmod 600 website-deploy-key
+          eval $(ssh-agent -s)
+          ssh-add website-deploy-key
+
+      - name: Deploy
+        run: bash scripts/deploy-website.sh
