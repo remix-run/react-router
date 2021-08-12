@@ -66,8 +66,8 @@ git clone https://github.com/<your_github_username>/react-router.git
 cd react-router
 ```
 
-3. Install dependencies and build. React Router uses `yarn` (version 1), so you
-   should too. If you install using `npm`, unnecessary `package-lock.json` files
+3. Install dependencies and build. React Router uses `npm` (version >=7.20), so you
+   should too. If you install using `yarn`, unnecessary `yarn.lock` files
    will be generated.
 
 <a name="dev"></a>
@@ -78,14 +78,14 @@ cd react-router
 
 React Router uses a monorepo to host code for multiple packages. These packages live in the `packages` directory.
 
-We use [Yarn workspaces](https://legacy.yarnpkg.com/en/docs/workspaces/) to manage installation of dependencies and running various scripts. To get everything installed, just run `yarn` or `yarn install` from the repo root.
+We use [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) to manage installation of dependencies and running various scripts. To get everything installed, just run `npm install` from the repo root.
 
 ### Building
 
-Calling `yarn build` from the root directory will run the build, which should take only a few seconds. It's important to build all the packages together because `react-router-dom` and `react-router-native` both use `react-router` as a dependency.
+Calling `npm run build` from the root directory will run the build, which should take only a few seconds. It's important to build all the packages together because `react-router-dom` and `react-router-native` both use `react-router` as a dependency.
 
 ### Testing
 
-Before running the tests, you need to run a build. After you build, running `yarn test` from the root directory will run **every** package's tests. If you want to run tests for a specific package, use e.g. `jest --projects package/react-router`.
+Before running the tests, you need to run a build. After you build, running `npm run test` from the root directory will run **every** package's tests. If you want to run tests for a specific package, use e.g. `jest --projects package/react-router`.
 
 TODO
