@@ -3,8 +3,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 
-console.log('hello');
-
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let target = process.argv[2];
