@@ -1,8 +1,6 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
 import { create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Routes, Route } from "react-router";
-import { act } from "react-dom/test-utils";
 
 describe("A <Routes>", () => {
   it("renders the first route that matches the URL", () => {
