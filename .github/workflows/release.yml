@@ -27,7 +27,7 @@ jobs:
         run: yarn build
 
       - name: Test
-        run: yarn test & yarn size
+        run: yarn test
 
       - name: Publish
         env:
