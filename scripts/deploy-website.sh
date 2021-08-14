@@ -15,7 +15,7 @@ git clone --depth 2 --branch main "git@github.com:remix-run/reactrouter.com.git"
 rm -rf "$tmp_dir/static/react-router"
 cd "$root_dir/website"
 npm install
-npm run build build --output-path "$tmp_dir/static/react-router" --output-public-path $PUBLIC_PATH
+npm run build --output-path "$tmp_dir/static/react-router" --output-public-path $PUBLIC_PATH
 
 # Commit all changes
 cd $tmp_dir
