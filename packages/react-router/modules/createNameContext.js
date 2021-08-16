@@ -1,5 +1,4 @@
-// TODO: Replace with React.createContext once we can assume React 16+
-import createContext from "mini-create-react-context";
+import { createContext } from "react";
 
 const createNamedContext = name => {
   const context = createContext();
