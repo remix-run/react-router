@@ -989,13 +989,25 @@ export function resolvePath(to: To, fromPathname = "/", basename = ""): Path {
       )
     : fromPathname;
 
-  return { pathname, search, hash };
+  return {
+    pathname,
+    search: normalizeSearch(search),
+    hash: normalizeHash(hash)
+  };
 }
 
 const trimTrailingSlashes = (path: string) => path.replace(/\/+$/, "");
 const normalizeSlashes = (path: string) => path.replace(/\/\/+/g, "/");
 const joinPaths = (paths: string[]) => normalizeSlashes(paths.join("/"));
 const splitPath = (path: string) => normalizeSlashes(path).split("/");
+const normalizeSearch = (search: string) =>
+  !search || search === "?"
+    ? ""
+    : search.startsWith("?")
+    ? search
+    : "?" + search;
+const normalizeHash = (hash: string) =>
+  !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
 
 function resolvePathname(toPathname: string, fromPathname: string): string {
   let segments = splitPath(trimTrailingSlashes(fromPathname));
