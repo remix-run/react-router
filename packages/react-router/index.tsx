@@ -15,7 +15,7 @@ import {
   parsePath
 } from "history";
 
-const readOnly: <T extends unknown>(obj: T) => T = __DEV__
+const readOnly: <T>(obj: T) => Readonly<T> = __DEV__
   ? obj => Object.freeze(obj)
   : obj => obj;
 
@@ -23,7 +23,7 @@ function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);
 }
 
-function warning(cond: boolean, message: string): void {
+function warning(cond: any, message: string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
     if (typeof console !== "undefined") console.warn(message);
