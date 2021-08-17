@@ -6,7 +6,7 @@ import {
   Routes,
   Route,
   useNavigate,
-  useLocation,
+  useLocation
 } from "react-router";
 
 describe("navigate", () => {
@@ -138,8 +138,7 @@ describe("navigate", () => {
       }
 
       function About() {
-        let { search } = useLocation();
-        let { user } = qsParse(search);
+        let user = new URLSearchParams(useLocation().search).get("user");
         return <h1>About {user}</h1>;
       }
 
@@ -165,16 +164,3 @@ describe("navigate", () => {
     });
   });
 });
-
-function qsParse(qs: string): Record<string, string> {
-  return qs
-    .replace(/^\?/g, "")
-    .split("&")
-    .reduce<Record<string, string>>((prev, str) => {
-      let idx = str.indexOf("=");
-      return {
-        ...prev,
-        [str.slice(0, idx)]: str.slice(idx + 1)
-      };
-    }, {});
-}
