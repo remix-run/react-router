@@ -1,4 +1,3 @@
-import { prev } from "cheerio/lib/api/traversing";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
@@ -8,7 +7,6 @@ import {
   Route,
   useNavigate,
   useLocation,
-  useParams
 } from "react-router";
 
 describe("navigate", () => {
