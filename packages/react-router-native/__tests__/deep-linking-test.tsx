@@ -16,14 +16,10 @@ const Linking = mocked(_Linking);
 
 describe("deep linking", () => {
   describe("when there is no initial URL", () => {
-    let kf;
     it("stays on the initial route", () => {
-      kf = 6;
-      console.log(kf);
       Linking.getInitialURL.mockImplementation(() => {
         return mockPromiseThatResolvesImmediatelyWith<string>();
       });
-      kf = '';
 
       function Home() {
         useDeepLinking();
