@@ -267,6 +267,7 @@ async function createBrowserBuild(
     bundle: true,
     logLevel: "silent",
     splitting: true,
+    sourcemap: true,
     metafile: true,
     incremental: options.incremental,
     minify: options.mode === BuildMode.Production,
@@ -304,6 +305,7 @@ async function createServerBuild(
     bundle: true,
     logLevel: "silent",
     incremental: options.incremental,
+    sourcemap: true,
     // The server build needs to know how to generate asset URLs for imports
     // of CSS and other files.
     assetNames: "_assets/[name]-[hash]",

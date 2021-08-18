@@ -1,24 +1,32 @@
-import {
-  Headers as NodeHeaders,
-  Request as NodeRequest,
-  Response as NodeResponse,
-  fetch as nodeFetch
-} from "./fetch";
+import crypto from "crypto";
+
+import { atob, btoa } from "./base64";
+import { Headers, Request, Response, fetch } from "./fetch";
 
 declare global {
   namespace NodeJS {
     interface Global {
-      Headers: typeof NodeHeaders;
-      Request: typeof NodeRequest;
-      Response: typeof NodeResponse;
-      fetch: typeof nodeFetch;
+      atob: typeof atob;
+      btoa: typeof btoa;
+      Headers: typeof Headers;
+      Request: typeof Request;
+      Response: typeof Response;
+      fetch: typeof fetch;
+      crypto: Crypto;
     }
   }
 }
 
 export function installGlobals() {
-  (global as NodeJS.Global).Headers = NodeHeaders;
-  (global as NodeJS.Global).Request = NodeRequest;
-  (global as NodeJS.Global).Response = NodeResponse;
-  (global as NodeJS.Global).fetch = nodeFetch;
+  global.atob = atob;
+  global.btoa = btoa;
+
+  (global as NodeJS.Global).Headers = Headers;
+  (global as NodeJS.Global).Request = Request;
+  (global as NodeJS.Global).Response = Response;
+  (global as NodeJS.Global).fetch = fetch;
+
+  // TODO: Missing types
+  // @ts-expect-error
+  global.crypto = crypto.webcrypto;
 }

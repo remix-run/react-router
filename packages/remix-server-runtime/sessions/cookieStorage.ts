@@ -31,7 +31,7 @@ export function createCookieSessionStorage({
   return {
     async getSession(cookieHeader, options) {
       return createSession(
-        (cookieHeader && cookie.parse(cookieHeader, options)) || {}
+        (cookieHeader && (await cookie.parse(cookieHeader, options))) || {}
       );
     },
     async commitSession(session, options) {

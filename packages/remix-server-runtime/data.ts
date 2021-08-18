@@ -1,8 +1,6 @@
 import type { Params } from "react-router";
 
 import type { ServerBuild } from "./build";
-import type { Request } from "./fetch";
-import { Response } from "./fetch";
 import { json } from "./responses";
 
 /**

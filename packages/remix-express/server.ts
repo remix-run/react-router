@@ -1,16 +1,19 @@
 import { PassThrough } from "stream";
-import { URL } from "url";
 import type * as express from "express";
 import type {
   AppLoadContext,
-  RequestInit,
-  Response,
-  ServerBuild
+  ServerBuild,
+  ServerPlatform
+} from "@remix-run/server-runtime";
+import { createRequestHandler as createRemixRequestHandler } from "@remix-run/server-runtime";
+import type {
+  RequestInit as NodeRequestInit,
+  Response as NodeResponse
 } from "@remix-run/node";
 import {
-  Headers,
-  Request,
-  createRequestHandler as createRemixRequestHandler
+  Headers as NodeHeaders,
+  Request as NodeRequest,
+  formatServerError
 } from "@remix-run/node";
 
 /**
@@ -39,7 +42,8 @@ export function createRequestHandler({
   getLoadContext?: GetLoadContextFunction;
   mode?: string;
 }) {
-  let handleRequest = createRemixRequestHandler(build, mode);
+  let platform: ServerPlatform = { formatServerError };
+  let handleRequest = createRemixRequestHandler(build, platform, mode);
 
   return async (
     req: express.Request,
@@ -53,7 +57,10 @@ export function createRequestHandler({
           ? getLoadContext(req, res)
           : undefined;
 
-      let response = await handleRequest(request, loadContext);
+      let response = ((await handleRequest(
+        (request as unknown) as Request,
+        loadContext
+      )) as unknown) as NodeResponse;
 
       sendRemixResponse(res, response);
     } catch (error) {
@@ -66,8 +73,8 @@ export function createRequestHandler({
 
 function createRemixHeaders(
   requestHeaders: express.Request["headers"]
-): Headers {
-  return new Headers(
+): NodeHeaders {
+  return new NodeHeaders(
     Object.keys(requestHeaders).reduce((memo, key) => {
       let value = requestHeaders[key];
 
@@ -82,11 +89,11 @@ function createRemixHeaders(
   );
 }
 
-function createRemixRequest(req: express.Request): Request {
+function createRemixRequest(req: express.Request): NodeRequest {
   let origin = `${req.protocol}://${req.hostname}`;
   let url = new URL(req.url, origin);
 
-  let init: RequestInit = {
+  let init: NodeRequestInit = {
     method: req.method,
     headers: createRemixHeaders(req.headers)
   };
@@ -95,10 +102,13 @@ function createRemixRequest(req: express.Request): Request {
     init.body = req.pipe(new PassThrough({ highWaterMark: 16384 }));
   }
 
-  return new Request(url.toString(), init);
+  return new NodeRequest(url.toString(), init);
 }
 
-function sendRemixResponse(res: express.Response, response: Response): void {
+function sendRemixResponse(
+  res: express.Response,
+  response: NodeResponse
+): void {
   res.status(response.status);
 
   for (let [key, value] of response.headers.entries()) {

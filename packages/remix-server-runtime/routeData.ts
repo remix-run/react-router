@@ -1,6 +1,5 @@
 import type { AppData } from "./data";
 import { extractData } from "./data";
-import type { Response } from "./fetch";
 import type { ServerRoute } from "./routes";
 import type { RouteMatch } from "./routeMatching";
 

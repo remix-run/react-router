@@ -3,13 +3,11 @@ import supertest from "supertest";
 
 import { createRequestHandler } from "../server";
 
-import { Response } from "@remix-run/node";
-
-import { createRequestHandler as createRemixRequestHandler } from "@remix-run/node/server";
+import { createRequestHandler as createRemixRequestHandler } from "@remix-run/server-runtime";
 
 // We don't want to test that the remix server works here (that's what the
 // puppetteer tests do), we just want to test the express adapter
-jest.mock("@remix-run/node/server");
+jest.mock("@remix-run/server-runtime/server");
 let mockedCreateRequestHandler = createRemixRequestHandler as jest.MockedFunction<
   typeof createRemixRequestHandler
 >;

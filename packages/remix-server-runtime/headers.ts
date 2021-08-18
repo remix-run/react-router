@@ -1,6 +1,4 @@
 import type { ServerBuild } from "./build";
-import type { Response } from "./fetch";
-import { Headers } from "./fetch";
 import type { ServerRoute } from "./routes";
 import type { RouteMatch } from "./routeMatching";
 

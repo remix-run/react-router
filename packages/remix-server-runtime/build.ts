@@ -1,5 +1,4 @@
 import type { EntryContext, AssetsManifest } from "./entry";
-import type { Headers, Request, Response } from "./fetch";
 import type { ServerRouteManifest } from "./routes";
 
 /**

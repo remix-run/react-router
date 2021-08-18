@@ -1,6 +1,7 @@
 import type { CookieParseOptions, CookieSerializeOptions } from "cookie";
 import { parse, serialize } from "cookie";
-import { sign, unsign } from "cookie-signature";
+
+import { sign, unsign } from "./cookieSigning";
 
 export type { CookieParseOptions, CookieSerializeOptions };
 
@@ -53,13 +54,16 @@ export interface Cookie {
    * Parses a raw `Cookie` header and returns the value of this cookie or
    * `null` if it's not present.
    */
-  parse(cookieHeader: string | null, options?: CookieParseOptions): any;
+  parse(
+    cookieHeader: string | null,
+    options?: CookieParseOptions
+  ): Promise<any>;
 
   /**
    * Serializes the given value to a string and returns the `Set-Cookie`
    * header.
    */
-  serialize(value: any, options?: CookieSerializeOptions): string;
+  serialize(value: any, options?: CookieSerializeOptions): Promise<string>;
 }
 
 /**
@@ -82,19 +86,19 @@ export function createCookie(
         ? new Date(Date.now() + options.maxAge * 1000)
         : options.expires;
     },
-    parse(cookieHeader, parseOptions) {
+    async parse(cookieHeader, parseOptions) {
       if (!cookieHeader) return null;
       let cookies = parse(cookieHeader, { ...options, ...parseOptions });
       return name in cookies
         ? cookies[name] === ""
           ? ""
-          : decodeCookieValue(cookies[name], secrets)
+          : await decodeCookieValue(cookies[name], secrets)
         : null;
     },
-    serialize(value, serializeOptions) {
+    async serialize(value, serializeOptions) {
       return serialize(
         name,
-        value === "" ? "" : encodeCookieValue(value, secrets),
+        value === "" ? "" : await encodeCookieValue(value, secrets),
         {
           ...options,
           ...serializeOptions
@@ -114,20 +118,26 @@ export function isCookie(object: any): object is Cookie {
   );
 }
 
-function encodeCookieValue(value: any, secrets: string[]): string {
+async function encodeCookieValue(
+  value: any,
+  secrets: string[]
+): Promise<string> {
   let encoded = encodeData(value);
 
   if (secrets.length > 0) {
-    encoded = sign(encoded, secrets[0]);
+    encoded = await sign(encoded, secrets[0]);
   }
 
   return encoded;
 }
 
-function decodeCookieValue(value: string, secrets: string[]): any {
+async function decodeCookieValue(
+  value: string,
+  secrets: string[]
+): Promise<any> {
   if (secrets.length > 0) {
     for (let secret of secrets) {
-      let unsignedValue = unsign(value, secret);
+      let unsignedValue = await unsign(value, secret);
       if (unsignedValue !== false) {
         return decodeData(unsignedValue);
       }
@@ -149,12 +159,4 @@ function decodeData(value: string): any {
   } catch (error) {
     return {};
   }
-}
-
-function btoa(b: string): string {
-  return Buffer.from(b, "binary").toString("base64");
-}
-
-function atob(a: string): string {
-  return Buffer.from(a, "base64").toString("binary");
 }

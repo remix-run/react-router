@@ -1,0 +1,20 @@
+{
+  "exclude": ["__tests__/**/*", "scripts/**/*"],
+  "compilerOptions": {
+    "lib": ["ES2019", "DOM"],
+    "target": "ES2019",
+
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+
+    "declaration": true,
+    "emitDeclarationOnly": true,
+
+    "outDir": "../../build/node_modules/@remix-run/server-runtime",
+    "rootDir": ".",
+
+    // Avoid naming conflicts between lib.dom.d.ts and globals.ts
+    "skipLibCheck": true
+  }
+}

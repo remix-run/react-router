@@ -214,7 +214,7 @@ export function createSessionStorage({
 
   return {
     async getSession(cookieHeader, options) {
-      let id = cookieHeader && cookie.parse(cookieHeader, options);
+      let id = cookieHeader && (await cookie.parse(cookieHeader, options));
       let data = id && (await readData(id));
       return createSession(data || {}, id || "");
     },

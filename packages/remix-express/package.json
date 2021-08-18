@@ -4,7 +4,8 @@
   "version": "0.17.5",
   "repository": "https://github.com/remix-run/packages",
   "dependencies": {
-    "@remix-run/node": "0.17.5"
+    "@remix-run/node": "0.17.5",
+    "@remix-run/server-runtime": "0.17.5"
   },
   "peerDependencies": {
     "express": "^4.17.1"
