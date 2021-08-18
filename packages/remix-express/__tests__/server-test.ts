@@ -1,7 +1,13 @@
 import express from "express";
 import supertest from "supertest";
+import { Response, Headers } from "@remix-run/node";
+import { createRequest } from "node-mocks-http";
 
-import { createRequestHandler } from "../server";
+import {
+  createRemixHeaders,
+  createRemixRequest,
+  createRequestHandler
+} from "../server";
 
 import { createRequestHandler as createRemixRequestHandler } from "@remix-run/server-runtime";
 
@@ -63,15 +69,180 @@ describe("express createRequestHandler", () => {
 
     it("sets headers", async () => {
       mockedCreateRequestHandler.mockImplementation(() => async () => {
-        return new Response("", {
-          headers: { "X-Time-Of-Year": "most wonderful" }
-        });
+        const headers = new Headers({ "X-Time-Of-Year": "most wonderful" });
+        headers.append(
+          "Set-Cookie",
+          "first=one; Expires=0; Path=/; HttpOnly; Secure; SameSite=Lax"
+        );
+        headers.append(
+          "Set-Cookie",
+          "second=two; MaxAge=1209600; Path=/; HttpOnly; Secure; SameSite=Lax"
+        );
+        headers.append(
+          "Set-Cookie",
+          "third=three; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/; HttpOnly; Secure; SameSite=Lax"
+        );
+        return new Response("", { headers });
       });
 
       let request = supertest(createApp());
       let res = await request.get("/");
 
       expect(res.headers["x-time-of-year"]).toBe("most wonderful");
+      expect(res.headers["set-cookie"]).toEqual([
+        "first=one; Expires=0; Path=/; HttpOnly; Secure; SameSite=Lax",
+        "second=two; MaxAge=1209600; Path=/; HttpOnly; Secure; SameSite=Lax",
+        "third=three; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/; HttpOnly; Secure; SameSite=Lax"
+      ]);
     });
+  });
+});
+
+describe("express createRemixHeaders", () => {
+  describe("creates fetch headers from express headers", () => {
+    it("handles empty headers", () => {
+      expect(createRemixHeaders({})).toMatchInlineSnapshot(`
+        Headers {
+          Symbol(map): Object {},
+        }
+      `);
+    });
+
+    it("handles simple headers", () => {
+      expect(createRemixHeaders({ "x-foo": "bar" })).toMatchInlineSnapshot(`
+        Headers {
+          Symbol(map): Object {
+            "x-foo": Array [
+              "bar",
+            ],
+          },
+        }
+      `);
+    });
+
+    it("handles multiple headers", () => {
+      expect(createRemixHeaders({ "x-foo": "bar", "x-bar": "baz" }))
+        .toMatchInlineSnapshot(`
+        Headers {
+          Symbol(map): Object {
+            "x-bar": Array [
+              "baz",
+            ],
+            "x-foo": Array [
+              "bar",
+            ],
+          },
+        }
+      `);
+    });
+
+    it("handles headers with multiple values", () => {
+      expect(createRemixHeaders({ "x-foo": "bar, baz" }))
+        .toMatchInlineSnapshot(`
+        Headers {
+          Symbol(map): Object {
+            "x-foo": Array [
+              "bar, baz",
+            ],
+          },
+        }
+      `);
+    });
+
+    it("handles headers with multiple values and multiple headers", () => {
+      expect(createRemixHeaders({ "x-foo": "bar, baz", "x-bar": "baz" }))
+        .toMatchInlineSnapshot(`
+        Headers {
+          Symbol(map): Object {
+            "x-bar": Array [
+              "baz",
+            ],
+            "x-foo": Array [
+              "bar, baz",
+            ],
+          },
+        }
+      `);
+    });
+
+    it("handles multiple set-cookie headers", () => {
+      expect(
+        createRemixHeaders({
+          "set-cookie": [
+            "__session=some_value; Path=/; Secure; HttpOnly; MaxAge=7200; SameSite=Lax",
+            "__other=some_other_value; Path=/; Secure; HttpOnly; MaxAge=3600; SameSite=Lax"
+          ]
+        })
+      ).toMatchInlineSnapshot(`
+        Headers {
+          Symbol(map): Object {
+            "set-cookie": Array [
+              "__session=some_value; Path=/; Secure; HttpOnly; MaxAge=7200; SameSite=Lax",
+              "__other=some_other_value; Path=/; Secure; HttpOnly; MaxAge=3600; SameSite=Lax",
+            ],
+          },
+        }
+      `);
+    });
+  });
+});
+
+describe("express createRemixRequest", () => {
+  it("creates a request with the correct headers", async () => {
+    const expressRequest = createRequest({
+      url: "/foo/bar",
+      method: "GET",
+      protocol: "http",
+      hostname: "localhost",
+      headers: {
+        "Cache-Control": "max-age=300, s-maxage=3600",
+        Host: "localhost:3000"
+      }
+    });
+
+    expect(createRemixRequest(expressRequest)).toMatchInlineSnapshot(`
+      Request {
+        "agent": undefined,
+        "compress": true,
+        "counter": 0,
+        "follow": 20,
+        "size": 0,
+        "timeout": 0,
+        Symbol(Body internals): Object {
+          "body": null,
+          "disturbed": false,
+          "error": null,
+        },
+        Symbol(Request internals): Object {
+          "headers": Headers {
+            Symbol(map): Object {
+              "cache-control": Array [
+                "max-age=300, s-maxage=3600",
+              ],
+              "host": Array [
+                "localhost:3000",
+              ],
+            },
+          },
+          "method": "GET",
+          "parsedURL": Url {
+            "auth": null,
+            "hash": null,
+            "host": "localhost:3000",
+            "hostname": "localhost",
+            "href": "http://localhost:3000/foo/bar",
+            "path": "/foo/bar",
+            "pathname": "/foo/bar",
+            "port": "3000",
+            "protocol": "http:",
+            "query": null,
+            "search": null,
+            "slashes": true,
+          },
+          "redirect": "follow",
+          "signal": null,
+        },
+      }
+    `);
   });
 });

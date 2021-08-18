@@ -71,26 +71,28 @@ export function createRequestHandler({
   };
 }
 
-function createRemixHeaders(
+export function createRemixHeaders(
   requestHeaders: express.Request["headers"]
 ): NodeHeaders {
-  return new NodeHeaders(
-    Object.keys(requestHeaders).reduce((memo, key) => {
-      let value = requestHeaders[key];
+  let headers = new NodeHeaders();
 
-      if (typeof value === "string") {
-        memo[key] = value;
-      } else if (Array.isArray(value)) {
-        memo[key] = value.join(",");
+  for (let [key, values] of Object.entries(requestHeaders)) {
+    if (values) {
+      if (Array.isArray(values)) {
+        for (const value of values) {
+          headers.append(key, value);
+        }
+      } else {
+        headers.set(key, values);
       }
+    }
+  }
 
-      return memo;
-    }, {} as { [headerName: string]: string })
-  );
+  return headers;
 }
 
-function createRemixRequest(req: express.Request): NodeRequest {
-  let origin = `${req.protocol}://${req.hostname}`;
+export function createRemixRequest(req: express.Request): NodeRequest {
+  let origin = `${req.protocol}://${req.get("host")}`;
   let url = new URL(req.url, origin);
 
   let init: NodeRequestInit = {
@@ -111,8 +113,10 @@ function sendRemixResponse(
 ): void {
   res.status(response.status);
 
-  for (let [key, value] of response.headers.entries()) {
-    res.set(key, value);
+  for (let [key, values] of Object.entries(response.headers.raw())) {
+    for (const value of values) {
+      res.append(key, value);
+    }
   }
 
   if (Buffer.isBuffer(response.body)) {

@@ -141,6 +141,13 @@ describe("readConfig", () => {
             "parentId": "root",
             "path": "methods",
           },
+          "routes/multiple-set-cookies": Object {
+            "caseSensitive": false,
+            "file": "routes/multiple-set-cookies.tsx",
+            "id": "routes/multiple-set-cookies",
+            "parentId": "root",
+            "path": "multiple-set-cookies",
+          },
           "routes/prefs": Object {
             "caseSensitive": false,
             "file": "routes/prefs.tsx",
