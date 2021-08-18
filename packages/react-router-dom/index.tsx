@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createBrowserHistory, createHashHistory, createPath } from "history";
 import {
+  AnimatedRoutes,
   MemoryRouter,
   Navigate,
   Outlet,
@@ -49,6 +50,7 @@ function warning(cond: boolean, message: string): void {
 
 // Note: Keep in sync with react-router exports!
 export {
+  AnimatedRoutes,
   MemoryRouter,
   Navigate,
   Outlet,

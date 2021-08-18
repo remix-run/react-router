@@ -8,6 +8,7 @@ import {
   TouchableHighlightProps
 } from "react-native";
 import {
+  AnimatedRoutes,
   MemoryRouter,
   MemoryRouterProps,
   Navigate,
@@ -42,6 +43,7 @@ import URLSearchParams from "@ungap/url-search-params";
 
 // Note: Keep in sync with react-router exports!
 export {
+  AnimatedRoutes,
   MemoryRouter,
   Navigate,
   Outlet,

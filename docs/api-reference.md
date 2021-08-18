@@ -601,6 +601,56 @@ For example, in the following config the parent route renders an `<Outlet>` by d
 </Route>
 ```
 
+<a name="animatedroutes"></a>
+
+### `<AnimatedRoutes>`
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function AnimatedRoutes(props: RoutesProps): React.ReactElement;
+```
+
+`RoutesProps` is the same interface used for the props in [`<Routes>`](#routes-and-route).
+
+</details>
+
+`<AnimatedRoutes>` serves the same purpose as `<Routes>`. It should be rendered instead of `<Routes>` when used inside of animation components such as `react-transition-group`'s `CSSTransition`.
+
+```tsx
+import { TransitionGroup, CSSTransition } from "react-transition-group";
+import { AnimatedRoutes, Route, NavLink, useLocation } from "react-router";
+
+function Container() {
+  let location = useLocation();
+  return (
+    <div>
+      <nav>
+        <ul style={styles.nav}>
+          <li>
+            <NavLink to="/">Home</NavLink>
+          </li>
+          <li>
+            <NavLink to="/about">About</NavLink>
+          </li>
+        </ul>
+      </nav>
+      <main>
+        <TransitionGroup>
+          <CSSTransition key={location.key} classNames="fade" timeout={300}>
+            <AnimatedRoutes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+            </AnimatedRoutes>
+          </CSSTransition>
+        </TransitionGroup>
+      </main>
+    </div>
+  );
+}
+```
+
 <a name="staticrouter"></a>
 
 ### `<StaticRouter>`
@@ -1064,7 +1114,8 @@ See [`resolvePath`](#resolvepath) for more information.
 ```tsx
 declare function useRoutes(
   routes: PartialRouteObject[],
-  basename = ""
+  basename = "",
+  location?: Location | null
 ): React.ReactElement | null;
 ```
 
@@ -1096,6 +1147,8 @@ function App() {
 ```
 
 See also [`createRoutesFromArray`](#createroutesfromarray).
+
+A note about the `location` parameter: this is usually not needed, as `useRoutes` gets the current location from the router's context. You may wish to use a stable location in some scenarios, such as re-creating a custom [`<AnimatedRoutes>`](#animatedroutes) component.
 
 <a name="usesearchparams"></a>
 

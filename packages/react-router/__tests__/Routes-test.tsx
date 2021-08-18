@@ -16,7 +16,12 @@ describe("A <Routes>", () => {
       </Router>
     );
 
-    expect(renderer.toJSON()).toMatchSnapshot();
+    let json = renderer.toJSON();
+    if (!json || Array.isArray(json)) {
+      throw Error("Unexpected JSON from `createTestRenderer`");
+    }
+    expect(json).toMatchSnapshot();
+    expect(json.children?.includes("Home")).toBe(true);
   });
 
   it("does not render a 2nd route that also matches the URL", () => {
@@ -37,7 +42,13 @@ describe("A <Routes>", () => {
       </Router>
     );
 
-    expect(renderer.toJSON()).toMatchSnapshot();
+    let json = renderer.toJSON();
+    if (!json || Array.isArray(json)) {
+      throw Error("Unexpected JSON from `createTestRenderer`");
+    }
+    expect(json).toMatchSnapshot();
+    expect(json.children?.includes("Home")).toBe(true);
+    expect(json.children?.includes("Dashboard")).toBe(false);
   });
 
   it("renders with non-element children", () => {
@@ -78,6 +89,12 @@ describe("A <Routes>", () => {
       </Router>
     );
 
-    expect(renderer.toJSON()).toMatchSnapshot();
+    let json = renderer.toJSON();
+    if (!json || Array.isArray(json)) {
+      throw Error("Unexpected JSON from `createTestRenderer`");
+    }
+    expect(json).toMatchSnapshot();
+    expect(json.children?.includes("Admin")).toBe(true);
+    expect(json.children?.includes("Home")).toBe(false);
   });
 });

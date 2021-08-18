@@ -272,6 +272,52 @@ export function Routes({
   return useRoutes_(routes, location, basename);
 }
 
+/**
+ * A container for a nested tree of <Route> elements that renders the branch
+ * that best matches the current location. This component should be rendered
+ * instead of <Routes> when used inside of animation components.
+ *
+ * @see https://reactrouter.com/api/AnimatedRoutes
+ * @example
+ * import { TransitionGroup, CSSTransition } from "react-transition-group";
+ * import { AnimatedRoutes, Route, NavLink, useLocation } from "react-router";
+ *
+ * function Container() {
+ *   let location = useLocation();
+ *   return (
+ *     <div>
+ *       <nav>
+ *         <ul style={styles.nav}>
+ *           <li>
+ *             <NavLink to="/">Home</NavLink>
+ *           </li>
+ *             <NavLink to="/about">About</NavLink>
+ *           </li>
+ *         </ul>
+ *       </nav>
+ *       <main>
+ *         <TransitionGroup>
+ *           <CSSTransition key={location.key} classNames="fade" timeout={300}>
+ *             <AnimatedRoutes>
+ *               <Route path="/" element={<Home />} />
+ *               <Route path="/about" element={<About />} />
+ *             </AnimatedRoutes>
+ *           </CSSTransition>
+ *         </TransitionGroup>
+ *       </main>
+ *     </div>
+ *   );
+ * }
+ */
+export function AnimatedRoutes({
+  basename = "",
+  children
+}: RoutesProps): React.ReactElement | null {
+  let routes = createRoutesFromChildren(children);
+  let [location] = React.useState(useLocation());
+  return useRoutes_(routes, location, basename);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // HOOKS
 ///////////////////////////////////////////////////////////////////////////////
@@ -491,22 +537,21 @@ export function useResolvedPath(to: To): Path {
  */
 export function useRoutes(
   partialRoutes: PartialRouteObject[],
-  basename = ""
+  basename = "",
+  location?: Location | null
 ): React.ReactElement | null {
+  let _location = useLocation();
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
     // router loaded. We can help them understand how to avoid that.
     `useRoutes() may be used only in the context of a <Router> component.`
   );
-
-  let location = useLocation();
   let routes = React.useMemo(
     () => createRoutesFromArray(partialRoutes),
     [partialRoutes]
   );
-
-  return useRoutes_(routes, location, basename);
+  return useRoutes_(routes, location || _location, basename);
 }
 
 function useRoutes_(
