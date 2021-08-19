@@ -551,13 +551,15 @@ function useRoutes_(
   }
 
   // Otherwise render an element.
+  let allParams: Params = {};
   let element = matches.reduceRight((outlet, { params, pathname, route }) => {
+    allParams = { ...allParams, ...params };
     return (
       <RouteContext.Provider
         children={route.element}
         value={{
           outlet,
-          params: readOnly<Params>({ ...parentParams, ...params }),
+          params: readOnly<Params>({ ...parentParams, ...allParams }),
           pathname: joinPaths([basename, pathname]),
           basename,
           route
