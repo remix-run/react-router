@@ -193,4 +193,33 @@ describe("useParams", () => {
       );
     });
   });
+
+  describe("when the params match in a child route", () => {
+    it("renders params in the parent", () => {
+      let params: Record<string, string> = {};
+      function Blog() {
+        params = useParams();
+        return <h1>{params.slug}</h1>;
+      }
+
+      function BlogPost() {
+        return null;
+      }
+
+      createTestRenderer(
+        <Router initialEntries={["/blog/react-router"]}>
+          <Routes>
+            <Route path="/blog" element={<Blog />}>
+              <Route path=":slug" element={<BlogPost />} />
+            </Route>
+          </Routes>
+        </Router>
+      );
+
+      expect(typeof params).toBe("object");
+      expect(params).toMatchObject({
+        slug: "react-router"
+      });
+    });
+  });
 });
