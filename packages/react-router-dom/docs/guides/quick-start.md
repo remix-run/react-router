@@ -14,7 +14,7 @@ cd demo-app
 You can install React Router from [the public npm registry](https://npm.im/react-router-dom) with either `npm` or [`yarn`](https://yarnpkg.com). Since we're building a web app, we'll use `react-router-dom` in this guide.
 
 ```sh
-npm install react-router-dom
+yarn add react-router-dom
 ```
 
 Next, copy/paste either of the following examples into `src/App.js`.
