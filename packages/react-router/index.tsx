@@ -538,13 +538,13 @@ function useRoutes_(
     );
   }
 
-  let constructedBasename = basename
+  let basenameForMatching = basename
     ? joinPaths([parentPathname, basename])
     : parentPathname;
 
   let matches = React.useMemo(
-    () => matchRoutes(routes, location, constructedBasename),
-    [location, routes, constructedBasename]
+    () => matchRoutes(routes, location, basenameForMatching),
+    [location, routes, basenameForMatching]
   );
 
   if (!matches) {
@@ -560,7 +560,7 @@ function useRoutes_(
         value={{
           outlet,
           params: readOnly<Params>({ ...parentParams, ...params }),
-          pathname: joinPaths([constructedBasename, pathname]),
+          pathname: joinPaths([basenameForMatching, pathname]),
           basename,
           route
         }}
