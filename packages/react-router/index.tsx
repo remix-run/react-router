@@ -1,6 +1,6 @@
 import * as React from "react";
-import {
-  Action,
+import { Action, createMemoryHistory, parsePath } from "history";
+import type {
   Blocker,
   History,
   InitialEntry,
@@ -10,9 +10,7 @@ import {
   Path,
   State,
   To,
-  Transition,
-  createMemoryHistory,
-  parsePath
+  Transition
 } from "history";
 
 const readOnly: <T>(obj: T) => Readonly<T> = __DEV__
