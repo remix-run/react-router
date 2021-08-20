@@ -13,6 +13,7 @@ import { warnOnce } from "./warnings";
 import { createAssetsManifest } from "./compiler/assets";
 import { getAppDependencies } from "./compiler/dependencies";
 import { loaders, getLoaderForFile } from "./compiler/loaders";
+import { mdxPlugin } from "./compiler/plugins/mdx";
 import { getRouteModuleExportsCached } from "./compiler/routes";
 import { writeFileSafe } from "./compiler/utils/fs";
 
@@ -279,6 +280,7 @@ async function createBrowserBuild(
       "process.env.NODE_ENV": JSON.stringify(options.mode)
     },
     plugins: [
+      mdxPlugin(config),
       browserRouteModulesPlugin(config, /\?browser$/),
       emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/)
     ]
@@ -311,6 +313,7 @@ async function createServerBuild(
     assetNames: "_assets/[name]-[hash]",
     publicPath: config.publicPath,
     plugins: [
+      mdxPlugin(config),
       serverRouteModulesPlugin(config),
       emptyModulesPlugin(config, /\.client(\.[jt]sx?)?$/),
       manualExternalsPlugin((id, importer) => {

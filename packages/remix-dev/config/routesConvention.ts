@@ -4,7 +4,7 @@ import * as path from "path";
 import type { RouteManifest, DefineRouteFunction } from "./routes";
 import { defineRoutes, createRouteId } from "./routes";
 
-const routeModuleExts = [".js", ".jsx", ".ts", ".tsx"];
+const routeModuleExts = [".js", ".jsx", ".ts", ".tsx", ".md", ".mdx"];
 
 export function isRouteModuleFile(filename: string): boolean {
   return routeModuleExts.includes(path.extname(filename));

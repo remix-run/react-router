@@ -4,6 +4,7 @@
   "compilerOptions": {
     "lib": ["ES2019"],
     "target": "ES2019",
+    "module": "CommonJS",
 
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,

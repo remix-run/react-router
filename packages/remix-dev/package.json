@@ -14,8 +14,11 @@
     "meow": "^7.1.1",
     "pretty-ms": "^7.0.1",
     "read-package-json-fast": "^2.0.2",
+    "remark-frontmatter": "^4.0.0",
+    "remark-mdx-frontmatter": "^1.0.1",
     "signal-exit": "^3.0.3",
-    "ws": "^7.4.5"
+    "ws": "^7.4.5",
+    "xdm": "^2.0.0"
   },
   "devDependencies": {
     "@types/cacache": "^15.0.0",

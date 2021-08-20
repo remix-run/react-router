@@ -88,11 +88,11 @@ export interface EntryRouteModule {
   default: RouteComponent;
   handle?: RouteHandle;
   links?: LinksFunction;
-  meta?: MetaFunction;
+  meta?: MetaFunction | { [name: string]: string };
 }
 
 export interface ServerRouteModule extends EntryRouteModule {
   action?: ActionFunction;
-  headers?: HeadersFunction;
+  headers?: HeadersFunction | { [name: string]: string };
   loader?: LoaderFunction;
 }
