@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as fse from "fs-extra";
 import signalExit from "signal-exit";
 import prettyMs from "pretty-ms";
 import WebSocket from "ws";
@@ -75,6 +76,11 @@ export async function watch(
       }
     })
   );
+
+  signalExit(() => {
+    fse.emptyDirSync(config.assetsBuildDirectory);
+    fse.emptyDirSync(config.serverBuildDirectory);
+  });
 
   console.log(`💿 Built in ${prettyMs(Date.now() - start)}`);
 }
