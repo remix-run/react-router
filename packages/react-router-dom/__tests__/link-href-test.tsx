@@ -213,7 +213,7 @@ describe("Link href", () => {
       let anchor = renderer.root.findByType("a");
 
       expect(anchor).not.toBeNull();
-      // expect(anchor.props.href).toEqual("/app/about");
+      expect(anchor.props.href).toEqual("/app/about");
     });
   });
 });
