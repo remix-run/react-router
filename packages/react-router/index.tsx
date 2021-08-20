@@ -1,6 +1,6 @@
 import * as React from "react";
-import {
-  Action,
+import { Action, createMemoryHistory, parsePath } from "history";
+import type {
   Blocker,
   History,
   InitialEntry,
@@ -10,9 +10,7 @@ import {
   Path,
   State,
   To,
-  Transition,
-  createMemoryHistory,
-  parsePath
+  Transition
 } from "history";
 
 const readOnly: <T>(obj: T) => Readonly<T> = __DEV__
@@ -553,13 +551,15 @@ function useRoutes_(
   }
 
   // Otherwise render an element.
+  let allParams: Params = {};
   let element = matches.reduceRight((outlet, { params, pathname, route }) => {
+    allParams = { ...allParams, ...params };
     return (
       <RouteContext.Provider
         children={route.element}
         value={{
           outlet,
-          params: readOnly<Params>({ ...parentParams, ...params }),
+          params: readOnly<Params>({ ...parentParams, ...allParams }),
           pathname: joinPaths([basenameForMatching, pathname]),
           basename,
           route

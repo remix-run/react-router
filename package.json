@@ -76,13 +76,13 @@
       "none": "6 kB"
     },
     "build/react-router/umd/react-router.production.min.js": {
-      "none": "7 kB"
+      "none": "8 kB"
     },
     "build/react-router-dom/react-router-dom.production.min.js": {
       "none": "3 kB"
     },
     "build/react-router-dom/umd/react-router-dom.production.min.js": {
-      "none": "7 kB"
+      "none": "8 kB"
     }
   },
   "prettier": {
