@@ -345,7 +345,7 @@ async function createServerBuild(
 }
 
 function isBareModuleId(id: string): boolean {
-  return !id.startsWith(".") && !path.isAbsolute(id);
+  return !id.startsWith(".") && !id.startsWith("~") && !path.isAbsolute(id);
 }
 
 function getNpmPackageName(id: string): string {
