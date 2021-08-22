@@ -32,6 +32,33 @@ describe("useResolvedPath", () => {
     });
   });
 
+  it("partial path object resolves to Path object", () => {
+    let path!: Path;
+    function Home() {
+      path = useResolvedPath({
+        pathname: "/home",
+        search: new URLSearchParams({ user: "mj" }).toString(),
+        hash: "#welcome"
+      });
+      return <h1>Home</h1>;
+    }
+
+    createTestRenderer(
+      <Router initialEntries={["/home"]}>
+        <Routes>
+          <Route path="/home" element={<Home />} />
+        </Routes>
+      </Router>
+    );
+
+    expect(typeof path).toBe("object");
+    expect(path).toMatchObject({
+      pathname: "/home",
+      search: "?user=mj",
+      hash: "#welcome"
+    });
+  });
+
   describe("given a hash with a ? character", () => {
     it("hash is not parsed as a search string", () => {
       let path!: Path;

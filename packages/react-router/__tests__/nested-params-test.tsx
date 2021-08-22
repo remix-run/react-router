@@ -1,5 +1,6 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as ReactDOM from "react-dom";
+import { act } from "react-dom/test-utils";
 import {
   MemoryRouter as Router,
   Outlet,
@@ -9,6 +10,17 @@ import {
 } from "react-router";
 
 describe("nested routes", () => {
+  let node: HTMLDivElement;
+  beforeEach(() => {
+    node = document.createElement("div");
+    document.body.appendChild(node);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(node);
+    node = null!;
+  });
+
   it("gets all params from parent routes", () => {
     function Users() {
       return (
@@ -43,30 +55,32 @@ describe("nested routes", () => {
     }
 
     function Course() {
-      // We should be able to access the username param here
-      // even though it was defined in a parent route from
-      // another set of <Routes>
+      // We should be able to access the username param here even though it was
+      // defined in a parent route from another set of <Routes>
       let { username, courseId } = useParams();
       return (
         <div>
-          <h1>
+          <h1 id="course">
             User: {username}, course {courseId}
           </h1>
         </div>
       );
     }
 
-    let renderer = createTestRenderer(
-      <Router initialEntries={["/users/michael/courses/routing"]}>
-        <Routes>
-          <Route path="users" element={<Users />}>
-            <Route path=":username/*" element={<User />} />
-          </Route>
-        </Routes>
-      </Router>
-    );
+    act(() => {
+      ReactDOM.render(
+        <Router initialEntries={["/users/michael/courses/routing"]}>
+          <Routes>
+            <Route path="users" element={<Users />}>
+              <Route path=":username/*" element={<User />} />
+            </Route>
+          </Routes>
+        </Router>,
+        node
+      );
+    });
 
-    expect(renderer.toJSON()).not.toBeNull();
-    expect(renderer.toJSON()).toMatchSnapshot();
+    let elem = document.querySelector<HTMLHeadingElement>("#course")!;
+    expect(elem.innerHTML).toBe("User: michael, course routing");
   });
 });

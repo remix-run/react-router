@@ -195,6 +195,26 @@ describe("useHref", () => {
     });
   });
 
+  describe("to an absolute route", () => {
+    it("returns the correct href", () => {
+      let href = "";
+      function AdvancedReact() {
+        href = useHref("/users");
+        return <h1>Advanced React</h1>;
+      }
+
+      createTestRenderer(
+        <Router initialEntries={["/courses/advanced-react"]}>
+          <Routes>
+            <Route path="courses/advanced-react" element={<AdvancedReact />} />
+          </Routes>
+        </Router>
+      );
+
+      expect(href).toBe("/users");
+    });
+  });
+
   describe("with a to value that has more .. segments than are in the URL", () => {
     it("returns the correct href", () => {
       function Courses() {
