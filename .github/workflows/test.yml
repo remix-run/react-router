@@ -1,5 +1,10 @@
 name: test
-on: [push, pull_request]
+on:
+  push:
+    branches: [dev]
+    tags: [v*]
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   test:
