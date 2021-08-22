@@ -237,6 +237,10 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   }
 );
 
+if (__DEV__) {
+  Link.displayName = "Link";
+}
+
 export interface NavLinkProps extends LinkProps {
   activeClassName?: string;
   activeStyle?: object;
@@ -294,6 +298,10 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     );
   }
 );
+
+if (__DEV__) {
+  NavLink.displayName = "NavLink";
+}
 
 export interface PromptProps {
   message: string;

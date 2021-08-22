@@ -1,6 +1,6 @@
 import * as React from "react";
-import {
-  Action,
+import { Action, createMemoryHistory, parsePath } from "history";
+import type {
   Blocker,
   History,
   InitialEntry,
@@ -10,9 +10,7 @@ import {
   Path,
   State,
   To,
-  Transition,
-  createMemoryHistory,
-  parsePath
+  Transition
 } from "history";
 
 const readOnly: <T>(obj: T) => Readonly<T> = __DEV__
@@ -583,11 +581,13 @@ function useRoutes_(
     );
   }
 
-  basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
+  let basenameForMatching = basename
+    ? joinPaths([parentPathname, basename])
+    : parentPathname;
 
   let matches = React.useMemo(
-    () => matchRoutes(routes, location, basename),
-    [location, routes, basename]
+    () => matchRoutes(routes, location, basenameForMatching),
+    [location, routes, basenameForMatching]
   );
 
   if (!matches) {
@@ -596,14 +596,16 @@ function useRoutes_(
   }
 
   // Otherwise render an element.
+  let allParams: Params = {};
   let element = matches.reduceRight((outlet, { params, pathname, route }) => {
+    allParams = { ...allParams, ...params };
     return (
       <RouteContext.Provider
         children={route.element}
         value={{
           outlet,
-          params: readOnly<Params>({ ...parentParams, ...params }),
-          pathname: joinPaths([basename, pathname]),
+          params: readOnly<Params>({ ...parentParams, ...allParams }),
+          pathname: joinPaths([basenameForMatching, pathname]),
           basename,
           route
         }}
@@ -1034,13 +1036,25 @@ export function resolvePath(to: To, fromPathname = "/", basename = ""): Path {
       )
     : fromPathname;
 
-  return { pathname, search, hash };
+  return {
+    pathname,
+    search: normalizeSearch(search),
+    hash: normalizeHash(hash)
+  };
 }
 
 const trimTrailingSlashes = (path: string) => path.replace(/\/+$/, "");
 const normalizeSlashes = (path: string) => path.replace(/\/\/+/g, "/");
 const joinPaths = (paths: string[]) => normalizeSlashes(paths.join("/"));
 const splitPath = (path: string) => normalizeSlashes(path).split("/");
+const normalizeSearch = (search: string) =>
+  !search || search === "?"
+    ? ""
+    : search.startsWith("?")
+    ? search
+    : "?" + search;
+const normalizeHash = (hash: string) =>
+  !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
 
 function resolvePathname(toPathname: string, fromPathname: string): string {
   let segments = splitPath(trimTrailingSlashes(fromPathname));
