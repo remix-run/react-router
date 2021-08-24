@@ -338,6 +338,10 @@ async function createServerBuild(
               packageName
             );
           }
+
+          // allow importing css files for bundling / hashing from node_modules.
+          if (id.endsWith(".css")) return false;
+
           return true;
         }
 
