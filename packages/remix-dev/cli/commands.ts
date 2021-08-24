@@ -8,6 +8,56 @@ import { BuildMode, isBuildMode } from "../build";
 import * as compiler from "../compiler";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
+import { installMagicExports, isSetupPlatform, SetupPlatform } from "../setup";
+
+export async function setup(platformArg?: string) {
+  let platform = isSetupPlatform(platformArg)
+    ? platformArg
+    : SetupPlatform.Node;
+
+  let resolveRemixPackage = (pkg: string) =>
+    path.dirname(require.resolve(`@remix-run/${pkg}/package.json`));
+
+  let platformPkgJson = require(path.resolve(
+    resolveRemixPackage(platform),
+    "package.json"
+  ));
+  let platformExports = path.resolve(
+    resolveRemixPackage(platform),
+    "magicExports"
+  );
+  let clientPkgJson = require(path.resolve(
+    resolveRemixPackage("react"),
+    "package.json"
+  ));
+  let clientExports = path.resolve(
+    resolveRemixPackage("react"),
+    "magicExports"
+  );
+  let serverPkgJson = require(path.resolve(
+    resolveRemixPackage("server-runtime"),
+    "package.json"
+  ));
+  let serverExports = path.resolve(
+    resolveRemixPackage("server-runtime"),
+    "magicExports"
+  );
+
+  await installMagicExports(
+    { [platformPkgJson.name]: platformPkgJson.version },
+    platformExports
+  );
+  await installMagicExports(
+    { [clientPkgJson.name]: clientPkgJson.version },
+    clientExports
+  );
+  await installMagicExports(
+    { [serverPkgJson.name]: serverPkgJson.version },
+    serverExports
+  );
+
+  console.log(`Successfully setup platform "${platform}".`);
+}
 
 export async function build(
   remixRoot: string,

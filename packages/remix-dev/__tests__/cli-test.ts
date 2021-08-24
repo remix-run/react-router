@@ -26,14 +26,19 @@ describe("remix cli", () => {
           Usage
             $ remix build [remixRoot]
             $ remix run [remixRoot]
+            $ remix setup [remixPlatform]
 
           Options
             --help              Print this help message and exit
             --version, -v       Print the CLI version and exit
 
+          Values
+            [remixPlatform]     \\"node\\" is currently the only platform
+
           Examples
             $ remix build my-website
             $ remix run my-website
+            $ remix setup node
 
         "
       `);
