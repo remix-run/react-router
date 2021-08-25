@@ -31,12 +31,20 @@ declare module "*.json" {
   export default asset;
 }
 declare module "*.md" {
-  const asset: string;
-  export default asset;
+  import type { ComponentType as MdComponentType } from "react";
+
+  const Component: MdComponentType;
+  export const attributes: any;
+  export const filename: string;
+  export default Component;
 }
 declare module "*.mdx" {
-  const asset: string;
-  export default asset;
+  import type { ComponentType as MdxComponentType } from "react";
+
+  const Component: MdxComponentType;
+  export const attributes: any;
+  export const filename: string;
+  export default Component;
 }
 declare module "*.mp3" {
   const asset: string;
