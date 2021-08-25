@@ -1,6 +1,6 @@
-// TODO: Once node v15 hits LTS we should use the globally provided webcrypto "crypto"
-// variable and re-enable this code-path in "./cookies.ts" instead of referencing the
-// sign and unsign globals.
+// TODO: Once node v16 is available on AWS we should use the globally provided
+// webcrypto "crypto" variable and re-enable this code-path in "./cookies.ts"
+// instead of referencing the sign and unsign globals.
 
 // const encoder = new TextEncoder();
 

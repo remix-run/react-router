@@ -4,9 +4,9 @@ import { Headers, Request, Response, fetch } from "./fetch";
 
 declare global {
   namespace NodeJS {
-    type GlobalSignFunc = (data: string, secret: string) => Promise<string>;
+    type GlobalSignFunc = (value: string, secret: string) => Promise<string>;
     type GlobalUnsignFunc = (
-      encrypted: string,
+      signed: string,
       secret: string
     ) => Promise<string | false>;
 
@@ -18,8 +18,8 @@ declare global {
       Response: typeof Response;
       fetch: typeof fetch;
 
-      // TODO: Once node v15 hits LTS we should remove these globals and provide
-      // the webcrypto API instead.
+      // TODO: Once node v16 is available on AWS we should remove these globals
+      // and provide the webcrypto API instead.
       sign: GlobalSignFunc;
       unsign: GlobalUnsignFunc;
     }
