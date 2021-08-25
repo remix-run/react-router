@@ -1,52 +1,56 @@
-const encoder = new TextEncoder();
+// TODO: Once node v15 hits LTS we should use the globally provided webcrypto "crypto"
+// variable and re-enable this code-path in "./cookies.ts" instead of referencing the
+// sign and unsign globals.
 
-export async function sign(value: string, secret: string): Promise<string> {
-  let key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
+// const encoder = new TextEncoder();
 
-  let data = encoder.encode(value);
-  let signature = await crypto.subtle.sign("HMAC", key, data);
-  let hash = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(
-    /=+$/,
-    ""
-  );
+// export async function sign(value: string, secret: string): Promise<string> {
+//   let key = await crypto.subtle.importKey(
+//     "raw",
+//     encoder.encode(secret),
+//     { name: "HMAC", hash: "SHA-256" },
+//     false,
+//     ["sign"]
+//   );
 
-  return value + "." + hash;
-}
+//   let data = encoder.encode(value);
+//   let signature = await crypto.subtle.sign("HMAC", key, data);
+//   let hash = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(
+//     /=+$/,
+//     ""
+//   );
 
-export async function unsign(
-  cookie: string,
-  secret: string
-): Promise<string | false> {
-  let key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["verify"]
-  );
+//   return value + "." + hash;
+// }
 
-  let value = cookie.slice(0, cookie.lastIndexOf("."));
-  let hash = cookie.slice(cookie.lastIndexOf(".") + 1);
+// export async function unsign(
+//   cookie: string,
+//   secret: string
+// ): Promise<string | false> {
+//   let key = await crypto.subtle.importKey(
+//     "raw",
+//     encoder.encode(secret),
+//     { name: "HMAC", hash: "SHA-256" },
+//     false,
+//     ["verify"]
+//   );
 
-  let data = encoder.encode(value);
-  let signature = byteStringToUint8Array(atob(hash));
-  let valid = await crypto.subtle.verify("HMAC", key, signature, data);
+//   let value = cookie.slice(0, cookie.lastIndexOf("."));
+//   let hash = cookie.slice(cookie.lastIndexOf(".") + 1);
 
-  return valid ? value : false;
-}
+//   let data = encoder.encode(value);
+//   let signature = byteStringToUint8Array(atob(hash));
+//   let valid = await crypto.subtle.verify("HMAC", key, signature, data);
 
-function byteStringToUint8Array(byteString: string): Uint8Array {
-  let array = new Uint8Array(byteString.length);
+//   return valid ? value : false;
+// }
 
-  for (let i = 0; i < byteString.length; i++) {
-    array[i] = byteString.charCodeAt(i);
-  }
+// function byteStringToUint8Array(byteString: string): Uint8Array {
+//   let array = new Uint8Array(byteString.length);
 
-  return array;
-}
+//   for (let i = 0; i < byteString.length; i++) {
+//     array[i] = byteString.charCodeAt(i);
+//   }
+
+//   return array;
+// }

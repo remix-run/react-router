@@ -5,7 +5,11 @@
   "repository": "https://github.com/remix-run/packages",
   "dependencies": {
     "@remix-run/server-runtime": "0.17.5",
+    "cookie-signature": "^1.1.0",
     "source-map": "^0.7.3"
+  },
+  "devDependencies": {
+    "@types/cookie-signature": "^1.0.3"
   },
   "sideEffects": false
 }

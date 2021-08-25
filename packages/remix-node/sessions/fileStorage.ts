@@ -1,3 +1,4 @@
+import * as crypto from "crypto";
 import { promises as fsp } from "fs";
 import * as path from "path";
 
@@ -36,8 +37,7 @@ export function createFileSessionStorage({
       let content = JSON.stringify({ data, expires });
 
       while (true) {
-        let randomBytes = new Uint8Array(8);
-        crypto.getRandomValues(randomBytes);
+        let randomBytes = crypto.randomBytes(8);
         // This storage manages an id space of 2^64 ids, which is far greater
         // than the maximum number of files allowed on an NTFS or ext4 volume
         // (2^32). However, the larger id space should help to avoid collisions

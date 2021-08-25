@@ -1,7 +1,7 @@
 import type { CookieParseOptions, CookieSerializeOptions } from "cookie";
 import { parse, serialize } from "cookie";
 
-import { sign, unsign } from "./cookieSigning";
+// TODO: Once node v15 hits LTS `import { sign, unsign } from "./cookieSigning";`
 
 export type { CookieParseOptions, CookieSerializeOptions };
 
@@ -125,6 +125,7 @@ async function encodeCookieValue(
   let encoded = encodeData(value);
 
   if (secrets.length > 0) {
+    // @ts-expect-error
     encoded = await sign(encoded, secrets[0]);
   }
 
@@ -137,6 +138,7 @@ async function decodeCookieValue(
 ): Promise<any> {
   if (secrets.length > 0) {
     for (let secret of secrets) {
+      // @ts-expect-error
       let unsignedValue = await unsign(value, secret);
       if (unsignedValue !== false) {
         return decodeData(unsignedValue);
