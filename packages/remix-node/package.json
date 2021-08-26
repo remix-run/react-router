@@ -5,7 +5,9 @@
   "repository": "https://github.com/remix-run/packages",
   "dependencies": {
     "@remix-run/server-runtime": "0.18.0-pre.1",
+    "@types/node-fetch": "^2.5.12",
     "cookie-signature": "^1.1.0",
+    "node-fetch": "^2.6.1",
     "source-map": "^0.7.3"
   },
   "devDependencies": {

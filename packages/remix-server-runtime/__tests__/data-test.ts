@@ -1,4 +1,3 @@
-import { Request } from "node-fetch";
 import { ServerBuild } from "../build";
 import { createRequestHandler } from "../server";
 
