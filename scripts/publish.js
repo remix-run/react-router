@@ -4,6 +4,7 @@ const jsonfile = require("jsonfile");
 const semver = require("semver");
 
 const rootDir = path.resolve(__dirname, "..");
+const version = process.argv[2];
 
 /**
  * @param {*} cond
@@ -12,14 +13,6 @@ const rootDir = path.resolve(__dirname, "..");
  */
 function invariant(cond, message) {
   if (!cond) throw new Error(message);
-}
-
-/**
- * @returns {string}
- */
-function getTaggedVersion() {
-  let output = execSync("git tag --list --points-at HEAD").toString();
-  return output.replace(/^v|\n+$/g, "");
 }
 
 /**
@@ -41,7 +34,7 @@ async function ensureBuildVersion(packageName, version) {
  */
 function publishBuild(packageName, tag) {
   let buildDir = path.join(rootDir, "packages", packageName);
-  let command = `npm publish ${buildDir}` + tag ? ` --tag ${tag}` : "";
+  let command = `npm publish ${buildDir}` + (tag ? ` --tag ${tag}` : "");
   console.log();
   console.log(`  ${command}`);
   console.log();
@@ -60,7 +53,6 @@ async function run() {
     );
 
     // 1. Get the current tag, which has the release version number
-    let version = getTaggedVersion();
     invariant(
       version !== "",
       "Missing release version. Run the version script first."
@@ -71,7 +63,8 @@ async function run() {
 
     console.log();
     console.log(
-      `  Publishing version ${version} to npm` + tag ? ` with tag "${tag}"` : ""
+      `  Publishing version ${version} to npm` +
+        (tag ? ` with tag "${tag}"` : "")
     );
 
     // 3. Ensure build versions match the release version
