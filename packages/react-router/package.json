@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "Declarative routing for React",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
