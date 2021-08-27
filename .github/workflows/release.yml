@@ -29,9 +29,9 @@ jobs:
       - name: Test
         run: yarn test
 
-      # - name: Publish
-      #   env:
-      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      #   run: |
-      #     echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
-      #     node scripts/publish.js
+      - name: Publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+          node scripts/publish.js
