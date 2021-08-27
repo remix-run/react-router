@@ -9,15 +9,19 @@ import renderStrict from "./utils/renderStrict.js";
 describe("<Link> click events", () => {
   const node = document.createElement("div");
 
-  afterEach(() => {
-    ReactDOM.unmountComponentAtNode(node);
-  });
-
-  const memoryHistory = createMemoryHistory();
-  memoryHistory.push = jest.fn();
+  let memoryHistory, pushSpy, replaceSpy;
 
   beforeEach(() => {
-    memoryHistory.push.mockReset();
+    memoryHistory = createMemoryHistory();
+    pushSpy = jest.spyOn(memoryHistory, "push");
+    replaceSpy = jest.spyOn(memoryHistory, "push");
+  });
+
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node);
+
+    pushSpy.mockRestore();
+    replaceSpy.mockRestore();
   });
 
   it("calls onClick eventhandler and history.push", () => {
@@ -40,15 +44,45 @@ describe("<Link> click events", () => {
     });
 
     expect(clickHandler).toBeCalledTimes(1);
-    expect(memoryHistory.push).toBeCalledTimes(1);
-    expect(memoryHistory.push).toBeCalledWith(to);
+    expect(pushSpy).toBeCalledTimes(1);
+    expect(pushSpy).toBeCalledWith(to);
+  });
+
+  it("calls history.replace on duplicate navigation", () => {
+    const clickHandler = jest.fn();
+    const to = "/duplicate/path?the=query#the-hash";
+
+    renderStrict(
+      <Router history={memoryHistory}>
+        <Link to={to} onClick={clickHandler}>
+          link
+        </Link>
+      </Router>,
+      node
+    );
+
+    const a = node.querySelector("a");
+    TestUtils.Simulate.click(a, {
+      defaultPrevented: false,
+      button: 0
+    });
+
+    TestUtils.Simulate.click(a, {
+      defaultPrevented: false,
+      button: 0
+    });
+
+    expect(clickHandler).toBeCalledTimes(2);
+    expect(pushSpy).toBeCalledTimes(1);
+    expect(pushSpy).toBeCalledWith(to);
+    expect(replaceSpy).toBeCalledTimes(1);
+    expect(replaceSpy).toBeCalledWith(to);
   });
 
   it("calls onClick eventhandler and history.push with function `to` prop", () => {
-    const memoryHistoryFoo = createMemoryHistory({
-      initialEntries: ["/foo"]
-    });
-    memoryHistoryFoo.push = jest.fn();
+    // Make push a no-op so key IDs do not change
+    pushSpy.mockImplementation();
+
     const clickHandler = jest.fn();
     let to = null;
     const toFn = location => {
@@ -61,7 +95,7 @@ describe("<Link> click events", () => {
     };
 
     renderStrict(
-      <Router history={memoryHistoryFoo}>
+      <Router history={memoryHistory}>
         <Link to={toFn} onClick={clickHandler}>
           link
         </Link>
@@ -76,8 +110,8 @@ describe("<Link> click events", () => {
     });
 
     expect(clickHandler).toBeCalledTimes(1);
-    expect(memoryHistoryFoo.push).toBeCalledTimes(1);
-    expect(memoryHistoryFoo.push).toBeCalledWith(to);
+    expect(pushSpy).toBeCalledTimes(1);
+    expect(pushSpy).toBeCalledWith(to);
   });
 
   it("does not call history.push on right click", () => {
@@ -96,7 +130,7 @@ describe("<Link> click events", () => {
       button: 1
     });
 
-    expect(memoryHistory.push).toBeCalledTimes(0);
+    expect(pushSpy).toBeCalledTimes(0);
   });
 
   it("does not call history.push on prevented event.", () => {
@@ -115,7 +149,7 @@ describe("<Link> click events", () => {
       button: 0
     });
 
-    expect(memoryHistory.push).toBeCalledTimes(0);
+    expect(pushSpy).toBeCalledTimes(0);
   });
 
   it("does not call history.push target not specifying 'self'", () => {
@@ -136,12 +170,10 @@ describe("<Link> click events", () => {
       button: 0
     });
 
-    expect(memoryHistory.push).toBeCalledTimes(0);
+    expect(pushSpy).toBeCalledTimes(0);
   });
 
   it("prevents the default event handler if an error occurs", () => {
-    const memoryHistory = createMemoryHistory();
-    memoryHistory.push = jest.fn();
     const error = new Error();
     const clickHandler = () => {
       throw error;
@@ -173,6 +205,6 @@ describe("<Link> click events", () => {
     console.error.mockRestore();
     expect(clickHandler).toThrow(error);
     expect(mockPreventDefault).toHaveBeenCalled();
-    expect(memoryHistory.push).toBeCalledTimes(0);
+    expect(pushSpy).toBeCalledTimes(0);
   });
 });

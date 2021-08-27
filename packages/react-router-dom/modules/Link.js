@@ -1,5 +1,6 @@
 import React from "react";
 import { __RouterContext as RouterContext } from "react-router";
+import { createPath } from 'history';
 import PropTypes from "prop-types";
 import invariant from "tiny-invariant";
 import {
@@ -100,7 +101,8 @@ const Link = forwardRef(
             href,
             navigate() {
               const location = resolveToLocation(to, context.location);
-              const method = replace ? history.replace : history.push;
+              const isDuplicateNavigation = createPath(context.location) === createPath(normalizeToLocation(location));
+              const method = (replace || isDuplicateNavigation) ? history.replace : history.push;
 
               method(location);
             }
