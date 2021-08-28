@@ -1,18 +1,18 @@
 import { atob, btoa } from "./base64";
 import { sign, unsign } from "./cookieSigning";
-import { Headers, Request, Response, fetch } from "./fetch";
+import {
+  Headers as NodeHeaders,
+  Request as NodeRequest,
+  Response as NodeResponse,
+  fetch as nodeFetch
+} from "./fetch";
 
 declare global {
   namespace NodeJS {
-    type GlobalSignFunc = (value: string, secret: string) => Promise<string>;
-    type GlobalUnsignFunc = (
-      signed: string,
-      secret: string
-    ) => Promise<string | false>;
-
     interface Global {
       atob: typeof atob;
       btoa: typeof btoa;
+
       Headers: typeof Headers;
       Request: typeof Request;
       Response: typeof Response;
@@ -20,8 +20,8 @@ declare global {
 
       // TODO: Once node v16 is available on AWS we should remove these globals
       // and provide the webcrypto API instead.
-      sign: GlobalSignFunc;
-      unsign: GlobalUnsignFunc;
+      sign: typeof sign;
+      unsign: typeof unsign;
     }
   }
 }
@@ -30,10 +30,10 @@ export function installGlobals() {
   global.atob = atob;
   global.btoa = btoa;
 
-  (global as NodeJS.Global).Headers = Headers;
-  (global as NodeJS.Global).Request = Request;
-  (global as NodeJS.Global).Response = Response;
-  (global as NodeJS.Global).fetch = fetch;
+  global.Headers = (NodeHeaders as unknown) as typeof Headers;
+  global.Request = (NodeRequest as unknown) as typeof Request;
+  global.Response = (NodeResponse as unknown) as typeof Response;
+  global.fetch = (nodeFetch as unknown) as typeof fetch;
 
   global.sign = sign;
   global.unsign = unsign;

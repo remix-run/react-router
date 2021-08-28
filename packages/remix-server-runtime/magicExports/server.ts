@@ -17,7 +17,10 @@ export type {
   BlockLinkDescriptor,
   PageLinkDescriptor,
   ErrorBoundaryComponent,
+  ActionFunction,
+  HeadersFunction,
   LinksFunction,
+  LoaderFunction,
   MetaFunction,
   RouteComponent,
   RouteHandle,
@@ -35,5 +38,7 @@ export {
   isSession,
   createSessionStorage,
   createCookieSessionStorage,
-  createMemorySessionStorage
+  createMemorySessionStorage,
+  json,
+  redirect
 } from "@remix-run/server-runtime";

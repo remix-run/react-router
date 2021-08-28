@@ -1,5 +1,3 @@
-import "./assetImportTypes";
-
 export type { ServerBuild, ServerEntryModule } from "./build";
 
 export type {
