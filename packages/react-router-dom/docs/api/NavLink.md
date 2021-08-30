@@ -52,6 +52,32 @@ When `true`, the trailing slash on a location's `pathname` will be taken into co
 </NavLink>
 ```
 
+## inactiveClassName: string
+
+The class to give the element only when it is not active. By default, no `inactiveClassName` is assigned.
+
+```jsx
+<NavLink to="/faq" inactiveClassName="unselected">
+  FAQs
+</NavLink>
+```
+
+## inactiveStyle: object
+
+The styles to apply to the element only when it is not active.
+
+```jsx
+<NavLink
+  to="/faq"
+  inactiveStyle={{
+    fontWeight: "bold",
+    color: "blue"
+  }}
+>
+  FAQs
+</NavLink>
+```
+
 ## isActive: func
 
 A function to add extra logic for determining whether the link is active. This should be used if you want to do more than verify that the link's pathname matches the current URL's `pathname`.
