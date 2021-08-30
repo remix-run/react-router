@@ -30,6 +30,8 @@ const NavLink = forwardRef(
       activeStyle,
       className: classNameProp,
       exact,
+      inactiveClassName,
+      inactiveStyle,
       isActive: isActiveProp,
       location: locationProp,
       sensitive,
@@ -68,10 +70,14 @@ const NavLink = forwardRef(
             ? isActiveProp(match, currentLocation)
             : match);
 
-          const className = isActive
-            ? joinClassnames(classNameProp, activeClassName)
-            : classNameProp;
-          const style = isActive ? { ...styleProp, ...activeStyle } : styleProp;
+          const className = joinClassnames(
+            classNameProp,
+            isActive ? activeClassName : inactiveClassName
+          );
+          const style = {
+            ...styleProp,
+            ...(isActive ? activeStyle : inactiveStyle)
+          };
 
           const props = {
             "aria-current": (isActive && ariaCurrent) || null,
@@ -115,6 +121,8 @@ if (__DEV__) {
     activeStyle: PropTypes.object,
     className: PropTypes.string,
     exact: PropTypes.bool,
+    inactiveClassName: PropTypes.string,
+    inactiveStyle: PropTypes.object,
     isActive: PropTypes.func,
     location: PropTypes.object,
     sensitive: PropTypes.bool,

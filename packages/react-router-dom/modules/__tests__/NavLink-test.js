@@ -93,6 +93,37 @@ describe("A <NavLink>", () => {
       expect(a.style.color).toBe(activeStyle.color);
     });
 
+    it("does not apply its inactiveClassName", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink to="/pizza" inactiveClassName="unselected">
+            Pizza!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      expect(a.className).not.toContain("unselected");
+    });
+
+    it("does not apply its inactiveStyle", () => {
+      const defaultStyle = { color: "black" };
+      const inactiveStyle = { color: "blue" };
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink to="/pizza" style={defaultStyle} activeStyle={inactiveStyle}>
+            Pizza!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      expect(a.style.color).toBe(inactiveStyle.color);
+    });
+
     it("applies the default aria-current", () => {
       renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
@@ -215,6 +246,41 @@ describe("A <NavLink>", () => {
       const a = node.querySelector("a");
 
       expect(a.style.color).toBe(defaultStyle.color);
+    });
+
+    it("applies its inactiveClassName", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink to="/salad" inactiveClassName="unselected">
+            Salad?
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      expect(a.className).toContain("unselected");
+    });
+
+    it("applies its inactiveStyle", () => {
+      const defaultStyle = { color: "black" };
+      const inactiveStyle = { color: "blue" };
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink
+            to="/salad"
+            style={defaultStyle}
+            inactiveStyle={inactiveStyle}
+          >
+            Salad?
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      expect(a.style.color).toBe(inactiveStyle.color);
     });
 
     it("does not apply an aria-current value if no override value is given", () => {
