@@ -1,7 +1,7 @@
 import * as React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
-function App() {
+const App: React.FC = () => {
   return (
     <Router>
       <div>
@@ -33,7 +33,7 @@ function App() {
       </div>
     </Router>
   );
-}
+};
 
 function Home() {
   return (

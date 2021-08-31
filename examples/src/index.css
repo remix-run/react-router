@@ -1,0 +1,108 @@
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+* {
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #f1f1f1;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.root-layout {
+  --gap: 16px;
+  display: grid;
+  grid-template:
+    "header" min-content
+    "main" auto / 1fr;
+  min-height: 100vh;
+}
+
+.root-layout__header {
+  grid-area: header;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: var(--gap);
+}
+
+.root-layout__header-inner {
+  width: 100%;
+}
+
+.root-layout__main {
+  grid-area: main;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--gap);
+}
+
+.root-layout__inner {
+  background: #fff;
+  box-shadow: 0 0 6px hsla(0, 0%, 0%, 0.25);
+  width: 100%;
+  height: 100%;
+}
+
+@media screen and (max-width: 599px) {
+  .root-layout__header {
+    position: sticky;
+    top: 0;
+    background: #f1f1f1; /* TODO: Only apply on scroll */
+  }
+
+  .root-layout__main {
+    margin-top: calc(var(--gap) * -1);
+  }
+}
+
+@media screen and (min-width: 600px) {
+  .root-layout {
+    grid-template: "header main" auto / 200px 1fr;
+    height: 100vh;
+  }
+
+  .root-layout__header {
+    flex-direction: row;
+    overflow-y: scroll;
+  }
+
+  .root-layout__header-inner {
+    margin-top: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .root-layout__main {
+    overflow-y: hidden;
+    margin-left: calc(var(--gap) * -1);
+  }
+
+  .root-layout__inner {
+    overflow-y: scroll;
+  }
+}
