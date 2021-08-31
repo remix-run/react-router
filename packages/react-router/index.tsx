@@ -413,7 +413,8 @@ export function useNavigate(): NavigateFunction {
   );
 
   let navigator = React.useContext(NavigatorContext);
-  let { pathname, basename } = React.useContext(RouteContext);
+  let { basename } = React.useContext(RouteContext);
+  let { pathname } = useLocation();
 
   let activeRef = React.useRef(false);
   React.useEffect(() => {
