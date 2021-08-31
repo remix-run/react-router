@@ -93,6 +93,43 @@ describe("A <NavLink>", () => {
       expect(a.style.color).toBe(activeStyle.color);
     });
 
+    it("applies its className when provided as a function", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink
+            to="/pizza"
+            className={isActive => (isActive ? "active-pizza" : "chill-pizza")}
+          >
+            Pizza!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      expect(a.className).toContain("active-pizza");
+    });
+
+    it("applies its style when provided as a function", () => {
+      const defaultStyle = { color: "black" };
+      const activeStyle = { color: "red" };
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink
+            to="/pizza"
+            style={isActive => (isActive ? activeStyle : defaultStyle)}
+          >
+            Pizza!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      expect(a.style.color).toBe(activeStyle.color);
+    });
+
     it("applies the default aria-current", () => {
       renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
@@ -214,6 +251,43 @@ describe("A <NavLink>", () => {
 
       const a = node.querySelector("a");
 
+      expect(a.style.color).toBe(defaultStyle.color);
+    });
+
+    it("applies its className when provided as a function", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink
+            to="/salad"
+            className={isActive => (isActive ? "active-salad" : "chill-salad")}
+          >
+            Salad?
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      expect(a.className).toContain("chill-salad");
+    });
+
+    it("applies its style when provided as a function", () => {
+      const defaultStyle = { color: "black" };
+      const activeStyle = { color: "red" };
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink
+            to="/salad"
+            style={isActive => (isActive ? activeStyle : defaultStyle)}
+          >
+            Salad?
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
       expect(a.style.color).toBe(defaultStyle.color);
     });
 
