@@ -239,11 +239,11 @@ if (__DEV__) {
   Link.displayName = "Link";
 }
 
-export interface NavLinkProps extends LinkProps {
-  activeClassName?: string;
-  activeStyle?: object;
+export interface NavLinkProps extends Omit<LinkProps, "className" | "style"> {
   caseSensitive?: boolean;
+  className?: string | ((isActive: boolean) => string);
   end?: boolean;
+  style?: React.CSSProperties | ((isActive: boolean) => React.CSSProperties);
 }
 
 /**
@@ -253,8 +253,6 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   function NavLinkWithRef(
     {
       "aria-current": ariaCurrentProp = "page",
-      activeClassName = "active",
-      activeStyle,
       caseSensitive = false,
       className: classNameProp = "",
       end = false,
@@ -279,10 +277,23 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       : locationPathname.startsWith(toPathname);
 
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
-    let className = [classNameProp, isActive ? activeClassName : null]
-      .filter(Boolean)
-      .join(" ");
-    let style = { ...styleProp, ...(isActive ? activeStyle : null) };
+
+    let className: string;
+    if (typeof classNameProp === "function") {
+      className = classNameProp(isActive);
+    } else {
+      // If the className prop is not a function, we use a default `active`
+      // class for <NavLink />s that are active. In v5 `active` was the default
+      // value for `activeClassName`, but we are removing that API and can still
+      // use the old default behavior for a cleraner upgrade path and keep the
+      // simple styling rules working as the currently do.
+      className = [classNameProp, isActive ? "active" : null]
+        .filter(Boolean)
+        .join(" ");
+    }
+
+    let style =
+      typeof styleProp === "function" ? styleProp(isActive) : styleProp;
 
     return (
       <Link

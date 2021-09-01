@@ -341,19 +341,19 @@ TODO: example
 ```tsx
 declare function NavLink(props: NavLinkProps): React.ReactElement;
 
-interface NavLinkProps extends LinkProps {
-  activeClassName?: string;
-  activeStyle?: object;
+interface NavLinkProps extends Omit<LinkProps, "className" | "style"> {
   caseSensitive?: boolean;
+  className?: string | ((isActive: boolean) => string);
   end?: boolean;
+  style?: React.CSSProperties | ((isActive: boolean) => React.CSSProperties);
 }
 ```
 
 </details>
 
-A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not it is "active". This is useful when building a navigation menu such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected.
+A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not it is "active". This is useful when building a navigation menu such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected. It also provides useful context for assitive technology like screen readers.
 
-Both `<NavLink activeClassName>` and/or `<NavLink activeStyle>` are applied to the underlying `<Link>` when the route it links to is currently active.
+By default, an `active` class is added to a `<NavLink>` component when it is active. This provides the same simple styling mechanism for most users who are upgrading from v5. One difference as of `v6.0.0-beta.3` is that `activeClassName` and `activeStyle` have been removed from `NavLinkProps`. Instead, you can pass a function to either `style` or `className` that will allow you to customize the inline styling or the class string based on the component's active state.
 
 ```tsx
 import React from "react";
@@ -370,12 +370,18 @@ function NavList() {
     <nav>
       <ul>
         <li>
-          <NavLink to="messages" activeStyle={activeStyle}>
+          <NavLink
+            to="messages"
+            style={isActive => (isActive ? activeStyle : undefined)}
+          >
             Messages
           </NavLink>
         </li>
         <li>
-          <NavLink to="tasks" activeStyle={activeStyle}>
+          <NavLink
+            to="tasks"
+            style={isActive => (isActive ? activeStyle : undefined)}
+          >
             Tasks
           </NavLink>
         </li>
@@ -385,9 +391,36 @@ function NavList() {
 }
 ```
 
+If you prefer the v5 API, you can create your own `<NavLink />` as a wrapper component:
+
+```tsx
+import React from "react";
+import { NavLink as BaseNavLink } from "react-router-dom";
+
+const NavLink = React.forwardRef(
+  ({ activeClassName, activeStyle, ...props }, ref) => {
+    return (
+      <BaseNavLink
+        ref={ref}
+        {...props}
+        className={isActive =>
+          [props.className, isActive ? activeClassName : null]
+            .filter(Boolean)
+            .join(" ")
+        }
+        style={isActive => ({
+          ...props.style,
+          ...(isActive ? activeStyle : null)
+        })}
+      />
+    );
+  }
+);
+```
+
 If the `end` prop is used, it will ensure this component isn't matched as "active" when its descendant paths are matched:
 
-```
+```tsx
 <NavLink to="/" end>Home</NavLink>
 ```
 
