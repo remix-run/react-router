@@ -26,8 +26,8 @@ const NavLink = forwardRef(
   (
     {
       "aria-current": ariaCurrent = "page",
-      activeClassName = "active",
-      activeStyle,
+      activeClassName = "active", // TODO: deprecate
+      activeStyle, // TODO: deprecate
       className: classNameProp,
       exact,
       isActive: isActiveProp,
@@ -68,10 +68,18 @@ const NavLink = forwardRef(
             ? isActiveProp(match, currentLocation)
             : match);
 
-          const className = isActive
-            ? joinClassnames(classNameProp, activeClassName)
-            : classNameProp;
-          const style = isActive ? { ...styleProp, ...activeStyle } : styleProp;
+          let className =
+            typeof classNameProp === "function"
+              ? classNameProp(isActive)
+              : classNameProp;
+
+          let style =
+            typeof styleProp === "function" ? styleProp(isActive) : styleProp;
+
+          if (isActive) {
+            className = joinClassnames(className, activeClassName);
+            style = { ...style, ...activeStyle };
+          }
 
           const props = {
             "aria-current": (isActive && ariaCurrent) || null,
@@ -113,13 +121,13 @@ if (__DEV__) {
     "aria-current": ariaCurrentType,
     activeClassName: PropTypes.string,
     activeStyle: PropTypes.object,
-    className: PropTypes.string,
+    className: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
     exact: PropTypes.bool,
     isActive: PropTypes.func,
     location: PropTypes.object,
     sensitive: PropTypes.bool,
     strict: PropTypes.bool,
-    style: PropTypes.object
+    style: PropTypes.oneOfType([PropTypes.object, PropTypes.func])
   };
 }
 
