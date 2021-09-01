@@ -1,5 +1,5 @@
-import { matchRoutes } from "react-router";
 import type { PartialRouteObject } from "react-router";
+import { matchRoutes } from "react-router";
 
 describe("path matching", () => {
   function pickPaths(routes: PartialRouteObject[], pathname: string) {
@@ -71,7 +71,7 @@ describe("path matching", () => {
             children: [{ path: "subjects" }]
           },
           { path: "new" },
-          { path: "/" },
+          { index: true },
           { path: "*" }
         ]
       },
@@ -87,7 +87,7 @@ describe("path matching", () => {
       { path: "*" }
     ];
 
-    expect(pickPaths(routes, "/courses")).toEqual(["courses", "/"]);
+    expect(pickPaths(routes, "/courses")).toEqual(["courses", ""]);
     expect(pickPaths(routes, "/courses/routing")).toEqual(["courses", ":id"]);
     expect(pickPaths(routes, "/courses/routing/subjects")).toEqual([
       "courses",
@@ -115,7 +115,7 @@ describe("path matching", () => {
     let routes = [
       {
         path: ":page",
-        children: [{ path: "/" }]
+        children: [{ index: true }]
       },
       { path: "page" }
     ];
@@ -125,7 +125,7 @@ describe("path matching", () => {
 });
 
 describe("path matching with a basename", () => {
-  let routes = [
+  let routes: PartialRouteObject[] = [
     {
       path: "/users/:userId",
       children: [

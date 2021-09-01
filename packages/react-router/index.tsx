@@ -195,6 +195,7 @@ export interface RouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactElement | null;
+  index?: boolean;
   path?: string;
 }
 
@@ -528,13 +529,34 @@ function useRoutes_(
     // You won't get a warning about 2 different <Routes> under a <Route>
     // without a trailing *, but this is a best-effort warning anyway since we
     // cannot even give the warning unless they land at the parent route.
+    //
+    // Example:
+    //
+    // <Routes>
+    //   {/* This route path MUST end with /* because otherwise
+    //       it will never match /blog/post/123 */}
+    //   <Route path="blog" element={<Blog />} />
+    //   <Route path="blog/feed" element={<BlogFeed />} />
+    // </Routes>
+    //
+    // function Blog() {
+    //   return (
+    //     <>
+    //       <Link to="post/123">123</Link>
+    //       <Routes>
+    //         <Route path="post/:id" element={<Post />} />
+    //       </Routes>
+    //     </>
+    //   )
+    // }
+    // function Post() { ... }
     let parentPath = parentRoute && parentRoute.path;
     warningOnce(
       parentPathname,
       !parentRoute || parentRoute.path.endsWith("*"),
       `You rendered descendant <Routes> (or called \`useRoutes\`) at ` +
         `"${parentPathname}" (under <Route path="${parentPath}">) but the ` +
-        `parent route path has no trailing "*". This means if you navigate ` +
+        `parent route path has no trailing "/*". This means if you navigate ` +
         `deeper, the parent won't match anymore and therefore the child ` +
         `routes will never render.\n\n` +
         `Please change the parent <Route path="${parentPath}"> to <Route ` +
@@ -550,12 +572,14 @@ function useRoutes_(
   let location = locationOverride ?? contextLocation;
 
   let matches = React.useMemo(
-    () => matchRoutes(routes, location, basenameForMatching),
+    () => matchRoutes_(routes, location, basenameForMatching),
     [location, routes, basenameForMatching]
   );
 
   if (!matches) {
-    // TODO: Warn about nothing matching, suggest using a catch-all route.
+    if (__DEV__) {
+      // TODO: Warn about nothing matching, suggest using a catch-all route.
+    }
     return null;
   }
 
@@ -595,8 +619,10 @@ export function createRoutesFromArray(
 ): RouteObject[] {
   return array.map(partialRoute => {
     let route: RouteObject = {
-      path: partialRoute.path || "/",
+      path: partialRoute.path || "",
       caseSensitive: partialRoute.caseSensitive === true,
+      index: partialRoute.index === true,
+      // This is the same as default value of <Route element>
       element: partialRoute.element || <Outlet />
     };
 
@@ -637,8 +663,9 @@ export function createRoutesFromChildren(
     }
 
     let route: RouteObject = {
-      path: element.props.path || "/",
+      path: element.props.path || "",
       caseSensitive: element.props.caseSensitive === true,
+      index: element.props.index === true,
       // Default behavior is to just render the element that was given. This
       // permits people to use any element they prefer, not just <Route> (though
       // all our official examples and docs use <Route> for clarity).
@@ -670,6 +697,7 @@ export type Params = Record<string, string>;
 export interface RouteObject {
   caseSensitive: boolean;
   children?: RouteObject[];
+  index: boolean;
   element: React.ReactNode;
   path: string;
 }
@@ -679,11 +707,9 @@ export interface RouteObject {
  * certain properties of a real route object such as `path` and `element`,
  * which have reasonable defaults.
  */
-export interface PartialRouteObject {
-  caseSensitive?: boolean;
+export interface PartialRouteObject
+  extends Omit<Partial<RouteObject>, "children"> {
   children?: PartialRouteObject[];
-  element?: React.ReactNode;
-  path?: string;
 }
 
 /**
@@ -716,6 +742,14 @@ export function matchRoutes(
     location = parsePath(location);
   }
 
+  return matchRoutes_(createRoutesFromArray(routes), location, basename);
+}
+
+function matchRoutes_(
+  routes: RouteObject[],
+  location: Partial<Location>,
+  basename = ""
+): RouteMatch[] | null {
   let pathname = location.pathname || "/";
   if (basename) {
     let base = basename.replace(/^\/*/, "/").replace(/\/+$/, "");
@@ -746,28 +780,41 @@ export interface RouteMatch {
 }
 
 function flattenRoutes(
-  routes: PartialRouteObject[],
+  routes: RouteObject[],
   branches: RouteBranch[] = [],
   parentPath = "",
   parentRoutes: RouteObject[] = [],
   parentIndexes: number[] = []
 ): RouteBranch[] {
-  (routes as RouteObject[]).forEach((route, index) => {
-    route = {
-      ...route,
-      path: route.path || "/",
-      caseSensitive: !!route.caseSensitive,
-      element: route.element
-    };
+  routes.forEach((route, index) => {
+    let path: string;
+    if (route.path.startsWith("/")) {
+      invariant(
+        parentPath && !route.path.startsWith(parentPath),
+        `Absolute <Route path="${route.path}"> must begin ` +
+          `with its parent path "${parentPath}", otherwise it ` +
+          `will be unreachable.`
+      );
 
-    let path = joinPaths([parentPath, route.path]);
+      path = route.path;
+    } else {
+      path = joinPaths([parentPath, route.path]);
+    }
+
     let routes = parentRoutes.concat(route);
     let indexes = parentIndexes.concat(index);
 
     // Add the children before adding this route to the array so we traverse the
     // route tree depth-first and child routes appear before their parents in
     // the "flattened" version.
-    if (route.children) {
+    if (route.children && route.children.length > 0) {
+      invariant(
+        !route.index,
+        `Index route for <Route path="${parentPath}"> must ` +
+          `not have children. If you want the route to be a layout ` +
+          `for its child routes, remove the \`index\` prop.`
+      );
+
       flattenRoutes(route.children, branches, path, routes, indexes);
     }
 
@@ -785,9 +832,7 @@ function rankRouteBranches(branches: RouteBranch[]): void {
     return memo;
   }, {});
 
-  // Sorting is stable in modern browsers, but we still support IE 11, so we
-  // need this little helper.
-  stableSort(branches, (a, b) => {
+  branches.sort((a, b) => {
     let [aPath, , aIndexes] = a;
     let aScore = pathScores[aPath];
 
@@ -841,13 +886,6 @@ function compareIndexes(a: number[], b: number[]): number {
     : // Otherwise, it doesn't really make sense to rank non-siblings by index,
       // so they sort equally.
       0;
-}
-
-function stableSort(array: any[], compareItems: (a: any, b: any) => number) {
-  // This copy lets us get the original index of an item so we can preserve the
-  // original ordering in the case that they sort equally.
-  let copy = array.slice(0);
-  array.sort((a, b) => compareItems(a, b) || copy.indexOf(a) - copy.indexOf(b));
 }
 
 function matchRouteBranch(

@@ -1,9 +1,9 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { create as createTestRenderer } from "react-test-renderer";
+import type { RouteObject } from "react-router";
 import { MemoryRouter as Router, useRoutes } from "react-router";
 import { act } from "react-dom/test-utils";
-import type { PartialRouteObject } from "react-router";
 
 describe("useRoutes", () => {
   it("returns the matching element from a route config", () => {
@@ -59,7 +59,7 @@ function RoutesRenderer({
   basename,
   location
 }: {
-  routes: PartialRouteObject[];
+  routes: Partial<RouteObject>[];
   basename?: string;
   location?: Partial<Location> & { pathname: string };
 }) {

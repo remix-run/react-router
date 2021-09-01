@@ -1,5 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
+import type { PartialRouteObject } from "react-router";
 import {
   MemoryRouter as Router,
   Outlet,
@@ -8,7 +9,6 @@ import {
   useParams,
   useRoutes
 } from "react-router";
-import type { PartialRouteObject } from "react-router";
 import type { InitialEntry } from "history";
 
 describe("route matching", () => {
@@ -28,7 +28,7 @@ describe("route matching", () => {
             children: [{ path: "grades", element: <CourseGrades /> }]
           },
           { path: "new", element: <NewCourse /> },
-          { path: "/", element: <CoursesIndex /> },
+          { index: true, element: <CoursesIndex /> },
           { path: "*", element: <CoursesNotFound /> }
         ]
       },
@@ -56,7 +56,7 @@ describe("route matching", () => {
             <Route path="grades" element={<CourseGrades />} />
           </Route>
           <Route path="new" element={<NewCourse />} />
-          <Route path="/" element={<CoursesIndex />} />
+          <Route index element={<CoursesIndex />} />
           <Route path="*" element={<CoursesNotFound />} />
         </Route>
         <Route path="courses" element={<Landing />}>
@@ -80,7 +80,7 @@ describe("route matching", () => {
             <CourseGrades path="grades" />
           </Course>
           <NewCourse path="new" />
-          <CoursesIndex path="/" />
+          <CoursesIndex index />
           <CoursesNotFound path="*" />
         </Courses>
         <Landing path="courses">
@@ -193,4 +193,5 @@ describe("route matching", () => {
 interface Props {
   children?: React.ReactNode;
   path?: string;
+  index?: boolean;
 }
