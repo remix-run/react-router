@@ -253,6 +253,7 @@ export function Router({
 export interface RoutesProps {
   basename?: string;
   children?: React.ReactNode;
+  location?: Location;
 }
 
 /**
@@ -263,11 +264,12 @@ export interface RoutesProps {
  */
 export function Routes({
   basename = "",
-  children
+  children,
+  location
 }: RoutesProps): React.ReactElement | null {
   let routes = createRoutesFromChildren(children);
-  let location = useLocation();
-  return useRoutes_(routes, location, basename);
+  let location_ = useLocation();
+  return useRoutes_(routes, location ?? location_, basename);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -413,7 +415,8 @@ export function useNavigate(): NavigateFunction {
   );
 
   let navigator = React.useContext(NavigatorContext);
-  let { pathname, basename } = React.useContext(RouteContext);
+  let { basename } = React.useContext(RouteContext);
+  let { pathname } = useLocation();
 
   let activeRef = React.useRef(false);
   React.useEffect(() => {
