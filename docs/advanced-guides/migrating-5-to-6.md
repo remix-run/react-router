@@ -27,20 +27,22 @@ In general, the process looks like this:
   - Use `<Route children>` everywhere
   - Use hooks instead of `withRouter` and "floating" `<Route>`s (that aren't
     part of a `<Switch>`)
-- [Upgrade to React Router v6](#upgrade-to-react-router-v6)
-  - [Upgrade all `<Switch>` elements to `<Routes>`](#upgrade-all-switch-elements-to-routes)
-    - Update `<Link to>` values
-    - Update `<Route path>` patterns
-    - Remove `<Route exact>` and `<Route strict>` props
-    - Move `<Route sensitive>` to containing `<Routes caseSensitive>`
-    - Consolidate your `<Route>`s into a nested config (optional)
-  - [Use `navigate` instead of `history`](#use-navigate-instead-of-history)
-    - Use `useNavigate` hook instead of `useHistory`
-    - Use `<Navigate>` instead of `<Redirect>`
-  - [Use `useRoutes` instead of `react-router-config`](#use-useroutes-instead-of-react-router-config)
+- [Migrating React Router v5 to v6](#migrating-react-router-v5-to-v6)
+  - [Upgrade to React v16.8](#upgrade-to-react-v168)
+  - [Upgrade to React Router v5.1](#upgrade-to-react-router-v51)
+  - [Upgrade to React Router v6](#upgrade-to-react-router-v6)
+    - [Upgrade all `<Switch>` elements to `<Routes>`](#upgrade-all-switch-elements-to-routes)
+    - [Relative Routes and Links](#relative-routes-and-links)
+    - [Advantages of `<Route element>`](#advantages-of-route-element)
+    - [Note on `<Route path>` patterns](#note-on-route-path-patterns)
+    - [Note on `<Link to>` values](#note-on-link-to-values)
+  - [Use useRoutes instead of react-router-config](#use-useroutes-instead-of-react-router-config)
+  - [Use navigate instead of history](#use-navigate-instead-of-history)
   - [Rename `<Link component>` to `<Link as>` and `<NavLink exact>` to `<NavLink end>`](#rename-link-component-to-link-as-and-navlink-exact-to-navlink-end)
+  - [Remove `activeClassName` and `activeStyle` props from `<NavLink />`](#remove-activeclassname-and-activestyle-props-from-navlink-)
   - [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-domserver)
   - [Move `basename` from `<Router>` to `<Routes>`](#move-basename-from-router-to-routes)
+  - [What did we miss?](#what-did-we-miss)
 
 ## Upgrade to React v16.8
 
@@ -707,6 +709,59 @@ function SomeForm() {
 
 This is a simple renaming of a prop to better align with the common practice of
 other libraries in the React ecosystem including styled-components and Reach UI.
+
+## Remove `activeClassName` and `activeStyle` props from `<NavLink />`
+
+As of `v6.0.0-beta.3`, the `activeClassName` and `activeStyle` props have been removed from `NavLinkProps`. Instead, you can pass a function to either `style` or `className` that will allow you to customize the inline styling or the class string based on the component's active state.
+
+```diff tsx
+<NavLink
+  to="/messages"
+- style={{ color: 'blue' }}
+- activeStyle={{ color: 'green' }}
++ style={isActive => ({ color: isActive ? 'green' : 'blue })}
+>
+  Messages
+</NavLink>
+```
+
+```diff tsx
+<NavLink
+  to="/messages"
+- className="nav-link"
+- activeClassName="activated"
++ className={isActive => "nav-link" + (isActive ? " activated" : "")}
+>
+  Messages
+</NavLink>
+```
+
+If you prefer to keep the v5 props, you can create your own `<NavLink />` as a wrapper component for a smoother upgrade path.
+
+```tsx
+import React from "react";
+import { NavLink as BaseNavLink } from "react-router-dom";
+
+const NavLink = React.forwardRef(
+  ({ activeClassName, activeStyle, ...props }, ref) => {
+    return (
+      <BaseNavLink
+        ref={ref}
+        {...props}
+        className={isActive =>
+          [props.className, isActive ? activeClassName : null]
+            .filter(Boolean)
+            .join(" ")
+        }
+        style={isActive => ({
+          ...props.style,
+          ...(isActive ? activeStyle : null)
+        })}
+      />
+    );
+  }
+);
+```
 
 ## Get `StaticRouter` from `react-router-dom/server`
 
