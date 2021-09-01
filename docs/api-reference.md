@@ -329,7 +329,20 @@ interface LinkProps extends TouchableHighlightProps {
 
 A `<Link>` is an element that lets the user navigate to another view by tapping it, similar to how `<a>` elements work in a web app. In `react-router-native`, a `<Link>` renders a `TouchableHighlight`.
 
-TODO: example
+```tsx
+import React from "react";
+import { View, Text } from "react-native";
+import { Link } from "react-router-native";
+
+function Home() {
+  return (
+    <View>
+      <Text>Welcome!</Text>
+      <Link to="/profile">Visit your profile</Link>
+    </View>
+  );
+}
+```
 
 <a name="navlink"></a>
 
@@ -421,7 +434,9 @@ const NavLink = React.forwardRef(
 If the `end` prop is used, it will ensure this component isn't matched as "active" when its descendant paths are matched:
 
 ```tsx
-<NavLink to="/" end>Home</NavLink>
+<NavLink to="/" end>
+  Home
+</NavLink>
 ```
 
 <a name="navigate"></a>
