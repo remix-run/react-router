@@ -81,6 +81,7 @@ export type {
   Navigator,
   OutletProps,
   Params,
+  PartialRouteObject,
   PathMatch,
   RouteMatch,
   RouteObject,
