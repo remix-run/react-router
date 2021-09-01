@@ -10,7 +10,7 @@ search field.
 
 ## Using the `useSearchParams` hook
 
-React Router includes a convenient [`useSearchParams` hook](#TODO) for working
+React Router includes a convenient [`useSearchParams` hook](../api-reference.md#usesearchparams) for working
 with search strings that is based on [JavaScript's standard `URLSearchParams`
 API](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams).
 
