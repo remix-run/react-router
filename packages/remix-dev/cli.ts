@@ -52,6 +52,9 @@ switch (cli.input[0]) {
     commands.setup(cli.input[1]);
     break;
   case "run":
+    if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
+    commands.run(cli.input[1], process.env.NODE_ENV);
+    break;
   default:
     // `remix ./my-project` is shorthand for `remix run ./my-project`
     if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
