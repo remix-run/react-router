@@ -26,7 +26,13 @@ if (args.includes("-u")) {
   jestArgs.push("-u");
 }
 
-execSync(`jest ${jestArgs.join(" ")}`, {
-  env: process.env,
-  stdio: "inherit"
-});
+try {
+  execSync(`jest ${jestArgs.join(" ")}`, {
+    env: process.env,
+    stdio: "inherit"
+  });
+} catch (_) {
+  // Reduces the console noise in the event of a failing test and ensure CI
+  // failure.
+  process.exit(1);
+}
