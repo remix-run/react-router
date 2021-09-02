@@ -6,7 +6,6 @@ import type {
   InitialEntry,
   Location,
   MemoryHistory,
-  PartialLocation,
   Path,
   State,
   To,
@@ -250,10 +249,15 @@ export function Router({
   );
 }
 
+interface PartialLocation<S extends State = State>
+  extends Omit<Partial<Location<S>>, "pathname"> {
+  pathname: string;
+}
+
 export interface RoutesProps {
   basename?: string;
   children?: React.ReactNode;
-  location?: Location;
+  location?: PartialLocation;
 }
 
 /**
@@ -268,8 +272,7 @@ export function Routes({
   location
 }: RoutesProps): React.ReactElement | null {
   let routes = createRoutesFromChildren(children);
-  let location_ = useLocation();
-  return useRoutes_(routes, location ?? location_, basename);
+  return useRoutes_(routes, location, basename);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -492,7 +495,8 @@ export function useResolvedPath(to: To): Path {
  */
 export function useRoutes(
   partialRoutes: PartialRouteObject[],
-  basename = ""
+  basename = "",
+  location?: PartialLocation
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -501,7 +505,6 @@ export function useRoutes(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
-  let location = useLocation();
   let routes = React.useMemo(
     () => createRoutesFromArray(partialRoutes),
     [partialRoutes]
@@ -512,7 +515,7 @@ export function useRoutes(
 
 function useRoutes_(
   routes: RouteObject[],
-  location: Location,
+  locationOverride?: PartialLocation,
   basename = ""
 ): React.ReactElement | null {
   let {
@@ -542,6 +545,9 @@ function useRoutes_(
   let basenameForMatching = basename
     ? joinPaths([parentPathname, basename])
     : parentPathname;
+
+  let contextLocation = useLocation();
+  let location = locationOverride ?? contextLocation;
 
   let matches = React.useMemo(
     () => matchRoutes(routes, location, basenameForMatching),
@@ -703,7 +709,7 @@ export function generatePath(path: string, params: Params = {}): string {
  */
 export function matchRoutes(
   routes: PartialRouteObject[],
-  location: string | PartialLocation,
+  location: string | Partial<Location>,
   basename = ""
 ): RouteMatch[] | null {
   if (typeof location === "string") {
