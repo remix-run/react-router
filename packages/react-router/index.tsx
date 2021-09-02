@@ -249,10 +249,15 @@ export function Router({
   );
 }
 
+interface PartialLocation<S extends State = State>
+  extends Omit<Partial<Location<S>>, "pathname"> {
+  pathname: string;
+}
+
 export interface RoutesProps {
   basename?: string;
   children?: React.ReactNode;
-  location?: Partial<Location>;
+  location?: PartialLocation;
 }
 
 /**
@@ -491,7 +496,7 @@ export function useResolvedPath(to: To): Path {
 export function useRoutes(
   partialRoutes: PartialRouteObject[],
   basename = "",
-  location?: Partial<Location>
+  location?: PartialLocation
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -510,7 +515,7 @@ export function useRoutes(
 
 function useRoutes_(
   routes: RouteObject[],
-  locationOverride?: Partial<Location>,
+  locationOverride?: PartialLocation,
   basename = ""
 ): React.ReactElement | null {
   let {
@@ -542,11 +547,7 @@ function useRoutes_(
     : parentPathname;
 
   let contextLocation = useLocation();
-  let location = React.useMemo(() => {
-    return locationOverride
-      ? { ...contextLocation, ...locationOverride }
-      : contextLocation;
-  }, [locationOverride, contextLocation]);
+  let location = locationOverride ?? contextLocation;
 
   let matches = React.useMemo(
     () => matchRoutes(routes, location, basenameForMatching),
