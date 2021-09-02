@@ -61,7 +61,7 @@ function RoutesRenderer({
 }: {
   routes: PartialRouteObject[];
   basename?: string;
-  location?: Partial<Location>;
+  location?: Partial<Location> & { pathname: string };
 }) {
   return useRoutes(routes, basename, location);
 }
