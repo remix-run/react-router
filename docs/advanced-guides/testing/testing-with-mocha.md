@@ -1,4 +1,4 @@
-# Testing With Mocha
+# Testing with Mocha
 
 ## Getting Setup
 

@@ -1,4 +1,4 @@
-# Testing With React Test Renderer
+# Testing with React Testing Library
 
 ## Getting Setup
 

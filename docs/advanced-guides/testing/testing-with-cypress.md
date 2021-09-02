@@ -1,4 +1,4 @@
-# Testing With Cypress
+# Testing with Cypress
 
 ## Getting Setup
 

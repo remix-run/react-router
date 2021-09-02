@@ -29,13 +29,22 @@ TODO
 
 ## Common User Flows
 
-- [Login and Authentication](#login-and-auth)
-- [Forms and Prompts](#forms-and-prompts)
-- [Transitions and Animation](#animation)
-- [Passing Data Between Routes Using `location.state`](#passing-data-with-state)
-- [Persisting Data Using `location.key`](#persisting-data-with-key)
-- [Managing Scroll Position](#scroll-position)
-- [Modals](#modals)
+- [Advanced Guides for React Router](#advanced-guides-for-react-router)
+  - [Building the User Interface](#building-the-user-interface)
+    - [Using Layouts](#using-layouts)
+    - ["Not Found" Routes (404)](#not-found-routes-404)
+    - [Using Route Config Objects](#using-route-config-objects)
+  - [Common User Flows](#common-user-flows)
+    - [Login and Authentication](#login-and-authentication)
+    - [Forms and Prompts](#forms-and-prompts)
+    - [Transitions and Animation](#transitions-and-animation)
+    - [Passing Data Between Routes Using `location.state`](#passing-data-between-routes-using-locationstate)
+    - [Persisting Data Using `location.key`](#persisting-data-using-locationkey)
+    - [Managing Scroll Position](#managing-scroll-position)
+    - [Modals](#modals)
+  - [Useful Techniques](#useful-techniques)
+  - [Server Rendering](#server-rendering)
+  - [Testing](#testing)
 
 <a name="login-and-auth"></a>
 
@@ -93,10 +102,15 @@ TODO
 
 ## Testing
 
-- [Using Jest with React Test Renderer](testing/testing-with-react-test-renderer.md)
-- [Using Jest with React Testing Library](testing/testing-with-react-testing-library.md)
+For code examples, check out one of our guides for the testing tool you use in your project.
+
+- [Using Jest with ReactDOM `test-utils`](testing/testing-with-jest-react-dom-test-utils.md)
+- [Using Jest with React Test Renderer](testing/testing-with-jest-react-test-renderer.md)
+- [Using Jest with React Testing Library](testing/testing-with-jest-react-testing-library.md)
 - [Using Mocha](testing/testing-with-mocha.md)
 - [Using Cypress](testing/testing-with-cypress.md)
 
+---
+
 This list is by no means exhaustive, so if you think something is missing,
-please [let us know](#TODO)!
+please [let us know](https://github.com/remix-run/react-router/issues/new/choose)!
