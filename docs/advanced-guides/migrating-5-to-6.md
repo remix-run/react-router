@@ -552,7 +552,7 @@ function App() {
 ```
 
 Routes defined in this way follow all of the same semantics as `<Routes>`. In
-fact, `<Routes>` is really just a wrapper around `useRoutes`. Crazy, I know.
+fact, `<Routes>` is really just a wrapper around `useRoutes`.
 
 We encourage you to give both `<Routes>` and `useRoutes` a shot and decide for
 yourself which one you prefer to use. Honestly, we like and use them both.
