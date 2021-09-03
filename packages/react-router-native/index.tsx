@@ -134,7 +134,7 @@ export function Link({
   to,
   ...rest
 }: LinkProps) {
-  let internalOnPress = useLinkPress(to, { replace, state });
+  let internalOnPress = useLinkPressHandler(to, { replace, state });
   function handlePress(event: GestureResponderEvent) {
     if (onPress) onPress(event);
     if (!event.defaultPrevented) {
@@ -174,7 +174,7 @@ const URLEventType = "url";
  * you need to create custom `<Link>` compoments with the same press behavior we
  * use in our exported `<Link>`.
  */
-export function useLinkPress<S extends State = State>(
+export function useLinkPressHandler<S extends State = State>(
   to: To,
   {
     replace,

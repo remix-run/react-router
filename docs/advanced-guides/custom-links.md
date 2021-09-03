@@ -3,14 +3,14 @@
 In most cases, the exported `<Link>` component should meet all of your needs as an abstraction of the anchor tag. If you need to return anything other than an anchor element, or override any of `<Link>`'s rendering logic, you can use a few hooks from `react-router-dom` to build your own:
 
 ```tsx
-import { useHref, useLinkClick } from "react-router-dom";
+import { useHref, useLinkClickHandler } from "react-router-dom";
 
 const StyledLink = styled("a", { color: "fuschia" });
 
 const Link = React.forwardRef(
   ({ onClick, replace = false, state, target, to, ...rest }, ref) => {
     let href = useHref(to);
-    let handleClick = useLinkClick(to, { replace, state, target });
+    let handleClick = useLinkClickHandler(to, { replace, state, target });
 
     return (
       <StyledLink
@@ -30,14 +30,14 @@ const Link = React.forwardRef(
 );
 ```
 
-If you're using `react-router-native`, you can create a custom `<Link>` with the `useLinkPress` hook:
+If you're using `react-router-native`, you can create a custom `<Link>` with the `useLinkPressHandler` hook:
 
 ```tsx
 import { TouchableHighlight } from "react-native";
-import { useLinkPress } from "react-router-native";
+import { useLinkPressHandler } from "react-router-native";
 
 function Link({ onPress, replace = false, state, to, ...rest }) {
-  let handlePress = useLinkPress(to, { replace, state });
+  let handlePress = useLinkPressHandler(to, { replace, state });
 
   return (
     <TouchableHighlight

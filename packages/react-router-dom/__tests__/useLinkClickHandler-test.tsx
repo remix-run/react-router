@@ -6,16 +6,16 @@ import {
   Routes,
   Route,
   useHref,
-  useLinkClick
+  useLinkClickHandler
 } from "react-router-dom";
 import type { LinkProps } from "react-router-dom";
 
-describe("Custom link with useLinkClick", () => {
+describe("Custom link with useLinkClickHandler", () => {
   let node: HTMLDivElement;
 
   function Link({ to, replace, state, target, ...rest }: LinkProps) {
     let href = useHref(to);
-    let handleClick = useLinkClick(to, { target, replace, state });
+    let handleClick = useLinkClickHandler(to, { target, replace, state });
     return (
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a {...rest} href={href} onClick={handleClick} target={target} />

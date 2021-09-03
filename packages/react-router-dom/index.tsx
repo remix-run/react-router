@@ -199,7 +199,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     ref
   ) {
     let href = useHref(to);
-    let internalOnClick = useLinkClick(to, { replace, state, target });
+    let internalOnClick = useLinkClickHandler(to, { replace, state, target });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
     ) {
@@ -325,7 +325,7 @@ export function Prompt({ message, when }: PromptProps) {
  * you need to create custom `<Link>` compoments with the same click behavior we
  * use in our exported `<Link>`.
  */
-export function useLinkClick<
+export function useLinkClickHandler<
   E extends Element = HTMLAnchorElement,
   S extends State = State
 >(

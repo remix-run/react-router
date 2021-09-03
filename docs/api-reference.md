@@ -69,8 +69,8 @@ There are a few low-level APIs that we use internally that may also prove useful
 
 - [`useResolvedPath`](#useresolvedpath) - resolves a relative path against the current [location](#location)
 - [`useHref`](#usehref) - resolves a relative path suitable for use as a `<a href>`
-- [`useLinkClick`](#uselinkclick) - returns an event handler to for navigation when building a custom `<Link>` in `react-router-dom`
-- [`useLinkPress`](#uselinkpress) - returns an event handler to for navigation when building a custom `<Link>` in `react-router-native`
+- [`useLinkClickHandler`](#uselinkclickhandler) - returns an event handler to for navigation when building a custom `<Link>` in `react-router-dom`
+- [`useLinkPressHandler`](#uselinkpresshandler) - returns an event handler to for navigation when building a custom `<Link>` in `react-router-native`
 - [`resolvePath`](#resolvepath) - resolves a relative path against a given URL pathname
 
 <a name="confirming-navigation"></a>
@@ -894,15 +894,15 @@ The `useHref` hook returns a URL that may be used to link to the given `to` loca
 > component in `react-router-dom` to see how it uses `useHref` internally to
 > determine its own `href` value.
 
-<a name="uselinkclick"></a>
+<a name="uselinkclickhandler"></a>
 
-### `useLinkClick`
+### `useLinkClickHandler`
 
 <details>
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useLinkClick<
+declare function useLinkClickHandler<
   E extends Element = HTMLAnchorElement,
   S extends State = State
 >(
@@ -917,17 +917,17 @@ declare function useLinkClick<
 
 </details>
 
-The `useLinkClick` hook returns a click event handler to for navigation when building a custom `<Link>` in `react-router-dom`.
+The `useLinkClickHandler` hook returns a click event handler to for navigation when building a custom `<Link>` in `react-router-dom`.
 
 ```tsx
-import { useHref, useLinkClick } from "react-router-dom";
+import { useHref, useLinkClickHandler } from "react-router-dom";
 
 const StyledLink = styled("a", { color: "fuschia" });
 
 const Link = React.forwardRef(
   ({ onClick, replace = false, state, target, to, ...rest }, ref) => {
     let href = useHref(to);
-    let handleClick = useLinkClick(to, { replace, state, target });
+    let handleClick = useLinkClickHandler(to, { replace, state, target });
 
     return (
       <StyledLink
@@ -947,15 +947,15 @@ const Link = React.forwardRef(
 );
 ```
 
-<a name="uselinkpress"></a>
+<a name="uselinkpresshandler"></a>
 
-### `useLinkPress`
+### `useLinkPressHandler`
 
 <details>
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useLinkPress<S extends State = State>(
+declare function useLinkPressHandler<S extends State = State>(
   to: To,
   options?: {
     replace?: boolean;
@@ -966,14 +966,14 @@ declare function useLinkPress<S extends State = State>(
 
 </details>
 
-The `react-router-native` counterpart to `useLinkClick`, `useLinkPress` returns a press event handler for custom `<Link>` navigation.
+The `react-router-native` counterpart to `useLinkClickHandler`, `useLinkPressHandler` returns a press event handler for custom `<Link>` navigation.
 
 ```tsx
 import { TouchableHighlight } from "react-native";
-import { useLinkPress } from "react-router-native";
+import { useLinkPressHandler } from "react-router-native";
 
 function Link({ onPress, replace = false, state, to, ...rest }) {
-  let handlePress = useLinkPress(to, { replace, state });
+  let handlePress = useLinkPressHandler(to, { replace, state });
 
   return (
     <TouchableHighlight

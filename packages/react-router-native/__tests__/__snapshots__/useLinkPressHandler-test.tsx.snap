@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Custom link with useLinkPress navigates to the new view 1`] = `
+exports[`Custom link with useLinkPressHandler navigates to the new view 1`] = `
 <View>
   <Text>
     Home
@@ -27,7 +27,7 @@ exports[`Custom link with useLinkPress navigates to the new view 1`] = `
 </View>
 `;
 
-exports[`Custom link with useLinkPress navigates to the new view 2`] = `
+exports[`Custom link with useLinkPressHandler navigates to the new view 2`] = `
 <View>
   <Text>
     About

@@ -5,15 +5,15 @@ import {
   NativeRouter as Router,
   Route,
   Routes,
-  useLinkPress
+  useLinkPressHandler
 } from "react-router-native";
 import { press } from "./utils";
 import type { LinkProps } from "react-router-native";
 import type { ReactTestRenderer } from "react-test-renderer";
 
-describe("Custom link with useLinkPress", () => {
+describe("Custom link with useLinkPressHandler", () => {
   function Link({ to, replace, state, ...rest }: LinkProps) {
-    let handlePress = useLinkPress(to, { replace, state });
+    let handlePress = useLinkPressHandler(to, { replace, state });
     return <TouchableHighlight {...rest} onPress={handlePress} />;
   }
   it("navigates to the new view", () => {
