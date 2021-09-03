@@ -358,9 +358,11 @@ declare function NavLink(props: NavLinkProps): React.ReactElement;
 
 interface NavLinkProps extends Omit<LinkProps, "className" | "style"> {
   caseSensitive?: boolean;
-  className?: string | ((isActive: boolean) => string);
+  className?: string | ((props: { isActive: boolean }) => string);
   end?: boolean;
-  style?: React.CSSProperties | ((isActive: boolean) => React.CSSProperties);
+  style?:
+    | React.CSSProperties
+    | ((props: { isActive: boolean }) => React.CSSProperties);
 }
 ```
 
