@@ -195,30 +195,17 @@ export interface LinkProps
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
-    { onClick, replace: replaceProp = false, state, target, to, ...rest },
+    { onClick, replace = false, state, target, to, ...rest },
     ref
   ) {
     let href = useHref(to);
-    let navigate = useNavigate();
-    let location = useLocation();
-    let path = useResolvedPath(to);
-
-    function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
+    let internalOnClick = useLinkClickHandler(to, { replace, state, target });
+    function handleClick(
+      event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
+    ) {
       if (onClick) onClick(event);
-      if (
-        !event.defaultPrevented && // onClick prevented default
-        event.button === 0 && // Ignore everything but left clicks
-        (!target || target === "_self") && // Let browser handle "target=_blank" etc.
-        !isModifiedEvent(event) // Ignore clicks with modifier keys
-      ) {
-        event.preventDefault();
-
-        // If the URL hasn't changed, a regular <a> will do a replace instead of
-        // a push, so do the same here.
-        let replace =
-          !!replaceProp || createPath(location) === createPath(path);
-
-        navigate(to, { replace, state });
+      if (!event.defaultPrevented) {
+        internalOnClick(event);
       }
     }
 
@@ -332,6 +319,47 @@ export function Prompt({ message, when }: PromptProps) {
 ////////////////////////////////////////////////////////////////////////////////
 // HOOKS
 ////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Handles the click behavior for router `<Link>` components. This is useful if
+ * you need to create custom `<Link>` compoments with the same click behavior we
+ * use in our exported `<Link>`.
+ */
+export function useLinkClickHandler<
+  E extends Element = HTMLAnchorElement,
+  S extends State = State
+>(
+  to: To,
+  {
+    target,
+    replace: replaceProp,
+    state
+  }: {
+    target?: React.HTMLAttributeAnchorTarget;
+    replace?: boolean;
+    state?: S;
+  } = {}
+): (event: React.MouseEvent<E, MouseEvent>) => void {
+  let navigate = useNavigate();
+  let location = useLocation();
+  let path = useResolvedPath(to);
+
+  return function handleClick(event: React.MouseEvent<E, MouseEvent>) {
+    if (
+      event.button === 0 && // Ignore everything but left clicks
+      (!target || target === "_self") && // Let browser handle "target=_blank" etc.
+      !isModifiedEvent(event) // Ignore clicks with modifier keys
+    ) {
+      event.preventDefault();
+
+      // If the URL hasn't changed, a regular <a> will do a replace instead of
+      // a push, so do the same here.
+      let replace = !!replaceProp || createPath(location) === createPath(path);
+
+      navigate(to, { replace, state });
+    }
+  };
+}
 
 /**
  * Prevents navigation away from the current page using a window.confirm prompt

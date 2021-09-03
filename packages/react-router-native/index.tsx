@@ -134,12 +134,11 @@ export function Link({
   to,
   ...rest
 }: LinkProps) {
-  let navigate = useNavigate();
-
+  let internalOnPress = useLinkPressHandler(to, { replace, state });
   function handlePress(event: GestureResponderEvent) {
     if (onPress) onPress(event);
     if (!event.defaultPrevented) {
-      navigate(to, { replace, state });
+      internalOnPress(event);
     }
   }
 
@@ -169,6 +168,27 @@ export function Prompt({ message, when }: PromptProps) {
 
 const HardwareBackPressEventType = "hardwareBackPress";
 const URLEventType = "url";
+
+/**
+ * Handles the press behavior for router `<Link>` components. This is useful if
+ * you need to create custom `<Link>` compoments with the same press behavior we
+ * use in our exported `<Link>`.
+ */
+export function useLinkPressHandler<S extends State = State>(
+  to: To,
+  {
+    replace,
+    state
+  }: {
+    replace?: boolean;
+    state?: S;
+  } = {}
+): (event: GestureResponderEvent) => void {
+  let navigate = useNavigate();
+  return function handlePress() {
+    navigate(to, { replace, state });
+  };
+}
 
 /**
  * Enables support for the hardware back button on Android.
