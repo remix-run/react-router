@@ -86,6 +86,11 @@ async function run() {
   return 0;
 }
 
-run().then(code => {
-  process.exit(code);
-});
+run()
+  .then(code => {
+    process.exit(code);
+  })
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
