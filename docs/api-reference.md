@@ -387,7 +387,7 @@ function NavList() {
         <li>
           <NavLink
             to="messages"
-            style={isActive => (isActive ? activeStyle : undefined)}
+            style={({ isActive }) => (isActive ? activeStyle : undefined)}
           >
             Messages
           </NavLink>
@@ -395,7 +395,7 @@ function NavList() {
         <li>
           <NavLink
             to="tasks"
-            style={isActive => (isActive ? activeStyle : undefined)}
+            style={({ isActive }) => (isActive ? activeStyle : undefined)}
           >
             Tasks
           </NavLink>
@@ -418,12 +418,12 @@ const NavLink = React.forwardRef(
       <BaseNavLink
         ref={ref}
         {...props}
-        className={isActive =>
+        className={({ isActive }) =>
           [props.className, isActive ? activeClassName : null]
             .filter(Boolean)
             .join(" ")
         }
-        style={isActive => ({
+        style={({ isActive }) => ({
           ...props.style,
           ...(isActive ? activeStyle : null)
         })}

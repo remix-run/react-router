@@ -719,7 +719,7 @@ As of `v6.0.0-beta.3`, the `activeClassName` and `activeStyle` props have been r
   to="/messages"
 - style={{ color: 'blue' }}
 - activeStyle={{ color: 'green' }}
-+ style={isActive => ({ color: isActive ? 'green' : 'blue })}
++ style={({ isActive }) => ({ color: isActive ? 'green' : 'blue })}
 >
   Messages
 </NavLink>
@@ -730,7 +730,7 @@ As of `v6.0.0-beta.3`, the `activeClassName` and `activeStyle` props have been r
   to="/messages"
 - className="nav-link"
 - activeClassName="activated"
-+ className={isActive => "nav-link" + (isActive ? " activated" : "")}
++ className={({ isActive }) => "nav-link" + (isActive ? " activated" : "")}
 >
   Messages
 </NavLink>
@@ -748,12 +748,12 @@ const NavLink = React.forwardRef(
       <BaseNavLink
         ref={ref}
         {...props}
-        className={isActive =>
+        className={({ isActive }) =>
           [props.className, isActive ? activeClassName : null]
             .filter(Boolean)
             .join(" ")
         }
-        style={isActive => ({
+        style={({ isActive }) => ({
           ...props.style,
           ...(isActive ? activeStyle : null)
         })}
