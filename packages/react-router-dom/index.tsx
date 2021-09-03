@@ -24,7 +24,8 @@ import {
   matchPath,
   resolvePath
 } from "react-router";
-import type { BrowserHistory, HashHistory, State, To } from "history";
+import type { BrowserHistory, HashHistory, Location, State, To } from "history";
+import type { PathMatch } from "react-router";
 
 function warning(cond: boolean, message: string): void {
   if (!cond) {
@@ -229,6 +230,7 @@ if (__DEV__) {
 export interface NavLinkProps extends Omit<LinkProps, "className" | "style"> {
   caseSensitive?: boolean;
   className?: string | ((isActive: boolean) => string);
+  isActive?(match: PathMatch | null, location: Location<State>): boolean;
   end?: boolean;
   style?: React.CSSProperties | ((isActive: boolean) => React.CSSProperties);
 }
@@ -242,6 +244,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       "aria-current": ariaCurrentProp = "page",
       caseSensitive = false,
       className: classNameProp = "",
+      isActive: isActiveProp,
       end = false,
       style: styleProp,
       to,
@@ -251,18 +254,12 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   ) {
     let location = useLocation();
     let path = useResolvedPath(to);
+    let match = matchPath(
+      { path: path.pathname, caseSensitive, end },
+      location.pathname
+    );
 
-    let locationPathname = location.pathname;
-    let toPathname = path.pathname;
-    if (!caseSensitive) {
-      locationPathname = locationPathname.toLowerCase();
-      toPathname = toPathname.toLowerCase();
-    }
-
-    let isActive = end
-      ? locationPathname === toPathname
-      : locationPathname.startsWith(toPathname);
-
+    let isActive = isActiveProp ? isActiveProp(match, location) : !!match;
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
     let className: string;

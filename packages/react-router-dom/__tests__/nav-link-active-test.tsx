@@ -261,6 +261,68 @@ describe("NavLink", () => {
       });
     });
   });
+
+  describe("when using the isActive prop", () => {
+    it("applies an `'active'` className when `isActive` returns `true`", () => {
+      function Home() {
+        return (
+          <div>
+            <NavLink
+              to="."
+              isActive={(_, location) => location.pathname.startsWith("/home")}
+            >
+              Home
+            </NavLink>
+          </div>
+        );
+      }
+
+      let renderer!: ReactTestRenderer;
+      act(() => {
+        renderer = createTestRenderer(
+          <Router initialEntries={["/homer"]}>
+            <Routes>
+              <Route path="homer" element={<Home />} />
+            </Routes>
+          </Router>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+      expect(anchor).not.toBeNull();
+      expect(anchor.props.className).toMatch("active");
+    });
+
+    it("does not apply an `'active'` className when `isActive` returns `false`", () => {
+      function Home() {
+        return (
+          <div>
+            <NavLink
+              to="."
+              isActive={(_, location) => location.pathname === "/root"}
+            >
+              Home
+            </NavLink>
+          </div>
+        );
+      }
+
+      let renderer!: ReactTestRenderer;
+      act(() => {
+        renderer = createTestRenderer(
+          <Router initialEntries={["/home"]}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+            </Routes>
+          </Router>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+      expect(anchor).not.toBeNull();
+      expect(anchor.props.className).not.toMatch("active");
+    });
+  });
 });
 
 describe("NavLink under a Routes with a basename", () => {
