@@ -68,7 +68,7 @@ describe("NavLink", () => {
           <div>
             <NavLink
               to="."
-              className={isActive =>
+              className={({ isActive }) =>
                 "nav-link" + (isActive ? " highlighted" : " plain")
               }
             >
@@ -103,7 +103,7 @@ describe("NavLink", () => {
           <div>
             <NavLink
               to="."
-              style={isActive =>
+              style={({ isActive }) =>
                 isActive ? { textTransform: "uppercase" } : {}
               }
             >

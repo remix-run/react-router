@@ -351,8 +351,16 @@ function ExactNavLink(props) {
 
 // React Router v6
 function ExactNavLink(props) {
-  let match = useMatch(props.to);
-  return <Link className={match?.isExact ? "active" : ""} {...props} />;
+  return (
+    <Link
+      // If you only need the active state for styling without
+      // overriding the default isActive state, we provide it as
+      // a named argument in a function that can be passed to
+      // either `className` or `style` props
+      className={({ isActive }) => (isActive ? "active" : "")}
+      {...props}
+    />
+  );
 }
 
 // A link that is active when itself or deeper routes are current

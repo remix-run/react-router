@@ -228,9 +228,11 @@ if (__DEV__) {
 
 export interface NavLinkProps extends Omit<LinkProps, "className" | "style"> {
   caseSensitive?: boolean;
-  className?: string | ((isActive: boolean) => string);
+  className?: string | ((props: { isActive: boolean }) => string);
   end?: boolean;
-  style?: React.CSSProperties | ((isActive: boolean) => React.CSSProperties);
+  style?:
+    | React.CSSProperties
+    | ((props: { isActive: boolean }) => React.CSSProperties);
 }
 
 /**
@@ -267,7 +269,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
 
     let className: string;
     if (typeof classNameProp === "function") {
-      className = classNameProp(isActive);
+      className = classNameProp({ isActive });
     } else {
       // If the className prop is not a function, we use a default `active`
       // class for <NavLink />s that are active. In v5 `active` was the default
@@ -280,7 +282,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     }
 
     let style =
-      typeof styleProp === "function" ? styleProp(isActive) : styleProp;
+      typeof styleProp === "function" ? styleProp({ isActive }) : styleProp;
 
     return (
       <Link

@@ -358,9 +358,11 @@ declare function NavLink(props: NavLinkProps): React.ReactElement;
 
 interface NavLinkProps extends Omit<LinkProps, "className" | "style"> {
   caseSensitive?: boolean;
-  className?: string | ((isActive: boolean) => string);
+  className?: string | ((props: { isActive: boolean }) => string);
   end?: boolean;
-  style?: React.CSSProperties | ((isActive: boolean) => React.CSSProperties);
+  style?:
+    | React.CSSProperties
+    | ((props: { isActive: boolean }) => React.CSSProperties);
 }
 ```
 
@@ -387,7 +389,7 @@ function NavList() {
         <li>
           <NavLink
             to="messages"
-            style={isActive => (isActive ? activeStyle : undefined)}
+            style={({ isActive }) => (isActive ? activeStyle : undefined)}
           >
             Messages
           </NavLink>
@@ -395,7 +397,7 @@ function NavList() {
         <li>
           <NavLink
             to="tasks"
-            style={isActive => (isActive ? activeStyle : undefined)}
+            style={({ isActive }) => (isActive ? activeStyle : undefined)}
           >
             Tasks
           </NavLink>
@@ -418,12 +420,12 @@ const NavLink = React.forwardRef(
       <BaseNavLink
         ref={ref}
         {...props}
-        className={isActive =>
+        className={({ isActive }) =>
           [props.className, isActive ? activeClassName : null]
             .filter(Boolean)
             .join(" ")
         }
-        style={isActive => ({
+        style={({ isActive }) => ({
           ...props.style,
           ...(isActive ? activeStyle : null)
         })}
