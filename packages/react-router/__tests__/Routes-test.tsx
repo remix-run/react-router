@@ -157,6 +157,32 @@ describe("A <Routes>", () => {
       expect(node.innerHTML).toMatchInlineSnapshot(`"<h1>Home</h1>"`);
     });
 
+    it("matches regardless of URL casing", () => {
+      function Home() {
+        return <h1>Home</h1>;
+      }
+
+      function App() {
+        return <h1>App</h1>;
+      }
+
+      act(() => {
+        ReactDOM.render(
+          <Router initialEntries={["/hOmE"]}>
+            <Routes basename="aPp">
+              <Route path="/" element={<App />} />
+            </Routes>
+            <Routes basename="HoMe">
+              <Route path="/" element={<Home />} />
+            </Routes>
+          </Router>,
+          node
+        );
+      });
+
+      expect(node.innerHTML).toMatchInlineSnapshot(`"<h1>Home</h1>"`);
+    });
+
     it("does not render a 2nd route that also matches the URL", () => {
       function Home() {
         return <h1>Home</h1>;

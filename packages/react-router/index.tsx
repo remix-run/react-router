@@ -725,8 +725,8 @@ export function matchRoutes(
       .replace(/^\/*/, "/")
       .replace(/\/+$/, "");
 
-    if (pathname.startsWith(base)) {
-      pathname = pathname === base ? "/" : pathname.slice(base.length);
+    if (pathname.toLowerCase().startsWith(base)) {
+      pathname = pathname.slice(base.length) || "/";
     } else {
       // Pathname does not start with the basename, no match.
       return null;
