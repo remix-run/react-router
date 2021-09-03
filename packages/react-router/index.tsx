@@ -718,7 +718,13 @@ export function matchRoutes(
 
   let pathname = location.pathname || "/";
   if (basename) {
-    let base = basename.replace(/^\/*/, "/").replace(/\/+$/, "");
+    let base = basename
+      // // Basename should be case-insensitive
+      // https://github.com/remix-run/react-router/issues/7997#issuecomment-911916907
+      .toLowerCase()
+      .replace(/^\/*/, "/")
+      .replace(/\/+$/, "");
+
     if (pathname.startsWith(base)) {
       pathname = pathname === base ? "/" : pathname.slice(base.length);
     } else {
