@@ -52,3 +52,23 @@ function Link({ onPress, replace = false, state, to, ...rest }) {
   );
 }
 ```
+## Dealing with external URLs
+
+React Router's `Link` component assumes that the `to` prop's `pathname` is relative to the app. For external links we recommend using an HTML anchor component.
+
+A common pattern for React Router apps is to create a custom `Link` to check the `to` value to determine whether or not it is an external URL string before returning React Router's `Link`.
+
+```tsx
+import * as React from "react";
+import { Link as BaseLink } from "react-router-dom";
+
+const Link = React.forwardRef(({ to, replace, state, ...props }, ref) => {
+  return typeof to === "string" && isExternalURL(to) ? (
+    <a {...props} href={to} ref={ref} />
+  ) : (
+    <BaseLink {...props} to={to} replace={replace} state={state} ref={ref} />
+  );
+});
+```
+
+There are a number of ways one might implement a function like `isExternalURL`. At some point we may decide to provide one in a companion package as a convenience: [TODO: Add an example or two]
