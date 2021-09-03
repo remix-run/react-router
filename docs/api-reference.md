@@ -1208,8 +1208,11 @@ See [`resolvePath`](#resolvepath) for more information.
 
 ```tsx
 declare function useRoutes(
-  routes: PartialRouteObject[],
-  basename = ""
+  partialRoutes: PartialRouteObject[],
+  options?: {
+    basename?: string;
+    location?: PartialLocation;
+  }
 ): React.ReactElement | null;
 ```
 

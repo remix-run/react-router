@@ -495,8 +495,13 @@ export function useResolvedPath(to: To): Path {
  */
 export function useRoutes(
   partialRoutes: PartialRouteObject[],
-  basename = "",
-  location?: PartialLocation
+  {
+    basename = "",
+    location
+  }: {
+    basename?: string;
+    location?: PartialLocation;
+  } = {}
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
