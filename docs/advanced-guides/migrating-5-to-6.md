@@ -36,9 +36,10 @@ In general, the process looks like this:
     - [Advantages of `<Route element>`](#advantages-of-route-element)
     - [Note on `<Route path>` patterns](#note-on-route-path-patterns)
     - [Note on `<Link to>` values](#note-on-link-to-values)
-  - [Use useRoutes instead of react-router-config](#use-useroutes-instead-of-react-router-config)
-  - [Use navigate instead of history](#use-navigate-instead-of-history)
-  - [Rename `<Link component>` to `<Link as>` and `<NavLink exact>` to `<NavLink end>`](#rename-link-component-to-link-as-and-navlink-exact-to-navlink-end)
+  - [Use `useRoutes` instead of `react-router-config`](#use-useroutes-instead-of-react-router-config)
+  - [Use `useNavigate` instead of `history`](#use-usenavigate-instead-of-history)
+  - [Remove `<Link>` `component` prop](#remove-link-component-prop)
+  - [Rename `<NavLink exact>` to `<NavLink end>`](#rename-navlink-exact-to-navlink-end)
   - [Remove `activeClassName` and `activeStyle` props from `<NavLink />`](#remove-activeclassname-and-activestyle-props-from-navlink-)
   - [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-domserver)
   - [Move `basename` from `<Router>` to `<Routes>`](#move-basename-from-router-to-routes)
@@ -368,10 +369,11 @@ function DeepComponent() {
 // Aaaaaaaaand we're done here.
 ```
 
-Another important reason for using the `element` prop in v6 is that `<Route children>` is reserved for nesting routes. This is one of people's favorite
-features from v3 and @reach/router, and we're bringing it back in v6. Taking
-the code in the previous example one step further, we can hoist all `<Route>`
-elements into a single route config:
+Another important reason for using the `element` prop in v6 is that
+`<Route children>` is reserved for nesting routes. This is one of people's
+favorite features from v3 and `@reach/router`, and we're bringing it back in
+v6. Taking the code in the previous example one step further, we can hoist all
+`<Route>` elements into a single route config:
 
 ```js
 // This is a React Router v6 app
@@ -473,12 +475,13 @@ but you'll have to do it server-side.
 
 ### Note on `<Link to>` values
 
-In v5, a `<Link to>` value that does not begin with `/` was ambiguous; it depends
-on what the current URL is. For example, if the current URL is `/users`, a v5
-`<Link to="me">` would render a `<a href="/me">`. However, if the current URL
-has a trailing slash, like `/users/`, the same `<Link to="me">` would render `<a href="/users/me">`. This makes it difficult to predict how links will behave, so
-in v5 we recommended that you build links from the root URL (using `match.url`)
-and not use relative `<Link to>` values.
+In v5, a `<Link to>` value that does not begin with `/` was ambiguous; it
+depends on what the current URL is. For example, if the current URL is
+`/users`, a v5 `<Link to="me">` would render a `<a href="/me">`. However, if
+the current URL has a trailing slash, like `/users/`, the same `<Link to="me">`
+would render `<a href="/users/me">`. This makes it difficult to predict how
+links will behave, so in v5 we recommended that you build links from the root
+URL (using `match.url`) and not use relative `<Link to>` values.
 
 React Router v6 fixes this ambiguity. In v6, a `<Link to="me">` will always
 render the same `<a href>`, regardless of the current URL.
@@ -509,17 +512,17 @@ cd ../../stats                  // pwd is /stats
 cd ../../../stats               // pwd is /stats
 ```
 
-**Note**: The decision to ignore trailing slashes while matching and creating relative
-paths was not taken lightly by our team. We consulted with a number of
-our friends and clients (who are also our friends!) about it. We found that
-most of us don't even understand how plain HTML relative links are handled
-with the trailing slash. Most people guessed it worked like `cd` on the
-command line (it does not). Also, HTML relative links don't have the concept of nested
-routes, they only worked on the URL, so we had to blaze our own trail here a bit.
-@reach/router set this precendent and it has worked out well for a couple of
+**Note**: The decision to ignore trailing slashes while matching and creating
+relative paths was not taken lightly by our team. We consulted with a number of
+our friends and clients (who are also our friends!) about it. We found that most
+of us don't even understand how plain HTML relative links are handled with the
+trailing slash. Most people guessed it worked like `cd` on the command line (it
+does not). Also, HTML relative links don't have the concept of nested routes,
+they only worked on the URL, so we had to blaze our own trail here a bit.
+`@reach/router` set this precendent and it has worked out well for a couple of
 years.
 
-## Use useRoutes instead of react-router-config
+## Use `useRoutes` instead of `react-router-config`
 
 All of the functionality from v5's `react-router-config` package has moved into
 core in v6. If you prefer/need to define your routes as JavaScript objects
@@ -561,7 +564,7 @@ If you had cooked up some of your own logic around data fetching and rendering
 server-side, we have a low-level `matchRoutes` function available as well
 similar to the one we had in react-router-config.
 
-## Use navigate instead of history
+## Use `useNavigate` instead of `history`
 
 React Router v6 introduces a new navigation API that is synonymous with `<Link>`
 and provides better compatibility with suspense-enabled apps. We include both
@@ -705,10 +708,57 @@ function SomeForm() {
 }
 ```
 
-## Rename `<Link component>` to `<Link as>` and `<NavLink exact>` to `<NavLink end>`
+## Remove `<Link>` `component` prop
 
-This is a simple renaming of a prop to better align with the common practice of
-other libraries in the React ecosystem including styled-components and Reach UI.
+`<Link>` no longer supports the `component` prop for overriding the returned
+anchor tag. There are a few reasons for this.
+
+First of all, a `<Link>` should pretty much always render an `<a>`. If yours
+does not, there's a good chance your app has some serious accessibility and
+usability problems, and that's no good. The browsers give us a lot of nice
+usability features with `<a>` and we want your users to get those for free!
+
+That being said, maybe your app uses a CSS-in-JS library, or maybe you have a
+custom, fancy link component already in your design system that you'd like to
+render instead. The `component` prop may have worked well enough in a world
+before hooks, but now you can create your very own accessible `Link` component
+with just a few of our hooks:
+
+```tsx
+import { FancyPantsLink } from "@fancy-pants/design-system";
+import { useHref, useLinkClickHandler } from "react-router-dom";
+
+const Link = React.forwardRef(
+  ({ onClick, replace = false, state, target, to, ...rest }, ref) => {
+    let href = useHref(to);
+    let handleClick = useLinkClickHandler(to, { replace, state, target });
+
+    return (
+      <FancyPantsLink
+        {...rest}
+        href={href}
+        onClick={event => {
+          onClick?.(event);
+          if (!event.defaultPrevented) {
+            handleClick(event);
+          }
+        }}
+        ref={ref}
+        target={target}
+      />
+    );
+  }
+);
+```
+
+If you're using `react-router-native`, we provide `useLinkPressHandler` that
+works basically the same way. Just call that hook's returned function in your
+`Link`'s `onPress` handler and you're all set.
+
+## Rename `<NavLink exact>` to `<NavLink end>`
+
+This is a simple renaming of a prop to better align with the common practices of
+other libraries in the React ecosystem.
 
 ## Remove `activeClassName` and `activeStyle` props from `<NavLink />`
 
