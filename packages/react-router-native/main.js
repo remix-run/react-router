@@ -20,3 +20,5 @@ export { default as AndroidBackButton } from "./BackButton.js";
 export { default as DeepLinking } from "./DeepLinking.js";
 export { default as Link } from "./Link.js";
 export { default as NativeRouter } from "./NativeRouter.js";
+
+export { useNavigate } from "./hooks.js";
