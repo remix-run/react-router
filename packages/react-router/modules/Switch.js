@@ -1,63 +1,67 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import warning from 'warning'
-import invariant from 'invariant'
-import matchPath from './matchPath'
+import React from "react";
+import PropTypes from "prop-types";
+import invariant from "tiny-invariant";
+import warning from "tiny-warning";
+
+import RouterContext from "./RouterContext.js";
+import matchPath from "./matchPath.js";
 
 /**
  * The public API for rendering the first <Route> that matches.
  */
 class Switch extends React.Component {
-  static contextTypes = {
-    router: PropTypes.shape({
-      route: PropTypes.object.isRequired
-    }).isRequired
-  }
-
-  static propTypes = {
-    children: PropTypes.node,
-    location: PropTypes.object
-  }
-
-  componentWillMount() {
-    invariant(
-      this.context.router,
-      'You should not use <Switch> outside a <Router>'
-    )
-  }
-
-  componentWillReceiveProps(nextProps) {
-    warning(
-      !(nextProps.location && !this.props.location),
-      '<Switch> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
-    )
-
-    warning(
-      !(!nextProps.location && this.props.location),
-      '<Switch> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
-    )
-  }
-
   render() {
-    const { route } = this.context.router
-    const { children } = this.props
-    const location = this.props.location || route.location
+    return (
+      <RouterContext.Consumer>
+        {context => {
+          invariant(context, "You should not use <Switch> outside a <Router>");
 
-    let match, child
-    React.Children.forEach(children, element => {
-      if (!React.isValidElement(element)) return
+          const location = this.props.location || context.location;
 
-      const { path: pathProp, exact, strict, sensitive, from } = element.props
-      const path = pathProp || from
+          let element, match;
 
-      if (match == null) {
-        child = element
-        match = path ? matchPath(location.pathname, { path, exact, strict, sensitive }) : route.match
-      }
-    })
+          // We use React.Children.forEach instead of React.Children.toArray().find()
+          // here because toArray adds keys to all child elements and we do not want
+          // to trigger an unmount/remount for two <Route>s that render the same
+          // component at different URLs.
+          React.Children.forEach(this.props.children, child => {
+            if (match == null && React.isValidElement(child)) {
+              element = child;
 
-    return match ? React.cloneElement(child, { location, computedMatch: match }) : null
+              const path = child.props.path || child.props.from;
+
+              match = path
+                ? matchPath(location.pathname, { ...child.props, path })
+                : context.match;
+            }
+          });
+
+          return match
+            ? React.cloneElement(element, { location, computedMatch: match })
+            : null;
+        }}
+      </RouterContext.Consumer>
+    );
   }
 }
 
-export default Switch
+if (__DEV__) {
+  Switch.propTypes = {
+    children: PropTypes.node,
+    location: PropTypes.object
+  };
+
+  Switch.prototype.componentDidUpdate = function(prevProps) {
+    warning(
+      !(this.props.location && !prevProps.location),
+      '<Switch> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
+    );
+
+    warning(
+      !(!this.props.location && prevProps.location),
+      '<Switch> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
+    );
+  };
+}
+
+export default Switch;

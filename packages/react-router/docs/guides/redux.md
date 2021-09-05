@@ -1,44 +1,17 @@
-# Redux Integration
+# Deep Redux Integration
 
-Redux is an important part of the React ecosystem. We want to make the integration of React Router and Redux as seamless as possible for people wanting to use both.
+Redux is an important part of the React ecosystem. We want to make the integration of React Router and Redux as seamless as possible for people wanting to use both. To that end, some folks want to:
 
-## Blocked Updates
+1. Synchronize the routing data with, and accessed from, the store.
+2. Be able to navigate by dispatching actions.
+3. Have support for time travel debugging for route changes in the Redux devtools.
 
-Generally, React Router and Redux work just fine together. Occasionally though, an app can have a component that doesn't update when the location changes (child routes or active nav links don't update).
+All of this requires deeper integration.
 
-This happens if:
+Our recommendation is **not to keep your routes in your Redux store at all**. Here's our reasoning:
 
-1. The component is connected to redux via `connect()(Comp)`.
-2. The component is **not** a "route component", meaning it is not
-   rendered like so: `<Route component={SomeConnectedThing}/>`
+1. Routing data is already a prop of most of your components that care about it. Whether it comes from the store or the router, your component's code is largely the same.
+2. In most cases, you can use `Link`, `NavLink` and `Redirect` to perform navigation actions. Sometimes you might also need to navigate programmatically, after some asynchronous task that was originally initiated by an action. For example, you might dispatch an action when the user submits a login form. Your [thunk](https://github.com/reduxjs/redux-thunk), [saga](https://redux-saga.js.org/) or other async handler then authenticates the credentials, _then_ it needs to somehow navigate to a new page if successful. The solution here is simply to include the `history` object (provided to all route components) in the payload of the action, and your async handler can use this to navigate when appropriate.
+3. Route changes are unlikely to matter for time travel debugging. The only obvious case is to debug issues with your router/store synchronization, and this problem goes away if you don't synchronize them at all.
 
-The problem is that Redux implements `shouldComponentUpdate` and there's no indication that anything has changed if it isn't receiving props from the router.  This is straightforward to fix. Find where you `connect` your component and wrap it in `withRouter`.
-
-```js
-// before
-export default connect(mapStateToProps)(Something)
-
-// after
-import { withRouter } from 'react-router-dom'
-export default withRouter(connect(mapStateToProps)(Something))
-```
-
-## Deep integration
-
-Some folks want to:
-
-- synchronize the routing data with, and accessed from, the store
-- be able to navigate by dispatching actions
-- have support for time travel debugging for route changes in the Redux
-  devtools
-
-All of this requires deeper integration. Please note you don't need this deep integration:
-
-- Route changes are unlikely to matter for time travel debugging.
-- Rather than dispatching actions to navigate you can pass the `history` object provided to route components to your actions and navigate with it there.
-- Routing data is already a prop of most of your components that care about it, whether it comes from the store or the router doesn't change your component's code.
-
-However, we know some people feel strongly about this and so we want to provide the best deep integration possible. As of version 4 of React Router, the React Router Redux package is a part of the project.  Please refer to it for deep integration.
-
-[React Router Redux](https://github.com/reacttraining/react-router/tree/master/packages/react-router-redux)
-
+But if you feel strongly about synchronizing your routes with your store, you may want to try [Connected React Router](https://github.com/supasate/connected-react-router), a third party binding for React Router and Redux.

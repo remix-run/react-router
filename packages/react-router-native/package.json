@@ -1,18 +1,14 @@
 {
   "name": "react-router-native",
-  "version": "4.2.0",
+  "version": "5.2.1",
   "description": "React Native bindings for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
-  "authors": [
-    "Michael Jackson",
-    "Ryan Florence"
-  ],
+  "author": "React Training <hello@reacttraining.com>",
   "main": "main.js",
+  "sideEffects": false,
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start",
-    "clean": "git clean -fdX .",
-    "test": "jest"
+    "start": "node node_modules/react-native/local-cli/cli.js start"
   },
   "files": [
     "BackButton.js",
@@ -28,18 +24,7 @@
     "react-native": ">=0.44"
   },
   "dependencies": {
-    "prop-types": "^15.5.4",
-    "react-router": "^4.2.0"
-  },
-  "devDependencies": {
-    "babel-jest": "^20.0.3",
-    "babel-preset-react-native": "1.9.1",
-    "jest": "^20.0.4",
-    "react": "16.0.0-alpha.6",
-    "react-native": "0.44.0",
-    "react-test-renderer": "15.5.4"
-  },
-  "jest": {
-    "preset": "react-native"
+    "prop-types": "^15.6.1",
+    "react-router": "5.2.1"
   }
 }

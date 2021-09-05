@@ -4,14 +4,18 @@ React Router v4 is a complete rewrite, so there is not a simple migration path. 
 
 **Note:** This migration guide is for both React Router v2 and v3, but for brevity, references to previous versions will only mention v3.
 
-* [The Router](#the-router)
-* [Routes](#routes)
-  * [Nesting Routes](#nesting-routes)
-  * [on* properties](#on-properties)
-  * [Switch](#switch)
-  * [Redirect](#redirect)
-* [PatternUtils](#patternutils)
-* [Link](#link)
+**For react-router-redux users:** This library [has been deprecated](https://github.com/ReactTraining/react-router/tree/bca95ce2a4f1cdc88e29df8c1553e132ba6ebc4a/packages/react-router-redux#project-deprecated). It is recommended that you separate out Redux and React Router, as their state semantics don't match up exactly. But if you wish to attempt to keep them in sync, you can use a library such as [connected-react-router](https://github.com/supasate/connected-react-router).
+
+- [The Router](#the-router)
+- [Routes](#routes)
+  - [Nesting Routes](#nesting-routes)
+  - [on\* properties](#on-properties)
+  - [Optional Parameters](#optional-parameters)
+  - [Query Strings](#query-strings)
+  - [Switch](#switch)
+  - [Redirect](#redirect)
+- [PatternUtils](#patternutils)
+- [Link](#link)
 
 ## The Router
 
@@ -19,7 +23,7 @@ In React Router v3, there was a single `<Router>` component. It would be provide
 
 Also, you would provide it your application's route configuration to the `<Router>` either using the `routes` prop or as the `children` of the `<Router>`.
 
-```js
+```jsx
 // v3
 import routes from './routes'
 <Router history={browserHistory} routes={routes} />
@@ -35,19 +39,19 @@ With React Router v4, one of the big changes is that there are a number of diffe
 
 In v4, there is no centralized route configuration. Anywhere that you need to render content based on a route, you will just render a `<Route>` component.
 
-```js
+```jsx
 //v4
 <BrowserRouter>
   <div>
-    <Route path='/about' component={About} />
-    <Route path='/contact' component={Contact} />
+    <Route path="/about" component={About} />
+    <Route path="/contact" component={Contact} />
   </div>
 </BrowserRouter>
 ```
 
 One thing to note is that the router component must only be given one child element.
 
-```js
+```jsx
 // yes
 <BrowserRouter>
   <div>
@@ -65,9 +69,9 @@ One thing to note is that the router component must only be given one child elem
 
 ## Routes
 
-In v3, the `<Route>` was not really a component. Instead, all of your application's `<Route>` elements were just used to created a route configuration object.
+In v3, the `<Route>` was not really a component. Instead, all of your application's `<Route>` elements were just used to create a route configuration object.
 
-```js
+```jsx
 /// in v3 the element
 <Route path='contact' component={Contact} />
 // was equivalent to
@@ -85,16 +89,16 @@ The v4 `<Route>` component is actually a component, so wherever you render a `<R
 
 In v3, `<Route>`s were nested by passing them as the `children` of their parent `<Route>`.
 
-```js
-<Route path='parent' component={Parent}>
-  <Route path='child' component={Child} />
-  <Route path='other' component={Other} />
+```jsx
+<Route path="parent" component={Parent}>
+  <Route path="child" component={Child} />
+  <Route path="other" component={Other} />
 </Route>
 ```
 
 When a nested `<Route>` matched, React elements would be created using both the child and parent `<Route>`'s `component` prop. The child element would be passed to the parent element as its `children` prop.
 
-```js
+```jsx
 <Parent {...routeProps}>
   <Child {...routeProps} />
 </Parent>
@@ -102,108 +106,150 @@ When a nested `<Route>` matched, React elements would be created using both the 
 
 With v4, children `<Route>`s should just be rendered by the parent `<Route>`'s component.
 
-```js
-<Route path='parent' component={Parent} />
+```jsx
+<Route path="parent" component={Parent} />;
 
-const Parent = () => (
-  <div>
-    <Route path='child' component={Child} />
-    <Route path='other' component={Other} />
-  </div>
-)
+function Parent() {
+  return (
+    <div>
+      <Route path="child" component={Child} />
+      <Route path="other" component={Other} />
+    </div>
+  );
+}
 ```
 
 ### `on*` properties
 
 React Router v3 provides `onEnter`, `onUpdate`, and `onLeave` methods. These were essentially recreating React's lifecycle methods.
 
-With v4, you should use the lifecycle methods of the component rendered by a `<Route>`. Instead of `onEnter`, you would use `componentDidMount` or `componentWillMount`. Where you would use `onUpdate`, you can use `componentDidUpdate` or `componentWillUpdate` (or possibly `componentWillReceiveProps`). `onLeave` can be replaced with `componentWillUnmount`.
+With v4, you should use the lifecycle methods of the component rendered by a `<Route>`. Instead of `onEnter`, you would use `componentDidMount`. Where you would use `onUpdate`, you can use `componentDidUpdate`. `onLeave` can be replaced with `componentWillUnmount`.
+
+### Optional Parameters
+
+In v3, parameters were made optional with parentheses: `path="/entity/:entityId(/:parentId)"`
+
+In v4, the syntax is changed to a trailing question mark: `path="/entity/:entityId/:parentId?"`
+
+### Query Strings
+
+In v4, there is no parsing done on query strings. The unparsed query string is available on the `location.search` property.
+
+The [qhistory](https://github.com/pshrmn/qhistory) library can provide this functionality if it is necessary for your application.
+
+Read more regarding intentions for this change and possible solutions in [this issue](https://github.com/ReactTraining/react-router/issues/4410).
 
 ### `<Switch>`
 
 In v3, you could specify a number of child routes, and only the first one that matched would be rendered.
 
-```js
+```jsx
 // v3
-<Route path='/' component={App}>
+<Route path="/" component={App}>
   <IndexRoute component={Home} />
-  <Route path='about' component={About} />
-  <Route path='contact' component={Contact} />
+  <Route path="about" component={About} />
+  <Route path="contact" component={Contact} />
 </Route>
 ```
 
 v4 provides a similar functionality with the `<Switch>` component. When a `<Switch>` is rendered, it will only render the first child `<Route>` that matches the current location.
 
-```js
+```jsx
 // v4
 const App = () => (
   <Switch>
-    <Route exact path='/' component={Home} />
-    <Route path='/about' component={About} />
-    <Route path='/contact' component={Contact} />
+    <Route exact path="/" component={Home} />
+    <Route path="/about" component={About} />
+    <Route path="/contact" component={Contact} />
   </Switch>
-)
-
+);
 ```
 
 ### `<Redirect>`
 
 In v3, if you wanted to redirect from one path to another, for instance / to /welcome, you would use `<IndexRedirect >`.
 
-```js
+```jsx
 // v3
 <Route path="/" component={App}>
   <IndexRedirect to="/welcome" />
 </Route>
-
 ```
 
 In v4, you can achieve the same functionality using `<Redirect>`.
 
-```js
+```jsx
 // v4
 <Route exact path="/" render={() => <Redirect to="/welcome" component={App} />} />
 
-<Switch  >
+<Switch>
   <Route exact path="/" component={App} />
   <Route path="/login" component={Login} />
   <Redirect path="*" to="/" />
 </Switch>
+```
 
+In v3, `<Redirect>` preserved the query string:
+
+```jsx
+// v3
+
+<Redirect from="/" to="/welcome" />
+// /?source=google → /welcome?source=google
+```
+
+In v4, you must re-pass these properties to the `to` prop:
+
+```jsx
+// v4
+
+<Redirect from="/" to="/welcome" />
+// /?source=google → /welcome
+
+<Redirect from="/" to={{ ...location, pathname: "/welcome" }} />
+// /?source=google → /welcome?source=google
 ```
 
 ## PatternUtils
 
 ### matchPattern(pattern, pathname)
-In v3, you could use the same matching code used internally to check if a path matched a pattern. In v4 this has been replaced by [matchPath](/packages/react-router/docs/api/matchPath.md) which is powered by the [path-to-regexp](https://github.com/pillarjs/path-to-regexp) library.
+
+In v3, you could use the same matching code used internally to check if a path matched a pattern. In v4 this has been replaced by [matchPath](/packages/react-router/docs/api/matchPath.md) which is powered by the [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) library.
 
 ### formatPattern(pattern, params)
+
 In v3, you could use PatternUtils.formatPattern to generate a valid path from a path pattern (perhaps in a constant or in your central routing config) and an object containing the names parameters:
 
-```js
+```jsx
 // v3
-const THING_PATH = '/thing/:id';
+const THING_PATH = "/thing/:id";
 
-<Link to={PatternUtils.formatPattern(THING_PATH, {id: 1})}>A thing</Link>
+<Link to={PatternUtils.formatPattern(THING_PATH, { id: 1 })}>
+  A thing
+</Link>;
 ```
 
-In v4, you can achieve the same functionality using the [compile](https://github.com/pillarjs/path-to-regexp#compile-reverse-path-to-regexp) function in [path-to-regexp](https://github.com/pillarjs/path-to-regexp).
+In v4, you can achieve the same functionality using the [`compile`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0#compile-reverse-path-to-regexp) function in [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0).
 
-```js
+```jsx
 // v4
-const THING_PATH = '/thing/:id';
-
+const THING_PATH = "/thing/:id";
 const thingPath = pathToRegexp.compile(THING_PATH);
 
-<Link to={thingPath({id: 1})}>A thing</Link>
+<Link to={thingPath({ id: 1 })}>A thing</Link>;
 ```
+
+### getParamNames
+
+The `getParamNames` functionality can be achieved using the [`parse`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0#parse) function in [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0).
 
 ## Link
 
 ### `to` property is required
+
 In v3, you could omit `to` property or set it to null to create an anchor tag without `href` attribute.
 
-```js
+```jsx
 // v3
 <Link to={disabled ? null : `/item/${id}`} className="item">
   // item content
@@ -212,20 +258,16 @@ In v3, you could omit `to` property or set it to null to create an anchor tag wi
 
 In v4, you should always provide `to`. In case you are rely on empty `to` you can make a simple wrapper.
 
-```js
+```jsx
 // v4
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
 
-const LinkWrapper = (props) => {
-  const Component = props.to ? Link : 'a'
-  return (
-    <Component {...props}>
-      { props.children }
-    </Component>
-  )
-)
+const LinkWrapper = props => {
+  const Component = props.to ? Link : "a";
+  return <Component {...props}>{props.children}</Component>;
+};
 
 <LinkWrapper to={disabled ? null : `/item/${id}`} className="item">
   // item content
-</LinkWrapper>
+</LinkWrapper>;
 ```

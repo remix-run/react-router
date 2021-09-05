@@ -1,44 +1,26 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import PropTypes from 'prop-types'
-import MemoryRouter from '../MemoryRouter'
+import React from "react";
+import ReactDOM from "react-dom";
+import { MemoryRouter } from "react-router";
 
-describe('A <MemoryRouter>', () => {
-  it('puts history on context.router', () => {
-    let history
-    const ContextChecker = (props, context) => {
-      history = context.router.history
-      return null
-    }
+import renderStrict from "./utils/renderStrict.js";
 
-    ContextChecker.contextTypes = {
-      router: PropTypes.object.isRequired
-    }
+describe("A <MemoryRouter>", () => {
+  const node = document.createElement("div");
 
-    const node = document.createElement('div')
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node);
+  });
 
-    ReactDOM.render((
-      <MemoryRouter>
-        <ContextChecker/>
-      </MemoryRouter>
-    ), node)
+  describe("with a history prop", () => {
+    it("logs a warning", () => {
+      jest.spyOn(console, "warn").mockImplementation(() => {});
 
-    expect(typeof history).toBe('object')
-  })
+      const history = {};
+      renderStrict(<MemoryRouter history={history} />, node);
 
-  it('warns when passed a history prop', () => {
-    const history = {}
-    const node = document.createElement('div')
-
-    spyOn(console, 'error')
-
-    ReactDOM.render((
-      <MemoryRouter history={history} />
-    ), node)
-
-    expect(console.error).toHaveBeenCalledTimes(1)
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('<MemoryRouter> ignores the history prop')
-    )
-  })
-})
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("<MemoryRouter> ignores the history prop")
+      );
+    });
+  });
+});

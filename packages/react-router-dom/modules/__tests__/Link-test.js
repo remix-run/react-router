@@ -1,123 +1,281 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import MemoryRouter from 'react-router/MemoryRouter'
-import HashRouter from '../HashRouter'
-import Link from '../Link'
+import React from "react";
+import ReactDOM from "react-dom";
+import { MemoryRouter, HashRouter, Link } from "react-router-dom";
 
-describe('A <Link>', () => {
-  it('accepts a location "to" prop', () => {
-    const location = {
-      pathname: '/the/path',
-      search: 'the=query',
-      hash: '#the-hash'
-    }
-    const node = document.createElement('div')
+import renderStrict from "./utils/renderStrict.js";
 
-    ReactDOM.render((
-      <MemoryRouter>
-        <Link to={location}>link</Link>
-      </MemoryRouter>
-    ), node)
-
-    const href = node.querySelector('a').getAttribute('href')
-
-    expect(href).toEqual('/the/path?the=query#the-hash')
-  })
-
-  it('throws with no <Router>', () => {
-    const node = document.createElement('div')
-
-    spyOn(console, 'error')
-
-    expect(() => {
-      ReactDOM.render((
-        <Link to="/">link</Link>
-      ), node)
-    }).toThrow(/You should not use <Link> outside a <Router>/)
-
-    expect(console.error.calls.count()).toBe(1)
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      'The context `router` is marked as required in `Link`'
-    )
-  })
-
-  it('exposes its ref via an innerRef prop', done => {
-    const node = document.createElement('div')
-
-    const refCallback = n => {
-      expect(n.tagName).toEqual('A')
-      done()
-    }
-
-    ReactDOM.render(
-      <MemoryRouter>
-        <Link to="/" innerRef={refCallback}>link</Link>
-      </MemoryRouter>,
-      node
-    )
-  })
-})
-
-describe('When a <Link> is clicked', () => {
-  it('calls its onClick handler')
-
-  it('changes the location')
-
-  describe('and the onClick handler calls event.preventDefault()', () => {
-    it('does not change the location')
-  })
-})
-
-describe('A <Link> underneath a <HashRouter>', () => {
-  const node = document.createElement('div')
+describe("A <Link>", () => {
+  const node = document.createElement("div");
 
   afterEach(() => {
-    ReactDOM.unmountComponentAtNode(node)
-  })
+    ReactDOM.unmountComponentAtNode(node);
+  });
 
-  const createLinkNode = (hashType, to) => {
-    ReactDOM.render((
-      <HashRouter hashType={hashType}>
-        <Link to={to}/>
-      </HashRouter>
-    ), node)
+  describe("with no `to` prop", () => {
+    it("logs an error to the console", () => {
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
-    return node.querySelector('a')
-  }
+      renderStrict(
+        <MemoryRouter>
+          <Link>link</Link>
+        </MemoryRouter>,
+        node
+      );
 
-  describe('with the "slash" hashType', () => {
-    it('has the correct href', () => {
-      const linkNode = createLinkNode('slash', '/foo')
-      expect(linkNode.getAttribute('href')).toEqual('#/foo')
-    })
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining("The prop `to` is marked as required in `Link`")
+      );
+    });
+  });
 
-    it('has the correct href with a leading slash if it is missing', () => {
-      const linkNode = createLinkNode('slash', 'foo')
-      expect(linkNode.getAttribute('href')).toEqual('#/foo')
-    })
-  })
+  it("accepts a string `to` prop", () => {
+    const to = "/the/path?the=query#the-hash";
 
-  describe('with the "hashbang" hashType', () => {
-    it('has the correct href', () => {
-      const linkNode = createLinkNode('hashbang', '/foo')
-      expect(linkNode.getAttribute('href')).toEqual('#!/foo')
-    })
+    renderStrict(
+      <MemoryRouter>
+        <Link to={to}>link</Link>
+      </MemoryRouter>,
+      node
+    );
 
-    it('has the correct href with a leading slash if it is missing', () => {
-      const linkNode = createLinkNode('hashbang', 'foo')
-      expect(linkNode.getAttribute('href')).toEqual('#!/foo')
-    })
-  })
+    const a = node.querySelector("a");
 
-  describe('with the "noslash" hashType', () => {
-    it('has the correct href', () => {
-      const linkNode = createLinkNode('noslash', 'foo')
-      expect(linkNode.getAttribute('href')).toEqual('#foo')
-    })
+    expect(a.getAttribute("href")).toEqual("/the/path?the=query#the-hash");
+  });
 
-    it('has the correct href and removes the leading slash', () => {
-      const linkNode = createLinkNode('noslash', '/foo')
-      expect(linkNode.getAttribute('href')).toEqual('#foo')
-    })
-  })
-})
+  it("accepts an object `to` prop", () => {
+    const to = {
+      pathname: "/the/path",
+      search: "the=query",
+      hash: "#the-hash"
+    };
+
+    renderStrict(
+      <MemoryRouter>
+        <Link to={to}>link</Link>
+      </MemoryRouter>,
+      node
+    );
+
+    const a = node.querySelector("a");
+
+    expect(a.getAttribute("href")).toEqual("/the/path?the=query#the-hash");
+  });
+
+  it("accepts an object returning function `to` prop", () => {
+    const to = location => ({ ...location, search: "foo=bar" });
+
+    renderStrict(
+      <MemoryRouter initialEntries={["/hello"]}>
+        <Link to={to}>link</Link>
+      </MemoryRouter>,
+      node
+    );
+
+    const a = node.querySelector("a");
+    expect(a.getAttribute("href")).toEqual("/hello?foo=bar");
+  });
+
+  it("accepts a string returning function `to` prop", () => {
+    const to = location => `${location.pathname}?foo=bar`;
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/hello"]}>
+        <Link to={to}>link</Link>
+      </MemoryRouter>,
+      node
+    );
+
+    const a = node.querySelector("a");
+    expect(a.getAttribute("href")).toEqual("/hello?foo=bar");
+  });
+
+  describe("with no pathname", () => {
+    it("resolves using the current location", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/somewhere"]}>
+          <Link to="?rendersWithPathname=true">link</Link>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+
+      expect(a.getAttribute("href")).toEqual(
+        "/somewhere?rendersWithPathname=true"
+      );
+    });
+  });
+
+  it("forwards a ref", () => {
+    let refNode;
+    function refCallback(n) {
+      refNode = n;
+    }
+
+    renderStrict(
+      <MemoryRouter>
+        <Link to="/" ref={refCallback}>
+          link
+        </Link>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(refNode).not.toBe(undefined);
+    expect(refNode.tagName).toEqual("A");
+  });
+
+  it("exposes its ref via an innerRef callback prop", () => {
+    let refNode;
+    function refCallback(n) {
+      refNode = n;
+    }
+
+    renderStrict(
+      <MemoryRouter>
+        <Link to="/" innerRef={refCallback}>
+          link
+        </Link>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(refNode).not.toBe(undefined);
+    expect(refNode.tagName).toEqual("A");
+  });
+
+  it("prefers forwardRef over innerRef", () => {
+    let refNode;
+    function refCallback(n) {
+      refNode = n;
+    }
+
+    renderStrict(
+      <MemoryRouter>
+        <Link
+          to="/"
+          ref={refCallback}
+          innerRef={() => {
+            throw new Error("wrong ref, champ");
+          }}
+        >
+          link
+        </Link>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(refNode).not.toBe(undefined);
+    expect(refNode.tagName).toEqual("A");
+  });
+
+  it("uses a custom component prop", () => {
+    let linkProps;
+    function MyComponent(p) {
+      linkProps = p;
+      return null;
+    }
+
+    renderStrict(
+      <MemoryRouter>
+        <Link component={MyComponent} to="/">
+          link
+        </Link>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(linkProps).not.toBe(undefined);
+    expect(typeof linkProps.href).toBe("string");
+    expect(typeof linkProps.navigate).toBe("function");
+  });
+
+  it("exposes its ref via an innerRef RefObject prop", done => {
+    const refObject = {
+      get current() {
+        return null;
+      },
+      set current(n) {
+        if (n) {
+          expect(n.tagName).toEqual("A");
+          done();
+        }
+      }
+    };
+
+    renderStrict(
+      <MemoryRouter>
+        <Link to="/" innerRef={refObject}>
+          link
+        </Link>
+      </MemoryRouter>,
+      node
+    );
+  });
+
+  describe("with no <Router>", () => {
+    it("throws an error", () => {
+      jest.spyOn(console, "error").mockImplementation(() => {});
+
+      expect(() => {
+        renderStrict(<Link to="/">link</Link>, node);
+      }).toThrow(/You should not use <Link> outside a <Router>/);
+
+      expect(console.error).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("inside a <HashRouter>", () => {
+    afterEach(() => {
+      window.history.replaceState(null, "", "#");
+    });
+
+    function createLinkNode(hashType, to) {
+      renderStrict(
+        <HashRouter hashType={hashType}>
+          <Link to={to} />
+        </HashRouter>,
+        node
+      );
+
+      return node.querySelector("a");
+    }
+
+    describe('with the "slash" hashType', () => {
+      it("has the correct href", () => {
+        const linkNode = createLinkNode("slash", "/foo");
+        expect(linkNode.getAttribute("href")).toEqual("#/foo");
+      });
+
+      it("has the correct href with a leading slash if it is missing", () => {
+        const linkNode = createLinkNode("slash", "foo");
+        expect(linkNode.getAttribute("href")).toEqual("#/foo");
+      });
+    });
+
+    describe('with the "hashbang" hashType', () => {
+      it("has the correct href", () => {
+        const linkNode = createLinkNode("hashbang", "/foo");
+        expect(linkNode.getAttribute("href")).toEqual("#!/foo");
+      });
+
+      it("has the correct href with a leading slash if it is missing", () => {
+        const linkNode = createLinkNode("hashbang", "foo");
+        expect(linkNode.getAttribute("href")).toEqual("#!/foo");
+      });
+    });
+
+    describe('with the "noslash" hashType', () => {
+      it("has the correct href", () => {
+        const linkNode = createLinkNode("noslash", "foo");
+        expect(linkNode.getAttribute("href")).toEqual("#foo");
+      });
+
+      it("has the correct href and removes the leading slash", () => {
+        const linkNode = createLinkNode("noslash", "/foo");
+        expect(linkNode.getAttribute("href")).toEqual("#foo");
+      });
+    });
+  });
+});

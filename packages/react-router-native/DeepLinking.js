@@ -1,41 +1,40 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { Linking } from 'react-native'
+import React from "react";
+import { Linking } from "react-native";
 
-const regex = /.*?:\/\//g
+import { __HistoryContext as HistoryContext } from "react-router";
 
-class DeepLinking extends Component {
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
+const protocolAndSlashes = /.*?:\/\//g;
+
+class DeepLinking extends React.Component {
+  push(url) {
+    const pathname = url.replace(protocolAndSlashes, "");
+    this.history.push(pathname);
   }
 
   async componentDidMount() {
-    const url = await Linking.getInitialURL()
-    if (url)
-      this.push(url)
-    Linking.addEventListener('url', this.handleChange)
+    const url = await Linking.getInitialURL();
+    if (url) this.push(url);
+    Linking.addEventListener("url", this.handleChange);
   }
 
   componentWillUnmount() {
-    Linking.removeEventListener('url', this.handleChange)
+    Linking.removeEventListener("url", this.handleChange);
   }
 
-  handleChange = (e) => {
-    this.push(e.url)
-  }
-
-  push = (url) => {
-    const pathname = url.replace(regex, '')
-    this.context.router.history.push(pathname)
-  }
+  handleChange = e => {
+    this.push(e.url);
+  };
 
   render() {
-    return this.props.children || null;
+    return (
+      <HistoryContext.Consumer>
+        {history => {
+          this.history = history;
+          return this.props.children || null;
+        }}
+      </HistoryContext.Consumer>
+    );
   }
 }
 
-export default DeepLinking
+export default DeepLinking;

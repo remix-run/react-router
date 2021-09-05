@@ -1,9 +1,8 @@
 # Server Rendering
 
-Rendering on the server is a bit different since it's all stateless. The basic idea is that we wrap the app in a stateless [`<StaticRouter>`][StaticRouter] instead of a [`<BrowserRouter>`][BrowserRouter]. We pass in the requested url from the server so the routes can match and a `context` prop we'll discuss next.
+Rendering on the server is a bit different since it's all stateless. The basic idea is that we wrap the app in a stateless [`<StaticRouter>`][staticrouter] instead of a [`<BrowserRouter>`][browserrouter]. We pass in the requested url from the server so the routes can match and a `context` prop we'll discuss next.
 
-
-```js
+```jsx
 // client
 <BrowserRouter>
   <App/>
@@ -18,22 +17,19 @@ Rendering on the server is a bit different since it's all stateless. The basic i
 </StaticRouter>
 ```
 
-When you render a [`<Redirect>`][Redirect] on the client, the browser history changes state and we get the new screen. In a static server environment we can't change the app state. Instead, we use the `context` prop to find out what the result of rendering was. If we find a `context.url`, then we know the app redirected. This allows us to send a proper redirect from the server.
+When you render a [`<Redirect>`][redirect] on the client, the browser history changes state and we get the new screen. In a static server environment we can't change the app state. Instead, we use the `context` prop to find out what the result of rendering was. If we find a `context.url`, then we know the app redirected. This allows us to send a proper redirect from the server.
 
-```js
-const context = {}
+```jsx
+const context = {};
 const markup = ReactDOMServer.renderToString(
-  <StaticRouter
-    location={req.url}
-    context={context}
-  >
-    <App/>
+  <StaticRouter location={req.url} context={context}>
+    <App />
   </StaticRouter>
-)
+);
 
 if (context.url) {
   // Somewhere a `<Redirect>` was rendered
-  redirect(301, context.url)
+  redirect(301, context.url);
 } else {
   // we're good, send the response
 }
@@ -43,47 +39,48 @@ if (context.url) {
 
 The router only ever adds `context.url`. But you may want some redirects to be 301 and others 302. Or maybe you'd like to send a 404 response if some specific branch of UI is rendered, or a 401 if they aren't authorized. The context prop is yours, so you can mutate it. Here's a way to distinguish between 301 and 302 redirects:
 
-```js
-const RedirectWithStatus = ({ from, to, status }) => (
-  <Route render={({ staticContext }) => {
-    // there is no `staticContext` on the client, so
-    // we need to guard against that here
-    if (staticContext)
-      staticContext.status = status
-    return <Redirect from={from} to={to}/>
-  }}/>
-)
+```jsx
+function RedirectWithStatus({ from, to, status }) {
+  return (
+    <Route
+      render={({ staticContext }) => {
+        // there is no `staticContext` on the client, so
+        // we need to guard against that here
+        if (staticContext) staticContext.status = status;
+        return <Redirect from={from} to={to} />;
+      }}
+    />
+  );
+}
 
 // somewhere in your app
-const App = () => (
-  <Switch>
-    {/* some other routes */}
-    <RedirectWithStatus
-      status={301}
-      from="/users"
-      to="/profiles"
-    />
-    <RedirectWithStatus
-      status={302}
-      from="/courses"
-      to="/dashboard"
-    />
-  </Switch>
-)
+function App() {
+  return (
+    <Switch>
+      {/* some other routes */}
+      <RedirectWithStatus status={301} from="/users" to="/profiles" />
+      <RedirectWithStatus
+        status={302}
+        from="/courses"
+        to="/dashboard"
+      />
+    </Switch>
+  );
+}
 
 // on the server
-const context = {}
+const context = {};
 
 const markup = ReactDOMServer.renderToString(
   <StaticRouter context={context}>
-    <App/>
+    <App />
   </StaticRouter>
-)
+);
 
 if (context.url) {
   // can use the `context.status` that
   // we added in RedirectWithStatus
-  redirect(context.status, context.url)
+  redirect(context.status, context.url);
 }
 ```
 
@@ -91,33 +88,41 @@ if (context.url) {
 
 We can do the same thing as above. Create a component that adds some context and render it anywhere in the app to get a different status code.
 
-```js
-const Status = ({ code, children }) => (
-  <Route render={({ staticContext }) => {
-    if (staticContext)
-      staticContext.status = code
-    return children
-  }}/>
-)
+```jsx
+function Status({ code, children }) {
+  return (
+    <Route
+      render={({ staticContext }) => {
+        if (staticContext) staticContext.status = code;
+        return children;
+      }}
+    />
+  );
+}
 ```
 
 Now you can render a `Status` anywhere in the app that you want to add the code to `staticContext`.
 
-```js
-const NotFound = () => (
-  <Status code={404}>
-    <div>
-      <h1>Sorry, can’t find that.</h1>
-    </div>
-  </Status>
-)
+```jsx
+function NotFound() {
+  return (
+    <Status code={404}>
+      <div>
+        <h1>Sorry, can’t find that.</h1>
+      </div>
+    </Status>
+  );
+}
 
-// somewhere else
-<Switch>
-  <Route path="/about" component={About}/>
-  <Route path="/dashboard" component={Dashboard}/>
-  <Route component={NotFound}/>
-</Switch>
+function App() {
+  return (
+    <Switch>
+      <Route path="/about" component={About} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
 ```
 
 ## Putting it all together
@@ -125,52 +130,54 @@ const NotFound = () => (
 This isn't a real app, but it shows all of the general pieces you'll
 need to put it all together.
 
-```js
-import { createServer } from 'http'
-import React from 'react'
-import ReactDOMServer from 'react-dom/server'
-import { StaticRouter } from 'react-router'
-import App from './App'
+```jsx
+import http from "http";
+import React from "react";
+import ReactDOMServer from "react-dom/server";
+import { StaticRouter } from "react-router-dom";
 
-createServer((req, res) => {
-  const context = {}
+import App from "./App.js";
 
-  const html = ReactDOMServer.renderToString(
-    <StaticRouter
-      location={req.url}
-      context={context}
-    >
-      <App/>
-    </StaticRouter>
-  )
+http
+  .createServer((req, res) => {
+    const context = {};
 
-  if (context.url) {
-    res.writeHead(301, {
-      Location: context.url
-    })
-    res.end()
-  } else {
-    res.write(`
+    const html = ReactDOMServer.renderToString(
+      <StaticRouter location={req.url} context={context}>
+        <App />
+      </StaticRouter>
+    );
+
+    if (context.url) {
+      res.writeHead(301, {
+        Location: context.url
+      });
+      res.end();
+    } else {
+      res.write(`
       <!doctype html>
       <div id="app">${html}</div>
-    `)
-    res.end()
-  }
-}).listen(3000)
+    `);
+      res.end();
+    }
+  })
+  .listen(3000);
 ```
 
 And then the client:
 
-```js
-import ReactDOM from 'react-dom'
-import { BrowserRouter } from 'react-router-dom'
-import App from './App'
+```jsx
+import ReactDOM from "react-dom";
+import { BrowserRouter } from "react-router-dom";
 
-ReactDOM.render((
+import App from "./App.js";
+
+ReactDOM.render(
   <BrowserRouter>
-    <App/>
-  </BrowserRouter>
-), document.getElementById('app'))
+    <App />
+  </BrowserRouter>,
+  document.getElementById("app")
+);
 ```
 
 ## Data Loading
@@ -183,57 +190,58 @@ The gist of this approach relies on a static route config used to both render yo
 
 ```js
 const routes = [
-  { path: '/',
+  {
+    path: "/",
     component: Root,
-    loadData: () => getSomeData(),
-  },
+    loadData: () => getSomeData()
+  }
   // etc.
-]
+];
 ```
 
 Then use this config to render your routes in the app:
 
-```js
-import { routes } from './routes'
+```jsx
+import { routes } from "./routes.js";
 
-const App = () => (
-  <Switch>
-    {routes.map(route => (
-      <Route {...route}/>
-    ))}
-  </Switch>
-)
+function App() {
+  return (
+    <Switch>
+      {routes.map(route => (
+        <Route {...route} />
+      ))}
+    </Switch>
+  );
+}
 ```
 
 Then on the server you'd have something like:
 
 ```js
-import { matchPath } from 'react-router-dom'
+import { matchPath } from "react-router-dom";
 
 // inside a request
-const promises = []
+const promises = [];
 // use `some` to imitate `<Switch>` behavior of selecting only
 // the first to match
 routes.some(route => {
   // use `matchPath` here
-  const match = matchPath(req.path, route)
-  if (match)
-    promises.push(route.loadData(match))
-  return match
-})
+  const match = matchPath(req.path, route);
+  if (match) promises.push(route.loadData(match));
+  return match;
+});
 
 Promise.all(promises).then(data => {
   // do something w/ the data so the client
   // can access it then render the app
-})
+});
 ```
 
 And finally, the client will need to pick up the data. Again, we aren't in the business of prescribing a data loading pattern for your app, but these are the touch points you'll need to implement.
 
-You might be interested in our [React Router Config][RRC] package to assist with data loading and server rendering with static route configs.
+You might be interested in our [React Router Config][rrc] package to assist with data loading and server rendering with static route configs.
 
-
-  [StaticRouter]:../api/StaticRouter.md
-  [BrowserRouter]:../api/BrowserRouter.md
-  [Redirect]:../api/Redirect.md
-  [RRC]:https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
+[staticrouter]: ../api/StaticRouter.md
+[browserrouter]: ../api/BrowserRouter.md
+[redirect]: ../api/Redirect.md
+[rrc]: https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config

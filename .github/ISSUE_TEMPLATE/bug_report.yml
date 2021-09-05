@@ -1,0 +1,47 @@
+name: 🐛 Bug Report
+description: Something is wrong with React Router.
+title: "[Bug]: "
+body: 
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for contributing!
+        
+        Do you need some help?
+        ======================
+        The issue tracker is meant for feature requests and bug reports only. This isn't the best place for 
+        support or usage questions. Questions here don't have as much visibility as they do elsewhere. Before 
+        you ask a question, here are some resources to get help first:
+
+        - Read the docs: https://reacttraining.com/react-router
+        - Check out the list of frequently asked questions: https://github.com/ReactTraining/react-router/blob/master/FAQ.md
+        - Explore examples: https://reacttraining.com/react-router/web/example/basic
+        - Look for/ask questions on Stack Overflow: https://stackoverflow.com/questions/ask?tags=react-router
+        - Ask in chat: https://discord.gg/6RyV8n8yyM
+        
+        ### Test Case Starter:
+        https://codesandbox.io/s/react-router-gh6n7
+  - type: input
+    attributes:
+      label: What version of React Router are you using?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: A concise description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual Behavior
+      description: A concise description of what you're experiencing.
+    validations:
+      required: true
+    

@@ -1,45 +1,47 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import createHistory from 'history/createMemoryHistory'
-import Router from '../Router'
-import Switch from '../Switch'
-import Route from '../Route'
+import React from "react";
+import ReactDOM from "react-dom";
+import { MemoryRouter, Route, Switch } from "react-router";
 
-describe('A <Switch>', () => {
-  it('does not remount a <Route>', () => {
-    const node = document.createElement('div')
+import renderStrict from "./utils/renderStrict.js";
 
-    let mountCount = 0
+describe("A <Switch>", () => {
+  const node = document.createElement("div");
 
-    class App extends React.Component {
-      componentWillMount() {
-        mountCount++
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node);
+  });
+
+  it("does not remount a <Route>'s component", () => {
+    let mountCount = 0;
+    let push;
+
+    class MountCounter extends React.Component {
+      componentDidMount() {
+        push = this.props.history.push;
+        mountCount++;
       }
 
       render() {
-        return <div/>
+        return null;
       }
     }
 
-    const history = createHistory({
-      initialEntries: [ '/one' ]
-    })
-
-    ReactDOM.render((
-      <Router history={history}>
+    renderStrict(
+      <MemoryRouter initialEntries={["/one"]}>
         <Switch>
-          <Route path="/one" component={App}/>
-          <Route path="/two" component={App}/>
+          <Route path="/one" component={MountCounter} />
+          <Route path="/two" component={MountCounter} />
         </Switch>
-      </Router>
-    ), node)
+      </MemoryRouter>,
+      node
+    );
 
-    expect(mountCount).toBe(1)
-    history.push('/two')
+    expect(mountCount).toBe(1);
+    push("/two");
 
-    expect(mountCount).toBe(1)
-    history.push('/one')
+    expect(mountCount).toBe(1);
+    push("/one");
 
-    expect(mountCount).toBe(1)
-  })
-})
+    expect(mountCount).toBe(1);
+  });
+});

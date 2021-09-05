@@ -2,11 +2,14 @@
 
 A [`<Router>`](Router.md) that keeps the history of your "URL" in memory (does not read or write to the address bar). Useful in tests and non-browser environments like [React Native](https://facebook.github.io/react-native/).
 
-```js
-import { MemoryRouter } from 'react-router'
-
-<MemoryRouter>
-  <App/>
+```jsx
+<MemoryRouter
+  initialEntries={optionalArray}
+  initialIndex={optionalNumber}
+  getUserConfirmation={optionalFunc}
+  keyLength={optionalNumber}
+>
+  <App />
 </MemoryRouter>
 ```
 
@@ -14,12 +17,12 @@ import { MemoryRouter } from 'react-router'
 
 An array of `location`s in the history stack. These may be full-blown location objects with `{ pathname, search, hash, state }` or simple string URLs.
 
-```js
+```jsx
 <MemoryRouter
-  initialEntries={[ '/one', '/two', { pathname: '/three' } ]}
+  initialEntries={["/one", "/two", { pathname: "/three" }]}
   initialIndex={1}
 >
-  <App/>
+  <App />
 </MemoryRouter>
 ```
 
@@ -35,10 +38,12 @@ A function to use to confirm navigation. You must use this option when using `<M
 
 The length of `location.key`. Defaults to 6.
 
-```js
-<MemoryRouter keyLength={12}/>
+```jsx
+<MemoryRouter keyLength={12} />
 ```
 
 ## children: node
 
-A [single child element](https://facebook.github.io/react/docs/react-api.html#react.children.only) to render.
+The child elements to render.
+
+Note: On React &lt; 16 you must use a [single child element](https://facebook.github.io/react/docs/react-api.html#reactchildrenonly) since a render method cannot return more than one element. If you need more than one element, you might try wrapping them in an extra `<div>` or `<React.Fragment>`.

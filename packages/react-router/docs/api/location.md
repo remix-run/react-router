@@ -6,7 +6,7 @@ even where it was. It looks like this:
 ```js
 {
   key: 'ac3df4', // not with HashHistory!
-  pathname: '/somewhere'
+  pathname: '/somewhere',
   search: '?some=search-string',
   hash: '#howdy',
   state: {
@@ -22,7 +22,7 @@ The router will provide you with a location object in a few places:
 - [Route children](./Route.md#children-func) as `({ location }) => ()`
 - [withRouter](./withRouter.md) as `this.props.location`
 
-It is also found on `history.location` but you shouldn't use that because its mutable. You can read more about that in the [history](./history.md) doc.
+It is also found on `history.location` but you shouldn't use that because it's mutable. You can read more about that in the [history](./history.md) doc.
 
 A location object is never mutated so you can use it in the lifecycle hooks to determine when navigation happens, this is really useful for data fetching and animation.
 
@@ -50,7 +50,7 @@ Normally you just use a string, but if you need to add some "location state" tha
 
 // but you can use a location instead
 const location = {
-  pathname: '/somewhere'
+  pathname: '/somewhere',
   state: { fromDashboard: true }
 }
 
@@ -66,4 +66,3 @@ Finally, you can pass a location to the following components:
 - [Switch](./Switch.md#location)
 
 This will prevent them from using the actual location in the router's state. This is useful for animation and pending navigation, or any time you want to trick a component into rendering at a different location than the real one.
-

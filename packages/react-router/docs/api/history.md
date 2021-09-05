@@ -16,30 +16,32 @@ The following terms are also used:
   - `pathname` - (string) The path of the URL
   - `search` - (string) The URL query string
   - `hash` - (string) The URL hash fragment
-  - `state` - (string) location-specific state that was provided to e.g. `push(path, state)` when this location was pushed onto the stack. Only available in browser and memory history.
+  - `state` - (object) location-specific state that was provided to e.g. `push(path, state)` when this location was pushed onto the stack. Only available in browser and memory history.
 - `push(path, [state])` - (function) Pushes a new entry onto the history stack
 - `replace(path, [state])` - (function) Replaces the current entry on the history stack
 - `go(n)` - (function) Moves the pointer in the history stack by `n` entries
 - `goBack()` - (function) Equivalent to `go(-1)`
 - `goForward()` - (function) Equivalent to `go(1)`
-- `block(prompt)` - (function) Prevents navigation (see [the history docs](https://github.com/ReactTraining/history#blocking-transitions))
+- `block(prompt)` - (function) Prevents navigation (see [the history docs](https://github.com/ReactTraining/history/blob/master/docs/blocking-transitions.md))
 
 ## history is mutable
 
 The history object is mutable. Therefore it is recommended to access the [`location`](./location.md) from the render props of [`<Route>`](./Route.md), not from `history.location`. This ensures your assumptions about React are correct in lifecycle hooks. For example:
 
-```js
+```jsx
 class Comp extends React.Component {
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     // will be true
-    const locationChanged = nextProps.location !== this.props.location
+    const locationChanged =
+      this.props.location !== prevProps.location;
 
     // INCORRECT, will *always* be false because history is mutable.
-    const locationChanged = nextProps.history.location !== this.props.history.location
+    const locationChanged =
+      this.props.history.location !== prevProps.history.location;
   }
 }
 
-<Route component={Comp}/>
+<Route component={Comp} />;
 ```
 
-Additional properties may also be present depending on the implementation you're using. Please refer to [the history documentation](https://github.com/ReactTraining/history#properties) for more details.
+Additional properties may also be present depending on the implementation you're using. Please refer to [the history documentation](https://github.com/ReactTraining/history/tree/master/docs) for more details.

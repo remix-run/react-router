@@ -1,9 +1,8 @@
 {
-  "env": {
-    "jest": true
+  env: {
+    jest: true
   },
-  "rules": {
-    "react/display-name": 0,
-    "react/prop-types": 0
+  rules: {
+    "no-console": 0
   }
 }

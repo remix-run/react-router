@@ -12,12 +12,12 @@ Then `import` or `require` as you would anything else:
 
 ```js
 // using ES6 modules
-import { NativeRouter, Route, Link } from 'react-router-native'
+import { NativeRouter, Route, Link } from "react-router-native";
 
 // using CommonJS modules
-var NativeRouter = require('react-router-native').NativeRouter
-var Route = require('react-router-native').Route
-var Link = require('react-router-native').Link
+var NativeRouter = require("react-router-native").NativeRouter;
+var Route = require("react-router-native").Route;
+var Link = require("react-router-native").Link;
 ```
 
 ## Issues

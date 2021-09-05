@@ -1,52 +1,52 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { TouchableHighlight } from 'react-native'
+import React from "react";
+import { TouchableHighlight } from "react-native";
+import PropTypes from "prop-types";
 
-class Link extends Component {
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
-  }
+import { __HistoryContext as HistoryContext } from "react-router";
 
-  static propTypes = {
-    onPress: PropTypes.func,
-    component: PropTypes.func,
-    replace: PropTypes.bool,
-    to: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.object
-    ])
-  }
-
+export default class Link extends React.Component {
   static defaultProps = {
     component: TouchableHighlight,
     replace: false
-  }
+  };
 
-  handlePress = (event) => {
-    if (this.props.onPress)
-      this.props.onPress(event)
+  handlePress = (event, history) => {
+    if (this.props.onPress) this.props.onPress(event);
 
     if (!event.defaultPrevented) {
-      const { history } = this.context.router
-      const { to, replace } = this.props
+      const { to, replace } = this.props;
 
       if (replace) {
-        history.replace(to)
+        history.replace(to);
       } else {
-        history.push(to)
+        history.push(to);
       }
     }
-  }
+  };
 
   render() {
-    const { component: Component, to, replace, ...rest } = this.props
-    return <Component {...rest} onPress={this.handlePress}/>
+    const { component: Component, to, replace, ...rest } = this.props;
+
+    return (
+      <HistoryContext.Consumer>
+        {history => (
+          <Component
+            {...rest}
+            onPress={event => this.handlePress(event, history)}
+          />
+        )}
+      </HistoryContext.Consumer>
+    );
   }
 }
 
-export default Link
+const __DEV__ = true; // TODO
+
+if (__DEV__) {
+  Link.propTypes = {
+    onPress: PropTypes.func,
+    component: PropTypes.elementType,
+    replace: PropTypes.bool,
+    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
+  };
+}

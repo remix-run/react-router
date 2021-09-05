@@ -1,363 +1,462 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import ReactDOMServer from 'react-dom/server'
-import StaticRouter from 'react-router/StaticRouter'
-import Router from 'react-router/Router'
-import renderRoutes from '../renderRoutes'
-import createHistory from 'history/createMemoryHistory'
+import React from "react";
+import { createMemoryHistory as createHistory } from "history";
+import { Router, StaticRouter } from "react-router";
+import { renderRoutes } from "react-router-config";
 
-describe('renderRoutes', () => {
-  let renderedRoutes
-  let renderedExtraProps
-  const Comp = ({ route, route: { routes }, ...extraProps }) => (
-    renderedRoutes.push(route),
-    renderedExtraProps.push(extraProps),
-    renderRoutes(routes)
-  )
+import renderStrict from "./utils/renderStrict.js";
+import renderToStringStrict from "./utils/renderToStringStrict.js";
+
+describe("renderRoutes", () => {
+  let renderedRoutes;
+  let renderedExtraProps;
+
+  function Comp({ route, route: { routes }, ...extraProps }) {
+    renderedRoutes.push(route);
+    renderedExtraProps.push(extraProps);
+    return renderRoutes(routes);
+  }
 
   beforeEach(() => {
-    renderedRoutes = []
-    renderedExtraProps = []
-  })
+    renderedRoutes = [];
+    renderedExtraProps = [];
+  });
 
-  it('renders pathless routes', () => {
+  it("renders pathless routes", () => {
     const routeToMatch = {
       component: Comp
-    }
-    const routes = [routeToMatch]
+    };
+    const routes = [routeToMatch];
 
-    ReactDOMServer.renderToString(
-      <StaticRouter location='/path' context={{}}>
+    renderToStringStrict(
+      <StaticRouter location="/path" context={{}}>
         {renderRoutes(routes)}
       </StaticRouter>
-    )
-    expect(renderedRoutes.length).toEqual(1)
-    expect(renderedRoutes[0]).toEqual(routeToMatch)
-  })
+    );
 
-  it('passes extraProps to the component rendered by a pathless route', () => {
+    expect(renderedRoutes.length).toEqual(1);
+    expect(renderedRoutes[0]).toEqual(routeToMatch);
+  });
+
+  it("passes extraProps to the component rendered by a pathless route", () => {
     const routeToMatch = {
       component: Comp
-    }
-    const routes = [routeToMatch]
-    const extraProps = { anExtraProp: 'anExtraPropValue' }
+    };
+    const routes = [routeToMatch];
+    const extraProps = { anExtraProp: "anExtraPropValue" };
 
-    ReactDOMServer.renderToString(
-      <StaticRouter location='/path' context={{}}>
+    renderToStringStrict(
+      <StaticRouter location="/path" context={{}}>
         {renderRoutes(routes, extraProps)}
       </StaticRouter>
-    )
-    expect(renderedExtraProps.length).toEqual(1)
-    expect(renderedExtraProps[0].anExtraProp).toEqual('anExtraPropValue')
-  })
+    );
 
-  it('passes extraProps to the component rendered by a matched route', () => {
+    expect(renderedExtraProps.length).toEqual(1);
+    expect(renderedExtraProps[0].anExtraProp).toEqual("anExtraPropValue");
+  });
+
+  it("passes extraProps to the component rendered by a matched route", () => {
     const routeToMatch = {
       component: Comp,
-      path: '/'
-    }
-    const routes = [routeToMatch, {
-      component: Comp
-    }]
-    const extraProps = { anExtraProp: 'anExtraPropValue' }
+      path: "/"
+    };
+    const routes = [
+      routeToMatch,
+      {
+        component: Comp
+      }
+    ];
+    const extraProps = { anExtraProp: "anExtraPropValue" };
 
-    ReactDOMServer.renderToString(
-      <StaticRouter location='/' context={{}}>
+    renderToStringStrict(
+      <StaticRouter location="/" context={{}}>
         {renderRoutes(routes, extraProps)}
       </StaticRouter>
-    )
-    expect(renderedExtraProps.length).toEqual(1)
-    expect(renderedExtraProps[0].anExtraProp).toEqual('anExtraPropValue')
-  })
+    );
 
-  describe('Switch usage', () => {
-    it('renders the first matched route', () => {
+    expect(renderedExtraProps.length).toEqual(1);
+    expect(renderedExtraProps[0].anExtraProp).toEqual("anExtraPropValue");
+  });
+
+  describe("Switch usage", () => {
+    it("renders the first matched route", () => {
       const routeToMatch = {
         component: Comp,
-        path: '/'
-      }
-      const routes = [routeToMatch, {
-        component: Comp
-      }]
+        path: "/"
+      };
+      const routes = [
+        routeToMatch,
+        {
+          component: Comp
+        }
+      ];
 
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/' context={{}}>
+      renderToStringStrict(
+        <StaticRouter location="/" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
-      )
-      expect(renderedRoutes.length).toEqual(1)
-      expect(renderedRoutes[0]).toEqual(routeToMatch)
-    })
+      );
 
-    it('renders the first matched route in nested routes', () => {
+      expect(renderedRoutes.length).toEqual(1);
+      expect(renderedRoutes[0]).toEqual(routeToMatch);
+    });
+
+    it("renders the first matched route in nested routes", () => {
       const childRouteToMatch = {
         component: Comp,
-        path: '/'
-      }
+        path: "/"
+      };
       const routeToMatch = {
         component: Comp,
-        path: '/',
-        routes: [childRouteToMatch, {
+        path: "/",
+        routes: [
+          childRouteToMatch,
+          {
+            component: Comp
+          }
+        ]
+      };
+      const routes = [
+        routeToMatch,
+        {
           component: Comp
-        }]
-      }
-      const routes = [routeToMatch, {
-        component: Comp
-      }]
+        }
+      ];
 
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/' context={{}}>
+      renderToStringStrict(
+        <StaticRouter location="/" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
-      )
-      expect(renderedRoutes.length).toEqual(2)
-      expect(renderedRoutes[0]).toEqual(routeToMatch)
-      expect(renderedRoutes[1]).toEqual(childRouteToMatch)
-    })
+      );
 
-    it('does not remount a <Route>', () => {
-      const node = document.createElement('div')
+      expect(renderedRoutes.length).toEqual(2);
+      expect(renderedRoutes[0]).toEqual(routeToMatch);
+      expect(renderedRoutes[1]).toEqual(childRouteToMatch);
+    });
 
-      let mountCount = 0
+    it("does not remount a <Route>", () => {
+      const node = document.createElement("div");
 
-      const App = ({ route: { routes } }) => (
-        renderRoutes(routes)
-      )
+      let mountCount = 0;
+
+      const App = ({ route: { routes } }) => renderRoutes(routes);
 
       class Comp extends React.Component {
         componentDidMount() {
-          mountCount++
+          mountCount++;
         }
 
         render() {
-          return <div />
+          return <div />;
         }
       }
 
       const routes = [
-        { path: '/',
+        {
+          path: "/",
           component: App,
           routes: [
-            { path: '/one',
+            {
+              path: "/one",
               component: Comp,
-              key: 'comp'
+              key: "comp"
             },
-            { path: '/two',
+            {
+              path: "/two",
               component: Comp,
-              key: 'comp'
+              key: "comp"
             },
-            { path: '/three',
-              component: Comp,
+            {
+              path: "/three",
+              component: Comp
             }
           ]
         }
-      ]
+      ];
 
       const history = createHistory({
-        initialEntries: [ '/one' ]
-      })
+        initialEntries: ["/one"]
+      });
 
-      ReactDOM.render((
-        <Router history={history}>
-          {renderRoutes(routes)}
-        </Router>
-      ), node)
+      renderStrict(
+        <Router history={history}>{renderRoutes(routes)}</Router>,
+        node
+      );
 
-      expect(mountCount).toBe(1)
+      expect(mountCount).toBe(1);
 
-      history.push('/one')
-      expect(mountCount).toBe(1)
+      history.push("/one");
+      expect(mountCount).toBe(1);
 
-      history.push('/two')
-      expect(mountCount).toBe(1)
+      history.push("/two");
+      expect(mountCount).toBe(1);
 
-      history.push('/three')
-      expect(mountCount).toBe(2)
-    })
-  })
+      history.push("/three");
+      expect(mountCount).toBe(2);
+    });
 
-  describe('routes with exact', () => {
-    it('renders the exact route', () => {
+    it("passes props to Switch", () => {
+      const App = ({ route: { routes } }) => renderRoutes(routes);
+
       const routeToMatch = {
         component: Comp,
-        path: '/path/child',
-        exact: true,
-        routes: [{
-          component: Comp
-        }]
-      }
-      const routes = [{
-        component: Comp,
-        path: '/path',
-        exact: true
-      }, routeToMatch]
+        path: "/one"
+      };
 
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/path/child' context={{}}>
-          {renderRoutes(routes)}
+      const routes = [
+        {
+          path: "/",
+          component: App,
+          routes: [
+            {
+              path: "/one",
+              component: Comp
+            }
+          ]
+        }
+      ];
+
+      renderToStringStrict(
+        <StaticRouter location="/two" context={{}}>
+          {renderRoutes(routes, {}, { location: { pathname: "/one" } })}
         </StaticRouter>
-      )
-      expect(renderedRoutes.length).toEqual(2)
-      expect(renderedRoutes[0]).toEqual(routeToMatch)
-      expect(renderedRoutes[1]).toEqual({ component: Comp })
-    })
+      );
 
-    it('skips exact route and does not render it and any of its child routes', () => {
-      const routes = [{
+      expect(renderedRoutes.length).toEqual(1);
+      expect(renderedRoutes[0]).toEqual(routeToMatch);
+    });
+  });
+
+  describe("routes with exact", () => {
+    it("renders the exact route", () => {
+      const routeToMatch = {
         component: Comp,
-        path: '/path',
+        path: "/path/child",
         exact: true,
-        routes: [{
-          component: Comp
-        }, {
-          component: Comp
-        }]
-      }]
-
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/path/child' context={{}}>
-          {renderRoutes(routes)}
-        </StaticRouter>
-      )
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/' context={{}}>
-          {renderRoutes(routes)}
-        </StaticRouter>
-      )
-      expect(renderedRoutes.length).toEqual(0)
-    })
-
-    it('renders the matched exact route but not its child routes if they do not match', () => {
-      const routes = [{
-        // should render
-        component: Comp,
-        path: '/path',
-        exact: true,
-        routes: [{
-          // should skip
+        routes: [
+          {
+            component: Comp
+          }
+        ]
+      };
+      const routes = [
+        {
           component: Comp,
-          path: '/path/child',
+          path: "/path",
           exact: true
-        }, {
+        },
+        routeToMatch
+      ];
+
+      renderToStringStrict(
+        <StaticRouter location="/path/child" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      );
+      expect(renderedRoutes.length).toEqual(2);
+      expect(renderedRoutes[0]).toEqual(routeToMatch);
+      expect(renderedRoutes[1]).toEqual({ component: Comp });
+    });
+
+    it("skips exact route and does not render it and any of its child routes", () => {
+      const routes = [
+        {
+          component: Comp,
+          path: "/path",
+          exact: true,
+          routes: [
+            {
+              component: Comp
+            },
+            {
+              component: Comp
+            }
+          ]
+        }
+      ];
+
+      renderToStringStrict(
+        <StaticRouter location="/path/child" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      );
+      renderToStringStrict(
+        <StaticRouter location="/" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      );
+      expect(renderedRoutes.length).toEqual(0);
+    });
+
+    it("renders the matched exact route but not its child routes if they do not match", () => {
+      const routes = [
+        {
           // should render
-          component: Comp
-        }]
-      }]
+          component: Comp,
+          path: "/path",
+          exact: true,
+          routes: [
+            {
+              // should skip
+              component: Comp,
+              path: "/path/child",
+              exact: true
+            },
+            {
+              // should render
+              component: Comp
+            }
+          ]
+        }
+      ];
 
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/path/child/grandchild' context={{}}>
+      renderToStringStrict(
+        <StaticRouter location="/path/child/grandchild" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
-      )
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/path' context={{}}>
+      );
+      renderToStringStrict(
+        <StaticRouter location="/path" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
-      )
-      expect(renderedRoutes.length).toEqual(2)
-      expect(renderedRoutes[0]).toEqual(routes[0])
-      expect(renderedRoutes[1]).toEqual(routes[0].routes[1])
-    })
-  })
+      );
+      expect(renderedRoutes.length).toEqual(2);
+      expect(renderedRoutes[0]).toEqual(routes[0]);
+      expect(renderedRoutes[1]).toEqual(routes[0].routes[1]);
+    });
+  });
 
-  describe('routes with exact + strict', () => {
-    it('renders the exact strict route', () => {
+  describe("routes with exact + strict", () => {
+    it("renders the exact strict route", () => {
       const routeToMatch = {
         component: Comp,
-        path: '/path/',
+        path: "/path/",
         exact: true,
         strict: true
-      }
-      const routes = [{
-        // should skip
-        component: Comp,
-        path: '/path',
-        exact: true,
-        strict: true
-        // should render
-      }, routeToMatch]
-
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/path/' context={{}}>
-          {renderRoutes(routes)}
-        </StaticRouter>
-      )
-      expect(renderedRoutes.length).toEqual(1)
-      expect(renderedRoutes[0]).toEqual(routeToMatch)
-    })
-
-    it('skips exact strict route and does not render it and any of its child routes', () => {
-      const routes = [{
-        component: Comp,
-        path: '/path/',
-        exact: true,
-        strict: true,
-        routes: [{
-          component: Comp
-        }, {
-          component: Comp
-        }]
-      }]
-
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/path/child' context={{}}>
-          {renderRoutes(routes)}
-        </StaticRouter>
-      )
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/' context={{}}>
-          {renderRoutes(routes)}
-        </StaticRouter>
-      )
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/path' context={{}}>
-          {renderRoutes(routes)}
-        </StaticRouter>
-      )
-      expect(renderedRoutes.length).toEqual(0)
-    })
-
-    it('renders the matched exact strict route but not its child routes if they do not match', () => {
-      const routes = [{
-        // should skip
-        component: Comp,
-        path: '/path',
-        exact: true,
-        strict: true
-      }, {
-        // should render
-        component: Comp,
-        path: '/path/',
-        exact: true,
-        strict: true,
-        routes: [{
+      };
+      const routes = [
+        {
           // should skip
           component: Comp,
+          path: "/path",
+          exact: true,
+          strict: true
+          // should render
+        },
+        routeToMatch
+      ];
+
+      renderToStringStrict(
+        <StaticRouter location="/path/" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      );
+      expect(renderedRoutes.length).toEqual(1);
+      expect(renderedRoutes[0]).toEqual(routeToMatch);
+    });
+
+    it("skips exact strict route and does not render it and any of its child routes", () => {
+      const routes = [
+        {
+          component: Comp,
+          path: "/path/",
           exact: true,
           strict: true,
-          path: '/path'
-        }, {
+          routes: [
+            {
+              component: Comp
+            },
+            {
+              component: Comp
+            }
+          ]
+        }
+      ];
+
+      renderToStringStrict(
+        <StaticRouter location="/path/child" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      );
+      renderToStringStrict(
+        <StaticRouter location="/" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      );
+      renderToStringStrict(
+        <StaticRouter location="/path" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      );
+      expect(renderedRoutes.length).toEqual(0);
+    });
+
+    it("renders the matched exact strict route but not its child routes if they do not match", () => {
+      const routes = [
+        {
+          // should skip
+          component: Comp,
+          path: "/path",
+          exact: true,
+          strict: true
+        },
+        {
           // should render
           component: Comp,
+          path: "/path/",
           exact: true,
           strict: true,
-          path: '/path/'
-        }]
-      }]
+          routes: [
+            {
+              // should skip
+              component: Comp,
+              exact: true,
+              strict: true,
+              path: "/path"
+            },
+            {
+              // should render
+              component: Comp,
+              exact: true,
+              strict: true,
+              path: "/path/"
+            }
+          ]
+        }
+      ];
 
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/path/child/grandchild' context={{}}>
+      renderToStringStrict(
+        <StaticRouter location="/path/child/grandchild" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
-      )
-      ReactDOMServer.renderToString(
-        <StaticRouter location='/path/' context={{}}>
+      );
+
+      renderToStringStrict(
+        <StaticRouter location="/path/" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
-      )
-      expect(renderedRoutes.length).toEqual(2)
-      expect(renderedRoutes[0]).toEqual(routes[1])
-      expect(renderedRoutes[1]).toEqual(routes[1].routes[1])
-    })
-  })
-})
+      );
+
+      expect(renderedRoutes.length).toEqual(2);
+      expect(renderedRoutes[0]).toEqual(routes[1]);
+      expect(renderedRoutes[1]).toEqual(routes[1].routes[1]);
+    });
+  });
+
+  it("allows rendering a component using a function with render property", () => {
+    const routes = [
+      {
+        path: "/path",
+        render: props => <Comp {...props} />
+      }
+    ];
+
+    renderToStringStrict(
+      <StaticRouter location="/path" context={{}}>
+        {renderRoutes(routes)}
+      </StaticRouter>
+    );
+
+    expect(renderedRoutes.length).toEqual(1);
+    expect(renderedRoutes[0]).toEqual(routes[0]);
+  });
+});

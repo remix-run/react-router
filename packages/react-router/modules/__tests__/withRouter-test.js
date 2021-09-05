@@ -1,111 +1,166 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import MemoryRouter from '../MemoryRouter'
-import StaticRouter from '../StaticRouter'
-import Route from '../Route'
-import withRouter from '../withRouter'
+import React from "react";
+import ReactDOM from "react-dom";
+import * as ReactIs from "react-is";
+import { MemoryRouter, StaticRouter, Route, withRouter } from "react-router";
 
-describe('withRouter', () => {
-  const node = document.createElement('div')
+import renderStrict from "./utils/renderStrict.js";
+
+describe("withRouter", () => {
+  const node = document.createElement("div");
 
   afterEach(() => {
-    ReactDOM.unmountComponentAtNode(node)
-  })
+    ReactDOM.unmountComponentAtNode(node);
+  });
 
-  it('provides { match, location, history } props', () => {
-    const PropsChecker = withRouter(props => {
-      expect(typeof props.match).toBe('object')
-      expect(typeof props.location).toBe('object')
-      expect(typeof props.history).toBe('object')
-      return null
-    })
+  it("provides { match, location, history } props", () => {
+    let props;
 
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/bubblegum' ]}>
-        <Route path="/bubblegum" render={() => (
-          <PropsChecker/>
-        )}/>
-      </MemoryRouter>
-    ), node)
-  })
+    const PropsChecker = withRouter(p => {
+      props = p;
+      return null;
+    });
 
-  it('provides the parent match as a prop to the wrapped component', () => {
-    let parentMatch
-    const PropsChecker = withRouter(props => {
-      expect(props.match).toEqual(parentMatch)
-      return null
-    })
+    renderStrict(
+      <MemoryRouter>
+        <PropsChecker />
+      </MemoryRouter>,
+      node
+    );
 
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/bubblegum' ]}>
-        <Route path="/:flavor" render={({ match }) => {
-          parentMatch = match
-          return <PropsChecker/>
-        }}/>
-      </MemoryRouter>
-    ), node)
-  })
+    expect(typeof props).toBe("object");
+    expect(typeof props.match).toBe("object");
+    expect(typeof props.location).toBe("object");
+    expect(typeof props.history).toBe("object");
+  });
 
-  describe('inside a <StaticRouter>', () => {
-    it('provides the staticContext prop', () => {
-      const PropsChecker = withRouter(props => {
-        expect(typeof props.staticContext).toBe('object')
-        expect(props.staticContext).toBe(context)
-        return null
-      })
+  it("provides the parent match as a prop to the wrapped component", () => {
+    let parentMatch, props;
 
-      const context = {}
+    const PropsChecker = withRouter(p => {
+      props = p;
+      return null;
+    });
 
-      ReactDOM.render((
+    renderStrict(
+      <MemoryRouter initialEntries={["/bubblegum"]}>
+        <Route
+          path="/:flavor"
+          render={({ match }) => {
+            parentMatch = match;
+            return <PropsChecker />;
+          }}
+        />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(typeof parentMatch).toBe("object");
+    expect(typeof props).toBe("object");
+    expect(props.match).toBe(parentMatch);
+  });
+
+  it("works when parent match is null", () => {
+    let parentMatch, props;
+
+    const PropChecker = withRouter(p => {
+      props = p;
+      return null;
+    });
+
+    renderStrict(
+      <MemoryRouter initialEntries={["/somepath"]}>
+        <Route
+          path="/no-match"
+          children={({ match }) => {
+            parentMatch = match;
+            return <PropChecker />;
+          }}
+        />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(parentMatch).toBe(null);
+    expect(typeof props).toBe("object");
+    expect(props.match).toBe(null);
+  });
+
+  describe("inside a <StaticRouter>", () => {
+    it("provides the staticContext prop", () => {
+      let props;
+
+      const PropsChecker = withRouter(p => {
+        props = p;
+        return null;
+      });
+
+      const context = {};
+
+      renderStrict(
         <StaticRouter context={context}>
-          <Route component={PropsChecker}/>
-        </StaticRouter>
-      ), node)
-    })
-  })
+          <Route component={PropsChecker} />
+        </StaticRouter>,
+        node
+      );
 
-  it('exposes the wrapped component as WrappedComponent', () => {
-    const Component = () => <div/>
-    const decorated = withRouter(Component)
-    expect(decorated.WrappedComponent).toBe(Component)
-  })
+      expect(typeof props).toBe("object");
+      expect(typeof props.staticContext).toBe("object");
+      expect(props.staticContext).toBe(context);
+    });
+  });
 
-  it('exposes the instance of the wrapped component via wrappedComponentRef', () => {
+  it("exposes the wrapped component as WrappedComponent", () => {
+    const Component = () => <div />;
+    const decorated = withRouter(Component);
+    expect(decorated.WrappedComponent).toBe(Component);
+  });
+
+  it("exposes the instance of the wrapped component via wrappedComponentRef", () => {
     class WrappedComponent extends React.Component {
       render() {
-        return null
+        return null;
       }
     }
-    const Component = withRouter(WrappedComponent)
+    const Component = withRouter(WrappedComponent);
 
-    let ref
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/bubblegum' ]}>
-        <Route path="/bubblegum" render={() => (
-          <Component wrappedComponentRef={r => ref = r}/>
-        )}/>
-      </MemoryRouter>
-    ), node)
+    let ref;
+    renderStrict(
+      <MemoryRouter initialEntries={["/bubblegum"]}>
+        <Route
+          path="/bubblegum"
+          render={() => <Component wrappedComponentRef={r => (ref = r)} />}
+        />
+      </MemoryRouter>,
+      node
+    );
 
-    expect(ref instanceof WrappedComponent).toBe(true)
-  })
+    expect(ref instanceof WrappedComponent).toBe(true);
+  });
 
-  it('hoists non-react statics from the wrapped component', () => {
+  it("hoists non-react statics from the wrapped component", () => {
     class Component extends React.Component {
       static foo() {
-        return 'bar'
+        return "bar";
       }
 
       render() {
-        return null
+        return null;
       }
     }
-    Component.hello = 'world'
+    Component.hello = "world";
 
-    const decorated = withRouter(Component)
+    const decorated = withRouter(Component);
 
-    expect(decorated.hello).toBe('world')
-    expect(typeof decorated.foo).toBe('function')
-    expect(decorated.foo()).toBe('bar')
-  })
-})
+    expect(decorated.hello).toBe("world");
+    expect(typeof decorated.foo).toBe("function");
+    expect(decorated.foo()).toBe("bar");
+  });
+
+  it("does not allow ref forwarding", () => {
+    const WrappedComponent = React.forwardRef((props, ref) => (
+      <div {...props} ref={ref} />
+    ));
+    const Component = withRouter(WrappedComponent);
+    expect(ReactIs.isForwardRef(<Component />)).toBe(false);
+  });
+});

@@ -1,84 +1,92 @@
-import warning from 'warning'
-import invariant from 'invariant'
-import React from 'react'
-import PropTypes from 'prop-types'
+import React from "react";
+import PropTypes from "prop-types";
+import warning from "tiny-warning";
+
+import HistoryContext from "./HistoryContext.js";
+import RouterContext from "./RouterContext.js";
 
 /**
  * The public API for putting history on context.
  */
 class Router extends React.Component {
-  static propTypes = {
-    history: PropTypes.object.isRequired,
-    children: PropTypes.node
+  static computeRootMatch(pathname) {
+    return { path: "/", url: "/", params: {}, isExact: pathname === "/" };
   }
 
-  static contextTypes = {
-    router: PropTypes.object
-  }
+  constructor(props) {
+    super(props);
 
-  static childContextTypes = {
-    router: PropTypes.object.isRequired
-  }
+    this.state = {
+      location: props.history.location
+    };
 
-  getChildContext() {
-    return {
-      router: {
-        ...this.context.router,
-        history: this.props.history,
-        route: {
-          location: this.props.history.location,
-          match: this.state.match
+    // This is a bit of a hack. We have to start listening for location
+    // changes here in the constructor in case there are any <Redirect>s
+    // on the initial render. If there are, they will replace/push when
+    // they mount and since cDM fires in children before parents, we may
+    // get a new location before the <Router> is mounted.
+    this._isMounted = false;
+    this._pendingLocation = null;
+
+    if (!props.staticContext) {
+      this.unlisten = props.history.listen(location => {
+        if (this._isMounted) {
+          this.setState({ location });
+        } else {
+          this._pendingLocation = location;
         }
-      }
+      });
     }
   }
 
-  state = {
-    match: this.computeMatch(this.props.history.location.pathname)
-  }
+  componentDidMount() {
+    this._isMounted = true;
 
-  computeMatch(pathname) {
-    return {
-      path: '/',
-      url: '/',
-      params: {},
-      isExact: pathname === '/'
+    if (this._pendingLocation) {
+      this.setState({ location: this._pendingLocation });
     }
-  }
-
-  componentWillMount() {
-    const { children, history } = this.props
-
-    invariant(
-      children == null || React.Children.count(children) === 1,
-      'A <Router> may have only one child element'
-    )
-
-    // Do this here so we can setState when a <Redirect> changes the
-    // location in componentWillMount. This happens e.g. when doing
-    // server rendering using a <StaticRouter>.
-    this.unlisten = history.listen(() => {
-      this.setState({
-        match: this.computeMatch(history.location.pathname)
-      })
-    })
-  }
-
-  componentWillReceiveProps(nextProps) {
-    warning(
-      this.props.history === nextProps.history,
-      'You cannot change <Router history>'
-    )
   }
 
   componentWillUnmount() {
-    this.unlisten()
+    if (this.unlisten) {
+      this.unlisten();
+      this._isMounted = false;
+      this._pendingLocation = null;
+    }
   }
 
   render() {
-    const { children } = this.props
-    return children ? React.Children.only(children) : null
+    return (
+      <RouterContext.Provider
+        value={{
+          history: this.props.history,
+          location: this.state.location,
+          match: Router.computeRootMatch(this.state.location.pathname),
+          staticContext: this.props.staticContext
+        }}
+      >
+        <HistoryContext.Provider
+          children={this.props.children || null}
+          value={this.props.history}
+        />
+      </RouterContext.Provider>
+    );
   }
 }
 
-export default Router
+if (__DEV__) {
+  Router.propTypes = {
+    children: PropTypes.node,
+    history: PropTypes.object.isRequired,
+    staticContext: PropTypes.object
+  };
+
+  Router.prototype.componentDidUpdate = function(prevProps) {
+    warning(
+      prevProps.history === this.props.history,
+      "You cannot change <Router history>"
+    );
+  };
+}
+
+export default Router;

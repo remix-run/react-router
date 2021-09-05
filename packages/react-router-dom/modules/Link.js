@@ -1,79 +1,148 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import invariant from 'invariant'
+import React from "react";
+import { __RouterContext as RouterContext } from "react-router";
+import { createPath } from 'history';
+import PropTypes from "prop-types";
+import invariant from "tiny-invariant";
+import {
+  resolveToLocation,
+  normalizeToLocation
+} from "./utils/locationUtils.js";
 
-const isModifiedEvent = (event) =>
-  !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
+// React 15 compat
+const forwardRefShim = C => C;
+let { forwardRef } = React;
+if (typeof forwardRef === "undefined") {
+  forwardRef = forwardRefShim;
+}
+
+function isModifiedEvent(event) {
+  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
+}
+
+const LinkAnchor = forwardRef(
+  (
+    {
+      innerRef, // TODO: deprecate
+      navigate,
+      onClick,
+      ...rest
+    },
+    forwardedRef
+  ) => {
+    const { target } = rest;
+
+    let props = {
+      ...rest,
+      onClick: event => {
+        try {
+          if (onClick) onClick(event);
+        } catch (ex) {
+          event.preventDefault();
+          throw ex;
+        }
+
+        if (
+          !event.defaultPrevented && // onClick prevented default
+          event.button === 0 && // ignore everything but left clicks
+          (!target || target === "_self") && // let browser handle "target=_blank" etc.
+          !isModifiedEvent(event) // ignore clicks with modifier keys
+        ) {
+          event.preventDefault();
+          navigate();
+        }
+      }
+    };
+
+    // React 15 compat
+    if (forwardRefShim !== forwardRef) {
+      props.ref = forwardedRef || innerRef;
+    } else {
+      props.ref = innerRef;
+    }
+
+    /* eslint-disable-next-line jsx-a11y/anchor-has-content */
+    return <a {...props} />;
+  }
+);
+
+if (__DEV__) {
+  LinkAnchor.displayName = "LinkAnchor";
+}
 
 /**
  * The public API for rendering a history-aware <a>.
  */
-class Link extends React.Component {
-  static propTypes = {
+const Link = forwardRef(
+  (
+    {
+      component = LinkAnchor,
+      replace,
+      to,
+      innerRef, // TODO: deprecate
+      ...rest
+    },
+    forwardedRef
+  ) => {
+    return (
+      <RouterContext.Consumer>
+        {context => {
+          invariant(context, "You should not use <Link> outside a <Router>");
+
+          const { history } = context;
+
+          const location = normalizeToLocation(
+            resolveToLocation(to, context.location),
+            context.location
+          );
+
+          const href = location ? history.createHref(location) : "";
+          const props = {
+            ...rest,
+            href,
+            navigate() {
+              const location = resolveToLocation(to, context.location);
+              const isDuplicateNavigation = createPath(context.location) === createPath(normalizeToLocation(location));
+              const method = (replace || isDuplicateNavigation) ? history.replace : history.push;
+
+              method(location);
+            }
+          };
+
+          // React 15 compat
+          if (forwardRefShim !== forwardRef) {
+            props.ref = forwardedRef || innerRef;
+          } else {
+            props.innerRef = innerRef;
+          }
+
+          return React.createElement(component, props);
+        }}
+      </RouterContext.Consumer>
+    );
+  }
+);
+
+if (__DEV__) {
+  const toType = PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.object,
+    PropTypes.func
+  ]);
+  const refType = PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.func,
+    PropTypes.shape({ current: PropTypes.any })
+  ]);
+
+  Link.displayName = "Link";
+
+  Link.propTypes = {
+    innerRef: refType,
     onClick: PropTypes.func,
-    target: PropTypes.string,
     replace: PropTypes.bool,
-    to: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.object
-    ]).isRequired,
-    innerRef: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.func
-    ])
-  }
-
-  static defaultProps = {
-    replace: false
-  }
-
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired,
-        createHref: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
-  }
-
-  handleClick = (event) => {
-    if (this.props.onClick)
-      this.props.onClick(event)
-
-    if (
-      !event.defaultPrevented && // onClick prevented default
-      event.button === 0 && // ignore everything but left clicks
-      !this.props.target && // let browser handle "target=_blank" etc.
-      !isModifiedEvent(event) // ignore clicks with modifier keys
-    ) {
-      event.preventDefault()
-
-      const { history } = this.context.router
-      const { replace, to } = this.props
-
-      if (replace) {
-        history.replace(to)
-      } else {
-        history.push(to)
-      }
-    }
-  }
-
-  render() {
-    const { replace, to, innerRef, ...props } = this.props // eslint-disable-line no-unused-vars
-
-    invariant(
-      this.context.router,
-      'You should not use <Link> outside a <Router>'
-    )
-
-    const href = this.context.router.history.createHref(
-      typeof to === 'string' ? { pathname: to } : to
-    )
-
-    return <a {...props} onClick={this.handleClick} href={href} ref={innerRef}/>
-  }
+    target: PropTypes.string,
+    to: toType.isRequired
+  };
 }
 
-export default Link
+export default Link;

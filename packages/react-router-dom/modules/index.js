@@ -1,13 +1,21 @@
-export BrowserRouter from './BrowserRouter'
-export HashRouter from './HashRouter'
-export Link from './Link'
-export MemoryRouter from './MemoryRouter'
-export NavLink from './NavLink'
-export Prompt from './Prompt'
-export Redirect from './Redirect'
-export Route from './Route'
-export Router from './Router'
-export StaticRouter from './StaticRouter'
-export Switch from './Switch'
-export matchPath from './matchPath'
-export withRouter from './withRouter'
+export {
+  MemoryRouter,
+  Prompt,
+  Redirect,
+  Route,
+  Router,
+  StaticRouter,
+  Switch,
+  generatePath,
+  matchPath,
+  withRouter,
+  useHistory,
+  useLocation,
+  useParams,
+  useRouteMatch
+} from "react-router";
+
+export { default as BrowserRouter } from "./BrowserRouter.js";
+export { default as HashRouter } from "./HashRouter.js";
+export { default as Link } from "./Link.js";
+export { default as NavLink } from "./NavLink.js";

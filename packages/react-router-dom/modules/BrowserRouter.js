@@ -1,34 +1,36 @@
-import warning from 'warning'
-import React from 'react'
-import PropTypes from 'prop-types'
-import createHistory from 'history/createBrowserHistory'
-import Router from './Router'
+import React from "react";
+import { Router } from "react-router";
+import { createBrowserHistory as createHistory } from "history";
+import PropTypes from "prop-types";
+import warning from "tiny-warning";
 
 /**
  * The public API for a <Router> that uses HTML5 history.
  */
 class BrowserRouter extends React.Component {
-  static propTypes = {
-    basename: PropTypes.string,
-    forceRefresh: PropTypes.bool,
-    getUserConfirmation: PropTypes.func,
-    keyLength: PropTypes.number,
-    children: PropTypes.node
-  }
-
-  history = createHistory(this.props)
-
-  componentWillMount() {
-    warning(
-      !this.props.history,
-      '<BrowserRouter> ignores the history prop. To use a custom history, ' +
-      'use `import { Router }` instead of `import { BrowserRouter as Router }`.'
-    )
-  }
+  history = createHistory(this.props);
 
   render() {
-    return <Router history={this.history} children={this.props.children}/>
+    return <Router history={this.history} children={this.props.children} />;
   }
 }
 
-export default BrowserRouter
+if (__DEV__) {
+  BrowserRouter.propTypes = {
+    basename: PropTypes.string,
+    children: PropTypes.node,
+    forceRefresh: PropTypes.bool,
+    getUserConfirmation: PropTypes.func,
+    keyLength: PropTypes.number
+  };
+
+  BrowserRouter.prototype.componentDidMount = function() {
+    warning(
+      !this.props.history,
+      "<BrowserRouter> ignores the history prop. To use a custom history, " +
+        "use `import { Router }` instead of `import { BrowserRouter as Router }`."
+    );
+  };
+}
+
+export default BrowserRouter;
