@@ -753,7 +753,7 @@ See also [`createRoutesFromArray`](#createroutesfromarray).
   <summary>Type declaration</summary>
 
 ```tsx
-declare function generatePath(path: string, params: Params = {}): string;
+declare function generatePath(path: string, params?: Params): string;
 ```
 
 </details>
@@ -813,10 +813,10 @@ This is the heart of React Router's matching algorithm. It is used internally by
   <summary>Type declaration</summary>
 
 ```tsx
-declare function matchPath(
+declare function matchPath<ParamKey extends string = string>(
   pattern: PathPattern,
   pathname: string
-): PathMatch | null;
+): PathMatch<ParamKey> | null;
 
 type PathPattern =
   | string
@@ -1046,7 +1046,9 @@ function App() {
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useMatch(pattern: PathPattern): PathMatch | null;
+declare function useMatch<ParamKey extends string = string>(
+  pattern: PathPattern
+): PathMatch<ParamKey> | null;
 ```
 
 </details>
@@ -1119,7 +1121,7 @@ Returns the element for the child route at this level of the route hierarchy. Th
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useParams(): Params;
+declare function useParams<Key extends string = string>(): Params<Key>;
 ```
 
 </details>
