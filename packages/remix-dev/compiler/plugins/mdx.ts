@@ -56,12 +56,19 @@ export function mdxPlugin(config: RemixConfig): esbuild.Plugin {
               location:
                 message.line || message.column
                   ? {
-                      column: message.column ?? undefined,
-                      line: message.line ?? undefined
+                      column:
+                        typeof message.column === "number"
+                          ? message.column
+                          : undefined,
+                      line:
+                        typeof message.line === "number"
+                          ? message.line
+                          : undefined
                     }
                   : undefined,
               text: message.message,
-              detail: message.note ?? undefined
+              detail:
+                typeof message.note === "string" ? message.note : undefined
             });
           });
 
@@ -72,7 +79,7 @@ export function mdxPlugin(config: RemixConfig): esbuild.Plugin {
             resolveDir: path.dirname(args.path),
             loader: getLoaderForFile(args.path)
           };
-        } catch (err) {
+        } catch (err: any) {
           return {
             errors: [
               {
