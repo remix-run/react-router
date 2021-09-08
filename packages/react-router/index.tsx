@@ -673,7 +673,7 @@ export function createRoutesFromChildren(
  * The parameters that were parsed from the URL path.
  */
 export type Params<Key extends string = string> = {
-  readonly [key in Key]: string;
+  readonly [key in Key]: string | undefined;
 };
 
 /**
@@ -708,7 +708,7 @@ export function generatePath(path: string, params: Params = {}): string {
   return path
     .replace(/:(\w+)/g, (_, key) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
-      return params[key];
+      return params[key]!;
     })
     .replace(/\/*\*$/, _ =>
       params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
