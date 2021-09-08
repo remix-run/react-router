@@ -1,13 +1,13 @@
 {
   "name": "@remix-run/serve",
   "description": "Production application server for Remix",
-  "version": "0.18.0-pre.3",
+  "version": "0.18.0",
   "repository": "https://github.com/remix-run/packages",
   "bin": {
     "remix-serve": "cli.js"
   },
   "dependencies": {
-    "@remix-run/express": "0.18.0-pre.3",
+    "@remix-run/express": "0.18.0",
     "compression": "^1.7.4",
     "express": "^4.17.1",
     "morgan": "^1.10.0"
