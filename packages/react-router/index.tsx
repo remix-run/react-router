@@ -424,8 +424,9 @@ export function useNavigate(): NavigateFunction {
   );
 
   let navigator = React.useContext(NavigatorContext);
-  let { basename } = React.useContext(RouteContext);
-  let { pathname } = useLocation();
+  let { basename, pathname: parentRoutePathname } =
+    React.useContext(RouteContext);
+  let { pathname: currentLocationPathname } = useLocation();
 
   let activeRef = React.useRef(false);
   React.useEffect(() => {
@@ -438,7 +439,29 @@ export function useNavigate(): NavigateFunction {
         if (typeof to === "number") {
           navigator.go(to);
         } else {
-          let path = resolvePath(to, pathname, basename);
+          let toPathname =
+            // Empty strings should be treated the same as / paths
+            to === "" || (to as Path).pathname === ""
+              ? "/"
+              : typeof to === "string"
+              ? parsePath(to).pathname
+              : to.pathname;
+
+          let path = resolvePath(
+            to,
+            // If a pathname is explicitly provided in `to`, it should be
+            // relative to the parent route context. This is explained in `Note
+            // on `<Link to>` values` in our migration guide from v5 as a means
+            // of disambiguation between `to` values that begin with `/` and
+            // those that do not. However, this is problematic for `to` values
+            // that do not provide a pathname. `to` can simply be a search or
+            // hash string, in which case we should assume that the navigation
+            // is relative to the current location's pathname and *not* the
+            // pathname from the parent route.
+            toPathname ? parentRoutePathname : currentLocationPathname,
+            basename
+          );
+
           (!!options.replace ? navigator.replace : navigator.push)(
             path,
             options.state
@@ -452,7 +475,7 @@ export function useNavigate(): NavigateFunction {
         );
       }
     },
-    [basename, navigator, pathname]
+    [basename, navigator, parentRoutePathname, currentLocationPathname]
   );
 
   return navigate;
