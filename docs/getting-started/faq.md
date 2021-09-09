@@ -1,4 +1,6 @@
-# Frequently Asked Questions About React Router v6
+---
+title: FAQ
+---
 
 Here are some questions that people commonly have about React Router v6:
 

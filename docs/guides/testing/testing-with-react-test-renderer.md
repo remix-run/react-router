@@ -1,4 +1,6 @@
-# Testing With Mocha
+---
+title: Testing With React Test Renderer
+---
 
 ## Getting Setup
 

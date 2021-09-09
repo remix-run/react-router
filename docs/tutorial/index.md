@@ -1,4 +1,6 @@
-# React Router Tutorial
+---
+title: React Router Tutorial
+---
 
 Principles we should cover:
 
@@ -6,7 +8,7 @@ Principles we should cover:
 - Dynamic paths like `<Route path=":id">`
 - Nested paths (and layouts with `<Outlet>`s) like:
 
-```
+```jsx
 function ProductLayout() {
   return (
     <div>

@@ -1,6 +1,9 @@
-<a name="top"></a>
+---
+title: Installing React Router
+order: 1
+---
 
-# Installing React Router
+<a name="top"></a>
 
 The following guides explain how to get React Router installed in the various environments we support:
 

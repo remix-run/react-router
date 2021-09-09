@@ -1,4 +1,6 @@
-# Advanced Guides for React Router
+---
+title: Guides
+---
 
 These guides document some of the different flows and patterns you can use to
 build a certain capability or feature of your app with React Router.
@@ -19,7 +21,7 @@ TODO
 
 ### "Not Found" Routes (404)
 
-TODO 
+TODO
 
 <a name="route-configs"></a>
 

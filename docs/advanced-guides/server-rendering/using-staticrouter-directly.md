@@ -1,3 +1,0 @@
-# Using `StaticRouter` Directly
-
-TODO

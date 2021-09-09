@@ -1,6 +1,9 @@
-<a name="top"></a>
+---
+title: Add to a Website
+order: 1
+---
 
-# Add React Router to a Website
+<a name="top"></a>
 
 There are a few different ways to get React Router running on your website, depending mostly on what the rest of your stack looks like. This document describes the most common ways people use React Router.
 

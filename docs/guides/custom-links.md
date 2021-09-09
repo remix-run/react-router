@@ -1,4 +1,6 @@
-# Custom Links
+---
+title: Custom Links
+---
 
 In most cases, the exported `<Link>` component should meet all of your needs as an abstraction of the anchor tag. If you need to return anything other than an anchor element, or override any of `<Link>`'s rendering logic, you can use a few hooks from `react-router-dom` to build your own:
 

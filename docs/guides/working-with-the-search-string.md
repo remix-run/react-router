@@ -1,4 +1,6 @@
-# Working with the Search/Query String
+---
+title: Working with the Search/Query String
+---
 
 [The "search"
 string](https://developer.mozilla.org/en-US/docs/Web/API/URL/search) (also

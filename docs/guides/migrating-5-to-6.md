@@ -1,4 +1,6 @@
-# Migrating React Router v5 to v6
+---
+title: Migrating React Router v5 to v6
+---
 
 _Note: This document is still a work in progress! The migration process from
 React Router v5 to v6 isn't yet as smooth as we would like it to be. We are

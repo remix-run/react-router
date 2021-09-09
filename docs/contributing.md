@@ -1,4 +1,7 @@
-# Contributing to React Router
+---
+title: Contributing to React Router
+order: 1
+---
 
 Thanks for contributing, you rock!
 

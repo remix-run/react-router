@@ -1,4 +1,6 @@
-# Testing With React Test Renderer
+---
+title: Testing With React Testing Library
+---
 
 ## Getting Setup
 

@@ -1,6 +1,8 @@
-<a name="top"></a>
+---
+title: Welcome to React Router
+---
 
-# Welcome to React Router
+<a name="top"></a>
 
 **Please note: These docs are currently very much a work in progress. If you are interested in lending a hand, please contact [@mjackson](https://twitter.com/mjackson) directly on Twitter or just go ahead and find a TODO, complete it, and make a PR. Thanks!**
 
