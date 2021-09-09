@@ -827,9 +827,7 @@ function rankRouteBranches(branches: RouteBranch[]): void {
     return memo;
   }, {});
 
-  // Sorting is stable in modern browsers, but we still support IE 11, so we
-  // need this little helper.
-  stableSort(branches, (a, b) => {
+  branches.sort((a, b) => {
     let [aPath, , aIndexes] = a;
     let aScore = pathScores[aPath];
 
@@ -883,13 +881,6 @@ function compareIndexes(a: number[], b: number[]): number {
     : // Otherwise, it doesn't really make sense to rank non-siblings by index,
       // so they sort equally.
       0;
-}
-
-function stableSort(array: any[], compareItems: (a: any, b: any) => number) {
-  // This copy lets us get the original index of an item so we can preserve the
-  // original ordering in the case that they sort equally.
-  let copy = array.slice(0);
-  array.sort((a, b) => compareItems(a, b) || copy.indexOf(a) - copy.indexOf(b));
 }
 
 function matchRouteBranch<ParamKey extends string = string>(
