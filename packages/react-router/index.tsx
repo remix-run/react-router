@@ -12,6 +12,10 @@ import type {
   Transition
 } from "history";
 
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+
 const readOnly: <T>(obj: T) => Readonly<T> = __DEV__
   ? obj => Object.freeze(obj)
   : obj => obj;
@@ -87,9 +91,9 @@ const RouteContext = React.createContext<RouteContextObject>({
   route: null
 });
 
-interface RouteContextObject {
+interface RouteContextObject<ParamKey extends string = string> {
   outlet: React.ReactElement | null;
-  params: Params;
+  params: Params<ParamKey>;
   pathname: string;
   basename: string;
   route: RouteObject | null;
@@ -374,7 +378,9 @@ export function useLocation(): Location {
  *
  * @see https://reactrouter.com/api/useMatch
  */
-export function useMatch(pattern: PathPattern): PathMatch | null {
+export function useMatch<ParamKey extends string = string>(
+  pattern: PathPattern
+): PathMatch<ParamKey> | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -383,7 +389,7 @@ export function useMatch(pattern: PathPattern): PathMatch | null {
   );
 
   let location = useLocation() as Location;
-  return matchPath(pattern, location.pathname);
+  return matchPath<ParamKey>(pattern, location.pathname);
 }
 
 type PathPattern =
@@ -468,7 +474,7 @@ export function useOutlet(): React.ReactElement | null {
  *
  * @see https://reactrouter.com/api/useParams
  */
-export function useParams(): Params {
+export function useParams<Key extends string = string>(): Params<Key> {
   return React.useContext(RouteContext).params;
 }
 
@@ -666,7 +672,9 @@ export function createRoutesFromChildren(
 /**
  * The parameters that were parsed from the URL path.
  */
-export type Params = Record<string, string>;
+export type Params<Key extends string = string> = {
+  readonly [key in Key]: string | undefined;
+};
 
 /**
  * A route object represents a logical route, with (optionally) its child
@@ -700,7 +708,7 @@ export function generatePath(path: string, params: Params = {}): string {
   return path
     .replace(/:(\w+)/g, (_, key) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
-      return params[key];
+      return params[key]!;
     })
     .replace(/\/*\*$/, _ =>
       params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
@@ -750,10 +758,10 @@ export function matchRoutes(
   return matches;
 }
 
-export interface RouteMatch {
+export interface RouteMatch<ParamKey extends string = string> {
   route: RouteObject;
   pathname: string;
-  params: Params;
+  params: Params<ParamKey>;
 }
 
 function flattenRoutes(
@@ -861,13 +869,13 @@ function stableSort(array: any[], compareItems: (a: any, b: any) => number) {
   array.sort((a, b) => compareItems(a, b) || copy.indexOf(a) - copy.indexOf(b));
 }
 
-function matchRouteBranch(
+function matchRouteBranch<ParamKey extends string = string>(
   branch: RouteBranch,
   pathname: string
-): RouteMatch[] | null {
+): RouteMatch<ParamKey>[] | null {
   let routes = branch[1];
   let matchedPathname = "/";
-  let matchedParams: Params = {};
+  let matchedParams = {} as Params<ParamKey>;
 
   let matches: RouteMatch[] = [];
   for (let i = 0; i < routes.length; ++i) {
@@ -893,7 +901,7 @@ function matchRouteBranch(
     matches.push({
       route,
       pathname: matchedPathname,
-      params: readOnly<Params>(matchedParams)
+      params: readOnly<Params<ParamKey>>(matchedParams)
     });
   }
 
@@ -906,10 +914,10 @@ function matchRouteBranch(
  *
  * @see https://reactrouter.com/api/matchPath
  */
-export function matchPath(
+export function matchPath<ParamKey extends string = string>(
   pattern: PathPattern,
   pathname: string
-): PathMatch | null {
+): PathMatch<ParamKey> | null {
   if (typeof pattern === "string") {
     pattern = { path: pattern };
   }
@@ -922,18 +930,24 @@ export function matchPath(
 
   let matchedPathname = match[1];
   let values = match.slice(2);
-  let params = paramNames.reduce((memo, paramName, index) => {
-    memo[paramName] = safelyDecodeURIComponent(values[index] || "", paramName);
-    return memo;
-  }, {} as Params);
+  let params: Params = paramNames.reduce<Mutable<Params>>(
+    (memo, paramName, index) => {
+      memo[paramName] = safelyDecodeURIComponent(
+        values[index] || "",
+        paramName
+      );
+      return memo;
+    },
+    {}
+  );
 
   return { path, pathname: matchedPathname, params };
 }
 
-export interface PathMatch {
+export interface PathMatch<ParamKey extends string = string> {
   path: string;
   pathname: string;
-  params: Params;
+  params: Params<ParamKey>;
 }
 
 function compilePath(
