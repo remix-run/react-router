@@ -16,16 +16,11 @@ describe("useMatch", () => {
         return <h1>Home</h1>;
       }
 
-      function About() {
-        return <h1>About</h1>;
-      }
-
       createTestRenderer(
         <Router initialEntries={["/home"]}>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route path="/home" element={<Home />} />
-              <Route path="/about" element={<About />} />
             </Route>
           </Routes>
         </Router>
@@ -33,7 +28,37 @@ describe("useMatch", () => {
 
       expect(match).toMatchObject({
         path: "home",
-        pathname: "/home",
+        url: "/home",
+        params: {}
+      });
+    });
+  });
+
+  describe("when the current URL ends with a slash", () => {
+    it("returns the match.url with no trailing slash", () => {
+      let match: PathMatch | null = null;
+      function Layout() {
+        match = useMatch("home");
+        return null;
+      }
+
+      function Home() {
+        return <h1>Home</h1>;
+      }
+
+      createTestRenderer(
+        <Router initialEntries={["/home/"]}>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route path="/home" element={<Home />} />
+            </Route>
+          </Routes>
+        </Router>
+      );
+
+      expect(match).toMatchObject({
+        path: "home",
+        url: "/home",
         params: {}
       });
     });
@@ -51,16 +76,11 @@ describe("useMatch", () => {
         return <h1>Home</h1>;
       }
 
-      function About() {
-        return <h1>About</h1>;
-      }
-
       createTestRenderer(
         <Router initialEntries={["/home"]}>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route path="/home" element={<Home />} />
-              <Route path="/about" element={<About />} />
             </Route>
           </Routes>
         </Router>

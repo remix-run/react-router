@@ -918,7 +918,7 @@ function matchRouteBranch<ParamKey extends string = string>(
 
     if (!routeMatch) return null;
 
-    matchedPathname = joinPaths([matchedPathname, routeMatch.pathname]);
+    matchedPathname = joinPaths([matchedPathname, routeMatch.url]);
     matchedParams = { ...matchedParams, ...routeMatch.params };
 
     matches.push({
@@ -951,7 +951,7 @@ export function matchPath<ParamKey extends string = string>(
 
   if (!match) return null;
 
-  let matchedPathname = match[1];
+  let url = match[1].replace(/\/+$/, "");
   let values = match.slice(2);
   let params: Params = paramNames.reduce<Mutable<Params>>(
     (memo, paramName, index) => {
@@ -964,12 +964,12 @@ export function matchPath<ParamKey extends string = string>(
     {}
   );
 
-  return { path, pathname: matchedPathname, params };
+  return { path, url, params };
 }
 
 export interface PathMatch<ParamKey extends string = string> {
   path: string;
-  pathname: string;
+  url: string;
   params: Params<ParamKey>;
 }
 
