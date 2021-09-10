@@ -204,10 +204,12 @@ export interface RouteProps {
  *
  * @see https://reactrouter.com/api/Route
  */
-export function Route({
-  element = <Outlet />
-}: RouteProps): React.ReactElement | null {
-  return element;
+export function Route(_props: RouteProps): React.ReactElement | null {
+  invariant(
+    false,
+    `A <Route> is only ever to be used as the child of <Routes> element, ` +
+      `never rendered directly. Please wrap your <Route> in a <Routes>.`
+  );
 }
 
 export interface RouterProps {
@@ -650,10 +652,7 @@ export function createRoutesFromChildren(
       path: element.props.path,
       caseSensitive: element.props.caseSensitive,
       index: element.props.index,
-      // Default behavior is to just render the element that was given. This
-      // permits people to use any element they prefer, not just <Route> (though
-      // all our official examples and docs use <Route> for clarity).
-      element
+      element: element.props.element
     };
 
     if (element.props.children) {

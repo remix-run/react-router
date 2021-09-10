@@ -21,27 +21,17 @@ describe("creating routes from JSX", () => {
           "children": Array [
             Object {
               "caseSensitive": undefined,
-              "element": <Route
-                element={
-                  <h1>
-                    home
-                  </h1>
-                }
-                path="home"
-              />,
+              "element": <h1>
+                home
+              </h1>,
               "index": undefined,
               "path": "home",
             },
             Object {
               "caseSensitive": undefined,
-              "element": <Route
-                element={
-                  <h1>
-                    about
-                  </h1>
-                }
-                path="about"
-              />,
+              "element": <h1>
+                about
+              </h1>,
               "index": undefined,
               "path": "about",
             },
@@ -50,95 +40,27 @@ describe("creating routes from JSX", () => {
               "children": Array [
                 Object {
                   "caseSensitive": undefined,
-                  "element": <Route
-                    element={
-                      <h1>
-                        users index
-                      </h1>
-                    }
-                    index={true}
-                  />,
+                  "element": <h1>
+                    users index
+                  </h1>,
                   "index": true,
                   "path": undefined,
                 },
                 Object {
                   "caseSensitive": undefined,
-                  "element": <Route
-                    element={
-                      <h1>
-                        user profile
-                      </h1>
-                    }
-                    path=":id"
-                  />,
+                  "element": <h1>
+                    user profile
+                  </h1>,
                   "index": undefined,
                   "path": ":id",
                 },
               ],
-              "element": <Route
-                path="users"
-              >
-                <Route
-                  element={
-                    <h1>
-                      users index
-                    </h1>
-                  }
-                  index={true}
-                />
-                <Route
-                  element={
-                    <h1>
-                      user profile
-                    </h1>
-                  }
-                  path=":id"
-                />
-              </Route>,
+              "element": undefined,
               "index": undefined,
               "path": "users",
             },
           ],
-          "element": <Route
-            path="/"
-          >
-            <Route
-              element={
-                <h1>
-                  home
-                </h1>
-              }
-              path="home"
-            />
-            <Route
-              element={
-                <h1>
-                  about
-                </h1>
-              }
-              path="about"
-            />
-            <Route
-              path="users"
-            >
-              <Route
-                element={
-                  <h1>
-                    users index
-                  </h1>
-                }
-                index={true}
-              />
-              <Route
-                element={
-                  <h1>
-                    user profile
-                  </h1>
-                }
-                path=":id"
-              />
-            </Route>
-          </Route>,
+          "element": undefined,
           "index": undefined,
           "path": "/",
         },

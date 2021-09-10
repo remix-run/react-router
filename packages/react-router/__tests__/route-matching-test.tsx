@@ -72,30 +72,6 @@ describe("route matching", () => {
     describeRouteMatching(routes);
   });
 
-  describe("using <Routes> and the *secret menu*", () => {
-    let routes = (
-      <Routes>
-        <Courses path="courses">
-          <Course path=":id">
-            <CourseGrades path="grades" />
-          </Course>
-          <NewCourse path="new" />
-          <CoursesIndex index />
-          <CoursesNotFound path="*" />
-        </Courses>
-        <Landing path="courses">
-          <ReactFundamentals path="react-fundamentals" />
-          <AdvancedReact path="advanced-react" />
-          <NeverRender path="*" />
-        </Landing>
-        <Home path="/" />
-        <NotFound path="*" />
-      </Routes>
-    );
-
-    describeRouteMatching(routes);
-  });
-
   function describeRouteMatching(routes: React.ReactNode) {
     let testPaths = [
       "/courses",
@@ -120,11 +96,10 @@ describe("route matching", () => {
     let renderer = createTestRenderer(
       <Router initialEntries={[entry]} children={children} />
     );
-
     return renderer.toJSON();
   }
 
-  function Courses(_: Props) {
+  function Courses() {
     return (
       <div>
         <h1>Courses</h1>
@@ -133,9 +108,8 @@ describe("route matching", () => {
     );
   }
 
-  function Course(_: Props) {
+  function Course() {
     let { id } = useParams();
-
     return (
       <div>
         <h2>Course {id}</h2>
@@ -144,23 +118,23 @@ describe("route matching", () => {
     );
   }
 
-  function CourseGrades(_: Props) {
+  function CourseGrades() {
     return <p>Course Grades</p>;
   }
 
-  function NewCourse(_: Props) {
+  function NewCourse() {
     return <p>New Course</p>;
   }
 
-  function CoursesIndex(_: Props) {
+  function CoursesIndex() {
     return <p>All Courses</p>;
   }
 
-  function CoursesNotFound(_: Props) {
+  function CoursesNotFound() {
     return <p>Course Not Found</p>;
   }
 
-  function Landing(_: Props) {
+  function Landing() {
     return (
       <p>
         <h1>Welcome to React Training</h1>
@@ -169,29 +143,23 @@ describe("route matching", () => {
     );
   }
 
-  function ReactFundamentals(_: Props) {
+  function ReactFundamentals() {
     return <p>React Fundamentals</p>;
   }
 
-  function AdvancedReact(_: Props) {
+  function AdvancedReact() {
     return <p>Advanced React</p>;
   }
 
-  function Home(_: Props) {
+  function Home() {
     return <p>Home</p>;
   }
 
-  function NotFound(_: Props) {
+  function NotFound() {
     return <p>Not Found</p>;
   }
 
-  function NeverRender(_: Props): React.ReactElement {
+  function NeverRender(): React.ReactElement {
     throw new Error("NeverRender should ... uh ... never render");
   }
 });
-
-interface Props {
-  children?: React.ReactNode;
-  path?: string;
-  index?: boolean;
-}
