@@ -389,10 +389,6 @@ export function useMatch<ParamKey extends string = string>(
   return matchPath<ParamKey>(pattern, location.pathname);
 }
 
-type PathPattern =
-  | string
-  | { path: string; caseSensitive?: boolean; end?: boolean };
-
 /**
  * The interface for the navigate() function returned from useNavigate().
  */
@@ -705,9 +701,21 @@ export function generatePath(path: string, params: Params = {}): string {
     );
 }
 
+/**
+ * A RouteMatch contains info about how a route matched a URL.
+ */
 export interface RouteMatch<ParamKey extends string = string> {
+  /**
+   * The names and values of dynamic parameters in the URL.
+   */
   params: Params<ParamKey>;
+  /**
+   * The portion of the URL pathname that was matched.
+   */
   pathname: string;
+  /**
+   * The route object that was used to match.
+   */
   route: RouteObject;
 }
 
@@ -718,7 +726,7 @@ export interface RouteMatch<ParamKey extends string = string> {
  */
 export function matchRoutes(
   routes: RouteObject[],
-  location: string | Partial<Location>,
+  location: Partial<Location> | string,
   basename = ""
 ): RouteMatch[] | null {
   if (typeof location === "string") {
@@ -896,7 +904,7 @@ function matchRouteBranch<ParamKey extends string = string>(
     if (!match) return null;
 
     matchedParams = { ...matchedParams, ...match.params };
-    matchedPathname = joinPaths([matchedPathname, match.url]);
+    matchedPathname = joinPaths([matchedPathname, match.pathname]);
 
     let route = routes[meta.childrenIndex];
 
@@ -912,10 +920,31 @@ function matchRouteBranch<ParamKey extends string = string>(
   return matches;
 }
 
-export interface PathMatch<ParamKey extends string = string> {
-  params: Params<ParamKey>;
+/**
+ * A PathPattern is used to match on some portion of a URL pathname.
+ */
+export interface PathPattern {
   path: string;
-  url: string;
+  caseSensitive?: boolean;
+  end?: boolean;
+}
+
+/**
+ * A PathMatch contains info about how a PathPattern matched on a URL pathname.
+ */
+export interface PathMatch<ParamKey extends string = string> {
+  /**
+   * The names and values of dynamic parameters in the URL.
+   */
+  params: Params<ParamKey>;
+  /**
+   * The portion of the URL pathname that was matched.
+   */
+  pathname: string;
+  /**
+   * The pattern that was used to match.
+   */
+  pattern: PathPattern;
 }
 
 /**
@@ -925,20 +954,23 @@ export interface PathMatch<ParamKey extends string = string> {
  * @see https://reactrouter.com/api/matchPath
  */
 export function matchPath<ParamKey extends string = string>(
-  pattern: PathPattern,
+  pattern: PathPattern | string,
   pathname: string
 ): PathMatch<ParamKey> | null {
   if (typeof pattern === "string") {
-    pattern = { path: pattern };
+    pattern = { path: pattern, caseSensitive: false, end: true };
   }
 
-  let { path, caseSensitive = false, end = true } = pattern;
-  let [matcher, paramNames] = compilePath(path, caseSensitive, end);
+  let [matcher, paramNames] = compilePath(
+    pattern.path,
+    pattern.caseSensitive,
+    pattern.end
+  );
   let match = pathname.match(matcher);
 
   if (!match) return null;
 
-  let url = match[1].replace(/\/+$/, "");
+  let matchedPathname = match[1];
   let values = match.slice(2);
   let params: Params = paramNames.reduce<Mutable<Params>>(
     (memo, paramName, index) => {
@@ -951,13 +983,13 @@ export function matchPath<ParamKey extends string = string>(
     {}
   );
 
-  return { params, path, url };
+  return { params, pathname: matchedPathname, pattern };
 }
 
 function compilePath(
   path: string,
-  caseSensitive: boolean,
-  end: boolean
+  caseSensitive = false,
+  end = true
 ): [RegExp, string[]] {
   let keys: string[] = [];
   let source =
