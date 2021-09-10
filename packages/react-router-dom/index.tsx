@@ -343,21 +343,25 @@ export function useLinkClickHandler<
   let location = useLocation();
   let path = useResolvedPath(to);
 
-  return function handleClick(event: React.MouseEvent<E, MouseEvent>) {
-    if (
-      event.button === 0 && // Ignore everything but left clicks
-      (!target || target === "_self") && // Let browser handle "target=_blank" etc.
-      !isModifiedEvent(event) // Ignore clicks with modifier keys
-    ) {
-      event.preventDefault();
+  return React.useCallback(
+    (event: React.MouseEvent<E, MouseEvent>) => {
+      if (
+        event.button === 0 && // Ignore everything but left clicks
+        (!target || target === "_self") && // Let browser handle "target=_blank" etc.
+        !isModifiedEvent(event) // Ignore clicks with modifier keys
+      ) {
+        event.preventDefault();
 
-      // If the URL hasn't changed, a regular <a> will do a replace instead of
-      // a push, so do the same here.
-      let replace = !!replaceProp || createPath(location) === createPath(path);
+        // If the URL hasn't changed, a regular <a> will do a replace instead of
+        // a push, so do the same here.
+        let replace =
+          !!replaceProp || createPath(location) === createPath(path);
 
-      navigate(to, { replace, state });
-    }
-  };
+        navigate(to, { replace, state });
+      }
+    },
+    [location, navigate, path, replaceProp, state, target, to]
+  );
 }
 
 /**
