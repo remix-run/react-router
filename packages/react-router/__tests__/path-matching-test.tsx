@@ -1,10 +1,10 @@
+import type { RouteObject } from "react-router";
 import { matchRoutes } from "react-router";
-import type { PartialRouteObject } from "react-router";
 
 describe("path matching", () => {
-  function pickPaths(routes: PartialRouteObject[], pathname: string) {
+  function pickPaths(routes: RouteObject[], pathname: string) {
     let matches = matchRoutes(routes, { pathname });
-    return matches ? matches.map(match => match.route.path) : null;
+    return matches ? matches.map(match => match.route.path || "") : null;
   }
 
   test("root vs. dynamic", () => {
@@ -71,7 +71,7 @@ describe("path matching", () => {
             children: [{ path: "subjects" }]
           },
           { path: "new" },
-          { path: "/" },
+          { index: true },
           { path: "*" }
         ]
       },
@@ -87,7 +87,7 @@ describe("path matching", () => {
       { path: "*" }
     ];
 
-    expect(pickPaths(routes, "/courses")).toEqual(["courses", "/"]);
+    expect(pickPaths(routes, "/courses")).toEqual(["courses", ""]);
     expect(pickPaths(routes, "/courses/routing")).toEqual(["courses", ":id"]);
     expect(pickPaths(routes, "/courses/routing/subjects")).toEqual([
       "courses",
@@ -115,7 +115,7 @@ describe("path matching", () => {
     let routes = [
       {
         path: ":page",
-        children: [{ path: "/" }]
+        children: [{ index: true }]
       },
       { path: "page" }
     ];
