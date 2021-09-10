@@ -27,9 +27,9 @@ describe("useMatch", () => {
       );
 
       expect(match).toMatchObject({
-        path: "home",
-        url: "/home",
-        params: {}
+        params: {},
+        pathname: "/home",
+        pattern: { path: "home" }
       });
     });
   });
@@ -57,9 +57,9 @@ describe("useMatch", () => {
       );
 
       expect(match).toMatchObject({
-        path: "home",
-        url: "/home",
-        params: {}
+        params: {},
+        pathname: "/home",
+        pattern: { path: "home" }
       });
     });
   });

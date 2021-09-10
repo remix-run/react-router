@@ -378,7 +378,7 @@ export function useLocation(): Location {
  * @see https://reactrouter.com/api/useMatch
  */
 export function useMatch<ParamKey extends string = string>(
-  pattern: PathPattern
+  pattern: PathPattern | string
 ): PathMatch<ParamKey> | null {
   invariant(
     useInRouterContext(),
