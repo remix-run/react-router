@@ -1,7 +1,6 @@
 import * as React from "react";
-import { act, create as createTestRenderer } from "react-test-renderer";
+import { create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Outlet, Routes, Route } from "react-router";
-import type { ReactTestRenderer } from "react-test-renderer";
 
 describe("Descendant <Routes> splat matching", () => {
   describe("when the parent route path ends with /*", () => {
@@ -33,20 +32,31 @@ describe("Descendant <Routes> splat matching", () => {
         );
       }
 
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
-          <Router initialEntries={["/courses/react/react-fundamentals"]}>
-            <Routes>
-              <Route path="courses" element={<Courses />}>
-                <Route path="react/*" element={<ReactCourses />} />
-              </Route>
-            </Routes>
-          </Router>
-        );
-      });
+      let renderer = createTestRenderer(
+        <Router initialEntries={["/courses/react/react-fundamentals"]}>
+          <Routes>
+            <Route path="courses" element={<Courses />}>
+              <Route path="react/*" element={<ReactCourses />} />
+            </Route>
+          </Routes>
+        </Router>
+      );
 
-      expect(renderer.toJSON()).toMatchSnapshot();
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          <h1>
+            Courses
+          </h1>
+          <div>
+            <h1>
+              React
+            </h1>
+            <h1>
+              React Fundamentals
+            </h1>
+          </div>
+        </div>
+      `);
     });
   });
 });
