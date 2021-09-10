@@ -46,7 +46,6 @@ describe("Link href", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor).not.toBeNull();
       expect(anchor.props.href).toEqual("/about");
     });
 
@@ -96,7 +95,7 @@ describe("Link href", () => {
       });
 
       let anchor = renderer.root.findByType("a");
-      expect(anchor).not.toBeNull();
+
       expect(anchor.props.href).toEqual("/auth/forget-password");
     });
   });
@@ -125,7 +124,6 @@ describe("Link href", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor).not.toBeNull();
       expect(anchor.props.href).toEqual("/home");
     });
   });
@@ -154,7 +152,6 @@ describe("Link href", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor).not.toBeNull();
       expect(anchor.props.href).toEqual("/about");
     });
   });
@@ -183,7 +180,6 @@ describe("Link href", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor).not.toBeNull();
       expect(anchor.props.href).toEqual("/about");
     });
   });
@@ -212,7 +208,6 @@ describe("Link href", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor).not.toBeNull();
       expect(anchor.props.href).toEqual("/app/about");
     });
   });

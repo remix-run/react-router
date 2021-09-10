@@ -16,10 +16,6 @@ type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
-const readOnly: <T>(obj: T) => Readonly<T> = __DEV__
-  ? obj => Object.freeze(obj)
-  : obj => obj;
-
 function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);
 }
@@ -85,7 +81,7 @@ if (__DEV__) {
 
 const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
-  params: readOnly<Params>({}),
+  params: {},
   pathname: "",
   basename: "",
   route: null
@@ -93,9 +89,9 @@ const RouteContext = React.createContext<RouteContextObject>({
 
 interface RouteContextObject<ParamKey extends string = string> {
   outlet: React.ReactElement | null;
-  params: Params<ParamKey>;
+  params: Readonly<Params<ParamKey>>;
   pathname: string;
-  basename: string;
+  basename: string; // TODO: this shouldn't need to live in route context. it should live higher up in a <Routes> context
   route: RouteObject | null;
 }
 
@@ -199,6 +195,7 @@ export interface RouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactElement | null;
+  index?: boolean;
   path?: string;
 }
 
@@ -276,7 +273,7 @@ export function Routes({
   location
 }: RoutesProps): React.ReactElement | null {
   let routes = createRoutesFromChildren(children);
-  return useRoutes_(routes, location, basename);
+  return useRoutes(routes, { location, basename });
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -497,7 +494,9 @@ export function useOutlet(): React.ReactElement | null {
  *
  * @see https://reactrouter.com/api/useParams
  */
-export function useParams<Key extends string = string>(): Params<Key> {
+export function useParams<Key extends string = string>(): Readonly<
+  Params<Key>
+> {
   return React.useContext(RouteContext).params;
 }
 
@@ -523,10 +522,10 @@ export function useResolvedPath(to: To): Path {
  * @see https://reactrouter.com/api/useRoutes
  */
 export function useRoutes(
-  partialRoutes: PartialRouteObject[],
+  routes: RouteObject[],
   {
     basename = "",
-    location
+    location: locationArg
   }: {
     basename?: string;
     location?: PartialLocation;
@@ -539,19 +538,6 @@ export function useRoutes(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
-  let routes = React.useMemo(
-    () => createRoutesFromArray(partialRoutes),
-    [partialRoutes]
-  );
-
-  return useRoutes_(routes, location, basename);
-}
-
-function useRoutes_(
-  routes: RouteObject[],
-  locationOverride?: PartialLocation,
-  basename = ""
-): React.ReactElement | null {
   let {
     route: parentRoute,
     pathname: parentPathname,
@@ -562,10 +548,27 @@ function useRoutes_(
     // You won't get a warning about 2 different <Routes> under a <Route>
     // without a trailing *, but this is a best-effort warning anyway since we
     // cannot even give the warning unless they land at the parent route.
-    let parentPath = parentRoute && parentRoute.path;
+    //
+    // Example:
+    //
+    // <Routes>
+    //   {/* This route path MUST end with /* because otherwise
+    //       it will never match /blog/post/123 */}
+    //   <Route path="blog" element={<Blog />} />
+    //   <Route path="blog/feed" element={<BlogFeed />} />
+    // </Routes>
+    //
+    // function Blog() {
+    //   return (
+    //     <Routes>
+    //       <Route path="post/:id" element={<Post />} />
+    //     </Routes>
+    //   );
+    // }
+    let parentPath = (parentRoute && parentRoute.path) || "";
     warningOnce(
       parentPathname,
-      !parentRoute || parentRoute.path.endsWith("*"),
+      !parentRoute || parentPath.endsWith("*"),
       `You rendered descendant <Routes> (or called \`useRoutes\`) at ` +
         `"${parentPathname}" (under <Route path="${parentPath}">) but the ` +
         `parent route path has no trailing "*". This means if you navigate ` +
@@ -576,16 +579,16 @@ function useRoutes_(
     );
   }
 
+  let locationFromContext = useLocation();
+  let location = locationArg ?? locationFromContext;
+
   let basenameForMatching = basename
     ? joinPaths([parentPathname, basename])
     : parentPathname;
 
-  let contextLocation = useLocation();
-  let location = locationOverride ?? contextLocation;
-
   let matches = React.useMemo(
     () => matchRoutes(routes, location, basenameForMatching),
-    [location, routes, basenameForMatching]
+    [routes, location, basenameForMatching]
   );
 
   if (!matches) {
@@ -594,18 +597,19 @@ function useRoutes_(
   }
 
   // Otherwise render an element.
-  let allParams: Params = {};
-  let element = matches.reduceRight((outlet, { params, pathname, route }) => {
-    allParams = { ...allParams, ...params };
+  let params: Params = Object.assign({}, parentParams);
+  let element = matches.reduceRight((outlet, match) => {
+    Object.assign(params, match.params);
+
     return (
       <RouteContext.Provider
-        children={route.element}
+        children={match.route.element || <Outlet />}
         value={{
           outlet,
-          params: readOnly<Params>({ ...parentParams, ...allParams }),
-          pathname: joinPaths([basenameForMatching, pathname]),
+          params: params,
+          pathname: joinPaths([basenameForMatching, match.pathname]),
           basename,
-          route
+          route: match.route
         }}
       />
     );
@@ -617,30 +621,6 @@ function useRoutes_(
 ///////////////////////////////////////////////////////////////////////////////
 // UTILS
 ///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Creates a route config from an array of JavaScript objects. Used internally
- * by `useRoutes` to normalize the route config.
- *
- * @see https://reactrouter.com/api/createRoutesFromArray
- */
-export function createRoutesFromArray(
-  array: PartialRouteObject[]
-): RouteObject[] {
-  return array.map(partialRoute => {
-    let route: RouteObject = {
-      path: partialRoute.path || "/",
-      caseSensitive: partialRoute.caseSensitive === true,
-      element: partialRoute.element || <Outlet />
-    };
-
-    if (partialRoute.children) {
-      route.children = createRoutesFromArray(partialRoute.children);
-    }
-
-    return route;
-  });
-}
 
 /**
  * Creates a route config from a React "children" object, which is usually
@@ -671,8 +651,9 @@ export function createRoutesFromChildren(
     }
 
     let route: RouteObject = {
-      path: element.props.path || "/",
-      caseSensitive: element.props.caseSensitive === true,
+      path: element.props.path,
+      caseSensitive: element.props.caseSensitive,
+      index: element.props.index,
       // Default behavior is to just render the element that was given. This
       // permits people to use any element they prefer, not just <Route> (though
       // all our official examples and docs use <Route> for clarity).
@@ -680,10 +661,7 @@ export function createRoutesFromChildren(
     };
 
     if (element.props.children) {
-      let childRoutes = createRoutesFromChildren(element.props.children);
-      if (childRoutes.length) {
-        route.children = childRoutes;
-      }
+      route.children = createRoutesFromChildren(element.props.children);
     }
 
     routes.push(route);
@@ -704,21 +682,10 @@ export type Params<Key extends string = string> = {
  * routes organized in a tree-like structure.
  */
 export interface RouteObject {
-  caseSensitive: boolean;
-  children?: RouteObject[];
-  element: React.ReactNode;
-  path: string;
-}
-
-/**
- * A "partial route" object is usually supplied by the user and may omit
- * certain properties of a real route object such as `path` and `element`,
- * which have reasonable defaults.
- */
-export interface PartialRouteObject {
   caseSensitive?: boolean;
-  children?: PartialRouteObject[];
+  children?: RouteObject[];
   element?: React.ReactNode;
+  index?: boolean;
   path?: string;
 }
 
@@ -738,13 +705,19 @@ export function generatePath(path: string, params: Params = {}): string {
     );
 }
 
+export interface RouteMatch<ParamKey extends string = string> {
+  params: Params<ParamKey>;
+  pathname: string;
+  route: RouteObject;
+}
+
 /**
  * Matches the given routes to a location and returns the match data.
  *
  * @see https://reactrouter.com/api/matchRoutes
  */
 export function matchRoutes(
-  routes: PartialRouteObject[],
+  routes: RouteObject[],
   location: string | Partial<Location>,
   basename = ""
 ): RouteMatch[] | null {
@@ -754,19 +727,15 @@ export function matchRoutes(
 
   let pathname = location.pathname || "/";
   if (basename) {
-    let base = basename
-      // // Basename should be case-insensitive
-      // https://github.com/remix-run/react-router/issues/7997#issuecomment-911916907
-      .toLowerCase()
-      .replace(/^\/*/, "/")
-      .replace(/\/+$/, "");
+    let base = basename.replace(/^\/*/, "/").replace(/\/+$/, "");
 
-    if (pathname.toLowerCase().startsWith(base)) {
-      pathname = pathname.slice(base.length) || "/";
-    } else {
-      // Pathname does not start with the basename, no match.
+    // Basename should be case-insensitive
+    // https://github.com/remix-run/react-router/issues/7997#issuecomment-911916907
+    if (!pathname.toLowerCase().startsWith(base.toLowerCase())) {
       return null;
     }
+
+    pathname = pathname.slice(base.length) || "/";
   }
 
   let branches = flattenRoutes(routes);
@@ -774,69 +743,83 @@ export function matchRoutes(
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    // TODO: Match on search, state too?
-    matches = matchRouteBranch(branches[i], pathname);
+    matches = matchRouteBranch(branches[i], pathname, routes);
   }
 
   return matches;
 }
 
-export interface RouteMatch<ParamKey extends string = string> {
-  route: RouteObject;
-  pathname: string;
-  params: Params<ParamKey>;
+interface RouteMeta {
+  relativePath: string;
+  caseSensitive: boolean;
+  childrenIndex: number;
+}
+
+interface RouteBranch {
+  path: string;
+  routesMeta: RouteMeta[];
 }
 
 function flattenRoutes(
-  routes: PartialRouteObject[],
+  routes: RouteObject[],
   branches: RouteBranch[] = [],
-  parentPath = "",
-  parentRoutes: RouteObject[] = [],
-  parentIndexes: number[] = []
+  parentsMeta: RouteMeta[] = [],
+  parentPath = ""
 ): RouteBranch[] {
-  (routes as RouteObject[]).forEach((route, index) => {
-    route = {
-      ...route,
-      path: route.path || "/",
-      caseSensitive: !!route.caseSensitive,
-      element: route.element
+  routes.forEach((route, index) => {
+    let meta: RouteMeta = {
+      relativePath: route.path || "",
+      caseSensitive: route.caseSensitive === true,
+      childrenIndex: index
     };
 
-    let path = joinPaths([parentPath, route.path]);
-    let routes = parentRoutes.concat(route);
-    let indexes = parentIndexes.concat(index);
+    if (meta.relativePath.startsWith("/")) {
+      invariant(
+        meta.relativePath.startsWith(parentPath),
+        `Absolute route path "${meta.relativePath}" nested under path ` +
+          `"${parentPath}" is not valid. An absolute child route path ` +
+          `must start with the combined path of all its parent routes.`
+      );
+
+      meta.relativePath = meta.relativePath.slice(parentPath.length);
+    }
+
+    let path = joinPaths([parentPath, meta.relativePath]);
+    let routesMeta = parentsMeta.concat(meta);
 
     // Add the children before adding this route to the array so we traverse the
     // route tree depth-first and child routes appear before their parents in
     // the "flattened" version.
-    if (route.children) {
-      flattenRoutes(route.children, branches, path, routes, indexes);
+    if (route.children && route.children.length > 0) {
+      invariant(
+        route.index !== true,
+        `Index routes must not have child routes. Please remove ` +
+          `all child routes from route path "${path}".`
+      );
+
+      flattenRoutes(route.children, branches, routesMeta, path);
     }
 
-    branches.push([path, routes, indexes]);
+    branches.push({ path, routesMeta });
   });
 
   return branches;
 }
 
-type RouteBranch = [string, RouteObject[], number[]];
-
 function rankRouteBranches(branches: RouteBranch[]): void {
-  let pathScores = branches.reduce<Record<string, number>>((memo, [path]) => {
-    memo[path] = computeScore(path);
-    return memo;
-  }, {});
+  let pathScores: { [key: string]: number } = {};
+  let pathIndexes: { [key: string]: number[] } = {};
+  branches.forEach(({ path, routesMeta }) => {
+    pathScores[path] = computeScore(path);
+    pathIndexes[path] = routesMeta.map(meta => meta.childrenIndex);
+  });
 
   branches.sort((a, b) => {
-    let [aPath, , aIndexes] = a;
-    let aScore = pathScores[aPath];
-
-    let [bPath, , bIndexes] = b;
-    let bScore = pathScores[bPath];
-
+    let aScore = pathScores[a.path];
+    let bScore = pathScores[b.path];
     return aScore !== bScore
       ? bScore - aScore // Higher score first
-      : compareIndexes(aIndexes, bIndexes);
+      : compareIndexes(pathIndexes[a.path], pathIndexes[b.path]);
   });
 }
 
@@ -885,41 +868,54 @@ function compareIndexes(a: number[], b: number[]): number {
 
 function matchRouteBranch<ParamKey extends string = string>(
   branch: RouteBranch,
-  pathname: string
+  pathname: string,
+  originalRoutes: RouteObject[]
 ): RouteMatch<ParamKey>[] | null {
-  let routes = branch[1];
   let matchedPathname = "/";
   let matchedParams = {} as Params<ParamKey>;
 
+  let { routesMeta } = branch;
+  let routes = originalRoutes;
+
   let matches: RouteMatch[] = [];
-  for (let i = 0; i < routes.length; ++i) {
-    let route = routes[i];
+  for (let i = 0; i < routesMeta.length; ++i) {
+    let meta = routesMeta[i];
     let remainingPathname =
       matchedPathname === "/"
         ? pathname
         : pathname.slice(matchedPathname.length) || "/";
-    let routeMatch = matchPath(
+    let match = matchPath(
       {
-        path: route.path,
-        caseSensitive: route.caseSensitive,
-        end: i === routes.length - 1
+        path: meta.relativePath,
+        caseSensitive: meta.caseSensitive,
+        end: i === routesMeta.length - 1
       },
       remainingPathname
     );
 
-    if (!routeMatch) return null;
+    if (!match) return null;
 
-    matchedPathname = joinPaths([matchedPathname, routeMatch.url]);
-    matchedParams = { ...matchedParams, ...routeMatch.params };
+    matchedParams = { ...matchedParams, ...match.params };
+    matchedPathname = joinPaths([matchedPathname, match.url]);
+
+    let route = routes[meta.childrenIndex];
 
     matches.push({
-      route,
+      params: matchedParams,
       pathname: matchedPathname,
-      params: readOnly<Params<ParamKey>>(matchedParams)
+      route
     });
+
+    routes = route.children!;
   }
 
   return matches;
+}
+
+export interface PathMatch<ParamKey extends string = string> {
+  params: Params<ParamKey>;
+  path: string;
+  url: string;
 }
 
 /**
@@ -955,13 +951,7 @@ export function matchPath<ParamKey extends string = string>(
     {}
   );
 
-  return { path, url, params };
-}
-
-export interface PathMatch<ParamKey extends string = string> {
-  path: string;
-  url: string;
-  params: Params<ParamKey>;
+  return { params, path, url };
 }
 
 function compilePath(
