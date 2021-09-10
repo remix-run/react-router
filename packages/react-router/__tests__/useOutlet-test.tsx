@@ -27,21 +27,21 @@ describe("useOutlet", () => {
         return useOutlet();
       }
 
-      function Profile() {
-        return <p>Profile</p>;
-      }
-
       let renderer = createTestRenderer(
         <Router initialEntries={["/users/profile"]}>
           <Routes>
             <Route path="users" element={<Users />}>
-              <Route path="profile" element={<Profile />} />
+              <Route path="profile" element={<h1>Profile</h1>} />
             </Route>
           </Routes>
         </Router>
       );
 
-      expect(renderer.toJSON()).toMatchSnapshot();
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <h1>
+          Profile
+        </h1>
+      `);
     });
   });
 });
