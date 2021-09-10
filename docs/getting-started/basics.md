@@ -1,5 +1,5 @@
 ---
-title: Getting Started with React Router
+title: React Router Basics
 order: 1
 ---
 
