@@ -3,8 +3,6 @@ title: API Reference
 order: 1
 ---
 
-<a name="top"></a>
-
 React Router is a collection of [React components](https://reactjs.org/docs/components-and-props.html), [hooks](#https://reactjs.org/docs/hooks-intro.html) and utilities that make it easy to build multi-page applications with [React](https://reactjs.org). This reference contains the function signatures and return types of the various interfaces in React Router.
 
 > [!Tip:]
@@ -12,11 +10,7 @@ React Router is a collection of [React components](https://reactjs.org/docs/comp
 > Please refer to [our guides](./advanced-guides) for more in-depth usage
 > examples of how you can use React Router to accomplish specific tasks.
 
-<a name="overview"></a>
-
 ## Overview
-
-<a name="packages"></a>
 
 ### Packages
 
@@ -30,8 +24,6 @@ Both `react-router-dom` and `react-router-native` automatically include `react-r
 
 If you [installed](./installation) React Router as a global (using a `<script>` tag), you can find the library on the `window.ReactRouterDOM` object. If you installed it from npm, you can simply [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) the pieces you need. The examples in this reference all use `import` syntax.
 
-<a name="setup"></a>
-
 ### Setup
 
 To get React Router working in your app, you need to render a router element at or near the root of your element tree. We provide several different routers, depending on where you're running your app.
@@ -42,8 +34,6 @@ To get React Router working in your app, you need to render a router element at 
 - [`<MemoryRouter>`](#memoryrouter) is useful in testing scenarios and as a reference implementation for the other routers
 
 These routers provide the context that React Router needs to operate in a particular environment. Each one renders [a `<Router>`](#router) internally, which you may also do if you need more fine-grained control for some reason. But it is highly likely that one of the built-in routers is what you need.
-
-<a name="routing"></a>
 
 ### Routing
 
@@ -58,8 +48,6 @@ A few low-level pieces that we use internally are also exposed as public API, in
 - [`matchRoutes`](#matchroutes) - matches a set of routes against a [location](#location)
 - [`createRoutesFromArray`](#createroutesfromarray) - creates a route config from a set of plain JavaScript objects
 - [`createRoutesFromChildren`](#createroutesfromchildren) - creates a route config from a set of React elements (i.e. [`<Route>`](#route) elements)
-
-<a name="navigation"></a>
 
 ### Navigation
 
@@ -76,8 +64,6 @@ There are a few low-level APIs that we use internally that may also prove useful
 - [`useLinkPressHandler`](#uselinkpresshandler) - returns an event handler to for navigation when building a custom `<Link>` in `react-router-native`
 - [`resolvePath`](#resolvepath) - resolves a relative path against a given URL pathname
 
-<a name="confirming-navigation"></a>
-
 ### Confirming Navigation
 
 Sometimes you need to confirm navigation before it actually happens. For example, if the user has entered some data into a form on the current page, you may want to prompt them to save the data before they navigate to a different page.
@@ -85,19 +71,13 @@ Sometimes you need to confirm navigation before it actually happens. For example
 - [`usePrompt`](#useprompt) and [`<Prompt>`](#prompt) trigger a platform-native confirmation prompt when the user tries to navigate away from the current page
 - [`useBlocker`](#useblocker) is a low-level interface that lets you keep the user on the same page and execute a function that will be called when they try to navigate away
 
-<a name="search-parameters"></a>
-
 ### Search Parameters
 
 Access to the URL [search parameters](https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams) is provided via [the `useSearchParams` hook](#usesearchparams).
 
 ---
 
-<a name="reference"></a>
-
 ## Reference
-
-<a name="browserrouter"></a>
 
 ### `<BrowserRouter>`
 
@@ -130,8 +110,6 @@ ReactDOM.render(
 );
 ```
 
-<a name="hashrouter"></a>
-
 ### `<HashRouter>`
 
 <details>
@@ -163,8 +141,6 @@ ReactDOM.render(
 );
 ```
 
-<a name="nativerouter"></a>
-
 ### `<NativeRouter>`
 
 <details>
@@ -195,8 +171,6 @@ function App() {
   return <NativeRouter>{/* The rest of your app goes here */}</NativeRouter>;
 }
 ```
-
-<a name="memoryrouter"></a>
 
 ### `<MemoryRouter>`
 
@@ -247,8 +221,6 @@ describe("My app", () => {
   });
 });
 ```
-
-<a name="link"></a>
 
 ### `<Link>`
 
@@ -307,8 +279,6 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 > one URL segment for each `..`. But an `<a href>` value handles `..` differently
 > when the current URL ends with `/` vs when it does not.
 
-<a name="link-native"></a>
-
 ### `<Link>` (React Native)
 
 > [!Note:]
@@ -348,8 +318,6 @@ function Home() {
   );
 }
 ```
-
-<a name="navlink"></a>
 
 ### `<NavLink>`
 
@@ -446,8 +414,6 @@ If the `end` prop is used, it will ensure this component isn't matched as "activ
 </NavLink>
 ```
 
-<a name="navigate"></a>
-
 ### `<Navigate>`
 
 <details>
@@ -506,8 +472,6 @@ class LoginForm extends React.Component {
 }
 ```
 
-<a name="outlet"></a>
-
 ### `<Outlet>`
 
 <details>
@@ -547,8 +511,6 @@ function App() {
 }
 ```
 
-<a name="prompt"></a>
-
 ### `<Prompt>`
 
 <details>
@@ -573,8 +535,6 @@ A `<Prompt>` is the declarative version of [`usePrompt`](#useprompt). It doesn't
 > use this feature in a [`React.Component`](https://reactjs.org/docs/react-component.html)
 > subclass where hooks are not able to be used.
 
-<a name="router"></a>
-
 ### `<Router>`
 
 <details>
@@ -597,10 +557,6 @@ interface RouterProps {
 `<Router>` is the low-level interface that is shared by all router components ([`<BrowserRouter>`](#browserrouter), [`<HashRouter>`](#hashrouter), [`<StaticRouter>`](#staticrouter), [`<NativeRouter>`](#nativerouter), and [`<MemoryRouter>`](#memoryrouter)). In terms of React, `<Router>` is a [context provider](https://reactjs.org/docs/context.html#contextprovider) that supplies routing information to the rest of the app.
 
 You probably never need to render a `<Router>` manually. Instead, you should use one of the higher-level routers depending on your environment. You only ever need one router in a given app.
-
-<a name="routes"></a>
-<a name="route"></a>
-<a name="routes-and-route"></a>
 
 ### `<Routes>` and `<Route>`
 
@@ -656,8 +612,6 @@ For example, in the following config the parent route renders an `<Outlet>` by d
 </Route>
 ```
 
-<a name="staticrouter"></a>
-
 ### `<StaticRouter>`
 
 <details>
@@ -698,8 +652,6 @@ function requestHandler(req, res) {
 http.createServer(requestHandler).listen(3000);
 ```
 
-<a name="createroutesfromarray"></a>
-
 ### `createRoutesFromArray`
 
 <details>
@@ -729,8 +681,6 @@ interface RouteObject {
 
 `createRoutesFromArray` is a helper that fills in the (potentially) missing pieces in an array of route objects. It is used internally by [`useRoutes`](#useroutes) to create route objects.
 
-<a name="createroutesfromchildren"></a>
-
 ### `createRoutesFromChildren`
 
 <details>
@@ -747,8 +697,6 @@ declare function createRoutesFromChildren(
 `createRoutesFromChildren` is a helper that creates route objects from React elements. It is used internally in a [`<Routes>` element](#routes) to generate a route config from its [`<Route>`](#route) children elements.
 
 See also [`createRoutesFromArray`](#createroutesfromarray).
-
-<a name="generatepath"></a>
 
 ### `generatePath`
 
@@ -768,8 +716,6 @@ generatePath("/users/:id", { id: 42 }); // "/users/42"
 generatePath("/files/:type/*", { type: "img", "*": "cat.jpg" }); // "/files/img/cat.jpg"
 ```
 
-<a name="location"></a>
-
 ### `Location`
 
 The term "location" in React Router refers to [the `Location` interface](https://github.com/ReactTraining/history/blob/master/docs/api-reference.md#location) from the [history](https://github.com/ReactTraining/history) library.
@@ -780,8 +726,6 @@ The term "location" in React Router refers to [the `Location` interface](https:/
 > core types in React Router come directly from that library including
 > `Location`, `To`, `Path`, `State`, and others. You can read more about
 > the history library in [its documentation](https://github.com/ReactTraining/history/tree/master/docs).
-
-<a name="matchroutes"></a>
 
 ### `matchRoutes`
 
@@ -807,8 +751,6 @@ interface RouteMatch {
 `matchRoutes` runs the route matching algorithm for a set of routes against a given [`location`](#location) to see which routes (if any) match. If it finds a match, an array of `RouteMatch` objects is returned, one for each route that matched.
 
 This is the heart of React Router's matching algorithm. It is used internally by [`useRoutes`](#useroutes) and the [`<Routes>` component](#routes) to determine which routes match the current location. It can also be useful in some situations where you want to manually match a set of routes.
-
-<a name="matchpath"></a>
 
 ### `matchPath`
 
@@ -838,8 +780,6 @@ interface PathMatch {
 
 The [`useMatch` hook](#usematch) uses this function internally to match a route path relative to the current location.
 
-<a name="resolvepath"></a>
-
 ### `resolvePath`
 
 <details>
@@ -863,8 +803,6 @@ interface Path {
 
 The [`useResolvedPath` hook](#useresolvedpath) uses `resolvePath` internally to resolve against the current `location.pathname`.
 
-<a name="useblocker"></a>
-
 ### `useBlocker`
 
 <details>
@@ -877,8 +815,6 @@ declare function useBlocker(blocker: Blocker, when = true): void;
 </details>
 
 `useBlocker` is a low-level hook that allows you to block navigation away from the current page, i.e. prevent the current location from changing. This is probably something you don't ever want to do unless you also display a confirmation dialog to the user to help them understand why their navigation attempt was blocked. In these cases, you probably want to use [`usePrompt`](#useprompt) or [`<Prompt>`](#prompt) instead.
-
-<a name="usehref"></a>
 
 ### `useHref`
 
@@ -898,8 +834,6 @@ The `useHref` hook returns a URL that may be used to link to the given `to` loca
 > You may be interested in taking a look at the source for the `<Link>`
 > component in `react-router-dom` to see how it uses `useHref` internally to
 > determine its own `href` value.
-
-<a name="uselinkclickhandler"></a>
 
 ### `useLinkClickHandler`
 
@@ -952,8 +886,6 @@ const Link = React.forwardRef(
 );
 ```
 
-<a name="uselinkpresshandler"></a>
-
 ### `useLinkPressHandler`
 
 <details>
@@ -994,8 +926,6 @@ function Link({ onPress, replace = false, state, to, ...rest }) {
 }
 ```
 
-<a name="useinroutercontext"></a>
-
 ### `useInRouterContext`
 
 <details>
@@ -1008,8 +938,6 @@ declare function useInRouterContext(): boolean;
 </details>
 
 The `useInRouterContext` hooks returns `true` if the component is being rendered in the context of a `<Router>`, `false` otherwise. This can be useful for some 3rd-party extensions that need to know if they are being rendered in the context of a React Router app.
-
-<a name="uselocation"></a>
 
 ### `useLocation`
 
@@ -1041,8 +969,6 @@ function App() {
 }
 ```
 
-<a name="usematch"></a>
-
 ### `useMatch`
 
 <details>
@@ -1057,8 +983,6 @@ declare function useMatch(pattern: PathPattern): PathMatch | null;
 Returns match data about a route at the given path relative to the current location.
 
 See [`matchPath`](#matchpath) for more information.
-
-<a name="usenavigate"></a>
 
 ### `useNavigate`
 
@@ -1099,8 +1023,6 @@ The `navigate` function has two signatures:
 - Either pass a `To` value (same type as `<Link to>`) with an optional second `{ replace, state }` arg or
 - Pass the delta you want to go in the history stack. For example, `navigate(-1)` is equivalent to hitting the back button.
 
-<a name="useoutlet"></a>
-
 ### `useOutlet`
 
 <details>
@@ -1113,8 +1035,6 @@ declare function useOutlet(): React.ReactElement | null;
 </details>
 
 Returns the element for the child route at this level of the route hierarchy. This hook is used internally by [`<Outlet>`](#outlet) to render child routes.
-
-<a name="useparams"></a>
 
 ### `useParams`
 
@@ -1151,8 +1071,6 @@ function App() {
 }
 ```
 
-<a name="useprompt"></a>
-
 ### `usePrompt`
 
 <details>
@@ -1184,8 +1102,6 @@ function SignupForm() {
 > If you need a more custom dialog box, you will have to use [`useBlocker`](#useblocker)
 > directly and handle accessibility issues yourself.
 
-<a name="useresolvedpath"></a>
-
 ### `useResolvedPath`
 
 <details>
@@ -1202,9 +1118,6 @@ This hook resolves the `pathname` of the location in the given `to` value agains
 This is useful when building links from relative values. For example, check out the source to [`<NavLink>`](#navlink) which calls `useResolvedPath` internally to resolve the full pathname of the page being linked to.
 
 See [`resolvePath`](#resolvepath) for more information.
-
-<a name="useroutes"></a>
-<a name="partialrouteobject"></a>
 
 ### `useRoutes`
 
@@ -1249,8 +1162,6 @@ function App() {
 ```
 
 See also [`createRoutesFromArray`](#createroutesfromarray).
-
-<a name="usesearchparams"></a>
 
 ### `useSearchParams`
 
@@ -1311,6 +1222,6 @@ function App() {
 > of the URL. Also note that the second arg to `setSearchParams` is
 > the same type as the second arg to `navigate`.
 
-<a name="createsearchparams"></a>
-
 A `createSearchParams(init: URLSearchParamsInit)` function is also exported that is essentially a thin wrapper around [`new URLSearchParams(init)`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams) that adds support for using objects with array values. This is the same function that `useSearchParams` uses internally for creating `URLSearchParams` objects from `URLSearchParamsInit` values.
+
+[Here's an external link](https://remix.run)

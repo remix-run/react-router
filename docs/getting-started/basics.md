@@ -1,27 +1,25 @@
 ---
 title: React Router Basics
-order: 1
+order: 2
 ---
-
-<a name="top"></a>
 
 React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, and on React Native.
 
-<a name="create"></a>
+If you're just getting started with React generally, we recommend you follow [the excellent Getting Started guide](https://reactjs.org/docs/getting-started.html) in the official docs. There is plenty of information there to get you up and running. React Router is compatible with React >= 16.8.
 
-## Create a new React Router app
-
-If you're just getting started with React, we recommend you follow [the excellent Getting Started guide](https://reactjs.org/docs/getting-started.html) in the official docs. There is plenty of information there to get you up and running. React Router is compatible with React >= 16.8.
-
-If you're just getting started with React Router, we recommend you read our guide about how to [add React and React Router to your website](add-to-a-website.md) or how to [add React Router to your React Native app](add-to-react-native.md) if you're building something with [React Native](https://facebook.github.io/react-native/).
-
-Once you have React Router installed and running, come back and continue with this guide.
-
-<a name="intro"></a>
+If you're just getting started with React Router, we recommend you read the [installation guide](./installation) guide first. Once you have React Router installed and running, come back and continue with this guide.
 
 ## Introduction
 
-The heart of React Router is the concept of a _route_. A route represents a "page" in your app (or a "view" if you're on React Native). React Router represents routes internally with URLs, also called "locations". React Router lets you declare React elements that it renders when the user visits a route.
+The heart of React Router is the concept of a _route_. Routes in React Router might a little different than you're used to. Let's get some vocabulary figured out to help us understand them better:
+
+- **URL** - The URL in the address bar. A lot of people use the term "url" and "route" interchangeably, but this is not a "route" in React Router, it's just a url.
+- **History Stack** - As the user navigates around, the browser puts entries in the history stack. Think about when you click and hold the back button in a browser, you can see the history stack right there.
+- **Location** - When the user visits a URL, this becomes a "location" entry in the history stack. The same url can have multiple locations in the stack. The user could have clicked "/home", "/messages", and "/home" again: three entries, only two URLs.
+- **URL Segment** - URLs are made up of segments divided by `/`. Sometimes you want to match dynamically on specific segments of the url, like getting the user id out of `"/users/123"`.
+- **Path Pattern** - These look like URLs but can have special characters for matching urls to routes, like dynamic params (`"/users/:userId"`) or catchall (`"/docs/\*"`). They aren't URLs, they're url path patterns that React Router will match.
+
+Alright, so what is a route? A Route is a React component that conditionally renders its **element** when **URL segments** match the route's **path pattern** as the user navigates to **locations** in the **history stack**.
 
 A simple web app with two pages, "home" and "about" might look something like this:
 
@@ -50,17 +48,13 @@ ReactDOM.render(
 );
 ```
 
-The [`<Router>` element](../api-reference.md#router) provides information about the current [location](../api-reference.md#location) to the rest of its descendants. This example uses a [`<BrowserRouter>`](../api-reference.md#browserrouter). You should only ever render a single `<Router>` at or near the root of your component hierarchy.
+The [`<Router>`](../api-reference.md#router) provides information about the current [location](../api-reference.md#location) to the rest of its descendants. This example uses a [`<BrowserRouter>`](../api-reference.md#browserrouter). You should only ever render a single `<Router>` at or near the root of your component hierarchy.
 
-The [`<Routes>` element](../api-reference.md#routes) is where you declare what routes you have and what element each [`<Route>` element](../api-reference.md#route) renders when the location matches its `path`.
-
-The remaining examples in this guide assume you are importing React and rendering an `<App>` element inside a `<Router>`, but to be brief we'll just show the `<Routes>` you'll need for that example.
-
-<a name="navigation"></a>
+The [`<Routes>`](../api-reference.md#routes) element is where you declare the routes you have and what element each [`<Route>`](../api-reference.md#route) renders when the location matches its `path` pattern.
 
 ## Navigation
 
-React Router provides [a `Link` component](../api-reference.md#link) that you can use to let the user [navigate](../api-reference.md#navigation) around the app.
+React Router provides a [`Link`](../api-reference.md#link) component that you can use to let the user [navigate](../api-reference.md#navigation) around the app. Link is really just `<a href>` except it navigates without the browser making full page reloads.
 
 ```tsx
 import { Routes, Route, Link } from "react-router-dom";
@@ -93,18 +87,16 @@ function App() {
 }
 ```
 
-<a name="params"></a>
-
 ## Reading URL Parameters
 
-You can use dynamic `:id`-style segments in your `<Route path>` to extract values that you can use to fetch data or render something in your app. The [`useParams` hook](../api-reference.md#useparams) returns an object of key/value pairs of URL parameters.
+If you use `:id`-style dynamic segments in `<Route path>`, React Router will to extract the values from the URL and make them available to you from the [`useParams`](../api-reference.md#useparams) hook. The name of the segment in the path becomes the name of the key on the params object:
 
-```tsx
+```tsx [1,4,11]
 import { Routes, Route, useParams } from "react-router-dom";
 
 function Invoice() {
-  let { invoiceId } = useParams();
-  return <h1>Invoice {invoiceId}</h1>;
+  let params = useParams();
+  return <h1>Invoice {params.invoiceId}</h1>;
 }
 
 function App() {
@@ -116,68 +108,61 @@ function App() {
 }
 ```
 
-<a name="ranking"></a>
+Note that the path segment `:invoiceId` and the param's key `params.invoiceId` match up.
+
+A very common use-case is fetching data when the component renders:
+
+```tsx
+function Invoice() {
+  let { invoiceId } = useParams();
+  let invoice = useFakeFetch(`/api/invoices/${invoiceId}`);
+  return invoice ? (
+    <div>
+      <h1>{invoice.customerName}</h1>
+    </div>
+  ) : (
+    <Loading />
+  );
+}
+```
 
 ## Ambiguous Paths and Ranking
 
-When determining which route to render, the `Routes` element picks the route with the path that best matches the current location, which is usually the path that is the most specific.
+Sometimes multiple route paths match the URL. When determining which route to render in these situations, the route with a path that _best_ matches the url will be picked.
 
-For example, a route with `path="invoices/sent"` may match only `/invoices/sent`, so it is more specific than `path="invoices/:invoiceId"` which matches any URL that begins with `/invoices` (`/invoices/123`, `/invoices/cupcakes`, etc). You can organize your code however you'd like and put the routes in whatever order makes the most sense to you.
+For example, consider these two routes:
 
 ```tsx
-import { Routes, Route, useParams } from "react-router-dom";
-
-function Invoice() {
-  let { invoiceId } = useParams();
-  return <h1>Invoice {invoiceId}</h1>;
-}
-
-function SentInvoices() {
-  return <h1>Sent Invoices</h1>;
-}
-
-function App() {
-  return (
-    <Routes>
-      <Route path="invoices/:invoiceId" element={<Invoice />} />
-      <Route path="invoices/sent" element={<SentInvoices />} />
-    </Routes>
-  );
-}
+<Routes>
+  <Route path="invoices/:invoiceId" element={<Invoice />} />
+  <Route path="invoices/sent" element={<SentInvoices />} />
+</Routes>
 ```
 
-<a name="nesting"></a>
+`<Route path="invoices/:invoiceId">` can match an infinite number of URLs like `"/invoices/123"` and `"/invoices/cupcake"`. `<Route path="/invoices/sent">`, however, can only match one URL: `"/invoices/sent"`.
+
+So what happens when the URL is `"/invoices/sent"` and both paths match?
+
+`<Route path="/invoices/sent">` is more specific than `<Route path="invoices/:invoiceId">` so `<SentInvoices>` will be rendered. It's the _best_ match. Unlike previous versions of React Router, this means you can organize your code however you'd like, putting the routes in whatever order makes the most sense to you.
+
+We could render the same routes in the opposite order without changing what your app renders at `"/invoices/sent"`.
+
+```tsx
+<Routes>
+  <Route path="invoices/sent" element={<SentInvoices />} />
+  <Route path="invoices/:invoiceId" element={<Invoice />} />
+</Routes>
+```
+
+There's a lot more to the way React Router picks the best match than just this but you don't really ever even have to think about it so we'll leave it at that.
 
 ## Nested Routes
 
-Routes may be nested inside one another, and their paths will nest too. Components that are used higher in the route hierarchy may render [an `<Outlet>` element](../api-reference.md#outlet) to render their child routes.
+This is one of the most powerful features of React Router making it so you don't have to mess around with complicated layout code. The vast majority of your layouts are coupled to segments of the URL and React Router embraces this fully.
+
+Routes can be nested inside one another, and their paths will nest too (child inheriting the parent).
 
 ```tsx
-import { Routes, Route, Outlet } from "react-router-dom";
-
-function Invoices() {
-  return (
-    <div>
-      <h1>Invoices</h1>
-
-      {/*
-        This element renders the element for the child route, which in
-        this case will be either <SentInvoices> or <IndividualInvoice>
-      */}
-      <Outlet />
-    </div>
-  );
-}
-
-function IndividualInvoice() {
-  let { invoiceId } = useParams();
-  return <h1>Invoice {invoiceId}</h1>;
-}
-
-function SentInvoices() {
-  return <h1>Sent Invoices</h1>;
-}
-
 function App() {
   return (
     <Routes>
@@ -190,10 +175,84 @@ function App() {
 }
 ```
 
-Notice in the example above how nested route paths build on their parent path. This nesting behavior can be really useful for creating [navigation](../api-reference.md#navigation) and layouts where the surrounding UI remains consistent while the inner content changes between routes.
+This route config defined three route paths:
+
+- `"/invoices"`
+- `"/invoices/sent"`
+- `"/invoices/sent/:invoiceId"`
+
+When the URL is `"/invoices/sent"` the component tree will be:
+
+```tsx
+<App>
+  <Invoices>
+    <SentInvoices />
+  </Invoices>
+</App>
+```
+
+When the URL is `"/invoices/123"`, the component tree will:
+
+```tsx
+<App>
+  <Invoices>
+    <Invoice />
+  </Invoices>
+</App>
+```
+
+Notice the inner component that changed with the URL (`<SentInvoices>` and `<Invoice>`). The parent route (`<Invoices>`) is responsible for making sure the matching child route is rendered with [`<Outlet>`](../api-reference.md#outlet). Here's the full example:
+
+```tsx [18]
+import { Routes, Route, Outlet } from "react-router-dom";
+
+function App() {
+  return (
+    <Routes>
+      <Route path="invoices" element={<Invoices />}>
+        <Route path=":invoiceId" element={<Invoice />} />
+        <Route path="sent" element={<SentInvoices />} />
+      </Route>
+    </Routes>
+  );
+}
+
+function Invoices() {
+  return (
+    <div>
+      <h1>Invoices</h1>
+      <Outlet />
+    </div>
+  );
+}
+
+function Invoice() {
+  let { invoiceId } = useParams();
+  return <h1>Invoice {invoiceId}</h1>;
+}
+
+function SentInvoices() {
+  return <h1>Sent Invoices</h1>;
+}
+```
+
+The nested url segments map to nested component trees. This is perfect for creating UI that has persistent navigation in layouts with an inner section that changes with the URL. If you look around the web you'll notice many websites (and especially web apps) have multiple levels of layout nesting.
+
+Here's a another example of a root layout with navigation that persists while the inner page swaps out with the URL:
 
 ```tsx
 import { Routes, Route, Link, Outlet } from "react-router-dom";
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="dashboard" element={<Dashboard />} />
+      </Route>
+    </Routes>
+  );
+}
 
 function Layout() {
   return (
@@ -217,20 +276,71 @@ function Invoices() {
 function Dashboard() {
   return <h1>Dashboard</h1>;
 }
+```
 
+## Index Routes
+
+Index routes can be thought of as "default child routes". When a parent route has multiple children, but the URL is just at the parent's path, you probably want to render something into the outlet.
+
+Consider this example:
+
+```tsx
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route path="invoices" element={<Invoices />} />
-        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="activity" element={<Activity />} />
+      </Route>
+    </Routes>
+  );
+}
+
+function Layout() {
+  return (
+    <div>
+      <GlobalNav />
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+```
+
+This page looks great at "/invoices" and "/activity", but at "/" it's just a blank page in `<main>` because there is no child route to render there. For this we can add an index route:
+
+```tsx [5]
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Activity />}>
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="activity" element={<Activity />} />
       </Route>
     </Routes>
   );
 }
 ```
 
-<a name="relative-links"></a>
+Now at "/" the `<Activity>` element will render inside the outlet.
+
+You can have an index route at any level of the route hierarchy that will render when the parent matches but none of it's other children do.
+
+```tsx
+function App() {
+  return (
+    <Routes>
+      <Route index element={<Home />} />
+      <Route path="dashboard" element={<Dashboard />}>
+        <Route index element={<DashboardHome />} />
+        <Route path="invoices" element={<DashboardInvoices />} />
+      </Route>
+    </Routes>
+  );
+}
+```
 
 ## Relative Links
 
@@ -277,28 +387,6 @@ function App() {
 }
 ```
 
-<a name="index-routes"></a>
-
-## Index Routes
-
-Nested routes may use `path="/"` to indicate they should render at the path of the parent component. You can think about these routes like index pages for the rest of the child routes.
-
-```tsx
-function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="dashboard" element={<Dashboard />}>
-        <Route path="/" element={<DashboardHome />} />
-        <Route path="invoices" element={<DashboardInvoices />} />
-      </Route>
-    </Routes>
-  );
-}
-```
-
-<a name="not-found-routes"></a>
-
 ## "Not Found" Routes
 
 When no other route matches the URL, you can render a "not found" route using `path="*"`. This route will match any URL, but will have the weakest precedence so the router will only pick it if no other routes match.
@@ -314,8 +402,6 @@ function App() {
   );
 }
 ```
-
-<a name="multiple-sets-of-routes"></a>
 
 ## Multiple Sets of Routes
 
@@ -350,13 +436,20 @@ function App() {
 }
 ```
 
-<a name="descendant-routes"></a>
-
-## Descendant Routes
+## Descendant `<Routes>`
 
 You can render [a `<Routes>` element](../api-reference.md#routes) anywhere you need one, including deep within the component tree of another `<Routes>`. These will work just the same as any other `<Routes>`, except they will automatically build on the path of the route that rendered them. If you do this, _make sure to put a \* at the end of the parent route's path_. Otherwise the parent route won't match the URL when it is longer than the parent route's path, and your descendant `<Routes>` won't ever show up.
 
-```tsx
+```tsx [5]
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="dashboard/*" element={<Dashboard />} />
+    </Routes>
+  );
+}
+
 function Dashboard() {
   return (
     <div>
@@ -368,23 +461,12 @@ function Dashboard() {
     </div>
   );
 }
-
-function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="dashboard/*" element={<Dashboard />} />
-    </Routes>
-  );
-}
 ```
-
-<a name="navigating"></a>
 
 ## Navigating Programmatically
 
 If you need to navigate programmatically (like after the user submits a form),
-use [the `useNavigate` hook](../api-reference.md#usenavigate) to get a function you can use to navigate.
+use the [`useNavigate`](../api-reference.md#usenavigate) hook to get a function you can use to navigate.
 
 ```tsx
 import { useNavigate } from "react-router-dom";
