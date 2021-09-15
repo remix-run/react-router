@@ -5,6 +5,10 @@ order: 1
 
 ## Introduction
 
+React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, and on React Native.
+
+If you're just getting started with React generally, we recommend you follow [the excellent Getting Started guide](https://reactjs.org/docs/getting-started.html) in the official docs. There is plenty of information there to get you up and running. React Router is compatible with React >= 16.8.
+
 We'll keep this tutorial quick and to the point. By the end you'll know the APIs you deal with day-to-day with React Router. After that, you can dig into some of the other docs to get a deeper understanding.
 
 While building a little bookeeping app we'll cover:
@@ -17,10 +21,11 @@ While building a little bookeeping app we'll cover:
 - Using URL params for data loading
 - Using URL Search params
 - Creating your own behaviors through composition
+- Server Rendering
 
 ## Installation
 
-You can skip bundlers and use [this codesandbox](https://codesandbox) to code along in your browser.
+You can skip bundlers and use [this repl.it](https://codesandbox) to code along in your browser. But note that their platform breaks the browser history in a lot of ways, so using the back/forward/refresh buttons in codesandbox are not reliable. Since that's the whole point of
 
 If you prefer to do it locally, use [Create React App](https://npm.im/create-react-app) to get started:
 
@@ -683,3 +688,101 @@ export default function Invoice() {
 ```
 
 Of course, we didn't really change anything about our data in this example. We're just showing you the API you'd use along with whatever data abstractions you've got.
+
+## Server Rendering
+
+The most basic server rendering in React Router is pretty straightforward.
+
+However, there's a lot more to consider than just getting the right routes to render. Here's an incomplete list of things you'll need to consider:
+
+- Bundling your code for the server and the browser
+- Not bundling server-only code into the browser bundles
+- Server Side data loading so you actually have something to render
+- Data loading strategies that work on the client and server
+- Handling code splitting in the server and client
+- Proper HTTP status codes and redirects
+- Deployment
+
+Setting all of this up well can be really difficult.
+
+If you want to server render your React Router app, we highly recommend you use [Remix](https://remix.run). This is another project of ours. It's built on top of React Router and handles all of the things mentioned above and more. Give it a shot!
+
+If you want to tackle it on your own, you'll need to use `<StaticRouter>` on the server.
+
+First you'll need some sort of "app" or "root" component that gets rendered on the server and in the browser:
+
+```js filename=App.js
+export default function App() {
+  return (
+    <html>
+      <head>
+        <title>Server Rendered App</title>
+      </head>
+      <body>
+        <Routes>
+          <Route path="/" element={<div>Home</div>} />
+          <Route path="/about" element={<div>About</div>} />
+        </Routes>
+        <script src="/build/client.entry.js" />
+      </body>
+    </html>
+  );
+}
+```
+
+Here's the browser entry point (you've already seen this kind of code in this tutorial):
+
+```js filename=client.entry.js
+import ReactDOM from "react-dom";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App";
+
+ReactDOM.render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+  document.documentElement
+);
+```
+
+And finally, here's a simple express server that renders the same thing.
+
+```js filename=server.entry.js
+import express from "express"
+import ReactDOMServer from "react-dom/server";
+import { StaticRouter } from "react-router-dom";
+import App from "./App";
+
+let app = express();
+
+app.get("*", ((req, res)) => {
+  let html = ReactDOMServer.renderToString(
+    <StaticRouter location={req.url}>
+      <App/>
+    </StaticRouter>
+  );
+  res.send("<!DOCTYPE html>" + html);
+})
+
+app.listen(3000);
+```
+
+The only real differences from the client entry are:
+
+- `StaticRouter` instead of `BrowserRouter`
+- passing the URL from the server to `<StaticRouter url>`
+- Using `ReactDOMServer.renderToString` instead of `ReactDOM.render`.
+
+Some parts you'll need to fill for this to work:
+
+- How to bundle the code to work in the browser and server
+- How to know where the client entry is for `<script>` in the `<App>` component.
+- Figuring out data loading (especially for the `<title>`).
+
+Again, we recommend you give [Remix](https://remix.run) a look.
+
+## Getting Help
+
+Congrats! You're all done with this tutorial. We hope it helped you get your bearings with React Router.
+
+If you're having trouble, check out the [Resources](/resources) page to get help. Good luck!

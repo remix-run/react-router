@@ -1,13 +1,7 @@
 ---
-title: Overview
+title: Main Concepts
 order: 2
 ---
-
-React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, and on React Native.
-
-If you're just getting started with React generally, we recommend you follow [the excellent Getting Started guide](https://reactjs.org/docs/getting-started.html) in the official docs. There is plenty of information there to get you up and running. React Router is compatible with React >= 16.8.
-
-If you're just getting started with React Router, we recommend you read the [installation guide](./installation) guide first. Once you have React Router installed and running, come back and continue with this guide.
 
 ## Introduction
 
