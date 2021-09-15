@@ -13,7 +13,7 @@ While building a little bookeeping app we'll cover:
 - Navigating with Link
 - Creating Links with active styling
 - Using Nested Routes for Layout
-- Navigating imperatively
+- Navigating programatically
 - Using URL params for data loading
 - Using URL Search params
 - Creating your own behaviors through composition
@@ -33,7 +33,7 @@ npm start
 
 If you used Create React App, open up App.js and make sure it's pretty boring:
 
-```tsx bad filename=src/App.js
+```tsx filename=src/App.js
 export default function App() {
   return (
     <div>
@@ -502,6 +502,7 @@ export default function Invoices() {
     <div style={{ display: "flex" }}>
       <nav style={{ borderRight: "solid 1px", padding: "1rem" }}>
         <input
+          value={searchParams.get("filter") || ""}
           onChange={event => {
             let filter = event.target.value;
             if (filter) {
@@ -538,31 +539,147 @@ export default function Invoices() {
 }
 ```
 
-## Custom Behavior through Composition
+## Custom Behavior
 
-If you filter the list and then click a link, you'll notice that:
+If you filter the list and then click a link, you'll notice that the list is no longer filtered and the search param is cleared in the input and the URL. You might not like this. Maybe you want to keep the list filtered and keep the param in the URL.
 
-- the search params in the URL go away
-- the list is no longer filtered
-- the input retains the filter
-
-You might not like this state of your app. At this point it's a product decision for you to make, but there are two solid choices
-
-1. Clear the input when the user clicks an item
-2. Or persist the query string
-
-Let's clear the input first. We can do it by simply controlling its value with the search params:
+We can persist the query string when we click a link by adding it to the link's href. We'll do that by composing `NavLink` and `useLocation` from React Router into our own `QueryNavLink` (maybe there's a better name, but that's what we're going with today).
 
 ```js
-<input
-  value={searchParams.get("filter") || ""}
-  onChange={event => {
-    let filter = event.target.value;
-    if (filter) {
-      setSearchParams({ filter });
-    } else {
-      setSearchParams({});
-    }
-  }}
-/>
+import { useLocation, NavLink } from "react-router-dom";
+
+function QueryNavLink({ to, ...props }) {
+  let location = useLocation();
+  return <NavLink to={to + location.search} {...props} />;
+}
 ```
+
+Like `useSearchParams`, `useLocation` tells us information about the URL, but it's lower level. It looks something like this:
+
+```js
+{
+  pathame: "/invoices",
+  search: "?filter=sa",
+  hash: "",
+  state: null,
+  key: "ae4cz2j"
+}
+```
+
+With that information, the task in `QueryNavLink` is pretty simple: add the `location.search` onto the `to` prop. You might be thinking, "Geez, seems like this should be a built-in component of React Router or something?". Well, let's look at another example.
+
+What if you had links like this on an ecommerce site.
+
+```jsx
+<Link to="/shoes?brand=nike">Nike</Link>
+<Link to="/shoes?brand=vans">Vans</Link>
+```
+
+And then you wanted to style them as "active" when the url search params match the brand? You could make a component that does exactly that pretty quickly with stuff you've learned in this tutorial:
+
+```jsx
+function BrandLink({ brand, ...props }) {
+  let [params] = useSearchParams();
+  let isActive = params.getAll("brand").includes(brand);
+  return (
+    <Link
+      style={{ color: isActive ? "red" : "" }}
+      to={`/shoes?brand=${brand}`}
+      {...props}
+    />
+  );
+}
+```
+
+That's going to be active for `"/shoes?brand=nike"` as well as `"/shoes?brand=nike&brand=vans"`. Maybe you want it to be active when there's only one brand selected:
+
+```js
+let brands = params.getAll("brand");
+let isActive = brands.includes(brand) && brands.length === 1;
+// ...
+```
+
+Or maybe you want the links to be _additive_ (clicking Nike and then Vans adds both brands to the search params) instead of replacing the brand:
+
+```jsx [4-6,10]
+function BrandLink({ brand, ...props }) {
+  let [params] = useSearchParams();
+  let isActive = params.getAll("brand").includes(brand);
+  if (!isActive) {
+    params.append("brand", brand);
+  }
+  return (
+    <Link
+      style={{ color: isActive ? "red" : "" }}
+      to={`/shoes?${params.toString()}`}
+      {...props}
+    />
+  );
+}
+```
+
+Or maybe you want it to add the brand if it's not there already and remove it if it's clicked again!
+
+```jsx [6-12]
+function BrandLink({ brand, ...props }) {
+  let [params] = useSearchParams();
+  let isActive = params.getAll("brand").includes(brand);
+  if (!isActive) {
+    params.append("brand", brand);
+  } else {
+    params = new URLSearchParams(
+      Array.from(params).filter(
+        ([key, value]) => key !== "brand" || value !== branch
+      )
+    );
+  }
+  return (
+    <Link
+      style={{ color: isActive ? "red" : "" }}
+      to={`/shoes?${params.toString()}`}
+      {...props}
+    />
+  );
+}
+```
+
+As you can see, even in this fairly simple example there are a lot of valid behaviors you might want. React Router doesn't try to solve every use-case we've ever heard of directly. Instead, we give you the components and hooks to compose whatever behavior you need.
+
+## Navigating Programatically
+
+You're almost done! Most of the time the URL changes it was the user who clicked a link to change it. But sometimes you, the programmer, want to change the URL. A very common use case is after a data update like creating or deleting a record.
+
+Let's add a button that marks the invoice as paid and then navigates up to the index route.
+
+```js lines=[1,5,16-24] filename=src/routes/invoice.js
+import { useParams, useNavigate } from "react-router-dom";
+import { getInvoice } from "../data";
+
+export default function Invoice() {
+  let navigate = useNavigate();
+  let params = useParams();
+  let invoice = getInvoice(parseInt(params.invoiceId, 10));
+
+  return (
+    <main style={{ padding: "1rem" }}>
+      <h2>Total Due: {invoice.amount}</h2>
+      <p>
+        {invoice.name}: {invoice.number}
+      </p>
+      <p>Due Date: {invoice.due}</p>
+      <p>
+        <button
+          onClick={() => {
+            // markPaid(invoice);
+            navigate("/invoices");
+          }}
+        >
+          Mark Paid
+        </button>
+      </p>
+    </main>
+  );
+}
+```
+
+Of course, we didn't really change anything about our data in this example. We're just showing you the API you'd use along with whatever data abstractions you've got.
