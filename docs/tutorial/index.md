@@ -1,5 +1,7 @@
 ---
-title: React Router Tutorial
+title: Tutorial
+siblingLinks: true
+order: 2
 ---
 
 Principles we should cover:

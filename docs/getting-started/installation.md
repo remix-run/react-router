@@ -1,6 +1,6 @@
 ---
-title: Installing React Router
-order: 1
+title: Installation
+order: 3
 ---
 
 This document describes the most common ways people use React Router with various tools in the React Ecosystem.
