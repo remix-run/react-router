@@ -274,8 +274,7 @@ export function Routes({
   children,
   location
 }: RoutesProps): React.ReactElement | null {
-  let routes = createRoutesFromChildren(children);
-  return useRoutes(routes, { location, basename });
+  return useRoutes(createRoutesFromChildren(children), { location, basename });
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -335,9 +334,8 @@ export function useHref(to: To): string {
   );
 
   let navigator = React.useContext(NavigatorContext);
-  let path = useResolvedPath(to);
 
-  return navigator.createHref(path);
+  return navigator.createHref(useResolvedPath(to));
 }
 
 /**
@@ -387,8 +385,7 @@ export function useMatch<ParamKey extends string = string>(
     `useMatch() may be used only in the context of a <Router> component.`
   );
 
-  let location = useLocation() as Location;
-  return matchPath<ParamKey>(pattern, location.pathname);
+  return matchPath<ParamKey>(pattern, useLocation().pathname);
 }
 
 /**
@@ -419,9 +416,8 @@ export function useNavigate(): NavigateFunction {
   );
 
   let navigator = React.useContext(NavigatorContext);
-  let { basename, pathname: parentRoutePathname } =
-    React.useContext(RouteContext);
-  let { pathname: currentLocationPathname } = useLocation();
+  let { basename, pathname: routePathname } = React.useContext(RouteContext);
+  let { pathname: locationPathname } = useLocation();
 
   let activeRef = React.useRef(false);
   React.useEffect(() => {
@@ -445,15 +441,15 @@ export function useNavigate(): NavigateFunction {
           let path = resolvePath(
             to,
             // If a pathname is explicitly provided in `to`, it should be
-            // relative to the parent route context. This is explained in `Note
-            // on `<Link to>` values` in our migration guide from v5 as a means
-            // of disambiguation between `to` values that begin with `/` and
-            // those that do not. However, this is problematic for `to` values
-            // that do not provide a pathname. `to` can simply be a search or
-            // hash string, in which case we should assume that the navigation
-            // is relative to the current location's pathname and *not* the
-            // pathname from the parent route.
-            toPathname ? parentRoutePathname : currentLocationPathname,
+            // relative to the route context. This is explained in `Note on
+            // `<Link to>` values` in our migration guide from v5 as a means of
+            // disambiguation between `to` values that begin with `/` and those
+            // that do not. However, this is problematic for `to` values that do
+            // not provide a pathname. `to` can simply be a search or hash
+            // string, in which case we should assume that the navigation is
+            // relative to the current location's pathname and *not* the
+            // route pathname.
+            toPathname ? routePathname : locationPathname,
             basename
           );
 
@@ -470,7 +466,7 @@ export function useNavigate(): NavigateFunction {
         );
       }
     },
-    [basename, navigator, parentRoutePathname, currentLocationPathname]
+    [basename, navigator, routePathname, locationPathname]
   );
 
   return navigate;
@@ -504,10 +500,10 @@ export function useParams<Key extends string = string>(): Readonly<
  * @see https://reactrouter.com/api/useResolvedPath
  */
 export function useResolvedPath(to: To): Path {
-  let { pathname, basename } = React.useContext(RouteContext);
+  let { basename, pathname: fromPathname } = React.useContext(RouteContext);
   return React.useMemo(
-    () => resolvePath(to, pathname, basename),
-    [to, pathname, basename]
+    () => resolvePath(to, fromPathname, basename),
+    [to, fromPathname, basename]
   );
 }
 
@@ -567,7 +563,7 @@ export function useRoutes(
     warningOnce(
       parentPathname,
       !parentRoute || parentPath.endsWith("*"),
-      `You rendered descendant <Routes> (or called \`useRoutes\`) at ` +
+      `You rendered descendant <Routes> (or called \`useRoutes()\`) at ` +
         `"${parentPathname}" (under <Route path="${parentPath}">) but the ` +
         `parent route path has no trailing "*". This means if you navigate ` +
         `deeper, the parent won't match anymore and therefore the child ` +
@@ -923,8 +919,20 @@ function matchRouteBranch<ParamKey extends string = string>(
  * A PathPattern is used to match on some portion of a URL pathname.
  */
 export interface PathPattern {
+  /**
+   * A string to match against a URL pathname. May contain `:id`-style segments
+   * to indicate placeholders for dynamic parameters. May also end with `/*` to
+   * indicate matching the rest of the URL pathname.
+   */
   path: string;
+  /**
+   * Should be `true` if the static portions of the `path` should be matched in
+   * the same case.
+   */
   caseSensitive?: boolean;
+  /**
+   * Should be `true` if this pattern should match the entire URL pathname.
+   */
   end?: boolean;
 }
 
