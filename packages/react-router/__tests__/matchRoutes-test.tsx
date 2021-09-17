@@ -42,6 +42,7 @@ describe("matchRoutes", () => {
 
   it("matches root * routes correctly", () => {
     expect(pickPaths(routes, "/not-found")).toEqual(["*"]);
+    expect(pickPaths(routes, "/hometypo")).toEqual(["*"]);
   });
 
   it("matches index routes correctly", () => {

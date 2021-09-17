@@ -9,6 +9,30 @@ import {
 import type { Path } from "history";
 
 describe("useResolvedPath", () => {
+  it("resolves . to the route path inside a * route", () => {
+    let path!: Path;
+    function ResolvePath({ path: pathProp }: { path: string }) {
+      path = useResolvedPath(pathProp);
+      return null;
+    }
+
+    createTestRenderer(
+      <Router initialEntries={["/users/mj"]}>
+        <Routes>
+          <Route path="/users">
+            <Route path="*" element={<ResolvePath path="." />} />
+          </Route>
+        </Routes>
+      </Router>
+    );
+
+    expect(path).toMatchObject({
+      pathname: "/users/mj",
+      search: "",
+      hash: ""
+    });
+  });
+
   it("path string resolves to Path object", () => {
     let path!: Path;
     function ResolvePath({ path: pathProp }: { path: string }) {
