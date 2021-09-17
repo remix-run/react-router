@@ -1,12 +1,12 @@
 import type { RouteObject } from "react-router";
 import { matchRoutes } from "react-router";
 
-describe("path matching", () => {
-  function pickPaths(routes: RouteObject[], pathname: string) {
-    let matches = matchRoutes(routes, { pathname });
-    return matches ? matches.map(match => match.route.path || "") : null;
-  }
+function pickPaths(routes: RouteObject[], pathname: string): string[] | null {
+  let matches = matchRoutes(routes, pathname);
+  return matches && matches.map(match => match.route.path || "");
+}
 
+describe("path matching", () => {
   test("root vs. dynamic", () => {
     let routes = [{ path: "/" }, { path: ":id" }];
     expect(pickPaths(routes, "/")).toEqual(["/"]);
@@ -77,11 +77,7 @@ describe("path matching", () => {
       },
       {
         path: "courses",
-        children: [
-          { path: "react-fundamentals" },
-          { path: "advanced-react" },
-          { path: "*" }
-        ]
+        children: [{ path: "react-fundamentals" }, { path: "advanced-react" }]
       },
       { path: "/" },
       { path: "*" }

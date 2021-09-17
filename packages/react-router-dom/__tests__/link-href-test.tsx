@@ -5,8 +5,7 @@ import {
   Outlet,
   Routes,
   Route,
-  Link,
-  useRoutes
+  Link
 } from "react-router-dom";
 import type { ReactTestRenderer } from "react-test-renderer";
 
@@ -54,12 +53,12 @@ describe("Link href", () => {
         return (
           <div>
             Login page{" "}
-            <Link to="/auth/forget-password">Go to forgot password</Link>
+            <Link to="/auth/forgot-password">Go to forgot password</Link>
           </div>
         );
       }
 
-      function ForgetPassword() {
+      function ForgotPassword() {
         return (
           <div>
             Forgot password page{" "}
@@ -69,16 +68,12 @@ describe("Link href", () => {
       }
 
       function AuthRoutes() {
-        return useRoutes([
-          {
-            path: "login",
-            element: <Login />
-          },
-          {
-            path: "forget-password",
-            element: <ForgetPassword />
-          }
-        ]);
+        return (
+          <Routes>
+            <Route path="login" element={<Login />} />
+            <Route path="forgot-password" element={<ForgotPassword />} />
+          </Routes>
+        );
       }
 
       let renderer!: ReactTestRenderer;
@@ -96,7 +91,7 @@ describe("Link href", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor.props.href).toEqual("/auth/forget-password");
+      expect(anchor.props.href).toEqual("/auth/forgot-password");
     });
   });
 

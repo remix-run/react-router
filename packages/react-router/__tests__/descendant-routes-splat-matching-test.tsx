@@ -5,10 +5,6 @@ import { MemoryRouter as Router, Outlet, Routes, Route } from "react-router";
 describe("Descendant <Routes> splat matching", () => {
   describe("when the parent route path ends with /*", () => {
     it("works", () => {
-      function ReactFundamentals() {
-        return <h1>React Fundamentals</h1>;
-      }
-
       function ReactCourses() {
         return (
           <div>
@@ -16,7 +12,7 @@ describe("Descendant <Routes> splat matching", () => {
             <Routes>
               <Route
                 path="react-fundamentals"
-                element={<ReactFundamentals />}
+                element={<h1>React Fundamentals</h1>}
               />
             </Routes>
           </div>
