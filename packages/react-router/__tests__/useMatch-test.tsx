@@ -50,7 +50,7 @@ describe("useMatch", () => {
 
       expect(match).toMatchObject({
         params: {},
-        pathname: "/home",
+        pathname: "/home/",
         pattern: { path: "home" }
       });
     });

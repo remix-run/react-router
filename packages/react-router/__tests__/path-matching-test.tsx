@@ -160,11 +160,11 @@ describe("path matching with a basename", () => {
     expect(matches).toMatchObject([
       {
         pathname: "/users/michael",
-        params: { userId: "michael" }
+        params: { userId: "michael", courseId: "react" }
       },
       {
         pathname: "/users/michael/subjects",
-        params: { userId: "michael" }
+        params: { userId: "michael", courseId: "react" }
       },
       {
         pathname: "/users/michael/subjects/react",
@@ -177,19 +177,21 @@ describe("path matching with a basename", () => {
 describe("path matching with splats", () => {
   describe("splat after /", () => {
     let routes = [{ path: "users/:id/files/*" }];
-    let match = matchRoutes(routes, "/users/mj/files/secrets.md");
 
     it("finds the correct match", () => {
+      let match = matchRoutes(routes, "/users/mj/files/secrets.txt")!;
+
       expect(match).not.toBeNull();
-      expect(match?.[0]).toMatchObject({
-        pathname: "/users/mj/files",
-        params: { id: "mj", "*": "secrets.md" }
+      expect(match[0]).toMatchObject({
+        params: { id: "mj", "*": "secrets.txt" },
+        pathname: "/users/mj/files/secrets.txt",
+        pathnameStart: "/users/mj/files"
       });
     });
 
     describe("when other characters come before the /", () => {
       it("does not find a match", () => {
-        let match = matchRoutes(routes, "/users/mj/filesssss/secrets.md");
+        let match = matchRoutes(routes, "/users/mj/filesssss/secrets.txt");
         expect(match).toBeNull();
       });
     });
@@ -197,29 +199,28 @@ describe("path matching with splats", () => {
 
   test("splat after something other than /", () => {
     let routes = [{ path: "users/:id/files-*" }];
-    let match = matchRoutes(routes, "/users/mj/files-secrets.md");
+    let match = matchRoutes(routes, "/users/mj/files-secrets.txt");
 
-    expect(match).not.toBeNull();
-    expect(match?.[0]).toMatchObject({
-      pathname: "/users/mj/files-",
-      params: { id: "mj", "*": "secrets.md" }
-    });
+    // TODO: Maybe throw an error if the path ends with * but not /*?
+    expect(match).toBeNull();
   });
 
   test("parent route with splat after /", () => {
     let routes = [
-      { path: "users/:id/files/*", children: [{ path: "secrets.md" }] }
+      { path: "users/:id/files/*", children: [{ path: "secrets.txt" }] }
     ];
-    let match = matchRoutes(routes, "/users/mj/files/secrets.md");
+    let match = matchRoutes(routes, "/users/mj/files/secrets.txt")!;
 
     expect(match).not.toBeNull();
-    expect(match?.[0]).toMatchObject({
-      pathname: "/users/mj/files",
-      params: { id: "mj", "*": "secrets.md" }
+    expect(match[0]).toMatchObject({
+      params: { id: "mj", "*": "secrets.txt" },
+      pathname: "/users/mj/files/secrets.txt",
+      pathnameStart: "/users/mj/files"
     });
-    expect(match?.[1]).toMatchObject({
-      pathname: "/users/mj/files/secrets.md",
-      params: { id: "mj" }
+    expect(match[1]).toMatchObject({
+      params: { id: "mj", "*": "secrets.txt" },
+      pathname: "/users/mj/files/secrets.txt",
+      pathnameStart: "/users/mj/files/secrets.txt"
     });
   });
 
@@ -227,20 +228,23 @@ describe("path matching with splats", () => {
     let routes = [
       { path: "*", children: [{ path: "*", children: [{ path: "*" }] }] }
     ];
-    let match = matchRoutes(routes, "/one/two/three");
+    let match = matchRoutes(routes, "/one/two/three")!;
 
     expect(match).not.toBeNull();
-    expect(match?.[0]).toMatchObject({
-      pathname: "/",
-      params: { "*": "/one/two/three" }
+    expect(match[0]).toMatchObject({
+      params: { "*": "one/two/three" },
+      pathname: "/one/two/three",
+      pathnameStart: "/"
     });
-    expect(match?.[1]).toMatchObject({
-      pathname: "/",
-      params: { "*": "/one/two/three" }
+    expect(match[1]).toMatchObject({
+      params: { "*": "one/two/three" },
+      pathname: "/one/two/three",
+      pathnameStart: "/"
     });
-    expect(match?.[2]).toMatchObject({
-      pathname: "/",
-      params: { "*": "/one/two/three" }
+    expect(match[2]).toMatchObject({
+      params: { "*": "one/two/three" },
+      pathname: "/one/two/three",
+      pathnameStart: "/"
     });
   });
 });
