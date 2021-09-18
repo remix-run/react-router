@@ -12,10 +12,6 @@ import type {
   Transition
 } from "history";
 
-// type Mutable<T> = {
-//   -readonly [P in keyof T]: T[P];
-// };
-
 function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);
 }
@@ -84,7 +80,6 @@ const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
   params: {},
   pathname: "/",
-  pathnameStart: "/",
   route: null
 });
 
@@ -93,7 +88,6 @@ interface RouteContextObject<ParamKey extends string = string> {
   outlet: React.ReactElement | null;
   params: Readonly<Params<ParamKey>>;
   pathname: string;
-  pathnameStart: string;
   route: RouteObject | null;
 }
 
@@ -536,8 +530,8 @@ export function useRoutes(
 
   let {
     basename: parentBasename,
+    params: parentParams,
     pathname: parentPathname,
-    pathnameStart: parentPathnameStart,
     route: parentRoute
   } = React.useContext(RouteContext);
 
@@ -592,6 +586,7 @@ export function useRoutes(
       : locationArg
     : locationFromContext;
 
+  let parentPathnameStart = getPathnameStart(parentPathname, parentParams);
   let basenameForMatching = joinPaths([basename, parentPathnameStart]);
   let matches = matchRoutes(routes, location, basenameForMatching);
 
@@ -609,7 +604,6 @@ export function useRoutes(
           outlet,
           params: match.params,
           pathname: joinPaths([parentPathnameStart, match.pathname]),
-          pathnameStart: match.pathnameStart,
           route: match.route
         }}
       />
@@ -716,11 +710,6 @@ export interface RouteMatch<ParamKey extends string = string> {
    */
   pathname: string;
   /**
-   * The portion of the URL pathname that was matched before child routes will
-   * match.
-   */
-  pathnameStart: string;
-  /**
    * The route object that was used to match.
    */
   route: RouteObject;
@@ -756,7 +745,7 @@ export function matchRoutes(
     }
   }
 
-  let remainingPathname =
+  let trailingPathname =
     basename === "/" ? pathname : pathname.slice(basename.length) || "/";
 
   let branches = flattenRoutes(routes);
@@ -764,7 +753,7 @@ export function matchRoutes(
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    matches = matchRouteBranch(branches[i], routes, remainingPathname);
+    matches = matchRouteBranch(branches[i], routes, trailingPathname);
   }
 
   return matches;
@@ -895,7 +884,7 @@ function matchRouteBranch<ParamKey extends string = string>(
   let matches: RouteMatch[] = [];
   for (let i = 0; i < routesMeta.length; ++i) {
     let meta = routesMeta[i];
-    let remainingPathname =
+    let trailingPathname =
       matchedPathname === "/"
         ? pathname
         : pathname.slice(matchedPathname.length) || "/";
@@ -905,7 +894,7 @@ function matchRouteBranch<ParamKey extends string = string>(
         caseSensitive: meta.caseSensitive,
         end: i === routesMeta.length - 1
       },
-      remainingPathname
+      trailingPathname
     );
 
     if (!match) return null;
@@ -913,26 +902,38 @@ function matchRouteBranch<ParamKey extends string = string>(
     Object.assign(matchedParams, match.params);
 
     let route = routes[meta.childrenIndex];
-    let routeMatch = {
+
+    matches.push({
       params: matchedParams,
       pathname:
         match.pathname === "/"
           ? matchedPathname
           : joinPaths([matchedPathname, match.pathname]),
-      pathnameStart:
-        match.pathnameStart === "/"
-          ? matchedPathname
-          : joinPaths([matchedPathname, match.pathnameStart]),
       route
-    };
+    });
 
-    matches.push(routeMatch);
+    let pathnameStart = getPathnameStart(match.pathname, match.params);
+    if (pathnameStart !== "/") {
+      // Add only the portion of the match.pathname that comes before the * to
+      // the matchedPathname. This allows child routes to match against the
+      // portion of the pathname that was matched by the *.
+      matchedPathname = joinPaths([matchedPathname, pathnameStart]);
+    }
 
-    matchedPathname = routeMatch.pathnameStart;
     routes = route.children!;
   }
 
   return matches;
+}
+
+function getPathnameStart(pathname: string, params: Params): string {
+  let splat = params["*"];
+  if (!splat) return pathname;
+  let pathnameStart = pathname.slice(0, -splat.length);
+  if (splat.startsWith("/")) return pathnameStart;
+  let index = pathnameStart.lastIndexOf("/");
+  if (index > 0) return pathnameStart.slice(0, index);
+  return "/";
 }
 
 /**
@@ -969,15 +970,14 @@ export interface PathMatch<ParamKey extends string = string> {
    */
   pathname: string;
   /**
-   * The portion of the URL pathname that was matched before child routes will
-   * match.
-   */
-  pathnameStart: string;
-  /**
    * The pattern that was used to match.
    */
   pattern: PathPattern;
 }
+
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
 
 /**
  * Performs pattern matching on a URL pathname and returns information about
@@ -993,89 +993,70 @@ export function matchPath<ParamKey extends string = string>(
     pattern = { path: pattern, caseSensitive: false, end: true };
   }
 
-  let { path: pathArg, caseSensitive = false, end = true } = pattern;
-  let path = normalizePathname(pathArg);
+  let [matcher, paramNames] = compilePath(
+    pattern.path,
+    pattern.caseSensitive,
+    pattern.end
+  );
 
-  if (path === "/") {
-    return !end || pathname === "/"
-      ? {
-          params: {} as Params,
-          pathname: "/",
-          pathnameStart: "/",
-          pattern
-        }
-      : null;
-  }
+  let match = pathname.match(matcher);
+  if (!match) return null;
 
-  let needsTrailingSlash = false;
-  if (pathname !== "/" && pathname.endsWith("/")) {
-    needsTrailingSlash = true;
-    pathname = pathname.slice(0, -1);
-  }
+  let matchedPathname = match[0];
+  let values = match.slice(1);
+  let params: Params = paramNames.reduce<Mutable<Params>>(
+    (memo, paramName, index) => {
+      memo[paramName] = safelyDecodeURIComponent(
+        values[index] || "",
+        paramName
+      );
+      return memo;
+    },
+    {}
+  );
 
-  let matchers = path.split("/");
-  let segments = pathname.split("/");
+  return { params, pathname: matchedPathname, pattern };
+}
 
-  let matchedSegments: string[] = [];
-  let matchedParams: any = {};
+function compilePath(
+  path: string,
+  caseSensitive = false,
+  end = true
+): [RegExp, string[]] {
+  let keys: string[] = [];
+  let source =
+    "^" +
+    path
+      .replace(/\/?\*?$/, "") // Ignore trailing / and /*, we'll handle it below
+      .replace(/^\/*/, "/") // Make sure it has a leading /
+      .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
+      .replace(/:(\w+)/g, (_: string, key: string) => {
+        keys.push(key);
+        return "([^\\/]+)";
+      });
 
-  if (segments.length > matchers.length && end && !path.endsWith("*")) {
-    // URL pathname is longer than pattern with no trailing *. No match.
-    return null;
-  }
-
-  for (let i = 0; i < matchers.length; ++i) {
-    let matcher = matchers[i];
-    let segment = segments[i];
-
-    if (segment == null) return null;
-
-    if (matcher === "*") {
-      let pathnameStart = segments.slice(0, i).join("/") || "/";
-      matchedParams["*"] = segments.slice(i).join("/");
-      return {
-        params: matchedParams,
-        pathname,
-        pathnameStart,
-        pattern
-      };
+  if (path.endsWith("*")) {
+    if (path.endsWith("/*")) {
+      source += "(?:\\/(.+)|\\/?)$"; // Don't include the / in params['*']
+    } else {
+      source += "(.*)$";
     }
-
-    if (matcher.startsWith(":")) {
-      if (segment === "") return null;
-      let paramName = matcher.slice(1);
-      matchedParams[paramName] = safelyDecodeURIComponent(segment, paramName);
-      matchedSegments.push(segment);
-      continue;
-    }
-
-    if (
-      matcher === segment ||
-      (!caseSensitive && matcher.toLowerCase() === segment.toLowerCase())
-    ) {
-      matchedSegments.push(segment);
-      continue;
-    }
-
-    return null;
+    keys.push("*");
+  } else if (end) {
+    // When matching to the end, ignore trailing slashes.
+    source += "\\/?$";
+  } else {
+    // If not matching to the end (as parent routes do), at least match a word
+    // boundary. This restricts a parent route to matching only its own words
+    // and nothing more, e.g. parent route "/home" should not match "/home2".
+    source += "(?:\\b|$)";
   }
 
-  if (end && matchedSegments.length !== segments.length) {
-    return null;
-  }
+  // if (end) source += "$";
 
-  if (needsTrailingSlash) {
-    matchedSegments.push("");
-  }
+  let matcher = new RegExp(source, caseSensitive ? undefined : "i");
 
-  let matchedPathname = matchedSegments.join("/") || "/";
-
-  return {
-    params: matchedParams,
-    pathname: matchedPathname,
-    pathnameStart: matchedPathname,
-    pattern
-  };
+  return [matcher, keys];
 }
 
 function safelyDecodeURIComponent(value: string, paramName: string) {
