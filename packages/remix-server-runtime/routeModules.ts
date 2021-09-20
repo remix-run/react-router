@@ -20,6 +20,11 @@ export interface ActionFunction {
 }
 
 /**
+ * A React component that is rendered when the server throws a Response.
+ */
+export type CatchBoundaryComponent = ComponentType<{}>;
+
+/**
  * A React component that is rendered when there is an error on a route.
  */
 export type ErrorBoundaryComponent = ComponentType<{ error: Error }>;
@@ -80,6 +85,7 @@ export type RouteComponent = ComponentType<{}>;
 export type RouteHandle = any;
 
 export interface EntryRouteModule {
+  CatchBoundary?: CatchBoundaryComponent;
   ErrorBoundary?: ErrorBoundaryComponent;
   default: RouteComponent;
   handle?: RouteHandle;

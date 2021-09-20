@@ -192,7 +192,7 @@ export async function readConfig(
   }
 
   let routes: RouteManifest = {
-    root: { path: "/", id: "root", file: rootRouteFile }
+    root: { path: "", id: "root", file: rootRouteFile }
   };
   if (fs.existsSync(path.resolve(appDirectory, "routes"))) {
     let conventionalRoutes = defineConventionalRoutes(appDirectory);

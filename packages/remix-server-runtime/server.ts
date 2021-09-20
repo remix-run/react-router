@@ -1,4 +1,4 @@
-import type { AppLoadContext } from "./data";
+import { AppLoadContext, extractData, isCatchResponse } from "./data";
 import { loadRouteData, callRouteAction } from "./data";
 import type { ComponentDidCatchEmulator } from "./errors";
 
@@ -103,7 +103,7 @@ async function handleDataRequest(
           loadContext,
           routeMatch.params
         );
-  } catch (error) {
+  } catch (error: any) {
     let formattedError = (await platform.formatServerError?.(error)) || error;
     return json(await serializeError(formattedError), {
       status: 500,
@@ -141,25 +141,49 @@ async function handleDocumentRequest(
   let url = new URL(request.url);
 
   let matches = matchServerRoutes(routes, url.pathname);
+  let isNoMatch = false;
+
   if (!matches) {
-    // TODO: Provide a default 404 page
-    throw new Error(
-      `There is no route that matches ${url.pathname}. Please add ` +
-        `a routes/404.js file`
-    );
+    // If we do not match a user-provided-route, fall back to the root
+    // to allow the CatchBoundary to take over
+    isNoMatch = true;
+    matches = [
+      {
+        params: {},
+        pathname: "",
+        route: routes[0]
+      }
+    ];
   }
 
   let componentDidCatchEmulator: ComponentDidCatchEmulator = {
     trackBoundaries: true,
+    trackCatchBoundaries: true,
+    catchBoundaryRouteId: null,
     renderBoundaryRouteId: null,
     loaderBoundaryRouteId: null,
-    error: undefined
+    error: undefined,
+    catch: undefined
   };
 
-  let actionErrored: boolean = false;
+  let actionState: "" | "caught" | "error" = "";
   let actionResponse: Response | undefined;
 
-  if (isActionRequest(request)) {
+  if (isNoMatch) {
+    componentDidCatchEmulator.trackCatchBoundaries = false;
+    let withBoundaries = getMatchesUpToDeepestBoundary(
+      matches,
+      "CatchBoundary"
+    );
+    componentDidCatchEmulator.catchBoundaryRouteId =
+      withBoundaries.length > 0
+        ? withBoundaries[withBoundaries.length - 1].route.id
+        : null;
+    componentDidCatchEmulator.catch = {
+      status: 404,
+      data: null
+    };
+  } else if (isActionRequest(request)) {
     let leafMatch = matches[matches.length - 1];
     try {
       actionResponse = await callRouteAction(
@@ -172,25 +196,58 @@ async function handleDocumentRequest(
       if (isRedirectResponse(actionResponse)) {
         return actionResponse;
       }
-    } catch (error) {
+    } catch (error: any) {
       let formattedError = (await platform.formatServerError?.(error)) || error;
-      actionErrored = true;
-      let withBoundaries = getMatchesUpToDeepestErrorBoundary(matches);
+      actionState = "error";
+      let withBoundaries = getMatchesUpToDeepestBoundary(
+        matches,
+        "ErrorBoundary"
+      );
       componentDidCatchEmulator.loaderBoundaryRouteId =
         withBoundaries[withBoundaries.length - 1].route.id;
       componentDidCatchEmulator.error = await serializeError(formattedError);
     }
   }
 
-  let matchesToLoad = actionErrored
-    ? getMatchesUpToDeepestErrorBoundary(
+  if (actionResponse && isCatchResponse(actionResponse)) {
+    actionState = "caught";
+    let withBoundaries = getMatchesUpToDeepestBoundary(
+      matches,
+      "CatchBoundary"
+    );
+    componentDidCatchEmulator.trackCatchBoundaries = false;
+    componentDidCatchEmulator.catchBoundaryRouteId =
+      withBoundaries[withBoundaries.length - 1].route.id;
+    componentDidCatchEmulator.catch = {
+      status: actionResponse.status,
+      data: await extractData(actionResponse.clone())
+    };
+  }
+
+  // If we did not match a route, there is no need to call any loaders
+  let matchesToLoad = isNoMatch ? [] : matches;
+  switch (actionState) {
+    case "caught":
+      matchesToLoad = getMatchesUpToDeepestBoundary(
+        // get rid of the action, we don't want to call it's loader either
+        // because we'll be rendering the catch boundary, if you can get access
+        // to the loader data in the catch boundary then how the heck is it
+        // supposed to deal with thrown responses?
+        matches.slice(0, -1),
+        "CatchBoundary"
+      );
+      break;
+    case "error":
+      matchesToLoad = getMatchesUpToDeepestBoundary(
         // get rid of the action, we don't want to call it's loader either
         // because we'll be rendering the error boundary, if you can get access
         // to the loader data in the error boundary then how the heck is it
         // supposed to deal with errors in the loader, too?
-        matches.slice(0, -1)
-      )
-    : matches;
+        matches.slice(0, -1),
+        "ErrorBoundary"
+      );
+      break;
+  }
 
   // Run all data loaders in parallel. Await them in series below.  Note: This
   // code is a little weird due to the way unhandled promise rejections are
@@ -226,14 +283,19 @@ async function handleDocumentRequest(
     // We just give up and move on with rendering the error as deeply as we can,
     // which is the previous iteration of this loop
     if (
-      actionErrored &&
-      (response instanceof Error || isRedirectResponse(response))
+      (actionState === "error" &&
+        (response instanceof Error || isRedirectResponse(response))) ||
+      (actionState === "caught" && isCatchResponse(response))
     ) {
       break;
     }
 
-    if (componentDidCatchEmulator.error) {
+    if (componentDidCatchEmulator.catch || componentDidCatchEmulator.error) {
       continue;
+    }
+
+    if (routeModule.CatchBoundary) {
+      componentDidCatchEmulator.catchBoundaryRouteId = route.id;
     }
 
     if (routeModule.ErrorBoundary) {
@@ -254,6 +316,13 @@ async function handleDocumentRequest(
       routeLoaderResults[index] = json(null, { status: 500 });
     } else if (isRedirectResponse(response)) {
       return response;
+    } else if (isCatchResponse(response)) {
+      componentDidCatchEmulator.trackCatchBoundaries = false;
+      componentDidCatchEmulator.catch = {
+        status: response.status,
+        data: await extractData(response.clone())
+      };
+      routeLoaderResults[index] = json(null, { status: response.status });
     }
   }
 
@@ -262,17 +331,18 @@ async function handleDocumentRequest(
 
   // Handle responses with a non-200 status code. The first loader with a
   // non-200 status code determines the status code for the whole response.
-  let notOkResponse = routeLoaderResponses.find(
-    response => response.status !== 200
+  let notOkResponse = [actionResponse, ...routeLoaderResponses].find(
+    response => response && response.status !== 200
   );
 
-  let statusCode = actionErrored
-    ? 500
-    : notOkResponse
-    ? notOkResponse.status
-    : matches[matches.length - 1].route.id === "routes/404"
-    ? 404
-    : 200;
+  let statusCode =
+    actionState === "error"
+      ? 500
+      : notOkResponse
+      ? notOkResponse.status
+      : isNoMatch
+      ? 404
+      : 200;
 
   let renderableMatches = getRenderableMatches(
     matches,
@@ -319,7 +389,7 @@ async function handleDocumentRequest(
       headers,
       entryContext
     );
-  } catch (error) {
+  } catch (error: any) {
     let formattedError = (await platform.formatServerError?.(error)) || error;
     if (serverMode !== ServerMode.Test) {
       console.error(formattedError);
@@ -344,7 +414,7 @@ async function handleDocumentRequest(
         headers,
         entryContext
       );
-    } catch (error) {
+    } catch (error: any) {
       let formattedError = (await platform.formatServerError?.(error)) || error;
       if (serverMode !== ServerMode.Test) {
         console.error(formattedError);
@@ -390,24 +460,25 @@ function stripDataParam(request: Request) {
   return new Request(url.toString(), request);
 }
 
-// This ensures we only load the data for the routes above an action error
-function getMatchesUpToDeepestErrorBoundary(
-  matches: RouteMatch<ServerRoute>[]
+// TODO: update to use key for lookup
+function getMatchesUpToDeepestBoundary(
+  matches: RouteMatch<ServerRoute>[],
+  key: "CatchBoundary" | "ErrorBoundary"
 ) {
-  let deepestErrorBoundaryIndex: number = -1;
+  let deepestBoundaryIndex: number = -1;
 
   matches.forEach((match, index) => {
-    if (match.route.module.ErrorBoundary) {
-      deepestErrorBoundaryIndex = index;
+    if (match.route.module[key]) {
+      deepestBoundaryIndex = index;
     }
   });
 
-  if (deepestErrorBoundaryIndex === -1) {
+  if (deepestBoundaryIndex === -1) {
     // no route error boundaries, don't need to call any loaders
     return [];
   }
 
-  return matches.slice(0, deepestErrorBoundaryIndex + 1);
+  return matches.slice(0, deepestBoundaryIndex + 1);
 }
 
 // This prevents `<Outlet/>` from rendering anything below where the error threw
@@ -417,7 +488,7 @@ function getRenderableMatches(
   componentDidCatchEmulator: ComponentDidCatchEmulator
 ) {
   // no error, no worries
-  if (!componentDidCatchEmulator.error) {
+  if (!componentDidCatchEmulator.catch && !componentDidCatchEmulator.error) {
     return matches;
   }
 
@@ -427,7 +498,8 @@ function getRenderableMatches(
     let id = match.route.id;
     if (
       componentDidCatchEmulator.renderBoundaryRouteId === id ||
-      componentDidCatchEmulator.loaderBoundaryRouteId === id
+      componentDidCatchEmulator.loaderBoundaryRouteId === id ||
+      componentDidCatchEmulator.catchBoundaryRouteId === id
     ) {
       lastRenderableIndex = index;
     }

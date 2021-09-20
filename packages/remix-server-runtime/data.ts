@@ -27,7 +27,18 @@ export async function loadRouteData(
     return Promise.resolve(json(null));
   }
 
-  let result = await routeModule.loader({ request, context, params });
+  let result;
+
+  try {
+    result = await routeModule.loader({ request, context, params });
+  } catch (error) {
+    if (!isResponse(error)) {
+      throw error;
+    }
+
+    error.headers.set("X-Remix-Catch", "yes");
+    result = error;
+  }
 
   if (result === undefined) {
     throw new Error(
@@ -56,7 +67,17 @@ export async function callRouteAction(
     );
   }
 
-  let result = await routeModule.action({ request, context, params });
+  let result
+  try {
+   result = await routeModule.action({ request, context, params });
+  } catch (error) {
+    if (!isResponse(error)) {
+      throw error;
+    }
+
+    error.headers.set("X-Remix-Catch", "yes");
+    result = error;
+  }
 
   if (result === undefined) {
     throw new Error(
@@ -66,6 +87,10 @@ export async function callRouteAction(
   }
 
   return isResponse(result) ? result : json(result);
+}
+
+export function isCatchResponse(value: any) {
+  return isResponse(value) && value.headers.get("X-Remix-Catch") != null;
 }
 
 function isResponse(value: any): value is Response {

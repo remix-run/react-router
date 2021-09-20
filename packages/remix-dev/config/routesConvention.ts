@@ -49,10 +49,9 @@ export function defineConventionalRoutes(appDir: string): RouteManifest {
     );
 
     for (let routeId of childRouteIds) {
-      let routePath =
-        routeId === "routes/404"
-          ? "*"
-          : createRoutePath(routeId.slice((parentId || "routes").length + 1));
+      let routePath = createRoutePath(
+        routeId.slice((parentId || "routes").length + 1)
+      );
 
       defineRoute(routePath, files[routeId], () => {
         defineNestedRoutes(defineRoute, routeId);

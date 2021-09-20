@@ -48,14 +48,35 @@ describe("readConfig", () => {
           "root": Object {
             "file": "root.jsx",
             "id": "root",
-            "path": "/",
+            "path": "",
           },
-          "routes/404": Object {
+          "routes/action-catches": Object {
             "caseSensitive": false,
-            "file": "routes/404.jsx",
-            "id": "routes/404",
+            "file": "routes/action-catches.jsx",
+            "id": "routes/action-catches",
             "parentId": "root",
-            "path": "*",
+            "path": "action-catches",
+          },
+          "routes/action-catches-from-loader": Object {
+            "caseSensitive": false,
+            "file": "routes/action-catches-from-loader.jsx",
+            "id": "routes/action-catches-from-loader",
+            "parentId": "root",
+            "path": "action-catches-from-loader",
+          },
+          "routes/action-catches-from-loader-self-boundary": Object {
+            "caseSensitive": false,
+            "file": "routes/action-catches-from-loader-self-boundary.jsx",
+            "id": "routes/action-catches-from-loader-self-boundary",
+            "parentId": "root",
+            "path": "action-catches-from-loader-self-boundary",
+          },
+          "routes/action-catches-self-boundary": Object {
+            "caseSensitive": false,
+            "file": "routes/action-catches-self-boundary.jsx",
+            "id": "routes/action-catches-self-boundary",
+            "parentId": "root",
+            "path": "action-catches-self-boundary",
           },
           "routes/action-errors": Object {
             "caseSensitive": false,
@@ -203,6 +224,13 @@ describe("readConfig", () => {
             "id": "routes/loader-errors/nested",
             "parentId": "routes/loader-errors",
             "path": "nested",
+          },
+          "routes/loader-errors/nested-catch": Object {
+            "caseSensitive": false,
+            "file": "routes/loader-errors/nested-catch.jsx",
+            "id": "routes/loader-errors/nested-catch",
+            "parentId": "routes/loader-errors",
+            "path": "nested-catch",
           },
           "routes/methods": Object {
             "caseSensitive": false,
