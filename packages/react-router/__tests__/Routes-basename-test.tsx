@@ -1,62 +1,91 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import {
-  MemoryRouter as Router,
-  Outlet,
-  Routes,
-  Route,
-  useParams
-} from "react-router";
+import { MemoryRouter as Router, Routes, Route } from "react-router";
 
 describe("<Routes> with a basename", () => {
-  function User() {
-    let { userId } = useParams();
-    return (
-      <div>
-        <h1>User: {userId}</h1>
-        <Outlet />
-      </div>
-    );
-  }
-
-  function Dashboard() {
-    return <h1>Dashboard</h1>;
-  }
-
-  let userRoute = (
-    <Route path="users/:userId" element={<User />}>
-      <Route path="dashboard" element={<Dashboard />} />
-    </Route>
-  );
-
-  it("does not match when the URL pathname does not start with that base", () => {
+  it("renders null when the URL does not match the basename", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/app/users/michael/dashboard"]}>
-        <Routes basename="/base">{userRoute}</Routes>
+      <Router initialEntries={["/home"]}>
+        <Routes basename="app">
+          <Route path="/" element={<h1>App</h1>} />
+        </Routes>
       </Router>
     );
 
     expect(renderer.toJSON()).toBeNull();
   });
 
-  it("matches when the URL pathname starts with that base", () => {
+  it("renders the first route that matches the URL", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/app/users/michael/dashboard"]}>
-        <Routes basename="/app">{userRoute}</Routes>
+      <Router initialEntries={["/home"]}>
+        <Routes basename="app">
+          <Route path="/" element={<h1>App</h1>} />
+        </Routes>
+        <Routes basename="home">
+          <Route path="/" element={<h1>Home</h1>} />
+        </Routes>
       </Router>
     );
 
-    expect(renderer.toJSON()).not.toBeNull();
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      <div>
-        <h1>
-          User: 
-          michael
-        </h1>
-        <h1>
-          Dashboard
-        </h1>
-      </div>
+      <h1>
+        Home
+      </h1>
+    `);
+  });
+
+  it("does not render a 2nd route that also matches the URL", () => {
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/app/home"]}>
+        <Routes basename="app">
+          <Route path="home" element={<h1>Home</h1>} />
+          <Route path="home" element={<h1>Dashboard</h1>} />
+        </Routes>
+      </Router>
+    );
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <h1>
+        Home
+      </h1>
+    `);
+  });
+
+  it("matches regardless of basename casing", () => {
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/home"]}>
+        <Routes basename="APP">
+          <Route path="/" element={<h1>App</h1>} />
+        </Routes>
+        <Routes basename="HoME">
+          <Route path="/" element={<h1>Home</h1>} />
+        </Routes>
+      </Router>
+    );
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <h1>
+        Home
+      </h1>
+    `);
+  });
+
+  it("matches regardless of URL casing", () => {
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/hOmE"]}>
+        <Routes basename="aPp">
+          <Route path="/" element={<h1>App</h1>} />
+        </Routes>
+        <Routes basename="HoMe">
+          <Route path="/" element={<h1>Home</h1>} />
+        </Routes>
+      </Router>
+    );
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <h1>
+        Home
+      </h1>
     `);
   });
 });
