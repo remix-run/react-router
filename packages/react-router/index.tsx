@@ -1052,8 +1052,6 @@ function compilePath(
     source += "(?:\\b|$)";
   }
 
-  // if (end) source += "$";
-
   let matcher = new RegExp(source, caseSensitive ? undefined : "i");
 
   return [matcher, keys];
