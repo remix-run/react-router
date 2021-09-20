@@ -760,6 +760,7 @@ interface RouteMeta {
 
 interface RouteBranch {
   path: string;
+  score: number;
   routesMeta: RouteMeta[];
 }
 
@@ -803,27 +804,21 @@ function flattenRoutes(
       flattenRoutes(route.children, branches, routesMeta, path);
     }
 
-    branches.push({ path, routesMeta });
+    branches.push({ path, score: computeScore(path), routesMeta });
   });
 
   return branches;
 }
 
 function rankRouteBranches(branches: RouteBranch[]): void {
-  let pathScores: { [key: string]: number } = {};
-  let pathIndexes: { [key: string]: number[] } = {};
-  branches.forEach(({ path, routesMeta }) => {
-    pathScores[path] = computeScore(path);
-    pathIndexes[path] = routesMeta.map(meta => meta.childrenIndex);
-  });
-
-  branches.sort((a, b) => {
-    let aScore = pathScores[a.path];
-    let bScore = pathScores[b.path];
-    return aScore !== bScore
-      ? bScore - aScore // Higher score first
-      : compareIndexes(pathIndexes[a.path], pathIndexes[b.path]);
-  });
+  branches.sort((a, b) =>
+    a.score !== b.score
+      ? b.score - a.score // Higher score first
+      : compareIndexes(
+          a.routesMeta.map(meta => meta.childrenIndex),
+          b.routesMeta.map(meta => meta.childrenIndex)
+        )
+  );
 }
 
 const paramRe = /^:\w+$/;
