@@ -67,6 +67,13 @@ async function handleDataRequest(
   let routeMatch: RouteMatch<ServerRoute>;
   if (isActionRequest(request)) {
     routeMatch = matches[matches.length - 1];
+
+    if (
+      !isIndexRequestUrl(url) &&
+      matches[matches.length - 1].route.id.endsWith("/index")
+    ) {
+      routeMatch = matches[matches.length - 2];
+    }
   } else {
     let routeId = url.searchParams.get("_data");
     if (!routeId) {
@@ -84,7 +91,7 @@ async function handleDataRequest(
     routeMatch = match;
   }
 
-  let clonedRequest = stripDataParam(request);
+  let clonedRequest = stripIndexParam(stripDataParam(request));
 
   let response: Response;
   try {
@@ -168,6 +175,7 @@ async function handleDocumentRequest(
 
   let actionState: "" | "caught" | "error" = "";
   let actionResponse: Response | undefined;
+  let actionRouteId: string | undefined;
 
   if (isNoMatch) {
     componentDidCatchEmulator.trackCatchBoundaries = false;
@@ -184,14 +192,19 @@ async function handleDocumentRequest(
       data: null
     };
   } else if (isActionRequest(request)) {
-    let leafMatch = matches[matches.length - 1];
+    let actionMatch = matches[matches.length - 1];
+    if (!isIndexRequestUrl(url) && actionMatch.route.id.endsWith("/index")) {
+      actionMatch = matches[matches.length - 2];
+    }
+    actionRouteId = actionMatch.route.id;
+
     try {
       actionResponse = await callRouteAction(
         build,
-        leafMatch.route.id,
+        actionMatch.route.id,
         request.clone(),
         loadContext,
-        leafMatch.params
+        actionMatch.params
       );
       if (isRedirectResponse(actionResponse)) {
         return actionResponse;
@@ -360,13 +373,12 @@ async function handleDocumentRequest(
     renderableMatches,
     routeLoaderResponses
   );
-  let actionData = actionResponse
-    ? {
-        [matches[matches.length - 1].route.id]: await createActionData(
-          actionResponse
-        )
-      }
-    : undefined;
+  let actionData =
+    actionResponse && actionRouteId
+      ? {
+          [actionRouteId]: await createActionData(actionResponse)
+        }
+      : undefined;
   let routeModules = createEntryRouteModules(build.routes);
   let serverHandoff = {
     matches: entryMatches,
@@ -452,6 +464,35 @@ const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
 
 function isRedirectResponse(response: Response): boolean {
   return redirectStatusCodes.has(response.status);
+}
+
+function isIndexRequestUrl(url: URL) {
+  let indexRequest = false;
+
+  for (let param of url.searchParams.getAll("index")) {
+    if (!param) {
+      indexRequest = true;
+    }
+  }
+
+  return indexRequest;
+}
+
+function stripIndexParam(request: Request) {
+  let url = new URL(request.url);
+  let indexValues = url.searchParams.getAll("index");
+  url.searchParams.delete("index");
+  let indexValuesToKeep = [];
+  for (let indexValue of indexValues) {
+    if (indexValue) {
+      indexValuesToKeep.push(indexValue);
+    }
+  }
+  for (let toKeep of indexValuesToKeep) {
+    url.searchParams.append("index", toKeep);
+  }
+
+  return new Request(url.toString(), request);
 }
 
 function stripDataParam(request: Request) {

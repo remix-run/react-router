@@ -246,6 +246,27 @@ describe("readConfig", () => {
             "parentId": "root",
             "path": "multiple-set-cookies",
           },
+          "routes/nested-forms": Object {
+            "caseSensitive": false,
+            "file": "routes/nested-forms.tsx",
+            "id": "routes/nested-forms",
+            "parentId": "root",
+            "path": "nested-forms",
+          },
+          "routes/nested-forms/nested": Object {
+            "caseSensitive": false,
+            "file": "routes/nested-forms/nested.tsx",
+            "id": "routes/nested-forms/nested",
+            "parentId": "routes/nested-forms",
+            "path": "nested",
+          },
+          "routes/nested-forms/nested/index": Object {
+            "caseSensitive": false,
+            "file": "routes/nested-forms/nested/index.tsx",
+            "id": "routes/nested-forms/nested/index",
+            "parentId": "routes/nested-forms/nested",
+            "path": "/",
+          },
           "routes/one": Object {
             "caseSensitive": false,
             "file": "routes/one.mdx",
