@@ -27,25 +27,46 @@ export function mdxPlugin(config: RemixConfig): esbuild.Plugin {
         try {
           let contents = await fsp.readFile(args.path, "utf-8");
 
+          let rehypePlugins = [];
+          let remarkPlugins = [
+            remarkFrontmatter,
+            [remarkMdxFrontmatter, { name: "attributes" }]
+          ];
+
+          switch (typeof config.mdx) {
+            case "object":
+              rehypePlugins.push(...(config.mdx.rehypePlugins || []));
+              remarkPlugins.push(...(config.mdx.remarkPlugins || []));
+
+              break;
+            case "function":
+              let mdxConfig = await config.mdx(args.path);
+              rehypePlugins.push(...(mdxConfig?.rehypePlugins || []));
+              remarkPlugins.push(...(mdxConfig?.remarkPlugins || []));
+              break;
+          }
+
+          console.log(rehypePlugins);
+
+          let remixExports = `
+export const filename = ${JSON.stringify(path.basename(args.path))};
+export const headers = typeof attributes !== "undefined" && attributes.headers;
+export const meta = typeof attributes !== "undefined" && attributes.meta;
+export const links = undefined;
+          `;
+
           let compiled = await xdm.compile(contents, {
             jsx: true,
             jsxRuntime: "classic",
             pragma: "React.createElement",
             pragmaFrag: "React.Fragment",
-            remarkPlugins: [
-              remarkFrontmatter,
-              [remarkMdxFrontmatter, { name: "attributes" }]
-            ]
+            rehypePlugins,
+            remarkPlugins
           });
 
           contents = `
-          ${compiled.value}
-          
-          export const filename = ${JSON.stringify(path.basename(args.path))};
-          export const headers = typeof attributes !== "undefined" && attributes.headers;
-          export const meta = typeof attributes !== "undefined" && attributes.meta;
-          export const links = undefined;
-          `;
+${compiled.value}
+${remixExports}`;
 
           let errors: esbuild.PartialMessage[] = [];
           let warnings: esbuild.PartialMessage[] = [];

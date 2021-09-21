@@ -6,6 +6,15 @@ import { defineRoutes } from "./config/routes";
 import { defineConventionalRoutes } from "./config/routesConvention";
 import { ServerMode, isValidServerMode } from "./config/serverModes";
 
+export interface RemixMdxConfig {
+  rehypePlugins?: any[];
+  remarkPlugins?: any[];
+}
+
+export type RemixMdxConfigFunction = (
+  filename: string
+) => Promise<RemixMdxConfig | undefined> | RemixMdxConfig | undefined;
+
 /**
  * The user-provided config in `remix.config.js`.
  */
@@ -60,6 +69,8 @@ export interface AppConfig {
    * The port number to use for the dev server. Defaults to 8002.
    */
   devServerPort?: number;
+
+  mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 }
 
 /**
@@ -120,6 +131,8 @@ export interface RemixConfig {
    * The port number to use for the dev (asset) server.
    */
   devServerPort: number;
+
+  mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 }
 
 /**
@@ -220,7 +233,8 @@ export async function readConfig(
     rootDirectory,
     routes,
     serverBuildDirectory,
-    serverMode
+    serverMode,
+    mdx: appConfig.mdx
   };
 }
 
