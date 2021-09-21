@@ -22,6 +22,10 @@ if (args.includes("--watch")) {
   jestArgs.push("--watch");
 }
 
+if (args.includes("--watchAll")) {
+  jestArgs.push("--watchAll");
+}
+
 if (args.includes("-u")) {
   jestArgs.push("-u");
 }
