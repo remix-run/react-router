@@ -3,10 +3,14 @@
   "version": "6.0.0-beta.4",
   "author": "React Training <hello@reacttraining.com>",
   "description": "Declarative routing for React Native applications",
-  "repository": "ReactTraining/react-router",
+  "repository": "remix-run/react-router",
   "license": "MIT",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./index.js"
+  },
   "dependencies": {
     "@ungap/url-search-params": "^0.1.4",
     "react-router": "6.0.0-beta.4"
