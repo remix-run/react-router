@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "build": "node ./scripts/build.js",
-    "clean": "git clean -e '!/website-deploy-key' -e '!/website-deploy-key.pub' -fdX .",
+    "clean": "git clean -fdX .",
     "lint": "eslint .",
     "publish": "node ./scripts/publish.js",
     "size": "filesize",
