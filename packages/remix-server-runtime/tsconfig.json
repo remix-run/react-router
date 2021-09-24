@@ -1,5 +1,5 @@
 {
-  "exclude": ["__tests__/**/*", "scripts/**/*"],
+  "exclude": ["__tests__"],
   "compilerOptions": {
     "lib": ["ES2019", "DOM"],
     "target": "ES2019",

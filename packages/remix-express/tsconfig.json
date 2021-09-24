@@ -1,5 +1,4 @@
 {
-  "include": ["**/*"],
   "exclude": ["__tests__"],
   "compilerOptions": {
     "lib": ["ES2019"],
