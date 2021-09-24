@@ -4,7 +4,7 @@
 
 React Router is a collection of [React components](https://reactjs.org/docs/components-and-props.html), [hooks](#https://reactjs.org/docs/hooks-intro.html) and utilities that make it easy to build multi-page applications with [React](https://reactjs.org). This reference contains the function signatures and return types of the various interfaces in React Router.
 
-> [!Tip:]
+> **Tip:**
 >
 > Please refer to [our guides](./advanced-guides) for more in-depth usage
 > examples of how you can use React Router to accomplish specific tasks.
@@ -217,7 +217,7 @@ A `<MemoryRouter>` stores its locations internally in an array. Unlike `<Browser
 - `<MemoryRouter initialEntries>` defaults to `["/"]` (a single entry at the root `/` URL)
 - `<MemoryRouter initialIndex>` defaults to the last index of `props.initialEntries`
 
-> [!Tip:]
+> **Tip:**
 >
 > Most of React Router's tests are written using a `<MemoryRouter>` as the
 > source of truth, so you can see some great examples of using it by just
@@ -249,7 +249,7 @@ describe("My app", () => {
 
 ### `<Link>`
 
-> [!Note:]
+> **Note:**
 >
 > This is the web version of `<Link>`. For the React Native version,
 > [go here](#link-native).
@@ -297,18 +297,18 @@ function UsersIndexPage({ users }) {
 
 A relative `<Link to>` value (that does not begin with `/`) resolves relative to the parent route, which means that it builds upon the URL path that was matched by the route that rendered that `<Link>`. It may contain `..` to link to routes further up the hierarchy. In these cases, `..` works exactly like the command-line `cd` function; each `..` removes one segment of the parent path.
 
-> [!Note:]
+> **Note:**
 >
 > `<Link to>` with a `..` behaves differently from a normal `<a href>` when the
 > current URL ends with `/`. `<Link to>` ignores the trailing slash, and removes
-> one URL segment for each `..`. But an `<a href>` value handles `..` differently
-> when the current URL ends with `/` vs when it does not.
+> one URL segment for each `..`. But an `<a href>` value handles `..`
+> differently when the current URL ends with `/` vs when it does not.
 
 <a name="link-native"></a>
 
 ### `<Link>` (React Native)
 
-> [!Note:]
+> **Note:**
 >
 > This is the React Native version of `<Link>`. For the web version,
 > [go here](#link).
@@ -464,7 +464,7 @@ interface NavigateProps {
 
 A `<Navigate>` element changes the current location when it is rendered. It's a component wrapper around [`useNavigate`](#usenavigate), and accepts all the same arguments as props.
 
-> [!Note:]
+> **Note:**
 >
 > Having a component-based version of the `useNavigate` hook makes it easier to
 > use this feature in a [`React.Component`](https://reactjs.org/docs/react-component.html)
@@ -564,7 +564,7 @@ interface PromptProps {
 
 A `<Prompt>` is the declarative version of [`usePrompt`](#useprompt). It doesn't render anything. It just calls `usePrompt` with its props.
 
-> [!Note:]
+> **Note:**
 >
 > Having a component-based version of the `usePrompt` hook makes it easier to
 > use this feature in a [`React.Component`](https://reactjs.org/docs/react-component.html)
@@ -638,7 +638,7 @@ Whenever the location changes, `<Routes>` looks through all its `children` `<Rou
 </Routes>
 ```
 
-> [!Note:]
+> **Note:**
 >
 > If you'd prefer to define your routes as regular JavaScript objects instead
 > of using JSX, [try `useRoutes` instead](#useroutes).
@@ -771,7 +771,7 @@ generatePath("/files/:type/*", { type: "img", "*": "cat.jpg" }); // "/files/img/
 
 The term "location" in React Router refers to [the `Location` interface](https://github.com/ReactTraining/history/blob/master/docs/api-reference.md#location) from the [history](https://github.com/ReactTraining/history) library.
 
-> [!Note:]
+> **Note:**
 >
 > The history package is React Router's main dependency and many of the
 > core types in React Router come directly from that library including
@@ -890,7 +890,7 @@ declare function useHref(to: To): string;
 
 The `useHref` hook returns a URL that may be used to link to the given `to` location, even outside of React Router.
 
-> [!Tip:]
+> **Tip:**
 >
 > You may be interested in taking a look at the source for the `<Link>`
 > component in `react-router-dom` to see how it uses `useHref` internally to
@@ -1178,7 +1178,7 @@ function SignupForm() {
 
 `usePrompt` uses [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) on the web and [the `Alert` module](https://reactnative.dev/docs/alert) on React Native to display native, accessible confirm dialogs.
 
-> [!Note:]
+> **Note:**
 >
 > If you need a more custom dialog box, you will have to use [`useBlocker`](#useblocker)
 > directly and handle accessibility issues yourself.
@@ -1303,7 +1303,7 @@ function App() {
 }
 ```
 
-> [!Note:]
+> **Note:**
 >
 > The `setSearchParams` function works like [`navigate`](#usenavigate), but
 > only for the [search portion](https://developer.mozilla.org/en-US/docs/Web/API/Location/search)
