@@ -61,7 +61,7 @@ Here are some words we use a lot when we talk about React Router. The rest of th
 
 - <a id="parent-route">**Parent Route**</a> - A route with child routes.
 
-- <a id="outlet">**Outlet**</a> - A component that renders a parent route's matching children.
+- <a id="outlet">**Outlet**</a> - A component that renders the next match in a set of [matches].
 
 - <a id="index-route">**Index Route**</a> - A child route with no path that renders in the parent's outlet at the parent's [URL].
 
@@ -805,11 +805,21 @@ Let's put it all together from the top, let's assume we're at the URL: `
    );
    ```
 
-2. `<BrowserRouter>` creates a [history], puts the initial [location] insto state and subscribes to the [url].
+2. `<BrowserRouter>` creates a [history], puts the initial [location] in to state, and subscribes to the [url].
 
-3. `<Routes>` recurses it's [child routes][child route] to build a [route config], matches those routes against the [location], creates some route [matches], and renders the first matched route's element.
+3. `<Routes>` recurses it's [child routes][child route] to build a [route config], matches those routes against the [location], creates some route [matches], and renders the first match's route element.
 
-4. TODO: YOU ARE HERE! GOTTA GET JACE TO SOCCER!
+4. You render an [`<Outlet/>`][outlet] in each [parent route].
+
+5. The outlets render the next match in the route [matches].
+
+6. The user clicks a link
+
+7. The link calls `navigate()`
+
+8. The [history] changes the URL and notifies `<BrowserRouter>`.
+
+9. `<BrowserRouter>` rerenders, start over at (2)!
 
 That's it! We hope this guide has helped you gain a deeper understanding of the main concepts in React Router.
 
