@@ -3,8 +3,8 @@ on:
   push:
     branches:
       - logan/refresh-docs
-    paths:
-      - docs/**
+#     paths:
+#       - docs/**
 
 jobs:
   website:
