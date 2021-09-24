@@ -3,7 +3,7 @@ name: website
 on:
   push:
     branches:
-      - logan/refresh-site
+      - docs
     paths:
       - docs/**
 
