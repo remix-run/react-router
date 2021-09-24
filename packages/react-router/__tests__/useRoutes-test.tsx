@@ -69,12 +69,10 @@ describe("useRoutes", () => {
 
 function RoutesRenderer({
   routes,
-  basename,
   location
 }: {
   routes: RouteObject[];
-  basename?: string;
   location?: Partial<Location> & { pathname: string };
 }) {
-  return useRoutes(routes, { basename, location });
+  return useRoutes(routes, location);
 }

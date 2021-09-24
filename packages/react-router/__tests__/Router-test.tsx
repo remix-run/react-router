@@ -1,9 +1,9 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
-import { createMemoryHistory } from "history";
-import { Router } from "react-router";
+import type { ReactTestRenderer } from "react-test-renderer";
+import { act, create as createTestRenderer } from "react-test-renderer";
+import { MemoryRouter as Router, useLocation } from "react-router";
 
-describe("A <Router>", () => {
+describe("<Router>", () => {
   let consoleError: jest.SpyInstance;
   beforeEach(() => {
     consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -14,24 +14,50 @@ describe("A <Router>", () => {
   });
 
   it("throws if another <Router> is already in context", () => {
-    let history = createMemoryHistory();
-
     expect(() => {
       createTestRenderer(
-        <Router
-          action={history.action}
-          location={history.location}
-          navigator={history}
-        >
-          <Router
-            action={history.action}
-            location={history.location}
-            navigator={history}
-          />
+        <Router>
+          <Router />
         </Router>
       );
     }).toThrow(/cannot render a <Router> inside another <Router>/);
 
-    expect(consoleError).toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalledTimes(1);
+  });
+
+  it("memoizes the current location", () => {
+    let location1;
+    function CaptureLocation1() {
+      location1 = useLocation();
+      return null;
+    }
+
+    let renderer: ReactTestRenderer;
+    act(() => {
+      renderer = createTestRenderer(
+        <Router>
+          <CaptureLocation1 />
+        </Router>
+      );
+    });
+
+    expect(location1).toBeDefined();
+
+    let location2;
+    function CaptureLocation2() {
+      location2 = useLocation();
+      return null;
+    }
+
+    act(() => {
+      renderer.update(
+        <Router>
+          <CaptureLocation2 />
+        </Router>
+      );
+    });
+
+    expect(location2).toBeDefined();
+    expect(location1).toBe(location2);
   });
 });

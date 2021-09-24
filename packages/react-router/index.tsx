@@ -59,24 +59,30 @@ export type Navigator = Omit<
   "action" | "location" | "back" | "forward" | "listen"
 >;
 
-const NavigatorContext = React.createContext<Navigator>(null!);
-
-const LocationContext = React.createContext<LocationContextObject>({
-  static: false
-});
-
-interface LocationContextObject {
-  action?: Action;
-  location?: Location;
+interface NavigationContextObject {
+  basename: string;
+  navigator: Navigator;
   static: boolean;
 }
+
+const NavigationContext = React.createContext<NavigationContextObject>(null!);
+
+if (__DEV__) {
+  NavigationContext.displayName = "Navigation";
+}
+
+interface LocationContextObject {
+  action: Action;
+  location: Location;
+}
+
+const LocationContext = React.createContext<LocationContextObject>(null!);
 
 if (__DEV__) {
   LocationContext.displayName = "Location";
 }
 
 const RouteContext = React.createContext<RouteContextObject>({
-  basename: "/",
   outlet: null,
   params: {},
   pathname: "/",
@@ -84,7 +90,6 @@ const RouteContext = React.createContext<RouteContextObject>({
 });
 
 interface RouteContextObject<ParamKey extends string = string> {
-  basename: string;
   outlet: React.ReactElement | null;
   params: Readonly<Params<ParamKey>>;
   pathname: string;
@@ -100,6 +105,7 @@ if (__DEV__) {
 ///////////////////////////////////////////////////////////////////////////////
 
 export interface MemoryRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
@@ -111,6 +117,7 @@ export interface MemoryRouterProps {
  * @see https://reactrouter.com/api/MemoryRouter
  */
 export function MemoryRouter({
+  basename,
   children,
   initialEntries,
   initialIndex
@@ -130,6 +137,7 @@ export function MemoryRouter({
 
   return (
     <Router
+      basename={basename}
       children={children}
       action={state.action}
       location={state.location}
@@ -162,7 +170,7 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
   );
 
   warning(
-    !React.useContext(LocationContext).static,
+    !React.useContext(NavigationContext).static,
     `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
       `This is a no-op, but you should modify your code so the <Navigate> is ` +
       `only ever rendered in response to some user interaction or state change.`
@@ -210,8 +218,9 @@ export function Route(_props: RouteProps): React.ReactElement | null {
 
 export interface RouterProps {
   action?: Action;
+  basename?: string;
   children?: React.ReactNode;
-  location: Location;
+  location: Partial<Location> | string;
   navigator: Navigator;
   static?: boolean;
 }
@@ -226,37 +235,77 @@ export interface RouterProps {
  * @see https://reactrouter.com/api/Router
  */
 export function Router({
-  children = null,
   action = Action.Pop,
-  location,
+  basename: basenameProp = "/",
+  children = null,
+  location: locationProp,
   navigator,
   static: staticProp = false
-}: RouterProps): React.ReactElement {
+}: RouterProps): React.ReactElement | null {
   invariant(
     !useInRouterContext(),
     `You cannot render a <Router> inside another <Router>.` +
-      ` You never need more than one.`
+      ` You should never have more than one in your app.`
   );
+
+  let basename = normalizePathname(basenameProp);
+  let navigationContext = React.useMemo(
+    () => ({ basename, navigator, static: staticProp }),
+    [basename, navigator, staticProp]
+  );
+
+  if (typeof locationProp === "string") {
+    locationProp = parsePath(locationProp);
+  }
+
+  let {
+    pathname = "/",
+    search = "",
+    hash = "",
+    state = null,
+    key = "default"
+  } = locationProp;
+
+  let location = React.useMemo(() => {
+    let trailingPathname = stripBasename(pathname, basename);
+
+    if (trailingPathname == null) {
+      return null;
+    }
+
+    return {
+      pathname: trailingPathname,
+      search,
+      hash,
+      state,
+      key
+    };
+  }, [basename, pathname, search, hash, state, key]);
+
+  warning(
+    location != null,
+    `<Router basename="${basename}"> is not able to match the URL ` +
+      `"${pathname}${search}${hash}" because it does not start with the ` +
+      `basename, so the <Router> won't render anything.`
+  );
+
+  if (location == null) {
+    return null;
+  }
 
   return (
-    <NavigatorContext.Provider value={navigator}>
+    <NavigationContext.Provider value={navigationContext}>
       <LocationContext.Provider
         children={children}
-        value={{ action, location, static: staticProp }}
+        value={{ action, location }}
       />
-    </NavigatorContext.Provider>
+    </NavigationContext.Provider>
   );
-}
-
-interface PartialLocation<S extends State = State>
-  extends Omit<Partial<Location<S>>, "pathname"> {
-  pathname: string;
 }
 
 export interface RoutesProps {
-  basename?: string;
   children?: React.ReactNode;
-  location?: PartialLocation | string;
+  location?: Partial<Location> | string;
 }
 
 /**
@@ -266,11 +315,10 @@ export interface RoutesProps {
  * @see https://reactrouter.com/api/Routes
  */
 export function Routes({
-  basename,
   children,
   location
 }: RoutesProps): React.ReactElement | null {
-  return useRoutes(createRoutesFromChildren(children), { location, basename });
+  return useRoutes(createRoutesFromChildren(children), location);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -291,7 +339,7 @@ export function useBlocker(blocker: Blocker, when = true): void {
     `useBlocker() may be used only in the context of a <Router> component.`
   );
 
-  let navigator = React.useContext(NavigatorContext);
+  let { navigator } = React.useContext(NavigationContext);
 
   React.useEffect(() => {
     if (!when) return;
@@ -329,9 +377,19 @@ export function useHref(to: To): string {
     `useHref() may be used only in the context of a <Router> component.`
   );
 
-  let navigator = React.useContext(NavigatorContext);
+  let { basename, navigator } = React.useContext(NavigationContext);
+  let path = useResolvedPath(to);
 
-  return navigator.createHref(useResolvedPath(to));
+  if (basename !== "/") {
+    let toPathname = getToPathname(to);
+    let endsWithSlash = toPathname != null && toPathname.endsWith("/");
+    path.pathname =
+      path.pathname === "/"
+        ? basename + (endsWithSlash ? "/" : "")
+        : joinPaths([basename, path.pathname]);
+  }
+
+  return navigator.createHref(path);
 }
 
 /**
@@ -340,7 +398,7 @@ export function useHref(to: To): string {
  * @see https://reactrouter.com/api/useInRouterContext
  */
 export function useInRouterContext(): boolean {
-  return React.useContext(LocationContext).location != null;
+  return React.useContext(LocationContext) != null;
 }
 
 /**
@@ -381,7 +439,7 @@ export function useMatch<ParamKey extends string = string>(
     `useMatch() may be used only in the context of a <Router> component.`
   );
 
-  return matchPath<ParamKey>(pattern, useLocation().pathname);
+  return matchPath(pattern, useLocation().pathname);
 }
 
 /**
@@ -411,8 +469,8 @@ export function useNavigate(): NavigateFunction {
     `useNavigate() may be used only in the context of a <Router> component.`
   );
 
-  let navigator = React.useContext(NavigatorContext);
-  let { basename, pathname: routePathname } = React.useContext(RouteContext);
+  let { basename, navigator } = React.useContext(NavigationContext);
+  let { pathname: routePathname } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
   let activeRef = React.useRef(false);
@@ -422,45 +480,29 @@ export function useNavigate(): NavigateFunction {
 
   let navigate: NavigateFunction = React.useCallback(
     (to: To | number, options: { replace?: boolean; state?: State } = {}) => {
-      if (activeRef.current) {
-        if (typeof to === "number") {
-          navigator.go(to);
-        } else {
-          let toPathname =
-            // Empty strings should be treated the same as / paths
-            to === "" || (to as Path).pathname === ""
-              ? "/"
-              : typeof to === "string"
-              ? parsePath(to).pathname
-              : to.pathname;
+      warning(
+        activeRef.current,
+        `You should call navigate() in a React.useEffect(), not when ` +
+          `your component is first rendered.`
+      );
 
-          let path = resolvePath(
-            to,
-            // If a pathname is explicitly provided in `to`, it should be
-            // relative to the route context. This is explained in `Note on
-            // `<Link to>` values` in our migration guide from v5 as a means of
-            // disambiguation between `to` values that begin with `/` and those
-            // that do not. However, this is problematic for `to` values that do
-            // not provide a pathname. `to` can simply be a search or hash
-            // string, in which case we should assume that the navigation is
-            // relative to the current location's pathname and *not* the
-            // route pathname.
-            toPathname ? routePathname : locationPathname,
-            basename
-          );
+      if (!activeRef.current) return;
 
-          (!!options.replace ? navigator.replace : navigator.push)(
-            path,
-            options.state
-          );
-        }
-      } else {
-        warning(
-          false,
-          `You should call navigate() in a useEffect, not when ` +
-            `your component is first rendered.`
-        );
+      if (typeof to === "number") {
+        navigator.go(to);
+        return;
       }
+
+      let path = resolveTo(to, routePathname, locationPathname);
+
+      if (basename !== "/") {
+        path.pathname = joinPaths([basename, path.pathname]);
+      }
+
+      (!!options.replace ? navigator.replace : navigator.push)(
+        path,
+        options.state
+      );
     },
     [basename, navigator, routePathname, locationPathname]
   );
@@ -496,10 +538,12 @@ export function useParams<Key extends string = string>(): Readonly<
  * @see https://reactrouter.com/api/useResolvedPath
  */
 export function useResolvedPath(to: To): Path {
-  let { basename, pathname: fromPathname } = React.useContext(RouteContext);
+  let { pathname: locationPathname } = useLocation();
+  let { pathname: routePathname } = React.useContext(RouteContext);
+
   return React.useMemo(
-    () => resolvePath(to, fromPathname, basename),
-    [to, fromPathname, basename]
+    () => resolveTo(to, routePathname, locationPathname),
+    [to, routePathname, locationPathname]
   );
 }
 
@@ -513,13 +557,7 @@ export function useResolvedPath(to: To): Path {
  */
 export function useRoutes(
   routes: RouteObject[],
-  {
-    basename: basenameArg = "/",
-    location: locationArg
-  }: {
-    basename?: string;
-    location?: PartialLocation | string;
-  } = {}
+  locationArg?: Partial<Location> | string
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -529,20 +567,10 @@ export function useRoutes(
   );
 
   let {
-    basename: parentBasename,
     params: parentParams,
     pathname: parentPathname,
     route: parentRoute
   } = React.useContext(RouteContext);
-
-  invariant(
-    !parentRoute || basenameArg === "/",
-    `You cannot use a \`basename\` on a descendant <Routes> element ` +
-      `or \`useRoutes()\`. Please remove the \`basename\` prop from ` +
-      `<Routes basename="${basenameArg}">.`
-  );
-
-  let basename = parentRoute ? parentBasename : normalizePathname(basenameArg);
 
   if (__DEV__) {
     // You won't get a warning about 2 different <Routes> under a <Route>
@@ -585,32 +613,30 @@ export function useRoutes(
       ? parsePath(locationArg)
       : locationArg
     : locationFromContext;
+  let pathname = location.pathname || "/";
 
   let parentPathnameStart = getPathnameStart(parentPathname, parentParams);
-  let basenameForMatching = joinPaths([basename, parentPathnameStart]);
-  let matches = matchRoutes(routes, location, basenameForMatching);
+  let remainingPathname =
+    parentPathnameStart === "/"
+      ? pathname
+      : pathname.slice(parentPathnameStart.length);
+  let matches = matchRoutes(routes, { pathname: remainingPathname });
 
-  if (!matches) {
-    // No routes match the location.
-    return null;
+  if (__DEV__) {
+    warning(
+      parentRoute || matches != null,
+      `No routes matched location "${location.pathname}${location.search}${location.hash}" `
+    );
   }
 
-  let element = matches.reduceRight((outlet, match) => {
-    return (
-      <RouteContext.Provider
-        children={match.route.element || <Outlet />}
-        value={{
-          basename,
-          outlet,
-          params: match.params,
-          pathname: joinPaths([parentPathnameStart, match.pathname]),
-          route: match.route
-        }}
-      />
-    );
-  }, null as React.ReactElement | null);
-
-  return element;
+  return renderMatches(
+    matches &&
+      matches.map(match =>
+        Object.assign({}, match, {
+          pathname: joinPaths([parentPathnameStart, match.pathname])
+        })
+      )
+  );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -722,38 +748,24 @@ export interface RouteMatch<ParamKey extends string = string> {
  */
 export function matchRoutes(
   routes: RouteObject[],
-  location: Partial<Location> | string,
-  basenameArg: string = "/"
+  locationArg: Partial<Location> | string,
+  basename = "/"
 ): RouteMatch[] | null {
-  if (typeof location === "string") {
-    location = parsePath(location);
-  }
+  let location =
+    typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
-  let basename = normalizePathname(basenameArg);
-  let pathname = location.pathname || "/";
+  let pathname = stripBasename(location.pathname || "/", basename);
 
-  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
-    // URL pathname does not start with the basename.
+  if (pathname == null) {
     return null;
   }
-
-  if (basename !== "/") {
-    let nextChar = pathname.charAt(basename.length);
-    if (nextChar && nextChar !== "/") {
-      // URL pathname does not start with basename/.
-      return null;
-    }
-  }
-
-  let trailingPathname =
-    basename === "/" ? pathname : pathname.slice(basename.length) || "/";
 
   let branches = flattenRoutes(routes);
   rankRouteBranches(branches);
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    matches = matchRouteBranch(branches[i], routes, trailingPathname);
+    matches = matchRouteBranch(branches[i], routes, pathname);
   }
 
   return matches;
@@ -926,14 +938,27 @@ function matchRouteBranch<ParamKey extends string = string>(
   return matches;
 }
 
-function getPathnameStart(pathname: string, params: Params): string {
-  let splat = params["*"];
-  if (!splat) return pathname;
-  let pathnameStart = pathname.slice(0, -splat.length);
-  if (splat.startsWith("/")) return pathnameStart;
-  let index = pathnameStart.lastIndexOf("/");
-  if (index > 0) return pathnameStart.slice(0, index);
-  return "/";
+/**
+ * Renders the result of `matchRoutes()` into a React element.
+ */
+export function renderMatches(
+  matches: RouteMatch[] | null
+): React.ReactElement | null {
+  if (matches == null) return null;
+
+  return matches.reduceRight((outlet, match) => {
+    return (
+      <RouteContext.Provider
+        children={match.route.element || <Outlet />}
+        value={{
+          outlet,
+          params: match.params,
+          pathname: match.pathname,
+          route: match.route
+        }}
+      />
+    );
+  }, null as React.ReactElement | null);
 }
 
 /**
@@ -1077,25 +1102,17 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
  *
  * @see https://reactrouter.com/api/resolvePath
  */
-export function resolvePath(
-  to: To,
-  fromPathname = "/",
-  basenameArg = "/"
-): Path {
+export function resolvePath(to: To, fromPathname = "/"): Path {
   let {
     pathname: toPathname,
     search = "",
     hash = ""
   } = typeof to === "string" ? parsePath(to) : to;
-  let basename = normalizePathname(basenameArg);
 
   let pathname = toPathname
-    ? resolvePathname(
-        toPathname,
-        toPathname.startsWith("/")
-          ? basename
-          : joinPaths([basename, fromPathname])
-      )
+    ? toPathname.startsWith("/")
+      ? toPathname
+      : resolvePathname(toPathname, fromPathname)
     : fromPathname;
 
   return {
@@ -1105,9 +1122,9 @@ export function resolvePath(
   };
 }
 
-function resolvePathname(toPathname: string, fromPathname: string): string {
+function resolvePathname(relativePath: string, fromPathname: string): string {
   let segments = fromPathname.replace(/\/+$/, "").split("/");
-  let relativeSegments = toPathname.split("/");
+  let relativeSegments = relativePath.split("/");
 
   relativeSegments.forEach(segment => {
     if (segment === "..") {
@@ -1118,7 +1135,62 @@ function resolvePathname(toPathname: string, fromPathname: string): string {
     }
   });
 
-  return segments.length > 1 ? joinPaths(segments) : "/";
+  return segments.length > 1 ? segments.join("/") : "/";
+}
+
+function resolveTo(
+  to: To,
+  routePathname: string,
+  locationPathname: string
+): Path {
+  return resolvePath(
+    to,
+    // If a pathname is explicitly provided in `to`, it should be
+    // relative to the route context. This is explained in `Note on
+    // `<Link to>` values` in our migration guide from v5 as a means of
+    // disambiguation between `to` values that begin with `/` and those
+    // that do not. However, this is problematic for `to` values that do
+    // not provide a pathname. `to` can simply be a search or hash
+    // string, in which case we should assume that the navigation is
+    // relative to the current location's pathname and *not* the
+    // route pathname.
+    getToPathname(to) == null ? locationPathname : routePathname
+  );
+}
+
+function getToPathname(to: To): string | undefined {
+  // Empty strings should be treated the same as / paths
+  return to === "" || (to as Path).pathname === ""
+    ? "/"
+    : typeof to === "string"
+    ? parsePath(to).pathname
+    : to.pathname;
+}
+
+function getPathnameStart(pathname: string, params: Params): string {
+  let splat = params["*"];
+  if (!splat) return pathname;
+  let pathnameStart = pathname.slice(0, -splat.length);
+  if (splat.startsWith("/")) return pathnameStart;
+  let index = pathnameStart.lastIndexOf("/");
+  if (index > 0) return pathnameStart.slice(0, index);
+  return "/";
+}
+
+function stripBasename(pathname: string, basename: string): string | null {
+  if (basename === "/") return pathname;
+
+  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
+    return null;
+  }
+
+  let nextChar = pathname.charAt(basename.length);
+  if (nextChar && nextChar !== "/") {
+    // pathname does not start with basename/
+    return null;
+  }
+
+  return pathname.slice(basename.length) || "/";
 }
 
 const joinPaths = (paths: string[]): string =>
@@ -1152,7 +1224,7 @@ const normalizeHash = (hash: string): string =>
 
 /** @internal */
 export {
-  NavigatorContext as UNSAFE_NavigatorContext,
+  NavigationContext as UNSAFE_NavigationContext,
   LocationContext as UNSAFE_LocationContext,
   RouteContext as UNSAFE_RouteContext
 };

@@ -21,6 +21,7 @@ import {
   matchRoutes,
   matchPath,
   resolvePath,
+  renderMatches,
   useBlocker,
   useHref,
   useInRouterContext,
@@ -52,6 +53,7 @@ export {
   matchRoutes,
   matchPath,
   resolvePath,
+  renderMatches,
   useBlocker,
   useHref,
   useInRouterContext,
@@ -95,7 +97,7 @@ export type {
 
 /** @internal */
 export {
-  UNSAFE_NavigatorContext,
+  UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext
 } from "react-router";
