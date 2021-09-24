@@ -125,11 +125,12 @@ export function BrowserRouter({
   children,
   window
 }: BrowserRouterProps) {
-  let history = React.useMemo<BrowserHistory>(
-    () => createBrowserHistory({ window }),
-    [window]
-  );
+  let historyRef = React.useRef<BrowserHistory>();
+  if (historyRef.current == null) {
+    historyRef.current = createBrowserHistory({ window });
+  }
 
+  let history = historyRef.current;
   let [state, setState] = React.useState({
     action: history.action,
     location: history.location
@@ -159,11 +160,12 @@ export interface HashRouterProps {
  * portion of the URL so it is not sent to the server.
  */
 export function HashRouter({ basename, children, window }: HashRouterProps) {
-  let history = React.useMemo<HashHistory>(
-    () => createHashHistory({ window }),
-    [window]
-  );
+  let historyRef = React.useRef<HashHistory>();
+  if (historyRef.current == null) {
+    historyRef.current = createHashHistory({ window });
+  }
 
+  let history = historyRef.current;
   let [state, setState] = React.useState({
     action: history.action,
     location: history.location
