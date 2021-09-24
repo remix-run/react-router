@@ -1,20 +1,11 @@
 ---
-title: Quickstart Tutorial
-order: 1
+title: Tutorial
+order: 2
 ---
-
-# Quickstart Tutorial
-
-<docs-warning>This document is a practical guide to getting started quickly with React Router version 6. To dive more deeply into the principals that drive React Router's design, check out the [explanation of main concepts](concepts).</docs-warning>
-
-## NOTES
-
-- remove imports from App.jsx in the template
-- remove index.css import, just inline it
 
 ## Introduction
 
-TL;DR [Check out the completed version here](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Completed).
+[Check out the completed version of the app here](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Completed).
 
 React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, and on React Native.
 

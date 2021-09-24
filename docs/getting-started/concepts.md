@@ -1,6 +1,6 @@
 ---
 title: Main Concepts
-order: 3
+order: 4
 ---
 
 # Main Concepts
@@ -51,7 +51,7 @@ Here are some words we use a lot when we talk about React Router. The rest of th
 
 - <a id="route-config">**Route Config**</a> - A tree of **routes objects** that will be ranked and matched (with nesting) against the current location to create a branch of **route matches**.
 
-- <a id="route">**Route**</a> - An object or React Element typically with a shape of `{ path, element }` or `<Route path element>`. The `path` is a [path pattern] [segment]. When the path pattern matches, the element will be rendered.
+- <a id="route">**Route**</a> - An object or React Element typically with a shape of `{ path, element }` or `<Route path element>`. The `path` is a [path pattern][segment]. When the path pattern matches, the element will be rendered.
 
 - <a id="route-element">**Route Element**</a> - Or `<Route>`. This element's props are read to create a [route] by `<Routes>`, but otherwise does nothing.
 
@@ -827,8 +827,7 @@ Let's put it all together from the top, let's assume we're at the URL: `
 
 That's it! We hope this guide has helped you gain a deeper understanding of the main concepts in React Router.
 
-[URL]: #[URL]
-[location]: #location
+[URL]: #[URL][location]: #location
 [location state]: #location-state
 [history stack]: #history-stack
 [client side routing]: #csr

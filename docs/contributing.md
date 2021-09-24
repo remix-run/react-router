@@ -1,6 +1,5 @@
 ---
-title: Contributing to React Router
-order: 1
+title: Contributing
 ---
 
 # Contributing to React Router

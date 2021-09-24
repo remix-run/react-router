@@ -3,9 +3,7 @@ title: Custom Links
 order: 4
 ---
 
-# Custom Links
-
-In most cases, the exported `<Link>` component should meet all of your needs as an abstraction of the anchor tag. If you need to return anything other than an anchor element, or override any of `<Link>`'s rendering logic, you can use a few hooks from `react-router-dom` to build your own:
+In most cases, the exported `<Link>` and `<NavLink>` components should meet all of your needs as an abstraction of the anchor tag. If you need to return anything other than an anchor element (whatever you do return should eventually render an anchor element unless you really know what you're doing with accessibility), or override any of `<Link>`'s rendering logic, you can use a few hooks from `react-router-dom` to build your own:
 
 ```tsx
 import { useHref, useLinkClickHandler } from "react-router-dom";
@@ -57,6 +55,7 @@ function Link({ onPress, replace = false, state, to, ...rest }) {
   );
 }
 ```
+
 ## Dealing with external URLs
 
 React Router's `Link` component assumes that the `to` prop's `pathname` is relative to the app. For external links we recommend using an HTML anchor component.

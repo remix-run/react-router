@@ -7,12 +7,57 @@ order: 2
 
 <docs-warning>This document is an overview of new features and changes in React Router version 6. If you're new to React Router or looking for a more practical guide, check out our [quick start tutorial](tutorial).</docs-warning>
 
+If you're familiar with the JavaScript ecosystem, React, and React Router, this will get you up and running in React Router v6 as quickly as possible, no explanations, just code.
+
+- For a complete introduction to React Router do the [Tutorial](../tutorial)
+- For extensive documentation on every API see [API Reference](../api)
+- For a deeper understanding of concepts see [Main Concepts](../concepts)
+
+## Installation
+
+```sh
+npm add react-router-dom@6 history@5
+```
+
+## Configuring Routes
+
+```jsx
+import { render } from "react-dom";
+import { BrowserRouter } from "react-router-dom";
+// import your route components too
+
+render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />}>
+        <Route index element={<Home />} />
+        <Route path="teams" element={<Teams />}>
+          <Route path=":teamId" element={<Team />} />
+          <Route path="new" element={<NewTeamForm />} />
+          <Route index element={<LeagueStandings />} />
+        </Route>
+      </Route>
+    </Routes>
+  </BrowserRouter>,
+  document.getElementById("root")
+);
+```
+
+In previous versions of React Router you had to order your routes a certain way to get the right one to render when multiple routes matched an ambiguous URL. V6 is a lot smarter and will pick the most specific match so you don't have to worry about that anymore. For example, the URL `/teams/new` matches both of these route:
+
+```jsx
+<Route path="teams/:teamId" element={<Team />} />
+<Route path="teams/new" element={<NewTeamForm />} />
+```
+
+But `teams/new` is a more specific match than `/teams/:teamId`, so `<Team/>` will render.
+
 ## Navigation
 
-Use `Link` to let he user change the URL or `useNavigate` to do it yourself (like after form submissions):
+Use `Link` to let the user change the URL or `useNavigate` to do it yourself (like after form submissions):
 
 ```tsx
-import { Routes, Route, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function Home() {
   return (
@@ -21,22 +66,6 @@ function Home() {
       <nav>
         <Link to="/">Home</Link> | <Link to="about">About</Link>
       </nav>
-    </div>
-  );
-}
-
-function About() {
-  return <h1>About</h1>;
-}
-
-function App() {
-  return (
-    <div>
-      <h1>Welcome</h1>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="about" element={<About />} />
-      </Routes>
     </div>
   );
 }
@@ -98,36 +127,6 @@ function Invoice() {
   );
 }
 ```
-
-## Ambiguous Paths and Ranking
-
-Sometimes multiple route paths match the URL. When determining which route to render in these situations, the route with a path that _best_ matches the url will be picked.
-
-For example, consider these two routes:
-
-```tsx
-<Routes>
-  <Route path="invoices/:invoiceId" element={<Invoice />} />
-  <Route path="invoices/sent" element={<SentInvoices />} />
-</Routes>
-```
-
-`<Route path="invoices/:invoiceId">` can match an infinite number of URLs like `"/invoices/123"` and `"/invoices/cupcake"`. `<Route path="/invoices/sent">`, however, can only match one URL: `"/invoices/sent"`.
-
-So what happens when the URL is `"/invoices/sent"` and both paths match?
-
-`<Route path="/invoices/sent">` is more specific than `<Route path="invoices/:invoiceId">` so `<SentInvoices>` will be rendered. It's the _best_ match. Unlike previous versions of React Router, this means you can organize your code however you'd like, putting the routes in whatever order makes the most sense to you.
-
-We could render the same routes in the opposite order without changing what your app renders at `"/invoices/sent"`.
-
-```tsx
-<Routes>
-  <Route path="invoices/sent" element={<SentInvoices />} />
-  <Route path="invoices/:invoiceId" element={<Invoice />} />
-</Routes>
-```
-
-There's a lot more to the way React Router picks the best match than just this but you don't really ever even have to think about it so we'll leave it at that.
 
 ## Nested Routes
 

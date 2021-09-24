@@ -1,6 +1,5 @@
 ---
 title: API Reference
-order: 1
 ---
 
 # API Reference
@@ -144,6 +143,8 @@ ReactDOM.render(
   root
 );
 ```
+
+<docs-warning>We strongly recommend you do not use `HashRouter` unless you absolutely have to.</docs-warning>
 
 ### `<NativeRouter>`
 
@@ -487,7 +488,7 @@ declare function Outlet(): React.ReactElement | null;
 
 </details>
 
-An `<Outlet>` should be used in parent route elements to render their child route elements. This allows nested UI to show up when child routes are rendered. If the parent route matched exactly, it will render nothing.
+An `<Outlet>` should be used in parent route elements to render their child route elements. This allows nested UI to show up when child routes are rendered. If the parent route matched exactly, it will render a child index route or nothing if there is no index route.
 
 ```tsx
 function Dashboard() {

@@ -1,6 +1,5 @@
 ---
-title: Migrating React Router v5 to v6
-order: 1
+title: Migrating from v5
 ---
 
 # Migrating React Router v5 to v6
