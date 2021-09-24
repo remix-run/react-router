@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - logan/refresh-site
-#     paths:
-#       - docs/**
+    paths:
+      - docs/**
 
 jobs:
   website:
