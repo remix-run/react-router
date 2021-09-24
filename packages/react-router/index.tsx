@@ -439,7 +439,7 @@ export function useMatch<ParamKey extends string = string>(
     `useMatch() may be used only in the context of a <Router> component.`
   );
 
-  return matchPath<ParamKey>(pattern, useLocation().pathname);
+  return matchPath(pattern, useLocation().pathname);
 }
 
 /**
@@ -508,35 +508,6 @@ export function useNavigate(): NavigateFunction {
   );
 
   return navigate;
-}
-
-function getToPathname(to: To): string | undefined {
-  // Empty strings should be treated the same as / paths
-  return to === "" || (to as Path).pathname === ""
-    ? "/"
-    : typeof to === "string"
-    ? parsePath(to).pathname
-    : to.pathname;
-}
-
-function resolveTo(
-  to: To,
-  routePathname: string,
-  locationPathname: string
-): Path {
-  return resolvePath(
-    to,
-    // If a pathname is explicitly provided in `to`, it should be
-    // relative to the route context. This is explained in `Note on
-    // `<Link to>` values` in our migration guide from v5 as a means of
-    // disambiguation between `to` values that begin with `/` and those
-    // that do not. However, this is problematic for `to` values that do
-    // not provide a pathname. `to` can simply be a search or hash
-    // string, in which case we should assume that the navigation is
-    // relative to the current location's pathname and *not* the
-    // route pathname.
-    getToPathname(to) == null ? locationPathname : routePathname
-  );
 }
 
 /**
@@ -658,25 +629,14 @@ export function useRoutes(
     );
   }
 
-  if (matches == null) {
-    return null;
-  }
-
-  let element = matches.reduceRight((outlet, match) => {
-    return (
-      <RouteContext.Provider
-        children={match.route.element || <Outlet />}
-        value={{
-          outlet,
-          params: match.params,
-          pathname: joinPaths([parentPathnameStart, match.pathname]),
-          route: match.route
-        }}
-      />
-    );
-  }, null as React.ReactElement | null);
-
-  return element;
+  return renderMatches(
+    matches &&
+      matches.map(match =>
+        Object.assign({}, match, {
+          pathname: joinPaths([parentPathnameStart, match.pathname])
+        })
+      )
+  );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -779,22 +739,6 @@ export interface RouteMatch<ParamKey extends string = string> {
    * The route object that was used to match.
    */
   route: RouteObject;
-}
-
-function stripBasename(pathname: string, basename: string): string | null {
-  if (basename === "/") return pathname;
-
-  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
-    return null;
-  }
-
-  let nextChar = pathname.charAt(basename.length);
-  if (nextChar && nextChar !== "/") {
-    // pathname does not start with basename/
-    return null;
-  }
-
-  return pathname.slice(basename.length) || "/";
 }
 
 /**
@@ -994,14 +938,27 @@ function matchRouteBranch<ParamKey extends string = string>(
   return matches;
 }
 
-function getPathnameStart(pathname: string, params: Params): string {
-  let splat = params["*"];
-  if (!splat) return pathname;
-  let pathnameStart = pathname.slice(0, -splat.length);
-  if (splat.startsWith("/")) return pathnameStart;
-  let index = pathnameStart.lastIndexOf("/");
-  if (index > 0) return pathnameStart.slice(0, index);
-  return "/";
+/**
+ * Renders the result of `matchRoutes()` into a React element.
+ */
+export function renderMatches(
+  matches: RouteMatch[] | null
+): React.ReactElement | null {
+  if (matches == null) return null;
+
+  return matches.reduceRight((outlet, match) => {
+    return (
+      <RouteContext.Provider
+        children={match.route.element || <Outlet />}
+        value={{
+          outlet,
+          params: match.params,
+          pathname: match.pathname,
+          route: match.route
+        }}
+      />
+    );
+  }, null as React.ReactElement | null);
 }
 
 /**
@@ -1179,6 +1136,61 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
   });
 
   return segments.length > 1 ? segments.join("/") : "/";
+}
+
+function resolveTo(
+  to: To,
+  routePathname: string,
+  locationPathname: string
+): Path {
+  return resolvePath(
+    to,
+    // If a pathname is explicitly provided in `to`, it should be
+    // relative to the route context. This is explained in `Note on
+    // `<Link to>` values` in our migration guide from v5 as a means of
+    // disambiguation between `to` values that begin with `/` and those
+    // that do not. However, this is problematic for `to` values that do
+    // not provide a pathname. `to` can simply be a search or hash
+    // string, in which case we should assume that the navigation is
+    // relative to the current location's pathname and *not* the
+    // route pathname.
+    getToPathname(to) == null ? locationPathname : routePathname
+  );
+}
+
+function getToPathname(to: To): string | undefined {
+  // Empty strings should be treated the same as / paths
+  return to === "" || (to as Path).pathname === ""
+    ? "/"
+    : typeof to === "string"
+    ? parsePath(to).pathname
+    : to.pathname;
+}
+
+function getPathnameStart(pathname: string, params: Params): string {
+  let splat = params["*"];
+  if (!splat) return pathname;
+  let pathnameStart = pathname.slice(0, -splat.length);
+  if (splat.startsWith("/")) return pathnameStart;
+  let index = pathnameStart.lastIndexOf("/");
+  if (index > 0) return pathnameStart.slice(0, index);
+  return "/";
+}
+
+function stripBasename(pathname: string, basename: string): string | null {
+  if (basename === "/") return pathname;
+
+  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
+    return null;
+  }
+
+  let nextChar = pathname.charAt(basename.length);
+  if (nextChar && nextChar !== "/") {
+    // pathname does not start with basename/
+    return null;
+  }
+
+  return pathname.slice(basename.length) || "/";
 }
 
 const joinPaths = (paths: string[]): string =>

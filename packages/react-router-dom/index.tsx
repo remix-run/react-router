@@ -7,6 +7,12 @@ import {
   Route,
   Router,
   Routes,
+  createRoutesFromChildren,
+  generatePath,
+  matchRoutes,
+  matchPath,
+  resolvePath,
+  renderMatches,
   useBlocker,
   useHref,
   useInRouterContext,
@@ -16,12 +22,7 @@ import {
   useOutlet,
   useParams,
   useResolvedPath,
-  useRoutes,
-  createRoutesFromChildren,
-  generatePath,
-  matchRoutes,
-  matchPath,
-  resolvePath
+  useRoutes
 } from "react-router";
 import type { BrowserHistory, HashHistory, State, To } from "history";
 
@@ -58,6 +59,7 @@ export {
   generatePath,
   matchRoutes,
   matchPath,
+  renderMatches,
   resolvePath,
   useBlocker,
   useHref,
