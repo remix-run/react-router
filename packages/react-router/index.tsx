@@ -267,21 +267,11 @@ export function Router({
   } = locationProp;
 
   let location = React.useMemo(() => {
-    if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
-      // URL pathname does not start with the basename.
+    let trailingPathname = stripBasename(pathname, basename);
+
+    if (trailingPathname == null) {
       return null;
     }
-
-    if (basename !== "/") {
-      let nextChar = pathname.charAt(basename.length);
-      if (nextChar && nextChar !== "/") {
-        // URL pathname does not start with basename/.
-        return null;
-      }
-    }
-
-    let trailingPathname =
-      basename === "/" ? pathname : pathname.slice(basename.length) || "/";
 
     return {
       pathname: trailingPathname,
@@ -791,6 +781,22 @@ export interface RouteMatch<ParamKey extends string = string> {
   route: RouteObject;
 }
 
+function stripBasename(pathname: string, basename: string): string | null {
+  if (basename === "/") return pathname;
+
+  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
+    return null;
+  }
+
+  let nextChar = pathname.charAt(basename.length);
+  if (nextChar && nextChar !== "/") {
+    // pathname does not start with basename/
+    return null;
+  }
+
+  return pathname.slice(basename.length) || "/";
+}
+
 /**
  * Matches the given routes to a location and returns the match data.
  *
@@ -798,11 +804,17 @@ export interface RouteMatch<ParamKey extends string = string> {
  */
 export function matchRoutes(
   routes: RouteObject[],
-  locationArg: Partial<Location> | string
+  locationArg: Partial<Location> | string,
+  basename = "/"
 ): RouteMatch[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
-  let pathname = location.pathname || "/";
+
+  let pathname = stripBasename(location.pathname || "/", basename);
+
+  if (pathname == null) {
+    return null;
+  }
 
   let branches = flattenRoutes(routes);
   rankRouteBranches(branches);
