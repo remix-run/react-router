@@ -3,7 +3,11 @@
   "version": "6.0.0-beta.4",
   "author": "Remix Software <hello@remix.run>",
   "description": "Declarative routing for React Native applications",
-  "repository": "remix-run/react-router",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remix-run/react-router.git",
+    "directory": "packages/react-router-native"
+  },
   "license": "MIT",
   "main": "index.js",
   "types": "index.d.ts",
