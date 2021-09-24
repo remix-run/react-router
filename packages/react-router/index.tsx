@@ -269,7 +269,6 @@ export function Router({
   let location = React.useMemo(() => {
     if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
       // URL pathname does not start with the basename.
-      // TODO: warn
       return null;
     }
 
@@ -277,7 +276,6 @@ export function Router({
       let nextChar = pathname.charAt(basename.length);
       if (nextChar && nextChar !== "/") {
         // URL pathname does not start with basename/.
-        // TODO: warn
         return null;
       }
     }
