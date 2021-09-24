@@ -14,14 +14,6 @@ describe("Descendant <Routes>", () => {
 
   describe("when the parent route path does not have a trailing *", () => {
     it("warns once when you visit the parent route", () => {
-      function ReactFundamentals() {
-        return <h1>React Fundamentals</h1>;
-      }
-
-      function AdvancedReact() {
-        return <h1>Advanced React</h1>;
-      }
-
       function ReactCourses() {
         return (
           <div>
@@ -30,11 +22,9 @@ describe("Descendant <Routes>", () => {
             <Routes>
               <Route
                 path="react-fundamentals"
-                element={<ReactFundamentals />}
+                element={<h1>React Fundamentals</h1>}
               />
-            </Routes>
-            <Routes>
-              <Route path="advanced-react" element={<AdvancedReact />} />
+              <Route path="advanced-react" element={<h1>Advanced React</h1>} />
             </Routes>
           </div>
         );
@@ -49,17 +39,15 @@ describe("Descendant <Routes>", () => {
         );
       }
 
-      act(() => {
-        createTestRenderer(
-          <Router initialEntries={["/courses/react"]}>
-            <Routes>
-              <Route path="courses" element={<Courses />}>
-                <Route path="react" element={<ReactCourses />} />
-              </Route>
-            </Routes>
-          </Router>
-        );
-      });
+      createTestRenderer(
+        <Router initialEntries={["/courses/react"]}>
+          <Routes>
+            <Route path="courses" element={<Courses />}>
+              <Route path="react" element={<ReactCourses />} />
+            </Route>
+          </Routes>
+        </Router>
+      );
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn).toHaveBeenCalledWith(
@@ -70,10 +58,6 @@ describe("Descendant <Routes>", () => {
 
   describe("when the parent route has a trailing *", () => {
     it("does not warn when you visit the parent route", () => {
-      function ReactFundamentals() {
-        return <h1>React Fundamentals</h1>;
-      }
-
       function ReactCourses() {
         return (
           <div>
@@ -82,7 +66,7 @@ describe("Descendant <Routes>", () => {
             <Routes>
               <Route
                 path="react-fundamentals"
-                element={<ReactFundamentals />}
+                element={<h1>React Fundamentals</h1>}
               />
             </Routes>
           </div>

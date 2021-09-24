@@ -95,7 +95,7 @@ export type {
 
 /** @internal */
 export {
-  UNSAFE_NavigatorContext,
+  UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext
 } from "react-router";

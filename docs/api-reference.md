@@ -105,6 +105,7 @@ Access to the URL [search parameters](https://developer.mozilla.org/en-US/docs/W
 declare function BrowserRouter(props: BrowserRouterProps): React.ReactElement;
 
 interface BrowserRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   window?: Window;
 }
@@ -138,6 +139,7 @@ ReactDOM.render(
 declare function HashRouter(props: HashRouterProps): React.ReactElement;
 
 interface HashRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   window?: Window;
 }
@@ -171,6 +173,7 @@ ReactDOM.render(
 declare function NativeRouter(props: NativeRouterProps): React.ReactElement;
 
 interface NativeRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
@@ -204,6 +207,7 @@ function App() {
 declare function MemoryRouter(props: MemoryRouterProps): React.ReactElement;
 
 interface MemoryRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
@@ -268,7 +272,7 @@ interface LinkProps
 }
 
 type State = object | null;
-type To = string | PartialLocation;
+type To = Partial<Location> | string;
 ```
 
 </details>
@@ -435,7 +439,7 @@ const NavLink = React.forwardRef(
 );
 ```
 
-If the `end` prop is used, it will ensure this component isn't matched as "active" when its descendant paths are matched:
+If the `end` prop is used, it will ensure this component isn't matched as "active" when its descendant paths are matched. For example, to render a link that is only active at the website root and not any other URLs, you can use:
 
 ```tsx
 <NavLink to="/" end>
@@ -582,6 +586,7 @@ declare function Router(props: RouterProps): React.ReactElement;
 
 interface RouterProps {
   action?: Action;
+  basename?: string;
   children?: React.ReactNode;
   location: Location;
   navigator: Navigator;
@@ -594,6 +599,8 @@ interface RouterProps {
 `<Router>` is the low-level interface that is shared by all router components ([`<BrowserRouter>`](#browserrouter), [`<HashRouter>`](#hashrouter), [`<StaticRouter>`](#staticrouter), [`<NativeRouter>`](#nativerouter), and [`<MemoryRouter>`](#memoryrouter)). In terms of React, `<Router>` is a [context provider](https://reactjs.org/docs/context.html#contextprovider) that supplies routing information to the rest of the app.
 
 You probably never need to render a `<Router>` manually. Instead, you should use one of the higher-level routers depending on your environment. You only ever need one router in a given app.
+
+The `<Router basename>` prop may be used to make all routes and links in your app relative to a "base" portion of the URL pathname that they all share. This is useful when rendering only a portion of a larger app with React Router or when your app has multiple entry points. Basenames are not case-sensitive.
 
 <a name="routes"></a>
 <a name="route"></a>
@@ -608,8 +615,8 @@ You probably never need to render a `<Router>` manually. Instead, you should use
 declare function Routes(props: RoutesProps): React.ReactElement | null;
 
 interface RoutesProps {
-  basename?: string;
   children?: React.ReactNode;
+  location?: Partial<Location> | string;
 }
 
 declare function Route(props: RouteProps): React.ReactElement | null;
@@ -618,6 +625,7 @@ interface RouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactElement | null;
+  index?: boolean;
   path?: string;
 }
 ```
@@ -664,6 +672,7 @@ For example, in the following config the parent route renders an `<Outlet>` by d
 declare function StaticRouter(props: StaticRouterProps): React.ReactElement;
 
 interface StaticRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   location?: Path | LocationPieces;
 }
@@ -695,37 +704,6 @@ function requestHandler(req, res) {
 http.createServer(requestHandler).listen(3000);
 ```
 
-<a name="createroutesfromarray"></a>
-
-### `createRoutesFromArray`
-
-<details>
-  <summary>Type declaration</summary>
-
-```tsx
-declare function createRoutesFromArray(
-  array: PartialRouteObject[]
-): RouteObject[];
-
-interface PartialRouteObject {
-  path?: string;
-  caseSensitive?: boolean;
-  element?: React.ReactNode;
-  children?: PartialRouteObject[];
-}
-
-interface RouteObject {
-  caseSensitive: boolean;
-  children?: RouteObject[];
-  element: React.ReactNode;
-  path: string;
-}
-```
-
-</details>
-
-`createRoutesFromArray` is a helper that fills in the (potentially) missing pieces in an array of route objects. It is used internally by [`useRoutes`](#useroutes) to create route objects.
-
 <a name="createroutesfromchildren"></a>
 
 ### `createRoutesFromChildren`
@@ -737,13 +715,19 @@ interface RouteObject {
 declare function createRoutesFromChildren(
   children: React.ReactNode
 ): RouteObject[];
+
+interface RouteObject {
+  caseSensitive?: boolean;
+  children?: RouteObject[];
+  element?: React.ReactNode;
+  index?: boolean;
+  path?: string;
+}
 ```
 
 </details>
 
-`createRoutesFromChildren` is a helper that creates route objects from React elements. It is used internally in a [`<Routes>` element](#routes) to generate a route config from its [`<Route>`](#route) children elements.
-
-See also [`createRoutesFromArray`](#createroutesfromarray).
+`createRoutesFromChildren` is a helper that creates route objects from `<Route>` elements. It is used internally in a [`<Routes>` element](#routes) to generate a route config from its [`<Route>`](#route) children.
 
 <a name="generatepath"></a>
 
@@ -788,14 +772,13 @@ The term "location" in React Router refers to [the `Location` interface](https:/
 ```tsx
 declare function matchRoutes(
   routes: RouteObject[],
-  location: string | PartialLocation,
-  basename: string = ""
+  location: Partial<Location> | string
 ): RouteMatch[] | null;
 
 interface RouteMatch {
-  route: RouteObject;
-  pathname: string;
   params: Params;
+  pathname: string;
+  route: RouteObject;
 }
 ```
 
@@ -818,15 +801,15 @@ declare function matchPath<ParamKey extends string = string>(
   pathname: string
 ): PathMatch<ParamKey> | null;
 
-type PathPattern =
-  | string
-  | { path: string; caseSensitive?: boolean; end?: boolean };
-
 interface PathMatch {
-  path: string;
-  pathname: string;
   params: Params;
+  pathname: string;
+  pattern: PathPattern;
 }
+
+type PathPattern =
+  | { path: string; caseSensitive?: boolean; end?: boolean }
+  | string;
 ```
 
 </details>
@@ -845,7 +828,7 @@ The [`useMatch` hook](#usematch) uses this function internally to match a route 
 ```tsx
 declare function resolvePath(to: To, fromPathname = "/"): Path;
 
-type To = string | PartialLocation;
+type To = Partial<Location> | string;
 
 interface Path {
   pathname: string;
@@ -858,7 +841,7 @@ interface Path {
 
 `resolvePath` resolves a given `To` value into an actual `Path` object with an absolute `pathname`. This is useful whenever you need to know the exact path for a relative `To` value. For example, the `<Link>` component uses this function to know the actual URL it points to.
 
-The [`useResolvedPath` hook](#useresolvedpath) uses `resolvePath` internally to resolve against the current `location.pathname`.
+The [`useResolvedPath` hook](#useresolvedpath) uses `resolvePath` internally to resolve the pathname. If `to` contains a pathname, it is resolved against the current route pathname. Otherwise, it is resolved against the current URL (`location.pathname`).
 
 <a name="useblocker"></a>
 
@@ -1047,7 +1030,7 @@ function App() {
 
 ```tsx
 declare function useMatch<ParamKey extends string = string>(
-  pattern: PathPattern
+  pattern: PathPattern | string
 ): PathMatch<ParamKey> | null;
 ```
 
@@ -1212,11 +1195,8 @@ See [`resolvePath`](#resolvepath) for more information.
 
 ```tsx
 declare function useRoutes(
-  partialRoutes: PartialRouteObject[],
-  options?: {
-    basename?: string;
-    location?: PartialLocation;
-  }
+  routes: RouteObject[],
+  location?: Partial<Location> | string;
 ): React.ReactElement | null;
 ```
 

@@ -138,8 +138,8 @@ describe("path matching with a basename", () => {
   ];
 
   test("top-level route", () => {
-    let location = { pathname: "/app/users/michael" };
-    let matches = matchRoutes(routes, location, "/app");
+    let location = { pathname: "/users/michael" };
+    let matches = matchRoutes(routes, location);
 
     expect(matches).not.toBeNull();
     expect(matches).toHaveLength(1);
@@ -152,8 +152,8 @@ describe("path matching with a basename", () => {
   });
 
   test("deeply nested route", () => {
-    let location = { pathname: "/app/users/michael/subjects/react" };
-    let matches = matchRoutes(routes, location, "/app");
+    let location = { pathname: "/users/michael/subjects/react" };
+    let matches = matchRoutes(routes, location);
 
     expect(matches).not.toBeNull();
     expect(matches).toHaveLength(3);

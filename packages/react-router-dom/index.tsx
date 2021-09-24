@@ -102,7 +102,7 @@ export type {
 
 /** @internal */
 export {
-  UNSAFE_NavigatorContext,
+  UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext
 } from "react-router";
@@ -112,6 +112,7 @@ export {
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface BrowserRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   window?: Window;
 }
@@ -119,13 +120,16 @@ export interface BrowserRouterProps {
 /**
  * A <Router> for use in web browsers. Provides the cleanest URLs.
  */
-export function BrowserRouter({ children, window }: BrowserRouterProps) {
-  let historyRef = React.useRef<BrowserHistory>();
-  if (historyRef.current == null) {
-    historyRef.current = createBrowserHistory({ window });
-  }
+export function BrowserRouter({
+  basename,
+  children,
+  window
+}: BrowserRouterProps) {
+  let history = React.useMemo<BrowserHistory>(
+    () => createBrowserHistory({ window }),
+    [window]
+  );
 
-  let history = historyRef.current;
   let [state, setState] = React.useState({
     action: history.action,
     location: history.location
@@ -135,6 +139,7 @@ export function BrowserRouter({ children, window }: BrowserRouterProps) {
 
   return (
     <Router
+      basename={basename}
       children={children}
       action={state.action}
       location={state.location}
@@ -144,6 +149,7 @@ export function BrowserRouter({ children, window }: BrowserRouterProps) {
 }
 
 export interface HashRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   window?: Window;
 }
@@ -152,13 +158,12 @@ export interface HashRouterProps {
  * A <Router> for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ children, window }: HashRouterProps) {
-  let historyRef = React.useRef<HashHistory>();
-  if (historyRef.current == null) {
-    historyRef.current = createHashHistory({ window });
-  }
+export function HashRouter({ basename, children, window }: HashRouterProps) {
+  let history = React.useMemo<HashHistory>(
+    () => createHashHistory({ window }),
+    [window]
+  );
 
-  let history = historyRef.current;
   let [state, setState] = React.useState({
     action: history.action,
     location: history.location
@@ -168,6 +173,7 @@ export function HashRouter({ children, window }: HashRouterProps) {
 
   return (
     <Router
+      basename={basename}
       children={children}
       action={state.action}
       location={state.location}

@@ -2,7 +2,30 @@ import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Routes, Route } from "react-router";
 
-describe("A <Routes>", () => {
+describe("<Routes>", () => {
+  let consoleWarn: jest.SpyInstance;
+  beforeEach(() => {
+    consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleWarn.mockRestore();
+  });
+
+  it("renders null and issues a warning when no routes match the URL", () => {
+    let renderer = createTestRenderer(
+      <Router>
+        <Routes />
+      </Router>
+    );
+
+    expect(renderer.toJSON()).toBeNull();
+    expect(consoleWarn).toHaveBeenCalledTimes(1);
+    expect(consoleWarn).toHaveBeenCalledWith(
+      expect.stringContaining("No routes matched location")
+    );
+  });
+
   it("renders the first route that matches the URL", () => {
     let renderer = createTestRenderer(
       <Router initialEntries={["/"]}>
