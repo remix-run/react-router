@@ -7,7 +7,7 @@
     "lint": "eslint .",
     "publish": "node ./scripts/publish.js",
     "size": "filesize",
-    "test": "node ./scripts/test.js",
+    "test": "jest",
     "version": "node ./scripts/version.js",
     "watch": "node ./scripts/watch.js",
     "generate-api-docs": "node ./scripts/generate-api-docs.js"
@@ -70,6 +70,9 @@
       "**/react-native",
       "**/react-native/**"
     ]
+  },
+  "jest": {
+    "projects": ["<rootDir>/packages/*"]
   },
   "filesize": {
     "build/react-router/react-router.production.min.js": {
