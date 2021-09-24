@@ -7,9 +7,7 @@ on:
 
 jobs:
   website:
-    if: |
-      github.repository == "remix-run/react-router" &&
-      github.ref == "refs/heads/logan/refresh-docs"
+    if: github.repository == "remix-run/react-router" && github.ref == "refs/heads/logan/refresh-docs"
     runs-on: ubuntu-latest
 
     steps:
