@@ -1,4 +1,5 @@
 name: website
+
 on:
   push:
     branches:
@@ -8,13 +9,13 @@ on:
 
 jobs:
   website:
-    if: github.repository == 'remix-run/react-router'
+    if: github.repository == "remix-run/react-router"
     runs-on: ubuntu-latest
 
     steps:
       - name: Refresh the docs
         uses: fjogeleit/http-request-action@master
         with:
-          url: ${{ secrets.DOCS_REFRESH_URL }}?ref={{ github.ref}}
-          method: 'POST'
-          customHeaders: '{ Authorization: ${{ secrets.DOCS_REFRESH_TOKEN }} }'
+          url: "${{ secrets.DOCS_REFRESH_URL }}?ref={{ github.ref}}"
+          method: "POST"
+          customHeaders: "{ Authorization: ${{ secrets.DOCS_REFRESH_TOKEN }} }"
