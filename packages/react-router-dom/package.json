@@ -1,9 +1,9 @@
 {
   "name": "react-router-dom",
   "version": "6.0.0-beta.4",
-  "author": "React Training <hello@reacttraining.com>",
+  "author": "Remix Software <hello@remix.run>",
   "description": "Declarative routing for React web applications",
-  "repository": "ReactTraining/react-router",
+  "repository": "remix-run/react-router",
   "license": "MIT",
   "main": "main.js",
   "module": "index.js",
