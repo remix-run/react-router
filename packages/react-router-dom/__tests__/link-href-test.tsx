@@ -1,4 +1,5 @@
 import * as React from "react";
+import type { ReactTestRenderer } from "react-test-renderer";
 import { act, create as createTestRenderer } from "react-test-renderer";
 import {
   MemoryRouter as Router,
@@ -7,7 +8,6 @@ import {
   Route,
   Link
 } from "react-router-dom";
-import type { ReactTestRenderer } from "react-test-renderer";
 
 describe("Link href", () => {
   let node: HTMLDivElement;
