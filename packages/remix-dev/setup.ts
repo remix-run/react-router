@@ -2,18 +2,21 @@ import * as fse from "fs-extra";
 import * as path from "path";
 
 export enum SetupPlatform {
+  CloudflareWorkers = "cloudflare-workers",
   Node = "node"
 }
 
 export function isSetupPlatform(platform: any): platform is SetupPlatform {
-  return platform === SetupPlatform.Node;
+  return [SetupPlatform.CloudflareWorkers, SetupPlatform.Node].includes(
+    platform
+  );
 }
 
 export async function setupRemix(platform: SetupPlatform): Promise<void> {
   let remixPkgJsonFile: string;
   try {
     remixPkgJsonFile = resolvePackageJsonFile("remix");
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === "MODULE_NOT_FOUND") {
       console.error(
         `Missing the "remix" package. Please run \`npm install remix\` before \`remix setup\`.`

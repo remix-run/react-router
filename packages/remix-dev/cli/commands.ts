@@ -49,13 +49,15 @@ export async function watch(
       ? remixRootOrConfig
       : await readConfig(remixRootOrConfig);
 
-  let wss = new WebSocket.Server({ port: 3001 });
+  let wss = new WebSocket.Server({ port: config.devServerPort });
   function broadcast(event: { type: string; [key: string]: any }) {
-    wss.clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(event));
-      }
-    });
+    setTimeout(() => {
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(event));
+        }
+      });
+    }, config.devServerBroadcastDelay);
   }
 
   function log(_message: string) {

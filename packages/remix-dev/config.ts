@@ -69,6 +69,10 @@ export interface AppConfig {
    * The port number to use for the dev server. Defaults to 8002.
    */
   devServerPort?: number;
+  /**
+   * The delay before the dev server broadcasts a reload event
+   */
+  devServerBroadcastDelay?: number;
 
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 }
@@ -131,6 +135,11 @@ export interface RemixConfig {
    * The port number to use for the dev (asset) server.
    */
   devServerPort: number;
+
+  /**
+   * The delay before the dev (asset) server broadcasts a reload event.
+   */
+  devServerBroadcastDelay: number;
 
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 }
@@ -196,6 +205,7 @@ export async function readConfig(
   );
 
   let devServerPort = appConfig.devServerPort || 8002;
+  let devServerBroadcastDelay = appConfig.devServerBroadcastDelay || 0;
 
   let publicPath = addTrailingSlash(appConfig.publicPath || "/build/");
 
@@ -228,6 +238,7 @@ export async function readConfig(
     entryClientFile,
     entryServerFile,
     devServerPort,
+    devServerBroadcastDelay,
     assetsBuildDirectory,
     publicPath,
     rootDirectory,

@@ -46,8 +46,6 @@ export function mdxPlugin(config: RemixConfig): esbuild.Plugin {
               break;
           }
 
-          console.log(rehypePlugins);
-
           let remixExports = `
 export const filename = ${JSON.stringify(path.basename(args.path))};
 export const headers = typeof attributes !== "undefined" && attributes.headers;
