@@ -1,10 +1,11 @@
 {
   "name": "react-router-dom",
-  "version": "6.0.0-beta.4",
-  "author": "React Training <hello@reacttraining.com>",
+  "version": "6.0.0-beta.5",
+  "author": "Remix Software <hello@remix.run>",
   "description": "Declarative routing for React web applications",
   "repository": {
-    "url": "remix-run/react-router",
+    "type": "git",
+    "url": "https://github.com/remix-run/react-router.git",
     "directory": "packages/react-router-dom"
   },
   "license": "MIT",
@@ -20,7 +21,7 @@
     }
   },
   "dependencies": {
-    "react-router": "6.0.0-beta.4"
+    "react-router": "6.0.0-beta.5"
   },
   "peerDependencies": {
     "history": ">=5",

@@ -9,69 +9,8 @@ import {
   useParams,
   useRoutes
 } from "react-router";
-import type { InitialEntry } from "history";
 
 describe("route matching", () => {
-  describe("using a route config object", () => {
-    function RoutesRenderer({ routes }: { routes: RouteObject[] }) {
-      return useRoutes(routes);
-    }
-
-    let routes = [
-      {
-        path: "courses",
-        element: <Courses />,
-        children: [
-          {
-            path: ":id",
-            element: <Course />,
-            children: [{ path: "grades", element: <CourseGrades /> }]
-          },
-          { path: "new", element: <NewCourse /> },
-          { index: true, element: <CoursesIndex /> },
-          { path: "*", element: <CoursesNotFound /> }
-        ]
-      },
-      {
-        path: "courses",
-        element: <Landing />,
-        children: [
-          { path: "react-fundamentals", element: <ReactFundamentals /> },
-          { path: "advanced-react", element: <AdvancedReact /> },
-          { path: "*", element: <NeverRender /> }
-        ]
-      },
-      { path: "/", element: <Home /> },
-      { path: "*", element: <NotFound /> }
-    ];
-
-    describeRouteMatching(<RoutesRenderer routes={routes} />);
-  });
-
-  describe("using <Routes> with <Route> elements", () => {
-    let routes = (
-      <Routes>
-        <Route path="courses" element={<Courses />}>
-          <Route path=":id" element={<Course />}>
-            <Route path="grades" element={<CourseGrades />} />
-          </Route>
-          <Route path="new" element={<NewCourse />} />
-          <Route index element={<CoursesIndex />} />
-          <Route path="*" element={<CoursesNotFound />} />
-        </Route>
-        <Route path="courses" element={<Landing />}>
-          <Route path="react-fundamentals" element={<ReactFundamentals />} />
-          <Route path="advanced-react" element={<AdvancedReact />} />
-          <Route path="*" element={<NeverRender />} />
-        </Route>
-        <Route index element={<Home />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    );
-
-    describeRouteMatching(routes);
-  });
-
   function describeRouteMatching(routes: React.ReactNode) {
     let testPaths = [
       "/courses",
@@ -87,17 +26,74 @@ describe("route matching", () => {
 
     testPaths.forEach(path => {
       it(`renders the right elements at ${path}`, () => {
-        expect(renderRoutes(routes, path)).toMatchSnapshot();
+        let renderer = createTestRenderer(
+          <Router initialEntries={[path]} children={routes} />
+        );
+
+        expect(renderer.toJSON()).toMatchSnapshot();
       });
     });
   }
 
-  function renderRoutes(children: React.ReactNode, entry: InitialEntry) {
-    let renderer = createTestRenderer(
-      <Router initialEntries={[entry]} children={children} />
+  describe("using a route config object", () => {
+    let routes = [
+      {
+        path: "courses",
+        element: <Courses />,
+        children: [
+          { index: true, element: <CoursesIndex /> },
+          {
+            path: ":id",
+            element: <Course />,
+            children: [{ path: "grades", element: <CourseGrades /> }]
+          },
+          { path: "new", element: <NewCourse /> },
+          { path: "*", element: <CoursesNotFound /> }
+        ]
+      },
+      {
+        path: "courses",
+        element: <Landing />,
+        children: [
+          { path: "react-fundamentals", element: <ReactFundamentals /> },
+          { path: "advanced-react", element: <AdvancedReact /> },
+          { path: "*", element: <NeverRender /> }
+        ]
+      },
+      { index: true, element: <Home /> },
+      { path: "*", element: <NotFound /> }
+    ];
+
+    function RoutesRenderer({ routes }: { routes: RouteObject[] }) {
+      return useRoutes(routes);
+    }
+
+    describeRouteMatching(<RoutesRenderer routes={routes} />);
+  });
+
+  describe("using <Routes> with <Route> elements", () => {
+    let routes = (
+      <Routes>
+        <Route path="courses" element={<Courses />}>
+          <Route index element={<CoursesIndex />} />
+          <Route path=":id" element={<Course />}>
+            <Route path="grades" element={<CourseGrades />} />
+          </Route>
+          <Route path="new" element={<NewCourse />} />
+          <Route path="*" element={<CoursesNotFound />} />
+        </Route>
+        <Route path="courses" element={<Landing />}>
+          <Route path="react-fundamentals" element={<ReactFundamentals />} />
+          <Route path="advanced-react" element={<AdvancedReact />} />
+          <Route path="*" element={<NeverRender />} />
+        </Route>
+        <Route index element={<Home />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     );
-    return renderer.toJSON();
-  }
+
+    describeRouteMatching(routes);
+  });
 
   function Courses() {
     return (

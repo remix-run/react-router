@@ -2,26 +2,36 @@ import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Routes, Route } from "react-router";
 
-describe("<Routes> with a basename", () => {
-  it("renders null when the URL does not match the basename", () => {
+describe("<Router basename>", () => {
+  let consoleWarn: jest.SpyInstance;
+  beforeEach(() => {
+    consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleWarn.mockRestore();
+  });
+
+  it("renders null and issues a warning when the URL does not match the basename", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/home"]}>
-        <Routes basename="app">
+      <Router basename="/app" initialEntries={["/home"]}>
+        <Routes>
           <Route path="/" element={<h1>App</h1>} />
         </Routes>
       </Router>
     );
 
     expect(renderer.toJSON()).toBeNull();
+    expect(consoleWarn).toHaveBeenCalledTimes(1);
+    expect(consoleWarn).toHaveBeenCalledWith(
+      expect.stringContaining("<Router> won't render anything")
+    );
   });
 
   it("renders the first route that matches the URL", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/home"]}>
-        <Routes basename="app">
-          <Route path="/" element={<h1>App</h1>} />
-        </Routes>
-        <Routes basename="home">
+      <Router basename="/home" initialEntries={["/home"]}>
+        <Routes>
           <Route path="/" element={<h1>Home</h1>} />
         </Routes>
       </Router>
@@ -36,10 +46,10 @@ describe("<Routes> with a basename", () => {
 
   it("does not render a 2nd route that also matches the URL", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/app/home"]}>
-        <Routes basename="app">
+      <Router basename="/app" initialEntries={["/app/home"]}>
+        <Routes>
           <Route path="home" element={<h1>Home</h1>} />
-          <Route path="home" element={<h1>Dashboard</h1>} />
+          <Route path="home" element={<h1>Something else</h1>} />
         </Routes>
       </Router>
     );
@@ -53,11 +63,8 @@ describe("<Routes> with a basename", () => {
 
   it("matches regardless of basename casing", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/home"]}>
-        <Routes basename="APP">
-          <Route path="/" element={<h1>App</h1>} />
-        </Routes>
-        <Routes basename="HoME">
+      <Router basename="/HoME" initialEntries={["/home"]}>
+        <Routes>
           <Route path="/" element={<h1>Home</h1>} />
         </Routes>
       </Router>
@@ -72,11 +79,8 @@ describe("<Routes> with a basename", () => {
 
   it("matches regardless of URL casing", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/hOmE"]}>
-        <Routes basename="aPp">
-          <Route path="/" element={<h1>App</h1>} />
-        </Routes>
-        <Routes basename="HoMe">
+      <Router basename="/home" initialEntries={["/hOmE"]}>
+        <Routes>
           <Route path="/" element={<h1>Home</h1>} />
         </Routes>
       </Router>

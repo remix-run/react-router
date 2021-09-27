@@ -7,9 +7,6 @@ lerna-debug.log
 /website/build/
 node_modules/
 
-/website-deploy-key
-/website-deploy-key.pub
-
 # v5 build files
 /packages/*/cjs/
 /packages/*/esm/
