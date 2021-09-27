@@ -2,6 +2,8 @@
 title: Testing React Router Apps
 ---
 
+# Testing React Router Apps
+
 There are a few different ways to test an application built with React Router.
 We have guides for the following libraries:
 

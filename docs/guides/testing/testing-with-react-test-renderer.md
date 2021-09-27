@@ -2,6 +2,8 @@
 title: Testing With React Test Renderer
 ---
 
+# Testing With React Test Renderer
+
 ## Getting Setup
 
 TODO

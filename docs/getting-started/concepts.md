@@ -3,6 +3,8 @@ title: Main Concepts
 order: 2
 ---
 
+# Main Concepts
+
 You might be wondering what exactly React Router does. How can it help you build your app? What exactly is a **router**, anyway?
 
 If you've ever had any of these questions, or you'd just like to dig into the fundamental pieces of routing, you're in the right place. This document contains detailed explanations of all the core concepts behind routing as implemented in React Router.

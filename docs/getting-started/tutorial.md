@@ -3,6 +3,8 @@ title: Quickstart Tutorial
 order: 1
 ---
 
+# Quickstart Tutorial
+
 ## NOTES
 
 - remove imports from App.jsx in the template

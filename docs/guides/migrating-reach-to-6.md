@@ -2,6 +2,8 @@
 title: Migrating @reach/router to React Router v6
 ---
 
+# Migrating `@reach/router` to React Router v6
+
 _Note: This document is still a work in progress! Please let us know where it
 lacks so we can make the migration as smooth as possible!_
 

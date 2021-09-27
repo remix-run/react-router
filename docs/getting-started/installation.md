@@ -3,13 +3,16 @@ title: Installation
 order: 3
 ---
 
+# Installation
+
 This document describes the most common ways people use React Router with various tools in the React Ecosystem.
 
-- [Create React App](#create-react-app)
-- [Parcel](#parcel)
-- [Webpack](#webpack)
-- [HTML Script Tags](#html-script-tags)
-- [React Native](#react-native)
+- [Installation](#installation)
+  - [Create React App](#create-react-app)
+  - [Parcel](#parcel)
+  - [Webpack](#webpack)
+  - [HTML Script Tags](#html-script-tags)
+  - [React Native](#react-native)
 
 ## Create React App
 

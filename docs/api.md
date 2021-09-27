@@ -3,6 +3,8 @@ title: API Reference
 order: 1
 ---
 
+# API Reference
+
 React Router is a collection of [React components](https://reactjs.org/docs/components-and-props.html), [hooks](#https://reactjs.org/docs/hooks-intro.html) and utilities that make it easy to build multi-page applications with [React](https://reactjs.org). This reference contains the function signatures and return types of the various interfaces in React Router.
 
 > [!Tip:]

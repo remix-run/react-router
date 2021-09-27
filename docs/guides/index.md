@@ -2,6 +2,8 @@
 title: Guides
 ---
 
+# Guides
+
 These guides document some of the different flows and patterns you can use to
 build a certain capability or feature of your app with React Router.
 
@@ -31,13 +33,22 @@ TODO
 
 ## Common User Flows
 
-- [Login and Authentication](#login-and-auth)
-- [Forms and Prompts](#forms-and-prompts)
-- [Transitions and Animation](#animation)
-- [Passing Data Between Routes Using `location.state`](#passing-data-with-state)
-- [Persisting Data Using `location.key`](#persisting-data-with-key)
-- [Managing Scroll Position](#scroll-position)
-- [Modals](#modals)
+- [Guides](#guides)
+  - [Building the User Interface](#building-the-user-interface)
+    - [Using Layouts](#using-layouts)
+    - ["Not Found" Routes (404)](#not-found-routes-404)
+    - [Using Route Config Objects](#using-route-config-objects)
+  - [Common User Flows](#common-user-flows)
+    - [Login and Authentication](#login-and-authentication)
+    - [Forms and Prompts](#forms-and-prompts)
+    - [Transitions and Animation](#transitions-and-animation)
+    - [Passing Data Between Routes Using `location.state`](#passing-data-between-routes-using-locationstate)
+    - [Persisting Data Using `location.key`](#persisting-data-using-locationkey)
+    - [Managing Scroll Position](#managing-scroll-position)
+    - [Modals](#modals)
+  - [Useful Techniques](#useful-techniques)
+  - [Server Rendering](#server-rendering)
+  - [Testing](#testing)
 
 <a name="login-and-auth"></a>
 

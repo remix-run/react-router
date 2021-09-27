@@ -1,6 +1,8 @@
 ---
-title: Server Rendering
+title: Server-Side Rendering
 ---
+
+# Server-Side Rendering
 
 The most basic server rendering in React Router is pretty straightforward.
 

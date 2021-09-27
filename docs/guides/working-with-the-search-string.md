@@ -2,6 +2,8 @@
 title: Working with the Search/Query String
 ---
 
+# Working with the Search/Query String
+
 [The "search"
 string](https://developer.mozilla.org/en-US/docs/Web/API/URL/search) (also
 called a "query string") is the portion of a URL that begins with a `?` and
