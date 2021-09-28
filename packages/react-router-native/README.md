@@ -1,6 +1,6 @@
 # react-router-native
 
-[React Native](https://facebook.github.io/react-native/) bindings for [React Router](https://reacttraining.com/react-router).
+[React Native](https://facebook.github.io/react-native/) bindings for [React Router](https://reactrouter.com).
 
 ## Installation
 

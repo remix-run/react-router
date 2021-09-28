@@ -1,6 +1,6 @@
 # react-router-dom
 
-DOM bindings for [React Router](https://reacttraining.com/react-router).
+DOM bindings for [React Router](https://reactrouter.com).
 
 ## Installation
 
