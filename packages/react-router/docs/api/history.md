@@ -1,6 +1,6 @@
 # history
 
-The term "history" and "`history` object" in this documentation refers to [the `history` package](https://github.com/ReactTraining/history), which is one of only 2 major dependencies of React Router (besides React itself), and which provides several different implementations for managing session history in JavaScript in various environments.
+The term "history" and "`history` object" in this documentation refers to [the `history` package](https://github.com/remix-run/history), which is one of only 2 major dependencies of React Router (besides React itself), and which provides several different implementations for managing session history in JavaScript in various environments.
 
 The following terms are also used:
 
@@ -22,7 +22,7 @@ The following terms are also used:
 - `go(n)` - (function) Moves the pointer in the history stack by `n` entries
 - `goBack()` - (function) Equivalent to `go(-1)`
 - `goForward()` - (function) Equivalent to `go(1)`
-- `block(prompt)` - (function) Prevents navigation (see [the history docs](https://github.com/ReactTraining/history/blob/master/docs/blocking-transitions.md))
+- `block(prompt)` - (function) Prevents navigation (see [the history docs](https://github.com/remix-run/history/blob/main/docs/blocking-transitions.md)
 
 ## history is mutable
 
@@ -44,4 +44,4 @@ class Comp extends React.Component {
 <Route component={Comp} />;
 ```
 
-Additional properties may also be present depending on the implementation you're using. Please refer to [the history documentation](https://github.com/ReactTraining/history/tree/master/docs) for more details.
+Additional properties may also be present depending on the implementation you're using. Please refer to [the history documentation](https://github.com/remix-run/history/tree/main/docs) for more details.

@@ -4,7 +4,7 @@
   "npmClient": "yarn",
   "useWorkspaces": true,
   "changelog": {
-    "repo": "ReactTraining/react-router",
+    "repo": "remix-run/react-router",
     "cacheDir": ".changelog",
     "labels": {
       "breaking": "BREAKING CHANGE",

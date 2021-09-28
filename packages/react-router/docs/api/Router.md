@@ -29,7 +29,7 @@ ReactDOM.render(
 
 ## history: object
 
-A [`history`](https://github.com/ReactTraining/history) object to use for navigation.
+A [`history`](https://github.com/remix-run/history) object to use for navigation.
 
 ```jsx
 import React from "react";

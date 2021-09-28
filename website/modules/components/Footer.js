@@ -23,7 +23,7 @@ function ReactTraining() {
 
 function Contributors() {
   return (
-    <FooterLink href="https://github.com/ReactTraining/react-router/graphs/contributors">
+    <FooterLink href="https://github.com/remix-run/react-router/graphs/contributors">
       contributors
     </FooterLink>
   );

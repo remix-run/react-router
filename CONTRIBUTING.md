@@ -23,7 +23,7 @@ You may wish to use [this starter CodeSandbox](https://codesandbox.io/s/react-ro
 
 Please provide thoughtful comments and some sample code. Proposals without substance will be closed.
 
-It's generally a good idea to open an issue for the proposal first before working on the implementation and submitting a pull request. Please also take a look at [our current roadmap](https://github.com/ReactTraining/react-router/issues/6885) and consider ongoing work that might conflict with your proposed changes.
+It's generally a good idea to open an issue for the proposal first before working on the implementation and submitting a pull request. Please also take a look at [our current roadmap](https://github.com/remix-run/react-router/issues/6885) and consider ongoing work that might conflict with your proposed changes.
 
 <a name="attention"/></a>
 
@@ -53,7 +53,7 @@ All commits that change or add to the API must be done in a pull request that al
 
 The following steps will get you setup to contribute changes to this repo:
 
-1. Fork the repo (click the <kbd>Fork</kbd> button at the top right of [this page](https://github.com/ReactTraining/react-router))
+1. Fork the repo (click the <kbd>Fork</kbd> button at the top right of [this page](https://github.com/remix-run/react-router))
 2. Clone your fork locally
 
 ```bash

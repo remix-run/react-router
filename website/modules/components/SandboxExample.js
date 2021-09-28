@@ -15,7 +15,7 @@ export default function SandboxExample({
         name: `React Router - ${label}`,
         examplePath: path,
         gitInfo: {
-          account: "ReactTraining",
+          account: "remix-run",
           repository: "react-router",
           host: "github"
         },
