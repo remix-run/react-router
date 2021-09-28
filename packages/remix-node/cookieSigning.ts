@@ -1,12 +1,17 @@
 import cookieSignature from "cookie-signature";
 
-export async function sign(value: string, secret: string): Promise<string> {
-  return cookieSignature.sign(value, secret);
-}
+import type {
+  InternalSignFunctionDoNotUseMe,
+  InternalUnsignFunctionDoNotUseMe
+} from "@remix-run/server-runtime/cookieSigning";
 
-export async function unsign(
+export const sign: InternalSignFunctionDoNotUseMe = async (value, secret) => {
+  return cookieSignature.sign(value, secret);
+};
+
+export const unsign: InternalUnsignFunctionDoNotUseMe = async (
   signed: string,
   secret: string
-): Promise<string | false> {
+) => {
   return cookieSignature.unsign(signed, secret);
-}
+};

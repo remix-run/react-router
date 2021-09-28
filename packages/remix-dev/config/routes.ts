@@ -8,7 +8,12 @@ export interface ConfigRoute {
   /**
    * The path this route uses to match on the URL pathname.
    */
-  path: string;
+  path?: string;
+
+  /**
+   * Should be `true` if it is an index route. This disallows child routes.
+   */
+  index?: boolean;
 
   /**
    * Should be `true` if the `path` is case-sensitive. Defaults to `false`.
@@ -44,6 +49,11 @@ export interface DefineRouteOptions {
    * `false`.
    */
   caseSensitive?: boolean;
+
+  /**
+   * Should be `true` if this is an index route that does not allow child routes.
+   */
+  index?: boolean;
 }
 
 interface DefineRouteChildren {
@@ -69,7 +79,7 @@ export interface DefineRouteFunction {
     /**
      * The path this route uses to match the URL pathname.
      */
-    path: string,
+    path: string | undefined,
 
     /**
      * The path to the file that exports the React component rendered by this
@@ -128,8 +138,9 @@ export function defineRoutes(
     }
 
     let route: ConfigRoute = {
-      path: path || "/",
-      caseSensitive: !!options.caseSensitive,
+      path: path ? path : undefined,
+      index: options.index ? true : undefined,
+      caseSensitive: options.caseSensitive ? true : undefined,
       id: createRouteId(file),
       parentId:
         parentRoutes.length > 0
@@ -158,7 +169,7 @@ export function createRouteId(file: string) {
   return normalizeSlashes(stripFileExtension(file));
 }
 
-function normalizeSlashes(file: string) {
+export function normalizeSlashes(file: string) {
   return file.split(path.win32.sep).join("/");
 }
 

@@ -1,5 +1,10 @@
+import type {
+  InternalSignFunctionDoNotUseMe,
+  InternalUnsignFunctionDoNotUseMe
+} from "@remix-run/server-runtime/cookieSigning";
+
 import { atob, btoa } from "./base64";
-import { sign, unsign } from "./cookieSigning";
+import { sign as remixSign, unsign as remixUnsign } from "./cookieSigning";
 import {
   Headers as NodeHeaders,
   Request as NodeRequest,
@@ -20,8 +25,8 @@ declare global {
 
       // TODO: Once node v16 is available on AWS we should remove these globals
       // and provide the webcrypto API instead.
-      sign: typeof sign;
-      unsign: typeof unsign;
+      sign: InternalSignFunctionDoNotUseMe;
+      unsign: InternalUnsignFunctionDoNotUseMe;
     }
   }
 }
@@ -35,6 +40,6 @@ export function installGlobals() {
   global.Response = (NodeResponse as unknown) as typeof Response;
   global.fetch = (nodeFetch as unknown) as typeof fetch;
 
-  global.sign = sign;
-  global.unsign = unsign;
+  global.sign = remixSign;
+  global.unsign = remixUnsign;
 }

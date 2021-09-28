@@ -1,3 +1,18 @@
+export type InternalSignFunctionDoNotUseMe = (
+  value: string,
+  secret: string
+) => Promise<string>;
+
+export type InternalUnsignFunctionDoNotUseMe = (
+  cookie: string,
+  secret: string
+) => Promise<string | false>;
+
+declare global {
+  var sign: InternalSignFunctionDoNotUseMe;
+  var unsign: InternalUnsignFunctionDoNotUseMe;
+}
+
 // TODO: Once node v16 is available on AWS we should use the globally provided
 // webcrypto "crypto" variable and re-enable this code-path in "./cookies.ts"
 // instead of referencing the sign and unsign globals.

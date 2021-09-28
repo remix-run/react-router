@@ -51,7 +51,7 @@ export function createFileSessionStorage({
           await fsp.mkdir(path.dirname(file), { recursive: true });
           await fsp.writeFile(file, content, { encoding: "utf-8", flag: "wx" });
           return id;
-        } catch (error) {
+        } catch (error: any) {
           if (error.code !== "EEXIST") throw error;
         }
       }
@@ -74,7 +74,7 @@ export function createFileSessionStorage({
         if (expires) await fsp.unlink(file);
 
         return null;
-      } catch (error) {
+      } catch (error: any) {
         if (error.code !== "ENOENT") throw error;
         return null;
       }
@@ -88,7 +88,7 @@ export function createFileSessionStorage({
     async deleteData(id) {
       try {
         await fsp.unlink(getFile(dir, id));
-      } catch (error) {
+      } catch (error: any) {
         if (error.code !== "ENOENT") throw error;
       }
     }

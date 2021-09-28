@@ -5,7 +5,7 @@ describe("defineRoutes", () => {
     let routes = defineRoutes(route => {
       route("/", "routes/home.js");
       route("inbox", "routes/inbox.js", () => {
-        route("/", "routes/inbox/index.js");
+        route("/", "routes/inbox/index.js", { index: true });
         route(":messageId", "routes/inbox/$messageId.js");
         route("archive", "routes/inbox/archive.js");
       });
@@ -14,37 +14,42 @@ describe("defineRoutes", () => {
     expect(routes).toMatchInlineSnapshot(`
       Object {
         "routes/home": Object {
-          "caseSensitive": false,
+          "caseSensitive": undefined,
           "file": "routes/home.js",
           "id": "routes/home",
+          "index": undefined,
           "parentId": undefined,
           "path": "/",
         },
         "routes/inbox": Object {
-          "caseSensitive": false,
+          "caseSensitive": undefined,
           "file": "routes/inbox.js",
           "id": "routes/inbox",
+          "index": undefined,
           "parentId": undefined,
           "path": "inbox",
         },
         "routes/inbox/$messageId": Object {
-          "caseSensitive": false,
+          "caseSensitive": undefined,
           "file": "routes/inbox/$messageId.js",
           "id": "routes/inbox/$messageId",
+          "index": undefined,
           "parentId": "routes/inbox",
           "path": ":messageId",
         },
         "routes/inbox/archive": Object {
-          "caseSensitive": false,
+          "caseSensitive": undefined,
           "file": "routes/inbox/archive.js",
           "id": "routes/inbox/archive",
+          "index": undefined,
           "parentId": "routes/inbox",
           "path": "archive",
         },
         "routes/inbox/index": Object {
-          "caseSensitive": false,
+          "caseSensitive": undefined,
           "file": "routes/inbox/index.js",
           "id": "routes/inbox/index",
+          "index": true,
           "parentId": "routes/inbox",
           "path": "/",
         },
@@ -64,16 +69,18 @@ describe("defineRoutes", () => {
     expect(routes).toMatchInlineSnapshot(`
       Object {
         "one": Object {
-          "caseSensitive": false,
+          "caseSensitive": undefined,
           "file": "one.md",
           "id": "one",
+          "index": undefined,
           "parentId": undefined,
           "path": "one",
         },
         "two": Object {
-          "caseSensitive": false,
+          "caseSensitive": undefined,
           "file": "two.md",
           "id": "two",
+          "index": undefined,
           "parentId": undefined,
           "path": "two",
         },

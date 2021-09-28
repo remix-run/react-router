@@ -20,7 +20,8 @@ interface AssetsManifest {
     [routeId: string]: {
       id: string;
       parentId?: string;
-      path: string;
+      path?: string;
+      index?: boolean;
       caseSensitive?: boolean;
       module: string;
       imports?: string[];
@@ -88,6 +89,7 @@ export async function createAssetsManifest(
         id: route.id,
         parentId: route.parentId,
         path: route.path,
+        index: route.index,
         caseSensitive: route.caseSensitive,
         module: resolveUrl(key),
         imports: resolveImports(output.imports),
