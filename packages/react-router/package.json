@@ -9,10 +9,17 @@
     "directory": "packages/react-router"
   },
   "license": "MIT",
-  "main": "main.js",
-  "module": "index.js",
-  "types": "index.d.ts",
-  "unpkg": "umd/react-router.production.min.js",
+  "main": "./main.js",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "unpkg": "./umd/react-router.production.min.js",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": "./index.js",
+      "require": "./main.js"
+    }
+  },
   "peerDependencies": {
     "history": ">=5",
     "react": ">=16.8"
