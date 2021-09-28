@@ -30,7 +30,13 @@ function getTaggedVersion() {
  * @param {string|number} version
  */
 async function ensureBuildVersion(packageName, version) {
-  let file = path.join(rootDir, "build", packageName, "package.json");
+  let file = path.join(
+    rootDir,
+    "build",
+    "node_modules",
+    packageName,
+    "package.json"
+  );
   let json = await jsonfile.readFile(file);
   invariant(
     json.version === version,
@@ -43,7 +49,7 @@ async function ensureBuildVersion(packageName, version) {
  * @param {string} tag
  */
 function publishBuild(packageName, tag) {
-  let buildDir = path.join(rootDir, "build", packageName);
+  let buildDir = path.join(rootDir, "build", "node_modules", packageName);
   console.log();
   console.log(`  npm publish ${buildDir} --tag ${tag}`);
   console.log();

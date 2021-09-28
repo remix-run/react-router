@@ -2,15 +2,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node ./scripts/build.js",
+    "build": "rollup -c && tsc -b",
     "clean": "git clean -fdX .",
     "lint": "eslint .",
     "publish": "node ./scripts/publish.js",
     "size": "filesize",
     "test": "jest",
     "version": "node ./scripts/version.js",
-    "watch": "node ./scripts/watch.js",
-    "generate-api-docs": "node ./scripts/generate-api-docs.js"
+    "watch": "rollup -c -w"
   },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
