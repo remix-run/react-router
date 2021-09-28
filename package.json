@@ -2,15 +2,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node ./scripts/build.js",
+    "build": "rollup -c && tsc -b",
     "clean": "git clean -fdX .",
     "lint": "eslint .",
     "publish": "node ./scripts/publish.js",
     "size": "filesize",
     "test": "jest",
     "version": "node ./scripts/version.js",
-    "watch": "node ./scripts/watch.js",
-    "generate-api-docs": "node ./scripts/generate-api-docs.js"
+    "watch": "rollup -c -w"
   },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
@@ -75,16 +74,16 @@
     "projects": ["<rootDir>/packages/*"]
   },
   "filesize": {
-    "build/react-router/react-router.production.min.js": {
-      "none": "7 kB"
-    },
-    "build/react-router/umd/react-router.production.min.js": {
+    "build/node_modules/react-router/react-router.production.min.js": {
       "none": "8 kB"
     },
-    "build/react-router-dom/react-router-dom.production.min.js": {
-      "none": "3 kB"
+    "build/node_modules/react-router/umd/react-router.production.min.js": {
+      "none": "8 kB"
     },
-    "build/react-router-dom/umd/react-router-dom.production.min.js": {
+    "build/node_modules/react-router-dom/react-router-dom.production.min.js": {
+      "none": "4 kB"
+    },
+    "build/node_modules/react-router-dom/umd/react-router-dom.production.min.js": {
       "none": "8 kB"
     }
   },
