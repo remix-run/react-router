@@ -1,5 +1,6 @@
 ---
 title: Working with the Search/Query String
+order: 1
 ---
 
 # Working with the Search/Query String

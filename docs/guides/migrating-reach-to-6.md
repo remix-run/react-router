@@ -1,5 +1,6 @@
 ---
 title: Migrating @reach/router to React Router v6
+order: 2
 ---
 
 # Migrating `@reach/router` to React Router v6

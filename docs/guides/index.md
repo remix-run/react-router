@@ -9,100 +9,31 @@ build a certain capability or feature of your app with React Router.
 
 ## Building the User Interface
 
-- [Using Layouts](#layouts)
-- ["Not Found" Routes (404)](#not-found)
-- [Using Route Config Objects](#route-configs)
-
-<a name="layouts"></a>
-
-### Using Layouts
-
-TODO
-
-<a name="not-found"></a>
-
-### "Not Found" Routes (404)
-
-TODO
-
-<a name="route-configs"></a>
-
-### Using Route Config Objects
-
-TODO
+- [Using Layouts](building-the-user-interface/using-layouts.md)
+- [Using Route Config Objects](building-the-user-interface/route-configs.md)
+- ["Not Found" Routes (404)](building-the-user-interface/not-found.md)
+- [Custom Links](building-the-user-interface/custom-links.md)
 
 ## Common User Flows
 
-- [Guides](#guides)
-  - [Building the User Interface](#building-the-user-interface)
-    - [Using Layouts](#using-layouts)
-    - ["Not Found" Routes (404)](#not-found-routes-404)
-    - [Using Route Config Objects](#using-route-config-objects)
-  - [Common User Flows](#common-user-flows)
-    - [Login and Authentication](#login-and-authentication)
-    - [Forms and Prompts](#forms-and-prompts)
-    - [Transitions and Animation](#transitions-and-animation)
-    - [Passing Data Between Routes Using `location.state`](#passing-data-between-routes-using-locationstate)
-    - [Persisting Data Using `location.key`](#persisting-data-using-locationkey)
-    - [Managing Scroll Position](#managing-scroll-position)
-    - [Modals](#modals)
-  - [Useful Techniques](#useful-techniques)
-  - [Server Rendering](#server-rendering)
-  - [Testing](#testing)
-
-<a name="login-and-auth"></a>
-
-### Login and Authentication
-
-TODO
-
-<a name="forms-and-prompts"></a>
-
-### Forms and Prompts
-
-TODO
-
-<a name="animation"></a>
-
-### Transitions and Animation
-
-TODO
-
-<a name="passing-data-with-state"></a>
-
-### Passing Data Between Routes Using `location.state`
-
-TODO
-
-<a name="persisting-data-with-key"></a>
-
-### Persisting Data Using `location.key`
-
-TODO
-
-<a name="scroll-position"></a>
-
-### Managing Scroll Position
-
-TODO
-
-<a name="modals"></a>
-
-### Modals
-
-TODO
-
+- [Login and Authentication](user-flows/login-and-auth.md)
+- [Forms and Prompts](user-flows/forms-and-prompts.md)
+- [Transitions and Animation](user-flows/transitions-and-animation.md)
+- [Passing Data Between Routes Using `location.state`](user-flows/passing-data.md)
+- [Persisting Data Using `location.key`](user-flows/persisting-data.md)
+- [Managing Scroll Position](user-flows/scroll-position.md)
+- [Modals](user-flows/modals.md)
+- 
 ## Useful Techniques
 
-- [Working with the Search/Query String](working-with-the-search-string.md)
-- [Custom Links](custom-links.md)
-- [Recursive Paths](recursive-paths.md)
-- [Code Splitting](code-splitting.md)
+- [Working with the Search/Query String](techniques/working-with-the-search-string.md)
+- [Recursive Paths](techniques/recursive-paths.md)
+- [Code Splitting](techniques/code-splitting.md)
 
 ## Server Rendering
 
-- [Creating Routes from Files](server-rendering/creating-routes-from-files.md)
-- [Using `StaticRouter` Directly](server-rendering/using-staticrouter-directly.md)
+- [Creating Routes from Files](ssr/creating-routes-from-files.md)
+- [Using `StaticRouter` Directly](ssr/using-staticrouter-directly.md)
 
 ## Testing
 

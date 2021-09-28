@@ -1,5 +1,7 @@
 ---
 title: Server-Side Rendering
+toc: false
+order: 6
 ---
 
 # Server-Side Rendering
