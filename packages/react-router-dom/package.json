@@ -19,7 +19,10 @@
       "import": "./index.js",
       "require": "./main.js"
     },
-    "./server": "./server.js"
+    "./server": {
+      "import": "./server.mjs",
+      "require": "./server.js"
+    }
   },
   "dependencies": {
     "react-router": "6.0.0-beta.5"

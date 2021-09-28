@@ -188,6 +188,42 @@ export default function reactRouterDOM() {
     {
       input: `${SOURCE_DIR}/server.tsx`,
       output: {
+        file: `${OUTPUT_DIR}/server.mjs`,
+        format: "esm"
+      },
+      external: [
+        "url",
+        "history",
+        "react",
+        "react-dom/server",
+        "react-router-dom"
+      ],
+      plugins: [
+        tsc(),
+        babel({
+          exclude: /node_modules/,
+          presets: [
+            [
+              "@babel/preset-modules",
+              {
+                // Don't spoof `.name` for Arrow Functions, which breaks when minified anyway.
+                loose: true
+              }
+            ],
+            ["@babel/preset-react", { useBuiltIns: true }]
+          ],
+          plugins: ["babel-plugin-dev-expression"]
+        }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("production") }
+        })
+        // compiler(),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
+    },
+    {
+      input: `${SOURCE_DIR}/server.tsx`,
+      output: {
         file: `${OUTPUT_DIR}/server.js`,
         format: "cjs"
       },
