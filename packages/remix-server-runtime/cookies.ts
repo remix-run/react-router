@@ -4,6 +4,7 @@ import { parse, serialize } from "cookie";
 // TODO: Once node v16 is available on AWS we should use these instead of the
 // global `sign` and `unsign` functions.
 //import { sign, unsign } from "./cookieSigning";
+import "./cookieSigning";
 
 export type { CookieParseOptions, CookieSerializeOptions };
 
