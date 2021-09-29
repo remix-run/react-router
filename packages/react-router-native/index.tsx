@@ -16,12 +16,12 @@ import {
   Route,
   Router,
   Routes,
-  createRoutesFromArray,
   createRoutesFromChildren,
   generatePath,
   matchRoutes,
   matchPath,
   resolvePath,
+  renderMatches,
   useBlocker,
   useHref,
   useInRouterContext,
@@ -48,12 +48,12 @@ export {
   Route,
   Router,
   Routes,
-  createRoutesFromArray,
   createRoutesFromChildren,
   generatePath,
   matchRoutes,
   matchPath,
   resolvePath,
+  renderMatches,
   useBlocker,
   useHref,
   useInRouterContext,
@@ -74,7 +74,6 @@ export type {
   Navigator,
   OutletProps,
   Params,
-  PartialRouteObject,
   PathMatch,
   RouteMatch,
   RouteObject,
@@ -98,7 +97,7 @@ export type {
 
 /** @internal */
 export {
-  UNSAFE_NavigatorContext,
+  UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext
 } from "react-router";

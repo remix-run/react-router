@@ -12,10 +12,6 @@ import type {
   Transition
 } from "history";
 
-const readOnly: <T>(obj: T) => Readonly<T> = __DEV__
-  ? obj => Object.freeze(obj)
-  : obj => obj;
-
 function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);
 }
@@ -63,17 +59,24 @@ export type Navigator = Omit<
   "action" | "location" | "back" | "forward" | "listen"
 >;
 
-const NavigatorContext = React.createContext<Navigator>(null!);
-
-const LocationContext = React.createContext<LocationContextObject>({
-  static: false
-});
-
-interface LocationContextObject {
-  action?: Action;
-  location?: Location;
+interface NavigationContextObject {
+  basename: string;
+  navigator: Navigator;
   static: boolean;
 }
+
+const NavigationContext = React.createContext<NavigationContextObject>(null!);
+
+if (__DEV__) {
+  NavigationContext.displayName = "Navigation";
+}
+
+interface LocationContextObject {
+  action: Action;
+  location: Location;
+}
+
+const LocationContext = React.createContext<LocationContextObject>(null!);
 
 if (__DEV__) {
   LocationContext.displayName = "Location";
@@ -81,17 +84,15 @@ if (__DEV__) {
 
 const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
-  params: readOnly<Params>({}),
-  pathname: "",
-  basename: "",
+  params: {},
+  pathname: "/",
   route: null
 });
 
-interface RouteContextObject {
+interface RouteContextObject<ParamKey extends string = string> {
   outlet: React.ReactElement | null;
-  params: Params;
+  params: Readonly<Params<ParamKey>>;
   pathname: string;
-  basename: string;
   route: RouteObject | null;
 }
 
@@ -104,6 +105,7 @@ if (__DEV__) {
 ///////////////////////////////////////////////////////////////////////////////
 
 export interface MemoryRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
@@ -115,6 +117,7 @@ export interface MemoryRouterProps {
  * @see https://reactrouter.com/api/MemoryRouter
  */
 export function MemoryRouter({
+  basename,
   children,
   initialEntries,
   initialIndex
@@ -134,6 +137,7 @@ export function MemoryRouter({
 
   return (
     <Router
+      basename={basename}
       children={children}
       action={state.action}
       location={state.location}
@@ -166,7 +170,7 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
   );
 
   warning(
-    !React.useContext(LocationContext).static,
+    !React.useContext(NavigationContext).static,
     `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
       `This is a no-op, but you should modify your code so the <Navigate> is ` +
       `only ever rendered in response to some user interaction or state change.`
@@ -195,6 +199,7 @@ export interface RouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactElement | null;
+  index?: boolean;
   path?: string;
 }
 
@@ -203,16 +208,19 @@ export interface RouteProps {
  *
  * @see https://reactrouter.com/api/Route
  */
-export function Route({
-  element = <Outlet />
-}: RouteProps): React.ReactElement | null {
-  return element;
+export function Route(_props: RouteProps): React.ReactElement | null {
+  invariant(
+    false,
+    `A <Route> is only ever to be used as the child of <Routes> element, ` +
+      `never rendered directly. Please wrap your <Route> in a <Routes>.`
+  );
 }
 
 export interface RouterProps {
   action?: Action;
+  basename?: string;
   children?: React.ReactNode;
-  location: Location;
+  location: Partial<Location> | string;
   navigator: Navigator;
   static?: boolean;
 }
@@ -227,37 +235,77 @@ export interface RouterProps {
  * @see https://reactrouter.com/api/Router
  */
 export function Router({
-  children = null,
   action = Action.Pop,
-  location,
+  basename: basenameProp = "/",
+  children = null,
+  location: locationProp,
   navigator,
   static: staticProp = false
-}: RouterProps): React.ReactElement {
+}: RouterProps): React.ReactElement | null {
   invariant(
     !useInRouterContext(),
     `You cannot render a <Router> inside another <Router>.` +
-      ` You never need more than one.`
+      ` You should never have more than one in your app.`
   );
+
+  let basename = normalizePathname(basenameProp);
+  let navigationContext = React.useMemo(
+    () => ({ basename, navigator, static: staticProp }),
+    [basename, navigator, staticProp]
+  );
+
+  if (typeof locationProp === "string") {
+    locationProp = parsePath(locationProp);
+  }
+
+  let {
+    pathname = "/",
+    search = "",
+    hash = "",
+    state = null,
+    key = "default"
+  } = locationProp;
+
+  let location = React.useMemo(() => {
+    let trailingPathname = stripBasename(pathname, basename);
+
+    if (trailingPathname == null) {
+      return null;
+    }
+
+    return {
+      pathname: trailingPathname,
+      search,
+      hash,
+      state,
+      key
+    };
+  }, [basename, pathname, search, hash, state, key]);
+
+  warning(
+    location != null,
+    `<Router basename="${basename}"> is not able to match the URL ` +
+      `"${pathname}${search}${hash}" because it does not start with the ` +
+      `basename, so the <Router> won't render anything.`
+  );
+
+  if (location == null) {
+    return null;
+  }
 
   return (
-    <NavigatorContext.Provider value={navigator}>
+    <NavigationContext.Provider value={navigationContext}>
       <LocationContext.Provider
         children={children}
-        value={{ action, location, static: staticProp }}
+        value={{ action, location }}
       />
-    </NavigatorContext.Provider>
+    </NavigationContext.Provider>
   );
-}
-
-interface PartialLocation<S extends State = State>
-  extends Omit<Partial<Location<S>>, "pathname"> {
-  pathname: string;
 }
 
 export interface RoutesProps {
-  basename?: string;
   children?: React.ReactNode;
-  location?: PartialLocation;
+  location?: Partial<Location> | string;
 }
 
 /**
@@ -267,12 +315,10 @@ export interface RoutesProps {
  * @see https://reactrouter.com/api/Routes
  */
 export function Routes({
-  basename = "",
   children,
   location
 }: RoutesProps): React.ReactElement | null {
-  let routes = createRoutesFromChildren(children);
-  return useRoutes_(routes, location, basename);
+  return useRoutes(createRoutesFromChildren(children), location);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -293,7 +339,7 @@ export function useBlocker(blocker: Blocker, when = true): void {
     `useBlocker() may be used only in the context of a <Router> component.`
   );
 
-  let navigator = React.useContext(NavigatorContext);
+  let { navigator } = React.useContext(NavigationContext);
 
   React.useEffect(() => {
     if (!when) return;
@@ -331,8 +377,17 @@ export function useHref(to: To): string {
     `useHref() may be used only in the context of a <Router> component.`
   );
 
-  let navigator = React.useContext(NavigatorContext);
+  let { basename, navigator } = React.useContext(NavigationContext);
   let path = useResolvedPath(to);
+
+  if (basename !== "/") {
+    let toPathname = getToPathname(to);
+    let endsWithSlash = toPathname != null && toPathname.endsWith("/");
+    path.pathname =
+      path.pathname === "/"
+        ? basename + (endsWithSlash ? "/" : "")
+        : joinPaths([basename, path.pathname]);
+  }
 
   return navigator.createHref(path);
 }
@@ -343,7 +398,7 @@ export function useHref(to: To): string {
  * @see https://reactrouter.com/api/useInRouterContext
  */
 export function useInRouterContext(): boolean {
-  return React.useContext(LocationContext).location != null;
+  return React.useContext(LocationContext) != null;
 }
 
 /**
@@ -374,7 +429,9 @@ export function useLocation(): Location {
  *
  * @see https://reactrouter.com/api/useMatch
  */
-export function useMatch(pattern: PathPattern): PathMatch | null {
+export function useMatch<ParamKey extends string = string>(
+  pattern: PathPattern | string
+): PathMatch<ParamKey> | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -382,13 +439,8 @@ export function useMatch(pattern: PathPattern): PathMatch | null {
     `useMatch() may be used only in the context of a <Router> component.`
   );
 
-  let location = useLocation() as Location;
-  return matchPath(pattern, location.pathname);
+  return matchPath(pattern, useLocation().pathname);
 }
-
-type PathPattern =
-  | string
-  | { path: string; caseSensitive?: boolean; end?: boolean };
 
 /**
  * The interface for the navigate() function returned from useNavigate().
@@ -417,9 +469,9 @@ export function useNavigate(): NavigateFunction {
     `useNavigate() may be used only in the context of a <Router> component.`
   );
 
-  let navigator = React.useContext(NavigatorContext);
-  let { basename } = React.useContext(RouteContext);
-  let { pathname } = useLocation();
+  let { basename, navigator } = React.useContext(NavigationContext);
+  let { pathname: routePathname } = React.useContext(RouteContext);
+  let { pathname: locationPathname } = useLocation();
 
   let activeRef = React.useRef(false);
   React.useEffect(() => {
@@ -428,25 +480,31 @@ export function useNavigate(): NavigateFunction {
 
   let navigate: NavigateFunction = React.useCallback(
     (to: To | number, options: { replace?: boolean; state?: State } = {}) => {
-      if (activeRef.current) {
-        if (typeof to === "number") {
-          navigator.go(to);
-        } else {
-          let path = resolvePath(to, pathname, basename);
-          (!!options.replace ? navigator.replace : navigator.push)(
-            path,
-            options.state
-          );
-        }
-      } else {
-        warning(
-          false,
-          `You should call navigate() in a useEffect, not when ` +
-            `your component is first rendered.`
-        );
+      warning(
+        activeRef.current,
+        `You should call navigate() in a React.useEffect(), not when ` +
+          `your component is first rendered.`
+      );
+
+      if (!activeRef.current) return;
+
+      if (typeof to === "number") {
+        navigator.go(to);
+        return;
       }
+
+      let path = resolveTo(to, routePathname, locationPathname);
+
+      if (basename !== "/") {
+        path.pathname = joinPaths([basename, path.pathname]);
+      }
+
+      (!!options.replace ? navigator.replace : navigator.push)(
+        path,
+        options.state
+      );
     },
-    [basename, navigator, pathname]
+    [basename, navigator, routePathname, locationPathname]
   );
 
   return navigate;
@@ -468,7 +526,9 @@ export function useOutlet(): React.ReactElement | null {
  *
  * @see https://reactrouter.com/api/useParams
  */
-export function useParams(): Params {
+export function useParams<Key extends string = string>(): Readonly<
+  Params<Key>
+> {
   return React.useContext(RouteContext).params;
 }
 
@@ -478,10 +538,12 @@ export function useParams(): Params {
  * @see https://reactrouter.com/api/useResolvedPath
  */
 export function useResolvedPath(to: To): Path {
-  let { pathname, basename } = React.useContext(RouteContext);
+  let { pathname: locationPathname } = useLocation();
+  let { pathname: routePathname } = React.useContext(RouteContext);
+
   return React.useMemo(
-    () => resolvePath(to, pathname, basename),
-    [to, pathname, basename]
+    () => resolveTo(to, routePathname, locationPathname),
+    [to, routePathname, locationPathname]
   );
 }
 
@@ -494,14 +556,8 @@ export function useResolvedPath(to: To): Path {
  * @see https://reactrouter.com/api/useRoutes
  */
 export function useRoutes(
-  partialRoutes: PartialRouteObject[],
-  {
-    basename = "",
-    location
-  }: {
-    basename?: string;
-    location?: PartialLocation;
-  } = {}
+  routes: RouteObject[],
+  locationArg?: Partial<Location> | string
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -510,34 +566,38 @@ export function useRoutes(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
-  let routes = React.useMemo(
-    () => createRoutesFromArray(partialRoutes),
-    [partialRoutes]
-  );
-
-  return useRoutes_(routes, location, basename);
-}
-
-function useRoutes_(
-  routes: RouteObject[],
-  locationOverride?: PartialLocation,
-  basename = ""
-): React.ReactElement | null {
   let {
-    route: parentRoute,
+    params: parentParams,
     pathname: parentPathname,
-    params: parentParams
+    route: parentRoute
   } = React.useContext(RouteContext);
 
   if (__DEV__) {
     // You won't get a warning about 2 different <Routes> under a <Route>
     // without a trailing *, but this is a best-effort warning anyway since we
     // cannot even give the warning unless they land at the parent route.
-    let parentPath = parentRoute && parentRoute.path;
+    //
+    // Example:
+    //
+    // <Routes>
+    //   {/* This route path MUST end with /* because otherwise
+    //       it will never match /blog/post/123 */}
+    //   <Route path="blog" element={<Blog />} />
+    //   <Route path="blog/feed" element={<BlogFeed />} />
+    // </Routes>
+    //
+    // function Blog() {
+    //   return (
+    //     <Routes>
+    //       <Route path="post/:id" element={<Post />} />
+    //     </Routes>
+    //   );
+    // }
+    let parentPath = (parentRoute && parentRoute.path) || "";
     warningOnce(
       parentPathname,
-      !parentRoute || parentRoute.path.endsWith("*"),
-      `You rendered descendant <Routes> (or called \`useRoutes\`) at ` +
+      !parentRoute || parentPath.endsWith("*"),
+      `You rendered descendant <Routes> (or called \`useRoutes()\`) at ` +
         `"${parentPathname}" (under <Route path="${parentPath}">) but the ` +
         `parent route path has no trailing "*". This means if you navigate ` +
         `deeper, the parent won't match anymore and therefore the child ` +
@@ -547,71 +607,41 @@ function useRoutes_(
     );
   }
 
-  let basenameForMatching = basename
-    ? joinPaths([parentPathname, basename])
-    : parentPathname;
+  let locationFromContext = useLocation();
+  let location = locationArg
+    ? typeof locationArg === "string"
+      ? parsePath(locationArg)
+      : locationArg
+    : locationFromContext;
+  let pathname = location.pathname || "/";
 
-  let contextLocation = useLocation();
-  let location = locationOverride ?? contextLocation;
+  let parentPathnameStart = getPathnameStart(parentPathname, parentParams);
+  let remainingPathname =
+    parentPathnameStart === "/"
+      ? pathname
+      : pathname.slice(parentPathnameStart.length);
+  let matches = matchRoutes(routes, { pathname: remainingPathname });
 
-  let matches = React.useMemo(
-    () => matchRoutes(routes, location, basenameForMatching),
-    [location, routes, basenameForMatching]
-  );
-
-  if (!matches) {
-    // TODO: Warn about nothing matching, suggest using a catch-all route.
-    return null;
+  if (__DEV__) {
+    warning(
+      parentRoute || matches != null,
+      `No routes matched location "${location.pathname}${location.search}${location.hash}" `
+    );
   }
 
-  // Otherwise render an element.
-  let allParams: Params = {};
-  let element = matches.reduceRight((outlet, { params, pathname, route }) => {
-    allParams = { ...allParams, ...params };
-    return (
-      <RouteContext.Provider
-        children={route.element}
-        value={{
-          outlet,
-          params: readOnly<Params>({ ...parentParams, ...allParams }),
-          pathname: joinPaths([basenameForMatching, pathname]),
-          basename,
-          route
-        }}
-      />
-    );
-  }, null as React.ReactElement | null);
-
-  return element;
+  return renderMatches(
+    matches &&
+      matches.map(match =>
+        Object.assign({}, match, {
+          pathname: joinPaths([parentPathnameStart, match.pathname])
+        })
+      )
+  );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // UTILS
 ///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Creates a route config from an array of JavaScript objects. Used internally
- * by `useRoutes` to normalize the route config.
- *
- * @see https://reactrouter.com/api/createRoutesFromArray
- */
-export function createRoutesFromArray(
-  array: PartialRouteObject[]
-): RouteObject[] {
-  return array.map(partialRoute => {
-    let route: RouteObject = {
-      path: partialRoute.path || "/",
-      caseSensitive: partialRoute.caseSensitive === true,
-      element: partialRoute.element || <Outlet />
-    };
-
-    if (partialRoute.children) {
-      route.children = createRoutesFromArray(partialRoute.children);
-    }
-
-    return route;
-  });
-}
 
 /**
  * Creates a route config from a React "children" object, which is usually
@@ -642,19 +672,14 @@ export function createRoutesFromChildren(
     }
 
     let route: RouteObject = {
-      path: element.props.path || "/",
-      caseSensitive: element.props.caseSensitive === true,
-      // Default behavior is to just render the element that was given. This
-      // permits people to use any element they prefer, not just <Route> (though
-      // all our official examples and docs use <Route> for clarity).
-      element
+      path: element.props.path,
+      caseSensitive: element.props.caseSensitive,
+      index: element.props.index,
+      element: element.props.element
     };
 
     if (element.props.children) {
-      let childRoutes = createRoutesFromChildren(element.props.children);
-      if (childRoutes.length) {
-        route.children = childRoutes;
-      }
+      route.children = createRoutesFromChildren(element.props.children);
     }
 
     routes.push(route);
@@ -666,28 +691,19 @@ export function createRoutesFromChildren(
 /**
  * The parameters that were parsed from the URL path.
  */
-export type Params = Record<string, string>;
+export type Params<Key extends string = string> = {
+  readonly [key in Key]: string | undefined;
+};
 
 /**
  * A route object represents a logical route, with (optionally) its child
  * routes organized in a tree-like structure.
  */
 export interface RouteObject {
-  caseSensitive: boolean;
-  children?: RouteObject[];
-  element: React.ReactNode;
-  path: string;
-}
-
-/**
- * A "partial route" object is usually supplied by the user and may omit
- * certain properties of a real route object such as `path` and `element`,
- * which have reasonable defaults.
- */
-export interface PartialRouteObject {
   caseSensitive?: boolean;
-  children?: PartialRouteObject[];
+  children?: RouteObject[];
   element?: React.ReactNode;
+  index?: boolean;
   path?: string;
 }
 
@@ -700,11 +716,29 @@ export function generatePath(path: string, params: Params = {}): string {
   return path
     .replace(/:(\w+)/g, (_, key) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
-      return params[key];
+      return params[key]!;
     })
     .replace(/\/*\*$/, _ =>
       params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
     );
+}
+
+/**
+ * A RouteMatch contains info about how a route matched a URL.
+ */
+export interface RouteMatch<ParamKey extends string = string> {
+  /**
+   * The names and values of dynamic parameters in the URL.
+   */
+  params: Params<ParamKey>;
+  /**
+   * The portion of the URL pathname that was matched.
+   */
+  pathname: string;
+  /**
+   * The route object that was used to match.
+   */
+  route: RouteObject;
 }
 
 /**
@@ -713,29 +747,17 @@ export function generatePath(path: string, params: Params = {}): string {
  * @see https://reactrouter.com/api/matchRoutes
  */
 export function matchRoutes(
-  routes: PartialRouteObject[],
-  location: string | Partial<Location>,
-  basename = ""
+  routes: RouteObject[],
+  locationArg: Partial<Location> | string,
+  basename = "/"
 ): RouteMatch[] | null {
-  if (typeof location === "string") {
-    location = parsePath(location);
-  }
+  let location =
+    typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
-  let pathname = location.pathname || "/";
-  if (basename) {
-    let base = basename
-      // // Basename should be case-insensitive
-      // https://github.com/remix-run/react-router/issues/7997#issuecomment-911916907
-      .toLowerCase()
-      .replace(/^\/*/, "/")
-      .replace(/\/+$/, "");
+  let pathname = stripBasename(location.pathname || "/", basename);
 
-    if (pathname.toLowerCase().startsWith(base)) {
-      pathname = pathname.slice(base.length) || "/";
-    } else {
-      // Pathname does not start with the basename, no match.
-      return null;
-    }
+  if (pathname == null) {
+    return null;
   }
 
   let branches = flattenRoutes(routes);
@@ -743,72 +765,79 @@ export function matchRoutes(
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    // TODO: Match on search, state too?
-    matches = matchRouteBranch(branches[i], pathname);
+    matches = matchRouteBranch(branches[i], routes, pathname);
   }
 
   return matches;
 }
 
-export interface RouteMatch {
-  route: RouteObject;
-  pathname: string;
-  params: Params;
+interface RouteMeta {
+  relativePath: string;
+  caseSensitive: boolean;
+  childrenIndex: number;
+}
+
+interface RouteBranch {
+  path: string;
+  score: number;
+  routesMeta: RouteMeta[];
 }
 
 function flattenRoutes(
-  routes: PartialRouteObject[],
+  routes: RouteObject[],
   branches: RouteBranch[] = [],
-  parentPath = "",
-  parentRoutes: RouteObject[] = [],
-  parentIndexes: number[] = []
+  parentsMeta: RouteMeta[] = [],
+  parentPath = ""
 ): RouteBranch[] {
-  (routes as RouteObject[]).forEach((route, index) => {
-    route = {
-      ...route,
-      path: route.path || "/",
-      caseSensitive: !!route.caseSensitive,
-      element: route.element
+  routes.forEach((route, index) => {
+    let meta: RouteMeta = {
+      relativePath: route.path || "",
+      caseSensitive: route.caseSensitive === true,
+      childrenIndex: index
     };
 
-    let path = joinPaths([parentPath, route.path]);
-    let routes = parentRoutes.concat(route);
-    let indexes = parentIndexes.concat(index);
+    if (meta.relativePath.startsWith("/")) {
+      invariant(
+        meta.relativePath.startsWith(parentPath),
+        `Absolute route path "${meta.relativePath}" nested under path ` +
+          `"${parentPath}" is not valid. An absolute child route path ` +
+          `must start with the combined path of all its parent routes.`
+      );
+
+      meta.relativePath = meta.relativePath.slice(parentPath.length);
+    }
+
+    let path = joinPaths([parentPath, meta.relativePath]);
+    let routesMeta = parentsMeta.concat(meta);
 
     // Add the children before adding this route to the array so we traverse the
     // route tree depth-first and child routes appear before their parents in
     // the "flattened" version.
-    if (route.children) {
-      flattenRoutes(route.children, branches, path, routes, indexes);
+    if (route.children && route.children.length > 0) {
+      invariant(
+        route.index !== true,
+        `Index routes must not have child routes. Please remove ` +
+          `all child routes from route path "${path}".`
+      );
+
+      flattenRoutes(route.children, branches, routesMeta, path);
     }
 
-    branches.push([path, routes, indexes]);
+    branches.push({ path, score: computeScore(path), routesMeta });
   });
 
   return branches;
 }
 
-type RouteBranch = [string, RouteObject[], number[]];
-
 function rankRouteBranches(branches: RouteBranch[]): void {
-  let pathScores = branches.reduce<Record<string, number>>((memo, [path]) => {
-    memo[path] = computeScore(path);
-    return memo;
-  }, {});
-
-  // Sorting is stable in modern browsers, but we still support IE 11, so we
-  // need this little helper.
-  stableSort(branches, (a, b) => {
-    let [aPath, , aIndexes] = a;
-    let aScore = pathScores[aPath];
-
-    let [bPath, , bIndexes] = b;
-    let bScore = pathScores[bPath];
-
-    return aScore !== bScore
-      ? bScore - aScore // Higher score first
-      : compareIndexes(aIndexes, bIndexes);
-  });
+  branches.sort((a, b) =>
+    a.score !== b.score
+      ? b.score - a.score // Higher score first
+      : compareIndexes(
+          a.routesMeta.map(meta => meta.childrenIndex),
+          b.routesMeta.map(meta => meta.childrenIndex)
+        )
+  );
 }
 
 const paramRe = /^:\w+$/;
@@ -854,51 +883,126 @@ function compareIndexes(a: number[], b: number[]): number {
       0;
 }
 
-function stableSort(array: any[], compareItems: (a: any, b: any) => number) {
-  // This copy lets us get the original index of an item so we can preserve the
-  // original ordering in the case that they sort equally.
-  let copy = array.slice(0);
-  array.sort((a, b) => compareItems(a, b) || copy.indexOf(a) - copy.indexOf(b));
-}
-
-function matchRouteBranch(
+function matchRouteBranch<ParamKey extends string = string>(
   branch: RouteBranch,
+  routesArg: RouteObject[],
   pathname: string
-): RouteMatch[] | null {
-  let routes = branch[1];
-  let matchedPathname = "/";
-  let matchedParams: Params = {};
+): RouteMatch<ParamKey>[] | null {
+  let routes = routesArg;
+  let { routesMeta } = branch;
 
+  let matchedParams = {};
+  let matchedPathname = "/";
   let matches: RouteMatch[] = [];
-  for (let i = 0; i < routes.length; ++i) {
-    let route = routes[i];
-    let remainingPathname =
+  for (let i = 0; i < routesMeta.length; ++i) {
+    let meta = routesMeta[i];
+    let trailingPathname =
       matchedPathname === "/"
         ? pathname
         : pathname.slice(matchedPathname.length) || "/";
-    let routeMatch = matchPath(
+    let match = matchPath(
       {
-        path: route.path,
-        caseSensitive: route.caseSensitive,
-        end: i === routes.length - 1
+        path: meta.relativePath,
+        caseSensitive: meta.caseSensitive,
+        end: i === routesMeta.length - 1
       },
-      remainingPathname
+      trailingPathname
     );
 
-    if (!routeMatch) return null;
+    if (!match) return null;
 
-    matchedPathname = joinPaths([matchedPathname, routeMatch.pathname]);
-    matchedParams = { ...matchedParams, ...routeMatch.params };
+    Object.assign(matchedParams, match.params);
+
+    let route = routes[meta.childrenIndex];
 
     matches.push({
-      route,
-      pathname: matchedPathname,
-      params: readOnly<Params>(matchedParams)
+      params: matchedParams,
+      pathname:
+        match.pathname === "/"
+          ? matchedPathname
+          : joinPaths([matchedPathname, match.pathname]),
+      route
     });
+
+    let pathnameStart = getPathnameStart(match.pathname, match.params);
+    if (pathnameStart !== "/") {
+      // Add only the portion of the match.pathname that comes before the * to
+      // the matchedPathname. This allows child routes to match against the
+      // portion of the pathname that was matched by the *.
+      matchedPathname = joinPaths([matchedPathname, pathnameStart]);
+    }
+
+    routes = route.children!;
   }
 
   return matches;
 }
+
+/**
+ * Renders the result of `matchRoutes()` into a React element.
+ */
+export function renderMatches(
+  matches: RouteMatch[] | null
+): React.ReactElement | null {
+  if (matches == null) return null;
+
+  return matches.reduceRight((outlet, match) => {
+    return (
+      <RouteContext.Provider
+        children={match.route.element || <Outlet />}
+        value={{
+          outlet,
+          params: match.params,
+          pathname: match.pathname,
+          route: match.route
+        }}
+      />
+    );
+  }, null as React.ReactElement | null);
+}
+
+/**
+ * A PathPattern is used to match on some portion of a URL pathname.
+ */
+export interface PathPattern {
+  /**
+   * A string to match against a URL pathname. May contain `:id`-style segments
+   * to indicate placeholders for dynamic parameters. May also end with `/*` to
+   * indicate matching the rest of the URL pathname.
+   */
+  path: string;
+  /**
+   * Should be `true` if the static portions of the `path` should be matched in
+   * the same case.
+   */
+  caseSensitive?: boolean;
+  /**
+   * Should be `true` if this pattern should match the entire URL pathname.
+   */
+  end?: boolean;
+}
+
+/**
+ * A PathMatch contains info about how a PathPattern matched on a URL pathname.
+ */
+export interface PathMatch<ParamKey extends string = string> {
+  /**
+   * The names and values of dynamic parameters in the URL.
+   */
+  params: Params<ParamKey>;
+  /**
+   * The portion of the URL pathname that was matched.
+   */
+  pathname: string;
+  /**
+   * The pattern that was used to match.
+   */
+  pattern: PathPattern;
+}
+
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
 
 /**
  * Performs pattern matching on a URL pathname and returns information about
@@ -906,69 +1010,74 @@ function matchRouteBranch(
  *
  * @see https://reactrouter.com/api/matchPath
  */
-export function matchPath(
-  pattern: PathPattern,
+export function matchPath<ParamKey extends string = string>(
+  pattern: PathPattern | string,
   pathname: string
-): PathMatch | null {
+): PathMatch<ParamKey> | null {
   if (typeof pattern === "string") {
-    pattern = { path: pattern };
+    pattern = { path: pattern, caseSensitive: false, end: true };
   }
 
-  let { path, caseSensitive = false, end = true } = pattern;
-  let [matcher, paramNames] = compilePath(path, caseSensitive, end);
-  let match = pathname.match(matcher);
+  let [matcher, paramNames] = compilePath(
+    pattern.path,
+    pattern.caseSensitive,
+    pattern.end
+  );
 
+  let match = pathname.match(matcher);
   if (!match) return null;
 
-  let matchedPathname = match[1];
-  let values = match.slice(2);
-  let params = paramNames.reduce((memo, paramName, index) => {
-    memo[paramName] = safelyDecodeURIComponent(values[index] || "", paramName);
-    return memo;
-  }, {} as Params);
+  let matchedPathname = match[0];
+  let values = match.slice(1);
+  let params: Params = paramNames.reduce<Mutable<Params>>(
+    (memo, paramName, index) => {
+      memo[paramName] = safelyDecodeURIComponent(
+        values[index] || "",
+        paramName
+      );
+      return memo;
+    },
+    {}
+  );
 
-  return { path, pathname: matchedPathname, params };
-}
-
-export interface PathMatch {
-  path: string;
-  pathname: string;
-  params: Params;
+  return { params, pathname: matchedPathname, pattern };
 }
 
 function compilePath(
   path: string,
-  caseSensitive: boolean,
-  end: boolean
+  caseSensitive = false,
+  end = true
 ): [RegExp, string[]] {
   let keys: string[] = [];
   let source =
-    "^(" +
+    "^" +
     path
-      .replace(/^\/*/, "/") // Make sure it has a leading /
       .replace(/\/?\*?$/, "") // Ignore trailing / and /*, we'll handle it below
+      .replace(/^\/*/, "/") // Make sure it has a leading /
       .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
       .replace(/:(\w+)/g, (_: string, key: string) => {
         keys.push(key);
         return "([^\\/]+)";
-      }) +
-    ")";
+      });
 
   if (path.endsWith("*")) {
     if (path.endsWith("/*")) {
-      source += "(?:\\/(.+)|\\/?)"; // Don't include the / in params['*']
+      source += "(?:\\/(.+)|\\/?)$"; // Don't include the / in params['*']
     } else {
-      source += "(.*)";
+      source += "(.*)$";
     }
     keys.push("*");
   } else if (end) {
-    source += "\\/?";
+    // When matching to the end, ignore trailing slashes.
+    source += "\\/?$";
+  } else {
+    // If not matching to the end (as parent routes do), at least match a word
+    // boundary. This restricts a parent route to matching only its own words
+    // and nothing more, e.g. parent route "/home" should not match "/home2".
+    source += "(?:\\b|$)";
   }
 
-  if (end) source += "$";
-
-  let flags = caseSensitive ? undefined : "i";
-  let matcher = new RegExp(source, flags);
+  let matcher = new RegExp(source, caseSensitive ? undefined : "i");
 
   return [matcher, keys];
 }
@@ -993,7 +1102,7 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
  *
  * @see https://reactrouter.com/api/resolvePath
  */
-export function resolvePath(to: To, fromPathname = "/", basename = ""): Path {
+export function resolvePath(to: To, fromPathname = "/"): Path {
   let {
     pathname: toPathname,
     search = "",
@@ -1001,14 +1110,9 @@ export function resolvePath(to: To, fromPathname = "/", basename = ""): Path {
   } = typeof to === "string" ? parsePath(to) : to;
 
   let pathname = toPathname
-    ? resolvePathname(
-        toPathname,
-        toPathname.startsWith("/")
-          ? basename
-            ? normalizeSlashes(`/${basename}`)
-            : "/"
-          : fromPathname
-      )
+    ? toPathname.startsWith("/")
+      ? toPathname
+      : resolvePathname(toPathname, fromPathname)
     : fromPathname;
 
   return {
@@ -1018,22 +1122,9 @@ export function resolvePath(to: To, fromPathname = "/", basename = ""): Path {
   };
 }
 
-const trimTrailingSlashes = (path: string) => path.replace(/\/+$/, "");
-const normalizeSlashes = (path: string) => path.replace(/\/\/+/g, "/");
-const joinPaths = (paths: string[]) => normalizeSlashes(paths.join("/"));
-const splitPath = (path: string) => normalizeSlashes(path).split("/");
-const normalizeSearch = (search: string) =>
-  !search || search === "?"
-    ? ""
-    : search.startsWith("?")
-    ? search
-    : "?" + search;
-const normalizeHash = (hash: string) =>
-  !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
-
-function resolvePathname(toPathname: string, fromPathname: string): string {
-  let segments = splitPath(trimTrailingSlashes(fromPathname));
-  let relativeSegments = splitPath(toPathname);
+function resolvePathname(relativePath: string, fromPathname: string): string {
+  let segments = fromPathname.replace(/\/+$/, "").split("/");
+  let relativeSegments = relativePath.split("/");
 
   relativeSegments.forEach(segment => {
     if (segment === "..") {
@@ -1044,8 +1135,79 @@ function resolvePathname(toPathname: string, fromPathname: string): string {
     }
   });
 
-  return segments.length > 1 ? joinPaths(segments) : "/";
+  return segments.length > 1 ? segments.join("/") : "/";
 }
+
+function resolveTo(
+  to: To,
+  routePathname: string,
+  locationPathname: string
+): Path {
+  return resolvePath(
+    to,
+    // If a pathname is explicitly provided in `to`, it should be
+    // relative to the route context. This is explained in `Note on
+    // `<Link to>` values` in our migration guide from v5 as a means of
+    // disambiguation between `to` values that begin with `/` and those
+    // that do not. However, this is problematic for `to` values that do
+    // not provide a pathname. `to` can simply be a search or hash
+    // string, in which case we should assume that the navigation is
+    // relative to the current location's pathname and *not* the
+    // route pathname.
+    getToPathname(to) == null ? locationPathname : routePathname
+  );
+}
+
+function getToPathname(to: To): string | undefined {
+  // Empty strings should be treated the same as / paths
+  return to === "" || (to as Path).pathname === ""
+    ? "/"
+    : typeof to === "string"
+    ? parsePath(to).pathname
+    : to.pathname;
+}
+
+function getPathnameStart(pathname: string, params: Params): string {
+  let splat = params["*"];
+  if (!splat) return pathname;
+  let pathnameStart = pathname.slice(0, -splat.length);
+  if (splat.startsWith("/")) return pathnameStart;
+  let index = pathnameStart.lastIndexOf("/");
+  if (index > 0) return pathnameStart.slice(0, index);
+  return "/";
+}
+
+function stripBasename(pathname: string, basename: string): string | null {
+  if (basename === "/") return pathname;
+
+  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
+    return null;
+  }
+
+  let nextChar = pathname.charAt(basename.length);
+  if (nextChar && nextChar !== "/") {
+    // pathname does not start with basename/
+    return null;
+  }
+
+  return pathname.slice(basename.length) || "/";
+}
+
+const joinPaths = (paths: string[]): string =>
+  paths.join("/").replace(/\/\/+/g, "/");
+
+const normalizePathname = (pathname: string): string =>
+  pathname.replace(/\/+$/, "").replace(/^\/*/, "/");
+
+const normalizeSearch = (search: string): string =>
+  !search || search === "?"
+    ? ""
+    : search.startsWith("?")
+    ? search
+    : "?" + search;
+
+const normalizeHash = (hash: string): string =>
+  !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
@@ -1062,7 +1224,7 @@ function resolvePathname(toPathname: string, fromPathname: string): string {
 
 /** @internal */
 export {
-  NavigatorContext as UNSAFE_NavigatorContext,
+  NavigationContext as UNSAFE_NavigationContext,
   LocationContext as UNSAFE_LocationContext,
   RouteContext as UNSAFE_RouteContext
 };

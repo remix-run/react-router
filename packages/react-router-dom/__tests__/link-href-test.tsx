@@ -1,14 +1,13 @@
 import * as React from "react";
+import type { ReactTestRenderer } from "react-test-renderer";
 import { act, create as createTestRenderer } from "react-test-renderer";
 import {
   MemoryRouter as Router,
   Outlet,
   Routes,
   Route,
-  Link,
-  useRoutes
+  Link
 } from "react-router-dom";
-import type { ReactTestRenderer } from "react-test-renderer";
 
 describe("Link href", () => {
   let node: HTMLDivElement;
@@ -46,7 +45,6 @@ describe("Link href", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor).not.toBeNull();
       expect(anchor.props.href).toEqual("/about");
     });
 
@@ -55,12 +53,12 @@ describe("Link href", () => {
         return (
           <div>
             Login page{" "}
-            <Link to="/auth/forget-password">Go to forgot password</Link>
+            <Link to="/auth/forgot-password">Go to forgot password</Link>
           </div>
         );
       }
 
-      function ForgetPassword() {
+      function ForgotPassword() {
         return (
           <div>
             Forgot password page{" "}
@@ -70,16 +68,12 @@ describe("Link href", () => {
       }
 
       function AuthRoutes() {
-        return useRoutes([
-          {
-            path: "login",
-            element: <Login />
-          },
-          {
-            path: "forget-password",
-            element: <ForgetPassword />
-          }
-        ]);
+        return (
+          <Routes>
+            <Route path="login" element={<Login />} />
+            <Route path="forgot-password" element={<ForgotPassword />} />
+          </Routes>
+        );
       }
 
       let renderer!: ReactTestRenderer;
@@ -96,8 +90,8 @@ describe("Link href", () => {
       });
 
       let anchor = renderer.root.findByType("a");
-      expect(anchor).not.toBeNull();
-      expect(anchor.props.href).toEqual("/auth/forget-password");
+
+      expect(anchor.props.href).toEqual("/auth/forgot-password");
     });
   });
 
@@ -125,7 +119,6 @@ describe("Link href", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor).not.toBeNull();
       expect(anchor.props.href).toEqual("/home");
     });
   });
@@ -154,7 +147,6 @@ describe("Link href", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor).not.toBeNull();
       expect(anchor.props.href).toEqual("/about");
     });
   });
@@ -183,7 +175,6 @@ describe("Link href", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor).not.toBeNull();
       expect(anchor.props.href).toEqual("/about");
     });
   });
@@ -202,8 +193,8 @@ describe("Link href", () => {
       let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
-          <Router initialEntries={["/app/home"]}>
-            <Routes basename="/app">
+          <Router basename="/app" initialEntries={["/app/home"]}>
+            <Routes>
               <Route path="home" element={<Home />} />
             </Routes>
           </Router>
@@ -212,7 +203,6 @@ describe("Link href", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor).not.toBeNull();
       expect(anchor.props.href).toEqual("/app/about");
     });
   });

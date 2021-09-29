@@ -2,7 +2,7 @@ import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Routes, Route } from "react-router";
 
-describe("<Routes>", () => {
+describe("<Router basename>", () => {
   let consoleWarn: jest.SpyInstance;
   beforeEach(() => {
     consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -12,23 +12,25 @@ describe("<Routes>", () => {
     consoleWarn.mockRestore();
   });
 
-  it("renders null and issues a warning when no routes match the URL", () => {
+  it("renders null and issues a warning when the URL does not match the basename", () => {
     let renderer = createTestRenderer(
-      <Router>
-        <Routes />
+      <Router basename="/app" initialEntries={["/home"]}>
+        <Routes>
+          <Route path="/" element={<h1>App</h1>} />
+        </Routes>
       </Router>
     );
 
     expect(renderer.toJSON()).toBeNull();
     expect(consoleWarn).toHaveBeenCalledTimes(1);
     expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringContaining("No routes matched location")
+      expect.stringContaining("<Router> won't render anything")
     );
   });
 
   it("renders the first route that matches the URL", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/"]}>
+      <Router basename="/home" initialEntries={["/home"]}>
         <Routes>
           <Route path="/" element={<h1>Home</h1>} />
         </Routes>
@@ -44,10 +46,10 @@ describe("<Routes>", () => {
 
   it("does not render a 2nd route that also matches the URL", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/home"]}>
+      <Router basename="/app" initialEntries={["/app/home"]}>
         <Routes>
           <Route path="home" element={<h1>Home</h1>} />
-          <Route path="home" element={<h1>Dashboard</h1>} />
+          <Route path="home" element={<h1>Something else</h1>} />
         </Routes>
       </Router>
     );
@@ -59,13 +61,11 @@ describe("<Routes>", () => {
     `);
   });
 
-  it("renders with non-element children", () => {
+  it("matches regardless of basename casing", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/"]}>
+      <Router basename="/HoME" initialEntries={["/home"]}>
         <Routes>
           <Route path="/" element={<h1>Home</h1>} />
-          {false}
-          {undefined}
         </Routes>
       </Router>
     );
@@ -77,21 +77,18 @@ describe("<Routes>", () => {
     `);
   });
 
-  it("renders with React.Fragment children", () => {
+  it("matches regardless of URL casing", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/admin"]}>
+      <Router basename="/home" initialEntries={["/hOmE"]}>
         <Routes>
           <Route path="/" element={<h1>Home</h1>} />
-          <React.Fragment>
-            <Route path="admin" element={<h1>Admin</h1>} />
-          </React.Fragment>
         </Routes>
       </Router>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>
-        Admin
+        Home
       </h1>
     `);
   });

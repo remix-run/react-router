@@ -1,24 +1,68 @@
 import * as React from "react";
-import { act, create as createTestRenderer } from "react-test-renderer";
+import { create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Outlet, Routes, Route } from "react-router";
-import type { ReactTestRenderer } from "react-test-renderer";
+
+describe("nested routes with no path", () => {
+  it("matches them depth-first", () => {
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/"]}>
+        <Routes>
+          <Route element={<First />}>
+            <Route element={<Second />}>
+              <Route element={<Third />} />
+            </Route>
+          </Route>
+        </Routes>
+      </Router>
+    );
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <div>
+        First 
+        <div>
+          Second 
+          <div>
+            Third
+          </div>
+        </div>
+      </div>
+    `);
+  });
+
+  function First() {
+    return (
+      <div>
+        First <Outlet />
+      </div>
+    );
+  }
+
+  function Second() {
+    return (
+      <div>
+        Second <Outlet />
+      </div>
+    );
+  }
+
+  function Third() {
+    return <div>Third</div>;
+  }
+});
 
 describe("nested /", () => {
   it("matches them depth-first", () => {
-    let renderer!: ReactTestRenderer;
-    act(() => {
-      renderer = createTestRenderer(
-        <Router initialEntries={["/"]}>
-          <Routes>
-            <Route path="/" element={<First />}>
-              <Route path="/" element={<Second />}>
-                <Route path="/" element={<Third />} />
-              </Route>
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/"]}>
+        <Routes>
+          <Route path="/" element={<First />}>
+            <Route path="/" element={<Second />}>
+              <Route path="/" element={<Third />} />
             </Route>
-          </Routes>
-        </Router>
-      );
-    });
+          </Route>
+        </Routes>
+      </Router>
+    );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>
@@ -56,17 +100,14 @@ describe("nested /", () => {
 
 describe("routes with identical paths", () => {
   it("matches them in order", () => {
-    let renderer!: ReactTestRenderer;
-    act(() => {
-      renderer = createTestRenderer(
-        <Router initialEntries={["/home"]}>
-          <Routes>
-            <Route path="/home" element={<First />} />
-            <Route path="/home" element={<Second />} />
-          </Routes>
-        </Router>
-      );
-    });
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/home"]}>
+        <Routes>
+          <Route path="/home" element={<First />} />
+          <Route path="/home" element={<Second />} />
+        </Routes>
+      </Router>
+    );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>

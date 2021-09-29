@@ -1,23 +1,13 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
 import { create as createTestRenderer } from "react-test-renderer";
+import type { RouteObject } from "react-router";
 import { MemoryRouter as Router, useRoutes } from "react-router";
-import { act } from "react-dom/test-utils";
-import type { PartialRouteObject } from "react-router";
 
 describe("useRoutes", () => {
   it("returns the matching element from a route config", () => {
-    function Home() {
-      return <h1>Home</h1>;
-    }
-
-    function About() {
-      return <h1>About</h1>;
-    }
-
     let routes = [
-      { path: "home", element: <Home /> },
-      { path: "about", element: <About /> }
+      { path: "home", element: <h1>home</h1> },
+      { path: "about", element: <h1>about</h1> }
     ];
 
     let renderer = createTestRenderer(
@@ -26,42 +16,63 @@ describe("useRoutes", () => {
       </Router>
     );
 
-    expect(renderer.toJSON()).toMatchSnapshot();
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <h1>
+        home
+      </h1>
+    `);
+  });
+
+  describe("when some routes are missing elements", () => {
+    it("defaults to rendering their children", () => {
+      let routes = [
+        {
+          path: "users",
+          children: [{ path: ":id", element: <h1>user profile</h1> }]
+        },
+        { path: "about", element: <h1>about</h1> }
+      ];
+
+      let renderer = createTestRenderer(
+        <Router initialEntries={["/users/mj"]}>
+          <RoutesRenderer routes={routes} />
+        </Router>
+      );
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <h1>
+          user profile
+        </h1>
+      `);
+    });
   });
 
   it("Uses the `location` prop instead of context location`", () => {
-    let node = document.createElement("div");
-    document.body.appendChild(node);
-
     let routes = [
       { path: "one", element: <h1>one</h1> },
       { path: "two", element: <h1>two</h1> }
     ];
 
-    act(() => {
-      ReactDOM.render(
-        <Router initialEntries={["/one"]}>
-          <RoutesRenderer routes={routes} location={{ pathname: "/two" }} />
-        </Router>,
-        node
-      );
-    });
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/one"]}>
+        <RoutesRenderer routes={routes} location={{ pathname: "/two" }} />
+      </Router>
+    );
 
-    expect(node.innerHTML).toMatch(/two/);
-
-    // cleanup
-    document.body.removeChild(node);
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <h1>
+        two
+      </h1>
+    `);
   });
 });
 
 function RoutesRenderer({
   routes,
-  basename,
   location
 }: {
-  routes: PartialRouteObject[];
-  basename?: string;
+  routes: RouteObject[];
   location?: Partial<Location> & { pathname: string };
 }) {
-  return useRoutes(routes, { basename, location });
+  return useRoutes(routes, location);
 }

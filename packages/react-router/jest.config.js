@@ -5,8 +5,5 @@ module.exports = {
   },
   globals: {
     __DEV__: true
-  },
-  moduleNameMapper: {
-    "^react-router$": "<rootDir>/../../build/react-router"
   }
 };

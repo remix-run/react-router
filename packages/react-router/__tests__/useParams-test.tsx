@@ -11,7 +11,7 @@ import {
 describe("useParams", () => {
   describe("when the route isn't matched", () => {
     it("returns an empty object", () => {
-      let params: Record<string, string> = {};
+      let params: Record<string, string | undefined> = {};
       function Home() {
         params = useParams();
         return null;
@@ -30,7 +30,7 @@ describe("useParams", () => {
 
   describe("when the path has no params", () => {
     it("returns an empty object", () => {
-      let params: Record<string, string> = {};
+      let params: Record<string, string | undefined> = {};
       function Home() {
         params = useParams();
         return null;
@@ -51,7 +51,7 @@ describe("useParams", () => {
 
   describe("when the path has some params", () => {
     it("returns an object of the URL params", () => {
-      let params: Record<string, string> = {};
+      let params: Record<string, string | undefined> = {};
       function BlogPost() {
         params = useParams();
         return null;
@@ -73,7 +73,7 @@ describe("useParams", () => {
 
     describe("a child route", () => {
       it("returns a combined hash of the parent and child params", () => {
-        let params: Record<string, string> = {};
+        let params: Record<string, string | undefined> = {};
 
         function Course() {
           params = useParams();
@@ -110,7 +110,7 @@ describe("useParams", () => {
 
   describe("when the path has percent-encoded params", () => {
     it("returns an object of the decoded params", () => {
-      let params: Record<string, string> = {};
+      let params: Record<string, string | undefined> = {};
       function BlogPost() {
         params = useParams();
         return null;
@@ -133,7 +133,7 @@ describe("useParams", () => {
 
   describe("when the path has a + character", () => {
     it("returns an object of the decoded params", () => {
-      let params: Record<string, string> = {};
+      let params: Record<string, string | undefined> = {};
       function BlogPost() {
         params = useParams();
         return null;
@@ -169,7 +169,7 @@ describe("useParams", () => {
     });
 
     it("returns the raw value and warns", () => {
-      let params: Record<string, string> = {};
+      let params: Record<string, string | undefined> = {};
       function BlogPost() {
         params = useParams();
         return null;
@@ -196,7 +196,7 @@ describe("useParams", () => {
 
   describe("when the params match in a child route", () => {
     it("renders params in the parent", () => {
-      let params: Record<string, string> = {};
+      let params: Record<string, string | undefined> = {};
       function Blog() {
         params = useParams();
         return <h1>{params.slug}</h1>;

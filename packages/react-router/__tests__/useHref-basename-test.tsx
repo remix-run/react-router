@@ -2,7 +2,7 @@ import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter as Router, Routes, Route, useHref } from "react-router";
 
-describe("useHref under a <Routes basename>", () => {
+describe("useHref under a basename", () => {
   describe("to a child route", () => {
     it("returns the correct href", () => {
       let href = "";
@@ -12,8 +12,8 @@ describe("useHref under a <Routes basename>", () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={["/app/admin"]}>
-          <Routes basename="app">
+        <Router basename="/app" initialEntries={["/app/admin"]}>
+          <Routes>
             <Route path="admin" element={<Admin />} />
           </Routes>
         </Router>
@@ -31,8 +31,8 @@ describe("useHref under a <Routes basename>", () => {
         }
 
         createTestRenderer(
-          <Router initialEntries={["/app/admin/"]}>
-            <Routes basename="app">
+          <Router basename="/app" initialEntries={["/app/admin/"]}>
+            <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
           </Router>
@@ -51,8 +51,8 @@ describe("useHref under a <Routes basename>", () => {
         }
 
         createTestRenderer(
-          <Router initialEntries={["/app/admin"]}>
-            <Routes basename="app">
+          <Router basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
           </Router>
@@ -72,8 +72,8 @@ describe("useHref under a <Routes basename>", () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={["/app/admin"]}>
-          <Routes basename="app">
+        <Router basename="/app" initialEntries={["/app/admin"]}>
+          <Routes>
             <Route path="admin" element={<Admin />} />
           </Routes>
         </Router>
@@ -91,8 +91,8 @@ describe("useHref under a <Routes basename>", () => {
         }
 
         createTestRenderer(
-          <Router initialEntries={["/app/admin/"]}>
-            <Routes basename="app">
+          <Router basename="/app" initialEntries={["/app/admin/"]}>
+            <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
           </Router>
@@ -111,8 +111,8 @@ describe("useHref under a <Routes basename>", () => {
         }
 
         createTestRenderer(
-          <Router initialEntries={["/app/admin"]}>
-            <Routes basename="app">
+          <Router basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
           </Router>
@@ -132,8 +132,8 @@ describe("useHref under a <Routes basename>", () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={["/app/admin"]}>
-          <Routes basename="app">
+        <Router basename="/app" initialEntries={["/app/admin"]}>
+          <Routes>
             <Route path="admin" element={<Admin />} />
           </Routes>
         </Router>
@@ -151,8 +151,8 @@ describe("useHref under a <Routes basename>", () => {
         }
 
         createTestRenderer(
-          <Router initialEntries={["/app/admin/"]}>
-            <Routes basename="app">
+          <Router basename="/app" initialEntries={["/app/admin/"]}>
+            <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
           </Router>
@@ -171,8 +171,8 @@ describe("useHref under a <Routes basename>", () => {
         }
 
         createTestRenderer(
-          <Router initialEntries={["/app/admin"]}>
-            <Routes basename="app">
+          <Router basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
           </Router>
@@ -192,14 +192,18 @@ describe("useHref under a <Routes basename>", () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={["/app/admin"]}>
-          <Routes basename="app">
+        <Router basename="/app" initialEntries={["/app/admin"]}>
+          <Routes>
             <Route path="admin" element={<Admin />} />
           </Routes>
         </Router>
       );
 
-      expect(href).toBe("/dashboard");
+      // This is correct because the basename works like a chroot "jail".
+      // Relative <Link to> values cannot "escape" into a higher level URL since
+      // they would be linking to a URL that the <Router> cannot render. To link
+      // to a higher URL path, use a plain <a>.
+      expect(href).toBe("/app/dashboard");
     });
 
     describe("and no additional segments", () => {
@@ -211,14 +215,18 @@ describe("useHref under a <Routes basename>", () => {
         }
 
         createTestRenderer(
-          <Router initialEntries={["/app/admin"]}>
-            <Routes basename="app">
+          <Router basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
           </Router>
         );
 
-        expect(href).toBe("/");
+        // This is correct because the basename works like a chroot "jail".
+        // Relative <Link to> values cannot "escape" into a higher level URL
+        // since they would be linking to a URL that the <Router> cannot render.
+        // To link to a higher URL path, use a plain <a>.
+        expect(href).toBe("/app");
       });
     });
 
@@ -231,14 +239,18 @@ describe("useHref under a <Routes basename>", () => {
         }
 
         createTestRenderer(
-          <Router initialEntries={["/app/admin/"]}>
-            <Routes basename="app">
+          <Router basename="/app" initialEntries={["/app/admin/"]}>
+            <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
           </Router>
         );
 
-        expect(href).toBe("/dashboard");
+        // This is correct because the basename works like a chroot "jail".
+        // Relative <Link to> values cannot "escape" into a higher level URL
+        // since they would be linking to a URL that the <Router> cannot render.
+        // To link to a higher URL path, use a plain <a>.
+        expect(href).toBe("/app/dashboard");
       });
     });
 
@@ -251,14 +263,14 @@ describe("useHref under a <Routes basename>", () => {
         }
 
         createTestRenderer(
-          <Router initialEntries={["/app/admin"]}>
-            <Routes basename="app">
+          <Router basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
           </Router>
         );
 
-        expect(href).toBe("/dashboard/");
+        expect(href).toBe("/app/dashboard/");
       });
     });
   });
