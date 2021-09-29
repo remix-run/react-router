@@ -19,18 +19,18 @@ React Router is a collection of [React components](https://reactjs.org/docs/comp
 React Router is published to npm in three different packages:
 
 - [`react-router`](https://npm.im/react-router) contains most of the core functionality of React Router including the route matching algorithm and most of the core components and hooks
-- [`react-router-dom`](https://npm.im/react-router-dom) includes everything from `react-router` and adds a few DOM-specific APIs like [`<BrowserRouter>`](#browserrouter), [`<HashRouter>`](#hashrouter), [`<Link>`](#link), etc.
-- [`react-router-native`](https://npm.im/react-router-native) includes everything from `react-router` and adds a few APIs that are specific to React Native including [`<NativeRouter>`](#nativerouter) and [a native version of `<Link>`](#link-native)
+- [`react-router-dom`](https://npm.im/react-router-dom) includes everything from `react-router` and adds a few DOM-specific APIs, including [`<BrowserRouter>`](#browserrouter), [`<HashRouter>`](#hashrouter), and [`<Link>`](#link)
+- [`react-router-native`](https://npm.im/react-router-native) includes everything from `react-router` and adds a few APIs that are specific to React Native, including [`<NativeRouter>`](#nativerouter) and [a native version of `<Link>`](#link-native)
 
 Both `react-router-dom` and `react-router-native` automatically include `react-router` as a dependency when you install them, and both packages re-export everything from `react-router`. **When you `import` stuff, you should always import from either `react-router-dom` or `react-router-native` and never directly from `react-router`**. Otherwise you may accidentally import mismatched versions of the library in your app.
 
-If you [installed](./installation) React Router as a global (using a `<script>` tag), you can find the library on the `window.ReactRouterDOM` object. If you installed it from npm, you can simply [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) the pieces you need. The examples in this reference all use `import` syntax.
+If you [installed](./installation) React Router as a global (using a `<script>` tag), you can find the library on the `window.ReactRouterDOM` object. If you installed it from npm, you can [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) the pieces you need. The examples in this reference all use `import` syntax.
 
 ### Setup
 
-To get React Router working in your app, you need to render a router element at or near the root of your element tree. We provide several different routers, depending on where you're running your app.
+To get React Router working in your app, you need to render a router element at or near the root of your element tree. We provide several different routers depending on where your app is running.
 
-- [`<BrowserRouter>`](#browserrouter) or [`<HashRouter>`](#hashrouter) should be used when running in a web browser. Which one you pick depends on the style of URL you prefer or need.
+- [`<BrowserRouter>`](#browserrouter) or [`<HashRouter>`](#hashrouter) should be used when running in a web browser (which one you pick depends on the style of URL you prefer or need)
 - [`<StaticRouter>`](#staticrouter) should be used when server-rendering a website
 - [`<NativeRouter>`](#nativerouter) should be used in [React Native](https://reactnative.dev/) apps
 - [`<MemoryRouter>`](#memoryrouter) is useful in testing scenarios and as a reference implementation for the other routers
@@ -153,12 +153,7 @@ ReactDOM.render(
 ```tsx
 declare function NativeRouter(props: NativeRouterProps): React.ReactElement;
 
-interface NativeRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  initialEntries?: InitialEntry[];
-  initialIndex?: number;
-}
+interface NativeRouterProps extends MemoryRouterProps {}
 ```
 
 </details>
@@ -285,6 +280,8 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 > one URL segment for each `..`. But an `<a href>` value handles `..`
 > differently when the current URL ends with `/` vs when it does not.
 
+<a name="link-native"></a>
+
 ### `<Link>` (React Native)
 
 > **Note:**
@@ -299,7 +296,8 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 declare function Link(props: LinkProps): React.ReactElement;
 
 interface LinkProps extends TouchableHighlightProps {
-  onPress?: (event: GestureResponderEvent) => void;
+  children?: React.ReactNode;
+  onPress?(event: GestureResponderEvent): void;
   replace?: boolean;
   state?: State;
   to: To;
@@ -519,6 +517,11 @@ function App() {
 
 ### `<Prompt>`
 
+> **Note:**
+>
+> This is the web version of `<Prompt>`. For the React Native version,
+> [go here](#prompt-native).
+
 <details>
   <summary>Type declaration</summary>
 
@@ -541,19 +544,44 @@ A `<Prompt>` is the declarative version of [`usePrompt`](#useprompt). It doesn't
 > use this feature in a [`React.Component`](https://reactjs.org/docs/react-component.html)
 > subclass where hooks are not able to be used.
 
+<a name="prompt-native"></a>
+
+### `<Prompt>` (React Native)
+
+> **Note:**
+>
+> This is the React Native version of `<Prompt>`. For the web version,
+> [go here](#prompt).
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function Prompt(props: PromptProps): null;
+
+interface PromptProps {
+  message: string;
+  when?: boolean;
+}
+```
+
+</details>
+
+A `<Prompt>` is the declarative version of [`usePrompt`](#useprompt). It doesn't render anything. It just calls `usePrompt` with its props.
+
 ### `<Router>`
 
 <details>
   <summary>Type declaration</summary>
 
 ```tsx
-declare function Router(props: RouterProps): React.ReactElement;
+declare function Router(props: RouterProps): React.ReactElement | null;
 
 interface RouterProps {
   action?: Action;
   basename?: string;
   children?: React.ReactNode;
-  location: Location;
+  location: Partial<Location> | string;
   navigator: Navigator;
   static?: boolean;
 }
@@ -757,11 +785,12 @@ The term "location" in React Router refers to [the `Location` interface](https:/
 ```tsx
 declare function matchRoutes(
   routes: RouteObject[],
-  location: Partial<Location> | string
+  location: Partial<Location> | string,
+  basename?: string
 ): RouteMatch[] | null;
 
-interface RouteMatch {
-  params: Params;
+interface RouteMatch<ParamKey extends string = string> {
+  params: Params<ParamKey>;
   pathname: string;
   route: RouteObject;
 }
@@ -773,6 +802,21 @@ interface RouteMatch {
 
 This is the heart of React Router's matching algorithm. It is used internally by [`useRoutes`](#useroutes) and the [`<Routes>` component](#routes) to determine which routes match the current location. It can also be useful in some situations where you want to manually match a set of routes.
 
+### `renderMatches`
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function renderMatches(
+  matches: RouteMatch[] | null
+): React.ReactElement | null;
+```
+
+</details>
+
+`renderMatches` renders the result of `matchRoutes()` into a React element.
+
 ### `matchPath`
 
 <details>
@@ -780,19 +824,21 @@ This is the heart of React Router's matching algorithm. It is used internally by
 
 ```tsx
 declare function matchPath<ParamKey extends string = string>(
-  pattern: PathPattern,
+  pattern: PathPattern | string,
   pathname: string
 ): PathMatch<ParamKey> | null;
 
-interface PathMatch {
-  params: Params;
+interface PathMatch<ParamKey extends string = string> {
+  params: Params<ParamKey>;
   pathname: string;
   pattern: PathPattern;
 }
 
-type PathPattern =
-  | { path: string; caseSensitive?: boolean; end?: boolean }
-  | string;
+interface PathPattern {
+  path: string;
+  caseSensitive?: boolean;
+  end?: boolean;
+}
 ```
 
 </details>
@@ -807,7 +853,7 @@ The [`useMatch` hook](#usematch) uses this function internally to match a route 
   <summary>Type declaration</summary>
 
 ```tsx
-declare function resolvePath(to: To, fromPathname = "/"): Path;
+declare function resolvePath(to: To, fromPathname?: string): Path;
 
 type To = Partial<Location> | string;
 
@@ -830,7 +876,11 @@ The [`useResolvedPath` hook](#useresolvedpath) uses `resolvePath` internally to 
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useBlocker(blocker: Blocker, when = true): void;
+declare function useBlocker(blocker: Blocker, when?: boolean): void;
+
+interface Blocker<S extends State = object | null> {
+  (tx: Transition<S>): void;
+}
 ```
 
 </details>
@@ -967,6 +1017,11 @@ The `useInRouterContext` hooks returns `true` if the component is being rendered
 
 ```tsx
 declare function useLocation(): Location;
+
+interface Location<S extends State = object | null> extends Path {
+  state: S;
+  key: Key;
+}
 ```
 
 </details>
@@ -1065,7 +1120,7 @@ Returns the element for the child route at this level of the route hierarchy. Th
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useParams<Key extends string = string>(): Params<Key>;
+declare function useParams<K extends string = string>(): Readonly<Params<K>>;
 ```
 
 </details>
@@ -1096,11 +1151,16 @@ function App() {
 
 ### `usePrompt`
 
+> **Note:**
+>
+> This is the web version of `usePrompt`. For the React Native version,
+> [go here](#useprompt-native).
+
 <details>
   <summary>Type declaration</summary>
 
 ```tsx
-declare function usePrompt(message: string, when = true): void;
+declare function usePrompt(message: string, when?: boolean): void;
 ```
 
 </details>
@@ -1124,6 +1184,39 @@ function SignupForm() {
 >
 > If you need a more custom dialog box, you will have to use [`useBlocker`](#useblocker)
 > directly and handle accessibility issues yourself.
+
+<a name="useprompt-native"></a>
+
+### `usePrompt` (React Native)
+
+> **Note:**
+>
+> This is the React Native version of `usePrompt`. For the web version,
+> [go here](#useprompt).
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function usePrompt(message: string, when?: boolean): void;
+```
+
+</details>
+
+The `usePrompt` hook may be used to confirm navigation before the user navigates away from the current page. This is useful when someone has entered unsaved data into a form, and you'd like to prompt them before they accidentally leave or close the tab and lose their work.
+
+```tsx
+import React from "react";
+import { usePrompt } from "react-router-native";
+
+function SignupForm() {
+  let [formData, setFormData] = React.useState(null);
+  usePrompt("Are you sure you want to leave?", formData != null);
+  // ...
+}
+```
+
+The React Native version of `usePrompt` calls the `alert` method from the [React Native Alert class](https://reactnative.dev/docs/alert).
 
 ### `useResolvedPath`
 
@@ -1185,26 +1278,33 @@ See also [`createRoutesFromArray`](#createroutesfromarray).
 
 ### `useSearchParams`
 
+> **Note:**
+>
+> This is the web version of `useSearchParams`. For the React Native version,
+> [go here](#usesearchparams-native).
+
 <details>
   <summary>Type declaration</summary>
 
 ```tsx
 declare function useSearchParams(
   defaultInit?: URLSearchParamsInit
-): [
-  URLSearchParams,
-  (
-    nextInit: URLSearchParamsInit,
-    navigateOptions?: { replace?: boolean; state?: State }
-  ) => void
-];
+): [URLSearchParams, URLSearchParamsSetter];
 
 type ParamKeyValuePair = [string, string];
+
 type URLSearchParamsInit =
   | string
   | ParamKeyValuePair[]
   | Record<string, string | string[]>
   | URLSearchParams;
+
+interface URLSearchParamsSetter {
+  (
+    nextInit: URLSearchParamsInit,
+    navigateOptions?: { replace?: boolean; state?: State }
+  ): void;
+}
 ```
 
 </details>
@@ -1242,6 +1342,77 @@ function App() {
 > of the URL. Also note that the second arg to `setSearchParams` is
 > the same type as the second arg to `navigate`.
 
-A `createSearchParams(init: URLSearchParamsInit)` function is also exported that is essentially a thin wrapper around [`new URLSearchParams(init)`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams) that adds support for using objects with array values. This is the same function that `useSearchParams` uses internally for creating `URLSearchParams` objects from `URLSearchParamsInit` values.
+<a name="usesearchparams-native"></a>
 
-[Here's an external link](https://remix.run)
+### `useSearchParams` (React Native)
+
+> **Note:**
+>
+> This is the React Native version of `useSearchParams`. For the web version,
+> [go here](#usesearchparams).
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function useSearchParams(
+  defaultInit?: URLSearchParamsInit
+): [URLSearchParams, URLSearchParamsSetter];
+
+type ParamKeyValuePair = [string, string];
+
+type URLSearchParamsInit =
+  | string
+  | ParamKeyValuePair[]
+  | Record<string, string | string[]>
+  | URLSearchParams;
+
+interface URLSearchParamsSetter {
+  (
+    nextInit: URLSearchParamsInit,
+    navigateOptions?: { replace?: boolean; state?: State }
+  ): void;
+}
+```
+
+</details>
+
+The `useSearchParams` hook is used to read and modify the query string in the URL for the current location. Like React's own [`useState` hook](https://reactjs.org/docs/hooks-reference.html#usestate), `useSearchParams` returns an array of two values: the current location's [search params](https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams) and a function that may be used to update them.
+
+```tsx
+import React from "react";
+import { View, SearchForm, TextInput } from "react-native";
+import { useSearchParams } from "react-router-native";
+
+function App() {
+  let [searchParams, setSearchParams] = useSearchParams();
+  let [query, setQuery] = React.useState(searchParams.get("query"));
+
+  function handleSubmit() {
+    setSearchParams({ query });
+  }
+
+  return (
+    <View>
+      <SearchForm onSubmit={handleSubmit}>
+        <TextInput value={query} onChangeText={setQuery} />
+      </SearchForm>
+    </View>
+  );
+}
+```
+
+### `createSearchParams`
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function createSearchParams(
+  init?: URLSearchParamsInit
+): URLSearchParams;
+```
+
+</details>
+
+`createSearchParams` is a thin wrapper around [`new URLSearchParams(init)`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams) that adds support for using objects with array values. This is the same function that `useSearchParams` uses internally for creating `URLSearchParams` objects from `URLSearchParamsInit` values.
