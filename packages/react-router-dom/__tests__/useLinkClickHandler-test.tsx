@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
+import type { LinkProps } from "react-router-dom";
 import {
   MemoryRouter as Router,
   Routes,
@@ -8,20 +9,18 @@ import {
   useHref,
   useLinkClickHandler
 } from "react-router-dom";
-import type { LinkProps } from "react-router-dom";
+
+function CustomLink({ to, replace, state, target, ...rest }: LinkProps) {
+  let href = useHref(to);
+  let handleClick = useLinkClickHandler(to, { target, replace, state });
+  return (
+    // eslint-disable-next-line jsx-a11y/anchor-has-content
+    <a {...rest} href={href} onClick={handleClick} target={target} />
+  );
+}
 
 describe("Custom link with useLinkClickHandler", () => {
   let node: HTMLDivElement;
-
-  function Link({ to, replace, state, target, ...rest }: LinkProps) {
-    let href = useHref(to);
-    let handleClick = useLinkClickHandler(to, { target, replace, state });
-    return (
-      // eslint-disable-next-line jsx-a11y/anchor-has-content
-      <a {...rest} href={href} onClick={handleClick} target={target} />
-    );
-  }
-
   beforeEach(() => {
     node = document.createElement("div");
     document.body.appendChild(node);
@@ -33,25 +32,20 @@ describe("Custom link with useLinkClickHandler", () => {
   });
 
   it("navigates to the new page", () => {
-    function Home() {
-      return (
-        <div>
-          <h1>Home</h1>
-          <Link to="../about">About</Link>
-        </div>
-      );
-    }
-
-    function About() {
-      return <h1>About</h1>;
-    }
-
     act(() => {
       ReactDOM.render(
         <Router initialEntries={["/home"]}>
           <Routes>
-            <Route path="home" element={<Home />} />
-            <Route path="about" element={<About />} />
+            <Route
+              path="home"
+              element={
+                <div>
+                  <h1>Home</h1>
+                  <CustomLink to="../about">About</CustomLink>
+                </div>
+              }
+            />
+            <Route path="about" element={<h1>About</h1>} />
           </Routes>
         </Router>,
         node
@@ -78,25 +72,20 @@ describe("Custom link with useLinkClickHandler", () => {
 
   describe("with a right click", () => {
     it("stays on the same page", () => {
-      function Home() {
-        return (
-          <div>
-            <h1>Home</h1>
-            <Link to="../about">About</Link>
-          </div>
-        );
-      }
-
-      function About() {
-        return <h1>About</h1>;
-      }
-
       act(() => {
         ReactDOM.render(
           <Router initialEntries={["/home"]}>
             <Routes>
-              <Route path="home" element={<Home />} />
-              <Route path="about" element={<About />} />
+              <Route
+                path="home"
+                element={
+                  <div>
+                    <h1>Home</h1>
+                    <CustomLink to="../about">About</CustomLink>
+                  </div>
+                }
+              />
+              <Route path="about" element={<h1>About</h1>} />
             </Routes>
           </Router>,
           node
@@ -127,27 +116,22 @@ describe("Custom link with useLinkClickHandler", () => {
 
   describe("when the link is supposed to open in a new window", () => {
     it("stays on the same page", () => {
-      function Home() {
-        return (
-          <div>
-            <h1>Home</h1>
-            <Link to="../about" target="_blank">
-              About
-            </Link>
-          </div>
-        );
-      }
-
-      function About() {
-        return <h1>About</h1>;
-      }
-
       act(() => {
         ReactDOM.render(
           <Router initialEntries={["/home"]}>
             <Routes>
-              <Route path="home" element={<Home />} />
-              <Route path="about" element={<About />} />
+              <Route
+                path="home"
+                element={
+                  <div>
+                    <h1>Home</h1>
+                    <CustomLink to="../about" target="_blank">
+                      About
+                    </CustomLink>
+                  </div>
+                }
+              />
+              <Route path="about" element={<h1>About</h1>} />
             </Routes>
           </Router>,
           node
@@ -175,25 +159,20 @@ describe("Custom link with useLinkClickHandler", () => {
 
   describe("when the modifier keys are used", () => {
     it("stays on the same page", () => {
-      function Home() {
-        return (
-          <div>
-            <h1>Home</h1>
-            <Link to="../about">About</Link>
-          </div>
-        );
-      }
-
-      function About() {
-        return <h1>About</h1>;
-      }
-
       act(() => {
         ReactDOM.render(
           <Router initialEntries={["/home"]}>
             <Routes>
-              <Route path="home" element={<Home />} />
-              <Route path="about" element={<About />} />
+              <Route
+                path="home"
+                element={
+                  <div>
+                    <h1>Home</h1>
+                    <CustomLink to="../about">About</CustomLink>
+                  </div>
+                }
+              />
+              <Route path="about" element={<h1>About</h1>} />
             </Routes>
           </Router>,
           node

@@ -1,30 +1,34 @@
 import * as React from "react";
-import * as ReactDOMServer from "react-dom/server";
+import { create as createTestRenderer } from "react-test-renderer";
 import { Link } from "react-router-dom";
 import { StaticRouter as Router } from "react-router-dom/server";
 
-describe("A <StaticRouter>", () => {
-  describe("with a <Link to> string", () => {
+describe("A <Link> in a <StaticRouter>", () => {
+  describe("with a string", () => {
     it("uses the right href", () => {
-      let html = ReactDOMServer.renderToStaticMarkup(
+      let renderer = createTestRenderer(
         <Router location="/">
           <Link to="mjackson" />
         </Router>
       );
 
-      expect(html).toContain('href="/mjackson"');
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.props.href).toEqual("/mjackson");
     });
   });
 
-  describe("with a <Link to> object", () => {
+  describe("with an object", () => {
     it("uses the right href", () => {
-      let html = ReactDOMServer.renderToStaticMarkup(
+      let renderer = createTestRenderer(
         <Router location="/">
           <Link to={{ pathname: "/mjackson" }} />
         </Router>
       );
 
-      expect(html).toContain('href="/mjackson"');
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.props.href).toEqual("/mjackson");
     });
   });
 });

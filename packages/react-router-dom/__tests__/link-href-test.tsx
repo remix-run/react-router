@@ -1,205 +1,153 @@
 import * as React from "react";
-import type { ReactTestRenderer } from "react-test-renderer";
-import { act, create as createTestRenderer } from "react-test-renderer";
-import {
-  MemoryRouter as Router,
-  Outlet,
-  Routes,
-  Route,
-  Link
-} from "react-router-dom";
+import { create as createTestRenderer } from "react-test-renderer";
+import { MemoryRouter as Router, Routes, Route, Link } from "react-router-dom";
 
-describe("Link href", () => {
-  let node: HTMLDivElement;
-  beforeEach(() => {
-    node = document.createElement("div");
-    document.body.appendChild(node);
+describe("<Link> anchor href", () => {
+  test("absolute <Link to>", () => {
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/"]}>
+        <Routes>
+          <Route path="/" element={<Link to="/about" />} />
+        </Routes>
+      </Router>
+    );
+
+    let anchor = renderer.root.findByType("a");
+
+    expect(anchor.props.href).toEqual("/about");
   });
 
-  afterEach(() => {
-    document.body.removeChild(node);
-    node = null!;
+  test("absolute <Link to> in descendant <Routes>", () => {
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/auth/login"]}>
+        <Routes>
+          <Route
+            path="auth/*"
+            element={
+              <Routes>
+                <Route
+                  path="login"
+                  element={<Link to="/auth/forgot-password" />}
+                />
+              </Routes>
+            }
+          />
+        </Routes>
+      </Router>
+    );
+
+    let anchor = renderer.root.findByType("a");
+
+    expect(anchor.props.href).toEqual("/auth/forgot-password");
   });
 
-  describe("absolute", () => {
-    it("is correct", () => {
-      function Home() {
-        return (
-          <div>
-            <h1>Home</h1>
-            <Link to="/about">About</Link>
-          </div>
-        );
-      }
+  test('<Link to=".">', () => {
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/home"]}>
+        <Routes>
+          <Route path="home" element={<Link to="." />} />
+        </Routes>
+      </Router>
+    );
 
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
-          <Router initialEntries={["/home"]}>
-            <Routes>
-              <Route path="home" element={<Home />} />
-            </Routes>
-          </Router>
-        );
-      });
+    let anchor = renderer.root.findByType("a");
 
-      let anchor = renderer.root.findByType("a");
+    expect(anchor.props.href).toEqual("/home");
+  });
 
-      expect(anchor.props.href).toEqual("/about");
-    });
+  test('<Link to="."> in a splat route', () => {
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/home/inbox"]}>
+        <Routes>
+          <Route path="home/*" element={<Link to="." />} />
+        </Routes>
+      </Router>
+    );
 
-    it("is correct in nested routes", () => {
-      function Login() {
-        return (
-          <div>
-            Login page{" "}
-            <Link to="/auth/forgot-password">Go to forgot password</Link>
-          </div>
-        );
-      }
+    let anchor = renderer.root.findByType("a");
 
-      function ForgotPassword() {
-        return (
-          <div>
-            Forgot password page{" "}
-            <Link to="/auth/login">Back to login page</Link>
-          </div>
-        );
-      }
+    expect(anchor.props.href).toEqual("/home/inbox");
+  });
 
-      function AuthRoutes() {
-        return (
+  test("relative <Link> to a sibling route", () => {
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/home"]}>
+        <Routes>
+          <Route path="home" element={<Link to="../about" />} />
+        </Routes>
+      </Router>
+    );
+
+    let anchor = renderer.root.findByType("a");
+
+    expect(anchor.props.href).toEqual("/about");
+  });
+
+  test("relative <Link to> with more .. segments than are in the URL", () => {
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/home"]}>
+        <Routes>
+          <Route path="home" element={<Link to="../../about" />} />
+        </Routes>
+      </Router>
+    );
+
+    let anchor = renderer.root.findByType("a");
+
+    expect(anchor.props.href).toEqual("/about");
+  });
+
+  describe("under a <Router basename>", () => {
+    test("absolute <Link to>", () => {
+      let renderer = createTestRenderer(
+        <Router basename="/app" initialEntries={["/app/home"]}>
           <Routes>
-            <Route path="login" element={<Login />} />
-            <Route path="forgot-password" element={<ForgotPassword />} />
+            <Route path="home" element={<Link to="/about" />} />
           </Routes>
-        );
-      }
-
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
-          <Router initialEntries={["/auth/login"]}>
-            <Routes>
-              <Route path="auth/*" element={<Outlet />}>
-                <Route path="*" element={<AuthRoutes />} />
-              </Route>
-            </Routes>
-          </Router>
-        );
-      });
+        </Router>
+      );
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor.props.href).toEqual("/auth/forgot-password");
+      expect(anchor.props.href).toEqual("/app/about");
     });
-  });
 
-  describe("relative self", () => {
-    it("is correct", () => {
-      function Home() {
-        return (
-          <div>
-            <h1>Home</h1>
-            <Link to=".">Home</Link>
-          </div>
-        );
-      }
-
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
-          <Router initialEntries={["/home"]}>
-            <Routes>
-              <Route path="home" element={<Home />} />
-            </Routes>
-          </Router>
-        );
-      });
+    test('<Link to=".">', () => {
+      let renderer = createTestRenderer(
+        <Router basename="/app" initialEntries={["/app/home"]}>
+          <Routes>
+            <Route path="home" element={<Link to="." />} />
+          </Routes>
+        </Router>
+      );
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor.props.href).toEqual("/home");
+      expect(anchor.props.href).toEqual("/app/home");
     });
-  });
 
-  describe("relative sibling", () => {
-    it("is correct", () => {
-      function Home() {
-        return (
-          <div>
-            <h1>Home</h1>
-            <Link to="../about">About</Link>
-          </div>
-        );
-      }
-
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
-          <Router initialEntries={["/home"]}>
-            <Routes>
-              <Route path="home" element={<Home />} />
-            </Routes>
-          </Router>
-        );
-      });
+    test("relative <Link> to a sibling route", () => {
+      let renderer = createTestRenderer(
+        <Router basename="/app" initialEntries={["/app/home"]}>
+          <Routes>
+            <Route path="home" element={<Link to="../about" />} />
+          </Routes>
+        </Router>
+      );
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor.props.href).toEqual("/about");
+      expect(anchor.props.href).toEqual("/app/about");
     });
-  });
 
-  describe("relative with more .. segments than are in the URL", () => {
-    it("is correct", () => {
-      function Home() {
-        return (
-          <div>
-            <h1>Home</h1>
-            <Link to="../../about">About</Link>
-          </div>
-        );
-      }
-
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
-          <Router initialEntries={["/home"]}>
-            <Routes>
-              <Route path="home" element={<Home />} />
-            </Routes>
-          </Router>
-        );
-      });
-
-      let anchor = renderer.root.findByType("a");
-
-      expect(anchor.props.href).toEqual("/about");
-    });
-  });
-
-  describe("basename", () => {
-    it("is correct", () => {
-      function Home() {
-        return (
-          <div>
-            <h1>Home</h1>
-            <Link to="/about">About</Link>
-          </div>
-        );
-      }
-
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
-          <Router basename="/app" initialEntries={["/app/home"]}>
-            <Routes>
-              <Route path="home" element={<Home />} />
-            </Routes>
-          </Router>
-        );
-      });
+    test("relative <Link to> with more .. segments than are in the URL", () => {
+      let renderer = createTestRenderer(
+        <Router basename="/app" initialEntries={["/app/home"]}>
+          <Routes>
+            <Route path="home" element={<Link to="../../about" />} />
+          </Routes>
+        </Router>
+      );
 
       let anchor = renderer.root.findByType("a");
 
