@@ -171,7 +171,7 @@ test("clicking filter links updates product query params", () => {
 ### Alternatives
 
 1. You can also use `BrowserRouter` if your test environment has the browser globals `window.location` and `window.history` (which is the default in Jest through JSDOM, but you cannot reset the history between tests).
-1. Instead of passing a custom route to MemoryRouter, you can use the base `Router` with a `history` prop from the [`history`](https://github.com/ReactTraining/history) package:
+1. Instead of passing a custom route to MemoryRouter, you can use the base `Router` with a `history` prop from the [`history`](https://github.com/remix-run/history) package:
 
 ```jsx
 // app.test.js

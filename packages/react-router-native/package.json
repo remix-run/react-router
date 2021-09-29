@@ -2,7 +2,7 @@
   "name": "react-router-native",
   "version": "5.2.1",
   "description": "React Native bindings for React Router",
-  "repository": "ReactTraining/react-router",
+  "repository": "remix-run/react-router",
   "license": "MIT",
   "author": "React Training <hello@reacttraining.com>",
   "main": "main.js",

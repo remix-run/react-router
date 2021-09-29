@@ -2,7 +2,7 @@
   "name": "react-router",
   "version": "5.2.1",
   "description": "Declarative routing for React",
-  "repository": "ReactTraining/react-router",
+  "repository": "remix-run/react-router",
   "license": "MIT",
   "author": "React Training <hello@reacttraining.com>",
   "files": [

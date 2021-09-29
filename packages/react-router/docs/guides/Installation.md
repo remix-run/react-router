@@ -24,7 +24,7 @@ import {
 
 ## Native
 
-We're still working on great documentation for the native capabilities of React Router. For now we recommend you [read the source](https://github.com/ReactTraining/react-router/tree/master/packages/react-router-native).
+We're still working on great documentation for the native capabilities of React Router. For now we recommend you [read the source](https://github.com/remix-run/react-router/tree/main/packages/react-router-native).
 
 ```bash
 yarn add react-router-native
