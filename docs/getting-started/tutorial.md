@@ -5,6 +5,8 @@ order: 1
 
 # Quickstart Tutorial
 
+<docs-warning>This document is a practical guide to getting started quickly with React Router version 6. To dive more deeply into the principals that drive React Router's design, check out the [explanation of main concepts](concepts).</docs-warning>
+
 ## NOTES
 
 - remove imports from App.jsx in the template

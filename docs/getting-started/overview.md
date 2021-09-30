@@ -1,9 +1,11 @@
 ---
 title: Overview
-order: 1
+order: 2
 ---
 
 # Overview
+
+<docs-warning>This document is an overview of new features and changes in React Router version 6. If you're new to React Router or looking for a more practical guide, check out our [quick start tutorial](tutorial).</docs-warning>
 
 ## Navigation
 
