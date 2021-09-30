@@ -112,7 +112,11 @@ async function updatePackageConfig(packageName, transform) {
 async function updateExampleReadmeUrl(example, version) {
   let filePath = path.join(rootDir, "examples", example, "README.md")
   let fileBuffer = await fs.readFile(filePath)
-  let file = fileBuffer.toString().replace(`https://stackblitz.com/github/remix-run/react-router/tree/dev/examples/${example}`, `https://stackblitz.com/github/remix-run/react-router/tree/${version}/examples/${example}`)
+  let file = fileBuffer.toString().replace(
+    /https:\/\/stackblitz.com\/github\/remix-run\/react-router\/tree\/[^/+]+\/examples\/\w+/,
+    `https://stackblitz.com/github/remix-run/react-router/tree/${version}/examples/${example}`
+  );
+
   await fs.writeFile(filePath, file, "utf8");
 }
 
