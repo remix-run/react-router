@@ -1,6 +1,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
+import fs from 'fs/promises'
 import chalk from "chalk";
 import Confirm from "prompt-confirm";
 import jsonfile from "jsonfile";
@@ -11,10 +12,11 @@ const rootDir = path.resolve(dirname, "..");
 
 /**
  * @param {string} packageName
+ * @param {string} [directory]
  * @returns {string}
  */
-function packageJson(packageName) {
-  return path.join(rootDir, "packages", packageName, "package.json");
+function packageJson(packageName, directory = "packages") {
+  return path.join(rootDir, directory, packageName, "package.json");
 }
 
 /**
@@ -91,6 +93,22 @@ async function updatePackageConfig(packageName, transform) {
   await jsonfile.writeFile(file, json, { spaces: 2 });
 }
 
+/**
+ * @param {string} exampleName
+ * @param {(json: string) => any} transform
+ */
+ async function updateExamplesPackageConfig(transform) {
+  let examples = await fs.readdir(path.join(rootDir, "examples"));
+
+  for (let example of examples) {
+    let file = packageJson(example, "examples");
+    let json = await jsonfile.readFile(file);
+    transform(json);
+    await jsonfile.writeFile(file, json, { spaces: 2 });
+  }
+}
+
+
 async function run() {
   try {
     let args = process.argv.slice(2);
@@ -138,7 +156,13 @@ async function run() {
       chalk.green(`  Updated react-router-native to version ${version}`)
     );
 
-    // 6. Commit and tag
+    // 6. Update react-router and react-router-dom versions in the examples
+    updateExamplesPackageConfig(config => {
+      config.dependencies['react-router'] = version
+      config.dependencies['react-router-dom'] = version
+    })
+
+    // 7. Commit and tag
     execSync(`git commit --all --message="Version ${version}"`);
     execSync(`git tag -a -m "Version ${version}" v${version}`);
     console.log(chalk.green(`  Committed and tagged version ${version}`));
