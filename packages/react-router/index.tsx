@@ -199,8 +199,13 @@ export interface RouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactElement | null;
-  index?: boolean;
+  index?: false;
   path?: string;
+}
+
+export interface IndexRouteProps {
+  element?: React.ReactElement | null;
+  index: true;
 }
 
 /**
@@ -208,7 +213,9 @@ export interface RouteProps {
  *
  * @see https://reactrouter.com/api/Route
  */
-export function Route(_props: RouteProps): React.ReactElement | null {
+export function Route(
+  _props: RouteProps | IndexRouteProps
+): React.ReactElement | null {
   invariant(
     false,
     `A <Route> is only ever to be used as the child of <Routes> element, ` +
@@ -419,7 +426,7 @@ export function useLocation(): Location {
     `useLocation() may be used only in the context of a <Router> component.`
   );
 
-  return React.useContext(LocationContext).location as Location;
+  return React.useContext(LocationContext).location;
 }
 
 /**
@@ -538,8 +545,8 @@ export function useParams<Key extends string = string>(): Readonly<
  * @see https://reactrouter.com/api/useResolvedPath
  */
 export function useResolvedPath(to: To): Path {
-  let { pathname: locationPathname } = useLocation();
   let { pathname: routePathname } = React.useContext(RouteContext);
+  let { pathname: locationPathname } = useLocation();
 
   return React.useMemo(
     () => resolveTo(to, routePathname, locationPathname),
