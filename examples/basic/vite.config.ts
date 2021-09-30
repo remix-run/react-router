@@ -15,16 +15,18 @@ export default defineConfig({
     }),
     reactRefresh()
   ],
-  resolve: {
-    alias: {
-      "react-router": path.resolve(
-        __dirname,
-        "../../packages/react-router/index.tsx"
-      ),
-      "react-router-dom": path.resolve(
-        __dirname,
-        "../../packages/react-router-dom/index.tsx"
-      )
-    }
-  }
+  resolve: process.env.USE_SOURCE
+    ? {
+        alias: {
+          "react-router": path.resolve(
+            __dirname,
+            "../../packages/react-router/index.tsx"
+          ),
+          "react-router-dom": path.resolve(
+            __dirname,
+            "../../packages/react-router-dom/index.tsx"
+          )
+        }
+      }
+    : {}
 });
