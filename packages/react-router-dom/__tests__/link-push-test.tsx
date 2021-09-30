@@ -4,6 +4,17 @@ import { act } from "react-dom/test-utils";
 import { Router, Routes, Route, Link } from "react-router-dom";
 import type { History } from "history";
 
+function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit): void {
+  anchor.dispatchEvent(
+    new MouseEvent("click", {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+      ...eventInit
+    })
+  );
+}
+
 function createHref({ pathname = "/", search = "", hash = "" }): string {
   return pathname + search + hash;
 }
@@ -73,13 +84,7 @@ describe("Link push and replace", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor?.dispatchEvent(
-          new MouseEvent("click", {
-            view: window,
-            bubbles: true,
-            cancelable: true
-          })
-        );
+        click(anchor);
       });
 
       expect(spy).toHaveBeenCalledWith(
@@ -126,13 +131,7 @@ describe("Link push and replace", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor?.dispatchEvent(
-          new MouseEvent("click", {
-            view: window,
-            bubbles: true,
-            cancelable: true
-          })
-        );
+        click(anchor);
       });
 
       expect(spy).toHaveBeenCalledWith(
@@ -179,13 +178,7 @@ describe("Link push and replace", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor?.dispatchEvent(
-          new MouseEvent("click", {
-            view: window,
-            bubbles: true,
-            cancelable: true
-          })
-        );
+        click(anchor);
       });
 
       expect(spy).toHaveBeenCalledWith(
@@ -237,13 +230,7 @@ describe("Link push and replace", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor?.dispatchEvent(
-          new MouseEvent("click", {
-            view: window,
-            bubbles: true,
-            cancelable: true
-          })
-        );
+        click(anchor);
       });
 
       expect(spy).toHaveBeenCalledWith(
