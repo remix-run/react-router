@@ -6,4 +6,4 @@ Sometimes you want to prevent the user from navigating away from a page. The mos
 
 Open this example on [StackBlitz](https://stackblitz.com):
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/dev/examples/prompt)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/dev/examples/prompt?file=src/App.tsx)
