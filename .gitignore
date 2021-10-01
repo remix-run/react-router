@@ -7,6 +7,7 @@ node_modules/
 
 /examples/*/package-lock.json
 /examples/*/yarn.lock
+/examples/*/dist
 
 # v5 build files
 /packages/*/cjs/
