@@ -9,6 +9,7 @@ order: 2
 
 If you're familiar with the JavaScript ecosystem, React, and React Router, this will get you up and running in React Router v6 as quickly as possible, no explanations, just code.
 
+- The [API](../api.md)
 - For a complete introduction to React Router do the [Tutorial](tutorial.md)
 - For extensive documentation on every API see [API Reference](api.md)
 - For a deeper understanding of concepts see [Main Concepts](concepts.md)
