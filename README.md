@@ -1,7 +1,5 @@
-# React Router &middot; [![npm package][npm-badge]][npm] [![build][build-badge]][build]
+# React Router &middot; [![build][build-badge]][build]
 
-[npm-badge]: https://img.shields.io/npm/v/history.svg?style=flat-square
-[npm]: https://www.npmjs.org/package/react-router
 [build-badge]: https://img.shields.io/github/workflow/status/remix-run/react-router/test/dev?style=flat-square
 [build]: https://github.com/remix-run/react-router/actions/workflows/test.yml
 
