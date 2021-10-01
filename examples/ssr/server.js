@@ -42,13 +42,7 @@ async function createServer(
         render = require("./dist/server/entry.server.js").render;
       }
 
-      const context = {};
-      const appHtml = render(url, context);
-
-      if (context.url) {
-        // Somewhere a `<Redirect>` was rendered
-        return res.redirect(301, context.url);
-      }
+      const appHtml = render(url);
 
       const html = template.replace(`<!--app-html-->`, appHtml);
 
