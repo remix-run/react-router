@@ -1,6 +1,6 @@
 import * as path from "path";
 import { defineConfig } from "vite";
-import reactRefresh from "@vitejs/plugin-react-refresh";
+import react from "@vitejs/plugin-react";
 import rollupReplace from "@rollup/plugin-replace";
 
 // https://vitejs.dev/config/
@@ -13,7 +13,7 @@ export default defineConfig({
         "process.env.NODE_ENV": JSON.stringify("development")
       }
     }),
-    reactRefresh()
+    react()
   ],
   resolve: process.env.USE_SOURCE
     ? {
