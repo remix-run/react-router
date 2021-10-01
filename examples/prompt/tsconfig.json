@@ -14,11 +14,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react",
-    "paths": {
-      "react-router": ["../../packages/react-router/index.tsx"],
-      "react-router-dom": ["../../packages/react-router-dom/index.tsx"],
-    }
+    "jsx": "react"
   },
   "include": ["./src"]
 }
