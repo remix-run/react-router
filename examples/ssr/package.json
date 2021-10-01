@@ -10,13 +10,15 @@
     "debug": "node --inspect-brk server.js"
   },
   "dependencies": {
+    "compression": "^1.7.4",
     "cross-env": "^7.0.3",
     "express": "^4.17.1",
     "history": "latest",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router": "next",
-    "react-router-dom": "next"
+    "react-router-dom": "next",
+    "serve-static": "^1.14.1"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "^2.2.1",
