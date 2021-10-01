@@ -5,8 +5,10 @@ import App from "./app";
 
 export function render(url: string) {
   return ReactDOMServer.renderToString(
-    <Router location={url}>
-      <App />
-    </Router>
+    <React.StrictMode>
+      <Router location={url}>
+        <App />
+      </Router>
+    </React.StrictMode>
   );
 }
