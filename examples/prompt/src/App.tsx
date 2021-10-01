@@ -69,7 +69,7 @@ function Home() {
       >
         <Prompt
           when={isBlocking}
-          message={`Are you sure you want to go to leave?`}
+          message={`Are you sure you wantto leave?`}
         />
 
         <p>
