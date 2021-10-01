@@ -1,4 +1,4 @@
-# Basic Example
+# Server Side Rendering Example
 
 This example takes our basic example and adds Server Side Rendering to it.
 
