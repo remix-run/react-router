@@ -15,9 +15,6 @@ export default defineConfig({
     }),
     react()
   ],
-  build: {
-    minify: false
-  },
   resolve: process.env.USE_SOURCE
     ? {
         alias: {

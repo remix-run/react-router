@@ -6,6 +6,12 @@ export default function App() {
     <div>
       <h1>Welcome to the app!</h1>
 
+      <p>
+        View source to see the HTML! This is a nice user experience because if
+        someone visits this page without JavaScript or the JavaScript fails to
+        load, they'll still the content.
+      </p>
+
       {/* Routes nest inside one another. Nested route paths build upon
             parent route paths, and nested route elements render inside
             parent route elements. See the note about <Outlet> below. */}
