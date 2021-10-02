@@ -98,6 +98,32 @@ describe("NavLink", () => {
     });
   });
 
+  describe("when it matches a partial URL segment", () => {
+    it("does not apply the 'active' className to the underlying <a>", () => {
+      let renderer = createTestRenderer(
+        <Router initialEntries={["/home/children"]}>
+          <Routes>
+            <Route
+              path="home"
+              element={
+                <div>
+                  <NavLink to="child">Home</NavLink>
+                  <Outlet />
+                </div>
+              }
+            >
+              <Route path="children" element={<div>Child</div>} />
+            </Route>
+          </Routes>
+        </Router>
+      );
+
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.props.className).not.toMatch("active");
+    });
+  });
+
   describe("when it matches just the beginning but not to the end", () => {
     it("applies the default 'active' className to the underlying <a>", () => {
       let renderer = createTestRenderer(

@@ -268,9 +268,11 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       toPathname = toPathname.toLowerCase();
     }
 
-    let isActive = end
-      ? locationPathname === toPathname
-      : locationPathname.startsWith(toPathname);
+    let isActive =
+      locationPathname === toPathname ||
+      (!end &&
+        locationPathname.startsWith(toPathname) &&
+        locationPathname.charAt(toPathname.length) === "/");
 
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
