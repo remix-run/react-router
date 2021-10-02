@@ -99,30 +99,28 @@ describe("NavLink", () => {
   });
 
   describe("when it matches just the beginning but not to the end", () => {
-    describe("by default", () => {
-      it("applies the default 'active' className to the underlying <a>", () => {
-        let renderer = createTestRenderer(
-          <Router initialEntries={["/home/child"]}>
-            <Routes>
-              <Route
-                path="home"
-                element={
-                  <div>
-                    <NavLink to=".">Home</NavLink>
-                    <Outlet />
-                  </div>
-                }
-              >
-                <Route path="child" element={<div>Child</div>} />
-              </Route>
-            </Routes>
-          </Router>
-        );
+    it("applies the default 'active' className to the underlying <a>", () => {
+      let renderer = createTestRenderer(
+        <Router initialEntries={["/home/child"]}>
+          <Routes>
+            <Route
+              path="home"
+              element={
+                <div>
+                  <NavLink to=".">Home</NavLink>
+                  <Outlet />
+                </div>
+              }
+            >
+              <Route path="child" element={<div>Child</div>} />
+            </Route>
+          </Routes>
+        </Router>
+      );
 
-        let anchor = renderer.root.findByType("a");
+      let anchor = renderer.root.findByType("a");
 
-        expect(anchor.props.className).toMatch("active");
-      });
+      expect(anchor.props.className).toMatch("active");
     });
 
     describe("when end=true", () => {
@@ -155,20 +153,18 @@ describe("NavLink", () => {
   });
 
   describe("when it matches without matching case", () => {
-    describe("by default", () => {
-      it("applies the default 'active' className to the underlying <a>", () => {
-        let renderer = createTestRenderer(
-          <Router initialEntries={["/Home"]}>
-            <Routes>
-              <Route path="home" element={<NavLink to=".">Home</NavLink>} />
-            </Routes>
-          </Router>
-        );
+    it("applies the default 'active' className to the underlying <a>", () => {
+      let renderer = createTestRenderer(
+        <Router initialEntries={["/Home"]}>
+          <Routes>
+            <Route path="home" element={<NavLink to=".">Home</NavLink>} />
+          </Routes>
+        </Router>
+      );
 
-        let anchor = renderer.root.findByType("a");
+      let anchor = renderer.root.findByType("a");
 
-        expect(anchor.props.className).toMatch("active");
-      });
+      expect(anchor.props.className).toMatch("active");
     });
 
     describe("when caseSensitive=true", () => {
