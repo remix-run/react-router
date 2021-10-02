@@ -1,29 +1,20 @@
 import * as React from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Outlet,
-  Link,
-  Prompt
-} from "react-router-dom";
+import { Routes, Route, Outlet, Link, Prompt } from "react-router-dom";
 
 export default function App() {
   return (
-    <Router>
-      <div>
-        <h1>Welcome to the app!</h1>
+    <div>
+      <h1>Welcome to the app!</h1>
 
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="about" element={<About />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="*" element={<NoMatch />} />
-          </Route>
-        </Routes>
-      </div>
-    </Router>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="about" element={<About />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="*" element={<NoMatch />} />
+        </Route>
+      </Routes>
+    </div>
   );
 }
 
@@ -65,14 +56,13 @@ function Home() {
           setIsBlocking(false);
         }}
       >
-        <Prompt
-          when={isBlocking}
-          message={`Are you sure you wantto leave?`}
-        />
+        <Prompt when={isBlocking} message={`Are you sure you want to leave?`} />
 
         <p>
           Blocking?{" "}
-          {isBlocking ? "Yes, click a link or the back button" : "Nope"}
+          {isBlocking
+            ? "Yes, link clicks and navigation will prompt you"
+            : "Nope"}
         </p>
 
         <p>
