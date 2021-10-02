@@ -34,7 +34,7 @@ describe("absolute path matching", () => {
       }
     ];
 
-    // expect(pickPaths(routes, "/users")).toEqual(["/users"]);
+    expect(pickPaths(routes, "/users")).toEqual(["/users"]);
     expect(pickPaths(routes, "/users/not-found")).toEqual([
       "/users",
       "/users/*"
