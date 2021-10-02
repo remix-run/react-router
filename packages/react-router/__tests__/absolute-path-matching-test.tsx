@@ -1,12 +1,12 @@
 import type { RouteObject } from "react-router";
 import { matchRoutes } from "react-router";
 
-describe("absolute path matching", () => {
-  function pickPaths(routes: RouteObject[], pathname: string) {
-    let matches = matchRoutes(routes, { pathname });
-    return matches ? matches.map(match => match.route.path || "") : [];
-  }
+function pickPaths(routes: RouteObject[], pathname: string): string[] | null {
+  let matches = matchRoutes(routes, pathname);
+  return matches && matches.map(match => match.route.path || "");
+}
 
+describe("absolute path matching", () => {
   it("matches a nested route with an absolute path", () => {
     let routes = [
       {
@@ -24,6 +24,21 @@ describe("absolute path matching", () => {
     expect(pickPaths(routes, "/users/add")).toEqual(["/users", "add"]);
     expect(pickPaths(routes, "/users/remove")).toEqual(["/users", "remove"]);
     expect(pickPaths(routes, "/users/123")).toEqual(["/users", "/users/:id"]);
+  });
+
+  it("matches a nested splat route with an absolute path", () => {
+    let routes = [
+      {
+        path: "/users",
+        children: [{ path: "/users/*" }]
+      }
+    ];
+
+    // expect(pickPaths(routes, "/users")).toEqual(["/users"]);
+    expect(pickPaths(routes, "/users/not-found")).toEqual([
+      "/users",
+      "/users/*"
+    ]);
   });
 
   it("throws when the nested path does not begin with its parent path", () => {

@@ -903,16 +903,13 @@ function matchRouteBranch<ParamKey extends string = string>(
   let matches: RouteMatch[] = [];
   for (let i = 0; i < routesMeta.length; ++i) {
     let meta = routesMeta[i];
+    let end = i === routesMeta.length - 1;
     let trailingPathname =
       matchedPathname === "/"
         ? pathname
         : pathname.slice(matchedPathname.length) || "/";
     let match = matchPath(
-      {
-        path: meta.relativePath,
-        caseSensitive: meta.caseSensitive,
-        end: i === routesMeta.length - 1
-      },
+      { path: meta.relativePath, caseSensitive: meta.caseSensitive, end },
       trailingPathname
     );
 
@@ -1068,7 +1065,7 @@ function compilePath(
       });
 
   if (path.endsWith("*")) {
-    if (path.endsWith("/*")) {
+    if (path !== "/*" && path.endsWith("/*")) {
       source += "(?:\\/(.+)|\\/?)$"; // Don't include the / in params['*']
     } else {
       source += "(.*)$";
