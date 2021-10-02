@@ -1,14 +1,14 @@
 import * as React from "react";
 import {
-  BrowserRouter as Router,
   Routes,
   Route,
   Link,
   useNavigate,
-  RouteProps,
   useLocation,
-  Navigate
+  Navigate,
+  Outlet
 } from "react-router-dom";
+import { fakeAuthProvider } from "./auth";
 
 /*
 This example has 3 pages: a public page, a protected
@@ -29,94 +29,81 @@ just *before* logging in, the public page.
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div>
-          <AuthButton />
-
-          <ul>
-            <li>
-              <Link to="/public">Public Page</Link>
-            </li>
-            <li>
-              <Link to="/protected">Protected Page</Link>
-            </li>
-          </ul>
-
-          <Routes>
-            <Route index />
-            <Route path="/public" element={<PublicPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route
-              path="/protected"
-              element={<PrivateRoute element={<ProtectedPage />} />}
-            />
-          </Routes>
-        </div>
-      </Router>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index />
+          <Route path="/public" element={<PublicPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/protected"
+            element={
+              <RequireAuth>
+                <ProtectedPage />
+              </RequireAuth>
+            }
+          />
+        </Route>
+      </Routes>
     </AuthProvider>
   );
 }
 
-const fakeAuth = {
-  isAuthenticated: false,
-  signin(cb: VoidFunction) {
-    fakeAuth.isAuthenticated = true;
-    setTimeout(cb, 100); // fake async
-  },
-  signout(cb: VoidFunction) {
-    fakeAuth.isAuthenticated = false;
-    setTimeout(cb, 100);
-  }
-};
+function Layout() {
+  return (
+    <div>
+      <AuthStatus />
 
-/** For more details on
- * `AuthContext`, `AuthProvider`, `useAuth` and `useAuthProvider`
- * refer to: https://usehooks.com/useAuth/
- */
-interface AuthContextType {
-  user: "user" | null;
-  signin: (cb: VoidFunction) => void;
-  signout: (cb: VoidFunction) => void;
+      <ul>
+        <li>
+          <Link to="/public">Public Page</Link>
+        </li>
+        <li>
+          <Link to="/protected">Protected Page</Link>
+        </li>
+      </ul>
+
+      <Outlet />
+    </div>
+  );
 }
 
-let AuthContext = React.createContext<AuthContextType | undefined>(undefined);
+interface AuthContextType {
+  user: any;
+  signin: (user: any, callback: VoidFunction) => void;
+  signout: (callback: VoidFunction) => void;
+}
+
+let AuthContext = React.createContext<AuthContextType>(null!);
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
-  let auth = useAuthProvider();
-  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+  let [user, setUser] = React.useState<AuthContextType["user"]>(null);
+
+  let signin = (newUser: any, callback: VoidFunction) => {
+    return fakeAuthProvider.signin(() => {
+      setUser(newUser);
+      callback();
+    });
+  };
+
+  let signout = (callback: VoidFunction) => {
+    return fakeAuthProvider.signout(() => {
+      setUser(null);
+      callback();
+    });
+  };
+
+  let value = { user, signin, signout };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 function useAuth() {
-  let context = React.useContext(AuthContext);
-  if (!context) {
-    throw new Error(`useAuth must be wrapped in an AuthProvider`);
-  }
-  return context;
+  return React.useContext(AuthContext);
 }
 
-function useAuthProvider() {
-  let [user, setUser] = React.useState<AuthContextType["user"]>(null);
-
-  let signin = (cb: VoidFunction) => {
-    return fakeAuth.signin(() => {
-      setUser("user");
-      cb();
-    });
-  };
-
-  let signout = (cb: VoidFunction) => {
-    return fakeAuth.signout(() => {
-      setUser(null);
-      cb();
-    });
-  };
-
-  return { user, signin, signout };
-}
-
-function AuthButton() {
-  let navigate = useNavigate();
+function AuthStatus() {
   let auth = useAuth();
+  let navigate = useNavigate();
 
   if (!auth.user) {
     return <p>You are not logged in.</p>;
@@ -124,7 +111,7 @@ function AuthButton() {
 
   return (
     <p>
-      Welcome!{" "}
+      Welcome {auth.user}!{" "}
       <button
         onClick={() => {
           auth.signout(() => navigate("/"));
@@ -136,15 +123,58 @@ function AuthButton() {
   );
 }
 
-function PrivateRoute({ element }: RouteProps) {
+function RequireAuth({ children }: { children: JSX.Element }) {
   let auth = useAuth();
   let location = useLocation();
 
   if (!auth.user) {
+    // Redirect them to the /login page, but save the current location
+    // they were trying to go to when they were redirected. This allows
+    // us to send them along to that page after they login, which is a
+    // nicer user experience than dropping them off on the home page.
     return <Navigate to="/login" state={{ from: location }} />;
   }
 
-  return <>{element}</>;
+  return children;
+}
+
+function LoginPage() {
+  let navigate = useNavigate();
+  let location = useLocation();
+  let auth = useAuth();
+
+  let state = location.state as { from: Location };
+  let from = state ? state.from.pathname : "/";
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    let formData = new FormData(event.currentTarget);
+    let username = formData.get("username");
+
+    auth.signin(username, () => {
+      // Send them back to the page they tried to visit when they were
+      // redirected to the login page. Use { replace: true } so we don't
+      // create another entry in the history stack for the login page.
+      // This means that when they get to the protected page and click
+      // the back button, they won't end up back on the login page, which
+      // is also really nice for the user experience.
+      navigate(from, { replace: true });
+    });
+  }
+
+  return (
+    <div>
+      <p>You must log in to view the page at {from}</p>
+
+      <form onSubmit={handleSubmit}>
+        <label>
+          Username: <input name="username" type="text" />
+        </label>{" "}
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  );
 }
 
 function PublicPage() {
@@ -153,25 +183,4 @@ function PublicPage() {
 
 function ProtectedPage() {
   return <h3>Protected</h3>;
-}
-
-function LoginPage() {
-  let navigate = useNavigate();
-  let location = useLocation();
-  let auth = useAuth();
-
-  let from = (location.state as { from?: Location })?.from?.pathname ?? "/";
-
-  let login = () => {
-    auth.signin(() => {
-      navigate(from, { replace: true });
-    });
-  };
-
-  return (
-    <div>
-      <p>You must log in to view the page at {from}</p>
-      <button onClick={login}>Log in</button>
-    </div>
-  );
 }
