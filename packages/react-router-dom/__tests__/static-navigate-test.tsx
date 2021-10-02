@@ -14,14 +14,13 @@ describe("A <Navigate> in a <StaticRouter>", () => {
   });
 
   it("warns about using on the initial render", () => {
-    function Home() {
-      return <Navigate to="/somewhere-else?the=query" />;
-    }
-
     ReactDOMServer.renderToStaticMarkup(
       <Router location="/home">
         <Routes>
-          <Route path="/home" element={<Home />} />
+          <Route
+            path="/home"
+            element={<Navigate to="/somewhere-else?the=query" />}
+          />
         </Routes>
       </Router>
     );
