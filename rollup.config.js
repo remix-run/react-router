@@ -1,4 +1,3 @@
-import * as fs from "fs";
 import babel from "rollup-plugin-babel";
 // import compiler from "@ampproject/rollup-plugin-closure-compiler";
 import copy from "rollup-plugin-copy";
