@@ -31,7 +31,6 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route element={<Layout />}>
-          <Route index />
           <Route path="/public" element={<PublicPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route
