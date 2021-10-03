@@ -75,7 +75,7 @@ interface AuthContextType {
 let AuthContext = React.createContext<AuthContextType>(null!);
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
-  let [user, setUser] = React.useState<AuthContextType["user"]>(null);
+  let [user, setUser] = React.useState(null);
 
   let signin = (newUser: any, callback: VoidFunction) => {
     return fakeAuthProvider.signin(() => {
