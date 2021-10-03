@@ -1,27 +1,35 @@
 import * as React from "react";
-import { Routes, Route, Outlet, Link } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Outlet,
+  Link
+} from "react-router-dom";
 
 export default function App() {
   return (
-    <div>
-      <h1>Welcome to the app!</h1>
+    <Router>
+      <div>
+        <h1>Welcome to the app!</h1>
 
-      {/* Routes nest inside one another. Nested route paths build upon
+        {/* Routes nest inside one another. Nested route paths build upon
             parent route paths, and nested route elements render inside
             parent route elements. See the note about <Outlet> below. */}
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="about" element={<About />} />
-          <Route path="dashboard" element={<Dashboard />} />
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="about" element={<About />} />
+            <Route path="dashboard" element={<Dashboard />} />
 
-          {/* Using path="*"" means "match anything", so this route
+            {/* Using path="*"" means "match anything", so this route
                 acts like a catch-all for URLs that we don't have explicit
                 routes for. */}
-          <Route path="*" element={<NoMatch />} />
-        </Route>
-      </Routes>
-    </div>
+            <Route path="*" element={<NoMatch />} />
+          </Route>
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
