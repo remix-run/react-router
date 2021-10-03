@@ -199,7 +199,7 @@ export interface RouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactElement | null;
-  index?: false;
+  index?: boolean;
   path?: string;
 }
 
@@ -207,6 +207,7 @@ export interface PathRouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactElement | null;
+  index?: false;
   path: string;
 }
 
