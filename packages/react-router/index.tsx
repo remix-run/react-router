@@ -203,6 +203,18 @@ export interface RouteProps {
   path?: string;
 }
 
+export interface PathRouteProps {
+  caseSensitive?: boolean;
+  children?: React.ReactNode;
+  element?: React.ReactElement | null;
+  path: string;
+}
+
+export interface LayoutRouteProps {
+  children?: React.ReactNode;
+  element?: React.ReactElement | null;
+}
+
 export interface IndexRouteProps {
   element?: React.ReactElement | null;
   index: true;
@@ -214,7 +226,7 @@ export interface IndexRouteProps {
  * @see https://reactrouter.com/api/Route
  */
 export function Route(
-  _props: RouteProps | IndexRouteProps
+  _props: PathRouteProps | LayoutRouteProps | IndexRouteProps
 ): React.ReactElement | null {
   invariant(
     false,
@@ -828,6 +840,12 @@ function flattenRoutes(
       );
 
       flattenRoutes(route.children, branches, routesMeta, path);
+    }
+
+    // Routes without a path shouldn't ever match by themselves unless they are
+    // index routes, so don't add them to the list of possible branches.
+    if (route.path == null && !route.index) {
+      return;
     }
 
     branches.push({ path, score: computeScore(path), routesMeta });

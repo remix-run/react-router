@@ -9,7 +9,7 @@ describe("nested routes with no path", () => {
         <Routes>
           <Route element={<First />}>
             <Route element={<Second />}>
-              <Route element={<Third />} />
+              <Route path="/" element={<Third />} />
             </Route>
           </Route>
         </Routes>
