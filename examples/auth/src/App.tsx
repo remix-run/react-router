@@ -66,18 +66,20 @@ function Layout() {
   );
 }
 
+type User = string | null;
+
 interface AuthContextType {
-  user: any;
-  signin: (user: any, callback: VoidFunction) => void;
+  user: User;
+  signin: (user: string, callback: VoidFunction) => void;
   signout: (callback: VoidFunction) => void;
 }
 
 let AuthContext = React.createContext<AuthContextType>(null!);
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
-  let [user, setUser] = React.useState(null);
+  let [user, setUser] = React.useState<User>(null);
 
-  let signin = (newUser: any, callback: VoidFunction) => {
+  let signin = (newUser: string, callback: VoidFunction) => {
     return fakeAuthProvider.signin(() => {
       setUser(newUser);
       callback();
@@ -149,7 +151,7 @@ function LoginPage() {
     event.preventDefault();
 
     let formData = new FormData(event.currentTarget);
-    let username = formData.get("username");
+    let username = formData.get("username") as string;
 
     auth.signin(username, () => {
       // Send them back to the page they tried to visit when they were
