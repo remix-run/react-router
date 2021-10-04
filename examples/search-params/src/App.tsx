@@ -20,6 +20,7 @@ function randomUser() {
 function Home() {
   let [search, setSearch] = useSearchParams();
   let user = search.get("user");
+
   let [userData, setUserData] = React.useState<any>(null);
 
   React.useEffect(() => {
@@ -29,7 +30,9 @@ function Home() {
       setUserData(data);
     }
 
-    getGitHubUser();
+    if (user) {
+      getGitHubUser();
+    }
   }, [user]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
