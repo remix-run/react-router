@@ -27,7 +27,7 @@ class IndexRedirect extends Component {
   static displayName = 'IndexRedirect'
 
   static createRouteFromReactElement(element, parentRoute) {
-    /* istanbul ignore else: sanity check */
+    /* istanbul ignore else: quick check */
     if (parentRoute) {
       parentRoute.indexRoute = Redirect.createRouteFromReactElement(element)
     } else {

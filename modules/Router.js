@@ -122,7 +122,7 @@ class Router extends Component {
     this._unlisten = this.transitionManager.listen(this.listener)
   }
 
-  /* istanbul ignore next: sanity check */
+  /* istanbul ignore next: quick check */
   componentDidUpdate(prevProps) {
     warning(
       prevProps.history === this.props.history,

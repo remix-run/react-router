@@ -28,7 +28,7 @@ class IndexRoute extends Component {
   static displayName = 'IndexRoute'
 
   static createRouteFromReactElement(element, parentRoute) {
-    /* istanbul ignore else: sanity check */
+    /* istanbul ignore else: quick check */
     if (parentRoute) {
       parentRoute.indexRoute = createRouteFromReactElement(element)
     } else {
@@ -47,7 +47,7 @@ class IndexRoute extends Component {
     getComponents: func
   }
 
-  /* istanbul ignore next: sanity check */
+  /* istanbul ignore next: quick check */
   render() {
     invariant(
       false,

@@ -63,7 +63,7 @@ render(<App />, document.body)
 
 As the hash portion of the URL changes, `<App>` will render a different `<Child>` by branching on `this.state.route`. Pretty straightforward stuff. But it gets complicated fast.
 
-Imagine now that `Inbox` has some nested UI at different URLs, maybe something like this master detail view:
+Imagine now that `Inbox` has some nested UI at different URLs, maybe something like this overview-detail setup:
 
 ```
 path: /inbox/messages/1234

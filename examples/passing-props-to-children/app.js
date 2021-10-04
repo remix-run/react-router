@@ -59,7 +59,7 @@ class AppBase extends Component {
     return (
       <div className="App">
         <button onClick={this.addTaco}>Add Taco</button>
-        <ul className="Master">
+        <ul className="Overview">
           {links}
         </ul>
         <div className="Detail">

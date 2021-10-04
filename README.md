@@ -84,7 +84,7 @@ function Users({ children }) {
   return (
     <div>
       <h1>Users</h1>
-      <div className="master">
+      <div className="overview">
         <ul>
           {/* use Link to route around the app */}
           {users.map(user => (

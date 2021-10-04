@@ -42,7 +42,7 @@ class Route extends Component {
     getComponents: func
   }
 
-  /* istanbul ignore next: sanity check */
+  /* istanbul ignore next: quick check */
   render() {
     invariant(
       false,
