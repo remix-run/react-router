@@ -28,13 +28,18 @@ export default function App() {
       <Routes location={image || location}>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
-          {/* Show the modal when a image page is set */}
-          {image && <Route path="/img/:id" element={<Modal />} />}
           <Route path="gallery" element={<Gallery />} />
           <Route path="/img/:id" element={<ImageView />} />
           <Route path="*" element={<NoMatch />} />
         </Route>
       </Routes>
+
+      {/* Show the modal when a image page is set */}
+      {image && (
+        <Routes>
+          <Route path="/img/:id" element={<Modal />} />
+        </Routes>
+      )}
     </div>
   );
 }
