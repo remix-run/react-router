@@ -1,0 +1,31 @@
+{
+  "name": "ssr",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development node server.js",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "vite build --outDir dist/client --ssrManifest",
+    "build:server": "vite build --ssr src/entry.server.tsx --outDir dist/server",
+    "start": "cross-env NODE_ENV=production node server.js",
+    "debug": "node --inspect-brk server.js"
+  },
+  "dependencies": {
+    "compression": "1.7.4",
+    "cross-env": "^7.0.3",
+    "express": "^4.17.1",
+    "history": "latest",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-router": "next",
+    "react-router-dom": "next"
+  },
+  "devDependencies": {
+    "@rollup/plugin-replace": "^3.0.0",
+    "@types/node": "^16.10.2",
+    "@types/react": "^17.0.19",
+    "@types/react-dom": "^17.0.9",
+    "@vitejs/plugin-react": "^1.0.1",
+    "typescript": "^4.3.5",
+    "vite": "^2.5.0"
+  }
+}
