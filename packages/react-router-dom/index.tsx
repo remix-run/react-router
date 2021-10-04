@@ -85,6 +85,9 @@ export type {
   RouteMatch,
   RouteObject,
   RouteProps,
+  PathRouteProps,
+  LayoutRouteProps,
+  IndexRouteProps,
   RouterProps,
   RoutesProps
 } from "react-router";
