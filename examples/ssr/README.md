@@ -1,13 +1,17 @@
-# Server Side Rendering Example
+# Server-side Rendering Example
 
-This example takes our basic example and adds Server Side Rendering to it.
+This example adds [server-side rendering](https://reactjs.org/docs/react-dom-server.html) (SSR) to our basic example.
 
-In this example we provide a simple production ready server that renders the application.
+With SSR, the server renders your app and sends real HTML to the browser instead of an empty HTML document with a bunch of `<script>` tags. After the browser loads the HTML and JavaScript from the server, React "hydrates" the HTML document using the same components it used to render the app on the server.
 
-We have two entry points in this example, one for the client (src/entry.client.tsx) and one for the server (src/entry.server.tsx). On the client, we use React Router like we would traditionally do in a client app. On the server, we use React Router's `StaticRouter` to render the app, and then the client rehydrates the app.
+This example contains a server (server.js) that can run in both development and production modes.
+
+In the browser entry point (src/entry.client.tsx), we use React Router like we would traditionally do in a purely client-side app and render a `<BrowserRouter>` to provide routing context to the rest of the app. The main difference is that instead of using `ReactDOM.render()` to render the app, since the HTML was already sent by the server, all we need is `ReactDOM.hydrate()`.
+
+On the server (src/entry.server.tsx), we use React Router's `<StaticRouter>` to render the app and plug in the URL we get from the incoming HTTP request.
 
 ## Preview
 
 Open this example on [StackBlitz](https://stackblitz.com):
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/dev/examples/ssr?file=src/app.tsx)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/dev/examples/ssr?file=src/App.tsx)
