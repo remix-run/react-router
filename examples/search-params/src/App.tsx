@@ -24,15 +24,27 @@ function Home() {
   let [userData, setUserData] = React.useState<any>(null);
 
   React.useEffect(() => {
+    let isCurrent = true;
+    let abortController = new AbortController();
+
     async function getGitHubUser() {
-      let response = await fetch(`https://api.github.com/users/${user}`);
+      let response = await fetch(`https://api.github.com/users/${user}`, {
+        signal: abortController.signal
+      });
       let data = await response.json();
-      setUserData(data);
+      if (isCurrent) {
+        setUserData(data);
+      }
     }
 
     if (user) {
       getGitHubUser();
     }
+
+    return () => {
+      isCurrent = false;
+      abortController.abort();
+    };
   }, [user]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
