@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Route, Routes, useSearchParams } from "react-router-dom";
+import { Link, Route, Routes, useSearchParams } from "react-router-dom";
 
 export default function App() {
   return (
@@ -7,6 +7,7 @@ export default function App() {
       <h1>React Router - Search Params Example</h1>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="*" element={<NoMatch />} />
       </Routes>
     </div>
   );
@@ -104,6 +105,17 @@ function Home() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function NoMatch() {
+  return (
+    <div>
+      <h2>Nothing to see here!</h2>
+      <p>
+        <Link to="/">Go to the home page</Link>
+      </p>
     </div>
   );
 }
