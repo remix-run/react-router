@@ -17,14 +17,11 @@ export default function App() {
   let location = useLocation();
 
   /*
-    This piece of state is set when one of the
-    gallery links is clicked. The `image` state
-    is the location that we were at when one of
-    the gallery links was clicked. If it's there,
-    use it as the location for the <Routes> so
-    we show the gallery in the background, behind
-    the modal.
-    */
+    This piece of state is set when one of the gallery links is clicked.
+    The `image` state is the location that we were at when one of the gallery
+    links was clicked. If it's there, use it as the location for the <Routes>
+    so we show the gallery in the background, behind the modal.
+  */
   let state = location.state as { pinnedLocation?: Location };
   let pinnedLocation = state?.pinnedLocation;
 
@@ -120,7 +117,7 @@ function Gallery() {
                 borderRadius: "8px"
               }}
               src={image.src}
-              alt=""
+              alt={image.title}
             />
           </Link>
         ))}
