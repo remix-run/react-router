@@ -158,12 +158,23 @@ function Modal() {
       onDismiss={onDismiss}
       initialFocusRef={buttonRef}
     >
-      <div style={{ display: "grid", justifyContent: "center" }}>
+      <div
+        style={{
+          display: "grid",
+          justifyContent: "center",
+          padding: "8px 8px"
+        }}
+      >
         <h1 id="label" style={{ margin: 0 }}>
           {image.title}
         </h1>
         <img
-          style={{ margin: "16px 0", borderRadius: "8px" }}
+          style={{
+            margin: "16px 0",
+            borderRadius: "8px",
+            width: "100%",
+            height: "auto"
+          }}
           width={400}
           height={400}
           src={image.src}
