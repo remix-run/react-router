@@ -31,4 +31,33 @@ describe("Descendant <Routes>", () => {
       </p>
     `);
   });
+
+  it("overrides params of the same name from ancestor <Routes>", () => {
+    function Message() {
+      return <p>The params are {JSON.stringify(useParams())}</p>;
+    }
+
+    function User() {
+      return (
+        <Routes>
+          <Route path="messages/:id" element={<Message />} />
+        </Routes>
+      );
+    }
+
+    let renderer = createTestRenderer(
+      <Router initialEntries={["/users/mj/messages/123"]}>
+        <Routes>
+          <Route path="users/:id/*" element={<User />} />
+        </Routes>
+      </Router>
+    );
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <p>
+        The params are 
+        {"id":"123","*":"messages/123"}
+      </p>
+    `);
+  });
 });
