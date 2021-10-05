@@ -19,13 +19,13 @@ export default function App() {
   // use it as the location for the <Routes> so
   // we show the gallery in the background, behind
   // the modal.
-  let state = location.state as { image?: Location };
-  let image = state?.image;
+  let state = location.state as { pinnedLocation?: Location };
+  let pinnedLocation = state?.pinnedLocation;
 
   return (
     <div>
       <h1>Welcome to the app!</h1>
-      <Routes location={image || location}>
+      <Routes location={pinnedLocation || location}>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="gallery" element={<Gallery />} />
@@ -35,7 +35,7 @@ export default function App() {
       </Routes>
 
       {/* Show the modal when a image page is set */}
-      {image && (
+      {pinnedLocation && (
         <Routes>
           <Route path="/img/:id" element={<Modal />} />
         </Routes>
@@ -125,7 +125,7 @@ function Gallery() {
             to={`/img/${image.id}`}
             // This is the trick! This link sets
             // the `background` in location state.
-            state={{ image: location }}
+            state={{ pinnedLocation: location }}
           >
             <img
               width={200}
