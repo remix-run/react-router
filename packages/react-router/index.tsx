@@ -653,6 +653,7 @@ export function useRoutes(
     matches &&
       matches.map(match =>
         Object.assign({}, match, {
+          params: Object.assign({}, parentParams, match.params),
           pathname: joinPaths([parentPathnameStart, match.pathname])
         })
       )
@@ -692,10 +693,10 @@ export function createRoutesFromChildren(
     }
 
     let route: RouteObject = {
-      path: element.props.path,
       caseSensitive: element.props.caseSensitive,
+      element: element.props.element,
       index: element.props.index,
-      element: element.props.element
+      path: element.props.path
     };
 
     if (element.props.children) {
