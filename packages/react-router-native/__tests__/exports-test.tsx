@@ -4,7 +4,6 @@ import * as ReactRouterNative from "react-router-native";
 describe("react-router-native", () => {
   for (let key in ReactRouter) {
     it(`re-exports ${key} from react-router`, () => {
-      // @ts-ignore
       expect(ReactRouterNative[key]).toBe(ReactRouter[key]);
     });
   }

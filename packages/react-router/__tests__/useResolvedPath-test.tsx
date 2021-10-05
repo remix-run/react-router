@@ -27,9 +27,7 @@ describe("useResolvedPath", () => {
     );
 
     expect(path).toMatchObject({
-      pathname: "/users/mj",
-      search: "",
-      hash: ""
+      pathname: "/users/mj"
     });
   });
 

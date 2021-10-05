@@ -1,4 +1,3 @@
-import * as fs from "fs";
 import babel from "rollup-plugin-babel";
 // import compiler from "@ampproject/rollup-plugin-closure-compiler";
 import copy from "rollup-plugin-copy";
@@ -422,6 +421,39 @@ function reactRouterDom() {
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true, targets: { node: true } }],
+            "@babel/preset-react",
+            "@babel/preset-typescript"
+          ],
+          plugins: ["babel-plugin-dev-expression"],
+          extensions: [".ts", ".tsx"]
+        })
+        // compiler()
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
+    },
+    {
+      input: `${SOURCE_DIR}/server.tsx`,
+      output: {
+        file: `${OUTPUT_DIR}/server.mjs`,
+        format: "esm"
+      },
+      external: [
+        "url",
+        "history",
+        "react",
+        "react-dom/server",
+        "react-router-dom"
+      ],
+      plugins: [
+        babel({
+          exclude: /node_modules/,
+          presets: [
+            [
+              "@babel/preset-modules",
+              {
+                // Don't spoof `.name` for Arrow Functions, which breaks when minified anyway.
+                loose: true
+              }
+            ],
             "@babel/preset-react",
             "@babel/preset-typescript"
           ],

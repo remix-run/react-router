@@ -4,7 +4,7 @@ import { Navigate, Routes, Route } from "react-router-dom";
 import { StaticRouter as Router } from "react-router-dom/server";
 
 describe("A <Navigate> in a <StaticRouter>", () => {
-  let consoleWarn: jest.SpyInstance<void, any>;
+  let consoleWarn: jest.SpyInstance;
   beforeEach(() => {
     consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
   });
@@ -14,14 +14,13 @@ describe("A <Navigate> in a <StaticRouter>", () => {
   });
 
   it("warns about using on the initial render", () => {
-    function Home() {
-      return <Navigate to="/somewhere-else?the=query" />;
-    }
-
     ReactDOMServer.renderToStaticMarkup(
       <Router location="/home">
         <Routes>
-          <Route path="/home" element={<Home />} />
+          <Route
+            path="/home"
+            element={<Navigate to="/somewhere-else?the=query" />}
+          />
         </Routes>
       </Router>
     );

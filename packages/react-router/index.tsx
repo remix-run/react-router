@@ -203,12 +203,32 @@ export interface RouteProps {
   path?: string;
 }
 
+export interface PathRouteProps {
+  caseSensitive?: boolean;
+  children?: React.ReactNode;
+  element?: React.ReactElement | null;
+  index?: false;
+  path: string;
+}
+
+export interface LayoutRouteProps {
+  children?: React.ReactNode;
+  element?: React.ReactElement | null;
+}
+
+export interface IndexRouteProps {
+  element?: React.ReactElement | null;
+  index: true;
+}
+
 /**
  * Declares an element that should be rendered at a certain URL path.
  *
  * @see https://reactrouter.com/api/Route
  */
-export function Route(_props: RouteProps): React.ReactElement | null {
+export function Route(
+  _props: PathRouteProps | LayoutRouteProps | IndexRouteProps
+): React.ReactElement | null {
   invariant(
     false,
     `A <Route> is only ever to be used as the child of <Routes> element, ` +
@@ -419,7 +439,7 @@ export function useLocation(): Location {
     `useLocation() may be used only in the context of a <Router> component.`
   );
 
-  return React.useContext(LocationContext).location as Location;
+  return React.useContext(LocationContext).location;
 }
 
 /**
@@ -538,8 +558,8 @@ export function useParams<Key extends string = string>(): Readonly<
  * @see https://reactrouter.com/api/useResolvedPath
  */
 export function useResolvedPath(to: To): Path {
-  let { pathname: locationPathname } = useLocation();
   let { pathname: routePathname } = React.useContext(RouteContext);
+  let { pathname: locationPathname } = useLocation();
 
   return React.useMemo(
     () => resolveTo(to, routePathname, locationPathname),
@@ -633,6 +653,7 @@ export function useRoutes(
     matches &&
       matches.map(match =>
         Object.assign({}, match, {
+          params: Object.assign({}, parentParams, match.params),
           pathname: joinPaths([parentPathnameStart, match.pathname])
         })
       )
@@ -672,10 +693,10 @@ export function createRoutesFromChildren(
     }
 
     let route: RouteObject = {
-      path: element.props.path,
       caseSensitive: element.props.caseSensitive,
+      element: element.props.element,
       index: element.props.index,
-      element: element.props.element
+      path: element.props.path
     };
 
     if (element.props.children) {
@@ -823,6 +844,12 @@ function flattenRoutes(
       flattenRoutes(route.children, branches, routesMeta, path);
     }
 
+    // Routes without a path shouldn't ever match by themselves unless they are
+    // index routes, so don't add them to the list of possible branches.
+    if (route.path == null && !route.index) {
+      return;
+    }
+
     branches.push({ path, score: computeScore(path), routesMeta });
   });
 
@@ -896,16 +923,13 @@ function matchRouteBranch<ParamKey extends string = string>(
   let matches: RouteMatch[] = [];
   for (let i = 0; i < routesMeta.length; ++i) {
     let meta = routesMeta[i];
+    let end = i === routesMeta.length - 1;
     let trailingPathname =
       matchedPathname === "/"
         ? pathname
         : pathname.slice(matchedPathname.length) || "/";
     let match = matchPath(
-      {
-        path: meta.relativePath,
-        caseSensitive: meta.caseSensitive,
-        end: i === routesMeta.length - 1
-      },
+      { path: meta.relativePath, caseSensitive: meta.caseSensitive, end },
       trailingPathname
     );
 
@@ -1061,7 +1085,7 @@ function compilePath(
       });
 
   if (path.endsWith("*")) {
-    if (path.endsWith("/*")) {
+    if (path !== "/*" && path.endsWith("/*")) {
       source += "(?:\\/(.+)|\\/?)$"; // Don't include the / in params['*']
     } else {
       source += "(.*)$";

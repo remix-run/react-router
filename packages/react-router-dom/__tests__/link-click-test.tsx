@@ -3,6 +3,17 @@ import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
 import { MemoryRouter as Router, Routes, Route, Link } from "react-router-dom";
 
+function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit): void {
+  anchor.dispatchEvent(
+    new MouseEvent("click", {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+      ...eventInit
+    })
+  );
+}
+
 describe("A <Link> click", () => {
   let node: HTMLDivElement;
   beforeEach(() => {
@@ -25,16 +36,12 @@ describe("A <Link> click", () => {
       );
     }
 
-    function About() {
-      return <h1>About</h1>;
-    }
-
     act(() => {
       ReactDOM.render(
         <Router initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
-            <Route path="about" element={<About />} />
+            <Route path="about" element={<h1>About</h1>} />
           </Routes>
         </Router>,
         node
@@ -45,13 +52,7 @@ describe("A <Link> click", () => {
     expect(anchor).not.toBeNull();
 
     act(() => {
-      anchor?.dispatchEvent(
-        new MouseEvent("click", {
-          view: window,
-          bubbles: true,
-          cancelable: true
-        })
-      );
+      click(anchor);
     });
 
     let h1 = node.querySelector("h1");
@@ -76,16 +77,12 @@ describe("A <Link> click", () => {
         );
       }
 
-      function About() {
-        return <h1>About</h1>;
-      }
-
       act(() => {
         ReactDOM.render(
           <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
-              <Route path="about" element={<About />} />
+              <Route path="about" element={<h1>About</h1>} />
             </Routes>
           </Router>,
           node
@@ -96,13 +93,7 @@ describe("A <Link> click", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor?.dispatchEvent(
-          new MouseEvent("click", {
-            view: window,
-            bubbles: true,
-            cancelable: true
-          })
-        );
+        click(anchor);
       });
 
       let h1 = node.querySelector("h1");
@@ -122,16 +113,12 @@ describe("A <Link> click", () => {
         );
       }
 
-      function About() {
-        return <h1>About</h1>;
-      }
-
       act(() => {
         ReactDOM.render(
           <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
-              <Route path="about" element={<About />} />
+              <Route path="about" element={<h1>About</h1>} />
             </Routes>
           </Router>,
           node
@@ -144,14 +131,7 @@ describe("A <Link> click", () => {
       act(() => {
         // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
         let RightMouseButton = 2;
-        anchor?.dispatchEvent(
-          new MouseEvent("click", {
-            view: window,
-            bubbles: true,
-            cancelable: true,
-            button: RightMouseButton
-          })
-        );
+        click(anchor, { button: RightMouseButton });
       });
 
       let h1 = node.querySelector("h1");
@@ -173,16 +153,12 @@ describe("A <Link> click", () => {
         );
       }
 
-      function About() {
-        return <h1>About</h1>;
-      }
-
       act(() => {
         ReactDOM.render(
           <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
-              <Route path="about" element={<About />} />
+              <Route path="about" element={<h1>About</h1>} />
             </Routes>
           </Router>,
           node
@@ -193,13 +169,7 @@ describe("A <Link> click", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor?.dispatchEvent(
-          new MouseEvent("click", {
-            view: window,
-            bubbles: true,
-            cancelable: true
-          })
-        );
+        click(anchor);
       });
 
       let h1 = node.querySelector("h1");
@@ -219,16 +189,12 @@ describe("A <Link> click", () => {
         );
       }
 
-      function About() {
-        return <h1>About</h1>;
-      }
-
       act(() => {
         ReactDOM.render(
           <Router initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
-              <Route path="about" element={<About />} />
+              <Route path="about" element={<h1>About</h1>} />
             </Routes>
           </Router>,
           node
@@ -239,15 +205,7 @@ describe("A <Link> click", () => {
       expect(anchor).not.toBeNull();
 
       act(() => {
-        anchor?.dispatchEvent(
-          new MouseEvent("click", {
-            view: window,
-            bubbles: true,
-            cancelable: true,
-            // The Ctrl key is pressed
-            ctrlKey: true
-          })
-        );
+        click(anchor, { ctrlKey: true });
       });
 
       let h1 = node.querySelector("h1");
