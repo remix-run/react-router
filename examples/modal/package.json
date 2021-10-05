@@ -1,5 +1,5 @@
 {
-  "name": "basic",
+  "name": "modal",
   "private": true,
   "scripts": {
     "dev": "vite",
