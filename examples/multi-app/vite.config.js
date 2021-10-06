@@ -5,12 +5,6 @@ import rollupReplace from "@rollup/plugin-replace";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "/build/dashboard/",
-  build: {
-    outDir: path.resolve(__dirname, "../public/build/dashboard"),
-    emptyOutDir: true
-  },
-
   plugins: [
     rollupReplace({
       preventAssignment: true,
@@ -21,17 +15,16 @@ export default defineConfig({
     }),
     react()
   ],
-
   resolve: process.env.USE_SOURCE
     ? {
         alias: {
           "react-router": path.resolve(
             __dirname,
-            "../../../packages/react-router/index.tsx"
+            "../../packages/react-router/index.tsx"
           ),
           "react-router-dom": path.resolve(
             __dirname,
-            "../../../packages/react-router-dom/index.tsx"
+            "../../packages/react-router-dom/index.tsx"
           )
         }
       }

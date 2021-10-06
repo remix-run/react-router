@@ -2,15 +2,24 @@
   "name": "multi-app",
   "private": true,
   "scripts": {
-    "build": "cd home && npm run build && cd ../about && npm run build && cd ../",
-    "start": "node server.js"
+    "dev": "cross-env NODE_ENV=development node server.js",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "vite build --outDir dist/client --ssrManifest",
+    "build:server": "vite build --outDir dist/server --ssr src/entry-server.js",
+    "start": "cross-env NODE_ENV=production node server.js"
   },
   "dependencies": {
+    "cross-env": "7.0.3",
     "express": "4.17.1",
-    "vite": "2.6.3"
+    "history": "latest",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-router": "next",
+    "react-router-dom": "next"
   },
-  "workspaces": [
-    "home",
-    "about"
-  ]
+  "devDependencies": {
+    "@rollup/plugin-replace": "3.0.0",
+    "@vitejs/plugin-react": "^1.0.2",
+    "vite": "2.6.3"
+  }
 }
