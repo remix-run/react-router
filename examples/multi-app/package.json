@@ -1,0 +1,16 @@
+{
+  "name": "multi-app",
+  "private": true,
+  "scripts": {
+    "build": "cd home && npm run build && cd ../about && npm run build && cd ../",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "4.17.1",
+    "vite": "2.6.3"
+  },
+  "workspaces": [
+    "home",
+    "about"
+  ]
+}
