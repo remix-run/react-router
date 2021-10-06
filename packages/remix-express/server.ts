@@ -121,7 +121,9 @@ function sendRemixResponse(
 
   if (Buffer.isBuffer(response.body)) {
     res.end(response.body);
-  } else {
+  } else if (response.body?.pipe) {
     response.body.pipe(res);
+  } else {
+    res.end();
   }
 }

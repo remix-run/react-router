@@ -1,6 +1,5 @@
 import express from "express";
 import supertest from "supertest";
-import { Response, Headers } from "@remix-run/node";
 import { createRequest } from "node-mocks-http";
 
 import {
@@ -54,6 +53,17 @@ describe("express createRequestHandler", () => {
       expect(res.status).toBe(200);
       expect(res.text).toBe("URL: /foo/bar");
       expect(res.headers["x-powered-by"]).toBe("Express");
+    });
+
+    it("handles null body", async () => {
+      mockedCreateRequestHandler.mockImplementation(() => async () => {
+        return new Response(null, { status: 200 });
+      });
+
+      let request = supertest(createApp());
+      let res = await request.get("/");
+
+      expect(res.status).toBe(200);
     });
 
     it("handles status codes", async () => {

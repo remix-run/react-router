@@ -53,6 +53,7 @@ export interface ComponentDidCatchEmulator {
 
 export interface ThrownResponse<T = any> {
   status: number;
+  statusText: string;
   data: T;
 }
 

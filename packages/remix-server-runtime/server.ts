@@ -37,8 +37,8 @@ export function createRequestHandler(
   let routes = createRoutes(build.routes);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
 
-  return (request, loadContext = {}) =>
-    isDataRequest(request)
+  return async (request, loadContext = {}) => {
+    let response = await (isDataRequest(request)
       ? handleDataRequest(request, loadContext, build, platform, routes)
       : handleDocumentRequest(
           request,
@@ -47,7 +47,18 @@ export function createRequestHandler(
           platform,
           routes,
           serverMode
-        );
+        ));
+
+    if (isHeadRequest(request)) {
+      return new Response(null, {
+        headers: response.headers,
+        status: response.status,
+        statusText: response.statusText
+      });
+    }
+
+    return response;
+  };
 }
 
 async function handleDataRequest(
@@ -57,6 +68,10 @@ async function handleDataRequest(
   platform: ServerPlatform,
   routes: ServerRoute[]
 ): Promise<Response> {
+  if (!isValidRequestMethod(request)) {
+    return jsonError(`Invalid request method "${request.method}"`, 405);
+  }
+
   let url = new URL(request.url);
 
   let matches = matchServerRoutes(routes, url.pathname);
@@ -147,13 +162,19 @@ async function handleDocumentRequest(
 ): Promise<Response> {
   let url = new URL(request.url);
 
-  let matches = matchServerRoutes(routes, url.pathname);
-  let isNoMatch = false;
+  let requestState: "ok" | "no-match" | "invalid-request" =
+    isValidRequestMethod(request) ? "ok" : "invalid-request";
+  let matches =
+    requestState === "ok" ? matchServerRoutes(routes, url.pathname) : null;
 
   if (!matches) {
     // If we do not match a user-provided-route, fall back to the root
-    // to allow the CatchBoundary to take over
-    isNoMatch = true;
+    // to allow the CatchBoundary to take over while maintining invalid
+    // request state if already set
+    if (requestState === "ok") {
+      requestState = "no-match";
+    }
+
     matches = [
       {
         params: {},
@@ -173,11 +194,12 @@ async function handleDocumentRequest(
     catch: undefined
   };
 
-  let actionState: "" | "caught" | "error" = "";
+  let responseState: "ok" | "caught" | "error" = "ok";
   let actionResponse: Response | undefined;
   let actionRouteId: string | undefined;
 
-  if (isNoMatch) {
+  if (requestState !== "ok") {
+    responseState = "caught";
     componentDidCatchEmulator.trackCatchBoundaries = false;
     let withBoundaries = getMatchesUpToDeepestBoundary(
       matches,
@@ -188,7 +210,9 @@ async function handleDocumentRequest(
         ? withBoundaries[withBoundaries.length - 1].route.id
         : null;
     componentDidCatchEmulator.catch = {
-      status: 404,
+      status: requestState === "no-match" ? 404 : 405,
+      statusText:
+        requestState === "no-match" ? "Not Found" : "Method Not Allowed",
       data: null
     };
   } else if (isActionRequest(request)) {
@@ -211,7 +235,7 @@ async function handleDocumentRequest(
       }
     } catch (error: any) {
       let formattedError = (await platform.formatServerError?.(error)) || error;
-      actionState = "error";
+      responseState = "error";
       let withBoundaries = getMatchesUpToDeepestBoundary(
         matches,
         "ErrorBoundary"
@@ -223,7 +247,7 @@ async function handleDocumentRequest(
   }
 
   if (actionResponse && isCatchResponse(actionResponse)) {
-    actionState = "caught";
+    responseState = "caught";
     let withBoundaries = getMatchesUpToDeepestBoundary(
       matches,
       "CatchBoundary"
@@ -233,13 +257,14 @@ async function handleDocumentRequest(
       withBoundaries[withBoundaries.length - 1].route.id;
     componentDidCatchEmulator.catch = {
       status: actionResponse.status,
+      statusText: actionResponse.statusText,
       data: await extractData(actionResponse.clone())
     };
   }
 
   // If we did not match a route, there is no need to call any loaders
-  let matchesToLoad = isNoMatch ? [] : matches;
-  switch (actionState) {
+  let matchesToLoad = requestState !== "ok" ? [] : matches;
+  switch (responseState) {
     case "caught":
       matchesToLoad = getMatchesUpToDeepestBoundary(
         // get rid of the action, we don't want to call it's loader either
@@ -266,16 +291,15 @@ async function handleDocumentRequest(
   // code is a little weird due to the way unhandled promise rejections are
   // handled in node. We use a .catch() handler on each promise to avoid the
   // warning, then handle errors manually afterwards.
-  let routeLoaderPromises: Promise<
-    Response | Error
-  >[] = matchesToLoad.map(match =>
-    loadRouteData(
-      build,
-      match.route.id,
-      request.clone(),
-      loadContext,
-      match.params
-    ).catch(error => error)
+  let routeLoaderPromises: Promise<Response | Error>[] = matchesToLoad.map(
+    match =>
+      loadRouteData(
+        build,
+        match.route.id,
+        request.clone(),
+        loadContext,
+        match.params
+      ).catch(error => error)
   );
 
   let routeLoaderResults = await Promise.all(routeLoaderPromises);
@@ -296,9 +320,9 @@ async function handleDocumentRequest(
     // We just give up and move on with rendering the error as deeply as we can,
     // which is the previous iteration of this loop
     if (
-      (actionState === "error" &&
+      (responseState === "error" &&
         (response instanceof Error || isRedirectResponse(response))) ||
-      (actionState === "caught" && isCatchResponse(response))
+      (responseState === "caught" && isCatchResponse(response))
     ) {
       break;
     }
@@ -333,6 +357,7 @@ async function handleDocumentRequest(
       componentDidCatchEmulator.trackCatchBoundaries = false;
       componentDidCatchEmulator.catch = {
         status: response.status,
+        statusText: response.statusText,
         data: await extractData(response.clone())
       };
       routeLoaderResults[index] = json(null, { status: response.status });
@@ -349,12 +374,14 @@ async function handleDocumentRequest(
   );
 
   let statusCode =
-    actionState === "error"
+    requestState === "no-match"
+      ? 404
+      : requestState === "invalid-request"
+      ? 405
+      : responseState === "error"
       ? 500
       : notOkResponse
       ? notOkResponse.status
-      : isNoMatch
-      ? 404
       : 200;
 
   let renderableMatches = getRenderableMatches(
@@ -453,7 +480,25 @@ function jsonError(error: string, status = 403): Response {
 }
 
 function isActionRequest(request: Request): boolean {
-  return request.method.toLowerCase() !== "get";
+  let method = request.method.toLowerCase();
+  return (
+    method === "post" ||
+    method === "put" ||
+    method === "patch" ||
+    method === "delete"
+  );
+}
+
+function isValidRequestMethod(request: Request): boolean {
+  return (
+    request.method.toLowerCase() === "get" ||
+    isHeadRequest(request) ||
+    isActionRequest(request)
+  );
+}
+
+function isHeadRequest(request: Request): boolean {
+  return request.method.toLowerCase() === "head";
 }
 
 function isDataRequest(request: Request): boolean {
