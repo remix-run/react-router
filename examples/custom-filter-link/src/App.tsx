@@ -15,7 +15,7 @@ import { brands, filterByBrand, getSneakerById } from "./snkrs";
 export default function App() {
   return (
     <div>
-      <h1>Welcome to the app!</h1>
+      <h1>SNKRS</h1>
 
       <Routes>
         <Route path="/" element={<Layout />}>
@@ -55,16 +55,34 @@ function Layout() {
 function SneakerGrid() {
   let [searchParams] = useSearchParams();
   let brand = searchParams.get("brand");
+
   return (
     <main>
       <h2>Sneakers</h2>
 
-      <div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+          gap: "12px 24px"
+        }}
+      >
         {filterByBrand(brand).map(snkr => {
           let name = `${snkr.brand} ${snkr.model} ${snkr.colorway}`;
           return (
             <div key={snkr.id} style={{ position: "relative" }}>
-              <img width={200} height={200} src={snkr.imageUrl} alt={name} />
+              <img
+                width={200}
+                height={200}
+                src={snkr.imageUrl}
+                alt={name}
+                style={{
+                  borderRadius: "8px",
+                  width: "100%",
+                  height: "auto",
+                  aspectRatio: "1 / 1"
+                }}
+              />
               <Link
                 style={{ position: "absolute", inset: 0 }}
                 to={`/sneakers/${snkr.id}`}
@@ -92,7 +110,7 @@ const BrandLink: React.FC<BrandLinkProps> = ({ brand, children, ...props }) => {
 
   return (
     <Link
-      to={`?brand=${brand}`}
+      to={`/?brand=${brand}`}
       {...props}
       style={{
         ...props.style,
@@ -122,7 +140,17 @@ function SneakerView() {
   return (
     <div>
       <h2>{name}</h2>
-      <img width={200} height={200} src={snkr.imageUrl} alt={name} />
+      <img
+        width={400}
+        height={400}
+        style={{
+          borderRadius: "8px",
+          maxWidth: "100%",
+          aspectRatio: "1 / 1"
+        }}
+        src={snkr.imageUrl}
+        alt={name}
+      />
     </div>
   );
 }
