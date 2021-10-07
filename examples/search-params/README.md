@@ -8,4 +8,4 @@ In this example, we have a form to search for a user on GitHub and display their
 
 Open this example on [StackBlitz](https://stackblitz.com):
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/6.0.0-beta.6/examples/search-params-params?file=src/App.tsx)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/v6.0.0-beta.6/examples/search-params?file=src/App.tsx)
