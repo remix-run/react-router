@@ -5,7 +5,6 @@ npm-debug.log
 /website/build/
 node_modules/
 
-/examples/*/package-lock.json
 /examples/*/yarn.lock
 /examples/*/dist
 
