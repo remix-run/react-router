@@ -116,7 +116,7 @@ async function updateExampleReadmeUrl(example, version) {
   let file = fileBuffer
     .toString()
     .replace(
-      /https:\/\/stackblitz.com\/github\/remix-run\/react-router\/tree\/[^/+]+\/examples\/\w+/,
+      /https:\/\/stackblitz.com\/github\/remix-run\/react-router\/tree\/[^/+]+\/examples\/(.+?(?=\?)|.+?(?=\)))/,
       `https://stackblitz.com/github/remix-run/react-router/tree/${version}/examples/${example}`
     );
 
