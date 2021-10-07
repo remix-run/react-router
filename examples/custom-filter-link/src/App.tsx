@@ -10,7 +10,7 @@ import {
 import type { LinkProps } from "react-router-dom";
 import VisuallyHidden from "@reach/visually-hidden";
 
-import { brands, filterByBrand, getSneakerById } from "./snkrs";
+import { brands, filterByBrand, getSneakerById, SNEAKERS } from "./snkrs";
 
 export default function App() {
   return (
@@ -56,6 +56,11 @@ function SneakerGrid() {
   let [searchParams] = useSearchParams();
   let brand = searchParams.get("brand");
 
+  const sneakers = React.useMemo(() => {
+    if (!brand) return SNEAKERS;
+    return filterByBrand(brand);
+  }, [brand]);
+
   return (
     <main>
       <h2>Sneakers</h2>
@@ -67,7 +72,7 @@ function SneakerGrid() {
           gap: "12px 24px"
         }}
       >
-        {filterByBrand(brand).map(snkr => {
+        {sneakers.map(snkr => {
           let name = `${snkr.brand} ${snkr.model} ${snkr.colorway}`;
           return (
             <div key={snkr.id} style={{ position: "relative" }}>

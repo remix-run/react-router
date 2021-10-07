@@ -65,8 +65,7 @@ let SNEAKERS: Sneaker[] = [
   }
 ];
 
-function filterByBrand(brand?: string | undefined | null) {
-  if (!brand) return SNEAKERS;
+function filterByBrand(brand: string) {
   return SNEAKERS.filter(
     sneaker => sneaker.brand.toLowerCase() === brand.toLowerCase()
   );
