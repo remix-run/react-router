@@ -1052,11 +1052,11 @@ export function matchPath<ParamKey extends string = string>(
   if (!match) return null;
 
   let matchedPathname = match[0];
-  let values = match.slice(1);
+  let captureGroups = match.slice(1);
   let params: Params = paramNames.reduce<Mutable<Params>>(
     (memo, paramName, index) => {
       memo[paramName] = safelyDecodeURIComponent(
-        values[index] || "",
+        captureGroups[index] || "",
         paramName
       );
       return memo;
@@ -1072,38 +1072,36 @@ function compilePath(
   caseSensitive = false,
   end = true
 ): [RegExp, string[]] {
-  let keys: string[] = [];
-  let source =
+  let paramNames: string[] = [];
+  let regexpSource =
     "^" +
     path
       .replace(/\/?\*?$/, "") // Ignore trailing / and /*, we'll handle it below
       .replace(/^\/*/, "/") // Make sure it has a leading /
       .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
-      .replace(/:(\w+)/g, (_: string, key: string) => {
-        keys.push(key);
+      .replace(/:(\w+)/g, (_: string, paramName: string) => {
+        paramNames.push(paramName);
         return "([^\\/]+)";
       });
 
   if (path.endsWith("*")) {
-    if (path !== "/*" && path.endsWith("/*")) {
-      source += "(?:\\/(.+)|\\/?)$"; // Don't include the / in params['*']
-    } else {
-      source += "(.*)$";
-    }
-    keys.push("*");
-  } else if (end) {
-    // When matching to the end, ignore trailing slashes.
-    source += "\\/?$";
+    regexpSource +=
+      path === "/*"
+        ? "(.*)$" // Already matched the initial /, just match the rest
+        : "(?:\\/(.+)|\\/*)$"; // Don't include the / in params["*"]
+    paramNames.push("*");
   } else {
-    // If not matching to the end (as parent routes do), at least match a word
-    // boundary. This restricts a parent route to matching only its own words
-    // and nothing more, e.g. parent route "/home" should not match "/home2".
-    source += "(?:\\b|$)";
+    regexpSource += end
+      ? "\\/*$" // When matching to the end, ignore trailing slashes
+      : // Otherwise, at least match a word boundary. This restricts parent
+        // routes to matching only their own words and nothing more, e.g. parent
+        // route "/home" should not match "/home2".
+        "(?:\\b|$)";
   }
 
-  let matcher = new RegExp(source, caseSensitive ? undefined : "i");
+  let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
 
-  return [matcher, keys];
+  return [matcher, paramNames];
 }
 
 function safelyDecodeURIComponent(value: string, paramName: string) {
