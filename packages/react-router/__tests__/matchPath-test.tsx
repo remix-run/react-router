@@ -241,6 +241,63 @@ describe("matchPath", () => {
   });
 });
 
+describe("matchPath *", () => {
+  it("matches the root URL", () => {
+    expect(matchPath("*", "/")).toMatchObject({
+      pathname: "/",
+      pathnameBase: "/"
+    });
+    expect(matchPath("/*", "/")).toMatchObject({
+      pathname: "/",
+      pathnameBase: "/"
+    });
+  });
+
+  it("matches a URL with a segment", () => {
+    expect(matchPath("*", "/users")).toMatchObject({
+      pathname: "/users",
+      pathnameBase: "/"
+    });
+    expect(matchPath("/*", "/users")).toMatchObject({
+      pathname: "/users",
+      pathnameBase: "/"
+    });
+  });
+
+  it("matches a URL with a segment and a trailing slash", () => {
+    expect(matchPath("*", "/users/")).toMatchObject({
+      pathname: "/users/",
+      pathnameBase: "/"
+    });
+    expect(matchPath("/*", "/users/")).toMatchObject({
+      pathname: "/users/",
+      pathnameBase: "/"
+    });
+  });
+
+  it("matches a URL with multiple segments", () => {
+    expect(matchPath("*", "/users/mj")).toMatchObject({
+      pathname: "/users/mj",
+      pathnameBase: "/"
+    });
+    expect(matchPath("/*", "/users/mj")).toMatchObject({
+      pathname: "/users/mj",
+      pathnameBase: "/"
+    });
+  });
+
+  it("matches a URL with multiple segments and a trailing slash", () => {
+    expect(matchPath("*", "/users/mj/")).toMatchObject({
+      pathname: "/users/mj/",
+      pathnameBase: "/"
+    });
+    expect(matchPath("/*", "/users/mj/")).toMatchObject({
+      pathname: "/users/mj/",
+      pathnameBase: "/"
+    });
+  });
+});
+
 describe("matchPath warnings", () => {
   let consoleWarn: jest.SpyInstance<void, any>;
   beforeEach(() => {
