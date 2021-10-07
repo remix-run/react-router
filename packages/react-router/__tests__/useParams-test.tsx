@@ -8,78 +8,64 @@ import {
   useParams
 } from "react-router";
 
+function ShowParams() {
+  return <pre>{JSON.stringify(useParams())}</pre>;
+}
+
 describe("useParams", () => {
   describe("when the route isn't matched", () => {
     it("returns an empty object", () => {
-      let params: Record<string, string | undefined> = {};
-      function Home() {
-        params = useParams();
-        return null;
-      }
-
-      createTestRenderer(
+      let renderer = createTestRenderer(
         <Router initialEntries={["/home"]}>
-          <Home />
+          <ShowParams />
         </Router>
       );
 
-      expect(typeof params).toBe("object");
-      expect(Object.keys(params)).toHaveLength(0);
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {}
+        </pre>
+      `);
     });
   });
 
   describe("when the path has no params", () => {
     it("returns an empty object", () => {
-      let params: Record<string, string | undefined> = {};
-      function Home() {
-        params = useParams();
-        return null;
-      }
-
-      createTestRenderer(
+      let renderer = createTestRenderer(
         <Router initialEntries={["/home"]}>
           <Routes>
-            <Route path="/home" element={<Home />} />
+            <Route path="/home" element={<ShowParams />} />
           </Routes>
         </Router>
       );
 
-      expect(typeof params).toBe("object");
-      expect(Object.keys(params)).toHaveLength(0);
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {}
+        </pre>
+      `);
     });
   });
 
   describe("when the path has some params", () => {
     it("returns an object of the URL params", () => {
-      let params: Record<string, string | undefined> = {};
-      function BlogPost() {
-        params = useParams();
-        return null;
-      }
-
-      createTestRenderer(
+      let renderer = createTestRenderer(
         <Router initialEntries={["/blog/react-router"]}>
           <Routes>
-            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/blog/:slug" element={<ShowParams />} />
           </Routes>
         </Router>
       );
 
-      expect(typeof params).toBe("object");
-      expect(params).toMatchObject({
-        slug: "react-router"
-      });
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"slug":"react-router"}
+        </pre>
+      `);
     });
 
     describe("a child route", () => {
       it("returns a combined hash of the parent and child params", () => {
-        let params: Record<string, string | undefined> = {};
-
-        function Course() {
-          params = useParams();
-          return null;
-        }
-
         function UserDashboard() {
           return (
             <div>
@@ -89,68 +75,63 @@ describe("useParams", () => {
           );
         }
 
-        createTestRenderer(
+        let renderer = createTestRenderer(
           <Router initialEntries={["/users/mjackson/courses/react-router"]}>
             <Routes>
               <Route path="users/:username" element={<UserDashboard />}>
-                <Route path="courses/:course" element={<Course />} />
+                <Route path="courses/:course" element={<ShowParams />} />
               </Route>
             </Routes>
           </Router>
         );
 
-        expect(typeof params).toBe("object");
-        expect(params).toMatchObject({
-          username: "mjackson",
-          course: "react-router"
-        });
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <div>
+            <h1>
+              User Dashboard
+            </h1>
+            <pre>
+              {"username":"mjackson","course":"react-router"}
+            </pre>
+          </div>
+        `);
       });
     });
   });
 
   describe("when the path has percent-encoded params", () => {
     it("returns an object of the decoded params", () => {
-      let params: Record<string, string | undefined> = {};
-      function BlogPost() {
-        params = useParams();
-        return null;
-      }
-
-      createTestRenderer(
+      let renderer = createTestRenderer(
         <Router initialEntries={["/blog/react%20router"]}>
           <Routes>
-            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/blog/:slug" element={<ShowParams />} />
           </Routes>
         </Router>
       );
 
-      expect(typeof params).toBe("object");
-      expect(params).toMatchObject({
-        slug: "react router"
-      });
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"slug":"react router"}
+        </pre>
+      `);
     });
   });
 
   describe("when the path has a + character", () => {
     it("returns an object of the decoded params", () => {
-      let params: Record<string, string | undefined> = {};
-      function BlogPost() {
-        params = useParams();
-        return null;
-      }
-
-      createTestRenderer(
+      let renderer = createTestRenderer(
         <Router initialEntries={["/blog/react+router+is%20awesome"]}>
           <Routes>
-            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/blog/:slug" element={<ShowParams />} />
           </Routes>
         </Router>
       );
 
-      expect(typeof params).toBe("object");
-      expect(params).toMatchObject({
-        slug: "react+router+is awesome"
-      });
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"slug":"react+router+is awesome"}
+        </pre>
+      `);
     });
   });
 
@@ -169,24 +150,19 @@ describe("useParams", () => {
     });
 
     it("returns the raw value and warns", () => {
-      let params: Record<string, string | undefined> = {};
-      function BlogPost() {
-        params = useParams();
-        return null;
-      }
-
-      createTestRenderer(
+      let renderer = createTestRenderer(
         <Router initialEntries={["/blog/react%2router"]}>
           <Routes>
-            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/blog/:slug" element={<ShowParams />} />
           </Routes>
         </Router>
       );
 
-      expect(typeof params).toBe("object");
-      expect(params).toMatchObject({
-        slug: "react%2router"
-      });
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"slug":"react%2router"}
+        </pre>
+      `);
 
       expect(consoleWarn).toHaveBeenCalledWith(
         expect.stringMatching("malformed URL segment")
@@ -196,30 +172,21 @@ describe("useParams", () => {
 
   describe("when the params match in a child route", () => {
     it("renders params in the parent", () => {
-      let params: Record<string, string | undefined> = {};
-      function Blog() {
-        params = useParams();
-        return <h1>{params.slug}</h1>;
-      }
-
-      function BlogPost() {
-        return null;
-      }
-
-      createTestRenderer(
+      let renderer = createTestRenderer(
         <Router initialEntries={["/blog/react-router"]}>
           <Routes>
-            <Route path="/blog" element={<Blog />}>
-              <Route path=":slug" element={<BlogPost />} />
+            <Route path="/blog" element={<ShowParams />}>
+              <Route path=":slug" element={null} />
             </Route>
           </Routes>
         </Router>
       );
 
-      expect(typeof params).toBe("object");
-      expect(params).toMatchObject({
-        slug: "react-router"
-      });
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"slug":"react-router"}
+        </pre>
+      `);
     });
   });
 });
