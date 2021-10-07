@@ -2,7 +2,10 @@ import { matchPath } from "react-router";
 
 describe("matchPath", () => {
   it("matches the root / URL", () => {
-    expect(matchPath("/", "/")).toMatchObject({ pathname: "/" });
+    expect(matchPath("/", "/")).toMatchObject({
+      pathname: "/",
+      pathnameBase: "/"
+    });
   });
 
   describe("when the pattern has no leading slash", () => {
@@ -12,25 +15,29 @@ describe("matchPath", () => {
 
     it("matches a pathname", () => {
       expect(matchPath("users", "/users")).toMatchObject({
-        pathname: "/users"
+        pathname: "/users",
+        pathnameBase: "/users"
       });
     });
 
     it("matches a pathname with multiple segments", () => {
       expect(matchPath("users/mj", "/users/mj")).toMatchObject({
-        pathname: "/users/mj"
+        pathname: "/users/mj",
+        pathnameBase: "/users/mj"
       });
     });
 
     it("matches a pathname with a trailing slash", () => {
       expect(matchPath("users", "/users/")).toMatchObject({
-        pathname: "/users/"
+        pathname: "/users/",
+        pathnameBase: "/users"
       });
     });
 
     it("matches a pathname with multiple segments and a trailing slash", () => {
       expect(matchPath("users/mj", "/users/mj/")).toMatchObject({
-        pathname: "/users/mj/"
+        pathname: "/users/mj/",
+        pathnameBase: "/users/mj"
       });
     });
   });
@@ -42,25 +49,29 @@ describe("matchPath", () => {
 
     it("matches a pathname", () => {
       expect(matchPath("/users", "/users")).toMatchObject({
-        pathname: "/users"
+        pathname: "/users",
+        pathnameBase: "/users"
       });
     });
 
     it("matches a pathname with multiple segments", () => {
       expect(matchPath("/users/mj", "/users/mj")).toMatchObject({
-        pathname: "/users/mj"
+        pathname: "/users/mj",
+        pathnameBase: "/users/mj"
       });
     });
 
     it("matches a pathname with a trailing slash", () => {
       expect(matchPath("/users", "/users/")).toMatchObject({
-        pathname: "/users/"
+        pathname: "/users/",
+        pathnameBase: "/users"
       });
     });
 
     it("matches a pathname with multiple segments and a trailing slash", () => {
       expect(matchPath("/users/mj", "/users/mj/")).toMatchObject({
-        pathname: "/users/mj/"
+        pathname: "/users/mj/",
+        pathnameBase: "/users/mj"
       });
     });
   });
@@ -72,25 +83,29 @@ describe("matchPath", () => {
 
     it("matches a pathname", () => {
       expect(matchPath("users/", "/users")).toMatchObject({
-        pathname: "/users"
+        pathname: "/users",
+        pathnameBase: "/users"
       });
     });
 
     it("matches a pathname with multiple segments", () => {
       expect(matchPath("users/mj/", "/users/mj")).toMatchObject({
-        pathname: "/users/mj"
+        pathname: "/users/mj",
+        pathnameBase: "/users/mj"
       });
     });
 
     it("matches a pathname with a trailing slash", () => {
       expect(matchPath("users/", "/users/")).toMatchObject({
-        pathname: "/users/"
+        pathname: "/users/",
+        pathnameBase: "/users"
       });
     });
 
     it("matches a pathname with multiple segments and a trailing slash", () => {
       expect(matchPath("users/mj/", "/users/mj/")).toMatchObject({
-        pathname: "/users/mj/"
+        pathname: "/users/mj/",
+        pathnameBase: "/users/mj"
       });
     });
   });
@@ -98,14 +113,44 @@ describe("matchPath", () => {
   describe("with { end: false }", () => {
     it("matches the beginning of a pathname", () => {
       expect(matchPath({ path: "/users", end: false }, "/users")).toMatchObject(
-        { pathname: "/users" }
+        { pathname: "/users", pathnameBase: "/users" }
       );
+      expect(
+        matchPath({ path: "/users/", end: false }, "/users")
+      ).toMatchObject({
+        pathname: "/users",
+        pathnameBase: "/users"
+      });
+    });
+
+    it("matches the beginning of a pathname with a trailing slash", () => {
+      expect(
+        matchPath({ path: "/users", end: false }, "/users/")
+      ).toMatchObject({ pathname: "/users", pathnameBase: "/users" });
+      expect(
+        matchPath({ path: "/users/", end: false }, "/users/")
+      ).toMatchObject({
+        pathname: "/users",
+        pathnameBase: "/users"
+      });
     });
 
     it("matches the beginning of a pathname with multiple segments", () => {
       expect(
         matchPath({ path: "/users", end: false }, "/users/mj")
-      ).toMatchObject({ pathname: "/users" });
+      ).toMatchObject({ pathname: "/users", pathnameBase: "/users" });
+      expect(
+        matchPath({ path: "/users/", end: false }, "/users/mj")
+      ).toMatchObject({ pathname: "/users", pathnameBase: "/users" });
+    });
+
+    it("matches the beginning of a pathname with multiple segments and a trailing slash", () => {
+      expect(
+        matchPath({ path: "/users", end: false }, "/users/mj/")
+      ).toMatchObject({ pathname: "/users", pathnameBase: "/users" });
+      expect(
+        matchPath({ path: "/users/", end: false }, "/users/mj/")
+      ).toMatchObject({ pathname: "/users", pathnameBase: "/users" });
     });
 
     it("fails to match a pathname where the segments do not match", () => {
@@ -120,32 +165,37 @@ describe("matchPath", () => {
   describe("with { end: false } and a / pattern", () => {
     it("matches a pathname", () => {
       expect(matchPath({ path: "/", end: false }, "/users")).toMatchObject({
-        pathname: "/"
+        pathname: "/",
+        pathnameBase: "/"
       });
     });
 
     it("matches a pathname with multiple segments", () => {
       expect(matchPath({ path: "/", end: false }, "/users/mj")).toMatchObject({
-        pathname: "/"
+        pathname: "/",
+        pathnameBase: "/"
       });
     });
 
     it("matches a pathname with a trailing slash", () => {
       expect(matchPath({ path: "/", end: false }, "/users/")).toMatchObject({
-        pathname: "/"
+        pathname: "/",
+        pathnameBase: "/"
       });
     });
 
     it("matches a pathname with multiple segments and a trailing slash", () => {
       expect(matchPath({ path: "/", end: false }, "/users/mj/")).toMatchObject({
-        pathname: "/"
+        pathname: "/",
+        pathnameBase: "/"
       });
     });
   });
 
   it("is not case-sensitive by default", () => {
     expect(matchPath("/SystemDashboard", "/systemdashboard")).toMatchObject({
-      pathname: "/systemdashboard"
+      pathname: "/systemdashboard",
+      pathnameBase: "/systemdashboard"
     });
   });
 
@@ -156,7 +206,8 @@ describe("matchPath", () => {
         "/SystemDashboard"
       )
     ).toMatchObject({
-      pathname: "/SystemDashboard"
+      pathname: "/SystemDashboard",
+      pathnameBase: "/SystemDashboard"
     });
   });
 
@@ -169,37 +220,59 @@ describe("matchPath", () => {
     ).toBeNull();
   });
 
-  describe("when the pattern has a trailing *", () => {
-    it("matches the remaining portion of the pathname", () => {
-      expect(matchPath("/files*", "/files/mj.jpg")).toMatchObject({
-        params: { "*": "/mj.jpg" },
-        pathname: "/files/mj.jpg"
-      });
-      expect(matchPath("/files*", "/files/")).toMatchObject({
-        params: { "*": "/" },
-        pathname: "/files/"
-      });
-      expect(matchPath("/files*", "/files")).toMatchObject({
-        params: { "*": "" },
-        pathname: "/files"
-      });
-    });
-  });
-
   describe("when the pattern has a trailing /*", () => {
     it("matches the remaining portion of the pathname", () => {
       expect(matchPath("/files/*", "/files/mj.jpg")).toMatchObject({
         params: { "*": "mj.jpg" },
-        pathname: "/files/mj.jpg"
+        pathname: "/files/mj.jpg",
+        pathnameBase: "/files"
       });
       expect(matchPath("/files/*", "/files/")).toMatchObject({
         params: { "*": "" },
-        pathname: "/files/"
+        pathname: "/files/",
+        pathnameBase: "/files"
       });
       expect(matchPath("/files/*", "/files")).toMatchObject({
         params: { "*": "" },
-        pathname: "/files"
+        pathname: "/files",
+        pathnameBase: "/files"
       });
+    });
+  });
+});
+
+describe("matchPath warnings", () => {
+  let consoleWarn: jest.SpyInstance<void, any>;
+  beforeEach(() => {
+    consoleWarn = jest.spyOn(console, "warn").mockImplementation();
+  });
+
+  afterEach(() => {
+    consoleWarn.mockRestore();
+  });
+
+  describe("when the pattern has a trailing *", () => {
+    it("issues a warning and matches the remaining portion of the pathname", () => {
+      expect(matchPath("/files*", "/files/mj.jpg")).toMatchObject({
+        params: { "*": "mj.jpg" },
+        pathname: "/files/mj.jpg",
+        pathnameBase: "/files"
+      });
+      expect(consoleWarn).toHaveBeenCalledTimes(1);
+
+      expect(matchPath("/files*", "/files/")).toMatchObject({
+        params: { "*": "" },
+        pathname: "/files/",
+        pathnameBase: "/files"
+      });
+      expect(consoleWarn).toHaveBeenCalledTimes(2);
+
+      expect(matchPath("/files*", "/files")).toMatchObject({
+        params: { "*": "" },
+        pathname: "/files",
+        pathnameBase: "/files"
+      });
+      expect(consoleWarn).toHaveBeenCalledTimes(3);
     });
   });
 });

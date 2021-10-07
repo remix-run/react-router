@@ -1019,6 +1019,10 @@ export interface PathMatch<ParamKey extends string = string> {
    */
   pathname: string;
   /**
+   * The portion of the URL pathname that was matched before child routes.
+   */
+  pathnameBase: string;
+  /**
    * The pattern that was used to match.
    */
   pattern: PathPattern;
@@ -1052,9 +1056,19 @@ export function matchPath<ParamKey extends string = string>(
   if (!match) return null;
 
   let matchedPathname = match[0];
+  let pathnameBase = matchedPathname.replace(/(.)\/+$/, "$1");
   let captureGroups = match.slice(1);
   let params: Params = paramNames.reduce<Mutable<Params>>(
     (memo, paramName, index) => {
+      // We need to compute the pathnameBase here using the raw splat value
+      // instead of using params["*"] later because it will be decoded then
+      if (paramName === "*") {
+        let splatValue = captureGroups[index] || "";
+        pathnameBase = matchedPathname
+          .slice(0, matchedPathname.length - splatValue.length)
+          .replace(/(.)\/+$/, "$1");
+      }
+
       memo[paramName] = safelyDecodeURIComponent(
         captureGroups[index] || "",
         paramName
@@ -1064,7 +1078,12 @@ export function matchPath<ParamKey extends string = string>(
     {}
   );
 
-  return { params, pathname: matchedPathname, pattern };
+  return {
+    params,
+    pathname: matchedPathname,
+    pathnameBase,
+    pattern
+  };
 }
 
 function compilePath(
@@ -1072,11 +1091,18 @@ function compilePath(
   caseSensitive = false,
   end = true
 ): [RegExp, string[]] {
+  warning(
+    !path.endsWith("*") || path.endsWith("/*"),
+    `Route path "${path}" ends with \`*\` but it will be treated as ` +
+      `if it ended with \`/*\`. To get rid of this warning, please ` +
+      `adjust the route path to end with \`/*\`.`
+  );
+
   let paramNames: string[] = [];
   let regexpSource =
     "^" +
     path
-      .replace(/\/?\*?$/, "") // Ignore trailing / and /*, we'll handle it below
+      .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
       .replace(/^\/*/, "/") // Make sure it has a leading /
       .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
       .replace(/:(\w+)/g, (_: string, paramName: string) => {
@@ -1085,11 +1111,11 @@ function compilePath(
       });
 
   if (path.endsWith("*")) {
+    paramNames.push("*");
     regexpSource +=
       path === "/*"
         ? "(.*)$" // Already matched the initial /, just match the rest
         : "(?:\\/(.+)|\\/*)$"; // Don't include the / in params["*"]
-    paramNames.push("*");
   } else {
     regexpSource += end
       ? "\\/*$" // When matching to the end, ignore trailing slashes
