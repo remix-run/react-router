@@ -82,19 +82,19 @@ if (__DEV__) {
   LocationContext.displayName = "Location";
 }
 
-const RouteContext = React.createContext<RouteContextObject>({
-  outlet: null,
-  params: {},
-  pathname: "/",
-  route: null
-});
-
 interface RouteContextObject<ParamKey extends string = string> {
   outlet: React.ReactElement | null;
   params: Readonly<Params<ParamKey>>;
   pathname: string;
   route: RouteObject | null;
 }
+
+const RouteContext = React.createContext<RouteContextObject>({
+  outlet: null,
+  params: {},
+  pathname: "/",
+  route: null
+});
 
 if (__DEV__) {
   RouteContext.displayName = "Route";
