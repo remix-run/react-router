@@ -176,7 +176,7 @@ async function run() {
       let stat = await fsp.stat(path.join(examplesDir, example));
       if (!stat.isDirectory()) continue;
 
-      await updateExampleReadmeUrl(example, version);
+      await updateExampleReadmeUrl(example, `v${version}`);
       await updateExamplesPackageConfig(example, config => {
         config.dependencies["react-router"] = version;
         config.dependencies["react-router-dom"] = version;
