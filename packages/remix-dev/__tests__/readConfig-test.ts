@@ -70,6 +70,22 @@ describe("readConfig", () => {
             "id": "root",
             "path": "",
           },
+          "routes/_layout": Object {
+            "caseSensitive": undefined,
+            "file": "routes/_layout.tsx",
+            "id": "routes/_layout",
+            "index": undefined,
+            "parentId": "root",
+            "path": undefined,
+          },
+          "routes/_layout/with-layout": Object {
+            "caseSensitive": undefined,
+            "file": "routes/_layout/with-layout.tsx",
+            "id": "routes/_layout/with-layout",
+            "index": undefined,
+            "parentId": "routes/_layout",
+            "path": "with-layout",
+          },
           "routes/action-catches": Object {
             "caseSensitive": undefined,
             "file": "routes/action-catches.jsx",
@@ -189,6 +205,14 @@ describe("readConfig", () => {
             "index": undefined,
             "parentId": "routes/catchall-nested",
             "path": "*",
+          },
+          "routes/catchall-nested/index": Object {
+            "caseSensitive": undefined,
+            "file": "routes/catchall-nested/index.jsx",
+            "id": "routes/catchall-nested/index",
+            "index": true,
+            "parentId": "routes/catchall-nested",
+            "path": undefined,
           },
           "routes/catchall.flat.$": Object {
             "caseSensitive": undefined,
