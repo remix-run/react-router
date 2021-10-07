@@ -1,6 +1,7 @@
 import express from "express";
 import supertest from "supertest";
 import { createRequest } from "node-mocks-http";
+import { createRequestHandler as createRemixRequestHandler } from "@remix-run/server-runtime";
 
 import {
   createRemixHeaders,
@@ -8,7 +9,6 @@ import {
   createRequestHandler
 } from "../server";
 
-import { createRequestHandler as createRemixRequestHandler } from "@remix-run/server-runtime";
 
 // We don't want to test that the remix server works here (that's what the
 // puppetteer tests do), we just want to test the express adapter

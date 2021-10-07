@@ -1,4 +1,4 @@
-import { ServerBuild } from "../build";
+import type { ServerBuild } from "../build";
 import { createRequestHandler } from "../server";
 
 describe("loaders", () => {

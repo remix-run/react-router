@@ -1,5 +1,4 @@
 import cookieSignature from "cookie-signature";
-
 import type {
   InternalSignFunctionDoNotUseMe,
   InternalUnsignFunctionDoNotUseMe

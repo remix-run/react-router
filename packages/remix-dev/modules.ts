@@ -32,7 +32,6 @@ declare module "*.json" {
 }
 declare module "*.md" {
   import type { ComponentType as MdComponentType } from "react";
-
   export const attributes: any;
   export const filename: string;
   const Component: MdComponentType;
@@ -40,7 +39,6 @@ declare module "*.md" {
 }
 declare module "*.mdx" {
   import type { ComponentType as MdxComponentType } from "react";
-
   export const attributes: any;
   export const filename: string;
   const Component: MdxComponentType;

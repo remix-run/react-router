@@ -1,7 +1,7 @@
-import { AppLoadContext, extractData, isCatchResponse } from "./data";
+import type { AppLoadContext} from "./data";
+import { extractData, isCatchResponse } from "./data";
 import { loadRouteData, callRouteAction } from "./data";
 import type { ComponentDidCatchEmulator } from "./errors";
-
 import type { ServerBuild } from "./build";
 import type { EntryContext } from "./entry";
 import { createEntryMatches, createEntryRouteModules } from "./entry";

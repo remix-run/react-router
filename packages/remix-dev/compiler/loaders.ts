@@ -1,5 +1,5 @@
 import * as path from "path";
-import * as esbuild from "esbuild";
+import type * as esbuild from "esbuild";
 
 export const loaders: { [ext: string]: esbuild.Loader } = {
   ".aac": "file",

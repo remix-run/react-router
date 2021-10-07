@@ -1,7 +1,6 @@
 import { promises as fsp } from "fs";
 import * as path from "path";
-
-import * as esbuild from "esbuild";
+import type * as esbuild from "esbuild";
 import { remarkMdxFrontmatter } from "remark-mdx-frontmatter";
 
 import type { RemixConfig } from "../../config";
