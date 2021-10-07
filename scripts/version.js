@@ -1,7 +1,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
-import fs from 'fs/promises'
+import fsp from "fs/promises";
 import chalk from "chalk";
 import Confirm from "prompt-confirm";
 import jsonfile from "jsonfile";
@@ -9,6 +9,7 @@ import semver from "semver";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(dirname, "..");
+const examplesDir = path.resolve(rootDir, "examples");
 
 /**
  * @param {string} packageName
@@ -97,7 +98,7 @@ async function updatePackageConfig(packageName, transform) {
  * @param {string} example
  * @param {(json: string) => any} transform
  */
- async function updateExamplesPackageConfig(example, transform) {
+async function updateExamplesPackageConfig(example, transform) {
   let file = packageJson(example, "examples");
   let json = await jsonfile.readFile(file);
   transform(json);
@@ -105,21 +106,22 @@ async function updatePackageConfig(packageName, transform) {
 }
 
 /**
-*
-* @param {string} example
-* @param {string} version
-*/
+ *
+ * @param {string} example
+ * @param {string} version
+ */
 async function updateExampleReadmeUrl(example, version) {
-  let filePath = path.join(rootDir, "examples", example, "README.md")
-  let fileBuffer = await fs.readFile(filePath)
-  let file = fileBuffer.toString().replace(
-    /https:\/\/stackblitz.com\/github\/remix-run\/react-router\/tree\/[^/+]+\/examples\/\w+/,
-    `https://stackblitz.com/github/remix-run/react-router/tree/${version}/examples/${example}`
-  );
+  let filePath = path.join(rootDir, "examples", example, "README.md");
+  let fileBuffer = await fsp.readFile(filePath);
+  let file = fileBuffer
+    .toString()
+    .replace(
+      /https:\/\/stackblitz.com\/github\/remix-run\/react-router\/tree\/[^/+]+\/examples\/\w+/,
+      `https://stackblitz.com/github/remix-run/react-router/tree/${version}/examples/${example}`
+    );
 
-  await fs.writeFile(filePath, file, "utf8");
+  await fsp.writeFile(filePath, file, "utf8");
 }
-
 
 async function run() {
   try {
@@ -169,13 +171,16 @@ async function run() {
     );
 
     // 6. Update react-router and react-router-dom versions in the examples
-    let examples = await fs.readdir(path.join(rootDir, "examples"));
+    let examples = await fsp.readdir(examplesDir);
     for (const example of examples) {
-      await updateExampleReadmeUrl(example, version)
+      let stat = await fsp.stat(path.join(examplesDir, example));
+      if (!stat.isDirectory()) continue;
+
+      await updateExampleReadmeUrl(example, version);
       await updateExamplesPackageConfig(example, config => {
         config.dependencies["react-router"] = version;
         config.dependencies["react-router-dom"] = version;
-      })
+      });
     }
 
     // 7. Commit and tag
