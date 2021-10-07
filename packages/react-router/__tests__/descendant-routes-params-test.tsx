@@ -4,22 +4,21 @@ import { MemoryRouter as Router, Routes, Route, useParams } from "react-router";
 
 describe("Descendant <Routes>", () => {
   it("receive all params from ancestor <Routes>", () => {
-    function Message() {
+    function ShowParams() {
       return <p>The params are {JSON.stringify(useParams())}</p>;
-    }
-
-    function User() {
-      return (
-        <Routes>
-          <Route path="messages/:messageId" element={<Message />} />
-        </Routes>
-      );
     }
 
     let renderer = createTestRenderer(
       <Router initialEntries={["/users/mj/messages/123"]}>
         <Routes>
-          <Route path="users/:userId/*" element={<User />} />
+          <Route
+            path="users/:userId/*"
+            element={
+              <Routes>
+                <Route path="messages/:messageId" element={<ShowParams />} />
+              </Routes>
+            }
+          />
         </Routes>
       </Router>
     );
@@ -33,22 +32,21 @@ describe("Descendant <Routes>", () => {
   });
 
   it("overrides params of the same name from ancestor <Routes>", () => {
-    function Message() {
+    function ShowParams() {
       return <p>The params are {JSON.stringify(useParams())}</p>;
-    }
-
-    function User() {
-      return (
-        <Routes>
-          <Route path="messages/:id" element={<Message />} />
-        </Routes>
-      );
     }
 
     let renderer = createTestRenderer(
       <Router initialEntries={["/users/mj/messages/123"]}>
         <Routes>
-          <Route path="users/:id/*" element={<User />} />
+          <Route
+            path="users/:id/*"
+            element={
+              <Routes>
+                <Route path="messages/:id" element={<ShowParams />} />
+              </Routes>
+            }
+          />
         </Routes>
       </Router>
     );
