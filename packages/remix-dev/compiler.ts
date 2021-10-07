@@ -411,6 +411,7 @@ export const routes = {
     id: ${JSON.stringify(route.id)},
     parentId: ${JSON.stringify(route.parentId)},
     path: ${JSON.stringify(route.path)},
+    index: ${JSON.stringify(route.index)},
     caseSensitive: ${JSON.stringify(route.caseSensitive)},
     module: route${index}
   }`;

@@ -53,6 +53,11 @@ export function defineConventionalRoutes(appDir: string): RouteManifest {
         routeId.slice((parentId || "routes").length + 1)
       );
 
+      // layout routes
+      if (routePath.startsWith("_")) {
+        routePath = undefined;
+      }
+
       if (routeId.endsWith("/index")) {
         let invalidChildRoutes = routeIds.filter(
           id => findParentRouteId(routeIds, id) === routeId
