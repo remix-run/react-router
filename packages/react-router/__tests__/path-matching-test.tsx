@@ -145,8 +145,9 @@ describe("path matching with a basename", () => {
     expect(matches).toHaveLength(1);
     expect(matches).toMatchObject([
       {
+        params: { userId: "michael" },
         pathname: "/users/michael",
-        params: { userId: "michael" }
+        pathnameBase: "/users/michael"
       }
     ]);
   });
@@ -159,16 +160,19 @@ describe("path matching with a basename", () => {
     expect(matches).toHaveLength(3);
     expect(matches).toMatchObject([
       {
+        params: { userId: "michael", courseId: "react" },
         pathname: "/users/michael",
-        params: { userId: "michael", courseId: "react" }
+        pathnameBase: "/users/michael"
       },
       {
+        params: { userId: "michael", courseId: "react" },
         pathname: "/users/michael/subjects",
-        params: { userId: "michael", courseId: "react" }
+        pathnameBase: "/users/michael/subjects"
       },
       {
+        params: { userId: "michael", courseId: "react" },
         pathname: "/users/michael/subjects/react",
-        params: { userId: "michael", courseId: "react" }
+        pathnameBase: "/users/michael/subjects/react"
       }
     ]);
   });
@@ -184,7 +188,8 @@ describe("path matching with splats", () => {
       expect(match).not.toBeNull();
       expect(match[0]).toMatchObject({
         params: { id: "mj", "*": "secrets.txt" },
-        pathname: "/users/mj/files/secrets.txt"
+        pathname: "/users/mj/files/secrets.txt",
+        pathnameBase: "/users/mj/files"
       });
     });
 
@@ -196,18 +201,7 @@ describe("path matching with splats", () => {
     });
   });
 
-  test("splat after something other than /", () => {
-    let routes = [{ path: "users/:id/files-*" }];
-    let match = matchRoutes(routes, "/users/mj/files-secrets.txt")!;
-
-    expect(match).not.toBeNull();
-    expect(match[0]).toMatchObject({
-      params: { id: "mj", "*": "secrets.txt" },
-      pathname: "/users/mj/files-secrets.txt"
-    });
-  });
-
-  test("parent route with splat after /", () => {
+  test("parent route with splat", () => {
     let routes = [
       { path: "users/:id/files/*", children: [{ path: "secrets.txt" }] }
     ];
@@ -216,7 +210,8 @@ describe("path matching with splats", () => {
     expect(match).not.toBeNull();
     expect(match[0]).toMatchObject({
       params: { id: "mj", "*": "secrets.txt" },
-      pathname: "/users/mj/files/secrets.txt"
+      pathname: "/users/mj/files/secrets.txt",
+      pathnameBase: "/users/mj/files"
     });
     expect(match[1]).toMatchObject({
       params: { id: "mj", "*": "secrets.txt" },
@@ -233,15 +228,18 @@ describe("path matching with splats", () => {
     expect(match).not.toBeNull();
     expect(match[0]).toMatchObject({
       params: { "*": "one/two/three" },
-      pathname: "/one/two/three"
+      pathname: "/one/two/three",
+      pathnameBase: "/"
     });
     expect(match[1]).toMatchObject({
       params: { "*": "one/two/three" },
-      pathname: "/one/two/three"
+      pathname: "/one/two/three",
+      pathnameBase: "/"
     });
     expect(match[2]).toMatchObject({
       params: { "*": "one/two/three" },
-      pathname: "/one/two/three"
+      pathname: "/one/two/three",
+      pathnameBase: "/"
     });
   });
 });

@@ -286,8 +286,8 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       // If the className prop is not a function, we use a default `active`
       // class for <NavLink />s that are active. In v5 `active` was the default
       // value for `activeClassName`, but we are removing that API and can still
-      // use the old default behavior for a cleraner upgrade path and keep the
-      // simple styling rules working as the currently do.
+      // use the old default behavior for a cleaner upgrade path and keep the
+      // simple styling rules working as they currently do.
       className = [classNameProp, isActive ? "active" : null]
         .filter(Boolean)
         .join(" ");

@@ -82,19 +82,21 @@ if (__DEV__) {
   LocationContext.displayName = "Location";
 }
 
-const RouteContext = React.createContext<RouteContextObject>({
-  outlet: null,
-  params: {},
-  pathname: "/",
-  route: null
-});
-
 interface RouteContextObject<ParamKey extends string = string> {
   outlet: React.ReactElement | null;
   params: Readonly<Params<ParamKey>>;
   pathname: string;
+  pathnameBase: string;
   route: RouteObject | null;
 }
+
+const RouteContext = React.createContext<RouteContextObject>({
+  outlet: null,
+  params: {},
+  pathname: "/",
+  pathnameBase: "/",
+  route: null
+});
 
 if (__DEV__) {
   RouteContext.displayName = "Route";
@@ -589,6 +591,7 @@ export function useRoutes(
   let {
     params: parentParams,
     pathname: parentPathname,
+    pathnameBase: parentPathnameBase,
     route: parentRoute
   } = React.useContext(RouteContext);
 
@@ -628,18 +631,31 @@ export function useRoutes(
   }
 
   let locationFromContext = useLocation();
-  let location = locationArg
-    ? typeof locationArg === "string"
-      ? parsePath(locationArg)
-      : locationArg
-    : locationFromContext;
-  let pathname = location.pathname || "/";
 
-  let parentPathnameStart = getPathnameStart(parentPathname, parentParams);
+  let location;
+  if (locationArg) {
+    let parsedLocationArg =
+      typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
+
+    invariant(
+      parentPathnameBase === "/" ||
+        parsedLocationArg.pathname?.startsWith(parentPathnameBase),
+      `When overriding the location using \`<Routes location>\` or \`useRoutes(routes, location)\`, ` +
+        `the location pathname must begin with the portion of the URL pathname that was ` +
+        `matched by all parent routes. The current pathname base is "${parentPathnameBase}" ` +
+        `but pathname "${parsedLocationArg.pathname}" was given in the \`location\` prop.`
+    );
+
+    location = parsedLocationArg;
+  } else {
+    location = locationFromContext;
+  }
+
+  let pathname = location.pathname || "/";
   let remainingPathname =
-    parentPathnameStart === "/"
+    parentPathnameBase === "/"
       ? pathname
-      : pathname.slice(parentPathnameStart.length);
+      : pathname.slice(parentPathnameBase.length) || "/";
   let matches = matchRoutes(routes, { pathname: remainingPathname });
 
   if (__DEV__) {
@@ -654,7 +670,8 @@ export function useRoutes(
       matches.map(match =>
         Object.assign({}, match, {
           params: Object.assign({}, parentParams, match.params),
-          pathname: joinPaths([parentPathnameStart, match.pathname])
+          pathname: joinPaths([parentPathnameBase, match.pathname]),
+          pathnameBase: joinPaths([parentPathnameBase, match.pathnameBase])
         })
       )
   );
@@ -756,6 +773,10 @@ export interface RouteMatch<ParamKey extends string = string> {
    * The portion of the URL pathname that was matched.
    */
   pathname: string;
+  /**
+   * The portion of the URL pathname that was matched before child routes.
+   */
+  pathnameBase: string;
   /**
    * The route object that was used to match.
    */
@@ -912,6 +933,7 @@ function compareIndexes(a: number[], b: number[]): number {
 
 function matchRouteBranch<ParamKey extends string = string>(
   branch: RouteBranch,
+  // TODO: attach original route object inside routesMeta so we don't need this arg
   routesArg: RouteObject[],
   pathname: string
 ): RouteMatch<ParamKey>[] | null {
@@ -924,13 +946,13 @@ function matchRouteBranch<ParamKey extends string = string>(
   for (let i = 0; i < routesMeta.length; ++i) {
     let meta = routesMeta[i];
     let end = i === routesMeta.length - 1;
-    let trailingPathname =
+    let remainingPathname =
       matchedPathname === "/"
         ? pathname
         : pathname.slice(matchedPathname.length) || "/";
     let match = matchPath(
       { path: meta.relativePath, caseSensitive: meta.caseSensitive, end },
-      trailingPathname
+      remainingPathname
     );
 
     if (!match) return null;
@@ -941,20 +963,12 @@ function matchRouteBranch<ParamKey extends string = string>(
 
     matches.push({
       params: matchedParams,
-      pathname:
-        match.pathname === "/"
-          ? matchedPathname
-          : joinPaths([matchedPathname, match.pathname]),
+      pathname: joinPaths([matchedPathname, match.pathname]),
+      pathnameBase: joinPaths([matchedPathname, match.pathnameBase]),
       route
     });
 
-    let pathnameStart = getPathnameStart(match.pathname, match.params);
-    if (pathnameStart !== "/") {
-      // Add only the portion of the match.pathname that comes before the * to
-      // the matchedPathname. This allows child routes to match against the
-      // portion of the pathname that was matched by the *.
-      matchedPathname = joinPaths([matchedPathname, pathnameStart]);
-    }
+    matchedPathname = joinPaths([matchedPathname, match.pathnameBase]);
 
     routes = route.children!;
   }
@@ -978,6 +992,7 @@ export function renderMatches(
           outlet,
           params: match.params,
           pathname: match.pathname,
+          pathnameBase: match.pathnameBase,
           route: match.route
         }}
       />
@@ -1019,6 +1034,10 @@ export interface PathMatch<ParamKey extends string = string> {
    */
   pathname: string;
   /**
+   * The portion of the URL pathname that was matched before child routes.
+   */
+  pathnameBase: string;
+  /**
    * The pattern that was used to match.
    */
   pattern: PathPattern;
@@ -1052,11 +1071,21 @@ export function matchPath<ParamKey extends string = string>(
   if (!match) return null;
 
   let matchedPathname = match[0];
-  let values = match.slice(1);
+  let pathnameBase = matchedPathname.replace(/(.)\/+$/, "$1");
+  let captureGroups = match.slice(1);
   let params: Params = paramNames.reduce<Mutable<Params>>(
     (memo, paramName, index) => {
+      // We need to compute the pathnameBase here using the raw splat value
+      // instead of using params["*"] later because it will be decoded then
+      if (paramName === "*") {
+        let splatValue = captureGroups[index] || "";
+        pathnameBase = matchedPathname
+          .slice(0, matchedPathname.length - splatValue.length)
+          .replace(/(.)\/+$/, "$1");
+      }
+
       memo[paramName] = safelyDecodeURIComponent(
-        values[index] || "",
+        captureGroups[index] || "",
         paramName
       );
       return memo;
@@ -1064,7 +1093,12 @@ export function matchPath<ParamKey extends string = string>(
     {}
   );
 
-  return { params, pathname: matchedPathname, pattern };
+  return {
+    params,
+    pathname: matchedPathname,
+    pathnameBase,
+    pattern
+  };
 }
 
 function compilePath(
@@ -1072,38 +1106,44 @@ function compilePath(
   caseSensitive = false,
   end = true
 ): [RegExp, string[]] {
-  let keys: string[] = [];
-  let source =
+  warning(
+    path === "*" || !path.endsWith("*") || path.endsWith("/*"),
+    `Route path "${path}" will be treated as if it were ` +
+      `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
+      `always follow a \`/\` in the pattern. To get rid of this warning, ` +
+      `please change the route path to "${path.replace(/\*$/, "/*")}".`
+  );
+
+  let paramNames: string[] = [];
+  let regexpSource =
     "^" +
     path
-      .replace(/\/?\*?$/, "") // Ignore trailing / and /*, we'll handle it below
+      .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
       .replace(/^\/*/, "/") // Make sure it has a leading /
       .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
-      .replace(/:(\w+)/g, (_: string, key: string) => {
-        keys.push(key);
+      .replace(/:(\w+)/g, (_: string, paramName: string) => {
+        paramNames.push(paramName);
         return "([^\\/]+)";
       });
 
   if (path.endsWith("*")) {
-    if (path !== "/*" && path.endsWith("/*")) {
-      source += "(?:\\/(.+)|\\/?)$"; // Don't include the / in params['*']
-    } else {
-      source += "(.*)$";
-    }
-    keys.push("*");
-  } else if (end) {
-    // When matching to the end, ignore trailing slashes.
-    source += "\\/?$";
+    paramNames.push("*");
+    regexpSource +=
+      path === "*" || path === "/*"
+        ? "(.*)$" // Already matched the initial /, just match the rest
+        : "(?:\\/(.+)|\\/*)$"; // Don't include the / in params["*"]
   } else {
-    // If not matching to the end (as parent routes do), at least match a word
-    // boundary. This restricts a parent route to matching only its own words
-    // and nothing more, e.g. parent route "/home" should not match "/home2".
-    source += "(?:\\b|$)";
+    regexpSource += end
+      ? "\\/*$" // When matching to the end, ignore trailing slashes
+      : // Otherwise, at least match a word boundary. This restricts parent
+        // routes to matching only their own words and nothing more, e.g. parent
+        // route "/home" should not match "/home2".
+        "(?:\\b|$)";
   }
 
-  let matcher = new RegExp(source, caseSensitive ? undefined : "i");
+  let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
 
-  return [matcher, keys];
+  return [matcher, paramNames];
 }
 
 function safelyDecodeURIComponent(value: string, paramName: string) {
@@ -1189,16 +1229,6 @@ function getToPathname(to: To): string | undefined {
     : typeof to === "string"
     ? parsePath(to).pathname
     : to.pathname;
-}
-
-function getPathnameStart(pathname: string, params: Params): string {
-  let splat = params["*"];
-  if (!splat) return pathname;
-  let pathnameStart = pathname.slice(0, -splat.length);
-  if (splat.startsWith("/")) return pathnameStart;
-  let index = pathnameStart.lastIndexOf("/");
-  if (index > 0) return pathnameStart.slice(0, index);
-  return "/";
 }
 
 function stripBasename(pathname: string, basename: string): string | null {

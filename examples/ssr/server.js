@@ -1,6 +1,5 @@
-let fs = require("fs/promises");
 let path = require("path");
-
+let fsp = require("fs/promises");
 let express = require("express");
 
 let root = process.cwd();
@@ -37,13 +36,16 @@ async function createServer() {
       let render;
 
       if (!isProduction) {
-        template = await fs.readFile(resolve("index.html"), "utf8");
+        template = await fsp.readFile(resolve("index.html"), "utf8");
         template = await vite.transformIndexHtml(url, template);
         render = await vite
           .ssrLoadModule("src/entry.server.tsx")
           .then(m => m.render);
       } else {
-        template = await fs.readFile(resolve("dist/client/index.html"), "utf8");
+        template = await fsp.readFile(
+          resolve("dist/client/index.html"),
+          "utf8"
+        );
         render = require(resolve("dist/server/entry.server.js")).render;
       }
 
@@ -64,6 +66,6 @@ async function createServer() {
 
 createServer().then(app => {
   app.listen(3000, () => {
-    console.log("http://localhost:3000");
+    console.log("HTTP server is running at http://localhost:3000");
   });
 });
