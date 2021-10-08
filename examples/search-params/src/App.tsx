@@ -20,6 +20,9 @@ function randomUser() {
 
 function Home() {
   let [search, setSearch] = useSearchParams();
+
+  // The `search` object is a URLSearchParams object.
+  // See https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
   let user = search.get("user");
 
   let [userData, setUserData] = React.useState<any>(null);

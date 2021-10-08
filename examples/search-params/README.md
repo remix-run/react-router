@@ -1,6 +1,6 @@
 # Search Params Example
 
-This example demonstrates how to read and write to the search params, also known as the query string.
+This example demonstrates how to read and write the URL query string using the `useSearchParams()` hook. This hook is similar to the `useNavigate()` hook, but just for the [`search` portion of the URL](https://developer.mozilla.org/en-US/docs/Web/API/Location/search).
 
 In this example, we have a form to search for a user on GitHub and display their user profile.
 
