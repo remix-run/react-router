@@ -2,13 +2,13 @@ import { Routes, Route, Link } from "react-router-dom";
 import {Layout} from '../shared/layout'
 import "../shared/index.css";
 
-export default function FeedApp() {
+export default function HomeApp() {
   return (
     <div>
-      <h1>Welcome to the Feed app!</h1>
+      <h1>Welcome to the Home app!</h1>
 
       <Routes>
-        <Route path="/" element={<Layout app="feed" />}>
+        <Route path="/" element={<Layout app="/" />}>
           <Route index element={<Feed />} />
           <Route path="*" element={<NoMatch />} />
         </Route>

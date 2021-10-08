@@ -1,5 +1,6 @@
-import { Routes, Route, Outlet, Link } from "react-router-dom";
-import "./index.css";
+import { Routes, Route, Link } from "react-router-dom";
+import {Layout} from '../shared/layout'
+import "../shared/index.css";
 
 export default function ProfileApp() {
   return (
@@ -12,24 +13,6 @@ export default function ProfileApp() {
           <Route path="*" element={<NoMatch />} />
         </Route>
       </Routes>
-    </div>
-  );
-}
-
-function Layout() {
-  return (
-    <div>
-      <nav>
-        <ul>
-          <li>
-            <a href="/feed">Feed (different app)</a>
-          </li>
-        </ul>
-      </nav>
-
-      <hr />
-
-      <Outlet />
     </div>
   );
 }
