@@ -16,19 +16,15 @@ import { IMAGES, getImageById } from "./images";
 export default function App() {
   let location = useLocation();
 
-  /*
-    This piece of state is set when one of the gallery links is clicked.
-    The `image` state is the location that we were at when one of the gallery
-    links was clicked. If it's there, use it as the location for the <Routes>
-    so we show the gallery in the background, behind the modal.
-  */
-  let state = location.state as { pinnedLocation?: Location };
-  let pinnedLocation = state?.pinnedLocation;
+  // The `backgroundLocation` state is the location that we were at when one of
+  // the gallery links was clicked. If it's there, use it as the location for
+  // the <Routes> so we show the gallery in the background, behind the modal.
+  let state = location.state as { backgroundLocation?: Location };
 
   return (
     <div>
-      <h1>Welcome to the app!</h1>
-      <Routes location={pinnedLocation || location}>
+      <h1>Welcome to the gallery!</h1>
+      <Routes location={state?.backgroundLocation || location}>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="gallery" element={<Gallery />} />
@@ -37,8 +33,8 @@ export default function App() {
         </Route>
       </Routes>
 
-      {/* Show the modal when a image page is set */}
-      {pinnedLocation && (
+      {/* Show the modal when a `backgroundLocation` is set */}
+      {state?.backgroundLocation && (
         <Routes>
           <Route path="/img/:id" element={<Modal />} />
         </Routes>
@@ -103,9 +99,10 @@ function Gallery() {
           <Link
             key={image.id}
             to={`/img/${image.id}`}
-            // This is the trick! This link sets
-            // the `background` in location state.
-            state={{ pinnedLocation: location }}
+            // This is the trick! Set the `backgroundLocation` in location state
+            // so that when we open the modal we still see the current page in
+            // the background.
+            state={{ backgroundLocation: location }}
           >
             <img
               width={200}
