@@ -1,4 +1,4 @@
-# React Router &middot; [![build][build-badge]][build]
+# Welcome to React Router &middot; [![build][build-badge]][build]
 
 [build-badge]: https://img.shields.io/github/workflow/status/remix-run/react-router/test/dev?style=flat-square
 [build]: https://github.com/remix-run/react-router/actions/workflows/test.yml
@@ -31,8 +31,8 @@ Detailed release notes for a given version can be found [on our releases page](h
 
 ## Funding
 
-You may provide financial support for this project by donating [via Open Collective](https://opencollective.com/react-router), attending [one of our workshops](https://reacttraining.com/workshops/), or purchasing [one of our online courses](https://reacttraining.com/courses/). Thank you for your support!
+You may provide financial support for this project by donating [via Open Collective](https://opencollective.com/react-router). Thank you for your support!
 
 ## About
 
-`react-router` is developed and maintained by [React Training](https://reacttraining.com) and many [amazing contributors](https://github.com/remix-run/react-router/graphs/contributors).  If you're interested in learning more about what React can do for your company, please [get in touch](mailto:hello@reacttraining.com)!
+React Router is developed and maintained by [Remix Software](https://remix.run) and many [amazing contributors](https://github.com/remix-run/react-router/graphs/contributors).
