@@ -48,7 +48,7 @@ export interface HeadersFunction {
  * the document on route transitions.
  */
 export interface LinksFunction {
-  (args: { data: AppData }): LinkDescriptor[];
+  (): LinkDescriptor[];
 }
 
 /**

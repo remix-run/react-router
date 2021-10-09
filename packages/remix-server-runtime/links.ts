@@ -142,20 +142,6 @@ export interface PageLinkDescriptor
    * The absolute path of the page to prefetch.
    */
   page: string;
-
-  /**
-   * If `true` when using `transition: "client"`, instructs Remix to prefetch
-   * the data for the destination page.
-   */
-  data?: boolean;
 }
 
-export interface BlockLinkDescriptor {
-  blocker: true;
-  link: HTMLLinkDescriptor;
-}
-
-export type LinkDescriptor =
-  | HTMLLinkDescriptor
-  | BlockLinkDescriptor
-  | PageLinkDescriptor;
+export type LinkDescriptor = HTMLLinkDescriptor | PageLinkDescriptor;
