@@ -14,7 +14,6 @@ export type {
   EntryContext,
   LinkDescriptor,
   HTMLLinkDescriptor,
-  BlockLinkDescriptor,
   PageLinkDescriptor,
   ErrorBoundaryComponent,
   ActionFunction,

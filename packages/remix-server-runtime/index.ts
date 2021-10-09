@@ -16,7 +16,6 @@ export type { EntryContext } from "./entry";
 export type {
   LinkDescriptor,
   HTMLLinkDescriptor,
-  BlockLinkDescriptor,
   PageLinkDescriptor
 } from "./links";
 
