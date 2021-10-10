@@ -70,20 +70,20 @@ describe("readConfig", () => {
             "id": "root",
             "path": "",
           },
-          "routes/_layout": Object {
+          "routes/__layout": Object {
             "caseSensitive": undefined,
-            "file": "routes/_layout.tsx",
-            "id": "routes/_layout",
+            "file": "routes/__layout.tsx",
+            "id": "routes/__layout",
             "index": undefined,
             "parentId": "root",
             "path": undefined,
           },
-          "routes/_layout/with-layout": Object {
+          "routes/__layout/with-layout": Object {
             "caseSensitive": undefined,
-            "file": "routes/_layout/with-layout.tsx",
-            "id": "routes/_layout/with-layout",
+            "file": "routes/__layout/with-layout.tsx",
+            "id": "routes/__layout/with-layout",
             "index": undefined,
-            "parentId": "routes/_layout",
+            "parentId": "routes/__layout",
             "path": "with-layout",
           },
           "routes/action-catches": Object {

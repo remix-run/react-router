@@ -54,7 +54,7 @@ export function defineConventionalRoutes(appDir: string): RouteManifest {
       );
 
       // layout routes
-      if (routePath.startsWith("_")) {
+      if (routePath.startsWith("__")) {
         routePath = undefined;
       }
 
