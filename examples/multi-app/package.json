@@ -2,15 +2,11 @@
   "name": "multi-app",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development node server.js",
-    "build": "npm run build:client && npm run build:server",
-    "build:client": "vite build --outDir dist/client --ssrManifest",
-    "build:server": "vite build --outDir dist/server --ssr src/entry-server.js",
-    "start": "cross-env NODE_ENV=production node server.js"
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
   },
   "dependencies": {
-    "cross-env": "7.0.3",
-    "express": "4.17.1",
     "history": "latest",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
