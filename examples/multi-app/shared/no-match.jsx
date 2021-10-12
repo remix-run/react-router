@@ -1,4 +1,4 @@
-import {Link} from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 function NoMatch() {
   return (
@@ -11,4 +11,4 @@ function NoMatch() {
   );
 }
 
-export {NoMatch}
+export { NoMatch };

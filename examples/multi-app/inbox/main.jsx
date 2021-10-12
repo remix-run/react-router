@@ -2,13 +2,13 @@ import * as React from "react";
 import ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 
-import ProfileApp from "./App";
+import InboxApp from "./App";
 
 ReactDOM.hydrate(
   <React.StrictMode>
-    <BrowserRouter basename="profile">
-      <ProfileApp />
+    <BrowserRouter basename="inbox">
+      <InboxApp />
     </BrowserRouter>
   </React.StrictMode>,
-  document.getElementById("app")
+  document.getElementById("root")
 );

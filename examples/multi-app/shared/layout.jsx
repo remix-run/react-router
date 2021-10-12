@@ -1,19 +1,17 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
 
-function Layout({app}) {
+function Layout({ app }) {
   return (
     <div>
+      <h1>Welcome to the {app} app!</h1>
       <nav>
         <ul>
           <li>
             <a href="/">Home</a>
           </li>
           <li>
-            <a href="/feed">Feed</a>
-          </li>
-          <li>
-            <a href="/profile">Profile</a>
+            <a href="/inbox">Inbox</a>
           </li>
         </ul>
       </nav>
@@ -23,6 +21,6 @@ function Layout({app}) {
       <Outlet />
     </div>
   );
-};
+}
 
 export { Layout };
