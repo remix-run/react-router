@@ -1,14 +1,15 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useParams, Link } from "react-router-dom";
 import { Layout } from "../shared/layout";
 import { NoMatch } from "../shared/no-match";
 import "../shared/index.css";
-import { messages } from "./messages";
+import { getMessageById, messages } from "./messages";
 
 export default function InboxApp() {
   return (
     <Routes>
       <Route path="/" element={<Layout app="Inbox" />}>
         <Route index element={<Inbox />} />
+        <Route path=":id" element={<Message />} />
         <Route path="*" element={<NoMatch />} />
       </Route>
     </Routes>
@@ -20,13 +21,16 @@ function Inbox() {
     <div>
       <div style={{ maxWidth: 800, margin: "0 auto" }}>
         {messages.map(message => (
-          <div
+          <Link
+            to={message.id}
             key={message.id}
             style={{
               display: "flex",
               borderBottom: "1px solid #ccc",
               padding: "10px",
-              width: "100%"
+              width: "100%",
+              textDecoration: "none",
+              color: "#000"
             }}
           >
             <span
@@ -56,8 +60,30 @@ function Inbox() {
             <span style={{ flexShrink: 0 }}>
               {new Date(message.date).toDateString()}
             </span>
-          </div>
+          </Link>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function Message() {
+  let { id } = useParams();
+  let message = getMessageById(id);
+
+  if (!message) {
+    return <NoMatch />;
+  }
+
+  return (
+    <div>
+      <h2>{message.subject}</h2>
+      <div>
+        <h3 style={{ fontSize: 14 }}>
+          <span>{message.from.name}</span>{" "}
+          <span>&lt;{message.from.email}&gt;</span>
+        </h3>
+        <div>{message.body}</div>
       </div>
     </div>
   );

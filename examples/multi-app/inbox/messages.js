@@ -61,4 +61,13 @@ let messages = [
   }
 ];
 
-export { messages };
+/**
+ *
+ * @param {string} id
+ * @returns {Message | undefined}
+ */
+function getMessageById(id) {
+  return messages.find(message => message.id === id);
+}
+
+export { messages, getMessageById };
