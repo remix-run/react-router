@@ -48,8 +48,10 @@ function Inbox() {
               }}
             >
               <span>{message.subject}</span>
-              <span>{" - "}</span>
-              <span>{message.body}</span>
+              <div style={{ color: "#999", display: "inline" }}>
+                <span>{" — "}</span>
+                <span>{message.body}</span>
+              </div>
             </div>
             <span style={{ flexShrink: 0 }}>
               {new Date(message.date).toDateString()}
