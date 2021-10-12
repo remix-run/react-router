@@ -17,7 +17,9 @@ export function mdxPlugin(config: RemixConfig): esbuild.Plugin {
 
       build.onResolve({ filter: /\.mdx?$/ }, args => {
         return {
-          path: path.resolve(args.resolveDir, args.path),
+          path: args.path.startsWith("~/")
+            ? path.resolve(config.appDirectory, args.path.replace(/^~\//, ""))
+            : path.resolve(args.resolveDir, args.path),
           namespace: "mdx"
         };
       });
