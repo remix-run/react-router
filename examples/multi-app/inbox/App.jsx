@@ -48,6 +48,7 @@ function Inbox() {
               }}
             >
               <span>{message.subject}</span>
+              <span>{" - "}</span>
               <span>{message.body}</span>
             </div>
             <span style={{ flexShrink: 0 }}>
