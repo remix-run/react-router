@@ -1,7 +1,5 @@
 # Multi Page Example
 
-This example has 2 apps that are then combined using `server.js`
-
 ## Preview
 
 Open this example on [StackBlitz](https://stackblitz.com):
