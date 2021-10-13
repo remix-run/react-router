@@ -25,7 +25,7 @@ describe("remix cli", () => {
         "
           Usage
             $ remix build [remixRoot]
-            $ remix run [remixRoot]
+            $ remix dev [remixRoot]
             $ remix setup [remixPlatform]
 
           Options
@@ -37,7 +37,7 @@ describe("remix cli", () => {
 
           Examples
             $ remix build my-website
-            $ remix run my-website
+            $ remix dev my-website
             $ remix setup node
 
         "

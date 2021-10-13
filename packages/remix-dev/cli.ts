@@ -6,7 +6,7 @@ import * as commands from "./cli/commands";
 const helpText = `
 Usage
   $ remix build [remixRoot]
-  $ remix run [remixRoot]
+  $ remix dev [remixRoot]
   $ remix setup [remixPlatform]
 
 Options
@@ -18,7 +18,7 @@ Values
 
 Examples
   $ remix build my-website
-  $ remix run my-website
+  $ remix dev my-website
   $ remix setup node
 `;
 
@@ -44,19 +44,18 @@ switch (cli.input[0]) {
   case "build":
     commands.build(cli.input[1], process.env.NODE_ENV);
     break;
-  case "dev": // `remix dev` is alias for `remix watch`
   case "watch":
     commands.watch(cli.input[1], process.env.NODE_ENV);
     break;
   case "setup":
     commands.setup(cli.input[1]);
     break;
-  case "run":
+  case "dev":
     if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
-    commands.run(cli.input[1], process.env.NODE_ENV);
+    commands.dev(cli.input[1], process.env.NODE_ENV);
     break;
   default:
-    // `remix ./my-project` is shorthand for `remix run ./my-project`
+    // `remix ./my-project` is shorthand for `remix dev ./my-project`
     if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
-    commands.run(cli.input[0], process.env.NODE_ENV);
+    commands.dev(cli.input[0], process.env.NODE_ENV);
 }

@@ -98,7 +98,7 @@ export async function watch(
   console.log(`💿 Built in ${prettyMs(Date.now() - start)}`);
 }
 
-export async function run(remixRoot: string, modeArg?: string) {
+export async function dev(remixRoot: string, modeArg?: string) {
   // TODO: Warn about the need to install @remix-run/serve if it isn't there?
   let { createApp } = require("@remix-run/serve");
 
