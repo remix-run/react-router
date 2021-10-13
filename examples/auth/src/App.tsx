@@ -28,7 +28,7 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/public" element={<PublicPage />} />
+          <Route path="/" element={<PublicPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route
             path="/protected"
@@ -51,7 +51,7 @@ function Layout() {
 
       <ul>
         <li>
-          <Link to="/public">Public Page</Link>
+          <Link to="/">Public Page</Link>
         </li>
         <li>
           <Link to="/protected">Protected Page</Link>
