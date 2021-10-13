@@ -26,10 +26,6 @@ declare module "*.jpg" {
   const asset: string;
   export default asset;
 }
-declare module "*.json" {
-  const asset: string;
-  export default asset;
-}
 declare module "*.md" {
   import type { ComponentType as MdComponentType } from "react";
   export const attributes: any;
