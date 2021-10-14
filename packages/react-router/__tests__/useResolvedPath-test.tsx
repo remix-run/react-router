@@ -94,7 +94,7 @@ describe("useResolvedPath", () => {
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <pre>
-          {"pathname":"/users/mj","search":"","hash":""}
+          {"pathname":"/users","search":"","hash":""}
         </pre>
       `);
     });
