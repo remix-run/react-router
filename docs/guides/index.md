@@ -1,5 +1,6 @@
 ---
 title: Guides
+order: 3
 ---
 
 # Guides
@@ -23,7 +24,8 @@ build a certain capability or feature of your app with React Router.
 - [Persisting Data Using `location.key`](user-flows/persisting-data.md)
 - [Managing Scroll Position](user-flows/scroll-position.md)
 - [Modals](user-flows/modals.md)
-- 
+-
+
 ## Useful Techniques
 
 - [Working with the Search/Query String](techniques/working-with-the-search-string.md)
