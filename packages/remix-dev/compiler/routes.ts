@@ -34,7 +34,7 @@ export async function getRouteModuleExportsCached(
   }
 
   // Layout routes can't have actions
-  if (routeId.match(/\/_[\s\w\d_-]+$/) && cached.exports.includes("action")) {
+  if (routeId.match(/\/__[\s\w\d_-]+$/) && cached.exports.includes("action")) {
     throw new Error(`Actions are not supported in layout routes: ${routeId}`);
   }
 
