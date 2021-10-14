@@ -1,6 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter as Router, Routes, Route, useOutlet } from "react-router";
+import { MemoryRouter, Routes, Route, useOutlet } from "react-router";
 
 describe("useOutlet", () => {
   describe("when there is no child route", () => {
@@ -10,11 +10,11 @@ describe("useOutlet", () => {
       }
 
       let renderer = createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="/home" element={<Home />} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(renderer.toJSON()).toBeNull();
@@ -28,13 +28,13 @@ describe("useOutlet", () => {
       }
 
       let renderer = createTestRenderer(
-        <Router initialEntries={["/users/profile"]}>
+        <MemoryRouter initialEntries={["/users/profile"]}>
           <Routes>
             <Route path="users" element={<Users />}>
               <Route path="profile" element={<h1>Profile</h1>} />
             </Route>
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`

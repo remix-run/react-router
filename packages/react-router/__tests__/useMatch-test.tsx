@@ -1,7 +1,7 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
 import type { PathMatch } from "react-router";
-import { MemoryRouter as Router, Routes, Route, useMatch } from "react-router";
+import { MemoryRouter, Routes, Route, useMatch } from "react-router";
 
 describe("useMatch", () => {
   describe("when the path matches the current URL", () => {
@@ -13,13 +13,13 @@ describe("useMatch", () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route path="/home" element={<h1>Home</h1>} />
             </Route>
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(match).toMatchObject({
@@ -39,13 +39,13 @@ describe("useMatch", () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={["/home/"]}>
+        <MemoryRouter initialEntries={["/home/"]}>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route path="/home" element={<h1>Home</h1>} />
             </Route>
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(match).toMatchObject({
@@ -65,13 +65,13 @@ describe("useMatch", () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route path="/home" element={<h1>Home</h1>} />
             </Route>
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(match).toBeNull();

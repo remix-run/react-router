@@ -1,13 +1,13 @@
 import * as React from "react";
 import { View, Text, TextInput } from "react-native";
-import { act, create as createTestRenderer } from "react-test-renderer";
 import {
-  NativeRouter as Router,
+  NativeRouter,
   Routes,
   Route,
   useSearchParams
 } from "react-router-native";
 import type { ReactTestRenderer } from "react-test-renderer";
+import { act, create as createTestRenderer } from "react-test-renderer";
 
 describe("useSearchParams", () => {
   function SearchForm({
@@ -42,11 +42,11 @@ describe("useSearchParams", () => {
     let renderer!: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
-        <Router initialEntries={["/search?q=Michael+Jackson"]}>
+        <NativeRouter initialEntries={["/search?q=Michael+Jackson"]}>
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </Router>
+        </NativeRouter>
       );
     });
 

@@ -1,12 +1,7 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import {
-  MemoryRouter as Router,
-  Routes,
-  Route,
-  useNavigate
-} from "react-router";
 import type { NavigateFunction } from "react-router";
+import { MemoryRouter, Routes, Route, useNavigate } from "react-router";
 
 describe("useNavigate", () => {
   it("returns the navigate function", () => {
@@ -17,11 +12,11 @@ describe("useNavigate", () => {
     }
 
     createTestRenderer(
-      <Router initialEntries={["/home"]}>
+      <MemoryRouter initialEntries={["/home"]}>
         <Routes>
           <Route path="/home" element={<Home />} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(navigate).toBeInstanceOf(Function);

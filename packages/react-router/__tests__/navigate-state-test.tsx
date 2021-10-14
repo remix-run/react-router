@@ -2,7 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
 import {
-  MemoryRouter as Router,
+  MemoryRouter,
   Routes,
   Route,
   useNavigate,
@@ -46,12 +46,12 @@ describe("navigate state", () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });
@@ -96,12 +96,12 @@ describe("navigate state", () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });

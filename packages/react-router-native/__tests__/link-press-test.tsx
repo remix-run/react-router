@@ -1,14 +1,10 @@
 import * as React from "react";
-import { act, create as createTestRenderer } from "react-test-renderer";
 import { Text, TouchableHighlight, View } from "react-native";
-import {
-  Link,
-  NativeRouter as Router,
-  Routes,
-  Route
-} from "react-router-native";
-import { press } from "./utils";
+import { Link, NativeRouter, Routes, Route } from "react-router-native";
 import type { ReactTestRenderer } from "react-test-renderer";
+import { act, create as createTestRenderer } from "react-test-renderer";
+
+import { press } from "./utils";
 
 describe("A <Link> press", () => {
   it("navigates to the new view", () => {
@@ -34,12 +30,12 @@ describe("A <Link> press", () => {
     let renderer!: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <NativeRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
             <Route path="about" element={<About />} />
           </Routes>
-        </Router>
+        </NativeRouter>
       );
     });
 
@@ -80,12 +76,12 @@ describe("A <Link> press", () => {
     let renderer!: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <NativeRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
             <Route path="about" element={<About />} />
           </Routes>
-        </Router>
+        </NativeRouter>
       );
     });
 
@@ -131,12 +127,12 @@ describe("A <Link> press", () => {
       let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
-          <Router initialEntries={["/home"]}>
+          <NativeRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
             </Routes>
-          </Router>
+          </NativeRouter>
         );
       });
 

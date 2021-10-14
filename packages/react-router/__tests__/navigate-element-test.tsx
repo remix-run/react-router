@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
-import { MemoryRouter as Router, Navigate, Routes, Route } from "react-router";
+import { MemoryRouter, Navigate, Routes, Route } from "react-router";
 
 describe("navigate using an element", () => {
   let node: HTMLDivElement;
@@ -19,12 +19,12 @@ describe("navigate using an element", () => {
     it("navigates to the correct URL", () => {
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Navigate to="/about" />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });
@@ -37,12 +37,12 @@ describe("navigate using an element", () => {
     it("navigates to the correct URL", () => {
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Navigate to="../about" />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });

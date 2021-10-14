@@ -1,11 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import {
-  MemoryRouter as Router,
-  Routes,
-  Route,
-  useLocation
-} from "react-router";
+import { MemoryRouter, Routes, Route, useLocation } from "react-router";
 
 describe("useLocation", () => {
   it("returns the current location object", () => {
@@ -16,11 +11,11 @@ describe("useLocation", () => {
     }
 
     createTestRenderer(
-      <Router initialEntries={["/home?the=search#the-hash"]}>
+      <MemoryRouter initialEntries={["/home?the=search#the-hash"]}>
         <Routes>
           <Route path="/home" element={<Home />} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(typeof location).toBe("object");

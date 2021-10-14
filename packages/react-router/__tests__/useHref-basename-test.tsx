@@ -1,6 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter as Router, Routes, Route, useHref } from "react-router";
+import { MemoryRouter, Routes, Route, useHref } from "react-router";
 
 describe("useHref under a basename", () => {
   describe("to a child route", () => {
@@ -12,11 +12,11 @@ describe("useHref under a basename", () => {
       }
 
       createTestRenderer(
-        <Router basename="/app" initialEntries={["/app/admin"]}>
+        <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
           <Routes>
             <Route path="admin" element={<Admin />} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(href).toBe("/app/admin/invoices");
@@ -31,11 +31,11 @@ describe("useHref under a basename", () => {
         }
 
         createTestRenderer(
-          <Router basename="/app" initialEntries={["/app/admin/"]}>
+          <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
             <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         expect(href).toBe("/app/admin/invoices");
@@ -51,11 +51,11 @@ describe("useHref under a basename", () => {
         }
 
         createTestRenderer(
-          <Router basename="/app" initialEntries={["/app/admin"]}>
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
             <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         expect(href).toBe("/app/admin/invoices/");
@@ -72,11 +72,11 @@ describe("useHref under a basename", () => {
       }
 
       createTestRenderer(
-        <Router basename="/app" initialEntries={["/app/admin"]}>
+        <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
           <Routes>
             <Route path="admin" element={<Admin />} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(href).toBe("/app/dashboard");
@@ -91,11 +91,11 @@ describe("useHref under a basename", () => {
         }
 
         createTestRenderer(
-          <Router basename="/app" initialEntries={["/app/admin/"]}>
+          <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
             <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         expect(href).toBe("/app/dashboard");
@@ -111,11 +111,11 @@ describe("useHref under a basename", () => {
         }
 
         createTestRenderer(
-          <Router basename="/app" initialEntries={["/app/admin"]}>
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
             <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         expect(href).toBe("/app/dashboard/");
@@ -132,11 +132,11 @@ describe("useHref under a basename", () => {
       }
 
       createTestRenderer(
-        <Router basename="/app" initialEntries={["/app/admin"]}>
+        <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
           <Routes>
             <Route path="admin" element={<Admin />} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(href).toBe("/app");
@@ -151,11 +151,11 @@ describe("useHref under a basename", () => {
         }
 
         createTestRenderer(
-          <Router basename="/app" initialEntries={["/app/admin/"]}>
+          <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
             <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         expect(href).toBe("/app");
@@ -171,11 +171,11 @@ describe("useHref under a basename", () => {
         }
 
         createTestRenderer(
-          <Router basename="/app" initialEntries={["/app/admin"]}>
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
             <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         expect(href).toBe("/app/");
@@ -192,11 +192,11 @@ describe("useHref under a basename", () => {
       }
 
       createTestRenderer(
-        <Router basename="/app" initialEntries={["/app/admin"]}>
+        <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
           <Routes>
             <Route path="admin" element={<Admin />} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       // This is correct because the basename works like a chroot "jail".
@@ -215,11 +215,11 @@ describe("useHref under a basename", () => {
         }
 
         createTestRenderer(
-          <Router basename="/app" initialEntries={["/app/admin"]}>
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
             <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         // This is correct because the basename works like a chroot "jail".
@@ -239,11 +239,11 @@ describe("useHref under a basename", () => {
         }
 
         createTestRenderer(
-          <Router basename="/app" initialEntries={["/app/admin/"]}>
+          <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
             <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         // This is correct because the basename works like a chroot "jail".
@@ -263,11 +263,11 @@ describe("useHref under a basename", () => {
         }
 
         createTestRenderer(
-          <Router basename="/app" initialEntries={["/app/admin"]}>
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
             <Routes>
               <Route path="admin" element={<Admin />} />
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         expect(href).toBe("/app/dashboard/");

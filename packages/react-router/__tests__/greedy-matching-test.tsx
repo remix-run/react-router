@@ -1,11 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import {
-  MemoryRouter as Router,
-  Routes,
-  Route,
-  Outlet
-} from "react-router-dom";
+import { MemoryRouter, Routes, Route, Outlet } from "react-router-dom";
 
 describe("greedy matching", () => {
   let routes = (
@@ -28,7 +23,7 @@ describe("greedy matching", () => {
 
   it("matches the root route", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/"]} children={routes} />
+      <MemoryRouter initialEntries={["/"]} children={routes} />
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -40,7 +35,7 @@ describe("greedy matching", () => {
 
   it("matches the index route", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/home"]} children={routes} />
+      <MemoryRouter initialEntries={["/home"]} children={routes} />
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -55,7 +50,7 @@ describe("greedy matching", () => {
 
   it('matches the nested "not found" route', () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/home/typo"]} children={routes} />
+      <MemoryRouter initialEntries={["/home/typo"]} children={routes} />
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -70,7 +65,7 @@ describe("greedy matching", () => {
 
   it('matches the "not found" route', () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/hometypo"]} children={routes} />
+      <MemoryRouter initialEntries={["/hometypo"]} children={routes} />
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`

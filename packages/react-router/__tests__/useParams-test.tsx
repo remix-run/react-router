@@ -1,12 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import {
-  MemoryRouter as Router,
-  Outlet,
-  Routes,
-  Route,
-  useParams
-} from "react-router";
+import { MemoryRouter, Outlet, Routes, Route, useParams } from "react-router";
 
 function ShowParams() {
   return <pre>{JSON.stringify(useParams())}</pre>;
@@ -16,9 +10,9 @@ describe("useParams", () => {
   describe("when the route isn't matched", () => {
     it("returns an empty object", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <ShowParams />
-        </Router>
+        </MemoryRouter>
       );
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -32,11 +26,11 @@ describe("useParams", () => {
   describe("when the path has no params", () => {
     it("returns an empty object", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="/home" element={<ShowParams />} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -50,11 +44,11 @@ describe("useParams", () => {
   describe("when the path has some params", () => {
     it("returns an object of the URL params", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/blog/react-router"]}>
+        <MemoryRouter initialEntries={["/blog/react-router"]}>
           <Routes>
             <Route path="/blog/:slug" element={<ShowParams />} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -76,13 +70,15 @@ describe("useParams", () => {
         }
 
         let renderer = createTestRenderer(
-          <Router initialEntries={["/users/mjackson/courses/react-router"]}>
+          <MemoryRouter
+            initialEntries={["/users/mjackson/courses/react-router"]}
+          >
             <Routes>
               <Route path="users/:username" element={<UserDashboard />}>
                 <Route path="courses/:course" element={<ShowParams />} />
               </Route>
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -102,11 +98,11 @@ describe("useParams", () => {
   describe("when the path has percent-encoded params", () => {
     it("returns an object of the decoded params", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/blog/react%20router"]}>
+        <MemoryRouter initialEntries={["/blog/react%20router"]}>
           <Routes>
             <Route path="/blog/:slug" element={<ShowParams />} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -120,11 +116,11 @@ describe("useParams", () => {
   describe("when the path has a + character", () => {
     it("returns an object of the decoded params", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/blog/react+router+is%20awesome"]}>
+        <MemoryRouter initialEntries={["/blog/react+router+is%20awesome"]}>
           <Routes>
             <Route path="/blog/:slug" element={<ShowParams />} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -151,11 +147,11 @@ describe("useParams", () => {
 
     it("returns the raw value and warns", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/blog/react%2router"]}>
+        <MemoryRouter initialEntries={["/blog/react%2router"]}>
           <Routes>
             <Route path="/blog/:slug" element={<ShowParams />} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -173,13 +169,13 @@ describe("useParams", () => {
   describe("when the params match in a child route", () => {
     it("renders params in the parent", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/blog/react-router"]}>
+        <MemoryRouter initialEntries={["/blog/react-router"]}>
           <Routes>
             <Route path="/blog" element={<ShowParams />}>
               <Route path=":slug" element={null} />
             </Route>
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`

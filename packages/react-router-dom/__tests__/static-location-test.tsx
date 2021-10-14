@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { StaticRouter as Router } from "react-router-dom/server";
+import { StaticRouter } from "react-router-dom/server";
 
 describe("A <StaticRouter>", () => {
   describe("with a string location prop", () => {
@@ -13,11 +13,11 @@ describe("A <StaticRouter>", () => {
       }
 
       ReactDOMServer.renderToStaticMarkup(
-        <Router location="/the/path?the=query#the-hash">
+        <StaticRouter location="/the/path?the=query#the-hash">
           <Routes>
             <Route path="/the/path" element={<LocationChecker />} />
           </Routes>
-        </Router>
+        </StaticRouter>
       );
 
       expect(location).toMatchObject({
@@ -39,11 +39,13 @@ describe("A <StaticRouter>", () => {
       }
 
       ReactDOMServer.renderToStaticMarkup(
-        <Router location={{ pathname: "/the/path", search: "?the=query" }}>
+        <StaticRouter
+          location={{ pathname: "/the/path", search: "?the=query" }}
+        >
           <Routes>
             <Route path="/the/path" element={<LocationChecker />} />
           </Routes>
-        </Router>
+        </StaticRouter>
       );
 
       expect(location).toMatchObject({

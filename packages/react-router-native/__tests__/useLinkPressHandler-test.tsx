@@ -1,15 +1,16 @@
 import * as React from "react";
-import { act, create as createTestRenderer } from "react-test-renderer";
 import { Text, TouchableHighlight, View } from "react-native";
+import type { LinkProps } from "react-router-native";
 import {
-  NativeRouter as Router,
+  NativeRouter,
   Route,
   Routes,
   useLinkPressHandler
 } from "react-router-native";
-import { press } from "./utils";
-import type { LinkProps } from "react-router-native";
 import type { ReactTestRenderer } from "react-test-renderer";
+import { act, create as createTestRenderer } from "react-test-renderer";
+
+import { press } from "./utils";
 
 describe("Custom link with useLinkPressHandler", () => {
   function Link({ to, replace, state, ...rest }: LinkProps) {
@@ -39,12 +40,12 @@ describe("Custom link with useLinkPressHandler", () => {
     let renderer!: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <NativeRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
             <Route path="about" element={<About />} />
           </Routes>
-        </Router>
+        </NativeRouter>
       );
     });
 

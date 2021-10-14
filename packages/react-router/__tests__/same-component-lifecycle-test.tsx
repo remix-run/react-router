@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
-import { MemoryRouter as Router, Routes, Route } from "react-router";
+import { MemoryRouter, Routes, Route } from "react-router";
 
 describe("when the same component is mounted by two different routes", () => {
   let node: HTMLDivElement;
@@ -29,12 +29,12 @@ describe("when the same component is mounted by two different routes", () => {
 
     act(() => {
       ReactDOM.render(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
             <Route path="another-home" element={<Home />} />
           </Routes>
-        </Router>,
+        </MemoryRouter>,
         node
       );
     });
@@ -44,12 +44,12 @@ describe("when the same component is mounted by two different routes", () => {
 
     act(() => {
       ReactDOM.render(
-        <Router initialEntries={["/another-home"]}>
+        <MemoryRouter initialEntries={["/another-home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
             <Route path="another-home" element={<Home />} />
           </Routes>
-        </Router>,
+        </MemoryRouter>,
         node
       );
     });

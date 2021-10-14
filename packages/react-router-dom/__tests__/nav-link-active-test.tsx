@@ -1,25 +1,19 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import {
-  MemoryRouter as Router,
-  Routes,
-  Route,
-  NavLink,
-  Outlet
-} from "react-router-dom";
+import { MemoryRouter, Routes, Route, NavLink, Outlet } from "react-router-dom";
 
 describe("NavLink", () => {
   describe("when it does not match", () => {
     it("does not apply an 'active' className to the underlying <a>", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route
               path="/home"
               element={<NavLink to="somewhere-else">Somewhere else</NavLink>}
             />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       let anchor = renderer.root.findByType("a");
@@ -31,11 +25,11 @@ describe("NavLink", () => {
   describe("when it matches to the end", () => {
     it("applies the default 'active' className to the underlying <a>", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="/home" element={<NavLink to=".">Home</NavLink>} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       let anchor = renderer.root.findByType("a");
@@ -45,7 +39,7 @@ describe("NavLink", () => {
 
     it("applies its className correctly when provided as a function", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route
               path="/home"
@@ -61,7 +55,7 @@ describe("NavLink", () => {
               }
             />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       let anchor = renderer.root.findByType("a");
@@ -73,7 +67,7 @@ describe("NavLink", () => {
 
     it("applies its style correctly when provided as a function", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route
               path="/home"
@@ -89,7 +83,7 @@ describe("NavLink", () => {
               }
             />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       let anchor = renderer.root.findByType("a");
@@ -101,7 +95,7 @@ describe("NavLink", () => {
   describe("when it matches a partial URL segment", () => {
     it("does not apply the 'active' className to the underlying <a>", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/home/children"]}>
+        <MemoryRouter initialEntries={["/home/children"]}>
           <Routes>
             <Route
               path="home"
@@ -115,7 +109,7 @@ describe("NavLink", () => {
               <Route path="children" element={<div>Child</div>} />
             </Route>
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       let anchor = renderer.root.findByType("a");
@@ -127,7 +121,7 @@ describe("NavLink", () => {
   describe("when it matches just the beginning but not to the end", () => {
     it("applies the default 'active' className to the underlying <a>", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/home/child"]}>
+        <MemoryRouter initialEntries={["/home/child"]}>
           <Routes>
             <Route
               path="home"
@@ -141,7 +135,7 @@ describe("NavLink", () => {
               <Route path="child" element={<div>Child</div>} />
             </Route>
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       let anchor = renderer.root.findByType("a");
@@ -152,7 +146,7 @@ describe("NavLink", () => {
     describe("when end=true", () => {
       it("does not apply the default 'active' className to the underlying <a>", () => {
         let renderer = createTestRenderer(
-          <Router initialEntries={["/home/child"]}>
+          <MemoryRouter initialEntries={["/home/child"]}>
             <Routes>
               <Route
                 path="home"
@@ -168,7 +162,7 @@ describe("NavLink", () => {
                 <Route path="child" element={<div>Child</div>} />
               </Route>
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         let anchor = renderer.root.findByType("a");
@@ -181,11 +175,11 @@ describe("NavLink", () => {
   describe("when it matches without matching case", () => {
     it("applies the default 'active' className to the underlying <a>", () => {
       let renderer = createTestRenderer(
-        <Router initialEntries={["/Home"]}>
+        <MemoryRouter initialEntries={["/Home"]}>
           <Routes>
             <Route path="home" element={<NavLink to=".">Home</NavLink>} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       let anchor = renderer.root.findByType("a");
@@ -196,7 +190,7 @@ describe("NavLink", () => {
     describe("when caseSensitive=true", () => {
       it("does not apply the default 'active' className to the underlying <a>", () => {
         let renderer = createTestRenderer(
-          <Router initialEntries={["/Home"]}>
+          <MemoryRouter initialEntries={["/Home"]}>
             <Routes>
               <Route
                 path="home"
@@ -207,7 +201,7 @@ describe("NavLink", () => {
                 }
               />
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
 
         let anchor = renderer.root.findByType("a");
@@ -222,14 +216,14 @@ describe("NavLink under a Routes with a basename", () => {
   describe("when it does not match", () => {
     it("does not apply the default 'active' className to the underlying <a>", () => {
       let renderer = createTestRenderer(
-        <Router basename="/app" initialEntries={["/app/home"]}>
+        <MemoryRouter basename="/app" initialEntries={["/app/home"]}>
           <Routes>
             <Route
               path="home"
               element={<NavLink to="somewhere-else">Somewhere else</NavLink>}
             />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       let anchor = renderer.root.findByType("a");
@@ -241,11 +235,11 @@ describe("NavLink under a Routes with a basename", () => {
   describe("when it matches", () => {
     it("applies the default 'active' className to the underlying <a>", () => {
       let renderer = createTestRenderer(
-        <Router basename="/app" initialEntries={["/app/home"]}>
+        <MemoryRouter basename="/app" initialEntries={["/app/home"]}>
           <Routes>
             <Route path="home" element={<NavLink to=".">Home</NavLink>} />
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       let anchor = renderer.root.findByType("a");

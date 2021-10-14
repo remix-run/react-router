@@ -2,7 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
 import {
-  MemoryRouter as Router,
+  MemoryRouter,
   Outlet,
   Routes,
   Route,
@@ -45,12 +45,12 @@ describe("navigate", () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });
@@ -98,12 +98,12 @@ describe("navigate", () => {
 
         act(() => {
           ReactDOM.render(
-            <Router initialEntries={["/home"]}>
+            <MemoryRouter initialEntries={["/home"]}>
               <Routes>
                 <Route path="home" element={<Home />} />
                 <Route path="about" element={<About />} />
               </Routes>
-            </Router>,
+            </MemoryRouter>,
             node
           );
         });
@@ -151,14 +151,14 @@ describe("navigate", () => {
       it("navigates relative to the current location's pathname", () => {
         act(() => {
           ReactDOM.render(
-            <Router initialEntries={["/bakery/muffins"]}>
+            <MemoryRouter initialEntries={["/bakery/muffins"]}>
               <Routes>
                 <Route path="bakery" element={<Bakery />}>
                   <Route path="muffins" element={<Muffins />} />
                 </Route>
                 <Route path="about" element={<About />} />
               </Routes>
-            </Router>,
+            </MemoryRouter>,
             node
           );
         });
@@ -202,13 +202,13 @@ describe("navigate", () => {
       it("navigates relative to the current location's pathname", () => {
         act(() => {
           ReactDOM.render(
-            <Router initialEntries={["/bakery/muffins"]}>
+            <MemoryRouter initialEntries={["/bakery/muffins"]}>
               <Routes>
                 <Route path="bakery" element={<Bakery />}>
                   <Route path="muffins" element={<Muffins />} />
                 </Route>
               </Routes>
-            </Router>,
+            </MemoryRouter>,
             node
           );
         });
@@ -248,12 +248,12 @@ describe("navigate", () => {
 
         act(() => {
           ReactDOM.render(
-            <Router initialEntries={["/home"]}>
+            <MemoryRouter initialEntries={["/home"]}>
               <Routes>
                 <Route path="home" element={<Home />} />
                 <Route path="about" element={<About />} />
               </Routes>
-            </Router>,
+            </MemoryRouter>,
             node
           );
         });
@@ -299,14 +299,14 @@ describe("navigate", () => {
 
         act(() => {
           ReactDOM.render(
-            <Router initialEntries={["/app/home"]}>
+            <MemoryRouter initialEntries={["/app/home"]}>
               <Routes>
                 <Route path="app" element={<Layout />}>
                   <Route path="home" element={<Home />} />
                   <Route path="about" element={<About />} />
                 </Route>
               </Routes>
-            </Router>,
+            </MemoryRouter>,
             node
           );
         });
@@ -358,14 +358,14 @@ describe("navigate", () => {
 
         act(() => {
           ReactDOM.render(
-            <Router initialEntries={["/app/home"]}>
+            <MemoryRouter initialEntries={["/app/home"]}>
               <Routes>
                 <Route path="app" element={<Layout />}>
                   <Route path="home" element={<Home />} />
                   <Route path="about" element={<About />} />
                 </Route>
               </Routes>
-            </Router>,
+            </MemoryRouter>,
             node
           );
         });
@@ -417,14 +417,14 @@ describe("navigate", () => {
 
         act(() => {
           ReactDOM.render(
-            <Router initialEntries={["/home"]}>
+            <MemoryRouter initialEntries={["/home"]}>
               <Routes>
                 <Route element={<Layout />}>
                   <Route path="home" element={<Home />} />
                   <Route path="about" element={<About />} />
                 </Route>
               </Routes>
-            </Router>,
+            </MemoryRouter>,
             node
           );
         });

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter as Router, Route, Routes, useParams } from "react-router";
+import { MemoryRouter, Route, Routes, useParams } from "react-router";
 
 describe("<Routes> with a location", () => {
   function Home() {
@@ -26,12 +26,12 @@ describe("<Routes> with a location", () => {
     };
 
     const renderer = createTestRenderer(
-      <Router initialEntries={["/users/michael"]}>
+      <MemoryRouter initialEntries={["/users/michael"]}>
         <Routes location={location}>
           <Route path="home" element={<Home />} />
           <Route path="users/:userId" element={<User />} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -43,12 +43,12 @@ describe("<Routes> with a location", () => {
 
   it("matches when the location is not overridden", () => {
     const renderer = createTestRenderer(
-      <Router initialEntries={["/users/michael"]}>
+      <MemoryRouter initialEntries={["/users/michael"]}>
         <Routes>
           <Route path="home" element={<Home />} />
           <Route path="users/:userId" element={<User />} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`

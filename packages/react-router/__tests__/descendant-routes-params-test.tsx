@@ -1,6 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter as Router, Routes, Route, useParams } from "react-router";
+import { MemoryRouter, Routes, Route, useParams } from "react-router";
 
 describe("Descendant <Routes>", () => {
   it("receive all params from ancestor <Routes>", () => {
@@ -9,7 +9,7 @@ describe("Descendant <Routes>", () => {
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={["/users/mj/messages/123"]}>
+      <MemoryRouter initialEntries={["/users/mj/messages/123"]}>
         <Routes>
           <Route
             path="users/:userId/*"
@@ -20,7 +20,7 @@ describe("Descendant <Routes>", () => {
             }
           />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -37,7 +37,7 @@ describe("Descendant <Routes>", () => {
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={["/users/mj/messages/123"]}>
+      <MemoryRouter initialEntries={["/users/mj/messages/123"]}>
         <Routes>
           <Route
             path="users/:id/*"
@@ -48,7 +48,7 @@ describe("Descendant <Routes>", () => {
             }
           />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`

@@ -97,7 +97,7 @@ Once your project is set up and React Router is installed as a dependency, open 
 ```diff
 import React from 'react';
 import ReactDOM from 'react-dom';
-+ import { BrowserRouter as Router } from "react-router-dom";
++ import { BrowserRouter } from "react-router-dom";
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
@@ -108,9 +108,9 @@ To make sure your app has the necessary context to handle state and logic contro
 ```diff
 - ReactDOM.render(<App />, document.getElementById('root'));
 + ReactDOM.render(
-+   <Router>
++   <BrowserRouter>
 +     <App />
-+   </Router>,
++   </BrowserRouter>,
 +   document.getElementById('root')
 + );
 ```
@@ -219,7 +219,7 @@ Go to the `index.js` file in your project and import the necessary functions fro
 // index.js
 import React from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter as Router } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import App from "./App.js";
 ```
 
@@ -228,9 +228,9 @@ Now mount a React app in a `div` with the ID of `root`:
 ```js
 // index.js
 ReactDOM.render(
-  <Router>
+  <BrowserRouter>
     <App />
-  </Router>,
+  </BrowserRouter>,
   document.getElementById("root")
 );
 ```
@@ -322,11 +322,11 @@ $ npm install history@5 react-router-dom@6
 Then, somewhere in your code (probably towards the root of your React component tree) you'll want to `import` the pieces you need from `react-router-dom`.
 
 ```js
-import { BrowserRouter as Router } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <div>
         <h1>Hello, React Router!</h1>
 
@@ -334,7 +334,7 @@ function App() {
           <Route path="/" element={<Home />} />
         </Routes>
       </div>
-    </Router>
+    </BrowserRouter>
   );
 }
 ```

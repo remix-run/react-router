@@ -1,12 +1,7 @@
 import * as React from "react";
 import { render } from "react-dom";
 import { act } from "react-dom/test-utils";
-import {
-  MemoryRouter as Router,
-  Routes,
-  Route,
-  useSearchParams
-} from "react-router-dom";
+import { MemoryRouter, Routes, Route, useSearchParams } from "react-router-dom";
 
 describe("useSearchParams", () => {
   function SearchPage() {
@@ -45,11 +40,11 @@ describe("useSearchParams", () => {
   it("reads and writes the search string", () => {
     act(() => {
       render(
-        <Router initialEntries={["/search?q=Michael+Jackson"]}>
+        <MemoryRouter initialEntries={["/search?q=Michael+Jackson"]}>
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </Router>,
+        </MemoryRouter>,
         node
       );
     });

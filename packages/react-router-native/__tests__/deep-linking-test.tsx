@@ -3,7 +3,7 @@ import { mocked } from "ts-jest/utils";
 import { Linking as _Linking, Text, View } from "react-native";
 import { act, create as createTestRenderer } from "react-test-renderer";
 import {
-  NativeRouter as Router,
+  NativeRouter,
   Routes,
   Route,
   useDeepLinking
@@ -41,12 +41,12 @@ describe("deep linking", () => {
       let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
-          <Router initialEntries={["/home"]}>
+          <NativeRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
             </Routes>
-          </Router>
+          </NativeRouter>
         );
       });
 
@@ -82,12 +82,12 @@ describe("deep linking", () => {
       let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
-          <Router initialEntries={["/home"]}>
+          <NativeRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
             </Routes>
-          </Router>
+          </NativeRouter>
         );
       });
 
@@ -134,12 +134,12 @@ describe("deep linking", () => {
       let renderer!: ReactTestRenderer;
       act(() => {
         renderer = createTestRenderer(
-          <Router initialEntries={["/home"]}>
+          <NativeRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
             </Routes>
-          </Router>
+          </NativeRouter>
         );
       });
 

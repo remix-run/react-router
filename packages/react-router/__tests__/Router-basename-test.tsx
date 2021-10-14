@@ -1,6 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter as Router, Routes, Route } from "react-router";
+import { MemoryRouter, Routes, Route } from "react-router";
 
 describe("<Router basename>", () => {
   let consoleWarn: jest.SpyInstance;
@@ -14,11 +14,11 @@ describe("<Router basename>", () => {
 
   it("renders null and issues a warning when the URL does not match the basename", () => {
     let renderer = createTestRenderer(
-      <Router basename="/app" initialEntries={["/home"]}>
+      <MemoryRouter basename="/app" initialEntries={["/home"]}>
         <Routes>
           <Route path="/" element={<h1>App</h1>} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toBeNull();
@@ -30,11 +30,11 @@ describe("<Router basename>", () => {
 
   it("renders the first route that matches the URL", () => {
     let renderer = createTestRenderer(
-      <Router basename="/home" initialEntries={["/home"]}>
+      <MemoryRouter basename="/home" initialEntries={["/home"]}>
         <Routes>
           <Route path="/" element={<h1>Home</h1>} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -46,12 +46,12 @@ describe("<Router basename>", () => {
 
   it("does not render a 2nd route that also matches the URL", () => {
     let renderer = createTestRenderer(
-      <Router basename="/app" initialEntries={["/app/home"]}>
+      <MemoryRouter basename="/app" initialEntries={["/app/home"]}>
         <Routes>
           <Route path="home" element={<h1>Home</h1>} />
           <Route path="home" element={<h1>Something else</h1>} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -63,11 +63,11 @@ describe("<Router basename>", () => {
 
   it("matches regardless of basename casing", () => {
     let renderer = createTestRenderer(
-      <Router basename="/HoME" initialEntries={["/home"]}>
+      <MemoryRouter basename="/HoME" initialEntries={["/home"]}>
         <Routes>
           <Route path="/" element={<h1>Home</h1>} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -79,11 +79,11 @@ describe("<Router basename>", () => {
 
   it("matches regardless of URL casing", () => {
     let renderer = createTestRenderer(
-      <Router basename="/home" initialEntries={["/hOmE"]}>
+      <MemoryRouter basename="/home" initialEntries={["/hOmE"]}>
         <Routes>
           <Route path="/" element={<h1>Home</h1>} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`

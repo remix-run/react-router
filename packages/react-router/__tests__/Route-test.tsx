@@ -1,6 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter as Router, Routes, Route } from "react-router";
+import { MemoryRouter, Routes, Route } from "react-router";
 
 describe("A <Route>", () => {
   it("renders its `element` prop", () => {
@@ -9,11 +9,11 @@ describe("A <Route>", () => {
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={["/home"]}>
+      <MemoryRouter initialEntries={["/home"]}>
         <Routes>
           <Route path="home" element={<Home />} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -29,13 +29,13 @@ describe("A <Route>", () => {
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={["/app/home"]}>
+      <MemoryRouter initialEntries={["/app/home"]}>
         <Routes>
           <Route path="app">
             <Route path="home" element={<Home />} />
           </Route>
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`

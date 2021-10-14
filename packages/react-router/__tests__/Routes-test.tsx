@@ -1,6 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter as Router, Routes, Route } from "react-router";
+import { MemoryRouter, Routes, Route } from "react-router";
 
 describe("<Routes>", () => {
   let consoleWarn: jest.SpyInstance;
@@ -14,9 +14,9 @@ describe("<Routes>", () => {
 
   it("renders null and issues a warning when no routes match the URL", () => {
     let renderer = createTestRenderer(
-      <Router>
+      <MemoryRouter>
         <Routes />
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toBeNull();
@@ -28,11 +28,11 @@ describe("<Routes>", () => {
 
   it("renders the first route that matches the URL", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/"]}>
+      <MemoryRouter initialEntries={["/"]}>
         <Routes>
           <Route path="/" element={<h1>Home</h1>} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -44,12 +44,12 @@ describe("<Routes>", () => {
 
   it("does not render a 2nd route that also matches the URL", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/home"]}>
+      <MemoryRouter initialEntries={["/home"]}>
         <Routes>
           <Route path="home" element={<h1>Home</h1>} />
           <Route path="home" element={<h1>Dashboard</h1>} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -61,13 +61,13 @@ describe("<Routes>", () => {
 
   it("renders with non-element children", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/"]}>
+      <MemoryRouter initialEntries={["/"]}>
         <Routes>
           <Route path="/" element={<h1>Home</h1>} />
           {false}
           {undefined}
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -79,14 +79,14 @@ describe("<Routes>", () => {
 
   it("renders with React.Fragment children", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/admin"]}>
+      <MemoryRouter initialEntries={["/admin"]}>
         <Routes>
           <Route path="/" element={<h1>Home</h1>} />
           <React.Fragment>
             <Route path="admin" element={<h1>Admin</h1>} />
           </React.Fragment>
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
