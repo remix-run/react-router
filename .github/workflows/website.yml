@@ -3,7 +3,7 @@ name: website
 on:
   push:
     branches:
-      - docs
+      - dev
     paths:
       - docs/**
 
