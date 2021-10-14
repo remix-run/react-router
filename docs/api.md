@@ -7,10 +7,7 @@ order: 2
 
 React Router is a collection of [React components](https://reactjs.org/docs/components-and-props.html), [hooks](#https://reactjs.org/docs/hooks-intro.html) and utilities that make it easy to build multi-page applications with [React](https://reactjs.org). This reference contains the function signatures and return types of the various interfaces in React Router.
 
-> **Tip:**
->
-> Please refer to [our guides](./advanced-guides) for more in-depth usage
-> examples of how you can use React Router to accomplish specific tasks.
+<docs-info>Please refer to [our guides](./advanced-guides) for more in-depth usage examples of how you can use React Router to accomplish specific tasks.</docs-info>
 
 ## Overview
 
