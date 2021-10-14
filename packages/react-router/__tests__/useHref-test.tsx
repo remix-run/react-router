@@ -140,7 +140,9 @@ describe("useHref", () => {
       createTestRenderer(
         <Router initialEntries={["/courses/advanced-react"]}>
           <Routes>
-            <Route path="courses/advanced-react" element={<AdvancedReact />} />
+            <Route path="courses">
+              <Route path="advanced-react" element={<AdvancedReact />} />
+            </Route>
           </Routes>
         </Router>
       );
@@ -159,10 +161,9 @@ describe("useHref", () => {
         createTestRenderer(
           <Router initialEntries={["/courses/advanced-react/"]}>
             <Routes>
-              <Route
-                path="courses/advanced-react"
-                element={<AdvancedReact />}
-              />
+              <Route path="courses">
+                <Route path="advanced-react" element={<AdvancedReact />} />
+              </Route>
             </Routes>
           </Router>
         );
@@ -182,10 +183,9 @@ describe("useHref", () => {
         createTestRenderer(
           <Router initialEntries={["/courses/advanced-react"]}>
             <Routes>
-              <Route
-                path="courses/advanced-react"
-                element={<AdvancedReact />}
-              />
+              <Route path="courses">
+                <Route path="advanced-react" element={<AdvancedReact />} />
+              </Route>
             </Routes>
           </Router>
         );
