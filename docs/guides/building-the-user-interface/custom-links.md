@@ -75,4 +75,6 @@ const Link = React.forwardRef(({ to, replace, state, ...props }, ref) => {
 });
 ```
 
-There are a number of ways one might implement a function like `isExternalURL`. At some point we may decide to provide one in a companion package as a convenience: [TODO: Add an example or two]
+There are a number of ways one might implement a function like `isExternalURL`. At some point we may decide to provide one in a companion package as a convenience.
+
+<!-- [TODO: Add an example or two] -->
