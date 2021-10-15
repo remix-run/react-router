@@ -13,17 +13,6 @@
   "module": "./index.js",
   "types": "./index.d.ts",
   "unpkg": "./umd/react-router-dom.production.min.js",
-  "exports": {
-    "./package.json": "./package.json",
-    ".": {
-      "import": "./index.js",
-      "require": "./main.js"
-    },
-    "./server": {
-      "import": "./server.mjs",
-      "require": "./server.js"
-    }
-  },
   "dependencies": {
     "react-router": "6.0.0-beta.6"
   },

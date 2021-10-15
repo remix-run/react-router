@@ -11,10 +11,6 @@
   "license": "MIT",
   "main": "./index.js",
   "types": "./index.d.ts",
-  "exports": {
-    "./package.json": "./package.json",
-    ".": "./index.js"
-  },
   "dependencies": {
     "@ungap/url-search-params": "^0.1.4",
     "react-router": "6.0.0-beta.6"
