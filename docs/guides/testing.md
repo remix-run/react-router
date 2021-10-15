@@ -1,5 +1,6 @@
 ---
 title: Testing
+hidden: true
 ---
 
 # Testing With Mocha
