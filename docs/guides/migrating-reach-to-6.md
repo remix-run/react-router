@@ -44,7 +44,8 @@ We highly encourage you to do the following updates to your code before migratin
 
 ### Second: Breaking Updates
 
-The following changes need to be done all at once across your app. If it is a significant burden, we have copy/paste wrapper components and hooks in each section that you can import instead of updating all of your application code at once (TODO).
+The following changes need to be done all at once across your app.
+<!-- If it is a significant burden, we have copy/paste wrapper components and hooks in each section that you can import instead of updating all of your application code at once (TODO). -->
 
 1. Upgrade to React Router v6
 2. Update all `<Router>` elements to `<Routes>`
