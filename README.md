@@ -18,9 +18,11 @@
   <a href="https://travis-ci.com/ReactTraining/react-router"><img src="https://img.shields.io/travis/com/ReactTraining/react-router/master?style=flat-square"></a>
 </p>
 
+**Note: You're currently viewing the `v5` branch for React Router version 4 and 5. You can find the source code for version 6 on [the `main` branch](https://github.com/remix-run/react-router).**
+
 ## Docs
 
-**[View the docs here](https://reactrouter.com)**
+**[View the docs for 4.x/5.x here](https://v5.reactrouter.com)**
 
 [Migrating from 2.x/3.x?](/packages/react-router/docs/guides/migrating.md)
 
@@ -53,4 +55,4 @@ You may provide financial support for this project by donating [via Open Collect
 
 ## About
 
-`react-router` is developed and maintained by [React Training](https://reacttraining.com) and many [amazing contributors](https://github.com/remix-run/react-router/graphs/contributors). If you're interested in learning more about what React can do for your company, please [get in touch](mailto:hello@reacttraining.com)!
+React Router is developed and maintained by [Remix](https://remix.run) and many [amazing contributors](https://github.com/remix-run/react-router/graphs/contributors).
