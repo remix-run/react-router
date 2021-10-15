@@ -7,8 +7,6 @@ toc: false
 
 <a name="top"></a>
 
-TODO: Fix relative links
-
 Welcome to the React Router documentation!
 
 If you're not sure where to begin, our [getting started guide](/docs/en/v6/getting-started/installation) is a great place to start!
@@ -42,5 +40,5 @@ If you're not sure where to begin, our [getting started guide](/docs/en/v6/getti
 
 ## Previous Versions
 
-- [React Router v4/5 docs](#TODO)
-- [React Router v3 docs](#TODO)
+- [React Router v4/5 docs](https://v5.reactrouter.com)
+- [React Router v3 docs](https://github.com/remix-run/react-router/tree/v3.2.6/docs)
