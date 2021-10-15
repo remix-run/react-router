@@ -2,10 +2,8 @@ name: website
 
 on:
   push:
-    branches:
-      - dev
-    paths:
-      - docs/**
+    branches: [main]
+    paths: [docs/**]
 
 jobs:
   website:
