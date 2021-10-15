@@ -492,28 +492,81 @@ render the same `<a href>`, regardless of the current URL.
 
 For example, a `<Link to="me">` that is rendered inside a `<Route path="users">`
 will always render a link to `/users/me`, regardless of whether or not the
-current URL has a trailing slash. If you'd like to link to `/me` instead, you
-can go up one segment of the URL using `..`, like `<Link to="../me">`. The `..`
-basically means "remove one segment of the current URL", regardless of whether
-it has a trailing slash or not. Of course, you can always `<Link to="/me">` if
-you'd like to use an absolute URL instead.
+current URL has a trailing slash.
+
+When you'd like to link back "up" to parent routes, use a leading `..` segment
+in your `<Link to>` value, similar to what you'd do in a `<a href>`.
+
+```tsx
+function App() {
+  return (
+    <Routes>
+      <Route path="users" element={<Users />}>
+        <Route path=":id" element={<UserProfile />} />
+      </Route>
+    </Routes>
+  );
+}
+
+function Users() {
+  return (
+    <div>
+      <h2>
+        <Link to=".">Users</Link> {/* This links to /users - the current route */}
+      </h2>
+
+      <ul>
+        {users.map(user => (
+          // This links to /users/:id - the child route
+          <li><Link to={user.id}>{user.name}</Link></li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function UserProfile() {
+  return (
+    <div>
+      <h2>
+        <Link to="..">All Users</Link> {/* This links to /users - the parent route */}
+      </h2>
+
+      <h2>
+        <Link to=".">User Profile</Link> {/* This links to /users/:id - the current route */}
+      </h2>
+
+      <h2>
+        <Link to="../mj">MJ</Link> {/* This links to /users/mj - a "sibling" route */}
+      </h2>
+    </div>
+  )
+}
+```
 
 It may help to think about the current URL as if it were a directory path on the
 filesystem and `<Link to>` like the `cd` command line utility.
 
 ```
-// If the current URL is /app/dashboard (with or without
+// If your routes look like this
+<Route path="app">
+  <Route path="dashboard">
+    <Route path="stats" />
+  </Route>
+</Route>
+
+// and the current URL is /app/dashboard (with or without
 // a trailing slash)
-<Link to="stats">               // <a href="/app/dashboard/stats">
-<Link to="../stats">            // <a href="/app/stats">
-<Link to="../../stats">         // <a href="/stats">
-<Link to="../../../stats">      // <a href="/stats">
+<Link to="stats">               => <a href="/app/dashboard/stats">
+<Link to="../stats">            => <a href="/app/stats">
+<Link to="../../stats">         => <a href="/stats">
+<Link to="../../../stats">      => <a href="/stats">
 
 // On the command line, if the current directory is /app/dashboard
-cd stats                        // pwd is /app/dashboard/stats
-cd ../stats                     // pwd is /app/stats
-cd ../../stats                  // pwd is /stats
-cd ../../../stats               // pwd is /stats
+cd stats                        # pwd is /app/dashboard/stats
+cd ../stats                     # pwd is /app/stats
+cd ../../stats                  # pwd is /stats
+cd ../../../stats               # pwd is /stats
 ```
 
 **Note**: The decision to ignore trailing slashes while matching and creating
@@ -525,6 +578,56 @@ does not). Also, HTML relative links don't have the concept of nested routes,
 they only worked on the URL, so we had to blaze our own trail here a bit.
 `@reach/router` set this precendent and it has worked out well for a couple of
 years.
+
+In addition to ignoring trailing slashes in the current URL, it is important to
+note that `<Link to="..">` will not always behave like `<a href="..">` when your
+`<Route path>` matches more than one segment of the URL. Instead of removing
+just one segment of the URL, **it will resolve based upon the parent route's
+path, essentially removing all path segments specified by that route**.
+
+```tsx
+function App() {
+  return (
+    <Routes>
+      <Route path="users">
+        <Route
+          path=":id/messages"
+          element={
+            // This links to /users
+            <Link to=".." />
+          }
+        />
+      </Route>
+    </Routes>
+  );
+}
+```
+
+This may seem like an odd choice, to make `..` operate on routes instead of URL
+segments, but it's a **huge** help when working with `*` routes where an
+indeterminate number of segments may be matched by the `*`. In these scenarios,
+a single `..` segment in your `<Link to>` value can essentially remove anything
+matched by the `*`, which lets you create more predictable links in `*` routes.
+
+```tsx
+function App() {
+  return (
+    <Routes>
+      <Route path=":userId">
+        <Route path="messages" element={<UserMessages />} />
+        <Route
+          path="files/*"
+          element={
+            // This links to /:userId/messages, no matter
+            // how many segments were matched by the *
+            <Link to="../messages" />
+          }
+        />
+      </Route>
+    </Routes>
+  );
+}
+```
 
 ## Use `useRoutes` instead of `react-router-config`
 
