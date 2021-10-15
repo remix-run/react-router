@@ -18,7 +18,6 @@ build a certain capability or feature of your app with React Router.
 ## Common User Flows
 
 - [Login and Authentication](user-flows/login-and-auth.md)
-- [Forms and Prompts](user-flows/forms-and-prompts.md)
 - [Transitions and Animation](user-flows/transitions-and-animation.md)
 - [Passing Data Between Routes Using `location.state`](user-flows/passing-data.md)
 - [Persisting Data Using `location.key`](user-flows/persisting-data.md)

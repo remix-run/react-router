@@ -63,13 +63,6 @@ There are a few low-level APIs that we use internally that may also prove useful
 - [`useLinkPressHandler`](#uselinkpresshandler) - returns an event handler to for navigation when building a custom `<Link>` in `react-router-native`
 - [`resolvePath`](#resolvepath) - resolves a relative path against a given URL pathname
 
-### Confirming Navigation
-
-Sometimes you need to confirm navigation before it actually happens. For example, if the user has entered some data into a form on the current page, you may want to prompt them to save the data before they navigate to a different page.
-
-- [`usePrompt`](#useprompt) and [`<Prompt>`](#prompt) trigger a platform-native confirmation prompt when the user tries to navigate away from the current page
-- [`useBlocker`](#useblocker) is a low-level interface that lets you keep the user on the same page and execute a function that will be called when they try to navigate away
-
 ### Search Parameters
 
 Access to the URL [search parameters](https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams) is provided via [the `useSearchParams` hook](#usesearchparams).
@@ -514,60 +507,6 @@ function App() {
 }
 ```
 
-### `<Prompt>`
-
-> **Note:**
->
-> This is the web version of `<Prompt>`. For the React Native version,
-> [go here](#prompt-native).
-
-<details>
-  <summary>Type declaration</summary>
-
-```tsx
-declare function Prompt(props: PromptProps): null;
-
-interface PromptProps {
-  message: string;
-  when?: boolean;
-}
-```
-
-</details>
-
-A `<Prompt>` is the declarative version of [`usePrompt`](#useprompt). It doesn't render anything. It just calls `usePrompt` with its props.
-
-> **Note:**
->
-> Having a component-based version of the `usePrompt` hook makes it easier to
-> use this feature in a [`React.Component`](https://reactjs.org/docs/react-component.html)
-> subclass where hooks are not able to be used.
-
-<a name="prompt-native"></a>
-
-### `<Prompt>` (React Native)
-
-> **Note:**
->
-> This is the React Native version of `<Prompt>`. For the web version,
-> [go here](#prompt).
-
-<details>
-  <summary>Type declaration</summary>
-
-```tsx
-declare function Prompt(props: PromptProps): null;
-
-interface PromptProps {
-  message: string;
-  when?: boolean;
-}
-```
-
-</details>
-
-A `<Prompt>` is the declarative version of [`usePrompt`](#useprompt). It doesn't render anything. It just calls `usePrompt` with its props.
-
 ### `<Router>`
 
 <details>
@@ -869,23 +808,6 @@ interface Path {
 
 The [`useResolvedPath` hook](#useresolvedpath) uses `resolvePath` internally to resolve the pathname. If `to` contains a pathname, it is resolved against the current route pathname. Otherwise, it is resolved against the current URL (`location.pathname`).
 
-### `useBlocker`
-
-<details>
-  <summary>Type declaration</summary>
-
-```tsx
-declare function useBlocker(blocker: Blocker, when?: boolean): void;
-
-interface Blocker<S extends State = object | null> {
-  (tx: Transition<S>): void;
-}
-```
-
-</details>
-
-`useBlocker` is a low-level hook that allows you to block navigation away from the current page, i.e. prevent the current location from changing. This is probably something you don't ever want to do unless you also display a confirmation dialog to the user to help them understand why their navigation attempt was blocked. In these cases, you probably want to use [`usePrompt`](#useprompt) or [`<Prompt>`](#prompt) instead.
-
 ### `useHref`
 
 <details>
@@ -1147,75 +1069,6 @@ function App() {
   );
 }
 ```
-
-### `usePrompt`
-
-> **Note:**
->
-> This is the web version of `usePrompt`. For the React Native version,
-> [go here](#useprompt-native).
-
-<details>
-  <summary>Type declaration</summary>
-
-```tsx
-declare function usePrompt(message: string, when?: boolean): void;
-```
-
-</details>
-
-The `usePrompt` hook may be used to confirm navigation before the user navigates away from the current page. This is useful when someone has entered unsaved data into a form, and you'd like to prompt them before they accidentally leave or close the tab and lose their work.
-
-```tsx
-import React from "react";
-import { usePrompt } from "react-router-dom";
-
-function SignupForm() {
-  let [formData, setFormData] = React.useState(null);
-  usePrompt("Are you sure you want to leave?", formData != null);
-  // ...
-}
-```
-
-`usePrompt` uses [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm) on the web and [the `Alert` module](https://reactnative.dev/docs/alert) on React Native to display native, accessible confirm dialogs.
-
-> **Note:**
->
-> If you need a more custom dialog box, you will have to use [`useBlocker`](#useblocker)
-> directly and handle accessibility issues yourself.
-
-<a name="useprompt-native"></a>
-
-### `usePrompt` (React Native)
-
-> **Note:**
->
-> This is the React Native version of `usePrompt`. For the web version,
-> [go here](#useprompt).
-
-<details>
-  <summary>Type declaration</summary>
-
-```tsx
-declare function usePrompt(message: string, when?: boolean): void;
-```
-
-</details>
-
-The `usePrompt` hook may be used to confirm navigation before the user navigates away from the current page. This is useful when someone has entered unsaved data into a form, and you'd like to prompt them before they accidentally leave or close the tab and lose their work.
-
-```tsx
-import React from "react";
-import { usePrompt } from "react-router-native";
-
-function SignupForm() {
-  let [formData, setFormData] = React.useState(null);
-  usePrompt("Are you sure you want to leave?", formData != null);
-  // ...
-}
-```
-
-The React Native version of `usePrompt` calls the `alert` method from the [React Native Alert class](https://reactnative.dev/docs/alert).
 
 ### `useResolvedPath`
 

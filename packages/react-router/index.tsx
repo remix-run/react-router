@@ -1,15 +1,13 @@
 import * as React from "react";
 import { Action, createMemoryHistory, parsePath } from "history";
 import type {
-  Blocker,
   History,
   InitialEntry,
   Location,
   MemoryHistory,
   Path,
   State,
-  To,
-  Transition
+  To
 } from "history";
 
 function invariant(cond: any, message: string): asserts cond {
@@ -56,7 +54,7 @@ function warningOnce(key: string, cond: boolean, message: string) {
  */
 export type Navigator = Omit<
   History,
-  "action" | "location" | "back" | "forward" | "listen"
+  "action" | "location" | "back" | "forward" | "listen" | "block"
 >;
 
 interface NavigationContextObject {
@@ -340,44 +338,6 @@ export function Routes({
 ///////////////////////////////////////////////////////////////////////////////
 // HOOKS
 ///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Blocks all navigation attempts. This is useful for preventing the page from
- * changing until some condition is met, like saving form data.
- *
- * @see https://reactrouter.com/api/useBlocker
- */
-export function useBlocker(blocker: Blocker, when = true): void {
-  invariant(
-    useInRouterContext(),
-    // TODO: This error is probably because they somehow have 2 versions of the
-    // router loaded. We can help them understand how to avoid that.
-    `useBlocker() may be used only in the context of a <Router> component.`
-  );
-
-  let { navigator } = React.useContext(NavigationContext);
-
-  React.useEffect(() => {
-    if (!when) return;
-
-    let unblock = navigator.block((tx: Transition) => {
-      let autoUnblockingTx = {
-        ...tx,
-        retry() {
-          // Automatically unblock the transition so it can play all the way
-          // through before retrying it. TODO: Figure out how to re-enable
-          // this block if the transition is cancelled for some reason.
-          unblock();
-          tx.retry();
-        }
-      };
-
-      blocker(autoUnblockingTx);
-    });
-
-    return unblock;
-  }, [navigator, blocker, when]);
-}
 
 /**
  * Returns the full href for the given "to" value. This is useful for building

@@ -32,11 +32,8 @@ function createMockHistory({ pathname = "/", search = "", hash = "" }) {
     forward() {},
     listen() {
       return () => {};
-    },
-    block() {
-      return () => {};
     }
-  } as History;
+  } as Omit<History, "block">;
 }
 
 describe("Link push and replace", () => {

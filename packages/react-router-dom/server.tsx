@@ -67,12 +67,6 @@ export function StaticRouter({
         `You cannot use navigator.forward() on the server because it is a stateless ` +
           `environment.`
       );
-    },
-    block() {
-      throw new Error(
-        `You cannot use navigator.block() on the server because it is a stateless ` +
-          `environment.`
-      );
     }
   };
 
