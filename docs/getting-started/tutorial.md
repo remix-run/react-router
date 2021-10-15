@@ -3,6 +3,8 @@ title: Tutorial
 order: 2
 ---
 
+# Tutorial
+
 ## Introduction
 
 [Check out the completed version of the app here](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Completed).

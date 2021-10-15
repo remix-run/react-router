@@ -4,6 +4,8 @@ toc: false
 order: 6
 ---
 
+# Server-Side Rendering
+
 The most basic server rendering in React Router is pretty straightforward. However, there's a lot more to consider than just getting the right routes to render. Here's an incomplete list of things you'll need to handle:
 
 - Bundling your code for the server and the browser

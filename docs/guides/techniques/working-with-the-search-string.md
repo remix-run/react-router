@@ -1,6 +1,8 @@
 ---
-title: URL Search Params
+title: Working with URL Search Params
 ---
+
+# Working with URL Search Params
 
 [The "search" string](https://developer.mozilla.org/en-US/docs/Web/API/URL/search) (also called a "query string") is the portion of a URL that begins with a `?` and contains the search parameters of the URL. These parameters are commonly used to describe variations on a given resource, such as filtering and paging. In search engines, the search string often contains the terms that were entered into the search field.
 
