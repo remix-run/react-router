@@ -28,8 +28,6 @@ build a certain capability or feature of your app with React Router.
 ## Useful Techniques
 
 - [Working with the Search/Query String](techniques/working-with-the-search-string.md)
-- [Recursive Paths](techniques/recursive-paths.md)
-- [Code Splitting](techniques/code-splitting.md)
 
 ## Server Rendering
 
