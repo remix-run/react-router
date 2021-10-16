@@ -13,7 +13,7 @@ If you're not sure where to begin, our [getting started guide](/docs/en/v6/getti
   <a href="/docs/en/v6/getting-started/tutorial" aria-label="New to React Router?">
     <docs-card>
       <h3>New to React Router?</h3> 
-      <p>Everything you need to know to get up and running in React Router with the quickness.</p>
+      <p>Everything you need to know to get up and running in React Router quickly.</p>
     </docs-card>
   </a>
   <a href="/docs/en/v6/getting-started/overview" aria-label="Upgrading to v6?">
