@@ -1,4 +1,9 @@
-export type { ServerBuild, ServerEntryModule } from "./build";
+export type {
+  ServerBuild,
+  ServerEntryModule,
+  HandleDataRequestFunction,
+  HandleDocumentRequestFunction
+} from "./build";
 
 export type {
   CookieParseOptions,
@@ -23,6 +28,7 @@ export type { ServerPlatform } from "./platform";
 
 export type {
   ActionFunction,
+  DataFunctionArgs,
   ErrorBoundaryComponent,
   HeadersFunction,
   LinksFunction,

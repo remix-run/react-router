@@ -127,7 +127,7 @@ async function handleDataRequest(
         );
   } catch (error: any) {
     let formattedError = (await platform.formatServerError?.(error)) || error;
-    return json(await serializeError(formattedError), {
+    response = json(await serializeError(formattedError), {
       status: 500,
       headers: {
         "X-Remix-Error": "unfortunately, yes"
@@ -146,6 +146,15 @@ async function handleDataRequest(
     return new Response("", {
       status: 204,
       headers
+    });
+  }
+
+  if (build.entry.module.handleDataRequest) {
+    clonedRequest = stripIndexParam(stripDataParam(request));
+    return build.entry.module.handleDataRequest(response, {
+      request: clonedRequest,
+      context: loadContext,
+      params: routeMatch.params
     });
   }
 

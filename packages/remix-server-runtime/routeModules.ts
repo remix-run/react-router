@@ -1,6 +1,6 @@
 import type { Location } from "history";
 import type { ComponentType } from "react";
-import type { Params } from "react-router"; // TODO: import/export from react-router-dom
+import type { Params } from "react-router-dom";
 
 import type { AppLoadContext, AppData } from "./data";
 import type { LinkDescriptor } from "./links";
@@ -11,10 +11,19 @@ export interface RouteModules<RouteModule> {
 }
 
 /**
+ * The arguments passed to ActionFunction and LoaderFunction.
+ */
+export interface DataFunctionArgs {
+  request: Request;
+  context: AppLoadContext;
+  params: Params;
+}
+
+/**
  * A function that handles data mutations for a route.
  */
 export interface ActionFunction {
-  (args: { request: Request; context: AppLoadContext; params: Params }):
+  (args: DataFunctionArgs):
     | Promise<Response>
     | Response
     | Promise<AppData>
@@ -55,7 +64,7 @@ export interface LinksFunction {
  * A function that loads data for a route.
  */
 export interface LoaderFunction {
-  (args: { request: Request; context: AppLoadContext; params: Params }):
+  (args: DataFunctionArgs):
     | Promise<Response>
     | Response
     | Promise<AppData>
