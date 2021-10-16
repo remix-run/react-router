@@ -5,8 +5,6 @@ toc: false
 
 # Welcome to React Router
 
-<a name="top"></a>
-
 Welcome to the React Router documentation!
 
 If you're not sure where to begin, our [getting started guide](/docs/en/v6/getting-started/installation) is a great place to start!
