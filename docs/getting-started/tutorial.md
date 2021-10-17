@@ -715,7 +715,7 @@ Let's add a button that marks the invoice as paid and then navigates to the inde
 
 First you can copy paste this function that deletes an invoice from our fake data store:
 
-```js filename="src/data.js"
+```js filename=src/data.js
 export function deleteInvoice(number) {
   invoices = invoices.filter(invoice => invoice.number !== number);
 }
