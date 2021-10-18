@@ -5,14 +5,14 @@ order: 2
 
 # Overview
 
-<docs-warning>This document is an overview of new features and changes in React Router version 6. If you're new to React Router or looking for a more practical guide, check out our [quick start tutorial](tutorial.md).</docs-warning>
+<docs-warning>This document is an overview of new features and changes in React Router version 6. If you're new to React Router or looking for a more practical guide, check out our [quick start tutorial](tutorial).</docs-warning>
 
 If you're familiar with the JavaScript ecosystem, React, and React Router, this will get you up and running in React Router v6 as quickly as possible, no explanations, just code.
 
-- The [API](../api.md)
-- For a complete introduction to React Router do the [Tutorial](tutorial.md)
-- For extensive documentation on every API see [API Reference](api.md)
-- For a deeper understanding of concepts see [Main Concepts](concepts.md)
+- The [API](../api)
+- For a complete introduction to React Router do the [Tutorial](tutorial)
+- For extensive documentation on every API see [API Reference](api)
+- For a deeper understanding of concepts see [Main Concepts](concepts)
 
 ## Installation
 
@@ -436,4 +436,4 @@ function Dashboard() {
 }
 ```
 
-And that's just about it! We haven't covered every API here, but these are definitely the most common ones you'll use. If you'd like to learn more, go ahead and follow [our tutorial](../tutorial) or browse [the full API reference](../api-reference.md).
+And that's just about it! We haven't covered every API here, but these are definitely the most common ones you'll use. If you'd like to learn more, go ahead and follow [our tutorial](../tutorial) or browse [the full API reference](../api-reference).
