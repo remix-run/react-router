@@ -3,6 +3,8 @@ title: Guides
 order: 3
 ---
 
+<!-- TODO: Unsure why relative links are not resolving correctly, should not need `guides/` here! (Chance) -->
+
 <docs-info>This page is a work-in-progress, but keep an eye out as we add content over the coming days and weeks 👀.</docs-info>
 
 # Guides
@@ -16,7 +18,7 @@ build a certain capability or feature of your app with React Router.
 - [Using Route Config Objects](building-the-user-interface/route-configs)
 - ["Not Found" Routes (404)](building-the-user-interface/not-found) -->
 
-- [Custom Links](./building-the-user-interface/custom-links)
+- [Custom Links](guides/building-the-user-interface/custom-links)
 
 <!-- ## Common User Flows
 
@@ -29,11 +31,11 @@ build a certain capability or feature of your app with React Router.
 
 ## Useful Techniques
 
-- [Working with the Search/Query String](./techniques/working-with-the-search-string)
+- [Working with the Search/Query String](guides/techniques/working-with-the-search-string)
 
 ## Server Rendering
 
-- [Overview](./ssr)
+- [Overview](guides/ssr)
 <!-- - [Creating Routes from Files](ssr/creating-routes-from-files)
 - [Using `StaticRouter` Directly](ssr/using-staticrouter-directly) -->
 
