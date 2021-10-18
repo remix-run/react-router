@@ -66,7 +66,7 @@ All commits that change or add to the API must be done in a pull request that al
 The following steps will get you setup to contribute changes to this repo:
 
 1. Fork the repo (click the <kbd>Fork</kbd> button at the top right of [this
-   page](https://github.com/ReactTraining/react-router))
+   page](https://github.com/remix-run/react-router))
 
 2. Clone your fork locally
 
