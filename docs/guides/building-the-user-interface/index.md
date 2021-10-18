@@ -6,6 +6,6 @@ order: 3
 
 # Building the User Interface
 
-- [Using Layouts](layouts.md)
-- [Using Route Config Objects](route-configs.md)
-- ["Not Found" Routes (404)](not-found.md)
+- [Using Layouts](layouts)
+- [Using Route Config Objects](route-configs)
+- ["Not Found" Routes (404)](not-found)
