@@ -7,7 +7,7 @@ order: 2
 
 React Router is a collection of [React components](https://reactjs.org/docs/components-and-props.html), [hooks](#https://reactjs.org/docs/hooks-intro.html) and utilities that make it easy to build multi-page applications with [React](https://reactjs.org). This reference contains the function signatures and return types of the various interfaces in React Router.
 
-<docs-info>Please refer to [our guides](./advanced-guides) for more in-depth usage examples of how you can use React Router to accomplish specific tasks.</docs-info>
+<docs-info>Please refer to [our guides](./guides) for more in-depth usage examples of how you can use React Router to accomplish specific tasks.</docs-info>
 
 ## Overview
 
@@ -191,7 +191,7 @@ A `<MemoryRouter>` stores its locations internally in an array. Unlike `<Browser
 >
 > Most of React Router's tests are written using a `<MemoryRouter>` as the
 > source of truth, so you can see some great examples of using it by just
-> [browsing through our tests](https://github.com/ReactTraining/react-router/tree/dev/packages/react-router/__tests__).
+> [browsing through our tests](https://github.com/remix-run/react-router/tree/main/packages/react-router/__tests__).
 
 ```tsx
 import React from "react";
@@ -706,14 +706,14 @@ generatePath("/files/:type/*", { type: "img", "*": "cat.jpg" }); // "/files/img/
 
 ### `Location`
 
-The term "location" in React Router refers to [the `Location` interface](https://github.com/ReactTraining/history/blob/master/docs/api-reference.md#location) from the [history](https://github.com/ReactTraining/history) library.
+The term "location" in React Router refers to [the `Location` interface](https://github.com/remix-run/history/blob/main/docs/api-reference.md#location) from the [history](https://github.com/remix-run/history) library.
 
 > **Note:**
 >
 > The history package is React Router's main dependency and many of the
 > core types in React Router come directly from that library including
 > `Location`, `To`, `Path`, `State`, and others. You can read more about
-> the history library in [its documentation](https://github.com/ReactTraining/history/tree/master/docs).
+> the history library in [its documentation](https://github.com/remix-run/history/tree/main/docs).
 
 ### `matchRoutes`
 

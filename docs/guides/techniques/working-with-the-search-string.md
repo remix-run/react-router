@@ -8,7 +8,7 @@ title: Working with URL Search Params
 
 ## Using the `useSearchParams` hook
 
-React Router includes a convenient [`useSearchParams` hook](../api-reference.md#usesearchparams) for working with search strings that is based on [JavaScript's standard `URLSearchParams` API](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams).
+React Router includes a convenient [`useSearchParams` hook](../api#usesearchparams) for working with search strings that is based on [JavaScript's standard `URLSearchParams` API](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams).
 
 Using the `URLSearchParams` object provides a few nice benefits:
 
