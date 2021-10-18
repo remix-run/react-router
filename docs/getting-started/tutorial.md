@@ -159,7 +159,7 @@ export default function Invoices() {
 }
 ```
 
-Finally, let's teach Reach Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx`.
+Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx`.
 
 ```tsx lines=[2,4-5,10-14] filename=src/main.jsx
 import { render } from "react-dom";
@@ -456,7 +456,7 @@ Note that we used `parseInt` around the param. It's very common for your data lo
 
 Index routes are possibly the most difficult concept in React Router for people to understand. So if you've struggled before, we hope this can clarify it for you.
 
-Right now you're probably looking at one of the invoices. Click on the "Invoices" link in the global nav of your app. Notice that the main content error goes blank! We can fix this with an "index" route.
+Right now you're probably looking at one of the invoices. Click on the "Invoices" link in the global nav of your app. Notice that the main content area goes blank! We can fix this with an "index" route.
 
 ```jsx filename=src/main.jsx lines=[5]
 <Routes>
