@@ -16,7 +16,7 @@ build a certain capability or feature of your app with React Router.
 - [Using Route Config Objects](building-the-user-interface/route-configs)
 - ["Not Found" Routes (404)](building-the-user-interface/not-found) -->
 
-- [Custom Links](building-the-user-interface/custom-links)
+- [Custom Links](./building-the-user-interface/custom-links)
 
 <!-- ## Common User Flows
 
@@ -29,11 +29,11 @@ build a certain capability or feature of your app with React Router.
 
 ## Useful Techniques
 
-- [Working with the Search/Query String](techniques/working-with-the-search-string)
+- [Working with the Search/Query String](./techniques/working-with-the-search-string)
 
 ## Server Rendering
 
-- [Overview](ssr)
+- [Overview](./ssr)
 <!-- - [Creating Routes from Files](ssr/creating-routes-from-files)
 - [Using `StaticRouter` Directly](ssr/using-staticrouter-directly) -->
 
