@@ -3,7 +3,7 @@ import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
 import type { LinkProps } from "react-router-dom";
 import {
-  MemoryRouter as Router,
+  MemoryRouter,
   Routes,
   Route,
   useHref,
@@ -34,7 +34,7 @@ describe("Custom link with useLinkClickHandler", () => {
   it("navigates to the new page", () => {
     act(() => {
       ReactDOM.render(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route
               path="home"
@@ -47,7 +47,7 @@ describe("Custom link with useLinkClickHandler", () => {
             />
             <Route path="about" element={<h1>About</h1>} />
           </Routes>
-        </Router>,
+        </MemoryRouter>,
         node
       );
     });
@@ -74,7 +74,7 @@ describe("Custom link with useLinkClickHandler", () => {
     it("stays on the same page", () => {
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route
                 path="home"
@@ -87,7 +87,7 @@ describe("Custom link with useLinkClickHandler", () => {
               />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });
@@ -118,7 +118,7 @@ describe("Custom link with useLinkClickHandler", () => {
     it("stays on the same page", () => {
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route
                 path="home"
@@ -133,7 +133,7 @@ describe("Custom link with useLinkClickHandler", () => {
               />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });
@@ -161,7 +161,7 @@ describe("Custom link with useLinkClickHandler", () => {
     it("stays on the same page", () => {
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route
                 path="home"
@@ -174,7 +174,7 @@ describe("Custom link with useLinkClickHandler", () => {
               />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });

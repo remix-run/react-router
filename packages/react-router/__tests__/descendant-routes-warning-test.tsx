@@ -1,6 +1,6 @@
 import * as React from "react";
 import { act, create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter as Router, Outlet, Routes, Route } from "react-router";
+import { MemoryRouter, Outlet, Routes, Route } from "react-router";
 
 describe("Descendant <Routes>", () => {
   let consoleWarn: jest.SpyInstance<void, any>;
@@ -40,13 +40,13 @@ describe("Descendant <Routes>", () => {
       }
 
       createTestRenderer(
-        <Router initialEntries={["/courses/react"]}>
+        <MemoryRouter initialEntries={["/courses/react"]}>
           <Routes>
             <Route path="courses" element={<Courses />}>
               <Route path="react" element={<ReactCourses />} />
             </Route>
           </Routes>
-        </Router>
+        </MemoryRouter>
       );
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
@@ -84,13 +84,13 @@ describe("Descendant <Routes>", () => {
 
       act(() => {
         createTestRenderer(
-          <Router initialEntries={["/courses/react"]}>
+          <MemoryRouter initialEntries={["/courses/react"]}>
             <Routes>
               <Route path="courses" element={<Courses />}>
                 <Route path="react/*" element={<ReactCourses />} />
               </Route>
             </Routes>
-          </Router>
+          </MemoryRouter>
         );
       });
 

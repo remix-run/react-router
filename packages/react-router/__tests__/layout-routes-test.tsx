@@ -1,11 +1,11 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter as Router, Routes, Route, Outlet } from "react-router";
+import { MemoryRouter, Routes, Route, Outlet } from "react-router";
 
 describe("A layout route", () => {
   it("does not match when none of its children do", () => {
     let renderer = createTestRenderer(
-      <Router initialEntries={["/"]}>
+      <MemoryRouter initialEntries={["/"]}>
         <Routes>
           <Route
             element={
@@ -19,7 +19,7 @@ describe("A layout route", () => {
           </Route>
           <Route index element={<h1>Index</h1>} />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`

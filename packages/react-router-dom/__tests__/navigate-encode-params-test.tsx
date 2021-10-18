@@ -2,7 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
 import {
-  BrowserRouter as Router,
+  BrowserRouter,
   Routes,
   Route,
   useNavigate,
@@ -40,12 +40,12 @@ describe("navigate with params", () => {
 
       act(() => {
         ReactDOM.render(
-          <Router>
+          <BrowserRouter>
             <Routes>
               <Route path="/" element={<Start />} />
               <Route path="blog/:slug" element={<Blog />} />
             </Routes>
-          </Router>,
+          </BrowserRouter>,
           node
         );
       });
@@ -74,12 +74,12 @@ describe("navigate with params", () => {
 
       act(() => {
         ReactDOM.render(
-          <Router>
+          <BrowserRouter>
             <Routes>
               <Route path="/" element={<Start />} />
               <Route path="blog/:slug" element={<Blog />} />
             </Routes>
-          </Router>,
+          </BrowserRouter>,
           node
         );
       });

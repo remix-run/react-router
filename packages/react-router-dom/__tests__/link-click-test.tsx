@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
-import { MemoryRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { MemoryRouter, Routes, Route, Link } from "react-router-dom";
 
 function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit): void {
   anchor.dispatchEvent(
@@ -38,12 +38,12 @@ describe("A <Link> click", () => {
 
     act(() => {
       ReactDOM.render(
-        <Router initialEntries={["/home"]}>
+        <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
             <Route path="about" element={<h1>About</h1>} />
           </Routes>
-        </Router>,
+        </MemoryRouter>,
         node
       );
     });
@@ -79,12 +79,12 @@ describe("A <Link> click", () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });
@@ -115,12 +115,12 @@ describe("A <Link> click", () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });
@@ -155,12 +155,12 @@ describe("A <Link> click", () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });
@@ -191,12 +191,12 @@ describe("A <Link> click", () => {
 
       act(() => {
         ReactDOM.render(
-          <Router initialEntries={["/home"]}>
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </Router>,
+          </MemoryRouter>,
           node
         );
       });

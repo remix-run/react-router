@@ -1,6 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter as Router, Routes, Route, useParams } from "react-router";
+import { MemoryRouter, Routes, Route, useParams } from "react-router";
 
 describe("Decoding params", () => {
   it("works", () => {
@@ -9,7 +9,7 @@ describe("Decoding params", () => {
     }
 
     let renderer = createTestRenderer(
-      <Router initialEntries={["/content/%2F"]}>
+      <MemoryRouter initialEntries={["/content/%2F"]}>
         <Routes>
           <Route
             path="content/*"
@@ -20,7 +20,7 @@ describe("Decoding params", () => {
             }
           />
         </Routes>
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`

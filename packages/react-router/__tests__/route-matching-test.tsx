@@ -2,7 +2,7 @@ import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
 import type { RouteObject } from "react-router";
 import {
-  MemoryRouter as Router,
+  MemoryRouter,
   Outlet,
   Routes,
   Route,
@@ -27,7 +27,7 @@ describe("route matching", () => {
     testPaths.forEach(path => {
       it(`renders the right elements at ${path}`, () => {
         let renderer = createTestRenderer(
-          <Router initialEntries={[path]} children={routes} />
+          <MemoryRouter initialEntries={[path]} children={routes} />
         );
 
         expect(renderer.toJSON()).toMatchSnapshot();

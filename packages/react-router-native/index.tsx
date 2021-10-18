@@ -22,7 +22,6 @@ import {
   matchPath,
   resolvePath,
   renderMatches,
-  useBlocker,
   useHref,
   useInRouterContext,
   useLocation,
@@ -54,7 +53,6 @@ export {
   matchPath,
   resolvePath,
   renderMatches,
-  useBlocker,
   useHref,
   useInRouterContext,
   useLocation,
@@ -145,23 +143,6 @@ export function Link({
   }
 
   return <TouchableHighlight {...rest} onPress={handlePress} />;
-}
-
-export interface PromptProps {
-  message: string;
-  when?: boolean;
-}
-
-/**
- * A declarative interface for showing an Alert dialog with the given
- * message when the user tries to navigate away from the current screen.
- *
- * This also serves as a reference implementation for anyone who wants
- * to create their own custom prompt component.
- */
-export function Prompt({ message, when }: PromptProps) {
-  usePrompt(message, when);
-  return null;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -262,28 +243,6 @@ export function useDeepLinking() {
 
 function trimScheme(url: string) {
   return url.replace(/^.*?:\/\//, "");
-}
-
-/**
- * Prompts the user with an Alert before they leave the current screen.
- */
-export function usePrompt(message: string, when = true) {
-  let blocker = React.useCallback(
-    tx => {
-      Alert.alert("Confirm", message, [
-        { text: "Cancel", onPress() {} },
-        {
-          text: "OK",
-          onPress() {
-            tx.retry();
-          }
-        }
-      ]);
-    },
-    [message]
-  );
-
-  useBlocker(blocker, when);
 }
 
 /**

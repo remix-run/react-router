@@ -1,7 +1,7 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
 import type { RouteObject } from "react-router";
-import { MemoryRouter as Router, useRoutes } from "react-router";
+import { MemoryRouter, useRoutes } from "react-router";
 
 describe("useRoutes", () => {
   it("returns the matching element from a route config", () => {
@@ -11,9 +11,9 @@ describe("useRoutes", () => {
     ];
 
     let renderer = createTestRenderer(
-      <Router initialEntries={["/home"]}>
+      <MemoryRouter initialEntries={["/home"]}>
         <RoutesRenderer routes={routes} />
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -34,9 +34,9 @@ describe("useRoutes", () => {
       ];
 
       let renderer = createTestRenderer(
-        <Router initialEntries={["/users/mj"]}>
+        <MemoryRouter initialEntries={["/users/mj"]}>
           <RoutesRenderer routes={routes} />
-        </Router>
+        </MemoryRouter>
       );
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
@@ -54,9 +54,9 @@ describe("useRoutes", () => {
     ];
 
     let renderer = createTestRenderer(
-      <Router initialEntries={["/one"]}>
+      <MemoryRouter initialEntries={["/one"]}>
         <RoutesRenderer routes={routes} location={{ pathname: "/two" }} />
-      </Router>
+      </MemoryRouter>
     );
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`

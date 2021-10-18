@@ -18,11 +18,8 @@ function createMockHistory(initialLocation: Partial<History["location"]>) {
     forward() {},
     listen() {
       return () => {};
-    },
-    block() {
-      return () => {};
     }
-  } as History;
+  } as Omit<History, "block">;
 }
 
 describe("navigate", () => {

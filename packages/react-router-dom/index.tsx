@@ -13,7 +13,6 @@ import {
   matchPath,
   resolvePath,
   renderMatches,
-  useBlocker,
   useHref,
   useInRouterContext,
   useLocation,
@@ -61,7 +60,6 @@ export {
   matchPath,
   renderMatches,
   resolvePath,
-  useBlocker,
   useHref,
   useInRouterContext,
   useLocation,
@@ -313,23 +311,6 @@ if (__DEV__) {
   NavLink.displayName = "NavLink";
 }
 
-export interface PromptProps {
-  message: string;
-  when?: boolean;
-}
-
-/**
- * A declarative interface for showing a window.confirm dialog with the given
- * message when the user tries to navigate away from the current page.
- *
- * This also serves as a reference implementation for anyone who wants to
- * create their own custom prompt component.
- */
-export function Prompt({ message, when }: PromptProps) {
-  usePrompt(message, when);
-  return null;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // HOOKS
 ////////////////////////////////////////////////////////////////////////////////
@@ -377,21 +358,6 @@ export function useLinkClickHandler<
     },
     [location, navigate, path, replaceProp, state, target, to]
   );
-}
-
-/**
- * Prevents navigation away from the current page using a window.confirm prompt
- * with the given message.
- */
-export function usePrompt(message: string, when = true) {
-  let blocker = React.useCallback(
-    tx => {
-      if (window.confirm(message)) tx.retry();
-    },
-    [message]
-  );
-
-  useBlocker(blocker, when);
 }
 
 /**

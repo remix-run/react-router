@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import { Navigate, Routes, Route } from "react-router-dom";
-import { StaticRouter as Router } from "react-router-dom/server";
+import { StaticRouter } from "react-router-dom/server";
 
 describe("A <Navigate> in a <StaticRouter>", () => {
   let consoleWarn: jest.SpyInstance;
@@ -15,14 +15,14 @@ describe("A <Navigate> in a <StaticRouter>", () => {
 
   it("warns about using on the initial render", () => {
     ReactDOMServer.renderToStaticMarkup(
-      <Router location="/home">
+      <StaticRouter location="/home">
         <Routes>
           <Route
             path="/home"
             element={<Navigate to="/somewhere-else?the=query" />}
           />
         </Routes>
-      </Router>
+      </StaticRouter>
     );
 
     expect(consoleWarn).toHaveBeenCalledWith(

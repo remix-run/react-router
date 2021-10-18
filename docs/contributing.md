@@ -1,15 +1,25 @@
+---
+title: Contributing
+---
+
 # Contributing to React Router
 
 Thanks for contributing, you rock!
 
 When it comes to open source, there are many different kinds of contributions that can be made, all of which are valuable. Below are a few guidelines that should help you as you prepare your contribution.
 
-- [Think You Found a Bug?](#bug)
-- [Proposing New or Changed API?](#api)
-- [Issue Not Getting Attention?](#attention)
-- [Making a Pull Request?](#pr)
-- [Setup](#setup)
-- [Development](#dev)
+- [Contributing to React Router](#contributing-to-react-router)
+  - [Think You Found a Bug?](#think-you-found-a-bug)
+  - [Proposing New or Changed API?](#proposing-new-or-changed-api)
+  - [Issue Not Getting Attention?](#issue-not-getting-attention)
+  - [Making a Pull Request?](#making-a-pull-request)
+    - [Tests](#tests)
+    - [Docs + Examples](#docs--examples)
+  - [Setup](#setup)
+  - [Development](#development)
+    - [Packages](#packages)
+    - [Building](#building)
+    - [Testing](#testing)
 
 <a name="bug"></a>
 

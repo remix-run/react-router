@@ -1,7 +1,7 @@
 import * as React from "react";
 import type { ReactTestRenderer } from "react-test-renderer";
 import { act, create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter as Router, useLocation } from "react-router";
+import { MemoryRouter, useLocation } from "react-router";
 
 describe("<Router>", () => {
   let consoleError: jest.SpyInstance;
@@ -16,9 +16,9 @@ describe("<Router>", () => {
   it("throws if another <Router> is already in context", () => {
     expect(() => {
       createTestRenderer(
-        <Router>
-          <Router />
-        </Router>
+        <MemoryRouter>
+          <MemoryRouter />
+        </MemoryRouter>
       );
     }).toThrow(/cannot render a <Router> inside another <Router>/);
 
@@ -35,9 +35,9 @@ describe("<Router>", () => {
     let renderer: ReactTestRenderer;
     act(() => {
       renderer = createTestRenderer(
-        <Router>
+        <MemoryRouter>
           <CaptureLocation1 />
-        </Router>
+        </MemoryRouter>
       );
     });
 
@@ -51,9 +51,9 @@ describe("<Router>", () => {
 
     act(() => {
       renderer.update(
-        <Router>
+        <MemoryRouter>
           <CaptureLocation2 />
-        </Router>
+        </MemoryRouter>
       );
     });
 

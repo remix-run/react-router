@@ -1,15 +1,15 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
 import { Link } from "react-router-dom";
-import { StaticRouter as Router } from "react-router-dom/server";
+import { StaticRouter } from "react-router-dom/server";
 
 describe("A <Link> in a <StaticRouter>", () => {
   describe("with a string", () => {
     it("uses the right href", () => {
       let renderer = createTestRenderer(
-        <Router location="/">
+        <StaticRouter location="/">
           <Link to="mjackson" />
-        </Router>
+        </StaticRouter>
       );
 
       let anchor = renderer.root.findByType("a");
@@ -21,9 +21,9 @@ describe("A <Link> in a <StaticRouter>", () => {
   describe("with an object", () => {
     it("uses the right href", () => {
       let renderer = createTestRenderer(
-        <Router location="/">
+        <StaticRouter location="/">
           <Link to={{ pathname: "/mjackson" }} />
-        </Router>
+        </StaticRouter>
       );
 
       let anchor = renderer.root.findByType("a");
