@@ -135,14 +135,14 @@ async function checkPageLinks(page, options = {}, checkedPages = []) {
 }
 
 const startPage = createPage(
-  "https://github.com/ReactTraining/react-router/tree/dev/docs"
+  "https://github.com/remix-run/react-router/tree/dev/main"
 );
 
 checkPageLinks(startPage, {
   shouldCheckPage(page) {
     return (
       page.url.hostname === "github.com" &&
-      /^\/ReactTraining\/react-router\/(tree|blob)\/dev\/docs/i.test(
+      /^\/remix-run\/react-router\/(tree|blob)\/dev\/docs/i.test(
         page.url.pathname
       )
     );
