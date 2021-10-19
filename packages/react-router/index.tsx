@@ -211,6 +211,7 @@ export interface LayoutRouteProps {
 }
 
 export interface IndexRouteProps {
+  caseSensitive?: boolean;
   element?: React.ReactElement | null;
   index: true;
   path?: string;
