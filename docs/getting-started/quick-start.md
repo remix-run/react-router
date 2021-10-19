@@ -64,7 +64,8 @@ function Home() {
     <div>
       <h1>Home</h1>
       <nav>
-        <Link to="/">Home</Link> | <Link to="about">About</Link>
+        <Link to="/">Home</Link> |{" "}
+        <Link to="about">About</Link>
       </nav>
     </div>
   );
@@ -80,7 +81,9 @@ function Invoices() {
     <div>
       <NewInvoiceForm
         onSubmit={async event => {
-          let newInvoice = await createInvoice(event.target);
+          let newInvoice = await createInvoice(
+            event.target
+          );
           navigate(`/invoices/${newInvoice.id}`);
         }}
       />
@@ -99,7 +102,10 @@ import { Routes, Route, useParams } from "react-router-dom";
 function App() {
   return (
     <Routes>
-      <Route path="invoices/:invoiceId" element={<Invoice />} />
+      <Route
+        path="invoices/:invoiceId"
+        element={<Invoice />}
+      />
     </Routes>
   );
 }
@@ -139,7 +145,10 @@ function App() {
   return (
     <Routes>
       <Route path="invoices" element={<Invoices />}>
-        <Route path=":invoiceId" element={<IndividualInvoice />} />
+        <Route
+          path=":invoiceId"
+          element={<IndividualInvoice />}
+        />
         <Route path="sent" element={<SentInvoices />} />
       </Route>
     </Routes>
@@ -213,7 +222,12 @@ The nested url segments map to nested component trees. This is perfect for creat
 Here's a another example of a root layout with navigation that persists while the inner page swaps out with the URL:
 
 ```tsx
-import { Routes, Route, Link, Outlet } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Link,
+  Outlet
+} from "react-router-dom";
 
 function App() {
   return (
@@ -307,7 +321,10 @@ function App() {
       <Route index element={<Home />} />
       <Route path="dashboard" element={<Dashboard />}>
         <Route index element={<DashboardHome />} />
-        <Route path="invoices" element={<DashboardInvoices />} />
+        <Route
+          path="invoices"
+          element={<DashboardInvoices />}
+        />
       </Route>
     </Routes>
   );
@@ -319,7 +336,12 @@ function App() {
 Relative `<Link to>` values (that do not begin with a `/`) are relative to the path of the route that rendered them. The two links below will link to `/dashboard/invoices` and `/dashboard/team` because they're rendered inside of `<Dashboard>`. This is really nice when you change a parent's URL or re-arrange your components because all of your links automatically update.
 
 ```tsx
-import { Routes, Route, Link, Outlet } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Link,
+  Outlet
+} from "react-router-dom";
 
 function Home() {
   return <h1>Home</h1>;
@@ -330,7 +352,8 @@ function Dashboard() {
     <div>
       <h1>Dashboard</h1>
       <nav>
-        <Link to="invoices">Invoices</Link> <Link to="team">Team</Link>
+        <Link to="invoices">Invoices</Link>{" "}
+        <Link to="team">Team</Link>
       </nav>
       <hr />
       <Outlet />
@@ -386,7 +409,10 @@ function App() {
       <Sidebar>
         <Routes>
           <Route path="/" element={<MainNav />} />
-          <Route path="dashboard" element={<DashboardNav />} />
+          <Route
+            path="dashboard"
+            element={<DashboardNav />}
+          />
         </Routes>
       </Sidebar>
 

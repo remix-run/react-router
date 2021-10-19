@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require("path");
 const { execSync } = require("child_process");
 
 const jsonfile = require("jsonfile");

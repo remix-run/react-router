@@ -45,6 +45,7 @@ We highly encourage you to do the following updates to your code before migratin
 ### Second: Breaking Updates
 
 The following changes need to be done all at once across your app.
+
 <!-- If it is a significant burden, we have copy/paste wrapper components and hooks in each section that you can import instead of updating all of your application code at once (TODO). -->
 
 1. Upgrade to React Router v6
@@ -101,7 +102,11 @@ function User(props) {
 }
 
 // @reach/router v1.3 and React Router v6
-import { useParams, useLocation, useNavigate } from "@reach/router";
+import {
+  useParams,
+  useLocation,
+  useNavigate
+} from "@reach/router";
 
 function User() {
   // everything comes from a specific hook now
@@ -322,7 +327,12 @@ function SomeCustomLink() {
     <Link
       to="/some/where/cool"
       getProps={obj => {
-        let { isCurrent, isPartiallyCurrent, href, location } = obj;
+        let {
+          isCurrent,
+          isPartiallyCurrent,
+          href,
+          location
+        } = obj;
         // do what you will
       }}
     />
@@ -362,7 +372,9 @@ function ExactNavLink(props) {
       // overriding the default isActive state, we provide it as
       // a named argument in a function that can be passed to
       // either `className` or `style` props
-      className={({ isActive }) => (isActive ? "active" : "")}
+      className={({ isActive }) =>
+        isActive ? "active" : ""
+      }
       {...props}
     />
   );
@@ -373,7 +385,9 @@ function ExactNavLink(props) {
 // @reach/router
 function PartialNavLink(props) {
   const isPartiallyActive = ({ isPartiallyCurrent }) => {
-    return isPartiallyCurrent ? { className: "active" } : {};
+    return isPartiallyCurrent
+      ? { className: "active" }
+      : {};
   };
   return <Link getProps={isPartiallyActive} {...props} />;
 }
@@ -382,7 +396,9 @@ function PartialNavLink(props) {
 function PartialNavLink(props) {
   // add the wild card to match deeper urls
   let match = useMatch(props.to + "/*");
-  return <Link className={match ? "active" : ""} {...props} />;
+  return (
+    <Link className={match ? "active" : ""} {...props} />
+  );
 }
 ```
 
@@ -394,8 +410,11 @@ function PartialNavLink(props) {
 function RecentPostsLink(props) {
   let match = useMatch("/posts");
   let location = useLocation();
-  let isActive = match && location.search === "?view=recent";
-  return <Link className={isActive ? "active" : ""}>Recent</Link>;
+  let isActive =
+    match && location.search === "?view=recent";
+  return (
+    <Link className={isActive ? "active" : ""}>Recent</Link>
+  );
 }
 ```
 

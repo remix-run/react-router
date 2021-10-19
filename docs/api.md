@@ -77,7 +77,9 @@ Access to the URL [search parameters](https://developer.mozilla.org/en-US/docs/W
   <summary>Type declaration</summary>
 
 ```tsx
-declare function BrowserRouter(props: BrowserRouterProps): React.ReactElement;
+declare function BrowserRouter(
+  props: BrowserRouterProps
+): React.ReactElement;
 
 interface BrowserRouterProps {
   basename?: string;
@@ -98,7 +100,9 @@ import ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.render(
-  <BrowserRouter>{/* The rest of your app goes here */}</BrowserRouter>,
+  <BrowserRouter>
+    {/* The rest of your app goes here */}
+  </BrowserRouter>,
   root
 );
 ```
@@ -109,7 +113,9 @@ ReactDOM.render(
   <summary>Type declaration</summary>
 
 ```tsx
-declare function HashRouter(props: HashRouterProps): React.ReactElement;
+declare function HashRouter(
+  props: HashRouterProps
+): React.ReactElement;
 
 interface HashRouterProps {
   basename?: string;
@@ -130,7 +136,9 @@ import ReactDOM from "react-dom";
 import { HashRouter } from "react-router-dom";
 
 ReactDOM.render(
-  <HashRouter>{/* The rest of your app goes here */}</HashRouter>,
+  <HashRouter>
+    {/* The rest of your app goes here */}
+  </HashRouter>,
   root
 );
 ```
@@ -143,7 +151,9 @@ ReactDOM.render(
   <summary>Type declaration</summary>
 
 ```tsx
-declare function NativeRouter(props: NativeRouterProps): React.ReactElement;
+declare function NativeRouter(
+  props: NativeRouterProps
+): React.ReactElement;
 
 interface NativeRouterProps extends MemoryRouterProps {}
 ```
@@ -160,7 +170,11 @@ import React from "react";
 import { NativeRouter } from "react-router-native";
 
 function App() {
-  return <NativeRouter>{/* The rest of your app goes here */}</NativeRouter>;
+  return (
+    <NativeRouter>
+      {/* The rest of your app goes here */}
+    </NativeRouter>
+  );
 }
 ```
 
@@ -170,7 +184,9 @@ function App() {
   <summary>Type declaration</summary>
 
 ```tsx
-declare function MemoryRouter(props: MemoryRouterProps): React.ReactElement;
+declare function MemoryRouter(
+  props: MemoryRouterProps
+): React.ReactElement;
 
 interface MemoryRouterProps {
   basename?: string;
@@ -196,7 +212,11 @@ A `<MemoryRouter>` stores its locations internally in an array. Unlike `<Browser
 ```tsx
 import React from "react";
 import { create } from "react-test-renderer";
-import { MemoryRouter, Routes, Route } from "react-router-dom";
+import {
+  MemoryRouter,
+  Routes,
+  Route
+} from "react-router-dom";
 
 describe("My app", () => {
   it("renders correctly", () => {
@@ -229,7 +249,10 @@ describe("My app", () => {
 declare function Link(props: LinkProps): React.ReactElement;
 
 interface LinkProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+  extends Omit<
+    React.AnchorHTMLAttributes<HTMLAnchorElement>,
+    "href"
+  > {
   replace?: boolean;
   state?: State;
   to: To;
@@ -321,15 +344,22 @@ function Home() {
   <summary>Type declaration</summary>
 
 ```tsx
-declare function NavLink(props: NavLinkProps): React.ReactElement;
+declare function NavLink(
+  props: NavLinkProps
+): React.ReactElement;
 
-interface NavLinkProps extends Omit<LinkProps, "className" | "style"> {
+interface NavLinkProps
+  extends Omit<LinkProps, "className" | "style"> {
   caseSensitive?: boolean;
-  className?: string | ((props: { isActive: boolean }) => string);
+  className?:
+    | string
+    | ((props: { isActive: boolean }) => string);
   end?: boolean;
   style?:
     | React.CSSProperties
-    | ((props: { isActive: boolean }) => React.CSSProperties);
+    | ((props: {
+        isActive: boolean;
+      }) => React.CSSProperties);
 }
 ```
 
@@ -356,7 +386,9 @@ function NavList() {
         <li>
           <NavLink
             to="messages"
-            style={({ isActive }) => (isActive ? activeStyle : undefined)}
+            style={({ isActive }) =>
+              isActive ? activeStyle : undefined
+            }
           >
             Messages
           </NavLink>
@@ -364,7 +396,9 @@ function NavList() {
         <li>
           <NavLink
             to="tasks"
-            style={({ isActive }) => (isActive ? activeStyle : undefined)}
+            style={({ isActive }) =>
+              isActive ? activeStyle : undefined
+            }
           >
             Tasks
           </NavLink>
@@ -388,7 +422,10 @@ const NavLink = React.forwardRef(
         ref={ref}
         {...props}
         className={({ isActive }) =>
-          [props.className, isActive ? activeClassName : null]
+          [
+            props.className,
+            isActive ? activeClassName : null
+          ]
             .filter(Boolean)
             .join(" ")
         }
@@ -457,7 +494,9 @@ class LoginForm extends React.Component {
     return (
       <div>
         {error && <p>{error.message}</p>}
-        {user && <Navigate to="/dashboard" replace={true} />}
+        {user && (
+          <Navigate to="/dashboard" replace={true} />
+        )}
         <form onSubmit={event => this.handleSubmit(event)}>
           <input type="text" name="username" />
           <input type="password" name="password" />
@@ -499,7 +538,10 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Dashboard />}>
-        <Route path="messages" element={<DashboardMessages />} />
+        <Route
+          path="messages"
+          element={<DashboardMessages />}
+        />
         <Route path="tasks" element={<DashboardTasks />} />
       </Route>
     </Routes>
@@ -513,7 +555,9 @@ function App() {
   <summary>Type declaration</summary>
 
 ```tsx
-declare function Router(props: RouterProps): React.ReactElement | null;
+declare function Router(
+  props: RouterProps
+): React.ReactElement | null;
 
 interface RouterProps {
   action?: Action;
@@ -543,14 +587,18 @@ The `<Router basename>` prop may be used to make all routes and links in your ap
   <summary>Type declaration</summary>
 
 ```tsx
-declare function Routes(props: RoutesProps): React.ReactElement | null;
+declare function Routes(
+  props: RoutesProps
+): React.ReactElement | null;
 
 interface RoutesProps {
   children?: React.ReactNode;
   location?: Partial<Location> | string;
 }
 
-declare function Route(props: RouteProps): React.ReactElement | null;
+declare function Route(
+  props: RouteProps
+): React.ReactElement | null;
 
 interface RouteProps {
   caseSensitive?: boolean;
@@ -570,7 +618,10 @@ Whenever the location changes, `<Routes>` looks through all its `children` `<Rou
 ```tsx
 <Routes>
   <Route path="/" element={<Dashboard />}>
-    <Route path="messages" element={<DashboardMessages />} />
+    <Route
+      path="messages"
+      element={<DashboardMessages />}
+    />
     <Route path="tasks" element={<DashboardTasks />} />
   </Route>
   <Route path="about" element={<AboutPage />} />
@@ -598,7 +649,9 @@ For example, in the following config the parent route renders an `<Outlet>` by d
   <summary>Type declaration</summary>
 
 ```tsx
-declare function StaticRouter(props: StaticRouterProps): React.ReactElement;
+declare function StaticRouter(
+  props: StaticRouterProps
+): React.ReactElement;
 
 interface StaticRouterProps {
   basename?: string;
@@ -692,7 +745,10 @@ interface RouteObject {
   <summary>Type declaration</summary>
 
 ```tsx
-declare function generatePath(path: string, params?: Params): string;
+declare function generatePath(
+  path: string,
+  params?: Params
+): string;
 ```
 
 </details>
@@ -701,7 +757,10 @@ declare function generatePath(path: string, params?: Params): string;
 
 ```tsx
 generatePath("/users/:id", { id: 42 }); // "/users/42"
-generatePath("/files/:type/*", { type: "img", "*": "cat.jpg" }); // "/files/img/cat.jpg"
+generatePath("/files/:type/*", {
+  type: "img",
+  "*": "cat.jpg"
+}); // "/files/img/cat.jpg"
 ```
 
 ### `Location`
@@ -761,7 +820,9 @@ declare function renderMatches(
   <summary>Type declaration</summary>
 
 ```tsx
-declare function matchPath<ParamKey extends string = string>(
+declare function matchPath<
+  ParamKey extends string = string
+>(
   pattern: PathPattern | string,
   pathname: string
 ): PathMatch<ParamKey> | null;
@@ -791,7 +852,10 @@ The [`useMatch` hook](#usematch) uses this function internally to match a route 
   <summary>Type declaration</summary>
 
 ```tsx
-declare function resolvePath(to: To, fromPathname?: string): Path;
+declare function resolvePath(
+  to: To,
+  fromPathname?: string
+): Path;
 
 type To = Partial<Location> | string;
 
@@ -851,14 +915,31 @@ declare function useLinkClickHandler<
 The `useLinkClickHandler` hook returns a click event handler to for navigation when building a custom `<Link>` in `react-router-dom`.
 
 ```tsx
-import { useHref, useLinkClickHandler } from "react-router-dom";
+import {
+  useHref,
+  useLinkClickHandler
+} from "react-router-dom";
 
 const StyledLink = styled("a", { color: "fuschia" });
 
 const Link = React.forwardRef(
-  ({ onClick, replace = false, state, target, to, ...rest }, ref) => {
+  (
+    {
+      onClick,
+      replace = false,
+      state,
+      target,
+      to,
+      ...rest
+    },
+    ref
+  ) => {
     let href = useHref(to);
-    let handleClick = useLinkClickHandler(to, { replace, state, target });
+    let handleClick = useLinkClickHandler(to, {
+      replace,
+      state,
+      target
+    });
 
     return (
       <StyledLink
@@ -884,7 +965,9 @@ const Link = React.forwardRef(
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useLinkPressHandler<S extends State = State>(
+declare function useLinkPressHandler<
+  S extends State = State
+>(
   to: To,
   options?: {
     replace?: boolean;
@@ -901,8 +984,17 @@ The `react-router-native` counterpart to `useLinkClickHandler`, `useLinkPressHan
 import { TouchableHighlight } from "react-native";
 import { useLinkPressHandler } from "react-router-native";
 
-function Link({ onPress, replace = false, state, to, ...rest }) {
-  let handlePress = useLinkPressHandler(to, { replace, state });
+function Link({
+  onPress,
+  replace = false,
+  state,
+  to,
+  ...rest
+}) {
+  let handlePress = useLinkPressHandler(to, {
+    replace,
+    state
+  });
 
   return (
     <TouchableHighlight
@@ -939,7 +1031,8 @@ The `useInRouterContext` hooks returns `true` if the component is being rendered
 ```tsx
 declare function useLocation(): Location;
 
-interface Location<S extends State = object | null> extends Path {
+interface Location<S extends State = object | null>
+  extends Path {
   state: S;
   key: Key;
 }
@@ -992,7 +1085,10 @@ See [`matchPath`](#matchpath) for more information.
 declare function useNavigate(): NavigateFunction;
 
 interface NavigateFunction {
-  (to: To, options?: { replace?: boolean; state?: State }): void;
+  (
+    to: To,
+    options?: { replace?: boolean; state?: State }
+  ): void;
   (delta: number): void;
 }
 ```
@@ -1041,7 +1137,9 @@ Returns the element for the child route at this level of the route hierarchy. Th
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useParams<K extends string = string>(): Readonly<Params<K>>;
+declare function useParams<
+  K extends string = string
+>(): Readonly<Params<K>>;
 ```
 
 </details>
@@ -1115,7 +1213,10 @@ function App() {
       path: "/",
       element: <Dashboard />,
       children: [
-        { path: "messages", element: <DashboardMessages /> },
+        {
+          path: "messages",
+          element: <DashboardMessages />
+        },
         { path: "tasks", element: <DashboardTasks /> }
       ]
     },
@@ -1238,7 +1339,9 @@ import { useSearchParams } from "react-router-native";
 
 function App() {
   let [searchParams, setSearchParams] = useSearchParams();
-  let [query, setQuery] = React.useState(searchParams.get("query"));
+  let [query, setQuery] = React.useState(
+    searchParams.get("query")
+  );
 
   function handleSubmit() {
     setSearchParams({ query });
