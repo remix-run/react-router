@@ -627,15 +627,18 @@ export function useRoutes(
   let matches = matchRoutes(routes, { pathname: remainingPathname });
 
   if (__DEV__) {
+    let hasRoutes = parentRoute || matches != null;
     warning(
-      parentRoute || matches != null,
+      hasRoutes,
       `No routes matched location "${location.pathname}${location.search}${location.hash}" `
     );
 
-    warning(
-      matches != null && matches[matches.length - 1].route.element,
-      `Matched leaf route for location "${location.pathname}${location.search}${location.hash}" does not have an element`
-    );
+    if (hasRoutes) {
+      warning(
+        parentRoute || matches?.[matches.length - 1].route.element,
+        `Matched leaf route for location "${location.pathname}${location.search}${location.hash}" does not have an element`
+      );
+    }
   }
 
   return _renderMatches(
