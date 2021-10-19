@@ -631,6 +631,11 @@ export function useRoutes(
       parentRoute || matches != null,
       `No routes matched location "${location.pathname}${location.search}${location.hash}" `
     );
+
+    warning(
+      matches != null && matches[matches.length - 1].route.element,
+      `Matched leaf route for location "${location.pathname}${location.search}${location.hash}" does not have an element`
+    );
   }
 
   return _renderMatches(
