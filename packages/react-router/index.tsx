@@ -213,6 +213,7 @@ export interface LayoutRouteProps {
 export interface IndexRouteProps {
   element?: React.ReactElement | null;
   index: true;
+  path?: string;
 }
 
 /**
