@@ -1,6 +1,5 @@
 {
   "private": true,
-  "type": "module",
   "scripts": {
     "build": "rollup -c && tsc -b",
     "clean": "git clean -fdX .",
