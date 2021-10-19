@@ -1,12 +1,10 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import { execSync } from "child_process";
+const path = require('path');
+const { execSync } = require("child_process");
 
-import jsonfile from "jsonfile";
-import semver from "semver";
+const jsonfile = require("jsonfile");
+const semver = require("semver");
 
-const dirname = path.dirname(fileURLToPath(import.meta.url));
-const rootDir = path.resolve(dirname, "..");
+const rootDir = path.resolve(__dirname, "..");
 
 /**
  * @param {*} cond
