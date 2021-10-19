@@ -29,6 +29,6 @@ jobs:
 
       - name: Test
         run: yarn test
-        
+
       - name: Check bundle size
         run: yarn size

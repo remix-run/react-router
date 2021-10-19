@@ -41,5 +41,5 @@ jobs:
         with:
           url: "${{ secrets.DOCS_REFRESH_URL }}?ref=${{ github.ref }}"
           method: "POST"
-          customHeaders: "{\"Authorization\": \"${{ secrets.DOCS_REFRESH_TOKEN }}\"}"
+          customHeaders: '{"Authorization": "${{ secrets.DOCS_REFRESH_TOKEN }}"}'
           timeout: 60000
