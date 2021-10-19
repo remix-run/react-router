@@ -10,7 +10,7 @@ describe("loaders", () => {
     };
 
     let routeId = "routes/random";
-    let build = ({
+    let build = {
       routes: {
         [routeId]: {
           id: routeId,
@@ -20,7 +20,7 @@ describe("loaders", () => {
           }
         }
       }
-    } as unknown) as ServerBuild;
+    } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build, {});
 
@@ -47,7 +47,7 @@ describe("loaders", () => {
     };
 
     let routeId = "routes/random";
-    let build = ({
+    let build = {
       routes: {
         [routeId]: {
           id: routeId,
@@ -57,7 +57,7 @@ describe("loaders", () => {
           }
         }
       }
-    } as unknown) as ServerBuild;
+    } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build, {});
 
@@ -74,13 +74,13 @@ describe("loaders", () => {
     expect(await res.headers.get("X-Remix-Catch")).toBeTruthy();
   });
 
-   it("removes index from request.url", async () => {
+  it("removes index from request.url", async () => {
     let loader = async ({ request }) => {
       return new URL(request.url).search;
     };
 
     let routeId = "routes/random";
-    let build = ({
+    let build = {
       routes: {
         [routeId]: {
           id: routeId,
@@ -90,7 +90,7 @@ describe("loaders", () => {
           }
         }
       }
-    } as unknown) as ServerBuild;
+    } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build, {});
 
@@ -113,7 +113,7 @@ describe("loaders", () => {
     };
 
     let routeId = "routes/random";
-    let build = ({
+    let build = {
       routes: {
         [routeId]: {
           id: routeId,
@@ -123,7 +123,7 @@ describe("loaders", () => {
           }
         }
       }
-    } as unknown) as ServerBuild;
+    } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build, {});
 

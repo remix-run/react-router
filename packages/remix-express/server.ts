@@ -57,10 +57,10 @@ export function createRequestHandler({
           ? getLoadContext(req, res)
           : undefined;
 
-      let response = ((await handleRequest(
-        (request as unknown) as Request,
+      let response = (await handleRequest(
+        request as unknown as Request,
         loadContext
-      )) as unknown) as NodeResponse;
+      )) as unknown as NodeResponse;
 
       sendRemixResponse(res, response);
     } catch (error) {

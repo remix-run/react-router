@@ -5,7 +5,8 @@ import type { NullableMappedPosition } from "source-map";
 import { SourceMapConsumer } from "source-map";
 
 const ROOT = process.cwd() + path.sep;
-const SOURCE_PATTERN = /(?<at>\s+at.+)\((?<filename>.+):(?<line>\d+):(?<column>\d+)\)/;
+const SOURCE_PATTERN =
+  /(?<at>\s+at.+)\((?<filename>.+):(?<line>\d+):(?<column>\d+)\)/;
 
 export const UNKNOWN_LOCATION_POSITION = "<unknown location>";
 

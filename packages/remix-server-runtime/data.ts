@@ -67,9 +67,9 @@ export async function callRouteAction(
     );
   }
 
-  let result
+  let result;
   try {
-   result = await routeModule.action({ request, context, params });
+    result = await routeModule.action({ request, context, params });
   } catch (error) {
     if (!isResponse(error)) {
       throw error;

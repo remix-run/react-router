@@ -35,10 +35,10 @@ export function installGlobals() {
   global.atob = atob;
   global.btoa = btoa;
 
-  global.Headers = (NodeHeaders as unknown) as typeof Headers;
-  global.Request = (NodeRequest as unknown) as typeof Request;
-  global.Response = (NodeResponse as unknown) as typeof Response;
-  global.fetch = (nodeFetch as unknown) as typeof fetch;
+  global.Headers = NodeHeaders as unknown as typeof Headers;
+  global.Request = NodeRequest as unknown as typeof Request;
+  global.Response = NodeResponse as unknown as typeof Response;
+  global.fetch = nodeFetch as unknown as typeof fetch;
 
   global.sign = remixSign;
   global.unsign = remixUnsign;
