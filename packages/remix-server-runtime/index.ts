@@ -28,6 +28,7 @@ export type {
   LinksFunction,
   LoaderFunction,
   MetaFunction,
+  MetaDescriptor,
   RouteComponent,
   RouteHandle
 } from "./routeModules";

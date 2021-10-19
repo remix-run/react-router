@@ -20,6 +20,7 @@ export type {
   HeadersFunction,
   LinksFunction,
   LoaderFunction,
+  MetaDescriptor,
   MetaFunction,
   RouteComponent,
   RouteHandle,

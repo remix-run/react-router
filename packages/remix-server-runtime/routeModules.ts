@@ -73,7 +73,17 @@ export interface MetaFunction {
     parentsData: RouteData;
     params: Params;
     location: Location;
-  }): { [name: string]: string };
+  }): MetaDescriptor;
+}
+
+/**
+ * A name/content pair used to render `<meta>` tags in a meta function for a
+ * route. The value can be either a string, which will render a single `<meta>`
+ * tag, or an array of strings that will render multiple tags with the same
+ * `name` attribute.
+ */
+export interface MetaDescriptor {
+  [name: string]: string | string[];
 }
 
 /**
@@ -92,7 +102,7 @@ export interface EntryRouteModule {
   default: RouteComponent;
   handle?: RouteHandle;
   links?: LinksFunction;
-  meta?: MetaFunction | { [name: string]: string };
+  meta?: MetaFunction | MetaDescriptor;
 }
 
 export interface ServerRouteModule extends EntryRouteModule {
