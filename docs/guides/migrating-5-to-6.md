@@ -80,7 +80,9 @@ function App() {
       <Route path="/about" component={About} />
       <Route
         path="/users/:id"
-        render={({ match }) => <User id={match.params.id} />}
+        render={({ match }) => (
+          <User id={match.params.id} />
+        )}
       />
     </Switch>
   );
@@ -235,7 +237,12 @@ This is the same app in v6:
 
 ```js
 // This is a React Router v6 app
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link
+} from "react-router-dom";
 
 function App() {
   return (
@@ -381,7 +388,13 @@ v6. Taking the code in the previous example one step further, we can hoist all
 
 ```js
 // This is a React Router v6 app
-import { BrowserRouter, Routes, Route, Link, Outlet } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  Outlet
+} from "react-router-dom";
 
 function App() {
   return (
@@ -512,35 +525,41 @@ function Users() {
   return (
     <div>
       <h2>
-        <Link to=".">Users</Link> {/* This links to /users - the current route */}
+        {/* This links to /users - the current route */}
+        <Link to=".">Users</Link>{" "}
       </h2>
 
       <ul>
         {users.map(user => (
-          // This links to /users/:id - the child route
-          <li><Link to={user.id}>{user.name}</Link></li>
+          <li>
+            {/* This links to /users/:id - the child route */}
+            <Link to={user.id}>{user.name}</Link>
+          </li>
         ))}
       </ul>
     </div>
-  )
+  );
 }
 
 function UserProfile() {
   return (
     <div>
       <h2>
-        <Link to="..">All Users</Link> {/* This links to /users - the parent route */}
+        {/* This links to /users - the parent route */}
+        <Link to="..">All Users</Link>{" "}
       </h2>
 
       <h2>
-        <Link to=".">User Profile</Link> {/* This links to /users/:id - the current route */}
+        {/* This links to /users/:id - the current route */}
+        <Link to=".">User Profile</Link>{" "}
       </h2>
 
       <h2>
-        <Link to="../mj">MJ</Link> {/* This links to /users/mj - a "sibling" route */}
+        {/* This links to /users/mj - a "sibling" route */}
+        <Link to="../mj">MJ</Link>{" "}
       </h2>
     </div>
-  )
+  );
 }
 ```
 
@@ -746,10 +765,14 @@ function App() {
 
   return (
     <>
-      <button onClick={() => go(-2)}>Go 2 pages back</button>
+      <button onClick={() => go(-2)}>
+        Go 2 pages back
+      </button>
       <button onClick={goBack}>Go back</button>
       <button onClick={goForward}>Go forward</button>
-      <button onClick={() => go(2)}>Go 2 pages forward</button>
+      <button onClick={() => go(2)}>
+        Go 2 pages forward
+      </button>
     </>
   );
 }
@@ -766,10 +789,16 @@ function App() {
 
   return (
     <>
-      <button onClick={() => navigate(-2)}>Go 2 pages back</button>
+      <button onClick={() => navigate(-2)}>
+        Go 2 pages back
+      </button>
       <button onClick={() => navigate(-1)}>Go back</button>
-      <button onClick={() => navigate(1)}>Go forward</button>
-      <button onClick={() => navigate(2)}>Go 2 pages forward</button>
+      <button onClick={() => navigate(1)}>
+        Go forward
+      </button>
+      <button onClick={() => navigate(2)}>
+        Go 2 pages forward
+      </button>
     </>
   );
 }
@@ -802,7 +831,9 @@ function SomeForm() {
   return (
     <form
       onSubmit={async event => {
-        let newRecord = await saveDataFromForm(event.target);
+        let newRecord = await saveDataFromForm(
+          event.target
+        );
         // you can build up the URL yourself
         navigate(`/stuff/${newRecord.id}`);
         // or navigate relative, just like Link
@@ -833,12 +864,29 @@ with just a few of our hooks:
 
 ```tsx
 import { FancyPantsLink } from "@fancy-pants/design-system";
-import { useHref, useLinkClickHandler } from "react-router-dom";
+import {
+  useHref,
+  useLinkClickHandler
+} from "react-router-dom";
 
 const Link = React.forwardRef(
-  ({ onClick, replace = false, state, target, to, ...rest }, ref) => {
+  (
+    {
+      onClick,
+      replace = false,
+      state,
+      target,
+      to,
+      ...rest
+    },
+    ref
+  ) => {
     let href = useHref(to);
-    let handleClick = useLinkClickHandler(to, { replace, state, target });
+    let handleClick = useLinkClickHandler(to, {
+      replace,
+      state,
+      target
+    });
 
     return (
       <FancyPantsLink
@@ -906,7 +954,10 @@ const NavLink = React.forwardRef(
         ref={ref}
         {...props}
         className={({ isActive }) =>
-          [props.className, isActive ? activeClassName : null]
+          [
+            props.className,
+            isActive ? activeClassName : null
+          ]
             .filter(Boolean)
             .join(" ")
         }
