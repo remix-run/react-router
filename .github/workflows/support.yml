@@ -1,4 +1,4 @@
-name: 'Support Requests'
+name: "Support Requests"
 
 on:
   issues:
