@@ -32,11 +32,6 @@ describe("matchRoutes", () => {
       path: "/withpath",
       index: true
     }),
-    (layoutRouteIndex = {
-      path: "/layout",
-      index: true,
-      element: <h1>Layout</h1>
-    }),
     (layoutRoute = {
       path: "/layout",
       children: [
@@ -44,6 +39,11 @@ describe("matchRoutes", () => {
         { path: ":id", element: <h1>ID</h1> },
         { path: "*", element: <h1>Not Found</h1> }
       ]
+    }),
+    (layoutRouteIndex = {
+      path: "/layout",
+      index: true,
+      element: <h1>Layout</h1>
     }),
     (usersRoute = {
       path: "/users",
