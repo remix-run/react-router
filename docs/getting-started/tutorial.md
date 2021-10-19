@@ -328,6 +328,7 @@ export default function Invoices() {
           <Link
             style={{ display: "block", margin: "1rem 0" }}
             to={`/invoices/${invoice.number}`}
+            key={invoice.number}
           >
             {invoice.name}
           </Link>
@@ -421,6 +422,7 @@ export default function Invoices() {
           <Link
             style={{ display: "block", margin: "1rem 0" }}
             to={`/invoices/${invoice.number}`}
+            key={invoice.number}
           >
             {invoice.name}
           </Link>
@@ -548,8 +550,8 @@ export default function Invoices() {
                 color: isActive ? "red" : ""
               };
             }}
-            key={invoice.number}
             to={`/invoices/${invoice.number}`}
+            key={invoice.number}
           >
             {invoice.name}
           </NavLink>
@@ -630,8 +632,8 @@ export default function Invoices() {
                 margin: "1rem 0",
                 color: isActive ? "red" : ""
               })}
-              key={invoice.number}
               to={`/invoices/${invoice.number}`}
+              key={invoice.number}
             >
               {invoice.name}
             </NavLink>
