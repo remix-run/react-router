@@ -842,7 +842,7 @@ function flattenRoutes(
       return;
     }
 
-    branches.push({ path, score: computeScore(path), routesMeta });
+    branches.push({ path, score: computeScore(path, route.index), routesMeta });
   });
 
   return branches;
@@ -860,17 +860,22 @@ function rankRouteBranches(branches: RouteBranch[]): void {
 }
 
 const paramRe = /^:\w+$/;
-const dynamicSegmentValue = 2;
+const dynamicSegmentValue = 3;
+const indexRouteValue = 2;
 const emptySegmentValue = 1;
 const staticSegmentValue = 10;
 const splatPenalty = -2;
 const isSplat = (s: string) => s === "*";
 
-function computeScore(path: string): number {
+function computeScore(path: string, index: boolean | undefined): number {
   let segments = path.split("/");
   let initialScore = segments.length;
   if (segments.some(isSplat)) {
     initialScore += splatPenalty;
+  }
+
+  if (index) {
+    initialScore += indexRouteValue;
   }
 
   return segments
