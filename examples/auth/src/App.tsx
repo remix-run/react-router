@@ -6,7 +6,7 @@ import {
   useNavigate,
   useLocation,
   Navigate,
-  Outlet,
+  Outlet
 } from "react-router-dom";
 import { fakeAuthProvider } from "./auth";
 

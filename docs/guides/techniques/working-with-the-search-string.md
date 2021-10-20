@@ -8,7 +8,7 @@ title: Working with URL Search Params
 
 ## Using the `useSearchParams` hook
 
-React Router includes a convenient [`useSearchParams` hook](../api-reference.md#usesearchparams) for working with search strings that is based on [JavaScript's standard `URLSearchParams` API](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams).
+React Router includes a convenient [`useSearchParams` hook](../api#usesearchparams) for working with search strings that is based on [JavaScript's standard `URLSearchParams` API](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams).
 
 Using the `URLSearchParams` object provides a few nice benefits:
 
@@ -24,7 +24,9 @@ import { useSearchParams } from "react-router-dom";
 
 function SearchPage() {
   let queryRef = React.useRef();
-  let [searchParams, setSearchParams] = useSearchParams({ q: "" });
+  let [searchParams, setSearchParams] = useSearchParams({
+    q: ""
+  });
   let query = searchParams.get("q");
 
   // Use the form's "submit" event to persist
@@ -39,7 +41,11 @@ function SearchPage() {
       <p>The current query is "{query}".</p>
 
       <form onSubmit={handleSubmit}>
-        <input name="q" defaultValue={query} ref={queryRef} />
+        <input
+          name="q"
+          defaultValue={query}
+          ref={queryRef}
+        />
       </form>
     </div>
   );
@@ -63,7 +69,10 @@ import qs from "query-string";
 // string here so we don't have to re-parse it every time the hook is used.
 function useQuery() {
   let location = useLocation();
-  return React.useMemo(() => qs.parse(location.search), [location.search]);
+  return React.useMemo(
+    () => qs.parse(location.search),
+    [location.search]
+  );
 }
 
 // Then, assuming a <SearchResults> element is rendered at a URL like

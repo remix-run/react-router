@@ -65,6 +65,37 @@ describe("useRoutes", () => {
       </h1>
     `);
   });
+
+  describe("warns", () => {
+    let consoleWarn: jest.SpyInstance;
+    beforeEach(() => {
+      consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      consoleWarn.mockRestore();
+    });
+
+    it("for no element on leaf route", () => {
+      let routes = [
+        {
+          path: "layout",
+          children: [{ path: "two", element: <h1>two</h1> }]
+        }
+      ];
+
+      createTestRenderer(
+        <MemoryRouter initialEntries={["/layout"]}>
+          <RoutesRenderer routes={routes} />
+        </MemoryRouter>
+      );
+
+      expect(consoleWarn).toHaveBeenCalledTimes(1);
+      expect(consoleWarn).toHaveBeenCalledWith(
+        expect.stringContaining(`Matched leaf route at location "/layout" does not have an element`)
+      );
+    });
+  });
 });
 
 function RoutesRenderer({

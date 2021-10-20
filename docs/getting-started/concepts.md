@@ -41,7 +41,7 @@ Here are some words we use a lot when we talk about React Router. The rest of th
 
 - <a id="segment">**Segment**</a> - The parts of a [URL] or [path pattern] between the `/` characters. For example, "/users/123" has two segments.
 
-- <a id="path-pattern">**Path Pattern**</a> - These look like [URLs][url] but can have special characters for matching URLs to routes, like **dynamic segments** (`"/users/:userId"`) or **star segments** (`"/docs/\*"`). They aren't URLs, they're patterns that React Router will match.
+- <a id="path-pattern">**Path Pattern**</a> - These look like [URLs][url] but can have special characters for matching URLs to routes, like **dynamic segments** (`"/users/:userId"`) or **star segments** (`"/docs/*"`). They aren't URLs, they're patterns that React Router will match.
 
 - <a id="dynamic-segment">**Dynamic Segment**</a> - A [segment] of a [path pattern] that is dynamic, meaning it can match any values in the [segment]. For example the pattern `/users/:userId` will match [URL]s like `/users/123`
 

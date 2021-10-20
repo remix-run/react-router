@@ -16,14 +16,23 @@ mean you can't use the router. Assuming you can actually use hooks (you're on
 React 16.8+), you just need a wrapper.
 
 ```js
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams
+} from "react-router-dom";
 
 function withRouter(Component) {
   function ComponentWithRouterProp(props) {
     let location = useLocation();
     let navigate = useNavigate();
     let params = useParams();
-    return <Component {...props} router={{ location, navigate, params }} />;
+    return (
+      <Component
+        {...props}
+        router={{ location, navigate, params }}
+      />
+    );
   }
 
   return ComponentWithRouterProp;
@@ -33,7 +42,7 @@ function withRouter(Component) {
 ## Why does `<Route>` have an `element` prop instead of `render` or `component`?
 
 We mentioned this [in the migration guide from v5 to
-v6](advanced-guides/migrating-5-to-6.md#advantages-of-route-element), but it's worth
+v6](../guides/migrating-5-to-6#advantages-of-route-element), but it's worth
 repeating here.
 
 In React Router v6 we switched from using v5's `<Route component>` and `<Route render>` APIs to `<Route element>`. Why is that?
@@ -125,7 +134,7 @@ function DeepComponent() {
 ```
 
 Another important reason for using the `element` prop in v6 is that `<Route children>` is reserved for nesting routes. You can read more about this in [the
-guide about getting started](installation/getting-started.md#nested-routes) with v6.
+guide about getting started](quick-start#nested-routes) with v6.
 
 ## How do I add a No Match (404) Route in react-router v6?
 

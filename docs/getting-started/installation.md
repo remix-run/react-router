@@ -110,7 +110,10 @@ function About() {
     <>
       <main>
         <h2>Who are we?</h2>
-        <p>That feels like an existential question, don't you think?</p>
+        <p>
+          That feels like an existential question, don't you
+          think?
+        </p>
       </main>
       <nav>
         <Link to="/">Home</Link>
@@ -165,7 +168,10 @@ In your `index.html`, create the root div in the document body above the script 
 
 ```html
 <body>
-  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <noscript
+    >You need to enable JavaScript to run this
+    app.</noscript
+  >
   <div id="root"></div>
   <script src="./index.js"></script>
 </body>
@@ -211,7 +217,10 @@ function About() {
     <>
       <main>
         <h2>Who are we?</h2>
-        <p>That feels like an existential question, don't you think?</p>
+        <p>
+          That feels like an existential question, don't you
+          think?
+        </p>
       </main>
       <nav>
         <Link to="/">Home</Link>
@@ -234,7 +243,11 @@ Setting up a new React project in webpack is a bit more involved than Parcel or 
 Once you have webpack configured and the necessary dependencies installed, somewhere in your code (probably towards the root of your React component tree) you can `import` the modules you need from `react-router-dom`.
 
 ```js
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route
+} from "react-router-dom";
 
 function App() {
   return (

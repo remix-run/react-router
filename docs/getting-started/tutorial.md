@@ -123,7 +123,12 @@ export default function App() {
   return (
     <div>
       <h1>Bookkeeper</h1>
-      <nav style={{ borderBottom: "solid 1px", paddingBottom: "1rem" }}>
+      <nav
+        style={{
+          borderBottom: "solid 1px",
+          paddingBottom: "1rem"
+        }}
+      >
         <Link to="/invoices">Invoices</Link> |{" "}
         <Link to="/expenses">Expenses</Link>
       </nav>
@@ -159,11 +164,15 @@ export default function Invoices() {
 }
 ```
 
-Finally, let's teach Reach Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx`.
+Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx`.
 
 ```tsx lines=[2,4-5,10-14] filename=src/main.jsx
 import { render } from "react-dom";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route
+} from "react-router-dom";
 import App from "./App";
 import Expenses from "./routes/expenses";
 import Invoices from "./routes/invoices";
@@ -198,7 +207,11 @@ First let's nest the routes. Right now the expenses and invoices routes are sibl
 
 ```jsx lines=[11-14] filename=src/main.jsx
 import { render } from "react-dom";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route
+} from "react-router-dom";
 import App from "./App";
 import Expenses from "./routes/expenses";
 import Invoices from "./routes/invoices";
@@ -231,7 +244,12 @@ export default function App() {
   return (
     <div>
       <h1>Bookkeeper</h1>
-      <nav style={{ borderBottom: "solid 1px", paddingBottom: "1rem" }}>
+      <nav
+        style={{
+          borderBottom: "solid 1px",
+          paddingBottom: "1rem"
+        }}
+      >
         <Link to="/invoices">Invoices</Link> |{" "}
         <Link to="/expenses">Expenses</Link>
       </nav>
@@ -300,11 +318,17 @@ export default function Invoices() {
   let invoices = getInvoices();
   return (
     <div style={{ display: "flex" }}>
-      <nav style={{ borderRight: "solid 1px", padding: "1rem" }}>
+      <nav
+        style={{
+          borderRight: "solid 1px",
+          padding: "1rem"
+        }}
+      >
         {invoices.map(invoice => (
           <Link
             style={{ display: "block", margin: "1rem 0" }}
             to={`/invoices/${invoice.number}`}
+            key={invoice.number}
           >
             {invoice.name}
           </Link>
@@ -330,7 +354,10 @@ Before we move on, it's good practice to always handle this "no match" case. Go 
   <Route path="/" element={<App />}>
     <Route path="expenses" element={<Expenses />} />
     <Route path="invoices" element={<Invoices />} />
-    <Route path="*" element={<p>There's nothing here!</p>} />
+    <Route
+      path="*"
+      element={<p>There's nothing here!</p>}
+    />
   </Route>
 </Routes>
 ```
@@ -360,7 +387,10 @@ Create a new `<Route>` _inside_ of the "invoices" route like this:
     <Route path="invoices" element={<Invoices />}>
       <Route path=":invoiceId" element={<Invoice />} />
     </Route>
-    <Route path="*" element={<p>There's nothing here!</p>} />
+    <Route
+      path="*"
+      element={<p>There's nothing here!</p>}
+    />
   </Route>
 </Routes>
 ```
@@ -382,11 +412,17 @@ export default function Invoices() {
   let invoices = getInvoices();
   return (
     <div style={{ display: "flex" }}>
-      <nav style={{ borderRight: "solid 1px", padding: "1rem" }}>
+      <nav
+        style={{
+          borderRight: "solid 1px",
+          padding: "1rem"
+        }}
+      >
         {invoices.map(invoice => (
           <Link
             style={{ display: "block", margin: "1rem 0" }}
             to={`/invoices/${invoice.number}`}
+            key={invoice.number}
           >
             {invoice.name}
           </Link>
@@ -425,7 +461,9 @@ export function getInvoices() {
 }
 
 export function getInvoice(number) {
-  return invoices.find(invoice => invoice.number === number);
+  return invoices.find(
+    invoice => invoice.number === number
+  );
 }
 ```
 
@@ -456,7 +494,7 @@ Note that we used `parseInt` around the param. It's very common for your data lo
 
 Index routes are possibly the most difficult concept in React Router for people to understand. So if you've struggled before, we hope this can clarify it for you.
 
-Right now you're probably looking at one of the invoices. Click on the "Invoices" link in the global nav of your app. Notice that the main content error goes blank! We can fix this with an "index" route.
+Right now you're probably looking at one of the invoices. Click on the "Invoices" link in the global nav of your app. Notice that the main content area goes blank! We can fix this with an "index" route.
 
 ```jsx filename=src/main.jsx lines=[5]
 <Routes>
@@ -466,7 +504,10 @@ Right now you're probably looking at one of the invoices. Click on the "Invoices
       <Route index element={<p>Select an invoice</p>} />
       <Route path=":invoiceId" element={<Invoice />} />
     </Route>
-    <Route path="*" element={<p>There's nothing here!</p>} />
+    <Route
+      path="*"
+      element={<p>There's nothing here!</p>}
+    />
   </Route>
 </Routes>
 ```
@@ -494,7 +535,12 @@ export default function Invoices() {
   let invoices = getInvoices();
   return (
     <div style={{ display: "flex" }}>
-      <nav style={{ borderRight: "solid 1px", padding: "1rem" }}>
+      <nav
+        style={{
+          borderRight: "solid 1px",
+          padding: "1rem"
+        }}
+      >
         {invoices.map(invoice => (
           <NavLink
             style={({ isActive }) => {
@@ -504,8 +550,8 @@ export default function Invoices() {
                 color: isActive ? "red" : ""
               };
             }}
-            key={invoice.number}
             to={`/invoices/${invoice.number}`}
+            key={invoice.number}
           >
             {invoice.name}
           </NavLink>
@@ -542,7 +588,11 @@ React Router makes it easy to read and manipulate the search params with `useSea
 Let's see it in action by adding a little filter on the invoices nav list.
 
 ```jsx filename=routes/invoices.jsx lines=[1,6,11-20,22-27]
-import { NavLink, Outlet, useSearchParams } from "react-router-dom";
+import {
+  NavLink,
+  Outlet,
+  useSearchParams
+} from "react-router-dom";
 import { getInvoices } from "../data";
 
 export default function Invoices() {
@@ -551,7 +601,12 @@ export default function Invoices() {
 
   return (
     <div style={{ display: "flex" }}>
-      <nav style={{ borderRight: "solid 1px", padding: "1rem" }}>
+      <nav
+        style={{
+          borderRight: "solid 1px",
+          padding: "1rem"
+        }}
+      >
         <input
           value={searchParams.get("filter") || ""}
           onChange={event => {
@@ -577,8 +632,8 @@ export default function Invoices() {
                 margin: "1rem 0",
                 color: isActive ? "red" : ""
               })}
-              key={invoice.number}
               to={`/invoices/${invoice.number}`}
+              key={invoice.number}
             >
               {invoice.name}
             </NavLink>
@@ -655,7 +710,8 @@ That's going to be active for `"/shoes?brand=nike"` as well as `"/shoes?brand=ni
 
 ```js
 let brands = params.getAll("brand");
-let isActive = brands.includes(brand) && brands.length === 1;
+let isActive =
+  brands.includes(brand) && brands.length === 1;
 // ...
 ```
 
@@ -689,7 +745,8 @@ function BrandLink({ brand, ...props }) {
   } else {
     params = new URLSearchParams(
       Array.from(params).filter(
-        ([key, value]) => key !== "brand" || value !== branch
+        ([key, value]) =>
+          key !== "brand" || value !== branch
       )
     );
   }
@@ -715,9 +772,11 @@ Let's add a button that marks the invoice as paid and then navigates to the inde
 
 First you can copy paste this function that deletes an invoice from our fake data store:
 
-```js filename="src/data.js"
+```js filename=src/data.js
 export function deleteInvoice(number) {
-  invoices = invoices.filter(invoice => invoice.number !== number);
+  invoices = invoices.filter(
+    invoice => invoice.number !== number
+  );
 }
 ```
 

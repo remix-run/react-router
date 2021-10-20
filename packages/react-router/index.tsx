@@ -211,8 +211,10 @@ export interface LayoutRouteProps {
 }
 
 export interface IndexRouteProps {
+  caseSensitive?: boolean;
   element?: React.ReactElement | null;
   index: true;
+  path?: string;
 }
 
 /**
@@ -631,6 +633,12 @@ export function useRoutes(
       parentRoute || matches != null,
       `No routes matched location "${location.pathname}${location.search}${location.hash}" `
     );
+
+    warning(
+      matches == null || matches[matches.length - 1].route.element != null,
+      `Matched leaf route at location "${location.pathname}${location.search}${location.hash}" does not have an element. ` +
+        `This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.`
+    );
   }
 
   return _renderMatches(
@@ -840,7 +848,7 @@ function flattenRoutes(
       return;
     }
 
-    branches.push({ path, score: computeScore(path), routesMeta });
+    branches.push({ path, score: computeScore(path, route.index), routesMeta });
   });
 
   return branches;
@@ -858,17 +866,22 @@ function rankRouteBranches(branches: RouteBranch[]): void {
 }
 
 const paramRe = /^:\w+$/;
-const dynamicSegmentValue = 2;
+const dynamicSegmentValue = 3;
+const indexRouteValue = 2;
 const emptySegmentValue = 1;
 const staticSegmentValue = 10;
 const splatPenalty = -2;
 const isSplat = (s: string) => s === "*";
 
-function computeScore(path: string): number {
+function computeScore(path: string, index: boolean | undefined): number {
   let segments = path.split("/");
   let initialScore = segments.length;
   if (segments.some(isSplat)) {
     initialScore += splatPenalty;
+  }
+
+  if (index) {
+    initialScore += indexRouteValue;
   }
 
   return segments

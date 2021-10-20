@@ -12,7 +12,12 @@ function pickPaths(
 }
 
 describe("matchRoutes", () => {
-  let usersRoute: RouteObject, userProfileRoute: RouteObject;
+  let usersRoute: RouteObject,
+    userProfileRoute: RouteObject,
+    indexWithPathRoute,
+    layoutRouteIndex,
+    layoutRoute;
+
   let routes = [
     { path: "/", element: <h1>Root Layout</h1> },
     {
@@ -23,6 +28,23 @@ describe("matchRoutes", () => {
         { path: "*", element: <h1>Not Found</h1> }
       ]
     },
+    (indexWithPathRoute = {
+      path: "/withpath",
+      index: true
+    }),
+    (layoutRoute = {
+      path: "/layout",
+      children: [
+        { path: "item", element: <h1>Item</h1> },
+        { path: ":id", element: <h1>ID</h1> },
+        { path: "*", element: <h1>Not Found</h1> }
+      ]
+    }),
+    (layoutRouteIndex = {
+      path: "/layout",
+      index: true,
+      element: <h1>Layout</h1>
+    }),
     (usersRoute = {
       path: "/users",
       element: <h1>Users</h1>,
@@ -39,7 +61,28 @@ describe("matchRoutes", () => {
     expect(pickPaths(routes, "/hometypo")).toEqual(["*"]);
   });
 
-  it("matches index routes correctly", () => {
+  it("matches index routes with path correctly", () => {
+    expect(pickPaths(routes, "/withpath")).toEqual(["/withpath"]);
+  });
+
+  it("matches index routes with path over layout", () => {
+    expect(matchRoutes(routes, "/layout")[0].route.index).toBe(true);
+    expect(pickPaths(routes, "/layout")).toEqual(["/layout"]);
+  });
+
+  it("matches static path over index", () => {
+    expect(pickPaths(routes, "/layout/item")).toEqual(["/layout", "item"]);
+  });
+
+  it("matches dynamic layout path with param over index", () => {
+    expect(pickPaths(routes, "/layout/id")).toEqual(["/layout", ":id"]);
+  });
+
+  it("matches dynamic layout path with splat over index", () => {
+    expect(pickPaths(routes, "/layout/id/more")).toEqual(["/layout", "*"]);
+  });
+
+  it("matches nested index routes correctly", () => {
     expect(pickPaths(routes, "/users")).toEqual(["/users", ""]);
   });
 
