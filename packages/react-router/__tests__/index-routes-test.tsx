@@ -1,6 +1,6 @@
 import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
-import { matchRoutes, MemoryRouter, Routes, Route, Outlet } from "react-router";
+import { matchRoutes, MemoryRouter, Routes, Route } from "react-router";
 
 describe("index route matching", () => {
   it("throws when the index route has children", () => {

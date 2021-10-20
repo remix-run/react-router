@@ -3,7 +3,7 @@
   "scripts": {
     "build": "rollup -c && tsc -b",
     "clean": "git clean -fdX .",
-    "lint": "eslint .",
+    "lint": "eslint --cache .",
     "format": "prettier --ignore-path .eslintignore --write .",
     "publish": "node ./scripts/publish.js",
     "size": "filesize",
