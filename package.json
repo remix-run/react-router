@@ -4,7 +4,7 @@
     "build": "rollup -c && tsc -b",
     "clean": "git clean -fdX .",
     "lint": "eslint .",
-    "format": "prettier --ignore-file .eslintignore --write .",
+    "format": "prettier --ignore-path .eslintignore --write .",
     "publish": "node ./scripts/publish.js",
     "size": "filesize",
     "test": "jest",
