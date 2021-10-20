@@ -358,16 +358,18 @@ export function useHref(to: To): string {
   let { basename, navigator } = React.useContext(NavigationContext);
   let path = useResolvedPath(to);
 
-  if (basename !== "/" && !path.pathname.startsWith(basename)) {
-    let toPathname = getToPathname(to);
-    let endsWithSlash = toPathname != null && toPathname.endsWith("/");
-    path.pathname =
-      path.pathname === "/"
-        ? basename + (endsWithSlash ? "/" : "")
-        : joinPaths([basename, path.pathname]);
-  }
+  return React.useMemo(() => {
+    if (basename !== "/") {
+      let toPathname = getToPathname(to);
+      let endsWithSlash = toPathname != null && toPathname.endsWith("/");
+      path.pathname =
+        path.pathname === "/"
+          ? basename + (endsWithSlash ? "/" : "")
+          : joinPaths([basename, path.pathname]);
+    }
 
-  return navigator.createHref(path);
+    return navigator.createHref(path);
+  }, [path]);
 }
 
 /**
