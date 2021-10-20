@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Routes, Route, Outlet, Link, useSearchParams } from "react-router-dom";
+import { Routes, Route, Link, useSearchParams } from "react-router-dom";
 import * as JSURL from "jsurl";
 
 export default function App() {
@@ -23,7 +23,6 @@ function useQuery(): [
     return {
       get(key: string) {
         let searchValue = search.get(key);
-        // if (!searchValue) return null;
         return JSURL.parse(searchValue);
       }
     };
