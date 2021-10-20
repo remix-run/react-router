@@ -5,239 +5,239 @@ import { Router, Routes, Route, Link } from "react-router-dom";
 import type { History } from "history";
 
 function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit): void {
-	anchor.dispatchEvent(
-		new MouseEvent("click", {
-			view: window,
-			bubbles: true,
-			cancelable: true,
-			...eventInit
-		})
-	);
+  anchor.dispatchEvent(
+    new MouseEvent("click", {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+      ...eventInit
+    })
+  );
 }
 
 function createHref({ pathname = "/", search = "", hash = "" }): string {
-	return pathname + search + hash;
+  return pathname + search + hash;
 }
 
 function createMockHistory({ pathname = "/", search = "", hash = "" }) {
-	let location: Partial<History["location"]> = { pathname, search, hash };
-	return {
-		action: "POP",
-		location,
-		createHref,
-		push() {},
-		replace() {},
-		go() {},
-		back() {},
-		forward() {},
-		listen() {
-			return () => {};
-		}
-	} as Omit<History, "block">;
+  let location: Partial<History["location"]> = { pathname, search, hash };
+  return {
+    action: "POP",
+    location,
+    createHref,
+    push() {},
+    replace() {},
+    go() {},
+    back() {},
+    forward() {},
+    listen() {
+      return () => {};
+    }
+  } as Omit<History, "block">;
 }
 
 describe("Link push and replace", () => {
-	let node: HTMLDivElement;
-	beforeEach(() => {
-		node = document.createElement("div");
-		document.body.appendChild(node);
-	});
+  let node: HTMLDivElement;
+  beforeEach(() => {
+    node = document.createElement("div");
+    document.body.appendChild(node);
+  });
 
-	afterEach(() => {
-		document.body.removeChild(node);
-		node = null!;
-	});
+  afterEach(() => {
+    document.body.removeChild(node);
+    node = null!;
+  });
 
-	describe("to a different pathname, when it is clicked", () => {
-		it("performs a push", () => {
-			function Home() {
-				return (
-					<div>
-						<h1>Home</h1>
-						<Link to="../about">About</Link>
-					</div>
-				);
-			}
+  describe("to a different pathname, when it is clicked", () => {
+    it("performs a push", () => {
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to="../about">About</Link>
+          </div>
+        );
+      }
 
-			let history = createMockHistory({ pathname: "/home" });
-			let spy = jest.spyOn(history, "push");
+      let history = createMockHistory({ pathname: "/home" });
+      let spy = jest.spyOn(history, "push");
 
-			act(() => {
-				ReactDOM.render(
-					<Router
-						action={history.action}
-						location={history.location}
-						navigator={history}
-					>
-						<Routes>
-							<Route path="home" element={<Home />} />
-						</Routes>
-					</Router>,
-					node
-				);
-			});
+      act(() => {
+        ReactDOM.render(
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
+            <Routes>
+              <Route path="home" element={<Home />} />
+            </Routes>
+          </Router>,
+          node
+        );
+      });
 
-			let anchor = node.querySelector("a");
-			expect(anchor).not.toBeNull();
+      let anchor = node.querySelector("a");
+      expect(anchor).not.toBeNull();
 
-			act(() => {
-				click(anchor);
-			});
+      act(() => {
+        click(anchor);
+      });
 
-			expect(spy).toHaveBeenCalledWith(
-				expect.objectContaining({
-					pathname: "/about",
-					search: "",
-					hash: ""
-				}),
-				undefined
-			);
-		});
-	});
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pathname: "/about",
+          search: "",
+          hash: ""
+        }),
+        undefined
+      );
+    });
+  });
 
-	describe("to a different search string, when it is clicked", () => {
-		it("performs a push (with the existing pathname)", () => {
-			function Home() {
-				return (
-					<div>
-						<h1>Home</h1>
-						<Link to="?name=michael">Michael</Link>
-					</div>
-				);
-			}
+  describe("to a different search string, when it is clicked", () => {
+    it("performs a push (with the existing pathname)", () => {
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to="?name=michael">Michael</Link>
+          </div>
+        );
+      }
 
-			let history = createMockHistory({ pathname: "/home" });
-			let spy = jest.spyOn(history, "push");
+      let history = createMockHistory({ pathname: "/home" });
+      let spy = jest.spyOn(history, "push");
 
-			act(() => {
-				ReactDOM.render(
-					<Router
-						action={history.action}
-						location={history.location}
-						navigator={history}
-					>
-						<Routes>
-							<Route path="home" element={<Home />} />
-						</Routes>
-					</Router>,
-					node
-				);
-			});
+      act(() => {
+        ReactDOM.render(
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
+            <Routes>
+              <Route path="home" element={<Home />} />
+            </Routes>
+          </Router>,
+          node
+        );
+      });
 
-			let anchor = node.querySelector("a");
-			expect(anchor).not.toBeNull();
+      let anchor = node.querySelector("a");
+      expect(anchor).not.toBeNull();
 
-			act(() => {
-				click(anchor);
-			});
+      act(() => {
+        click(anchor);
+      });
 
-			expect(spy).toHaveBeenCalledWith(
-				expect.objectContaining({
-					pathname: "/home",
-					search: "?name=michael",
-					hash: ""
-				}),
-				undefined
-			);
-		});
-	});
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pathname: "/home",
+          search: "?name=michael",
+          hash: ""
+        }),
+        undefined
+      );
+    });
+  });
 
-	describe("to a different hash, when it is clicked", () => {
-		it("performs a push (with the existing pathname)", () => {
-			function Home() {
-				return (
-					<div>
-						<h1>Home</h1>
-						<Link to="#bio">Bio</Link>
-					</div>
-				);
-			}
+  describe("to a different hash, when it is clicked", () => {
+    it("performs a push (with the existing pathname)", () => {
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to="#bio">Bio</Link>
+          </div>
+        );
+      }
 
-			let history = createMockHistory({ pathname: "/home" });
-			let spy = jest.spyOn(history, "push");
+      let history = createMockHistory({ pathname: "/home" });
+      let spy = jest.spyOn(history, "push");
 
-			act(() => {
-				ReactDOM.render(
-					<Router
-						action={history.action}
-						location={history.location}
-						navigator={history}
-					>
-						<Routes>
-							<Route path="home" element={<Home />} />
-						</Routes>
-					</Router>,
-					node
-				);
-			});
+      act(() => {
+        ReactDOM.render(
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
+            <Routes>
+              <Route path="home" element={<Home />} />
+            </Routes>
+          </Router>,
+          node
+        );
+      });
 
-			let anchor = node.querySelector("a");
-			expect(anchor).not.toBeNull();
+      let anchor = node.querySelector("a");
+      expect(anchor).not.toBeNull();
 
-			act(() => {
-				click(anchor);
-			});
+      act(() => {
+        click(anchor);
+      });
 
-			expect(spy).toHaveBeenCalledWith(
-				expect.objectContaining({
-					pathname: "/home",
-					search: "",
-					hash: "#bio"
-				}),
-				undefined
-			);
-		});
-	});
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pathname: "/home",
+          search: "",
+          hash: "#bio"
+        }),
+        undefined
+      );
+    });
+  });
 
-	describe("to the same page, when it is clicked", () => {
-		it("performs a replace", () => {
-			function Home() {
-				return (
-					<div>
-						<h1>Home</h1>
-						<Link to=".">Home</Link>
-					</div>
-				);
-			}
+  describe("to the same page, when it is clicked", () => {
+    it("performs a replace", () => {
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to=".">Home</Link>
+          </div>
+        );
+      }
 
-			function About() {
-				return <h1>About</h1>;
-			}
+      function About() {
+        return <h1>About</h1>;
+      }
 
-			let history = createMockHistory({ pathname: "/home" });
-			let spy = jest.spyOn(history, "replace");
+      let history = createMockHistory({ pathname: "/home" });
+      let spy = jest.spyOn(history, "replace");
 
-			act(() => {
-				ReactDOM.render(
-					<Router
-						action={history.action}
-						location={history.location}
-						navigator={history}
-					>
-						<Routes>
-							<Route path="home" element={<Home />} />
-							<Route path="about" element={<About />} />
-						</Routes>
-					</Router>,
-					node
-				);
-			});
+      act(() => {
+        ReactDOM.render(
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
+            <Routes>
+              <Route path="home" element={<Home />} />
+              <Route path="about" element={<About />} />
+            </Routes>
+          </Router>,
+          node
+        );
+      });
 
-			let anchor = node.querySelector("a");
-			expect(anchor).not.toBeNull();
+      let anchor = node.querySelector("a");
+      expect(anchor).not.toBeNull();
 
-			act(() => {
-				click(anchor);
-			});
+      act(() => {
+        click(anchor);
+      });
 
-			expect(spy).toHaveBeenCalledWith(
-				expect.objectContaining({
-					pathname: "/home",
-					search: "",
-					hash: ""
-				}),
-				undefined
-			);
-		});
-	});
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pathname: "/home",
+          search: "",
+          hash: ""
+        }),
+        undefined
+      );
+    });
+  });
 });

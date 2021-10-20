@@ -84,36 +84,36 @@ In @reach/router v1.3 we added hooks to access route data in preparation for Rea
 ```jsx
 // @reach/router v1.2
 <Router>
-	<User path="users/:userId/grades/:assignmentId" />
+  <User path="users/:userId/grades/:assignmentId" />
 </Router>;
 
 function User(props) {
-	let {
-		// route params were accessed from props
-		userId,
-		assignmentId,
+  let {
+    // route params were accessed from props
+    userId,
+    assignmentId,
 
-		// as well as location and navigate
-		location,
-		navigate
-	} = props;
+    // as well as location and navigate
+    location,
+    navigate
+  } = props;
 
-	// ...
+  // ...
 }
 
 // @reach/router v1.3 and React Router v6
 import {
-	useParams,
-	useLocation,
-	useNavigate
+  useParams,
+  useLocation,
+  useNavigate
 } from "@reach/router";
 
 function User() {
-	// everything comes from a specific hook now
-	let { userId, assignmentId } = useParams();
-	let location = useLocation();
-	let navigate = useNavigate();
-	// ...
+  // everything comes from a specific hook now
+  let { userId, assignmentId } = useParams();
+  let location = useLocation();
+  let navigate = useNavigate();
+  // ...
 }
 ```
 
@@ -141,10 +141,10 @@ ReactDOM.render(<App />, el);
 import { LocationProvider } from "@reach/router";
 
 ReactDOM.render(
-	<LocationProvider>
-		<App />
-	</LocationProvider>,
-	el
+  <LocationProvider>
+    <App />
+  </LocationProvider>,
+  el
 );
 ```
 
@@ -173,20 +173,20 @@ npm install react-router@next
 import { LocationProvider } from "@reach/router";
 
 ReactDOM.render(
-	<LocationProvider>
-		<App />
-	</LocationProvider>,
-	el
+  <LocationProvider>
+    <App />
+  </LocationProvider>,
+  el
 );
 
 // React Router v6
 import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.render(
-	<BrowserRouter>
-		<App />
-	</BrowserRouter>,
-	el
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+  el
 );
 ```
 
@@ -199,16 +199,16 @@ You may have more than one, but usually there's just one somewhere near the top 
 import { Router } from "@reach/router";
 
 <Router>
-	<Home path="/" />
-	{/* ... */}
+  <Home path="/" />
+  {/* ... */}
 </Router>;
 
 // React Router v6
 import { Routes } from "react-router-dom";
 
 <Routes>
-	<Home path="/" />
-	{/* ... */}
+  <Home path="/" />
+  {/* ... */}
 </Routes>;
 ```
 
@@ -240,9 +240,9 @@ Don't confuse redirects with navigating while the user interacts with your app. 
 
 ```jsx
 <Router>
-	<Home path="/" />
-	<Users path="/events" />
-	<Redirect from="/dashboard" to="/events" />
+  <Home path="/" />
+  <Users path="/events" />
+  <Redirect from="/dashboard" to="/events" />
 </Router>
 ```
 
@@ -259,9 +259,9 @@ We use firebase hosting a lot, so as an example here's how we'd update one of ou
 ```jsx
 // @reach/router
 <Router>
-	<Home path="/" />
-	<Users path="/events" />
-	<Redirect from="/dashboard" to="/events" />
+  <Home path="/" />
+  <Users path="/events" />
+  <Redirect from="/dashboard" to="/events" />
 </Router>
 ```
 
@@ -297,18 +297,18 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Redirect({ to }) {
-	let navigate = useNavigate();
-	useEffect(() => {
-		navigate(to);
-	});
-	return null;
+  let navigate = useNavigate();
+  useEffect(() => {
+    navigate(to);
+  });
+  return null;
 }
 
 // usage
 <Routes>
-	<Home path="/" />
-	<Users path="/events" />
-	<Redirect path="/dashboard" to="/events" />
+  <Home path="/" />
+  <Users path="/events" />
+  <Redirect path="/dashboard" to="/events" />
 </Routes>;
 ```
 
@@ -323,31 +323,31 @@ This prop getter was useful for styling links as "active". Deciding if a link is
 ```jsx
 // @reach/router
 function SomeCustomLink() {
-	return (
-		<Link
-			to="/some/where/cool"
-			getProps={obj => {
-				let {
-					isCurrent,
-					isPartiallyCurrent,
-					href,
-					location
-				} = obj;
-				// do what you will
-			}}
-		/>
-	);
+  return (
+    <Link
+      to="/some/where/cool"
+      getProps={obj => {
+        let {
+          isCurrent,
+          isPartiallyCurrent,
+          href,
+          location
+        } = obj;
+        // do what you will
+      }}
+    />
+  );
 }
 
 // React Router
 import { useLocation, useMatch } from "react-router-dom";
 
 function SomeCustomLink() {
-	let to = "/some/where/cool";
-	let match = useMatch(to);
-	let { isExact } = useMatch(to);
-	let location = useLocation();
-	return <Link to={to} />;
+  let to = "/some/where/cool";
+  let match = useMatch(to);
+  let { isExact } = useMatch(to);
+  let location = useLocation();
+  return <Link to={to} />;
 }
 ```
 
@@ -358,47 +358,47 @@ Let's look at some less general examples.
 
 // @reach/router
 function ExactNavLink(props) {
-	const isActive = ({ isCurrent }) => {
-		return isCurrent ? { className: "active" } : {};
-	};
-	return <Link getProps={isActive} {...props} />;
+  const isActive = ({ isCurrent }) => {
+    return isCurrent ? { className: "active" } : {};
+  };
+  return <Link getProps={isActive} {...props} />;
 }
 
 // React Router v6
 function ExactNavLink(props) {
-	return (
-		<Link
-			// If you only need the active state for styling without
-			// overriding the default isActive state, we provide it as
-			// a named argument in a function that can be passed to
-			// either `className` or `style` props
-			className={({ isActive }) =>
-				isActive ? "active" : ""
-			}
-			{...props}
-		/>
-	);
+  return (
+    <Link
+      // If you only need the active state for styling without
+      // overriding the default isActive state, we provide it as
+      // a named argument in a function that can be passed to
+      // either `className` or `style` props
+      className={({ isActive }) =>
+        isActive ? "active" : ""
+      }
+      {...props}
+    />
+  );
 }
 
 // A link that is active when itself or deeper routes are current
 
 // @reach/router
 function PartialNavLink(props) {
-	const isPartiallyActive = ({ isPartiallyCurrent }) => {
-		return isPartiallyCurrent
-			? { className: "active" }
-			: {};
-	};
-	return <Link getProps={isPartiallyActive} {...props} />;
+  const isPartiallyActive = ({ isPartiallyCurrent }) => {
+    return isPartiallyCurrent
+      ? { className: "active" }
+      : {};
+  };
+  return <Link getProps={isPartiallyActive} {...props} />;
 }
 
 // React Router v6
 function PartialNavLink(props) {
-	// add the wild card to match deeper urls
-	let match = useMatch(props.to + "/*");
-	return (
-		<Link className={match ? "active" : ""} {...props} />
-	);
+  // add the wild card to match deeper urls
+  let match = useMatch(props.to + "/*");
+  return (
+    <Link className={match ? "active" : ""} {...props} />
+  );
 }
 ```
 
@@ -408,13 +408,13 @@ function PartialNavLink(props) {
 
 ```jsx
 function RecentPostsLink(props) {
-	let match = useMatch("/posts");
-	let location = useLocation();
-	let isActive =
-		match && location.search === "?view=recent";
-	return (
-		<Link className={isActive ? "active" : ""}>Recent</Link>
-	);
+  let match = useMatch("/posts");
+  let location = useLocation();
+  let isActive =
+    match && location.search === "?view=recent";
+  return (
+    <Link className={isActive ? "active" : ""}>Recent</Link>
+  );
 }
 ```
 
@@ -425,20 +425,20 @@ The signature of `useMatch` is slightly different in React Router v6.
 ```jsx
 // @reach/router
 let {
-	uri,
-	path,
+  uri,
+  path,
 
-	// params are merged into the object with uri and path
-	eventId
+  // params are merged into the object with uri and path
+  eventId
 } = useMatch("/events/:eventId");
 
 // React Router v6
 let {
-	url,
-	path,
+  url,
+  path,
 
-	// params get their own key on the match
-	params: { eventId }
+  // params get their own key on the match
+  params: { eventId }
 } = useMatch("/events/:eventId");
 ```
 
@@ -458,10 +458,10 @@ If you like it, or just don't want to update your code, it's easy to backport:
 
 ```jsx
 function Match({ path, children }) {
-	let match = useMatch(path);
-	let location = useLocation();
-	let navigate = useNavigate();
-	return children({ match, location, navigate });
+  let match = useMatch(path);
+  let location = useLocation();
+  let navigate = useNavigate();
+  return children({ match, location, navigate });
 }
 ```
 
@@ -478,12 +478,12 @@ Really simple rename here:
 import { ServerLocation } from "@reach/router";
 
 createServer((req, res) => {
-	let markup = ReactDOMServer.renderToString(
-		<ServerLocation url={req.url}>
-			<App />
-		</ServerLocation>
-	);
-	req.send(markup);
+  let markup = ReactDOMServer.renderToString(
+    <ServerLocation url={req.url}>
+      <App />
+    </ServerLocation>
+  );
+  req.send(markup);
 });
 
 // React Router v6
@@ -491,12 +491,12 @@ createServer((req, res) => {
 import { StaticRouter } from "react-router-dom/server";
 
 createServer((req, res) => {
-	let markup = ReactDOMServer.renderToString(
-		<StaticRouter location={req.url}>
-			<App />
-		</StaticRouter>
-	);
-	req.send(markup);
+  let markup = ReactDOMServer.renderToString(
+    <StaticRouter location={req.url}>
+      <App />
+    </StaticRouter>
+  );
+  req.send(markup);
 });
 ```
 

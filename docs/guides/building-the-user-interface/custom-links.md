@@ -7,46 +7,46 @@ In most cases, the exported `<Link>` and `<NavLink>` components should meet all 
 
 ```tsx
 import {
-	useHref,
-	useLinkClickHandler
+  useHref,
+  useLinkClickHandler
 } from "react-router-dom";
 
 const StyledLink = styled("a", { color: "fuschia" });
 
 const Link = React.forwardRef(
-	(
-		{
-			onClick,
-			replace = false,
-			state,
-			target,
-			to,
-			...rest
-		},
-		ref
-	) => {
-		let href = useHref(to);
-		let handleClick = useLinkClickHandler(to, {
-			replace,
-			state,
-			target
-		});
+  (
+    {
+      onClick,
+      replace = false,
+      state,
+      target,
+      to,
+      ...rest
+    },
+    ref
+  ) => {
+    let href = useHref(to);
+    let handleClick = useLinkClickHandler(to, {
+      replace,
+      state,
+      target
+    });
 
-		return (
-			<StyledLink
-				{...rest}
-				href={href}
-				onClick={event => {
-					onClick?.(event);
-					if (!event.defaultPrevented) {
-						handleClick(event);
-					}
-				}}
-				ref={ref}
-				target={target}
-			/>
-		);
-	}
+    return (
+      <StyledLink
+        {...rest}
+        href={href}
+        onClick={event => {
+          onClick?.(event);
+          if (!event.defaultPrevented) {
+            handleClick(event);
+          }
+        }}
+        ref={ref}
+        target={target}
+      />
+    );
+  }
 );
 ```
 
@@ -57,28 +57,28 @@ import { TouchableHighlight } from "react-native";
 import { useLinkPressHandler } from "react-router-native";
 
 function Link({
-	onPress,
-	replace = false,
-	state,
-	to,
-	...rest
+  onPress,
+  replace = false,
+  state,
+  to,
+  ...rest
 }) {
-	let handlePress = useLinkPressHandler(to, {
-		replace,
-		state
-	});
+  let handlePress = useLinkPressHandler(to, {
+    replace,
+    state
+  });
 
-	return (
-		<TouchableHighlight
-			{...rest}
-			onPress={event => {
-				onPress?.(event);
-				if (!event.defaultPrevented) {
-					handlePress(event);
-				}
-			}}
-		/>
-	);
+  return (
+    <TouchableHighlight
+      {...rest}
+      onPress={event => {
+        onPress?.(event);
+        if (!event.defaultPrevented) {
+          handlePress(event);
+        }
+      }}
+    />
+  );
 }
 ```
 
@@ -93,19 +93,19 @@ import * as React from "react";
 import { Link as BaseLink } from "react-router-dom";
 
 const Link = React.forwardRef(
-	({ to, replace, state, ...props }, ref) => {
-		return typeof to === "string" && isExternalURL(to) ? (
-			<a {...props} href={to} ref={ref} />
-		) : (
-			<BaseLink
-				{...props}
-				to={to}
-				replace={replace}
-				state={state}
-				ref={ref}
-			/>
-		);
-	}
+  ({ to, replace, state, ...props }, ref) => {
+    return typeof to === "string" && isExternalURL(to) ? (
+      <a {...props} href={to} ref={ref} />
+    ) : (
+      <BaseLink
+        {...props}
+        to={to}
+        replace={replace}
+        state={state}
+        ref={ref}
+      />
+    );
+  }
 );
 ```
 

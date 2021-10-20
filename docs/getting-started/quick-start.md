@@ -27,19 +27,19 @@ import { BrowserRouter } from "react-router-dom";
 // import your route components too
 
 render(
-	<BrowserRouter>
-		<Routes>
-			<Route path="/" element={<App />}>
-				<Route index element={<Home />} />
-				<Route path="teams" element={<Teams />}>
-					<Route path=":teamId" element={<Team />} />
-					<Route path="new" element={<NewTeamForm />} />
-					<Route index element={<LeagueStandings />} />
-				</Route>
-			</Route>
-		</Routes>
-	</BrowserRouter>,
-	document.getElementById("root")
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />}>
+        <Route index element={<Home />} />
+        <Route path="teams" element={<Teams />}>
+          <Route path=":teamId" element={<Team />} />
+          <Route path="new" element={<NewTeamForm />} />
+          <Route index element={<LeagueStandings />} />
+        </Route>
+      </Route>
+    </Routes>
+  </BrowserRouter>,
+  document.getElementById("root")
 );
 ```
 
@@ -60,15 +60,15 @@ Use `Link` to let the user change the URL or `useNavigate` to do it yourself (li
 import { Link } from "react-router-dom";
 
 function Home() {
-	return (
-		<div>
-			<h1>Home</h1>
-			<nav>
-				<Link to="/">Home</Link> |{" "}
-				<Link to="about">About</Link>
-			</nav>
-		</div>
-	);
+  return (
+    <div>
+      <h1>Home</h1>
+      <nav>
+        <Link to="/">Home</Link> |{" "}
+        <Link to="about">About</Link>
+      </nav>
+    </div>
+  );
 }
 ```
 
@@ -76,19 +76,19 @@ function Home() {
 import { useNavigate } from "react-router-dom";
 
 function Invoices() {
-	let navigate = useNavigate();
-	return (
-		<div>
-			<NewInvoiceForm
-				onSubmit={async event => {
-					let newInvoice = await createInvoice(
-						event.target
-					);
-					navigate(`/invoices/${newInvoice.id}`);
-				}}
-			/>
-		</div>
-	);
+  let navigate = useNavigate();
+  return (
+    <div>
+      <NewInvoiceForm
+        onSubmit={async event => {
+          let newInvoice = await createInvoice(
+            event.target
+          );
+          navigate(`/invoices/${newInvoice.id}`);
+        }}
+      />
+    </div>
+  );
 }
 ```
 
@@ -100,19 +100,19 @@ Use `:style` syntax in your route path and `useParams()` to read them:
 import { Routes, Route, useParams } from "react-router-dom";
 
 function App() {
-	return (
-		<Routes>
-			<Route
-				path="invoices/:invoiceId"
-				element={<Invoice />}
-			/>
-		</Routes>
-	);
+  return (
+    <Routes>
+      <Route
+        path="invoices/:invoiceId"
+        element={<Invoice />}
+      />
+    </Routes>
+  );
 }
 
 function Invoice() {
-	let params = useParams();
-	return <h1>Invoice {params.invoiceId}</h1>;
+  let params = useParams();
+  return <h1>Invoice {params.invoiceId}</h1>;
 }
 ```
 
@@ -122,15 +122,15 @@ A very common use-case is fetching data when the component renders:
 
 ```tsx
 function Invoice() {
-	let { invoiceId } = useParams();
-	let invoice = useFakeFetch(`/api/invoices/${invoiceId}`);
-	return invoice ? (
-		<div>
-			<h1>{invoice.customerName}</h1>
-		</div>
-	) : (
-		<Loading />
-	);
+  let { invoiceId } = useParams();
+  let invoice = useFakeFetch(`/api/invoices/${invoiceId}`);
+  return invoice ? (
+    <div>
+      <h1>{invoice.customerName}</h1>
+    </div>
+  ) : (
+    <Loading />
+  );
 }
 ```
 
@@ -142,17 +142,17 @@ Routes can be nested inside one another, and their paths will nest too (child in
 
 ```tsx
 function App() {
-	return (
-		<Routes>
-			<Route path="invoices" element={<Invoices />}>
-				<Route
-					path=":invoiceId"
-					element={<IndividualInvoice />}
-				/>
-				<Route path="sent" element={<SentInvoices />} />
-			</Route>
-		</Routes>
-	);
+  return (
+    <Routes>
+      <Route path="invoices" element={<Invoices />}>
+        <Route
+          path=":invoiceId"
+          element={<IndividualInvoice />}
+        />
+        <Route path="sent" element={<SentInvoices />} />
+      </Route>
+    </Routes>
+  );
 }
 ```
 
@@ -166,9 +166,9 @@ When the URL is `"/invoices/sent"` the component tree will be:
 
 ```tsx
 <App>
-	<Invoices>
-		<SentInvoices />
-	</Invoices>
+  <Invoices>
+    <SentInvoices />
+  </Invoices>
 </App>
 ```
 
@@ -176,9 +176,9 @@ When the URL is `"/invoices/123"`, the component tree will:
 
 ```tsx
 <App>
-	<Invoices>
-		<Invoice />
-	</Invoices>
+  <Invoices>
+    <Invoice />
+  </Invoices>
 </App>
 ```
 
@@ -188,32 +188,32 @@ Notice the inner component that changed with the URL (`<SentInvoices>` and `<Inv
 import { Routes, Route, Outlet } from "react-router-dom";
 
 function App() {
-	return (
-		<Routes>
-			<Route path="invoices" element={<Invoices />}>
-				<Route path=":invoiceId" element={<Invoice />} />
-				<Route path="sent" element={<SentInvoices />} />
-			</Route>
-		</Routes>
-	);
+  return (
+    <Routes>
+      <Route path="invoices" element={<Invoices />}>
+        <Route path=":invoiceId" element={<Invoice />} />
+        <Route path="sent" element={<SentInvoices />} />
+      </Route>
+    </Routes>
+  );
 }
 
 function Invoices() {
-	return (
-		<div>
-			<h1>Invoices</h1>
-			<Outlet />
-		</div>
-	);
+  return (
+    <div>
+      <h1>Invoices</h1>
+      <Outlet />
+    </div>
+  );
 }
 
 function Invoice() {
-	let { invoiceId } = useParams();
-	return <h1>Invoice {invoiceId}</h1>;
+  let { invoiceId } = useParams();
+  return <h1>Invoice {invoiceId}</h1>;
 }
 
 function SentInvoices() {
-	return <h1>Sent Invoices</h1>;
+  return <h1>Sent Invoices</h1>;
 }
 ```
 
@@ -223,44 +223,44 @@ Here's a another example of a root layout with navigation that persists while th
 
 ```tsx
 import {
-	Routes,
-	Route,
-	Link,
-	Outlet
+  Routes,
+  Route,
+  Link,
+  Outlet
 } from "react-router-dom";
 
 function App() {
-	return (
-		<Routes>
-			<Route path="/" element={<Layout />}>
-				<Route path="invoices" element={<Invoices />} />
-				<Route path="dashboard" element={<Dashboard />} />
-			</Route>
-		</Routes>
-	);
+  return (
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="dashboard" element={<Dashboard />} />
+      </Route>
+    </Routes>
+  );
 }
 
 function Layout() {
-	return (
-		<div>
-			<h1>Welcome to the app!</h1>
-			<nav>
-				<Link to="invoices">Invoices</Link> |{" "}
-				<Link to="dashboard">Dashboard</Link>
-			</nav>
-			<div className="content">
-				<Outlet />
-			</div>
-		</div>
-	);
+  return (
+    <div>
+      <h1>Welcome to the app!</h1>
+      <nav>
+        <Link to="invoices">Invoices</Link> |{" "}
+        <Link to="dashboard">Dashboard</Link>
+      </nav>
+      <div className="content">
+        <Outlet />
+      </div>
+    </div>
+  );
 }
 
 function Invoices() {
-	return <h1>Invoices</h1>;
+  return <h1>Invoices</h1>;
 }
 
 function Dashboard() {
-	return <h1>Dashboard</h1>;
+  return <h1>Dashboard</h1>;
 }
 ```
 
@@ -272,25 +272,25 @@ Consider this example:
 
 ```tsx
 function App() {
-	return (
-		<Routes>
-			<Route path="/" element={<Layout />}>
-				<Route path="invoices" element={<Invoices />} />
-				<Route path="activity" element={<Activity />} />
-			</Route>
-		</Routes>
-	);
+  return (
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="activity" element={<Activity />} />
+      </Route>
+    </Routes>
+  );
 }
 
 function Layout() {
-	return (
-		<div>
-			<GlobalNav />
-			<main>
-				<Outlet />
-			</main>
-		</div>
-	);
+  return (
+    <div>
+      <GlobalNav />
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  );
 }
 ```
 
@@ -316,18 +316,18 @@ You can have an index route at any level of the route hierarchy that will render
 
 ```tsx
 function App() {
-	return (
-		<Routes>
-			<Route index element={<Home />} />
-			<Route path="dashboard" element={<Dashboard />}>
-				<Route index element={<DashboardHome />} />
-				<Route
-					path="invoices"
-					element={<DashboardInvoices />}
-				/>
-			</Route>
-		</Routes>
-	);
+  return (
+    <Routes>
+      <Route index element={<Home />} />
+      <Route path="dashboard" element={<Dashboard />}>
+        <Route index element={<DashboardHome />} />
+        <Route
+          path="invoices"
+          element={<DashboardInvoices />}
+        />
+      </Route>
+    </Routes>
+  );
 }
 ```
 
@@ -337,48 +337,48 @@ Relative `<Link to>` values (that do not begin with a `/`) are relative to the p
 
 ```tsx
 import {
-	Routes,
-	Route,
-	Link,
-	Outlet
+  Routes,
+  Route,
+  Link,
+  Outlet
 } from "react-router-dom";
 
 function Home() {
-	return <h1>Home</h1>;
+  return <h1>Home</h1>;
 }
 
 function Dashboard() {
-	return (
-		<div>
-			<h1>Dashboard</h1>
-			<nav>
-				<Link to="invoices">Invoices</Link>{" "}
-				<Link to="team">Team</Link>
-			</nav>
-			<hr />
-			<Outlet />
-		</div>
-	);
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <nav>
+        <Link to="invoices">Invoices</Link>{" "}
+        <Link to="team">Team</Link>
+      </nav>
+      <hr />
+      <Outlet />
+    </div>
+  );
 }
 
 function Invoices() {
-	return <h1>Invoices</h1>;
+  return <h1>Invoices</h1>;
 }
 
 function Team() {
-	return <h1>Team</h1>;
+  return <h1>Team</h1>;
 }
 
 function App() {
-	return (
-		<Routes>
-			<Route path="/" element={<Home />} />
-			<Route path="dashboard" element={<Dashboard />}>
-				<Route path="invoices" element={<Invoices />} />
-				<Route path="team" element={<Team />} />
-			</Route>
-		</Routes>
-	);
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="dashboard" element={<Dashboard />}>
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="team" element={<Team />} />
+      </Route>
+    </Routes>
+  );
 }
 ```
 
@@ -388,13 +388,13 @@ When no other route matches the URL, you can render a "not found" route using `p
 
 ```tsx
 function App() {
-	return (
-		<Routes>
-			<Route path="/" element={<Home />} />
-			<Route path="dashboard" element={<Dashboard />} />
-			<Route path="*" element={<NotFound />} />
-		</Routes>
-	);
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="dashboard" element={<Dashboard />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
 }
 ```
 
@@ -404,33 +404,33 @@ Although you should only ever have a single `<Router>` in an app, you may have a
 
 ```tsx
 function App() {
-	return (
-		<div>
-			<Sidebar>
-				<Routes>
-					<Route path="/" element={<MainNav />} />
-					<Route
-						path="dashboard"
-						element={<DashboardNav />}
-					/>
-				</Routes>
-			</Sidebar>
+  return (
+    <div>
+      <Sidebar>
+        <Routes>
+          <Route path="/" element={<MainNav />} />
+          <Route
+            path="dashboard"
+            element={<DashboardNav />}
+          />
+        </Routes>
+      </Sidebar>
 
-			<MainContent>
-				<Routes>
-					<Route path="/" element={<Home />}>
-						<Route path="about" element={<About />} />
-						<Route path="support" element={<Support />} />
-					</Route>
-					<Route path="dashboard" element={<Dashboard />}>
-						<Route path="invoices" element={<Invoices />} />
-						<Route path="team" element={<Team />} />
-					</Route>
-					<Route path="*" element={<NotFound />} />
-				</Routes>
-			</MainContent>
-		</div>
-	);
+      <MainContent>
+        <Routes>
+          <Route path="/" element={<Home />}>
+            <Route path="about" element={<About />} />
+            <Route path="support" element={<Support />} />
+          </Route>
+          <Route path="dashboard" element={<Dashboard />}>
+            <Route path="invoices" element={<Invoices />} />
+            <Route path="team" element={<Team />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </MainContent>
+    </div>
+  );
 }
 ```
 
@@ -440,24 +440,24 @@ You can render [a `<Routes>` element](../api#routes) anywhere you need one, incl
 
 ```tsx [5]
 function App() {
-	return (
-		<Routes>
-			<Route path="/" element={<Home />} />
-			<Route path="dashboard/*" element={<Dashboard />} />
-		</Routes>
-	);
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="dashboard/*" element={<Dashboard />} />
+    </Routes>
+  );
 }
 
 function Dashboard() {
-	return (
-		<div>
-			<p>Look, more routes!</p>
-			<Routes>
-				<Route path="/" element={<DashboardGraphs />} />
-				<Route path="invoices" element={<InvoiceList />} />
-			</Routes>
-		</div>
-	);
+  return (
+    <div>
+      <p>Look, more routes!</p>
+      <Routes>
+        <Route path="/" element={<DashboardGraphs />} />
+        <Route path="invoices" element={<InvoiceList />} />
+      </Routes>
+    </div>
+  );
 }
 ```
 

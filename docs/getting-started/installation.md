@@ -60,10 +60,10 @@ import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 
 ReactDOM.render(
-	<BrowserRouter>
-		<App />
-	</BrowserRouter>,
-	document.getElementById("root")
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+  document.getElementById("root")
 );
 ```
 
@@ -75,15 +75,15 @@ import { Routes, Route, Link } from "react-router-dom";
 import "./App.css";
 
 function App() {
-	return (
-		<div className="App">
-			<h1>Welcome to React Router!</h1>
-			<Routes>
-				<Route path="/" element={<Home />} />
-				<Route path="about" element={<About />} />
-			</Routes>
-		</div>
-	);
+  return (
+    <div className="App">
+      <h1>Welcome to React Router!</h1>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="about" element={<About />} />
+      </Routes>
+    </div>
+  );
 }
 ```
 
@@ -92,34 +92,34 @@ Now, still in `src/App.js`, create your route components:
 ```js
 // App.js
 function Home() {
-	return (
-		<>
-			<main>
-				<h2>Welcome to the homepage!</h2>
-				<p>You can do this, I believe in you.</p>
-			</main>
-			<nav>
-				<Link to="/about">About</Link>
-			</nav>
-		</>
-	);
+  return (
+    <>
+      <main>
+        <h2>Welcome to the homepage!</h2>
+        <p>You can do this, I believe in you.</p>
+      </main>
+      <nav>
+        <Link to="/about">About</Link>
+      </nav>
+    </>
+  );
 }
 
 function About() {
-	return (
-		<>
-			<main>
-				<h2>Who are we?</h2>
-				<p>
-					That feels like an existential question, don't you
-					think?
-				</p>
-			</main>
-			<nav>
-				<Link to="/">Home</Link>
-			</nav>
-		</>
-	);
+  return (
+    <>
+      <main>
+        <h2>Who are we?</h2>
+        <p>
+          That feels like an existential question, don't you
+          think?
+        </p>
+      </main>
+      <nav>
+        <Link to="/">Home</Link>
+      </nav>
+    </>
+  );
 }
 ```
 
@@ -143,7 +143,7 @@ Once the project is set up and your dependencies are installed, create a new `.b
 
 ```json
 {
-	"presets": ["@babel/preset-react"]
+  "presets": ["@babel/preset-react"]
 }
 ```
 
@@ -157,10 +157,10 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.js";
 
 ReactDOM.render(
-	<BrowserRouter>
-		<App />
-	</BrowserRouter>,
-	document.getElementById("root")
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+  document.getElementById("root")
 );
 ```
 
@@ -168,12 +168,12 @@ In your `index.html`, create the root div in the document body above the script 
 
 ```html
 <body>
-	<noscript
-		>You need to enable JavaScript to run this
-		app.</noscript
-	>
-	<div id="root"></div>
-	<script src="./index.js"></script>
+  <noscript
+    >You need to enable JavaScript to run this
+    app.</noscript
+  >
+  <div id="root"></div>
+  <script src="./index.js"></script>
 </body>
 ```
 
@@ -185,48 +185,48 @@ import React from "react";
 import { Routes, Route, Link } from "react-router-dom";
 
 function App() {
-	return (
-		<div>
-			<header>
-				<h1>Welcome to React Router!</h1>
-			</header>
-			<Routes>
-				<Route path="/" element={<Home />} />
-				<Route path="about" element={<About />} />
-			</Routes>
-		</div>
-	);
+  return (
+    <div>
+      <header>
+        <h1>Welcome to React Router!</h1>
+      </header>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="about" element={<About />} />
+      </Routes>
+    </div>
+  );
 }
 
 function Home() {
-	return (
-		<>
-			<main>
-				<h2>Welcome to the homepage!</h2>
-				<p>You can do this, I believe in you.</p>
-			</main>
-			<nav>
-				<Link to="/about">About</Link>
-			</nav>
-		</>
-	);
+  return (
+    <>
+      <main>
+        <h2>Welcome to the homepage!</h2>
+        <p>You can do this, I believe in you.</p>
+      </main>
+      <nav>
+        <Link to="/about">About</Link>
+      </nav>
+    </>
+  );
 }
 
 function About() {
-	return (
-		<>
-			<main>
-				<h2>Who are we?</h2>
-				<p>
-					That feels like an existential question, don't you
-					think?
-				</p>
-			</main>
-			<nav>
-				<Link to="/">Home</Link>
-			</nav>
-		</>
-	);
+  return (
+    <>
+      <main>
+        <h2>Who are we?</h2>
+        <p>
+          That feels like an existential question, don't you
+          think?
+        </p>
+      </main>
+      <nav>
+        <Link to="/">Home</Link>
+      </nav>
+    </>
+  );
 }
 
 export default App;
@@ -244,22 +244,22 @@ Once you have webpack configured and the necessary dependencies installed, somew
 
 ```js
 import {
-	BrowserRouter,
-	Routes,
-	Route
+  BrowserRouter,
+  Routes,
+  Route
 } from "react-router-dom";
 
 function App() {
-	return (
-		<BrowserRouter>
-			<div>
-				<h1>Hello, React Router!</h1>
-				<Routes>
-					<Route path="/" element={<Home />} />
-				</Routes>
-			</div>
-		</BrowserRouter>
-	);
+  return (
+    <BrowserRouter>
+      <div>
+        <h1>Hello, React Router!</h1>
+        <Routes>
+          <Route path="/" element={<Home />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
+  );
 }
 ```
 

@@ -1,35 +1,35 @@
 import * as React from "react";
 import {
-	BackHandler,
-	GestureResponderEvent,
-	Linking,
-	TouchableHighlight,
-	TouchableHighlightProps
+  BackHandler,
+  GestureResponderEvent,
+  Linking,
+  TouchableHighlight,
+  TouchableHighlightProps
 } from "react-native";
 import {
-	MemoryRouter,
-	MemoryRouterProps,
-	Navigate,
-	NavigateOptions,
-	Outlet,
-	Route,
-	Router,
-	Routes,
-	createRoutesFromChildren,
-	generatePath,
-	matchRoutes,
-	matchPath,
-	resolvePath,
-	renderMatches,
-	useHref,
-	useInRouterContext,
-	useLocation,
-	useMatch,
-	useNavigate,
-	useOutlet,
-	useParams,
-	useResolvedPath,
-	useRoutes
+  MemoryRouter,
+  MemoryRouterProps,
+  Navigate,
+  NavigateOptions,
+  Outlet,
+  Route,
+  Router,
+  Routes,
+  createRoutesFromChildren,
+  generatePath,
+  matchRoutes,
+  matchPath,
+  resolvePath,
+  renderMatches,
+  useHref,
+  useInRouterContext,
+  useLocation,
+  useMatch,
+  useNavigate,
+  useOutlet,
+  useParams,
+  useResolvedPath,
+  useRoutes
 } from "react-router";
 import { State, To } from "history";
 import URLSearchParams from "@ungap/url-search-params";
@@ -40,46 +40,46 @@ import URLSearchParams from "@ungap/url-search-params";
 
 // Note: Keep in sync with react-router exports!
 export {
-	MemoryRouter,
-	Navigate,
-	Outlet,
-	Route,
-	Router,
-	Routes,
-	createRoutesFromChildren,
-	generatePath,
-	matchRoutes,
-	matchPath,
-	resolvePath,
-	renderMatches,
-	useHref,
-	useInRouterContext,
-	useLocation,
-	useMatch,
-	useNavigate,
-	useOutlet,
-	useParams,
-	useResolvedPath,
-	useRoutes
+  MemoryRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Router,
+  Routes,
+  createRoutesFromChildren,
+  generatePath,
+  matchRoutes,
+  matchPath,
+  resolvePath,
+  renderMatches,
+  useHref,
+  useInRouterContext,
+  useLocation,
+  useMatch,
+  useNavigate,
+  useOutlet,
+  useParams,
+  useResolvedPath,
+  useRoutes
 };
 
 export type {
-	MemoryRouterProps,
-	NavigateFunction,
-	NavigateOptions,
-	NavigateProps,
-	Navigator,
-	OutletProps,
-	Params,
-	PathMatch,
-	RouteMatch,
-	RouteObject,
-	RouteProps,
-	PathRouteProps,
-	LayoutRouteProps,
-	IndexRouteProps,
-	RouterProps,
-	RoutesProps
+  MemoryRouterProps,
+  NavigateFunction,
+  NavigateOptions,
+  NavigateProps,
+  Navigator,
+  OutletProps,
+  Params,
+  PathMatch,
+  RouteMatch,
+  RouteObject,
+  RouteProps,
+  PathRouteProps,
+  LayoutRouteProps,
+  IndexRouteProps,
+  RouterProps,
+  RoutesProps
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -97,9 +97,9 @@ export type {
 
 /** @internal */
 export {
-	UNSAFE_NavigationContext,
-	UNSAFE_LocationContext,
-	UNSAFE_RouteContext
+  UNSAFE_NavigationContext,
+  UNSAFE_LocationContext,
+  UNSAFE_RouteContext
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,36 +112,36 @@ export interface NativeRouterProps extends MemoryRouterProps {}
  * A <Router> that runs on React Native.
  */
 export function NativeRouter(props: NativeRouterProps) {
-	return <MemoryRouter {...props} />;
+  return <MemoryRouter {...props} />;
 }
 
 export interface LinkProps extends TouchableHighlightProps {
-	children?: React.ReactNode;
-	onPress?: (event: GestureResponderEvent) => void;
-	replace?: boolean;
-	state?: State;
-	to: To;
+  children?: React.ReactNode;
+  onPress?: (event: GestureResponderEvent) => void;
+  replace?: boolean;
+  state?: State;
+  to: To;
 }
 
 /**
  * A <TouchableHighlight> that navigates to a different URL when touched.
  */
 export function Link({
-	onPress,
-	replace = false,
-	state,
-	to,
-	...rest
+  onPress,
+  replace = false,
+  state,
+  to,
+  ...rest
 }: LinkProps) {
-	let internalOnPress = useLinkPressHandler(to, { replace, state });
-	function handlePress(event: GestureResponderEvent) {
-		if (onPress) onPress(event);
-		if (!event.defaultPrevented) {
-			internalOnPress(event);
-		}
-	}
+  let internalOnPress = useLinkPressHandler(to, { replace, state });
+  function handlePress(event: GestureResponderEvent) {
+    if (onPress) onPress(event);
+    if (!event.defaultPrevented) {
+      internalOnPress(event);
+    }
+  }
 
-	return <TouchableHighlight {...rest} onPress={handlePress} />;
+  return <TouchableHighlight {...rest} onPress={handlePress} />;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,49 +157,49 @@ const URLEventType = "url";
  * use in our exported `<Link>`.
  */
 export function useLinkPressHandler<S extends State = State>(
-	to: To,
-	{
-		replace,
-		state
-	}: {
-		replace?: boolean;
-		state?: S;
-	} = {}
+  to: To,
+  {
+    replace,
+    state
+  }: {
+    replace?: boolean;
+    state?: S;
+  } = {}
 ): (event: GestureResponderEvent) => void {
-	let navigate = useNavigate();
-	return function handlePress() {
-		navigate(to, { replace, state });
-	};
+  let navigate = useNavigate();
+  return function handlePress() {
+    navigate(to, { replace, state });
+  };
 }
 
 /**
  * Enables support for the hardware back button on Android.
  */
 export function useHardwareBackButton() {
-	React.useEffect(() => {
-		function handleHardwardBackPress() {
-			return undefined;
-			// TODO: The implementation will be something like this
-			// if (history.index === 0) {
-			//   return false; // home screen
-			// } else {
-			//   history.back();
-			//   return true;
-			// }
-		}
+  React.useEffect(() => {
+    function handleHardwardBackPress() {
+      return undefined;
+      // TODO: The implementation will be something like this
+      // if (history.index === 0) {
+      //   return false; // home screen
+      // } else {
+      //   history.back();
+      //   return true;
+      // }
+    }
 
-		BackHandler.addEventListener(
-			HardwareBackPressEventType,
-			handleHardwardBackPress
-		);
+    BackHandler.addEventListener(
+      HardwareBackPressEventType,
+      handleHardwardBackPress
+    );
 
-		return () => {
-			BackHandler.removeEventListener(
-				HardwareBackPressEventType,
-				handleHardwardBackPress
-			);
-		};
-	}, []);
+    return () => {
+      BackHandler.removeEventListener(
+        HardwareBackPressEventType,
+        handleHardwardBackPress
+      );
+    };
+  }, []);
 }
 
 export { useHardwareBackButton as useAndroidBackButton };
@@ -209,39 +209,39 @@ export { useHardwareBackButton as useAndroidBackButton };
  * subsequent incoming links.
  */
 export function useDeepLinking() {
-	let navigate = useNavigate();
+  let navigate = useNavigate();
 
-	// Get the initial URL
-	React.useEffect(() => {
-		let current = true;
+  // Get the initial URL
+  React.useEffect(() => {
+    let current = true;
 
-		Linking.getInitialURL().then(url => {
-			if (current) {
-				if (url) navigate(trimScheme(url));
-			}
-		});
+    Linking.getInitialURL().then(url => {
+      if (current) {
+        if (url) navigate(trimScheme(url));
+      }
+    });
 
-		return () => {
-			current = false;
-		};
-	}, [navigate]);
+    return () => {
+      current = false;
+    };
+  }, [navigate]);
 
-	// Listen for URL changes
-	React.useEffect(() => {
-		function handleURLChange(event: { url: string }) {
-			navigate(trimScheme(event.url));
-		}
+  // Listen for URL changes
+  React.useEffect(() => {
+    function handleURLChange(event: { url: string }) {
+      navigate(trimScheme(event.url));
+    }
 
-		Linking.addEventListener(URLEventType, handleURLChange);
+    Linking.addEventListener(URLEventType, handleURLChange);
 
-		return () => {
-			Linking.removeEventListener(URLEventType, handleURLChange);
-		};
-	}, [navigate]);
+    return () => {
+      Linking.removeEventListener(URLEventType, handleURLChange);
+    };
+  }, [navigate]);
 }
 
 function trimScheme(url: string) {
-	return url.replace(/^.*?:\/\//, "");
+  return url.replace(/^.*?:\/\//, "");
 }
 
 /**
@@ -249,48 +249,48 @@ function trimScheme(url: string) {
  * URLSearchParams interface.
  */
 export function useSearchParams(
-	defaultInit?: URLSearchParamsInit
+  defaultInit?: URLSearchParamsInit
 ): [URLSearchParams, SetURLSearchParams] {
-	let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
+  let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
 
-	let location = useLocation();
-	let searchParams = React.useMemo(() => {
-		let searchParams = createSearchParams(location.search);
+  let location = useLocation();
+  let searchParams = React.useMemo(() => {
+    let searchParams = createSearchParams(location.search);
 
-		for (let key of defaultSearchParamsRef.current.keys()) {
-			if (!searchParams.has(key)) {
-				defaultSearchParamsRef.current.getAll(key).forEach(value => {
-					searchParams.append(key, value);
-				});
-			}
-		}
+    for (let key of defaultSearchParamsRef.current.keys()) {
+      if (!searchParams.has(key)) {
+        defaultSearchParamsRef.current.getAll(key).forEach(value => {
+          searchParams.append(key, value);
+        });
+      }
+    }
 
-		return searchParams;
-	}, [location.search]);
+    return searchParams;
+  }, [location.search]);
 
-	let navigate = useNavigate();
-	let setSearchParams: SetURLSearchParams = React.useCallback(
-		(nextInit, navigateOpts) => {
-			navigate("?" + createSearchParams(nextInit), navigateOpts);
-		},
-		[navigate]
-	);
+  let navigate = useNavigate();
+  let setSearchParams: SetURLSearchParams = React.useCallback(
+    (nextInit, navigateOpts) => {
+      navigate("?" + createSearchParams(nextInit), navigateOpts);
+    },
+    [navigate]
+  );
 
-	return [searchParams, setSearchParams];
+  return [searchParams, setSearchParams];
 }
 
 type SetURLSearchParams = (
-	nextInit?: URLSearchParamsInit | undefined,
-	navigateOpts?: NavigateOptions | undefined
+  nextInit?: URLSearchParamsInit | undefined,
+  navigateOpts?: NavigateOptions | undefined
 ) => void;
 
 export type ParamKeyValuePair = [string, string];
 
 export type URLSearchParamsInit =
-	| string
-	| ParamKeyValuePair[]
-	| Record<string, string | string[]>
-	| URLSearchParams;
+  | string
+  | ParamKeyValuePair[]
+  | Record<string, string | string[]>
+  | URLSearchParams;
 
 /**
  * Creates a URLSearchParams object using the given initializer.
@@ -314,18 +314,18 @@ export type URLSearchParamsInit =
  *   });
  */
 export function createSearchParams(
-	init: URLSearchParamsInit = ""
+  init: URLSearchParamsInit = ""
 ): URLSearchParams {
-	return new URLSearchParams(
-		typeof init === "string" ||
-		Array.isArray(init) ||
-		init instanceof URLSearchParams
-			? init
-			: Object.keys(init).reduce((memo, key) => {
-					let value = init[key];
-					return memo.concat(
-						Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
-					);
-			  }, [] as ParamKeyValuePair[])
-	);
+  return new URLSearchParams(
+    typeof init === "string" ||
+    Array.isArray(init) ||
+    init instanceof URLSearchParams
+      ? init
+      : Object.keys(init).reduce((memo, key) => {
+          let value = init[key];
+          return memo.concat(
+            Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+          );
+        }, [] as ParamKeyValuePair[])
+  );
 }

@@ -3,42 +3,42 @@ import { create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter, Outlet, Routes, Route } from "react-router";
 
 describe("Descendant <Routes> splat matching", () => {
-	describe("when the parent route path ends with /*", () => {
-		it("works", () => {
-			function ReactCourses() {
-				return (
-					<div>
-						<h1>React</h1>
-						<Routes>
-							<Route
-								path="react-fundamentals"
-								element={<h1>React Fundamentals</h1>}
-							/>
-						</Routes>
-					</div>
-				);
-			}
+  describe("when the parent route path ends with /*", () => {
+    it("works", () => {
+      function ReactCourses() {
+        return (
+          <div>
+            <h1>React</h1>
+            <Routes>
+              <Route
+                path="react-fundamentals"
+                element={<h1>React Fundamentals</h1>}
+              />
+            </Routes>
+          </div>
+        );
+      }
 
-			function Courses() {
-				return (
-					<div>
-						<h1>Courses</h1>
-						<Outlet />
-					</div>
-				);
-			}
+      function Courses() {
+        return (
+          <div>
+            <h1>Courses</h1>
+            <Outlet />
+          </div>
+        );
+      }
 
-			let renderer = createTestRenderer(
-				<MemoryRouter initialEntries={["/courses/react/react-fundamentals"]}>
-					<Routes>
-						<Route path="courses" element={<Courses />}>
-							<Route path="react/*" element={<ReactCourses />} />
-						</Route>
-					</Routes>
-				</MemoryRouter>
-			);
+      let renderer = createTestRenderer(
+        <MemoryRouter initialEntries={["/courses/react/react-fundamentals"]}>
+          <Routes>
+            <Route path="courses" element={<Courses />}>
+              <Route path="react/*" element={<ReactCourses />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      );
 
-			expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <div>
           <h1>
             Courses
@@ -53,6 +53,6 @@ describe("Descendant <Routes> splat matching", () => {
           </div>
         </div>
       `);
-		});
-	});
+    });
+  });
 });
