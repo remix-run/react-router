@@ -1,3 +1,4 @@
+import * as React from "react";
 import { create as createTestRenderer } from "react-test-renderer";
 import { matchRoutes, MemoryRouter, Routes, Route } from "react-router";
 
