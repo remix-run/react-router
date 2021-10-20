@@ -99,13 +99,13 @@ With **client side routing**, developers are able to manipulate the browser [his
 
 ```jsx
 <a
-  href="/contact"
-  onClick={event => {
-    // stop the browser from changing the [URL] and requesting the new document
-    event.preventDefault();
-    // push an entry into the browser history stack and change the [URL]
-    window.history.pushState({}, undefined, "/contact");
-  }}
+	href="/contact"
+	onClick={event => {
+		// stop the browser from changing the [URL] and requesting the new document
+		event.preventDefault();
+		// push an entry into the browser history stack and change the [URL]
+		window.history.pushState({}, undefined, "/contact");
+	}}
 />
 ```
 
@@ -117,7 +117,7 @@ Well, that's not totally true. We can listen for changes to the [URL] via [pop][
 
 ```jsx
 window.addEventListener("popstate", () => {
-  // [URL] changed!
+	// [URL] changed!
 });
 ```
 
@@ -128,8 +128,8 @@ That's where a React Router specific `history` object comes into play. It provid
 ```js
 let history = createBrowserHistory();
 history.listen((location, action) => {
-  // this is called whenever new locations come in
-  // the action is POP, PUSH, or REPLACE
+	// this is called whenever new locations come in
+	// the action is POP, PUSH, or REPLACE
 });
 ```
 
@@ -261,40 +261,40 @@ For example, a very basic client side data cache could store values by location 
 let cache = new Map();
 
 function useFakeFetch([URL]) {
-  let location = useLocation();
-  let cacheKey = location.key + [URL];
-  let cached = cache.get(cacheKey);
+	let location = useLocation();
+	let cacheKey = location.key + [URL];
+	let cached = cache.get(cacheKey);
 
-  let [data, setData] = useState(() => {
-    // initialize from the cache
-    return cached || null;
-  });
+	let [data, setData] = useState(() => {
+		// initialize from the cache
+		return cached || null;
+	});
 
-  let [state, setState] = useState(() => {
-    // avoid the fetch if cached
-    return cached ? "done" : "loading";
-  });
+	let [state, setState] = useState(() => {
+		// avoid the fetch if cached
+		return cached ? "done" : "loading";
+	});
 
-  useEffect(() => {
-    if (state === "loading") {
-      let controller = new AbortController();
-      fetch([URL], { signal: controller.signal })
-        .then(res => res.json())
-        .then(data => {
-          if (controller.aborted) return;
-          // set the cache
-          cache.set(cacheKey, data);
-          setData(data);
-        });
-      return () => controller.abort();
-    }
-  }, [state, cacheKey]);
+	useEffect(() => {
+		if (state === "loading") {
+			let controller = new AbortController();
+			fetch([URL], { signal: controller.signal })
+				.then(res => res.json())
+				.then(data => {
+					if (controller.aborted) return;
+					// set the cache
+					cache.set(cacheKey, data);
+					setData(data);
+				});
+			return () => controller.abort();
+		}
+	}, [state, cacheKey]);
 
-  useEffect(() => {
-    setState("loading");
-  }, [[URL]]);
+	useEffect(() => {
+		setState("loading");
+	}, [[URL]]);
 
-  return data;
+	return data;
 }
 ```
 
@@ -308,20 +308,20 @@ A route config is a tree of [routes][route] that looks something like this:
 
 ```js
 <Routes>
-  <Route path="/" element={<App />}>
-    <Route index element={<Home />} />
-    <Route path="teams" element={<Teams />}>
-      <Route path=":teamId" element={<Team />} />
-      <Route path=":teamId/edit" element={<EditTeam />} />
-      <Route path="new" element={<NewTeamForm />} />
-      <Route index element={<LeagueStandings />} />
-    </Route>
-  </Route>
-  <Route element={<PageLayout />}>
-    <Route path="/privacy" element={<Privacy />} />
-    <Route path="/tos" element={<Tos />} />
-  </Route>
-  <Route path="contact-us" element={<Contact />} />
+	<Route path="/" element={<App />}>
+		<Route index element={<Home />} />
+		<Route path="teams" element={<Teams />}>
+			<Route path=":teamId" element={<Team />} />
+			<Route path=":teamId/edit" element={<EditTeam />} />
+			<Route path="new" element={<NewTeamForm />} />
+			<Route index element={<LeagueStandings />} />
+		</Route>
+	</Route>
+	<Route element={<PageLayout />}>
+		<Route path="/privacy" element={<Privacy />} />
+		<Route path="/tos" element={<Tos />} />
+	</Route>
+	<Route path="contact-us" element={<Contact />} />
 </Routes>
 ```
 
@@ -329,55 +329,55 @@ The `<Routes>` component recurses through its `props.children`, strips their pro
 
 ```js
 let routes = [
-  {
-    element: <App />,
-    path: "/",
-    children: [
-      {
-        index: true,
-        element: <Home />
-      },
-      {
-        path: "teams",
-        element: <Teams />,
-        children: [
-          {
-            index: true,
-            element: <LeagueStandings />
-          },
-          {
-            path: ":teamId",
-            element: <Team />
-          },
-          {
-            path: ":teamId/edit",
-            element: <EditTeam />
-          },
-          {
-            path: "new",
-            element: <NewTeamForm />
-          }
-        ]
-      }
-    ]
-  },
-  {
-    element: <PageLayout />,
-    children: [
-      {
-        element: <Privacy />,
-        path: "/privacy"
-      },
-      {
-        element: <Tos />,
-        path: "/tos"
-      }
-    ]
-  },
-  {
-    element: <Contact />,
-    path: "/contact-us"
-  }
+	{
+		element: <App />,
+		path: "/",
+		children: [
+			{
+				index: true,
+				element: <Home />
+			},
+			{
+				path: "teams",
+				element: <Teams />,
+				children: [
+					{
+						index: true,
+						element: <LeagueStandings />
+					},
+					{
+						path: ":teamId",
+						element: <Team />
+					},
+					{
+						path: ":teamId/edit",
+						element: <EditTeam />
+					},
+					{
+						path: "new",
+						element: <NewTeamForm />
+					}
+				]
+			}
+		]
+	},
+	{
+		element: <PageLayout />,
+		children: [
+			{
+				element: <Privacy />,
+				path: "/privacy"
+			},
+			{
+				element: <Tos />,
+				path: "/tos"
+			}
+		]
+	},
+	{
+		element: <Contact />,
+		path: "/contact-us"
+	}
 ];
 ```
 
@@ -395,14 +395,14 @@ If we add up all the segments of all the branches of our route config, we end up
 
 ```js
 [
-  "/",
-  "/teams",
-  "/teams/:teamId",
-  "/teams/:teamId/edit",
-  "/teams/new",
-  "/privacy",
-  "/tos",
-  "/contact-us"
+	"/",
+	"/teams",
+	"/teams/:teamId",
+	"/teams/:teamId/edit",
+	"/teams/new",
+	"/privacy",
+	"/tos",
+	"/contact-us"
 ];
 ```
 
@@ -454,20 +454,20 @@ Because our routes are a tree, a single URL can match an entire branch of the tr
 
 ```jsx [2,4,5]
 <Routes>
-  <Route path="/" element={<App />}>
-    <Route index element={<Home />} />
-    <Route path="teams" element={<Teams />}>
-      <Route path=":teamId" element={<Team />} />
-      <Route path=":teamId/edit" element={<EditTeam />} />
-      <Route path="new" element={<NewTeamForm />} />
-      <Route index element={<LeagueStandings />} />
-    </Route>
-  </Route>
-  <Route element={<PageLayout />}>
-    <Route path="/privacy" element={<Privacy />} />
-    <Route path="/tos" element={<Tos />} />
-  </Route>
-  <Route path="contact-us" element={<Contact />} />
+	<Route path="/" element={<App />}>
+		<Route index element={<Home />} />
+		<Route path="teams" element={<Teams />}>
+			<Route path=":teamId" element={<Team />} />
+			<Route path=":teamId/edit" element={<EditTeam />} />
+			<Route path="new" element={<NewTeamForm />} />
+			<Route index element={<LeagueStandings />} />
+		</Route>
+	</Route>
+	<Route element={<PageLayout />}>
+		<Route path="/privacy" element={<Privacy />} />
+		<Route path="/tos" element={<Tos />} />
+	</Route>
+	<Route path="contact-us" element={<Contact />} />
 </Routes>
 ```
 
@@ -475,32 +475,32 @@ React Router will create an array of [matches] from these routes and the url so 
 
 ```js
 [
-  {
-    pathname: "/",
-    params: null,
-    route: {
-      element: <App />,
-      path: "/"
-    }
-  },
-  {
-    pathname: "/teams",
-    params: null,
-    route: {
-      element: <Teams />,
-      path: "teams"
-    }
-  },
-  {
-    pathname: "/teams/firebirds",
-    params: {
-      teamId: "firebirds"
-    },
-    route: {
-      element: <Team />,
-      path: ":teamId"
-    }
-  }
+	{
+		pathname: "/",
+		params: null,
+		route: {
+			element: <App />,
+			path: "/"
+		}
+	},
+	{
+		pathname: "/teams",
+		params: null,
+		route: {
+			element: <Teams />,
+			path: "teams"
+		}
+	},
+	{
+		pathname: "/teams/firebirds",
+		params: {
+			teamId: "firebirds"
+		},
+		route: {
+			element: <Team />,
+			path: ":teamId"
+		}
+	}
 ];
 ```
 
@@ -510,24 +510,24 @@ The final concept is rendering. Consider that the entry to your app looks like t
 
 ```jsx
 ReactDOM.render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<App />}>
-        <Route index element={<Home />} />
-        <Route path="teams" element={<Teams />}>
-          <Route path=":teamId" element={<Team />} />
-          <Route path="new" element={<NewTeamForm />} />
-          <Route index element={<LeagueStandings />} />
-        </Route>
-      </Route>
-      <Route element={<PageLayout />}>
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/tos" element={<Tos />} />
-      </Route>
-      <Route path="contact-us" element={<Contact />} />
-    </Routes>
-  </BrowserRouter>,
-  document.getElementById("root")
+	<BrowserRouter>
+		<Routes>
+			<Route path="/" element={<App />}>
+				<Route index element={<Home />} />
+				<Route path="teams" element={<Teams />}>
+					<Route path=":teamId" element={<Team />} />
+					<Route path="new" element={<NewTeamForm />} />
+					<Route index element={<LeagueStandings />} />
+				</Route>
+			</Route>
+			<Route element={<PageLayout />}>
+				<Route path="/privacy" element={<Privacy />} />
+				<Route path="/tos" element={<Tos />} />
+			</Route>
+			<Route path="contact-us" element={<Contact />} />
+		</Routes>
+	</BrowserRouter>,
+	document.getElementById("root")
 );
 ```
 
@@ -535,9 +535,9 @@ Let's use the `/teams/firebirds` URL as an example again. `<Routes>` will match 
 
 ```jsx
 <App>
-  <Teams>
-    <Team />
-  </Teams>
+	<Teams>
+		<Team />
+	</Teams>
 </App>
 ```
 
@@ -549,13 +549,13 @@ This nested element tree won't happen automatically. `<Routes>` will render the 
 
 ```jsx [5]
 function App() {
-  return (
-    <div>
-      <GlobalNav />
-      <Outlet />
-      <GlobalFooter />
-    </div>
-  );
+	return (
+		<div>
+			<GlobalNav />
+			<Outlet />
+			<GlobalFooter />
+		</div>
+	);
 }
 ```
 
@@ -565,7 +565,7 @@ If the URL were `/contact-us`, the element tree would change to:
 
 ```jsx
 <App>
-  <ContactForm />
+	<ContactForm />
 </App>
 ```
 
@@ -573,9 +573,9 @@ If the URL were `/teams/firebirds/edit`, the element tree would change to:
 
 ```jsx
 <App>
-  <Teams>
-    <EditTeam />
-  </Teams>
+	<Teams>
+		<EditTeam />
+	</Teams>
 </App>
 ```
 
@@ -587,9 +587,9 @@ Remember the [route config] for `/teams`:
 
 ```js
 <Route path="teams" element={<Teams />}>
-  <Route path=":teamId" element={<Team />} />
-  <Route path="new" element={<NewTeamForm />} />
-  <Route index element={<LeagueStandings />} />
+	<Route path=":teamId" element={<Team />} />
+	<Route path="new" element={<NewTeamForm />} />
+	<Route index element={<LeagueStandings />} />
 </Route>
 ```
 
@@ -597,9 +597,9 @@ If the URL were `/teams/firebirds`, the element tree would be:
 
 ```jsx
 <App>
-  <Teams>
-    <Team />
-  </Teams>
+	<Teams>
+		<Team />
+	</Teams>
 </App>
 ```
 
@@ -607,9 +607,9 @@ But if the URL were `/teams`, the element tree would be:
 
 ```jsx
 <App>
-  <Teams>
-    <LeagueStandings />
-  </Teams>
+	<Teams>
+		<LeagueStandings />
+	</Teams>
 </App>
 ```
 
@@ -619,7 +619,7 @@ Think of it this way, if you're not at one of the child routes' paths, the `<Out
 
 ```jsx
 <App>
-  <Teams />
+	<Teams />
 </App>
 ```
 
@@ -635,20 +635,20 @@ Here's a part of our route config we haven't matched yet: `/privacy`. Let's look
 
 ```jsx [2,11,12]
 <Routes>
-  <Route path="/" element={<App />}>
-    <Route index element={<Home />} />
-    <Route path="teams" element={<Teams />}>
-      <Route path=":teamId" element={<Team />} />
-      <Route path=":teamId/edit" element={<EditTeam />} />
-      <Route path="new" element={<NewTeamForm />} />
-      <Route index element={<LeagueStandings />} />
-    </Route>
-  </Route>
-  <Route element={<PageLayout />}>
-    <Route path="/privacy" element={<Privacy />} />
-    <Route path="/tos" element={<Tos />} />
-  </Route>
-  <Route path="contact-us" element={<Contact />} />
+	<Route path="/" element={<App />}>
+		<Route index element={<Home />} />
+		<Route path="teams" element={<Teams />}>
+			<Route path=":teamId" element={<Team />} />
+			<Route path=":teamId/edit" element={<EditTeam />} />
+			<Route path="new" element={<NewTeamForm />} />
+			<Route index element={<LeagueStandings />} />
+		</Route>
+	</Route>
+	<Route element={<PageLayout />}>
+		<Route path="/privacy" element={<Privacy />} />
+		<Route path="/tos" element={<Tos />} />
+	</Route>
+	<Route path="contact-us" element={<Contact />} />
 </Routes>
 ```
 
@@ -656,9 +656,9 @@ And the resulting element tree rendered will be:
 
 ```jsx
 <App>
-  <PageLayout>
-    <Privacy />
-  </PageLayout>
+	<PageLayout>
+		<Privacy />
+	</PageLayout>
 </App>
 ```
 
@@ -719,7 +719,7 @@ However, links are accessible in that they
 
 ```jsx
 <Route path="teams" element={<Teams />}>
-  <Route path=":teamId" element={<Team />} />
+	<Route path=":teamId" element={<Team />} />
 </Route>
 ```
 
@@ -739,9 +739,9 @@ This function is returned from the `useNavigate` hook and allows you, the progra
 ```js
 let navigate = useNavigate();
 useEffect(() => {
-  setTimeout(() => {
-    navigate("/logout");
-  }, 30000);
+	setTimeout(() => {
+		navigate("/logout");
+	}, 30000);
 }, []);
 ```
 
@@ -788,24 +788,24 @@ Let's put it all together from the top, let's assume we're at the URL: `
 
    ```jsx
    ReactDOM.render(
-     <BrowserRouter>
-       <Routes>
-         <Route path="/" element={<App />}>
-           <Route index element={<Home />} />
-           <Route path="teams" element={<Teams />}>
-             <Route path=":teamId" element={<Team />} />
-             <Route path="new" element={<NewTeamForm />} />
-             <Route index element={<LeagueStandings />} />
-           </Route>
-         </Route>
-         <Route element={<PageLayout />}>
-           <Route path="/privacy" element={<Privacy />} />
-           <Route path="/tos" element={<Tos />} />
-         </Route>
-         <Route path="contact-us" element={<Contact />} />
-       </Routes>
-     </BrowserRouter>,
-     document.getElementById("root")
+   	<BrowserRouter>
+   		<Routes>
+   			<Route path="/" element={<App />}>
+   				<Route index element={<Home />} />
+   				<Route path="teams" element={<Teams />}>
+   					<Route path=":teamId" element={<Team />} />
+   					<Route path="new" element={<NewTeamForm />} />
+   					<Route index element={<LeagueStandings />} />
+   				</Route>
+   			</Route>
+   			<Route element={<PageLayout />}>
+   				<Route path="/privacy" element={<Privacy />} />
+   				<Route path="/tos" element={<Tos />} />
+   			</Route>
+   			<Route path="contact-us" element={<Contact />} />
+   		</Routes>
+   	</BrowserRouter>,
+   	document.getElementById("root")
    );
    ```
 

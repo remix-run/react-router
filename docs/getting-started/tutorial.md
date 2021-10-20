@@ -62,11 +62,11 @@ Then edit your App.js to be pretty boring:
 
 ```tsx filename=src/App.js
 export default function App() {
-  return (
-    <div>
-      <h1>Bookkeeper!</h1>
-    </div>
-  );
+	return (
+		<div>
+			<h1>Bookkeeper!</h1>
+		</div>
+	);
 }
 ```
 
@@ -103,10 +103,10 @@ import App from "./App";
 
 const rootElement = document.getElementById("root");
 render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>,
-  rootElement
+	<BrowserRouter>
+		<App />
+	</BrowserRouter>,
+	rootElement
 );
 ```
 
@@ -120,20 +120,20 @@ Open up `src/App.js`, import `Link` and add some global navigation. Side note: d
 import { Link } from "react-router-dom";
 
 export default function App() {
-  return (
-    <div>
-      <h1>Bookkeeper</h1>
-      <nav
-        style={{
-          borderBottom: "solid 1px",
-          paddingBottom: "1rem"
-        }}
-      >
-        <Link to="/invoices">Invoices</Link> |{" "}
-        <Link to="/expenses">Expenses</Link>
-      </nav>
-    </div>
-  );
+	return (
+		<div>
+			<h1>Bookkeeper</h1>
+			<nav
+				style={{
+					borderBottom: "solid 1px",
+					paddingBottom: "1rem"
+				}}
+			>
+				<Link to="/invoices">Invoices</Link> |{" "}
+				<Link to="/expenses">Expenses</Link>
+			</nav>
+		</div>
+	);
 }
 ```
 
@@ -154,13 +154,13 @@ Now fill 'em up with some code:
 
 ```tsx filename=src/routes/expenses.jsx
 export default function Expenses() {
-  return <h2>Expenses</h2>;
+	return <h2>Expenses</h2>;
 }
 ```
 
 ```tsx filename=src/routes/invoices.jsx
 export default function Invoices() {
-  return <h2>Invoices</h2>;
+	return <h2>Invoices</h2>;
 }
 ```
 
@@ -169,9 +169,9 @@ Finally, let's teach React Router how to render our app at different URLs by cre
 ```tsx lines=[2,4-5,10-14] filename=src/main.jsx
 import { render } from "react-dom";
 import {
-  BrowserRouter,
-  Routes,
-  Route
+	BrowserRouter,
+	Routes,
+	Route
 } from "react-router-dom";
 import App from "./App";
 import Expenses from "./routes/expenses";
@@ -179,14 +179,14 @@ import Invoices from "./routes/invoices";
 
 const rootElement = document.getElementById("root");
 render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<App />} />
-      <Route path="expenses" element={<Expenses />} />
-      <Route path="invoices" element={<Invoices />} />
-    </Routes>
-  </BrowserRouter>,
-  rootElement
+	<BrowserRouter>
+		<Routes>
+			<Route path="/" element={<App />} />
+			<Route path="expenses" element={<Expenses />} />
+			<Route path="invoices" element={<Invoices />} />
+		</Routes>
+	</BrowserRouter>,
+	rootElement
 );
 ```
 
@@ -208,9 +208,9 @@ First let's nest the routes. Right now the expenses and invoices routes are sibl
 ```jsx lines=[11-14] filename=src/main.jsx
 import { render } from "react-dom";
 import {
-  BrowserRouter,
-  Routes,
-  Route
+	BrowserRouter,
+	Routes,
+	Route
 } from "react-router-dom";
 import App from "./App";
 import Expenses from "./routes/expenses";
@@ -218,15 +218,15 @@ import Invoices from "./routes/invoices";
 
 const rootElement = document.getElementById("root");
 render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<App />}>
-        <Route path="expenses" element={<Expenses />} />
-        <Route path="invoices" element={<Invoices />} />
-      </Route>
-    </Routes>
-  </BrowserRouter>,
-  rootElement
+	<BrowserRouter>
+		<Routes>
+			<Route path="/" element={<App />}>
+				<Route path="expenses" element={<Expenses />} />
+				<Route path="invoices" element={<Invoices />} />
+			</Route>
+		</Routes>
+	</BrowserRouter>,
+	rootElement
 );
 ```
 
@@ -241,21 +241,21 @@ However, before (2) will work we need to render an `Outlet` in the `App.jsx` "pa
 import { Outlet, Link } from "react-router-dom";
 
 export default function App() {
-  return (
-    <div>
-      <h1>Bookkeeper</h1>
-      <nav
-        style={{
-          borderBottom: "solid 1px",
-          paddingBottom: "1rem"
-        }}
-      >
-        <Link to="/invoices">Invoices</Link> |{" "}
-        <Link to="/expenses">Expenses</Link>
-      </nav>
-      <Outlet />
-    </div>
-  );
+	return (
+		<div>
+			<h1>Bookkeeper</h1>
+			<nav
+				style={{
+					borderBottom: "solid 1px",
+					paddingBottom: "1rem"
+				}}
+			>
+				<Link to="/invoices">Invoices</Link> |{" "}
+				<Link to="/expenses">Expenses</Link>
+			</nav>
+			<Outlet />
+		</div>
+	);
 }
 ```
 
@@ -271,40 +271,40 @@ Make a file at `src/data.js` and copy/paste this in there:
 
 ```js filename=src/data.js
 let invoices = [
-  {
-    name: "Santa Monica",
-    number: 1995,
-    amount: "$10,800",
-    due: "12/05/1995"
-  },
-  {
-    name: "Stankonia",
-    number: 2000,
-    amount: "$8,000",
-    due: "10/31/2000"
-  },
-  {
-    name: "Ocean Avenue",
-    number: 2003,
-    amount: "$9,500",
-    due: "07/22/2003"
-  },
-  {
-    name: "Tubthumper",
-    number: 1997,
-    amount: "$14,000",
-    due: "09/01/1997"
-  },
-  {
-    name: "Wide Open Spaces",
-    number: 1998,
-    amount: "$4,600",
-    due: "01/27/2998"
-  }
+	{
+		name: "Santa Monica",
+		number: 1995,
+		amount: "$10,800",
+		due: "12/05/1995"
+	},
+	{
+		name: "Stankonia",
+		number: 2000,
+		amount: "$8,000",
+		due: "10/31/2000"
+	},
+	{
+		name: "Ocean Avenue",
+		number: 2003,
+		amount: "$9,500",
+		due: "07/22/2003"
+	},
+	{
+		name: "Tubthumper",
+		number: 1997,
+		amount: "$14,000",
+		due: "09/01/1997"
+	},
+	{
+		name: "Wide Open Spaces",
+		number: 1998,
+		amount: "$4,600",
+		due: "01/27/2998"
+	}
 ];
 
 export function getInvoices() {
-  return invoices;
+	return invoices;
 }
 ```
 
@@ -315,27 +315,27 @@ import { Link } from "react-router-dom";
 import { getInvoices } from "../data";
 
 export default function Invoices() {
-  let invoices = getInvoices();
-  return (
-    <div style={{ display: "flex" }}>
-      <nav
-        style={{
-          borderRight: "solid 1px",
-          padding: "1rem"
-        }}
-      >
-        {invoices.map(invoice => (
-          <Link
-            style={{ display: "block", margin: "1rem 0" }}
-            to={`/invoices/${invoice.number}`}
-            key={invoice.number}
-          >
-            {invoice.name}
-          </Link>
-        ))}
-      </nav>
-    </div>
-  );
+	let invoices = getInvoices();
+	return (
+		<div style={{ display: "flex" }}>
+			<nav
+				style={{
+					borderRight: "solid 1px",
+					padding: "1rem"
+				}}
+			>
+				{invoices.map(invoice => (
+					<Link
+						style={{ display: "block", margin: "1rem 0" }}
+						to={`/invoices/${invoice.number}`}
+						key={invoice.number}
+					>
+						{invoice.name}
+					</Link>
+				))}
+			</nav>
+		</div>
+	);
 }
 ```
 
@@ -351,14 +351,14 @@ Before we move on, it's good practice to always handle this "no match" case. Go 
 
 ```js lines=[5] filename=src/main.jsx
 <Routes>
-  <Route path="/" element={<App />}>
-    <Route path="expenses" element={<Expenses />} />
-    <Route path="invoices" element={<Invoices />} />
-    <Route
-      path="*"
-      element={<p>There's nothing here!</p>}
-    />
-  </Route>
+	<Route path="/" element={<App />}>
+		<Route path="expenses" element={<Expenses />} />
+		<Route path="invoices" element={<Invoices />} />
+		<Route
+			path="*"
+			element={<p>There's nothing here!</p>}
+		/>
+	</Route>
 </Routes>
 ```
 
@@ -370,7 +370,7 @@ Alright, back to the individual invoice URLs. Let's add a route for a specific i
 
 ```js filename=src/routes/invoice.js
 export default function Invoice() {
-  return <h2>Invoice #???</h2>;
+	return <h2>Invoice #???</h2>;
 }
 ```
 
@@ -382,16 +382,16 @@ Create a new `<Route>` _inside_ of the "invoices" route like this:
 
 ```js lines=[4-6] filename=src/main.jsx
 <Routes>
-  <Route path="/" element={<App />}>
-    <Route path="expenses" element={<Expenses />} />
-    <Route path="invoices" element={<Invoices />}>
-      <Route path=":invoiceId" element={<Invoice />} />
-    </Route>
-    <Route
-      path="*"
-      element={<p>There's nothing here!</p>}
-    />
-  </Route>
+	<Route path="/" element={<App />}>
+		<Route path="expenses" element={<Expenses />} />
+		<Route path="invoices" element={<Invoices />}>
+			<Route path=":invoiceId" element={<Invoice />} />
+		</Route>
+		<Route
+			path="*"
+			element={<p>There's nothing here!</p>}
+		/>
+	</Route>
 </Routes>
 ```
 
@@ -409,28 +409,28 @@ import { Link } from "react-router-dom";
 import { getInvoices } from "../data";
 
 export default function Invoices() {
-  let invoices = getInvoices();
-  return (
-    <div style={{ display: "flex" }}>
-      <nav
-        style={{
-          borderRight: "solid 1px",
-          padding: "1rem"
-        }}
-      >
-        {invoices.map(invoice => (
-          <Link
-            style={{ display: "block", margin: "1rem 0" }}
-            to={`/invoices/${invoice.number}`}
-            key={invoice.number}
-          >
-            {invoice.name}
-          </Link>
-        ))}
-      </nav>
-      <Outlet />
-    </div>
-  );
+	let invoices = getInvoices();
+	return (
+		<div style={{ display: "flex" }}>
+			<nav
+				style={{
+					borderRight: "solid 1px",
+					padding: "1rem"
+				}}
+			>
+				{invoices.map(invoice => (
+					<Link
+						style={{ display: "block", margin: "1rem 0" }}
+						to={`/invoices/${invoice.number}`}
+						key={invoice.number}
+					>
+						{invoice.name}
+					</Link>
+				))}
+			</nav>
+			<Outlet />
+		</div>
+	);
 }
 ```
 
@@ -440,8 +440,8 @@ Okay, let's close the circle here. Open up the invoice component again and let's
 import { useParams } from "react-router-dom";
 
 export default function Invoice() {
-  let params = useParams();
-  return <h2>Invoice: {params.invoiceId}</h2>;
+	let params = useParams();
+	return <h2>Invoice: {params.invoiceId}</h2>;
 }
 ```
 
@@ -457,13 +457,13 @@ Let's use that information to build up a more interesting invoice page. Open up 
 // ...
 
 export function getInvoices() {
-  return invoices;
+	return invoices;
 }
 
 export function getInvoice(number) {
-  return invoices.find(
-    invoice => invoice.number === number
-  );
+	return invoices.find(
+		invoice => invoice.number === number
+	);
 }
 ```
 
@@ -474,17 +474,17 @@ import { useParams } from "react-router-dom";
 import { getInvoice } from "../data";
 
 export default function Invoice() {
-  let params = useParams();
-  let invoice = getInvoice(parseInt(params.invoiceId, 10));
-  return (
-    <main style={{ padding: "1rem" }}>
-      <h2>Total Due: {invoice.amount}</h2>
-      <p>
-        {invoice.name}: {invoice.number}
-      </p>
-      <p>Due Date: {invoice.due}</p>
-    </main>
-  );
+	let params = useParams();
+	let invoice = getInvoice(parseInt(params.invoiceId, 10));
+	return (
+		<main style={{ padding: "1rem" }}>
+			<h2>Total Due: {invoice.amount}</h2>
+			<p>
+				{invoice.name}: {invoice.number}
+			</p>
+			<p>Due Date: {invoice.due}</p>
+		</main>
+	);
 }
 ```
 
@@ -498,17 +498,17 @@ Right now you're probably looking at one of the invoices. Click on the "Invoices
 
 ```jsx filename=src/main.jsx lines=[5]
 <Routes>
-  <Route path="/" element={<App />}>
-    <Route path="expenses" element={<Expenses />} />
-    <Route path="invoices" element={<Invoices />}>
-      <Route index element={<p>Select an invoice</p>} />
-      <Route path=":invoiceId" element={<Invoice />} />
-    </Route>
-    <Route
-      path="*"
-      element={<p>There's nothing here!</p>}
-    />
-  </Route>
+	<Route path="/" element={<App />}>
+		<Route path="expenses" element={<Expenses />} />
+		<Route path="invoices" element={<Invoices />}>
+			<Route index element={<p>Select an invoice</p>} />
+			<Route path=":invoiceId" element={<Invoice />} />
+		</Route>
+		<Route
+			path="*"
+			element={<p>There's nothing here!</p>}
+		/>
+	</Route>
 </Routes>
 ```
 
@@ -532,34 +532,34 @@ import { NavLink, Outlet } from "react-router-dom";
 import { getInvoices } from "../data";
 
 export default function Invoices() {
-  let invoices = getInvoices();
-  return (
-    <div style={{ display: "flex" }}>
-      <nav
-        style={{
-          borderRight: "solid 1px",
-          padding: "1rem"
-        }}
-      >
-        {invoices.map(invoice => (
-          <NavLink
-            style={({ isActive }) => {
-              return {
-                display: "block",
-                margin: "1rem 0",
-                color: isActive ? "red" : ""
-              };
-            }}
-            to={`/invoices/${invoice.number}`}
-            key={invoice.number}
-          >
-            {invoice.name}
-          </NavLink>
-        ))}
-      </nav>
-      <Outlet />
-    </div>
-  );
+	let invoices = getInvoices();
+	return (
+		<div style={{ display: "flex" }}>
+			<nav
+				style={{
+					borderRight: "solid 1px",
+					padding: "1rem"
+				}}
+			>
+				{invoices.map(invoice => (
+					<NavLink
+						style={({ isActive }) => {
+							return {
+								display: "block",
+								margin: "1rem 0",
+								color: isActive ? "red" : ""
+							};
+						}}
+						to={`/invoices/${invoice.number}`}
+						key={invoice.number}
+					>
+						{invoice.name}
+					</NavLink>
+				))}
+			</nav>
+			<Outlet />
+		</div>
+	);
 }
 ```
 
@@ -589,59 +589,59 @@ Let's see it in action by adding a little filter on the invoices nav list.
 
 ```jsx filename=routes/invoices.jsx lines=[1,6,11-20,22-27]
 import {
-  NavLink,
-  Outlet,
-  useSearchParams
+	NavLink,
+	Outlet,
+	useSearchParams
 } from "react-router-dom";
 import { getInvoices } from "../data";
 
 export default function Invoices() {
-  let invoices = getInvoices();
-  let [searchParams, setSearchParams] = useSearchParams();
+	let invoices = getInvoices();
+	let [searchParams, setSearchParams] = useSearchParams();
 
-  return (
-    <div style={{ display: "flex" }}>
-      <nav
-        style={{
-          borderRight: "solid 1px",
-          padding: "1rem"
-        }}
-      >
-        <input
-          value={searchParams.get("filter") || ""}
-          onChange={event => {
-            let filter = event.target.value;
-            if (filter) {
-              setSearchParams({ filter });
-            } else {
-              setSearchParams({});
-            }
-          }}
-        />
-        {invoices
-          .filter(invoice => {
-            let filter = searchParams.get("filter");
-            if (!filter) return true;
-            let name = invoice.name.toLowerCase();
-            return name.startsWith(filter.toLowerCase());
-          })
-          .map(invoice => (
-            <NavLink
-              style={({ isActive }) => ({
-                display: "block",
-                margin: "1rem 0",
-                color: isActive ? "red" : ""
-              })}
-              to={`/invoices/${invoice.number}`}
-              key={invoice.number}
-            >
-              {invoice.name}
-            </NavLink>
-          ))}
-      </nav>
-      <Outlet />
-    </div>
-  );
+	return (
+		<div style={{ display: "flex" }}>
+			<nav
+				style={{
+					borderRight: "solid 1px",
+					padding: "1rem"
+				}}
+			>
+				<input
+					value={searchParams.get("filter") || ""}
+					onChange={event => {
+						let filter = event.target.value;
+						if (filter) {
+							setSearchParams({ filter });
+						} else {
+							setSearchParams({});
+						}
+					}}
+				/>
+				{invoices
+					.filter(invoice => {
+						let filter = searchParams.get("filter");
+						if (!filter) return true;
+						let name = invoice.name.toLowerCase();
+						return name.startsWith(filter.toLowerCase());
+					})
+					.map(invoice => (
+						<NavLink
+							style={({ isActive }) => ({
+								display: "block",
+								margin: "1rem 0",
+								color: isActive ? "red" : ""
+							})}
+							to={`/invoices/${invoice.number}`}
+							key={invoice.number}
+						>
+							{invoice.name}
+						</NavLink>
+					))}
+			</nav>
+			<Outlet />
+		</div>
+	);
 }
 ```
 
@@ -662,8 +662,8 @@ We can persist the query string when we click a link by adding it to the link's 
 import { useLocation, NavLink } from "react-router-dom";
 
 function QueryNavLink({ to, ...props }) {
-  let location = useLocation();
-  return <NavLink to={to + location.search} {...props} />;
+	let location = useLocation();
+	return <NavLink to={to + location.search} {...props} />;
 }
 ```
 
@@ -694,15 +694,15 @@ And then you wanted to style them as "active" when the url search params match t
 
 ```jsx
 function BrandLink({ brand, ...props }) {
-  let [params] = useSearchParams();
-  let isActive = params.getAll("brand").includes(brand);
-  return (
-    <Link
-      style={{ color: isActive ? "red" : "" }}
-      to={`/shoes?brand=${brand}`}
-      {...props}
-    />
-  );
+	let [params] = useSearchParams();
+	let isActive = params.getAll("brand").includes(brand);
+	return (
+		<Link
+			style={{ color: isActive ? "red" : "" }}
+			to={`/shoes?brand=${brand}`}
+			{...props}
+		/>
+	);
 }
 ```
 
@@ -711,7 +711,7 @@ That's going to be active for `"/shoes?brand=nike"` as well as `"/shoes?brand=ni
 ```js
 let brands = params.getAll("brand");
 let isActive =
-  brands.includes(brand) && brands.length === 1;
+	brands.includes(brand) && brands.length === 1;
 // ...
 ```
 
@@ -719,18 +719,18 @@ Or maybe you want the links to be _additive_ (clicking Nike and then Vans adds b
 
 ```jsx [4-6,10]
 function BrandLink({ brand, ...props }) {
-  let [params] = useSearchParams();
-  let isActive = params.getAll("brand").includes(brand);
-  if (!isActive) {
-    params.append("brand", brand);
-  }
-  return (
-    <Link
-      style={{ color: isActive ? "red" : "" }}
-      to={`/shoes?${params.toString()}`}
-      {...props}
-    />
-  );
+	let [params] = useSearchParams();
+	let isActive = params.getAll("brand").includes(brand);
+	if (!isActive) {
+		params.append("brand", brand);
+	}
+	return (
+		<Link
+			style={{ color: isActive ? "red" : "" }}
+			to={`/shoes?${params.toString()}`}
+			{...props}
+		/>
+	);
 }
 ```
 
@@ -738,25 +738,25 @@ Or maybe you want it to add the brand if it's not there already and remove it if
 
 ```jsx [6-12]
 function BrandLink({ brand, ...props }) {
-  let [params] = useSearchParams();
-  let isActive = params.getAll("brand").includes(brand);
-  if (!isActive) {
-    params.append("brand", brand);
-  } else {
-    params = new URLSearchParams(
-      Array.from(params).filter(
-        ([key, value]) =>
-          key !== "brand" || value !== branch
-      )
-    );
-  }
-  return (
-    <Link
-      style={{ color: isActive ? "red" : "" }}
-      to={`/shoes?${params.toString()}`}
-      {...props}
-    />
-  );
+	let [params] = useSearchParams();
+	let isActive = params.getAll("brand").includes(brand);
+	if (!isActive) {
+		params.append("brand", brand);
+	} else {
+		params = new URLSearchParams(
+			Array.from(params).filter(
+				([key, value]) =>
+					key !== "brand" || value !== branch
+			)
+		);
+	}
+	return (
+		<Link
+			style={{ color: isActive ? "red" : "" }}
+			to={`/shoes?${params.toString()}`}
+			{...props}
+		/>
+	);
 }
 ```
 
@@ -774,9 +774,9 @@ First you can copy paste this function that deletes an invoice from our fake dat
 
 ```js filename=src/data.js
 export function deleteInvoice(number) {
-  invoices = invoices.filter(
-    invoice => invoice.number !== number
-  );
+	invoices = invoices.filter(
+		invoice => invoice.number !== number
+	);
 }
 ```
 
@@ -787,29 +787,29 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getInvoice, deleteInvoice } from "../data";
 
 export default function Invoice() {
-  let navigate = useNavigate();
-  let params = useParams();
-  let invoice = getInvoice(parseInt(params.invoiceId, 10));
+	let navigate = useNavigate();
+	let params = useParams();
+	let invoice = getInvoice(parseInt(params.invoiceId, 10));
 
-  return (
-    <main style={{ padding: "1rem" }}>
-      <h2>Total Due: {invoice.amount}</h2>
-      <p>
-        {invoice.name}: {invoice.number}
-      </p>
-      <p>Due Date: {invoice.due}</p>
-      <p>
-        <button
-          onClick={() => {
-            deleteInvoice(invoice.number);
-            navigate("/invoices");
-          }}
-        >
-          Delete
-        </button>
-      </p>
-    </main>
-  );
+	return (
+		<main style={{ padding: "1rem" }}>
+			<h2>Total Due: {invoice.amount}</h2>
+			<p>
+				{invoice.name}: {invoice.number}
+			</p>
+			<p>Due Date: {invoice.due}</p>
+			<p>
+				<button
+					onClick={() => {
+						deleteInvoice(invoice.number);
+						navigate("/invoices");
+					}}
+				>
+					Delete
+				</button>
+			</p>
+		</main>
+	);
 }
 ```
 

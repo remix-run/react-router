@@ -6,10 +6,10 @@ import "./index.css";
 import App from "./App";
 
 ReactDOM.hydrate(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>,
-  document.getElementById("app")
+	<React.StrictMode>
+		<BrowserRouter>
+			<App />
+		</BrowserRouter>
+	</React.StrictMode>,
+	document.getElementById("app")
 );

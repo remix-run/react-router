@@ -7,145 +7,145 @@ import { act, create as createTestRenderer } from "react-test-renderer";
 import { press } from "./utils";
 
 describe("A <Link> press", () => {
-  it("navigates to the new view", () => {
-    function Home() {
-      return (
-        <View>
-          <Text>Home</Text>
-          <Link to="../about">
-            <Text>About</Text>
-          </Link>
-        </View>
-      );
-    }
+	it("navigates to the new view", () => {
+		function Home() {
+			return (
+				<View>
+					<Text>Home</Text>
+					<Link to="../about">
+						<Text>About</Text>
+					</Link>
+				</View>
+			);
+		}
 
-    function About() {
-      return (
-        <View>
-          <Text>About</Text>
-        </View>
-      );
-    }
+		function About() {
+			return (
+				<View>
+					<Text>About</Text>
+				</View>
+			);
+		}
 
-    let renderer!: ReactTestRenderer;
-    act(() => {
-      renderer = createTestRenderer(
-        <NativeRouter initialEntries={["/home"]}>
-          <Routes>
-            <Route path="home" element={<Home />} />
-            <Route path="about" element={<About />} />
-          </Routes>
-        </NativeRouter>
-      );
-    });
+		let renderer!: ReactTestRenderer;
+		act(() => {
+			renderer = createTestRenderer(
+				<NativeRouter initialEntries={["/home"]}>
+					<Routes>
+						<Route path="home" element={<Home />} />
+						<Route path="about" element={<About />} />
+					</Routes>
+				</NativeRouter>
+			);
+		});
 
-    expect(renderer.toJSON()).toMatchSnapshot();
+		expect(renderer.toJSON()).toMatchSnapshot();
 
-    let touchable = renderer.root.findByType(TouchableHighlight);
-    expect(touchable).not.toBeNull();
+		let touchable = renderer.root.findByType(TouchableHighlight);
+		expect(touchable).not.toBeNull();
 
-    act(() => {
-      press(touchable);
-    });
+		act(() => {
+			press(touchable);
+		});
 
-    expect(renderer.toJSON()).toMatchSnapshot();
-  });
+		expect(renderer.toJSON()).toMatchSnapshot();
+	});
 
-  it("calls the custom onPress handler", () => {
-    let spy = jest.fn();
+	it("calls the custom onPress handler", () => {
+		let spy = jest.fn();
 
-    function Home() {
-      return (
-        <View>
-          <Text>Home</Text>
-          <Link to="../about" onPress={spy}>
-            <Text>About</Text>
-          </Link>
-        </View>
-      );
-    }
+		function Home() {
+			return (
+				<View>
+					<Text>Home</Text>
+					<Link to="../about" onPress={spy}>
+						<Text>About</Text>
+					</Link>
+				</View>
+			);
+		}
 
-    function About() {
-      return (
-        <View>
-          <Text>About</Text>
-        </View>
-      );
-    }
+		function About() {
+			return (
+				<View>
+					<Text>About</Text>
+				</View>
+			);
+		}
 
-    let renderer!: ReactTestRenderer;
-    act(() => {
-      renderer = createTestRenderer(
-        <NativeRouter initialEntries={["/home"]}>
-          <Routes>
-            <Route path="home" element={<Home />} />
-            <Route path="about" element={<About />} />
-          </Routes>
-        </NativeRouter>
-      );
-    });
+		let renderer!: ReactTestRenderer;
+		act(() => {
+			renderer = createTestRenderer(
+				<NativeRouter initialEntries={["/home"]}>
+					<Routes>
+						<Route path="home" element={<Home />} />
+						<Route path="about" element={<About />} />
+					</Routes>
+				</NativeRouter>
+			);
+		});
 
-    expect(renderer.toJSON()).toMatchSnapshot();
+		expect(renderer.toJSON()).toMatchSnapshot();
 
-    let touchable = renderer.root.findByType(TouchableHighlight);
-    expect(touchable).not.toBeNull();
+		let touchable = renderer.root.findByType(TouchableHighlight);
+		expect(touchable).not.toBeNull();
 
-    let pressEvent;
-    act(() => {
-      pressEvent = press(touchable);
-    });
+		let pressEvent;
+		act(() => {
+			pressEvent = press(touchable);
+		});
 
-    expect(spy).toHaveBeenCalledWith(pressEvent);
-  });
+		expect(spy).toHaveBeenCalledWith(pressEvent);
+	});
 
-  describe("when event.preventDefault() is used in the onPress handler", () => {
-    it("does not navigate to the new view", () => {
-      function Home() {
-        return (
-          <View>
-            <Text>Home</Text>
-            <Link
-              to="../about"
-              onPress={event => {
-                event.preventDefault();
-              }}
-            >
-              <Text>About</Text>
-            </Link>
-          </View>
-        );
-      }
+	describe("when event.preventDefault() is used in the onPress handler", () => {
+		it("does not navigate to the new view", () => {
+			function Home() {
+				return (
+					<View>
+						<Text>Home</Text>
+						<Link
+							to="../about"
+							onPress={event => {
+								event.preventDefault();
+							}}
+						>
+							<Text>About</Text>
+						</Link>
+					</View>
+				);
+			}
 
-      function About() {
-        return (
-          <View>
-            <Text>About</Text>
-          </View>
-        );
-      }
+			function About() {
+				return (
+					<View>
+						<Text>About</Text>
+					</View>
+				);
+			}
 
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
-          <NativeRouter initialEntries={["/home"]}>
-            <Routes>
-              <Route path="home" element={<Home />} />
-              <Route path="about" element={<About />} />
-            </Routes>
-          </NativeRouter>
-        );
-      });
+			let renderer!: ReactTestRenderer;
+			act(() => {
+				renderer = createTestRenderer(
+					<NativeRouter initialEntries={["/home"]}>
+						<Routes>
+							<Route path="home" element={<Home />} />
+							<Route path="about" element={<About />} />
+						</Routes>
+					</NativeRouter>
+				);
+			});
 
-      expect(renderer.toJSON()).toMatchSnapshot();
+			expect(renderer.toJSON()).toMatchSnapshot();
 
-      let touchable = renderer.root.findByType(TouchableHighlight);
-      expect(touchable).not.toBeNull();
+			let touchable = renderer.root.findByType(TouchableHighlight);
+			expect(touchable).not.toBeNull();
 
-      act(() => {
-        press(touchable);
-      });
+			act(() => {
+				press(touchable);
+			});
 
-      expect(renderer.toJSON()).toMatchSnapshot();
-    });
-  });
+			expect(renderer.toJSON()).toMatchSnapshot();
+		});
+	});
 });

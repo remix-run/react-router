@@ -70,43 +70,43 @@ elements that will help smooth the transition to v6. Instead of using `<Route co
 ```js
 // v4 and v5 before 5.1
 function User({ id }) {
-  // ...
+	// ...
 }
 
 function App() {
-  return (
-    <Switch>
-      <Route exact path="/" component={Home} />
-      <Route path="/about" component={About} />
-      <Route
-        path="/users/:id"
-        render={({ match }) => (
-          <User id={match.params.id} />
-        )}
-      />
-    </Switch>
-  );
+	return (
+		<Switch>
+			<Route exact path="/" component={Home} />
+			<Route path="/about" component={About} />
+			<Route
+				path="/users/:id"
+				render={({ match }) => (
+					<User id={match.params.id} />
+				)}
+			/>
+		</Switch>
+	);
 }
 
 // v5.1 preferred style
 function User() {
-  let { id } = useParams();
-  // ...
+	let { id } = useParams();
+	// ...
 }
 
 function App() {
-  return (
-    <Switch>
-      <Route exact path="/">
-        <Home />
-      </Route>
-      <Route path="/about">
-        <About />
-      </Route>
-      {/* Can also use a named `children` prop */}
-      <Route path="/users/:id" children={<User />} />
-    </Switch>
-  );
+	return (
+		<Switch>
+			<Route exact path="/">
+				<Home />
+			</Route>
+			<Route path="/about">
+				<About />
+			</Route>
+			{/* Can also use a named `children` prop */}
+			<Route path="/users/:id" children={<User />} />
+		</Switch>
+	);
 }
 ```
 
@@ -186,50 +186,50 @@ put them in the child route's component.
 ```js
 // This is a React Router v5 app
 import {
-  BrowserRouter,
-  Switch,
-  Route,
-  Link,
-  useRouteMatch
+	BrowserRouter,
+	Switch,
+	Route,
+	Link,
+	useRouteMatch
 } from "react-router-dom";
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Switch>
-        <Route exact path="/">
-          <Home />
-        </Route>
-        <Route path="/users">
-          <Users />
-        </Route>
-      </Switch>
-    </BrowserRouter>
-  );
+	return (
+		<BrowserRouter>
+			<Switch>
+				<Route exact path="/">
+					<Home />
+				</Route>
+				<Route path="/users">
+					<Users />
+				</Route>
+			</Switch>
+		</BrowserRouter>
+	);
 }
 
 function Users() {
-  // In v5, nested routes are rendered by the child component, so
-  // you have <Switch> elements all over your app for nested UI.
-  // You build nested routes and links using match.url and match.path.
-  let match = useRouteMatch();
+	// In v5, nested routes are rendered by the child component, so
+	// you have <Switch> elements all over your app for nested UI.
+	// You build nested routes and links using match.url and match.path.
+	let match = useRouteMatch();
 
-  return (
-    <div>
-      <nav>
-        <Link to={`${match.url}/me`}>My Profile</Link>
-      </nav>
+	return (
+		<div>
+			<nav>
+				<Link to={`${match.url}/me`}>My Profile</Link>
+			</nav>
 
-      <Switch>
-        <Route path={`${match.path}/me`}>
-          <OwnUserProfile />
-        </Route>
-        <Route path={`${match.path}/:id`}>
-          <UserProfile />
-        </Route>
-      </Switch>
-    </div>
-  );
+			<Switch>
+				<Route path={`${match.path}/me`}>
+					<OwnUserProfile />
+				</Route>
+				<Route path={`${match.path}/:id`}>
+					<UserProfile />
+				</Route>
+			</Switch>
+		</div>
+	);
 }
 ```
 
@@ -238,36 +238,36 @@ This is the same app in v6:
 ```js
 // This is a React Router v6 app
 import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Link
+	BrowserRouter,
+	Routes,
+	Route,
+	Link
 } from "react-router-dom";
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="users/*" element={<Users />} />
-      </Routes>
-    </BrowserRouter>
-  );
+	return (
+		<BrowserRouter>
+			<Routes>
+				<Route path="/" element={<Home />} />
+				<Route path="users/*" element={<Users />} />
+			</Routes>
+		</BrowserRouter>
+	);
 }
 
 function Users() {
-  return (
-    <div>
-      <nav>
-        <Link to="me">My Profile</Link>
-      </nav>
+	return (
+		<div>
+			<nav>
+				<Link to="me">My Profile</Link>
+			</nav>
 
-      <Routes>
-        <Route path=":id" element={<UserProfile />} />
-        <Route path="me" element={<OwnUserProfile />} />
-      </Routes>
-    </div>
-  );
+			<Routes>
+				<Route path=":id" element={<UserProfile />} />
+				<Route path="me" element={<OwnUserProfile />} />
+			</Routes>
+		</div>
+	);
 }
 ```
 
@@ -389,37 +389,37 @@ v6. Taking the code in the previous example one step further, we can hoist all
 ```js
 // This is a React Router v6 app
 import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Link,
-  Outlet
+	BrowserRouter,
+	Routes,
+	Route,
+	Link,
+	Outlet
 } from "react-router-dom";
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="users" element={<Users />}>
-          <Route path="me" element={<OwnUserProfile />} />
-          <Route path=":id" element={<UserProfile />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  );
+	return (
+		<BrowserRouter>
+			<Routes>
+				<Route path="/" element={<Home />} />
+				<Route path="users" element={<Users />}>
+					<Route path="me" element={<OwnUserProfile />} />
+					<Route path=":id" element={<UserProfile />} />
+				</Route>
+			</Routes>
+		</BrowserRouter>
+	);
 }
 
 function Users() {
-  return (
-    <div>
-      <nav>
-        <Link to="me">My Profile</Link>
-      </nav>
+	return (
+		<div>
+			<nav>
+				<Link to="me">My Profile</Link>
+			</nav>
 
-      <Outlet />
-    </div>
-  );
+			<Outlet />
+		</div>
+	);
 }
 ```
 
@@ -512,54 +512,54 @@ in your `<Link to>` value, similar to what you'd do in a `<a href>`.
 
 ```tsx
 function App() {
-  return (
-    <Routes>
-      <Route path="users" element={<Users />}>
-        <Route path=":id" element={<UserProfile />} />
-      </Route>
-    </Routes>
-  );
+	return (
+		<Routes>
+			<Route path="users" element={<Users />}>
+				<Route path=":id" element={<UserProfile />} />
+			</Route>
+		</Routes>
+	);
 }
 
 function Users() {
-  return (
-    <div>
-      <h2>
-        {/* This links to /users - the current route */}
-        <Link to=".">Users</Link>{" "}
-      </h2>
+	return (
+		<div>
+			<h2>
+				{/* This links to /users - the current route */}
+				<Link to=".">Users</Link>{" "}
+			</h2>
 
-      <ul>
-        {users.map(user => (
-          <li>
-            {/* This links to /users/:id - the child route */}
-            <Link to={user.id}>{user.name}</Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+			<ul>
+				{users.map(user => (
+					<li>
+						{/* This links to /users/:id - the child route */}
+						<Link to={user.id}>{user.name}</Link>
+					</li>
+				))}
+			</ul>
+		</div>
+	);
 }
 
 function UserProfile() {
-  return (
-    <div>
-      <h2>
-        {/* This links to /users - the parent route */}
-        <Link to="..">All Users</Link>{" "}
-      </h2>
+	return (
+		<div>
+			<h2>
+				{/* This links to /users - the parent route */}
+				<Link to="..">All Users</Link>{" "}
+			</h2>
 
-      <h2>
-        {/* This links to /users/:id - the current route */}
-        <Link to=".">User Profile</Link>{" "}
-      </h2>
+			<h2>
+				{/* This links to /users/:id - the current route */}
+				<Link to=".">User Profile</Link>{" "}
+			</h2>
 
-      <h2>
-        {/* This links to /users/mj - a "sibling" route */}
-        <Link to="../mj">MJ</Link>{" "}
-      </h2>
-    </div>
-  );
+			<h2>
+				{/* This links to /users/mj - a "sibling" route */}
+				<Link to="../mj">MJ</Link>{" "}
+			</h2>
+		</div>
+	);
 }
 ```
 
@@ -606,19 +606,19 @@ path, essentially removing all path segments specified by that route**.
 
 ```tsx
 function App() {
-  return (
-    <Routes>
-      <Route path="users">
-        <Route
-          path=":id/messages"
-          element={
-            // This links to /users
-            <Link to=".." />
-          }
-        />
-      </Route>
-    </Routes>
-  );
+	return (
+		<Routes>
+			<Route path="users">
+				<Route
+					path=":id/messages"
+					element={
+						// This links to /users
+						<Link to=".." />
+					}
+				/>
+			</Route>
+		</Routes>
+	);
 }
 ```
 
@@ -630,21 +630,21 @@ matched by the `*`, which lets you create more predictable links in `*` routes.
 
 ```tsx
 function App() {
-  return (
-    <Routes>
-      <Route path=":userId">
-        <Route path="messages" element={<UserMessages />} />
-        <Route
-          path="files/*"
-          element={
-            // This links to /:userId/messages, no matter
-            // how many segments were matched by the *
-            <Link to="../messages" />
-          }
-        />
-      </Route>
-    </Routes>
-  );
+	return (
+		<Routes>
+			<Route path=":userId">
+				<Route path="messages" element={<UserMessages />} />
+				<Route
+					path="files/*"
+					element={
+						// This links to /:userId/messages, no matter
+						// how many segments were matched by the *
+						<Link to="../messages" />
+					}
+				/>
+			</Route>
+		</Routes>
+	);
 }
 ```
 
@@ -656,27 +656,27 @@ instead of using React elements, you're going to love this.
 
 ```js
 function App() {
-  let element = useRoutes([
-    // These are the same as the props you provide to <Route>
-    { path: "/", element: <Home /> },
-    { path: "dashboard", element: <Dashboard /> },
-    {
-      path: "invoices",
-      element: <Invoices />,
-      // Nested routes use a children property, which is also
-      // the same as <Route>
-      children: [
-        { path: ":id", element: <Invoice /> },
-        { path: "sent", element: <SentInvoices /> }
-      ]
-    },
-    // Not found routes work as you'd expect
-    { path: "*", element: <NotFound /> }
-  ]);
+	let element = useRoutes([
+		// These are the same as the props you provide to <Route>
+		{ path: "/", element: <Home /> },
+		{ path: "dashboard", element: <Dashboard /> },
+		{
+			path: "invoices",
+			element: <Invoices />,
+			// Nested routes use a children property, which is also
+			// the same as <Route>
+			children: [
+				{ path: ":id", element: <Invoice /> },
+				{ path: "sent", element: <SentInvoices /> }
+			]
+		},
+		// Not found routes work as you'd expect
+		{ path: "*", element: <NotFound /> }
+	]);
 
-  // The returned element will render the entire element
-  // hierarchy with all the appropriate context it needs
-  return element;
+	// The returned element will render the entire element
+	// hierarchy with all the appropriate context it needs
+	return element;
 }
 ```
 
@@ -702,15 +702,15 @@ needs.
 import { useHistory } from "react-router-dom";
 
 function App() {
-  let history = useHistory();
-  function handleClick() {
-    history.push("/home");
-  }
-  return (
-    <div>
-      <button onClick={handleClick}>go home</button>
-    </div>
-  );
+	let history = useHistory();
+	function handleClick() {
+		history.push("/home");
+	}
+	return (
+		<div>
+			<button onClick={handleClick}>go home</button>
+		</div>
+	);
 }
 ```
 
@@ -723,15 +723,15 @@ this means changing `useHistory` to `useNavigate` and changing the
 import { useNavigate } from "react-router-dom";
 
 function App() {
-  let navigate = useNavigate();
-  function handleClick() {
-    navigate("/home");
-  }
-  return (
-    <div>
-      <button onClick={handleClick}>go home</button>
-    </div>
-  );
+	let navigate = useNavigate();
+	function handleClick() {
+		navigate("/home");
+	}
+	return (
+		<div>
+			<button onClick={handleClick}>go home</button>
+		</div>
+	);
 }
 ```
 
@@ -747,7 +747,7 @@ component), v6 provides a `Navigate` component. Use it like:
 import { Navigate } from "react-router-dom";
 
 function App() {
-  return <Navigate to="/home" replace state={state} />;
+	return <Navigate to="/home" replace state={state} />;
 }
 ```
 
@@ -761,20 +761,20 @@ stack. For example, here is some code using v5's `useHistory` hook:
 import { useHistory } from "react-router-dom";
 
 function App() {
-  const { go, goBack, goForward } = useHistory();
+	const { go, goBack, goForward } = useHistory();
 
-  return (
-    <>
-      <button onClick={() => go(-2)}>
-        Go 2 pages back
-      </button>
-      <button onClick={goBack}>Go back</button>
-      <button onClick={goForward}>Go forward</button>
-      <button onClick={() => go(2)}>
-        Go 2 pages forward
-      </button>
-    </>
-  );
+	return (
+		<>
+			<button onClick={() => go(-2)}>
+				Go 2 pages back
+			</button>
+			<button onClick={goBack}>Go back</button>
+			<button onClick={goForward}>Go forward</button>
+			<button onClick={() => go(2)}>
+				Go 2 pages forward
+			</button>
+		</>
+	);
 }
 ```
 
@@ -785,22 +785,22 @@ Here is the equivalent app with v6:
 import { useNavigate } from "react-router-dom";
 
 function App() {
-  const navigate = useNavigate();
+	const navigate = useNavigate();
 
-  return (
-    <>
-      <button onClick={() => navigate(-2)}>
-        Go 2 pages back
-      </button>
-      <button onClick={() => navigate(-1)}>Go back</button>
-      <button onClick={() => navigate(1)}>
-        Go forward
-      </button>
-      <button onClick={() => navigate(2)}>
-        Go 2 pages forward
-      </button>
-    </>
-  );
+	return (
+		<>
+			<button onClick={() => navigate(-2)}>
+				Go 2 pages back
+			</button>
+			<button onClick={() => navigate(-1)}>Go back</button>
+			<button onClick={() => navigate(1)}>
+				Go forward
+			</button>
+			<button onClick={() => navigate(2)}>
+				Go 2 pages forward
+			</button>
+		</>
+	);
 }
 ```
 
@@ -827,22 +827,22 @@ navigation. For example:
 ```jsx
 // assuming we are at `/stuff`
 function SomeForm() {
-  let navigate = useNavigate();
-  return (
-    <form
-      onSubmit={async event => {
-        let newRecord = await saveDataFromForm(
-          event.target
-        );
-        // you can build up the URL yourself
-        navigate(`/stuff/${newRecord.id}`);
-        // or navigate relative, just like Link
-        navigate(`${newRecord.id}`);
-      }}
-    >
-      {/* ... */}
-    </form>
-  );
+	let navigate = useNavigate();
+	return (
+		<form
+			onSubmit={async event => {
+				let newRecord = await saveDataFromForm(
+					event.target
+				);
+				// you can build up the URL yourself
+				navigate(`/stuff/${newRecord.id}`);
+				// or navigate relative, just like Link
+				navigate(`${newRecord.id}`);
+			}}
+		>
+			{/* ... */}
+		</form>
+	);
 }
 ```
 
@@ -865,44 +865,44 @@ with just a few of our hooks:
 ```tsx
 import { FancyPantsLink } from "@fancy-pants/design-system";
 import {
-  useHref,
-  useLinkClickHandler
+	useHref,
+	useLinkClickHandler
 } from "react-router-dom";
 
 const Link = React.forwardRef(
-  (
-    {
-      onClick,
-      replace = false,
-      state,
-      target,
-      to,
-      ...rest
-    },
-    ref
-  ) => {
-    let href = useHref(to);
-    let handleClick = useLinkClickHandler(to, {
-      replace,
-      state,
-      target
-    });
+	(
+		{
+			onClick,
+			replace = false,
+			state,
+			target,
+			to,
+			...rest
+		},
+		ref
+	) => {
+		let href = useHref(to);
+		let handleClick = useLinkClickHandler(to, {
+			replace,
+			state,
+			target
+		});
 
-    return (
-      <FancyPantsLink
-        {...rest}
-        href={href}
-        onClick={event => {
-          onClick?.(event);
-          if (!event.defaultPrevented) {
-            handleClick(event);
-          }
-        }}
-        ref={ref}
-        target={target}
-      />
-    );
-  }
+		return (
+			<FancyPantsLink
+				{...rest}
+				href={href}
+				onClick={event => {
+					onClick?.(event);
+					if (!event.defaultPrevented) {
+						handleClick(event);
+					}
+				}}
+				ref={ref}
+				target={target}
+			/>
+		);
+	}
 );
 ```
 
@@ -948,26 +948,26 @@ import React from "react";
 import { NavLink as BaseNavLink } from "react-router-dom";
 
 const NavLink = React.forwardRef(
-  ({ activeClassName, activeStyle, ...props }, ref) => {
-    return (
-      <BaseNavLink
-        ref={ref}
-        {...props}
-        className={({ isActive }) =>
-          [
-            props.className,
-            isActive ? activeClassName : null
-          ]
-            .filter(Boolean)
-            .join(" ")
-        }
-        style={({ isActive }) => ({
-          ...props.style,
-          ...(isActive ? activeStyle : null)
-        })}
-      />
-    );
-  }
+	({ activeClassName, activeStyle, ...props }, ref) => {
+		return (
+			<BaseNavLink
+				ref={ref}
+				{...props}
+				className={({ isActive }) =>
+					[
+						props.className,
+						isActive ? activeClassName : null
+					]
+						.filter(Boolean)
+						.join(" ")
+				}
+				style={({ isActive }) => ({
+					...props.style,
+					...(isActive ? activeStyle : null)
+				})}
+			/>
+		);
+	}
 );
 ```
 
