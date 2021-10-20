@@ -7,7 +7,7 @@ order: 2
 
 React Router is a collection of [React components](https://reactjs.org/docs/components-and-props.html), [hooks](#https://reactjs.org/docs/hooks-intro.html) and utilities that make it easy to build multi-page applications with [React](https://reactjs.org). This reference contains the function signatures and return types of the various interfaces in React Router.
 
-<docs-info>Please refer to [our guides](./guides) for more in-depth usage examples of how you can use React Router to accomplish specific tasks.</docs-info>
+<docs-info>Please refer to [our guides](./guides/index.md) for more in-depth usage examples of how you can use React Router to accomplish specific tasks.</docs-info>
 
 ## Overview
 
@@ -21,7 +21,7 @@ React Router is published to npm in three different packages:
 
 Both `react-router-dom` and `react-router-native` automatically include `react-router` as a dependency when you install them, and both packages re-export everything from `react-router`. **When you `import` stuff, you should always import from either `react-router-dom` or `react-router-native` and never directly from `react-router`**. Otherwise you may accidentally import mismatched versions of the library in your app.
 
-If you [installed](./installation) React Router as a global (using a `<script>` tag), you can find the library on the `window.ReactRouterDOM` object. If you installed it from npm, you can [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) the pieces you need. The examples in this reference all use `import` syntax.
+If you [installed](./getting-started/installation.md) React Router as a global (using a `<script>` tag), you can find the library on the `window.ReactRouterDOM` object. If you installed it from npm, you can [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) the pieces you need. The examples in this reference all use `import` syntax.
 
 ### Setup
 
