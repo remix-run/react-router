@@ -1,7 +1,10 @@
 ---
 title: Custom Links
 order: 4
+toc: false
 ---
+
+# Custom Links
 
 In most cases, the exported `<Link>` and `<NavLink>` components should meet all of your needs as an abstraction of the anchor tag. If you need to return anything other than an anchor element (whatever you do return should eventually render an anchor element unless you really know what you're doing with accessibility), or override any of `<Link>`'s rendering logic, you can use a few hooks from `react-router-dom` to build your own:
 
