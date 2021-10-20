@@ -19,13 +19,15 @@ function useQuery(): [
 ] {
   let [search, setSearch] = useSearchParams();
 
-  let query = {
-    get(key: string) {
-      let searchValue = search.get(key);
-      // if (!searchValue) return null;
-      return JSURL.parse(searchValue);
-    }
-  };
+  let query = React.useMemo(() => {
+    return {
+      get(key: string) {
+        let searchValue = search.get(key);
+        // if (!searchValue) return null;
+        return JSURL.parse(searchValue);
+      }
+    };
+  }, [search]);
 
   let setQuery = React.useCallback(
     (key: string, newQuery: any) => {
@@ -41,7 +43,10 @@ function useQuery(): [
 }
 
 function Home() {
-  let [query, setQuery] = useQuery();
+  let [query, setQuery] = useQuery({
+    stringify: JSURL.stringify,
+    parse: JSURL.parse
+  });
   let data = query.get("data");
 
   return (
