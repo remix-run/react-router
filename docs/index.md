@@ -7,7 +7,7 @@ toc: false
 
 Welcome to the React Router documentation!
 
-If you're not sure where to begin, our [getting started guide](/docs/en/v6/getting-started/installation) is a great place to start!
+If you're not sure where to begin, our [getting started guide](getting-started/installation.md) is a great place to start!
 
 <docs-cards>
   <a href="/docs/en/v6/getting-started/tutorial" aria-label="New to React Router?">
