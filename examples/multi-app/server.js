@@ -26,7 +26,7 @@ async function createServer() {
   app.use("*", async (req, res) => {
     let url = req.originalUrl;
 
-    let appDirectory = url.split("/")[1];
+    let appDirectory = url.startsWith("/inbox") ? "inbox" : "";
     let htmlFileToLoad;
 
     if (isProduction) {
