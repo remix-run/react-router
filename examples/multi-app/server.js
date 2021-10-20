@@ -51,7 +51,24 @@ async function createServer() {
       if (!isProduction) {
         vite.ssrFixStacktrace(error);
       }
+
       console.log(error.stack);
+
+      // if our app is not found, we send a 404 error using our "home" app
+      if (error.code === "ENOENT") {
+        let html = await fsp.readFile(
+          path.join(__dirname, "index.html"),
+          "utf8"
+        );
+
+        if (!isProduction) {
+          html = await vite.transformIndexHtml(req.url, html);
+        }
+
+        res.setHeader("Content-Type", "text/html");
+        return res.status(404).end(html);
+      }
+
       return res.status(500).end(error.stack);
     }
   });

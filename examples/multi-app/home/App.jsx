@@ -1,4 +1,5 @@
 import { Routes, Route, Outlet, Link } from "react-router-dom";
+import { NoMatch } from "../inbox/no-match";
 import "./index.css";
 
 export default function HomeApp() {
@@ -7,6 +8,7 @@ export default function HomeApp() {
       <Route path="/" element={<Layout app="Home" />}>
         <Route index element={<Home />} />
         <Route path="about" element={<About />} />
+        <Route path="*" element={<NoMatch />} />
       </Route>
     </Routes>
   );
