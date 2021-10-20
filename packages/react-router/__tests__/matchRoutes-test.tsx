@@ -12,11 +12,32 @@ function pickPaths(
 }
 
 describe("matchRoutes", () => {
-  let usersRoute: RouteObject,
-    userProfileRoute: RouteObject,
-    indexWithPathRoute,
-    layoutRouteIndex,
-    layoutRoute;
+  let userProfileRoute: RouteObject = {
+    path: ":id",
+    element: <h1>User Profile</h1>
+  };
+  let usersRoute: RouteObject = {
+    path: "/users",
+    element: <h1>Users</h1>,
+    children: [{ index: true, element: <h1>Index</h1> }, userProfileRoute]
+  };
+  let indexWithPathRoute: RouteObject = {
+    path: "/withpath",
+    index: true
+  };
+  let layoutRouteIndex: RouteObject = {
+    path: "/layout",
+    index: true,
+    element: <h1>Layout</h1>
+  };
+  let layoutRoute: RouteObject = {
+    path: "/layout",
+    children: [
+      { path: "item", element: <h1>Item</h1> },
+      { path: ":id", element: <h1>ID</h1> },
+      { path: "*", element: <h1>Not Found</h1> }
+    ]
+  };
 
   let routes = [
     { path: "/", element: <h1>Root Layout</h1> },
@@ -28,31 +49,10 @@ describe("matchRoutes", () => {
         { path: "*", element: <h1>Not Found</h1> }
       ]
     },
-    (indexWithPathRoute = {
-      path: "/withpath",
-      index: true
-    }),
-    (layoutRoute = {
-      path: "/layout",
-      children: [
-        { path: "item", element: <h1>Item</h1> },
-        { path: ":id", element: <h1>ID</h1> },
-        { path: "*", element: <h1>Not Found</h1> }
-      ]
-    }),
-    (layoutRouteIndex = {
-      path: "/layout",
-      index: true,
-      element: <h1>Layout</h1>
-    }),
-    (usersRoute = {
-      path: "/users",
-      element: <h1>Users</h1>,
-      children: [
-        { index: true, element: <h1>Index</h1> },
-        (userProfileRoute = { path: ":id", element: <h1>User Profile</h1> })
-      ]
-    }),
+    indexWithPathRoute,
+    layoutRoute,
+    layoutRouteIndex,
+    usersRoute,
     { path: "*", element: <h1>Not Found</h1> }
   ];
 
