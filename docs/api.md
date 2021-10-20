@@ -78,13 +78,13 @@ Access to the URL [search parameters](https://developer.mozilla.org/en-US/docs/W
 
 ```tsx
 declare function BrowserRouter(
-	props: BrowserRouterProps
+  props: BrowserRouterProps
 ): React.ReactElement;
 
 interface BrowserRouterProps {
-	basename?: string;
-	children?: React.ReactNode;
-	window?: Window;
+  basename?: string;
+  children?: React.ReactNode;
+  window?: Window;
 }
 ```
 
@@ -100,10 +100,10 @@ import ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.render(
-	<BrowserRouter>
-		{/* The rest of your app goes here */}
-	</BrowserRouter>,
-	root
+  <BrowserRouter>
+    {/* The rest of your app goes here */}
+  </BrowserRouter>,
+  root
 );
 ```
 
@@ -114,13 +114,13 @@ ReactDOM.render(
 
 ```tsx
 declare function HashRouter(
-	props: HashRouterProps
+  props: HashRouterProps
 ): React.ReactElement;
 
 interface HashRouterProps {
-	basename?: string;
-	children?: React.ReactNode;
-	window?: Window;
+  basename?: string;
+  children?: React.ReactNode;
+  window?: Window;
 }
 ```
 
@@ -136,10 +136,10 @@ import ReactDOM from "react-dom";
 import { HashRouter } from "react-router-dom";
 
 ReactDOM.render(
-	<HashRouter>
-		{/* The rest of your app goes here */}
-	</HashRouter>,
-	root
+  <HashRouter>
+    {/* The rest of your app goes here */}
+  </HashRouter>,
+  root
 );
 ```
 
@@ -152,7 +152,7 @@ ReactDOM.render(
 
 ```tsx
 declare function NativeRouter(
-	props: NativeRouterProps
+  props: NativeRouterProps
 ): React.ReactElement;
 
 interface NativeRouterProps extends MemoryRouterProps {}
@@ -170,11 +170,11 @@ import React from "react";
 import { NativeRouter } from "react-router-native";
 
 function App() {
-	return (
-		<NativeRouter>
-			{/* The rest of your app goes here */}
-		</NativeRouter>
-	);
+  return (
+    <NativeRouter>
+      {/* The rest of your app goes here */}
+    </NativeRouter>
+  );
 }
 ```
 
@@ -185,14 +185,14 @@ function App() {
 
 ```tsx
 declare function MemoryRouter(
-	props: MemoryRouterProps
+  props: MemoryRouterProps
 ): React.ReactElement;
 
 interface MemoryRouterProps {
-	basename?: string;
-	children?: React.ReactNode;
-	initialEntries?: InitialEntry[];
-	initialIndex?: number;
+  basename?: string;
+  children?: React.ReactNode;
+  initialEntries?: InitialEntry[];
+  initialIndex?: number;
 }
 ```
 
@@ -213,25 +213,25 @@ A `<MemoryRouter>` stores its locations internally in an array. Unlike `<Browser
 import React from "react";
 import { create } from "react-test-renderer";
 import {
-	MemoryRouter,
-	Routes,
-	Route
+  MemoryRouter,
+  Routes,
+  Route
 } from "react-router-dom";
 
 describe("My app", () => {
-	it("renders correctly", () => {
-		let renderer = create(
-			<MemoryRouter initialEntries={["/users/mjackson"]}>
-				<Routes>
-					<Route path="users" element={<Users />}>
-						<Route path=":id" element={<UserProfile />} />
-					</Route>
-				</Routes>
-			</MemoryRouter>
-		);
+  it("renders correctly", () => {
+    let renderer = create(
+      <MemoryRouter initialEntries={["/users/mjackson"]}>
+        <Routes>
+          <Route path="users" element={<Users />}>
+            <Route path=":id" element={<UserProfile />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    );
 
-		expect(renderer.toJSON()).toMatchSnapshot();
-	});
+    expect(renderer.toJSON()).toMatchSnapshot();
+  });
 });
 ```
 
@@ -249,13 +249,13 @@ describe("My app", () => {
 declare function Link(props: LinkProps): React.ReactElement;
 
 interface LinkProps
-	extends Omit<
-		React.AnchorHTMLAttributes<HTMLAnchorElement>,
-		"href"
-	> {
-	replace?: boolean;
-	state?: State;
-	to: To;
+  extends Omit<
+    React.AnchorHTMLAttributes<HTMLAnchorElement>,
+    "href"
+  > {
+  replace?: boolean;
+  state?: State;
+  to: To;
 }
 
 type State = object | null;
@@ -271,18 +271,18 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 function UsersIndexPage({ users }) {
-	return (
-		<div>
-			<h1>Users</h1>
-			<ul>
-				{users.map(user => (
-					<li key={user.id}>
-						<Link to={user.id}>{user.name}</Link>
-					</li>
-				))}
-			</ul>
-		</div>
-	);
+  return (
+    <div>
+      <h1>Users</h1>
+      <ul>
+        {users.map(user => (
+          <li key={user.id}>
+            <Link to={user.id}>{user.name}</Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 ```
 
@@ -311,11 +311,11 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 declare function Link(props: LinkProps): React.ReactElement;
 
 interface LinkProps extends TouchableHighlightProps {
-	children?: React.ReactNode;
-	onPress?(event: GestureResponderEvent): void;
-	replace?: boolean;
-	state?: State;
-	to: To;
+  children?: React.ReactNode;
+  onPress?(event: GestureResponderEvent): void;
+  replace?: boolean;
+  state?: State;
+  to: To;
 }
 ```
 
@@ -329,12 +329,12 @@ import { View, Text } from "react-native";
 import { Link } from "react-router-native";
 
 function Home() {
-	return (
-		<View>
-			<Text>Welcome!</Text>
-			<Link to="/profile">Visit your profile</Link>
-		</View>
-	);
+  return (
+    <View>
+      <Text>Welcome!</Text>
+      <Link to="/profile">Visit your profile</Link>
+    </View>
+  );
 }
 ```
 
@@ -345,21 +345,21 @@ function Home() {
 
 ```tsx
 declare function NavLink(
-	props: NavLinkProps
+  props: NavLinkProps
 ): React.ReactElement;
 
 interface NavLinkProps
-	extends Omit<LinkProps, "className" | "style"> {
-	caseSensitive?: boolean;
-	className?:
-		| string
-		| ((props: { isActive: boolean }) => string);
-	end?: boolean;
-	style?:
-		| React.CSSProperties
-		| ((props: {
-				isActive: boolean;
-		  }) => React.CSSProperties);
+  extends Omit<LinkProps, "className" | "style"> {
+  caseSensitive?: boolean;
+  className?:
+    | string
+    | ((props: { isActive: boolean }) => string);
+  end?: boolean;
+  style?:
+    | React.CSSProperties
+    | ((props: {
+        isActive: boolean;
+      }) => React.CSSProperties);
 }
 ```
 
@@ -374,38 +374,38 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 
 function NavList() {
-	// This styling will be applied to a <NavLink> when the
-	// route that it links to is currently selected.
-	let activeStyle = {
-		textDecoration: "underline"
-	};
+  // This styling will be applied to a <NavLink> when the
+  // route that it links to is currently selected.
+  let activeStyle = {
+    textDecoration: "underline"
+  };
 
-	return (
-		<nav>
-			<ul>
-				<li>
-					<NavLink
-						to="messages"
-						style={({ isActive }) =>
-							isActive ? activeStyle : undefined
-						}
-					>
-						Messages
-					</NavLink>
-				</li>
-				<li>
-					<NavLink
-						to="tasks"
-						style={({ isActive }) =>
-							isActive ? activeStyle : undefined
-						}
-					>
-						Tasks
-					</NavLink>
-				</li>
-			</ul>
-		</nav>
-	);
+  return (
+    <nav>
+      <ul>
+        <li>
+          <NavLink
+            to="messages"
+            style={({ isActive }) =>
+              isActive ? activeStyle : undefined
+            }
+          >
+            Messages
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            to="tasks"
+            style={({ isActive }) =>
+              isActive ? activeStyle : undefined
+            }
+          >
+            Tasks
+          </NavLink>
+        </li>
+      </ul>
+    </nav>
+  );
 }
 ```
 
@@ -416,26 +416,26 @@ import React from "react";
 import { NavLink as BaseNavLink } from "react-router-dom";
 
 const NavLink = React.forwardRef(
-	({ activeClassName, activeStyle, ...props }, ref) => {
-		return (
-			<BaseNavLink
-				ref={ref}
-				{...props}
-				className={({ isActive }) =>
-					[
-						props.className,
-						isActive ? activeClassName : null
-					]
-						.filter(Boolean)
-						.join(" ")
-				}
-				style={({ isActive }) => ({
-					...props.style,
-					...(isActive ? activeStyle : null)
-				})}
-			/>
-		);
-	}
+  ({ activeClassName, activeStyle, ...props }, ref) => {
+    return (
+      <BaseNavLink
+        ref={ref}
+        {...props}
+        className={({ isActive }) =>
+          [
+            props.className,
+            isActive ? activeClassName : null
+          ]
+            .filter(Boolean)
+            .join(" ")
+        }
+        style={({ isActive }) => ({
+          ...props.style,
+          ...(isActive ? activeStyle : null)
+        })}
+      />
+    );
+  }
 );
 ```
 
@@ -443,7 +443,7 @@ If the `end` prop is used, it will ensure this component isn't matched as "activ
 
 ```tsx
 <NavLink to="/" end>
-	Home
+  Home
 </NavLink>
 ```
 
@@ -456,9 +456,9 @@ If the `end` prop is used, it will ensure this component isn't matched as "activ
 declare function Navigate(props: NavigateProps): null;
 
 interface NavigateProps {
-	to: To;
-	replace?: boolean;
-	state?: State;
+  to: To;
+  replace?: boolean;
+  state?: State;
 }
 ```
 
@@ -477,33 +477,33 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 
 class LoginForm extends React.Component {
-	state = { user: null, error: null };
+  state = { user: null, error: null };
 
-	async handleSubmit(event) {
-		event.preventDefault();
-		try {
-			let user = await login(event.target);
-			this.setState({ user });
-		} catch (error) {
-			this.setState({ error });
-		}
-	}
+  async handleSubmit(event) {
+    event.preventDefault();
+    try {
+      let user = await login(event.target);
+      this.setState({ user });
+    } catch (error) {
+      this.setState({ error });
+    }
+  }
 
-	render() {
-		let { user, error } = this.state;
-		return (
-			<div>
-				{error && <p>{error.message}</p>}
-				{user && (
-					<Navigate to="/dashboard" replace={true} />
-				)}
-				<form onSubmit={event => this.handleSubmit(event)}>
-					<input type="text" name="username" />
-					<input type="password" name="password" />
-				</form>
-			</div>
-		);
-	}
+  render() {
+    let { user, error } = this.state;
+    return (
+      <div>
+        {error && <p>{error.message}</p>}
+        {user && (
+          <Navigate to="/dashboard" replace={true} />
+        )}
+        <form onSubmit={event => this.handleSubmit(event)}>
+          <input type="text" name="username" />
+          <input type="password" name="password" />
+        </form>
+      </div>
+    );
+  }
 }
 ```
 
@@ -522,30 +522,30 @@ An `<Outlet>` should be used in parent route elements to render their child rout
 
 ```tsx
 function Dashboard() {
-	return (
-		<div>
-			<h1>Dashboard</h1>
+  return (
+    <div>
+      <h1>Dashboard</h1>
 
-			{/* This element will render either <DashboardMessages> when the URL is
+      {/* This element will render either <DashboardMessages> when the URL is
           "/messages", <DashboardTasks> at "/tasks", or null if it is "/"
       */}
-			<Outlet />
-		</div>
-	);
+      <Outlet />
+    </div>
+  );
 }
 
 function App() {
-	return (
-		<Routes>
-			<Route path="/" element={<Dashboard />}>
-				<Route
-					path="messages"
-					element={<DashboardMessages />}
-				/>
-				<Route path="tasks" element={<DashboardTasks />} />
-			</Route>
-		</Routes>
-	);
+  return (
+    <Routes>
+      <Route path="/" element={<Dashboard />}>
+        <Route
+          path="messages"
+          element={<DashboardMessages />}
+        />
+        <Route path="tasks" element={<DashboardTasks />} />
+      </Route>
+    </Routes>
+  );
 }
 ```
 
@@ -556,16 +556,16 @@ function App() {
 
 ```tsx
 declare function Router(
-	props: RouterProps
+  props: RouterProps
 ): React.ReactElement | null;
 
 interface RouterProps {
-	action?: Action;
-	basename?: string;
-	children?: React.ReactNode;
-	location: Partial<Location> | string;
-	navigator: Navigator;
-	static?: boolean;
+  action?: Action;
+  basename?: string;
+  children?: React.ReactNode;
+  location: Partial<Location> | string;
+  navigator: Navigator;
+  static?: boolean;
 }
 ```
 
@@ -588,24 +588,24 @@ The `<Router basename>` prop may be used to make all routes and links in your ap
 
 ```tsx
 declare function Routes(
-	props: RoutesProps
+  props: RoutesProps
 ): React.ReactElement | null;
 
 interface RoutesProps {
-	children?: React.ReactNode;
-	location?: Partial<Location> | string;
+  children?: React.ReactNode;
+  location?: Partial<Location> | string;
 }
 
 declare function Route(
-	props: RouteProps
+  props: RouteProps
 ): React.ReactElement | null;
 
 interface RouteProps {
-	caseSensitive?: boolean;
-	children?: React.ReactNode;
-	element?: React.ReactElement | null;
-	index?: boolean;
-	path?: string;
+  caseSensitive?: boolean;
+  children?: React.ReactNode;
+  element?: React.ReactElement | null;
+  index?: boolean;
+  path?: string;
 }
 ```
 
@@ -617,14 +617,14 @@ Whenever the location changes, `<Routes>` looks through all its `children` `<Rou
 
 ```tsx
 <Routes>
-	<Route path="/" element={<Dashboard />}>
-		<Route
-			path="messages"
-			element={<DashboardMessages />}
-		/>
-		<Route path="tasks" element={<DashboardTasks />} />
-	</Route>
-	<Route path="about" element={<AboutPage />} />
+  <Route path="/" element={<Dashboard />}>
+    <Route
+      path="messages"
+      element={<DashboardMessages />}
+    />
+    <Route path="tasks" element={<DashboardTasks />} />
+  </Route>
+  <Route path="about" element={<AboutPage />} />
 </Routes>
 ```
 
@@ -639,7 +639,7 @@ For example, in the following config the parent route renders an `<Outlet>` by d
 
 ```tsx
 <Route path="users">
-	<Route path=":id" element={<UserProfile />} />
+  <Route path=":id" element={<UserProfile />} />
 </Route>
 ```
 
@@ -650,13 +650,13 @@ For example, in the following config the parent route renders an `<Outlet>` by d
 
 ```tsx
 declare function StaticRouter(
-	props: StaticRouterProps
+  props: StaticRouterProps
 ): React.ReactElement;
 
 interface StaticRouterProps {
-	basename?: string;
-	children?: React.ReactNode;
-	location?: Path | LocationPieces;
+  basename?: string;
+  children?: React.ReactNode;
+  location?: Path | LocationPieces;
 }
 ```
 
@@ -673,14 +673,14 @@ import { StaticRouter } from "react-router-dom/server";
 import http from "http";
 
 function requestHandler(req, res) {
-	let html = ReactDOMServer.renderToString(
-		<StaticRouter location={req.url}>
-			{/* The rest of your app goes here */}
-		</StaticRouter>
-	);
+  let html = ReactDOMServer.renderToString(
+    <StaticRouter location={req.url}>
+      {/* The rest of your app goes here */}
+    </StaticRouter>
+  );
 
-	res.write(html);
-	res.end();
+  res.write(html);
+  res.end();
 }
 
 http.createServer(requestHandler).listen(3000);
@@ -693,21 +693,21 @@ http.createServer(requestHandler).listen(3000);
 
 ```tsx
 declare function createRoutesFromArray(
-	array: PartialRouteObject[]
+  array: PartialRouteObject[]
 ): RouteObject[];
 
 interface PartialRouteObject {
-	path?: string;
-	caseSensitive?: boolean;
-	element?: React.ReactNode;
-	children?: PartialRouteObject[];
+  path?: string;
+  caseSensitive?: boolean;
+  element?: React.ReactNode;
+  children?: PartialRouteObject[];
 }
 
 interface RouteObject {
-	caseSensitive: boolean;
-	children?: RouteObject[];
-	element: React.ReactNode;
-	path: string;
+  caseSensitive: boolean;
+  children?: RouteObject[];
+  element: React.ReactNode;
+  path: string;
 }
 ```
 
@@ -723,15 +723,15 @@ interface RouteObject {
 
 ```tsx
 declare function createRoutesFromChildren(
-	children: React.ReactNode
+  children: React.ReactNode
 ): RouteObject[];
 
 interface RouteObject {
-	caseSensitive?: boolean;
-	children?: RouteObject[];
-	element?: React.ReactNode;
-	index?: boolean;
-	path?: string;
+  caseSensitive?: boolean;
+  children?: RouteObject[];
+  element?: React.ReactNode;
+  index?: boolean;
+  path?: string;
 }
 ```
 
@@ -746,8 +746,8 @@ interface RouteObject {
 
 ```tsx
 declare function generatePath(
-	path: string,
-	params?: Params
+  path: string,
+  params?: Params
 ): string;
 ```
 
@@ -758,8 +758,8 @@ declare function generatePath(
 ```tsx
 generatePath("/users/:id", { id: 42 }); // "/users/42"
 generatePath("/files/:type/*", {
-	type: "img",
-	"*": "cat.jpg"
+  type: "img",
+  "*": "cat.jpg"
 }); // "/files/img/cat.jpg"
 ```
 
@@ -781,15 +781,15 @@ The term "location" in React Router refers to [the `Location` interface](https:/
 
 ```tsx
 declare function matchRoutes(
-	routes: RouteObject[],
-	location: Partial<Location> | string,
-	basename?: string
+  routes: RouteObject[],
+  location: Partial<Location> | string,
+  basename?: string
 ): RouteMatch[] | null;
 
 interface RouteMatch<ParamKey extends string = string> {
-	params: Params<ParamKey>;
-	pathname: string;
-	route: RouteObject;
+  params: Params<ParamKey>;
+  pathname: string;
+  route: RouteObject;
 }
 ```
 
@@ -806,7 +806,7 @@ This is the heart of React Router's matching algorithm. It is used internally by
 
 ```tsx
 declare function renderMatches(
-	matches: RouteMatch[] | null
+  matches: RouteMatch[] | null
 ): React.ReactElement | null;
 ```
 
@@ -821,22 +821,22 @@ declare function renderMatches(
 
 ```tsx
 declare function matchPath<
-	ParamKey extends string = string
+  ParamKey extends string = string
 >(
-	pattern: PathPattern | string,
-	pathname: string
+  pattern: PathPattern | string,
+  pathname: string
 ): PathMatch<ParamKey> | null;
 
 interface PathMatch<ParamKey extends string = string> {
-	params: Params<ParamKey>;
-	pathname: string;
-	pattern: PathPattern;
+  params: Params<ParamKey>;
+  pathname: string;
+  pattern: PathPattern;
 }
 
 interface PathPattern {
-	path: string;
-	caseSensitive?: boolean;
-	end?: boolean;
+  path: string;
+  caseSensitive?: boolean;
+  end?: boolean;
 }
 ```
 
@@ -853,16 +853,16 @@ The [`useMatch` hook](#usematch) uses this function internally to match a route 
 
 ```tsx
 declare function resolvePath(
-	to: To,
-	fromPathname?: string
+  to: To,
+  fromPathname?: string
 ): Path;
 
 type To = Partial<Location> | string;
 
 interface Path {
-	pathname: string;
-	search: string;
-	hash: string;
+  pathname: string;
+  search: string;
+  hash: string;
 }
 ```
 
@@ -898,15 +898,15 @@ The `useHref` hook returns a URL that may be used to link to the given `to` loca
 
 ```tsx
 declare function useLinkClickHandler<
-	E extends Element = HTMLAnchorElement,
-	S extends State = State
+  E extends Element = HTMLAnchorElement,
+  S extends State = State
 >(
-	to: To,
-	options?: {
-		target?: React.HTMLAttributeAnchorTarget;
-		replace?: boolean;
-		state?: S;
-	}
+  to: To,
+  options?: {
+    target?: React.HTMLAttributeAnchorTarget;
+    replace?: boolean;
+    state?: S;
+  }
 ): (event: React.MouseEvent<E, MouseEvent>) => void;
 ```
 
@@ -916,46 +916,46 @@ The `useLinkClickHandler` hook returns a click event handler to for navigation w
 
 ```tsx
 import {
-	useHref,
-	useLinkClickHandler
+  useHref,
+  useLinkClickHandler
 } from "react-router-dom";
 
 const StyledLink = styled("a", { color: "fuschia" });
 
 const Link = React.forwardRef(
-	(
-		{
-			onClick,
-			replace = false,
-			state,
-			target,
-			to,
-			...rest
-		},
-		ref
-	) => {
-		let href = useHref(to);
-		let handleClick = useLinkClickHandler(to, {
-			replace,
-			state,
-			target
-		});
+  (
+    {
+      onClick,
+      replace = false,
+      state,
+      target,
+      to,
+      ...rest
+    },
+    ref
+  ) => {
+    let href = useHref(to);
+    let handleClick = useLinkClickHandler(to, {
+      replace,
+      state,
+      target
+    });
 
-		return (
-			<StyledLink
-				{...rest}
-				href={href}
-				onClick={event => {
-					onClick?.(event);
-					if (!event.defaultPrevented) {
-						handleClick(event);
-					}
-				}}
-				ref={ref}
-				target={target}
-			/>
-		);
-	}
+    return (
+      <StyledLink
+        {...rest}
+        href={href}
+        onClick={event => {
+          onClick?.(event);
+          if (!event.defaultPrevented) {
+            handleClick(event);
+          }
+        }}
+        ref={ref}
+        target={target}
+      />
+    );
+  }
 );
 ```
 
@@ -966,13 +966,13 @@ const Link = React.forwardRef(
 
 ```tsx
 declare function useLinkPressHandler<
-	S extends State = State
+  S extends State = State
 >(
-	to: To,
-	options?: {
-		replace?: boolean;
-		state?: S;
-	}
+  to: To,
+  options?: {
+    replace?: boolean;
+    state?: S;
+  }
 ): (event: GestureResponderEvent) => void;
 ```
 
@@ -985,28 +985,28 @@ import { TouchableHighlight } from "react-native";
 import { useLinkPressHandler } from "react-router-native";
 
 function Link({
-	onPress,
-	replace = false,
-	state,
-	to,
-	...rest
+  onPress,
+  replace = false,
+  state,
+  to,
+  ...rest
 }) {
-	let handlePress = useLinkPressHandler(to, {
-		replace,
-		state
-	});
+  let handlePress = useLinkPressHandler(to, {
+    replace,
+    state
+  });
 
-	return (
-		<TouchableHighlight
-			{...rest}
-			onPress={event => {
-				onPress?.(event);
-				if (!event.defaultPrevented) {
-					handlePress(event);
-				}
-			}}
-		/>
-	);
+  return (
+    <TouchableHighlight
+      {...rest}
+      onPress={event => {
+        onPress?.(event);
+        if (!event.defaultPrevented) {
+          handlePress(event);
+        }
+      }}
+    />
+  );
 }
 ```
 
@@ -1032,9 +1032,9 @@ The `useInRouterContext` hooks returns `true` if the component is being rendered
 declare function useLocation(): Location;
 
 interface Location<S extends State = object | null>
-	extends Path {
-	state: S;
-	key: Key;
+  extends Path {
+  state: S;
+  key: Key;
 }
 ```
 
@@ -1066,7 +1066,7 @@ function App() {
 
 ```tsx
 declare function useMatch<ParamKey extends string = string>(
-	pattern: PathPattern | string
+  pattern: PathPattern | string
 ): PathMatch<ParamKey> | null;
 ```
 
@@ -1085,11 +1085,11 @@ See [`matchPath`](#matchpath) for more information.
 declare function useNavigate(): NavigateFunction;
 
 interface NavigateFunction {
-	(
-		to: To,
-		options?: { replace?: boolean; state?: State }
-	): void;
-	(delta: number): void;
+  (
+    to: To,
+    options?: { replace?: boolean; state?: State }
+  ): void;
+  (delta: number): void;
 }
 ```
 
@@ -1101,15 +1101,15 @@ The `useNavigate` hook returns a function that lets you navigate programmaticall
 import { useNavigate } from "react-router-dom";
 
 function SignupForm() {
-	let navigate = useNavigate();
+  let navigate = useNavigate();
 
-	async function handleSubmit(event) {
-		event.preventDefault();
-		await submitForm(event.target);
-		navigate("../success", { replace: true });
-	}
+  async function handleSubmit(event) {
+    event.preventDefault();
+    await submitForm(event.target);
+    navigate("../success", { replace: true });
+  }
 
-	return <form onSubmit={handleSubmit}>{/* ... */}</form>;
+  return <form onSubmit={handleSubmit}>{/* ... */}</form>;
 }
 ```
 
@@ -1138,7 +1138,7 @@ Returns the element for the child route at this level of the route hierarchy. Th
 
 ```tsx
 declare function useParams<
-	K extends string = string
+  K extends string = string
 >(): Readonly<Params<K>>;
 ```
 
@@ -1208,22 +1208,22 @@ import React from "react";
 import { useRoutes } from "react-router-dom";
 
 function App() {
-	let element = useRoutes([
-		{
-			path: "/",
-			element: <Dashboard />,
-			children: [
-				{
-					path: "messages",
-					element: <DashboardMessages />
-				},
-				{ path: "tasks", element: <DashboardTasks /> }
-			]
-		},
-		{ path: "team", element: <AboutPage /> }
-	]);
+  let element = useRoutes([
+    {
+      path: "/",
+      element: <Dashboard />,
+      children: [
+        {
+          path: "messages",
+          element: <DashboardMessages />
+        },
+        { path: "tasks", element: <DashboardTasks /> }
+      ]
+    },
+    { path: "team", element: <AboutPage /> }
+  ]);
 
-	return element;
+  return element;
 }
 ```
 
@@ -1241,22 +1241,22 @@ See also [`createRoutesFromArray`](#createroutesfromarray).
 
 ```tsx
 declare function useSearchParams(
-	defaultInit?: URLSearchParamsInit
+  defaultInit?: URLSearchParamsInit
 ): [URLSearchParams, URLSearchParamsSetter];
 
 type ParamKeyValuePair = [string, string];
 
 type URLSearchParamsInit =
-	| string
-	| ParamKeyValuePair[]
-	| Record<string, string | string[]>
-	| URLSearchParams;
+  | string
+  | ParamKeyValuePair[]
+  | Record<string, string | string[]>
+  | URLSearchParams;
 
 interface URLSearchParamsSetter {
-	(
-		nextInit: URLSearchParamsInit,
-		navigateOptions?: { replace?: boolean; state?: State }
-	): void;
+  (
+    nextInit: URLSearchParamsInit,
+    navigateOptions?: { replace?: boolean; state?: State }
+  ): void;
 }
 ```
 
@@ -1269,22 +1269,22 @@ import React from "react";
 import { useSearchParams } from "react-router-dom";
 
 function App() {
-	let [searchParams, setSearchParams] = useSearchParams();
+  let [searchParams, setSearchParams] = useSearchParams();
 
-	function handleSubmit(event) {
-		event.preventDefault();
-		// The serialize function here would be responsible for
-		// creating an object of { key: value } pairs from the
-		// fields in the form that make up the query.
-		let params = serializeFormQuery(event.target);
-		setSearchParams(params);
-	}
+  function handleSubmit(event) {
+    event.preventDefault();
+    // The serialize function here would be responsible for
+    // creating an object of { key: value } pairs from the
+    // fields in the form that make up the query.
+    let params = serializeFormQuery(event.target);
+    setSearchParams(params);
+  }
 
-	return (
-		<div>
-			<form onSubmit={handleSubmit}>{/* ... */}</form>
-		</div>
-	);
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>{/* ... */}</form>
+    </div>
+  );
 }
 ```
 
@@ -1309,22 +1309,22 @@ function App() {
 
 ```tsx
 declare function useSearchParams(
-	defaultInit?: URLSearchParamsInit
+  defaultInit?: URLSearchParamsInit
 ): [URLSearchParams, URLSearchParamsSetter];
 
 type ParamKeyValuePair = [string, string];
 
 type URLSearchParamsInit =
-	| string
-	| ParamKeyValuePair[]
-	| Record<string, string | string[]>
-	| URLSearchParams;
+  | string
+  | ParamKeyValuePair[]
+  | Record<string, string | string[]>
+  | URLSearchParams;
 
 interface URLSearchParamsSetter {
-	(
-		nextInit: URLSearchParamsInit,
-		navigateOptions?: { replace?: boolean; state?: State }
-	): void;
+  (
+    nextInit: URLSearchParamsInit,
+    navigateOptions?: { replace?: boolean; state?: State }
+  ): void;
 }
 ```
 
@@ -1338,22 +1338,22 @@ import { View, SearchForm, TextInput } from "react-native";
 import { useSearchParams } from "react-router-native";
 
 function App() {
-	let [searchParams, setSearchParams] = useSearchParams();
-	let [query, setQuery] = React.useState(
-		searchParams.get("query")
-	);
+  let [searchParams, setSearchParams] = useSearchParams();
+  let [query, setQuery] = React.useState(
+    searchParams.get("query")
+  );
 
-	function handleSubmit() {
-		setSearchParams({ query });
-	}
+  function handleSubmit() {
+    setSearchParams({ query });
+  }
 
-	return (
-		<View>
-			<SearchForm onSubmit={handleSubmit}>
-				<TextInput value={query} onChangeText={setQuery} />
-			</SearchForm>
-		</View>
-	);
+  return (
+    <View>
+      <SearchForm onSubmit={handleSubmit}>
+        <TextInput value={query} onChangeText={setQuery} />
+      </SearchForm>
+    </View>
+  );
 }
 ```
 
@@ -1364,7 +1364,7 @@ function App() {
 
 ```tsx
 declare function createSearchParams(
-	init?: URLSearchParamsInit
+  init?: URLSearchParamsInit
 ): URLSearchParams;
 ```
 

@@ -28,20 +28,20 @@ First you'll need some sort of "app" or "root" component that gets rendered on t
 
 ```js filename=App.js
 export default function App() {
-	return (
-		<html>
-			<head>
-				<title>Server Rendered App</title>
-			</head>
-			<body>
-				<Routes>
-					<Route path="/" element={<div>Home</div>} />
-					<Route path="/about" element={<div>About</div>} />
-				</Routes>
-				<script src="/build/client.entry.js" />
-			</body>
-		</html>
-	);
+  return (
+    <html>
+      <head>
+        <title>Server Rendered App</title>
+      </head>
+      <body>
+        <Routes>
+          <Route path="/" element={<div>Home</div>} />
+          <Route path="/about" element={<div>About</div>} />
+        </Routes>
+        <script src="/build/client.entry.js" />
+      </body>
+    </html>
+  );
 }
 ```
 
@@ -75,10 +75,10 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 
 ReactDOM.render(
-	<BrowserRouter>
-		<App />
-	</BrowserRouter>,
-	document.documentElement
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+  document.documentElement
 );
 ```
 
