@@ -2,3 +2,4 @@
 /fixtures/
 node_modules/
 /docs/api
+examples/**/dist/
