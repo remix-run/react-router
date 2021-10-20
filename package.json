@@ -3,9 +3,8 @@
   "scripts": {
     "build": "rollup -c && tsc -b",
     "clean": "git clean -fdX .",
-    "lint": "eslint --cache --ext .js,.jsx,.ts,.tsx .",
+    "lint": "eslint --cache .",
     "format": "prettier --ignore-path .eslintignore --write .",
-    "format:ci": "prettier --ignore-path .eslintignore --check .",
     "publish": "node ./scripts/publish.js",
     "size": "filesize",
     "test": "jest",
