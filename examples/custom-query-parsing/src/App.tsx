@@ -13,57 +13,119 @@ export default function App() {
   );
 }
 
-function useQuery(): [
-  { get(key: string): any },
-  (key: string, newQuery: any) => void
-] {
+function useQuery<T>(key: string): [T | undefined, (newQuery: T) => void] {
   let [search, setSearch] = useSearchParams();
+  let searchValue = search.get(key);
 
   let query = React.useMemo(() => {
-    return {
-      get(key: string) {
-        let searchValue = search.get(key);
-        return JSURL.parse(searchValue);
-      }
-    };
-  }, [search]);
+    let parsed = JSURL.parse(searchValue);
+    return parsed;
+  }, [searchValue]);
 
   let setQuery = React.useCallback(
-    (key: string, newQuery: any) => {
-      setSearch({
-        ...search,
-        [key]: JSURL.stringify(newQuery)
-      });
+    (newQuery: T) => {
+      setSearch(
+        {
+          ...search,
+          [key]: JSURL.stringify(newQuery)
+        },
+        { replace: true }
+      );
     },
-    [search, setSearch]
+    [key, search, setSearch]
   );
 
   return [query, setQuery];
 }
 
+interface Pizza {
+  toppings: string[];
+  crust: string;
+  extraSauce: boolean;
+}
+
 function Home() {
-  let [query, setQuery] = useQuery({
-    stringify: JSURL.stringify,
-    parse: JSURL.parse
-  });
-  let data = query.get("data");
+  let [pizza, setPizza] = useQuery<Pizza>("pizza");
+
+  function change(event: React.ChangeEvent<HTMLFormElement>) {
+    let form = event.currentTarget;
+    let formData = new FormData(form);
+
+    let pizza: Pizza = {
+      toppings: formData.getAll("toppings") as string[],
+      crust: formData.get("crust") as string,
+      extraSauce: formData.get("extraSauce") === "on"
+    };
+
+    setPizza(pizza);
+  }
 
   return (
     <div>
       <h1>Custom Query Parse Serialization Example</h1>
-      <button
-        type="button"
-        onClick={() => {
-          setQuery("data", {
-            name: "John Doe",
-            age: 42,
-            children: ["Mary", "Bill"]
-          });
-        }}
-      >
-        Stringify data
-      </button>
-      {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
+      <form onChange={change}>
+        <p>
+          <label>
+            Pepperoni
+            <input
+              defaultChecked={pizza?.toppings.includes("pepperoni")}
+              type="checkbox"
+              name="toppings"
+              value="pepperoni"
+            />
+          </label>
+          <label>
+            Olives
+            <input
+              type="checkbox"
+              name="toppings"
+              value="olives"
+              defaultChecked={pizza?.toppings.includes("olives")}
+            />
+          </label>
+        </p>
+        <p>
+          <label>
+            Thin Crust
+            <input
+              type="radio"
+              name="crust"
+              value="thin"
+              defaultChecked={pizza?.crust === "thin"}
+            />
+          </label>
+          <label>
+            Regular Crust
+            <input
+              type="radio"
+              name="crust"
+              value="regular"
+              defaultChecked={pizza?.crust === "regular"}
+            />
+          </label>
+          <label>
+            Deep Dish
+            <input
+              type="radio"
+              name="crust"
+              value="deep-dish"
+              defaultChecked={pizza?.crust === "dish-dish"}
+            />
+          </label>
+        </p>
+        <p>
+          <label>
+            Extra Sauce
+            <input
+              type="checkbox"
+              name="extraSauce"
+              defaultChecked={pizza?.extraSauce}
+            />
+          </label>
+        </p>
+      </form>
+
+      {pizza && <pre>{JSON.stringify(pizza, null, 2)}</pre>}
     </div>
   );
 }
