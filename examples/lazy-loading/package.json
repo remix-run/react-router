@@ -1,5 +1,5 @@
 {
-  "name": "code-splitting",
+  "name": "lazy-loading",
   "private": true,
   "scripts": {
     "dev": "vite",
