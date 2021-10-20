@@ -50,6 +50,9 @@ function Layout() {
             <Link to="/dashboard">Dashboard</Link>
           </li>
           <li>
+            <Link to="/dashboard/messages">Messages</Link>
+          </li>
+          <li>
             <Link to="/nothing-here">Nothing Here</Link>
           </li>
         </ul>
