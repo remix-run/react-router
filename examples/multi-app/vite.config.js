@@ -15,6 +15,14 @@ export default defineConfig({
     }),
     react()
   ],
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        inbox: path.resolve(__dirname, "inbox/index.html")
+      }
+    }
+  },
   resolve: process.env.USE_SOURCE
     ? {
         alias: {

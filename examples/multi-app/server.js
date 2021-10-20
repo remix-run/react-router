@@ -20,54 +20,31 @@ async function createServer() {
     app.use(vite.middlewares);
   } else {
     app.use(require("compression")());
-    app.use(express.static(path.join(__dirname, "dist/home/client")));
-    app.use(express.static(path.join(__dirname, "dist/inbox/client")));
+    app.use(express.static(path.join(__dirname, "dist")));
   }
 
   app.use("*", async (req, res) => {
     let url = req.originalUrl;
-    let template;
-    let render;
 
-    let htmlFileToLoad = url.startsWith("/inbox")
-      ? isProduction
-        ? "inbox/client/index.html"
-        : "inbox/index.html"
-      : isProduction
-      ? "home/client/index.html"
-      : "index.html";
+    let appDirectory = url.startsWith("/inbox") ? "inbox" : "";
+    let htmlFileToLoad;
 
-    let appDirectory = url.startsWith("/inbox") ? "inbox" : "home";
+    if (isProduction) {
+      htmlFileToLoad = path.join("dist", appDirectory, "index.html");
+    } else {
+      htmlFileToLoad = path.join(appDirectory, "index.html");
+    }
 
     try {
+      let html = await fsp.readFile(
+        path.join(__dirname, htmlFileToLoad),
+        "utf8"
+      );
+
       if (!isProduction) {
-        template = await fsp.readFile(
-          path.resolve(__dirname, htmlFileToLoad),
-          "utf8"
-        );
-        template = await vite.transformIndexHtml(url, template);
-        render = await vite
-          .ssrLoadModule(
-            path.resolve(__dirname, appDirectory, "entry.server.jsx")
-          )
-          .then(m => m.render);
-      } else {
-        template = await fsp.readFile(
-          path.resolve(__dirname, "dist", htmlFileToLoad),
-          "utf8"
-        );
-        render = require(path.resolve(
-          __dirname,
-          "dist",
-          appDirectory,
-          "server",
-          "entry.server.js"
-        )).render;
+        html = await vite.transformIndexHtml(req.url, html);
       }
 
-      let appHTML = await render(url);
-
-      let html = template.replace("<!--ssr-outlet-->", appHTML);
       res.setHeader("Content-Type", "text/html");
       return res.status(200).end(html);
     } catch (error) {

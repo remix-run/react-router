@@ -1,8 +1,7 @@
-import { Routes, Route, useParams, Link } from "react-router-dom";
-import { Layout } from "../shared/layout";
-import { NoMatch } from "../shared/no-match";
-import "../shared/index.css";
+import { Routes, Route, useParams, Link, Outlet } from "react-router-dom";
+import "./index.css";
 import { getMessageById, messages } from "./messages";
+import { NoMatch } from "./no-match";
 
 export default function InboxApp() {
   return (
@@ -13,6 +12,31 @@ export default function InboxApp() {
         <Route path="*" element={<NoMatch />} />
       </Route>
     </Routes>
+  );
+}
+
+function Layout({ app }) {
+  return (
+    <div>
+      <h1>Welcome to the {app} app!</h1>
+      <nav>
+        <ul>
+          <li>
+            <a href="/">Home</a>
+          </li>
+          <li>
+            <a href="/about">About</a>
+          </li>
+          <li>
+            <Link to="/">Inbox</Link>
+          </li>
+        </ul>
+      </nav>
+
+      <hr />
+
+      <Outlet />
+    </div>
   );
 }
 

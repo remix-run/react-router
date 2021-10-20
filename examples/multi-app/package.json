@@ -3,16 +3,14 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=development node server.js",
-    "build": "npm run build:client && npm run build:server",
-    "build:client": "vite build --outDir dist/home/client --ssrManifest && vite build --outDir dist/inbox/client --ssrManifest",
-    "build:server": "vite build --ssr home/entry.server.jsx --outDir dist/home/server && vite build --ssr inbox/entry.server.jsx --outDir dist/inbox/server",
+    "build": "vite build",
     "start": "cross-env NODE_ENV=production node server.js",
     "debug": "node --inspect-brk server.js"
   },
   "dependencies": {
-    "compression": "1.7.4",
-    "cross-env": "7.0.3",
-    "express": "4.17.1",
+    "compression": "^1.7.4",
+    "cross-env": "^7.0.3",
+    "express": "^4.17.1",
     "history": "latest",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -20,8 +18,8 @@
     "react-router-dom": "next"
   },
   "devDependencies": {
-    "@rollup/plugin-replace": "3.0.0",
-    "@vitejs/plugin-react": "^1.0.2",
-    "vite": "2.6.3"
+    "@rollup/plugin-replace": "^3.0.0",
+    "@vitejs/plugin-react": "^1.0.5",
+    "vite": "^2.6.10"
   }
 }
