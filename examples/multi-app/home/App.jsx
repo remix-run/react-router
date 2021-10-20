@@ -5,7 +5,7 @@ import "./index.css";
 export default function HomeApp() {
   return (
     <Routes>
-      <Route path="/" element={<Layout app="Home" />}>
+      <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="about" element={<About />} />
         <Route path="*" element={<NoMatch />} />
@@ -14,10 +14,10 @@ export default function HomeApp() {
   );
 }
 
-function Layout({ app }) {
+function Layout() {
   return (
     <div>
-      <h1>Welcome to the {app} app!</h1>
+      <h1>Welcome to the Home app!</h1>
       <nav>
         <ul>
           <li>

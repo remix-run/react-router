@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import HomeApp from "./App";
 
-ReactDOM.hydrate(
+ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
       <HomeApp />

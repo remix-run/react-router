@@ -6,7 +6,7 @@ import { NoMatch } from "./no-match";
 export default function InboxApp() {
   return (
     <Routes>
-      <Route path="/" element={<Layout app="Inbox" />}>
+      <Route path="/" element={<Layout />}>
         <Route index element={<Inbox />} />
         <Route path=":id" element={<Message />} />
         <Route path="*" element={<NoMatch />} />
@@ -15,10 +15,10 @@ export default function InboxApp() {
   );
 }
 
-function Layout({ app }) {
+function Layout() {
   return (
     <div>
-      <h1>Welcome to the {app} app!</h1>
+      <h1>Welcome to the Inbox app!</h1>
       <nav>
         <ul>
           <li>

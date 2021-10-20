@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import InboxApp from "./App";
 
-ReactDOM.hydrate(
+ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter basename="inbox">
       <InboxApp />
