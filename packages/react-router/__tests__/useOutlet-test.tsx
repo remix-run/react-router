@@ -3,45 +3,45 @@ import { create as createTestRenderer } from "react-test-renderer";
 import { MemoryRouter, Routes, Route, useOutlet } from "react-router";
 
 describe("useOutlet", () => {
-  describe("when there is no child route", () => {
-    it("returns null", () => {
-      function Home() {
-        return useOutlet();
-      }
+	describe("when there is no child route", () => {
+		it("returns null", () => {
+			function Home() {
+				return useOutlet();
+			}
 
-      let renderer = createTestRenderer(
-        <MemoryRouter initialEntries={["/home"]}>
-          <Routes>
-            <Route path="/home" element={<Home />} />
-          </Routes>
-        </MemoryRouter>
-      );
+			let renderer = createTestRenderer(
+				<MemoryRouter initialEntries={["/home"]}>
+					<Routes>
+						<Route path="/home" element={<Home />} />
+					</Routes>
+				</MemoryRouter>
+			);
 
-      expect(renderer.toJSON()).toBeNull();
-    });
-  });
+			expect(renderer.toJSON()).toBeNull();
+		});
+	});
 
-  describe("when there is a child route", () => {
-    it("returns an element", () => {
-      function Users() {
-        return useOutlet();
-      }
+	describe("when there is a child route", () => {
+		it("returns an element", () => {
+			function Users() {
+				return useOutlet();
+			}
 
-      let renderer = createTestRenderer(
-        <MemoryRouter initialEntries={["/users/profile"]}>
-          <Routes>
-            <Route path="users" element={<Users />}>
-              <Route path="profile" element={<h1>Profile</h1>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
+			let renderer = createTestRenderer(
+				<MemoryRouter initialEntries={["/users/profile"]}>
+					<Routes>
+						<Route path="users" element={<Users />}>
+							<Route path="profile" element={<h1>Profile</h1>} />
+						</Route>
+					</Routes>
+				</MemoryRouter>
+			);
 
-      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+			expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           Profile
         </h1>
       `);
-    });
-  });
+		});
+	});
 });

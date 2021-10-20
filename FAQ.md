@@ -17,10 +17,10 @@ If your application is hosted on a static file server, you need to use a `<HashR
 import { HashRouter } from "react-router-dom";
 
 ReactDOM.render(
-  <HashRouter>
-    <App />
-  </HashRouter>,
-  holder
+	<HashRouter>
+		<App />
+	</HashRouter>,
+	holder
 );
 ```
 
@@ -42,7 +42,7 @@ This is not an issue when your server can respond to dynamic requests. In that s
 
 ```js
 app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "index.html"));
+	res.sendFile(path.resolve(__dirname, "index.html"));
 });
 ```
 
@@ -90,10 +90,10 @@ import { Router } from "react-router-dom";
 import history from "./history";
 
 ReactDOM.render(
-  <Router history={history}>
-    <App />
-  </Router>,
-  document.getElementById("root")
+	<Router history={history}>
+		<App />
+	</Router>,
+	document.getElementById("root")
 );
 ```
 
@@ -102,7 +102,7 @@ ReactDOM.render(
 import history from "./history";
 
 export default function nav(loc) {
-  history.push(loc);
+	history.push(loc);
 }
 ```
 
@@ -116,12 +116,12 @@ If you need to pass props to the component rendered by a `<Route>`, you should u
 
 ```js
 const App = () => {
-  const color = "red";
-  return (
-    <Route
-      path="/somewhere"
-      render={props => <MyComponent {...props} color={color} />}
-    />
-  );
+	const color = "red";
+	return (
+		<Route
+			path="/somewhere"
+			render={props => <MyComponent {...props} color={color} />}
+		/>
+	);
 };
 ```
