@@ -4,7 +4,15 @@ import { Link, Route, Routes, useSearchParams } from "react-router-dom";
 export default function App() {
   return (
     <div>
-      <h1>React Router - Search Params Example</h1>
+      <h1>Search Params Example</h1>
+
+      <p>
+        This example demonstrates a simple search page that makes a request for
+        user data to the GitHub API and displays information for that user on
+        the page. The example uses the <code>useSearchParams()</code> hook to
+        read and write the URL query string.
+      </p>
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="*" element={<NoMatch />} />
@@ -19,11 +27,11 @@ function randomUser() {
 }
 
 function Home() {
-  let [search, setSearch] = useSearchParams();
+  let [searchParams, setSearchParams] = useSearchParams();
 
-  // The `search` object is a URLSearchParams object.
+  // searchParams is a URLSearchParams object.
   // See https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
-  let user = search.get("user");
+  let user = searchParams.get("user");
 
   let [userData, setUserData] = React.useState<any>(null);
 
@@ -55,7 +63,7 @@ function Home() {
     let formData = new FormData(event.currentTarget);
     let newUser = formData.get("user") as string;
     if (!newUser) return;
-    setSearch({ user: newUser });
+    setSearchParams({ user: newUser });
   }
 
   function handleRandomSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -65,7 +73,7 @@ function Home() {
     if (newUser === user) {
       handleRandomSubmit(event);
     } else {
-      setSearch({ user: newUser });
+      setSearchParams({ user: newUser });
     }
   }
 

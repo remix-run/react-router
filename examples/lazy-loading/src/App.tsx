@@ -7,7 +7,7 @@ const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 export default function App() {
   return (
     <div>
-      <h1>Lazy Loading with React Router</h1>
+      <h1>Lazy Loading Example</h1>
 
       <p>
         This example demonstrates how to lazily load both route elements and
@@ -18,9 +18,9 @@ export default function App() {
 
       <p>
         The "About" page is not loaded until you click on the link. When you do,
-        a <code>React.Suspense</code> fallback renders while the code is loaded
-        via a dynamic <code>import()</code> statement. Once the code loads, the
-        fallback is replaced by the actual code for that page.
+        a <code>&lt;React.Suspense fallback&gt;</code> renders while the code is
+        loaded via a dynamic <code>import()</code> statement. Once the code
+        loads, the fallback is replaced by the actual code for that page.
       </p>
 
       <p>

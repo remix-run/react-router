@@ -4,7 +4,7 @@ import { Routes, Route, Outlet, Link } from "react-router-dom";
 export default function App() {
   return (
     <div>
-      <h1>Welcome to the app!</h1>
+      <h1>Server Rendering Example</h1>
 
       <p>
         If you check out the HTML source of this page, you'll notice that it

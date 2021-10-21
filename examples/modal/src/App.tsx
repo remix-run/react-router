@@ -23,7 +23,31 @@ export default function App() {
 
   return (
     <div>
-      <h1>Welcome to the gallery!</h1>
+      <h1>Modal Example</h1>
+
+      <p>
+        This is an example of how to create a modal with React Router. Modals
+        are typically used as a kind of "detail" view to focus on a particular
+        object in a collection while not taking you completely out of context of
+        the parent page.
+      </p>
+
+      <p>
+        In this example, notice how the URL updates when the modal opens (if you
+        are viewing the example in StackBlitz you may need to open in a new
+        browser window). Even though the URL is updated to the specific item in
+        the modal, the background page is still showing behind it.
+      </p>
+
+      <p>
+        Next, copy and paste the URL to a new browser tab and notice that it
+        shows that specific item not in a modal, but directly on the page. This
+        is the view that someone would see if they clicked on a link that you
+        sent them when you had the modal open. They don't have the context you
+        did when you opened the modal, so they don't see it in the context of
+        the background page.
+      </p>
+
       <Routes location={state?.backgroundLocation || location}>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />

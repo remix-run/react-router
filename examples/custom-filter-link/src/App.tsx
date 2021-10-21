@@ -15,7 +15,15 @@ import { brands, filterByBrand, getSneakerById, SNEAKERS } from "./snkrs";
 export default function App() {
   return (
     <div>
-      <h1>SNKRS</h1>
+      <h1>Custom Filter Link Example</h1>
+
+      <p>
+        This example demonstrates how to create a "filter link" like one that is
+        commonly used to filter a list of products on an e-commerce website. The
+        <code>&lt;BrandLink&gt;</code> component is a custom{" "}
+        <code>&lt;Link&gt;</code> that knows whether or not it is currently
+        "active" by what is in the URL query string.
+      </p>
 
       <Routes>
         <Route path="/" element={<Layout />}>
@@ -25,6 +33,28 @@ export default function App() {
         </Route>
       </Routes>
     </div>
+  );
+}
+
+interface BrandLinkProps extends Omit<LinkProps, "to"> {
+  brand: string;
+}
+
+function BrandLink({ brand, children, ...props }: BrandLinkProps) {
+  let [searchParams] = useSearchParams();
+  let isActive = searchParams.get("brand") === brand;
+
+  return (
+    <Link
+      to={`/?brand=${brand}`}
+      {...props}
+      style={{
+        ...props.style,
+        color: isActive ? "red" : "black"
+      }}
+    >
+      {children}
+    </Link>
   );
 }
 
@@ -104,28 +134,6 @@ function SneakerGrid() {
     </main>
   );
 }
-
-interface BrandLinkProps extends Omit<LinkProps, "to"> {
-  brand: string;
-}
-
-const BrandLink: React.FC<BrandLinkProps> = ({ brand, children, ...props }) => {
-  let [searchParams] = useSearchParams();
-  let isActive = searchParams.get("brand") === brand;
-
-  return (
-    <Link
-      to={`/?brand=${brand}`}
-      {...props}
-      style={{
-        ...props.style,
-        color: isActive ? "red" : "black"
-      }}
-    >
-      {children}
-    </Link>
-  );
-};
 
 function SneakerView() {
   let { id } = useParams<"id">();

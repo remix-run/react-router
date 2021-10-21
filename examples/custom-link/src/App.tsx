@@ -12,6 +12,15 @@ import type { LinkProps } from "react-router-dom";
 export default function App() {
   return (
     <div>
+      <h1>Custom Link Example</h1>
+
+      <p>
+        This example demonstrates how to create a custom{" "}
+        <code>&lt;Link&gt;</code> component that knows whether or not it is
+        "active" using the low-level <code>useResolvedPath()</code> and
+        <code>useMatch()</code> hooks.
+      </p>
+
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
@@ -19,6 +28,24 @@ export default function App() {
           <Route path="*" element={<NoMatch />} />
         </Route>
       </Routes>
+    </div>
+  );
+}
+
+function CustomLink({ children, to, ...props }: LinkProps) {
+  let resolved = useResolvedPath(to);
+  let match = useMatch({ path: resolved.pathname, end: true });
+
+  return (
+    <div>
+      <Link
+        style={{ textDecoration: match ? "underline" : "none" }}
+        to={to}
+        {...props}
+      >
+        {children}
+      </Link>
+      {match && " (active)"}
     </div>
   );
 }
@@ -40,27 +67,6 @@ function Layout() {
       <hr />
 
       <Outlet />
-    </div>
-  );
-}
-
-function CustomLink({ children, to, ...props }: LinkProps) {
-  let resolved = useResolvedPath(to);
-  let match = useMatch({
-    path: resolved.pathname,
-    end: true
-  });
-
-  return (
-    <div>
-      <Link
-        style={{ textDecoration: match ? "underline" : "none" }}
-        to={to}
-        {...props}
-      >
-        {children}
-      </Link>
-      {match && " (active)"}
     </div>
   );
 }
