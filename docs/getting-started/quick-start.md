@@ -5,13 +5,13 @@ order: 2
 
 # Overview
 
-<docs-warning>This document is an overview of new features and changes in React Router version 6. If you're new to React Router or looking for a more practical guide, check out our [quick start tutorial](tutorial).</docs-warning>
+<docs-warning>This document is an overview of new features and changes in React Router version 6. If you're new to React Router or looking for a more practical guide, check out our [quick start tutorial](tutorial.md).</docs-warning>
 
 If you're familiar with the JavaScript ecosystem, React, and React Router, this will get you up and running in React Router v6 as quickly as possible, no explanations, just code.
 
-- For a complete introduction to React Router, do the [Tutorial](tutorial)
-- For extensive documentation on every API, see [API Reference](../api)
-- For a deeper understanding of concepts, see [Main Concepts](concepts)
+- For a complete introduction to React Router, do the [Tutorial](tutorial.md)
+- For extensive documentation on every API, see [API Reference](../api.md)
+- For a deeper understanding of concepts, see [Main Concepts](concepts.md)
 
 ## Installation
 
@@ -182,7 +182,7 @@ When the URL is `"/invoices/123"`, the component tree will:
 </App>
 ```
 
-Notice the inner component that changed with the URL (`<SentInvoices>` and `<Invoice>`). The parent route (`<Invoices>`) is responsible for making sure the matching child route is rendered with [`<Outlet>`](../api#outlet). Here's the full example:
+Notice the inner component that changed with the URL (`<SentInvoices>` and `<Invoice>`). The parent route (`<Invoices>`) is responsible for making sure the matching child route is rendered with [`<Outlet>`](../api.md#outlet). Here's the full example:
 
 ```tsx [18]
 import { Routes, Route, Outlet } from "react-router-dom";
@@ -400,7 +400,7 @@ function App() {
 
 ## Multiple Sets of Routes
 
-Although you should only ever have a single `<Router>` in an app, you may have as many [`<Routes>`](../api#routes) as you need, wherever you need them. Each `<Routes>` element operates independently of the others and picks a child route to render.
+Although you should only ever have a single `<Router>` in an app, you may have as many [`<Routes>`](../api.md#routes) as you need, wherever you need them. Each `<Routes>` element operates independently of the others and picks a child route to render.
 
 ```tsx
 function App() {
@@ -436,7 +436,7 @@ function App() {
 
 ## Descendant `<Routes>`
 
-You can render [a `<Routes>` element](../api#routes) anywhere you need one, including deep within the component tree of another `<Routes>`. These will work just the same as any other `<Routes>`, except they will automatically build on the path of the route that rendered them. If you do this, _make sure to put a \* at the end of the parent route's path_. Otherwise the parent route won't match the URL when it is longer than the parent route's path, and your descendant `<Routes>` won't ever show up.
+You can render [a `<Routes>` element](../api.md#routes) anywhere you need one, including deep within the component tree of another `<Routes>`. These will work just the same as any other `<Routes>`, except they will automatically build on the path of the route that rendered them. If you do this, _make sure to put a \* at the end of the parent route's path_. Otherwise the parent route won't match the URL when it is longer than the parent route's path, and your descendant `<Routes>` won't ever show up.
 
 ```tsx [5]
 function App() {
@@ -461,4 +461,4 @@ function Dashboard() {
 }
 ```
 
-And that's just about it! We haven't covered every API here, but these are definitely the most common ones you'll use. If you'd like to learn more, go ahead and follow [our tutorial](tutorial) or browse [the full API reference](../api).
+And that's just about it! We haven't covered every API here, but these are definitely the most common ones you'll use. If you'd like to learn more, go ahead and follow [our tutorial](tutorial.md) or browse [the full API reference](../api.md).
