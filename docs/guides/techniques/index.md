@@ -8,4 +8,4 @@ order: 5
 
 # Useful Techniques
 
-- [Working with URL Search Params](working-with-the-search-string)
+- [Working with URL Search Params](working-with-the-search-string.md)
