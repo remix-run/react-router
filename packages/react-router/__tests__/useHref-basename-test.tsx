@@ -118,6 +118,8 @@ describe("useHref under a basename", () => {
       );
 
       expect(href).toBe("/app/dashboard");
+      act(() => state[1]({}));
+      expect(href).toBe("/app/dashboard");
     });
 
     describe("when the URL has a trailing slash", () => {
@@ -138,6 +140,8 @@ describe("useHref under a basename", () => {
           </MemoryRouter>
         );
 
+        expect(href).toBe("/app/dashboard");
+        act(() => state[1]({}));
         expect(href).toBe("/app/dashboard");
       });
     });
@@ -160,6 +164,8 @@ describe("useHref under a basename", () => {
           </MemoryRouter>
         );
 
+        expect(href).toBe("/app/dashboard/");
+        act(() => state[1]({}));
         expect(href).toBe("/app/dashboard/");
       });
     });
