@@ -362,14 +362,15 @@ export function useHref(to: To): string {
     if (basename !== "/") {
       let toPathname = getToPathname(to);
       let endsWithSlash = toPathname != null && toPathname.endsWith("/");
-      path.pathname =
+      let pathname =
         path.pathname === "/"
           ? basename + (endsWithSlash ? "/" : "")
           : joinPaths([basename, path.pathname]);
+      path = Object.assign({}, path, { pathname });
     }
 
     return navigator.createHref(path);
-  }, [path]);
+  }, [path, basename]);
 }
 
 /**
