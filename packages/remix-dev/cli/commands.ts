@@ -8,6 +8,7 @@ import { BuildMode, isBuildMode } from "../build";
 import * as compiler from "../compiler";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
+import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "../setup";
 
 export async function setup(platformArg?: string) {
@@ -18,6 +19,17 @@ export async function setup(platformArg?: string) {
   await setupRemix(platform);
 
   console.log(`Successfully setup Remix for ${platform}.`);
+}
+
+export async function routes(
+  remixRoot: string,
+  formatArg?: string
+): Promise<void> {
+  let config = await readConfig(remixRoot);
+
+  let format = isRoutesFormat(formatArg) ? formatArg : RoutesFormat.jsx;
+
+  console.log(formatRoutes(config.routes, format));
 }
 
 export async function build(

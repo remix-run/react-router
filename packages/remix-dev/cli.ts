@@ -8,10 +8,12 @@ Usage
   $ remix build [remixRoot]
   $ remix dev [remixRoot]
   $ remix setup [remixPlatform]
+  $ remix routes [remixRoot]
 
 Options
   --help              Print this help message and exit
   --version, -v       Print the CLI version and exit
+  --json              Print the routes as JSON
 
 Values
   [remixPlatform]     "node" is currently the only platform
@@ -20,12 +22,16 @@ Examples
   $ remix build my-website
   $ remix dev my-website
   $ remix setup node
+  $ remix routes my-website
 `;
 
 const flags: AnyFlags = {
   version: {
     type: "boolean",
     alias: "v"
+  },
+  json: {
+    type: "boolean"
   }
 };
 
@@ -41,6 +47,9 @@ if (cli.flags.version) {
 }
 
 switch (cli.input[0]) {
+  case "routes":
+    commands.routes(cli.input[1], cli.flags.json ? "json" : "jsx");
+    break;
   case "build":
     commands.build(cli.input[1], process.env.NODE_ENV);
     break;
