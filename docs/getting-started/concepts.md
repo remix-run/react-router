@@ -5,7 +5,7 @@ order: 4
 
 # Main Concepts
 
-<docs-warning>This document is a deep dive into the core concepts behind routing as implemented in React Router. It's pretty long, so if you're looking for a more practical guide check out our [quick start tutorial](tutorial).</docs-warning>
+<docs-warning>This document is a deep dive into the core concepts behind routing as implemented in React Router. It's pretty long, so if you're looking for a more practical guide check out our [quick start tutorial](tutorial.md).</docs-warning>
 
 You might be wondering what exactly React Router does. How can it help you build your app? What exactly is a **router**, anyway?
 
@@ -209,7 +209,7 @@ Hashes in [URL]s indication a scroll position _on the current page_. Before the 
 
 **Location State**
 
-You may have wondered why the `window.history.pushState()` API is called "push state". State? Aren't we just changing the [URL]? Shouldn't it be `history.push[URL]()`? Well, we weren't in the room when the API was designed, so we're not sure why "state" was the focus, but it is a cool feature of browsers nonetheless.
+You may have wondered why the `window.history.pushState()` API is called "push state". State? Aren't we just changing the [URL]? Shouldn't it be `history.push`? Well, we weren't in the room when the API was designed, so we're not sure why "state" was the focus, but it is a cool feature of browsers nonetheless.
 
 Browsers let us persist information about a transition by passing a value to `pushState`. When the user clicks back, the value on `history.state` changes to whatever was "pushed" before.
 
