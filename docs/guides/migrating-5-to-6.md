@@ -290,7 +290,7 @@ named `element` prop (TODO: can we provide a codemod here?).
 
 ### Advantages of `<Route element>`
 
-In the section about upgrading to v5.1, I promised you we'd discuss the
+In the section about upgrading to v5.1, we promised that we'd discuss the
 advantages of using regular elements instead of components (or element types)
 for rendering. Let's take a quick break from upgrading and talk about that now.
 
@@ -304,8 +304,8 @@ example, in a component-based API there is no good way to pass props to the
 `<Profile>` element that is rendered when `<Route path=":userId" component={Profile} />` matches. Most React libraries who take this approach end
 up with either an API like `<Route component={Profile} passProps={{ animate: true }} />` or use a render prop or higher-order component.
 
-Also, I'm not sure if you noticed this but in v4 and v5, `Route`'s rendering API
-became rather large. It went something like this:
+Also, in case you didn't notice, in v4 and v5 `Route`'s rendering API became
+rather large. It went something like this:
 
 ```js
 // Ah, this is nice and simple!
@@ -1006,15 +1006,9 @@ This is a simple change of moving the prop. The `basename` behavior has remained
 
 ## What did we miss?
 
-Despite my best attempts at being thorough (it took me 2 days to write this) I'm
-sure I missed something. If you follow this upgrade guide and find it's missing
-something, please let us know. We are happy to help you figure out what to do
-with your v5 code to be able to upgrade and take advantage of all of the cool
-stuff in v6.
-
-If you don't understand the rationale for some of the decisions we've made,
-please feel free to reach out directly to [me on
-Twitter](https://twitter.com/mjackson) or
-[Ryan](https://twitter.com/ryanflorence). Let's talk about it!
+Despite our best attempts at being thorough, it's very likely that we missed
+something. If you follow this upgrade guide and find that to be the case, please
+let us know. We are happy to help you figure out what to do with your v5 code to
+be able to upgrade and take advantage of all of the cool stuff in v6.
 
 Good luck 🤘
