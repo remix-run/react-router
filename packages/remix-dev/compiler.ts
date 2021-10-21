@@ -115,7 +115,14 @@ export async function watch(
 
   let restartBuilders = debounce(async (newConfig?: RemixConfig) => {
     await disposeBuilders();
-    config = newConfig || (await readConfig(config.rootDirectory));
+    try {
+      newConfig = await readConfig(config.rootDirectory);
+    } catch (error) {
+      onBuildFailure(error as Error);
+      return;
+    }
+
+    config = newConfig;
     if (onRebuildStart) onRebuildStart();
     let builders = await buildEverything(config, options);
     if (onRebuildFinish) onRebuildFinish();
@@ -167,7 +174,14 @@ export async function watch(
     })
     .on("add", async file => {
       if (onFileCreated) onFileCreated(file);
-      let newConfig = await readConfig(config.rootDirectory);
+      let newConfig: RemixConfig;
+      try {
+        newConfig = await readConfig(config.rootDirectory);
+      } catch (error) {
+        onBuildFailure(error as Error);
+        return;
+      }
+
       if (isEntryPoint(newConfig, file)) {
         await restartBuilders(newConfig);
       } else {

@@ -39,6 +39,8 @@ export function defineConventionalRoutes(appDir: string): RouteManifest {
 
   let routeIds = Object.keys(files).sort(byLongestFirst);
 
+  let uniqueRoutes = new Map<string, string>();
+
   // Then, recurse through all routes using the public defineRoutes() API
   function defineNestedRoutes(
     defineRoute: DefineRouteFunction,
@@ -53,12 +55,25 @@ export function defineConventionalRoutes(appDir: string): RouteManifest {
         routeId.slice((parentId || "routes").length + 1)
       );
 
-      // layout routes
-      if (routePath.startsWith("__")) {
-        routePath = undefined;
+      let isIndexRoute = routeId.endsWith("/index");
+      let fullPath = createRoutePath(routeId.slice("routes".length + 1));
+      let uniqueRouteId = (fullPath || "") + (isIndexRoute ? "?index" : "");
+
+      if (typeof uniqueRouteId !== "undefined") {
+        if (uniqueRoutes.has(uniqueRouteId)) {
+          throw new Error(
+            `Path ${JSON.stringify(fullPath)} defined by route ${JSON.stringify(
+              routeId
+            )} conflicts with route ${JSON.stringify(
+              uniqueRoutes.get(uniqueRouteId)
+            )}`
+          );
+        } else {
+          uniqueRoutes.set(uniqueRouteId, routeId);
+        }
       }
 
-      if (routeId.endsWith("/index")) {
+      if (isIndexRoute) {
         let invalidChildRoutes = routeIds.filter(
           id => findParentRouteId(routeIds, id) === routeId
         );
@@ -84,7 +99,7 @@ export function defineConventionalRoutes(appDir: string): RouteManifest {
 }
 
 // TODO: Cleanup and write some tests for this function
-export function createRoutePath(partialRouteId: string): string {
+export function createRoutePath(partialRouteId: string): string | undefined {
   let path = normalizeSlashes(partialRouteId)
     // routes/$ -> routes/*
     // routes/nested/$.tsx (with a "routes/nested.tsx" layout)
@@ -96,7 +111,15 @@ export function createRoutePath(partialRouteId: string): string {
     .replace(/\$/g, ":")
     // routes/not.nested -> routes/not/nested
     .replace(/\./g, "/");
-  return /\b\/?index$/.test(path) ? path.replace(/\/?index$/, "") : path;
+  path = /\b\/?index$/.test(path) ? path.replace(/\/?index$/, "") : path;
+
+  // remove "__" layout segments
+  path = path
+    .split("/")
+    .filter(segment => !segment.startsWith("__"))
+    .join("/");
+
+  return path ? path : undefined;
 }
 
 function findParentRouteId(
