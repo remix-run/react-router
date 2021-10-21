@@ -5,6 +5,7 @@
     "clean": "git clean -fdX .",
     "lint": "eslint --cache .",
     "format": "prettier --ignore-path .eslintignore --write .",
+    "format:check": "prettier --ignore-path .eslintignore --check .",
     "publish": "node ./scripts/publish.js",
     "size": "filesize",
     "test": "jest",
