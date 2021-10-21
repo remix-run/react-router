@@ -92,7 +92,9 @@ describe("useRoutes", () => {
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn).toHaveBeenCalledWith(
-        expect.stringContaining(`Matched leaf route at location "/layout" does not have an element`)
+        expect.stringContaining(
+          `Matched leaf route at location "/layout" does not have an element`
+        )
       );
     });
   });
