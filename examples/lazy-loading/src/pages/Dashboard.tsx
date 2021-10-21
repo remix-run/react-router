@@ -2,6 +2,8 @@ import * as React from "react";
 import { Routes, Route, Outlet, Link } from "react-router-dom";
 
 export default function Dashboard() {
+  // These routes are defined when this component is loaded on demand via
+  // dynamic import() on the home page!
   return (
     <Routes>
       <Route path="/" element={<DashboardLayout />}>
