@@ -1,8 +1,7 @@
 name: test
 on:
   push:
-    branches: [main]
-    tags: [v*]
+    branches: [dev]
   pull_request:
     types: [opened, synchronize]
 
