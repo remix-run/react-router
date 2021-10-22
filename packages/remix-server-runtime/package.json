@@ -8,13 +8,13 @@
     "cookie": "^0.4.1",
     "history": "^5.0.0",
     "jsesc": "^3.0.1",
-    "react-router-dom": "6.0.0-beta.6",
     "set-cookie-parser": "^2.4.8",
     "source-map": "^0.7.3"
   },
   "peerDependencies": {
     "react": ">=16.8",
-    "react-dom": ">=16.8"
+    "react-dom": ">=16.8",
+    "react-router-dom": "6.0.0-beta.8"
   },
   "devDependencies": {
     "@types/jsesc": "^2.5.1",
