@@ -259,6 +259,16 @@ async function createBrowserBuild(
   // on node built-ins in browser bundles.
   let dependencies = Object.keys(await getAppDependencies(config));
   let externals = nodeBuiltins.filter(mod => !dependencies.includes(mod));
+  let fakeBuiltins = nodeBuiltins.filter(mod => dependencies.includes(mod));
+
+  if (fakeBuiltins.length > 0) {
+    console.error(
+      `It appears you're using a module that is built in to node, but you installed it as a dependency which could cause problems. Please remove ${fakeBuiltins.join(
+        ", "
+      )} before continuing.`
+    );
+    process.exit(1);
+  }
 
   let entryPoints: esbuild.BuildOptions["entryPoints"] = {
     "entry.client": path.resolve(config.appDirectory, config.entryClientFile)
