@@ -4,7 +4,7 @@ import { MemoryRouter, Routes, Route, useHref } from "react-router";
 
 describe("useHref under a basename", () => {
   describe("to an absolute route", () => {
-    it("returns the correct href a", () => {
+    it("returns the correct href", () => {
       function Admin() {
         let href = useHref("/invoices");
         return <p>{href}</p>;
