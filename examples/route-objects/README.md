@@ -8,4 +8,4 @@ One interesting thing to note is that even if you don't use this hook directly, 
 
 Open this example on [StackBlitz](https://stackblitz.com):
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/v6.0.0-beta.7/examples/route-objects?file=src/App.tsx)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/v6.0.0-beta.8/examples/route-objects?file=src/App.tsx)

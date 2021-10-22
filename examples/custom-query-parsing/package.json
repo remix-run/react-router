@@ -11,8 +11,8 @@
     "jsurl": "0.1.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-router": "6.0.0-beta.7",
-    "react-router-dom": "6.0.0-beta.7"
+    "react-router": "6.0.0-beta.8",
+    "react-router-dom": "6.0.0-beta.8"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "^2.2.1",

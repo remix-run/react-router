@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "6.0.0-beta.7",
+  "version": "6.0.0-beta.8",
   "author": "Remix Software <hello@remix.run>",
   "description": "Declarative routing for React web applications",
   "repository": {
@@ -14,7 +14,7 @@
   "types": "./index.d.ts",
   "unpkg": "./umd/react-router-dom.production.min.js",
   "dependencies": {
-    "react-router": "6.0.0-beta.7"
+    "react-router": "6.0.0-beta.8"
   },
   "peerDependencies": {
     "history": ">=5",
