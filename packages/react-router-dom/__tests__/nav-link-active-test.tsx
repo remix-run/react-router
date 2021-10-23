@@ -1,6 +1,6 @@
 import * as React from "react";
+import { MemoryRouter, NavLink, Outlet, Route, Routes } from "react-router-dom";
 import { create as createTestRenderer } from "react-test-renderer";
-import { MemoryRouter, Routes, Route, NavLink, Outlet } from "react-router-dom";
 
 describe("NavLink", () => {
   describe("when it does not match", () => {
@@ -19,6 +19,27 @@ describe("NavLink", () => {
       let anchor = renderer.root.findByType("a");
 
       expect(anchor.props.className).not.toMatch("active");
+    });
+
+    it("does not change the content inside the <a>", () => {
+      let renderer = createTestRenderer(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route
+              path="/home"
+              element={
+                <NavLink to="somewhere-else">
+                  {({ isActive }) => isActive ? "Current" : "Somewhere else"}
+                </NavLink>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      );
+
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.children).not.toMatch("Current");
     });
   });
 
@@ -89,6 +110,27 @@ describe("NavLink", () => {
       let anchor = renderer.root.findByType("a");
 
       expect(anchor.props.style).toMatchObject({ textTransform: "uppercase" });
+    });
+
+    it("applies its children correctly when provided as a function", () => {
+      let renderer = createTestRenderer(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route
+              path="/home"
+              element={
+                <NavLink to=".">
+                  {({ isActive }) => isActive ? "Home (current)" : "Home"}
+                </NavLink>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      );
+
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.children).toMatch("Home (current)");
     });
   });
 
