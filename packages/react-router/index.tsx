@@ -366,7 +366,7 @@ export function useHref(to: To): string {
         : joinPaths([basename, pathname]);
   }
 
-  return navigator.createHref({ hash, pathname: joinedPathname, search });
+  return navigator.createHref({ pathname: joinedPathname, search, hash });
 }
 
 /**
@@ -634,7 +634,8 @@ export function useRoutes(
     );
 
     warning(
-      matches == null || matches[matches.length - 1].route.element != null,
+      matches == null ||
+        matches[matches.length - 1].route.element !== undefined,
       `Matched leaf route at location "${location.pathname}${location.search}${location.hash}" does not have an element. ` +
         `This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.`
     );
@@ -977,7 +978,9 @@ function _renderMatches(
   return matches.reduceRight((outlet, match, index) => {
     return (
       <RouteContext.Provider
-        children={match.route.element || <Outlet />}
+        children={
+          match.route.element !== undefined ? match.route.element : <Outlet />
+        }
         value={{
           outlet,
           matches: parentMatches.concat(matches.slice(0, index + 1))
