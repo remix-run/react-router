@@ -46,14 +46,10 @@ function useQueryParam<T>(
   let value = React.useMemo(() => JSURL.parse(paramValue), [paramValue]);
 
   let setValue = React.useCallback(
-    (newQuery: T, options?: NavigateOptions) => {
-      setSearchParams(
-        {
-          ...searchParams,
-          [key]: JSURL.stringify(newQuery)
-        },
-        options
-      );
+    (newValue: T, options?: NavigateOptions) => {
+      let newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set(key, JSURL.stringify(newValue));
+      setSearchParams(newSearchParams, options);
     },
     [key, searchParams, setSearchParams]
   );
