@@ -39,7 +39,7 @@ describe("NavLink", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor.children).not.toMatch("Current");
+      expect(anchor.children[0]).toMatch("Current");
     });
   });
 
@@ -130,7 +130,7 @@ describe("NavLink", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor.children).toMatch("Home (current)");
+      expect(anchor.children[0]).toMatch("Home (current)");
     });
   });
 
