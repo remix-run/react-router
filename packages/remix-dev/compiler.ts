@@ -458,7 +458,7 @@ const browserSafeRouteExports: { [name: string]: boolean } = {
   handle: true,
   links: true,
   meta: true,
-  shouldReload: true
+  unstable_shouldReload: true
 };
 
 /**
