@@ -647,7 +647,10 @@ export function useRoutes(
         Object.assign({}, match, {
           params: Object.assign({}, parentParams, match.params),
           pathname: joinPaths([parentPathnameBase, match.pathname]),
-          pathnameBase: joinPaths([parentPathnameBase, match.pathnameBase])
+          pathnameBase:
+            match.pathnameBase === "/"
+              ? parentPathnameBase
+              : joinPaths([parentPathnameBase, match.pathnameBase])
         })
       ),
     parentMatches
