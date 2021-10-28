@@ -16,7 +16,7 @@ If you're not sure where to begin, our [getting started guide](getting-started/i
       <p>Everything you need to know to get up and running in React Router quickly.</p>
     </docs-card>
   </a>
-  <a href="/docs/en/v6/getting-started/overview" aria-label="Upgrading to v6?">
+  <a href="/docs/en/v6/getting-started/quick-start" aria-label="Upgrading to v6?">
     <docs-card>
       <h3>Upgrading to v6?</h3> 
       <p>We introduced several new features and exciting changes in version 6 of React Router. Learn all about them here.</p>
