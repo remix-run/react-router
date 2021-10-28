@@ -36,7 +36,9 @@ export async function loadRouteData(
       throw error;
     }
 
-    error.headers.set("X-Remix-Catch", "yes");
+    if (!isRedirectResponse(error)) {
+      error.headers.set("X-Remix-Catch", "yes");
+    }
     result = error;
   }
 
@@ -75,7 +77,9 @@ export async function callRouteAction(
       throw error;
     }
 
-    error.headers.set("X-Remix-Catch", "yes");
+    if (!isRedirectResponse(error)) {
+      error.headers.set("X-Remix-Catch", "yes");
+    }
     result = error;
   }
 
@@ -101,6 +105,12 @@ function isResponse(value: any): value is Response {
     typeof value.headers === "object" &&
     typeof value.body !== "undefined"
   );
+}
+
+const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
+
+export function isRedirectResponse(response: Response): boolean {
+  return redirectStatusCodes.has(response.status);
 }
 
 export function extractData(response: Response): Promise<AppData> {

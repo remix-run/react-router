@@ -1,6 +1,6 @@
 import type { AppLoadContext } from "./data";
 import { extractData, isCatchResponse } from "./data";
-import { loadRouteData, callRouteAction } from "./data";
+import { loadRouteData, callRouteAction, isRedirectResponse } from "./data";
 import type { ComponentDidCatchEmulator } from "./errors";
 import type { ServerBuild } from "./build";
 import type { EntryContext } from "./entry";
@@ -503,12 +503,6 @@ function isHeadRequest(request: Request): boolean {
 
 function isDataRequest(request: Request): boolean {
   return new URL(request.url).searchParams.has("_data");
-}
-
-const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
-
-function isRedirectResponse(response: Response): boolean {
-  return redirectStatusCodes.has(response.status);
 }
 
 function isIndexRequestUrl(url: URL) {

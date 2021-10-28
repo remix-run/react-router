@@ -366,6 +366,14 @@ describe("readConfig", () => {
             "parentId": "root",
             "path": "prefs",
           },
+          "routes/redirects/login": Object {
+            "caseSensitive": undefined,
+            "file": "routes/redirects/login.jsx",
+            "id": "routes/redirects/login",
+            "index": undefined,
+            "parentId": "root",
+            "path": "redirects/login",
+          },
           "routes/render-errors": Object {
             "caseSensitive": undefined,
             "file": "routes/render-errors.jsx",
