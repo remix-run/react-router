@@ -7,12 +7,11 @@ order: 1
 
 This document describes the most common ways people use React Router with various tools in the React Ecosystem.
 
-- [Installation](#installation)
-  - [Basic Installation](#basic-installation)
-  - [Create React App](#create-react-app)
-  - [Parcel](#parcel)
-  - [Webpack](#webpack)
-  - [HTML Script Tags](#html-script-tags)
+- [Basic Installation](#basic-installation)
+- [Create React App](#create-react-app)
+- [Parcel](#parcel)
+- [Webpack](#webpack)
+- [HTML Script Tags](#html-script-tags)
 
 ## Basic Installation
 
