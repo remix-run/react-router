@@ -16,7 +16,6 @@
     "react-router": "6.0.0-beta.8"
   },
   "peerDependencies": {
-    "history": ">=5",
     "react": ">=16.8",
     "react-native": ">=0.44"
   },

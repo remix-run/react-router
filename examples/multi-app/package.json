@@ -11,11 +11,9 @@
     "compression": "^1.7.4",
     "cross-env": "^7.0.3",
     "express": "^4.17.1",
-    "history": "latest",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-router": "next",
-    "react-router-dom": "next"
+    "react-router-dom": "6.0.0-beta.8"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "^3.0.0",
