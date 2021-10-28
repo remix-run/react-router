@@ -7,12 +7,12 @@ order: 1
 
 This document describes the most common ways people use React Router with various tools in the React Ecosystem.
 
-- [Basic Installation](#basic-installation)
-- [Create React App](#create-react-app)
-- [Parcel](#parcel)
-- [Webpack](#webpack)
-- [HTML Script Tags](#html-script-tags)
-- [React Native](#react-native)
+- [Installation](#installation)
+  - [Basic Installation](#basic-installation)
+  - [Create React App](#create-react-app)
+  - [Parcel](#parcel)
+  - [Webpack](#webpack)
+  - [HTML Script Tags](#html-script-tags)
 
 ## Basic Installation
 
@@ -316,6 +316,8 @@ Although this method is a nice way to get up and running quickly, it does load s
 
 In order to do this, you'll need to build your website with a JavaScript bundler like [Webpack](#webpack) or [Parcel](#parcel). The rest of the installation methods on this page describe how to get started using these tools.
 
+<!--
 ## React Native
 
 TODO:
+-->
