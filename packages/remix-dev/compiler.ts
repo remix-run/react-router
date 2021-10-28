@@ -25,6 +25,7 @@ const reactShim = path.resolve(__dirname, "compiler/shims/react.ts");
 interface BuildConfig {
   mode: BuildMode;
   target: BuildTarget;
+  sourcemap: boolean;
 }
 
 function defaultWarningHandler(message: string, key: string) {
@@ -63,6 +64,7 @@ export async function build(
   {
     mode = BuildMode.Production,
     target = BuildTarget.Node14,
+    sourcemap = false,
     onWarning = defaultWarningHandler,
     onBuildFailure = defaultBuildFailureHandler
   }: BuildOptions = {}
@@ -70,6 +72,7 @@ export async function build(
   await buildEverything(config, {
     mode,
     target,
+    sourcemap,
     onWarning,
     onBuildFailure
   });
@@ -88,6 +91,7 @@ export async function watch(
   {
     mode = BuildMode.Development,
     target = BuildTarget.Node14,
+    sourcemap = true,
     onWarning = defaultWarningHandler,
     onBuildFailure = defaultBuildFailureHandler,
     onRebuildStart,
@@ -100,6 +104,7 @@ export async function watch(
   let options = {
     mode,
     target,
+    sourcemap,
     onBuildFailure,
     onWarning,
     incremental: true
@@ -292,7 +297,7 @@ async function createBrowserBuild(
     bundle: true,
     logLevel: "silent",
     splitting: true,
-    sourcemap: true,
+    sourcemap: options.sourcemap,
     metafile: true,
     incremental: options.incremental,
     minify: options.mode === BuildMode.Production,
@@ -331,7 +336,7 @@ async function createServerBuild(
     bundle: true,
     logLevel: "silent",
     incremental: options.incremental,
-    sourcemap: true,
+    sourcemap: options.sourcemap,
     // The server build needs to know how to generate asset URLs for imports
     // of CSS and other files.
     assetNames: "_assets/[name]-[hash]",

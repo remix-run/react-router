@@ -11,7 +11,10 @@ const SOURCE_PATTERN =
 export const UNKNOWN_LOCATION_POSITION = "<unknown location>";
 
 export async function formatServerError(error: Error): Promise<Error> {
-  error.stack = await formatStackTrace(error);
+  try {
+    error.stack = await formatStackTrace(error);
+  } catch {}
+
   return error;
 }
 
