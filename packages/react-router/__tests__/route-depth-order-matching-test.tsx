@@ -1,20 +1,23 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Outlet, Routes, Route } from "react-router";
 
 describe("nested routes with no path", () => {
   it("matches them depth-first", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/"]}>
-        <Routes>
-          <Route element={<First />}>
-            <Route element={<Second />}>
-              <Route path="/" element={<Third />} />
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/"]}>
+          <Routes>
+            <Route element={<First />}>
+              <Route element={<Second />}>
+                <Route path="/" element={<Third />} />
+              </Route>
             </Route>
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    );
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>
@@ -52,17 +55,20 @@ describe("nested routes with no path", () => {
 
 describe("nested /", () => {
   it("matches them depth-first", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/"]}>
-        <Routes>
-          <Route path="/" element={<First />}>
-            <Route path="/" element={<Second />}>
-              <Route path="/" element={<Third />} />
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/"]}>
+          <Routes>
+            <Route path="/" element={<First />}>
+              <Route path="/" element={<Second />}>
+                <Route path="/" element={<Third />} />
+              </Route>
             </Route>
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    );
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>
@@ -100,14 +106,17 @@ describe("nested /", () => {
 
 describe("routes with identical paths", () => {
   it("matches them in order", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/home"]}>
-        <Routes>
-          <Route path="/home" element={<First />} />
-          <Route path="/home" element={<Second />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route path="/home" element={<First />} />
+            <Route path="/home" element={<Second />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>

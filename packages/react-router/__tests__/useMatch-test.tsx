@@ -1,5 +1,5 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import type { PathMatch } from "react-router";
 import { MemoryRouter, Routes, Route, useMatch } from "react-router";
 
@@ -12,15 +12,17 @@ describe("useMatch", () => {
         return null;
       }
 
-      createTestRenderer(
-        <MemoryRouter initialEntries={["/home"]}>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route path="/home" element={<h1>Home</h1>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
+      TestRenderer.act(() => {
+        TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route path="/home" element={<h1>Home</h1>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(match).toMatchObject({
         params: {},
@@ -38,15 +40,17 @@ describe("useMatch", () => {
         return null;
       }
 
-      createTestRenderer(
-        <MemoryRouter initialEntries={["/home/"]}>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route path="/home" element={<h1>Home</h1>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
+      TestRenderer.act(() => {
+        TestRenderer.create(
+          <MemoryRouter initialEntries={["/home/"]}>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route path="/home" element={<h1>Home</h1>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(match).toMatchObject({
         params: {},
@@ -64,15 +68,17 @@ describe("useMatch", () => {
         return null;
       }
 
-      createTestRenderer(
-        <MemoryRouter initialEntries={["/home"]}>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route path="/home" element={<h1>Home</h1>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
+      TestRenderer.act(() => {
+        TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route path="/home" element={<h1>Home</h1>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(match).toBeNull();
     });

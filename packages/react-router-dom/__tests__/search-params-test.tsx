@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render } from "react-dom";
+import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
 import { MemoryRouter, Routes, Route, useSearchParams } from "react-router-dom";
 
@@ -39,7 +39,7 @@ describe("useSearchParams", () => {
 
   it("reads and writes the search string", () => {
     act(() => {
-      render(
+      ReactDOM.render(
         <MemoryRouter initialEntries={["/search?q=Michael+Jackson"]}>
           <Routes>
             <Route path="search" element={<SearchPage />} />

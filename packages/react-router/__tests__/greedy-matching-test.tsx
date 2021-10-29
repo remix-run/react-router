@@ -1,5 +1,5 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Routes, Route, Outlet } from "react-router-dom";
 
 describe("greedy matching", () => {
@@ -22,9 +22,12 @@ describe("greedy matching", () => {
   );
 
   it("matches the root route", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/"]} children={routes} />
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/"]} children={routes} />
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <p>
@@ -34,9 +37,12 @@ describe("greedy matching", () => {
   });
 
   it("matches the index route", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/home"]} children={routes} />
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/home"]} children={routes} />
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>
@@ -49,9 +55,12 @@ describe("greedy matching", () => {
   });
 
   it('matches the nested "not found" route', () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/home/typo"]} children={routes} />
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/home/typo"]} children={routes} />
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>
@@ -64,9 +73,12 @@ describe("greedy matching", () => {
   });
 
   it('matches the "not found" route', () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/hometypo"]} children={routes} />
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/hometypo"]} children={routes} />
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <p>

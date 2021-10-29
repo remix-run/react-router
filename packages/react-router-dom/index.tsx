@@ -1,4 +1,5 @@
 import * as React from "react";
+import type { BrowserHistory, HashHistory, State, To } from "history";
 import { createBrowserHistory, createHashHistory, createPath } from "history";
 import {
   MemoryRouter,
@@ -23,7 +24,6 @@ import {
   useResolvedPath,
   useRoutes
 } from "react-router";
-import type { BrowserHistory, HashHistory, State, To } from "history";
 
 function warning(cond: boolean, message: string): void {
   if (!cond) {

@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Action, createMemoryHistory, parsePath } from "history";
 import type {
   History,
   InitialEntry,
@@ -9,6 +8,7 @@ import type {
   State,
   To
 } from "history";
+import { Action, createMemoryHistory, parsePath } from "history";
 
 function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);
@@ -70,7 +70,7 @@ if (__DEV__) {
 }
 
 interface LocationContextObject {
-  action: Action;
+  action: "POP" | "PUSH" | "REPLACE";
   location: Location;
 }
 
@@ -231,7 +231,7 @@ export function Route(
 }
 
 export interface RouterProps {
-  action?: Action;
+  action?: "POP" | "PUSH" | "REPLACE";
   basename?: string;
   children?: React.ReactNode;
   location: Partial<Location> | string;

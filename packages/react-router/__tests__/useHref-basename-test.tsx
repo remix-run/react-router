@@ -1,7 +1,6 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Routes, Route, useHref } from "react-router";
-import { render } from "react-dom";
 
 function ShowHref({ to }: { to: string }) {
   return <p>{useHref(to)}</p>;
@@ -10,13 +9,16 @@ function ShowHref({ to }: { to: string }) {
 describe("useHref under a basename", () => {
   describe("to an absolute route", () => {
     it("returns the correct href", () => {
-      let renderer = createTestRenderer(
-        <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
-          <Routes>
-            <Route path="admin" element={<ShowHref to="/invoices" />} />
-          </Routes>
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
+              <Route path="admin" element={<ShowHref to="/invoices" />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <p>
@@ -28,13 +30,16 @@ describe("useHref under a basename", () => {
 
   describe("to a child route", () => {
     it("returns the correct href", () => {
-      let renderer = createTestRenderer(
-        <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
-          <Routes>
-            <Route path="admin" element={<ShowHref to="invoices" />} />
-          </Routes>
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
+              <Route path="admin" element={<ShowHref to="invoices" />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <p>
@@ -45,13 +50,16 @@ describe("useHref under a basename", () => {
 
     describe("when the URL has a trailing slash", () => {
       it("returns the correct href", () => {
-        let renderer = createTestRenderer(
-          <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
-            <Routes>
-              <Route path="admin" element={<ShowHref to="invoices" />} />
-            </Routes>
-          </MemoryRouter>
-        );
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
+              <Routes>
+                <Route path="admin" element={<ShowHref to="invoices" />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <p>
@@ -63,13 +71,16 @@ describe("useHref under a basename", () => {
 
     describe("when the href has a trailing slash", () => {
       it("returns the correct href", () => {
-        let renderer = createTestRenderer(
-          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
-            <Routes>
-              <Route path="admin" element={<ShowHref to="invoices/" />} />
-            </Routes>
-          </MemoryRouter>
-        );
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+              <Routes>
+                <Route path="admin" element={<ShowHref to="invoices/" />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <p>
@@ -82,13 +93,16 @@ describe("useHref under a basename", () => {
 
   describe("to a sibling route", () => {
     it("returns the correct href", () => {
-      let renderer = createTestRenderer(
-        <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
-          <Routes>
-            <Route path="admin" element={<ShowHref to="../dashboard" />} />
-          </Routes>
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
+              <Route path="admin" element={<ShowHref to="../dashboard" />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <p>
@@ -99,13 +113,16 @@ describe("useHref under a basename", () => {
 
     describe("when the URL has a trailing slash", () => {
       it("returns the correct href", () => {
-        let renderer = createTestRenderer(
-          <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
-            <Routes>
-              <Route path="admin" element={<ShowHref to="../dashboard" />} />
-            </Routes>
-          </MemoryRouter>
-        );
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
+              <Routes>
+                <Route path="admin" element={<ShowHref to="../dashboard" />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <p>
@@ -117,13 +134,16 @@ describe("useHref under a basename", () => {
 
     describe("when the href has a trailing slash", () => {
       it("returns the correct href", () => {
-        let renderer = createTestRenderer(
-          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
-            <Routes>
-              <Route path="admin" element={<ShowHref to="../dashboard/" />} />
-            </Routes>
-          </MemoryRouter>
-        );
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+              <Routes>
+                <Route path="admin" element={<ShowHref to="../dashboard/" />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <p>
@@ -136,13 +156,16 @@ describe("useHref under a basename", () => {
 
   describe("to a parent route", () => {
     it("returns the correct href", () => {
-      let renderer = createTestRenderer(
-        <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
-          <Routes>
-            <Route path="admin" element={<ShowHref to=".." />} />
-          </Routes>
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
+              <Route path="admin" element={<ShowHref to=".." />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <p>
@@ -153,13 +176,16 @@ describe("useHref under a basename", () => {
 
     describe("when the URL has a trailing slash", () => {
       it("returns the correct href", () => {
-        let renderer = createTestRenderer(
-          <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
-            <Routes>
-              <Route path="admin" element={<ShowHref to=".." />} />
-            </Routes>
-          </MemoryRouter>
-        );
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
+              <Routes>
+                <Route path="admin" element={<ShowHref to=".." />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <p>
@@ -171,13 +197,16 @@ describe("useHref under a basename", () => {
 
     describe("when the href has a trailing slash", () => {
       it("returns the correct href", () => {
-        let renderer = createTestRenderer(
-          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
-            <Routes>
-              <Route path="admin" element={<ShowHref to="../" />} />
-            </Routes>
-          </MemoryRouter>
-        );
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+              <Routes>
+                <Route path="admin" element={<ShowHref to="../" />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <p>
@@ -190,16 +219,19 @@ describe("useHref under a basename", () => {
 
   describe("with a to value that has more .. segments than the current URL", () => {
     it("returns the correct href", () => {
-      let renderer = createTestRenderer(
-        <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
-          <Routes>
-            <Route
-              path="admin"
-              element={<ShowHref to="../../../dashboard" />}
-            />
-          </Routes>
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
+              <Route
+                path="admin"
+                element={<ShowHref to="../../../dashboard" />}
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       // This is correct because the basename works like a chroot "jail".
       // Relative <Link to> values cannot "escape" into a higher level URL since
@@ -214,13 +246,16 @@ describe("useHref under a basename", () => {
 
     describe("and no additional segments", () => {
       it("returns the correct href", () => {
-        let renderer = createTestRenderer(
-          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
-            <Routes>
-              <Route path="admin" element={<ShowHref to="../../.." />} />
-            </Routes>
-          </MemoryRouter>
-        );
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+              <Routes>
+                <Route path="admin" element={<ShowHref to="../../.." />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         // This is correct because the basename works like a chroot "jail".
         // Relative <Link to> values cannot "escape" into a higher level URL
@@ -236,16 +271,19 @@ describe("useHref under a basename", () => {
 
     describe("when the URL has a trailing slash", () => {
       it("returns the correct href", () => {
-        let renderer = createTestRenderer(
-          <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
-            <Routes>
-              <Route
-                path="admin"
-                element={<ShowHref to="../../../dashboard" />}
-              />
-            </Routes>
-          </MemoryRouter>
-        );
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter basename="/app" initialEntries={["/app/admin/"]}>
+              <Routes>
+                <Route
+                  path="admin"
+                  element={<ShowHref to="../../../dashboard" />}
+                />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         // This is correct because the basename works like a chroot "jail".
         // Relative <Link to> values cannot "escape" into a higher level URL
@@ -261,16 +299,19 @@ describe("useHref under a basename", () => {
 
     describe("when the href has a trailing slash", () => {
       it("returns the correct href", () => {
-        let renderer = createTestRenderer(
-          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
-            <Routes>
-              <Route
-                path="admin"
-                element={<ShowHref to="../../../dashboard/" />}
-              />
-            </Routes>
-          </MemoryRouter>
-        );
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+              <Routes>
+                <Route
+                  path="admin"
+                  element={<ShowHref to="../../../dashboard/" />}
+                />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <p>
@@ -291,8 +332,14 @@ describe("useHref under a basename", () => {
         </MemoryRouter>
       );
 
-      let renderer = createTestRenderer(element);
-      renderer.update(element);
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(element);
+      });
+
+      TestRenderer.act(() => {
+        renderer.update(element);
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <p>

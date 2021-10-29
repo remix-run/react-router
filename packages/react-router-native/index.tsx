@@ -1,4 +1,5 @@
 import * as React from "react";
+import type { State, To } from "history";
 import {
   BackHandler,
   GestureResponderEvent,
@@ -31,7 +32,6 @@ import {
   useResolvedPath,
   useRoutes
 } from "react-router";
-import { State, To } from "history";
 import URLSearchParams from "@ungap/url-search-params";
 
 ////////////////////////////////////////////////////////////////////////////////

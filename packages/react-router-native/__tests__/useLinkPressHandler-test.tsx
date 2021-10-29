@@ -7,8 +7,7 @@ import {
   Routes,
   useLinkPressHandler
 } from "react-router-native";
-import type { ReactTestRenderer } from "react-test-renderer";
-import { act, create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 
 import { press } from "./utils";
 
@@ -37,9 +36,9 @@ describe("Custom link with useLinkPressHandler", () => {
       );
     }
 
-    let renderer!: ReactTestRenderer;
-    act(() => {
-      renderer = createTestRenderer(
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
         <NativeRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
@@ -52,9 +51,8 @@ describe("Custom link with useLinkPressHandler", () => {
     expect(renderer.toJSON()).toMatchSnapshot();
 
     let touchable = renderer.root.findByType(TouchableHighlight);
-    expect(touchable).not.toBeNull();
 
-    act(() => {
+    TestRenderer.act(() => {
       press(touchable);
     });
 

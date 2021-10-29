@@ -6,8 +6,7 @@ import {
   Route,
   useSearchParams
 } from "react-router-native";
-import type { ReactTestRenderer } from "react-test-renderer";
-import { act, create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 
 describe("useSearchParams", () => {
   function SearchForm({
@@ -39,9 +38,9 @@ describe("useSearchParams", () => {
   }
 
   it("reads and writes the search string", () => {
-    let renderer!: ReactTestRenderer;
-    act(() => {
-      renderer = createTestRenderer(
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
         <NativeRouter initialEntries={["/search?q=Michael+Jackson"]}>
           <Routes>
             <Route path="search" element={<SearchPage />} />
@@ -52,13 +51,15 @@ describe("useSearchParams", () => {
 
     expect(renderer.toJSON()).toMatchSnapshot();
 
-    act(() => {
-      let textInput = renderer.root.findByType(TextInput);
+    let textInput = renderer.root.findByType(TextInput);
+
+    TestRenderer.act(() => {
       textInput.props.onChangeText("Ryan Florence");
     });
 
-    act(() => {
-      let searchForm = renderer.root.findByType(SearchForm);
+    let searchForm = renderer.root.findByType(SearchForm);
+
+    TestRenderer.act(() => {
       searchForm.props.onSubmit();
     });
 

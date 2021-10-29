@@ -1,20 +1,19 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Routes, Route } from "react-router";
 
 describe("A <Route>", () => {
   it("renders its `element` prop", () => {
-    function Home() {
-      return <h1>Home</h1>;
-    }
-
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/home"]}>
-        <Routes>
-          <Route path="home" element={<Home />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route path="home" element={<h1>Home</h1>} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>
@@ -24,19 +23,18 @@ describe("A <Route>", () => {
   });
 
   it("renders its child routes when no `element` prop is given", () => {
-    function Home() {
-      return <h1>Home</h1>;
-    }
-
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/app/home"]}>
-        <Routes>
-          <Route path="app">
-            <Route path="home" element={<Home />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/app/home"]}>
+          <Routes>
+            <Route path="app">
+              <Route path="home" element={<h1>Home</h1>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>

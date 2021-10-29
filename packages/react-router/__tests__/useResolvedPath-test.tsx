@@ -1,5 +1,5 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import type { Path } from "history";
 import { MemoryRouter, Routes, Route, useResolvedPath } from "react-router";
 
@@ -9,16 +9,19 @@ function ShowResolvedPath({ path }: { path: string | Path }) {
 
 describe("useResolvedPath", () => {
   it("path string resolves correctly", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/"]}>
-        <Routes>
-          <Route
-            path="/"
-            element={<ShowResolvedPath path="/home?user=mj#welcome" />}
-          />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/"]}>
+          <Routes>
+            <Route
+              path="/"
+              element={<ShowResolvedPath path="/home?user=mj#welcome" />}
+            />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <pre>
@@ -28,24 +31,27 @@ describe("useResolvedPath", () => {
   });
 
   it("partial path object resolves correctly", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/"]}>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ShowResolvedPath
-                path={{
-                  pathname: "/home",
-                  search: new URLSearchParams({ user: "mj" }).toString(),
-                  hash: "#welcome"
-                }}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/"]}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ShowResolvedPath
+                  path={{
+                    pathname: "/home",
+                    search: new URLSearchParams({ user: "mj" }).toString(),
+                    hash: "#welcome"
+                  }}
+                />
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <pre>
@@ -56,16 +62,19 @@ describe("useResolvedPath", () => {
 
   describe("given a hash with a ? character", () => {
     it("hash is not parsed as a search string", () => {
-      let renderer = createTestRenderer(
-        <MemoryRouter initialEntries={["/"]}>
-          <Routes>
-            <Route
-              path="/"
-              element={<ShowResolvedPath path="/home#welcome?user=mj" />}
-            />
-          </Routes>
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/"]}>
+            <Routes>
+              <Route
+                path="/"
+                element={<ShowResolvedPath path="/home#welcome?user=mj" />}
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <pre>
@@ -77,15 +86,18 @@ describe("useResolvedPath", () => {
 
   describe("in a splat route", () => {
     it("resolves . to the route path", () => {
-      let renderer = createTestRenderer(
-        <MemoryRouter initialEntries={["/users/mj"]}>
-          <Routes>
-            <Route path="/users">
-              <Route path="*" element={<ShowResolvedPath path="." />} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/mj"]}>
+            <Routes>
+              <Route path="/users">
+                <Route path="*" element={<ShowResolvedPath path="." />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <pre>

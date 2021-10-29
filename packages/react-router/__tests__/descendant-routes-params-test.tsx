@@ -1,5 +1,5 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Routes, Route, useParams } from "react-router";
 
 describe("Descendant <Routes>", () => {
@@ -8,20 +8,23 @@ describe("Descendant <Routes>", () => {
       return <p>The params are {JSON.stringify(useParams())}</p>;
     }
 
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/users/mj/messages/123"]}>
-        <Routes>
-          <Route
-            path="users/:userId/*"
-            element={
-              <Routes>
-                <Route path="messages/:messageId" element={<ShowParams />} />
-              </Routes>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/users/mj/messages/123"]}>
+          <Routes>
+            <Route
+              path="users/:userId/*"
+              element={
+                <Routes>
+                  <Route path="messages/:messageId" element={<ShowParams />} />
+                </Routes>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <p>
@@ -36,20 +39,23 @@ describe("Descendant <Routes>", () => {
       return <p>The params are {JSON.stringify(useParams())}</p>;
     }
 
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/users/mj/messages/123"]}>
-        <Routes>
-          <Route
-            path="users/:id/*"
-            element={
-              <Routes>
-                <Route path="messages/:id" element={<ShowParams />} />
-              </Routes>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/users/mj/messages/123"]}>
+          <Routes>
+            <Route
+              path="users/:id/*"
+              element={
+                <Routes>
+                  <Route path="messages/:id" element={<ShowParams />} />
+                </Routes>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <p>
