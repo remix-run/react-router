@@ -1,5 +1,6 @@
 ---
 title: Contributing
+order: 5
 ---
 
 # Contributing to React Router

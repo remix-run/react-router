@@ -1,6 +1,6 @@
 ---
 title: Guides
-order: 3
+order: 4
 ---
 
 <docs-info>This page is a work-in-progress, but keep an eye out as we add content over the coming days and weeks 👀.</docs-info>
