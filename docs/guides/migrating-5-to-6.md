@@ -26,31 +26,33 @@ are using your app.
 
 In general, the process looks like this:
 
-- [Upgrade to React v16.8 or greater](#upgrade-to-react-v168)
-- [Upgrade to React Router v5.1](#upgrade-to-react-router-v51)
-  - Use `<Route children>` everywhere
-  - Use hooks instead of `withRouter` and "floating" `<Route>`s (that aren't
-    part of a `<Switch>`)
+1. [Upgrade to React v16.8 or greater](#upgrade-to-react-v168)
+2. [Upgrade to React Router v5.1](#upgrade-to-react-router-v51)
+3. [Upgrade to React Router v6](#upgrade-to-react-router-v6)
+
+The following is a detailed breakdown of each step that should help you migrate
+quickly and with confidence to v6.
 
 ---
 
-- [Migrating React Router v5 to v6](#migrating-react-router-v5-to-v6)
-  - [Upgrade to React v16.8](#upgrade-to-react-v168)
-  - [Upgrade to React Router v5.1](#upgrade-to-react-router-v51)
-  - [Upgrade to React Router v6](#upgrade-to-react-router-v6)
-    - [Upgrade all `<Switch>` elements to `<Routes>`](#upgrade-all-switch-elements-to-routes)
-    - [Relative Routes and Links](#relative-routes-and-links)
-    - [Advantages of `<Route element>`](#advantages-of-route-element)
-    - [Note on `<Route path>` patterns](#note-on-route-path-patterns)
-    - [Note on `<Link to>` values](#note-on-link-to-values)
-  - [Use `useRoutes` instead of `react-router-config`](#use-useroutes-instead-of-react-router-config)
-  - [Use `useNavigate` instead of `history`](#use-usenavigate-instead-of-history)
-  - [Remove `<Link>` `component` prop](#remove-link-component-prop)
-  - [Rename `<NavLink exact>` to `<NavLink end>`](#rename-navlink-exact-to-navlink-end)
-  - [Remove `activeClassName` and `activeStyle` props from `<NavLink />`](#remove-activeclassname-and-activestyle-props-from-navlink-)
-  - [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-domserver)
-  - [Move `basename` from `<Router>` to `<Routes>`](#move-basename-from-router-to-routes)
-  - [What did we miss?](#what-did-we-miss)
+## Table of Contents
+
+- [Upgrade to React v16.8](#upgrade-to-react-v168)
+- [Upgrade to React Router v5.1](#upgrade-to-react-router-v51)
+- [Upgrade to React Router v6](#upgrade-to-react-router-v6)
+  - [Upgrade all `<Switch>` elements to `<Routes>`](#upgrade-all-switch-elements-to-routes)
+  - [Relative Routes and Links](#relative-routes-and-links)
+  - [Advantages of `<Route element>`](#advantages-of-route-element)
+  - [Note on `<Route path>` patterns](#note-on-route-path-patterns)
+  - [Note on `<Link to>` values](#note-on-link-to-values)
+- [Use `useRoutes` instead of `react-router-config`](#use-useroutes-instead-of-react-router-config)
+- [Use `useNavigate` instead of `history`](#use-usenavigate-instead-of-history)
+- [Remove `<Link>` `component` prop](#remove-link-component-prop)
+- [Rename `<NavLink exact>` to `<NavLink end>`](#rename-navlink-exact-to-navlink-end)
+(#remove-activeclassname-and-activestyle-props-from-navlink-)
+- [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-domserver)
+- [Move `basename` from `<Router>` to `<Routes>`](#move-basename-from-router-to-routes)
+- [What did we miss?](#what-did-we-miss)
 
 ## Upgrade to React v16.8
 
