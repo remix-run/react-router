@@ -1232,7 +1232,7 @@ See also [`createRoutesFromArray`](#createroutesfromarray).
 > **Note:**
 >
 > This is the web version of `useSearchParams`. For the React Native version,
-> [go here](#usesearchparams-native).
+> [go here](#usesearchparams-react-native).
 
 <details>
   <summary>Type declaration</summary>
@@ -1292,8 +1292,6 @@ function App() {
 > only for the [search portion](https://developer.mozilla.org/en-US/docs/Web/API/Location/search)
 > of the URL. Also note that the second arg to `setSearchParams` is
 > the same type as the second arg to `navigate`.
-
-<a name="usesearchparams-native"></a>
 
 ### `useSearchParams` (React Native)
 
