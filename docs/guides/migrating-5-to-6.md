@@ -49,7 +49,7 @@ quickly and with confidence to v6.
 - [Use `useNavigate` instead of `history`](#use-usenavigate-instead-of-history)
 - [Remove `<Link>` `component` prop](#remove-link-component-prop)
 - [Rename `<NavLink exact>` to `<NavLink end>`](#rename-navlink-exact-to-navlink-end)
-(#remove-activeclassname-and-activestyle-props-from-navlink-)
+  (#remove-activeclassname-and-activestyle-props-from-navlink-)
 - [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-domserver)
 - [Move `basename` from `<Router>` to `<Routes>`](#move-basename-from-router-to-routes)
 - [What did we miss?](#what-did-we-miss)
