@@ -2,24 +2,24 @@
 title: Migrating from @reach/router
 ---
 
-# Migrating `@reach/router` to React Router v6
+# Migrating from `@reach/router` to React Router v6
 
-_Note: This document is still a work in progress! Please let us know where it
-lacks so we can make the migration as smooth as possible!_
+<docs-info>This page is a work-in-progress. Please let us know where it
+lacks so we can make the migration as smooth as possible!</docs-info>
 
 ## Introduction
 
-When we set out to build React Router v6, from the perspective of @reach/router users, we had these goals:
+When we set out to build React Router v6, from the perspective of `@reach/router` users, we had these goals:
 
-- Keep the bundle size low. Turns out we got it smaller than @reach/router
-- Keep the best parts of @reach/router (nested routes, and a simplified API via ranked path matching and `navigate`)
-- Update the API to be idiomatic with modern react: aka hooks.
+- Keep the bundle size low (turns out we got it smaller than `@reach/router`)
+- Keep the best parts of `@reach/router` (nested routes, and a simplified API via ranked path matching and `navigate`)
+- Update the API to be idiomatic with modern React (AKA hooks).
 - Provide better support for Concurrent Mode and Suspense.
 - Stop doing not-good-enough focus management by default.
 
-If we were to make a @reach/router v2, it would look pretty much exactly like React Router v6. So, the next version of @reach/router _is_ React Router v6. In other words, there will be no @reach/router v2, because it would be the same as React Router v6.
+If we were to make a `@reach/router` v2, it would look pretty much exactly like React Router v6. So, the next version of `@reach/router` _is_ React Router v6. In other words, there will be no `@reach/router` v2, because it would be the same as React Router v6.
 
-A lot of the API is actually identical between @reach/router 1.3 and React Router v6:
+A lot of the API is actually identical between `@reach/router` 1.3 and React Router v6:
 
 - Routes are ranked and matched
 - The nested route config is there
@@ -38,7 +38,7 @@ In this guide we'll show you how to upgrade each piece of your routing code. We'
 We highly encourage you to do the following updates to your code before migrating to React Router v6. These changes don't have to be done all at once across your app, you can simply update one line, commit, and ship. Doing this will greatly reduce the effort when you get to the breaking changes in React Router v6.
 
 1. Upgrade to React v16.8 or greater
-2. Upgrade to @reach/router v1.3
+2. Upgrade to `@reach/router` v1.3
 3. Update route components to access data from hooks
 4. Add a `<LocationProvider/>` to the top of the app
 
@@ -53,7 +53,7 @@ The following changes need to be done all at once across your app.
 3. Change `<RouteElement default/>` to `<RouteElement path="*" />`
 4. Fix `<Redirect />`
 5. Implement `<Link getProps />` with hooks
-6. update `useMatch`, params are on `match.params`
+6. Update `useMatch`, params are on `match.params`
 7. Change `ServerLocation` to `StaticRouter`
 
 ## Non-Breaking Updates
@@ -67,7 +67,7 @@ React 16.8 or greater before attempting the upgrade to React Router v6.
 Once you've upgraded to React 16.8, you should deploy your app. Then you can
 come back later and pick up where you left off.
 
-### Upgrade to @reach/router v1.3.3
+### Upgrade to `@reach/router` v1.3.3
 
 You should be able to simply install v1.3.3 and then deploy your app.
 
@@ -79,7 +79,7 @@ npm install @reach/router@lastest
 
 You can do this step one route component at a time, commit, and deploy. You don't need to update the entire app at once.
 
-In @reach/router v1.3 we added hooks to access route data in preparation for React Router v6. If you do this first you'll have a lot less to do when you upgrade to React Router v6.
+In `@reach/router` v1.3 we added hooks to access route data in preparation for React Router v6. If you do this first you'll have a lot less to do when you upgrade to React Router v6.
 
 ```jsx
 // @reach/router v1.2
@@ -131,7 +131,7 @@ $ npm install react-router@6 react-router-dom@6
 
 ### Add a LocationProvider
 
-While @reach/router doesn't require a location provider at the top of the application tree, React Router v6 does, so might as well get ready for that now.
+While `@reach/router` doesn't require a location provider at the top of the application tree, React Router v6 does, so might as well get ready for that now.
 
 ```jsx
 // before
@@ -150,9 +150,9 @@ ReactDOM.render(
 
 #### Justification:
 
-@reach/router uses a global, default history instance that has side-effects in the module, which prevents the ability to tree-shake the module whether you use the global or not. Additionally, React Router provides other history types (like hash history) that @reach/router doesn't, so it always requires a top-level location provider (in React Router these are `<BrowserRouter/>` and friends).
+`@reach/router` uses a global, default history instance that has side-effects in the module, which prevents the ability to tree-shake the module whether you use the global or not. Additionally, React Router provides other history types (like hash history) that `@reach/router` doesn't, so it always requires a top-level location provider (in React Router these are `<BrowserRouter/>` and friends).
 
-Also, various modules like `Router`, `Link` and `useLocation` rendered outside of a `<LocationProvider/>` set up their own url listener. It's generally not a problem, but every little bit counts. Putting a `<LocationProvider />` at the top allows the app to have a single url listener.
+Also, various modules like `Router`, `Link` and `useLocation` rendered outside of a `<LocationProvider/>` set up their own URL listener. It's generally not a problem, but every little bit counts. Putting a `<LocationProvider />` at the top allows the app to have a single URL listener.
 
 ## Breaking updates
 
@@ -214,7 +214,7 @@ import { Routes } from "react-router-dom";
 
 ### Update `default` route prop
 
-The `default` prop told @reach/router to use that route if no other routes matched. In React Router v6 you can explain this behavior with a wildcard path.
+The `default` prop told `@reach/router` to use that route if no other routes matched. In React Router v6 you can explain this behavior with a wildcard path.
 
 ```jsx
 // @reach/router
@@ -246,7 +246,7 @@ Don't confuse redirects with navigating while the user interacts with your app. 
 </Router>
 ```
 
-The way redirects work in @reach/router was a bit of an experiment. It "throws" redirects and catches it with `componentDidCatch`. This was cool because it caused the entire render tree to stop, and then start over with the new location. Discussions with the React team years ago when we first shipped this project led us to give it a shot.
+The way redirects work in `@reach/router` was a bit of an experiment. It "throws" redirects and catches it with `componentDidCatch`. This was cool because it caused the entire render tree to stop, and then start over with the new location. Discussions with the React team years ago when we first shipped this project led us to give it a shot.
 
 After bumping into issues (like app level `componentDidCatch`'s needing to rethrow the redirect), we've decided not to do that anymore in React Router v6.
 
@@ -318,7 +318,7 @@ We figured by not providing any redirect API at all, people will be more likely 
 
 ### `<Link getProps />`
 
-This prop getter was useful for styling links as "active". Deciding if a link is active is kind of subjective. Sometimes you want it to be active if the url matches exactly, sometimes you want it active if it matches partially, and there are even more edge cases involving search params and location state.
+This prop getter was useful for styling links as "active". Deciding if a link is active is kind of subjective. Sometimes you want it to be active if the URL matches exactly, sometimes you want it active if it matches partially, and there are even more edge cases involving search params and location state.
 
 ```jsx
 // @reach/router
@@ -354,7 +354,7 @@ function SomeCustomLink() {
 Let's look at some less general examples.
 
 ```jsx
-// A custom nav link that is active when the url matches the link's href exactly
+// A custom nav link that is active when the URL matches the link's href exactly
 
 // @reach/router
 function ExactNavLink(props) {
@@ -394,7 +394,7 @@ function PartialNavLink(props) {
 
 // React Router v6
 function PartialNavLink(props) {
-  // add the wild card to match deeper urls
+  // add the wild card to match deeper URLs
   let match = useMatch(props.to + "/*");
   return (
     <Link className={match ? "active" : ""} {...props} />
@@ -446,7 +446,7 @@ Also note the change from `uri -> url`.
 
 #### Justification
 
-Just feels cleaner to have the params be seperate from url and path.
+Just feels cleaner to have the params be seperate from URL and path.
 
 Also nobody knows the difference between URL and URI, so we didn't want to start a bunch of pedantic arguments about it. React Router always called it URL, and it's got more production apps, so we used URL instead of URI.
 
@@ -506,6 +506,6 @@ Please let us know if this guide helped:
 
 _Open a Pull Request_: Please add any migration we missed that you needed.
 
-_General Feedback_ @reacttraining on twitter, hello@reacttraining.com
+_General Feedback_: [@remix_run](https://twitter.com/remix_run) on Twitter, or email [hello@remix.run](mailto:hello@remix.run).
 
 Thanks!
