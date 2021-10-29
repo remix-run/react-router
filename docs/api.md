@@ -5,7 +5,7 @@ order: 2
 
 # API Reference
 
-React Router is a collection of [React components](https://reactjs.org/docs/components-and-props.html), [hooks](#https://reactjs.org/docs/hooks-intro.html) and utilities that make it easy to build multi-page applications with [React](https://reactjs.org). This reference contains the function signatures and return types of the various interfaces in React Router.
+React Router is a collection of [React components](https://reactjs.org/docs/components-and-props.html), [hooks](https://reactjs.org/docs/hooks-intro.html) and utilities that make it easy to build multi-page applications with [React](https://reactjs.org). This reference contains the function signatures and return types of the various interfaces in React Router.
 
 <docs-info>Please refer to [our guides](./guides/index.md) for more in-depth usage examples of how you can use React Router to accomplish specific tasks.</docs-info>
 
@@ -17,7 +17,7 @@ React Router is published to npm in three different packages:
 
 - [`react-router`](https://npm.im/react-router) contains most of the core functionality of React Router including the route matching algorithm and most of the core components and hooks
 - [`react-router-dom`](https://npm.im/react-router-dom) includes everything from `react-router` and adds a few DOM-specific APIs, including [`<BrowserRouter>`](#browserrouter), [`<HashRouter>`](#hashrouter), and [`<Link>`](#link)
-- [`react-router-native`](https://npm.im/react-router-native) includes everything from `react-router` and adds a few APIs that are specific to React Native, including [`<NativeRouter>`](#nativerouter) and [a native version of `<Link>`](#link-native)
+- [`react-router-native`](https://npm.im/react-router-native) includes everything from `react-router` and adds a few APIs that are specific to React Native, including [`<NativeRouter>`](#nativerouter) and [a native version of `<Link>`](#link-react-native)
 
 Both `react-router-dom` and `react-router-native` automatically include `react-router` as a dependency when you install them, and both packages re-export everything from `react-router`. **When you `import` stuff, you should always import from either `react-router-dom` or `react-router-native` and never directly from `react-router`**. Otherwise you may accidentally import mismatched versions of the library in your app.
 
@@ -46,7 +46,7 @@ A few low-level pieces that we use internally are also exposed as public API, in
 - [`matchPath`](#matchpath) - matches a path pattern against a URL pathname
 - [`matchRoutes`](#matchroutes) - matches a set of routes against a [location](#location)
 - [`createRoutesFromArray`](#createroutesfromarray) - creates a route config from a set of plain JavaScript objects
-- [`createRoutesFromChildren`](#createroutesfromchildren) - creates a route config from a set of React elements (i.e. [`<Route>`](#route) elements)
+- [`createRoutesFromChildren`](#createroutesfromchildren) - creates a route config from a set of React elements (i.e. [`<Route>`](#routes-and-route) elements)
 
 ### Navigation
 
@@ -240,7 +240,7 @@ describe("My app", () => {
 > **Note:**
 >
 > This is the web version of `<Link>`. For the React Native version,
-> [go here](#link-native).
+> [go here](#link-react-native).
 
 <details>
   <summary>Type declaration</summary>
@@ -294,8 +294,6 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 > current URL ends with `/`. `<Link to>` ignores the trailing slash, and removes
 > one URL segment for each `..`. But an `<a href>` value handles `..`
 > differently when the current URL ends with `/` vs when it does not.
-
-<a name="link-native"></a>
 
 ### `<Link>` (React Native)
 
@@ -737,7 +735,7 @@ interface RouteObject {
 
 </details>
 
-`createRoutesFromChildren` is a helper that creates route objects from `<Route>` elements. It is used internally in a [`<Routes>` element](#routes) to generate a route config from its [`<Route>`](#route) children.
+`createRoutesFromChildren` is a helper that creates route objects from `<Route>` elements. It is used internally in a [`<Routes>` element](#routes-and-route) to generate a route config from its [`<Route>`](#routes-and-route) children.
 
 ### `generatePath`
 
@@ -797,7 +795,7 @@ interface RouteMatch<ParamKey extends string = string> {
 
 `matchRoutes` runs the route matching algorithm for a set of routes against a given [`location`](#location) to see which routes (if any) match. If it finds a match, an array of `RouteMatch` objects is returned, one for each route that matched.
 
-This is the heart of React Router's matching algorithm. It is used internally by [`useRoutes`](#useroutes) and the [`<Routes>` component](#routes) to determine which routes match the current location. It can also be useful in some situations where you want to manually match a set of routes.
+This is the heart of React Router's matching algorithm. It is used internally by [`useRoutes`](#useroutes) and the [`<Routes>` component](#routes-and-route) to determine which routes match the current location. It can also be useful in some situations where you want to manually match a set of routes.
 
 ### `renderMatches`
 
@@ -1199,7 +1197,7 @@ declare function useRoutes(
 
 </details>
 
-The `useRoutes` hook is the functional equivalent of [`<Routes>`](#routes), but it uses JavaScript objects instead of `<Route>` elements to define your routes. These objects have the same properties as normal [`<Route>` elements](#route), but they don't require JSX.
+The `useRoutes` hook is the functional equivalent of [`<Routes>`](#routes), but it uses JavaScript objects instead of `<Route>` elements to define your routes. These objects have the same properties as normal [`<Route>` elements](#routes-and-route), but they don't require JSX.
 
 The return value of `useRoutes` is either a valid React element you can use to render the route tree, or `null` if nothing matched.
 
