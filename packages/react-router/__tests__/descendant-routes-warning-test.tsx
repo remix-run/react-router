@@ -1,5 +1,5 @@
 import * as React from "react";
-import { act, create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Outlet, Routes, Route } from "react-router";
 
 describe("Descendant <Routes>", () => {
@@ -39,15 +39,17 @@ describe("Descendant <Routes>", () => {
         );
       }
 
-      createTestRenderer(
-        <MemoryRouter initialEntries={["/courses/react"]}>
-          <Routes>
-            <Route path="courses" element={<Courses />}>
-              <Route path="react" element={<ReactCourses />} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
+      TestRenderer.act(() => {
+        TestRenderer.create(
+          <MemoryRouter initialEntries={["/courses/react"]}>
+            <Routes>
+              <Route path="courses" element={<Courses />}>
+                <Route path="react" element={<ReactCourses />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn).toHaveBeenCalledWith(
@@ -82,8 +84,8 @@ describe("Descendant <Routes>", () => {
         );
       }
 
-      act(() => {
-        createTestRenderer(
+      TestRenderer.act(() => {
+        TestRenderer.create(
           <MemoryRouter initialEntries={["/courses/react"]}>
             <Routes>
               <Route path="courses" element={<Courses />}>

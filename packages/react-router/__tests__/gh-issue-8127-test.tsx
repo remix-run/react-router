@@ -1,12 +1,12 @@
 import * as React from "react";
-import { act, create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 
 describe("GH Issue #8127", () => {
   it("works", () => {
-    let renderer;
-    act(() => {
-      renderer = createTestRenderer(
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
         <MemoryRouter initialEntries={["/availability"]}>
           <Routes>
             <Route

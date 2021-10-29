@@ -1,6 +1,5 @@
 import * as React from "react";
-import type { ReactTestRenderer } from "react-test-renderer";
-import { act, create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, useLocation } from "react-router";
 
 describe("<Router>", () => {
@@ -15,7 +14,7 @@ describe("<Router>", () => {
 
   it("throws if another <Router> is already in context", () => {
     expect(() => {
-      createTestRenderer(
+      TestRenderer.create(
         <MemoryRouter>
           <MemoryRouter />
         </MemoryRouter>
@@ -32,9 +31,9 @@ describe("<Router>", () => {
       return null;
     }
 
-    let renderer: ReactTestRenderer;
-    act(() => {
-      renderer = createTestRenderer(
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
         <MemoryRouter>
           <CaptureLocation1 />
         </MemoryRouter>
@@ -49,7 +48,7 @@ describe("<Router>", () => {
       return null;
     }
 
-    act(() => {
+    TestRenderer.act(() => {
       renderer.update(
         <MemoryRouter>
           <CaptureLocation2 />

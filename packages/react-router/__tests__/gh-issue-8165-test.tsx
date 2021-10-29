@@ -1,5 +1,5 @@
 import * as React from "react";
-import { act, create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import {
   MemoryRouter,
   Routes,
@@ -58,9 +58,9 @@ describe("GH Issue #8165", () => {
       );
     }
 
-    let renderer;
-    act(() => {
-      renderer = createTestRenderer(
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
         <MemoryRouter initialEntries={["/en/tab"]}>
           <App />
         </MemoryRouter>
