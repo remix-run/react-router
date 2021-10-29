@@ -154,7 +154,7 @@ the most time and effort.
 For this step, you'll need to install React Router v6 and the history library,
 which is now a peer dependency. If you're managing dependencies via npm:
 
-```
+```bash
 $ npm install react-router@next react-router-dom@next history
 # or, for a React Native app
 $ npm install react-router@next react-router-native@next history
