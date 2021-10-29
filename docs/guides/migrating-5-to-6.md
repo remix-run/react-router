@@ -4,10 +4,10 @@ title: Migrating from v5
 
 # Migrating React Router v5 to v6
 
-_Note: This document is still a work in progress! The migration process from
+<docs-info>This page is a work-in-progress. The migration process from
 React Router v5 to v6 isn't yet as smooth as we would like it to be. We are
 planning on backporting several of v6's new APIs to v5 to make it smoother, and
-this guide will keep improving as we continue to gather feedback._
+this guide will keep improving as we continue to gather feedback from our users.</docs-info>
 
 React Router version 6 introduces several powerful new features, as well as
 improved compatibility with the latest versions of React. It also introduces a
@@ -31,6 +31,9 @@ In general, the process looks like this:
   - Use `<Route children>` everywhere
   - Use hooks instead of `withRouter` and "floating" `<Route>`s (that aren't
     part of a `<Switch>`)
+
+---
+
 - [Migrating React Router v5 to v6](#migrating-react-router-v5-to-v6)
   - [Upgrade to React v16.8](#upgrade-to-react-v168)
   - [Upgrade to React Router v5.1](#upgrade-to-react-router-v51)
@@ -286,7 +289,7 @@ A few important things to notice about v6 in this example:
 You may have also noticed that all `<Route children>` from the v5 app changed to
 `<Route element>` in v6. Assuming you followed the upgrade steps to v5.1, this
 should be as simple as moving your route element from the child position to a
-named `element` prop (TODO: can we provide a codemod here?).
+named `element` prop. <!-- (TODO: can we provide a codemod here?) -->
 
 ### Advantages of `<Route element>`
 
