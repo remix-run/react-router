@@ -1,53 +1,18 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
-import { act } from "react-dom/test-utils";
-import { Router, Routes, Route, Link } from "react-router-dom";
-import type { History } from "history";
+import * as TestRenderer from "react-test-renderer";
+import {
+  MemoryRouter,
+  Routes,
+  Route,
+  Link,
+  useNavigationType
+} from "react-router-dom";
 
-function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit): void {
-  anchor.dispatchEvent(
-    new MouseEvent("click", {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-      ...eventInit
-    })
-  );
-}
-
-function createHref({ pathname = "/", search = "", hash = "" }): string {
-  return pathname + search + hash;
-}
-
-function createMockHistory({ pathname = "/", search = "", hash = "" }) {
-  let location: Partial<History["location"]> = { pathname, search, hash };
-  return {
-    action: "POP",
-    location,
-    createHref,
-    push() {},
-    replace() {},
-    go() {},
-    back() {},
-    forward() {},
-    listen() {
-      return () => {};
-    }
-  } as Omit<History, "block">;
+function ShowNavigationType() {
+  return <p>{useNavigationType()}</p>;
 }
 
 describe("Link push and replace", () => {
-  let node: HTMLDivElement;
-  beforeEach(() => {
-    node = document.createElement("div");
-    document.body.appendChild(node);
-  });
-
-  afterEach(() => {
-    document.body.removeChild(node);
-    node = null!;
-  });
-
   describe("to a different pathname, when it is clicked", () => {
     it("performs a push", () => {
       function Home() {
@@ -59,133 +24,143 @@ describe("Link push and replace", () => {
         );
       }
 
-      let history = createMockHistory({ pathname: "/home" });
-      let spy = jest.spyOn(history, "push");
-
-      act(() => {
-        ReactDOM.render(
-          <Router
-            action={history.action}
-            location={history.location}
-            navigator={history}
-          >
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
+              <Route path="about" element={<ShowNavigationType />} />
             </Routes>
-          </Router>,
-          node
+          </MemoryRouter>
         );
       });
 
-      let anchor = node.querySelector("a");
-      expect(anchor).not.toBeNull();
+      let anchor = renderer.root.findByType("a");
 
-      act(() => {
-        click(anchor);
+      TestRenderer.act(() => {
+        anchor.props.onClick(
+          new MouseEvent("click", {
+            view: window,
+            bubbles: true,
+            cancelable: true
+          })
+        );
       });
 
-      expect(spy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          pathname: "/about",
-          search: "",
-          hash: ""
-        }),
-        undefined
-      );
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <p>
+          PUSH
+        </p>
+      `);
     });
   });
 
   describe("to a different search string, when it is clicked", () => {
-    it("performs a push (with the existing pathname)", () => {
+    it("performs a push with the existing pathname", () => {
       function Home() {
         return (
           <div>
             <h1>Home</h1>
             <Link to="?name=michael">Michael</Link>
+            <ShowNavigationType />
           </div>
         );
       }
 
-      let history = createMockHistory({ pathname: "/home" });
-      let spy = jest.spyOn(history, "push");
-
-      act(() => {
-        ReactDOM.render(
-          <Router
-            action={history.action}
-            location={history.location}
-            navigator={history}
-          >
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
             </Routes>
-          </Router>,
-          node
+          </MemoryRouter>
         );
       });
 
-      let anchor = node.querySelector("a");
-      expect(anchor).not.toBeNull();
+      let anchor = renderer.root.findByType("a");
 
-      act(() => {
-        click(anchor);
+      TestRenderer.act(() => {
+        anchor.props.onClick(
+          new MouseEvent("click", {
+            view: window,
+            bubbles: true,
+            cancelable: true
+          })
+        );
       });
 
-      expect(spy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          pathname: "/home",
-          search: "?name=michael",
-          hash: ""
-        }),
-        undefined
-      );
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          <h1>
+            Home
+          </h1>
+          <a
+            href="/home?name=michael"
+            onClick={[Function]}
+          >
+            Michael
+          </a>
+          <p>
+            PUSH
+          </p>
+        </div>
+      `);
     });
   });
 
   describe("to a different hash, when it is clicked", () => {
-    it("performs a push (with the existing pathname)", () => {
+    it("performs a push with the existing pathname", () => {
       function Home() {
         return (
           <div>
             <h1>Home</h1>
             <Link to="#bio">Bio</Link>
+            <ShowNavigationType />
           </div>
         );
       }
 
-      let history = createMockHistory({ pathname: "/home" });
-      let spy = jest.spyOn(history, "push");
-
-      act(() => {
-        ReactDOM.render(
-          <Router
-            action={history.action}
-            location={history.location}
-            navigator={history}
-          >
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
             </Routes>
-          </Router>,
-          node
+          </MemoryRouter>
         );
       });
 
-      let anchor = node.querySelector("a");
-      expect(anchor).not.toBeNull();
+      let anchor = renderer.root.findByType("a");
 
-      act(() => {
-        click(anchor);
+      TestRenderer.act(() => {
+        anchor.props.onClick(
+          new MouseEvent("click", {
+            view: window,
+            bubbles: true,
+            cancelable: true
+          })
+        );
       });
 
-      expect(spy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          pathname: "/home",
-          search: "",
-          hash: "#bio"
-        }),
-        undefined
-      );
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          <h1>
+            Home
+          </h1>
+          <a
+            href="/home#bio"
+            onClick={[Function]}
+          >
+            Bio
+          </a>
+          <p>
+            PUSH
+          </p>
+        </div>
+      `);
     });
   });
 
@@ -196,6 +171,7 @@ describe("Link push and replace", () => {
           <div>
             <h1>Home</h1>
             <Link to=".">Home</Link>
+            <ShowNavigationType />
           </div>
         );
       }
@@ -204,40 +180,46 @@ describe("Link push and replace", () => {
         return <h1>About</h1>;
       }
 
-      let history = createMockHistory({ pathname: "/home" });
-      let spy = jest.spyOn(history, "replace");
-
-      act(() => {
-        ReactDOM.render(
-          <Router
-            action={history.action}
-            location={history.location}
-            navigator={history}
-          >
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
             </Routes>
-          </Router>,
-          node
+          </MemoryRouter>
         );
       });
 
-      let anchor = node.querySelector("a");
-      expect(anchor).not.toBeNull();
+      let anchor = renderer.root.findByType("a");
 
-      act(() => {
-        click(anchor);
+      TestRenderer.act(() => {
+        anchor.props.onClick(
+          new MouseEvent("click", {
+            view: window,
+            bubbles: true,
+            cancelable: true
+          })
+        );
       });
 
-      expect(spy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          pathname: "/home",
-          search: "",
-          hash: ""
-        }),
-        undefined
-      );
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          <h1>
+            Home
+          </h1>
+          <a
+            href="/home"
+            onClick={[Function]}
+          >
+            Home
+          </a>
+          <p>
+            REPLACE
+          </p>
+        </div>
+      `);
     });
   });
 });

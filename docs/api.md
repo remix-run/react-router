@@ -59,6 +59,7 @@ There are a few low-level APIs that we use internally that may also prove useful
 
 - [`useResolvedPath`](#useresolvedpath) - resolves a relative path against the current [location](#location)
 - [`useHref`](#usehref) - resolves a relative path suitable for use as a `<a href>`
+- [`useLocation`](#uselocation) and [`useNavigationType`](#usenavigationtype) - these describe the current [location](#location) and how we got there
 - [`useLinkClickHandler`](#uselinkclickhandler) - returns an event handler to for navigation when building a custom `<Link>` in `react-router-dom`
 - [`useLinkPressHandler`](#uselinkpresshandler) - returns an event handler to for navigation when building a custom `<Link>` in `react-router-native`
 - [`resolvePath`](#resolvepath) - resolves a relative path against a given URL pathname
@@ -1056,6 +1057,21 @@ function App() {
   );
 }
 ```
+
+### `useNavigationType`
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function useNavigationType(): NavigationType;
+
+type NavigationType = "POP" | "PUSH" | "REPLACE";
+```
+
+</details>
+
+This hook returns the current type of navigation or how the user came to the current page; either via a pop, push, or replace action on the history stack.
 
 ### `useMatch`
 

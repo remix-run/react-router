@@ -19,6 +19,7 @@ import {
   useLocation,
   useMatch,
   useNavigate,
+  useNavigationType,
   useOutlet,
   useParams,
   useResolvedPath,
@@ -65,6 +66,7 @@ export {
   useLocation,
   useMatch,
   useNavigate,
+  useNavigationType,
   useOutlet,
   useParams,
   useResolvedPath,
@@ -145,8 +147,8 @@ export function BrowserRouter({
     <Router
       basename={basename}
       children={children}
-      action={state.action}
       location={state.location}
+      navigationType={state.action}
       navigator={history}
     />
   );
@@ -180,8 +182,8 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
     <Router
       basename={basename}
       children={children}
-      action={state.action}
       location={state.location}
+      navigationType={state.action}
       navigator={history}
     />
   );

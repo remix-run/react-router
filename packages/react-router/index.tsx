@@ -8,7 +8,11 @@ import type {
   State,
   To
 } from "history";
-import { Action, createMemoryHistory, parsePath } from "history";
+import {
+  Action as NavigationType,
+  createMemoryHistory,
+  parsePath
+} from "history";
 
 function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);
@@ -70,8 +74,8 @@ if (__DEV__) {
 }
 
 interface LocationContextObject {
-  action: "POP" | "PUSH" | "REPLACE";
   location: Location;
+  navigationType: NavigationType;
 }
 
 const LocationContext = React.createContext<LocationContextObject>(null!);
@@ -133,8 +137,8 @@ export function MemoryRouter({
     <Router
       basename={basename}
       children={children}
-      action={state.action}
       location={state.location}
+      navigationType={state.action}
       navigator={history}
     />
   );
@@ -231,10 +235,10 @@ export function Route(
 }
 
 export interface RouterProps {
-  action?: "POP" | "PUSH" | "REPLACE";
   basename?: string;
   children?: React.ReactNode;
   location: Partial<Location> | string;
+  navigationType?: NavigationType;
   navigator: Navigator;
   static?: boolean;
 }
@@ -249,10 +253,10 @@ export interface RouterProps {
  * @see https://reactrouter.com/api/Router
  */
 export function Router({
-  action = Action.Pop,
   basename: basenameProp = "/",
   children = null,
   location: locationProp,
+  navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false
 }: RouterProps): React.ReactElement | null {
@@ -311,7 +315,7 @@ export function Router({
     <NavigationContext.Provider value={navigationContext}>
       <LocationContext.Provider
         children={children}
-        value={{ action, location }}
+        value={{ location, navigationType }}
       />
     </NavigationContext.Provider>
   );
@@ -397,6 +401,16 @@ export function useLocation(): Location {
   );
 
   return React.useContext(LocationContext).location;
+}
+
+/**
+ * Returns the current navigation action which describes how the router came to
+ * the current location, either by a pop, push, or replace on the history stack.
+ *
+ * @see https://reactrouter.com/api/useNavigationType
+ */
+export function useNavigationType(): NavigationType {
+  return React.useContext(LocationContext).navigationType;
 }
 
 /**
