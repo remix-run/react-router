@@ -48,27 +48,36 @@ if (cli.flags.version) {
   cli.showVersion();
 }
 
+function handleError(error: Error) {
+  console.error(error.message);
+  process.exit(1);
+}
+
 switch (cli.input[0]) {
   case "routes":
-    commands.routes(cli.input[1], cli.flags.json ? "json" : "jsx");
+    commands
+      .routes(cli.input[1], cli.flags.json ? "json" : "jsx")
+      .catch(handleError);
     break;
   case "build":
     if (!process.env.NODE_ENV) process.env.NODE_ENV = "production";
-    commands.build(cli.input[1], process.env.NODE_ENV, cli.flags.sourcemap);
+    commands
+      .build(cli.input[1], process.env.NODE_ENV, cli.flags.sourcemap)
+      .catch(handleError);
     break;
   case "watch":
     if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
-    commands.watch(cli.input[1], process.env.NODE_ENV);
+    commands.watch(cli.input[1], process.env.NODE_ENV).catch(handleError);
     break;
   case "setup":
-    commands.setup(cli.input[1]);
+    commands.setup(cli.input[1]).catch(handleError);
     break;
   case "dev":
     if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
-    commands.dev(cli.input[1], process.env.NODE_ENV);
+    commands.dev(cli.input[1], process.env.NODE_ENV).catch(handleError);
     break;
   default:
     // `remix ./my-project` is shorthand for `remix dev ./my-project`
     if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
-    commands.dev(cli.input[0], process.env.NODE_ENV);
+    commands.dev(cli.input[0], process.env.NODE_ENV).catch(handleError);
 }

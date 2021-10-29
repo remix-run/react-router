@@ -167,9 +167,7 @@ export async function readConfig(
   try {
     appConfig = require(configFile);
   } catch (error) {
-    console.error(`Error loading Remix config in ${configFile}`);
-    console.error(error);
-    process.exit();
+    throw new Error(`Error loading Remix config in ${configFile}`);
   }
 
   let appDirectory = path.resolve(
