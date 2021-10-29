@@ -25,7 +25,7 @@ But first, some definitions! There are a lot of different ideas around routing f
 
 Here are some words we use a lot when we talk about React Router. The rest of this guide will go into more detail on each one.
 
-- <a id="URL">**URL**</a> - The URL in the address bar. A lot of people use the term "URL" and "route" interchangeably, but this is not a route in React Router, it's just a URL.
+- <a id="url">**URL**</a> - The URL in the address bar. A lot of people use the term "URL" and "route" interchangeably, but this is not a route in React Router, it's just a URL.
 
 - <a id="location">**Location**</a> - This is a React Router specific object that is based on the built-in browser's `window.location` object. It represents "where the user is at". It's mostly an object representation of the URL but has a bit more to it than that.
 
