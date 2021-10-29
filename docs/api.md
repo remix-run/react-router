@@ -559,10 +559,10 @@ declare function Router(
 ): React.ReactElement | null;
 
 interface RouterProps {
-  action?: Action;
   basename?: string;
   children?: React.ReactNode;
   location: Partial<Location> | string;
+  navigationType?: NavigationType;
   navigator: Navigator;
   static?: boolean;
 }
