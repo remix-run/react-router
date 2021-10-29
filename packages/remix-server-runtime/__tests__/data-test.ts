@@ -19,7 +19,8 @@ describe("loaders", () => {
             loader
           }
         }
-      }
+      },
+      entry: { module: {} }
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build, {});
@@ -56,7 +57,8 @@ describe("loaders", () => {
             loader
           }
         }
-      }
+      },
+      entry: { module: {} }
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build, {});
@@ -89,7 +91,8 @@ describe("loaders", () => {
             loader
           }
         }
-      }
+      },
+      entry: { module: {} }
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build, {});
@@ -122,7 +125,8 @@ describe("loaders", () => {
             loader
           }
         }
-      }
+      },
+      entry: { module: {} }
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build, {});
