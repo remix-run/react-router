@@ -1,13 +1,18 @@
 ---
-title: Migrating from v5
+title: Upgrading from v5
 ---
 
-# Migrating React Router v5 to v6
+# Upgrading from v5
 
-<docs-info>This page is a work-in-progress. The migration process from
-React Router v5 to v6 isn't yet as smooth as we would like it to be. We are
-planning on backporting several of v6's new APIs to v5 to make it smoother, and
-this guide will keep improving as we continue to gather feedback from our users.</docs-info>
+## Backwards Compatibility Package
+
+We are actively working on a backwards compatibility layer that implements the v5 API on top of the v6 implementation. This will make upgrading as smooth as possible. You'll be able to upgrade to v6 with minimal changes to your application code. Then, you can incrementally update your code to the v6 API.
+
+<docs-info>We recommend waiting for the backwards compatibility package to be released before upgrading apps that have more than a few routes.</docs-info>
+
+Until then, we hope this guide will help you do the upgrade all at once!
+
+## Introduction
 
 React Router version 6 introduces several powerful new features, as well as
 improved compatibility with the latest versions of React. It also introduces a
@@ -32,27 +37,6 @@ In general, the process looks like this:
 
 The following is a detailed breakdown of each step that should help you migrate
 quickly and with confidence to v6.
-
----
-
-## Table of Contents
-
-- [Upgrade to React v16.8](#upgrade-to-react-v168)
-- [Upgrade to React Router v5.1](#upgrade-to-react-router-v51)
-- [Upgrade to React Router v6](#upgrade-to-react-router-v6)
-  - [Upgrade all `<Switch>` elements to `<Routes>`](#upgrade-all-switch-elements-to-routes)
-  - [Relative Routes and Links](#relative-routes-and-links)
-  - [Advantages of `<Route element>`](#advantages-of-route-element)
-  - [Note on `<Route path>` patterns](#note-on-route-path-patterns)
-  - [Note on `<Link to>` values](#note-on-link-to-values)
-- [Use `useRoutes` instead of `react-router-config`](#use-useroutes-instead-of-react-router-config)
-- [Use `useNavigate` instead of `history`](#use-usenavigate-instead-of-history)
-- [Remove `<Link>` `component` prop](#remove-link-component-prop)
-- [Rename `<NavLink exact>` to `<NavLink end>`](#rename-navlink-exact-to-navlink-end)
-  (#remove-activeclassname-and-activestyle-props-from-navlink-)
-- [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-domserver)
-- [Move `basename` from `<Router>` to `<Routes>`](#move-basename-from-router-to-routes)
-- [What did we miss?](#what-did-we-miss)
 
 ## Upgrade to React v16.8
 

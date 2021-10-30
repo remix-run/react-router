@@ -1,4 +1,4 @@
 ---
-title: Guides
+title: Examples
 order: 4
 ---

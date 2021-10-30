@@ -1,5 +1,5 @@
 ---
-title: Welcome to React Router
+title: Docs Home
 toc: false
 order: 1
 ---

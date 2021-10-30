@@ -1,6 +1,6 @@
 ---
 title: API Reference
-order: 3
+order: 2
 ---
 
 # API Reference
