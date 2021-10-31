@@ -16,7 +16,7 @@ If you're familiar with the JavaScript ecosystem, React, and React Router, this 
 ## Installation
 
 ```sh
-npm add react-router-dom@6 history@5
+npm add react-router-dom@6
 ```
 
 ## Configuring Routes
