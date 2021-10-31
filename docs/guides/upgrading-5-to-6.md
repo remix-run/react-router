@@ -135,13 +135,12 @@ pick this guide back up when you're ready to continue.
 **Heads up:** This is the biggest step in the migration and will probably take
 the most time and effort.
 
-For this step, you'll need to install React Router v6 and the history library,
-which is now a peer dependency. If you're managing dependencies via npm:
+For this step, you'll need to install React Router v6. If you're managing dependencies via npm:
 
 ```bash
-$ npm install react-router@next react-router-dom@next history
+$ npm install react-router-dom@next
 # or, for a React Native app
-$ npm install react-router@next react-router-native@next history
+$ npm install react-router-native@next
 ```
 
 ### Upgrade all `<Switch>` elements to `<Routes>`
