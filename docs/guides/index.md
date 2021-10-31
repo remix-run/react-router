@@ -1,4 +1,4 @@
 ---
 title: Guides
-order: 4
+order: 6
 ---
