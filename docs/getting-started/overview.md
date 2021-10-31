@@ -5,9 +5,7 @@ order: 2
 
 # Overview
 
-<docs-warning>This document is an overview of new features and changes in React Router version 6. If you're new to React Router or looking for a more practical guide, check out our [quick start tutorial](tutorial.md).</docs-warning>
-
-If you're familiar with the JavaScript ecosystem, React, and React Router, this will get you up and running in React Router v6 as quickly as possible, no explanations, just code.
+If you're familiar with the JavaScript ecosystem, React, and React Router, this serves as a quick overview of React Router v6 with lots of code and minimal explanations.
 
 - For a complete introduction to React Router, do the [Tutorial](tutorial.md)
 - For extensive documentation on every API, see [API Reference](../api.md)
@@ -16,7 +14,7 @@ If you're familiar with the JavaScript ecosystem, React, and React Router, this 
 ## Installation
 
 ```sh
-npm add react-router-dom@6 history@5
+npm add react-router-dom@6
 ```
 
 ## Configuring Routes
