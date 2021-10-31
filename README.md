@@ -9,7 +9,7 @@ React Router is a lightweight, fully-featured routing library for the [React](ht
 
 If you're new to React Router, we recommend you start with [the getting started guide](/docs/getting-started/installation.md).
 
-If you're migrating to v6 from v5 (or v4, which is the same as v5), check out [the migration guide](/docs/guides/migrating-5-to-6.md). If you're migrating from Reach Router, check out [the migration guide for Reach Router](/docs/guides/migrating-reach-to-6.md).
+If you're migrating to v6 from v5 (or v4, which is the same as v5), check out [the migration guide](/docs/guides/upgrading-5-to-6.md). If you're migrating from Reach Router, check out [the migration guide for Reach Router](/docs/guides/migrating-reach-to-6.md).
 
 When v6 is stable we will publish the docs on our website.
 
