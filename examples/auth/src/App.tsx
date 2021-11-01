@@ -147,8 +147,7 @@ function LoginPage() {
   let location = useLocation();
   let auth = useAuth();
 
-  let state = location.state as { from: Location };
-  let from = state ? state.from.pathname : "/";
+  let from = location.state?.from?.pathname || "/";
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
