@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { BrowserHistory, HashHistory, State, To } from "history";
+import type { BrowserHistory, HashHistory } from "history";
 import { createBrowserHistory, createHashHistory, createPath } from "history";
 import {
   MemoryRouter,
@@ -25,6 +25,7 @@ import {
   useResolvedPath,
   useRoutes
 } from "react-router";
+import type { To } from "react-router";
 
 function warning(cond: boolean, message: string): void {
   if (!cond) {
@@ -74,6 +75,10 @@ export {
 };
 
 export type {
+  Location,
+  Path,
+  To,
+  NavigationType,
   MemoryRouterProps,
   NavigateFunction,
   NavigateOptions,
@@ -196,7 +201,7 @@ function isModifiedEvent(event: React.MouseEvent) {
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
   replace?: boolean;
-  state?: State;
+  state?: any;
   to: To;
 }
 
@@ -322,10 +327,7 @@ if (__DEV__) {
  * you need to create custom `<Link>` compoments with the same click behavior we
  * use in our exported `<Link>`.
  */
-export function useLinkClickHandler<
-  E extends Element = HTMLAnchorElement,
-  S extends State = State
->(
+export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   to: To,
   {
     target,
@@ -334,7 +336,7 @@ export function useLinkClickHandler<
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
-    state?: S;
+    state?: any;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -400,7 +402,7 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   let setSearchParams = React.useCallback(
     (
       nextInit: URLSearchParamsInit,
-      navigateOptions?: { replace?: boolean; state?: State }
+      navigateOptions?: { replace?: boolean; state?: any }
     ) => {
       navigate("?" + createSearchParams(nextInit), navigateOptions);
     },

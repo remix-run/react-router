@@ -17,7 +17,7 @@
     "react": ">=16.8"
   },
   "dependencies": {
-    "history": "^5.0.1"
+    "history": "^5.0.3"
   },
   "sideEffects": false,
   "keywords": [

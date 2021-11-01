@@ -5,7 +5,6 @@ import type {
   Location,
   MemoryHistory,
   Path,
-  State,
   To
 } from "history";
 import {
@@ -13,6 +12,8 @@ import {
   createMemoryHistory,
   parsePath
 } from "history";
+
+export type { Location, Path, To, NavigationType };
 
 function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);
@@ -147,7 +148,7 @@ export function MemoryRouter({
 export interface NavigateProps {
   to: To;
   replace?: boolean;
-  state?: State;
+  state?: any;
 }
 
 /**
@@ -443,7 +444,7 @@ export interface NavigateFunction {
 
 export interface NavigateOptions {
   replace?: boolean;
-  state?: State;
+  state?: any;
 }
 
 /**
@@ -474,7 +475,7 @@ export function useNavigate(): NavigateFunction {
   });
 
   let navigate: NavigateFunction = React.useCallback(
-    (to: To | number, options: { replace?: boolean; state?: State } = {}) => {
+    (to: To | number, options: { replace?: boolean; state?: any } = {}) => {
       warning(
         activeRef.current,
         `You should call navigate() in a React.useEffect(), not when ` +
