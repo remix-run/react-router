@@ -7,7 +7,7 @@ order: 2
 
 ## Introduction
 
-[Check out the completed version of the app here](https://stackblitz.com/edit/github-agqlf5?file=src/main.jsx).
+[Check out the completed version of the app here](https://stackblitz.com/edit/github-agqlf5?file=src/App.jsx).
 
 React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, and on React Native.
 
@@ -31,9 +31,9 @@ While building a little bookeeping app we'll cover:
 
 ### Recommended: StackBlitz
 
-To do this tutorial you'll need a working React app. We recommend skipping bundlers and using [this demo on StackBlitz](https://stackblitz.com/github/remix-run/react-router/tree/rem-463-stackblitz-tutorial/tutorial?file=src/App.jsx) to code along in your browser:
+To do this tutorial you'll need a working React app. We recommend skipping bundlers and using [this demo on StackBlitz](https://stackblitz.com/github/remix-run/react-router/tree/main/tutorial?file=src/App.jsx) to code along in your browser:
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/rem-463-stackblitz-tutorial/tutorial?file=src/App.jsx)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/main/tutorial?file=src/App.jsx)
 
 As you edit files, the tutorial will update live.
 
