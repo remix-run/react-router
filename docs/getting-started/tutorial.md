@@ -7,7 +7,7 @@ order: 2
 
 ## Introduction
 
-[Check out the completed version of the app here](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Completed).
+[Check out the completed version of the app here](https://stackblitz.com/edit/github-agqlf5?file=src/main.jsx).
 
 React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, and on React Native.
 
@@ -152,13 +152,21 @@ Now fill 'em up with some code:
 
 ```tsx filename=src/routes/expenses.jsx
 export default function Expenses() {
-  return <h2>Expenses</h2>;
+  return (
+    <main style={{ padding: "1rem 0" }}>
+      <h2>Expenses</h2>
+    </main>
+  );
 }
 ```
 
 ```tsx filename=src/routes/invoices.jsx
 export default function Invoices() {
-  return <h2>Invoices</h2>;
+  return (
+    <main style={{ padding: "1rem 0" }}>
+      <h2>Invoices</h2>
+    </main>
+  );
 }
 ```
 
@@ -347,14 +355,18 @@ That didn't go as you might have expected. If you click those links the page goe
 
 Before we move on, it's good practice to always handle this "no match" case. Go back to your route config and add this:
 
-```js lines=[5] filename=src/main.jsx
+```js lines=[5-12] filename=src/main.jsx
 <Routes>
   <Route path="/" element={<App />}>
     <Route path="expenses" element={<Expenses />} />
     <Route path="invoices" element={<Invoices />} />
     <Route
       path="*"
-      element={<p>There's nothing here!</p>}
+      element={
+        <main style={{ padding: "1rem" }}>
+          <p>There's nothing here!</p>
+        </main>
+      }
     />
   </Route>
 </Routes>
@@ -387,7 +399,11 @@ Create a new `<Route>` _inside_ of the "invoices" route like this:
     </Route>
     <Route
       path="*"
-      element={<p>There's nothing here!</p>}
+      element={
+        <main style={{ padding: "1rem" }}>
+          <p>There's nothing here!</p>
+        </main>
+      }
     />
   </Route>
 </Routes>
@@ -494,17 +510,28 @@ Index routes are possibly the most difficult concept in React Router for people 
 
 Right now you're probably looking at one of the invoices. Click on the "Invoices" link in the global nav of your app. Notice that the main content area goes blank! We can fix this with an "index" route.
 
-```jsx filename=src/main.jsx lines=[5]
+```jsx filename=src/main.jsx lines=[5-12]
 <Routes>
   <Route path="/" element={<App />}>
     <Route path="expenses" element={<Expenses />} />
     <Route path="invoices" element={<Invoices />}>
-      <Route index element={<p>Select an invoice</p>} />
+      <Route
+        index
+        element={
+          <main style={{ padding: "1rem" }}>
+            <p>Select an invoice</p>
+          </main>
+        }
+      />
       <Route path=":invoiceId" element={<Invoice />} />
     </Route>
     <Route
       path="*"
-      element={<p>There's nothing here!</p>}
+      element={
+        <main style={{ padding: "1rem" }}>
+          <p>There's nothing here!</p>
+        </main>
+      }
     />
   </Route>
 </Routes>
