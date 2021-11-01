@@ -7,7 +7,7 @@ order: 2
 
 ## Introduction
 
-[Check out the completed version of the app here](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Completed).
+[Check out the completed version of the app here](https://stackblitz.com/edit/github-agqlf5?file=src/main.jsx).
 
 React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, and on React Native.
 
@@ -29,15 +29,13 @@ While building a little bookeeping app we'll cover:
 
 ## Installation
 
-### Recommended: repl.it
+### Recommended: StackBlitz
 
-To do this tutorial you'll need a working React app. We recommend skipping bundlers and using [this repl.it](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Template) to code along in your browser.
+To do this tutorial you'll need a working React app. We recommend skipping bundlers and using [this demo on StackBlitz](https://stackblitz.com/github/remix-run/react-router/tree/rem-463-stackblitz-tutorial/tutorial?file=src/App.jsx) to code along in your browser:
 
-- [Open this in a new tab](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Template)
-- Click the "Fork" button
-- Once it's loaded up, click the "Run" button.
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/rem-463-stackblitz-tutorial/tutorial?file=src/App.jsx)
 
-As you edit files it will update live.
+As you edit files, the tutorial will update live.
 
 ### Using a bundler
 
@@ -137,7 +135,7 @@ export default function App() {
 }
 ```
 
-Go ahead and click the links and the back/forward button (if you're using repl.it, you'll need to click the "open in new tab" button in the inline-browser's toolbar). React Router is now controlling the URL!
+Go ahead and click the links and the back/forward button (if you're using StackBlitz, you'll need to click the "Open in New Window" button in the inline-browser's toolbar). React Router is now controlling the URL!
 
 We don't have any routes that render when the URL changes yet, but Link is changing the URL without causing a full page reload.
 
@@ -154,13 +152,21 @@ Now fill 'em up with some code:
 
 ```tsx filename=src/routes/expenses.jsx
 export default function Expenses() {
-  return <h2>Expenses</h2>;
+  return (
+    <main style={{ padding: "1rem 0" }}>
+      <h2>Expenses</h2>
+    </main>
+  );
 }
 ```
 
 ```tsx filename=src/routes/invoices.jsx
 export default function Invoices() {
-  return <h2>Invoices</h2>;
+  return (
+    <main style={{ padding: "1rem 0" }}>
+      <h2>Invoices</h2>
+    </main>
+  );
 }
 ```
 
@@ -192,7 +198,7 @@ render(
 
 Notice at `"/"` it renders `<App>`. At `"/invoices"` it render `<Invoices>`. Nice work!
 
-<docs-info>Remember if you're using repl.it to click the "open in new tab" button in the inline browser's toolbar to be able to click the back/forward buttons in your browser.</docs-info>
+<docs-info>Remember if you're using StackBlitz to click the "Open in New Window" button in the inline browser's toolbar to be able to click the back/forward buttons in your browser.</docs-info>
 
 ## Nested Routes
 
@@ -349,14 +355,18 @@ That didn't go as you might have expected. If you click those links the page goe
 
 Before we move on, it's good practice to always handle this "no match" case. Go back to your route config and add this:
 
-```js lines=[5] filename=src/main.jsx
+```js lines=[5-12] filename=src/main.jsx
 <Routes>
   <Route path="/" element={<App />}>
     <Route path="expenses" element={<Expenses />} />
     <Route path="invoices" element={<Invoices />} />
     <Route
       path="*"
-      element={<p>There's nothing here!</p>}
+      element={
+        <main style={{ padding: "1rem" }}>
+          <p>There's nothing here!</p>
+        </main>
+      }
     />
   </Route>
 </Routes>
@@ -389,7 +399,11 @@ Create a new `<Route>` _inside_ of the "invoices" route like this:
     </Route>
     <Route
       path="*"
-      element={<p>There's nothing here!</p>}
+      element={
+        <main style={{ padding: "1rem" }}>
+          <p>There's nothing here!</p>
+        </main>
+      }
     />
   </Route>
 </Routes>
@@ -496,17 +510,28 @@ Index routes are possibly the most difficult concept in React Router for people 
 
 Right now you're probably looking at one of the invoices. Click on the "Invoices" link in the global nav of your app. Notice that the main content area goes blank! We can fix this with an "index" route.
 
-```jsx filename=src/main.jsx lines=[5]
+```jsx filename=src/main.jsx lines=[5-12]
 <Routes>
   <Route path="/" element={<App />}>
     <Route path="expenses" element={<Expenses />} />
     <Route path="invoices" element={<Invoices />}>
-      <Route index element={<p>Select an invoice</p>} />
+      <Route
+        index
+        element={
+          <main style={{ padding: "1rem" }}>
+            <p>Select an invoice</p>
+          </main>
+        }
+      />
       <Route path=":invoiceId" element={<Invoice />} />
     </Route>
     <Route
       path="*"
-      element={<p>There's nothing here!</p>}
+      element={
+        <main style={{ padding: "1rem" }}>
+          <p>There's nothing here!</p>
+        </main>
+      }
     />
   </Route>
 </Routes>
