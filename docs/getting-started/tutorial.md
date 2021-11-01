@@ -29,15 +29,13 @@ While building a little bookeeping app we'll cover:
 
 ## Installation
 
-### Recommended: repl.it
+### Recommended: StackBlitz
 
-To do this tutorial you'll need a working React app. We recommend skipping bundlers and using [this repl.it](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Template) to code along in your browser.
+To do this tutorial you'll need a working React app. We recommend skipping bundlers and using [this demo on StackBlitz](https://stackblitz.com/github/remix-run/react-router/tree/rem-463-stackblitz-tutorial/tutorial?file=src/App.tsx) to code along in your browser:
 
-- [Open this in a new tab](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Template)
-- Click the "Fork" button
-- Once it's loaded up, click the "Run" button.
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/rem-463-stackblitz-tutorial/tutorial?file=src/App.tsx)
 
-As you edit files it will update live.
+As you edit files, the tutorial will update live.
 
 ### Using a bundler
 
@@ -137,7 +135,7 @@ export default function App() {
 }
 ```
 
-Go ahead and click the links and the back/forward button (if you're using repl.it, you'll need to click the "open in new tab" button in the inline-browser's toolbar). React Router is now controlling the URL!
+Go ahead and click the links and the back/forward button (if you're using StackBlitz, you'll need to click the "Open in New Window" button in the inline-browser's toolbar). React Router is now controlling the URL!
 
 We don't have any routes that render when the URL changes yet, but Link is changing the URL without causing a full page reload.
 
@@ -192,7 +190,7 @@ render(
 
 Notice at `"/"` it renders `<App>`. At `"/invoices"` it render `<Invoices>`. Nice work!
 
-<docs-info>Remember if you're using repl.it to click the "open in new tab" button in the inline browser's toolbar to be able to click the back/forward buttons in your browser.</docs-info>
+<docs-info>Remember if you're using StackBlitz to click the "Open in New Window" button in the inline browser's toolbar to be able to click the back/forward buttons in your browser.</docs-info>
 
 ## Nested Routes
 
