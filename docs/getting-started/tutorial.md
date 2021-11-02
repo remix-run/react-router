@@ -172,7 +172,7 @@ export default function Invoices() {
 
 Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx`.
 
-```tsx lines=[2,4-5,10-14] filename=src/main.jsx
+```tsx lines=[2,4-5,13-19] filename=src/main.jsx
 import { render } from "react-dom";
 import {
   BrowserRouter,
@@ -211,7 +211,7 @@ Let's get some automatic, persistent layout handling by doing just two things:
 
 First let's nest the routes. Right now the expenses and invoices routes are siblings to to the app, we're want to make them _children_ of the app route:
 
-```jsx lines=[11-14] filename=src/main.jsx
+```jsx lines=[15-18] filename=src/main.jsx
 import { render } from "react-dom";
 import {
   BrowserRouter,
@@ -243,7 +243,7 @@ When routes have children it does two things:
 
 However, before (2) will work we need to render an `Outlet` in the `App.jsx` "parent" route.
 
-```jsx lines=[1,11] filename=src/App.jsx
+```jsx lines=[1,16] filename=src/App.jsx
 import { Outlet, Link } from "react-router-dom";
 
 export default function App() {
@@ -316,7 +316,7 @@ export function getInvoices() {
 
 Now we can use it in the invoices route. Let's also add a bit of styling to get a sidebar nav layout going on. Feel free to copy/paste all of this, but take special note of the `<Link>` elements `to` prop:
 
-```js lines=[12] filename=src/routes/invoices.jsx
+```js lines=[17] filename=src/routes/invoices.jsx
 import { Link } from "react-router-dom";
 import { getInvoices } from "../data";
 
@@ -418,8 +418,8 @@ Alright, now go click a link to an invoice, note that the URL changes but the ne
 
 That's right! We need to add an outlet to the parent layout route (we're really proud of you).
 
-```tsx lines=[1,18] filename=src/routes/invoices.jsx
-import { Link } from "react-router-dom";
+```tsx lines=[1,24] filename=src/routes/invoices.jsx
+import { Link, Outlet } from "react-router-dom";
 import { getInvoices } from "../data";
 
 export default function Invoices() {
@@ -467,7 +467,7 @@ Note that the key of the param on the `params` object is the same as the dynamic
 
 Let's use that information to build up a more interesting invoice page. Open up `src/data.js` and add a new function to lookup invoices by their number:
 
-```js filename=src/data.js lines=[7-9]
+```js filename=src/data.js lines=[7-11]
 // ...
 
 export function getInvoices() {
@@ -552,7 +552,7 @@ Maybe you're still scratching your head. There are a few ways we try to answer t
 
 It's very common, especially in navigation lists, to display the link as the active link the user is looking at. Let's add this treatment to our invoices list by swapping out `Link` for `NavLink`.
 
-```jsx lines=[1,10-17,22] filename=src/routes/invoices.jsx
+```jsx lines=[1,15-27] filename=src/routes/invoices.jsx
 import { NavLink, Outlet } from "react-router-dom";
 import { getInvoices } from "../data";
 
@@ -612,7 +612,7 @@ React Router makes it easy to read and manipulate the search params with `useSea
 
 Let's see it in action by adding a little filter on the invoices nav list.
 
-```jsx filename=routes/invoices.jsx lines=[1,6,11-20,22-27]
+```jsx filename=routes/invoices.jsx lines=[4,10,21-27,32-37]
 import {
   NavLink,
   Outlet,
@@ -761,7 +761,7 @@ function BrandLink({ brand, ...props }) {
 
 Or maybe you want it to add the brand if it's not there already and remove it if it's clicked again!
 
-```jsx [6-12]
+```jsx [7-12]
 function BrandLink({ brand, ...props }) {
   let [params] = useSearchParams();
   let isActive = params.getAll("brand").includes(brand);
