@@ -26,6 +26,7 @@ async function createServer() {
   app.use("*", async (req, res) => {
     let url = req.originalUrl;
 
+    // Use a separate HTML file for the "Inbox" app.
     let appDirectory = url.startsWith("/inbox") ? "inbox" : "";
     let htmlFileToLoad;
 

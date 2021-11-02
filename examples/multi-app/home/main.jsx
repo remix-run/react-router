@@ -6,6 +6,7 @@ import HomeApp from "./App";
 
 ReactDOM.render(
   <React.StrictMode>
+    {/* No basename for this router. This app renders at the root / URL. */}
     <BrowserRouter>
       <HomeApp />
     </BrowserRouter>

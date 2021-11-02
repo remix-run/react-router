@@ -17,6 +17,7 @@ export default defineConfig({
   ],
   build: {
     rollupOptions: {
+      // Build two separate bundles, one for each app.
       input: {
         main: path.resolve(__dirname, "index.html"),
         inbox: path.resolve(__dirname, "inbox/index.html")
