@@ -68,7 +68,7 @@ export default function App() {
 }
 ```
 
-Actually, that "!" doesn't look boring at all. This is pretty exciting. We sat on this code for over a year as we recovered financially from a global pandemic. THIS IS THE MOST EXCITING THING WE'VE DONE IN A WHILE!
+Actually, that "!" doesn't look boring at all. This is pretty exciting. We sat on React Router v6 beta for over a year as we shifted gears with our business after a global pandemic. THIS IS THE MOST EXCITING THING WE'VE DONE IN A WHILE!
 
 Finally, go make sure `index.js` or `main.jsx` (depending on the bundler you used) is actually boring:
 
