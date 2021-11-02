@@ -232,10 +232,12 @@ async function handleDocumentRequest(
     actionRouteId = actionMatch.route.id;
 
     try {
+      let clonedRequest = stripIndexParam(stripDataParam(request));
+
       actionResponse = await callRouteAction(
         build,
         actionMatch.route.id,
-        request.clone(),
+        clonedRequest,
         loadContext,
         actionMatch.params
       );
@@ -305,7 +307,7 @@ async function handleDocumentRequest(
       loadRouteData(
         build,
         match.route.id,
-        request.clone(),
+        stripIndexParam(stripDataParam(request.clone())),
         loadContext,
         match.params
       ).catch(error => error)
