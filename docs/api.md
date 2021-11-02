@@ -7,8 +7,6 @@ order: 2
 
 React Router is a collection of [React components](https://reactjs.org/docs/components-and-props.html), [hooks](https://reactjs.org/docs/hooks-intro.html) and utilities that make it easy to build multi-page applications with [React](https://reactjs.org). This reference contains the function signatures and return types of the various interfaces in React Router.
 
-<docs-info>Please refer to [our guides](./guides/index.md) for more in-depth usage examples of how you can use React Router to accomplish specific tasks.</docs-info>
-
 ## Overview
 
 ### Packages
@@ -45,7 +43,6 @@ A few low-level pieces that we use internally are also exposed as public API, in
 
 - [`matchPath`](#matchpath) - matches a path pattern against a URL pathname
 - [`matchRoutes`](#matchroutes) - matches a set of routes against a [location](#location)
-- [`createRoutesFromArray`](#createroutesfromarray) - creates a route config from a set of plain JavaScript objects
 - [`createRoutesFromChildren`](#createroutesfromchildren) - creates a route config from a set of React elements (i.e. [`<Route>`](#routes-and-route) elements)
 
 ### Navigation
@@ -96,8 +93,8 @@ interface BrowserRouterProps {
 `<BrowserRouter window>` defaults to using the current [document's `defaultView`](https://developer.mozilla.org/en-US/docs/Web/API/Document/defaultView), but it may also be used to track changes to another's window's URL, in an `<iframe>`, for example.
 
 ```tsx
-import React from "react";
-import ReactDOM from "react-dom";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.render(
@@ -132,8 +129,8 @@ interface HashRouterProps {
 `<HashRouter window>` defaults to using the current [document's `defaultView`](https://developer.mozilla.org/en-US/docs/Web/API/Document/defaultView), but it may also be used to track changes to another window's URL, in an `<iframe>`, for example.
 
 ```tsx
-import React from "react";
-import ReactDOM from "react-dom";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { HashRouter } from "react-router-dom";
 
 ReactDOM.render(
@@ -167,7 +164,7 @@ interface NativeRouterProps extends MemoryRouterProps {}
 - `<NativeRouter initialIndex>` defaults to the last index of `props.initialEntries`
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import { NativeRouter } from "react-router-native";
 
 function App() {
@@ -211,7 +208,7 @@ A `<MemoryRouter>` stores its locations internally in an array. Unlike `<Browser
 > [browsing through our tests](https://github.com/remix-run/react-router/tree/main/packages/react-router/__tests__).
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import { create } from "react-test-renderer";
 import {
   MemoryRouter,
@@ -268,7 +265,7 @@ type To = Partial<Location> | string;
 A `<Link>` is an element that lets the user navigate to another page by clicking or tapping on it. In `react-router-dom`, a `<Link>` renders an accessible `<a>` element with a real `href` that points to the resource it's linking to. This means that things like right-clicking a `<Link>` work as you'd expect.
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import { Link } from "react-router-dom";
 
 function UsersIndexPage({ users }) {
@@ -323,7 +320,7 @@ interface LinkProps extends TouchableHighlightProps {
 A `<Link>` is an element that lets the user navigate to another view by tapping it, similar to how `<a>` elements work in a web app. In `react-router-native`, a `<Link>` renders a `TouchableHighlight`.
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import { View, Text } from "react-native";
 import { Link } from "react-router-native";
 
@@ -369,7 +366,7 @@ A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not i
 By default, an `active` class is added to a `<NavLink>` component when it is active. This provides the same simple styling mechanism for most users who are upgrading from v5. One difference as of `v6.0.0-beta.3` is that `activeClassName` and `activeStyle` have been removed from `NavLinkProps`. Instead, you can pass a function to either `style` or `className` that will allow you to customize the inline styling or the class string based on the component's active state.
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import { NavLink } from "react-router-dom";
 
 function NavList() {
@@ -411,7 +408,7 @@ function NavList() {
 If you prefer the v5 API, you can create your own `<NavLink />` as a wrapper component:
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import { NavLink as BaseNavLink } from "react-router-dom";
 
 const NavLink = React.forwardRef(
@@ -472,7 +469,7 @@ A `<Navigate>` element changes the current location when it is rendered. It's a 
 > subclass where hooks are not able to be used.
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import { Navigate } from "react-router-dom";
 
 class LoginForm extends React.Component {
@@ -666,8 +663,8 @@ interface StaticRouterProps {
 - `<StaticRouter location>` defaults to `"/"`
 
 ```tsx
-import React from "react";
-import ReactDOMServer from "react-dom/server";
+import * as React from "react";
+import * as ReactDOMServer from "react-dom/server";
 import { StaticRouter } from "react-router-dom/server";
 import http from "http";
 
@@ -768,7 +765,7 @@ The term "location" in React Router refers to [the `Location` interface](https:/
 
 > **Note:**
 >
-> The history package is React Router's main dependency and many of the
+> The `history` package is React Router's only dependency and many of the
 > core types in React Router come directly from that library including
 > `Location`, `To`, `Path`, `State`, and others. You can read more about
 > the history library in [its documentation](https://github.com/remix-run/history/tree/main/docs).
@@ -1042,7 +1039,7 @@ interface Location<S extends State = object | null>
 This hook returns the current [`location`](#location) object. This can be useful if you'd like to perform some side effect whenever the current location changes.
 
 ```tsx
-import React from 'react';
+import * as React from 'react';
 import { useLocation } from 'react-router-dom';
 
 function App() {
@@ -1161,7 +1158,7 @@ declare function useParams<
 The `useParams` hook returns an object of key/value pairs of the dynamic params from the current URL that were matched by the `<Route path>`. Child routes inherit all params from their parent routes.
 
 ```tsx
-import React from 'react';
+import * as React from 'react';
 import { Routes, Route, useParams } from 'react-router-dom';
 
 function ProfilePage() {
@@ -1218,7 +1215,7 @@ The `useRoutes` hook is the functional equivalent of [`<Routes>`](#routes), but 
 The return value of `useRoutes` is either a valid React element you can use to render the route tree, or `null` if nothing matched.
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import { useRoutes } from "react-router-dom";
 
 function App() {
@@ -1279,7 +1276,7 @@ interface URLSearchParamsSetter {
 The `useSearchParams` hook is used to read and modify the query string in the URL for the current location. Like React's own [`useState` hook](https://reactjs.org/docs/hooks-reference.html#usestate), `useSearchParams` returns an array of two values: the current location's [search params](https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams) and a function that may be used to update them.
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import { useSearchParams } from "react-router-dom";
 
 function App() {
@@ -1345,7 +1342,7 @@ interface URLSearchParamsSetter {
 The `useSearchParams` hook is used to read and modify the query string in the URL for the current location. Like React's own [`useState` hook](https://reactjs.org/docs/hooks-reference.html#usestate), `useSearchParams` returns an array of two values: the current location's [search params](https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams) and a function that may be used to update them.
 
 ```tsx
-import React from "react";
+import * as React from "react";
 import { View, SearchForm, TextInput } from "react-native";
 import { useSearchParams } from "react-router-native";
 
