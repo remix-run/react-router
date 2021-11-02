@@ -34,6 +34,10 @@ function Layout() {
             <Link to="/about">About</Link>
           </li>
           <li>
+            {/* Use a normal <a> when linking to the "Inbox" app so the browser
+                does a full document reload, which is what we want when exiting
+                this app and entering another so we execute its entry point in
+                inbox/main.jsx. */}
             <a href="/inbox">Inbox</a>
           </li>
         </ul>

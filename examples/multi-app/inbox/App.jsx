@@ -6,6 +6,10 @@ import { NoMatch } from "./no-match";
 export default function InboxApp() {
   return (
     <Routes>
+      {/* Routes in this app don't need to worry about which URL prefix they are
+          mounted at. They can just assume they are mounted at /. Then, if they
+          are moved under a different basename later on, all routes and links will
+          continue to work. */}
       <Route path="/" element={<Layout />}>
         <Route index element={<Inbox />} />
         <Route path=":id" element={<Message />} />
@@ -22,6 +26,10 @@ function Layout() {
       <nav>
         <ul>
           <li>
+            {/* Using a normal link here will cause the browser to reload the
+                document when following this link, which is exactly what we want
+                when transitioning to the "Home" app so we execute its entry
+                point (see home/main.jsx). */}
             <a href="/">Home</a>
           </li>
           <li>

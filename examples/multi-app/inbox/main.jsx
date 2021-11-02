@@ -6,6 +6,8 @@ import InboxApp from "./App";
 
 ReactDOM.render(
   <React.StrictMode>
+    {/* "Mount" this app under the /inbox URL pathname. All routes and links
+        are relative to this name. */}
     <BrowserRouter basename="inbox">
       <InboxApp />
     </BrowserRouter>
