@@ -158,7 +158,7 @@ This route config defined three route paths:
 
 - `"/invoices"`
 - `"/invoices/sent"`
-- `"/invoices/sent/:invoiceId"`
+- `"/invoices/:invoiceId"`
 
 When the URL is `"/invoices/sent"` the component tree will be:
 
