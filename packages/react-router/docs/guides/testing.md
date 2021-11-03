@@ -106,7 +106,7 @@ import { act } from 'react-dom/test-utils';
 import { MemoryRouter } from "react-router-dom";
 
 // app.test.js
-it("navigates home when you click the logo", async => {
+it("navigates home when you click the logo", () => {
   // in a real test a renderer like "@testing-library/react"
   // would take care of setting up the DOM elements
   const root = document.createElement('div');
@@ -114,7 +114,7 @@ it("navigates home when you click the logo", async => {
 
   // Render app
   render(
-    <MemoryRouter initialEntries={['/my/initial/route']}>
+    <MemoryRouter initialEntries={['/dashboard']}>
       <App />
     </MemoryRouter>,
     root
@@ -123,13 +123,13 @@ it("navigates home when you click the logo", async => {
   // Interact with page
   act(() => {
     // Find the link (perhaps using the text content)
-    const goHomeLink = document.querySelector('#nav-logo-home');
+    const goHomeLink = document.querySelector('#click-me');
     // Click it
     goHomeLink.dispatchEvent(new MouseEvent("click", { bubbles: true }));
   });
 
   // Check correct page content showed up
-  expect(document.body.textContent).toBe('Home');
+  expect(document.body.textContent).toBe('Welcome');
 });
 ```
 
@@ -171,7 +171,7 @@ test("clicking filter links updates product query params", () => {
 ### Alternatives
 
 1. You can also use `BrowserRouter` if your test environment has the browser globals `window.location` and `window.history` (which is the default in Jest through JSDOM, but you cannot reset the history between tests).
-1. Instead of passing a custom route to MemoryRouter, you can use the base `Router` with a `history` prop from the [`history`](https://github.com/ReactTraining/history) package:
+1. Instead of passing a custom route to MemoryRouter, you can use the base `Router` with a `history` prop from the [`history`](https://github.com/remix-run/history) package:
 
 ```jsx
 // app.test.js

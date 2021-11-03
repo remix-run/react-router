@@ -6,6 +6,23 @@ A special version of the [`<Link>`](Link.md) that will add styling attributes to
 <NavLink to="/about">About</NavLink>
 ```
 
+## className: string | func
+
+`className` can either be a string or a function that returns a string. If the function `className` is used, the link's `active` state is passed as a parameter. This is helpful if you want to exclusively apply a `className` to an inactive link.
+
+```jsx
+<NavLink
+  to="/faq"
+  className={isActive =>
+    "nav-link" + (!isActive ? " unselected" : "")
+  }
+>
+  FAQs
+</NavLink>
+```
+
+In React Router v6, `activeClassName` will be removed and you should use the function `className` to apply classnames to either active or inactive `NavLink` components.
+
 ## activeClassName: string
 
 The class to give the element when it is active. The default given class is `active`. This will be joined with the `className` prop.
@@ -15,6 +32,23 @@ The class to give the element when it is active. The default given class is `act
   FAQs
 </NavLink>
 ```
+
+## style: object | func
+
+`style` can either be a `React.CSSProperties` object or a function that returns a style object. If the function `style` is used, the link's `active` state is passed as a parameter.
+
+```jsx
+<NavLink
+  to="/faq"
+  style={isActive => ({
+    color: isActive ? "green" : "blue"
+  })}
+>
+  FAQs
+</NavLink>
+```
+
+In React Router v6, `activeStyle` will be removed and you should use the function `style` to apply inline styles to either active or inactive `NavLink` components.
 
 ## activeStyle: object
 

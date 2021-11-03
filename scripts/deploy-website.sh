@@ -5,27 +5,26 @@ set -e
 PUBLIC_PATH="${PUBLIC_PATH:-/}"
 
 root_dir="$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)")"
-tmp_dir="/tmp/reactrouter.com"
-output_dir="$tmp_dir/public"
+tmp_dir="/tmp/reactrouter-website"
 
-# Clone reacttraining.com repo into the tmp dir
+# Clone reactrouter-website repo into the tmp dir
 rm -rf $tmp_dir
-git clone --depth 2 --branch master "git@github.com:ReactTraining/reactrouter.com.git" $tmp_dir
+git clone --depth 2 --branch v5 "git@github.com:remix-run/reactrouter-website.git" $tmp_dir
 
-# Build the website into the static/react-router dir
-rm -rf "$output_dir"
+# Build the website into the public dir
+rm -rf "$tmp_dir/public"
 cd "$root_dir/website"
 yarn
-yarn build --output-path "$output_dir" --output-public-path $PUBLIC_PATH
+yarn build --output-path "$tmp_dir/public" --output-public-path $PUBLIC_PATH
 
 # Commit all changes
 cd $tmp_dir
 git add -A
 git commit \
-	--author "Travis CI <travis-ci@reacttraining.com>" \
-  -m "Update react-router website
+	--author "GitHub Actions <github-actions@remix.run>" \
+  -m "Update React Router v5 website
 
-https://travis-ci.com/$TRAVIS_REPO_SLUG/builds/$TRAVIS_BUILD_ID"
+$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
 # Deploy
-git push origin master
+git push origin v5

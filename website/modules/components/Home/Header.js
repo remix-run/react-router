@@ -57,14 +57,14 @@ function NavBar() {
         <Inline> / </Inline>
         <Inline
           component="a"
-          props={{ href: "https://github.com/ReactTraining/react-router" }}
+          props={{ href: "https://github.com/remix-run/react-router" }}
           color={LIGHT_GRAY}
         >
           React Router
         </Inline>
       </Block>
       <Row fontSize="12px">
-        <NavLink href="https://github.com/ReactTraining/react-router">
+        <NavLink href="https://github.com/remix-run/react-router">
           Github
         </NavLink>
         <NavLink href="https://www.npmjs.com/package/react-router">NPM</NavLink>

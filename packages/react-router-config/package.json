@@ -1,8 +1,13 @@
 {
   "name": "react-router-config",
-  "version": "5.1.1",
+  "version": "5.2.1",
   "description": "Static route config matching for React Router",
-  "repository": "ReactTraining/react-router",
+  "homepage": "https://reactrouter.com/",
+  "repository": {
+    "url": "https://github.com/remix-run/react-router.git",
+    "type": "git",
+    "directory": "packages/react-router-config"
+  },
   "license": "MIT",
   "author": "React Training <hello@reacttraining.com>",
   "files": [
@@ -29,7 +34,7 @@
     "react-router": ">=5"
   },
   "dependencies": {
-    "@babel/runtime": "^7.1.2"
+    "@babel/runtime": "^7.12.13"
   },
   "browserify": {
     "transform": [

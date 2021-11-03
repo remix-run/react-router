@@ -1,6 +1,6 @@
 # react-router-dom
 
-DOM bindings for [React Router](https://reacttraining.com/react-router).
+DOM bindings for [React Router](https://reactrouter.com).
 
 ## Installation
 
@@ -30,7 +30,7 @@ You can find the library on `window.ReactRouterDOM`.
 
 ## Issues
 
-If you find a bug, please file an issue on [our issue tracker on GitHub](https://github.com/ReactTraining/react-router/issues).
+If you find a bug, please file an issue on [our issue tracker on GitHub](https://github.com/remix-run/react-router/issues).
 
 ## Credits
 

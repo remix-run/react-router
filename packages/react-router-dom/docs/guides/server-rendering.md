@@ -244,4 +244,4 @@ You might be interested in our [React Router Config][rrc] package to assist with
 [staticrouter]: ../api/StaticRouter.md
 [browserrouter]: ../api/BrowserRouter.md
 [redirect]: ../api/Redirect.md
-[rrc]: https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config
+[rrc]: https://github.com/remix-run/react-router/tree/main/packages/react-router-config

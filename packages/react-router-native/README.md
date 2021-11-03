@@ -1,6 +1,6 @@
 # react-router-native
 
-[React Native](https://facebook.github.io/react-native/) bindings for [React Router](https://reacttraining.com/react-router).
+[React Native](https://facebook.github.io/react-native/) bindings for [React Router](https://reactrouter.com).
 
 ## Installation
 
@@ -22,7 +22,7 @@ var Link = require("react-router-native").Link;
 
 ## Issues
 
-If you find a bug, please file an issue on [our issue tracker on GitHub](https://github.com/ReactTraining/react-router/issues).
+If you find a bug, please file an issue on [our issue tracker on GitHub](https://github.com/remix-run/react-router/issues).
 
 ## Credits
 
