@@ -1,7 +1,7 @@
-name: website
+name: v5-website
 on:
   push:
-    branches: [website]
+    branches: [v5-website]
 
 jobs:
   website:
