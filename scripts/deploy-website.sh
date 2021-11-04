@@ -20,10 +20,12 @@ yarn build --output-path "$tmp_dir/public" --output-public-path $PUBLIC_PATH
 
 # Commit all changes
 cd $tmp_dir
+
+git config --global user.email "github-actions@remix.run"
+git config --global user.name "GitHub Actions"
+
 git add -A
-git commit \
-	--author "GitHub Actions <github-actions@remix.run>" \
-  -m "Update React Router v5 website
+git commit -m "Update React Router v5 website"
 
 $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
