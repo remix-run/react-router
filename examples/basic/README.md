@@ -1,5 +1,7 @@
 ---
-title: Basic
+title: Basics
+toc: false
+order: 1
 ---
 
 # Basic Example

@@ -1,5 +1,6 @@
 ---
-title: Server-side Rendering
+title: Server Rendering
+toc: false
 ---
 
 # Server-side Rendering Example

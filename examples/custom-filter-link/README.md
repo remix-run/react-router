@@ -1,5 +1,6 @@
 ---
 title: Custom Filter Link
+toc: false
 ---
 
 # Custom Filter Link Example

@@ -1,5 +1,6 @@
 ---
 title: Search Params
+toc: false
 ---
 
 # Search Params Example

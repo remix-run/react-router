@@ -1,5 +1,6 @@
 ---
-title: Custom Link
+title: Custom Active Link
+toc: false
 ---
 
 # Custom Link Example

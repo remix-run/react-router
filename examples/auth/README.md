@@ -1,5 +1,6 @@
 ---
-title: Auth
+title: Authentication
+toc: false
 ---
 
 # Auth Example

@@ -1,5 +1,6 @@
 ---
 title: Multi App
+toc: false
 ---
 
 # Multi App Example

@@ -1,5 +1,6 @@
 ---
 title: Custom Query Parsing
+toc: false
 ---
 
 # Custom Query Parsing Example

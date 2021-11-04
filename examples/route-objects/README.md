@@ -1,5 +1,6 @@
 ---
 title: Route Objects
+toc: false
 ---
 
 # Route Objects Example
