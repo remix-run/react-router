@@ -404,7 +404,8 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
       nextInit: URLSearchParamsInit,
       navigateOptions?: { replace?: boolean; state?: any }
     ) => {
-      navigate("?" + createSearchParams(nextInit), navigateOptions);
+      const searchParams = createSearchParams(nextInit).toString();
+      navigate(searchParams !== "" ? `?${searchParams}` : "", navigateOptions);
     },
     [navigate]
   );
