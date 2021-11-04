@@ -27,7 +27,7 @@ git config --global user.name "GitHub Actions"
 git add -A
 git commit -m "Update React Router v5 website"
 
-$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+echo "https://github.com/remix-run/reactrouter-website/actions/workflows/deploy.yml"
 
 # Deploy
 git push origin v5
