@@ -271,7 +271,7 @@ As we'll see later, this works at _any level_ of the route hierarchy and is incr
 
 ## Listing the Invoices
 
-Normally you'd be fetching data from a server somewhere, but for this tutorail lets just hard code some fake stuff so we can focus on routing.
+Normally you'd be fetching data from a server somewhere, but for this tutorial lets just hard code some fake stuff so we can focus on routing.
 
 Make a file at `src/data.js` and copy/paste this in there:
 
