@@ -48,7 +48,7 @@ In previous versions of React Router you had to order your routes a certain way 
 <Route path="teams/new" element={<NewTeamForm />} />
 ```
 
-But `teams/new` is a more specific match than `/teams/:teamId`, so `<Team/>` will render.
+But `teams/new` is a more specific match than `/teams/:teamId`, so `<NewTeamForm />` will render.
 
 ## Navigation
 
