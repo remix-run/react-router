@@ -51,8 +51,8 @@ Follow the instructions in the [React documentation to set up a new project with
 Once your project is set up and React Router is installed as a dependency, open the `src/index.js` in your text editor. Import `BrowserRouter` from `react-router-dom` near the top of your file and wrap your app in a `<Router>`:
 
 ```js [3, 9-11]
-import React from "react";
-import ReactDOM from "react-dom";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App";
@@ -69,7 +69,7 @@ ReactDOM.render(
 Now you can use React Router anywhere in your app! For a simple example, open `src/App.js` and replace the default markup with some routes:
 
 ```js [2, 8-12]
-import React from "react";
+import * as React from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import "./App.css";
 
@@ -150,8 +150,8 @@ Go to the `index.js` file in your project and import the necessary functions fro
 
 ```js
 // index.js
-import React from "react";
-import ReactDOM from "react-dom";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.js";
 
@@ -180,7 +180,7 @@ Now that React and React Router are set up create a new file `App.js` and add so
 
 ```js
 // App.js
-import React from "react";
+import * as React from "react";
 import { Routes, Route, Link } from "react-router-dom";
 
 function App() {
