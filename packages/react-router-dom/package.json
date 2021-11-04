@@ -18,7 +18,8 @@
   },
   "peerDependencies": {
     "react": ">=16.8",
-    "react-dom": ">=16.8"
+    "react-dom": ">=16.8",
+    "history": ">=5"
   },
   "sideEffects": false,
   "keywords": [
