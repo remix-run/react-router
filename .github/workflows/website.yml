@@ -32,10 +32,8 @@ jobs:
       - name: Setup
         run: |
           echo "Deploying website to https://v5.reactrouter.com/"
-          openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv -in website-deploy-key.enc -out website-deploy-key -d
-          chmod 600 website-deploy-key
           eval $(ssh-agent -s)
-          ssh-add website-deploy-key
+          echo "${{ secrets.WEBSITE_DEPLOY_KEY }}" | ssh-add - 
 
       - name: Deploy
         run: bash scripts/deploy-website.sh
