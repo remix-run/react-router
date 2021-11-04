@@ -541,7 +541,7 @@ Let's use the `/teams/firebirds` URL as an example again. `<Routes>` will match 
 </App>
 ```
 
-Each match rendered inside the parent route's element is a really powerful abstraction. Most websites and apps share this characteristig: boxes inside of boxes inside of boxes, each with a navigation section that changes a child section of the page.
+Each match rendered inside the parent route's element is a really powerful abstraction. Most websites and apps share this characteristic: boxes inside of boxes inside of boxes, each with a navigation section that changes a child section of the page.
 
 ### Outlets
 
