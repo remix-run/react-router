@@ -1,0 +1,24 @@
+{
+  "name": "tutorial",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "history": "^5.0.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-router-dom": "6.0.0-beta.8"
+  },
+  "devDependencies": {
+    "@rollup/plugin-replace": "^2.2.1",
+    "@types/node": "14.x",
+    "@types/react": "^17.0.19",
+    "@types/react-dom": "^17.0.9",
+    "@vitejs/plugin-react": "^1.0.1",
+    "typescript": "^4.3.5",
+    "vite": "^2.5.0"
+  }
+}

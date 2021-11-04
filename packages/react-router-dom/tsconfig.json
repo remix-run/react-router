@@ -1,0 +1,20 @@
+{
+  "files": ["index.tsx", "server.tsx"],
+  "compilerOptions": {
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
+
+    "strict": true,
+    "jsx": "react",
+
+    "declaration": true,
+    "emitDeclarationOnly": true,
+
+    "skipLibCheck": true,
+
+    "outDir": "../../build/node_modules/react-router-dom",
+    "rootDir": "."
+  }
+}

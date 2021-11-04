@@ -1,20 +1,22 @@
 {
   "name": "react-router-dom",
-  "version": "6.0.0-beta.0",
-  "author": "React Training <hello@reacttraining.com>",
+  "version": "6.0.0-beta.8",
+  "author": "Remix Software <hello@remix.run>",
   "description": "Declarative routing for React web applications",
-  "repository": "ReactTraining/react-router",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remix-run/react-router.git",
+    "directory": "packages/react-router-dom"
+  },
   "license": "MIT",
-  "main": "main.js",
-  "module": "index.js",
-  "types": "index.d.ts",
-  "unpkg": "umd/react-router-dom.production.min.js",
+  "main": "./main.js",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "unpkg": "./umd/react-router-dom.production.min.js",
   "dependencies": {
-    "prop-types": "^15.7.2",
-    "react-router": "6.0.0-beta.0"
+    "react-router": "6.0.0-beta.8"
   },
   "peerDependencies": {
-    "history": ">=5",
     "react": ">=16.8",
     "react-dom": ">=16.8"
   },
