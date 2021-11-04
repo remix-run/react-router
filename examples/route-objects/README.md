@@ -1,3 +1,7 @@
+---
+title: Route Objects
+---
+
 # Route Objects Example
 
 This example demonstrates how to use the `useRoutes()` hook to define and render routes using regular JavaScript objects instead of `<Routes>` and `<Route>` elements. This is mainly a stylistic preference that may make more sense in some scenarios, depending on the data structures you're working with to define your routes.

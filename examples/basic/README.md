@@ -1,3 +1,7 @@
+---
+title: Basic
+---
+
 # Basic Example
 
 This example demonstrates some of the basic features of React Router, including:

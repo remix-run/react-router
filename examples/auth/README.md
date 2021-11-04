@@ -1,3 +1,7 @@
+---
+title: Auth
+---
+
 # Auth Example
 
 This example demonstrates how to restrict access to routes to authenticated users.

@@ -1,3 +1,7 @@
+---
+title: Lazy Loading
+---
+
 # Lazy Loading Example
 
 This example demonstrates how to lazily load both

@@ -1,3 +1,7 @@
+---
+title: Modal
+---
+
 # Modal Example
 
 ## Preview
