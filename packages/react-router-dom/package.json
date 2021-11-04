@@ -14,7 +14,8 @@
   "types": "./index.d.ts",
   "unpkg": "./umd/react-router-dom.production.min.js",
   "dependencies": {
-    "react-router": "6.0.0"
+    "react-router": "6.0.0",
+    "history": "^5.1.0"
   },
   "peerDependencies": {
     "react": ">=16.8",
