@@ -21,7 +21,7 @@ While building a little bookeeping app we'll cover:
 - Navigating with Link
 - Creating Links with active styling
 - Using Nested Routes for Layout
-- Navigating programatically
+- Navigating programmatically
 - Using URL params for data loading
 - Using URL Search params
 - Creating your own behaviors through composition
@@ -787,7 +787,7 @@ function BrandLink({ brand, ...props }) {
 
 As you can see, even in this fairly simple example there are a lot of valid behaviors you might want. React Router doesn't try to solve every use-case we've ever heard of directly. Instead, we give you the components and hooks to compose whatever behavior you need.
 
-## Navigating Programatically
+## Navigating Programmatically
 
 Okay, back to our app. Hang in there, you're almost done!
 
