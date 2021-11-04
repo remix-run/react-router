@@ -36,4 +36,4 @@ jobs:
           echo "${{ secrets.WEBSITE_DEPLOY_KEY }}" | ssh-add - 
 
       - name: Deploy
-        run: bash scripts/deploy-website.sh
+        run: bash scripts/deploy-website.sh "${{ secrets.WEBSITE_DEPLOY_TOKEN }}"
