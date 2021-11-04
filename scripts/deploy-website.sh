@@ -10,7 +10,7 @@ tmp_dir="/tmp/reactrouter-website"
 
 # Clone reactrouter-website repo into the tmp dir
 rm -rf $tmp_dir
-git clone --depth 2 --branch v5 "https://${DEPLOY_TOKEN}@github.com:remix-run/reactrouter-website.git" $tmp_dir
+git clone --depth 2 --branch v5 "https://${DEPLOY_TOKEN}@github.com/remix-run/reactrouter-website.git" $tmp_dir
 
 # Build the website into the public dir
 rm -rf "$tmp_dir/public"
