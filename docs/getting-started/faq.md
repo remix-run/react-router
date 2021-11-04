@@ -132,7 +132,7 @@ In v5 the `<Route>` component was just a normal component that was like an `if` 
 
 In v5, since routes were just components, `MyRoute` will be rendered when the path is "/my-route".
 
-```tsx bad filename=v5.js
+```tsx filename=v5.js
 let App = () => (
   <div>
     <MyRoute />
@@ -168,7 +168,7 @@ You can get the same behavior by:
 - Only rendering `<Route>` elements inside of `<Routes>`
 - Moving the composition into the `element` prop
 
-```tsx bad filename=v6.js
+```tsx filename=v6.js
 let App = () => (
   <div>
     <Routes>
