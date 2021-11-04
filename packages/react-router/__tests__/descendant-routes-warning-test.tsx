@@ -52,9 +52,47 @@ describe("Descendant <Routes>", () => {
       });
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
-      expect(consoleWarn).toHaveBeenCalledWith(
-        expect.stringContaining("child routes will never render")
-      );
+
+      expect(consoleWarn.mock.calls[0][0])
+        .toMatch(`You rendered descendant <Routes> (or called \`useRoutes()\`) at "/courses/react" (under <Route path="react">) but the parent route path has no trailing "*". This means if you navigate deeper, the parent won't match anymore and therefore the child routes will never render.
+
+Please change the parent <Route path="react"> to <Route path="react/*">.`);
+    });
+  });
+
+  describe("when the parent route path does not have a trailing * and is the root", () => {
+    it("warns once when you visit the parent route and only shows a hint like *", () => {
+      function ReactCourses() {
+        return (
+          <div>
+            <h1>React</h1>
+
+            <Routes>
+              <Route
+                path="/react-fundamentals"
+                element={<h1>React Fundamentals</h1>}
+              />
+            </Routes>
+          </div>
+        );
+      }
+
+      TestRenderer.act(() => {
+        TestRenderer.create(
+          <MemoryRouter initialEntries={["/"]}>
+            <Routes>
+              <Route path="/" element={<ReactCourses />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(consoleWarn).toHaveBeenCalledTimes(1);
+
+      expect(consoleWarn.mock.calls[0][0])
+        .toMatch(`You rendered descendant <Routes> (or called \`useRoutes()\`) at "/" (under <Route path="/">) but the parent route path has no trailing "*". This means if you navigate deeper, the parent won't match anymore and therefore the child routes will never render.
+
+Please change the parent <Route path="/"> to <Route path="*">.`);
     });
   });
 
