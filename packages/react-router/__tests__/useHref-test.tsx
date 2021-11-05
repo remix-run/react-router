@@ -3,7 +3,7 @@ import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Routes, Route, useHref } from "react-router";
 
 function ShowHref({ to }: { to: string }) {
-  return <p>{useHref(to)}</p>;
+  return <pre>{useHref(to)}</pre>;
 }
 
 describe("useHref", () => {
@@ -24,9 +24,9 @@ describe("useHref", () => {
       });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
-        <p>
+        <pre>
           /courses/advanced-react
-        </p>
+        </pre>
       `);
     });
 
@@ -47,9 +47,9 @@ describe("useHref", () => {
         });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /courses/advanced-react
-          </p>
+          </pre>
         `);
       });
     });
@@ -71,9 +71,9 @@ describe("useHref", () => {
         });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /courses/advanced-react/
-          </p>
+          </pre>
         `);
       });
     });
@@ -93,9 +93,9 @@ describe("useHref", () => {
       });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
-        <p>
+        <pre>
           /about
-        </p>
+        </pre>
       `);
     });
 
@@ -113,9 +113,9 @@ describe("useHref", () => {
         });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /about
-          </p>
+          </pre>
         `);
       });
     });
@@ -134,9 +134,9 @@ describe("useHref", () => {
         });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /about/
-          </p>
+          </pre>
         `);
       });
     });
@@ -158,9 +158,9 @@ describe("useHref", () => {
       });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
-        <p>
+        <pre>
           /courses
-        </p>
+        </pre>
       `);
     });
 
@@ -180,9 +180,9 @@ describe("useHref", () => {
         });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /courses
-          </p>
+          </pre>
         `);
       });
     });
@@ -206,9 +206,9 @@ describe("useHref", () => {
         });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /courses/
-          </p>
+          </pre>
         `);
       });
     });
@@ -231,9 +231,9 @@ describe("useHref", () => {
       });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
-        <p>
+        <pre>
           /users
-        </p>
+        </pre>
       `);
     });
   });
@@ -257,9 +257,9 @@ describe("useHref", () => {
       });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
-        <p>
+        <pre>
           /courses
-        </p>
+        </pre>
       `);
     });
 
@@ -277,9 +277,9 @@ describe("useHref", () => {
         });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /
-          </p>
+          </pre>
         `);
       });
     });
