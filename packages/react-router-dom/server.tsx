@@ -15,7 +15,7 @@ export interface StaticRouterProps {
 export function StaticRouter({
   basename,
   children,
-  location: locationProp
+  location: locationProp = "/"
 }: StaticRouterProps) {
   if (typeof locationProp === "string") {
     locationProp = parsePath(locationProp);

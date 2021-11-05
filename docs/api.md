@@ -161,7 +161,7 @@ interface NativeRouterProps extends MemoryRouterProps {}
 `<NativeRouter>` is the recommended interface for running React Router in a [React Native](https://reactnative.dev) app.
 
 - `<NativeRouter initialEntries>` defaults to `["/"]` (a single entry at the root `/` URL)
-- `<NativeRouter initialIndex>` defaults to the last index of `props.initialEntries`
+- `<NativeRouter initialIndex>` defaults to the last index of `initialEntries`
 
 ```tsx
 import * as React from "react";
@@ -199,7 +199,7 @@ interface MemoryRouterProps {
 A `<MemoryRouter>` stores its locations internally in an array. Unlike `<BrowserHistory>` and `<HashHistory>`, it isn't tied to an external source, like the history stack in a browser. This makes it ideal for scenarios where you need complete control over the history stack, like testing.
 
 - `<MemoryRouter initialEntries>` defaults to `["/"]` (a single entry at the root `/` URL)
-- `<MemoryRouter initialIndex>` defaults to the last index of `props.initialEntries`
+- `<MemoryRouter initialIndex>` defaults to the last index of `initialEntries`
 
 > **Tip:**
 >
