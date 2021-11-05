@@ -6,7 +6,7 @@ describe("useLocation", () => {
   it("returns the current location object", () => {
     function Home() {
       let { pathname, search, hash } = useLocation();
-      return <pre>{JSON.stringify({ location: pathname, search, hash })}</pre>;
+      return <pre>{JSON.stringify({ pathname, search, hash })}</pre>;
     }
 
     let renderer: TestRenderer.ReactTestRenderer;
@@ -22,7 +22,7 @@ describe("useLocation", () => {
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <pre>
-        {"location":"/home","search":"?the=search","hash":"#the-hash"}
+        {"pathname":"/home","search":"?the=search","hash":"#the-hash"}
       </pre>
     `);
   });
