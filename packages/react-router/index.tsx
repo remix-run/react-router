@@ -704,6 +704,13 @@ export function createRoutesFromChildren(
       return;
     }
 
+    invariant(
+      element.type === Route,
+      `[${
+        typeof element.type === "string" ? element.type : element.type.name
+      }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
+    );
+
     let route: RouteObject = {
       caseSensitive: element.props.caseSensitive,
       element: element.props.element,
