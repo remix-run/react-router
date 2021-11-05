@@ -1,6 +1,8 @@
 name: 💡 Feature Request
 description: I want to add something to React Router.
 title: "[Feature]: "
+labels:
+  - feature
 body:
   - type: markdown
     attributes:

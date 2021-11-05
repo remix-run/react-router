@@ -1,6 +1,8 @@
 name: 🐛 Bug Report
 description: Something is wrong with React Router.
 title: "[Bug]: "
+labels:
+  - bug
 body:
   - type: markdown
     attributes:
