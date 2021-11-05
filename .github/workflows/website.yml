@@ -29,11 +29,5 @@ jobs:
       - name: Test
         run: yarn test
 
-      - name: Setup
-        run: |
-          echo "Deploying website to https://v5.reactrouter.com/"
-          eval $(ssh-agent -s)
-          echo "${{ secrets.WEBSITE_DEPLOY_KEY }}" | ssh-add - 
-
       - name: Deploy
         run: bash scripts/deploy-website.sh "${{ secrets.WEBSITE_DEPLOY_TOKEN }}"
