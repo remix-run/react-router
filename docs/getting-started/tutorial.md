@@ -376,7 +376,7 @@ The `"*"` has special meaning here. It will match only when no other routes do.
 
 ## Reading URL Params
 
-Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visted some URLs like `"/invoices/1998"` and `"/invoices/2005"`, lets make a new component at `src/routes/invoice.js` to render at those URLs:
+Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, lets make a new component at `src/routes/invoice.js` to render at those URLs:
 
 ```js filename=src/routes/invoice.js
 export default function Invoice() {
@@ -673,7 +673,7 @@ export default function Invoices() {
 Check this out, as the user types:
 
 - `setSearchParams()` is putting the `?filter=...` search params in the URL and rerendering the router.
-- `useSearchParams` is now returing a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) with `"filter"` as one of it's values.
+- `useSearchParams` is now returning a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) with `"filter"` as one of its values.
 - We set the value of the input to whatever is in the filter search param (it's just like `useState` but in the URLSearchParams instead!)
 - We filter our list of invoices based on the filter search param.
 
