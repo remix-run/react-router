@@ -50,7 +50,7 @@ Here's a simple express server that renders the app on the server. Note the use 
 ```js filename=server.entry.js
 import express from "express"
 import ReactDOMServer from "react-dom/server";
-import { StaticRouter } from "react-router-dom";
+import { StaticRouter } from "react-router-dom/server";
 import App from "./App";
 
 let app = express();
