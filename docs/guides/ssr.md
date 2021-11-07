@@ -15,7 +15,7 @@ The most basic server rendering in React Router is pretty straightforward. Howev
 - Data loading strategies that work on the client and server
 - Handling code splitting in the server and client
 - Proper HTTP status codes and redirects
-- Environment varialbes and secrets
+- Environment variables and secrets
 - Deployment
 
 Setting all of this up well can be pretty involved but is worth the performance and UX charactertics you can only get when server rendering.
