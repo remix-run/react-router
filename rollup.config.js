@@ -33,12 +33,19 @@ function reactRouter() {
   const modules = [
     {
       input: `${SOURCE_DIR}/index.tsx`,
-      output: {
-        file: `${OUTPUT_DIR}/index.js`,
-        format: "esm",
-        sourcemap: !PRETTY,
-        banner: createBanner("React Router", version)
-      },
+      output: [
+        {
+          file: `${OUTPUT_DIR}/index.js`,
+          format: "esm",
+          sourcemap: !PRETTY,
+          banner: createBanner("React Router", version)
+        }, {
+          file: `${OUTPUT_DIR}/index.mjs`,
+          format: "esm",
+          sourcemap: !PRETTY,
+          banner: createBanner("React Router", version)
+        }
+      ],
       external: ["history", "react"],
       plugins: [
         babel({
@@ -220,12 +227,20 @@ function reactRouterDom() {
   const modules = [
     {
       input: `${SOURCE_DIR}/index.tsx`,
-      output: {
-        file: `${OUTPUT_DIR}/index.js`,
-        format: "esm",
-        sourcemap: !PRETTY,
-        banner: createBanner("React Router DOM", version)
-      },
+      output: [
+        {
+          file: `${OUTPUT_DIR}/index.js`,
+          format: "esm",
+          sourcemap: !PRETTY,
+          banner: createBanner("React Router DOM", version)
+        },
+        {
+          file: `${OUTPUT_DIR}/index.mjs`,
+          format: "esm",
+          sourcemap: !PRETTY,
+          banner: createBanner("React Router DOM", version)
+        }
+      ],
       external: ["history", "react", "react-dom", "react-router"],
       plugins: [
         babel({

@@ -12,6 +12,10 @@
   "main": "./main.js",
   "module": "./index.js",
   "types": "./index.d.ts",
+  "exports": {
+    "require": "./main.js",
+    "import": "./index.mjs"
+  },
   "unpkg": "./umd/react-router.production.min.js",
   "peerDependencies": {
     "react": ">=16.8"

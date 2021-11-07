@@ -12,6 +12,10 @@
   "main": "./main.js",
   "module": "./index.js",
   "types": "./index.d.ts",
+  "exports": {
+    "require": "./main.js",
+    "import": "./index.mjs"
+  },
   "unpkg": "./umd/react-router-dom.production.min.js",
   "dependencies": {
     "react-router": "6.1.0",
