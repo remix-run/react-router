@@ -39,7 +39,8 @@ function reactRouter() {
           format: "esm",
           sourcemap: !PRETTY,
           banner: createBanner("React Router", version)
-        }, {
+        },
+        {
           file: `${OUTPUT_DIR}/index.mjs`,
           format: "esm",
           sourcemap: !PRETTY,
