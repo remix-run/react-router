@@ -21,7 +21,7 @@ npm install react-router-dom@6
 
 ```jsx
 import { render } from "react-dom";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import your route components too
 
 render(
