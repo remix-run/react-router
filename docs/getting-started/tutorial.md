@@ -770,8 +770,7 @@ function BrandLink({ brand, ...props }) {
   } else {
     params = new URLSearchParams(
       Array.from(params).filter(
-        ([key, value]) =>
-          key !== "brand" || value !== brand
+        ([key, value]) => key !== "brand" || value !== brand
       )
     );
   }
