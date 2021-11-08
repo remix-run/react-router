@@ -324,7 +324,7 @@ if (__DEV__) {
 
 /**
  * Handles the click behavior for router `<Link>` components. This is useful if
- * you need to create custom `<Link>` compoments with the same click behavior we
+ * you need to create custom `<Link>` components with the same click behavior we
  * use in our exported `<Link>`.
  */
 export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
