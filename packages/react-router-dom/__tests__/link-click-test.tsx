@@ -62,13 +62,13 @@ describe("A <Link> click", () => {
     expect(h1?.textContent).toEqual("About");
   });
 
-  describe("when forceDocument specified", () => {
+  describe("when reloadDocument is specified", () => {
     it("does not prevent default", () => {
       function Home() {
         return (
           <div>
             <h1>Home</h1>
-            <Link forceDocument to="../about">
+            <Link reloadDocument to="../about">
               About
             </Link>
           </div>

@@ -200,7 +200,7 @@ function isModifiedEvent(event: React.MouseEvent) {
 
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
-  forceDocument?: boolean;
+  reloadDocument?: boolean;
   replace?: boolean;
   state?: any;
   to: To;
@@ -211,7 +211,7 @@ export interface LinkProps
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
-    { onClick, forceDocument, replace = false, state, target, to, ...rest },
+    { onClick, reloadDocument, replace = false, state, target, to, ...rest },
     ref
   ) {
     let href = useHref(to);
@@ -220,7 +220,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
     ) {
       if (onClick) onClick(event);
-      if (!event.defaultPrevented && !forceDocument) {
+      if (!event.defaultPrevented && !reloadDocument) {
         internalOnClick(event);
       }
     }
