@@ -201,7 +201,7 @@ params.get("popular"); // "true"
 params.toString(); // "campaign=instagram&popular=true",
 ```
 
-When being precise, refer to the serialized string version as "search" and the parsed version as "search params", but its common to use the terms interchangeably when precision isn't important.
+When being precise, refer to the serialized string version as "search" and the parsed version as "search params", but it's common to use the terms interchangeably when precision isn't important.
 
 **Location Hash**
 
@@ -417,7 +417,7 @@ That's right, two of them!
 
 React Router has to make a decision here, there can be only one. Many routers, both client side and server side, will simply process the patterns in the order in which they were defined. First to match wins. In this case we would match `/` and render the `<Home/>` component. Definitely not what we wanted. These kinds of routers require us to order our routes perfectly to get the expected result. This is how React Router has worked up until v6, but now it’s much smarter.
 
-Looking at those patterns, you intuitively know that we want `/teams/new` to match the URL `/teams/new`. It's a perfect match! React Router also knows that. When matching, it will rank your routes according the number of segments, static segments, dynamic segments, star patterns, etc. and pick the most specific match. You never have to think about ordering your routes.
+Looking at those patterns, you intuitively know that we want `/teams/new` to match the URL `/teams/new`. It's a perfect match! React Router also knows that. When matching, it will rank your routes according the number of segments, static segments, dynamic segments, star patterns, etc. and pick the most specific match. You'll never have to think about ordering your routes.
 
 ### Pathless Routes
 
