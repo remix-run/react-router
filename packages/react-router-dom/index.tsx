@@ -1,5 +1,5 @@
 import * as React from "react";
-export * as History from "history";
+export * as History from "history"; // forward history
 import type { BrowserHistory, HashHistory } from "history";
 import { createBrowserHistory, createHashHistory, createPath } from "history";
 import {
