@@ -193,3 +193,169 @@ function MatchPath({ path, Comp }) {
 // Will match anywhere w/o needing to be in a `<Routes>`
 <MatchPath path="/accounts/:id" Comp={Account} />;
 ```
+
+## What Happened to Regexp Routes Paths?
+
+Regexp route paths were removed for two reasons:
+
+1. Regular expression paths in routes raised a lot of questions for v6's ranked route matching. How do you rank a regex?
+
+2. We were able to shed an entire dependency (path-to-regexp) and cut the package weight sent to your user's browser significantly. If it were added back, it would represent 1/3 of React Router's page weight!
+
+After looking at a lot of use cases, we found we can still meet them without direct regexp path support, so we made the tradeoff to significantly decrease the bundle size and avoid the open questions around ranking regexp routes.
+
+The majority of regexp routes were only concerned about one URL segment at a time and doing one of two things:
+
+1. Matching multiple static values
+2. Validating the param in some way (is a number, not a number, etc.)
+
+**Matching generally static values**
+
+A very common route we've seen is a regex matching multiple language codes:
+
+```tsx filename=v5-regex-route.js
+function App() {
+  return (
+    <Switch>
+      <Route path={/(en|es|fr)/} component={Lang} />
+    </Switch>
+  );
+}
+
+function Lang({ params }) {
+  let lang = params[0];
+  let translations = I81n[lang];
+  // ...
+}
+```
+
+These are all actually just static paths, so in v6 you can make three routes and pass the code directly to the component. If you've got a lot of them, make an array and map it into routes to avoid the repetition.
+
+```tsx filename=v6.js
+function App() {
+  return (
+    <Routes>
+      <Route path="en" element={<Lang code="en" />} />
+      <Route path="es" element={<Lang code="en" />} />
+      <Route path="fr" element={<Lang code="en" />} />
+    </Routes>
+  );
+}
+
+function Lang({ lang }) {
+  let translations = I81n[lang];
+  // ...
+}
+```
+
+**Doing some sort of param validation**
+
+Another common case was ensuring that parameters were an integer.
+
+```tsx filename=v5-regex-route.js
+function App() {
+  return (
+    <Switch>
+      <Route path={/users\/(\d+)/} component={User} />
+    </Switch>
+  );
+}
+
+function User({ params }) {
+  let id = params[0];
+  // ...
+}
+```
+
+In this case you have to do a bit of work yourself with the regex inside the matching component:
+
+```tsx filename=v5-regex-route.js
+function App() {
+  return (
+    <Routes>
+      <Route path="users/:id" element={<ValidateUser />} />
+      <Route path="/users/*" component={NotFound} />
+    </Routes>
+  );
+}
+
+function ValidateUser() {
+  let params = useParams();
+  let userId = params.id.match(/\d+/);
+  if (!userId) {
+    return <NotFound />;
+  }
+  return <User id={params.userId} />;
+}
+
+function User(props) {
+  let id = props.id;
+  // ...
+}
+```
+
+In v5 if the regex didn't match then `<Switch>` would keep trying to match the next routes:
+
+```tsx filename=v5-switch.js
+function App() {
+  return (
+    <Switch>
+      <Route path={/users\/(\d+)/} component={User} />
+      <Route path="/users/new" exact component={NewUser} />
+      <Route
+        path="/users/inactive"
+        exact
+        component={InactiveUsers}
+      />
+      <Route path="/users/*" component={NotFound} />
+    </Switch>
+  );
+}
+```
+
+Looking at this example you might be concerned that in the v6 version your other routes won't get rendered at their URLs because the `:userId` route might match first. But, thanks to route ranking, that is not the case. The "new" and "inactive" routes will rank higher and therefore render at their respective URLs:
+
+```tsx filename=v6-ranked.js
+function App() {
+  return (
+    <Routes>
+      <Route path="/users/:id" element={<ValidateUser />} />
+      <Route path="/users/new" element={<NewUser />} />
+      <Route
+        path="/users/inactive"
+        element={<InactiveUsers />}
+      />
+    </Routes>
+  );
+}
+```
+
+In fact, the v5 version has all sorts of problems if your routes aren't ordered _just right_. V6 competely eliminates this problem.
+
+**Remix Users**
+
+If you're using [Remix](https://remix.run), you can send proper 40x responses to the browser by moving this work into your loader. This also decreases the size of the browser bundles sent to the user because loaders only run on the server.
+
+```tsx
+import { useLoaderData } from "remix";
+
+export async function loader({ params }) {
+  if (!params.id.match(/\d+/)) {
+    throw new Response("", { status: 400 });
+  }
+
+  let user = await fakeDb.user.find({ where: { id: params.id=}})
+  if (!user) {
+    throw new Response("", { status: 404})
+  }
+
+  return user;
+}
+
+function User() {
+  let user = useLoaderData();
+  // ...
+}
+```
+
+Instead of rending your component, remix will render the nearest [catch boundary](https://docs.remix.run/v0.20/api/app/#catchboundary) instead.
