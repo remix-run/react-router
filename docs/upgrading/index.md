@@ -1,4 +1,4 @@
 ---
 title: Upgrading to v6
-order: 4
+order: 5
 ---
