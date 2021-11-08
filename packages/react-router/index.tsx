@@ -13,6 +13,7 @@ import {
   parsePath
 } from "history";
 
+export * as History from "history"; // forward history
 export type { Location, Path, To, NavigationType };
 
 function invariant(cond: any, message: string): asserts cond {
