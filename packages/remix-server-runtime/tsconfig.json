@@ -1,7 +1,7 @@
 {
   "exclude": ["__tests__"],
   "compilerOptions": {
-    "lib": ["ES2019", "DOM"],
+    "lib": ["ES2019", "DOM", "DOM.Iterable"],
     "target": "ES2019",
 
     "moduleResolution": "node",

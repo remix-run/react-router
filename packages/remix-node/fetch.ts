@@ -1,5 +1,7 @@
 import type { RequestInfo, RequestInit, Response } from "node-fetch";
-import nodeFetch from "node-fetch";
+import nodeFetch, { Request as NodeRequest } from "node-fetch";
+
+import { RemixFormData } from "./form-data";
 
 export type {
   HeadersInit,
@@ -7,7 +9,18 @@ export type {
   RequestInit,
   ResponseInit
 } from "node-fetch";
-export { Headers, Request, Response } from "node-fetch";
+export { Headers, Response } from "node-fetch";
+
+export class Request extends NodeRequest {
+  constructor(input: RequestInfo, init?: RequestInit | undefined) {
+    super(input, init);
+  }
+
+  async formData() {
+    let body = await this.clone().text();
+    return new RemixFormData(body);
+  }
+}
 
 /**
  * A `fetch` function for node that matches the web Fetch API. Based on
