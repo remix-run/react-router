@@ -3,7 +3,7 @@ name: website
 on:
   push:
     branches: [main]
-    paths: 
+    paths:
       - docs/**
       - examples/README.md
       - examples/**/README.md
