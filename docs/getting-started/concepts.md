@@ -579,7 +579,7 @@ If the URL were `/teams/firebirds/edit`, the element tree would change to:
 </App>
 ```
 
-The outlet swaps out the child for the new child that matches, but the parent layout presists. It's subtle but very effective at cleaning up your components.
+The outlet swaps out the child for the new child that matches, but the parent layout persists. It's subtle but very effective at cleaning up your components.
 
 ### Index Routes
 
