@@ -1,3 +1,8 @@
+---
+title: Examples
+order: 6
+---
+
 # React Router Examples
 
 Welcome to the examples for React Router.
