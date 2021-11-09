@@ -26,6 +26,28 @@ export interface RequestHandler {
   (request: Request, loadContext?: AppLoadContext): Promise<Response>;
 }
 
+type RequestType = "data" | "document" | "resource";
+
+function getRequestType(
+  request: Request,
+  matches: RouteMatch<ServerRoute>[] | null
+): RequestType {
+  if (isDataRequest(request)) {
+    return "data";
+  }
+
+  if (!matches) {
+    return "document";
+  }
+
+  let match = matches.slice(-1)[0];
+  if (!match.route.module.default) {
+    return "resource";
+  }
+
+  return "document";
+}
+
 /**
  * Creates a function that serves HTTP requests.
  */
@@ -38,16 +60,46 @@ export function createRequestHandler(
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
 
   return async (request, loadContext = {}) => {
-    let response = await (isDataRequest(request)
-      ? handleDataRequest(request, loadContext, build, platform, routes)
-      : handleDocumentRequest(
+    let url = new URL(request.url);
+    let matches = matchServerRoutes(routes, url.pathname);
+
+    let requestType = getRequestType(request, matches);
+
+    let response: Response;
+
+    switch (requestType) {
+      // has _data
+      case "data":
+        response = await handleDataRequest(
+          request,
+          loadContext,
+          build,
+          platform,
+          matches
+        );
+        break;
+      // no _data & default export
+      case "document":
+        response = await handleDocumentRequest(
           request,
           loadContext,
           build,
           platform,
           routes,
           serverMode
-        ));
+        );
+        break;
+      // no _data  or default export
+      case "resource":
+        response = await handleResourceRequest(
+          request,
+          loadContext,
+          build,
+          platform,
+          matches
+        );
+        break;
+    }
 
     if (isHeadRequest(request)) {
       return new Response(null, {
@@ -61,12 +113,48 @@ export function createRequestHandler(
   };
 }
 
+async function handleResourceRequest(
+  request: Request,
+  loadContext: AppLoadContext,
+  build: ServerBuild,
+  platform: ServerPlatform,
+  matches: RouteMatch<ServerRoute>[] | null
+): Promise<Response> {
+  let url = new URL(request.url);
+
+  if (!matches) {
+    return jsonError(`No route matches URL "${url.pathname}"`, 404);
+  }
+
+  let routeMatch: RouteMatch<ServerRoute> = matches.slice(-1)[0];
+  try {
+    return isActionRequest(request)
+      ? await callRouteAction(
+          build,
+          routeMatch.route.id,
+          request,
+          loadContext,
+          routeMatch.params
+        )
+      : await loadRouteData(
+          build,
+          routeMatch.route.id,
+          request,
+          loadContext,
+          routeMatch.params
+        );
+  } catch (error: any) {
+    let formattedError = (await platform.formatServerError?.(error)) || error;
+    throw formattedError;
+  }
+}
+
 async function handleDataRequest(
   request: Request,
   loadContext: AppLoadContext,
   build: ServerBuild,
   platform: ServerPlatform,
-  routes: ServerRoute[]
+  matches: RouteMatch<ServerRoute>[] | null
 ): Promise<Response> {
   if (!isValidRequestMethod(request)) {
     return jsonError(`Invalid request method "${request.method}"`, 405);
@@ -74,7 +162,6 @@ async function handleDataRequest(
 
   let url = new URL(request.url);
 
-  let matches = matchServerRoutes(routes, url.pathname);
   if (!matches) {
     return jsonError(`No route matches URL "${url.pathname}"`, 404);
   }
