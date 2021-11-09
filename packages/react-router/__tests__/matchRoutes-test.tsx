@@ -100,7 +100,7 @@ describe("matchRoutes", () => {
     ]);
   });
 
-  it("matches nested dynamic routes with base64 encoded ids", () => {
+  it("matches nested dynamic routes with params ending in = (e.x. base64 encoded Id)", () => {
     expect(pickPaths(routes, "/users/VXNlcnM6MQ==")).toEqual(["/users", ":id"]);
     expect(pickPaths(routes, "/users/VXNlcnM6MQ==/edit")).toEqual([
       "/users",
