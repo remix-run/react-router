@@ -290,7 +290,7 @@ If your app has a `<Link to="/events" />` still hanging around and the user
 clicks it, the server isn't involved since you're using a client-side router.
 You'll need to be more diligent about updating your links 😬.
 
-Alternatively, if you want to allow for out-dated links, _and you realize you need to configure your redirects on both the client and the server_, go ahead and copy paste the `Redirect` component we were about to ship but then deleted.
+Alternatively, if you want to allow for outdated links, _and you realize you need to configure your redirects on both the client and the server_, go ahead and copy paste the `Redirect` component we were about to ship but then deleted.
 
 ```jsx
 import { useEffect } from "react";
@@ -404,7 +404,7 @@ function PartialNavLink(props) {
 
 #### Justification
 
-"Prop getters" are clunky and can almost always be replaced with a hook. This also allows you to use the other hooks, like useLocation, and do even more custom things, like making a link active with a search string:
+"Prop getters" are clunky and can almost always be replaced with a hook. This also allows you to use the other hooks, like `useLocation`, and do even more custom things, like making a link active with a search string:
 
 ```jsx
 function RecentPostsLink(props) {
@@ -446,7 +446,7 @@ Also note the change from `uri -> url`.
 
 #### Justification
 
-Just feels cleaner to have the params be seperate from URL and path.
+Just feels cleaner to have the params be separate from URL and path.
 
 Also nobody knows the difference between URL and URI, so we didn't want to start a bunch of pedantic arguments about it. React Router always called it URL, and it's got more production apps, so we used URL instead of URI.
 

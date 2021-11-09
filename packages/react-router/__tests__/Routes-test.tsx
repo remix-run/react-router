@@ -4,12 +4,15 @@ import { MemoryRouter, Routes, Route } from "react-router";
 
 describe("<Routes>", () => {
   let consoleWarn: jest.SpyInstance;
+  let consoleError: jest.SpyInstance;
   beforeEach(() => {
     consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
     consoleWarn.mockRestore();
+    consoleError.mockRestore();
   });
 
   it("renders null and issues a warning when no routes match the URL", () => {
@@ -109,5 +112,37 @@ describe("<Routes>", () => {
         Admin
       </h1>
     `);
+  });
+
+  it("throws if some <CustomRoute> is passed as a child of <Routes>", () => {
+    const CustomRoute = (...args: any) => <Route />;
+
+    expect(() => {
+      TestRenderer.create(
+        <MemoryRouter initialEntries={["/admin"]}>
+          <Routes>
+            <Route path="/" element={<h1>Home</h1>} />
+            <CustomRoute path="admin" element={<h1>Admin</h1>} />
+          </Routes>
+        </MemoryRouter>
+      );
+    }).toThrow(/children of <Routes> must be a <Route>/);
+
+    expect(consoleError).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws if a regular element (ex: <div>) is passed as a child of <Routes>", () => {
+    expect(() => {
+      TestRenderer.create(
+        <MemoryRouter initialEntries={["/admin"]}>
+          <Routes>
+            <Route path="/" element={<h1>Home</h1>} />
+            <div {...({ path: "admin", element: <h1>Admin</h1> } as any)} />
+          </Routes>
+        </MemoryRouter>
+      );
+    }).toThrow(/children of <Routes> must be a <Route>/);
+
+    expect(consoleError).toHaveBeenCalledTimes(1);
   });
 });

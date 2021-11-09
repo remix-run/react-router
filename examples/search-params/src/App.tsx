@@ -36,16 +36,16 @@ function Home() {
   let [userData, setUserData] = React.useState<any>(null);
 
   React.useEffect(() => {
-    let cleanupWasCalled = false;
     let abortController = new AbortController();
 
     async function getGitHubUser() {
       let response = await fetch(`https://api.github.com/users/${user}`, {
         signal: abortController.signal
       });
-      let data = await response.json();
-      if (cleanupWasCalled) return;
-      setUserData(data);
+      if (!abortController.signal.aborted) {
+        let data = await response.json();
+        setUserData(data);
+      }
     }
 
     if (user) {
@@ -53,7 +53,6 @@ function Home() {
     }
 
     return () => {
-      cleanupWasCalled = true;
       abortController.abort();
     };
   }, [user]);

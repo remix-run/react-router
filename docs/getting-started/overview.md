@@ -14,14 +14,18 @@ If you're familiar with the JavaScript ecosystem, React, and React Router, this 
 ## Installation
 
 ```sh
-npm add react-router-dom@6
+npm install react-router-dom@6
 ```
 
 ## Configuring Routes
 
 ```jsx
 import { render } from "react-dom";
-import { BrowserRouter } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route
+} from "react-router-dom";
 // import your route components too
 
 render(
@@ -143,10 +147,7 @@ function App() {
   return (
     <Routes>
       <Route path="invoices" element={<Invoices />}>
-        <Route
-          path=":invoiceId"
-          element={<IndividualInvoice />}
-        />
+        <Route path=":invoiceId" element={<Invoice />} />
         <Route path="sent" element={<SentInvoices />} />
       </Route>
     </Routes>

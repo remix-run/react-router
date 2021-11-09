@@ -26,10 +26,15 @@ export default function App() {
       <h1>Modal Example</h1>
 
       <p>
-        This is an example of how to create a modal with React Router. Modals
-        are typically used as a kind of "detail" view to focus on a particular
-        object in a collection while not taking you completely out of context of
-        the parent page.
+        This is an example of how to create a contextual modal navigation with
+        React Router where the navigation path the user takes determines if the
+        page is rendered in the modal or not (popularized by pinterest,
+        instagram, and others in the 2010s). This type of modal is typically
+        used as a kind of "detail" view to focus on a particular object in a
+        collection (like a pinterest board) while not taking you completely out
+        of context of the parent page. But, when the same URL is visited
+        directly (rather than from the collection page) it renders as it's own
+        full page instead of in a modal.
       </p>
 
       <p>

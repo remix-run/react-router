@@ -160,7 +160,7 @@ const URLEventType = "url";
 
 /**
  * Handles the press behavior for router `<Link>` components. This is useful if
- * you need to create custom `<Link>` compoments with the same press behavior we
+ * you need to create custom `<Link>` components with the same press behavior we
  * use in our exported `<Link>`.
  */
 export function useLinkPressHandler(

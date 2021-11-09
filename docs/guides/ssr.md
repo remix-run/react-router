@@ -15,10 +15,10 @@ The most basic server rendering in React Router is pretty straightforward. Howev
 - Data loading strategies that work on the client and server
 - Handling code splitting in the server and client
 - Proper HTTP status codes and redirects
-- Environment varialbes and secrets
+- Environment variables and secrets
 - Deployment
 
-Setting all of this up well can be pretty involved but is worth the performance and UX charactertics you can only get when server rendering.
+Setting all of this up well can be pretty involved but is worth the performance and UX characteristics you can only get when server rendering.
 
 If you want to server render your React Router app, we highly recommend you use [Remix](https://remix.run). This is another project of ours that's built on top of React Router and handles all of the things mentioned above and more. Give it a shot!
 
@@ -50,7 +50,7 @@ Here's a simple express server that renders the app on the server. Note the use 
 ```js filename=server.entry.js
 import express from "express"
 import ReactDOMServer from "react-dom/server";
-import { StaticRouter } from "react-router-dom";
+import { StaticRouter } from "react-router-dom/server";
 import App from "./App";
 
 let app = express();
