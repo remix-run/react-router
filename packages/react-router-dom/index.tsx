@@ -125,6 +125,7 @@ export interface BrowserRouterProps {
   basename?: string;
   children?: React.ReactNode;
   window?: Window;
+  history?: BrowserHistory;
 }
 
 /**
@@ -133,11 +134,12 @@ export interface BrowserRouterProps {
 export function BrowserRouter({
   basename,
   children,
-  window
+  window,
+  history: defaultHistory
 }: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
   if (historyRef.current == null) {
-    historyRef.current = createBrowserHistory({ window });
+    historyRef.current = defaultHistory ?? createBrowserHistory({ window });
   }
 
   let history = historyRef.current;
@@ -163,16 +165,17 @@ export interface HashRouterProps {
   basename?: string;
   children?: React.ReactNode;
   window?: Window;
+  history?: HashHistory;
 }
 
 /**
  * A <Router> for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ basename, children, window }: HashRouterProps) {
+export function HashRouter({ basename, children, window, history: defaultHistory }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
-    historyRef.current = createHashHistory({ window });
+    historyRef.current = defaultHistory ?? createHashHistory({ window });
   }
 
   let history = historyRef.current;
