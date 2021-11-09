@@ -1,3 +1,8 @@
+---
+title: Custom Active Link
+toc: false
+---
+
 # Custom Link Example
 
 This example demonstrates how to make a custom `<Link>` component to render something different when the link is "active" using the `useMatch()` and `useResolvedPath()` hooks.

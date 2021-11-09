@@ -1,3 +1,8 @@
+---
+title: Custom Query Parsing
+toc: false
+---
+
 # Custom Query Parsing Example
 
 This example demonstrates how to store a complex data structure in the URL query string using a custom hook.

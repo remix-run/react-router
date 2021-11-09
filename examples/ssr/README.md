@@ -1,3 +1,8 @@
+---
+title: Server Rendering
+toc: false
+---
+
 # Server-side Rendering Example
 
 This example adds [server-side rendering](https://reactjs.org/docs/react-dom-server.html) (SSR) to our basic example.
