@@ -9,6 +9,32 @@ Thanks for contributing, you rock!
 
 When it comes to open source, there are many different kinds of contributions that can be made, all of which are valuable. Here are a few guidelines that should help you as you prepare your contribution.
 
+## Setup
+
+Before you can contribute to the codebase, you will need to fork the repo. This will look a bit different depending on what type of contribution you are making:
+
+- All new features, bug-fixes, or **anything that touches `react-router` code** should be branched off of and merged into the `dev` branch
+- Changes that only touch documentation can be branched off of and merged into the `main` branch
+
+The following steps will get you setup to contribute changes to this repo:
+
+1. Fork the repo (click the <kbd>Fork</kbd> button at the top right of [this
+   page](https://github.com/remix-run/react-router))
+2. Clone your fork locally
+
+```bash
+# in a terminal, cd to parent directory where you want your clone to be, then
+git clone https://github.com/<your_github_username>/react-router.git
+cd react-router
+
+# if you are making *any* code changes, make sure to checkout the dev branch
+git checkout dev
+```
+
+3. Install dependencies and build. React Router uses [`yarn` (version 1)](https://classic.yarnpkg.com/lang/en/docs/install), so you
+   should too. If you install using `npm`, unnecessary `package-lock.json` files
+   will be generated.
+
 ## Think You Found a Bug?
 
 Please conform to the issue template and provide a clear path to reproduction with a code example. Best is a pull request with a failing test. Next best is a link to CodeSandbox or repository that illustrates the bug.
@@ -29,6 +55,10 @@ Issues with no activity for 60 days will be automatically closed, with a warning
 
 Pull requests need only the :+1: of two or more collaborators to be merged; when the PR author is a collaborator, that counts as one.
 
+> **Important:** When creating the PR in GitHub, make sure that you set the base to the correct branch. If you are submitting a PR that touches any code, this should be the `dev` branch. You set the base in GitHub when authoring the PR with the dropdown below the "Compare changes" heading:
+>
+> <img src="../static/base-branch.png" alt="" width="460" height="350" />
+
 ### Tests
 
 All commits that fix bugs or add features need a test.
@@ -38,25 +68,6 @@ All commits that fix bugs or add features need a test.
 ### Docs + Examples
 
 All commits that change or add to the API must be done in a pull request that also updates all relevant examples and docs.
-
-## Setup
-
-The following steps will get you setup to contribute changes to this repo:
-
-1. Fork the repo (click the <kbd>Fork</kbd> button at the top right of [this
-   page](https://github.com/remix-run/react-router))
-
-2. Clone your fork locally
-
-```bash
-# in a terminal, cd to parent directory where you want your clone to be, then
-git clone https://github.com/<your_github_username>/react-router.git
-cd react-router
-```
-
-3. Install dependencies and build. React Router uses `yarn` (version 1), so you
-   should too. If you install using `npm`, unnecessary `package-lock.json` files
-   will be generated.
 
 ## Development
 
