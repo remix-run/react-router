@@ -52,7 +52,7 @@ Pull requests need only the approval of two or more collaborators to be merged; 
 
 > **Important:** When creating the PR in GitHub, make sure that you set the base to the correct branch. If you are submitting a PR that touches any code, this should be the `dev` branch. You set the base in GitHub when authoring the PR with the dropdown below the "Compare changes" heading:
 >
-> <img src="../static/base-branch.png" alt="" width="460" height="350" />
+> <img src="https://raw.githubusercontent.com/remix-run/react-router/main/static/base-branch.png" alt="" width="460" height="350" />
 
 ### Tests
 
