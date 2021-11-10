@@ -49,11 +49,9 @@ We have learned by experience that small APIs are usually better, so we may be a
 
 If you need a bug fixed and nobody is fixing it, your best bet is to provide a fix for it and make a [pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request). Open source code belongs to all of us, and it's all of our responsibility to push it forward.
 
-Issues with no activity for 60 days will be automatically closed, with a warning 7 days before closing.
-
 ## Making a Pull Request?
 
-Pull requests need only the :+1: of two or more collaborators to be merged; when the PR author is a collaborator, that counts as one.
+Pull requests need only the approval of two or more collaborators to be merged; when the PR author is a collaborator, that counts as one.
 
 > **Important:** When creating the PR in GitHub, make sure that you set the base to the correct branch. If you are submitting a PR that touches any code, this should be the `dev` branch. You set the base in GitHub when authoring the PR with the dropdown below the "Compare changes" heading:
 >
@@ -75,7 +73,7 @@ All commits that change or add to the API must be done in a pull request that al
 
 React Router uses a monorepo to host code for multiple packages. These packages live in the `packages` directory.
 
-We use [Yarn workspaces](https://legacy.yarnpkg.com/en/docs/workspaces/) to manage installation of dependencies and running various scripts. To get everything installed, just run `yarn` or `yarn install` from the repo root.
+We use [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces/) to manage installation of dependencies and running various scripts. To get everything installed, make sure you have [Yarn (version 1) installed](https://classic.yarnpkg.com/lang/en/docs/install), and then run `yarn` or `yarn install` from the repo root.
 
 ### Building
 
@@ -83,4 +81,12 @@ Calling `yarn build` from the root directory will run the build, which should ta
 
 ### Testing
 
-Before running the tests, you need to run a build. After you build, running `yarn test` from the root directory will run **every** package's tests. If you want to run tests for a specific package, use e.g. `jest --projects package/react-router`.
+Before running the tests, you need to run a build. After you build, running `yarn test` from the root directory will run **every** package's tests. If you want to run tests for a specific package, use `yarn test --projects packages/<package-name>`:
+
+```bash
+# Test all packages
+yarn test
+
+# Test only react-router-dom
+yarn test --projects packages/react-router-dom
+```
