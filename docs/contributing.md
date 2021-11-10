@@ -169,4 +169,10 @@ git push origin main --follow-tags
 
 # In GitHub, create the release from the new tag and it will be
 # published via GitHub actions
+
+# When the hot-fix is done, merge the changes into dev and clean
+# up conflicts as needed.
+git checkout dev
+git merge main
+git push origin dev
 ```
