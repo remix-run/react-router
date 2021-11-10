@@ -18,8 +18,7 @@ Before you can contribute to the codebase, you will need to fork the repo. This 
 
 The following steps will get you setup to contribute changes to this repo:
 
-1. Fork the repo (click the <kbd>Fork</kbd> button at the top right of [this
-   page](https://github.com/remix-run/react-router))
+1. Fork the repo (click the <kbd>Fork</kbd> button at the top right of [this page](https://github.com/remix-run/react-router))
 2. Clone your fork locally
 
 ```bash
@@ -31,9 +30,7 @@ cd react-router
 git checkout dev
 ```
 
-3. Install dependencies and build. React Router uses [`yarn` (version 1)](https://classic.yarnpkg.com/lang/en/docs/install), so you
-   should too. If you install using `npm`, unnecessary `package-lock.json` files
-   will be generated.
+3. Install dependencies and build. React Router uses [`yarn` (version 1)](https://classic.yarnpkg.com/lang/en/docs/install), so you should too. If you install using `npm`, unnecessary `package-lock.json` files will be generated.
 
 ## Think You Found a Bug?
 
@@ -89,4 +86,87 @@ yarn test
 
 # Test only react-router-dom
 yarn test --projects packages/react-router-dom
+```
+
+## Repository Branching
+
+This repo maintains separate branches for different purposes. They will look something like this:
+
+```
+- main   > the most recent release and current docs
+- dev    > code under active development between stable releases
+- v5     > the most recent code for a specific major release
+```
+
+There may be other branches for various features and experimentation, but all of the magic happens from these branches.
+
+## New Releases
+
+When it's time to cut a new release, we follow a process based on our branching strategy depending on the type of release.
+
+### `react-router@next` Releases
+
+We create experimental releases from the current state of the `dev` branch. They can be installed by using the `@next` tag:
+
+```bash
+yarn add react-router-dom@next
+# or
+npm install react-router-dom@next
+```
+
+These releases will be automated as PRs are merged into the `dev` branch.
+
+### Latest Major Releases
+
+```bash
+# Start from the dev branch.
+git checkout dev
+
+# Merge the main branch into dev to ensure that any hotfixes and
+# docs updates are available in the release.
+git merge main
+
+# Create a new release branch from dev.
+git checkout -b release/v6.1.0
+
+# Create a new tag and update version references throughout the
+# codebase.
+yarn run version minor # | "patch" | "major"
+
+# Push the release branch along with the new release tag.
+git push origin release/v6.1.0 --follow-tags
+
+# Wait for GitHub actions to run all tests. If the tests pass, the
+# release is ready to go! Merge the release branch into main and dev.
+git checkout main
+git merge release/v6.1.0
+git checkout dev
+git merge release/v6.1.0
+
+# The release branch can now be deleted.
+git branch -D release/v6.1.0
+git push origin --delete release/v6.1.0
+
+# Now go to GitHub and create the release from the new tag. Let
+# GitHub Actions take care of the rest!
+```
+
+### Hot-fix Releases
+
+Sometimes we have a crucial bug that needs to be patched right away. If the bug affects the latest release, we can create a new version directly from `main` (or the relevant major release branch where the bug exists):
+
+```bash
+# From the main branch, make sure to run the build and all tests
+# before creating a new release.
+yarn && yarn build && yarn test
+
+# Assuming the tests pass, create the release tag and update
+# version references throughout the codebase.
+yarn run version patch
+
+# Push changes along with the new release tag.
+git push origin main --follow-tags
+
+# In GitHub, create the release from the new tag and it will be
+# published via GitHub actions
 ```
