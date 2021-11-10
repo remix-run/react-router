@@ -13,8 +13,17 @@
   "module": "./index.js",
   "types": "./index.d.ts",
   "exports": {
-    "require": "./main.js",
-    "import": "./index.mjs"
+    ".": {
+      "node":  {
+        "require": "./main.js",
+        "import": "./index.mjs"
+      },
+      "default": "./index.js"
+    },
+    "./server": {
+      "require": "./server.js",
+      "import": "./server.mjs"
+    }
   },
   "unpkg": "./umd/react-router-dom.production.min.js",
   "dependencies": {
