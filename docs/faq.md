@@ -204,7 +204,7 @@ It might have looked like this in v5
 // somewhere up the tree
 <Switch>
   <Route path="/users" component={Users} />
-</Switch>
+</Switch>;
 
 // and now deeper in the tree
 function Users() {
@@ -215,7 +215,7 @@ function Users() {
         <Route path="/users/accont" component={Account} />
       </Switch>
     </div>
-  )
+  );
 }
 ```
 
@@ -228,7 +228,7 @@ In v6 it's almost the same:
 // somewhere up the tree
 <Routes>
   <Route path="/users/*" element={<Users />} />
-</Routes>
+</Routes>;
 
 // and now deeper in the tree
 function Users() {
@@ -239,7 +239,7 @@ function Users() {
         <Route path="account" element={<Account />} />
       </Routes>
     </div>
-  )
+  );
 }
 ```
 
@@ -420,5 +420,3 @@ function User() {
 ```
 
 Instead of rending your component, remix will render the nearest [catch boundary](https://docs.remix.run/v0.20/api/app/#catchboundary) instead.
-
-
