@@ -194,6 +194,67 @@ function MatchPath({ path, Comp }) {
 <MatchPath path="/accounts/:id" Comp={Account} />;
 ```
 
+## How do I nest routes deep in the tree?
+
+In v5 you could render a `<Route>` or `<Switch>` anywhere you want. You can keep doing the very same thing but you need to use `<Routes>` (`<Route>` without an 's' will not work). We call these "Descendant `<Routes>`".
+
+It might have looked like this in v5
+
+```tsx filename=v5.js
+// somewhere up the tree
+<Switch>
+  <Route path="/users" component={Users} />
+</Switch>
+
+// and now deeper in the tree
+function Users() {
+  return (
+    <div>
+      <h1>Users</h1>
+      <Switch>
+        <Route path="/users/accont" component={Account} />
+      </Switch>
+    </div>
+  )
+}
+```
+
+In v6 it's almost the same:
+
+- Note the `*` in the ancestor routes to get it to match deeper URLs even though it has no direct children
+- You no longer need to know the entire child route path, you can use a relative route now
+
+```tsx filename=v6.js
+// somewhere up the tree
+<Routes>
+  <Route path="/users/*" element={<Users />} />
+</Routes>
+
+// and now deeper in the tree
+function Users() {
+  return (
+    <div>
+      <h1>Users</h1>
+      <Routes>
+        <Route path="account" element={<Account />} />
+      </Routes>
+    </div>
+  )
+}
+```
+
+If you had a "floating route" in v5 (not wrapped in a `<Switch>`), simply wrap it in a `<Routes>` instead.
+
+```tsx
+// v5
+<Route path="/contact" component={Contact} />
+
+// v6
+<Routes>
+  <Route path="contact" element={<Contact />} />
+</Routes>
+```
+
 ## What Happened to Regexp Routes Paths?
 
 Regexp route paths were removed for two reasons:
@@ -359,3 +420,5 @@ function User() {
 ```
 
 Instead of rending your component, remix will render the nearest [catch boundary](https://docs.remix.run/v0.20/api/app/#catchboundary) instead.
+
+
