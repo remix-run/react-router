@@ -15,7 +15,7 @@ If you're just getting started with React generally, we recommend you follow [th
 
 We'll keep this tutorial quick and to the point. By the end you'll know the APIs you deal with day-to-day with React Router. After that, you can dig into some of the other docs to get a deeper understanding.
 
-While building a little bookeeping app we'll cover:
+While building a little bookkeeping app we'll cover:
 
 - Configuring Routes
 - Navigating with Link

@@ -361,7 +361,7 @@ interface NavLinkProps
 
 </details>
 
-A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not it is "active". This is useful when building a navigation menu such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected. It also provides useful context for assitive technology like screen readers.
+A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not it is "active". This is useful when building a navigation menu such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected. It also provides useful context for assistive technology like screen readers.
 
 By default, an `active` class is added to a `<NavLink>` component when it is active. This provides the same simple styling mechanism for most users who are upgrading from v5. One difference as of `v6.0.0-beta.3` is that `activeClassName` and `activeStyle` have been removed from `NavLinkProps`. Instead, you can pass a function to either `style` or `className` that will allow you to customize the inline styling or the class string based on the component's active state.
 
@@ -916,7 +916,7 @@ import {
   useLinkClickHandler
 } from "react-router-dom";
 
-const StyledLink = styled("a", { color: "fuschia" });
+const StyledLink = styled("a", { color: "fuchsia" });
 
 const Link = React.forwardRef(
   (
