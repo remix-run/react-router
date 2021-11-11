@@ -955,7 +955,6 @@ function matchRouteBranch<ParamKey extends string = string>(
     if (match.pathnameBase !== "/") {
       matchedPathname = joinPaths([matchedPathname, match.pathnameBase]);
     }
-
   }
 
   return matches;
