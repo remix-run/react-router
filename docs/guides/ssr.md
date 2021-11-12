@@ -55,7 +55,7 @@ import App from "./App";
 
 let app = express();
 
-app.get("*", ((req, res)) => {
+app.get("*", (req, res) => {
   let html = ReactDOMServer.renderToString(
     <StaticRouter location={req.url}>
       <App/>
