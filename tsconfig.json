@@ -1,26 +1,8 @@
 {
-  "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "module": "esnext",
-    "target": "es2018",
-    "moduleResolution": "node",
-    "downlevelIteration": true,
-    "esModuleInterop": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "declaration": true,
-    "outDir": ".tsc-output",
-    "sourceMap": true,
-    "skipLibCheck": true,
-    "jsx": "react"
-  },
-  "files": [
-    "packages/react-router/index.tsx",
-    "packages/react-router-dom/index.tsx",
-    "packages/react-router-dom/server.tsx",
-    "packages/react-router-native/index.tsx"
-  ],
-  "include": ["types/global.d.ts"]
+  "files": [],
+  "references": [
+    { "path": "packages/react-router" },
+    { "path": "packages/react-router-dom" },
+    { "path": "packages/react-router-native" }
+  ]
 }

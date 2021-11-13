@@ -1,17 +1,11 @@
-import * as React from 'react';
-import {
-  Action,
-  Location,
-  PartialLocation,
-  To,
-  createPath,
-  parsePath
-} from 'history';
-import { Router } from 'react-router-dom';
+import * as React from "react";
+import { Action, Location, To, createPath, parsePath } from "history";
+import { Router } from "react-router-dom";
 
 export interface StaticRouterProps {
+  basename?: string;
   children?: React.ReactNode;
-  location?: string | PartialLocation;
+  location: Partial<Location> | string;
 }
 
 /**
@@ -19,25 +13,26 @@ export interface StaticRouterProps {
  * on the server where there is no stateful UI.
  */
 export function StaticRouter({
+  basename,
   children,
-  location: loc = '/'
+  location: locationProp = "/"
 }: StaticRouterProps) {
-  if (typeof loc === 'string') {
-    loc = parsePath(loc);
+  if (typeof locationProp === "string") {
+    locationProp = parsePath(locationProp);
   }
 
   let action = Action.Pop;
   let location: Location = {
-    pathname: loc.pathname || '/',
-    search: loc.search || '',
-    hash: loc.hash || '',
-    state: loc.state || null,
-    key: loc.key || 'default'
+    pathname: locationProp.pathname || "/",
+    search: locationProp.search || "",
+    hash: locationProp.hash || "",
+    state: locationProp.state || null,
+    key: locationProp.key || "default"
   };
 
   let staticNavigator = {
     createHref(to: To) {
-      return typeof to === 'string' ? to : createPath(to);
+      return typeof to === "string" ? to : createPath(to);
     },
     push(to: To) {
       throw new Error(
@@ -72,20 +67,15 @@ export function StaticRouter({
         `You cannot use navigator.forward() on the server because it is a stateless ` +
           `environment.`
       );
-    },
-    block() {
-      throw new Error(
-        `You cannot use navigator.block() on the server because it is a stateless ` +
-          `environment.`
-      );
     }
   };
 
   return (
     <Router
+      basename={basename}
       children={children}
-      action={action}
       location={location}
+      navigationType={action}
       navigator={staticNavigator}
       static={true}
     />

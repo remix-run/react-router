@@ -1,39 +1,40 @@
-import * as React from 'react';
+import * as React from "react";
 import {
-  Alert,
   BackHandler,
   GestureResponderEvent,
   Linking,
   TouchableHighlight,
   TouchableHighlightProps
-} from 'react-native';
+} from "react-native";
 import {
   MemoryRouter,
   MemoryRouterProps,
   Navigate,
+  NavigateOptions,
   Outlet,
   Route,
   Router,
   Routes,
-  createRoutesFromArray,
   createRoutesFromChildren,
   generatePath,
   matchRoutes,
   matchPath,
   resolvePath,
-  useBlocker,
+  renderMatches,
   useHref,
   useInRouterContext,
   useLocation,
   useMatch,
   useNavigate,
+  useNavigationType,
   useOutlet,
   useParams,
   useResolvedPath,
   useRoutes
-} from 'react-router';
-import { State, To } from 'history';
-import URLSearchParams from '@ungap/url-search-params';
+} from "react-router";
+import type { To } from "react-router";
+
+import URLSearchParams from "@ungap/url-search-params";
 
 ////////////////////////////////////////////////////////////////////////////////
 // RE-EXPORTS
@@ -47,23 +48,66 @@ export {
   Route,
   Router,
   Routes,
-  createRoutesFromArray,
   createRoutesFromChildren,
   generatePath,
   matchRoutes,
   matchPath,
   resolvePath,
-  useBlocker,
+  renderMatches,
   useHref,
   useInRouterContext,
   useLocation,
   useMatch,
   useNavigate,
+  useNavigationType,
   useOutlet,
   useParams,
   useResolvedPath,
   useRoutes
 };
+
+export type {
+  IndexRouteProps,
+  LayoutRouteProps,
+  Location,
+  MemoryRouterProps,
+  NavigateFunction,
+  NavigateOptions,
+  NavigateProps,
+  NavigationType,
+  Navigator,
+  OutletProps,
+  Params,
+  Path,
+  PathMatch,
+  PathRouteProps,
+  RouteMatch,
+  RouteObject,
+  RouteProps,
+  RouterProps,
+  RoutesProps,
+  To
+} from "react-router";
+
+///////////////////////////////////////////////////////////////////////////////
+// DANGER! PLEASE READ ME!
+// We provide these exports as an escape hatch in the event that you need any
+// routing data that we don't provide an explicit API for. With that said, we
+// want to cover your use case if we can, so if you feel the need to use these
+// we want to hear from you. Let us know what you're building and we'll do our
+// best to make sure we can support you!
+//
+// We consider these exports an implementation detail and do not guarantee
+// against any breaking changes, regardless of the semver release. Use with
+// extreme caution and only if you understand the consequences. Godspeed.
+///////////////////////////////////////////////////////////////////////////////
+
+/** @internal */
+export {
+  UNSAFE_NavigationContext,
+  UNSAFE_LocationContext,
+  UNSAFE_RouteContext
+} from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////
 // COMPONENTS
@@ -79,9 +123,10 @@ export function NativeRouter(props: NativeRouterProps) {
 }
 
 export interface LinkProps extends TouchableHighlightProps {
+  children?: React.ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
   replace?: boolean;
-  state?: State;
+  state?: any;
   to: To;
 }
 
@@ -95,41 +140,44 @@ export function Link({
   to,
   ...rest
 }: LinkProps) {
-  let navigate = useNavigate();
-
+  let internalOnPress = useLinkPressHandler(to, { replace, state });
   function handlePress(event: GestureResponderEvent) {
     if (onPress) onPress(event);
     if (!event.defaultPrevented) {
-      navigate(to, { replace, state });
+      internalOnPress(event);
     }
   }
 
   return <TouchableHighlight {...rest} onPress={handlePress} />;
 }
 
-export interface PromptProps {
-  message: string;
-  when?: boolean;
-}
-
-/**
- * A declarative interface for showing an Alert dialog with the given
- * message when the user tries to navigate away from the current screen.
- *
- * This also serves as a reference implementation for anyone who wants
- * to create their own custom prompt component.
- */
-export function Prompt({ message, when }: PromptProps) {
-  usePrompt(message, when);
-  return null;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // HOOKS
 ////////////////////////////////////////////////////////////////////////////////
 
-const HardwareBackPressEventType = 'hardwareBackPress';
-const URLEventType = 'url';
+const HardwareBackPressEventType = "hardwareBackPress";
+const URLEventType = "url";
+
+/**
+ * Handles the press behavior for router `<Link>` components. This is useful if
+ * you need to create custom `<Link>` components with the same press behavior we
+ * use in our exported `<Link>`.
+ */
+export function useLinkPressHandler(
+  to: To,
+  {
+    replace,
+    state
+  }: {
+    replace?: boolean;
+    state?: any;
+  } = {}
+): (event: GestureResponderEvent) => void {
+  let navigate = useNavigate();
+  return function handlePress() {
+    navigate(to, { replace, state });
+  };
+}
 
 /**
  * Enables support for the hardware back button on Android.
@@ -200,36 +248,16 @@ export function useDeepLinking() {
 }
 
 function trimScheme(url: string) {
-  return url.replace(/^.*?:\/\//, '');
-}
-
-/**
- * Prompts the user with an Alert before they leave the current screen.
- */
-export function usePrompt(message: string, when = true) {
-  let blocker = React.useCallback(
-    tx => {
-      Alert.alert('Confirm', message, [
-        { text: 'Cancel', onPress() {} },
-        {
-          text: 'OK',
-          onPress() {
-            tx.retry();
-          }
-        }
-      ]);
-    },
-    [message]
-  );
-
-  useBlocker(blocker, when);
+  return url.replace(/^.*?:\/\//, "");
 }
 
 /**
  * A convenient wrapper for accessing individual query parameters via the
  * URLSearchParams interface.
  */
-export function useSearchParams(defaultInit?: URLSearchParamsInit) {
+export function useSearchParams(
+  defaultInit?: URLSearchParamsInit
+): [URLSearchParams, SetURLSearchParams] {
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
 
   let location = useLocation();
@@ -248,15 +276,20 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   }, [location.search]);
 
   let navigate = useNavigate();
-  let setSearchParams = React.useCallback(
+  let setSearchParams: SetURLSearchParams = React.useCallback(
     (nextInit, navigateOpts) => {
-      navigate('?' + createSearchParams(nextInit), navigateOpts);
+      navigate("?" + createSearchParams(nextInit), navigateOpts);
     },
     [navigate]
   );
 
   return [searchParams, setSearchParams];
 }
+
+type SetURLSearchParams = (
+  nextInit?: URLSearchParamsInit | undefined,
+  navigateOpts?: NavigateOptions | undefined
+) => void;
 
 export type ParamKeyValuePair = [string, string];
 
@@ -288,10 +321,10 @@ export type URLSearchParamsInit =
  *   });
  */
 export function createSearchParams(
-  init: URLSearchParamsInit = ''
+  init: URLSearchParamsInit = ""
 ): URLSearchParams {
   return new URLSearchParams(
-    typeof init === 'string' ||
+    typeof init === "string" ||
     Array.isArray(init) ||
     init instanceof URLSearchParams
       ? init

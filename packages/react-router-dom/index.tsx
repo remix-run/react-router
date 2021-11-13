@@ -1,13 +1,6 @@
-import * as React from 'react';
-import {
-  BrowserHistory,
-  HashHistory,
-  State,
-  To,
-  createBrowserHistory,
-  createHashHistory,
-  createPath
-} from 'history';
+import * as React from "react";
+import type { BrowserHistory, HashHistory } from "history";
+import { createBrowserHistory, createHashHistory, createPath } from "history";
 import {
   MemoryRouter,
   Navigate,
@@ -15,28 +8,29 @@ import {
   Route,
   Router,
   Routes,
-  useBlocker,
+  createRoutesFromChildren,
+  generatePath,
+  matchRoutes,
+  matchPath,
+  resolvePath,
+  renderMatches,
   useHref,
   useInRouterContext,
   useLocation,
   useMatch,
   useNavigate,
+  useNavigationType,
   useOutlet,
   useParams,
   useResolvedPath,
-  useRoutes,
-  createRoutesFromArray,
-  createRoutesFromChildren,
-  generatePath,
-  matchRoutes,
-  matchPath,
-  resolvePath
-} from 'react-router';
+  useRoutes
+} from "react-router";
+import type { To } from "react-router";
 
 function warning(cond: boolean, message: string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
-    if (typeof console !== 'undefined') console.warn(message);
+    if (typeof console !== "undefined") console.warn(message);
 
     try {
       // Welcome to debugging React Router!
@@ -62,29 +56,73 @@ export {
   Route,
   Router,
   Routes,
-  createRoutesFromArray,
   createRoutesFromChildren,
   generatePath,
   matchRoutes,
   matchPath,
+  renderMatches,
   resolvePath,
-  useBlocker,
   useHref,
   useInRouterContext,
   useLocation,
   useMatch,
   useNavigate,
+  useNavigationType,
   useOutlet,
   useParams,
   useResolvedPath,
   useRoutes
 };
 
+export type {
+  Location,
+  Path,
+  To,
+  NavigationType,
+  MemoryRouterProps,
+  NavigateFunction,
+  NavigateOptions,
+  NavigateProps,
+  Navigator,
+  OutletProps,
+  Params,
+  PathMatch,
+  RouteMatch,
+  RouteObject,
+  RouteProps,
+  PathRouteProps,
+  LayoutRouteProps,
+  IndexRouteProps,
+  RouterProps,
+  RoutesProps
+} from "react-router";
+
+///////////////////////////////////////////////////////////////////////////////
+// DANGER! PLEASE READ ME!
+// We provide these exports as an escape hatch in the event that you need any
+// routing data that we don't provide an explicit API for. With that said, we
+// want to cover your use case if we can, so if you feel the need to use these
+// we want to hear from you. Let us know what you're building and we'll do our
+// best to make sure we can support you!
+//
+// We consider these exports an implementation detail and do not guarantee
+// against any breaking changes, regardless of the semver release. Use with
+// extreme caution and only if you understand the consequences. Godspeed.
+///////////////////////////////////////////////////////////////////////////////
+
+/** @internal */
+export {
+  UNSAFE_NavigationContext,
+  UNSAFE_LocationContext,
+  UNSAFE_RouteContext
+} from "react-router";
+
 ////////////////////////////////////////////////////////////////////////////////
 // COMPONENTS
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface BrowserRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   window?: Window;
 }
@@ -92,7 +130,11 @@ export interface BrowserRouterProps {
 /**
  * A <Router> for use in web browsers. Provides the cleanest URLs.
  */
-export function BrowserRouter({ children, window }: BrowserRouterProps) {
+export function BrowserRouter({
+  basename,
+  children,
+  window
+}: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window });
@@ -108,15 +150,17 @@ export function BrowserRouter({ children, window }: BrowserRouterProps) {
 
   return (
     <Router
+      basename={basename}
       children={children}
-      action={state.action}
       location={state.location}
+      navigationType={state.action}
       navigator={history}
     />
   );
 }
 
 export interface HashRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   window?: Window;
 }
@@ -125,7 +169,7 @@ export interface HashRouterProps {
  * A <Router> for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ children, window }: HashRouterProps) {
+export function HashRouter({ basename, children, window }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window });
@@ -141,9 +185,10 @@ export function HashRouter({ children, window }: HashRouterProps) {
 
   return (
     <Router
+      basename={basename}
       children={children}
-      action={state.action}
       location={state.location}
+      navigationType={state.action}
       navigator={history}
     />
   );
@@ -154,9 +199,10 @@ function isModifiedEvent(event: React.MouseEvent) {
 }
 
 export interface LinkProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
+  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+  reloadDocument?: boolean;
   replace?: boolean;
-  state?: State;
+  state?: any;
   to: To;
 }
 
@@ -165,30 +211,17 @@ export interface LinkProps
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
-    { onClick, replace: replaceProp = false, state, target, to, ...rest },
+    { onClick, reloadDocument, replace = false, state, target, to, ...rest },
     ref
   ) {
     let href = useHref(to);
-    let navigate = useNavigate();
-    let location = useLocation();
-    let path = useResolvedPath(to);
-
-    function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
+    let internalOnClick = useLinkClickHandler(to, { replace, state, target });
+    function handleClick(
+      event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
+    ) {
       if (onClick) onClick(event);
-      if (
-        !event.defaultPrevented && // onClick prevented default
-        event.button === 0 && // Ignore everything but left clicks
-        (!target || target === '_self') && // Let browser handle "target=_blank" etc.
-        !isModifiedEvent(event) // Ignore clicks with modifier keys
-      ) {
-        event.preventDefault();
-
-        // If the URL hasn't changed, a regular <a> will do a replace instead of
-        // a push, so do the same here.
-        let replace =
-          !!replaceProp || createPath(location) === createPath(path);
-
-        navigate(to, { replace, state });
+      if (!event.defaultPrevented && !reloadDocument) {
+        internalOnClick(event);
       }
     }
 
@@ -205,11 +238,17 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   }
 );
 
-export interface NavLinkProps extends LinkProps {
-  activeClassName?: string;
-  activeStyle?: object;
+if (__DEV__) {
+  Link.displayName = "Link";
+}
+
+export interface NavLinkProps extends Omit<LinkProps, "className" | "style"> {
   caseSensitive?: boolean;
+  className?: string | ((props: { isActive: boolean }) => string);
   end?: boolean;
+  style?:
+    | React.CSSProperties
+    | ((props: { isActive: boolean }) => React.CSSProperties);
 }
 
 /**
@@ -218,11 +257,9 @@ export interface NavLinkProps extends LinkProps {
 export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   function NavLinkWithRef(
     {
-      'aria-current': ariaCurrentProp = 'page',
-      activeClassName = 'active',
-      activeStyle,
+      "aria-current": ariaCurrentProp = "page",
       caseSensitive = false,
-      className: classNameProp = '',
+      className: classNameProp = "",
       end = false,
       style: styleProp,
       to,
@@ -240,15 +277,30 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       toPathname = toPathname.toLowerCase();
     }
 
-    let isActive = end
-      ? locationPathname === toPathname
-      : locationPathname.startsWith(toPathname);
+    let isActive =
+      locationPathname === toPathname ||
+      (!end &&
+        locationPathname.startsWith(toPathname) &&
+        locationPathname.charAt(toPathname.length) === "/");
 
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
-    let className = [classNameProp, isActive ? activeClassName : null]
-      .filter(Boolean)
-      .join(' ');
-    let style = { ...styleProp, ...(isActive ? activeStyle : null) };
+
+    let className: string;
+    if (typeof classNameProp === "function") {
+      className = classNameProp({ isActive });
+    } else {
+      // If the className prop is not a function, we use a default `active`
+      // class for <NavLink />s that are active. In v5 `active` was the default
+      // value for `activeClassName`, but we are removing that API and can still
+      // use the old default behavior for a cleaner upgrade path and keep the
+      // simple styling rules working as they currently do.
+      className = [classNameProp, isActive ? "active" : null]
+        .filter(Boolean)
+        .join(" ");
+    }
+
+    let style =
+      typeof styleProp === "function" ? styleProp({ isActive }) : styleProp;
 
     return (
       <Link
@@ -263,21 +315,8 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   }
 );
 
-export interface PromptProps {
-  message: string;
-  when?: boolean;
-}
-
-/**
- * A declarative interface for showing a window.confirm dialog with the given
- * message when the user tries to navigate away from the current page.
- *
- * This also serves as a reference implementation for anyone who wants to
- * create their own custom prompt component.
- */
-export function Prompt({ message, when }: PromptProps) {
-  usePrompt(message, when);
-  return null;
+if (__DEV__) {
+  NavLink.displayName = "NavLink";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -285,18 +324,45 @@ export function Prompt({ message, when }: PromptProps) {
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Prevents navigation away from the current page using a window.confirm prompt
- * with the given message.
+ * Handles the click behavior for router `<Link>` components. This is useful if
+ * you need to create custom `<Link>` components with the same click behavior we
+ * use in our exported `<Link>`.
  */
-export function usePrompt(message: string, when = true) {
-  let blocker = React.useCallback(
-    tx => {
-      if (window.confirm(message)) tx.retry();
-    },
-    [message]
-  );
+export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
+  to: To,
+  {
+    target,
+    replace: replaceProp,
+    state
+  }: {
+    target?: React.HTMLAttributeAnchorTarget;
+    replace?: boolean;
+    state?: any;
+  } = {}
+): (event: React.MouseEvent<E, MouseEvent>) => void {
+  let navigate = useNavigate();
+  let location = useLocation();
+  let path = useResolvedPath(to);
 
-  useBlocker(blocker, when);
+  return React.useCallback(
+    (event: React.MouseEvent<E, MouseEvent>) => {
+      if (
+        event.button === 0 && // Ignore everything but left clicks
+        (!target || target === "_self") && // Let browser handle "target=_blank" etc.
+        !isModifiedEvent(event) // Ignore clicks with modifier keys
+      ) {
+        event.preventDefault();
+
+        // If the URL hasn't changed, a regular <a> will do a replace instead of
+        // a push, so do the same here.
+        let replace =
+          !!replaceProp || createPath(location) === createPath(path);
+
+        navigate(to, { replace, state });
+      }
+    },
+    [location, navigate, path, replaceProp, state, target, to]
+  );
 }
 
 /**
@@ -305,7 +371,7 @@ export function usePrompt(message: string, when = true) {
  */
 export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   warning(
-    typeof URLSearchParams !== 'undefined',
+    typeof URLSearchParams !== "undefined",
     `You cannot use the \`useSearchParams\` hook in a browser that does not ` +
       `support the URLSearchParams API. If you need to support Internet ` +
       `Explorer 11, we recommend you load a polyfill such as ` +
@@ -337,9 +403,9 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   let setSearchParams = React.useCallback(
     (
       nextInit: URLSearchParamsInit,
-      navigateOptions?: { replace?: boolean; state?: State }
+      navigateOptions?: { replace?: boolean; state?: any }
     ) => {
-      navigate('?' + createSearchParams(nextInit), navigateOptions);
+      navigate("?" + createSearchParams(nextInit), navigateOptions);
     },
     [navigate]
   );
@@ -377,10 +443,10 @@ export type URLSearchParamsInit =
  *   });
  */
 export function createSearchParams(
-  init: URLSearchParamsInit = ''
+  init: URLSearchParamsInit = ""
 ): URLSearchParams {
   return new URLSearchParams(
-    typeof init === 'string' ||
+    typeof init === "string" ||
     Array.isArray(init) ||
     init instanceof URLSearchParams
       ? init
