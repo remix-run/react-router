@@ -252,17 +252,17 @@ interface LinkProps
     "href"
   > {
   replace?: boolean;
-  state?: State;
+  state?: any;
   to: To;
+  reloadDocument?: boolean;
 }
 
-type State = object | null;
 type To = Partial<Location> | string;
 ```
 
 </details>
 
-A `<Link>` is an element that lets the user navigate to another page by clicking or tapping on it. In `react-router-dom`, a `<Link>` renders an accessible `<a>` element with a real `href` that points to the resource it's linking to. This means that things like right-clicking a `<Link>` work as you'd expect.
+A `<Link>` is an element that lets the user navigate to another page by clicking or tapping on it. In `react-router-dom`, a `<Link>` renders an accessible `<a>` element with a real `href` that points to the resource it's linking to. This means that things like right-clicking a `<Link>` work as you'd expect. You can use `<Link reloadDocument>` to skip client side routing and let the browser handle the transition normally (as if it were an `<a href>`).
 
 ```tsx
 import * as React from "react";
@@ -361,7 +361,7 @@ interface NavLinkProps
 
 </details>
 
-A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not it is "active". This is useful when building a navigation menu such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected. It also provides useful context for assitive technology like screen readers.
+A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not it is "active". This is useful when building a navigation menu such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected. It also provides useful context for assistive technology like screen readers.
 
 By default, an `active` class is added to a `<NavLink>` component when it is active. This provides the same simple styling mechanism for most users who are upgrading from v5. One difference as of `v6.0.0-beta.3` is that `activeClassName` and `activeStyle` have been removed from `NavLinkProps`. Instead, you can pass a function to either `style` or `className` that will allow you to customize the inline styling or the class string based on the component's active state.
 
@@ -916,7 +916,7 @@ import {
   useLinkClickHandler
 } from "react-router-dom";
 
-const StyledLink = styled("a", { color: "fuschia" });
+const StyledLink = styled("a", { color: "fuchsia" });
 
 const Link = React.forwardRef(
   (

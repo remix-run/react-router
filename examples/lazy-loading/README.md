@@ -1,3 +1,8 @@
+---
+title: Lazy Loading
+toc: false
+---
+
 # Lazy Loading Example
 
 This example demonstrates how to lazily load both
