@@ -782,7 +782,7 @@ let [urlSearchParams] = useSearchParams();
 
 ## Review
 
-Let's put it all together from the top, let's assume we're at the URL: `
+Let's put it all together from the top!
 
 1. You render your app:
 
