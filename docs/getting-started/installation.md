@@ -21,7 +21,7 @@ Most modern React projects manage their dependencies using a package manager lik
 <summary>npm</summary>
 
 ```sh
-$ npm install history@5 react-router-dom@6
+$ npm install react-router-dom@6
 ```
 
 </details>
@@ -30,7 +30,7 @@ $ npm install history@5 react-router-dom@6
 <summary>Yarn</summary>
 
 ```sh
-$ yarn add history@5 react-router-dom@6
+$ yarn add react-router-dom@6
 ```
 
 </details>
@@ -39,7 +39,7 @@ $ yarn add history@5 react-router-dom@6
 <summary>pnpm</summary>
 
 ```sh
-$ pnpm add history@5 react-router-dom@6
+$ pnpm add react-router-dom@6
 ```
 
 </details>
