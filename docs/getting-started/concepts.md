@@ -205,7 +205,7 @@ When being precise, refer to the serialized string version as "search" and the p
 
 **Location Hash**
 
-Hashes in URLs indicate a scroll position _on the current page_. Before the `window.history.pushState` API was introduced, web developers did client side routing exclusively with the hash portion of the [URL](#url), it was the only part we could manipulate without making a new request to the server. However, today we can use it for it's designed purpose.
+Hashes in URLs indicate a scroll position _on the current page_. Before the `window.history.pushState` API was introduced, web developers did client side routing exclusively with the hash portion of the [URL](#url), it was the only part we could manipulate without making a new request to the server. However, today we can use it for its designed purpose.
 
 **Location State**
 
@@ -415,7 +415,7 @@ That's right, two of them!
 /teams/:teamId
 ```
 
-React Router has to make a decision here, there can be only one. Many routers, both client side and server side, will simply process the patterns in the order in which they were defined. First to match wins. In this case we would match `/` and render the `<Home/>` component. Definitely not what we wanted. These kinds of routers require us to order our routes perfectly to get the expected result. This is how React Router has worked up until v6, but now it’s much smarter.
+React Router has to make a decision here, there can be only one. Many routers, both client side and server side, will simply process the patterns in the order in which they were defined. First to match wins. In this case we would match `/` and render the `<Home/>` component. Definitely not what we wanted. These kinds of routers require us to order our routes perfectly to get the expected result. This is how React Router has worked up until v6, but now it's much smarter.
 
 Looking at those patterns, you intuitively know that we want `/teams/new` to match the URL `/teams/new`. It's a perfect match! React Router also knows that. When matching, it will rank your routes according the number of segments, static segments, dynamic segments, star patterns, etc. and pick the most specific match. You'll never have to think about ordering your routes.
 
@@ -712,7 +712,7 @@ This is the primary means of navigation. Rendering a `<Link>` allows the user to
 
 However, links are accessible in that they
 
-- Still render a `<a href>` so all default accessiblility concerns are met (like keyboard, focusability, SEO, etc.)
+- Still render a `<a href>` so all default accessibility concerns are met (like keyboard, focusability, SEO, etc.)
 - Don't prevent the browser's default behavior if it's a right click or command/control click to "open in new tab"
 
 [Nested routes](#nested-routes) aren't just about rendering layouts; they also enable "relative links". Consider our `teams` route from before:
