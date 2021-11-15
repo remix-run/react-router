@@ -200,29 +200,31 @@ export interface HistoryRouterProps {
   history: History;
 }
 
-export function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
+export function HistoryRouter({
+  basename,
+  children,
+  history
+}: HistoryRouterProps) {
   const [state, setState] = React.useState({
     action: history.action,
-    location: history.location,
+    location: history.location
   });
 
   React.useLayoutEffect(() => history.listen(setState), [history]);
 
   return (
-      <Router
-          basename={basename}
-          children={children}
-          location={state.location}
-          navigationType={state.action}
-          navigator={history}
-      />
+    <Router
+      basename={basename}
+      children={children}
+      location={state.location}
+      navigationType={state.action}
+      navigator={history}
+    />
   );
 }
 
-
-
 if (__DEV__) {
-  HistoryRouter.displayName = 'HistoryRouter';
+  HistoryRouter.displayName = "HistoryRouter";
 }
 
 function isModifiedEvent(event: React.MouseEvent) {
