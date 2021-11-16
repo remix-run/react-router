@@ -76,6 +76,7 @@ if (__DEV__) {
 
 interface LocationContextObject {
   location: Location;
+  locationRef: React.MutableRefObject<Location>;
   navigationType: NavigationType;
 }
 
@@ -146,7 +147,7 @@ export function MemoryRouter({
 }
 
 export interface NavigateProps {
-  to: To;
+  to: NextTo;
   replace?: boolean;
   state?: any;
 }
@@ -285,6 +286,7 @@ export function Router({
     key = "default"
   } = locationProp;
 
+  let locationRef = React.useRef<Location>(null!);
   let location = React.useMemo(() => {
     let trailingPathname = stripBasename(pathname, basename);
 
@@ -312,11 +314,13 @@ export function Router({
     return null;
   }
 
+  locationRef.current = location;
+
   return (
     <NavigationContext.Provider value={navigationContext}>
       <LocationContext.Provider
         children={children}
-        value={{ location, navigationType }}
+        value={{ location, locationRef, navigationType }}
       />
     </NavigationContext.Provider>
   );
@@ -435,10 +439,17 @@ export function useMatch<ParamKey extends string = string>(
 }
 
 /**
+ * Type of the input to a navigate function. Either provides the next value
+ * directly or provides an update function that computes a location value from
+ * the current one.
+ */
+export type NextTo = To | ((current: Location) => To);
+
+/**
  * The interface for the navigate() function returned from useNavigate().
  */
 export interface NavigateFunction {
-  (to: To, options?: NavigateOptions): void;
+  (to: NextTo, options?: NavigateOptions): void;
   (delta: number): void;
 }
 
@@ -463,7 +474,7 @@ export function useNavigate(): NavigateFunction {
 
   let { basename, navigator } = React.useContext(NavigationContext);
   let { matches } = React.useContext(RouteContext);
-  let { pathname: locationPathname } = useLocation();
+  let { locationRef } = React.useContext(LocationContext);
 
   let routePathnamesJson = JSON.stringify(
     matches.map(match => match.pathnameBase)
@@ -475,7 +486,7 @@ export function useNavigate(): NavigateFunction {
   });
 
   let navigate: NavigateFunction = React.useCallback(
-    (to: To | number, options: { replace?: boolean; state?: any } = {}) => {
+    (to: NextTo | number, options: { replace?: boolean; state?: any } = {}) => {
       warning(
         activeRef.current,
         `You should call navigate() in a React.useEffect(), not when ` +
@@ -489,11 +500,21 @@ export function useNavigate(): NavigateFunction {
         return;
       }
 
+      if (typeof to === "function") {
+        to = to(locationRef.current);
+      }
+
       let path = resolveTo(
         to,
         JSON.parse(routePathnamesJson),
-        locationPathname
+        locationRef.current.pathname
       );
+
+      locationRef.current = {
+        ...path,
+        key: locationRef.current.key,
+        state: options.state
+      };
 
       if (basename !== "/") {
         path.pathname = joinPaths([basename, path.pathname]);
@@ -504,7 +525,7 @@ export function useNavigate(): NavigateFunction {
         options.state
       );
     },
-    [basename, navigator, routePathnamesJson, locationPathname]
+    [basename, navigator, routePathnamesJson, locationRef]
   );
 
   return navigate;

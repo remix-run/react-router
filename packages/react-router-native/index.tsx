@@ -252,6 +252,15 @@ function trimScheme(url: string) {
 }
 
 /**
+ * Type of the input to a search params setter. Either provides the next value
+ * directly or provides an update function that computes a new search param
+ * value from the current one.
+ */
+export type NextSearchParams =
+  | URLSearchParamsInit
+  | ((current: URLSearchParams) => URLSearchParamsInit | void);
+
+/**
  * A convenient wrapper for accessing individual query parameters via the
  * URLSearchParams interface.
  */
@@ -278,7 +287,16 @@ export function useSearchParams(
   let navigate = useNavigate();
   let setSearchParams: SetURLSearchParams = React.useCallback(
     (nextInit, navigateOpts) => {
-      navigate("?" + createSearchParams(nextInit), navigateOpts);
+      navigate(
+        typeof nextInit === "function"
+          ? ({ search }) => {
+              let current = createSearchParams(search);
+              let next = nextInit(current);
+              return "?" + (next != null ? createSearchParams(next) : current);
+            }
+          : "?" + createSearchParams(nextInit),
+        navigateOpts
+      );
     },
     [navigate]
   );
@@ -287,8 +305,8 @@ export function useSearchParams(
 }
 
 type SetURLSearchParams = (
-  nextInit?: URLSearchParamsInit | undefined,
-  navigateOpts?: NavigateOptions | undefined
+  nextInit?: NextSearchParams,
+  navigateOpts?: NavigateOptions
 ) => void;
 
 export type ParamKeyValuePair = [string, string];

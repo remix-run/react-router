@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`useSearchParams reads and writes the search string 1`] = `
+exports[`useSearchParams get and set reads and writes the search string 1`] = `
 <View>
   <Text>
     The current query is "
@@ -19,7 +19,7 @@ exports[`useSearchParams reads and writes the search string 1`] = `
 </View>
 `;
 
-exports[`useSearchParams reads and writes the search string 2`] = `
+exports[`useSearchParams get and set reads and writes the search string 2`] = `
 <View>
   <Text>
     The current query is "
@@ -35,5 +35,57 @@ exports[`useSearchParams reads and writes the search string 2`] = `
       value="Ryan Florence"
     />
   </View>
+</View>
+`;
+
+exports[`useSearchParams update function writes search string with correctly updated state 1`] = `
+<View>
+  <Text>
+    The current params are "
+    Simon
+    " and "
+    Garfunkel
+    ".
+  </Text>
+  <TextInput
+    allowFontScaling={true}
+    onChangeText={[Function]}
+    rejectResponderTermination={true}
+    underlineColorAndroid="transparent"
+    value="Simon"
+  />
+  <TextInput
+    allowFontScaling={true}
+    onChangeText={[Function]}
+    rejectResponderTermination={true}
+    underlineColorAndroid="transparent"
+    value="Garfunkel"
+  />
+</View>
+`;
+
+exports[`useSearchParams update function writes search string with correctly updated state 2`] = `
+<View>
+  <Text>
+    The current params are "
+    Bert
+    " and "
+    Ernie
+    ".
+  </Text>
+  <TextInput
+    allowFontScaling={true}
+    onChangeText={[Function]}
+    rejectResponderTermination={true}
+    underlineColorAndroid="transparent"
+    value="Bert"
+  />
+  <TextInput
+    allowFontScaling={true}
+    onChangeText={[Function]}
+    rejectResponderTermination={true}
+    underlineColorAndroid="transparent"
+    value="Ernie"
+  />
 </View>
 `;

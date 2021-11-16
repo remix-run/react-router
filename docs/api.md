@@ -452,7 +452,7 @@ If the `end` prop is used, it will ensure this component isn't matched as "activ
 declare function Navigate(props: NavigateProps): null;
 
 interface NavigateProps {
-  to: To;
+  to: NextTo;
   replace?: boolean;
   state?: State;
 }
@@ -1095,9 +1095,11 @@ See [`matchPath`](#matchpath) for more information.
 ```tsx
 declare function useNavigate(): NavigateFunction;
 
+type NextTo = To | ((current: Location) => To);
+
 interface NavigateFunction {
   (
-    to: To,
+    to: NextTo,
     options?: { replace?: boolean; state?: State }
   ): void;
   (delta: number): void;
@@ -1126,7 +1128,7 @@ function SignupForm() {
 
 The `navigate` function has two signatures:
 
-- Either pass a `To` value (same type as `<Link to>`) with an optional second `{ replace, state }` arg or
+- Either pass a `NextTo` value (same type as `<Link to>`, or a function from the current location to a `To`) with an optional second `{ replace, state }` arg or
 - Pass the delta you want to go in the history stack. For example, `navigate(-1)` is equivalent to hitting the back button.
 
 ### `useOutlet`
@@ -1263,9 +1265,15 @@ type URLSearchParamsInit =
   | Record<string, string | string[]>
   | URLSearchParams;
 
+type NextURLSearchParams =
+  | URLSearchParamsInit
+  | ((
+      current: URLSearchParams
+    ) => URLSearchParamsInit | void);
+
 interface URLSearchParamsSetter {
   (
-    nextInit: URLSearchParamsInit,
+    nextInit: NextURLSearchParams,
     navigateOptions?: { replace?: boolean; state?: State }
   ): void;
 }
@@ -1306,6 +1314,21 @@ function App() {
 > of the URL. Also note that the second arg to `setSearchParams` is
 > the same type as the second arg to `navigate`.
 
+Similar to `useState`, the setter function returned by the hook also accepts a function that is passed the current search params and produces the next search params to use. This function can also mutate the given `URLSearchParams` instead of returning a new value, as a convenience for this common pattern:
+
+```tsx
+setSearchParams(params => {
+  params.set("q", value);
+  return params;
+});
+```
+
+This can instead be written:
+
+```tsx
+setSearchParams(params => params.set("q", value));
+```
+
 ### `useSearchParams` (React Native)
 
 > **Note:**
@@ -1328,6 +1351,12 @@ type URLSearchParamsInit =
   | ParamKeyValuePair[]
   | Record<string, string | string[]>
   | URLSearchParams;
+
+type NextURLSearchParams =
+  | URLSearchParamsInit
+  | ((
+      current: URLSearchParams
+    ) => URLSearchParamsInit | void);
 
 interface URLSearchParamsSetter {
   (
@@ -1364,6 +1393,21 @@ function App() {
     </View>
   );
 }
+```
+
+Similar to `useState`, the setter function returned by the hook also accepts a function that is passed the current search params and produces the next search params to use. This function can also mutate the given `URLSearchParams` instead of returning a new value, as a convenience for this common pattern:
+
+```tsx
+setSearchParams(params => {
+  params.set("q", value);
+  return params;
+});
+```
+
+This can instead be written:
+
+```tsx
+setSearchParams(params => params.set("q", value));
 ```
 
 ### `createSearchParams`

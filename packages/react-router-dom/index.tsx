@@ -366,6 +366,15 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
 }
 
 /**
+ * Type of the input to a search params setter. Either provides the next value
+ * directly or provides an update function that computes a new search param
+ * value from the current one.
+ */
+export type NextSearchParams =
+  | URLSearchParamsInit
+  | ((current: URLSearchParams) => URLSearchParamsInit | void);
+
+/**
  * A convenient wrapper for reading and writing search parameters via the
  * URLSearchParams interface.
  */
@@ -402,10 +411,19 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   let navigate = useNavigate();
   let setSearchParams = React.useCallback(
     (
-      nextInit: URLSearchParamsInit,
+      nextInit: NextSearchParams,
       navigateOptions?: { replace?: boolean; state?: any }
     ) => {
-      navigate("?" + createSearchParams(nextInit), navigateOptions);
+      navigate(
+        typeof nextInit === "function"
+          ? ({ search }) => {
+              let current = createSearchParams(search);
+              let next = nextInit(current);
+              return "?" + (next != null ? createSearchParams(next) : current);
+            }
+          : "?" + createSearchParams(nextInit),
+        navigateOptions
+      );
     },
     [navigate]
   );

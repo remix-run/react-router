@@ -97,4 +97,49 @@ describe("useNavigate", () => {
       `);
     });
   });
+
+  describe("update function", () => {
+    it("transitions to the location derived from the current one", () => {
+      function Home() {
+        let navigate = useNavigate();
+        let { search } = useLocation();
+        let clickable = !new URLSearchParams(search).get("x");
+
+        let handleClick = React.useCallback(() => {
+          navigate(({ search }) => `${search}&x=y`);
+        }, [navigate]);
+
+        return (
+          <>
+            <p>The current search is: {search}</p>
+            {clickable && <button onClick={handleClick}>click me</button>}
+          </>
+        );
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home?a=b"]}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let button = renderer.root.findByType("button");
+
+      TestRenderer.act(() => {
+        button.props.onClick();
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <p>
+          The current search is: 
+          ?a=b&x=y
+        </p>
+      `);
+    });
+  });
 });
