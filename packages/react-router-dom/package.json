@@ -23,7 +23,8 @@
     "./server": {
       "require": "./server.js",
       "import": "./server.mjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "unpkg": "./umd/react-router-dom.production.min.js",
   "dependencies": {

@@ -13,11 +13,14 @@
   "module": "./index.js",
   "types": "./index.d.ts",
   "exports": {
-    "node": {
-      "require": "./main.js",
-      "import": "./index.mjs"
+    ".": {
+      "node": {
+        "require": "./main.js",
+        "import": "./index.mjs"
+      },
+      "default": "./index.js"
     },
-    "default": "./index.js"
+    "./package.json": "./package.json"
   },
   "unpkg": "./umd/react-router.production.min.js",
   "peerDependencies": {
