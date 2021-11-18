@@ -526,8 +526,10 @@ export function useOutlet(): React.ReactElement | null {
  *
  * @see https://reactrouter.com/docs/en/v6/api#useparams
  */
-export function useParams<Key extends string = string>(): Readonly<
-  Params<Key>
+export function useParams<
+  ParamsOrKey extends string | Record<string, string | undefined> = string
+>(): Readonly<
+  [ParamsOrKey] extends [string] ? Params<ParamsOrKey> : Partial<ParamsOrKey>
 > {
   let { matches } = React.useContext(RouteContext);
   let routeMatch = matches[matches.length - 1];
