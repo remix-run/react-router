@@ -112,7 +112,7 @@ You can see a demonstration of how this works in this [CodeSandbox demo](https:/
 
 If you need to pass props to the component rendered by a `<Route>`, you should use the `<Route>`'s `render` prop. The `render` prop can take an inline function as its value, which means that you can pass variables from the local scope to the component that the `<Route>` renders.
 
-**Note:** The `render` function receives a `props` argument, which you should pass on to the element that your `render` function returned. If you do not do this, the component that you are rendering will not have acccess to the router variables (`match`, `location`, and `history`).
+**Note:** The `render` function receives a `props` argument, which you should pass on to the element that your `render` function returned. If you do not do this, the component that you are rendering will not have access to the router variables (`match`, `location`, and `history`).
 
 ```js
 const App = () => {
