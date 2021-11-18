@@ -837,6 +837,18 @@ export default function Invoice() {
 }
 ```
 
+## Using the Navigate component
+Rendering a <Navigate> component will navigate/redirect the user to a new location. 
+
+You can use this to automatically redirect users to their dashboard after they are logged in, as shown below.
+```js
+import { Route, Navigate } from 'react-router-dom';
+
+<Route path="/">
+  {loggedIn ? <Navigate to="/dashboard" /> : <PublicHomePage />}
+</Route>
+```
+
 ## Getting Help
 
 Congrats! You're all done with this tutorial. We hope it helped you get your bearings with React Router.
