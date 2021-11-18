@@ -7,9 +7,9 @@ export function createApp(buildPath: string, mode = "production") {
   let app = express();
 
   app.use(compression());
-  app.use(morgan("tiny"));
   app.use(express.static("public", { immutable: true, maxAge: "1y" }));
 
+  app.use(morgan("tiny"));
   app.all(
     "*",
     mode === "production"
