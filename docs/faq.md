@@ -212,7 +212,7 @@ function Users() {
     <div>
       <h1>Users</h1>
       <Switch>
-        <Route path="/users/accont" component={Account} />
+        <Route path="/users/account" component={Account} />
       </Switch>
     </div>
   );
