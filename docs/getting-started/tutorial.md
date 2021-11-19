@@ -271,7 +271,7 @@ As we'll see later, this works at _any level_ of the route hierarchy and is incr
 
 ## Listing the Invoices
 
-Normally you'd be fetching data from a server somewhere, but for this tutorial lets just hard code some fake stuff so we can focus on routing.
+Normally you'd be fetching data from a server somewhere, but for this tutorial let's hard code some fake stuff so we can focus on routing.
 
 Make a file at `src/data.js` and copy/paste this in there:
 
@@ -376,7 +376,7 @@ The `"*"` has special meaning here. It will match only when no other routes do.
 
 ## Reading URL Params
 
-Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, lets make a new component at `src/routes/invoice.js` to render at those URLs:
+Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, let's make a new component at `src/routes/invoice.js` to render at those URLs:
 
 ```js filename=src/routes/invoice.js
 export default function Invoice() {
