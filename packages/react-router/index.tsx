@@ -2,7 +2,7 @@ import * as React from "react";
 import type {
   History,
   InitialEntry,
-  Location,
+  Location as HistoryLocation,
   MemoryHistory,
   Path,
   To
@@ -13,7 +13,9 @@ import {
   parsePath
 } from "history";
 
+
 export type { Location, Path, To, NavigationType };
+
 
 function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);
@@ -72,6 +74,10 @@ const NavigationContext = React.createContext<NavigationContextObject>(null!);
 
 if (__DEV__) {
   NavigationContext.displayName = "Navigation";
+}
+
+interface Location<T=any> extends HistoryLocation {
+  state: T
 }
 
 interface LocationContextObject {
@@ -393,7 +399,7 @@ export function useInRouterContext(): boolean {
  *
  * @see https://reactrouter.com/docs/en/v6/api#uselocation
  */
-export function useLocation(): Location {
+export function useLocation<T=any>(): Location<T> {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
