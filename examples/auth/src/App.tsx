@@ -144,7 +144,7 @@ function RequireAuth({ children }: { children: JSX.Element }) {
 
 function LoginPage() {
   let navigate = useNavigate();
-  let location = useLocation();
+  let location = useLocation<{from: Location}>();
   let auth = useAuth();
 
   let from = location.state?.from?.pathname || "/";
