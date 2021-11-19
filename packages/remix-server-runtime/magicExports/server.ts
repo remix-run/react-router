@@ -4,6 +4,8 @@
 export type {
   ServerBuild,
   ServerEntryModule,
+  HandleDataRequestFunction,
+  HandleDocumentRequestFunction,
   CookieParseOptions,
   CookieSerializeOptions,
   CookieSignatureOptions,
