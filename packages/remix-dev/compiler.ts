@@ -100,7 +100,7 @@ export async function watch(
     onFileChanged,
     onFileDeleted
   }: WatchOptions = {}
-): Promise<() => void> {
+): Promise<() => Promise<void>> {
   let options = {
     mode,
     target,
@@ -111,15 +111,15 @@ export async function watch(
   };
   let [browserBuild, serverBuild] = await buildEverything(config, options);
 
-  async function disposeBuilders() {
-    await Promise.all([
-      browserBuild?.rebuild?.dispose(),
-      serverBuild?.rebuild?.dispose()
-    ]);
+  function disposeBuilders() {
+    browserBuild?.rebuild?.dispose();
+    serverBuild?.rebuild?.dispose();
+    browserBuild = undefined;
+    serverBuild = undefined;
   }
 
   let restartBuilders = debounce(async (newConfig?: RemixConfig) => {
-    await disposeBuilders();
+    disposeBuilders();
     try {
       newConfig = await readConfig(config.rootDirectory);
     } catch (error) {
@@ -138,8 +138,8 @@ export async function watch(
   let rebuildEverything = debounce(async () => {
     if (onRebuildStart) onRebuildStart();
 
-    if (!browserBuild || !serverBuild) {
-      await disposeBuilders();
+    if (!browserBuild?.rebuild || !serverBuild?.rebuild) {
+      disposeBuilders();
 
       try {
         [browserBuild, serverBuild] = await buildEverything(config, options);
@@ -153,11 +153,12 @@ export async function watch(
     await Promise.all([
       // If we get here and can't call rebuild something went wrong and we
       // should probably blow as it's not really recoverable.
-      browserBuild.rebuild!().then(build =>
-        generateManifests(config, build.metafile!)
-      ),
-      serverBuild.rebuild!()
+      browserBuild
+        .rebuild()
+        .then(build => generateManifests(config, build.metafile!)),
+      serverBuild.rebuild()
     ]).catch(err => {
+      disposeBuilders();
       onBuildFailure(err);
     });
     if (onRebuildFinish) onRebuildFinish();
@@ -203,8 +204,8 @@ export async function watch(
     });
 
   return async () => {
-    await watcher.close();
-    await disposeBuilders();
+    await watcher.close().catch(() => {});
+    disposeBuilders();
   };
 }
 
@@ -238,19 +239,21 @@ async function buildEverything(
   // builds serially so we can inline the asset manifest into the server build
   // in a single JavaScript file.
 
-  let browserBuildPromise = createBrowserBuild(config, options);
-  let serverBuildPromise = createServerBuild(config, options);
+  try {
+    let browserBuildPromise = createBrowserBuild(config, options);
+    let serverBuildPromise = createServerBuild(config, options);
 
-  return Promise.all([
-    browserBuildPromise.then(async build => {
-      await generateManifests(config, build.metafile!);
-      return build;
-    }),
-    serverBuildPromise
-  ]).catch(err => {
-    options.onBuildFailure(err);
+    return await Promise.all([
+      browserBuildPromise.then(async build => {
+        await generateManifests(config, build.metafile!);
+        return build;
+      }),
+      serverBuildPromise
+    ]);
+  } catch (err) {
+    options.onBuildFailure(err as Error);
     return [undefined, undefined];
-  });
+  }
 }
 
 async function createBrowserBuild(
@@ -267,12 +270,11 @@ async function createBrowserBuild(
   let fakeBuiltins = nodeBuiltins.filter(mod => dependencies.includes(mod));
 
   if (fakeBuiltins.length > 0) {
-    console.error(
+    throw new Error(
       `It appears you're using a module that is built in to node, but you installed it as a dependency which could cause problems. Please remove ${fakeBuiltins.join(
         ", "
       )} before continuing.`
     );
-    process.exit(1);
   }
 
   let entryPoints: esbuild.BuildOptions["entryPoints"] = {
