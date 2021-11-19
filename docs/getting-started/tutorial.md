@@ -481,7 +481,7 @@ export function getInvoice(number) {
 }
 ```
 
-And now back in `invoice.js` we can display use the param to look it up and display more information:
+And now back in `invoice.js` we use the param to look up an invoice and display more information:
 
 ```js filename=routes/invoice.js lines=[2,6]
 import { useParams } from "react-router-dom";
