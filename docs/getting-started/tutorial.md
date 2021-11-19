@@ -612,7 +612,7 @@ React Router makes it easy to read and manipulate the search params with `useSea
 
 Let's see it in action by adding a little filter on the invoices nav list.
 
-```jsx filename=routes/invoices.jsx lines=[4,10,21-27,32-37]
+```jsx filename=routes/invoices.jsx lines=[4,10,20-30,32-37]
 import {
   NavLink,
   Outlet,
