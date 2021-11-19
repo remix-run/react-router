@@ -518,9 +518,9 @@ async function handleDocumentRequest(
     serverHandoffString: createServerHandoffString(serverHandoff)
   };
 
-  let response: Response | Promise<Response>;
+  let response: Response;
   try {
-    response = serverEntryModule.default(
+    response = await serverEntryModule.default(
       request,
       statusCode,
       headers,
@@ -545,7 +545,7 @@ async function handleDocumentRequest(
     entryContext.serverHandoffString = createServerHandoffString(serverHandoff);
 
     try {
-      response = serverEntryModule.default(
+      response = await serverEntryModule.default(
         request,
         statusCode,
         headers,
