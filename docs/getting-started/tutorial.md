@@ -209,7 +209,7 @@ Let's get some automatic, persistent layout handling by doing just two things:
 1. Nest the routes inside of the App route
 2. Render an Outlet
 
-First let's nest the routes. Right now the expenses and invoices routes are siblings to to the app, we're want to make them _children_ of the app route:
+First let's nest the routes. Right now the expenses and invoices routes are siblings to the app, we're want to make them _children_ of the app route:
 
 ```jsx lines=[15-18] filename=src/main.jsx
 import { render } from "react-dom";
