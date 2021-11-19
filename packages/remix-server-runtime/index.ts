@@ -20,7 +20,7 @@ export type { EntryContext } from "./entry";
 
 export type {
   LinkDescriptor,
-  HTMLLinkDescriptor,
+  HtmlLinkDescriptor,
   PageLinkDescriptor
 } from "./links";
 
@@ -31,10 +31,11 @@ export type {
   DataFunctionArgs,
   ErrorBoundaryComponent,
   HeadersFunction,
+  HtmlMetaDescriptor,
   LinksFunction,
   LoaderFunction,
-  MetaFunction,
   MetaDescriptor,
+  MetaFunction,
   RouteComponent,
   RouteHandle
 } from "./routeModules";

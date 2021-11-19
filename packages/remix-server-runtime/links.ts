@@ -3,7 +3,7 @@
  *
  * WHATWG Specification: https://html.spec.whatwg.org/multipage/semantics.html#the-link-element
  */
-export interface HTMLLinkDescriptor {
+export interface HtmlLinkDescriptor {
   /**
    * Address of the hyperlink
    */
@@ -127,7 +127,7 @@ export interface HTMLLinkDescriptor {
 
 export interface PageLinkDescriptor
   extends Omit<
-    HTMLLinkDescriptor,
+    HtmlLinkDescriptor,
     | "href"
     | "rel"
     | "type"
@@ -144,4 +144,4 @@ export interface PageLinkDescriptor
   page: string;
 }
 
-export type LinkDescriptor = HTMLLinkDescriptor | PageLinkDescriptor;
+export type LinkDescriptor = HtmlLinkDescriptor | PageLinkDescriptor;
