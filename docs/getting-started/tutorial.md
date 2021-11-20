@@ -209,7 +209,7 @@ Let's get some automatic, persistent layout handling by doing just two things:
 1. Nest the routes inside of the App route
 2. Render an Outlet
 
-First let's nest the routes. Right now the expenses and invoices routes are siblings to to the app, we're want to make them _children_ of the app route:
+First let's nest the routes. Right now the expenses and invoices routes are siblings to the app, we want to make them _children_ of the app route:
 
 ```jsx lines=[15-18] filename=src/main.jsx
 import { render } from "react-dom";
@@ -271,7 +271,7 @@ As we'll see later, this works at _any level_ of the route hierarchy and is incr
 
 ## Listing the Invoices
 
-Normally you'd be fetching data from a server somewhere, but for this tutorial lets just hard code some fake stuff so we can focus on routing.
+Normally you'd be fetching data from a server somewhere, but for this tutorial let's hard code some fake stuff so we can focus on routing.
 
 Make a file at `src/data.js` and copy/paste this in there:
 
@@ -376,7 +376,7 @@ The `"*"` has special meaning here. It will match only when no other routes do.
 
 ## Reading URL Params
 
-Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, lets make a new component at `src/routes/invoice.js` to render at those URLs:
+Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, let's make a new component at `src/routes/invoice.js` to render at those URLs:
 
 ```js filename=src/routes/invoice.js
 export default function Invoice() {
@@ -481,7 +481,7 @@ export function getInvoice(number) {
 }
 ```
 
-And now back in `invoice.js` we can display use the param to look it up and display more information:
+And now back in `invoice.js` we use the param to look up an invoice and display more information:
 
 ```js filename=routes/invoice.js lines=[2,6]
 import { useParams } from "react-router-dom";
@@ -612,7 +612,7 @@ React Router makes it easy to read and manipulate the search params with `useSea
 
 Let's see it in action by adding a little filter on the invoices nav list.
 
-```jsx filename=routes/invoices.jsx lines=[4,10,21-27,32-37]
+```jsx filename=routes/invoices.jsx lines=[4,10,20-30,32-37]
 import {
   NavLink,
   Outlet,
