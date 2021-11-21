@@ -84,6 +84,7 @@ interface WatchOptions extends BuildOptions {
   onFileCreated?(file: string): void;
   onFileChanged?(file: string): void;
   onFileDeleted?(file: string): void;
+  onInitialBuild?(): void;
 }
 
 export async function watch(
@@ -98,7 +99,8 @@ export async function watch(
     onRebuildFinish,
     onFileCreated,
     onFileChanged,
-    onFileDeleted
+    onFileDeleted,
+    onInitialBuild
   }: WatchOptions = {}
 ): Promise<() => Promise<void>> {
   let options = {
@@ -110,6 +112,11 @@ export async function watch(
     incremental: true
   };
   let [browserBuild, serverBuild] = await buildEverything(config, options);
+
+  let initialBuildComplete = !!browserBuild && !!serverBuild;
+  if (initialBuildComplete) {
+    onInitialBuild?.();
+  }
 
   function disposeBuilders() {
     browserBuild?.rebuild?.dispose();
@@ -143,6 +150,13 @@ export async function watch(
 
       try {
         [browserBuild, serverBuild] = await buildEverything(config, options);
+
+        if (!initialBuildComplete) {
+          initialBuildComplete = !!browserBuild && !!serverBuild;
+          if (initialBuildComplete) {
+            onInitialBuild?.();
+          }
+        }
         if (onRebuildFinish) onRebuildFinish();
       } catch (err: any) {
         onBuildFailure(err);
