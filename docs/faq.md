@@ -405,9 +405,11 @@ export async function loader({ params }) {
     throw new Response("", { status: 400 });
   }
 
-  let user = await fakeDb.user.find({ where: { id: params.id }})
+  let user = await fakeDb.user.find({
+    where: { id: params.id }
+  });
   if (!user) {
-    throw new Response("", { status: 404})
+    throw new Response("", { status: 404 });
   }
 
   return user;
