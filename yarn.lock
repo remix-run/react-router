@@ -4476,10 +4476,10 @@ history@^5.0.0:
   dependencies:
     "@babel/runtime" "^7.7.6"
 
-history@^5.0.3:
-  version "5.0.3"
-  resolved "https://registry.npmjs.org/history/-/history-5.0.3.tgz#23d0b3046f695623c95a870506545e2b67e82edb"
-  integrity sha512-LoyCVOpCBkNAgrsdpTDZP77fys7lFDg8JdxTr7s6GHueZbTplKf8NAJu3y6/QuJIjk6TFsEGrhtILVP814X8+A==
+history@^5.1.0:
+  version "5.1.0"
+  resolved "https://registry.npmjs.org/history/-/history-5.1.0.tgz#2e93c09c064194d38d52ed62afd0afc9d9b01ece"
+  integrity sha512-zPuQgPacm2vH2xdORvGGz1wQMuHSIB56yNAy5FnLuwOwgSYyPKptJtcMm6Ev+hRGeS+GzhbmRacHzvlESbFwDg==
   dependencies:
     "@babel/runtime" "^7.7.6"
 
