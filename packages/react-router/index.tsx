@@ -57,10 +57,7 @@ function warningOnce(key: string, cond: boolean, message: string) {
  * to avoid "tearing" that may occur in a suspense-enabled app if the action
  * and/or location were to be read directly from the history instance.
  */
-export type Navigator = Omit<
-  History,
-  "action" | "location" | "back" | "forward" | "listen" | "block"
->;
+export type Navigator = Pick<History, "go" | "push" | "replace" | "createHref">;
 
 interface NavigationContextObject {
   basename: string;
