@@ -4,6 +4,7 @@ import signalExit from "signal-exit";
 import prettyMs from "pretty-ms";
 import WebSocket from "ws";
 import type { Server } from "http";
+import type * as Express from "express";
 import type { createApp as createAppType } from "@remix-run/serve";
 
 import { BuildMode, isBuildMode } from "../build";
@@ -141,9 +142,11 @@ export async function watch(
 export async function dev(remixRoot: string, modeArg?: string) {
   // TODO: Warn about the need to install @remix-run/serve if it isn't there?
   let createApp: typeof createAppType;
+  let express: typeof Express;
   try {
     let serve = require("@remix-run/serve");
     createApp = serve.createApp;
+    express = require("express");
   } catch (err) {
     throw new Error(
       "Could not locate @remix-run/serve. Please verify you have it installed to use the dev command."
@@ -154,14 +157,17 @@ export async function dev(remixRoot: string, modeArg?: string) {
   let mode = isBuildMode(modeArg) ? modeArg : BuildMode.Development;
   let port = process.env.PORT || 3000;
 
-  let app = createApp(config.serverBuildDirectory, mode);
+  let app = express();
+  app.use((_, __, next) => {
+    purgeAppRequireCache(config.serverBuildDirectory);
+    next();
+  });
+  app.use(createApp(config.serverBuildDirectory, mode));
+
   let server: Server | null = null;
 
   try {
     await watch(config, mode, {
-      onRebuildStart: () => {
-        purgeAppRequireCache(config.serverBuildDirectory);
-      },
       onInitialBuild: () => {
         server = app.listen(port, () => {
           console.log(`Remix App Server started at http://localhost:${port}`);
