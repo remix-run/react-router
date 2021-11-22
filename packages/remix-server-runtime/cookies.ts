@@ -40,8 +40,6 @@ export interface Cookie {
 
   /**
    * True if this cookie uses one or more secrets for verification.
-   *
-   * See https://remix.run/dashboard/docs/cookies#signing-cookies
    */
   readonly isSigned: boolean;
 
