@@ -11,13 +11,13 @@ body:
 
         Do you need some help?
         ======================
-        The issue tracker is meant for feature requests and bug reports only. This isn't the best place for 
-        support or usage questions. Questions here don't have as much visibility as they do elsewhere. Before 
+        The issue tracker is meant for feature requests and bug reports only. This isn't the best place for
+        support or usage questions. Questions here don't have as much visibility as they do elsewhere. Before
         you ask a question, here are some resources to get help first:
 
         - Read the docs: https://reactrouter.com
         - Check out the list of frequently asked questions: https://reactrouter.com/docs/en/v6/getting-started/faq
-        - Explore examples: hhttps://reactrouter.com/docs/en/v6/examples/basic
+        - Explore examples: https://reactrouter.com/docs/en/v6/examples/basic
         - Look for/ask questions on Stack Overflow: https://stackoverflow.com/questions/ask?tags=react-router
         - Ask in chat: https://discord.gg/6RyV8n8yyM
 
