@@ -2,6 +2,7 @@ import path from "path";
 
 import { createApp } from "./index";
 
+process.env.NODE_ENV = "production";
 let port = process.env.PORT || 3000;
 let buildPathArg = process.argv[2];
 
