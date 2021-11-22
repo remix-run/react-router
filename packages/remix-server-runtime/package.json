@@ -7,14 +7,13 @@
     "@types/cookie": "^0.4.0",
     "cookie": "^0.4.1",
     "jsesc": "^3.0.1",
+    "react-router-dom": "^6.0.2",
     "set-cookie-parser": "^2.4.8",
     "source-map": "^0.7.3"
   },
   "peerDependencies": {
-    "history": "^5.1.0",
     "react": ">=16.8",
-    "react-dom": ">=16.8",
-    "react-router-dom": "^6.0.2"
+    "react-dom": ">=16.8"
   },
   "devDependencies": {
     "@types/jsesc": "^2.5.1",
