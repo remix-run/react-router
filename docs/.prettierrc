@@ -1,0 +1,5 @@
+{
+  "arrowParens": "avoid",
+  "printWidth": 60,
+  "trailingComma": "none"
+}
