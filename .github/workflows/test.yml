@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Print Prettier version
+        run: yarn prettier:version
+
       - name: Check formatting
         run: yarn format:check
 
