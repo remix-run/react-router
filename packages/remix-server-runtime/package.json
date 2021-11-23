@@ -2,7 +2,14 @@
   "name": "@remix-run/server-runtime",
   "description": "Server runtime for Remix",
   "version": "1.0.4",
-  "repository": "https://github.com/remix-run/packages",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remix-run/remix",
+    "directory": "packages/remix-server-runtime"
+  },
+  "bugs": {
+    "url": "https://github.com/remix-run/remix/issues"
+  },
   "dependencies": {
     "@types/cookie": "^0.4.0",
     "cookie": "^0.4.1",

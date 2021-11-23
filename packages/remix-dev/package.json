@@ -2,7 +2,14 @@
   "name": "@remix-run/dev",
   "description": "Dev tools and CLI for Remix",
   "version": "1.0.4",
-  "repository": "https://github.com/remix-run/packages",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remix-run/remix",
+    "directory": "packages/remix-dev"
+  },
+  "bugs": {
+    "url": "https://github.com/remix-run/remix/issues"
+  },
   "bin": {
     "remix": "cli.js"
   },
