@@ -21,7 +21,7 @@ React Router isn't just about matching a url to a function or component: it's ab
 
 ## Definitions
 
-But first, some definitions! There are a lot of different ideas around routing from back and front end frameworks. Sometimes a word in one context might have different meaning than another.
+But first, some definitions! There are a lot of different ideas around routing from frontend and backend frameworks. Sometimes a word in one context might have different meaning than another.
 
 Here are some words we use a lot when we talk about React Router. The rest of this guide will go into more detail on each one.
 
