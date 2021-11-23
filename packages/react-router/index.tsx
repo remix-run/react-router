@@ -13,8 +13,7 @@ import {
   parsePath
 } from "history";
 
-export type {
-  Location, Path, To, NavigationType };
+export type { Location, Path, To, NavigationType };
 
 function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);
@@ -1183,11 +1182,8 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
  * @see https://reactrouter.com/docs/en/v6/api#resolvepath
  */
 export function resolvePath(to: To, fromPathname = "/"): Path {
-  let {
-    pathname: toPathname,
-    search = "",
-    hash = ""
-  } = typeof to === "string" ? parsePath(to) : to;
+  let { pathname: toPathname, search = "", hash = "" } =
+    typeof to === "string" ? parsePath(to) : to;
 
   let pathname = toPathname
     ? toPathname.startsWith("/")
