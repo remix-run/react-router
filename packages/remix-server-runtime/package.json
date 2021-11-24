@@ -1,7 +1,7 @@
 {
   "name": "@remix-run/server-runtime",
   "description": "Server runtime for Remix",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/remix-run/remix",
