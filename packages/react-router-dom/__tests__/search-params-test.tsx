@@ -1,9 +1,21 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
-import { MemoryRouter, Routes, Route, useSearchParams } from "react-router-dom";
+import {
+  MemoryRouter,
+  Routes,
+  Route,
+  useLocation,
+  useSearchParams
+} from "react-router-dom";
 
 describe("useSearchParams", () => {
+  let location!: ReturnType<typeof useLocation>;
+  function LocationChecker() {
+    location = useLocation();
+    return null;
+  }
+
   function SearchPage() {
     let queryRef = React.useRef<HTMLInputElement>(null);
     let [searchParams, setSearchParams] = useSearchParams({ q: "" });
@@ -22,6 +34,7 @@ describe("useSearchParams", () => {
         <form onSubmit={handleSubmit}>
           <input name="q" defaultValue={query} ref={queryRef} />
         </form>
+        <LocationChecker />
       </div>
     );
   }
@@ -65,5 +78,35 @@ describe("useSearchParams", () => {
     });
 
     expect(node.innerHTML).toMatch(/The current query is "Ryan Florence"/);
+  });
+
+  it("writes the search string without removing the hash from the URL", () => {
+    act(() => {
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/search?q=Michael+Jackson#artists"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>,
+        node
+      );
+    });
+
+    expect(location.hash).toBe("#artists");
+
+    let form = node.querySelector("form")!;
+
+    let queryInput = node.querySelector<HTMLInputElement>("input[name=q]")!;
+
+    act(() => {
+      queryInput.value = "Ryan Florence";
+      form.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true })
+      );
+    });
+
+    expect(node.innerHTML).toMatch(/The current query is "Ryan Florence"/);
+
+    expect(location.hash).toBe("#artists");
   });
 });
