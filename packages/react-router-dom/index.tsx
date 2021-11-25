@@ -405,12 +405,9 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
       nextInit: URLSearchParamsInit,
       navigateOptions?: { replace?: boolean; state?: any }
     ) => {
-      navigate({
-        hash: location.hash,
-        search: "?" + createSearchParams(nextInit),
-      }, navigateOptions);
+      navigate("?" + createSearchParams(nextInit), navigateOptions);
     },
-    [location.hash, navigate]
+    [navigate]
   );
 
   return [searchParams, setSearchParams] as const;

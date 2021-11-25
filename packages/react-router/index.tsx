@@ -463,7 +463,7 @@ export function useNavigate(): NavigateFunction {
 
   let { basename, navigator } = React.useContext(NavigationContext);
   let { matches } = React.useContext(RouteContext);
-  let { pathname: locationPathname } = useLocation();
+  let { pathname: locationPathname, hash: locationHash } = useLocation();
 
   let routePathnamesJson = JSON.stringify(
     matches.map(match => match.pathnameBase)
@@ -492,7 +492,8 @@ export function useNavigate(): NavigateFunction {
       let path = resolveTo(
         to,
         JSON.parse(routePathnamesJson),
-        locationPathname
+        locationPathname,
+        locationHash
       );
 
       if (basename !== "/") {
@@ -504,7 +505,7 @@ export function useNavigate(): NavigateFunction {
         options.state
       );
     },
-    [basename, navigator, routePathnamesJson, locationPathname]
+    [basename, navigator, routePathnamesJson, locationPathname, locationHash]
   );
 
   return navigate;
@@ -541,15 +542,21 @@ export function useParams<Key extends string = string>(): Readonly<
  */
 export function useResolvedPath(to: To): Path {
   let { matches } = React.useContext(RouteContext);
-  let { pathname: locationPathname } = useLocation();
+  let { pathname: locationPathname, hash: locationHash } = useLocation();
 
   let routePathnamesJson = JSON.stringify(
     matches.map(match => match.pathnameBase)
   );
 
   return React.useMemo(
-    () => resolveTo(to, JSON.parse(routePathnamesJson), locationPathname),
-    [to, routePathnamesJson, locationPathname]
+    () =>
+      resolveTo(
+        to,
+        JSON.parse(routePathnamesJson),
+        locationPathname,
+        locationHash
+      ),
+    [to, routePathnamesJson, locationPathname, locationHash]
   );
 }
 
@@ -1181,11 +1188,11 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
  *
  * @see https://reactrouter.com/docs/en/v6/api#resolvepath
  */
-export function resolvePath(to: To, fromPathname = "/"): Path {
+export function resolvePath(to: To, fromPathname = "/", fromHash = ""): Path {
   let {
     pathname: toPathname,
     search = "",
-    hash = ""
+    hash = fromHash
   } = typeof to === "string" ? parsePath(to) : to;
 
   let pathname = toPathname
@@ -1220,7 +1227,8 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
 function resolveTo(
   toArg: To,
   routePathnames: string[],
-  locationPathname: string
+  locationPathname: string,
+  locationHash: string
 ): Path {
   let to = typeof toArg === "string" ? parsePath(toArg) : toArg;
   let toPathname = toArg === "" || to.pathname === "" ? "/" : to.pathname;
@@ -1233,8 +1241,11 @@ function resolveTo(
   // hash string, in which case we should assume that the navigation is relative
   // to the current location's pathname and *not* the route pathname.
   let from: string;
+  let fromHash: string;
+
   if (toPathname == null) {
     from = locationPathname;
+    fromHash = locationHash;
   } else {
     let routePathnameIndex = routePathnames.length - 1;
 
@@ -1255,9 +1266,10 @@ function resolveTo(
     // If there are more ".." segments than parent routes, resolve relative to
     // the root / URL.
     from = routePathnameIndex >= 0 ? routePathnames[routePathnameIndex] : "/";
+    fromHash = "";
   }
 
-  let path = resolvePath(to, from);
+  let path = resolvePath(to, from, fromHash);
 
   // Ensure the pathname has a trailing slash if the original to value had one.
   if (
