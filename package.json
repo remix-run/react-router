@@ -32,7 +32,7 @@
     "test-browser:watch": "cross-env NODE_ENV=test karma start",
     "test-node": "cross-env NODE_ENV=test mocha --require babel-register tests.node.js",
     "test:lockfile": "lockfile-lint -p package-lock.json -t npm -a npm -o https: -c -i",
-    "posttest": "npm run lint && npm run test:git-history && npm run test:lockfile"
+    "posttest": "npm run test:git-history && npm run test:lockfile"
   },
   "contributors": [
     "Andres Escobar <Andres.Escobar@aexp.com> (https://github.com/anescobar1991)",
