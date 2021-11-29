@@ -475,7 +475,7 @@ export function useNavigate(): NavigateFunction {
   });
 
   let navigate: NavigateFunction = React.useCallback(
-    (to: To | number, options: { replace?: boolean; state?: any } = {}) => {
+    (to: To | number, options: NavigateOptions = {}) => {
       warning(
         activeRef.current,
         `You should call navigate() in a React.useEffect(), not when ` +
