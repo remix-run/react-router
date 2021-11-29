@@ -1,0 +1,31 @@
+name: Health Check
+
+on:
+  schedule:
+    # At minute 0 past hour 0800 and 2000.
+    - cron:  '0 8,20 * * *'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [ '12.x', '14.x', '16.x' ]
+    name: Node ${{ matrix.node }}
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        git remote set-branches --add origin main
+        git fetch
+    - name: Setup Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node }}
+    - name: Install Dependencies
+      run: npm ci
+      env:
+        NODE_ENV: development
+    - name: Run Test Script
+      run: npm test
+      env:
+        NODE_ENV: production
