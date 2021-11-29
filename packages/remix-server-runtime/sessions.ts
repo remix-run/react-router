@@ -244,7 +244,7 @@ export function warnOnceAboutSigningSessionCookie(cookie: Cookie) {
     cookie.isSigned,
     `The "${cookie.name}" cookie is not signed, but session cookies should be ` +
       `signed to prevent tampering on the client before they are sent back to the ` +
-      `server.` /* TODO: Update link with new docs. See https://remix.run/cookies#signing-cookies ` +
-      `for more information.` */
+      `server. See https://remix.run/docs/en/v1/api/remix#signing-cookies ` +
+      `for more information.`
   );
 }
