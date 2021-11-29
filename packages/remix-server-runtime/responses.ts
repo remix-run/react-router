@@ -36,7 +36,7 @@ export function redirect(
   let headers = new Headers(responseInit.headers);
   headers.set("Location", url);
 
-  return new Response("", {
+  return new Response(null, {
     ...responseInit,
     headers
   });

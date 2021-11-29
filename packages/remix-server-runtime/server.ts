@@ -193,22 +193,20 @@ async function handleDataRequest(
     routeMatch = match;
   }
 
-  let clonedRequest = stripIndexParam(stripDataParam(request));
-
   let response: Response;
   try {
     response = isActionRequest(request)
       ? await callRouteAction(
           build,
           routeMatch.route.id,
-          clonedRequest,
+          stripIndexParam(stripDataParam(request.clone())),
           loadContext,
           routeMatch.params
         )
       : await loadRouteData(
           build,
           routeMatch.route.id,
-          clonedRequest,
+          stripIndexParam(stripDataParam(request.clone())),
           loadContext,
           routeMatch.params
         );
@@ -230,16 +228,15 @@ async function handleDataRequest(
     headers.set("X-Remix-Redirect", headers.get("Location")!);
     headers.delete("Location");
 
-    return new Response("", {
+    return new Response(null, {
       status: 204,
       headers
     });
   }
 
   if (build.entry.module.handleDataRequest) {
-    clonedRequest = stripIndexParam(stripDataParam(request));
     return build.entry.module.handleDataRequest(response, {
-      request: clonedRequest,
+      request: request.clone(),
       context: loadContext,
       params: routeMatch.params
     });
@@ -319,12 +316,10 @@ async function handleDocumentRequest(
     actionRouteId = actionMatch.route.id;
 
     try {
-      let clonedRequest = stripIndexParam(stripDataParam(request));
-
       actionResponse = await callRouteAction(
         build,
         actionMatch.route.id,
-        clonedRequest,
+        stripIndexParam(stripDataParam(request.clone())),
         loadContext,
         actionMatch.params
       );
@@ -501,7 +496,7 @@ async function handleDocumentRequest(
   let actionData =
     actionResponse && actionRouteId
       ? {
-          [actionRouteId]: await createActionData(actionResponse)
+          [actionRouteId]: await createActionData(actionResponse.clone())
         }
       : undefined;
   let routeModules = createEntryRouteModules(build.routes);
