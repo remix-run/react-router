@@ -1098,7 +1098,7 @@ declare function useNavigate(): NavigateFunction;
 interface NavigateFunction {
   (
     to: To,
-    options?: { replace?: boolean; state?: State }
+    options?: { replace?: boolean; state?: any }
   ): void;
   (delta: number): void;
 }
