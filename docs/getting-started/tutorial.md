@@ -376,9 +376,9 @@ The `"*"` has special meaning here. It will match only when no other routes do.
 
 ## Reading URL Params
 
-Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, let's make a new component at `src/routes/invoice.js` to render at those URLs:
+Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, let's make a new component at `src/routes/invoice.jsx` to render at those URLs:
 
-```js filename=src/routes/invoice.js
+```js filename=src/routes/invoice.jsx
 export default function Invoice() {
   return <h2>Invoice #???</h2>;
 }
@@ -450,7 +450,7 @@ export default function Invoices() {
 
 Okay, let's close the circle here. Open up the invoice component again and let's get the `:invoiceId` param from the URL:
 
-```ts lines=[1,4] filename=src/routes/invoice.js
+```ts lines=[1,4] filename=src/routes/invoice.jsx
 import { useParams } from "react-router-dom";
 
 export default function Invoice() {
