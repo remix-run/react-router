@@ -209,3 +209,8 @@ function visitFiles(
     }
   }
 }
+
+/*
+eslint
+  no-loop-func: "off",
+*/
