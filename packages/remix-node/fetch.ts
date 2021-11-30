@@ -12,10 +12,6 @@ export type {
 export { Headers, Response } from "node-fetch";
 
 export class Request extends NodeRequest {
-  constructor(input: RequestInfo, init?: RequestInit | undefined) {
-    super(input, init);
-  }
-
   async formData() {
     let body = await this.clone().text();
     return new RemixFormData(body);
