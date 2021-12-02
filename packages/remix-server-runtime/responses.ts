@@ -1,7 +1,7 @@
 /**
  * A JSON response. Converts `data` to JSON and sets the `Content-Type` header.
  */
-export function json(data: any, init: number | ResponseInit = {}): Response {
+export function json<Data>(data: Data, init: number | ResponseInit = {}): Response {
   let responseInit: any = init;
   if (typeof init === "number") {
     responseInit = { status: init };
