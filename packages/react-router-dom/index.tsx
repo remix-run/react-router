@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { BrowserHistory, HashHistory } from "history";
+import type { BrowserHistory, HashHistory, History } from "history";
 import { createBrowserHistory, createHashHistory, createPath } from "history";
 import {
   MemoryRouter,
@@ -192,6 +192,39 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
       navigator={history}
     />
   );
+}
+
+export interface HistoryRouterProps {
+  basename?: string;
+  children?: React.ReactNode;
+  history: History;
+}
+
+export function HistoryRouter({
+  basename,
+  children,
+  history
+}: HistoryRouterProps) {
+  const [state, setState] = React.useState({
+    action: history.action,
+    location: history.location
+  });
+
+  React.useLayoutEffect(() => history.listen(setState), [history]);
+
+  return (
+    <Router
+      basename={basename}
+      children={children}
+      location={state.location}
+      navigationType={state.action}
+      navigator={history}
+    />
+  );
+}
+
+if (__DEV__) {
+  HistoryRouter.displayName = "HistoryRouter";
 }
 
 function isModifiedEvent(event: React.MouseEvent) {
