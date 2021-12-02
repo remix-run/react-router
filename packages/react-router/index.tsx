@@ -431,7 +431,8 @@ export function useMatch<ParamKey extends string = string>(
     `useMatch() may be used only in the context of a <Router> component.`
   );
 
-  return matchPath(pattern, useLocation().pathname);
+  let { pathname } = useLocation();
+  return React.useMemo(() => matchPath(pattern, pathname), [pathname, pattern]);
 }
 
 /**
