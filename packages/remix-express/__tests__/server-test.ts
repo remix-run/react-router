@@ -68,7 +68,7 @@ describe("express createRequestHandler", () => {
 
     it("handles status codes", async () => {
       mockedCreateRequestHandler.mockImplementation(() => async () => {
-        return new Response("", { status: 204 });
+        return new Response(null, { status: 204 });
       });
 
       let request = supertest(createApp());
@@ -92,7 +92,7 @@ describe("express createRequestHandler", () => {
           "Set-Cookie",
           "third=three; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Path=/; HttpOnly; Secure; SameSite=Lax"
         );
-        return new Response("", { headers });
+        return new Response(null, { headers });
       });
 
       let request = supertest(createApp());
