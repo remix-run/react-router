@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route, useMatch } from "react-router";
+import { MemoryRouter, PathMatch, Routes, Route, useMatch } from "react-router";
 
 function ShowMatch({ pattern }: { pattern: string }) {
   return <pre>{JSON.stringify(useMatch(pattern), null, 2)}</pre>;
@@ -91,6 +91,47 @@ describe("useMatch", () => {
           null
         </pre>
       `);
+    });
+  });
+
+  describe("when re-rendered with the same URL", () => {
+    it("returns the memoized match", () => {
+      let path = "/home";
+      let match: PathMatch<string>;
+      let firstMatch: PathMatch<string>;
+
+      function HomePage() {
+        match = useMatch(path);
+
+        if (!firstMatch) {
+          firstMatch = match;
+        }
+
+        return null;
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={[path]}>
+            <Routes>
+              <Route path={path} element={<HomePage />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      TestRenderer.act(() => {
+        renderer.update(
+          <MemoryRouter initialEntries={[path]}>
+            <Routes>
+              <Route path={path} element={<HomePage />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(match).toBe(firstMatch);
     });
   });
 });
