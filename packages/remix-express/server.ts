@@ -1,4 +1,3 @@
-import { PassThrough } from "stream";
 import type * as express from "express";
 import type {
   AppLoadContext,
@@ -11,6 +10,8 @@ import type {
   Response as NodeResponse
 } from "@remix-run/node";
 import {
+  // This has been added as a global in node 15+
+  AbortController,
   Headers as NodeHeaders,
   Request as NodeRequest,
   formatServerError
@@ -51,7 +52,8 @@ export function createRequestHandler({
     next: express.NextFunction
   ) => {
     try {
-      let request = createRemixRequest(req);
+      let abortController = new AbortController();
+      let request = createRemixRequest(req, abortController);
       let loadContext =
         typeof getLoadContext === "function"
           ? getLoadContext(req, res)
@@ -62,7 +64,7 @@ export function createRequestHandler({
         loadContext
       )) as unknown as NodeResponse;
 
-      sendRemixResponse(res, response);
+      sendRemixResponse(res, response, abortController);
     } catch (error) {
       // Express doesn't support async functions, so we have to pass along the
       // error manually using next().
@@ -91,17 +93,22 @@ export function createRemixHeaders(
   return headers;
 }
 
-export function createRemixRequest(req: express.Request): NodeRequest {
+export function createRemixRequest(
+  req: express.Request,
+  abortController?: AbortController
+): NodeRequest {
   let origin = `${req.protocol}://${req.get("host")}`;
   let url = new URL(req.url, origin);
 
   let init: NodeRequestInit = {
     method: req.method,
-    headers: createRemixHeaders(req.headers)
+    headers: createRemixHeaders(req.headers),
+    signal: abortController?.signal,
+    abortController
   };
 
   if (req.method !== "GET" && req.method !== "HEAD") {
-    init.body = req.pipe(new PassThrough({ highWaterMark: 16384 }));
+    init.body = req; //req.pipe(new PassThrough({ highWaterMark: 16384 }));
   }
 
   return new NodeRequest(url.toString(), init);
@@ -109,7 +116,8 @@ export function createRemixRequest(req: express.Request): NodeRequest {
 
 function sendRemixResponse(
   res: express.Response,
-  response: NodeResponse
+  response: NodeResponse,
+  abortController: AbortController
 ): void {
   res.status(response.status);
 
@@ -117,6 +125,10 @@ function sendRemixResponse(
     for (const value of values) {
       res.append(key, value);
     }
+  }
+
+  if (abortController.signal.aborted) {
+    res.set("Connection", "close");
   }
 
   if (Buffer.isBuffer(response.body)) {
