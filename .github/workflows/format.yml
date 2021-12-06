@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  prettier:
+  format:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,7 +31,6 @@ jobs:
         run: |
           git config --local user.email "github-actions@remix.run"
           git config --local user.name "Remix Run Bot"
-          git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
 
           git add .
           if [ -z "$(git status --porcelain)" ]; then
@@ -39,5 +38,5 @@ jobs:
             exit 0
           fi
           git commit -m "chore: format" -m "formatted $GITHUB_SHA"
-          git push github HEAD:${GITHUB_REF}
+          git push
           echo "💿 pushed formatting changes https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
