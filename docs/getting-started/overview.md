@@ -300,7 +300,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<Activity />}>
+        <Route index element={<Activity />} />
         <Route path="invoices" element={<Invoices />} />
         <Route path="activity" element={<Activity />} />
       </Route>
