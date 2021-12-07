@@ -161,6 +161,7 @@ export function BrowserRouter({
 
 export interface HashRouterProps {
   basename?: string;
+  hashType?: "noslash";
   children?: React.ReactNode;
   window?: Window;
 }
@@ -169,7 +170,7 @@ export interface HashRouterProps {
  * A <Router> for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ basename, children, window }: HashRouterProps) {
+export function HashRouter({ basename, hashType, children, window }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window });
@@ -182,10 +183,11 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
   });
 
   React.useLayoutEffect(() => history.listen(setState), [history]);
+  let hashTypeBasename = hashType && hashType === "noslash" ? "" : "/"
 
   return (
     <Router
-      basename={basename}
+      basename={basename || hashTypeBasename}
       children={children}
       location={state.location}
       navigationType={state.action}
