@@ -258,7 +258,7 @@ export function Router({
   children = null,
   location: locationProp,
   navigationType = NavigationType.Pop,
-  navigator,
+  navigator: navigatorProp,
   static: staticProp = false
 }: RouterProps): React.ReactElement | null {
   invariant(
@@ -267,6 +267,7 @@ export function Router({
       ` You should never have more than one in your app.`
   );
 
+  let navigator = useNavigator(navigatorProp, basenameProp);
   let basename = normalizePathname(basenameProp);
   let navigationContext = React.useMemo(
     () => ({ basename, navigator, static: staticProp }),
@@ -277,13 +278,7 @@ export function Router({
     locationProp = parsePath(locationProp);
   }
 
-  let {
-    pathname = "/",
-    search = "",
-    hash = "",
-    state = null,
-    key = "default"
-  } = locationProp;
+  let { pathname, search, hash, state, key } = parseLocation(locationProp);
 
   let location = React.useMemo(() => {
     let trailingPathname = stripBasename(pathname, basename);
@@ -451,6 +446,62 @@ type ParamParseKey<Segment extends string> =
     : string;
 
 /**
+ * Returns a complete Location with an absolute pathname
+ */
+export function parseLocation({
+  pathname = "/",
+  ...rest
+}: Partial<Location>): Location {
+  const defaultLocation = {
+    pathname: "/",
+    search: "",
+    hash: "",
+    state: null,
+    key: "default"
+  };
+  return {
+    ...defaultLocation,
+    ...rest,
+    pathname: normalizePathnameStart(pathname)
+  };
+}
+
+/**
+ * Returns a modified navigator to allow relative pathnames
+ */
+export function useNavigator(
+  navigator: Navigator,
+  basename: string
+): Navigator {
+  if (basename !== "") {
+    return navigator;
+  }
+
+  const makeRelative = (path: Path): Path => {
+    return {
+      ...path,
+      pathname: path.pathname.replace(/^\//, "")
+    };
+  };
+  const push = (to: To, state?: any): void => {
+    navigator.push(makeRelative(resolvePath(to)), state);
+  };
+  const replace = (to: To, state?: any): void => {
+    navigator.replace(makeRelative(resolvePath(to)), state);
+  };
+  const createHref = (to: To): string => {
+    return navigator.createHref(makeRelative(resolvePath(to)));
+  };
+
+  return {
+    go: navigator.go,
+    push,
+    replace,
+    createHref
+  };
+}
+
+/**
  * Returns the current navigation action which describes how the router came to
  * the current location, either by a pop, push, or replace on the history stack.
  *
@@ -599,7 +650,6 @@ export function useResolvedPath(to: To): Path {
   let routePathnamesJson = JSON.stringify(
     matches.map(match => match.pathnameBase)
   );
-
   return React.useMemo(
     () => resolveTo(to, JSON.parse(routePathnamesJson), locationPathname),
     [to, routePathnamesJson, locationPathname]
@@ -848,10 +898,11 @@ export function matchRoutes(
   locationArg: Partial<Location> | string,
   basename = "/"
 ): RouteMatch[] | null {
-  let location =
-    typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
+  let absolutePathname = parseLocation(
+    typeof locationArg === "string" ? parsePath(locationArg) : locationArg
+  ).pathname;
 
-  let pathname = stripBasename(location.pathname || "/", basename);
+  let pathname = stripBasename(absolutePathname, basename);
 
   if (pathname == null) {
     return null;
@@ -1353,8 +1404,11 @@ function stripBasename(pathname: string, basename: string): string | null {
 const joinPaths = (paths: string[]): string =>
   paths.join("/").replace(/\/\/+/g, "/");
 
+const normalizePathnameStart = (pathname: string): string =>
+  pathname.replace(/^\/*/, "/");
+
 const normalizePathname = (pathname: string): string =>
-  pathname.replace(/\/+$/, "").replace(/^\/*/, "/");
+  normalizePathnameStart(pathname.replace(/\/+$/, ""));
 
 const normalizeSearch = (search: string): string =>
   !search || search === "?"

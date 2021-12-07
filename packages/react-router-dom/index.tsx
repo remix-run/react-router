@@ -12,6 +12,7 @@ import {
   generatePath,
   matchRoutes,
   matchPath,
+  parseLocation,
   resolvePath,
   renderMatches,
   useHref,
@@ -20,6 +21,7 @@ import {
   useMatch,
   useNavigate,
   useNavigationType,
+  useNavigator,
   useOutlet,
   useParams,
   useResolvedPath,
@@ -60,6 +62,7 @@ export {
   generatePath,
   matchRoutes,
   matchPath,
+  parseLocation,
   renderMatches,
   resolvePath,
   useHref,
@@ -68,6 +71,7 @@ export {
   useMatch,
   useNavigate,
   useNavigationType,
+  useNavigator,
   useOutlet,
   useParams,
   useResolvedPath,
@@ -169,7 +173,11 @@ export interface HashRouterProps {
  * A <Router> for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ basename, children, window }: HashRouterProps) {
+export function HashRouter({
+  basename = "/",
+  children,
+  window
+}: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window });
