@@ -6,12 +6,12 @@ import type {
   MemoryHistory,
   Path,
   To
-} from "history";
+} from "history-noslash";
 import {
   Action as NavigationType,
   createMemoryHistory,
   parsePath
-} from "history";
+} from "history-noslash";
 
 export type { Location, Path, To, NavigationType };
 
@@ -258,7 +258,7 @@ export function Router({
   children = null,
   location: locationProp,
   navigationType = NavigationType.Pop,
-  navigator: navigatorProp,
+  navigator,
   static: staticProp = false
 }: RouterProps): React.ReactElement | null {
   invariant(
@@ -267,7 +267,6 @@ export function Router({
       ` You should never have more than one in your app.`
   );
 
-  let navigator = useNavigator(navigatorProp, basenameProp);
   let basename = normalizePathname(basenameProp);
   let navigationContext = React.useMemo(
     () => ({ basename, navigator, static: staticProp }),
@@ -463,41 +462,6 @@ export function parseLocation({
     ...defaultLocation,
     ...rest,
     pathname: normalizePathnameStart(pathname)
-  };
-}
-
-/**
- * Returns a modified navigator to allow relative pathnames
- */
-export function useNavigator(
-  navigator: Navigator,
-  basename: string
-): Navigator {
-  if (basename !== "") {
-    return navigator;
-  }
-
-  const makeRelative = (path: Path): Path => {
-    return {
-      ...path,
-      pathname: path.pathname.replace(/^\//, "")
-    };
-  };
-  const push = (to: To, state?: any): void => {
-    navigator.push(makeRelative(resolvePath(to)), state);
-  };
-  const replace = (to: To, state?: any): void => {
-    navigator.replace(makeRelative(resolvePath(to)), state);
-  };
-  const createHref = (to: To): string => {
-    return navigator.createHref(makeRelative(resolvePath(to)));
-  };
-
-  return {
-    go: navigator.go,
-    push,
-    replace,
-    createHref
   };
 }
 

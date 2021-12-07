@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Action, Location, To, createPath, parsePath } from "history";
+import { Action, Location, To, createPath, parsePath } from "history-noslash";
 import { Router } from "react-router-dom";
 
 export interface StaticRouterProps {
