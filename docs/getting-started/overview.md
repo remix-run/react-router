@@ -311,7 +311,7 @@ function App() {
 
 Now at "/" the `<Activity>` element will render inside the outlet.
 
-You can have an index route at any level of the route hierarchy that will render when the parent matches but none of it's other children do.
+You can have an index route at any level of the route hierarchy that will render when the parent matches but none of its other children do.
 
 ```tsx
 function App() {
