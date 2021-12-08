@@ -1,4 +1,4 @@
-import type { ComponentDidCatchEmulator } from "./errors";
+import type { AppState } from "./errors";
 import type {
   RouteManifest,
   ServerRouteManifest,
@@ -10,7 +10,7 @@ import type { RouteMatch } from "./routeMatching";
 import type { RouteModules, EntryRouteModule } from "./routeModules";
 
 export interface EntryContext {
-  componentDidCatchEmulator: ComponentDidCatchEmulator;
+  appState: AppState;
   manifest: AssetsManifest;
   matches: RouteMatch<EntryRoute>[];
   routeData: RouteData;

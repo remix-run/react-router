@@ -1,7 +1,6 @@
-import type { Params } from "react-router";
-
-import type { ServerBuild } from "./build";
-import { json } from "./responses";
+import type { RouteMatch } from "./routeMatching";
+import type { ServerRoute } from "./routes";
+import { json, isResponse, isRedirectResponse } from "./responses";
 
 /**
  * An object of arbitrary for route loaders and actions provided by the
@@ -14,65 +13,33 @@ export type AppLoadContext = any;
  */
 export type AppData = any;
 
-export async function loadRouteData(
-  build: ServerBuild,
-  routeId: string,
-  request: Request,
-  context: AppLoadContext,
-  params: Params
-): Promise<Response> {
-  let routeModule = build.routes[routeId].module;
+export async function callRouteAction({
+  loadContext,
+  match,
+  request
+}: {
+  loadContext: unknown;
+  match: RouteMatch<ServerRoute>;
+  request: Request;
+}) {
+  let action = match.route.module.action;
 
-  if (!routeModule.loader) {
-    return Promise.resolve(json(null));
-  }
-
-  let result;
-
-  try {
-    result = await routeModule.loader({ request, context, params });
-  } catch (error) {
-    if (!isResponse(error)) {
-      throw error;
-    }
-
-    if (!isRedirectResponse(error)) {
-      error.headers.set("X-Remix-Catch", "yes");
-    }
-    result = error;
-  }
-
-  if (result === undefined) {
-    throw new Error(
-      `You defined a loader for route "${routeId}" but didn't return ` +
-        `anything from your \`loader\` function. Please return a value or \`null\`.`
-    );
-  }
-
-  return isResponse(result) ? result : json(result);
-}
-
-export async function callRouteAction(
-  build: ServerBuild,
-  routeId: string,
-  request: Request,
-  context: AppLoadContext,
-  params: Params
-): Promise<Response> {
-  let routeModule = build.routes[routeId].module;
-
-  if (!routeModule.action) {
+  if (!action) {
     throw new Error(
       `You made a ${request.method} request to ${request.url} but did not provide ` +
-        `an \`action\` for route "${routeId}", so there is no way to handle the ` +
+        `an \`action\` for route "${match.route.id}", so there is no way to handle the ` +
         `request.`
     );
   }
 
   let result;
   try {
-    result = await routeModule.action({ request, context, params });
-  } catch (error) {
+    result = await action({
+      request: stripDataParam(stripIndexParam(request.clone())),
+      context: loadContext,
+      params: match.params
+    });
+  } catch (error: unknown) {
     if (!isResponse(error)) {
       throw error;
     }
@@ -85,7 +52,7 @@ export async function callRouteAction(
 
   if (result === undefined) {
     throw new Error(
-      `You defined an action for route "${routeId}" but didn't return ` +
+      `You defined an action for route "${match.route.id}" but didn't return ` +
         `anything from your \`action\` function. Please return a value or \`null\`.`
     );
   }
@@ -93,27 +60,77 @@ export async function callRouteAction(
   return isResponse(result) ? result : json(result);
 }
 
-export function isCatchResponse(value: any) {
-  return isResponse(value) && value.headers.get("X-Remix-Catch") != null;
+export async function callRouteLoader({
+  loadContext,
+  match,
+  request
+}: {
+  request: Request;
+  match: RouteMatch<ServerRoute>;
+  loadContext: unknown;
+}) {
+  let loader = match.route.module.loader;
+
+  if (!loader) {
+    throw new Error(
+      `You made a ${request.method} request to ${request.url} but did not provide ` +
+        `a \`loader\` for route "${match.route.id}", so there is no way to handle the ` +
+        `request.`
+    );
+  }
+
+  let result;
+  try {
+    result = await loader({
+      request: stripDataParam(stripIndexParam(request.clone())),
+      context: loadContext,
+      params: match.params
+    });
+  } catch (error: unknown) {
+    if (!isResponse(error)) {
+      throw error;
+    }
+
+    if (!isRedirectResponse(error)) {
+      error.headers.set("X-Remix-Catch", "yes");
+    }
+    result = error;
+  }
+
+  if (result === undefined) {
+    throw new Error(
+      `You defined an action for route "${match.route.id}" but didn't return ` +
+        `anything from your \`action\` function. Please return a value or \`null\`.`
+    );
+  }
+
+  return isResponse(result) ? result : json(result);
 }
 
-function isResponse(value: any): value is Response {
-  return (
-    value != null &&
-    typeof value.status === "number" &&
-    typeof value.statusText === "string" &&
-    typeof value.headers === "object" &&
-    typeof value.body !== "undefined"
-  );
+function stripIndexParam(request: Request) {
+  let url = new URL(request.url);
+  let indexValues = url.searchParams.getAll("index");
+  url.searchParams.delete("index");
+  let indexValuesToKeep = [];
+  for (let indexValue of indexValues) {
+    if (indexValue) {
+      indexValuesToKeep.push(indexValue);
+    }
+  }
+  for (let toKeep of indexValuesToKeep) {
+    url.searchParams.append("index", toKeep);
+  }
+
+  return new Request(url.toString(), request);
 }
 
-const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
-
-export function isRedirectResponse(response: Response): boolean {
-  return redirectStatusCodes.has(response.status);
+function stripDataParam(request: Request) {
+  let url = new URL(request.url);
+  url.searchParams.delete("_data");
+  return new Request(url.toString(), request);
 }
 
-export function extractData(response: Response): Promise<AppData> {
+export function extractData(response: Response): Promise<unknown> {
   let contentType = response.headers.get("Content-Type");
 
   if (contentType && /\bapplication\/json\b/.test(contentType)) {
