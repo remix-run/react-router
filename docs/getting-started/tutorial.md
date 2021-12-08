@@ -80,7 +80,7 @@ const rootElement = document.getElementById("root");
 render(<App />, rootElement);
 ```
 
-Finally start your app:
+Finally, start your app:
 
 ```sh
 # probably this
@@ -794,7 +794,7 @@ Most of the time the URL changes is in response to the user clicking a link. But
 
 Let's add a button that marks the invoice as paid and then navigates to the index route.
 
-First you can copy paste this function that deletes an invoice from our fake data store:
+First you can copy and paste this function that deletes an invoice from our fake data store:
 
 ```js filename=src/data.js
 export function deleteInvoice(number) {

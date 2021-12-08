@@ -230,7 +230,7 @@ You can think about `location.state` just like `location.hash` or `location.sear
 
 A couple great use-cases for location state are:
 
-- Telling the next page where the user came from and branching the UI. The most popular implementation here is the showing a record in a modal if the user clicked on an item in a grid view, but if they show up to the URL directly, show the record in it's own layout (pinterest, old instagram).
+- Telling the next page where the user came from and branching the UI. The most popular implementation here is the showing a record in a modal if the user clicked on an item in a grid view, but if they show up to the URL directly, show the record in its own layout (pinterest, old instagram).
 - Sending a partial record from a list to the next screen so it can render the partial data immediately and then fetching the rest of the data afterward.
 
 You set location state in two ways: on `<Link>` or `navigate`:
