@@ -128,7 +128,7 @@ In v4 we would have just left the path prop off a route. In v5 we would have wra
 
 ## `<Route>` doesn't render? How do I compose?
 
-In v5 the `<Route>` component was just a normal component that was like an `if` statement that rendered when the URL matched it's path. In v6, a `<Route>` element doesn't actually ever render, it's simply there for configuration.
+In v5 the `<Route>` component was just a normal component that was like an `if` statement that rendered when the URL matched its path. In v6, a `<Route>` element doesn't actually ever render, it's simply there for configuration.
 
 In v5, since routes were just components, `MyRoute` will be rendered when the path is "/my-route".
 
@@ -146,7 +146,7 @@ let MyRoute = ({ element, ...rest }) => {
 };
 ```
 
-In v6, however, the `<Route>` is only used for it's props, so the following code will never render `<p>Hello!</p>` because `<MyRoute>` has no path that `<Routes>` can see:
+In v6, however, the `<Route>` is only used for its props, so the following code will never render `<p>Hello!</p>` because `<MyRoute>` has no path that `<Routes>` can see:
 
 ```tsx bad filename=v6-wrong.js
 let App = () => (
