@@ -150,9 +150,9 @@ ReactDOM.render(
 
 #### Justification:
 
-`@reach/router` uses a global, default history instance that has side-effects in the module, which prevents the ability to tree-shake the module whether you use the global or not. Additionally, React Router provides other history types (like hash history) that `@reach/router` doesn't, so it always requires a top-level location provider (in React Router these are `<BrowserRouter/>` and friends).
+`@reach/router` uses a global, default history instance that has side effects in the module, which prevents the ability to tree-shake the module whether you use the global or not. Additionally, React Router provides other history types (like hash history) that `@reach/router` doesn't, so it always requires a top-level location provider (in React Router these are `<BrowserRouter/>` and friends).
 
-Also, various modules like `Router`, `Link` and `useLocation` rendered outside of a `<LocationProvider/>` set up their own URL listener. It's generally not a problem, but every little bit counts. Putting a `<LocationProvider />` at the top allows the app to have a single URL listener.
+Also, various modules like `Router`, `Link` and `useLocation` rendered outside a `<LocationProvider/>` set up their own URL listener. It's generally not a problem, but every little bit counts. Putting a `<LocationProvider />` at the top allows the app to have a single URL listener.
 
 ## Breaking updates
 
@@ -250,7 +250,7 @@ The way redirects work in `@reach/router` was a bit of an experiment. It "throws
 
 After bumping into issues (like app level `componentDidCatch`'s needing to rethrow the redirect), we've decided not to do that anymore in React Router v6.
 
-But we've gone a step farther and concluded that redirect's are not even the job of React Router. Your dynamic web server or static file server should be handling this and sending an appropriate response status code like 301 or 302.
+But we've gone a step farther and concluded that redirects are not even the job of React Router. Your dynamic web server or static file server should be handling this and sending an appropriate response status code like 301 or 302.
 
 Having the ability to redirect while matching in React Router at best requires you to configure the redirects in two places (your server and your routes) and at worst encouraged people to only do it in React Router--which doesn't send a status code at all.
 
@@ -290,7 +290,7 @@ If your app has a `<Link to="/events" />` still hanging around and the user
 clicks it, the server isn't involved since you're using a client-side router.
 You'll need to be more diligent about updating your links 😬.
 
-Alternatively, if you want to allow for outdated links, _and you realize you need to configure your redirects on both the client and the server_, go ahead and copy paste the `Redirect` component we were about to ship but then deleted.
+Alternatively, if you want to allow for outdated links, _and you realize you need to configure your redirects on both the client and the server_, go ahead and copy and paste the `Redirect` component we were about to ship but then deleted.
 
 ```jsx
 import { useEffect } from "react";
@@ -448,11 +448,11 @@ Also note the change from `uri -> url`.
 
 Just feels cleaner to have the params be separate from URL and path.
 
-Also nobody knows the difference between URL and URI, so we didn't want to start a bunch of pedantic arguments about it. React Router always called it URL, and it's got more production apps, so we used URL instead of URI.
+Also, nobody knows the difference between URL and URI, so we didn't want to start a bunch of pedantic arguments about it. React Router always called it URL, and it's got more production apps, so we used URL instead of URI.
 
 ### `<Match />`
 
-There is no `<Match/>` component in React Router v6. It used render props to compose behavior but we've got hooks now.
+There is no `<Match/>` component in React Router v6. It used render props to compose behavior, but we've got hooks now.
 
 If you like it, or just don't want to update your code, it's easy to backport:
 

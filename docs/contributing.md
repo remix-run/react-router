@@ -16,7 +16,7 @@ Before you can contribute to the codebase, you will need to fork the repo. This 
 - All new features, bug-fixes, or **anything that touches `react-router` code** should be branched off of and merged into the `dev` branch
 - Changes that only touch documentation can be branched off of and merged into the `main` branch
 
-The following steps will get you setup to contribute changes to this repo:
+The following steps will get you set up to contribute changes to this repo:
 
 1. Fork the repo (click the <kbd>Fork</kbd> button at the top right of [this page](https://github.com/remix-run/react-router))
 2. Clone your fork locally
