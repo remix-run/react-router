@@ -404,6 +404,52 @@ export function useLocation(): Location {
   return React.useContext(LocationContext).location;
 }
 
+type ParamParseFailed = { failed: true };
+
+type ParamParseSegment<Segment extends string> =
+  // Check here if there exists a forward slash in the string.
+  Segment extends `${infer LeftSegment}/${infer RightSegment}`
+    ? // If there is a forward slash, then attempt to parse each side of the
+      // forward slash.
+      ParamParseSegment<LeftSegment> extends infer LeftResult
+      ? ParamParseSegment<RightSegment> extends infer RightResult
+        ? LeftResult extends string
+          ? // If the left side is successfully parsed as a param, then check if
+            // the right side can be successfully parsed as well. If both sides
+            // can be parsed, then the result is a union of the two sides
+            // (read: "foo" | "bar").
+            RightResult extends string
+            ? LeftResult | RightResult
+            : LeftResult
+          : // If the left side is not successfully parsed as a param, then check
+          // if only the right side can be successfully parse as a param. If it
+          // can, then the result is just right, else it's a failure.
+          RightResult extends string
+          ? RightResult
+          : ParamParseFailed
+        : ParamParseFailed
+      : // If the left side didn't parse into a param, then just check the right
+      // side.
+      ParamParseSegment<RightSegment> extends infer RightResult
+      ? RightResult extends string
+        ? RightResult
+        : ParamParseFailed
+      : ParamParseFailed
+    : // If there's no forward slash, then check if this segment starts with a
+    // colon. If it does, then this is a dynamic segment, so the result is
+    // just the remainder of the string. Otherwise, it's a failure.
+    Segment extends `:${infer Remaining}`
+    ? Remaining
+    : ParamParseFailed;
+
+// Attempt to parse the given string segment. If it fails, then just return the
+// plain string type as a default fallback. Otherwise return the union of the
+// parsed string literals that were referenced as dynamic segments in the route.
+type ParamParseKey<Segment extends string> =
+  ParamParseSegment<Segment> extends string
+    ? ParamParseSegment<Segment>
+    : string;
+
 /**
  * Returns the current navigation action which describes how the router came to
  * the current location, either by a pop, push, or replace on the history stack.
@@ -421,9 +467,10 @@ export function useNavigationType(): NavigationType {
  *
  * @see https://reactrouter.com/docs/en/v6/api#usematch
  */
-export function useMatch<ParamKey extends string = string>(
-  pattern: PathPattern | string
-): PathMatch<ParamKey> | null {
+export function useMatch<
+  ParamKey extends ParamParseKey<Path>,
+  Path extends string
+>(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -432,7 +479,10 @@ export function useMatch<ParamKey extends string = string>(
   );
 
   let { pathname } = useLocation();
-  return React.useMemo(() => matchPath(pattern, pathname), [pathname, pattern]);
+  return React.useMemo(
+    () => matchPath<ParamKey, Path>(pattern, pathname),
+    [pathname, pattern]
+  );
 }
 
 /**
@@ -1021,13 +1071,13 @@ function _renderMatches(
 /**
  * A PathPattern is used to match on some portion of a URL pathname.
  */
-export interface PathPattern {
+export interface PathPattern<Path extends string = string> {
   /**
    * A string to match against a URL pathname. May contain `:id`-style segments
    * to indicate placeholders for dynamic parameters. May also end with `/*` to
    * indicate matching the rest of the URL pathname.
    */
-  path: string;
+  path: Path;
   /**
    * Should be `true` if the static portions of the `path` should be matched in
    * the same case.
@@ -1071,8 +1121,11 @@ type Mutable<T> = {
  *
  * @see https://reactrouter.com/docs/en/v6/api#matchpath
  */
-export function matchPath<ParamKey extends string = string>(
-  pattern: PathPattern | string,
+export function matchPath<
+  ParamKey extends ParamParseKey<Path>,
+  Path extends string
+>(
+  pattern: PathPattern<Path> | Path,
   pathname: string
 ): PathMatch<ParamKey> | null {
   if (typeof pattern === "string") {
