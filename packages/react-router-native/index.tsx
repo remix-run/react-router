@@ -26,12 +26,14 @@ import {
   useLocation,
   useMatch,
   useNavigate,
+  useNavigationType,
   useOutlet,
   useParams,
   useResolvedPath,
   useRoutes
 } from "react-router";
-import { State, To } from "history";
+import type { To } from "react-router";
+
 import URLSearchParams from "@ungap/url-search-params";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,6 +59,7 @@ export {
   useLocation,
   useMatch,
   useNavigate,
+  useNavigationType,
   useOutlet,
   useParams,
   useResolvedPath,
@@ -64,22 +67,26 @@ export {
 };
 
 export type {
+  IndexRouteProps,
+  LayoutRouteProps,
+  Location,
   MemoryRouterProps,
   NavigateFunction,
   NavigateOptions,
   NavigateProps,
+  NavigationType,
   Navigator,
   OutletProps,
   Params,
+  Path,
   PathMatch,
+  PathRouteProps,
   RouteMatch,
   RouteObject,
   RouteProps,
-  PathRouteProps,
-  LayoutRouteProps,
-  IndexRouteProps,
   RouterProps,
-  RoutesProps
+  RoutesProps,
+  To
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -119,7 +126,7 @@ export interface LinkProps extends TouchableHighlightProps {
   children?: React.ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
   replace?: boolean;
-  state?: State;
+  state?: any;
   to: To;
 }
 
@@ -153,17 +160,17 @@ const URLEventType = "url";
 
 /**
  * Handles the press behavior for router `<Link>` components. This is useful if
- * you need to create custom `<Link>` compoments with the same press behavior we
+ * you need to create custom `<Link>` components with the same press behavior we
  * use in our exported `<Link>`.
  */
-export function useLinkPressHandler<S extends State = State>(
+export function useLinkPressHandler(
   to: To,
   {
     replace,
     state
   }: {
     replace?: boolean;
-    state?: S;
+    state?: any;
   } = {}
 ): (event: GestureResponderEvent) => void {
   let navigate = useNavigate();

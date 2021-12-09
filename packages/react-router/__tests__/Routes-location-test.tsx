@@ -1,5 +1,5 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Route, Routes, useParams } from "react-router";
 
 describe("<Routes> with a location", () => {
@@ -17,7 +17,7 @@ describe("<Routes> with a location", () => {
   }
 
   it("matches when the location is overridden", () => {
-    const location = {
+    let location = {
       pathname: "/home",
       search: "",
       hash: "",
@@ -25,14 +25,17 @@ describe("<Routes> with a location", () => {
       key: "r9qntrej"
     };
 
-    const renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/users/michael"]}>
-        <Routes location={location}>
-          <Route path="home" element={<Home />} />
-          <Route path="users/:userId" element={<User />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/users/michael"]}>
+          <Routes location={location}>
+            <Route path="home" element={<Home />} />
+            <Route path="users/:userId" element={<User />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
      <h1>
@@ -42,14 +45,17 @@ describe("<Routes> with a location", () => {
   });
 
   it("matches when the location is not overridden", () => {
-    const renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/users/michael"]}>
-        <Routes>
-          <Route path="home" element={<Home />} />
-          <Route path="users/:userId" element={<User />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/users/michael"]}>
+          <Routes>
+            <Route path="home" element={<Home />} />
+            <Route path="users/:userId" element={<User />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>

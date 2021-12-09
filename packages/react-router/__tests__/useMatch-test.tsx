@@ -1,80 +1,137 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
-import type { PathMatch } from "react-router";
-import { MemoryRouter, Routes, Route, useMatch } from "react-router";
+import * as TestRenderer from "react-test-renderer";
+import { MemoryRouter, PathMatch, Routes, Route, useMatch } from "react-router";
+
+function ShowMatch({ pattern }: { pattern: string }) {
+  return <pre>{JSON.stringify(useMatch(pattern), null, 2)}</pre>;
+}
 
 describe("useMatch", () => {
   describe("when the path matches the current URL", () => {
     it("returns the match", () => {
-      let match: PathMatch | null = null;
-      function Layout() {
-        match = useMatch("home");
-        return null;
-      }
-
-      createTestRenderer(
-        <MemoryRouter initialEntries={["/home"]}>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route path="/home" element={<h1>Home</h1>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
-
-      expect(match).toMatchObject({
-        params: {},
-        pathname: "/home",
-        pattern: { path: "home" }
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="/" element={<ShowMatch pattern="home" />}>
+                <Route path="/home" element={<h1>Home</h1>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
       });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {
+          "params": {},
+          "pathname": "/home",
+          "pathnameBase": "/home",
+          "pattern": {
+            "path": "home",
+            "caseSensitive": false,
+            "end": true
+          }
+        }
+        </pre>
+      `);
     });
   });
 
   describe("when the current URL ends with a slash", () => {
     it("returns the match.pathname with the trailing slash", () => {
-      let match = null;
-      function Layout() {
-        match = useMatch("home");
-        return null;
-      }
-
-      createTestRenderer(
-        <MemoryRouter initialEntries={["/home/"]}>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route path="/home" element={<h1>Home</h1>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
-
-      expect(match).toMatchObject({
-        params: {},
-        pathname: "/home/",
-        pattern: { path: "home" }
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home/"]}>
+            <Routes>
+              <Route path="/" element={<ShowMatch pattern="home" />}>
+                <Route path="/home" element={<h1>Home</h1>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
       });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {
+          "params": {},
+          "pathname": "/home/",
+          "pathnameBase": "/home",
+          "pattern": {
+            "path": "home",
+            "caseSensitive": false,
+            "end": true
+          }
+        }
+        </pre>
+      `);
     });
   });
 
   describe("when the path does not match the current URL", () => {
     it("returns null", () => {
-      let match = null;
-      function Layout() {
-        match = useMatch("about");
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="/" element={<ShowMatch pattern="about" />}>
+                <Route path="/home" element={<h1>Home</h1>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          null
+        </pre>
+      `);
+    });
+  });
+
+  describe("when re-rendered with the same URL", () => {
+    it("returns the memoized match", () => {
+      let path = "/home";
+      let match: PathMatch<string>;
+      let firstMatch: PathMatch<string>;
+
+      function HomePage() {
+        match = useMatch(path);
+
+        if (!firstMatch) {
+          firstMatch = match;
+        }
+
         return null;
       }
 
-      createTestRenderer(
-        <MemoryRouter initialEntries={["/home"]}>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route path="/home" element={<h1>Home</h1>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={[path]}>
+            <Routes>
+              <Route path={path} element={<HomePage />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
-      expect(match).toBeNull();
+      TestRenderer.act(() => {
+        renderer.update(
+          <MemoryRouter initialEntries={[path]}>
+            <Routes>
+              <Route path={path} element={<HomePage />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(match).toBe(firstMatch);
     });
   });
 });

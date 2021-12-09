@@ -1,5 +1,5 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import type { RouteObject } from "react-router";
 import { MemoryRouter, useRoutes } from "react-router";
 
@@ -10,11 +10,14 @@ describe("useRoutes", () => {
       { path: "about", element: <h1>about</h1> }
     ];
 
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/home"]}>
-        <RoutesRenderer routes={routes} />
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/home"]}>
+          <RoutesRenderer routes={routes} />
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>
@@ -33,11 +36,14 @@ describe("useRoutes", () => {
         { path: "about", element: <h1>about</h1> }
       ];
 
-      let renderer = createTestRenderer(
-        <MemoryRouter initialEntries={["/users/mj"]}>
-          <RoutesRenderer routes={routes} />
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/mj"]}>
+            <RoutesRenderer routes={routes} />
+          </MemoryRouter>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
@@ -53,11 +59,14 @@ describe("useRoutes", () => {
       { path: "two", element: <h1>two</h1> }
     ];
 
-    let renderer = createTestRenderer(
-      <MemoryRouter initialEntries={["/one"]}>
-        <RoutesRenderer routes={routes} location={{ pathname: "/two" }} />
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/one"]}>
+          <RoutesRenderer routes={routes} location={{ pathname: "/two" }} />
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>
@@ -84,11 +93,13 @@ describe("useRoutes", () => {
         }
       ];
 
-      createTestRenderer(
-        <MemoryRouter initialEntries={["/layout"]}>
-          <RoutesRenderer routes={routes} />
-        </MemoryRouter>
-      );
+      TestRenderer.act(() => {
+        TestRenderer.create(
+          <MemoryRouter initialEntries={["/layout"]}>
+            <RoutesRenderer routes={routes} />
+          </MemoryRouter>
+        );
+      });
 
       expect(consoleWarn).toHaveBeenCalledTimes(1);
       expect(consoleWarn).toHaveBeenCalledWith(

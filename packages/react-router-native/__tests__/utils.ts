@@ -1,4 +1,4 @@
-import type { ReactTestInstance } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 
 export class MockEvent {
   type: string;
@@ -16,7 +16,7 @@ export class MockEvent {
 }
 
 export function press(
-  element: React.ReactElement | ReactTestInstance,
+  element: React.ReactElement | TestRenderer.ReactTestInstance,
   extraProps?: any
 ) {
   if (!element.props.onPress) {

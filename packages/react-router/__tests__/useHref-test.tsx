@@ -1,35 +1,18 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Routes, Route, useHref } from "react-router";
 
 function ShowHref({ to }: { to: string }) {
-  return <p>{useHref(to)}</p>;
+  return <pre>{useHref(to)}</pre>;
 }
 
 describe("useHref", () => {
   describe("to a child route", () => {
     it("returns the correct href", () => {
-      let element = (
-        <MemoryRouter initialEntries={["/courses"]}>
-          <Routes>
-            <Route path="courses" element={<ShowHref to="advanced-react" />} />
-          </Routes>
-        </MemoryRouter>
-      );
-      let renderer = createTestRenderer(element);
-      renderer.update(element);
-
-      expect(renderer.toJSON()).toMatchInlineSnapshot(`
-        <p>
-          /courses/advanced-react
-        </p>
-      `);
-    });
-
-    describe("when the URL has a trailing slash", () => {
-      it("returns the correct href", () => {
-        let element = (
-          <MemoryRouter initialEntries={["/courses/"]}>
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/courses"]}>
             <Routes>
               <Route
                 path="courses"
@@ -38,36 +21,59 @@ describe("useHref", () => {
             </Routes>
           </MemoryRouter>
         );
-        let renderer = createTestRenderer(element);
-        renderer.update(element);
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          /courses/advanced-react
+        </pre>
+      `);
+    });
+
+    describe("when the URL has a trailing slash", () => {
+      it("returns the correct href", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/courses/"]}>
+              <Routes>
+                <Route
+                  path="courses"
+                  element={<ShowHref to="advanced-react" />}
+                />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /courses/advanced-react
-          </p>
+          </pre>
         `);
       });
     });
 
     describe("when the href has a trailing slash", () => {
       it("returns the correct href", () => {
-        let element = (
-          <MemoryRouter initialEntries={["/courses"]}>
-            <Routes>
-              <Route
-                path="courses"
-                element={<ShowHref to="advanced-react/" />}
-              />
-            </Routes>
-          </MemoryRouter>
-        );
-        let renderer = createTestRenderer(element);
-        renderer.update(element);
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/courses"]}>
+              <Routes>
+                <Route
+                  path="courses"
+                  element={<ShowHref to="advanced-react/" />}
+                />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /courses/advanced-react/
-          </p>
+          </pre>
         `);
       });
     });
@@ -75,59 +81,62 @@ describe("useHref", () => {
 
   describe("to a sibling route", () => {
     it("returns the correct href", () => {
-      let element = (
-        <MemoryRouter initialEntries={["/courses"]}>
-          <Routes>
-            <Route path="courses" element={<ShowHref to="../about" />} />
-          </Routes>
-        </MemoryRouter>
-      );
-      let renderer = createTestRenderer(element);
-      renderer.update(element);
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/courses"]}>
+            <Routes>
+              <Route path="courses" element={<ShowHref to="../about" />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
-        <p>
+        <pre>
           /about
-        </p>
+        </pre>
       `);
     });
 
     describe("when the URL has a trailing slash", () => {
       it("returns the correct href", () => {
-        let element = (
-          <MemoryRouter initialEntries={["/courses/"]}>
-            <Routes>
-              <Route path="/courses/" element={<ShowHref to="../about" />} />
-            </Routes>
-          </MemoryRouter>
-        );
-        let renderer = createTestRenderer(element);
-        renderer.update(element);
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/courses/"]}>
+              <Routes>
+                <Route path="/courses/" element={<ShowHref to="../about" />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /about
-          </p>
+          </pre>
         `);
       });
     });
 
     describe("when the href has a trailing slash", () => {
       it("returns the correct href", () => {
-        let element = (
-          <MemoryRouter initialEntries={["/courses"]}>
-            <Routes>
-              <Route path="courses" element={<ShowHref to="../about/" />} />
-            </Routes>
-          </MemoryRouter>
-        );
-        let renderer = createTestRenderer(element);
-        renderer.update(element);
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/courses"]}>
+              <Routes>
+                <Route path="courses" element={<ShowHref to="../about/" />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /about/
-          </p>
+          </pre>
         `);
       });
     });
@@ -135,29 +144,10 @@ describe("useHref", () => {
 
   describe("to a parent route", () => {
     it("returns the correct href", () => {
-      let element = (
-        <MemoryRouter initialEntries={["/courses/advanced-react"]}>
-          <Routes>
-            <Route path="courses">
-              <Route path="advanced-react" element={<ShowHref to=".." />} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
-      let renderer = createTestRenderer(element);
-      renderer.update(element);
-
-      expect(renderer.toJSON()).toMatchInlineSnapshot(`
-        <p>
-          /courses
-        </p>
-      `);
-    });
-
-    describe("when the URL has a trailing slash", () => {
-      it("returns the correct href", () => {
-        let element = (
-          <MemoryRouter initialEntries={["/courses/advanced-react/"]}>
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/courses/advanced-react"]}>
             <Routes>
               <Route path="courses">
                 <Route path="advanced-react" element={<ShowHref to=".." />} />
@@ -165,35 +155,60 @@ describe("useHref", () => {
             </Routes>
           </MemoryRouter>
         );
-        let renderer = createTestRenderer(element);
-        renderer.update(element);
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          /courses
+        </pre>
+      `);
+    });
+
+    describe("when the URL has a trailing slash", () => {
+      it("returns the correct href", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/courses/advanced-react/"]}>
+              <Routes>
+                <Route path="courses">
+                  <Route path="advanced-react" element={<ShowHref to=".." />} />
+                </Route>
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /courses
-          </p>
+          </pre>
         `);
       });
     });
 
     describe("when the href has a trailing slash", () => {
       it("returns the correct href", () => {
-        let element = (
-          <MemoryRouter initialEntries={["/courses/advanced-react"]}>
-            <Routes>
-              <Route path="courses">
-                <Route path="advanced-react" element={<ShowHref to="../" />} />
-              </Route>
-            </Routes>
-          </MemoryRouter>
-        );
-        let renderer = createTestRenderer(element);
-        renderer.update(element);
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/courses/advanced-react"]}>
+              <Routes>
+                <Route path="courses">
+                  <Route
+                    path="advanced-react"
+                    element={<ShowHref to="../" />}
+                  />
+                </Route>
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /courses/
-          </p>
+          </pre>
         `);
       });
     });
@@ -201,67 +216,70 @@ describe("useHref", () => {
 
   describe("to an absolute route", () => {
     it("returns the correct href", () => {
-      let element = (
-        <MemoryRouter initialEntries={["/courses/advanced-react"]}>
-          <Routes>
-            <Route
-              path="courses/advanced-react"
-              element={<ShowHref to="/users" />}
-            />
-          </Routes>
-        </MemoryRouter>
-      );
-      let renderer = createTestRenderer(element);
-      renderer.update(element);
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/courses/advanced-react"]}>
+            <Routes>
+              <Route
+                path="courses/advanced-react"
+                element={<ShowHref to="/users" />}
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
-        <p>
+        <pre>
           /users
-        </p>
+        </pre>
       `);
     });
   });
 
   describe("with a to value that has more .. segments than are in the URL", () => {
     it("returns the correct href", () => {
-      let element = (
-        <MemoryRouter initialEntries={["/courses/react-fundamentals"]}>
-          <Routes>
-            <Route path="courses">
-              <Route
-                path="react-fundamentals"
-                element={<ShowHref to="../../../courses" />}
-              />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
-      let renderer = createTestRenderer(element);
-      renderer.update(element);
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/courses/react-fundamentals"]}>
+            <Routes>
+              <Route path="courses">
+                <Route
+                  path="react-fundamentals"
+                  element={<ShowHref to="../../../courses" />}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
-        <p>
+        <pre>
           /courses
-        </p>
+        </pre>
       `);
     });
 
     describe("and no additional segments", () => {
       it("links to the root /", () => {
-        let element = (
-          <MemoryRouter initialEntries={["/home"]}>
-            <Routes>
-              <Route path="/home" element={<ShowHref to="../../.." />} />
-            </Routes>
-          </MemoryRouter>
-        );
-        let renderer = createTestRenderer(element);
-        renderer.update(element);
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/home"]}>
+              <Routes>
+                <Route path="/home" element={<ShowHref to="../../.." />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
-          <p>
+          <pre>
             /
-          </p>
+          </pre>
         `);
       });
     });

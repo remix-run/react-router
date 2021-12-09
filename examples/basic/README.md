@@ -1,3 +1,9 @@
+---
+title: Basics
+toc: false
+order: 1
+---
+
 # Basic Example
 
 This example demonstrates some of the basic features of React Router, including:
@@ -12,4 +18,4 @@ This example demonstrates some of the basic features of React Router, including:
 
 Open this example on [StackBlitz](https://stackblitz.com):
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/v6.0.0-beta.8/examples/basic?file=src/App.tsx)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/main/examples/basic?file=src/App.tsx)

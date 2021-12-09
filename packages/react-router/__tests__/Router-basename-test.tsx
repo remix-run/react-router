@@ -1,5 +1,5 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Routes, Route } from "react-router";
 
 describe("<Router basename>", () => {
@@ -13,13 +13,16 @@ describe("<Router basename>", () => {
   });
 
   it("renders null and issues a warning when the URL does not match the basename", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter basename="/app" initialEntries={["/home"]}>
-        <Routes>
-          <Route path="/" element={<h1>App</h1>} />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter basename="/app" initialEntries={["/home"]}>
+          <Routes>
+            <Route path="/" element={<h1>App</h1>} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toBeNull();
     expect(consoleWarn).toHaveBeenCalledTimes(1);
@@ -29,13 +32,16 @@ describe("<Router basename>", () => {
   });
 
   it("renders the first route that matches the URL", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter basename="/home" initialEntries={["/home"]}>
-        <Routes>
-          <Route path="/" element={<h1>Home</h1>} />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter basename="/home" initialEntries={["/home"]}>
+          <Routes>
+            <Route path="/" element={<h1>Home</h1>} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>
@@ -45,14 +51,17 @@ describe("<Router basename>", () => {
   });
 
   it("does not render a 2nd route that also matches the URL", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter basename="/app" initialEntries={["/app/home"]}>
-        <Routes>
-          <Route path="home" element={<h1>Home</h1>} />
-          <Route path="home" element={<h1>Something else</h1>} />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter basename="/app" initialEntries={["/app/home"]}>
+          <Routes>
+            <Route path="home" element={<h1>Home</h1>} />
+            <Route path="home" element={<h1>Something else</h1>} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>
@@ -62,13 +71,16 @@ describe("<Router basename>", () => {
   });
 
   it("matches regardless of basename casing", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter basename="/HoME" initialEntries={["/home"]}>
-        <Routes>
-          <Route path="/" element={<h1>Home</h1>} />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter basename="/HoME" initialEntries={["/home"]}>
+          <Routes>
+            <Route path="/" element={<h1>Home</h1>} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>
@@ -78,13 +90,16 @@ describe("<Router basename>", () => {
   });
 
   it("matches regardless of URL casing", () => {
-    let renderer = createTestRenderer(
-      <MemoryRouter basename="/home" initialEntries={["/hOmE"]}>
-        <Routes>
-          <Route path="/" element={<h1>Home</h1>} />
-        </Routes>
-      </MemoryRouter>
-    );
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter basename="/home" initialEntries={["/hOmE"]}>
+          <Routes>
+            <Route path="/" element={<h1>Home</h1>} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>

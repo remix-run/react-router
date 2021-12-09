@@ -1,5 +1,5 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import type { RouteObject } from "react-router";
 import {
   MemoryRouter,
@@ -26,9 +26,12 @@ describe("route matching", () => {
 
     testPaths.forEach(path => {
       it(`renders the right elements at ${path}`, () => {
-        let renderer = createTestRenderer(
-          <MemoryRouter initialEntries={[path]} children={routes} />
-        );
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={[path]} children={routes} />
+          );
+        });
 
         expect(renderer.toJSON()).toMatchSnapshot();
       });

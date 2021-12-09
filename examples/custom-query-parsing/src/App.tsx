@@ -36,6 +36,10 @@ export default function App() {
  *
  * It's a good example of how React hooks offer a great deal of flexibility when
  * you compose them together!
+ *
+ * TODO: rethink the generic type here, users can put whatever they want in the
+ * URL, probably best to use runtime validation with a type predicate:
+ * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates
  */
 function useQueryParam<T>(
   key: string
@@ -46,14 +50,10 @@ function useQueryParam<T>(
   let value = React.useMemo(() => JSURL.parse(paramValue), [paramValue]);
 
   let setValue = React.useCallback(
-    (newQuery: T, options?: NavigateOptions) => {
-      setSearchParams(
-        {
-          ...searchParams,
-          [key]: JSURL.stringify(newQuery)
-        },
-        options
-      );
+    (newValue: T, options?: NavigateOptions) => {
+      let newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set(key, JSURL.stringify(newValue));
+      setSearchParams(newSearchParams, options);
     },
     [key, searchParams, setSearchParams]
   );

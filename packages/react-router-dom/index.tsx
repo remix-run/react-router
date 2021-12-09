@@ -1,4 +1,5 @@
 import * as React from "react";
+import type { BrowserHistory, HashHistory, History } from "history";
 import { createBrowserHistory, createHashHistory, createPath } from "history";
 import {
   MemoryRouter,
@@ -18,12 +19,13 @@ import {
   useLocation,
   useMatch,
   useNavigate,
+  useNavigationType,
   useOutlet,
   useParams,
   useResolvedPath,
   useRoutes
 } from "react-router";
-import type { BrowserHistory, HashHistory, State, To } from "history";
+import type { To } from "react-router";
 
 function warning(cond: boolean, message: string): void {
   if (!cond) {
@@ -65,6 +67,7 @@ export {
   useLocation,
   useMatch,
   useNavigate,
+  useNavigationType,
   useOutlet,
   useParams,
   useResolvedPath,
@@ -72,6 +75,10 @@ export {
 };
 
 export type {
+  Location,
+  Path,
+  To,
+  NavigationType,
   MemoryRouterProps,
   NavigateFunction,
   NavigateOptions,
@@ -145,8 +152,8 @@ export function BrowserRouter({
     <Router
       basename={basename}
       children={children}
-      action={state.action}
       location={state.location}
+      navigationType={state.action}
       navigator={history}
     />
   );
@@ -180,11 +187,44 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
     <Router
       basename={basename}
       children={children}
-      action={state.action}
       location={state.location}
+      navigationType={state.action}
       navigator={history}
     />
   );
+}
+
+export interface HistoryRouterProps {
+  basename?: string;
+  children?: React.ReactNode;
+  history: History;
+}
+
+export function HistoryRouter({
+  basename,
+  children,
+  history
+}: HistoryRouterProps) {
+  const [state, setState] = React.useState({
+    action: history.action,
+    location: history.location
+  });
+
+  React.useLayoutEffect(() => history.listen(setState), [history]);
+
+  return (
+    <Router
+      basename={basename}
+      children={children}
+      location={state.location}
+      navigationType={state.action}
+      navigator={history}
+    />
+  );
+}
+
+if (__DEV__) {
+  HistoryRouter.displayName = "HistoryRouter";
 }
 
 function isModifiedEvent(event: React.MouseEvent) {
@@ -193,8 +233,9 @@ function isModifiedEvent(event: React.MouseEvent) {
 
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+  reloadDocument?: boolean;
   replace?: boolean;
-  state?: State;
+  state?: any;
   to: To;
 }
 
@@ -203,7 +244,7 @@ export interface LinkProps
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
-    { onClick, replace = false, state, target, to, ...rest },
+    { onClick, reloadDocument, replace = false, state, target, to, ...rest },
     ref
   ) {
     let href = useHref(to);
@@ -212,7 +253,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
     ) {
       if (onClick) onClick(event);
-      if (!event.defaultPrevented) {
+      if (!event.defaultPrevented && !reloadDocument) {
         internalOnClick(event);
       }
     }
@@ -321,13 +362,10 @@ if (__DEV__) {
 
 /**
  * Handles the click behavior for router `<Link>` components. This is useful if
- * you need to create custom `<Link>` compoments with the same click behavior we
+ * you need to create custom `<Link>` components with the same click behavior we
  * use in our exported `<Link>`.
  */
-export function useLinkClickHandler<
-  E extends Element = HTMLAnchorElement,
-  S extends State = State
->(
+export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   to: To,
   {
     target,
@@ -336,7 +374,7 @@ export function useLinkClickHandler<
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
-    state?: S;
+    state?: any;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -402,7 +440,7 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   let setSearchParams = React.useCallback(
     (
       nextInit: URLSearchParamsInit,
-      navigateOptions?: { replace?: boolean; state?: State }
+      navigateOptions?: { replace?: boolean; state?: any }
     ) => {
       navigate("?" + createSearchParams(nextInit), navigateOptions);
     },

@@ -103,24 +103,6 @@ async function updateExamplesPackageConfig(example, transform) {
   await jsonfile.writeFile(file, json, { spaces: 2 });
 }
 
-/**
- *
- * @param {string} example
- * @param {string} version
- */
-async function updateExampleReadmeUrl(example, version) {
-  let filePath = path.join(rootDir, "examples", example, "README.md");
-  let fileBuffer = await fsp.readFile(filePath);
-  let file = fileBuffer
-    .toString()
-    .replace(
-      /https:\/\/stackblitz.com\/github\/remix-run\/react-router\/tree\/[^/+]+\/examples\/(.+?(?=\?)|.+?(?=\)))/,
-      `https://stackblitz.com/github/remix-run/react-router/tree/${version}/examples/${example}`
-    );
-
-  await fsp.writeFile(filePath, file, "utf8");
-}
-
 async function run() {
   try {
     let args = process.argv.slice(2);
@@ -174,7 +156,6 @@ async function run() {
       let stat = await fsp.stat(path.join(examplesDir, example));
       if (!stat.isDirectory()) continue;
 
-      await updateExampleReadmeUrl(example, `v${version}`);
       await updateExamplesPackageConfig(example, config => {
         config.dependencies["react-router"] = version;
         config.dependencies["react-router-dom"] = version;

@@ -1,15 +1,15 @@
-# Welcome to React Router &middot; [![build][build-badge]][build]
+# Welcome to React Router &middot; [![npm package][npm-badge]][npm] [![build][build-badge]][build]
 
+[npm-badge]: https://img.shields.io/npm/v/react-router-dom.svg?style=flat-square
+[npm]: https://www.npmjs.org/package/react-router-dom
 [build-badge]: https://img.shields.io/github/workflow/status/remix-run/react-router/test/dev?style=flat-square
 [build]: https://github.com/remix-run/react-router/actions/workflows/test.yml
 
 React Router is a lightweight, fully-featured routing library for the [React](https://reactjs.org) JavaScript library. React Router runs everywhere that React runs; on the web, on the server (using node.js), and on React Native.
 
-**The current stable release of React Router is version 5, which you can find [on the `v5` branch](https://github.com/remix-run/react-router/tree/v5). The current branch you are viewing is for version 6 which is under active development and should be released very soon.**
-
 If you're new to React Router, we recommend you start with [the getting started guide](/docs/getting-started/installation.md).
 
-If you're migrating to v6 from v5 (or v4, which is the same as v5), check out [the migration guide](/docs/guides/migrating-5-to-6.md). If you're migrating from Reach Router, check out [the migration guide for Reach Router](/docs/guides/migrating-reach-to-6.md).
+If you're migrating to v6 from v5 (or v4, which is the same as v5), check out [the migration guide](/docs/upgrading/v5.md). If you're migrating from Reach Router, check out [the migration guide for Reach Router](/docs/upgrading/reach.md). If you need to find the code for v5, [it is on the `v5` branch](https://github.com/remix-run/react-router/tree/v5).
 
 When v6 is stable we will publish the docs on our website.
 

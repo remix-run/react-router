@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mocked } from "ts-jest/utils";
 import { Linking as _Linking, Text, View } from "react-native";
-import { act, create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import {
   NativeRouter,
   Routes,
@@ -9,7 +9,6 @@ import {
   useDeepLinking
 } from "react-router-native";
 import { MockEvent, mockPromiseThatResolvesImmediatelyWith } from "./utils";
-import type { ReactTestRenderer } from "react-test-renderer";
 
 // Ensures TypeScript understands that Linking is a mock
 const Linking = mocked(_Linking);
@@ -38,9 +37,9 @@ describe("deep linking", () => {
         );
       }
 
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
           <NativeRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
@@ -79,9 +78,9 @@ describe("deep linking", () => {
         );
       }
 
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
           <NativeRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
@@ -131,9 +130,9 @@ describe("deep linking", () => {
         );
       }
 
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
           <NativeRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
@@ -145,7 +144,7 @@ describe("deep linking", () => {
 
       expect(renderer.toJSON()).toMatchSnapshot();
 
-      act(() => {
+      TestRenderer.act(() => {
         changeURL("app:///about");
       });
 

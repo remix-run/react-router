@@ -1,5 +1,5 @@
 import * as React from "react";
-import { create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Outlet, Routes, Route } from "react-router";
 
 describe("Descendant <Routes> splat matching", () => {
@@ -28,15 +28,18 @@ describe("Descendant <Routes> splat matching", () => {
         );
       }
 
-      let renderer = createTestRenderer(
-        <MemoryRouter initialEntries={["/courses/react/react-fundamentals"]}>
-          <Routes>
-            <Route path="courses" element={<Courses />}>
-              <Route path="react/*" element={<ReactCourses />} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/courses/react/react-fundamentals"]}>
+            <Routes>
+              <Route path="courses" element={<Courses />}>
+                <Route path="react/*" element={<ReactCourses />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <div>

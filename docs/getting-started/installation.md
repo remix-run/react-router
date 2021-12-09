@@ -12,7 +12,6 @@ This document describes the most common ways people use React Router with variou
 - [Parcel](#parcel)
 - [Webpack](#webpack)
 - [HTML Script Tags](#html-script-tags)
-- [React Native](#react-native)
 
 ## Basic Installation
 
@@ -22,7 +21,7 @@ Most modern React projects manage their dependencies using a package manager lik
 <summary>npm</summary>
 
 ```sh
-$ npm install history@5 react-router-dom@6
+$ npm install react-router-dom@6
 ```
 
 </details>
@@ -31,7 +30,7 @@ $ npm install history@5 react-router-dom@6
 <summary>Yarn</summary>
 
 ```sh
-$ yarn add history@5 react-router-dom@6
+$ yarn add react-router-dom@6
 ```
 
 </details>
@@ -40,7 +39,7 @@ $ yarn add history@5 react-router-dom@6
 <summary>pnpm</summary>
 
 ```sh
-$ pnpm add history@5 react-router-dom@6
+$ pnpm add react-router-dom@6
 ```
 
 </details>
@@ -49,11 +48,11 @@ $ pnpm add history@5 react-router-dom@6
 
 Follow the instructions in the [React documentation to set up a new project with Create React App](https://reactjs.org/docs/create-a-new-react-app.html#create-react-app), then follow [the installation instructions above](#basic-installation) to install React Router in your project.
 
-Once your project is set up and React Router is installed as a dependency, open the `src/index.js` in your text editor. Import `BrowserRouter` from `react-router-dom` near the top of your file and wrap your app in a `<Router>`:
+Once your project is set up and React Router is installed as a dependency, open the `src/index.js` in your text editor. Import `BrowserRouter` from `react-router-dom` near the top of your file and wrap your app in a `<BrowserRouter>`:
 
 ```js [3, 9-11]
-import React from "react";
-import ReactDOM from "react-dom";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App";
@@ -70,7 +69,7 @@ ReactDOM.render(
 Now you can use React Router anywhere in your app! For a simple example, open `src/App.js` and replace the default markup with some routes:
 
 ```js [2, 8-12]
-import React from "react";
+import * as React from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import "./App.css";
 
@@ -151,8 +150,8 @@ Go to the `index.js` file in your project and import the necessary functions fro
 
 ```js
 // index.js
-import React from "react";
-import ReactDOM from "react-dom";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.js";
 
@@ -181,7 +180,7 @@ Now that React and React Router are set up create a new file `App.js` and add so
 
 ```js
 // App.js
-import React from "react";
+import * as React from "react";
 import { Routes, Route, Link } from "react-router-dom";
 
 function App() {
@@ -316,6 +315,8 @@ Although this method is a nice way to get up and running quickly, it does load s
 
 In order to do this, you'll need to build your website with a JavaScript bundler like [Webpack](#webpack) or [Parcel](#parcel). The rest of the installation methods on this page describe how to get started using these tools.
 
+<!--
 ## React Native
 
 TODO:
+-->

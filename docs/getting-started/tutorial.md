@@ -7,7 +7,7 @@ order: 2
 
 ## Introduction
 
-[Check out the completed version of the app here](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Completed).
+[Check out the completed version of the app here](https://stackblitz.com/edit/github-agqlf5?file=src/App.jsx).
 
 React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, and on React Native.
 
@@ -15,13 +15,13 @@ If you're just getting started with React generally, we recommend you follow [th
 
 We'll keep this tutorial quick and to the point. By the end you'll know the APIs you deal with day-to-day with React Router. After that, you can dig into some of the other docs to get a deeper understanding.
 
-While building a little bookeeping app we'll cover:
+While building a little bookkeeping app we'll cover:
 
 - Configuring Routes
 - Navigating with Link
 - Creating Links with active styling
 - Using Nested Routes for Layout
-- Navigating programatically
+- Navigating programmatically
 - Using URL params for data loading
 - Using URL Search params
 - Creating your own behaviors through composition
@@ -29,15 +29,13 @@ While building a little bookeeping app we'll cover:
 
 ## Installation
 
-### Recommended: repl.it
+### Recommended: StackBlitz
 
-To do this tutorial you'll need a working React app. We recommend skipping bundlers and using [this repl.it](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Template) to code along in your browser.
+To do this tutorial you'll need a working React app. We recommend skipping bundlers and using [this demo on StackBlitz](https://stackblitz.com/github/remix-run/react-router/tree/main/tutorial?file=src/App.jsx) to code along in your browser:
 
-- [Open this in a new tab](https://replit.com/@RemixRun/React-Router-v6-Tutorial-Template)
-- Click the "Fork" button
-- Once it's loaded up, click the "Run" button.
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/main/tutorial?file=src/App.jsx)
 
-As you edit files it will update live.
+As you edit files, the tutorial will update live.
 
 ### Using a bundler
 
@@ -70,7 +68,7 @@ export default function App() {
 }
 ```
 
-Actually, that "!" doesn't look boring at all. This is pretty exciting. We sat on this code for over a year as we recovered financially from a global pandemic. THIS IS THE MOST EXCITING THING WE'VE DONE IN A WHILE!
+Actually, that "!" doesn't look boring at all. This is pretty exciting. We sat on React Router v6 beta for over a year as we shifted gears with our business after a global pandemic. THIS IS THE MOST EXCITING THING WE'VE DONE IN A WHILE!
 
 Finally, go make sure `index.js` or `main.jsx` (depending on the bundler you used) is actually boring:
 
@@ -137,7 +135,7 @@ export default function App() {
 }
 ```
 
-Go ahead and click the links and the back/forward button (if you're using repl.it, you'll need to click the "open in new tab" button in the inline-browser's toolbar). React Router is now controlling the URL!
+Go ahead and click the links and the back/forward button (if you're using StackBlitz, you'll need to click the "Open in New Window" button in the inline-browser's toolbar). React Router is now controlling the URL!
 
 We don't have any routes that render when the URL changes yet, but Link is changing the URL without causing a full page reload.
 
@@ -154,19 +152,27 @@ Now fill 'em up with some code:
 
 ```tsx filename=src/routes/expenses.jsx
 export default function Expenses() {
-  return <h2>Expenses</h2>;
+  return (
+    <main style={{ padding: "1rem 0" }}>
+      <h2>Expenses</h2>
+    </main>
+  );
 }
 ```
 
 ```tsx filename=src/routes/invoices.jsx
 export default function Invoices() {
-  return <h2>Invoices</h2>;
+  return (
+    <main style={{ padding: "1rem 0" }}>
+      <h2>Invoices</h2>
+    </main>
+  );
 }
 ```
 
 Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx`.
 
-```tsx lines=[2,4-5,10-14] filename=src/main.jsx
+```tsx lines=[2,4-5,13-19] filename=src/main.jsx
 import { render } from "react-dom";
 import {
   BrowserRouter,
@@ -192,7 +198,7 @@ render(
 
 Notice at `"/"` it renders `<App>`. At `"/invoices"` it render `<Invoices>`. Nice work!
 
-<docs-info>Remember if you're using repl.it to click the "open in new tab" button in the inline browser's toolbar to be able to click the back/forward buttons in your browser.</docs-info>
+<docs-info>Remember if you're using StackBlitz to click the "Open in New Window" button in the inline browser's toolbar to be able to click the back/forward buttons in your browser.</docs-info>
 
 ## Nested Routes
 
@@ -203,9 +209,9 @@ Let's get some automatic, persistent layout handling by doing just two things:
 1. Nest the routes inside of the App route
 2. Render an Outlet
 
-First let's nest the routes. Right now the expenses and invoices routes are siblings to to the app, we're want to make them _children_ of the app route:
+First let's nest the routes. Right now the expenses and invoices routes are siblings to the app, we want to make them _children_ of the app route:
 
-```jsx lines=[11-14] filename=src/main.jsx
+```jsx lines=[15-18] filename=src/main.jsx
 import { render } from "react-dom";
 import {
   BrowserRouter,
@@ -237,7 +243,7 @@ When routes have children it does two things:
 
 However, before (2) will work we need to render an `Outlet` in the `App.jsx` "parent" route.
 
-```jsx lines=[1,11] filename=src/App.jsx
+```jsx lines=[1,16] filename=src/App.jsx
 import { Outlet, Link } from "react-router-dom";
 
 export default function App() {
@@ -265,7 +271,7 @@ As we'll see later, this works at _any level_ of the route hierarchy and is incr
 
 ## Listing the Invoices
 
-Normally you'd be fetching data from a server somewhere, but for this tutorail lets just hard code some fake stuff so we can focus on routing.
+Normally you'd be fetching data from a server somewhere, but for this tutorial let's hard code some fake stuff so we can focus on routing.
 
 Make a file at `src/data.js` and copy/paste this in there:
 
@@ -310,7 +316,7 @@ export function getInvoices() {
 
 Now we can use it in the invoices route. Let's also add a bit of styling to get a sidebar nav layout going on. Feel free to copy/paste all of this, but take special note of the `<Link>` elements `to` prop:
 
-```js lines=[12] filename=src/routes/invoices.jsx
+```js lines=[17] filename=src/routes/invoices.jsx
 import { Link } from "react-router-dom";
 import { getInvoices } from "../data";
 
@@ -349,14 +355,18 @@ That didn't go as you might have expected. If you click those links the page goe
 
 Before we move on, it's good practice to always handle this "no match" case. Go back to your route config and add this:
 
-```js lines=[5] filename=src/main.jsx
+```js lines=[5-12] filename=src/main.jsx
 <Routes>
   <Route path="/" element={<App />}>
     <Route path="expenses" element={<Expenses />} />
     <Route path="invoices" element={<Invoices />} />
     <Route
       path="*"
-      element={<p>There's nothing here!</p>}
+      element={
+        <main style={{ padding: "1rem" }}>
+          <p>There's nothing here!</p>
+        </main>
+      }
     />
   </Route>
 </Routes>
@@ -366,7 +376,7 @@ The `"*"` has special meaning here. It will match only when no other routes do.
 
 ## Reading URL Params
 
-Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visted some URLs like `"/invoices/1998"` and `"/invoices/2005"`, lets make a new component at `src/routes/invoice.js` to render at those URLs:
+Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, let's make a new component at `src/routes/invoice.js` to render at those URLs:
 
 ```js filename=src/routes/invoice.js
 export default function Invoice() {
@@ -389,7 +399,11 @@ Create a new `<Route>` _inside_ of the "invoices" route like this:
     </Route>
     <Route
       path="*"
-      element={<p>There's nothing here!</p>}
+      element={
+        <main style={{ padding: "1rem" }}>
+          <p>There's nothing here!</p>
+        </main>
+      }
     />
   </Route>
 </Routes>
@@ -404,8 +418,8 @@ Alright, now go click a link to an invoice, note that the URL changes but the ne
 
 That's right! We need to add an outlet to the parent layout route (we're really proud of you).
 
-```tsx lines=[1,18] filename=src/routes/invoices.jsx
-import { Link } from "react-router-dom";
+```tsx lines=[1,24] filename=src/routes/invoices.jsx
+import { Link, Outlet } from "react-router-dom";
 import { getInvoices } from "../data";
 
 export default function Invoices() {
@@ -453,7 +467,7 @@ Note that the key of the param on the `params` object is the same as the dynamic
 
 Let's use that information to build up a more interesting invoice page. Open up `src/data.js` and add a new function to lookup invoices by their number:
 
-```js filename=src/data.js lines=[7-9]
+```js filename=src/data.js lines=[7-11]
 // ...
 
 export function getInvoices() {
@@ -467,7 +481,7 @@ export function getInvoice(number) {
 }
 ```
 
-And now back in `invoice.js` we can display use the param to look it up and display more information:
+And now back in `invoice.js` we use the param to look up an invoice and display more information:
 
 ```js filename=routes/invoice.js lines=[2,6]
 import { useParams } from "react-router-dom";
@@ -496,17 +510,28 @@ Index routes are possibly the most difficult concept in React Router for people 
 
 Right now you're probably looking at one of the invoices. Click on the "Invoices" link in the global nav of your app. Notice that the main content area goes blank! We can fix this with an "index" route.
 
-```jsx filename=src/main.jsx lines=[5]
+```jsx filename=src/main.jsx lines=[5-12]
 <Routes>
   <Route path="/" element={<App />}>
     <Route path="expenses" element={<Expenses />} />
     <Route path="invoices" element={<Invoices />}>
-      <Route index element={<p>Select an invoice</p>} />
+      <Route
+        index
+        element={
+          <main style={{ padding: "1rem" }}>
+            <p>Select an invoice</p>
+          </main>
+        }
+      />
       <Route path=":invoiceId" element={<Invoice />} />
     </Route>
     <Route
       path="*"
-      element={<p>There's nothing here!</p>}
+      element={
+        <main style={{ padding: "1rem" }}>
+          <p>There's nothing here!</p>
+        </main>
+      }
     />
   </Route>
 </Routes>
@@ -527,7 +552,7 @@ Maybe you're still scratching your head. There are a few ways we try to answer t
 
 It's very common, especially in navigation lists, to display the link as the active link the user is looking at. Let's add this treatment to our invoices list by swapping out `Link` for `NavLink`.
 
-```jsx lines=[1,10-17,22] filename=src/routes/invoices.jsx
+```jsx lines=[1,15-27] filename=src/routes/invoices.jsx
 import { NavLink, Outlet } from "react-router-dom";
 import { getInvoices } from "../data";
 
@@ -587,7 +612,7 @@ React Router makes it easy to read and manipulate the search params with `useSea
 
 Let's see it in action by adding a little filter on the invoices nav list.
 
-```jsx filename=routes/invoices.jsx lines=[1,6,11-20,22-27]
+```jsx filename=routes/invoices.jsx lines=[4,10,20-30,32-37]
 import {
   NavLink,
   Outlet,
@@ -648,7 +673,7 @@ export default function Invoices() {
 Check this out, as the user types:
 
 - `setSearchParams()` is putting the `?filter=...` search params in the URL and rerendering the router.
-- `useSearchParams` is now returing a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) with `"filter"` as one of it's values.
+- `useSearchParams` is now returning a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) with `"filter"` as one of its values.
 - We set the value of the input to whatever is in the filter search param (it's just like `useState` but in the URLSearchParams instead!)
 - We filter our list of invoices based on the filter search param.
 
@@ -736,7 +761,7 @@ function BrandLink({ brand, ...props }) {
 
 Or maybe you want it to add the brand if it's not there already and remove it if it's clicked again!
 
-```jsx [6-12]
+```jsx [7-12]
 function BrandLink({ brand, ...props }) {
   let [params] = useSearchParams();
   let isActive = params.getAll("brand").includes(brand);
@@ -745,8 +770,7 @@ function BrandLink({ brand, ...props }) {
   } else {
     params = new URLSearchParams(
       Array.from(params).filter(
-        ([key, value]) =>
-          key !== "brand" || value !== branch
+        ([key, value]) => key !== "brand" || value !== brand
       )
     );
   }
@@ -762,7 +786,7 @@ function BrandLink({ brand, ...props }) {
 
 As you can see, even in this fairly simple example there are a lot of valid behaviors you might want. React Router doesn't try to solve every use-case we've ever heard of directly. Instead, we give you the components and hooks to compose whatever behavior you need.
 
-## Navigating Programatically
+## Navigating Programmatically
 
 Okay, back to our app. Hang in there, you're almost done!
 
@@ -782,7 +806,7 @@ export function deleteInvoice(number) {
 
 Now let's add the delete button, call our new function, and navigate to the index route:
 
-```js lines=[1-2,5,16-24] filename=src/routes/invoice.jsx
+```js lines=[1-2,5,17-24] filename=src/routes/invoice.jsx
 import { useParams, useNavigate } from "react-router-dom";
 import { getInvoice, deleteInvoice } from "../data";
 

@@ -1,8 +1,7 @@
 import * as React from "react";
 import { Text, TouchableHighlight, View } from "react-native";
 import { Link, NativeRouter, Routes, Route } from "react-router-native";
-import type { ReactTestRenderer } from "react-test-renderer";
-import { act, create as createTestRenderer } from "react-test-renderer";
+import * as TestRenderer from "react-test-renderer";
 
 import { press } from "./utils";
 
@@ -27,9 +26,9 @@ describe("A <Link> press", () => {
       );
     }
 
-    let renderer!: ReactTestRenderer;
-    act(() => {
-      renderer = createTestRenderer(
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
         <NativeRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
@@ -42,9 +41,8 @@ describe("A <Link> press", () => {
     expect(renderer.toJSON()).toMatchSnapshot();
 
     let touchable = renderer.root.findByType(TouchableHighlight);
-    expect(touchable).not.toBeNull();
 
-    act(() => {
+    TestRenderer.act(() => {
       press(touchable);
     });
 
@@ -73,9 +71,9 @@ describe("A <Link> press", () => {
       );
     }
 
-    let renderer!: ReactTestRenderer;
-    act(() => {
-      renderer = createTestRenderer(
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
         <NativeRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
@@ -88,10 +86,9 @@ describe("A <Link> press", () => {
     expect(renderer.toJSON()).toMatchSnapshot();
 
     let touchable = renderer.root.findByType(TouchableHighlight);
-    expect(touchable).not.toBeNull();
 
     let pressEvent;
-    act(() => {
+    TestRenderer.act(() => {
       pressEvent = press(touchable);
     });
 
@@ -124,9 +121,9 @@ describe("A <Link> press", () => {
         );
       }
 
-      let renderer!: ReactTestRenderer;
-      act(() => {
-        renderer = createTestRenderer(
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
           <NativeRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
@@ -139,9 +136,8 @@ describe("A <Link> press", () => {
       expect(renderer.toJSON()).toMatchSnapshot();
 
       let touchable = renderer.root.findByType(TouchableHighlight);
-      expect(touchable).not.toBeNull();
 
-      act(() => {
+      TestRenderer.act(() => {
         press(touchable);
       });
 
