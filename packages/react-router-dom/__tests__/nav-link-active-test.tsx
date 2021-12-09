@@ -42,7 +42,7 @@ describe("NavLink", () => {
 
       let anchor = renderer.root.findByType("a");
 
-      expect(anchor.children[0]).toMatch("Current");
+      expect(anchor.children[0]).toMatch("Somewhere else");
     });
   });
 
