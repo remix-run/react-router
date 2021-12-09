@@ -19,8 +19,6 @@ function spyConsole() {
 }
 
 describe("server", () => {
-  let spy = spyConsole();
-
   let routeId = "root";
   let build: ServerBuild = {
     entry: {

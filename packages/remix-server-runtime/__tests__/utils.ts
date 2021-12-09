@@ -1,12 +1,6 @@
 import prettier from "prettier";
 
-import type {
-  ActionFunction,
-  HandleDataRequestFunction,
-  HandleDocumentRequestFunction,
-  HeadersFunction,
-  LoaderFunction
-} from "../";
+import type { ActionFunction, HeadersFunction, LoaderFunction } from "../";
 import type { EntryRoute, ServerRoute, ServerRouteManifest } from "../routes";
 
 export function mockServerBuild(

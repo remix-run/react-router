@@ -1,6 +1,5 @@
 import type { AppLoadContext } from "./data";
-import { extractData } from "./data";
-import { callRouteAction, callRouteLoader } from "./data";
+import { callRouteAction, callRouteLoader, extractData } from "./data";
 import type { AppState } from "./errors";
 import type { HandleDataRequestFunction, ServerBuild } from "./build";
 import type { EntryContext } from "./entry";
