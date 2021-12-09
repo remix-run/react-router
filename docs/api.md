@@ -345,7 +345,10 @@ declare function NavLink(
 ): React.ReactElement;
 
 interface NavLinkProps
-  extends Omit<LinkProps, "className" | "style" | "children"> {
+  extends Omit<
+    LinkProps,
+    "className" | "style" | "children"
+  > {
   caseSensitive?: boolean;
   children?:
     | React.ReactNode

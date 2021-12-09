@@ -275,8 +275,11 @@ if (__DEV__) {
   Link.displayName = "Link";
 }
 
-export interface NavLinkProps extends Omit<LinkProps, "className" | "style" | "children"> {
-  children: React.ReactNode | ((props: { isActive: boolean }) => React.ReactNode);
+export interface NavLinkProps
+  extends Omit<LinkProps, "className" | "style" | "children"> {
+  children:
+    | React.ReactNode
+    | ((props: { isActive: boolean }) => React.ReactNode);
   caseSensitive?: boolean;
   className?: string | ((props: { isActive: boolean }) => string);
   end?: boolean;
@@ -346,7 +349,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         style={style}
         to={to}
       >
-        {typeof children === "function"? children({ isActive }) : children}
+        {typeof children === "function" ? children({ isActive }) : children}
       </Link>
     );
   }
