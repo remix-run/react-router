@@ -345,8 +345,14 @@ declare function NavLink(
 ): React.ReactElement;
 
 interface NavLinkProps
-  extends Omit<LinkProps, "className" | "style"> {
+  extends Omit<
+    LinkProps,
+    "className" | "style" | "children"
+  > {
   caseSensitive?: boolean;
+  children?:
+    | React.ReactNode
+    | ((props: { isActive: boolean }) => React.ReactNode);
   className?:
     | string
     | ((props: { isActive: boolean }) => string);
@@ -363,7 +369,7 @@ interface NavLinkProps
 
 A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not it is "active". This is useful when building a navigation menu such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected. It also provides useful context for assistive technology like screen readers.
 
-By default, an `active` class is added to a `<NavLink>` component when it is active. This provides the same simple styling mechanism for most users who are upgrading from v5. One difference as of `v6.0.0-beta.3` is that `activeClassName` and `activeStyle` have been removed from `NavLinkProps`. Instead, you can pass a function to either `style` or `className` that will allow you to customize the inline styling or the class string based on the component's active state.
+By default, an `active` class is added to a `<NavLink>` component when it is active. This provides the same simple styling mechanism for most users who are upgrading from v5. One difference as of `v6.0.0-beta.3` is that `activeClassName` and `activeStyle` have been removed from `NavLinkProps`. Instead, you can pass a function to either `style` or `className` that will allow you to customize the inline styling or the class string based on the component's active state. you can also pass a function as children to customize the content of the `<NavLink>` component based on their active state, specially useful to change styles on internal elements.
 
 ```tsx
 import * as React from "react";
@@ -375,6 +381,8 @@ function NavList() {
   let activeStyle = {
     textDecoration: "underline"
   };
+
+  let activeClassName = "underline"
 
   return (
     <nav>
@@ -392,11 +400,22 @@ function NavList() {
         <li>
           <NavLink
             to="tasks"
-            style={({ isActive }) =>
-              isActive ? activeStyle : undefined
+            className={({ isActive }) =>
+              isActive ? activeClassName : undefined
             }
           >
             Tasks
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            to="tasks"
+          >
+            {({ isActive }) => (
+              <span className={isActive ? activeClassName : undefined}>
+                Tasks
+              </span>
+            ))}
           </NavLink>
         </li>
       </ul>
