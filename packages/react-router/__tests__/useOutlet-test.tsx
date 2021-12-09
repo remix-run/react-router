@@ -102,12 +102,12 @@ describe("useOutlet", () => {
     it("returns the context", () => {
       function Users() {
         return useOutlet([
-          "Chance",
-          "Jacob",
-          "Kent",
-          "Logan",
+          "Mary",
+          "Jane",
           "Michael",
-          "Ryan"
+          "Bert",
+          "Winifred",
+          "George"
         ]);
       }
 
@@ -146,22 +146,22 @@ describe("useOutlet", () => {
           </h1>
           <ul>
             <li>
-              Chance
+              Mary
             </li>
             <li>
-              Jacob
-            </li>
-            <li>
-              Kent
-            </li>
-            <li>
-              Logan
+              Jane
             </li>
             <li>
               Michael
             </li>
             <li>
-              Ryan
+              Bert
+            </li>
+            <li>
+              Winifred
+            </li>
+            <li>
+              George
             </li>
           </ul>
         </div>
