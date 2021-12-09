@@ -30,7 +30,8 @@ import {
   useOutlet,
   useParams,
   useResolvedPath,
-  useRoutes
+  useRoutes,
+  useOutletContext
 } from "react-router";
 import type { To } from "react-router";
 
@@ -63,7 +64,8 @@ export {
   useOutlet,
   useParams,
   useResolvedPath,
-  useRoutes
+  useRoutes,
+  useOutletContext
 };
 
 export type {

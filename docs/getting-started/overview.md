@@ -218,7 +218,7 @@ function SentInvoices() {
 
 The nested url segments map to nested component trees. This is perfect for creating UI that has persistent navigation in layouts with an inner section that changes with the URL. If you look around the web you'll notice many websites (and especially web apps) have multiple levels of layout nesting.
 
-Here's a another example of a root layout with navigation that persists while the inner page swaps out with the URL:
+Here's another example of a root layout with navigation that persists while the inner page swaps out with the URL:
 
 ```tsx
 import {
@@ -300,7 +300,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<Activity />}>
+        <Route index element={<Activity />} />
         <Route path="invoices" element={<Invoices />} />
         <Route path="activity" element={<Activity />} />
       </Route>
@@ -311,7 +311,7 @@ function App() {
 
 Now at "/" the `<Activity>` element will render inside the outlet.
 
-You can have an index route at any level of the route hierarchy that will render when the parent matches but none of it's other children do.
+You can have an index route at any level of the route hierarchy that will render when the parent matches but none of its other children do.
 
 ```tsx
 function App() {
@@ -435,7 +435,7 @@ function App() {
 
 ## Descendant `<Routes>`
 
-You can render [a `<Routes>` element](../api.md#routes) anywhere you need one, including deep within the component tree of another `<Routes>`. These will work just the same as any other `<Routes>`, except they will automatically build on the path of the route that rendered them. If you do this, _make sure to put a \* at the end of the parent route's path_. Otherwise the parent route won't match the URL when it is longer than the parent route's path, and your descendant `<Routes>` won't ever show up.
+You can render [a `<Routes>` element](../api.md#routes) anywhere you need one, including deep within the component tree of another `<Routes>`. These will work just the same as any other `<Routes>`, except they will automatically build on the path of the route that rendered them. If you do this, _make sure to put a \* at the end of the parent route's path_. Otherwise, the parent route won't match the URL when it is longer than the parent route's path, and your descendant `<Routes>` won't ever show up.
 
 ```tsx [5]
 function App() {

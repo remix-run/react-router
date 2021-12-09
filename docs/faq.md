@@ -43,7 +43,7 @@ In React Router v6 we switched from using v5's `<Route component>` and `<Route r
 
 For starters, we see React itself taking the lead here with the `<Suspense fallback={<Spinner />}>` API. The `fallback` prop takes a React **element**, not a **component**. This lets you easily pass whatever props you want to your `<Spinner>` from the component that renders it.
 
-Using elements instead of components means we don't have to provide a `passProps`-style API so you can get the props you need to your elements. For example, in a component-based API there is no good way to pass props to the `<Profile>` element that is rendered when `<Route path=":userId" component={Profile} />` matches. Most React libraries who take this approach end up with either an API like `<Route component={Profile} passProps={{ animate: true }} />` or use a render prop or higher-order component.
+Using elements instead of components means we don't have to provide a `passProps`-style API, so you can get the props you need to your elements. For example, in a component-based API there is no good way to pass props to the `<Profile>` element that is rendered when `<Route path=":userId" component={Profile} />` matches. Most React libraries who take this approach end up with either an API like `<Route component={Profile} passProps={{ animate: true }} />` or use a render prop or higher-order component.
 
 Also, `Route`'s rendering API in v5 was rather large. As we worked on v4/5, the conversation went something like this:
 
@@ -128,7 +128,7 @@ In v4 we would have just left the path prop off a route. In v5 we would have wra
 
 ## `<Route>` doesn't render? How do I compose?
 
-In v5 the `<Route>` component was just a normal component that was like an `if` statement that rendered when the URL matched it's path. In v6, a `<Route>` element doesn't actually ever render, it's simply there for configuration.
+In v5 the `<Route>` component was just a normal component that was like an `if` statement that rendered when the URL matched its path. In v6, a `<Route>` element doesn't actually ever render, it's simply there for configuration.
 
 In v5, since routes were just components, `MyRoute` will be rendered when the path is "/my-route".
 
@@ -146,7 +146,7 @@ let MyRoute = ({ element, ...rest }) => {
 };
 ```
 
-In v6, however, the `<Route>` is only used for it's props, so the following code will never render `<p>Hello!</p>` because `<MyRoute>` has no path that `<Routes>` can see:
+In v6, however, the `<Route>` is only used for its props, so the following code will never render `<p>Hello!</p>` because `<MyRoute>` has no path that `<Routes>` can see:
 
 ```tsx bad filename=v6-wrong.js
 let App = () => (
@@ -196,7 +196,7 @@ function MatchPath({ path, Comp }) {
 
 ## How do I nest routes deep in the tree?
 
-In v5 you could render a `<Route>` or `<Switch>` anywhere you want. You can keep doing the very same thing but you need to use `<Routes>` (`<Route>` without an 's' will not work). We call these "Descendant `<Routes>`".
+In v5 you could render a `<Route>` or `<Switch>` anywhere you want. You can keep doing the very same thing, but you need to use `<Routes>` (`<Route>` without an 's' will not work). We call these "Descendant `<Routes>`".
 
 It might have looked like this in v5
 
@@ -391,7 +391,7 @@ function App() {
 }
 ```
 
-In fact, the v5 version has all sorts of problems if your routes aren't ordered _just right_. V6 competely eliminates this problem.
+In fact, the v5 version has all sorts of problems if your routes aren't ordered _just right_. V6 completely eliminates this problem.
 
 **Remix Users**
 
