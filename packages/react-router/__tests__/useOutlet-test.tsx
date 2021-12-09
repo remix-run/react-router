@@ -1,6 +1,12 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route, useOutlet } from "react-router";
+import {
+  MemoryRouter,
+  Routes,
+  Route,
+  useOutlet,
+  useOutletContext
+} from "react-router";
 
 describe("useOutlet", () => {
   describe("when there is no child route", () => {
@@ -47,6 +53,118 @@ describe("useOutlet", () => {
         <h1>
           Profile
         </h1>
+      `);
+    });
+  });
+
+  describe("when there is no context", () => {
+    it("returns null", () => {
+      function Users() {
+        return useOutlet();
+      }
+
+      function Profile() {
+        let outletContext = useOutletContext();
+
+        return (
+          <div>
+            <h1>Profile</h1>
+            <pre>{outletContext}</pre>
+          </div>
+        );
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/profile"]}>
+            <Routes>
+              <Route path="users" element={<Users />}>
+                <Route path="profile" element={<Profile />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          <h1>
+            Profile
+          </h1>
+          <pre />
+        </div>
+      `);
+    });
+  });
+
+  describe("when there is context", () => {
+    it("returns the context", () => {
+      function Users() {
+        return useOutlet([
+          "Chance",
+          "Jacob",
+          "Kent",
+          "Logan",
+          "Michael",
+          "Ryan"
+        ]);
+      }
+
+      function Profile() {
+        let outletContext = useOutletContext<string[]>();
+
+        return (
+          <div>
+            <h1>Profile</h1>
+            <ul>
+              {outletContext.map(name => (
+                <li key={name}>{name}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/profile"]}>
+            <Routes>
+              <Route path="users" element={<Users />}>
+                <Route path="profile" element={<Profile />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          <h1>
+            Profile
+          </h1>
+          <ul>
+            <li>
+              Chance
+            </li>
+            <li>
+              Jacob
+            </li>
+            <li>
+              Kent
+            </li>
+            <li>
+              Logan
+            </li>
+            <li>
+              Michael
+            </li>
+            <li>
+              Ryan
+            </li>
+          </ul>
+        </div>
       `);
     });
   });
