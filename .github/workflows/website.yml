@@ -22,4 +22,10 @@ jobs:
           url: "${{ secrets.DOCS_REFRESH_URL }}?ref=${{ github.ref }}"
           method: "POST"
           customHeaders: '{"Authorization": "${{ secrets.DOCS_REFRESH_TOKEN }}"}'
-          timeout: 60000
+
+      - name: Refresh the staging docs
+        uses: fjogeleit/http-request-action@v1.8.1
+        with:
+          url: "${{ secrets.DOCS_STAGING_REFRESH_URL }}?ref=${{ github.ref }}"
+          method: "POST"
+          customHeaders: '{"Authorization": "${{ secrets.DOCS_REFRESH_TOKEN }}"}'
