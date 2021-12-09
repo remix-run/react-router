@@ -90,7 +90,7 @@ interface BrowserRouterProps {
 
 `<BrowserRouter>` is the recommended interface for running React Router in a web browser. A `<BrowserRouter>` stores the current location in the browser's address bar using clean URLs and navigates using the browser's built-in history stack.
 
-`<BrowserRouter window>` defaults to using the current [document's `defaultView`](https://developer.mozilla.org/en-US/docs/Web/API/Document/defaultView), but it may also be used to track changes to another's window's URL, in an `<iframe>`, for example.
+`<BrowserRouter window>` defaults to using the current [document's `defaultView`](https://developer.mozilla.org/en-US/docs/Web/API/Document/defaultView), but it may also be used to track changes to another window's URL, in an `<iframe>`, for example.
 
 ```tsx
 import * as React from "react";
@@ -317,7 +317,7 @@ interface LinkProps extends TouchableHighlightProps {
 
 </details>
 
-A `<Link>` is an element that lets the user navigate to another view by tapping it, similar to how `<a>` elements work in a web app. In `react-router-native`, a `<Link>` renders a `TouchableHighlight`.
+A `<Link>` is an element that lets the user navigate to another view by tapping it, similar to how `<a>` elements work in a web app. In `react-router-native`, a `<Link>` renders a `TouchableHighlight`. To override default styling and behaviour, please refer to the [Props reference for `TouchableHighlight`](https://reactnative.dev/docs/touchablehighlight#props).
 
 ```tsx
 import * as React from "react";
@@ -509,7 +509,12 @@ class LoginForm extends React.Component {
   <summary>Type declaration</summary>
 
 ```tsx
-declare function Outlet(): React.ReactElement | null;
+interface OutletProps {
+  context?: unknown;
+}
+declare function Outlet(
+  props: OutletProps
+): React.ReactElement | null;
 ```
 
 </details>
@@ -541,6 +546,74 @@ function App() {
         <Route path="tasks" element={<DashboardTasks />} />
       </Route>
     </Routes>
+  );
+}
+```
+
+### `useOutletContext`
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function useOutletContext<
+  Context = unknown
+>(): Context;
+```
+
+</details>
+
+Often parent routes manage state or other values you want shared with child routes. You can create your own [context provider](https://reactjs.org/docs/context.html) if you like, but this is such a common situation that it's built-into `<Outlet />`:
+
+```tsx lines=[3]
+function Parent() {
+  const [count, setCount] = React.useState(0);
+  return <Outlet context={[count, setCount]} />;
+}
+```
+
+```tsx lines=[2]
+function Child() {
+  const [count, setCount] = useOutletContext();
+  const increment = () => setCount(c => c + 1);
+  return <button onClick={increment}>{count}</button>;
+}
+```
+
+If you're using TypeScript, we recommend the parent component provide a custom hook for accessing the context value. This makes it easier for consumers to get nice typings, control consumers, and know who's consuming the context value. Here's a more realistic example:
+
+```tsx filename=src/routes/dashboard.tsx lines=[12,17-19]
+import * as React from "react";
+import type { User } from "./types";
+
+type ContextType = { user: User | null };
+
+export default function Dashboard() {
+  const [user, setUser] = React.useState<User | null>(null);
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <Outlet context={user} />
+    </div>
+  );
+}
+
+export function useUser() {
+  return useOutletContext<ContextType>();
+}
+```
+
+```tsx filename=src/routes/dashboard/messages.tsx lines=[1,4]
+import { useUser } from "../dashboard";
+
+export default function DashboardMessages() {
+  const user = useUser();
+  return (
+    <div>
+      <h2>Messages</h2>
+      <p>Hello, {user.name}!</p>
+    </div>
   );
 }
 ```
@@ -1098,7 +1171,7 @@ declare function useNavigate(): NavigateFunction;
 interface NavigateFunction {
   (
     to: To,
-    options?: { replace?: boolean; state?: State }
+    options?: { replace?: boolean; state?: any }
   ): void;
   (delta: number): void;
 }

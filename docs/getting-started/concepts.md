@@ -33,9 +33,9 @@ Here are some words we use a lot when we talk about React Router. The rest of th
 
 - <a id="history-stack">**History Stack**</a> - As the user navigates, the browser keeps track of each [location](#location) in a stack. If you click and hold the back button in a browser you can see the browser's history stack right there.
 
-- <a id="csr">**Client Side Routing (CSR)**</a> - A plain HTML document can link to other documents and the browser handles the [history stack](#history-stack) itself. Client Side Routing enables developers to manipulate the browser history stack without making document request to the server.
+- <a id="csr">**Client Side Routing (CSR)**</a> - A plain HTML document can link to other documents and the browser handles the [history stack](#history-stack) itself. Client Side Routing enables developers to manipulate the browser history stack without making a document request to the server.
 
-- <a id="history-object">**History**</a> - An object allows React Router to subscribe to changes in the [URL](#url) as well as providing APIs to manipulate the browser [history stack](#history-stack) programmatically.
+- <a id="history-object">**History**</a> - An object that allows React Router to subscribe to changes in the [URL](#url) as well as providing APIs to manipulate the browser [history stack](#history-stack) programmatically.
 
 - <a id="history-action">**History Action**</a> - One of `POP`, `PUSH`, or `REPLACE`. Users can arrive at a [URL](#url) for one of these three reasons. A push when a new entry is added to the history stack (typically a link click or the programmer forced a navigation). A replace is similar except it replaces the current entry on the stack instead of pushing a new one. Finally, a pop happens when the user clicks the back or forward buttons in the browser chrome.
 
@@ -230,7 +230,7 @@ You can think about `location.state` just like `location.hash` or `location.sear
 
 A couple great use-cases for location state are:
 
-- Telling the next page where the user came from and branching the UI. The most popular implementation here is the showing a record in a modal if the user clicked on an item in a grid view, but if they show up to the URL directly, show the record in it's own layout (pinterest, old instagram).
+- Telling the next page where the user came from and branching the UI. The most popular implementation here is the showing a record in a modal if the user clicked on an item in a grid view, but if they show up to the URL directly, show the record in its own layout (pinterest, old instagram).
 - Sending a partial record from a list to the next screen so it can render the partial data immediately and then fetching the rest of the data afterward.
 
 You set location state in two ways: on `<Link>` or `navigate`:

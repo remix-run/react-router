@@ -43,7 +43,7 @@ In React Router v6 we switched from using v5's `<Route component>` and `<Route r
 
 For starters, we see React itself taking the lead here with the `<Suspense fallback={<Spinner />}>` API. The `fallback` prop takes a React **element**, not a **component**. This lets you easily pass whatever props you want to your `<Spinner>` from the component that renders it.
 
-Using elements instead of components means we don't have to provide a `passProps`-style API so you can get the props you need to your elements. For example, in a component-based API there is no good way to pass props to the `<Profile>` element that is rendered when `<Route path=":userId" component={Profile} />` matches. Most React libraries who take this approach end up with either an API like `<Route component={Profile} passProps={{ animate: true }} />` or use a render prop or higher-order component.
+Using elements instead of components means we don't have to provide a `passProps`-style API, so you can get the props you need to your elements. For example, in a component-based API there is no good way to pass props to the `<Profile>` element that is rendered when `<Route path=":userId" component={Profile} />` matches. Most React libraries who take this approach end up with either an API like `<Route component={Profile} passProps={{ animate: true }} />` or use a render prop or higher-order component.
 
 Also, `Route`'s rendering API in v5 was rather large. As we worked on v4/5, the conversation went something like this:
 
@@ -128,7 +128,7 @@ In v4 we would have just left the path prop off a route. In v5 we would have wra
 
 ## `<Route>` doesn't render? How do I compose?
 
-In v5 the `<Route>` component was just a normal component that was like an `if` statement that rendered when the URL matched it's path. In v6, a `<Route>` element doesn't actually ever render, it's simply there for configuration.
+In v5 the `<Route>` component was just a normal component that was like an `if` statement that rendered when the URL matched its path. In v6, a `<Route>` element doesn't actually ever render, it's simply there for configuration.
 
 In v5, since routes were just components, `MyRoute` will be rendered when the path is "/my-route".
 
@@ -146,7 +146,7 @@ let MyRoute = ({ element, ...rest }) => {
 };
 ```
 
-In v6, however, the `<Route>` is only used for it's props, so the following code will never render `<p>Hello!</p>` because `<MyRoute>` has no path that `<Routes>` can see:
+In v6, however, the `<Route>` is only used for its props, so the following code will never render `<p>Hello!</p>` because `<MyRoute>` has no path that `<Routes>` can see:
 
 ```tsx bad filename=v6-wrong.js
 let App = () => (
@@ -196,7 +196,7 @@ function MatchPath({ path, Comp }) {
 
 ## How do I nest routes deep in the tree?
 
-In v5 you could render a `<Route>` or `<Switch>` anywhere you want. You can keep doing the very same thing but you need to use `<Routes>` (`<Route>` without an 's' will not work). We call these "Descendant `<Routes>`".
+In v5 you could render a `<Route>` or `<Switch>` anywhere you want. You can keep doing the very same thing, but you need to use `<Routes>` (`<Route>` without an 's' will not work). We call these "Descendant `<Routes>`".
 
 It might have looked like this in v5
 
@@ -212,7 +212,7 @@ function Users() {
     <div>
       <h1>Users</h1>
       <Switch>
-        <Route path="/users/accont" component={Account} />
+        <Route path="/users/account" component={Account} />
       </Switch>
     </div>
   );
@@ -274,7 +274,7 @@ The majority of regexp routes were only concerned about one URL segment at a tim
 
 A very common route we've seen is a regex matching multiple language codes:
 
-```tsx filename=v5-regex-route.js
+```tsx filename=v5-lang-route.js
 function App() {
   return (
     <Switch>
@@ -292,7 +292,7 @@ function Lang({ params }) {
 
 These are all actually just static paths, so in v6 you can make three routes and pass the code directly to the component. If you've got a lot of them, make an array and map it into routes to avoid the repetition.
 
-```tsx filename=v6.js
+```tsx filename=v6-lang-route.js
 function App() {
   return (
     <Routes>
@@ -313,7 +313,7 @@ function Lang({ lang }) {
 
 Another common case was ensuring that parameters were an integer.
 
-```tsx filename=v5-regex-route.js
+```tsx filename=v5-userId-route.js
 function App() {
   return (
     <Switch>
@@ -330,11 +330,11 @@ function User({ params }) {
 
 In this case you have to do a bit of work yourself with the regex inside the matching component:
 
-```tsx filename=v5-regex-route.js
+```tsx filename=v6-userId-route.js
 function App() {
   return (
     <Routes>
-      <Route path="users/:id" element={<ValidateUser />} />
+      <Route path="/users/:id" element={<ValidateUser />} />
       <Route path="/users/*" component={NotFound} />
     </Routes>
   );
@@ -391,13 +391,13 @@ function App() {
 }
 ```
 
-In fact, the v5 version has all sorts of problems if your routes aren't ordered _just right_. V6 competely eliminates this problem.
+In fact, the v5 version has all sorts of problems if your routes aren't ordered _just right_. V6 completely eliminates this problem.
 
 **Remix Users**
 
 If you're using [Remix](https://remix.run), you can send proper 40x responses to the browser by moving this work into your loader. This also decreases the size of the browser bundles sent to the user because loaders only run on the server.
 
-```tsx
+```tsx filename=remix-useLoaderData.js
 import { useLoaderData } from "remix";
 
 export async function loader({ params }) {
@@ -405,9 +405,11 @@ export async function loader({ params }) {
     throw new Response("", { status: 400 });
   }
 
-  let user = await fakeDb.user.find({ where: { id: params.id=}})
+  let user = await fakeDb.user.find({
+    where: { id: params.id }
+  });
   if (!user) {
-    throw new Response("", { status: 404})
+    throw new Response("", { status: 404 });
   }
 
   return user;
