@@ -663,7 +663,7 @@ export function useRoutes(
         `deeper, the parent won't match anymore and therefore the child ` +
         `routes will never render.\n\n` +
         `Please change the parent <Route path="${parentPath}"> to <Route ` +
-        `path="${parentPath}/*">.`
+        `path="${parentPath === "/" ? "*" : `${parentPath}/*`}">.`
     );
   }
 
