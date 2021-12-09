@@ -478,7 +478,8 @@ export function useMatch<
     `useMatch() may be used only in the context of a <Router> component.`
   );
 
-  return matchPath<ParamKey, Path>(pattern, useLocation().pathname);
+  let { pathname } = useLocation();
+  return React.useMemo(() => matchPath<ParamKey, Path>(pattern, pathname), [pathname, pattern]);
 }
 
 /**
@@ -522,7 +523,7 @@ export function useNavigate(): NavigateFunction {
   });
 
   let navigate: NavigateFunction = React.useCallback(
-    (to: To | number, options: { replace?: boolean; state?: any } = {}) => {
+    (to: To | number, options: NavigateOptions = {}) => {
       warning(
         activeRef.current,
         `You should call navigate() in a React.useEffect(), not when ` +
@@ -573,8 +574,10 @@ export function useOutlet(): React.ReactElement | null {
  *
  * @see https://reactrouter.com/docs/en/v6/api#useparams
  */
-export function useParams<Key extends string = string>(): Readonly<
-  Params<Key>
+export function useParams<
+  ParamsOrKey extends string | Record<string, string | undefined> = string
+>(): Readonly<
+  [ParamsOrKey] extends [string] ? Params<ParamsOrKey> : Partial<ParamsOrKey>
 > {
   let { matches } = React.useContext(RouteContext);
   let routeMatch = matches[matches.length - 1];

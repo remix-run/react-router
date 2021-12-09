@@ -48,21 +48,21 @@ export default function App() {
 Here's a simple express server that renders the app on the server. Note the use of `StaticRouter`.
 
 ```js filename=server.entry.js
-import express from "express"
+import express from "express";
 import ReactDOMServer from "react-dom/server";
 import { StaticRouter } from "react-router-dom/server";
 import App from "./App";
 
 let app = express();
 
-app.get("*", ((req, res)) => {
+app.get("*", (req, res) => {
   let html = ReactDOMServer.renderToString(
     <StaticRouter location={req.url}>
-      <App/>
+      <App />
     </StaticRouter>
   );
   res.send("<!DOCTYPE html>" + html);
-})
+});
 
 app.listen(3000);
 ```

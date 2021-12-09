@@ -72,7 +72,7 @@ come back later and pick up where you left off.
 You should be able to simply install v1.3.3 and then deploy your app.
 
 ```sh
-npm install @reach/router@lastest
+npm install @reach/router@latest
 ```
 
 ### Update route components to use hooks

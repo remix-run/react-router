@@ -21,7 +21,7 @@ Most modern React projects manage their dependencies using a package manager lik
 <summary>npm</summary>
 
 ```sh
-$ npm install history@5 react-router-dom@6
+$ npm install react-router-dom@6
 ```
 
 </details>
@@ -30,7 +30,7 @@ $ npm install history@5 react-router-dom@6
 <summary>Yarn</summary>
 
 ```sh
-$ yarn add history@5 react-router-dom@6
+$ yarn add react-router-dom@6
 ```
 
 </details>
@@ -39,7 +39,7 @@ $ yarn add history@5 react-router-dom@6
 <summary>pnpm</summary>
 
 ```sh
-$ pnpm add history@5 react-router-dom@6
+$ pnpm add react-router-dom@6
 ```
 
 </details>
@@ -48,7 +48,7 @@ $ pnpm add history@5 react-router-dom@6
 
 Follow the instructions in the [React documentation to set up a new project with Create React App](https://reactjs.org/docs/create-a-new-react-app.html#create-react-app), then follow [the installation instructions above](#basic-installation) to install React Router in your project.
 
-Once your project is set up and React Router is installed as a dependency, open the `src/index.js` in your text editor. Import `BrowserRouter` from `react-router-dom` near the top of your file and wrap your app in a `<Router>`:
+Once your project is set up and React Router is installed as a dependency, open the `src/index.js` in your text editor. Import `BrowserRouter` from `react-router-dom` near the top of your file and wrap your app in a `<BrowserRouter>`:
 
 ```js [3, 9-11]
 import * as React from "react";

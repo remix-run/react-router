@@ -194,6 +194,67 @@ function MatchPath({ path, Comp }) {
 <MatchPath path="/accounts/:id" Comp={Account} />;
 ```
 
+## How do I nest routes deep in the tree?
+
+In v5 you could render a `<Route>` or `<Switch>` anywhere you want. You can keep doing the very same thing but you need to use `<Routes>` (`<Route>` without an 's' will not work). We call these "Descendant `<Routes>`".
+
+It might have looked like this in v5
+
+```tsx filename=v5.js
+// somewhere up the tree
+<Switch>
+  <Route path="/users" component={Users} />
+</Switch>;
+
+// and now deeper in the tree
+function Users() {
+  return (
+    <div>
+      <h1>Users</h1>
+      <Switch>
+        <Route path="/users/account" component={Account} />
+      </Switch>
+    </div>
+  );
+}
+```
+
+In v6 it's almost the same:
+
+- Note the `*` in the ancestor routes to get it to match deeper URLs even though it has no direct children
+- You no longer need to know the entire child route path, you can use a relative route now
+
+```tsx filename=v6.js
+// somewhere up the tree
+<Routes>
+  <Route path="/users/*" element={<Users />} />
+</Routes>;
+
+// and now deeper in the tree
+function Users() {
+  return (
+    <div>
+      <h1>Users</h1>
+      <Routes>
+        <Route path="account" element={<Account />} />
+      </Routes>
+    </div>
+  );
+}
+```
+
+If you had a "floating route" in v5 (not wrapped in a `<Switch>`), simply wrap it in a `<Routes>` instead.
+
+```tsx
+// v5
+<Route path="/contact" component={Contact} />
+
+// v6
+<Routes>
+  <Route path="contact" element={<Contact />} />
+</Routes>
+```
+
 ## What Happened to Regexp Routes Paths?
 
 Regexp route paths were removed for two reasons:
@@ -213,7 +274,7 @@ The majority of regexp routes were only concerned about one URL segment at a tim
 
 A very common route we've seen is a regex matching multiple language codes:
 
-```tsx filename=v5-regex-route.js
+```tsx filename=v5-lang-route.js
 function App() {
   return (
     <Switch>
@@ -231,7 +292,7 @@ function Lang({ params }) {
 
 These are all actually just static paths, so in v6 you can make three routes and pass the code directly to the component. If you've got a lot of them, make an array and map it into routes to avoid the repetition.
 
-```tsx filename=v6.js
+```tsx filename=v6-lang-route.js
 function App() {
   return (
     <Routes>
@@ -252,7 +313,7 @@ function Lang({ lang }) {
 
 Another common case was ensuring that parameters were an integer.
 
-```tsx filename=v5-regex-route.js
+```tsx filename=v5-userId-route.js
 function App() {
   return (
     <Switch>
@@ -269,11 +330,11 @@ function User({ params }) {
 
 In this case you have to do a bit of work yourself with the regex inside the matching component:
 
-```tsx filename=v5-regex-route.js
+```tsx filename=v6-userId-route.js
 function App() {
   return (
     <Routes>
-      <Route path="users/:id" element={<ValidateUser />} />
+      <Route path="/users/:id" element={<ValidateUser />} />
       <Route path="/users/*" component={NotFound} />
     </Routes>
   );
@@ -336,7 +397,7 @@ In fact, the v5 version has all sorts of problems if your routes aren't ordered 
 
 If you're using [Remix](https://remix.run), you can send proper 40x responses to the browser by moving this work into your loader. This also decreases the size of the browser bundles sent to the user because loaders only run on the server.
 
-```tsx
+```tsx filename=remix-useLoaderData.js
 import { useLoaderData } from "remix";
 
 export async function loader({ params }) {
@@ -344,9 +405,11 @@ export async function loader({ params }) {
     throw new Response("", { status: 400 });
   }
 
-  let user = await fakeDb.user.find({ where: { id: params.id=}})
+  let user = await fakeDb.user.find({
+    where: { id: params.id }
+  });
   if (!user) {
-    throw new Response("", { status: 404})
+    throw new Response("", { status: 404 });
   }
 
   return user;
