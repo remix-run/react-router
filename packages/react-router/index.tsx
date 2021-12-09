@@ -1203,10 +1203,10 @@ function compilePath(
   } else {
     regexpSource += end
       ? "\\/*$" // When matching to the end, ignore trailing slashes
-      : // Otherwise, at least match a word boundary. This restricts parent
-        // routes to matching only their own words and nothing more, e.g. parent
+      : // Otherwise, match a word boundary or a proceeding /. The word boundary restricts
+        // parent routes to matching only their own words and nothing more, e.g. parent
         // route "/home" should not match "/home2".
-        "(?:\\b|$)";
+        "(?:\\b|\\/|$)";
   }
 
   let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
