@@ -479,7 +479,10 @@ export function useMatch<
   );
 
   let { pathname } = useLocation();
-  return React.useMemo(() => matchPath<ParamKey, Path>(pattern, pathname), [pathname, pattern]);
+  return React.useMemo(
+    () => matchPath<ParamKey, Path>(pattern, pathname),
+    [pathname, pattern]
+  );
 }
 
 /**
