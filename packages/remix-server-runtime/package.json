@@ -1,7 +1,7 @@
 {
   "name": "@remix-run/server-runtime",
   "description": "Server runtime for Remix",
-  "version": "1.0.6",
+  "version": "0.0.0-experimental-b697c4f3",
   "license": "MIT",
   "repository": {
     "type": "git",
