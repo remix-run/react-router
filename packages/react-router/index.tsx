@@ -862,7 +862,7 @@ export function matchRoutes(
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    matches = matchRouteBranch(branches[i], routes, pathname);
+    matches = matchRouteBranch(branches[i], pathname);
   }
 
   return matches;
@@ -872,6 +872,7 @@ interface RouteMeta {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
+  route: RouteObject;
 }
 
 interface RouteBranch {
@@ -890,7 +891,8 @@ function flattenRoutes(
     let meta: RouteMeta = {
       relativePath: route.path || "",
       caseSensitive: route.caseSensitive === true,
-      childrenIndex: index
+      childrenIndex: index,
+      route
     };
 
     if (meta.relativePath.startsWith("/")) {
@@ -993,11 +995,8 @@ function compareIndexes(a: number[], b: number[]): number {
 
 function matchRouteBranch<ParamKey extends string = string>(
   branch: RouteBranch,
-  // TODO: attach original route object inside routesMeta so we don't need this arg
-  routesArg: RouteObject[],
   pathname: string
 ): RouteMatch<ParamKey>[] | null {
-  let routes = routesArg;
   let { routesMeta } = branch;
 
   let matchedParams = {};
@@ -1019,7 +1018,7 @@ function matchRouteBranch<ParamKey extends string = string>(
 
     Object.assign(matchedParams, match.params);
 
-    let route = routes[meta.childrenIndex];
+    let route = meta.route;
 
     matches.push({
       params: matchedParams,
@@ -1031,8 +1030,6 @@ function matchRouteBranch<ParamKey extends string = string>(
     if (match.pathnameBase !== "/") {
       matchedPathname = joinPaths([matchedPathname, match.pathnameBase]);
     }
-
-    routes = route.children!;
   }
 
   return matches;
