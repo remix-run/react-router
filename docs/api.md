@@ -509,7 +509,12 @@ class LoginForm extends React.Component {
   <summary>Type declaration</summary>
 
 ```tsx
-declare function Outlet(): React.ReactElement | null;
+interface OutletProps {
+  context?: unknown;
+}
+declare function Outlet(
+  props: OutletProps
+): React.ReactElement | null;
 ```
 
 </details>
@@ -541,6 +546,53 @@ function App() {
         <Route path="tasks" element={<DashboardTasks />} />
       </Route>
     </Routes>
+  );
+}
+```
+
+### `useOutletContext`
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function useOutletContext<
+  Context = unknown
+>(): Context;
+```
+
+</details>
+
+Often parent routes manage state or other values you want shared with child routes. You can create your own [context provider](https://reactjs.org/docs/context.html) if you like, but this is such a common situation that it's built-into `<Outlet />`:
+
+```tsx filename=src/routes/dashboard.tsx lines=[7]
+type ContextType = { user: User | null };
+function Dashboard() {
+  const [user, setUser] = React.useState<User | null>(null);
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <Outlet context={user} />
+    </div>
+  );
+}
+
+export function useUser() {
+  return useOutletContext<ContextType>();
+}
+```
+
+```tsx filename=src/routes/dashboard/messages.tsx lines=[1,4]
+import { useUser } from "../dashboard";
+
+function DashboardMessages() {
+  const user = useUser();
+  return (
+    <div>
+      <h2>Messages</h2>
+      <p>Hello, {user.name}!</p>
+    </div>
   );
 }
 ```
