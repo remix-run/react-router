@@ -183,15 +183,17 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
   return null;
 }
 
-export interface OutletProps {}
+export interface OutletProps {
+  context?: unknown;
+}
 
 /**
  * Renders the child route's element, if there is one.
  *
  * @see https://reactrouter.com/docs/en/v6/api#outlet
  */
-export function Outlet(_props: OutletProps): React.ReactElement | null {
-  return useOutlet();
+export function Outlet(props: OutletProps): React.ReactElement | null {
+  return useOutlet(props.context);
 }
 
 export interface RouteProps {
@@ -510,14 +512,28 @@ export function useNavigate(): NavigateFunction {
   return navigate;
 }
 
+const OutletContext = React.createContext<unknown>(null);
+
+/**
+ * Returns the context (if provided) for the child route at this level of the route
+ * hierarchy.
+ * @see https://reactrouter.com/docs/en/v6/api#useoutletcontext
+ */
+export function useOutletContext<Context = unknown>(): Context {
+  return React.useContext(OutletContext) as Context;
+}
+
 /**
  * Returns the element for the child route at this level of the route
  * hierarchy. Used internally by <Outlet> to render child routes.
  *
  * @see https://reactrouter.com/docs/en/v6/api#useoutlet
  */
-export function useOutlet(): React.ReactElement | null {
-  return React.useContext(RouteContext).outlet;
+export function useOutlet(context?: unknown): React.ReactElement | null {
+  let outlet = React.useContext(RouteContext).outlet;
+  return (
+    <OutletContext.Provider value={context}>{outlet}</OutletContext.Provider>
+  );
 }
 
 /**
