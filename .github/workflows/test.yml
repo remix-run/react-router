@@ -1,7 +1,13 @@
 name: test
 on:
   push:
-    branches: [main]
+    branches:
+      - "**"
+    tags-ignore:
+      - v*
+    paths-ignore:
+      - "docs/**"
+      - "**/README.md"
   pull_request:
     types: [opened, synchronize]
 
