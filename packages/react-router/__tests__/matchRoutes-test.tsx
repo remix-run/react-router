@@ -12,9 +12,14 @@ function pickPaths(
 }
 
 describe("matchRoutes", () => {
+  let userEditRoute: RouteObject = {
+    path: "edit",
+    element: <h1>User Edit</h1>
+  };
   let userProfileRoute: RouteObject = {
     path: ":id",
-    element: <h1>User Profile</h1>
+    element: <h1>User Profile</h1>,
+    children: [userEditRoute]
   };
   let usersRoute: RouteObject = {
     path: "/users",
@@ -88,6 +93,20 @@ describe("matchRoutes", () => {
 
   it("matches nested dynamic routes correctly", () => {
     expect(pickPaths(routes, "/users/mj")).toEqual(["/users", ":id"]);
+    expect(pickPaths(routes, "/users/mj/edit")).toEqual([
+      "/users",
+      ":id",
+      "edit"
+    ]);
+  });
+
+  it("matches nested dynamic routes with params ending in = (e.x. base64 encoded Id)", () => {
+    expect(pickPaths(routes, "/users/VXNlcnM6MQ==")).toEqual(["/users", ":id"]);
+    expect(pickPaths(routes, "/users/VXNlcnM6MQ==/edit")).toEqual([
+      "/users",
+      ":id",
+      "edit"
+    ]);
   });
 
   it("matches nested * routes correctly", () => {

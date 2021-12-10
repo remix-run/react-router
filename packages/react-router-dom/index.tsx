@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { BrowserHistory, HashHistory } from "history";
+import type { BrowserHistory, HashHistory, History } from "history";
 import { createBrowserHistory, createHashHistory, createPath } from "history";
 import {
   MemoryRouter,
@@ -196,6 +196,39 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
   );
 }
 
+export interface HistoryRouterProps {
+  basename?: string;
+  children?: React.ReactNode;
+  history: History;
+}
+
+export function HistoryRouter({
+  basename,
+  children,
+  history
+}: HistoryRouterProps) {
+  const [state, setState] = React.useState({
+    action: history.action,
+    location: history.location
+  });
+
+  React.useLayoutEffect(() => history.listen(setState), [history]);
+
+  return (
+    <Router
+      basename={basename}
+      children={children}
+      location={state.location}
+      navigationType={state.action}
+      navigator={history}
+    />
+  );
+}
+
+if (__DEV__) {
+  HistoryRouter.displayName = "HistoryRouter";
+}
+
 function isModifiedEvent(event: React.MouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
@@ -244,7 +277,11 @@ if (__DEV__) {
   Link.displayName = "Link";
 }
 
-export interface NavLinkProps extends Omit<LinkProps, "className" | "style"> {
+export interface NavLinkProps
+  extends Omit<LinkProps, "className" | "style" | "children"> {
+  children:
+    | React.ReactNode
+    | ((props: { isActive: boolean }) => React.ReactNode);
   caseSensitive?: boolean;
   className?: string | ((props: { isActive: boolean }) => string);
   end?: boolean;
@@ -265,6 +302,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       end = false,
       style: styleProp,
       to,
+      children,
       ...rest
     },
     ref
@@ -312,7 +350,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ref={ref}
         style={style}
         to={to}
-      />
+      >
+        {typeof children === "function" ? children({ isActive }) : children}
+      </Link>
     );
   }
 );
