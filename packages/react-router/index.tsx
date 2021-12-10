@@ -277,7 +277,13 @@ export function Router({
     locationProp = parsePath(locationProp);
   }
 
-  let { pathname, search, hash, state, key } = parseLocation(locationProp);
+  let {
+    pathname = "/",
+    search = "",
+    hash = "",
+    state = null,
+    key = "default"
+  } = locationProp;
 
   let location = React.useMemo(() => {
     let trailingPathname = stripBasename(pathname, basename);
@@ -447,23 +453,6 @@ type ParamParseKey<Segment extends string> =
 /**
  * Returns a complete Location with an absolute pathname
  */
-export function parseLocation({
-  pathname = "/",
-  ...rest
-}: Partial<Location>): Location {
-  const defaultLocation = {
-    pathname: "/",
-    search: "",
-    hash: "",
-    state: null,
-    key: "default"
-  };
-  return {
-    ...defaultLocation,
-    ...rest,
-    pathname: normalizePathnameStart(pathname)
-  };
-}
 
 /**
  * Returns the current navigation action which describes how the router came to
@@ -862,11 +851,10 @@ export function matchRoutes(
   locationArg: Partial<Location> | string,
   basename = "/"
 ): RouteMatch[] | null {
-  let absolutePathname = parseLocation(
-    typeof locationArg === "string" ? parsePath(locationArg) : locationArg
-  ).pathname;
+  let location =
+    typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
-  let pathname = stripBasename(absolutePathname, basename);
+  let pathname = stripBasename(location.pathname || "/", basename);
 
   if (pathname == null) {
     return null;
