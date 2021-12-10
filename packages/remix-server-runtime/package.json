@@ -15,7 +15,7 @@
     "@types/cookie": "^0.4.0",
     "cookie": "^0.4.1",
     "jsesc": "^3.0.1",
-    "react-router-dom": "^6.0.2",
+    "react-router-dom": "^6.1.0",
     "set-cookie-parser": "^2.4.8",
     "source-map": "^0.7.3"
   },
