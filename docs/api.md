@@ -774,36 +774,6 @@ function requestHandler(req, res) {
 http.createServer(requestHandler).listen(3000);
 ```
 
-### `createRoutesFromArray`
-
-<details>
-  <summary>Type declaration</summary>
-
-```tsx
-declare function createRoutesFromArray(
-  array: PartialRouteObject[]
-): RouteObject[];
-
-interface PartialRouteObject {
-  path?: string;
-  caseSensitive?: boolean;
-  element?: React.ReactNode;
-  children?: PartialRouteObject[];
-}
-
-interface RouteObject {
-  caseSensitive: boolean;
-  children?: RouteObject[];
-  element: React.ReactNode;
-  path: string;
-}
-```
-
-</details>
-
-`createRoutesFromArray` is a helper that fills in the (potentially) missing pieces in an array of route objects. It is used internally by [`useRoutes`](#useroutes) to create route objects.
-<a name="createroutesfromchildren"></a>
-
 ### `createRoutesFromChildren`
 
 <details>
@@ -1329,8 +1299,6 @@ function App() {
   return element;
 }
 ```
-
-See also [`createRoutesFromArray`](#createroutesfromarray).
 
 ### `useSearchParams`
 
