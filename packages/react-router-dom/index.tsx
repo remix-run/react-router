@@ -130,7 +130,7 @@ export interface BrowserRouterProps {
 }
 
 /**
- * A <Router> for use in web browsers. Provides the cleanest URLs.
+ * A `<Router>` for use in web browsers. Provides the cleanest URLs.
  */
 export function BrowserRouter({
   basename,
@@ -168,7 +168,7 @@ export interface HashRouterProps {
 }
 
 /**
- * A <Router> for use in web browsers. Stores the location in the hash
+ * A `<Router>` for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
 export function HashRouter({ basename, children, window }: HashRouterProps) {
@@ -202,11 +202,12 @@ export interface HistoryRouterProps {
   history: History;
 }
 
-export function HistoryRouter({
-  basename,
-  children,
-  history
-}: HistoryRouterProps) {
+/**
+ * A `<Router>` that accepts a pre-instantiated history object. It's important
+ * to note that using your own history object is highly discouraged and can
+ * potentially cause issues in your dependency tree.
+ */
+function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
   const [state, setState] = React.useState({
     action: history.action,
     location: history.location
@@ -226,8 +227,10 @@ export function HistoryRouter({
 }
 
 if (__DEV__) {
-  HistoryRouter.displayName = "HistoryRouter";
+  HistoryRouter.displayName = "unstable_HistoryRouter";
 }
+
+export { HistoryRouter as unstable_HistoryRouter };
 
 function isModifiedEvent(event: React.MouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
