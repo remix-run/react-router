@@ -30,11 +30,17 @@ export function defineConventionalRoutes(appDir: string): RouteManifest {
 
     if (isRouteModuleFile(file)) {
       files[routeId] = path.join("routes", file);
-    } else {
-      throw new Error(
-        `Invalid route module file: ${path.join(appDir, "routes", file)}`
-      );
+      return;
     }
+
+    // https://github.com/remix-run/remix/issues/391
+    if (path.basename(file).startsWith(".")) {
+      return;
+    }
+
+    throw new Error(
+      `Invalid route module file: ${path.join(appDir, "routes", file)}`
+    );
   });
 
   let routeIds = Object.keys(files).sort(byLongestFirst);
