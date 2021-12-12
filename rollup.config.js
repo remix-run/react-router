@@ -24,6 +24,13 @@ function getVersion(sourceDir) {
   return require(`./${sourceDir}/package.json`).version;
 }
 
+function addTypeModule(contents) {
+  return JSON.stringify({
+    type: "module",
+    ...JSON.parse(contents.toString()),
+  }, null, 2);
+}
+
 function reactRouter() {
   const SOURCE_DIR = "packages/react-router";
   const OUTPUT_DIR = "build/node_modules/react-router";
@@ -33,20 +40,12 @@ function reactRouter() {
   const modules = [
     {
       input: `${SOURCE_DIR}/index.tsx`,
-      output: [
-        {
-          file: `${OUTPUT_DIR}/index.js`,
-          format: "esm",
-          sourcemap: !PRETTY,
-          banner: createBanner("React Router", version)
-        },
-        {
-          file: `${OUTPUT_DIR}/index.mjs`,
-          format: "esm",
-          sourcemap: !PRETTY,
-          banner: createBanner("React Router", version)
-        }
-      ],
+      output: {
+        file: `${OUTPUT_DIR}/index.js`,
+        format: "esm",
+        sourcemap: !PRETTY,
+        banner: createBanner("React Router", version)
+      },
       external: ["history", "react"],
       plugins: [
         babel({
@@ -61,7 +60,7 @@ function reactRouter() {
         }),
         copy({
           targets: [
-            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
+            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR, transform: addTypeModule },
             { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
             { src: "LICENSE.md", dest: OUTPUT_DIR }
           ],
@@ -208,7 +207,7 @@ function reactRouter() {
     {
       input: `${SOURCE_DIR}/node-main.js`,
       output: {
-        file: `${OUTPUT_DIR}/main.js`,
+        file: `${OUTPUT_DIR}/index.cjs`,
         format: "cjs",
         banner: createBanner("React Router", version)
       },
@@ -228,20 +227,12 @@ function reactRouterDom() {
   const modules = [
     {
       input: `${SOURCE_DIR}/index.tsx`,
-      output: [
-        {
-          file: `${OUTPUT_DIR}/index.js`,
-          format: "esm",
-          sourcemap: !PRETTY,
-          banner: createBanner("React Router DOM", version)
-        },
-        {
-          file: `${OUTPUT_DIR}/index.mjs`,
-          format: "esm",
-          sourcemap: !PRETTY,
-          banner: createBanner("React Router DOM", version)
-        }
-      ],
+      output: {
+        file: `${OUTPUT_DIR}/index.js`,
+        format: "esm",
+        sourcemap: !PRETTY,
+        banner: createBanner("React Router DOM", version)
+      },
       external: ["history", "react", "react-dom", "react-router"],
       plugins: [
         babel({
@@ -256,7 +247,7 @@ function reactRouterDom() {
         }),
         copy({
           targets: [
-            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
+            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR, transform: addTypeModule },
             { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
             { src: "LICENSE.md", dest: OUTPUT_DIR }
           ],
@@ -413,7 +404,7 @@ function reactRouterDom() {
     {
       input: `${SOURCE_DIR}/node-main.js`,
       output: {
-        file: `${OUTPUT_DIR}/main.js`,
+        file: `${OUTPUT_DIR}/index.cjs`,
         format: "cjs",
         banner: createBanner("React Router DOM", version)
       },
@@ -422,7 +413,7 @@ function reactRouterDom() {
     {
       input: `${SOURCE_DIR}/server.tsx`,
       output: {
-        file: `${OUTPUT_DIR}/server.js`,
+        file: `${OUTPUT_DIR}/server.cjs`,
         format: "cjs"
       },
       external: [
@@ -449,7 +440,7 @@ function reactRouterDom() {
     {
       input: `${SOURCE_DIR}/server.tsx`,
       output: {
-        file: `${OUTPUT_DIR}/server.mjs`,
+        file: `${OUTPUT_DIR}/server.js`,
         format: "esm"
       },
       external: [

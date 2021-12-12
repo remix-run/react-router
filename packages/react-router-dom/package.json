@@ -9,20 +9,21 @@
     "directory": "packages/react-router-dom"
   },
   "license": "MIT",
-  "main": "./main.js",
+  "main": "./main.cjs",
   "module": "./index.js",
   "types": "./index.d.ts",
   "exports": {
     ".": {
       "node": {
-        "require": "./main.js",
-        "import": "./index.mjs"
+        "require": "./index.cjs",
+        "import": "./index.js"
       },
+      "types": "./index.d.ts",
       "default": "./index.js"
     },
     "./server": {
-      "require": "./server.js",
-      "import": "./server.mjs"
+      "require": "./server.cjs",
+      "import": "./server.js"
     },
     "./package.json": "./package.json"
   },
