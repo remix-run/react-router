@@ -25,10 +25,14 @@ function getVersion(sourceDir) {
 }
 
 function addTypeModule(contents) {
-  return JSON.stringify({
-    type: "module",
-    ...JSON.parse(contents.toString()),
-  }, null, 2);
+  return JSON.stringify(
+    {
+      type: "module",
+      ...JSON.parse(contents.toString())
+    },
+    null,
+    2
+  );
 }
 
 function reactRouter() {
@@ -60,7 +64,11 @@ function reactRouter() {
         }),
         copy({
           targets: [
-            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR, transform: addTypeModule },
+            {
+              src: `${SOURCE_DIR}/package.json`,
+              dest: OUTPUT_DIR,
+              transform: addTypeModule
+            },
             { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
             { src: "LICENSE.md", dest: OUTPUT_DIR }
           ],
@@ -247,7 +255,11 @@ function reactRouterDom() {
         }),
         copy({
           targets: [
-            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR, transform: addTypeModule },
+            {
+              src: `${SOURCE_DIR}/package.json`,
+              dest: OUTPUT_DIR,
+              transform: addTypeModule
+            },
             { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
             { src: "LICENSE.md", dest: OUTPUT_DIR }
           ],
