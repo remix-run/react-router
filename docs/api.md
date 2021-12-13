@@ -26,6 +26,7 @@ If you [installed](./getting-started/installation.md) React Router as a global (
 To get React Router working in your app, you need to render a router element at or near the root of your element tree. We provide several different routers depending on where your app is running.
 
 - [`<BrowserRouter>`](#browserrouter) or [`<HashRouter>`](#hashrouter) should be used when running in a web browser (which one you pick depends on the style of URL you prefer or need)
+- [`<unstable_HistoryRouter>`](#unstable_HistoryRouter) Accept pre-instantiated historical objects. This is very important in some scenarios (Please note that this API is HistoryRouter in 6.1.0, and changed to unstable_HistoryRouter in 6.1.1, which means that this is an unstable and may change in subsequent major versions)
 - [`<StaticRouter>`](#staticrouter) should be used when server-rendering a website
 - [`<NativeRouter>`](#nativerouter) should be used in [React Native](https://reactnative.dev/) apps
 - [`<MemoryRouter>`](#memoryrouter) is useful in testing scenarios and as a reference implementation for the other routers
@@ -142,6 +143,48 @@ ReactDOM.render(
 ```
 
 <docs-warning>We strongly recommend you do not use `HashRouter` unless you absolutely have to.</docs-warning>
+
+
+### `<unstable_HistoryRouter>` 
+
+<details>
+  <summary>Type declaration</summary> 
+
+```tsx
+declare function HistoryRouter(
+    props: HistoryRouterProps
+) : React.ReactElement;
+
+interface HistoryRouterProps {
+    basename?: string;
+    children?: React.ReactNode;
+    history: History;
+}
+```
+
+</details> 
+
+`<unstable_HistoryRouter>` In some scenarios, we may need to navigate outside the React context, such as global unified request response error handling.
+`<unstable_HistoryRouter history>` Accept pre-instantiated historical objects. 
+
+
+```tsx
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { unstable_HistoryRouter as HistoryRouter } from "react-router-dom";
+import { createBrowserHistory } from "history";
+
+const history = createBrowserHistory({ window });
+
+ReactDOM.render(
+  <HistoryRouter history={history}>
+    {/* The rest of your app goes here */}
+  </HistoryRouter>,
+  root
+);
+```
+
+<docs-warning>to note that using your own history object is highly discouraged and may add two versions of the history library to your bundles unless you use the same version of the history library that React Router uses internally.</docs-warning>
 
 ### `<NativeRouter>`
 
