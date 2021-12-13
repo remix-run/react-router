@@ -26,7 +26,7 @@ If you [installed](./getting-started/installation.md) React Router as a global (
 To get React Router working in your app, you need to render a router element at or near the root of your element tree. We provide several different routers depending on where your app is running.
 
 - [`<BrowserRouter>`](#browserrouter) or [`<HashRouter>`](#hashrouter) should be used when running in a web browser (which one you pick depends on the style of URL you prefer or need)
-- [`<unstable_HistoryRouter>`](#unstable_HistoryRouter) Accept pre-instantiated historical objects. This is very important in some scenarios (Please note that this API is HistoryRouter in 6.1.0, and changed to unstable_HistoryRouter in 6.1.1, which means that this is an unstable and may change in subsequent major versions)
+- [`<unstable_HistoryRouter>`](#unstable_historyrouter) Accept pre-instantiated historical objects. This is very important in some scenarios (Please note that this API is HistoryRouter in 6.1.0, and changed to unstable_HistoryRouter in 6.1.1, which means that this is an unstable and may change in subsequent major versions)
 - [`<StaticRouter>`](#staticrouter) should be used when server-rendering a website
 - [`<NativeRouter>`](#nativerouter) should be used in [React Native](https://reactnative.dev/) apps
 - [`<MemoryRouter>`](#memoryrouter) is useful in testing scenarios and as a reference implementation for the other routers
