@@ -79,7 +79,7 @@ describe("cookies", () => {
     `);
   });
 
-  it("failes to parses signed object values with invalid signature", async () => {
+  it("fails to parse signed object values with invalid signature", async () => {
     let cookie = createCookie("my-cookie", {
       secrets: ["secret1"]
     });

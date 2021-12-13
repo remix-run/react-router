@@ -51,7 +51,7 @@ function defaultBuildFailureHandler(failure: Error | esbuild.BuildFailure) {
     }
   }
 
-  console.error(failure?.message || "An unknown build error occured");
+  console.error(failure?.message || "An unknown build error occurred");
 }
 
 interface BuildOptions extends Partial<BuildConfig> {
