@@ -144,29 +144,27 @@ ReactDOM.render(
 
 <docs-warning>We strongly recommend you do not use `HashRouter` unless you absolutely have to.</docs-warning>
 
-
-### `<unstable_HistoryRouter>` 
+### `<unstable_HistoryRouter>`
 
 <details>
-  <summary>Type declaration</summary> 
+  <summary>Type declaration</summary>
 
 ```tsx
 declare function HistoryRouter(
-    props: HistoryRouterProps
-) : React.ReactElement;
+  props: HistoryRouterProps
+): React.ReactElement;
 
 interface HistoryRouterProps {
-    basename?: string;
-    children?: React.ReactNode;
-    history: History;
+  basename?: string;
+  children?: React.ReactNode;
+  history: History;
 }
 ```
 
-</details> 
+</details>
 
 `<unstable_HistoryRouter>` In some scenarios, we may need to navigate outside the React context, such as global unified request response error handling.
-`<unstable_HistoryRouter history>` Accept pre-instantiated historical objects. 
-
+`<unstable_HistoryRouter history>` Accept pre-instantiated historical objects.
 
 ```tsx
 import * as React from "react";
