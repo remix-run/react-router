@@ -357,6 +357,9 @@ async function createServerBuild(
     // of CSS and other files.
     assetNames: "_assets/[name]-[hash]",
     publicPath: config.publicPath,
+    define: {
+      "process.env.NODE_ENV": JSON.stringify(options.mode)
+    },
     plugins: [
       mdxPlugin(config),
       serverRouteModulesPlugin(config),

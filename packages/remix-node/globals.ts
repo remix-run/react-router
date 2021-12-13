@@ -16,6 +16,10 @@ import { FormData as NodeFormData } from "./formData";
 
 declare global {
   namespace NodeJS {
+    interface ProcessEnv {
+      NODE_ENV: "development" | "production" | "test";
+    }
+
     interface Global {
       atob: typeof atob;
       btoa: typeof btoa;
