@@ -73,7 +73,8 @@
   },
   "jest": {
     "projects": [
-      "<rootDir>/packages/*"
+      "<rootDir>/packages/*",
+      "<rootDir>/build"
     ]
   },
   "filesize": {
