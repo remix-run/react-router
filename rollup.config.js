@@ -35,6 +35,16 @@ function addTypeModule(contents) {
   );
 }
 
+function addTypeCommonjsFile(srcDir, destDir) {
+  return copy({
+    targets: [{
+      src: `${srcDir}/package.json`,
+      dest: `${destDir}/umd`,
+      transform: () => JSON.stringify({ type: "commonjs" }, null, 2)
+    }]
+  });
+}
+
 function reactRouter() {
   const SOURCE_DIR = "packages/react-router";
   const OUTPUT_DIR = "build/node_modules/react-router";
@@ -219,7 +229,7 @@ function reactRouter() {
         format: "cjs",
         banner: createBanner("React Router", version)
       },
-      plugins: [].concat(PRETTY ? prettier({ parser: "babel" }) : [])
+      plugins: [addTypeCommonjsFile(SOURCE_DIR, OUTPUT_DIR)].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     }
   ];
 
@@ -420,7 +430,7 @@ function reactRouterDom() {
         format: "cjs",
         banner: createBanner("React Router DOM", version)
       },
-      plugins: [].concat(PRETTY ? prettier({ parser: "babel" }) : [])
+      plugins: [addTypeCommonjsFile(SOURCE_DIR, OUTPUT_DIR)].concat(PRETTY ? prettier({ parser: "babel" }) : [])
     },
     {
       input: `${SOURCE_DIR}/server.tsx`,
