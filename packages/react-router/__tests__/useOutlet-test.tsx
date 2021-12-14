@@ -28,6 +28,56 @@ describe("useOutlet", () => {
 
       expect(renderer.toJSON()).toBeNull();
     });
+
+    it("renders the fallback", () => {
+      function Home() {
+        let outlet = useOutlet();
+        return <div>{outlet ? "outlet" : "no outlet"}</div>;
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="/home" element={<Home />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          no outlet
+        </div>
+      `);
+    });
+  });
+
+  it("renders the outlet", () => {
+    function Home() {
+      let outlet = useOutlet();
+      return <div>{outlet ? "outlet" : "no outlet"}</div>;
+    }
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route path="/home" element={<Home />}>
+              <Route index element={<div>index</div>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          outlet
+        </div>
+      `);
   });
 
   describe("when there is a child route", () => {
