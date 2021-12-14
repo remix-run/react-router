@@ -579,9 +579,9 @@ export function useOutletContext<Context = unknown>(): Context {
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
   let outlet = React.useContext(RouteContext).outlet;
-  return (
+  return outlet ? (
     <OutletContext.Provider value={context}>{outlet}</OutletContext.Provider>
-  );
+  ) : null;
 }
 
 /**
