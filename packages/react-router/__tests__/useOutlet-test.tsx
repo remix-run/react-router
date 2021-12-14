@@ -52,32 +52,30 @@ describe("useOutlet", () => {
         </div>
       `);
     });
-  });
 
-  it("renders the outlet", () => {
-    function Home() {
-      let outlet = useOutlet();
-      return <div>{outlet ? "outlet" : "no outlet"}</div>;
-    }
+    it("renders the fallback with context provided", () => {
+      function Home() {
+        let outlet = useOutlet({ some: "context" });
+        return <div>{outlet ? "outlet" : "no outlet"}</div>;
+      }
 
-    let renderer: TestRenderer.ReactTestRenderer;
-    TestRenderer.act(() => {
-      renderer = TestRenderer.create(
-        <MemoryRouter initialEntries={["/home"]}>
-          <Routes>
-            <Route path="/home" element={<Home />}>
-              <Route index element={<div>index</div>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
-      );
-    });
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="/home" element={<Home />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
 
-    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <div>
-          outlet
+          no outlet
         </div>
       `);
+    });
   });
 
   describe("when there is a child route", () => {
@@ -105,9 +103,61 @@ describe("useOutlet", () => {
         </h1>
       `);
     });
+
+    it("returns an element when no context", () => {
+      function Home() {
+        let outlet = useOutlet();
+        return <div>{outlet ? "outlet" : "no outlet"}</div>;
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="/home" element={<Home />}>
+                <Route index element={<div>index</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <div>
+            outlet
+          </div>
+        `);
+    });
+
+    it("returns an element when context", () => {
+      function Home() {
+        let outlet = useOutlet({ some: "context" });
+        return <div>{outlet ? "outlet" : "no outlet"}</div>;
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="/home" element={<Home />}>
+                <Route index element={<div>index</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <div>
+            outlet
+          </div>
+        `);
+    });
   });
 
-  describe("when there is no context", () => {
+  describe("OutletContext when there is no context", () => {
     it("returns null", () => {
       function Users() {
         return useOutlet();
@@ -148,7 +198,7 @@ describe("useOutlet", () => {
     });
   });
 
-  describe("when there is context", () => {
+  describe("OutletContext when there is context", () => {
     it("returns the context", () => {
       function Users() {
         return useOutlet([
