@@ -698,7 +698,7 @@ Like `useSearchParams`, `useLocation` returns a location that tells us informati
 
 ```js
 {
-  pathame: "/invoices",
+  pathname: "/invoices",
   search: "?filter=sa",
   hash: "",
   state: null,
