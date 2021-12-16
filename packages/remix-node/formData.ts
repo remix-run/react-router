@@ -58,7 +58,7 @@ class NodeFormData implements FormData {
 
   get(name: string): FormDataEntryValue | null {
     let arr = this._fields[name];
-    return (arr && arr.slice(-1)[0]) || null;
+    return arr?.slice(-1)[0] || null;
   }
 
   getAll(name: string): FormDataEntryValue[] {

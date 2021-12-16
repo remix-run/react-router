@@ -411,7 +411,7 @@ async function renderDocumentRequest({
     renderableMatches = [];
 
     let root = routes[0];
-    if (root && root.module.CatchBoundary) {
+    if (root?.module.CatchBoundary) {
       appState.catchBoundaryRouteId = "root";
       renderableMatches.push({
         params: {},

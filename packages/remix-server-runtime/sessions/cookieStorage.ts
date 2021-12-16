@@ -24,7 +24,7 @@ export function createCookieSessionStorage({
 }: CookieSessionStorageOptions = {}): SessionStorage {
   let cookie = isCookie(cookieArg)
     ? cookieArg
-    : createCookie((cookieArg && cookieArg.name) || "__session", cookieArg);
+    : createCookie(cookieArg?.name || "__session", cookieArg);
 
   warnOnceAboutSigningSessionCookie(cookie);
 

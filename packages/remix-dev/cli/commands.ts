@@ -105,7 +105,7 @@ export async function watch(
     onInitialBuild,
     onRebuildStart() {
       start = Date.now();
-      onRebuildStart && onRebuildStart();
+      onRebuildStart?.();
       log("Rebuilding...");
     },
     onRebuildFinish() {
