@@ -1,4 +1,4 @@
-import type { Readable } from "stream";
+import { Readable } from "stream";
 import Busboy from "busboy";
 
 import type { Request as NodeRequest } from "./fetch";
@@ -14,12 +14,19 @@ export function parseMultipartFormData(
 
 export async function internalParseFormData(
   contentType: string,
-  stream: Readable,
+  body: string | Buffer | Readable,
   abortController?: AbortController,
   uploadHandler?: UploadHandler
 ) {
   let formData = new NodeFormData();
   let fileWorkQueue: Promise<void>[] = [];
+
+  let stream: Readable;
+  if (typeof body === "string" || Buffer.isBuffer(body)) {
+    stream = Readable.from(body.toString());
+  } else {
+    stream = body;
+  }
 
   await new Promise<void>(async (resolve, reject) => {
     let busboy = new Busboy({
