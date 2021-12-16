@@ -344,7 +344,7 @@ async function createServerBuild(
       resolveDir: config.serverBuildDirectory
     },
     outfile: path.resolve(config.serverBuildDirectory, "index.js"),
-    platform: "node",
+    platform: config.serverPlatform,
     format: config.serverModuleFormat,
     target: options.target,
     inject: [reactShim],

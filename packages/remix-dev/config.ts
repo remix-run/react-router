@@ -82,7 +82,12 @@ export interface AppConfig {
   /**
    * The output format of the server build. Defaults to "cjs".
    */
-  serverModuleFormat: "esm" | "cjs";
+  serverModuleFormat?: "esm" | "cjs";
+
+  /**
+   * The platform the server build is targeting. Defaults to "node".
+   */
+  serverPlatform?: "node" | "neutral";
 
   /**
    * A list of filenames or a glob patterns to match files in the `app/routes`
@@ -165,6 +170,11 @@ export interface RemixConfig {
    * The output format of the server build. Defaults to "cjs".
    */
   serverModuleFormat: "esm" | "cjs";
+
+  /**
+   * The platform the server build is targeting. Defaults to "node".
+   */
+   serverPlatform: "node" | "neutral";
 }
 
 /**
@@ -194,6 +204,7 @@ export async function readConfig(
   }
 
   let serverModuleFormat = appConfig.serverModuleFormat || "cjs";
+  let serverPlatform = appConfig.serverPlatform || "node";
   let mdx = appConfig.mdx;
 
   let appDirectory = path.resolve(
@@ -273,6 +284,7 @@ export async function readConfig(
     serverBuildDirectory,
     serverMode,
     serverModuleFormat,
+    serverPlatform,
     mdx
   };
 }

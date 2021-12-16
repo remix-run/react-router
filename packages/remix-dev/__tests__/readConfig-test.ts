@@ -434,6 +434,7 @@ describe("readConfig", () => {
         "serverBuildDirectory": Any<String>,
         "serverMode": "production",
         "serverModuleFormat": "cjs",
+        "serverPlatform": "node",
       }
     `
     );
