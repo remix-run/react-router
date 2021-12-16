@@ -308,7 +308,10 @@ function Redirect({ to }) {
 <Routes>
   <Route path="/" element={<Home />} />
   <Route path="/events" element={<Users />} />
-  <Route path="/dashboard" element={<Redirect to="/events" />} />
+  <Route
+    path="/dashboard"
+    element={<Redirect to="/events" />}
+  />
 </Routes>;
 ```
 
