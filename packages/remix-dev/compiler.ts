@@ -346,6 +346,10 @@ async function createServerBuild(
     outfile: path.resolve(config.serverBuildDirectory, "index.js"),
     platform: config.serverPlatform,
     format: config.serverModuleFormat,
+    mainFields:
+      config.serverModuleFormat === "esm"
+        ? ["module", "main"]
+        : ["main", "module"],
     target: options.target,
     inject: [reactShim],
     loader: loaders,
