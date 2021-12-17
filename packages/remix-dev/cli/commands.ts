@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as fse from "fs-extra";
-import signalExit from "signal-exit";
+import exitHook from "exit-hook";
 import prettyMs from "pretty-ms";
 import WebSocket from "ws";
 import type { Server } from "http";
@@ -126,7 +126,7 @@ export async function watch(
   console.log(`💿 Built in ${prettyMs(Date.now() - start)}`);
 
   let resolve: () => void;
-  signalExit(() => {
+  exitHook(() => {
     resolve();
   });
   return new Promise<void>(r => {

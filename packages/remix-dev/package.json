@@ -18,6 +18,7 @@
     "cacache": "^15.0.5",
     "chokidar": "^3.5.1",
     "esbuild": "0.13.14",
+    "exit-hook": "2.2.1",
     "fs-extra": "^10.0.0",
     "lodash.debounce": "^4.0.8",
     "meow": "^7.1.1",
@@ -26,14 +27,12 @@
     "read-package-json-fast": "^2.0.2",
     "remark-frontmatter": "^4.0.0",
     "remark-mdx-frontmatter": "^1.0.1",
-    "signal-exit": "^3.0.3",
     "ws": "^7.4.5",
     "xdm": "^2.0.0"
   },
   "devDependencies": {
     "@types/cacache": "^15.0.0",
     "@types/lodash.debounce": "^4.0.6",
-    "@types/signal-exit": "^3.0.0",
     "@types/ws": "^7.4.1",
     "semver": "^7.3.4"
   }
