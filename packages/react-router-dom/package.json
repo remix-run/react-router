@@ -15,7 +15,7 @@
   "unpkg": "./umd/react-router-dom.production.min.js",
   "dependencies": {
     "react-router": "6.2.0",
-    "history": "^5.1.0"
+    "history": "^5.2.0"
   },
   "peerDependencies": {
     "react": ">=16.8",
