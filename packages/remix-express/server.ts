@@ -111,7 +111,7 @@ export function createRemixRequest(
     init.body = req; //req.pipe(new PassThrough({ highWaterMark: 16384 }));
   }
 
-  return new NodeRequest(url.toString(), init);
+  return new NodeRequest(url.href, init);
 }
 
 function sendRemixResponse(

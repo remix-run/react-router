@@ -121,13 +121,13 @@ function stripIndexParam(request: Request) {
     url.searchParams.append("index", toKeep);
   }
 
-  return new Request(url.toString(), request);
+  return new Request(url.href, request);
 }
 
 function stripDataParam(request: Request) {
   let url = new URL(request.url);
   url.searchParams.delete("_data");
-  return new Request(url.toString(), request);
+  return new Request(url.href, request);
 }
 
 export function extractData(response: Response): Promise<unknown> {
