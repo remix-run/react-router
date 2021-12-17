@@ -4469,17 +4469,10 @@ hermes-engine@^0.2.1:
   resolved "https://registry.npmjs.org/hermes-engine/-/hermes-engine-0.2.1.tgz"
   integrity sha512-eNHUQHuadDMJARpaqvlCZoK/Nitpj6oywq3vQ3wCwEsww5morX34mW5PmKWQTO7aU0ck0hgulxR+EVDlXygGxQ==
 
-history@^5.0.0:
-  version "5.0.2"
-  resolved "https://registry.npmjs.org/history/-/history-5.0.2.tgz"
-  integrity sha512-mBsCaXLUOD9x4YMQlyKHkHqFQlgG0ISle3edo6npJ1N2kb8lcGkmPUHpS4WjmrB64s5H70UniAxKmGDHJkstUQ==
-  dependencies:
-    "@babel/runtime" "^7.7.6"
-
-history@^5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/history/-/history-5.1.0.tgz#2e93c09c064194d38d52ed62afd0afc9d9b01ece"
-  integrity sha512-zPuQgPacm2vH2xdORvGGz1wQMuHSIB56yNAy5FnLuwOwgSYyPKptJtcMm6Ev+hRGeS+GzhbmRacHzvlESbFwDg==
+history@^5.2.0:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/history/-/history-5.2.0.tgz#7cdd31cf9bac3c5d31f09c231c9928fad0007b7c"
+  integrity sha512-uPSF6lAJb3nSePJ43hN3eKj1dTWpN9gMod0ZssbFTIsen+WehTmEadgL+kg78xLJFdRfrrC//SavDzmRVdE+Ig==
   dependencies:
     "@babel/runtime" "^7.7.6"
 
