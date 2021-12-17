@@ -211,7 +211,7 @@ describe("express createRemixRequest", () => {
     });
 
     expect(createRemixRequest(expressRequest)).toMatchInlineSnapshot(`
-      RemixRequest {
+      NodeRequest {
         "abortController": undefined,
         "agent": undefined,
         "compress": true,

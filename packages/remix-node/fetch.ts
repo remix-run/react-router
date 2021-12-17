@@ -3,7 +3,7 @@ import { PassThrough } from "stream";
 import type AbortController from "abort-controller";
 import FormStream from "form-data";
 import type { RequestInfo, RequestInit, Response } from "node-fetch";
-import nodeFetch, { Request as NodeRequest } from "node-fetch";
+import nodeFetch, { Request as BaseNodeRequest } from "node-fetch";
 
 import { FormData as NodeFormData, isFile } from "./formData";
 import type { UploadHandler } from "./formData";
@@ -63,14 +63,14 @@ function formDataToStream(formData: NodeFormData): FormStream {
   return formStream;
 }
 
-interface RemixRequestInit extends RequestInit {
+interface NodeRequestInit extends RequestInit {
   abortController?: AbortController;
 }
 
-class RemixRequest extends NodeRequest {
+class NodeRequest extends BaseNodeRequest {
   private abortController?: AbortController;
 
-  constructor(input: RequestInfo, init?: RemixRequestInit | undefined) {
+  constructor(input: RequestInfo, init?: NodeRequestInit | undefined) {
     if (init?.body instanceof NodeFormData) {
       init = {
         ...init,
@@ -101,12 +101,12 @@ class RemixRequest extends NodeRequest {
     throw new Error("Invalid MIME type");
   }
 
-  clone() {
-    return new RemixRequest(super.clone());
+  clone(): NodeRequest {
+    return new NodeRequest(this);
   }
 }
 
-export { RemixRequest as Request, RemixRequestInit as RequestInit };
+export { NodeRequest as Request, NodeRequestInit as RequestInit };
 
 /**
  * A `fetch` function for node that matches the web Fetch API. Based on
