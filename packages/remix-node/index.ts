@@ -14,12 +14,12 @@ export { FormData } from "./formData";
 
 export { installGlobals } from "./globals";
 
-export { parseMultipartFormData } from "./parseMultipartFormData";
+export { parseMultipartFormData as unstable_parseMultipartFormData } from "./parseMultipartFormData";
 
 export { createFileSessionStorage } from "./sessions/fileStorage";
 
 export {
-  createFileUploadHandler,
+  createFileUploadHandler as unstable_createFileUploadHandler,
   NodeOnDiskFile
 } from "./upload/fileUploadHandler";
-export { createMemoryUploadHandler } from "./upload/memoryUploadHandler";
+export { createMemoryUploadHandler as unstable_createMemoryUploadHandler } from "./upload/memoryUploadHandler";
