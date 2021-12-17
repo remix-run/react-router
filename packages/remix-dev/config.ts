@@ -174,7 +174,7 @@ export interface RemixConfig {
   /**
    * The platform the server build is targeting. Defaults to "node".
    */
-   serverPlatform: "node" | "neutral";
+  serverPlatform: "node" | "neutral";
 }
 
 /**
