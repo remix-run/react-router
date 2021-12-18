@@ -373,8 +373,8 @@ async function createServerBuild(
         // browser build and it's not there yet.
         if (id === "./assets.json" && importer === "<stdin>") return true;
 
-        // Mark all bare imports as external. They will be require()'d (or imported if esm) at
-        // runtime from node_modules.
+        // Mark all bare imports as external. They will be require()'d (or
+        // imported if ESM) at runtime from node_modules.
         if (isBareModuleId(id)) {
           let packageName = getNpmPackageName(id);
           if (
@@ -391,12 +391,14 @@ async function createServerBuild(
             );
           }
 
-          // include .css files from node_modules in the build
-          // so we can get a hashed file name to put into the HTML
+          // Include .css files from node_modules in the build so we can get a
+          // hashed file name to put into the HTML.
           if (id.endsWith(".css")) return false;
 
-          // include "remix" in the build so the server runtime (node) doesn't have to try
-          // to find the magic exports
+          // Include "remix" in the build so the server runtime (node) doesn't
+          // have to try to find the magic exports at runtime. This essentially
+          // translates all `import x from "remix"` statements into `import x
+          // from "@remix-run/x"` in the build.
           if (packageName === "remix") return false;
 
           return true;
