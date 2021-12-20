@@ -22,6 +22,7 @@ import {
   useNavigationType,
   useOutlet,
   useParams,
+  usePath,
   useResolvedPath,
   useRoutes,
   useOutletContext
@@ -322,7 +323,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     }
 
     let isActive =
-      locationPathname === toPathname ||
+      !!usePath(toPathname) ||
       (!end &&
         locationPathname.startsWith(toPathname) &&
         locationPathname.charAt(toPathname.length) === "/");
