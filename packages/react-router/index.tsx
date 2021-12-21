@@ -392,7 +392,7 @@ export function useInRouterContext(): boolean {
  *
  * @see https://reactrouter.com/docs/en/v6/api#uselocation
  */
-export function useLocation(): Location {
+export function useLocation<T = unknown>(): Location & { state: T } {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -400,7 +400,7 @@ export function useLocation(): Location {
     `useLocation() may be used only in the context of a <Router> component.`
   );
 
-  return React.useContext(LocationContext).location;
+  return React.useContext(LocationContext).location as Location & { state: T };
 }
 
 type ParamParseFailed = { failed: true };
