@@ -228,9 +228,9 @@ React Router takes advantage of this browser feature, abstracts it a bit, and su
 
 You can think about `location.state` just like `location.hash` or `location.search` except instead of putting the values in the [URL](#url) it's hidden--like a super secret piece of the URL only the programmer knows about.
 
-A couple great use-cases for location state are:
+A couple of great use-cases for location state are:
 
-- Telling the next page where the user came from and branching the UI. The most popular implementation here is the showing a record in a modal if the user clicked on an item in a grid view, but if they show up to the URL directly, show the record in its own layout (pinterest, old instagram).
+- Telling the next page where the user came from and branching the UI. The most popular implementation here is showing a record in a modal if the user clicked on an item in a grid view, but if they show up to the URL directly, show the record in its own layout (pinterest, old instagram).
 - Sending a partial record from a list to the next screen so it can render the partial data immediately and then fetching the rest of the data afterward.
 
 You set location state in two ways: on `<Link>` or `navigate`:
@@ -383,7 +383,7 @@ let routes = [
 
 In fact, instead of `<Routes>` you can use the hook `useRoutes(routesGoHere)` instead. That's all `<Routes>` is doing.
 
-As you can see, routes can define a multiple [segments](#segment) like `:teamId/edit`, or just one like `:teamId`. All of the segments down a branch of the [route config](#route-config) are added together to create a final [path pattern](#path-pattern) for a route.
+As you can see, routes can define multiple [segments](#segment) like `:teamId/edit`, or just one like `:teamId`. All of the segments down a branch of the [route config](#route-config) are added together to create a final [path pattern](#path-pattern) for a route.
 
 ### Match Params
 
@@ -625,7 +625,7 @@ Think of it this way, if you're not at one of the child routes' paths, the `<Out
 
 If all the teams are in a list on the left then an empty outlet means you've got a blank page on the right! Your UI needs something to fill the space: index routes to the rescue.
 
-Another way to think of an index routes is that it's the default child route when the parent matches but none of its children do.
+Another way to think of an index route is that it's the default child route when the parent matches but none of its children do.
 
 Depending on the user interface, you might not need an index route, but if there is any sort of persistent navigation in the parent route you'll most likely want index route to fill the space when the user hasn't clicked one of the items yet.
 
@@ -710,7 +710,7 @@ When the [URL](#url) changes we call that a "navigation". There are two ways to 
 
 This is the primary means of navigation. Rendering a `<Link>` allows the user to change the URL when they click it. React Router will prevent the browser's default behavior and tell the [history](#history) to push a new entry into the [history stack](#history-stack). The [location](#location) changes and the new [matches](#match) will render.
 
-However, links are accessible in that they
+However, links are accessible in that they:
 
 - Still render a `<a href>` so all default accessibility concerns are met (like keyboard, focusability, SEO, etc.)
 - Don't prevent the browser's default behavior if it's a right click or command/control click to "open in new tab"
