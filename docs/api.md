@@ -613,7 +613,7 @@ export default function Dashboard() {
   return (
     <div>
       <h1>Dashboard</h1>
-      <Outlet context={user} />
+      <Outlet context={{user}} />
     </div>
   );
 }
@@ -627,7 +627,7 @@ export function useUser() {
 import { useUser } from "../dashboard";
 
 export default function DashboardMessages() {
-  const user = useUser();
+  const { user } = useUser();
   return (
     <div>
       <h2>Messages</h2>
