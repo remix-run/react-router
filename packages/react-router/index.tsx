@@ -13,7 +13,8 @@ import {
   parsePath,
 } from "history";
 
-export type { Location, Path, To, NavigationType };
+export { NavigationType };
+export type { Location, Path, To };
 
 function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);

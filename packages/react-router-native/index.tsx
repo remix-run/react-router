@@ -68,6 +68,7 @@ export {
   useOutletContext,
 };
 
+export { NavigationType } from "react-router";
 export type {
   IndexRouteProps,
   LayoutRouteProps,
@@ -76,7 +77,6 @@ export type {
   NavigateFunction,
   NavigateOptions,
   NavigateProps,
-  NavigationType,
   Navigator,
   OutletProps,
   Params,

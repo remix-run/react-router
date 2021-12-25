@@ -76,11 +76,11 @@ export {
   useOutletContext,
 };
 
+export { NavigationType } from "react-router";
 export type {
   Location,
   Path,
   To,
-  NavigationType,
   MemoryRouterProps,
   NavigateFunction,
   NavigateOptions,
