@@ -1040,7 +1040,7 @@ function matchRouteBranch<ParamKey extends string = string>(
     matches.push({
       params: matchedParams,
       pathname: joinPaths([matchedPathname, match.pathname]),
-      pathnameBase: joinPaths([matchedPathname, match.pathnameBase]),
+      pathnameBase: normalizePathname(joinPaths([matchedPathname, match.pathnameBase])),
       route,
     });
 
