@@ -53,7 +53,7 @@ Then install React Router dependencies:
 
 ```sh
 cd router-tutorial
-npm install react-router-dom@6 history@5
+npm install react-router-dom@6
 ```
 
 Then edit your App.js to be pretty boring:
