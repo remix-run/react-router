@@ -296,9 +296,9 @@ These are all actually just static paths, so in v6 you can make three routes and
 function App() {
   return (
     <Routes>
-      <Route path="en" element={<Lang code="en" />} />
-      <Route path="es" element={<Lang code="en" />} />
-      <Route path="fr" element={<Lang code="en" />} />
+      <Route path="en" element={<Lang lang="en" />} />
+      <Route path="es" element={<Lang lang="es" />} />
+      <Route path="fr" element={<Lang lang="fr" />} />
     </Routes>
   );
 }
