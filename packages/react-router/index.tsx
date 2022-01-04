@@ -196,7 +196,7 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
 export interface RouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
-  element?: React.ReactElement | null;
+  element?: React.ReactNode | null;
   index?: boolean;
   path?: string;
 }
@@ -204,18 +204,18 @@ export interface RouteProps {
 export interface PathRouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
-  element?: React.ReactElement | null;
+  element?: React.ReactNode | null;
   index?: false;
   path: string;
 }
 
 export interface LayoutRouteProps {
   children?: React.ReactNode;
-  element?: React.ReactElement | null;
+  element?: React.ReactNode | null;
 }
 
 export interface IndexRouteProps {
-  element?: React.ReactElement | null;
+  element?: React.ReactNode | null;
   index: true;
 }
 
@@ -579,9 +579,12 @@ export function useOutletContext<Context = unknown>(): Context {
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
   let outlet = React.useContext(RouteContext).outlet;
-  return (
-    <OutletContext.Provider value={context}>{outlet}</OutletContext.Provider>
-  );
+  if (outlet) {
+    return (
+      <OutletContext.Provider value={context}>{outlet}</OutletContext.Provider>
+    );
+  }
+  return outlet;
 }
 
 /**
