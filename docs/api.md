@@ -355,7 +355,7 @@ interface NavLinkProps
     | ((props: { isActive: boolean }) => React.ReactNode);
   className?:
     | string
-    | ((props: { isActive: boolean }) => string);
+    | ((props: { isActive: boolean }) => string | undefined);
   end?: boolean;
   style?:
     | React.CSSProperties

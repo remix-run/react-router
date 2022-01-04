@@ -44,6 +44,35 @@ describe("NavLink", () => {
 
       expect(anchor.children[0]).toMatch("Somewhere else");
     });
+
+    it("applies an 'undefined' className to the underlying <a>", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route
+                path="/home"
+                element={
+                  <NavLink
+                    to="somewhere-else"
+                    className={({ isActive }) =>
+                      isActive ? "some-active-classname" : undefined
+                    }
+                  >
+                    Home
+                  </NavLink>
+                }
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.props.className).toBeUndefined();
+    });
   });
 
   describe("when it matches to the end", () => {
