@@ -70,7 +70,7 @@ export function defineConventionalRoutes(
       let fullPath = createRoutePath(routeId.slice("routes".length + 1));
       let uniqueRouteId = (fullPath || "") + (isIndexRoute ? "?index" : "");
 
-      if (typeof uniqueRouteId !== "undefined") {
+      if (uniqueRouteId) {
         if (uniqueRoutes.has(uniqueRouteId)) {
           throw new Error(
             `Path ${JSON.stringify(fullPath)} defined by route ${JSON.stringify(
