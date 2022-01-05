@@ -1,4 +1,5 @@
 import * as path from "path";
+import os from "os";
 import * as fse from "fs-extra";
 import exitHook from "exit-hook";
 import prettyMs from "pretty-ms";
@@ -169,8 +170,16 @@ export async function dev(remixRoot: string, modeArg?: string) {
   try {
     await watch(config, mode, {
       onInitialBuild: () => {
+        let address = Object.values(os.networkInterfaces())
+          .flat()
+          .find(ip => ip?.family == "IPv4" && !ip.internal)?.address;
+
+        if (!address) {
+          throw new Error("Could not find an IPv4 address.");
+        }
+
         server = app.listen(port, () => {
-          console.log(`Remix App Server started at http://localhost:${port}`);
+          console.log(`Remix App Server started at http://${address}:${port}`);
         });
       }
     });
