@@ -1222,7 +1222,10 @@ function compilePath(
       : // Otherwise, match a word boundary or a proceeding /. The word boundary restricts
         // parent routes to matching only their own words and nothing more, e.g. parent
         // route "/home" should not match "/home2".
-        "(?:\\b|\\/|$)";
+        // Additionally, allow paths starting with `.`, `-`, `~`, and url-encoded entities,
+        // but do not consume the character in the matched path so they can match against
+        // nested paths.
+        "(?:(?=[.~-]|%[0-7][0-9A-F])|(?:\\b|\\/|$))";
   }
 
   let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");

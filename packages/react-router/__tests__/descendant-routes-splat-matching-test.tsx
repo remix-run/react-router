@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Outlet, Routes, Route } from "react-router";
+import { MemoryRouter, Outlet, Routes, Route, useParams } from "react-router";
 
 describe("Descendant <Routes> splat matching", () => {
   describe("when the parent route path ends with /*", () => {
@@ -53,6 +53,73 @@ describe("Descendant <Routes> splat matching", () => {
             <h1>
               React Fundamentals
             </h1>
+          </div>
+        </div>
+      `);
+    });
+    it("works with paths beginning with special characters", () => {
+      function PrintParams() {
+        return <p>The params are {JSON.stringify(useParams())}</p>;
+      }
+      function ReactCourses() {
+        return (
+          <div>
+            <h1>React</h1>
+            <Routes>
+              <Route
+                path=":splat"
+                element={
+                  <div>
+                    <h1>React Fundamentals</h1>
+                    <PrintParams />
+                  </div>
+                }
+              />
+            </Routes>
+          </div>
+        );
+      }
+
+      function Courses() {
+        return (
+          <div>
+            <h1>Courses</h1>
+            <Outlet />
+          </div>
+        );
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/courses/react/-react-fundamentals"]}>
+            <Routes>
+              <Route path="courses" element={<Courses />}>
+                <Route path="react/*" element={<ReactCourses />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          <h1>
+            Courses
+          </h1>
+          <div>
+            <h1>
+              React
+            </h1>
+            <div>
+              <h1>
+                React Fundamentals
+              </h1>
+              <p>
+                The params are 
+                {"*":"-react-fundamentals","splat":"-react-fundamentals"}
+              </p>
+            </div>
           </div>
         </div>
       `);
