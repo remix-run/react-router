@@ -1225,7 +1225,7 @@ function compilePath(
         // Additionally, allow paths starting with `.`, `-`, `~`, and url-encoded entities,
         // but do not consume the character in the matched path so they can match against
         // nested paths.
-        "(?:(?=[.~-]|%[0-7][0-9A-F])|(?:\\b|\\/|$))";
+        "(?:(?=[.~-]|%[0-9A-F]{2})|(?:\\b|\\/|$))";
   }
 
   let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
