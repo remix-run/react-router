@@ -26,7 +26,7 @@ import {
   useRoutes,
   useOutletContext
 } from "react-router";
-import type { To } from "react-router";
+import type { To, Path } from "react-router";
 
 function warning(cond: boolean, message: string): void {
   if (!cond) {
@@ -311,21 +311,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     },
     ref
   ) {
-    let location = useLocation();
-    let path = useResolvedPath(to);
-
-    let locationPathname = location.pathname;
-    let toPathname = path.pathname;
-    if (!caseSensitive) {
-      locationPathname = locationPathname.toLowerCase();
-      toPathname = toPathname.toLowerCase();
-    }
-
-    let isActive =
-      locationPathname === toPathname ||
-      (!end &&
-        locationPathname.startsWith(toPathname) &&
-        locationPathname.charAt(toPathname.length) === "/");
+    let isActive = useIsPathActive(to, caseSensitive, end);
 
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
@@ -409,6 +395,20 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     },
     [location, navigate, path, replaceProp, state, target, to]
   );
+}
+
+/**
+ * Returns true if the given location seems currently active.
+ * `caseSensitive` and `end` work the same as with `<NavLink>`.
+ */
+export function useIsPathActive(
+  to: To,
+  caseSensitive: boolean = false,
+  end: boolean = false
+): boolean {
+  let location = useLocation();
+  let path = useResolvedPath(to);
+  return isPathActive(location, path, caseSensitive, end);
 }
 
 /**
@@ -502,5 +502,30 @@ export function createSearchParams(
             Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
           );
         }, [] as ParamKeyValuePair[])
+  );
+}
+
+/**
+ * Given a location and a path, returns true if the path is active in the location.
+ * `caseSensitive` and `end` work the same as with `<NavLink>`.
+ */
+export function isPathActive(
+  location: Path,
+  path: Path,
+  caseSensitive: boolean = false,
+  end: boolean = false
+) {
+  let locationPathname = location.pathname;
+  let toPathname = path.pathname;
+  if (!caseSensitive) {
+    locationPathname = locationPathname.toLowerCase();
+    toPathname = toPathname.toLowerCase();
+  }
+
+  return (
+    locationPathname === toPathname ||
+    (!end &&
+      locationPathname.startsWith(toPathname) &&
+      locationPathname.charAt(toPathname.length) === "/")
   );
 }
