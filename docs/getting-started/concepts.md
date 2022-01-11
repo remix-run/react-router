@@ -33,9 +33,9 @@ Here are some words we use a lot when we talk about React Router. The rest of th
 
 - <a id="history-stack">**History Stack**</a> - As the user navigates, the browser keeps track of each [location](#location) in a stack. If you click and hold the back button in a browser you can see the browser's history stack right there.
 
-- <a id="csr">**Client Side Routing (CSR)**</a> - A plain HTML document can link to other documents and the browser handles the [history stack](#history-stack) itself. Client Side Routing enables developers to manipulate the browser history stack without making document request to the server.
+- <a id="csr">**Client Side Routing (CSR)**</a> - A plain HTML document can link to other documents and the browser handles the [history stack](#history-stack) itself. Client Side Routing enables developers to manipulate the browser history stack without making a document request to the server.
 
-- <a id="history-object">**History**</a> - An object allows React Router to subscribe to changes in the [URL](#url) as well as providing APIs to manipulate the browser [history stack](#history-stack) programmatically.
+- <a id="history-object">**History**</a> - An object that allows React Router to subscribe to changes in the [URL](#url) as well as providing APIs to manipulate the browser [history stack](#history-stack) programmatically.
 
 - <a id="history-action">**History Action**</a> - One of `POP`, `PUSH`, or `REPLACE`. Users can arrive at a [URL](#url) for one of these three reasons. A push when a new entry is added to the history stack (typically a link click or the programmer forced a navigation). A replace is similar except it replaces the current entry on the stack instead of pushing a new one. Finally, a pop happens when the user clicks the back or forward buttons in the browser chrome.
 
@@ -201,11 +201,11 @@ params.get("popular"); // "true"
 params.toString(); // "campaign=instagram&popular=true",
 ```
 
-When being precise, refer to the serialized string version as "search" and the parsed version as "search params", but its common to use the terms interchangeably when precision isn't important.
+When being precise, refer to the serialized string version as "search" and the parsed version as "search params", but it's common to use the terms interchangeably when precision isn't important.
 
 **Location Hash**
 
-Hashes in URLs indicate a scroll position _on the current page_. Before the `window.history.pushState` API was introduced, web developers did client side routing exclusively with the hash portion of the [URL](#url), it was the only part we could manipulate without making a new request to the server. However, today we can use it for it's designed purpose.
+Hashes in URLs indicate a scroll position _on the current page_. Before the `window.history.pushState` API was introduced, web developers did client side routing exclusively with the hash portion of the [URL](#url), it was the only part we could manipulate without making a new request to the server. However, today we can use it for its designed purpose.
 
 **Location State**
 
@@ -230,7 +230,7 @@ You can think about `location.state` just like `location.hash` or `location.sear
 
 A couple great use-cases for location state are:
 
-- Telling the next page where the user came from and branching the UI. The most popular implementation here is the showing a record in a modal if the user clicked on an item in a grid view, but if they show up to the URL directly, show the record in it's own layout (pinterest, old instagram).
+- Telling the next page where the user came from and branching the UI. The most popular implementation here is the showing a record in a modal if the user clicked on an item in a grid view, but if they show up to the URL directly, show the record in its own layout (pinterest, old instagram).
 - Sending a partial record from a list to the next screen so it can render the partial data immediately and then fetching the rest of the data afterward.
 
 You set location state in two ways: on `<Link>` or `navigate`:
@@ -415,9 +415,9 @@ That's right, two of them!
 /teams/:teamId
 ```
 
-React Router has to make a decision here, there can be only one. Many routers, both client side and server side, will simply process the patterns in the order in which they were defined. First to match wins. In this case we would match `/` and render the `<Home/>` component. Definintely not what we wanted. These kinds of routers require us to order our routes perfectly to get the expected result. This is how React Router has worked up until v6, but now its much smarter.
+React Router has to make a decision here, there can be only one. Many routers, both client side and server side, will simply process the patterns in the order in which they were defined. First to match wins. In this case we would match `/` and render the `<Home/>` component. Definitely not what we wanted. These kinds of routers require us to order our routes perfectly to get the expected result. This is how React Router has worked up until v6, but now it's much smarter.
 
-Looking at those patterns, you intuitively know that we want `/teams/new` to match the URL `/teams/new`. It's a perfect match! React Router also knows that. When matching, it will rank your routes according the number of segments, static segments, dynamic segments, star patterns, etc. and pick the most specific match. You never have to think about ordering your routes.
+Looking at those patterns, you intuitively know that we want `/teams/new` to match the URL `/teams/new`. It's a perfect match! React Router also knows that. When matching, it will rank your routes according the number of segments, static segments, dynamic segments, star patterns, etc. and pick the most specific match. You'll never have to think about ordering your routes.
 
 ### Pathless Routes
 
@@ -564,10 +564,10 @@ The `Outlet` component will always render the next match. That means `<Teams>` a
 If the URL were `/contact-us`, the element tree would change to:
 
 ```jsx
-<App>
-  <ContactForm />
-</App>
+<ContactForm />
 ```
+
+Because the contact form is not under the main `<App>` route.
 
 If the URL were `/teams/firebirds/edit`, the element tree would change to:
 
@@ -579,7 +579,7 @@ If the URL were `/teams/firebirds/edit`, the element tree would change to:
 </App>
 ```
 
-The outlet swaps out the child for the new child that matches, but the parent layout presists. It's subtle but very effective at cleaning up your components.
+The outlet swaps out the child for the new child that matches, but the parent layout persists. It's subtle but very effective at cleaning up your components.
 
 ### Index Routes
 
@@ -712,7 +712,7 @@ This is the primary means of navigation. Rendering a `<Link>` allows the user to
 
 However, links are accessible in that they
 
-- Still render a `<a href>` so all default accessiblility concerns are met (like keyboard, focusability, SEO, etc.)
+- Still render a `<a href>` so all default accessibility concerns are met (like keyboard, focusability, SEO, etc.)
 - Don't prevent the browser's default behavior if it's a right click or command/control click to "open in new tab"
 
 [Nested routes](#nested-routes) aren't just about rendering layouts; they also enable "relative links". Consider our `teams` route from before:
@@ -782,7 +782,7 @@ let [urlSearchParams] = useSearchParams();
 
 ## Review
 
-Let's put it all together from the top, let's assume we're at the URL: `
+Let's put it all together from the top!
 
 1. You render your app:
 

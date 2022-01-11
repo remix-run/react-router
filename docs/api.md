@@ -90,7 +90,7 @@ interface BrowserRouterProps {
 
 `<BrowserRouter>` is the recommended interface for running React Router in a web browser. A `<BrowserRouter>` stores the current location in the browser's address bar using clean URLs and navigates using the browser's built-in history stack.
 
-`<BrowserRouter window>` defaults to using the current [document's `defaultView`](https://developer.mozilla.org/en-US/docs/Web/API/Document/defaultView), but it may also be used to track changes to another's window's URL, in an `<iframe>`, for example.
+`<BrowserRouter window>` defaults to using the current [document's `defaultView`](https://developer.mozilla.org/en-US/docs/Web/API/Document/defaultView), but it may also be used to track changes to another window's URL, in an `<iframe>`, for example.
 
 ```tsx
 import * as React from "react";
@@ -252,17 +252,17 @@ interface LinkProps
     "href"
   > {
   replace?: boolean;
-  state?: State;
+  state?: any;
   to: To;
+  reloadDocument?: boolean;
 }
 
-type State = object | null;
 type To = Partial<Location> | string;
 ```
 
 </details>
 
-A `<Link>` is an element that lets the user navigate to another page by clicking or tapping on it. In `react-router-dom`, a `<Link>` renders an accessible `<a>` element with a real `href` that points to the resource it's linking to. This means that things like right-clicking a `<Link>` work as you'd expect.
+A `<Link>` is an element that lets the user navigate to another page by clicking or tapping on it. In `react-router-dom`, a `<Link>` renders an accessible `<a>` element with a real `href` that points to the resource it's linking to. This means that things like right-clicking a `<Link>` work as you'd expect. You can use `<Link reloadDocument>` to skip client side routing and let the browser handle the transition normally (as if it were an `<a href>`).
 
 ```tsx
 import * as React from "react";
@@ -317,7 +317,7 @@ interface LinkProps extends TouchableHighlightProps {
 
 </details>
 
-A `<Link>` is an element that lets the user navigate to another view by tapping it, similar to how `<a>` elements work in a web app. In `react-router-native`, a `<Link>` renders a `TouchableHighlight`.
+A `<Link>` is an element that lets the user navigate to another view by tapping it, similar to how `<a>` elements work in a web app. In `react-router-native`, a `<Link>` renders a `TouchableHighlight`. To override default styling and behaviour, please refer to the [Props reference for `TouchableHighlight`](https://reactnative.dev/docs/touchablehighlight#props).
 
 ```tsx
 import * as React from "react";
@@ -345,8 +345,14 @@ declare function NavLink(
 ): React.ReactElement;
 
 interface NavLinkProps
-  extends Omit<LinkProps, "className" | "style"> {
+  extends Omit<
+    LinkProps,
+    "className" | "style" | "children"
+  > {
   caseSensitive?: boolean;
+  children?:
+    | React.ReactNode
+    | ((props: { isActive: boolean }) => React.ReactNode);
   className?:
     | string
     | ((props: { isActive: boolean }) => string);
@@ -361,9 +367,9 @@ interface NavLinkProps
 
 </details>
 
-A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not it is "active". This is useful when building a navigation menu such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected. It also provides useful context for assitive technology like screen readers.
+A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not it is "active". This is useful when building a navigation menu such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected. It also provides useful context for assistive technology like screen readers.
 
-By default, an `active` class is added to a `<NavLink>` component when it is active. This provides the same simple styling mechanism for most users who are upgrading from v5. One difference as of `v6.0.0-beta.3` is that `activeClassName` and `activeStyle` have been removed from `NavLinkProps`. Instead, you can pass a function to either `style` or `className` that will allow you to customize the inline styling or the class string based on the component's active state.
+By default, an `active` class is added to a `<NavLink>` component when it is active. This provides the same simple styling mechanism for most users who are upgrading from v5. One difference as of `v6.0.0-beta.3` is that `activeClassName` and `activeStyle` have been removed from `NavLinkProps`. Instead, you can pass a function to either `style` or `className` that will allow you to customize the inline styling or the class string based on the component's active state. you can also pass a function as children to customize the content of the `<NavLink>` component based on their active state, specially useful to change styles on internal elements.
 
 ```tsx
 import * as React from "react";
@@ -375,6 +381,8 @@ function NavList() {
   let activeStyle = {
     textDecoration: "underline"
   };
+
+  let activeClassName = "underline"
 
   return (
     <nav>
@@ -392,11 +400,22 @@ function NavList() {
         <li>
           <NavLink
             to="tasks"
-            style={({ isActive }) =>
-              isActive ? activeStyle : undefined
+            className={({ isActive }) =>
+              isActive ? activeClassName : undefined
             }
           >
             Tasks
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            to="tasks"
+          >
+            {({ isActive }) => (
+              <span className={isActive ? activeClassName : undefined}>
+                Tasks
+              </span>
+            ))}
           </NavLink>
         </li>
       </ul>
@@ -509,7 +528,12 @@ class LoginForm extends React.Component {
   <summary>Type declaration</summary>
 
 ```tsx
-declare function Outlet(): React.ReactElement | null;
+interface OutletProps {
+  context?: unknown;
+}
+declare function Outlet(
+  props: OutletProps
+): React.ReactElement | null;
 ```
 
 </details>
@@ -541,6 +565,74 @@ function App() {
         <Route path="tasks" element={<DashboardTasks />} />
       </Route>
     </Routes>
+  );
+}
+```
+
+### `useOutletContext`
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function useOutletContext<
+  Context = unknown
+>(): Context;
+```
+
+</details>
+
+Often parent routes manage state or other values you want shared with child routes. You can create your own [context provider](https://reactjs.org/docs/context.html) if you like, but this is such a common situation that it's built-into `<Outlet />`:
+
+```tsx lines=[3]
+function Parent() {
+  const [count, setCount] = React.useState(0);
+  return <Outlet context={[count, setCount]} />;
+}
+```
+
+```tsx lines=[2]
+function Child() {
+  const [count, setCount] = useOutletContext();
+  const increment = () => setCount(c => c + 1);
+  return <button onClick={increment}>{count}</button>;
+}
+```
+
+If you're using TypeScript, we recommend the parent component provide a custom hook for accessing the context value. This makes it easier for consumers to get nice typings, control consumers, and know who's consuming the context value. Here's a more realistic example:
+
+```tsx filename=src/routes/dashboard.tsx lines=[12,17-19]
+import * as React from "react";
+import type { User } from "./types";
+
+type ContextType = { user: User | null };
+
+export default function Dashboard() {
+  const [user, setUser] = React.useState<User | null>(null);
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <Outlet context={user} />
+    </div>
+  );
+}
+
+export function useUser() {
+  return useOutletContext<ContextType>();
+}
+```
+
+```tsx filename=src/routes/dashboard/messages.tsx lines=[1,4]
+import { useUser } from "../dashboard";
+
+export default function DashboardMessages() {
+  const user = useUser();
+  return (
+    <div>
+      <h2>Messages</h2>
+      <p>Hello, {user.name}!</p>
+    </div>
   );
 }
 ```
@@ -681,36 +773,6 @@ function requestHandler(req, res) {
 
 http.createServer(requestHandler).listen(3000);
 ```
-
-### `createRoutesFromArray`
-
-<details>
-  <summary>Type declaration</summary>
-
-```tsx
-declare function createRoutesFromArray(
-  array: PartialRouteObject[]
-): RouteObject[];
-
-interface PartialRouteObject {
-  path?: string;
-  caseSensitive?: boolean;
-  element?: React.ReactNode;
-  children?: PartialRouteObject[];
-}
-
-interface RouteObject {
-  caseSensitive: boolean;
-  children?: RouteObject[];
-  element: React.ReactNode;
-  path: string;
-}
-```
-
-</details>
-
-`createRoutesFromArray` is a helper that fills in the (potentially) missing pieces in an array of route objects. It is used internally by [`useRoutes`](#useroutes) to create route objects.
-<a name="createroutesfromchildren"></a>
 
 ### `createRoutesFromChildren`
 
@@ -916,7 +978,7 @@ import {
   useLinkClickHandler
 } from "react-router-dom";
 
-const StyledLink = styled("a", { color: "fuschia" });
+const StyledLink = styled("a", { color: "fuchsia" });
 
 const Link = React.forwardRef(
   (
@@ -1098,7 +1160,7 @@ declare function useNavigate(): NavigateFunction;
 interface NavigateFunction {
   (
     to: To,
-    options?: { replace?: boolean; state?: State }
+    options?: { replace?: boolean; state?: any }
   ): void;
   (delta: number): void;
 }
@@ -1237,8 +1299,6 @@ function App() {
   return element;
 }
 ```
-
-See also [`createRoutesFromArray`](#createroutesfromarray).
 
 ### `useSearchParams`
 

@@ -21,7 +21,7 @@ Most modern React projects manage their dependencies using a package manager lik
 <summary>npm</summary>
 
 ```sh
-$ npm install history@5 react-router-dom@6
+$ npm install react-router-dom@6
 ```
 
 </details>
@@ -30,7 +30,7 @@ $ npm install history@5 react-router-dom@6
 <summary>Yarn</summary>
 
 ```sh
-$ yarn add history@5 react-router-dom@6
+$ yarn add react-router-dom@6
 ```
 
 </details>
@@ -39,7 +39,7 @@ $ yarn add history@5 react-router-dom@6
 <summary>pnpm</summary>
 
 ```sh
-$ pnpm add history@5 react-router-dom@6
+$ pnpm add react-router-dom@6
 ```
 
 </details>
@@ -48,7 +48,7 @@ $ pnpm add history@5 react-router-dom@6
 
 Follow the instructions in the [React documentation to set up a new project with Create React App](https://reactjs.org/docs/create-a-new-react-app.html#create-react-app), then follow [the installation instructions above](#basic-installation) to install React Router in your project.
 
-Once your project is set up and React Router is installed as a dependency, open the `src/index.js` in your text editor. Import `BrowserRouter` from `react-router-dom` near the top of your file and wrap your app in a `<Router>`:
+Once your project is set up and React Router is installed as a dependency, open the `src/index.js` in your text editor. Import `BrowserRouter` from `react-router-dom` near the top of your file and wrap your app in a `<BrowserRouter>`:
 
 ```js [3, 9-11]
 import * as React from "react";
@@ -122,7 +122,7 @@ function About() {
 }
 ```
 
-Go ahead and start your app by running `npm start`, and you should see the `Home` route when your app starts running. Click the "About" link to see your `<About>` route, and voila! You've successfully set up React Router using Create React App! 🥳
+Go ahead and start your app by running `npm start`, and you should see the `Home` route when your app starts running. Click the "About" link to see your `<About>` route, and voilà! You've successfully set up React Router using Create React App! 🥳
 
 When it's time to deploy your app to production, be sure to follow [Create React App's instructions](https://create-react-app.dev/docs/deployment#serving-apps-with-client-side-routing) on deploying with React Router to be sure your server is configured correctly.
 
@@ -163,7 +163,7 @@ ReactDOM.render(
 );
 ```
 
-In your `index.html`, create the root div in the document body above the script tag. It's also helpful to provide a `noscript` fallback message for users who may disabled JavaScript, unless you plan on server-rendering your app later.
+In your `index.html`, create the root div in the document body above the script tag. It's also helpful to provide a `noscript` fallback message for users who may have disabled JavaScript, unless you plan on server-rendering your app later.
 
 ```html
 <body>
@@ -231,7 +231,7 @@ function About() {
 export default App;
 ```
 
-Now start your app by running `npm start`, and you should see the `Home` route when your app starts running. Click the "About" link to see your `About` route, and voila! You successfully set up React Router using Parcel! 🥳
+Now start your app by running `npm start`, and you should see the `Home` route when your app starts running. Click the "About" link to see your `About` route, and voilà! You successfully set up React Router using Parcel! 🥳
 
 ## Webpack
 

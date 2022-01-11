@@ -1,3 +1,8 @@
+---
+title: Modal
+toc: false
+---
+
 # Modal Example
 
 ## Preview

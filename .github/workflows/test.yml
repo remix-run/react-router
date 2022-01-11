@@ -1,7 +1,13 @@
 name: test
 on:
   push:
-    branches: [main]
+    branches:
+      - "**"
+    tags-ignore:
+      - v*
+    paths-ignore:
+      - "docs/**"
+      - "**/README.md"
   pull_request:
     types: [opened, synchronize]
 
@@ -9,26 +15,18 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [14.x]
-
     steps:
       - uses: actions/checkout@v2
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+      - name: Set up Node
+        uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 14
+          check-latest: true
+          cache: yarn
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-
-      - name: Check formatting
-        run: yarn format:check
-
-      - name: Lint
-        run: yarn lint
 
       - name: Build
         run: yarn build

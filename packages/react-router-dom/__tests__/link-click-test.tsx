@@ -3,15 +3,15 @@ import * as ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
 import { MemoryRouter, Routes, Route, Link } from "react-router-dom";
 
-function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit): void {
-  anchor.dispatchEvent(
-    new MouseEvent("click", {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-      ...eventInit
-    })
-  );
+function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit) {
+  let event = new MouseEvent("click", {
+    view: window,
+    bubbles: true,
+    cancelable: true,
+    ...eventInit
+  });
+  anchor.dispatchEvent(event);
+  return event;
 }
 
 describe("A <Link> click", () => {
@@ -51,13 +51,52 @@ describe("A <Link> click", () => {
     let anchor = node.querySelector("a");
     expect(anchor).not.toBeNull();
 
+    let event: MouseEvent;
     act(() => {
-      click(anchor);
+      event = click(anchor);
     });
 
+    expect(event.defaultPrevented).toBe(true);
     let h1 = node.querySelector("h1");
     expect(h1).not.toBeNull();
     expect(h1?.textContent).toEqual("About");
+  });
+
+  describe("when reloadDocument is specified", () => {
+    it("does not prevent default", () => {
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link reloadDocument to="../about">
+              About
+            </Link>
+          </div>
+        );
+      }
+
+      act(() => {
+        ReactDOM.render(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+              <Route path="about" element={<h1>About</h1>} />
+            </Routes>
+          </MemoryRouter>,
+          node
+        );
+      });
+
+      let anchor = node.querySelector("a");
+      expect(anchor).not.toBeNull();
+
+      let event: MouseEvent;
+      act(() => {
+        event = click(anchor);
+      });
+
+      expect(event.defaultPrevented).toBe(false);
+    });
   });
 
   describe("when preventDefault is used on the click handler", () => {

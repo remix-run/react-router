@@ -30,7 +30,8 @@ import {
   useOutlet,
   useParams,
   useResolvedPath,
-  useRoutes
+  useRoutes,
+  useOutletContext
 } from "react-router";
 import type { To } from "react-router";
 
@@ -63,7 +64,8 @@ export {
   useOutlet,
   useParams,
   useResolvedPath,
-  useRoutes
+  useRoutes,
+  useOutletContext
 };
 
 export type {
@@ -160,7 +162,7 @@ const URLEventType = "url";
 
 /**
  * Handles the press behavior for router `<Link>` components. This is useful if
- * you need to create custom `<Link>` compoments with the same press behavior we
+ * you need to create custom `<Link>` components with the same press behavior we
  * use in our exported `<Link>`.
  */
 export function useLinkPressHandler(

@@ -1,6 +1,6 @@
 import * as React from "react";
 export * as History from "history"; // forward history
-import type { BrowserHistory, HashHistory } from "history";
+import type { BrowserHistory, HashHistory, History } from "history";
 import { createBrowserHistory, createHashHistory, createPath } from "history";
 import {
   MemoryRouter,
@@ -24,7 +24,8 @@ import {
   useOutlet,
   useParams,
   useResolvedPath,
-  useRoutes
+  useRoutes,
+  useOutletContext
 } from "react-router";
 import type { To } from "react-router";
 
@@ -72,7 +73,8 @@ export {
   useOutlet,
   useParams,
   useResolvedPath,
-  useRoutes
+  useRoutes,
+  useOutletContext
 };
 
 export type {
@@ -129,7 +131,7 @@ export interface BrowserRouterProps {
 }
 
 /**
- * A <Router> for use in web browsers. Provides the cleanest URLs.
+ * A `<Router>` for use in web browsers. Provides the cleanest URLs.
  */
 export function BrowserRouter({
   basename,
@@ -167,7 +169,7 @@ export interface HashRouterProps {
 }
 
 /**
- * A <Router> for use in web browsers. Stores the location in the hash
+ * A `<Router>` for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
 export function HashRouter({ basename, children, window }: HashRouterProps) {
@@ -195,12 +197,50 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
   );
 }
 
+export interface HistoryRouterProps {
+  basename?: string;
+  children?: React.ReactNode;
+  history: History;
+}
+
+/**
+ * A `<Router>` that accepts a pre-instantiated history object. It's important
+ * to note that using your own history object is highly discouraged and may add
+ * two versions of the history library to your bundles unless you use the same
+ * version of the history library that React Router uses internally.
+ */
+function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
+  const [state, setState] = React.useState({
+    action: history.action,
+    location: history.location
+  });
+
+  React.useLayoutEffect(() => history.listen(setState), [history]);
+
+  return (
+    <Router
+      basename={basename}
+      children={children}
+      location={state.location}
+      navigationType={state.action}
+      navigator={history}
+    />
+  );
+}
+
+if (__DEV__) {
+  HistoryRouter.displayName = "unstable_HistoryRouter";
+}
+
+export { HistoryRouter as unstable_HistoryRouter };
+
 function isModifiedEvent(event: React.MouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+  reloadDocument?: boolean;
   replace?: boolean;
   state?: any;
   to: To;
@@ -211,7 +251,7 @@ export interface LinkProps
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
-    { onClick, replace = false, state, target, to, ...rest },
+    { onClick, reloadDocument, replace = false, state, target, to, ...rest },
     ref
   ) {
     let href = useHref(to);
@@ -220,7 +260,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
     ) {
       if (onClick) onClick(event);
-      if (!event.defaultPrevented) {
+      if (!event.defaultPrevented && !reloadDocument) {
         internalOnClick(event);
       }
     }
@@ -242,7 +282,11 @@ if (__DEV__) {
   Link.displayName = "Link";
 }
 
-export interface NavLinkProps extends Omit<LinkProps, "className" | "style"> {
+export interface NavLinkProps
+  extends Omit<LinkProps, "className" | "style" | "children"> {
+  children:
+    | React.ReactNode
+    | ((props: { isActive: boolean }) => React.ReactNode);
   caseSensitive?: boolean;
   className?: string | ((props: { isActive: boolean }) => string);
   end?: boolean;
@@ -263,6 +307,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       end = false,
       style: styleProp,
       to,
+      children,
       ...rest
     },
     ref
@@ -310,7 +355,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ref={ref}
         style={style}
         to={to}
-      />
+      >
+        {typeof children === "function" ? children({ isActive }) : children}
+      </Link>
     );
   }
 );
@@ -325,7 +372,7 @@ if (__DEV__) {
 
 /**
  * Handles the click behavior for router `<Link>` components. This is useful if
- * you need to create custom `<Link>` compoments with the same click behavior we
+ * you need to create custom `<Link>` components with the same click behavior we
  * use in our exported `<Link>`.
  */
 export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(

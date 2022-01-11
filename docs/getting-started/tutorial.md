@@ -15,7 +15,7 @@ If you're just getting started with React generally, we recommend you follow [th
 
 We'll keep this tutorial quick and to the point. By the end you'll know the APIs you deal with day-to-day with React Router. After that, you can dig into some of the other docs to get a deeper understanding.
 
-While building a little bookeeping app we'll cover:
+While building a little bookkeeping app we'll cover:
 
 - Configuring Routes
 - Navigating with Link
@@ -53,7 +53,7 @@ Then install React Router dependencies:
 
 ```sh
 cd router-tutorial
-npm add react-router-dom@6 history@5
+npm install react-router-dom@6 history@5
 ```
 
 Then edit your App.js to be pretty boring:
@@ -80,7 +80,7 @@ const rootElement = document.getElementById("root");
 render(<App />, rootElement);
 ```
 
-Finally start your app:
+Finally, start your app:
 
 ```sh
 # probably this
@@ -209,7 +209,7 @@ Let's get some automatic, persistent layout handling by doing just two things:
 1. Nest the routes inside of the App route
 2. Render an Outlet
 
-First let's nest the routes. Right now the expenses and invoices routes are siblings to to the app, we're want to make them _children_ of the app route:
+First let's nest the routes. Right now the expenses and invoices routes are siblings to the app, we want to make them _children_ of the app route:
 
 ```jsx lines=[15-18] filename=src/main.jsx
 import { render } from "react-dom";
@@ -271,7 +271,7 @@ As we'll see later, this works at _any level_ of the route hierarchy and is incr
 
 ## Listing the Invoices
 
-Normally you'd be fetching data from a server somewhere, but for this tutorial lets just hard code some fake stuff so we can focus on routing.
+Normally you'd be fetching data from a server somewhere, but for this tutorial let's hard code some fake stuff so we can focus on routing.
 
 Make a file at `src/data.js` and copy/paste this in there:
 
@@ -376,7 +376,7 @@ The `"*"` has special meaning here. It will match only when no other routes do.
 
 ## Reading URL Params
 
-Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, lets make a new component at `src/routes/invoice.js` to render at those URLs:
+Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, let's make a new component at `src/routes/invoice.js` to render at those URLs:
 
 ```js filename=src/routes/invoice.js
 export default function Invoice() {
@@ -481,7 +481,7 @@ export function getInvoice(number) {
 }
 ```
 
-And now back in `invoice.js` we can display use the param to look it up and display more information:
+And now back in `invoice.js` we use the param to look up an invoice and display more information:
 
 ```js filename=routes/invoice.js lines=[2,6]
 import { useParams } from "react-router-dom";
@@ -612,7 +612,7 @@ React Router makes it easy to read and manipulate the search params with `useSea
 
 Let's see it in action by adding a little filter on the invoices nav list.
 
-```jsx filename=routes/invoices.jsx lines=[4,10,21-27,32-37]
+```jsx filename=routes/invoices.jsx lines=[4,10,20-30,32-37]
 import {
   NavLink,
   Outlet,
@@ -698,7 +698,7 @@ Like `useSearchParams`, `useLocation` returns a location that tells us informati
 
 ```js
 {
-  pathame: "/invoices",
+  pathname: "/invoices",
   search: "?filter=sa",
   hash: "",
   state: null,
@@ -794,7 +794,7 @@ Most of the time the URL changes is in response to the user clicking a link. But
 
 Let's add a button that marks the invoice as paid and then navigates to the index route.
 
-First you can copy paste this function that deletes an invoice from our fake data store:
+First you can copy and paste this function that deletes an invoice from our fake data store:
 
 ```js filename=src/data.js
 export function deleteInvoice(number) {
