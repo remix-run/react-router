@@ -1,8 +1,8 @@
 import * as React from "react";
-export * as History from "history"; // forward history
 import type { BrowserHistory, HashHistory, History } from "history";
-import { createBrowserHistory, createHashHistory, createPath } from "history";
+import { createBrowserHistory, createHashHistory } from "history";
 import {
+  createPath,
   MemoryRouter,
   Navigate,
   Outlet,
@@ -13,6 +13,7 @@ import {
   generatePath,
   matchRoutes,
   matchPath,
+  parsePath,
   resolvePath,
   renderMatches,
   useHref,
@@ -52,6 +53,7 @@ function warning(cond: boolean, message: string): void {
 
 // Note: Keep in sync with react-router exports!
 export {
+  createPath,
   MemoryRouter,
   Navigate,
   Outlet,
@@ -62,6 +64,7 @@ export {
   generatePath,
   matchRoutes,
   matchPath,
+  parsePath,
   renderMatches,
   resolvePath,
   useHref,
@@ -78,6 +81,7 @@ export {
 };
 
 export type {
+  Hash,
   Location,
   Path,
   To,
@@ -97,6 +101,7 @@ export type {
   LayoutRouteProps,
   IndexRouteProps,
   RouterProps,
+  Pathname,
   RoutesProps
 } from "react-router";
 

@@ -1,20 +1,24 @@
 import * as React from "react";
 import type {
+  Hash,
   History,
   InitialEntry,
   Location,
   MemoryHistory,
   Path,
+  Pathname,
+  Search,
   To
 } from "history";
 import {
   Action as NavigationType,
   createMemoryHistory,
-  parsePath
+  parsePath,
+  createPath
 } from "history";
 
-export * as History from "history"; // forward history
-export type { Location, Path, To, NavigationType };
+export { parsePath, createPath, NavigationType };
+export type { Hash, Location, Path, Pathname, Search, To };
 
 function invariant(cond: any, message: string): asserts cond {
   if (!cond) throw new Error(message);
