@@ -691,7 +691,7 @@ declare function Route(
 interface RouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
-  element?: React.ReactElement | null;
+  element?: React.ReactNode | null;
   index?: boolean;
   path?: string;
 }
