@@ -99,8 +99,8 @@ export async function callRouteLoader({
 
   if (result === undefined) {
     throw new Error(
-      `You defined an action for route "${match.route.id}" but didn't return ` +
-        `anything from your \`action\` function. Please return a value or \`null\`.`
+      `You defined a loader for route "${match.route.id}" but didn't return ` +
+        `anything from your \`loader\` function. Please return a value or \`null\`.`
     );
   }
 
