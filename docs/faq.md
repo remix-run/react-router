@@ -335,7 +335,7 @@ function App() {
   return (
     <Routes>
       <Route path="/users/:id" element={<ValidateUser />} />
-      <Route path="/users/*" component={NotFound} />
+      <Route path="/users/*" element={<NotFound />} />
     </Routes>
   );
 }
