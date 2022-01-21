@@ -957,7 +957,9 @@ The `useHref` hook returns a URL that may be used to link to the given `to` loca
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
+declare function useLinkClickHandler<
+  E extends Element = HTMLAnchorElement
+>(
   to: To,
   options?: {
     target?: React.HTMLAttributeAnchorTarget;
