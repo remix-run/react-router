@@ -310,7 +310,7 @@ interface LinkProps extends TouchableHighlightProps {
   children?: React.ReactNode;
   onPress?(event: GestureResponderEvent): void;
   replace?: boolean;
-  state?: State;
+  state?: any;
   to: To;
 }
 ```
@@ -475,7 +475,7 @@ declare function Navigate(props: NavigateProps): null;
 interface NavigateProps {
   to: To;
   replace?: boolean;
-  state?: State;
+  state?: any;
 }
 ```
 
@@ -831,7 +831,7 @@ The term "location" in React Router refers to [the `Location` interface](https:/
 >
 > The `history` package is React Router's only dependency and many of the
 > core types in React Router come directly from that library including
-> `Location`, `To`, `Path`, `State`, and others. You can read more about
+> `Location`, `To`, `Path`, and others. You can read more about
 > the history library in [its documentation](https://github.com/remix-run/history/tree/main/docs).
 
 ### `matchRoutes`
@@ -957,15 +957,12 @@ The `useHref` hook returns a URL that may be used to link to the given `to` loca
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useLinkClickHandler<
-  E extends Element = HTMLAnchorElement,
-  S extends State = State
->(
+declare function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   to: To,
   options?: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
-    state?: S;
+    state?: any;
   }
 ): (event: React.MouseEvent<E, MouseEvent>) => void;
 ```
@@ -1025,13 +1022,11 @@ const Link = React.forwardRef(
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useLinkPressHandler<
-  S extends State = State
->(
+declare function useLinkPressHandler(
   to: To,
   options?: {
     replace?: boolean;
-    state?: S;
+    state?: any;
   }
 ): (event: GestureResponderEvent) => void;
 ```
@@ -1091,9 +1086,8 @@ The `useInRouterContext` hooks returns `true` if the component is being rendered
 ```tsx
 declare function useLocation(): Location;
 
-interface Location<S extends State = object | null>
-  extends Path {
-  state: S;
+interface Location extends Path {
+  state: unknown;
   key: Key;
 }
 ```
@@ -1315,7 +1309,7 @@ function App() {
 ```tsx
 declare function useSearchParams(
   defaultInit?: URLSearchParamsInit
-): [URLSearchParams, URLSearchParamsSetter];
+): [URLSearchParams, SetURLSearchParams];
 
 type ParamKeyValuePair = [string, string];
 
@@ -1325,12 +1319,10 @@ type URLSearchParamsInit =
   | Record<string, string | string[]>
   | URLSearchParams;
 
-interface URLSearchParamsSetter {
-  (
-    nextInit: URLSearchParamsInit,
-    navigateOptions?: { replace?: boolean; state?: State }
-  ): void;
-}
+type SetURLSearchParams = (
+  nextInit?: URLSearchParamsInit,
+  navigateOpts?: : { replace?: boolean; state?: any }
+) => void;
 ```
 
 </details>
@@ -1381,7 +1373,7 @@ function App() {
 ```tsx
 declare function useSearchParams(
   defaultInit?: URLSearchParamsInit
-): [URLSearchParams, URLSearchParamsSetter];
+): [URLSearchParams, SetURLSearchParams];
 
 type ParamKeyValuePair = [string, string];
 
@@ -1391,11 +1383,14 @@ type URLSearchParamsInit =
   | Record<string, string | string[]>
   | URLSearchParams;
 
-interface URLSearchParamsSetter {
-  (
-    nextInit: URLSearchParamsInit,
-    navigateOptions?: { replace?: boolean; state?: State }
-  ): void;
+type SetURLSearchParams = (
+  nextInit?: URLSearchParamsInit,
+  navigateOpts?: : NavigateOptions
+) => void;
+
+interface NavigateOptions {
+  replace?: boolean;
+  state?: any;
 }
 ```
 
