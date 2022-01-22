@@ -1,10 +1,12 @@
-import * as fs from "fs";
 import * as path from "path";
+import * as fse from "fs-extra";
 
 import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
 import { defineRoutes } from "./config/routes";
 import { defineConventionalRoutes } from "./config/routesConvention";
 import { ServerMode, isValidServerMode } from "./config/serverModes";
+
+import virtualModules from "./compiler/virtualModules";
 
 export interface RemixMdxConfig {
   rehypePlugins?: any[];
@@ -14,6 +16,17 @@ export interface RemixMdxConfig {
 export type RemixMdxConfigFunction = (
   filename: string
 ) => Promise<RemixMdxConfig | undefined> | RemixMdxConfig | undefined;
+
+export type ServerBuildTarget =
+  | "node-cjs"
+  | "arc"
+  | "netlify"
+  | "vercel"
+  | "cloudflare-pages"
+  | "cloudflare-workers";
+
+export type ServerModuleFormat = "esm" | "cjs";
+export type ServerPlatform = "node" | "neutral";
 
 /**
  * The user-provided config in `remix.config.js`.
@@ -42,8 +55,15 @@ export interface AppConfig {
   /**
    * The path to the server build, relative to `remix.config.js`. Defaults to
    * "build".
+   * @deprecated Use {@link ServerConfig.serverBuildPath} instead.
    */
   serverBuildDirectory?: string;
+
+  /**
+   * The path to the server build file. This file should end in a `.js`. Defaults
+   * are based on {@link ServerConfig.serverBuildTarget}.
+   */
+  serverBuildPath?: string;
 
   /**
    * The path to the browser build, relative to `remix.config.js`. Defaults to
@@ -55,7 +75,7 @@ export interface AppConfig {
    * The path to the browser build, relative to remix.config.js. Defaults to
    * "public/build".
    *
-   * @deprecated Use `assetsBuildDirectory` instead
+   * @deprecated Use `{@link ServerConfig.assetsBuildDirectory}` instead
    */
   browserBuildDirectory?: string;
 
@@ -81,13 +101,25 @@ export interface AppConfig {
 
   /**
    * The output format of the server build. Defaults to "cjs".
+   * * @deprecated Use {@link ServerConfig.serverBuildTarget} instead.
    */
-  serverModuleFormat?: "esm" | "cjs";
+  serverModuleFormat?: ServerModuleFormat;
 
   /**
    * The platform the server build is targeting. Defaults to "node".
+   * @deprecated Use {@link ServerConfig.serverBuildTarget} instead.
    */
-  serverPlatform?: "node" | "neutral";
+  serverPlatform?: ServerPlatform;
+
+  /**
+   * The target of the server build. Defaults to "node-cjs".
+   */
+  serverBuildTarget?: ServerBuildTarget;
+
+  /**
+   * A server entrypoint relative to the root directory that becomes your server's main module.
+   */
+  server?: string;
 
   /**
    * A list of filenames or a glob patterns to match files in the `app/routes`
@@ -132,9 +164,10 @@ export interface RemixConfig {
   routes: RouteManifest;
 
   /**
-   * The absolute path to the server build directory.
+   * The path to the server build file. This file should end in a `.js`. Defaults
+   * are based on {@link ServerConfig.serverBuildTarget}.
    */
-  serverBuildDirectory: string;
+  serverBuildPath: string;
 
   /**
    * The absolute path to the assets build directory.
@@ -169,12 +202,27 @@ export interface RemixConfig {
   /**
    * The output format of the server build. Defaults to "cjs".
    */
-  serverModuleFormat: "esm" | "cjs";
+  serverModuleFormat: ServerModuleFormat;
 
   /**
    * The platform the server build is targeting. Defaults to "node".
    */
-  serverPlatform: "node" | "neutral";
+  serverPlatform: ServerPlatform;
+
+  /**
+   * The target of the server build.
+   */
+  serverBuildTarget?: ServerBuildTarget;
+
+  /**
+   * The default entry module for the server build if a {@see RemixConfig.customServer} is not provided.
+   */
+  serverBuildTargetEntryModule: string;
+
+  /**
+   * A server entrypoint relative to the root directory that becomes your server's main module.
+   */
+  serverEntryPoint?: string;
 }
 
 /**
@@ -203,8 +251,20 @@ export async function readConfig(
     throw new Error(`Error loading Remix config in ${configFile}`);
   }
 
-  let serverModuleFormat = appConfig.serverModuleFormat || "cjs";
-  let serverPlatform = appConfig.serverPlatform || "node";
+  let customServerEntryPoint = appConfig.server;
+  let serverBuildTarget: ServerBuildTarget | undefined =
+    appConfig.serverBuildTarget;
+  let serverModuleFormat: ServerModuleFormat =
+    appConfig.serverModuleFormat || "cjs";
+  let serverPlatform: ServerPlatform = appConfig.serverPlatform || "node";
+  switch (appConfig.serverBuildTarget) {
+    case "cloudflare-pages":
+    case "cloudflare-workers":
+      serverModuleFormat = "esm";
+      serverPlatform = "neutral";
+      break;
+  }
+
   let mdx = appConfig.mdx;
 
   let appDirectory = path.resolve(
@@ -227,10 +287,34 @@ export async function readConfig(
     throw new Error(`Missing "entry.server" file in ${appDirectory}`);
   }
 
-  let serverBuildDirectory = path.resolve(
-    rootDirectory,
-    appConfig.serverBuildDirectory || "build"
-  );
+  let serverBuildPath = "build/index.js";
+  switch (serverBuildTarget) {
+    case "arc":
+      serverBuildPath = "server/index.js";
+      break;
+    case "cloudflare-pages":
+      serverBuildPath = "functions/[[path]].js";
+      break;
+    case "netlify":
+      serverBuildPath = "netlify/functions/server/index.js";
+      break;
+    case "vercel":
+      serverBuildPath = "api/index.js";
+      break;
+  }
+  serverBuildPath = path.resolve(rootDirectory, serverBuildPath);
+
+  // retain deprecated behavior for now
+  if (appConfig.serverBuildDirectory) {
+    serverBuildPath = path.resolve(
+      rootDirectory,
+      path.join(appConfig.serverBuildDirectory, "index.js")
+    );
+  }
+
+  if (appConfig.serverBuildPath) {
+    serverBuildPath = path.resolve(rootDirectory, appConfig.serverBuildPath);
+  }
 
   let assetsBuildDirectory = path.resolve(
     rootDirectory,
@@ -242,7 +326,14 @@ export async function readConfig(
   let devServerPort = appConfig.devServerPort || 8002;
   let devServerBroadcastDelay = appConfig.devServerBroadcastDelay || 0;
 
-  let publicPath = addTrailingSlash(appConfig.publicPath || "/build/");
+  let defaultPublicPath = "/build/";
+  switch (serverBuildTarget) {
+    case "arc":
+      defaultPublicPath = "/_static/build/";
+      break;
+  }
+
+  let publicPath = addTrailingSlash(appConfig.publicPath || defaultPublicPath);
 
   let rootRouteFile = findEntry(appDirectory, "root");
   if (!rootRouteFile) {
@@ -252,7 +343,7 @@ export async function readConfig(
   let routes: RouteManifest = {
     root: { path: "", id: "root", file: rootRouteFile }
   };
-  if (fs.existsSync(path.resolve(appDirectory, "routes"))) {
+  if (fse.existsSync(path.resolve(appDirectory, "routes"))) {
     let conventionalRoutes = defineConventionalRoutes(
       appDirectory,
       appConfig.ignoredRouteFiles
@@ -270,6 +361,10 @@ export async function readConfig(
     }
   }
 
+  let serverBuildTargetEntryModule = `export * from ${JSON.stringify(
+    virtualModules.serverBuildVirutalModule.path
+  )};`;
+
   return {
     appDirectory,
     cacheDirectory,
@@ -281,10 +376,13 @@ export async function readConfig(
     publicPath,
     rootDirectory,
     routes,
-    serverBuildDirectory,
+    serverBuildPath,
     serverMode,
     serverModuleFormat,
     serverPlatform,
+    serverBuildTarget,
+    serverBuildTargetEntryModule,
+    serverEntryPoint: customServerEntryPoint,
     mdx
   };
 }
@@ -298,7 +396,7 @@ const entryExts = [".js", ".jsx", ".ts", ".tsx"];
 function findEntry(dir: string, basename: string): string | undefined {
   for (let ext of entryExts) {
     let file = path.resolve(dir, basename + ext);
-    if (fs.existsSync(file)) return path.relative(dir, file);
+    if (fse.existsSync(file)) return path.relative(dir, file);
   }
 
   return undefined;

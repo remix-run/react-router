@@ -136,7 +136,7 @@ export async function watch(
     wss.close();
     await closeWatcher();
     fse.emptyDirSync(config.assetsBuildDirectory);
-    fse.emptyDirSync(config.serverBuildDirectory);
+    fse.rmSync(config.serverBuildPath);
   });
 }
 
@@ -158,12 +158,16 @@ export async function dev(remixRoot: string, modeArg?: string) {
   let mode = isBuildMode(modeArg) ? modeArg : BuildMode.Development;
   let port = process.env.PORT || 3000;
 
+  if (config.serverEntryPoint) {
+    throw new Error("remix dev is not supported for custom servers.");
+  }
+
   let app = express();
   app.use((_, __, next) => {
-    purgeAppRequireCache(config.serverBuildDirectory);
+    purgeAppRequireCache(config.serverBuildPath);
     next();
   });
-  app.use(createApp(config.serverBuildDirectory, mode));
+  app.use(createApp(config.serverBuildPath, mode));
 
   let server: Server | null = null;
 
