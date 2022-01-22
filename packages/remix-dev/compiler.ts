@@ -4,6 +4,8 @@ import * as esbuild from "esbuild";
 import * as fse from "fs-extra";
 import debounce from "lodash.debounce";
 import chokidar from "chokidar";
+import type { AssetsManifest } from "@remix-run/server-runtime/entry";
+import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 
 import { BuildMode, BuildTarget } from "./build";
 import type { RemixConfig } from "./config";
@@ -21,8 +23,6 @@ import { serverBareModulesPlugin } from "./compiler/plugins/serverBareModulesPlu
 import { serverEntryModulesPlugin } from "./compiler/plugins/serverEntryModulesPlugin";
 import { serverRouteModulesPlugin } from "./compiler/plugins/serverRouteModulesPlugin";
 import { writeFileSafe } from "./compiler/utils/fs";
-import type { AssetsManifest } from "@remix-run/server-runtime/entry";
-import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 
 // When we build Remix, this shim file is copied directly into the output
 // directory in the same place relative to this file. It is eventually injected

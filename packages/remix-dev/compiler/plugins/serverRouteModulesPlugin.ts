@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as fsp from "fs/promises";
-
 import type esbuild from "esbuild";
 
 import type { RemixConfig } from "../../config";

@@ -1,9 +1,8 @@
 import { builtinModules } from "module";
 import { isAbsolute, relative } from "path";
-
 import type { Plugin } from "esbuild";
 
-import { RemixConfig } from "../../config";
+import type { RemixConfig } from "../../config";
 import virtualModules from "../virtualModules";
 
 /**

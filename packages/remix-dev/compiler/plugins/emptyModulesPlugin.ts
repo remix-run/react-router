@@ -1,8 +1,7 @@
 import * as path from "path";
-
 import type esbuild from "esbuild";
 
-import { RemixConfig } from "../../config";
+import type { RemixConfig } from "../../config";
 
 /**
  * This plugin substitutes an empty module for any modules in the `app`
