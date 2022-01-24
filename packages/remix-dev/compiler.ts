@@ -205,8 +205,13 @@ export async function watch(
     if (onRebuildFinish) onRebuildFinish();
   }, 100);
 
+  let toWatch = [config.appDirectory];
+  if (config.serverEntryPoint) {
+    toWatch.push(config.serverEntryPoint);
+  }
+
   let watcher = chokidar
-    .watch(config.appDirectory, {
+    .watch(toWatch, {
       persistent: true,
       ignoreInitial: true,
       awaitWriteFinish: {
