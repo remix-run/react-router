@@ -152,7 +152,7 @@ function Home() {
               type="radio"
               name="crust"
               value="deep-dish"
-              defaultChecked={pizza.crust === "dish-dish"}
+              defaultChecked={pizza.crust === "deep-dish"}
             />{" "}
             Deep Dish
           </label>
