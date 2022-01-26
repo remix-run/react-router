@@ -114,7 +114,7 @@ Nothing changes in your app, but now we're ready to start messing with the URL.
 
 Open up `src/App.js`, import `Link` and add some global navigation. Side note: don't take the styling too seriously in this tutorial, we're just using inline styles for convenience, style your apps however you want.
 
-```tsx lines=[1,7-9] filename=src/App.js
+```tsx lines=[1,7-15] filename=src/App.js
 import { Link } from "react-router-dom";
 
 export default function App() {
