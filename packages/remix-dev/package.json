@@ -22,6 +22,7 @@
     "esbuild": "0.13.14",
     "exit-hook": "2.2.1",
     "fs-extra": "^10.0.0",
+    "get-port": "^5.1.1",
     "lodash.debounce": "^4.0.8",
     "meow": "^7.1.1",
     "minimatch": "^3.0.4",

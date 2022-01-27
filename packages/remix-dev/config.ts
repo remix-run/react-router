@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as fse from "fs-extra";
+import getPort from "get-port";
 
 import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
 import { defineRoutes } from "./config/routes";
@@ -322,7 +323,7 @@ export async function readConfig(
       path.join("public", "build")
   );
 
-  let devServerPort = appConfig.devServerPort || 8002;
+  let devServerPort = await getPort({ port: appConfig.devServerPort || 8002 });
   let devServerBroadcastDelay = appConfig.devServerBroadcastDelay || 0;
 
   let defaultPublicPath = "/build/";

@@ -7,6 +7,7 @@ import WebSocket from "ws";
 import type { Server } from "http";
 import type * as Express from "express";
 import type { createApp as createAppType } from "@remix-run/serve";
+import getPort from "get-port";
 
 import { BuildMode, isBuildMode } from "../build";
 import * as compiler from "../compiler";
@@ -156,7 +157,9 @@ export async function dev(remixRoot: string, modeArg?: string) {
 
   let config = await readConfig(remixRoot);
   let mode = isBuildMode(modeArg) ? modeArg : BuildMode.Development;
-  let port = process.env.PORT || 3000;
+  let port = await getPort({
+    port: process.env.PORT ? Number(process.env.PORT) : 3000
+  });
 
   if (config.serverEntryPoint) {
     throw new Error("remix dev is not supported for custom servers.");
