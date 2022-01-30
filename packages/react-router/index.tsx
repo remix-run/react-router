@@ -206,6 +206,7 @@ export interface PathRouteProps {
   children?: React.ReactNode;
   element?: React.ReactNode | null;
   index?: false;
+  key?: string;
   path: string;
 }
 
