@@ -6,6 +6,8 @@ import { createRequestHandler } from "@remix-run/express";
 export function createApp(buildPath: string, mode = "production") {
   let app = express();
 
+  app.disable("x-powered-by");
+
   app.use(compression());
   app.use(express.static("public", { immutable: true, maxAge: "1y" }));
 
