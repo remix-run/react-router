@@ -182,7 +182,7 @@ export async function dev(remixRoot: string, modeArg?: string) {
           .find(ip => ip?.family == "IPv4" && !ip.internal)?.address;
 
         if (!address) {
-          throw new Error("Could not find an IPv4 address.");
+          address = "localhost";
         }
 
         server = app.listen(port, () => {

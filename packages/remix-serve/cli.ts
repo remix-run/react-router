@@ -21,7 +21,7 @@ createApp(buildPath).listen(port, () => {
     .find(ip => ip?.family == "IPv4" && !ip.internal)?.address;
 
   if (!address) {
-    throw new Error("Could not find an IPv4 address.");
+    address = "localhost";
   }
 
   console.log(`Remix App Server started at http://${address}:${port}`);
