@@ -38,7 +38,10 @@ export function browserRouteModulesPlugin(
       );
 
       build.onResolve({ filter: suffixMatcher }, args => {
-        return { path: args.path, namespace: "browser-route-module" };
+        return {
+          path: args.path,
+          namespace: "browser-route-module"
+        };
       });
 
       build.onLoad(

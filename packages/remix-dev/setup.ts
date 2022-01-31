@@ -58,11 +58,46 @@ export async function setupRemix(platform: SetupPlatform): Promise<void> {
   let serverExportsDir = path.resolve(serverPkgJsonFile, "..", "magicExports");
   let clientExportsDir = path.resolve(clientPkgJsonFile, "..", "magicExports");
 
-  await Promise.all([
-    fse.copy(platformExportsDir, remixPkgDir),
-    fse.copy(serverExportsDir, remixPkgDir),
-    fse.copy(clientExportsDir, remixPkgDir)
-  ]);
+  let magicTypes = await combineFilesInDirs(
+    [platformExportsDir, serverExportsDir, clientExportsDir],
+    ".d.ts"
+  );
+
+  let magicCJS = await combineFilesInDirs(
+    [platformExportsDir, serverExportsDir, clientExportsDir],
+    ".js"
+  );
+
+  let magicESM = await combineFilesInDirs(
+    [
+      path.join(platformExportsDir, "esm"),
+      path.join(serverExportsDir, "esm"),
+      path.join(clientExportsDir, "esm")
+    ],
+    ".js"
+  );
+
+  await fse.writeFile(path.join(remixPkgDir, "index.js"), magicCJS);
+  await fse.writeFile(path.join(remixPkgDir, "index.d.ts"), magicTypes);
+  await fse.writeFile(path.join(remixPkgDir, "esm/index.js"), magicESM);
+}
+
+async function combineFilesInDirs(
+  dirs: string[],
+  ext: string
+): Promise<string> {
+  let combined = "";
+  for (let dir of dirs) {
+    let files = await fse.readdir(dir);
+    for (let file of files) {
+      if (!file.endsWith(ext)) {
+        continue;
+      }
+      let contents = await fse.readFile(path.join(dir, file), "utf8");
+      combined += contents + "\n";
+    }
+  }
+  return combined;
 }
 
 function resolvePackageJsonFile(packageName: string): string {
