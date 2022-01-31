@@ -443,7 +443,10 @@ async function createServerBuild(
       assetNames: "_assets/[name]-[hash]",
       publicPath: config.publicPath,
       define: {
-        "process.env.NODE_ENV": JSON.stringify(options.mode)
+        "process.env.NODE_ENV": JSON.stringify(options.mode),
+        "process.env.REMIX_DEV_SERVER_WS_PORT": JSON.stringify(
+          config.devServerPort
+        )
       },
       plugins
     })
