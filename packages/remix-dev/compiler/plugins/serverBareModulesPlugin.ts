@@ -68,6 +68,15 @@ export function serverBareModulesPlugin(
           case "cloudflare-pages":
           case "cloudflare-workers":
             return undefined;
+          // Map node externals to deno std libs and bundle everything else.
+          case "deno":
+            if (isNodeBuiltIn(packageName)) {
+              return {
+                path: `https://deno.land/std/node/${packageName}/mod.ts`,
+                external: true
+              };
+            }
+            return undefined;
         }
 
         // Externalize everything else if we've gotten here.

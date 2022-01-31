@@ -34,10 +34,10 @@ describe("remix cli", () => {
             --version, -v       Print the CLI version and exit
 
             --json              Print the routes as JSON (remix routes only)
-            --sourcemap        Generate source maps (remix build only)
+            --sourcemap         Generate source maps (remix build only)
 
           Values
-            [remixPlatform]     \\"node\\" is currently the only platform
+            [remixPlatform]     Can be one of: node, cloudflare-pages, cloudflare-workers, or deno
 
           Examples
             $ remix build my-website

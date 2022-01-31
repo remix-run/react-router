@@ -4,14 +4,16 @@ import * as fse from "fs-extra";
 export enum SetupPlatform {
   CloudflarePages = "cloudflare-pages",
   CloudflareWorkers = "cloudflare-workers",
-  Node = "node"
+  Node = "node",
+  Deno = "deno"
 }
 
 export function isSetupPlatform(platform: any): platform is SetupPlatform {
   return [
     SetupPlatform.CloudflarePages,
     SetupPlatform.CloudflareWorkers,
-    SetupPlatform.Node
+    SetupPlatform.Node,
+    SetupPlatform.Deno
   ].includes(platform);
 }
 
