@@ -15,6 +15,7 @@ import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "../setup";
+import { log } from "../log";
 
 export async function setup(platformArg?: string) {
   let platform = isSetupPlatform(platformArg)
@@ -23,7 +24,7 @@ export async function setup(platformArg?: string) {
 
   await setupRemix(platform);
 
-  console.log(`Successfully setup Remix for ${platform}.`);
+  log(`Successfully setup Remix for ${platform}.`);
 }
 
 export async function routes(
@@ -44,7 +45,7 @@ export async function build(
 ): Promise<void> {
   let mode = isBuildMode(modeArg) ? modeArg : BuildMode.Production;
 
-  console.log(`Building Remix app in ${mode} mode...`);
+  log(`Building Remix app in ${mode} mode...`);
 
   if (modeArg === BuildMode.Production && sourcemap) {
     console.warn(
@@ -62,7 +63,7 @@ export async function build(
   let config = await readConfig(remixRoot);
   await compiler.build(config, { mode: mode, sourcemap });
 
-  console.log(`Built in ${prettyMs(Date.now() - start)}`);
+  log(`Built in ${prettyMs(Date.now() - start)}`);
 }
 
 type WatchCallbacks = {
