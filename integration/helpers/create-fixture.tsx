@@ -185,16 +185,22 @@ export async function createAppFixture(fixture: Fixture) {
        * `action` supplied, clicks it, and optionally waits for the network to
        * be idle before contininuing.
        *
-       * @param formAction The formAction of the button you want to click
+       * @param action The formAction of the button you want to click
        * @param options `{ wait }` waits for the network to be idle before moving on
        */
       clickSubmitButton: async (
-        formAction: string,
+        action: string,
         options: { wait: boolean } = { wait: true }
       ) => {
-        let selector = `button[formaction="${formAction}"]`;
+        let selector = `button[formaction="${action}"]`;
         let el = await page.$(selector);
-        if (!el) throw new Error(`Can't find button: ${selector}`);
+        if (!el) {
+          selector = `form[action="${action}"] button[type="submit"]`;
+          el = await page.$(selector);
+          if (!el) {
+            throw new Error(`Can't find button for: ${action}`);
+          }
+        }
         if (options.wait) {
           await doAndWait(page, () => el.click());
         } else {

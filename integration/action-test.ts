@@ -13,6 +13,9 @@ describe("actions", () => {
   const FIELD_NAME = "message";
   const WAITING_VALUE = "Waiting...";
   const SUBMITTED_VALUE = "Submission";
+  const THROWS_REDIRECT = "redirect-throw";
+  const REDIRECT_TARGET = "page";
+  const PAGE_TEXT = "PAGE_TEXT";
 
   beforeAll(async () => {
     fixture = await createFixture({
@@ -40,6 +43,28 @@ describe("actions", () => {
               </Form>
             );
           }
+        `,
+
+        [`app/routes/${THROWS_REDIRECT}.jsx`]: js`
+          import { Form, redirect } from "remix";
+
+          export function action() {
+            throw redirect("/${REDIRECT_TARGET}")
+          }
+
+          export default function () {
+            return (
+              <Form method="post">
+                <button type="submit">Go</button>
+              </Form>
+            )
+          }
+        `,
+
+        [`app/routes/${REDIRECT_TARGET}.jsx`]: js`
+          export default function () {
+            return <div>${PAGE_TEXT}</div>
+          }
         `
       }
     });
@@ -51,13 +76,13 @@ describe("actions", () => {
     await app.close();
   });
 
-  it("returns undefined for action data on GET", async () => {
+  it("is not called on document GET requests", async () => {
     let res = await fixture.requestDocument("/urlencoded");
     let html = selectHtml(await res.text(), "#text");
     expect(html).toMatch(WAITING_VALUE);
   });
 
-  it("returns data from the action after POST", async () => {
+  it("is called on document POST requests", async () => {
     const FIELD_VALUE = "cheeseburger";
 
     let params = new URLSearchParams();
@@ -69,7 +94,7 @@ describe("actions", () => {
     expect(html).toMatch(FIELD_VALUE);
   });
 
-  it("returns data after a form submission with JavaScript", async () => {
+  it("is called on script transition POST requests", async () => {
     await app.goto(`/urlencoded`);
     let html = await app.getHtml("#text");
     expect(html).toMatch(WAITING_VALUE);
@@ -78,5 +103,22 @@ describe("actions", () => {
     await app.page.waitForSelector("#action-text");
     html = await app.getHtml("#text");
     expect(html).toMatch(SUBMITTED_VALUE);
+  });
+
+  it("redirects a thrown response on document requests", async () => {
+    let params = new URLSearchParams();
+    let res = await fixture.postDocument(`/${THROWS_REDIRECT}`, params);
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe(`/${REDIRECT_TARGET}`);
+  });
+
+  it("redirects a thrown response on script transitions", async () => {
+    await app.goto(`/${THROWS_REDIRECT}`);
+    let responses = app.collectDataResponses();
+    await app.clickSubmitButton(`/${THROWS_REDIRECT}`);
+    expect(responses.length).toBe(1);
+    expect(responses[0].status()).toBe(204);
+    expect(new URL(app.page.url()).pathname).toBe(`/${REDIRECT_TARGET}`);
+    expect(await app.getHtml()).toMatch(PAGE_TEXT);
   });
 });
