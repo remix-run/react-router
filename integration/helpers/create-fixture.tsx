@@ -159,6 +159,48 @@ export async function createAppFixture(fixture: Fixture) {
       },
 
       /**
+       * Finds a link on the page with a matching href, clicks it, and waits for
+       * the network to be idle before contininuing.
+       *
+       * @param href The href of the link you want to click
+       * @param options `{ wait }` waits for the network to be idle before moving on
+       */
+      clickLink: async (
+        href: string,
+        options: { wait: boolean } = { wait: true }
+      ) => {
+        let selector = `a[href="${href}"]`;
+        let el = await page.$(selector);
+        if (options.wait) {
+          await doAndWait(page, () => el.click(), 200, 2000);
+        } else {
+          await el.click();
+        }
+      },
+
+      /**
+       * Finds the first submit button with `formAction` that matches the
+       * `action` supplied, clicks it, and optionally waits for the network to
+       * be idle before contininuing.
+       *
+       * @param formAction The formAction of the button you want to click
+       * @param options `{ wait }` waits for the network to be idle before moving on
+       */
+      clickSubmitButton: async (
+        formAction: string,
+        options: { wait: boolean } = { wait: true }
+      ) => {
+        let selector = `button[formaction="${formAction}"]`;
+        let el = await page.$(selector);
+        if (!el) throw new Error(`Can't find button: ${selector}`);
+        if (options.wait) {
+          await doAndWait(page, () => el.click(), 200, 2000);
+        } else {
+          await el.click();
+        }
+      },
+
+      /**
        * Get HTML from the page. Useful for asserting something rendered that
        * you expected.
        *
@@ -172,10 +214,11 @@ export async function createAppFixture(fixture: Fixture) {
        *
        * @param seconds How long you want the app to stay open
        */
-      poke: async (seconds: number = 10) => {
+      poke: async (seconds: number = 10, href: string = "/") => {
         let ms = seconds * 1000;
         jest.setTimeout(ms);
         console.log(`🙈 Poke around for ${seconds} seconds 👉 ${serverUrl}`);
+        cp.exec(`open ${serverUrl}${href}`);
         return new Promise(res => setTimeout(res, ms));
       }
     };
@@ -227,6 +270,7 @@ function writeTestFiles(init: FixtureInit, dir: string) {
   return Promise.all(
     Object.keys(init.files).map(async filename => {
       let filePath = path.join(dir, filename);
+      await fse.ensureDir(path.dirname(filePath));
       await fs.writeFile(filePath, init.files[filename]);
     })
   );
@@ -249,4 +293,46 @@ export function selectHtml(source: string, selector: string) {
 
 export function prettyHtml(source: string): string {
   return prettier.format(source, { parser: "html" });
+}
+
+// Taken from https://github.com/puppeteer/puppeteer/issues/5328#issuecomment-986175620
+// Seems to work?
+async function doAndWait(
+  page: puppeteer.Page,
+  fun: () => Promise<unknown>,
+  pollTime: number = 1000,
+  timeout: number = 10000
+) {
+  let waiting: puppeteer.HTTPRequest[] = [];
+
+  await page.setRequestInterception(true);
+  let onRequest = (interceptedRequest: puppeteer.HTTPRequest) => {
+    interceptedRequest.continue();
+    waiting.push(interceptedRequest);
+  };
+  page.on("request", onRequest);
+
+  await fun();
+
+  let pollEvent: NodeJS.Timer;
+  let timeoutEvent: NodeJS.Timer;
+  return new Promise((res, rej) => {
+    let clear = () => {
+      clearInterval(pollEvent);
+      clearTimeout(timeoutEvent);
+      page.off("request", onRequest);
+      return page.setRequestInterception(false);
+    };
+    timeoutEvent = setTimeout(() => {
+      console.warn("Warning, wait for the address below to time out:");
+      console.warn(waiting.map(a => a.url()).join("\n"));
+      return clear().then(() => res(null));
+    }, timeout);
+    pollEvent = setInterval(() => {
+      if (waiting.length == 0) {
+        return clear().then(() => res(null));
+      }
+      waiting = waiting.filter(a => a.response() == null);
+    }, pollTime);
+  });
 }
