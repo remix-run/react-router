@@ -1,4 +1,4 @@
-import { createAppFixture, createFixture } from "./helpers/create-fixture";
+import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
 
 describe("CatchBoundary", () => {
@@ -18,7 +18,7 @@ describe("CatchBoundary", () => {
   beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": `
+        "app/root.jsx": js`
           import { Outlet, Scripts } from "remix";
           export default function Root() {
             return (
@@ -44,7 +44,7 @@ describe("CatchBoundary", () => {
           }
         `,
 
-        "app/routes/index.jsx": `
+        "app/routes/index.jsx": js`
           import { Link, Form } from "remix";
           export default function() {
             return (
@@ -67,7 +67,7 @@ describe("CatchBoundary", () => {
           }
         `,
 
-        [`app/routes${HAS_BOUNDARY_ACTION}.jsx`]: `
+        [`app/routes${HAS_BOUNDARY_ACTION}.jsx`]: js`
           import { Form } from "remix";
           export async function action() {
             throw new Response("", { status: 401 })
@@ -86,7 +86,7 @@ describe("CatchBoundary", () => {
           }
         `,
 
-        [`app/routes${NO_BOUNDARY_ACTION}.jsx`]: `
+        [`app/routes${NO_BOUNDARY_ACTION}.jsx`]: js`
           import { Form } from "remix";
           export function action() {
             throw new Response("", { status: 401 })
@@ -102,7 +102,7 @@ describe("CatchBoundary", () => {
           }
         `,
 
-        [`app/routes${HAS_BOUNDARY_LOADER}.jsx`]: `
+        [`app/routes${HAS_BOUNDARY_LOADER}.jsx`]: js`
           export function loader() {
             throw new Response("", { status: 401 })
           }
@@ -114,7 +114,7 @@ describe("CatchBoundary", () => {
           }
         `,
 
-        [`app/routes${NO_BOUNDARY_LOADER}.jsx`]: `
+        [`app/routes${NO_BOUNDARY_LOADER}.jsx`]: js`
           export function loader() {
             throw new Response("", { status: 401 })
           }

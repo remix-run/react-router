@@ -1,4 +1,4 @@
-import { createFixture } from "./helpers/create-fixture";
+import { createFixture, js } from "./helpers/create-fixture";
 
 describe("loader export", () => {
   it("returns responses for a specific route", async () => {
@@ -7,7 +7,7 @@ describe("loader export", () => {
 
     let fixture = await createFixture({
       files: {
-        "app/root.jsx": `
+        "app/root.jsx": js`
           import { Outlet } from "remix";
 
           export function loader() {
@@ -19,7 +19,7 @@ describe("loader export", () => {
           }
         `,
 
-        "app/routes/index.jsx": `
+        "app/routes/index.jsx": js`
           import { json } from "remix";
 
           export function loader() {

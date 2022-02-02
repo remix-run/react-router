@@ -1,4 +1,4 @@
-import { createFixture } from "./helpers/create-fixture";
+import { createFixture, js } from "./helpers/create-fixture";
 import type { Fixture } from "./helpers/create-fixture";
 
 describe("headers export", () => {
@@ -12,7 +12,7 @@ describe("headers export", () => {
   beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": `
+        "app/root.jsx": js`
           import { Outlet } from "remix";
 
           export function loader() {
@@ -24,7 +24,7 @@ describe("headers export", () => {
           }
         `,
 
-        "app/routes/index.jsx": `
+        "app/routes/index.jsx": js`
           import { json } from "remix";
 
           export function loader() {
@@ -46,7 +46,7 @@ describe("headers export", () => {
           }
         `,
 
-        "app/routes/action.jsx": `
+        "app/routes/action.jsx": js`
           import { json } from "remix";
 
           export function action() {
@@ -80,44 +80,44 @@ describe("headers export", () => {
   });
 
   // FIXME: this test is busted
-  // it("can use the loader headers when parents don't have loaders", async () => {
-  //   const HEADER_KEY = "X-Test";
-  //   const HEADER_VALUE = "SUCCESS";
+  it.skip("can use the loader headers when parents don't have loaders", async () => {
+    const HEADER_KEY = "X-Test";
+    const HEADER_VALUE = "SUCCESS";
 
-  //   let fixture = await createFixture({
-  //     files: {
-  //       "app/root.jsx": `
-  //         import { Outlet } from "remix";
+    let fixture = await createFixture({
+      files: {
+        "app/root.jsx": js`
+          import { Outlet } from "remix";
 
-  //         export default function Index() {
-  //           return <html><body><Outlet/></body></html>
-  //         }
-  //       `,
+          export default function Index() {
+            return <html><body><Outlet/></body></html>
+          }
+        `,
 
-  //       "app/routes/index.jsx": `
-  //         import { json } from "remix";
+        "app/routes/index.jsx": js`
+          import { json } from "remix";
 
-  //         export function loader() {
-  //           return json(null, {
-  //             headers: {
-  //               "${HEADER_KEY}": "${HEADER_VALUE}"
-  //             }
-  //           })
-  //         }
+          export function loader() {
+            return json(null, {
+              headers: {
+                "${HEADER_KEY}": "${HEADER_VALUE}"
+              }
+            })
+          }
 
-  //         export function headers({ loaderHeaders }) {
-  //           return {
-  //             "${HEADER_KEY}": loaderHeaders.get("${HEADER_KEY}")
-  //           }
-  //         }
+          export function headers({ loaderHeaders }) {
+            return {
+              "${HEADER_KEY}": loaderHeaders.get("${HEADER_KEY}")
+            }
+          }
 
-  //         export default function Index() {
-  //           return <div>Heyo!</div>
-  //         }
-  //       `
-  //     }
-  //   });
-  //   let response = await fixture.requestDocument("/");
-  //   expect(response.headers.get(HEADER_KEY)).toBe(HEADER_VALUE);
-  // });
+          export default function Index() {
+            return <div>Heyo!</div>
+          }
+        `
+      }
+    });
+    let response = await fixture.requestDocument("/");
+    expect(response.headers.get(HEADER_KEY)).toBe(HEADER_VALUE);
+  });
 });

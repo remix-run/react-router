@@ -1,7 +1,8 @@
 import {
   createFixture,
   createAppFixture,
-  selectHtml
+  selectHtml,
+  js
 } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
 
@@ -17,7 +18,7 @@ describe("action + useActionData", () => {
     beforeAll(async () => {
       fixture = await createFixture({
         files: {
-          "app/routes/urlencoded.jsx": `
+          "app/routes/urlencoded.jsx": js`
             import { Form, useActionData } from "remix";
 
             export let action = async ({ request }) => {

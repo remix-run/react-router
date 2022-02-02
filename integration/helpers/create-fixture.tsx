@@ -27,6 +27,8 @@ interface FixtureInit {
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
 export type AppFixture = Awaited<ReturnType<typeof createAppFixture>>;
 
+export let js = String.raw;
+
 export async function createFixture(init: FixtureInit) {
   let projectDir = await createFixtureProject(init);
   let app: ServerBuild = await import(path.resolve(projectDir, "build"));
