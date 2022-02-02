@@ -18,29 +18,29 @@ describe("actions", () => {
     fixture = await createFixture({
       files: {
         "app/routes/urlencoded.jsx": js`
-        import { Form, useActionData } from "remix";
+          import { Form, useActionData } from "remix";
 
-        export let action = async ({ request }) => {
-          let formData = await request.formData();
-          return formData.get("${FIELD_NAME}");
-        };
+          export let action = async ({ request }) => {
+            let formData = await request.formData();
+            return formData.get("${FIELD_NAME}");
+          };
 
-        export default function Actions() {
-          let data = useActionData()
+          export default function Actions() {
+            let data = useActionData()
 
-          return (
-            <Form method="post" id="form">
-              <p id="text">
-                {data ? <span id="action-text">{data}</span> : "${WAITING_VALUE}"}
-              </p>
-              <p>
-                <input type="text" defaultValue="${SUBMITTED_VALUE}" name="${FIELD_NAME}" />
-                <button type="submit" id="submit">Go</button>
-              </p>
-            </Form>
-          );
-        }
-      `
+            return (
+              <Form method="post" id="form">
+                <p id="text">
+                  {data ? <span id="action-text">{data}</span> : "${WAITING_VALUE}"}
+                </p>
+                <p>
+                  <input type="text" defaultValue="${SUBMITTED_VALUE}" name="${FIELD_NAME}" />
+                  <button type="submit" id="submit">Go</button>
+                </p>
+              </Form>
+            );
+          }
+        `
       }
     });
 
