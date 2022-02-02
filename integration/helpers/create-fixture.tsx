@@ -15,7 +15,7 @@ import { createApp } from "../../packages/create-remix";
 import { createRequestHandler as createExpressHandler } from "../../packages/remix-express";
 import type { ServerBuild } from "../../packages/remix-server-runtime";
 import type { CreateAppArgs } from "../../packages/create-remix";
-import { TMP_DIR } from "../global-setup";
+import { TMP_DIR } from "./global-setup";
 
 const REMIX_SOURCE_BUILD_DIR = path.join(process.cwd(), "build");
 

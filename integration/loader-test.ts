@@ -1,11 +1,14 @@
 import { createFixture, js } from "./helpers/create-fixture";
+import type { Fixture } from "./helpers/create-fixture";
 
-describe("loader export", () => {
-  it("returns responses for a specific route", async () => {
-    const ROOT_DATA = "ROOT_DATA";
-    const INDEX_DATA = "INDEX_DATA";
+describe("loader", () => {
+  let fixture: Fixture;
 
-    let fixture = await createFixture({
+  const ROOT_DATA = "ROOT_DATA";
+  const INDEX_DATA = "INDEX_DATA";
+
+  beforeAll(async () => {
+    fixture = await createFixture({
       files: {
         "app/root.jsx": js`
           import { Outlet } from "remix";
@@ -32,7 +35,9 @@ describe("loader export", () => {
         `
       }
     });
+  });
 
+  it("returns responses for a specific route", async () => {
     let [root, index] = await Promise.all([
       fixture.requestData("/", "root"),
       fixture.requestData("/", "routes/index")
