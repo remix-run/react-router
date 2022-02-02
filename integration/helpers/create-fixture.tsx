@@ -220,6 +220,28 @@ export async function createAppFixture(fixture: Fixture) {
       },
 
       /**
+       * Clicks any element and waits for the network to be idle.
+       */
+      clickElement: async (selector: string) => {
+        let el = await page.$(selector);
+        if (!el) {
+          throw new Error(`Can't find element for: ${selector}`);
+        }
+        await doAndWait(page, () => el.click());
+      },
+
+      /**
+       * Perform any interaction and wait for the network to be idle:
+       *
+       * ```js
+       * await app.waitForNetworkAfter(() => app.page.focus("#el"))
+       * ```
+       */
+      waitForNetworkAfter: async (fn: () => Promise<unknown>) => {
+        await doAndWait(page, fn);
+      },
+
+      /**
        * "Clicks" the back button and optionally waits for the network to be
        * idle (defaults to waiting).
        */
@@ -237,6 +259,30 @@ export async function createAppFixture(fixture: Fixture) {
        * were called (or not).
        */
       collectDataResponses: () => collectDataResponses(page),
+
+      /**
+       * Disables JavaScript for the page, make sure to enable it again by
+       * calling and awaiting the returned function!
+       *
+       * ```js
+       * let enable = await app.disableJavaScript();
+       * // tests
+       * await enable();
+       * ```
+       */
+      disableJavaScript: async () => {
+        await page.setRequestInterception(true);
+        let handler = (request: puppeteer.HTTPRequest) => {
+          if (request.resourceType() === "script") request.abort();
+          else request.continue();
+        };
+        page.on("request", handler);
+
+        return async () => {
+          await page.setRequestInterception(false);
+          page.off("request", handler);
+        };
+      },
 
       /**
        * Get HTML from the page. Useful for asserting something rendered that

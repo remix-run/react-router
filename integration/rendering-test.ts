@@ -59,7 +59,7 @@ describe("rendering", () => {
 
   it("hydrates", async () => {
     await app.goto("/");
-    expect(selectHtml(await app.getHtml(), "#content")).toMatchInlineSnapshot(`
+    expect(await app.getHtml("#content")).toMatchInlineSnapshot(`
       "<div id=\\"content\\">
         <h1>Root</h1>
         <h2>Index</h2>
