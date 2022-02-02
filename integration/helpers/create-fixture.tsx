@@ -181,6 +181,9 @@ export async function createAppFixture(fixture: Fixture) {
       ) => {
         let selector = `a[href="${href}"]`;
         let el = await page.$(selector);
+        if (!el) {
+          throw new Error(`Could not find link for ${selector}`);
+        }
         if (options.wait) {
           await doAndWait(page, () => el.click());
         } else {
@@ -301,14 +304,33 @@ async function installRemix(projectDir: string) {
   await fse.copy(buildDir, installDir);
 }
 
-function writeTestFiles(init: FixtureInit, dir: string) {
-  return Promise.all(
+async function writeTestFiles(init: FixtureInit, dir: string) {
+  await Promise.all(
     Object.keys(init.files).map(async filename => {
       let filePath = path.join(dir, filename);
       await fse.ensureDir(path.dirname(filePath));
       await fs.writeFile(filePath, init.files[filename]);
     })
   );
+  await renamePkgJsonApp(dir);
+}
+
+/**
+ * This prevents the console for spitting out a bunch of junk like this for
+ * every fixture:
+ *
+ *    jest-haste-map: Haste module naming collision: remix-app-template-js
+ *
+ * I found some github issues that says that `modulePathIgnorePatterns` should
+ * help, so I added it to our `jest.config.js`, but it doesn't seem to help, so
+ * I bruteforced it here.
+ */
+async function renamePkgJsonApp(dir: string) {
+  let pkgPath = path.join(dir, "package.json");
+  let pkg = await fs.readFile(pkgPath);
+  let obj = JSON.parse(pkg.toString());
+  obj.name = path.basename(dir);
+  await fs.writeFile(pkgPath, JSON.stringify(obj, null, 2) + "\n");
 }
 
 export async function getHtml(page: Page, selector?: string) {
