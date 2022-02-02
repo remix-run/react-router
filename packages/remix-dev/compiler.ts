@@ -372,7 +372,8 @@ async function createBrowserBuild(
     plugins: [
       mdxPlugin(config),
       browserRouteModulesPlugin(config, /\?browser$/),
-      emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/)
+      emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/),
+      NodeModulesPolyfillPlugin()
     ]
   });
 }
@@ -397,19 +398,18 @@ async function createServerBuild(
     };
   }
 
-  let plugins: esbuild.Plugin[] = [];
-  if (config.serverPlatform !== "node") {
-    plugins.push(NodeModulesPolyfillPlugin());
-  }
-
-  plugins.push(
+  let plugins: esbuild.Plugin[] = [
     mdxPlugin(config),
     emptyModulesPlugin(config, /\.client\.[tj]sx?$/),
     serverRouteModulesPlugin(config),
     serverEntryModulesPlugin(config),
     serverAssetsPlugin(browserManifestPromiseRef),
     serverBareModulesPlugin(config, dependencies)
-  );
+  ];
+
+  if (config.serverPlatform !== "node") {
+    plugins.push(NodeModulesPolyfillPlugin());
+  }
 
   return esbuild
     .build({
