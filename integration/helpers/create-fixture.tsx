@@ -329,7 +329,7 @@ export function selectHtml(source: string, selector: string) {
 export function prettyHtml(source: string): string {
   return prettier.format(source, { parser: "html" });
 }
-  
+
 // Taken from https://github.com/puppeteer/puppeteer/issues/5328#issuecomment-986175620
 // Seems to work?
 async function doAndWait(
