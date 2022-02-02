@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import fse from "fs-extra";
 import cp from "child_process";
 import puppeteer from "puppeteer";
-import type { Page } from "puppeteer";
+import type { Page, HTTPResponse } from "puppeteer";
 import express from "express";
 import cheerio from "cheerio";
 import prettier from "prettier";
@@ -174,7 +174,7 @@ export async function createAppFixture(fixture: Fixture) {
         let selector = `a[href="${href}"]`;
         let el = await page.$(selector);
         if (options.wait) {
-          await doAndWait(page, () => el.click(), 200, 2000);
+          await doAndWait(page, () => el.click());
         } else {
           await el.click();
         }
@@ -196,11 +196,30 @@ export async function createAppFixture(fixture: Fixture) {
         let el = await page.$(selector);
         if (!el) throw new Error(`Can't find button: ${selector}`);
         if (options.wait) {
-          await doAndWait(page, () => el.click(), 200, 2000);
+          await doAndWait(page, () => el.click());
         } else {
           await el.click();
         }
       },
+
+      /**
+       * "Clicks" the back button and optionally waits for the network to be
+       * idle (defaults to waiting).
+       */
+      goBack: async (options: { wait: boolean } = { wait: true }) => {
+        if (options.wait) {
+          await doAndWait(page, () => page.goBack());
+        } else {
+          await page.goBack();
+        }
+      },
+
+      /**
+       * Collects data responses from the network, usually after a link click or
+       * form submission. This is useful for asserting that specific loaders
+       * were called (or not).
+       */
+      collectDataResponses: () => collectDataResponses(page),
 
       /**
        * Get HTML from the page. Useful for asserting something rendered that
@@ -302,8 +321,8 @@ export function prettyHtml(source: string): string {
 async function doAndWait(
   page: puppeteer.Page,
   fun: () => Promise<unknown>,
-  pollTime: number = 1000,
-  timeout: number = 10000
+  pollTime: number = 20,
+  timeout: number = 2000
 ) {
   let waiting: puppeteer.HTTPRequest[] = [];
 
@@ -337,4 +356,25 @@ async function doAndWait(
       waiting = waiting.filter(a => a.response() == null);
     }, pollTime);
   });
+}
+
+type UrlFilter = (url: URL) => boolean;
+
+export function collectResponses(
+  page: Page,
+  filter?: UrlFilter
+): HTTPResponse[] {
+  let responses: HTTPResponse[] = [];
+
+  page.on("response", res => {
+    if (!filter || filter(new URL(res.url()))) {
+      responses.push(res);
+    }
+  });
+
+  return responses;
+}
+
+export function collectDataResponses(page: Page) {
+  return collectResponses(page, url => url.searchParams.has("_data"));
 }
