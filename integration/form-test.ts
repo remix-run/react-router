@@ -17,23 +17,7 @@ describe("Forms", () => {
   beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
-          import { Outlet, Scripts } from "remix";
-          export default function Root() {
-            return (
-              <html>
-                <head />
-                <body>
-                  <Outlet />
-                  <Scripts />
-                </body>
-              </html>
-            )
-          }
-        `,
-
         "app/routes/get-submission.jsx": js`
-          import { Fragment } from "react"
           import { useLoaderData, Form } from "remix";
 
           export function loader({ request }) {
