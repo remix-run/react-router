@@ -50,6 +50,58 @@ describe("useNavigate", () => {
     `);
   });
 
+  it("produce same navigation results with double-slashed paths with and without basename in Router", () => {
+    function changeRoute(el: React.ReactElement) {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(el);
+      });
+
+      let button = renderer.root.findByType("button");
+
+      TestRenderer.act(() => {
+        button.props.onClick();
+      });
+
+      return renderer.toJSON();
+    }
+
+    function Home() {
+      let navigate = useNavigate();
+
+      function handleClick() {
+        navigate("/about//test/");
+      }
+
+      return (
+        <div>
+          <h1>Home</h1>
+          <button onClick={handleClick}>click me</button>
+        </div>
+      );
+    }
+
+    const Common = (
+      <Routes>
+        <Route path="home" element={<Home />} />
+        <Route path="about//test/" element={<h1>Double</h1>} />
+        <Route path="about/test/" element={<h1>Single</h1>} />
+      </Routes>
+    );
+
+    const withoutBasename = changeRoute(
+      <MemoryRouter initialEntries={["/home"]}>{Common}</MemoryRouter>
+    );
+
+    const withBasename = changeRoute(
+      <MemoryRouter basename="/hosted" initialEntries={["/hosted/home"]}>
+        {Common}
+      </MemoryRouter>
+    );
+
+    expect(withoutBasename).toEqual(withBasename);
+  });
+
   describe("with state", () => {
     it("adds the state to location.state", () => {
       function Home() {
