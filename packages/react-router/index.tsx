@@ -1367,7 +1367,21 @@ function stripBasename(pathname: string, basename: string): string | null {
 }
 
 const joinPaths = (paths: string[]): string =>
-  paths.join("/").replace(/\/\/+/g, "/");
+  paths.reduce((acc, path, index) => {
+    if (!path) {
+      return acc;
+    }
+
+    if (index !== 0 && !path.startsWith("/")) {
+      path = "/" + path;
+    }
+
+    if (index !== paths.length - 1) {
+      path = path.replace(/\/$/, "");
+    }
+
+    return acc + path;
+  }, "");
 
 const normalizePathname = (pathname: string): string =>
   pathname.replace(/\/+$/, "").replace(/^\/*/, "/");
