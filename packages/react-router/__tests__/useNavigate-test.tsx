@@ -100,6 +100,11 @@ describe("useNavigate", () => {
     );
 
     expect(withoutBasename).toEqual(withBasename);
+    expect(withBasename).toMatchInlineSnapshot(`
+      <h1>
+        Double
+      </h1>
+    `);
   });
 
   describe("with state", () => {
