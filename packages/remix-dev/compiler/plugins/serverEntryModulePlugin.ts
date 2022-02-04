@@ -13,33 +13,32 @@ import {
  * for you to consume the build in a custom server entry that is also fed through
  * the compiler.
  */
-export function serverEntryModulesPlugin(
-  remixConfig: RemixConfig,
-  filter: RegExp = serverBuildVirtualModule.filter
-): Plugin {
+export function serverEntryModulePlugin(config: RemixConfig): Plugin {
+  let filter = serverBuildVirtualModule.filter;
+
   return {
-    name: "server-entry",
+    name: "server-entry-module",
     setup(build) {
       build.onResolve({ filter }, ({ path }) => {
         return {
           path,
-          namespace: "server-entry"
+          namespace: "server-entry-module"
         };
       });
 
       build.onLoad({ filter }, async () => {
         return {
-          resolveDir: remixConfig.appDirectory,
+          resolveDir: config.appDirectory,
           loader: "js",
           contents: `
 import * as entryServer from ${JSON.stringify(
-            path.resolve(remixConfig.appDirectory, remixConfig.entryServerFile)
+            path.resolve(config.appDirectory, config.entryServerFile)
           )};
-${Object.keys(remixConfig.routes)
+${Object.keys(config.routes)
   .map((key, index) => {
-    let route = remixConfig.routes[key];
+    let route = config.routes[key];
     return `import * as route${index} from ${JSON.stringify(
-      path.resolve(remixConfig.appDirectory, route.file)
+      path.resolve(config.appDirectory, route.file)
     )};`;
   })
   .join("\n")}
@@ -48,9 +47,9 @@ ${Object.keys(remixConfig.routes)
   )};
   export const entry = { module: entryServer };
   export const routes = {
-    ${Object.keys(remixConfig.routes)
+    ${Object.keys(config.routes)
       .map((key, index) => {
-        let route = remixConfig.routes[key];
+        let route = config.routes[key];
         return `${JSON.stringify(key)}: {
       id: ${JSON.stringify(route.id)},
       parentId: ${JSON.stringify(route.parentId)},

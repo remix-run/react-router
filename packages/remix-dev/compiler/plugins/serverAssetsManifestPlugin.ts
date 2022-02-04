@@ -7,28 +7,32 @@ import { assetsManifestVirtualModule } from "../virtualModules";
 export type AssetsManifestPromiseRef = { current?: Promise<unknown> };
 
 /**
- * Creates a virtual module of the asset manifest for consumption.
- * See {@link serverEntryModulesPlugin} for consumption.
+ * Creates a virtual module called `@remix-run/dev/assets-manifest` that exports
+ * the assets manifest. This is used in the server entry module to access the
+ * assets manifest in the server build.
  */
-export function serverAssetsPlugin(
-  browserManifestPromiseRef: AssetsManifestPromiseRef,
-  filter: RegExp = assetsManifestVirtualModule.filter
+export function serverAssetsManifestPlugin(
+  assetsManifestPromiseRef: AssetsManifestPromiseRef
 ): Plugin {
+  let filter = assetsManifestVirtualModule.filter;
+
   return {
-    name: "server-assets",
+    name: "server-assets-manifest",
     setup(build) {
       build.onResolve({ filter }, ({ path }) => {
         return {
           path,
-          namespace: "assets"
+          namespace: "server-assets-manifest"
         };
       });
+
       build.onLoad({ filter }, async () => {
         invariant(
-          browserManifestPromiseRef.current,
-          "Missing browser manifest assets ref in server build."
+          assetsManifestPromiseRef.current,
+          "Missing assets manifests in server build."
         );
-        let manifest = await browserManifestPromiseRef.current;
+
+        let manifest = await assetsManifestPromiseRef.current;
 
         return {
           contents: `export default ${jsesc(manifest, { es6: true })};`,

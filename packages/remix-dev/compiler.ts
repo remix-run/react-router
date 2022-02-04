@@ -17,10 +17,10 @@ import { loaders } from "./compiler/loaders";
 import { browserRouteModulesPlugin } from "./compiler/plugins/browserRouteModulesPlugin";
 import { emptyModulesPlugin } from "./compiler/plugins/emptyModulesPlugin";
 import { mdxPlugin } from "./compiler/plugins/mdx";
-import { serverAssetsPlugin } from "./compiler/plugins/serverAssetsPlugin";
-import type { AssetsManifestPromiseRef } from "./compiler/plugins/serverAssetsPlugin";
+import type { AssetsManifestPromiseRef } from "./compiler/plugins/serverAssetsManifestPlugin";
+import { serverAssetsManifestPlugin } from "./compiler/plugins/serverAssetsManifestPlugin";
 import { serverBareModulesPlugin } from "./compiler/plugins/serverBareModulesPlugin";
-import { serverEntryModulesPlugin } from "./compiler/plugins/serverEntryModulesPlugin";
+import { serverEntryModulePlugin } from "./compiler/plugins/serverEntryModulePlugin";
 import { serverRouteModulesPlugin } from "./compiler/plugins/serverRouteModulesPlugin";
 import { writeFileSafe } from "./compiler/utils/fs";
 
@@ -401,8 +401,8 @@ async function createServerBuild(
     mdxPlugin(config),
     emptyModulesPlugin(config, /\.client\.[tj]sx?$/),
     serverRouteModulesPlugin(config),
-    serverEntryModulesPlugin(config),
-    serverAssetsPlugin(assetsManifestPromiseRef),
+    serverEntryModulePlugin(config),
+    serverAssetsManifestPlugin(assetsManifestPromiseRef),
     serverBareModulesPlugin(config, dependencies)
   ];
 
