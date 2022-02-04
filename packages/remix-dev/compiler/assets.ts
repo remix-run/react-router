@@ -9,7 +9,7 @@ import { createUrl } from "./utils/url";
 
 type Route = RemixConfig["routes"][string];
 
-interface AssetsManifest {
+export interface AssetsManifest {
   version: string;
   url?: string;
   entry: {

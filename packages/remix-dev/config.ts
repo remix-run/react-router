@@ -6,7 +6,7 @@ import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
 import { defineRoutes } from "./config/routes";
 import { defineConventionalRoutes } from "./config/routesConvention";
 import { ServerMode, isValidServerMode } from "./config/serverModes";
-import virtualModules from "./compiler/virtualModules";
+import { serverBuildVirtualModule } from "./compiler/virtualModules";
 
 export interface RemixMdxConfig {
   rehypePlugins?: any[];
@@ -364,7 +364,7 @@ export async function readConfig(
   }
 
   let serverBuildTargetEntryModule = `export * from ${JSON.stringify(
-    virtualModules.serverBuildVirutalModule.path
+    serverBuildVirtualModule.id
   )};`;
 
   return {

@@ -4,13 +4,13 @@ import * as esbuild from "esbuild";
 import * as fse from "fs-extra";
 import debounce from "lodash.debounce";
 import chokidar from "chokidar";
-import type { AssetsManifest } from "@remix-run/server-runtime/entry";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 
 import { BuildMode, BuildTarget } from "./build";
 import type { RemixConfig } from "./config";
 import { readConfig } from "./config";
 import { warnOnce } from "./warnings";
+import type { AssetsManifest } from "./compiler/assets";
 import { createAssetsManifest } from "./compiler/assets";
 import { getAppDependencies } from "./compiler/dependencies";
 import { loaders } from "./compiler/loaders";
@@ -18,7 +18,7 @@ import { browserRouteModulesPlugin } from "./compiler/plugins/browserRouteModule
 import { emptyModulesPlugin } from "./compiler/plugins/emptyModulesPlugin";
 import { mdxPlugin } from "./compiler/plugins/mdx";
 import { serverAssetsPlugin } from "./compiler/plugins/serverAssetsPlugin";
-import type { BrowserManifestPromiseRef } from "./compiler/plugins/serverAssetsPlugin";
+import type { AssetsManifestPromiseRef } from "./compiler/plugins/serverAssetsPlugin";
 import { serverBareModulesPlugin } from "./compiler/plugins/serverBareModulesPlugin";
 import { serverEntryModulesPlugin } from "./compiler/plugins/serverEntryModulesPlugin";
 import { serverRouteModulesPlugin } from "./compiler/plugins/serverRouteModulesPlugin";
@@ -76,9 +76,9 @@ export async function build(
     onBuildFailure = defaultBuildFailureHandler
   }: BuildOptions = {}
 ): Promise<void> {
-  let ref: BrowserManifestPromiseRef = {};
+  let assetsManifestPromiseRef: AssetsManifestPromiseRef = {};
 
-  await buildEverything(config, ref, {
+  await buildEverything(config, assetsManifestPromiseRef, {
     mode,
     target,
     sourcemap,
@@ -120,10 +120,11 @@ export async function watch(
     onWarning,
     incremental: true
   };
-  let browserManifestPromiseRef: BrowserManifestPromiseRef = {};
+
+  let assetsManifestPromiseRef: AssetsManifestPromiseRef = {};
   let [browserBuild, serverBuild] = await buildEverything(
     config,
-    browserManifestPromiseRef,
+    assetsManifestPromiseRef,
     options
   );
 
@@ -152,7 +153,7 @@ export async function watch(
     if (onRebuildStart) onRebuildStart();
     let builders = await buildEverything(
       config,
-      browserManifestPromiseRef,
+      assetsManifestPromiseRef,
       options
     );
     if (onRebuildFinish) onRebuildFinish();
@@ -169,7 +170,7 @@ export async function watch(
       try {
         [browserBuild, serverBuild] = await buildEverything(
           config,
-          browserManifestPromiseRef,
+          assetsManifestPromiseRef,
           options
         );
 
@@ -188,16 +189,20 @@ export async function watch(
 
     // If we get here and can't call rebuild something went wrong and we
     // should probably blow as it's not really recoverable.
-    let browserBuildPromise = browserBuild
-      .rebuild()
-      .then(build => generateManifests(config, build.metafile!));
-    // Do not await the client build, instead assign the promise to a ref
-    // so the server build can await it to gain access to the client manifest.
-    browserManifestPromiseRef.current = browserBuildPromise;
+    let browserBuildPromise = browserBuild.rebuild();
+    let assetsManifestPromise = browserBuildPromise.then(build =>
+      generateAssetsManifest(config, build.metafile!)
+    );
+
+    // Assign the assetsManifestPromise to a ref so the server build can await
+    // it when loading the @remix-run/dev/assets-manifest virtual module.
+    assetsManifestPromiseRef.current = assetsManifestPromise;
 
     await Promise.all([
-      browserBuildPromise,
-      serverBuild.rebuild().then(writeServerBuildResult(config))
+      assetsManifestPromise,
+      serverBuild
+        .rebuild()
+        .then(build => writeServerBuildResult(config, build.outputFiles!))
     ]).catch(err => {
       disposeBuilders();
       onBuildFailure(err);
@@ -275,33 +280,27 @@ function isEntryPoint(config: RemixConfig, file: string) {
 
 async function buildEverything(
   config: RemixConfig,
-  browserManifestPromiseRef: BrowserManifestPromiseRef,
+  assetsManifestPromiseRef: AssetsManifestPromiseRef,
   options: Required<BuildOptions> & { incremental?: boolean }
 ): Promise<(esbuild.BuildResult | undefined)[]> {
-  // TODO:
-  // When building for node, we build both the browser and server builds in
-  // parallel and emit the asset manifest as a separate file in the output
-  // directory.
-  // When building for Cloudflare Workers, we need to run the browser and server
-  // builds serially so we can inline the asset manifest into the server build
-  // in a single JavaScript file.
-
   try {
     let browserBuildPromise = createBrowserBuild(config, options);
-    let manifestPromise = browserBuildPromise.then(build => {
-      return generateManifests(config, build.metafile!);
-    });
-    // Do not await the client build, instead assign the promise to a ref
-    // so the server build can await it to gain access to the client manifest.
-    browserManifestPromiseRef.current = manifestPromise;
+    let assetsManifestPromise = browserBuildPromise.then(build =>
+      generateAssetsManifest(config, build.metafile!)
+    );
+
+    // Assign the assetsManifestPromise to a ref so the server build can await
+    // it when loading the @remix-run/dev/assets-manifest virtual module.
+    assetsManifestPromiseRef.current = assetsManifestPromise;
+
     let serverBuildPromise = createServerBuild(
       config,
       options,
-      browserManifestPromiseRef
+      assetsManifestPromiseRef
     );
 
     return await Promise.all([
-      manifestPromise.then(() => browserBuildPromise),
+      assetsManifestPromise.then(() => browserBuildPromise),
       serverBuildPromise
     ]);
   } catch (err) {
@@ -381,7 +380,7 @@ async function createBrowserBuild(
 async function createServerBuild(
   config: RemixConfig,
   options: Required<BuildOptions> & { incremental?: boolean },
-  browserManifestPromiseRef: BrowserManifestPromiseRef
+  assetsManifestPromiseRef: AssetsManifestPromiseRef
 ): Promise<esbuild.BuildResult> {
   let dependencies = await getAppDependencies(config);
 
@@ -393,8 +392,8 @@ async function createServerBuild(
   } else {
     stdin = {
       contents: config.serverBuildTargetEntryModule,
-      loader: "ts",
-      resolveDir: config.rootDirectory
+      resolveDir: config.rootDirectory,
+      loader: "ts"
     };
   }
 
@@ -403,7 +402,7 @@ async function createServerBuild(
     emptyModulesPlugin(config, /\.client\.[tj]sx?$/),
     serverRouteModulesPlugin(config),
     serverEntryModulesPlugin(config),
-    serverAssetsPlugin(browserManifestPromiseRef),
+    serverAssetsPlugin(assetsManifestPromiseRef),
     serverBareModulesPlugin(config, dependencies)
   ];
 
@@ -450,16 +449,19 @@ async function createServerBuild(
       },
       plugins
     })
-    .then(writeServerBuildResult(config));
+    .then(async build => {
+      await writeServerBuildResult(config, build.outputFiles);
+      return build;
+    });
 }
 
-async function generateManifests(
+async function generateAssetsManifest(
   config: RemixConfig,
   metafile: esbuild.Metafile
 ): Promise<AssetsManifest> {
   let assetsManifest = await createAssetsManifest(config, metafile);
-
   let filename = `manifest-${assetsManifest.version.toUpperCase()}.js`;
+
   assetsManifest.url = config.publicPath + filename;
 
   await writeFileSafe(
@@ -467,22 +469,19 @@ async function generateManifests(
     `window.__remixManifest=${JSON.stringify(assetsManifest)};`
   );
 
-  return assetsManifest as AssetsManifest;
+  return assetsManifest;
 }
 
-function writeServerBuildResult(config: RemixConfig) {
-  return async (buildResult: esbuild.BuildResult) => {
-    await fse.ensureDir(path.dirname(config.serverBuildPath));
+async function writeServerBuildResult(
+  config: RemixConfig,
+  outputFiles: esbuild.OutputFile[]
+) {
+  await fse.ensureDir(path.dirname(config.serverBuildPath));
 
-    // manually write files to exclude assets from server build
-    for (let file of buildResult.outputFiles!) {
-      if (file.path !== config.serverBuildPath) {
-        continue;
-      }
+  for (let file of outputFiles) {
+    if (file.path === config.serverBuildPath) {
       await fse.writeFile(file.path, file.contents);
       break;
     }
-
-    return buildResult;
-  };
+  }
 }

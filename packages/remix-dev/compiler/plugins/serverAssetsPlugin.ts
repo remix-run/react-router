@@ -2,18 +2,17 @@ import type { Plugin } from "esbuild";
 import jsesc from "jsesc";
 
 import invariant from "../../invariant";
-import virtualModules from "../virtualModules";
-import type { serverEntryModulesPlugin } from "./serverEntryModulesPlugin";
+import { assetsManifestVirtualModule } from "../virtualModules";
 
-export type BrowserManifestPromiseRef = { current?: Promise<unknown> };
+export type AssetsManifestPromiseRef = { current?: Promise<unknown> };
 
 /**
  * Creates a virtual module of the asset manifest for consumption.
  * See {@link serverEntryModulesPlugin} for consumption.
  */
 export function serverAssetsPlugin(
-  browserManifestPromiseRef: BrowserManifestPromiseRef,
-  filter: RegExp = virtualModules.assetsManifestVirtualModule.filter
+  browserManifestPromiseRef: AssetsManifestPromiseRef,
+  filter: RegExp = assetsManifestVirtualModule.filter
 ): Plugin {
   return {
     name: "server-assets",

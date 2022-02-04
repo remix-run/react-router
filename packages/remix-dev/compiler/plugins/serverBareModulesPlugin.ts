@@ -3,7 +3,10 @@ import { isAbsolute, relative } from "path";
 import type { Plugin } from "esbuild";
 
 import type { RemixConfig } from "../../config";
-import virtualModules from "../virtualModules";
+import {
+  serverBuildVirtualModule,
+  assetsManifestVirtualModule
+} from "../virtualModules";
 
 /**
  * A plugin responsible for resolving bare module ids based on server target.
@@ -33,8 +36,8 @@ export function serverBareModulesPlugin(
         // These are our virutal modules, always bundle the because there is no
         // "real" file on disk to externalize.
         if (
-          path === virtualModules.serverBuildVirutalModule.path ||
-          path === virtualModules.assetsManifestVirtualModule.path
+          path === serverBuildVirtualModule.id ||
+          path === assetsManifestVirtualModule.id
         ) {
           return undefined;
         }
