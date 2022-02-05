@@ -29,6 +29,7 @@ To get React Router working in your app, you need to render a router element at 
 - [`<StaticRouter>`](#staticrouter) should be used when server-rendering a website
 - [`<NativeRouter>`](#nativerouter) should be used in [React Native](https://reactnative.dev/) apps
 - [`<MemoryRouter>`](#memoryrouter) is useful in testing scenarios and as a reference implementation for the other routers
+- [`<unstable_HistoryRouter>`](#unstable_historyrouter) is used with your own [`history`](https://github.com/remix-run/history) instance.
 
 These routers provide the context that React Router needs to operate in a particular environment. Each one renders [a `<Router>`](#router) internally, which you may also do if you need more fine-grained control for some reason. But it is highly likely that one of the built-in routers is what you need.
 
@@ -232,6 +233,45 @@ describe("My app", () => {
   });
 });
 ```
+
+### `<unstable_HistoryRouter>`
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function HistoryRouter(
+  props: HistoryRouterProps
+): React.ReactElement;
+
+interface HistoryRouterProps {
+  basename?: string;
+  children?: React.ReactNode;
+  history: History;
+}
+```
+
+</details>
+
+`<unstable_HistoryRouter>` takes an instance of the [`history`](https://github.com/remix-run/history) library as prop. This allows you to use that instance in non-React contexts or as a global variable.
+
+```tsx
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { unstable_HistoryRouter as HistoryRouter } from "react-router-dom";
+import { createBrowserHistory } from "history";
+
+const history = createBrowserHistory({ window });
+
+ReactDOM.render(
+  <HistoryRouter history={history}>
+    {/* The rest of your app goes here */}
+  </HistoryRouter>,
+  root
+);
+```
+
+<docs-warning>This API is currently prefixed as `unstable_` because you may unintentionally add two versions of the `history` library to your app, the one you have added to your package.json and whatever version React Router uses internally. If it is allowed by your tooling, it's recommended to not add `history` as a direct dependency and instead rely on the nested dependency from the `react-router` package. Once we have a mechanism to detect mis-matched versions, this API will remove its `unstable_` prefix.</docs-warning>
 
 ### `<Link>`
 
