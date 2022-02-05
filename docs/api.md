@@ -253,7 +253,7 @@ interface HistoryRouterProps {
 
 </details>
 
-`<unstable_HistoryRouter>` takes an instance of the [`history`](https://github.com/remix-run/history) library as prop. This allows you to use that instance in non-React contexts or as a global variable. 
+`<unstable_HistoryRouter>` takes an instance of the [`history`](https://github.com/remix-run/history) library as prop. This allows you to use that instance in non-React contexts or as a global variable.
 
 ```tsx
 import * as React from "react";
