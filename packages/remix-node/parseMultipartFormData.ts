@@ -8,7 +8,7 @@ import { FormData as NodeFormData } from "./formData";
 /**
  * Allows you to handle multipart forms (file uploads) for your app.
  *
- * @see https://remix.run/docs/en/v1/api/remix#parsemultipartformdata-node
+ * @see https://remix.run/api/remix#parsemultipartformdata-node
  */
 export function parseMultipartFormData(
   request: Request,

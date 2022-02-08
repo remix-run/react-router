@@ -2,7 +2,7 @@
  * This is a shortcut for creating `application/json` responses. Converts `data`
  * to JSON and sets the `Content-Type` header.
  *
- * @see https://remix.run/docs/en/v1/api/remix#json
+ * @see https://remix.run/api/remix#json
  */
 export function json<Data>(
   data: Data,
@@ -28,7 +28,7 @@ export function json<Data>(
  * A redirect response. Sets the status code and the `Location` header.
  * Defaults to "302 Found".
  *
- * @see https://remix.run/docs/en/v1/api/remix#redirect
+ * @see https://remix.run/api/remix#redirect
  */
 export function redirect(
   url: string,

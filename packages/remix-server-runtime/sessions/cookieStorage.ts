@@ -19,7 +19,7 @@ interface CookieSessionStorageOptions {
  * also has the limitation that serialized session data may not exceed the
  * browser's maximum cookie size. Trade-offs!
  *
- * @see https://remix.run/docs/en/v1/api/remix#createcookiesessionstorage
+ * @see https://remix.run/api/remix#createcookiesessionstorage
  */
 export function createCookieSessionStorage({
   cookie: cookieArg
