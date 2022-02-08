@@ -31,6 +31,8 @@ export type CookieOptions = CookieParseOptions &
  * and options. But it doesn't contain a value. Instead, it has `parse()` and
  * `serialize()` methods that allow a single instance to be reused for
  * parsing/encoding multiple different values.
+ *
+ * @see https://remix.run/docs/en/v1/api/remix#cookie-api
  */
 export interface Cookie {
   /**
@@ -68,7 +70,9 @@ export interface Cookie {
 }
 
 /**
- * Creates and returns a new Cookie.
+ * Creates a logical container for managing a browser cookie from the server.
+ *
+ * @see https://remix.run/docs/en/v1/api/remix#createcookie
  */
 export function createCookie(
   name: string,
@@ -109,6 +113,11 @@ export function createCookie(
   };
 }
 
+/**
+ * Returns true if an object is a Remix cookie container.
+ *
+ * @see https://remix.run/docs/en/v1/api/remix#iscookie
+ */
 export function isCookie(object: any): object is Cookie {
   return (
     object != null &&

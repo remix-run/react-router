@@ -19,6 +19,8 @@ interface MemorySessionStorageOptions {
  *
  * Note: This storage does not scale beyond a single process, so it is not
  * suitable for most production scenarios.
+ *
+ * @see https://remix.run/docs/en/v1/api/remix#creatememorysessionstorage
  */
 export function createMemorySessionStorage({
   cookie

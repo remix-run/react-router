@@ -13,6 +13,8 @@ export interface SessionData {
 
 /**
  * Session persists data across HTTP requests.
+ *
+ * @see https://remix.run/docs/en/v1/api/remix#session-api
  */
 export interface Session {
   /**
@@ -68,6 +70,8 @@ function flash(name: string): string {
  *
  * Note: This function is typically not invoked directly by application code.
  * Instead, use a `SessionStorage` object's `getSession` method.
+ *
+ * @see https://remix.run/docs/en/v1/api/remix#createsession
  */
 export function createSession(initialData: SessionData = {}, id = ""): Session {
   let map = new Map<string, any>(Object.entries(initialData));
@@ -106,6 +110,11 @@ export function createSession(initialData: SessionData = {}, id = ""): Session {
   };
 }
 
+/**
+ * Returns true if an object is a Remix session.
+ *
+ * @see https://remix.run/docs/en/v1/api/remix#issession
+ */
 export function isSession(object: any): object is Session {
   return (
     object != null &&
@@ -198,6 +207,8 @@ export interface SessionIdStorageStrategy {
  *
  * Note: This is a low-level API that should only be used if none of the
  * existing session storage options meet your requirements.
+ *
+ * @see https://remix.run/docs/en/v1/api/remix#createsessionstorage
  */
 export function createSessionStorage({
   cookie: cookieArg,

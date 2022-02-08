@@ -25,6 +25,8 @@ interface FileSessionStorageOptions {
  *
  * The advantage of using this instead of cookie session storage is that
  * files may contain much more data than cookies.
+ *
+ * @see https://remix.run/docs/en/v1/api/remix#createfilesessionstorage-node
  */
 export function createFileSessionStorage({
   cookie,
