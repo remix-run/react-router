@@ -1,4 +1,5 @@
 import meow from "meow";
+import inspector from "inspector";
 
 import * as commands from "./cli/commands";
 
@@ -14,16 +15,22 @@ Options
   --version, -v       Print the CLI version and exit
 
   --json              Print the routes as JSON (remix routes only)
-  --sourcemap         Generate source maps (remix build only)
+  --sourcemap         Generate source maps for production (remix build only)
+  --debug             Attach Node.js inspector (remix dev only)
 
 Values
   [remixPlatform]     Can be one of: node, cloudflare-pages, cloudflare-workers, or deno
 
 Examples
+  $ remix build
+  $ remix build --sourcemap
   $ remix build my-website
+  $ remix dev
+  $ remix dev --debug
   $ remix dev my-website
   $ remix setup node
   $ remix routes my-website
+  $ remix routes my-website --json
 `;
 
 const cli = meow(helpText, {
@@ -39,6 +46,9 @@ const cli = meow(helpText, {
       type: "boolean"
     },
     sourcemap: {
+      type: "boolean"
+    },
+    debug: {
       type: "boolean"
     }
   }
@@ -74,6 +84,7 @@ switch (cli.input[0]) {
     break;
   case "dev":
     if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
+    if (cli.flags.debug) inspector.open();
     commands.dev(cli.input[1], process.env.NODE_ENV).catch(handleError);
     break;
   default:
