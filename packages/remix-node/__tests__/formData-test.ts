@@ -18,6 +18,12 @@ describe("FormData", () => {
     ]);
   });
 
+  it("restores correctly empty string values with get method", () => {
+    let formData = new NodeFormData();
+    formData.set("single", "");
+    expect(formData.get("single")).toBe("");
+  });
+
   it("allows for mix of set and append with blobs and files", () => {
     let formData = new NodeFormData();
     formData.set("single", new Blob([]));
