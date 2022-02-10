@@ -103,6 +103,34 @@ describe("rendering", () => {
           export default function() {
             return null;
           }
+        `,
+
+        "app/routes/gh-1691.jsx": js`
+          import { Form, redirect, useFetcher, useTransition} from "remix";
+
+          export const action = async ({ request }) => {
+            return redirect("/gh-1691");
+          };
+
+          export const loader = async ({ request }) => {
+            return {};
+          };
+
+          export default function GitHubIssue1691() {
+            const fetcher = useFetcher();
+
+            return (
+              <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
+                <span>{fetcher.state}</span>
+                <fetcher.Form method="post">
+                  <input type="hidden" name="source" value="fetcher" />
+                  <button type="submit" name="_action" value="add">
+                    Submit
+                  </button>
+                </fetcher.Form>
+              </div>
+            );
+          }
         `
       }
     });
@@ -172,5 +200,13 @@ describe("rendering", () => {
     let html = await app.getHtml("main");
     expect(html).toMatch(PAGE_TEXT);
     expect(html).toMatch(PAGE_INDEX_TEXT);
+  });
+
+  it("useFetcher state should return to the idle when redirect from an action", async () => {
+    await app.goto("/gh-1691");
+    expect(await app.getHtml("span")).toMatch("idle");
+
+    await app.clickSubmitButton("/gh-1691");
+    expect(await app.getHtml("span")).toMatch("idle");
   });
 });
