@@ -31,7 +31,8 @@ describe("Forms", () => {
               <>
                 <Form>
                   <input type="text" name="${LUNCH}" defaultValue="${CHEESESTEAK}" />
-                  <button type="submit">Go</button>
+                  <button type="submit">
+                  </button>
                 </Form>
 
                 <Form id="${FORM_WITH_ORPHAN}">
@@ -41,7 +42,11 @@ describe("Forms", () => {
                     type="submit"
                     name="${LUNCH}"
                     value="${LAKSA}"
-                  >Go</button>
+                  >
+                    <svg height="100" width="100">
+                      <circle id="svg-button-enhanced" cx="50" cy="50" r="40" stroke="black" strokeWidth="3" fill="red" />
+                    </svg> 
+                  </button>
                 </Form>
 
                 <button
@@ -97,6 +102,7 @@ describe("Forms", () => {
   });
 
   it("posts to a loader", async () => {
+    // this indirectly tests that clicking SVG children in buttons works
     await app.goto("/get-submission");
     await app.clickSubmitButton("/get-submission");
     expect(await app.getHtml("pre")).toMatch(CHEESESTEAK);
