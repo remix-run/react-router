@@ -324,7 +324,7 @@ async function renderDocumentRequest({
   appState.error = undefined;
 
   let headerMatches: RouteMatch<ServerRoute>[] = [];
-  let routeLoaderResponses: Response[] = [];
+  let routeLoaderResponses: Record<string, Response> = {};
   let loaderStatusCodes: number[] = [];
   let routeData: Record<string, unknown> = {};
   for (let index = 0; index < matchesToLoad.length; index++) {
@@ -372,7 +372,7 @@ async function renderDocumentRequest({
       break;
     } else if (response) {
       headerMatches.push(match);
-      routeLoaderResponses.push(response);
+      routeLoaderResponses[match.route.id] = response;
       loaderStatusCodes.push(response.status);
 
       if (isCatch) {

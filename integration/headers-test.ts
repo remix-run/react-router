@@ -79,8 +79,7 @@ describe("headers export", () => {
     expect(response.headers.get(ROOT_HEADER_KEY)).toBe(ROOT_HEADER_VALUE);
   });
 
-  // FIXME: this test is busted
-  it.skip("can use the loader headers when parents don't have loaders", async () => {
+  it("can use the loader headers when parents don't have loaders", async () => {
     const HEADER_KEY = "X-Test";
     const HEADER_VALUE = "SUCCESS";
 
