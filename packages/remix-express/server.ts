@@ -120,6 +120,7 @@ function sendRemixResponse(
   response: NodeResponse,
   abortController: AbortController
 ): void {
+  res.statusMessage = response.statusText;
   res.status(response.status);
 
   for (let [key, values] of Object.entries(response.headers.raw())) {
