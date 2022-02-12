@@ -11,6 +11,7 @@ export type {
 export { Headers, Request, Response, fetch } from "./fetch";
 
 export { FormData } from "./formData";
+export type { UploadHandler, UploadHandlerArgs } from "./formData";
 
 export { installGlobals } from "./globals";
 
