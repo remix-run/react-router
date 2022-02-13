@@ -305,7 +305,7 @@ let invoices = [
     name: "Wide Open Spaces",
     number: 1998,
     amount: "$4,600",
-    due: "01/27/2998"
+    due: "01/27/1998"
   }
 ];
 
