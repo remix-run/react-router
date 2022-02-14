@@ -85,9 +85,7 @@ export function serverBareModulesPlugin(
         for (let pattern of remixConfig.serverDependenciesToBundle) {
           // bundle it if the path matches the pattern
           if (
-            typeof pattern === "string"
-              ? path === pattern
-              : pattern.test(path)
+            typeof pattern === "string" ? path === pattern : pattern.test(path)
           ) {
             return undefined;
           }
