@@ -37,7 +37,7 @@ function withRouter(Component) {
 
 ## Why does `<Route>` have an `element` prop instead of `render` or `component`?
 
-We mentioned this [in the migration guide from v5 to v6](../guides/migrating-5-to-6#advantages-of-route-element), but it's worth repeating here.
+We mentioned this [in the migration guide from v5 to v6](./upgrading/v5.md#advantages-of-route-element), but it's worth repeating here.
 
 In React Router v6 we switched from using v5's `<Route component>` and `<Route render>` APIs to `<Route element>`. Why is that?
 
