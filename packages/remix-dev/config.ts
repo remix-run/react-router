@@ -128,6 +128,13 @@ export interface AppConfig {
    * routes.
    */
   ignoredRouteFiles?: string[];
+
+  /**
+   * A list of patterns that determined if a module is transpiled and included
+   * in the server bundle. This can be useful when consuming ESM only packages
+   * in a CJS build.
+   */
+  serverDependenciesToBundle?: Array<string | RegExp>;
 }
 
 /**
@@ -224,6 +231,13 @@ export interface RemixConfig {
    * A server entrypoint relative to the root directory that becomes your server's main module.
    */
   serverEntryPoint?: string;
+
+  /**
+   * A list of patterns that determined if a module is transpiled and included
+   * in the server bundle. This can be useful when consuming ESM only packages
+   * in a CJS build.
+   */
+  serverDependenciesToBundle: Array<string | RegExp>;
 }
 
 /**
@@ -367,6 +381,8 @@ export async function readConfig(
     serverBuildVirtualModule.id
   )};`;
 
+  let serverDependenciesToBundle = appConfig.serverDependenciesToBundle || [];
+
   return {
     appDirectory,
     cacheDirectory,
@@ -385,6 +401,7 @@ export async function readConfig(
     serverBuildTarget,
     serverBuildTargetEntryModule,
     serverEntryPoint: customServerEntryPoint,
+    serverDependenciesToBundle,
     mdx
   };
 }

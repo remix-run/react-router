@@ -36,8 +36,29 @@ describe("compiler", () => {
           import * as path from "path";
 
           export default function BuiltIns() {
-            return <div id="built-ins-polyfill">{path.join("test", "file.txt")}</div>
+            return <div id="built-ins-polyfill">{path.join("test", "file.txt")}</div>;
           }
+        `,
+        "app/routes/esm-only-pkg.jsx": js`
+          import esmOnlyPkg from "esm-only-pkg";
+
+          export default function EsmOnlyPkg() {
+            return <div id="esm-only-pkg">{esmOnlyPkg}</div>;
+          }
+        `,
+        "remix.config.js": js`
+          module.exports = {
+            serverDependenciesToBundle: ["esm-only-pkg"],
+          };
+        `,
+        "node_modules/esm-only-pkg/package.json": `{
+          "name": "esm-only-pkg",
+          "version": "1.0.0",
+          "type": "module",
+          "main": "./esm-only-pkg.js"
+        }`,
+        "node_modules/esm-only-pkg/esm-only-pkg.js": js`
+          export default "esm-only-pkg";
         `
       }
     });
@@ -89,5 +110,14 @@ describe("compiler", () => {
     );
     // does not include `import bla from "path"` in the output bundle
     expect(routeModule).not.toMatch(/from\s*"path/);
+  });
+
+  it("allows consumption of ESM modules in CJS builds with `serverDependenciesToBundle`", async () => {
+    let res = await app.goto("/esm-only-pkg", true);
+    expect(res.status()).toBe(200); // server rendered fine
+    // rendered the page instead of the error boundary
+    expect(await app.getHtml("#esm-only-pkg")).toMatchInlineSnapshot(
+      `"<div id=\\"esm-only-pkg\\">esm-only-pkg</div>"`
+    );
   });
 });

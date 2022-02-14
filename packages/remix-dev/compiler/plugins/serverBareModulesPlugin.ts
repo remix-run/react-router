@@ -33,7 +33,7 @@ export function serverBareModulesPlugin(
           return undefined;
         }
 
-        // These are our virutal modules, always bundle the because there is no
+        // These are our virutal modules, always bundle them because there is no
         // "real" file on disk to externalize.
         if (
           path === serverBuildVirtualModule.id ||
@@ -80,6 +80,17 @@ export function serverBareModulesPlugin(
               };
             }
             return undefined;
+        }
+
+        for (let pattern of remixConfig.serverDependenciesToBundle) {
+          // bundle it if the path matches the pattern
+          if (
+            typeof pattern === "string"
+              ? path === pattern
+              : pattern.test(path)
+          ) {
+            return undefined;
+          }
         }
 
         // Externalize everything else if we've gotten here.

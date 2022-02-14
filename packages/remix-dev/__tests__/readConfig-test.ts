@@ -410,6 +410,7 @@ describe("readConfig", () => {
         "serverBuildPath": Any<String>,
         "serverBuildTarget": undefined,
         "serverBuildTargetEntryModule": "export * from \\"@remix-run/dev/server-build\\";",
+        "serverDependenciesToBundle": Array [],
         "serverEntryPoint": "./server.js",
         "serverMode": "production",
         "serverModuleFormat": "cjs",
