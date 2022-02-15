@@ -19,7 +19,7 @@
     "@remix-run/server-runtime": "1.2.0-pre.0",
     "cacache": "^15.0.5",
     "chokidar": "^3.5.1",
-    "esbuild": "0.14.16",
+    "esbuild": "0.13.14",
     "exit-hook": "2.2.1",
     "fs-extra": "^10.0.0",
     "get-port": "^5.1.1",
