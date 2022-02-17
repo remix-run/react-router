@@ -102,7 +102,7 @@ export interface AppConfig {
 
   /**
    * The output format of the server build. Defaults to "cjs".
-   * * @deprecated Use {@link ServerConfig.serverBuildTarget} instead.
+   * @deprecated Use {@link ServerConfig.serverBuildTarget} instead.
    */
   serverModuleFormat?: ServerModuleFormat;
 
