@@ -1,6 +1,8 @@
-export { AbortController } from "abort-controller";
+import sourceMapSupport from "source-map-support";
 
-export { formatServerError } from "./errors";
+sourceMapSupport.install();
+
+export { AbortController } from "abort-controller";
 
 export type {
   HeadersInit,

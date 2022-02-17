@@ -22,11 +22,12 @@
     "cookie-signature": "^1.1.0",
     "form-data": "^4.0.0",
     "node-fetch": "^2.6.1",
-    "source-map": "^0.7.3"
+    "source-map-support": "^0.5.21"
   },
   "devDependencies": {
     "@types/blob-stream": "^0.1.30",
-    "@types/cookie-signature": "^1.0.3"
+    "@types/cookie-signature": "^1.0.3",
+    "@types/source-map-support": "^0.5.4"
   },
   "sideEffects": false
 }
