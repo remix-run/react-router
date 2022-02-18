@@ -646,6 +646,7 @@ If you're using TypeScript, we recommend the parent component provide a custom h
 ```tsx filename=src/routes/dashboard.tsx lines=[12,17-19]
 import * as React from "react";
 import type { User } from "./types";
+import { Outlet, useOutletContext } from "react-router-dom";
 
 type ContextType = { user: User | null };
 
