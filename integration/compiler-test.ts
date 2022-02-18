@@ -9,14 +9,23 @@ describe("compiler", () => {
     fixture = await createFixture({
       files: {
         "app/fake.server.js": js`
-          export default { hello: "world" };
+          export const hello = "server";
+        `,
+        "app/fake.client.js": js`
+          export const hello = "client";
+        `,
+        "app/fake.js": js`
+          import { hello as clientHello } from "./fake.client.js";
+          import { hello as serverHello } from "./fake.server.js";
+          export default clientHello || serverHello;
         `,
 
         "app/routes/index.jsx": js`
-          import fake from "~/fake.server.js";
+          import fake from "~/fake.js";
 
           export default function Index() {
-            return <div id="index">{Object.keys(fake).length}</div>
+            let hasRightModule = fake === (typeof document === "undefined" ? "server" : "client");
+            return <div id="index">{String(hasRightModule)}</div>
           }
         `,
         "app/routes/built-ins.jsx": js`
@@ -76,7 +85,17 @@ describe("compiler", () => {
 
     // rendered the page instead of the error boundary
     expect(await app.getHtml("#index")).toMatchInlineSnapshot(
-      `"<div id=\\"index\\">0</div>"`
+      `"<div id=\\"index\\">true</div>"`
+    );
+  });
+  it("removes server code with `*.client` files", async () => {
+    await app.disableJavaScript();
+    let res = await app.goto("/", true);
+    expect(res.status()).toBe(200); // server rendered fine
+
+    // rendered the page instead of the error boundary
+    expect(await app.getHtml("#index")).toMatchInlineSnapshot(
+      `"<div id=\\"index\\">true</div>"`
     );
   });
 

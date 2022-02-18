@@ -399,7 +399,7 @@ async function createServerBuild(
 
   let plugins: esbuild.Plugin[] = [
     mdxPlugin(config),
-    emptyModulesPlugin(config, /\.client\.[tj]sx?$/),
+    emptyModulesPlugin(config, /\.client(\.[jt]sx?)?$/),
     serverRouteModulesPlugin(config),
     serverEntryModulePlugin(config),
     serverAssetsManifestPlugin(assetsManifestPromiseRef),
