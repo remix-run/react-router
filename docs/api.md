@@ -634,7 +634,7 @@ function Parent() {
 ```
 
 ```tsx lines=[2]
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext } from "react-router-dom";
 
 function Child() {
   const [count, setCount] = useOutletContext();
