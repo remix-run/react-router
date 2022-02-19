@@ -10,10 +10,12 @@ import prettier from "prettier";
 import getPort from "get-port";
 
 import { createRequestHandler } from "../../packages/remix-server-runtime";
-import { formatServerError } from "../../packages/remix-node";
 import { createApp } from "../../packages/create-remix";
 import { createRequestHandler as createExpressHandler } from "../../packages/remix-express";
-import type { ServerBuild } from "../../packages/remix-server-runtime";
+import type {
+  ServerBuild,
+  ServerPlatform
+} from "../../packages/remix-server-runtime";
 import type { CreateAppArgs } from "../../packages/create-remix";
 import { TMP_DIR } from "./global-setup";
 
@@ -32,7 +34,7 @@ export let js = String.raw;
 export async function createFixture(init: FixtureInit) {
   let projectDir = await createFixtureProject(init);
   let app: ServerBuild = await import(path.resolve(projectDir, "build"));
-  let platform = { formatServerError };
+  let platform: ServerPlatform = {};
   let handler = createRequestHandler(app, platform);
 
   let requestDocument = async (href: string, init?: RequestInit) => {
