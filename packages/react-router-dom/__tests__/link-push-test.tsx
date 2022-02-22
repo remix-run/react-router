@@ -5,7 +5,7 @@ import {
   Routes,
   Route,
   Link,
-  useNavigationType
+  useNavigationType,
 } from "react-router-dom";
 
 function ShowNavigationType() {
@@ -43,7 +43,7 @@ describe("Link push and replace", () => {
           new MouseEvent("click", {
             view: window,
             bubbles: true,
-            cancelable: true
+            cancelable: true,
           })
         );
       });
@@ -86,7 +86,7 @@ describe("Link push and replace", () => {
           new MouseEvent("click", {
             view: window,
             bubbles: true,
-            cancelable: true
+            cancelable: true,
           })
         );
       });
@@ -140,7 +140,7 @@ describe("Link push and replace", () => {
           new MouseEvent("click", {
             view: window,
             bubbles: true,
-            cancelable: true
+            cancelable: true,
           })
         );
       });
@@ -199,7 +199,7 @@ describe("Link push and replace", () => {
           new MouseEvent("click", {
             view: window,
             bubbles: true,
-            cancelable: true
+            cancelable: true,
           })
         );
       });

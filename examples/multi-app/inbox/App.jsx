@@ -52,7 +52,7 @@ function Inbox() {
   return (
     <div>
       <div style={{ maxWidth: 800, margin: "0 auto" }}>
-        {messages.map(message => (
+        {messages.map((message) => (
           <Link
             to={message.id}
             key={message.id}
@@ -62,13 +62,13 @@ function Inbox() {
               padding: "10px",
               width: "100%",
               textDecoration: "none",
-              color: "#000"
+              color: "#000",
             }}
           >
             <span
               style={{
                 flexBasis: 100,
-                marginRight: "1rem"
+                marginRight: "1rem",
               }}
             >
               {message.from.name}
@@ -80,7 +80,7 @@ function Inbox() {
                 width: "100%",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
-                marginRight: "1rem"
+                marginRight: "1rem",
               }}
             >
               <span>{message.subject}</span>

@@ -5,12 +5,12 @@ import type {
   Location,
   MemoryHistory,
   Path,
-  To
+  To,
 } from "history";
 import {
   Action as NavigationType,
   createMemoryHistory,
-  parsePath
+  parsePath,
 } from "history";
 
 export type { Location, Path, To, NavigationType };
@@ -89,7 +89,7 @@ interface RouteContextObject {
 
 const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
-  matches: []
+  matches: [],
 });
 
 if (__DEV__) {
@@ -116,7 +116,7 @@ export function MemoryRouter({
   basename,
   children,
   initialEntries,
-  initialIndex
+  initialIndex,
 }: MemoryRouterProps): React.ReactElement {
   let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
@@ -126,7 +126,7 @@ export function MemoryRouter({
   let history = historyRef.current;
   let [state, setState] = React.useState({
     action: history.action,
-    location: history.location
+    location: history.location,
   });
 
   React.useLayoutEffect(() => history.listen(setState), [history]);
@@ -258,7 +258,7 @@ export function Router({
   location: locationProp,
   navigationType = NavigationType.Pop,
   navigator,
-  static: staticProp = false
+  static: staticProp = false,
 }: RouterProps): React.ReactElement | null {
   invariant(
     !useInRouterContext(),
@@ -281,7 +281,7 @@ export function Router({
     search = "",
     hash = "",
     state = null,
-    key = "default"
+    key = "default",
   } = locationProp;
 
   let location = React.useMemo(() => {
@@ -296,7 +296,7 @@ export function Router({
       search,
       hash,
       state,
-      key
+      key,
     };
   }, [basename, pathname, search, hash, state, key]);
 
@@ -334,7 +334,7 @@ export interface RoutesProps {
  */
 export function Routes({
   children,
-  location
+  location,
 }: RoutesProps): React.ReactElement | null {
   return useRoutes(createRoutesFromChildren(children), location);
 }
@@ -516,7 +516,7 @@ export function useNavigate(): NavigateFunction {
   let { pathname: locationPathname } = useLocation();
 
   let routePathnamesJson = JSON.stringify(
-    matches.map(match => match.pathnameBase)
+    matches.map((match) => match.pathnameBase)
   );
 
   let activeRef = React.useRef(false);
@@ -613,7 +613,7 @@ export function useResolvedPath(to: To): Path {
   let { pathname: locationPathname } = useLocation();
 
   let routePathnamesJson = JSON.stringify(
-    matches.map(match => match.pathnameBase)
+    matches.map((match) => match.pathnameBase)
   );
 
   return React.useMemo(
@@ -727,14 +727,14 @@ export function useRoutes(
 
   return _renderMatches(
     matches &&
-      matches.map(match =>
+      matches.map((match) =>
         Object.assign({}, match, {
           params: Object.assign({}, parentParams, match.params),
           pathname: joinPaths([parentPathnameBase, match.pathname]),
           pathnameBase:
             match.pathnameBase === "/"
               ? parentPathnameBase
-              : joinPaths([parentPathnameBase, match.pathnameBase])
+              : joinPaths([parentPathnameBase, match.pathnameBase]),
         })
       ),
     parentMatches
@@ -757,7 +757,7 @@ export function createRoutesFromChildren(
 ): RouteObject[] {
   let routes: RouteObject[] = [];
 
-  React.Children.forEach(children, element => {
+  React.Children.forEach(children, (element) => {
     if (!React.isValidElement(element)) {
       // Ignore non-elements. This allows people to more easily inline
       // conditionals in their route config.
@@ -784,7 +784,7 @@ export function createRoutesFromChildren(
       caseSensitive: element.props.caseSensitive,
       element: element.props.element,
       index: element.props.index,
-      path: element.props.path
+      path: element.props.path,
     };
 
     if (element.props.children) {
@@ -827,7 +827,7 @@ export function generatePath(path: string, params: Params = {}): string {
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
     })
-    .replace(/\/*\*$/, _ =>
+    .replace(/\/*\*$/, (_) =>
       params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
     );
 }
@@ -908,7 +908,7 @@ function flattenRoutes(
       relativePath: route.path || "",
       caseSensitive: route.caseSensitive === true,
       childrenIndex: index,
-      route
+      route,
     };
 
     if (meta.relativePath.startsWith("/")) {
@@ -955,8 +955,8 @@ function rankRouteBranches(branches: RouteBranch[]): void {
     a.score !== b.score
       ? b.score - a.score // Higher score first
       : compareIndexes(
-          a.routesMeta.map(meta => meta.childrenIndex),
-          b.routesMeta.map(meta => meta.childrenIndex)
+          a.routesMeta.map((meta) => meta.childrenIndex),
+          b.routesMeta.map((meta) => meta.childrenIndex)
         )
   );
 }
@@ -981,7 +981,7 @@ function computeScore(path: string, index: boolean | undefined): number {
   }
 
   return segments
-    .filter(s => !isSplat(s))
+    .filter((s) => !isSplat(s))
     .reduce(
       (score, segment) =>
         score +
@@ -1040,7 +1040,7 @@ function matchRouteBranch<ParamKey extends string = string>(
       params: matchedParams,
       pathname: joinPaths([matchedPathname, match.pathname]),
       pathnameBase: joinPaths([matchedPathname, match.pathnameBase]),
-      route
+      route,
     });
 
     if (match.pathnameBase !== "/") {
@@ -1074,7 +1074,7 @@ function _renderMatches(
         }
         value={{
           outlet,
-          matches: parentMatches.concat(matches.slice(0, index + 1))
+          matches: parentMatches.concat(matches.slice(0, index + 1)),
         }}
       />
     );
@@ -1181,7 +1181,7 @@ export function matchPath<
     params,
     pathname: matchedPathname,
     pathnameBase,
-    pattern
+    pattern,
   };
 }
 
@@ -1254,7 +1254,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
   let {
     pathname: toPathname,
     search = "",
-    hash = ""
+    hash = "",
   } = typeof to === "string" ? parsePath(to) : to;
 
   let pathname = toPathname
@@ -1266,7 +1266,7 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
   return {
     pathname,
     search: normalizeSearch(search),
-    hash: normalizeHash(hash)
+    hash: normalizeHash(hash),
   };
 }
 
@@ -1274,7 +1274,7 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
   let segments = fromPathname.replace(/\/+$/, "").split("/");
   let relativeSegments = relativePath.split("/");
 
-  relativeSegments.forEach(segment => {
+  relativeSegments.forEach((segment) => {
     if (segment === "..") {
       // Keep the root "" segment so the pathname starts at /
       if (segments.length > 1) segments.pop();
@@ -1399,5 +1399,5 @@ const normalizeHash = (hash: string): string =>
 export {
   NavigationContext as UNSAFE_NavigationContext,
   LocationContext as UNSAFE_LocationContext,
-  RouteContext as UNSAFE_RouteContext
+  RouteContext as UNSAFE_RouteContext,
 };

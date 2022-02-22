@@ -7,7 +7,7 @@ import {
   Routes,
   Route,
   useHref,
-  useLinkClickHandler
+  useLinkClickHandler,
 } from "react-router-dom";
 
 function CustomLink({ to, replace, state, target, ...rest }: LinkProps) {
@@ -60,7 +60,7 @@ describe("Custom link with useLinkClickHandler", () => {
         new MouseEvent("click", {
           view: window,
           bubbles: true,
-          cancelable: true
+          cancelable: true,
         })
       );
     });
@@ -103,7 +103,7 @@ describe("Custom link with useLinkClickHandler", () => {
             view: window,
             bubbles: true,
             cancelable: true,
-            button: RightMouseButton
+            button: RightMouseButton,
           })
         );
       });
@@ -146,7 +146,7 @@ describe("Custom link with useLinkClickHandler", () => {
           new MouseEvent("click", {
             view: window,
             bubbles: true,
-            cancelable: true
+            cancelable: true,
           })
         );
       });
@@ -189,7 +189,7 @@ describe("Custom link with useLinkClickHandler", () => {
             bubbles: true,
             cancelable: true,
             // The Ctrl key is pressed
-            ctrlKey: true
+            ctrlKey: true,
           })
         );
       });

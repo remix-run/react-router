@@ -31,7 +31,7 @@ function ensureCleanWorkingDirectory() {
   let status = execSync(`git status --porcelain`).toString().trim();
   let lines = status.split("\n");
   invariant(
-    lines.every(line => line === "" || line.startsWith("?")),
+    lines.every((line) => line === "" || line.startsWith("?")),
     "Working directory is not clean. Please commit or stash your changes."
   );
 }
@@ -127,13 +127,13 @@ async function run() {
     if (answer === false) return 0;
 
     // 3. Update react-router version
-    await updatePackageConfig("react-router", config => {
+    await updatePackageConfig("react-router", (config) => {
       config.version = version;
     });
     console.log(chalk.green(`  Updated react-router to version ${version}`));
 
     // 4. Update react-router-dom version + react-router dep
-    await updatePackageConfig("react-router-dom", config => {
+    await updatePackageConfig("react-router-dom", (config) => {
       config.version = version;
       config.dependencies["react-router"] = version;
     });
@@ -142,7 +142,7 @@ async function run() {
     );
 
     // 5. Update react-router-native version + react-router dep
-    await updatePackageConfig("react-router-native", config => {
+    await updatePackageConfig("react-router-native", (config) => {
       config.version = version;
       config.dependencies["react-router"] = version;
     });
@@ -156,7 +156,7 @@ async function run() {
       let stat = await fsp.stat(path.join(examplesDir, example));
       if (!stat.isDirectory()) continue;
 
-      await updateExamplesPackageConfig(example, config => {
+      await updateExamplesPackageConfig(example, (config) => {
         config.dependencies["react-router"] = version;
         config.dependencies["react-router-dom"] = version;
       });
@@ -176,6 +176,6 @@ async function run() {
   return 0;
 }
 
-run().then(code => {
+run().then((code) => {
   process.exit(code);
 });

@@ -31,6 +31,6 @@ export function mockPromiseThatResolvesImmediatelyWith<T = void>(value?: T) {
   return {
     then(callback: (val?: T | undefined) => any) {
       callback(value);
-    }
+    },
   } as Promise<T>;
 }
