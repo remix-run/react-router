@@ -167,6 +167,7 @@ export async function dev(remixRoot: string, modeArg?: string) {
   }
 
   let app = express();
+  app.disable("x-powered-by");
   app.use((_, __, next) => {
     purgeAppRequireCache(config.serverBuildPath);
     next();
