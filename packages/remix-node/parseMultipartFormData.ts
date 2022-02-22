@@ -37,8 +37,8 @@ export async function internalParseFormData(
     let busboy = new Busboy({
       highWaterMark: 2 * 1024 * 1024,
       headers: {
-        "content-type": contentType
-      }
+        "content-type": contentType,
+      },
     });
 
     let aborted = false;
@@ -68,7 +68,7 @@ export async function internalParseFormData(
                 stream: filestream,
                 filename,
                 encoding,
-                mimetype
+                mimetype,
               });
 
               if (typeof value !== "undefined") {

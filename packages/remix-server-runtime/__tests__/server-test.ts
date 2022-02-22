@@ -23,10 +23,10 @@ describe("server", () => {
   let build: ServerBuild = {
     entry: {
       module: {
-        default: async request => {
+        default: async (request) => {
           return new Response(`${request.method}, ${request.url}`);
-        }
-      }
+        },
+      },
     },
     routes: {
       [routeId]: {
@@ -35,9 +35,9 @@ describe("server", () => {
         module: {
           action: () => "ACTION",
           loader: () => "LOADER",
-          default: () => "COMPONENT"
-        }
-      }
+          default: () => "COMPONENT",
+        },
+      },
     },
     assets: {
       routes: {
@@ -47,10 +47,10 @@ describe("server", () => {
           hasLoader: true,
           id: routeId,
           module: routeId,
-          path: ""
-        }
-      }
-    }
+          path: "",
+        },
+      },
+    },
   } as unknown as ServerBuild;
 
   describe("createRequestHandler", () => {
@@ -64,14 +64,14 @@ describe("server", () => {
       ["DELETE", "/"],
       ["DELETE", "/_data=root"],
       ["PATCH", "/"],
-      ["PATCH", "/_data=root"]
+      ["PATCH", "/_data=root"],
     ];
     for (let [method, to] of allowThrough) {
       it(`allows through ${method} request to ${to}`, async () => {
         let handler = createRequestHandler(build, {});
         let response = await handler(
           new Request(`http://localhost:3000${to}`, {
-            method
+            method,
           })
         );
 
@@ -83,7 +83,7 @@ describe("server", () => {
       let handler = createRequestHandler(build, {});
       let response = await handler(
         new Request("http://localhost:3000/", {
-          method: "HEAD"
+          method: "HEAD",
         })
       );
 
@@ -112,12 +112,12 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/resource": {
           loader: resourceLoader,
-          path: "resource"
-        }
+          path: "resource",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -143,16 +143,16 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/resource": {
           loader: resourceLoader,
-          path: "resource"
+          path: "resource",
         },
         "routes/resource.sub": {
           loader: subResourceLoader,
-          path: "resource/sub"
-        }
+          path: "resource/sub",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -176,12 +176,12 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/resource": {
           loader: resourceLoader,
-          path: "resource"
-        }
+          path: "resource",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -202,8 +202,8 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         "routes/resource": {
           loader,
-          path: "resource"
-        }
+          path: "resource",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -221,8 +221,8 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         "routes/resource": {
           loader,
-          path: "resource"
-        }
+          path: "resource",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Development);
 
@@ -243,12 +243,12 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          action: rootAction
+          action: rootAction,
         },
         "routes/resource": {
           action: resourceAction,
-          path: "resource"
-        }
+          path: "resource",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -274,16 +274,16 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          action: rootAction
+          action: rootAction,
         },
         "routes/resource": {
           action: resourceAction,
-          path: "resource"
+          path: "resource",
         },
         "routes/resource.sub": {
           action: subResourceAction,
-          path: "resource/sub"
-        }
+          path: "resource/sub",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -307,12 +307,12 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          action: rootAction
+          action: rootAction,
         },
         "routes/resource": {
           action: resourceAction,
-          path: "resource"
-        }
+          path: "resource",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -333,8 +333,8 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         "routes/resource": {
           action,
-          path: "resource"
-        }
+          path: "resource",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -352,8 +352,8 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         "routes/resource": {
           action,
-          path: "resource"
-        }
+          path: "resource",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Development);
 
@@ -369,17 +369,17 @@ describe("shared server runtime", () => {
     test("data request that does not match loader surfaces error for boundary", async () => {
       let build = mockServerBuild({
         root: {
-          default: {}
+          default: {},
         },
         "routes/index": {
           parentId: "root",
-          index: true
-        }
+          index: true,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?_data=routes/index`, {
-        method: "get"
+        method: "get",
       });
 
       let result = await handler(request);
@@ -398,18 +398,18 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/index": {
           parentId: "root",
           loader: indexLoader,
-          index: true
-        }
+          index: true,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?_data=routes/index`, {
-        method: "get"
+        method: "get",
       });
 
       let result = await handler(request);
@@ -429,18 +429,18 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/test": {
           parentId: "root",
           action: testAction,
-          path: "test"
-        }
+          path: "test",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test?_data=root`, {
-        method: "get"
+        method: "get",
       });
 
       let result = await handler(request);
@@ -463,18 +463,18 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/test": {
           parentId: "root",
           action: testAction,
-          path: "test"
-        }
+          path: "test",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Development);
 
       let request = new Request(`${baseUrl}/test?_data=root`, {
-        method: "get"
+        method: "get",
       });
 
       let result = await handler(request);
@@ -496,18 +496,18 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/test": {
           parentId: "root",
           action: testAction,
-          path: "test"
-        }
+          path: "test",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test?_data=root`, {
-        method: "get"
+        method: "get",
       });
 
       let result = await handler(request);
@@ -521,17 +521,17 @@ describe("shared server runtime", () => {
     test("data request that does not match action surfaces error for boundary", async () => {
       let build = mockServerBuild({
         root: {
-          default: {}
+          default: {},
         },
         "routes/index": {
           parentId: "root",
-          index: true
-        }
+          index: true,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?index&_data=routes/index`, {
-        method: "post"
+        method: "post",
       });
 
       let result = await handler(request);
@@ -550,18 +550,18 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/test": {
           parentId: "root",
           action: testAction,
-          path: "test"
-        }
+          path: "test",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test?_data=routes/test`, {
-        method: "post"
+        method: "post",
       });
 
       let result = await handler(request);
@@ -581,18 +581,18 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/test": {
           parentId: "root",
           action: testAction,
-          path: "test"
-        }
+          path: "test",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test?_data=routes/test`, {
-        method: "post"
+        method: "post",
       });
 
       let result = await handler(request);
@@ -615,18 +615,18 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/test": {
           parentId: "root",
           action: testAction,
-          path: "test"
-        }
+          path: "test",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Development);
 
       let request = new Request(`${baseUrl}/test?_data=routes/test`, {
-        method: "post"
+        method: "post",
       });
 
       let result = await handler(request);
@@ -648,18 +648,18 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/test": {
           parentId: "root",
           action: testAction,
-          path: "test"
-        }
+          path: "test",
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test?_data=routes/test`, {
-        method: "post"
+        method: "post",
       });
 
       let result = await handler(request);
@@ -681,12 +681,12 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          action: rootAction
+          action: rootAction,
         },
         "routes/index": {
           parentId: "root",
-          index: true
-        }
+          index: true,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -709,18 +709,18 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
+          loader: rootLoader,
         },
         "routes/index": {
           parentId: "root",
           action: indexAction,
-          index: true
-        }
+          index: true,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?index&_data=routes/index`, {
-        method: "post"
+        method: "post",
       });
 
       let result = await handler(request);
@@ -739,8 +739,8 @@ describe("shared server runtime", () => {
       let build = mockServerBuild({
         root: {
           default: {},
-          loader: rootLoader
-        }
+          loader: rootLoader,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -767,8 +767,8 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {}
-        }
+          CatchBoundary: {},
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -799,14 +799,14 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {}
+          CatchBoundary: {},
         },
         "routes/index": {
           parentId: "root",
           index: true,
           default: {},
-          loader: indexLoader
-        }
+          loader: indexLoader,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -825,7 +825,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.catch!.status).toBe(400);
       expect(entryContext.appState.catchBoundaryRouteId).toBe("root");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -840,15 +840,15 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {}
+          CatchBoundary: {},
         },
         "routes/index": {
           parentId: "root",
           index: true,
           default: {},
           loader: indexLoader,
-          CatchBoundary: {}
-        }
+          CatchBoundary: {},
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -867,7 +867,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.catch!.status).toBe(400);
       expect(entryContext.appState.catchBoundaryRouteId).toBe("routes/index");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -885,15 +885,15 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {}
+          CatchBoundary: {},
         },
         "routes/test": {
           parentId: "root",
           path: "test",
           default: {},
           loader: testLoader,
-          action: testAction
-        }
+          action: testAction,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -913,7 +913,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.catch!.status).toBe(400);
       expect(entryContext.appState.catchBoundaryRouteId).toBe("root");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -931,15 +931,15 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {}
+          CatchBoundary: {},
         },
         "routes/index": {
           parentId: "root",
           index: true,
           default: {},
           loader: indexLoader,
-          action: indexAction
-        }
+          action: indexAction,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -959,7 +959,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.catch!.status).toBe(400);
       expect(entryContext.appState.catchBoundaryRouteId).toBe("root");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -977,7 +977,7 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {}
+          CatchBoundary: {},
         },
         "routes/test": {
           parentId: "root",
@@ -985,8 +985,8 @@ describe("shared server runtime", () => {
           default: {},
           loader: testLoader,
           action: testAction,
-          CatchBoundary: {}
-        }
+          CatchBoundary: {},
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1006,7 +1006,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.catch!.status).toBe(400);
       expect(entryContext.appState.catchBoundaryRouteId).toBe("routes/test");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1024,7 +1024,7 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {}
+          CatchBoundary: {},
         },
         "routes/index": {
           parentId: "root",
@@ -1032,8 +1032,8 @@ describe("shared server runtime", () => {
           default: {},
           loader: indexLoader,
           action: indexAction,
-          CatchBoundary: {}
-        }
+          CatchBoundary: {},
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1053,7 +1053,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.catch!.status).toBe(400);
       expect(entryContext.appState.catchBoundaryRouteId).toBe("routes/index");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1074,21 +1074,21 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {}
+          CatchBoundary: {},
         },
         "routes/__layout": {
           parentId: "root",
           default: {},
           loader: layoutLoader,
-          CatchBoundary: {}
+          CatchBoundary: {},
         },
         "routes/__layout/test": {
           parentId: "routes/__layout",
           path: "test",
           default: {},
           loader: testLoader,
-          action: testAction
-        }
+          action: testAction,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1110,7 +1110,7 @@ describe("shared server runtime", () => {
         "routes/__layout"
       );
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1131,21 +1131,21 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {}
+          CatchBoundary: {},
         },
         "routes/__layout": {
           parentId: "root",
           default: {},
           loader: layoutLoader,
-          CatchBoundary: {}
+          CatchBoundary: {},
         },
         "routes/__layout/index": {
           parentId: "routes/__layout",
           index: true,
           default: {},
           loader: indexLoader,
-          action: indexAction
-        }
+          action: indexAction,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1167,7 +1167,7 @@ describe("shared server runtime", () => {
         "routes/__layout"
       );
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1182,14 +1182,14 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/index": {
           parentId: "root",
           index: true,
           default: {},
-          loader: indexLoader
-        }
+          loader: indexLoader,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1208,7 +1208,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.error.message).toBe("index");
       expect(entryContext.appState.loaderBoundaryRouteId).toBe("root");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1223,15 +1223,15 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/index": {
           parentId: "root",
           index: true,
           default: {},
           loader: indexLoader,
-          ErrorBoundary: {}
-        }
+          ErrorBoundary: {},
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1250,7 +1250,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.error.message).toBe("index");
       expect(entryContext.appState.loaderBoundaryRouteId).toBe("routes/index");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1268,15 +1268,15 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/test": {
           parentId: "root",
           path: "test",
           default: {},
           loader: testLoader,
-          action: testAction
-        }
+          action: testAction,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1296,7 +1296,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.error.message).toBe("test");
       expect(entryContext.appState.loaderBoundaryRouteId).toBe("root");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1314,15 +1314,15 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/index": {
           parentId: "root",
           index: true,
           default: {},
           loader: indexLoader,
-          action: indexAction
-        }
+          action: indexAction,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1342,7 +1342,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.error.message).toBe("index");
       expect(entryContext.appState.loaderBoundaryRouteId).toBe("root");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1360,7 +1360,7 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/test": {
           parentId: "root",
@@ -1368,8 +1368,8 @@ describe("shared server runtime", () => {
           default: {},
           loader: testLoader,
           action: testAction,
-          ErrorBoundary: {}
-        }
+          ErrorBoundary: {},
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1389,7 +1389,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.error.message).toBe("test");
       expect(entryContext.appState.loaderBoundaryRouteId).toBe("routes/test");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1407,7 +1407,7 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/index": {
           parentId: "root",
@@ -1415,8 +1415,8 @@ describe("shared server runtime", () => {
           default: {},
           loader: indexLoader,
           action: indexAction,
-          ErrorBoundary: {}
-        }
+          ErrorBoundary: {},
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1436,7 +1436,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.error.message).toBe("index");
       expect(entryContext.appState.loaderBoundaryRouteId).toBe("routes/index");
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1457,21 +1457,21 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/__layout": {
           parentId: "root",
           default: {},
           loader: layoutLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/__layout/test": {
           parentId: "routes/__layout",
           path: "test",
           default: {},
           loader: testLoader,
-          action: testAction
-        }
+          action: testAction,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1493,7 +1493,7 @@ describe("shared server runtime", () => {
         "routes/__layout"
       );
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1514,21 +1514,21 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/__layout": {
           parentId: "root",
           default: {},
           loader: layoutLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/__layout/index": {
           parentId: "routes/__layout",
           index: true,
           default: {},
           loader: indexLoader,
-          action: indexAction
-        }
+          action: indexAction,
+        },
       });
       let handler = createRequestHandler(build, {}, ServerMode.Test);
 
@@ -1550,7 +1550,7 @@ describe("shared server runtime", () => {
         "routes/__layout"
       );
       expect(entryContext.routeData).toEqual({
-        root: "root"
+        root: "root",
       });
     });
 
@@ -1565,13 +1565,13 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/index": {
           parentId: "root",
           default: {},
-          loader: indexLoader
-        }
+          loader: indexLoader,
+        },
       });
       let calledBefore = false;
       let ogHandleDocumentRequest = build.entry.module.default;
@@ -1611,13 +1611,13 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/index": {
           parentId: "root",
           default: {},
-          loader: indexLoader
-        }
+          loader: indexLoader,
+        },
       });
       let lastThrownError;
       build.entry.module.default = jest.fn(function () {
@@ -1649,13 +1649,13 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          ErrorBoundary: {}
+          ErrorBoundary: {},
         },
         "routes/index": {
           parentId: "root",
           default: {},
-          loader: indexLoader
-        }
+          loader: indexLoader,
+        },
       });
       let errorMessage =
         "thrown from handleDocumentRequest and expected to be logged in console only once";

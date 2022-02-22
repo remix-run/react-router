@@ -5,7 +5,7 @@ import type { Plugin } from "esbuild";
 import type { RemixConfig } from "../../config";
 import {
   serverBuildVirtualModule,
-  assetsManifestVirtualModule
+  assetsManifestVirtualModule,
 } from "../virtualModules";
 
 /**
@@ -85,10 +85,10 @@ export function serverBareModulesPlugin(
         // Externalize everything else if we've gotten here.
         return {
           path,
-          external: true
+          external: true,
         };
       });
-    }
+    },
   };
 }
 

@@ -146,7 +146,7 @@ export function defineRoutes(
         parentRoutes.length > 0
           ? parentRoutes[parentRoutes.length - 1].id
           : undefined,
-      file
+      file,
     };
 
     routes[route.id] = route;

@@ -14,7 +14,7 @@ describe("internalParseFormData", () => {
 
     let req = new NodeRequest("https://test.com", {
       method: "post",
-      body: formData as any
+      body: formData as any,
     });
 
     let uploadHandler = createMemoryUploadHandler({});

@@ -91,14 +91,14 @@ class NodeFormData implements FormData {
     thisArg?: any
   ): void {
     Object.entries(this._fields).forEach(([name, values]) => {
-      values.forEach(value => callbackfn(value, name, thisArg), thisArg);
+      values.forEach((value) => callbackfn(value, name, thisArg), thisArg);
     });
   }
 
   entries(): IterableIterator<[string, FormDataEntryValue]> {
     return Object.entries(this._fields)
       .reduce((entries, [name, values]) => {
-        values.forEach(value => entries.push([name, value]));
+        values.forEach((value) => entries.push([name, value]));
         return entries;
       }, [] as [string, FormDataEntryValue][])
       .values();
@@ -111,7 +111,7 @@ class NodeFormData implements FormData {
   values(): IterableIterator<FormDataEntryValue> {
     return Object.entries(this._fields)
       .reduce((results, [name, values]) => {
-        values.forEach(value => results.push(value));
+        values.forEach((value) => results.push(value));
         return results;
       }, [] as FormDataEntryValue[])
       .values();

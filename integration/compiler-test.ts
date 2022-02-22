@@ -68,8 +68,8 @@ describe("compiler", () => {
         }`,
         "node_modules/esm-only-pkg/esm-only-pkg.js": js`
           export default "esm-only-pkg";
-        `
-      }
+        `,
+      },
     });
 
     app = await createAppFixture(fixture);

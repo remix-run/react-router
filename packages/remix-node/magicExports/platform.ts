@@ -5,7 +5,7 @@ export {
   createFileSessionStorage,
   unstable_createFileUploadHandler,
   unstable_createMemoryUploadHandler,
-  unstable_parseMultipartFormData
+  unstable_parseMultipartFormData,
 } from "@remix-run/node";
 
 export type { UploadHandler, UploadHandlerArgs } from "@remix-run/node";

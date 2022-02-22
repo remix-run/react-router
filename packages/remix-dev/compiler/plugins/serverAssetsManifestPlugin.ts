@@ -22,7 +22,7 @@ export function serverAssetsManifestPlugin(
       build.onResolve({ filter }, ({ path }) => {
         return {
           path,
-          namespace: "server-assets-manifest"
+          namespace: "server-assets-manifest",
         };
       });
 
@@ -36,9 +36,9 @@ export function serverAssetsManifestPlugin(
 
         return {
           contents: `export default ${jsesc(manifest, { es6: true })};`,
-          loader: "js"
+          loader: "js",
         };
       });
-    }
+    },
   };
 }

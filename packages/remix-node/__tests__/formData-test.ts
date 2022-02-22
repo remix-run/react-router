@@ -14,7 +14,7 @@ describe("FormData", () => {
     expect(results).toEqual([
       ["single", "heyo"],
       ["multi", "one"],
-      ["multi", "two"]
+      ["multi", "two"],
     ]);
   });
 

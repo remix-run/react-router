@@ -35,7 +35,7 @@ describe("createRoutePath", () => {
       ["beef]", "beef]"],
       ["[index]", "index"],
       ["test/inde[x]", "test/index"],
-      ["[i]ndex/[[].[[]]", "index/[/[]"]
+      ["[i]ndex/[[].[[]]", "index/[/[]"],
     ];
 
     for (let [input, expected] of tests) {

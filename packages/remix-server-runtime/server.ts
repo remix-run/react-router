@@ -48,7 +48,7 @@ export function createRequestHandler(
           loadContext,
           matches: matches!,
           handleDataRequest: build.entry.module.handleDataRequest,
-          serverMode
+          serverMode,
         });
         break;
       case "document":
@@ -58,7 +58,7 @@ export function createRequestHandler(
           matches,
           request,
           routes,
-          serverMode
+          serverMode,
         });
         break;
       case "resource":
@@ -66,7 +66,7 @@ export function createRequestHandler(
           request,
           loadContext,
           matches: matches!,
-          serverMode
+          serverMode,
         });
         break;
     }
@@ -75,7 +75,7 @@ export function createRequestHandler(
       return new Response(null, {
         headers: response.headers,
         status: response.status,
-        statusText: response.statusText
+        statusText: response.statusText,
       });
     }
 
@@ -87,7 +87,7 @@ async function handleDataRequest({
   loadContext,
   matches,
   request,
-  serverMode
+  serverMode,
 }: {
   handleDataRequest?: HandleDataRequestFunction;
   loadContext: unknown;
@@ -120,7 +120,7 @@ async function handleDataRequest({
       response = await callRouteAction({
         loadContext,
         match,
-        request: request
+        request: request,
       });
     } else {
       let routeId = url.searchParams.get("_data");
@@ -128,7 +128,7 @@ async function handleDataRequest({
         return errorBoundaryError(new Error(`Missing route id in ?_data`), 403);
       }
 
-      let tempMatch = matches.find(match => match.route.id === routeId);
+      let tempMatch = matches.find((match) => match.route.id === routeId);
       if (!tempMatch) {
         return errorBoundaryError(
           new Error(`Route "${routeId}" does not match URL "${url.pathname}"`),
@@ -150,7 +150,7 @@ async function handleDataRequest({
 
       return new Response(null, {
         status: 204,
-        headers
+        headers,
       });
     }
 
@@ -158,7 +158,7 @@ async function handleDataRequest({
       response = await handleDataRequest(response.clone(), {
         context: loadContext,
         params: match.params,
-        request: request.clone()
+        request: request.clone(),
       });
     }
 
@@ -182,7 +182,7 @@ async function renderDocumentRequest({
   matches,
   request,
   routes,
-  serverMode
+  serverMode,
 }: {
   build: ServerBuild;
   loadContext: unknown;
@@ -200,7 +200,7 @@ async function renderDocumentRequest({
     renderBoundaryRouteId: null,
     loaderBoundaryRouteId: null,
     error: undefined,
-    catch: undefined
+    catch: undefined,
   };
 
   if (!isValidRequestMethod(request)) {
@@ -209,14 +209,14 @@ async function renderDocumentRequest({
     appState.catch = {
       data: null,
       status: 405,
-      statusText: "Method Not Allowed"
+      statusText: "Method Not Allowed",
     };
   } else if (!matches) {
     appState.trackCatchBoundaries = false;
     appState.catch = {
       data: null,
       status: 404,
-      statusText: "Not Found"
+      statusText: "Not Found",
     };
   }
 
@@ -232,7 +232,7 @@ async function renderDocumentRequest({
       actionResponse = await callRouteAction({
         loadContext,
         match: actionMatch,
-        request: request
+        request: request,
       });
 
       if (isRedirectResponse(actionResponse)) {
@@ -241,7 +241,7 @@ async function renderDocumentRequest({
 
       actionStatus = {
         status: actionResponse.status,
-        statusText: actionResponse.statusText
+        statusText: actionResponse.statusText,
       };
 
       if (isCatchResponse(actionResponse)) {
@@ -252,11 +252,11 @@ async function renderDocumentRequest({
         appState.trackCatchBoundaries = false;
         appState.catch = {
           ...actionStatus,
-          data: await extractData(actionResponse)
+          data: await extractData(actionResponse),
         };
       } else {
         actionData = {
-          [actionMatch.route.id]: await extractData(actionResponse)
+          [actionMatch.route.id]: await extractData(actionResponse),
         };
       }
     } catch (error: any) {
@@ -299,12 +299,12 @@ async function renderDocumentRequest({
   }
 
   let routeLoaderResults = await Promise.allSettled(
-    matchesToLoad.map(match =>
+    matchesToLoad.map((match) =>
       match.route.module.loader
         ? callRouteLoader({
             loadContext,
             match,
-            request
+            request,
           })
         : Promise.resolve(undefined)
     )
@@ -381,7 +381,7 @@ async function renderDocumentRequest({
         appState.catch = {
           data: await extractData(response),
           status: response.status,
-          statusText: response.statusText
+          statusText: response.statusText,
         };
         break;
       } else {
@@ -416,7 +416,7 @@ async function renderDocumentRequest({
       renderableMatches.push({
         params: {},
         pathname: "",
-        route: routes[0]
+        route: routes[0],
       });
     }
   }
@@ -426,7 +426,7 @@ async function renderDocumentRequest({
   let notOkResponse =
     actionStatus && actionStatus.status !== 200
       ? actionStatus.status
-      : loaderStatusCodes.find(status => status !== 200);
+      : loaderStatusCodes.find((status) => status !== 200);
 
   let responseStatusCode = appState.error
     ? 500
@@ -449,14 +449,14 @@ async function renderDocumentRequest({
     actionData,
     appState: appState,
     matches: entryMatches,
-    routeData
+    routeData,
   };
 
   let entryContext: EntryContext = {
     ...serverHandoff,
     manifest: build.assets,
     routeModules,
-    serverHandoffString: createServerHandoffString(serverHandoff)
+    serverHandoffString: createServerHandoffString(serverHandoff),
   };
 
   let handleDocumentRequest = build.entry.module.default;
@@ -502,8 +502,8 @@ async function renderDocumentRequest({
       return new Response(message, {
         status: 500,
         headers: {
-          "Content-Type": "text/plain"
-        }
+          "Content-Type": "text/plain",
+        },
       });
     }
   }
@@ -513,7 +513,7 @@ async function handleResourceRequest({
   loadContext,
   matches,
   request,
-  serverMode
+  serverMode,
 }: {
   request: Request;
   loadContext: unknown;
@@ -543,8 +543,8 @@ async function handleResourceRequest({
     return new Response(message, {
       status: 500,
       headers: {
-        "Content-Type": "text/plain"
-      }
+        "Content-Type": "text/plain",
+      },
     });
   }
 }
@@ -597,8 +597,8 @@ async function errorBoundaryError(error: Error, status: number) {
   return json(await serializeError(error), {
     status,
     headers: {
-      "X-Remix-Error": "yes"
-    }
+      "X-Remix-Error": "yes",
+    },
   });
 }
 

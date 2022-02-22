@@ -47,14 +47,14 @@ export async function getRouteModuleExports(
 ): Promise<string[]> {
   let result = await esbuild.build({
     entryPoints: [
-      path.resolve(config.appDirectory, config.routes[routeId].file)
+      path.resolve(config.appDirectory, config.routes[routeId].file),
     ],
     platform: "neutral",
     format: "esm",
     metafile: true,
     write: false,
     logLevel: "silent",
-    plugins: [mdxPlugin(config)]
+    plugins: [mdxPlugin(config)],
   });
   let metafile = result.metafile!;
 

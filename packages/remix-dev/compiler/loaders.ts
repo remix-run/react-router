@@ -30,7 +30,7 @@ export const loaders: { [ext: string]: esbuild.Loader } = {
   ".webm": "file",
   ".webp": "file",
   ".woff": "file",
-  ".woff2": "file"
+  ".woff2": "file",
 };
 
 export function getLoaderForFile(file: string): esbuild.Loader {

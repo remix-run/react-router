@@ -9,7 +9,7 @@ console.warn = () => {};
 export default async function setup() {
   await fs.rm(TMP_DIR, {
     force: true,
-    recursive: true
+    recursive: true,
   });
   await fs.mkdir(TMP_DIR);
 }

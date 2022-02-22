@@ -2,7 +2,7 @@ import {
   createFixture,
   createAppFixture,
   selectHtml,
-  js
+  js,
 } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
 
@@ -65,8 +65,8 @@ describe("actions", () => {
           export default function () {
             return <div>${PAGE_TEXT}</div>
           }
-        `
-      }
+        `,
+      },
     });
 
     app = await createAppFixture(fixture);

@@ -7,7 +7,7 @@ export function putJson(cachePath: string, key: string, data: any) {
 }
 
 export function getJson(cachePath: string, key: string) {
-  return get(cachePath, key).then(obj =>
+  return get(cachePath, key).then((obj) =>
     JSON.parse(obj.data.toString("utf-8"))
   );
 }

@@ -3,7 +3,7 @@ import { promises as fsp } from "fs";
 import * as path from "path";
 import type {
   SessionStorage,
-  SessionIdStorageStrategy
+  SessionIdStorageStrategy,
 } from "@remix-run/server-runtime";
 import { createSessionStorage } from "@remix-run/server-runtime";
 
@@ -30,7 +30,7 @@ interface FileSessionStorageOptions {
  */
 export function createFileSessionStorage({
   cookie,
-  dir
+  dir,
 }: FileSessionStorageOptions): SessionStorage {
   return createSessionStorage({
     cookie,
@@ -92,7 +92,7 @@ export function createFileSessionStorage({
       } catch (error: any) {
         if (error.code !== "ENOENT") throw error;
       }
-    }
+    },
   });
 }
 

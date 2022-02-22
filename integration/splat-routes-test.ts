@@ -76,8 +76,8 @@ describe("rendering", () => {
           export default function() {
             return <h2>${PARENTLESS_$}</h2>
           }
-        `
-      }
+        `,
+      },
     });
   });
 

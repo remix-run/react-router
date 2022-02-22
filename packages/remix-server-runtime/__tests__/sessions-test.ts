@@ -52,7 +52,7 @@ describe("isSession", () => {
 describe("In-memory session storage", () => {
   it("persists session data across requests", async () => {
     let { getSession, commitSession } = createMemorySessionStorage({
-      cookie: { secrets: ["secret1"] }
+      cookie: { secrets: ["secret1"] },
     });
     let session = await getSession();
     session.set("user", "mjackson");
@@ -66,7 +66,7 @@ describe("In-memory session storage", () => {
 describe("Cookie session storage", () => {
   it("persists session data across requests", async () => {
     let { getSession, commitSession } = createCookieSessionStorage({
-      cookie: { secrets: ["secret1"] }
+      cookie: { secrets: ["secret1"] },
     });
     let session = await getSession();
     session.set("user", "mjackson");
@@ -78,7 +78,7 @@ describe("Cookie session storage", () => {
 
   it("returns an empty session for cookies that are not signed properly", async () => {
     let { getSession, commitSession } = createCookieSessionStorage({
-      cookie: { secrets: ["secret1"] }
+      cookie: { secrets: ["secret1"] },
     });
     let session = await getSession();
     session.set("user", "mjackson");
@@ -96,7 +96,7 @@ describe("Cookie session storage", () => {
 
   it('"makes the default path of cookies to be /', async () => {
     let { getSession, commitSession } = createCookieSessionStorage({
-      cookie: { secrets: ["secret1"] }
+      cookie: { secrets: ["secret1"] },
     });
     let session = await getSession();
     session.set("user", "mjackson");
@@ -107,7 +107,7 @@ describe("Cookie session storage", () => {
   describe("when a new secret shows up in the rotation", () => {
     it("unsigns old session cookies using the old secret and encodes new cookies using the new secret", async () => {
       let { getSession, commitSession } = createCookieSessionStorage({
-        cookie: { secrets: ["secret1"] }
+        cookie: { secrets: ["secret1"] },
       });
       let session = await getSession();
       session.set("user", "mjackson");
@@ -118,7 +118,7 @@ describe("Cookie session storage", () => {
 
       // A new secret enters the rotation...
       let storage = createCookieSessionStorage({
-        cookie: { secrets: ["secret2", "secret1"] }
+        cookie: { secrets: ["secret2", "secret1"] },
       });
       getSession = storage.getSession;
       commitSession = storage.commitSession;

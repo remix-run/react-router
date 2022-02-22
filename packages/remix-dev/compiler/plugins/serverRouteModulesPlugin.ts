@@ -14,18 +14,18 @@ export function serverRouteModulesPlugin(config: RemixConfig): esbuild.Plugin {
     name: "server-route-modules",
     setup(build) {
       let routeFiles = new Set(
-        Object.keys(config.routes).map(key =>
+        Object.keys(config.routes).map((key) =>
           path.resolve(config.appDirectory, config.routes[key].file)
         )
       );
 
-      build.onResolve({ filter: /.*/ }, args => {
+      build.onResolve({ filter: /.*/ }, (args) => {
         if (routeFiles.has(args.path)) {
           return { path: args.path, namespace: "route" };
         }
       });
 
-      build.onLoad({ filter: /.*/, namespace: "route" }, async args => {
+      build.onLoad({ filter: /.*/, namespace: "route" }, async (args) => {
         let file = args.path;
         let contents = await fsp.readFile(file, "utf-8");
 
@@ -40,9 +40,9 @@ export function serverRouteModulesPlugin(config: RemixConfig): esbuild.Plugin {
         return {
           contents,
           resolveDir: path.dirname(file),
-          loader: getLoaderForFile(file)
+          loader: getLoaderForFile(file),
         };
       });
-    }
+    },
   };
 }

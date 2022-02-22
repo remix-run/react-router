@@ -8,7 +8,7 @@ export type {
   HeadersInit,
   RequestInfo,
   RequestInit,
-  ResponseInit
+  ResponseInit,
 } from "./fetch";
 export { Headers, Request, Response, fetch } from "./fetch";
 
@@ -23,6 +23,6 @@ export { createFileSessionStorage } from "./sessions/fileStorage";
 
 export {
   createFileUploadHandler as unstable_createFileUploadHandler,
-  NodeOnDiskFile
+  NodeOnDiskFile,
 } from "./upload/fileUploadHandler";
 export { createMemoryUploadHandler as unstable_createMemoryUploadHandler } from "./upload/memoryUploadHandler";

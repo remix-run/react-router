@@ -2,7 +2,7 @@ import {
   createAppFixture,
   createFixture,
   getElement,
-  js
+  js,
 } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
 
@@ -256,8 +256,8 @@ describe("Forms", () => {
               </>
             )
           }
-        `
-      }
+        `,
+      },
     });
 
     app = await createAppFixture(fixture);

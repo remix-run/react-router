@@ -18,7 +18,7 @@ describe("readConfig", () => {
         appDirectory: expect.any(String),
         cacheDirectory: expect.any(String),
         serverBuildPath: expect.any(String),
-        assetsBuildDirectory: expect.any(String)
+        assetsBuildDirectory: expect.any(String),
       },
       `
       Object {

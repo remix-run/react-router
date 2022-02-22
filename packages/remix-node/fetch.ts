@@ -34,7 +34,7 @@ function formDataToStream(formData: NodeFormData): FormStream {
         }
         passthrough.push(null);
       })
-      .catch(error => {
+      .catch((error) => {
         passthrough.emit("error", error);
       });
 
@@ -49,13 +49,13 @@ function formDataToStream(formData: NodeFormData): FormStream {
       formStream.append(key, stream, {
         filename: value.name,
         contentType: value.type,
-        knownLength: value.size
+        knownLength: value.size,
       });
     } else {
       let file = value as File;
       let stream = toNodeStream(file.stream());
       formStream.append(key, stream, {
-        filename: "unknown"
+        filename: "unknown",
       });
     }
   }
@@ -74,7 +74,7 @@ class NodeRequest extends BaseNodeRequest {
     if (init?.body instanceof NodeFormData) {
       init = {
         ...init,
-        body: formDataToStream(init.body)
+        body: formDataToStream(init.body),
       };
     }
 
@@ -124,7 +124,7 @@ export function fetch(
   if (init?.body instanceof NodeFormData) {
     init = {
       ...init,
-      body: formDataToStream(init.body)
+      body: formDataToStream(init.body),
     };
   }
 

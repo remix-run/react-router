@@ -1,6 +1,6 @@
 import type {
   InternalSignFunctionDoNotUseMe,
-  InternalUnsignFunctionDoNotUseMe
+  InternalUnsignFunctionDoNotUseMe,
 } from "@remix-run/server-runtime/cookieSigning";
 import { Blob as NodeBlob, File as NodeFile } from "@web-std/file";
 
@@ -10,7 +10,7 @@ import {
   Headers as NodeHeaders,
   Request as NodeRequest,
   Response as NodeResponse,
-  fetch as nodeFetch
+  fetch as nodeFetch,
 } from "./fetch";
 import { FormData as NodeFormData } from "./formData";
 

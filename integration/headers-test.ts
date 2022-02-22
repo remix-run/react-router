@@ -64,8 +64,8 @@ describe("headers export", () => {
           }
 
           export default function Action() { return <div/> }
-        `
-      }
+        `,
+      },
     });
   });
 
@@ -113,8 +113,8 @@ describe("headers export", () => {
           export default function Index() {
             return <div>Heyo!</div>
           }
-        `
-      }
+        `,
+      },
     });
     let response = await fixture.requestDocument("/");
     expect(response.headers.get(HEADER_KEY)).toBe(HEADER_VALUE);

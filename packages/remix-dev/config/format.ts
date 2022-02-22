@@ -2,7 +2,7 @@ import type { RouteManifest } from "./routes";
 
 export enum RoutesFormat {
   json = "json",
-  jsx = "jsx"
+  jsx = "jsx",
 }
 
 export function isRoutesFormat(format: any): format is RoutesFormat {
@@ -35,7 +35,7 @@ export function formatRoutesAsJson(routeManifest: RouteManifest): string {
     parentId?: string
   ): JsonFormattedRoute[] | undefined {
     let routes = Object.values(routeManifest).filter(
-      route => route.parentId === parentId
+      (route) => route.parentId === parentId
     );
 
     let children = [];
@@ -47,7 +47,7 @@ export function formatRoutesAsJson(routeManifest: RouteManifest): string {
         path: route.path,
         caseSensitive: route.caseSensitive,
         file: route.file,
-        children: handleRoutesRecursive(route.id)
+        children: handleRoutesRecursive(route.id),
       });
     }
 
@@ -65,7 +65,7 @@ export function formatRoutesAsJsx(routeManifest: RouteManifest) {
 
   function handleRoutesRecursive(parentId?: string, level = 1): boolean {
     let routes = Object.values(routeManifest).filter(
-      route => route.parentId === parentId
+      (route) => route.parentId === parentId
     );
 
     let indent = Array(level * 2)

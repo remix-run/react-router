@@ -28,7 +28,7 @@ export type MemoryUploadHandlerOptions = {
 
 export function createMemoryUploadHandler({
   filter,
-  maxFileSize = 3000000
+  maxFileSize = 3000000,
 }: MemoryUploadHandlerOptions): UploadHandler {
   return async ({ name, stream, filename, encoding, mimetype }) => {
     if (filter && !(await filter({ filename, encoding, mimetype }))) {
@@ -63,7 +63,7 @@ export function createMemoryUploadHandler({
     });
 
     return new BufferFile(bufferStream.data, filename, {
-      type: mimetype
+      type: mimetype,
     });
   };
 }

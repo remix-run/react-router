@@ -5,7 +5,7 @@ export enum SetupPlatform {
   CloudflarePages = "cloudflare-pages",
   CloudflareWorkers = "cloudflare-workers",
   Node = "node",
-  Deno = "deno"
+  Deno = "deno",
 }
 
 export function isSetupPlatform(platform: any): platform is SetupPlatform {
@@ -13,7 +13,7 @@ export function isSetupPlatform(platform: any): platform is SetupPlatform {
     SetupPlatform.CloudflarePages,
     SetupPlatform.CloudflareWorkers,
     SetupPlatform.Node,
-    SetupPlatform.Deno
+    SetupPlatform.Deno,
   ].includes(platform);
 }
 
@@ -74,7 +74,7 @@ export async function setupRemix(platform: SetupPlatform): Promise<void> {
     [
       path.join(platformExportsDir, "esm"),
       path.join(serverExportsDir, "esm"),
-      path.join(clientExportsDir, "esm")
+      path.join(clientExportsDir, "esm"),
     ],
     ".js"
   );

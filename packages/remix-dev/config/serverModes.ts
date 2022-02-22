@@ -4,7 +4,7 @@
 export enum ServerMode {
   Development = "development",
   Production = "production",
-  Test = "test"
+  Test = "test",
 }
 
 export function isValidServerMode(mode: string): mode is ServerMode {

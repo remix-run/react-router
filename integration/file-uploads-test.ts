@@ -57,8 +57,8 @@ describe("file-uploads", () => {
               </>
             );
           }
-        `
-      }
+        `,
+      },
     });
 
     app = await createAppFixture(fixture);
