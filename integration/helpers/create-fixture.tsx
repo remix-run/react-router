@@ -308,6 +308,15 @@ export async function createAppFixture(fixture: Fixture) {
       getHtml: (selector?: string) => getHtml(page, selector),
 
       /**
+       * Get a cheerio instance of an element from the page.
+       *
+       * @param selector CSS Selector for the element's HTML you want
+       */
+      getElement: async (selector: string) => {
+        return getElement(await getHtml(page), selector);
+      },
+
+      /**
        * Keeps the fixture running for as many seconds as you want so you can go
        * poke around in the browser to see what's up.
        *
@@ -399,13 +408,25 @@ export async function getHtml(page: Page, selector?: string) {
   return selector ? selectHtml(html, selector) : prettyHtml(html);
 }
 
-export function selectHtml(source: string, selector: string) {
-  let el = cheerio(selector, source);
+export function getAttribute(
+  source: string,
+  selector: string,
+  attributeName: string
+) {
+  let el = getElement(source, selector);
+  return el.attr(attributeName);
+}
 
+export function getElement(source: string, selector: string) {
+  let el = cheerio(selector, source);
   if (!el.length) {
     throw new Error(`No element matches selector "${selector}"`);
   }
+  return el;
+}
 
+export function selectHtml(source: string, selector: string) {
+  let el = getElement(source, selector);
   return prettyHtml(cheerio.html(el)).trim();
 }
 
