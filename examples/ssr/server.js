@@ -19,7 +19,7 @@ async function createServer() {
   if (!isProduction) {
     vite = await require("vite").createServer({
       root,
-      server: { middlewareMode: "ssr" }
+      server: { middlewareMode: "ssr" },
     });
 
     app.use(vite.middlewares);
@@ -40,7 +40,7 @@ async function createServer() {
         template = await vite.transformIndexHtml(url, template);
         render = await vite
           .ssrLoadModule("src/entry.server.tsx")
-          .then(m => m.render);
+          .then((m) => m.render);
       } else {
         template = await fsp.readFile(
           resolve("dist/client/index.html"),
@@ -64,7 +64,7 @@ async function createServer() {
   return app;
 }
 
-createServer().then(app => {
+createServer().then((app) => {
   app.listen(3000, () => {
     console.log("HTTP server is running at http://localhost:3000");
   });

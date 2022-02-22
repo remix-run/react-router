@@ -120,7 +120,7 @@ const App = () => {
   return (
     <Route
       path="/somewhere"
-      render={props => <MyComponent {...props} color={color} />}
+      render={(props) => <MyComponent {...props} color={color} />}
     />
   );
 };

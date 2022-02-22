@@ -5,7 +5,7 @@ import {
   Routes,
   Route,
   useOutlet,
-  useOutletContext
+  useOutletContext,
 } from "react-router";
 
 describe("useOutlet", () => {
@@ -207,7 +207,7 @@ describe("useOutlet", () => {
           "Michael",
           "Bert",
           "Winifred",
-          "George"
+          "George",
         ]);
       }
 
@@ -218,7 +218,7 @@ describe("useOutlet", () => {
           <div>
             <h1>Profile</h1>
             <ul>
-              {outletContext.map(name => (
+              {outletContext.map((name) => (
                 <li key={name}>{name}</li>
               ))}
             </ul>

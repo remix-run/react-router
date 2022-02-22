@@ -103,7 +103,7 @@ describe("A <Link> press", () => {
             <Text>Home</Text>
             <Link
               to="../about"
-              onPress={event => {
+              onPress={(event) => {
                 event.preventDefault();
               }}
             >

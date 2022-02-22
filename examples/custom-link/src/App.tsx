@@ -5,7 +5,7 @@ import {
   Outlet,
   Link,
   useMatch,
-  useResolvedPath
+  useResolvedPath,
 } from "react-router-dom";
 import type { LinkProps } from "react-router-dom";
 

@@ -5,7 +5,7 @@ import {
   NativeRouter,
   Route,
   Routes,
-  useLinkPressHandler
+  useLinkPressHandler,
 } from "react-router-native";
 import * as TestRenderer from "react-test-renderer";
 

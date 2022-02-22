@@ -40,7 +40,7 @@ function Home() {
 
     async function getGitHubUser() {
       let response = await fetch(`https://api.github.com/users/${user}`, {
-        signal: abortController.signal
+        signal: abortController.signal,
       });
       if (!abortController.signal.aborted) {
         let data = await response.json();
@@ -99,7 +99,7 @@ function Home() {
             borderTop: "1px solid #eaeaea",
             display: "flex",
             alignItems: "center",
-            gap: "16px"
+            gap: "16px",
           }}
         >
           <img

@@ -5,7 +5,7 @@ import {
   Outlet,
   Link,
   useSearchParams,
-  useParams
+  useParams,
 } from "react-router-dom";
 import type { LinkProps } from "react-router-dom";
 import VisuallyHidden from "@reach/visually-hidden";
@@ -50,7 +50,7 @@ function BrandLink({ brand, children, ...props }: BrandLinkProps) {
       {...props}
       style={{
         ...props.style,
-        color: isActive ? "red" : "black"
+        color: isActive ? "red" : "black",
       }}
     >
       {children}
@@ -67,7 +67,7 @@ function Layout() {
           <li>
             <Link to="/">All</Link>
           </li>
-          {brands.map(brand => (
+          {brands.map((brand) => (
             <li key={brand}>
               <BrandLink brand={brand}>{brand}</BrandLink>
             </li>
@@ -99,10 +99,10 @@ function SneakerGrid() {
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-          gap: "12px 24px"
+          gap: "12px 24px",
         }}
       >
-        {sneakers.map(snkr => {
+        {sneakers.map((snkr) => {
           let name = `${snkr.brand} ${snkr.model} ${snkr.colorway}`;
           return (
             <div key={snkr.id} style={{ position: "relative" }}>
@@ -115,7 +115,7 @@ function SneakerGrid() {
                   borderRadius: "8px",
                   width: "100%",
                   height: "auto",
-                  aspectRatio: "1 / 1"
+                  aspectRatio: "1 / 1",
                 }}
               />
               <Link
@@ -159,7 +159,7 @@ function SneakerView() {
         style={{
           borderRadius: "8px",
           maxWidth: "100%",
-          aspectRatio: "1 / 1"
+          aspectRatio: "1 / 1",
         }}
         src={snkr.imageUrl}
         alt={name}
