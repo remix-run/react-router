@@ -25,7 +25,7 @@ describe("A <StaticRouter>", () => {
         search: "?the=query",
         hash: "#the-hash",
         state: {},
-        key: expect.any(String)
+        key: expect.any(String),
       });
     });
   });
@@ -53,7 +53,7 @@ describe("A <StaticRouter>", () => {
         search: "?the=query",
         hash: "",
         state: {},
-        key: expect.any(String)
+        key: expect.any(String),
       });
     });
   });

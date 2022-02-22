@@ -95,7 +95,7 @@ function User(props) {
 
     // as well as location and navigate
     location,
-    navigate
+    navigate,
   } = props;
 
   // ...
@@ -105,7 +105,7 @@ function User(props) {
 import {
   useParams,
   useLocation,
-  useNavigate
+  useNavigate,
 } from "@reach/router";
 
 function User() {
@@ -329,12 +329,12 @@ function SomeCustomLink() {
   return (
     <Link
       to="/some/where/cool"
-      getProps={obj => {
+      getProps={(obj) => {
         let {
           isCurrent,
           isPartiallyCurrent,
           href,
-          location
+          location,
         } = obj;
         // do what you will
       }}
@@ -432,7 +432,7 @@ let {
   path,
 
   // params are merged into the object with uri and path
-  eventId
+  eventId,
 } = useMatch("/events/:eventId");
 
 // React Router v6
@@ -441,7 +441,7 @@ let {
   path,
 
   // params get their own key on the match
-  params: { eventId }
+  params: { eventId },
 } = useMatch("/events/:eventId");
 ```
 

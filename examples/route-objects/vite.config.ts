@@ -10,10 +10,10 @@ export default defineConfig({
       preventAssignment: true,
       values: {
         __DEV__: JSON.stringify(true),
-        "process.env.NODE_ENV": JSON.stringify("development")
-      }
+        "process.env.NODE_ENV": JSON.stringify("development"),
+      },
     }),
-    react()
+    react(),
   ],
   resolve: process.env.USE_SOURCE
     ? {
@@ -25,8 +25,8 @@ export default defineConfig({
           "react-router-dom": path.resolve(
             __dirname,
             "../../packages/react-router-dom/index.tsx"
-          )
-        }
+          ),
+        },
       }
-    : {}
+    : {},
 });

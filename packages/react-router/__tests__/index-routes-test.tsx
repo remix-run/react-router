@@ -11,11 +11,11 @@ describe("index route matching", () => {
               {
                 index: true,
                 // This config is not valid because index routes cannot have children
-                children: [{ path: "not-valid" }]
+                children: [{ path: "not-valid" }],
               },
-              { path: ":id" }
-            ]
-          }
+              { path: ":id" },
+            ],
+          },
         ],
         "/users/mj"
       );

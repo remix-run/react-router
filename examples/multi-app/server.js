@@ -14,7 +14,7 @@ async function createServer() {
   if (!isProduction) {
     vite = await require("vite").createServer({
       root: process.cwd(),
-      server: { middlewareMode: "ssr" }
+      server: { middlewareMode: "ssr" },
     });
 
     app.use(vite.middlewares);
@@ -58,7 +58,7 @@ async function createServer() {
   return app;
 }
 
-createServer().then(app => {
+createServer().then((app) => {
   app.listen(3000, () => {
     console.log("HTTP server is running at http://localhost:3000");
   });

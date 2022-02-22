@@ -4,6 +4,6 @@ jest.mock("react-native/Libraries/Linking/Linking", () => {
     removeEventListener: jest.fn(),
     openURL: jest.fn(),
     canOpenURL: jest.fn(),
-    getInitialURL: jest.fn()
+    getInitialURL: jest.fn(),
   };
 });

@@ -15,7 +15,7 @@ This question usually stems from the fact that you're using React class componen
 import {
   useLocation,
   useNavigate,
-  useParams
+  useParams,
 } from "react-router-dom";
 
 function withRouter(Component) {
@@ -406,7 +406,7 @@ export async function loader({ params }) {
   }
 
   let user = await fakeDb.user.find({
-    where: { id: params.id }
+    where: { id: params.id },
   });
   if (!user) {
     throw new Response("", { status: 404 });
