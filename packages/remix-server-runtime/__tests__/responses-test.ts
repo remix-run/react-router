@@ -14,8 +14,8 @@ describe("json", () => {
       {
         headers: {
           "Content-Type": "application/json; charset=iso-8859-1",
-          "X-Remix": "is awesome"
-        }
+          "X-Remix": "is awesome",
+        },
       }
     );
 
@@ -45,8 +45,8 @@ describe("redirect", () => {
   it("sets the status to 302 when only headers are given", () => {
     let response = redirect("/login", {
       headers: {
-        "X-Remix": "is awesome"
-      }
+        "X-Remix": "is awesome",
+      },
     });
     expect(response.status).toEqual(302);
   });
@@ -60,8 +60,8 @@ describe("redirect", () => {
     let response = redirect("/login", {
       headers: {
         Location: "/",
-        "X-Remix": "is awesome"
-      }
+        "X-Remix": "is awesome",
+      },
     });
 
     expect(response.headers.get("Location")).toEqual("/login");

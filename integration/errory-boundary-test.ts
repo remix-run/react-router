@@ -161,8 +161,8 @@ describe("ErrorBoundary", () => {
           export function ErrorBoundary() {
             return <div>${OWN_BOUNDARY_TEXT}</div>
           }
-        `
-      }
+        `,
+      },
     });
 
     app = await createAppFixture(fixture);

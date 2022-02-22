@@ -1,7 +1,7 @@
 import cookieSignature from "cookie-signature";
 import type {
   InternalSignFunctionDoNotUseMe,
-  InternalUnsignFunctionDoNotUseMe
+  InternalUnsignFunctionDoNotUseMe,
 } from "@remix-run/server-runtime/cookieSigning";
 
 export const sign: InternalSignFunctionDoNotUseMe = async (value, secret) => {

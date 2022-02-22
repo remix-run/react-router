@@ -58,8 +58,8 @@ beforeAll(async () => {
         export default function Index() {
           return <div>cheeseburger</div>;
         }
-      `
-    }
+      `,
+    },
   });
 
   // This creates an interactive app using puppeteer.

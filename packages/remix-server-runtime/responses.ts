@@ -20,7 +20,7 @@ export function json<Data>(
 
   return new Response(JSON.stringify(data), {
     ...responseInit,
-    headers
+    headers,
   });
 }
 
@@ -46,7 +46,7 @@ export function redirect(
 
   return new Response(null, {
     ...responseInit,
-    headers
+    headers,
   });
 }
 

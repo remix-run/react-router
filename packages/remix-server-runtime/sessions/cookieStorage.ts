@@ -22,7 +22,7 @@ interface CookieSessionStorageOptions {
  * @see https://remix.run/api/remix#createcookiesessionstorage
  */
 export function createCookieSessionStorage({
-  cookie: cookieArg
+  cookie: cookieArg,
 }: CookieSessionStorageOptions = {}): SessionStorage {
   let cookie = isCookie(cookieArg)
     ? cookieArg
@@ -42,8 +42,8 @@ export function createCookieSessionStorage({
     async destroySession(_session, options) {
       return cookie.serialize("", {
         ...options,
-        expires: new Date(0)
+        expires: new Date(0),
       });
-    }
+    },
   };
 }

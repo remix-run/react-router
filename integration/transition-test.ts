@@ -131,8 +131,8 @@ describe("rendering", () => {
               </div>
             );
           }
-        `
-      }
+        `,
+      },
     });
 
     app = await createAppFixture(fixture);
@@ -148,7 +148,7 @@ describe("rendering", () => {
     await app.clickLink(`/${PAGE}`);
 
     expect(
-      responses.map(res => new URL(res.url()).searchParams.get("_data"))
+      responses.map((res) => new URL(res.url()).searchParams.get("_data"))
     ).toEqual([`routes/${PAGE}`, `routes/${PAGE}/index`]);
 
     let html = await app.getHtml("main");
@@ -162,7 +162,7 @@ describe("rendering", () => {
     await app.clickLink(`/${PAGE}/${CHILD}`);
 
     expect(
-      responses.map(res => new URL(res.url()).searchParams.get("_data"))
+      responses.map((res) => new URL(res.url()).searchParams.get("_data"))
     ).toEqual([`routes/${PAGE}/${CHILD}`]);
 
     let html = await app.getHtml("main");
@@ -178,7 +178,7 @@ describe("rendering", () => {
     expect(new URL(app.page.url()).pathname).toBe(`/${REDIRECT_TARGET}`);
 
     expect(
-      responses.map(res => new URL(res.url()).searchParams.get("_data"))
+      responses.map((res) => new URL(res.url()).searchParams.get("_data"))
     ).toEqual([`routes/${REDIRECT}`, `routes/${PAGE}`, `routes/${PAGE}/index`]);
 
     let html = await app.getHtml("main");
@@ -194,7 +194,7 @@ describe("rendering", () => {
     await app.goBack();
 
     expect(
-      responses.map(res => new URL(res.url()).searchParams.get("_data"))
+      responses.map((res) => new URL(res.url()).searchParams.get("_data"))
     ).toEqual([`routes/${PAGE}/index`]);
 
     let html = await app.getHtml("main");

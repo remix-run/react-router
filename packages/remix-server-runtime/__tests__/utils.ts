@@ -23,7 +23,7 @@ export function mockServerBuild(
     assets: {
       entry: {
         imports: [""],
-        module: ""
+        module: "",
       },
       routes: Object.entries(routes).reduce((p, [id, config]) => {
         let route: EntryRoute = {
@@ -35,15 +35,15 @@ export function mockServerBuild(
           module: "",
           index: config.index,
           path: config.path,
-          parentId: config.parentId
+          parentId: config.parentId,
         };
         return {
           ...p,
-          [id]: route
+          [id]: route,
         };
       }, {}),
       url: "",
-      version: ""
+      version: "",
     },
     entry: {
       module: {
@@ -51,11 +51,11 @@ export function mockServerBuild(
           async (request, responseStatusCode, responseHeaders, entryContext) =>
             new Response(null, {
               status: responseStatusCode,
-              headers: responseHeaders
+              headers: responseHeaders,
             })
         ),
-        handleDataRequest: jest.fn(async response => response)
-      }
+        handleDataRequest: jest.fn(async (response) => response),
+      },
     },
     routes: Object.entries(routes).reduce<ServerRouteManifest>(
       (p, [id, config]) => {
@@ -70,16 +70,16 @@ export function mockServerBuild(
             ErrorBoundary: config.ErrorBoundary,
             action: config.action,
             headers: config.headers,
-            loader: config.loader
-          }
+            loader: config.loader,
+          },
         };
         return {
           ...p,
-          [id]: route
+          [id]: route,
         };
       },
       {}
-    )
+    ),
   };
 }
 

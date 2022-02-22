@@ -121,8 +121,8 @@ describe("CatchBoundary", () => {
           export default function Index() {
             return <div/>
           }
-        `
-      }
+        `,
+      },
     });
 
     app = await createAppFixture(fixture);
@@ -146,7 +146,7 @@ describe("CatchBoundary", () => {
 
   test("invalid request methods", async () => {
     let res = await fixture.requestDocument("/", {
-      method: "OPTIONS"
+      method: "OPTIONS",
     });
     expect(res.status).toBe(405);
     expect(await res.text()).toMatch(ROOT_BOUNDARY_TEXT);

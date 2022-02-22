@@ -5,7 +5,7 @@ import type { Plugin } from "esbuild";
 import type { RemixConfig } from "../../config";
 import {
   serverBuildVirtualModule,
-  assetsManifestVirtualModule
+  assetsManifestVirtualModule,
 } from "../virtualModules";
 
 /**
@@ -76,7 +76,7 @@ export function serverBareModulesPlugin(
             if (isNodeBuiltIn(packageName)) {
               return {
                 path: `https://deno.land/std/node/${packageName}/mod.ts`,
-                external: true
+                external: true,
               };
             }
             return undefined;
@@ -94,10 +94,10 @@ export function serverBareModulesPlugin(
         // Externalize everything else if we've gotten here.
         return {
           path,
-          external: true
+          external: true,
         };
       });
-    }
+    },
   };
 }
 

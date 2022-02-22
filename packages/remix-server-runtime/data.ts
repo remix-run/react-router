@@ -16,7 +16,7 @@ export type AppData = any;
 export async function callRouteAction({
   loadContext,
   match,
-  request
+  request,
 }: {
   loadContext: unknown;
   match: RouteMatch<ServerRoute>;
@@ -37,7 +37,7 @@ export async function callRouteAction({
     result = await action({
       request: stripDataParam(stripIndexParam(request)),
       context: loadContext,
-      params: match.params
+      params: match.params,
     });
   } catch (error: unknown) {
     if (!isResponse(error)) {
@@ -63,7 +63,7 @@ export async function callRouteAction({
 export async function callRouteLoader({
   loadContext,
   match,
-  request
+  request,
 }: {
   request: Request;
   match: RouteMatch<ServerRoute>;
@@ -84,7 +84,7 @@ export async function callRouteLoader({
     result = await loader({
       request: stripDataParam(stripIndexParam(request.clone())),
       context: loadContext,
-      params: match.params
+      params: match.params,
     });
   } catch (error: unknown) {
     if (!isResponse(error)) {

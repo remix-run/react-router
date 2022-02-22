@@ -32,15 +32,15 @@ describe("loader", () => {
           export default function Index() {
             return <div/>
           }
-        `
-      }
+        `,
+      },
     });
   });
 
   it("returns responses for a specific route", async () => {
     let [root, index] = await Promise.all([
       fixture.requestData("/", "root"),
-      fixture.requestData("/", "routes/index")
+      fixture.requestData("/", "routes/index"),
     ]);
 
     expect(root.headers.get("Content-Type")).toBe(

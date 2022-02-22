@@ -81,8 +81,8 @@ describe("Forms", () => {
               </>
             )
           }
-        `
-      }
+        `,
+      },
     });
 
     app = await createAppFixture(fixture);

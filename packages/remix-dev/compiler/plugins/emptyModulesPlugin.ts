@@ -14,7 +14,7 @@ export function emptyModulesPlugin(
   return {
     name: "empty-modules",
     setup(build) {
-      build.onResolve({ filter }, args => {
+      build.onResolve({ filter }, (args) => {
         let resolved = path.resolve(args.resolveDir, args.path);
         if (
           // Limit this behavior to modules found in only the `app` directory.
@@ -32,9 +32,9 @@ export function emptyModulesPlugin(
           // matching export" errors in esbuild for stuff that is imported
           // from this file.
           contents: "module.exports = {};",
-          loader: "js"
+          loader: "js",
         };
       });
-    }
+    },
   };
 }

@@ -40,7 +40,7 @@ function prependCookies(parentHeaders: Headers, childHeaders: Headers): void {
 
   if (parentSetCookieString) {
     let cookies = splitCookiesString(parentSetCookieString);
-    cookies.forEach(cookie => {
+    cookies.forEach((cookie) => {
       childHeaders.append("Set-Cookie", cookie);
     });
   }

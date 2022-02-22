@@ -24,8 +24,8 @@ let test = {
       "Content-Type: application/octet-stream",
       "",
       "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-      "-----------------------------paZqsnEHRufoShdX6fh0lUhXBP4k--"
-    ].join("\r\n")
+      "-----------------------------paZqsnEHRufoShdX6fh0lUhXBP4k--",
+    ].join("\r\n"),
   ],
   boundary: "---------------------------paZqsnEHRufoShdX6fh0lUhXBP4k",
   expected: [
@@ -36,7 +36,7 @@ let test = {
       false,
       false,
       "7bit",
-      "text/plain"
+      "text/plain",
     ],
     [
       "field",
@@ -45,7 +45,7 @@ let test = {
       false,
       false,
       "7bit",
-      "text/plain"
+      "text/plain",
     ],
     [
       "file",
@@ -54,7 +54,7 @@ let test = {
       0,
       "1k_a.dat",
       "7bit",
-      "application/octet-stream"
+      "application/octet-stream",
     ],
     [
       "file",
@@ -63,10 +63,10 @@ let test = {
       0,
       "1k_b.dat",
       "7bit",
-      "application/octet-stream"
-    ]
+      "application/octet-stream",
+    ],
   ],
-  what: "Fields and files"
+  what: "Fields and files",
 };
 
 describe("Request", () => {
@@ -74,14 +74,14 @@ describe("Request", () => {
 
   it("clones", async () => {
     let body = new PassThrough();
-    test.source.forEach(chunk => body.write(chunk));
+    test.source.forEach((chunk) => body.write(chunk));
 
     let req = new Request("http://test.com", {
       method: "post",
       body,
       headers: {
-        "Content-Type": "multipart/form-data; boundary=" + test.boundary
-      }
+        "Content-Type": "multipart/form-data; boundary=" + test.boundary,
+      },
     });
 
     let cloned = req.clone();

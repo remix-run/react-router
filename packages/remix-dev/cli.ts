@@ -40,18 +40,18 @@ const cli = meow(helpText, {
   flags: {
     version: {
       type: "boolean",
-      alias: "v"
+      alias: "v",
     },
     json: {
-      type: "boolean"
+      type: "boolean",
     },
     sourcemap: {
-      type: "boolean"
+      type: "boolean",
     },
     debug: {
-      type: "boolean"
-    }
-  }
+      type: "boolean",
+    },
+  },
 });
 
 if (cli.flags.version) {

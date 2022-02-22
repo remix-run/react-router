@@ -44,7 +44,7 @@ describe("cookies", () => {
 
   it("parses/serializes signed string values", async () => {
     let cookie = createCookie("my-cookie", {
-      secrets: ["secret1"]
+      secrets: ["secret1"],
     });
     let setCookie = await cookie.serialize("hello michael");
     let value = await cookie.parse(getCookieFromSetCookie(setCookie));
@@ -54,11 +54,11 @@ describe("cookies", () => {
 
   it("fails to parses signed string values with invalid signature", async () => {
     let cookie = createCookie("my-cookie", {
-      secrets: ["secret1"]
+      secrets: ["secret1"],
     });
     let setCookie = await cookie.serialize("hello michael");
     let cookie2 = createCookie("my-cookie", {
-      secrets: ["secret2"]
+      secrets: ["secret2"],
     });
     let value = await cookie2.parse(getCookieFromSetCookie(setCookie));
 
@@ -67,7 +67,7 @@ describe("cookies", () => {
 
   it("parses/serializes signed object values", async () => {
     let cookie = createCookie("my-cookie", {
-      secrets: ["secret1"]
+      secrets: ["secret1"],
     });
     let setCookie = await cookie.serialize({ hello: "mjackson" });
     let value = await cookie.parse(getCookieFromSetCookie(setCookie));
@@ -81,11 +81,11 @@ describe("cookies", () => {
 
   it("fails to parse signed object values with invalid signature", async () => {
     let cookie = createCookie("my-cookie", {
-      secrets: ["secret1"]
+      secrets: ["secret1"],
     });
     let setCookie = await cookie.serialize({ hello: "mjackson" });
     let cookie2 = createCookie("my-cookie", {
-      secrets: ["secret2"]
+      secrets: ["secret2"],
     });
     let value = await cookie2.parse(getCookieFromSetCookie(setCookie));
 
@@ -94,7 +94,7 @@ describe("cookies", () => {
 
   it("supports secret rotation", async () => {
     let cookie = createCookie("my-cookie", {
-      secrets: ["secret1"]
+      secrets: ["secret1"],
     });
     let setCookie = await cookie.serialize({ hello: "mjackson" });
     let value = await cookie.parse(getCookieFromSetCookie(setCookie));
@@ -107,7 +107,7 @@ describe("cookies", () => {
 
     // A new secret enters the rotation...
     cookie = createCookie("my-cookie", {
-      secrets: ["secret2", "secret1"]
+      secrets: ["secret2", "secret1"],
     });
 
     // cookie should still be able to parse old cookies.
@@ -128,7 +128,7 @@ describe("cookies", () => {
     let cookie2 = createCookie("my-cookie2");
 
     let setCookie2 = await cookie2.serialize("hello world", {
-      path: "/about"
+      path: "/about",
     });
     expect(setCookie2).toContain("Path=/about");
   });

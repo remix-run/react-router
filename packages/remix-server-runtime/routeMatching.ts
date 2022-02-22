@@ -16,9 +16,9 @@ export function matchServerRoutes(
   let matches = matchRoutes(routes as unknown as RouteObject[], pathname);
   if (!matches) return null;
 
-  return matches.map(match => ({
+  return matches.map((match) => ({
     params: match.params,
     pathname: match.pathname,
-    route: match.route as unknown as ServerRoute
+    route: match.route as unknown as ServerRoute,
   }));
 }

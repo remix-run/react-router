@@ -14,7 +14,7 @@ async function generateBuild(config: RemixConfig, options: BuildOptions) {
 }
 
 function getFilenames(output: RollupOutput) {
-  return output.output.map(item => item.fileName).sort();
+  return output.output.map((item) => item.fileName).sort();
 }
 
 describe.skip("building", () => {
@@ -32,7 +32,7 @@ describe.skip("building", () => {
     it("generates the correct bundles", async () => {
       let output = await generateBuild(config, {
         mode: BuildMode.Development,
-        target: BuildTarget.Server
+        target: BuildTarget.Server,
       });
 
       expect(getFilenames(output)).toMatchInlineSnapshot(`
@@ -68,7 +68,7 @@ describe.skip("building", () => {
     it("generates the correct bundles", async () => {
       let output = await generateBuild(config, {
         mode: BuildMode.Production,
-        target: BuildTarget.Server
+        target: BuildTarget.Server,
       });
 
       expect(getFilenames(output)).toMatchInlineSnapshot(`
@@ -104,7 +104,7 @@ describe.skip("building", () => {
     it("generates the correct bundles", async () => {
       let output = await generateBuild(config, {
         mode: BuildMode.Development,
-        target: BuildTarget.Browser
+        target: BuildTarget.Browser,
       });
 
       expect(getFilenames(output)).toMatchInlineSnapshot(`
@@ -162,7 +162,7 @@ describe.skip("building", () => {
     it("generates the correct bundles", async () => {
       let output = await generateBuild(config, {
         mode: BuildMode.Production,
-        target: BuildTarget.Browser
+        target: BuildTarget.Browser,
       });
 
       expect(getFilenames(output)).toMatchInlineSnapshot(`

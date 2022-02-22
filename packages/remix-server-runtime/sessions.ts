@@ -106,7 +106,7 @@ export function createSession(initialData: SessionData = {}, id = ""): Session {
     },
     unset(name) {
       map.delete(name);
-    }
+    },
   };
 }
 
@@ -215,7 +215,7 @@ export function createSessionStorage({
   createData,
   readData,
   updateData,
-  deleteData
+  deleteData,
 }: SessionIdStorageStrategy): SessionStorage {
   let cookie = isCookie(cookieArg)
     ? cookieArg
@@ -244,9 +244,9 @@ export function createSessionStorage({
       await deleteData(session.id);
       return cookie.serialize("", {
         ...options,
-        expires: new Date(0)
+        expires: new Date(0),
       });
-    }
+    },
   };
 }
 

@@ -4,7 +4,7 @@ import type { Plugin } from "esbuild";
 import type { RemixConfig } from "../../config";
 import {
   serverBuildVirtualModule,
-  assetsManifestVirtualModule
+  assetsManifestVirtualModule,
 } from "../virtualModules";
 
 /**
@@ -22,7 +22,7 @@ export function serverEntryModulePlugin(config: RemixConfig): Plugin {
       build.onResolve({ filter }, ({ path }) => {
         return {
           path,
-          namespace: "server-entry-module"
+          namespace: "server-entry-module",
         };
       });
 
@@ -60,9 +60,9 @@ ${Object.keys(config.routes)
     }`;
       })
       .join(",\n  ")}
-  };`
+  };`,
         };
       });
-    }
+    },
   };
 }

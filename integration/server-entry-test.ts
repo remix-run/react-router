@@ -28,8 +28,8 @@ describe("Server Entry", () => {
           export default function () {
             return <div/>
           }
-        `
-      }
+        `,
+      },
     });
   });
 

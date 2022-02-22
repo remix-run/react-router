@@ -81,7 +81,7 @@ export function createCookie(
   let { secrets, ...options } = {
     secrets: [],
     path: "/",
-    ...cookieOptions
+    ...cookieOptions,
   };
 
   return {
@@ -112,10 +112,10 @@ export function createCookie(
         value === "" ? "" : await encodeCookieValue(value, secrets),
         {
           ...options,
-          ...serializeOptions
+          ...serializeOptions,
         }
       );
-    }
+    },
   };
 }
 
