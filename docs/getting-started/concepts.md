@@ -100,7 +100,7 @@ With **client side routing**, developers are able to manipulate the browser [his
 ```jsx
 <a
   href="/contact"
-  onClick={event => {
+  onClick={(event) => {
     // stop the browser from changing the URL and requesting the new document
     event.preventDefault();
     // push an entry into the browser history stack and change the URL
@@ -191,7 +191,7 @@ let location = {
   search: "?campaign=instagram&popular=true",
   hash: "",
   state: null,
-  key: "aefz24ie"
+  key: "aefz24ie",
 };
 
 // we can turn the location.search into URLSearchParams
@@ -279,8 +279,8 @@ function useFakeFetch(URL) {
     if (state === "loading") {
       let controller = new AbortController();
       fetch(URL, { signal: controller.signal })
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           if (controller.aborted) return;
           // set the cache
           cache.set(cacheKey, data);
@@ -335,7 +335,7 @@ let routes = [
     children: [
       {
         index: true,
-        element: <Home />
+        element: <Home />,
       },
       {
         path: "teams",
@@ -343,41 +343,41 @@ let routes = [
         children: [
           {
             index: true,
-            element: <LeagueStandings />
+            element: <LeagueStandings />,
           },
           {
             path: ":teamId",
-            element: <Team />
+            element: <Team />,
           },
           {
             path: ":teamId/edit",
-            element: <EditTeam />
+            element: <EditTeam />,
           },
           {
             path: "new",
-            element: <NewTeamForm />
-          }
-        ]
-      }
-    ]
+            element: <NewTeamForm />,
+          },
+        ],
+      },
+    ],
   },
   {
     element: <PageLayout />,
     children: [
       {
         element: <Privacy />,
-        path: "/privacy"
+        path: "/privacy",
       },
       {
         element: <Tos />,
-        path: "/tos"
-      }
-    ]
+        path: "/tos",
+      },
+    ],
   },
   {
     element: <Contact />,
-    path: "/contact-us"
-  }
+    path: "/contact-us",
+  },
 ];
 ```
 
@@ -402,7 +402,7 @@ If we add up all the segments of all the branches of our [route config](#route-c
   "/teams/new",
   "/privacy",
   "/tos",
-  "/contact-us"
+  "/contact-us",
 ];
 ```
 
@@ -480,27 +480,27 @@ React Router will create an array of [matches](#match) from these routes and the
     params: null,
     route: {
       element: <App />,
-      path: "/"
-    }
+      path: "/",
+    },
   },
   {
     pathname: "/teams",
     params: null,
     route: {
       element: <Teams />,
-      path: "teams"
-    }
+      path: "teams",
+    },
   },
   {
     pathname: "/teams/firebirds",
     params: {
-      teamId: "firebirds"
+      teamId: "firebirds",
     },
     route: {
       element: <Team />,
-      path: ":teamId"
-    }
-  }
+      path: ":teamId",
+    },
+  },
 ];
 ```
 

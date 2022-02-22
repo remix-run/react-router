@@ -15,7 +15,7 @@ export interface StaticRouterProps {
 export function StaticRouter({
   basename,
   children,
-  location: locationProp = "/"
+  location: locationProp = "/",
 }: StaticRouterProps) {
   if (typeof locationProp === "string") {
     locationProp = parsePath(locationProp);
@@ -27,7 +27,7 @@ export function StaticRouter({
     search: locationProp.search || "",
     hash: locationProp.hash || "",
     state: locationProp.state || null,
-    key: locationProp.key || "default"
+    key: locationProp.key || "default",
   };
 
   let staticNavigator = {
@@ -67,7 +67,7 @@ export function StaticRouter({
         `You cannot use navigator.forward() on the server because it is a stateless ` +
           `environment.`
       );
-    }
+    },
   };
 
   return (

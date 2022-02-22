@@ -8,7 +8,7 @@ function click(anchor: HTMLAnchorElement, eventInit?: MouseEventInit) {
     view: window,
     bubbles: true,
     cancelable: true,
-    ...eventInit
+    ...eventInit,
   });
   anchor.dispatchEvent(event);
   return event;

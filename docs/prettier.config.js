@@ -3,5 +3,5 @@
  */
 module.exports = {
   ...require("../prettier.config"),
-  printWidth: 60
+  printWidth: 60,
 };

@@ -6,7 +6,7 @@ import {
   Route,
   useParams,
   useNavigate,
-  Navigate
+  Navigate,
 } from "react-router-dom";
 
 describe("GH Issue #8165", () => {
