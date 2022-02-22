@@ -104,5 +104,10 @@ function getNpmPackageName(id: string): string {
 }
 
 function isBareModuleId(id: string): boolean {
-  return !id.startsWith(".") && !id.startsWith("~") && !isAbsolute(id);
+  return (
+    !id.startsWith("node:") &&
+    !id.startsWith(".") &&
+    !id.startsWith("~") &&
+    !isAbsolute(id)
+  );
 }
