@@ -407,7 +407,7 @@ async function createServerBuild(
   ];
 
   if (config.serverPlatform !== "node") {
-    plugins.push(NodeModulesPolyfillPlugin());
+    plugins.unshift(NodeModulesPolyfillPlugin());
   }
 
   return esbuild
