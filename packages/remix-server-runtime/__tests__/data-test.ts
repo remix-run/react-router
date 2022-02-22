@@ -165,13 +165,21 @@ describe("loaders", () => {
       }
     } as unknown as RouteMatch<ServerRoute>;
 
+    let possibleError: any;
     try {
-      await callRouteLoader({ request, match, loadContext: {} });
+      possibleError = await callRouteLoader({
+        request,
+        match,
+        loadContext: {}
+      });
     } catch (error) {
-      expect(error.message).toMatchInlineSnapshot(
-        '"You defined a loader for route \\"routes/random\\" but didn\'t return anything from your `loader` function. Please return a value or `null`."'
-      );
+      possibleError = error;
     }
+
+    expect(possibleError).toBeInstanceOf(Error);
+    expect(possibleError.message).toMatchInlineSnapshot(
+      '"You defined a loader for route \\"routes/random\\" but didn\'t return anything from your `loader` function. Please return a value or `null`."'
+    );
   });
 });
 
@@ -194,12 +202,20 @@ describe("actions", () => {
       }
     } as unknown as RouteMatch<ServerRoute>;
 
+    let possibleError: any;
     try {
-      await callRouteAction({ request, match, loadContext: {} });
+      possibleError = await callRouteAction({
+        request,
+        match,
+        loadContext: {}
+      });
     } catch (error) {
-      expect(error.message).toMatchInlineSnapshot(
-        '"You defined an action for route \\"routes/random\\" but didn\'t return anything from your `action` function. Please return a value or `null`."'
-      );
+      possibleError = error;
     }
+
+    expect(possibleError).toBeInstanceOf(Error);
+    expect(possibleError.message).toMatchInlineSnapshot(
+      '"You defined an action for route \\"routes/random\\" but didn\'t return anything from your `action` function. Please return a value or `null`."'
+    );
   });
 });

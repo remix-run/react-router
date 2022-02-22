@@ -1,3 +1,4 @@
+/* eslint-disable no-unreachable */
 import type { ServerBuild } from "@remix-run/server-runtime";
 
 throw new Error(
