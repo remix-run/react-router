@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - dev
 
 jobs:
   format:
+    if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
 
     steps:
@@ -15,6 +17,8 @@ jobs:
 
       - name: Checkout Repository
         uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.FORMAT_PAT }}
 
       - name: Use Node.js
         uses: actions/setup-node@v2
@@ -29,7 +33,7 @@ jobs:
 
       - name: Commit
         run: |
-          git config --local user.email "github-actions@remix.run"
+          git config --local user.email "hello@remix.run"
           git config --local user.name "Remix Run Bot"
 
           git add .
@@ -37,6 +41,6 @@ jobs:
             echo "💿 no formatting changed"
             exit 0
           fi
-          git commit -m "chore: format" -m "formatted $GITHUB_SHA"
+          git commit -m "chore: format"
           git push
           echo "💿 pushed formatting changes https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"
