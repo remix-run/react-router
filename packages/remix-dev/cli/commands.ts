@@ -14,6 +14,7 @@ import * as compiler from "../compiler";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
+import { loadEnv } from "../env";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "../setup";
 import { log } from "../log";
 
@@ -143,7 +144,6 @@ export async function watch(
 }
 
 export async function dev(remixRoot: string, modeArg?: string) {
-  // TODO: Warn about the need to install @remix-run/serve if it isn't there?
   let createApp: typeof createAppType;
   let express: typeof Express;
   try {
@@ -158,6 +158,9 @@ export async function dev(remixRoot: string, modeArg?: string) {
 
   let config = await readConfig(remixRoot);
   let mode = isBuildMode(modeArg) ? modeArg : BuildMode.Development;
+
+  await loadEnv(config.rootDirectory);
+
   let port = await getPort({
     port: process.env.PORT ? Number(process.env.PORT) : 3000,
   });
