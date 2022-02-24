@@ -93,7 +93,7 @@ function Status({ code, children }) {
   return (
     <Route
       render={({ staticContext }) => {
-        if (staticContext) staticContext.status = code;
+        if (staticContext) staticContext.statusCode = code;
         return children;
       }}
     />
