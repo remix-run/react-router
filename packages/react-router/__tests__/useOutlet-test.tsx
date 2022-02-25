@@ -6,7 +6,6 @@ import {
   Route,
   useOutlet,
   useOutletContext,
-  Outlet
 } from "react-router";
 
 describe("useOutlet", () => {
@@ -208,7 +207,7 @@ describe("useOutlet", () => {
           "Michael",
           "Bert",
           "Winifred",
-          "George"
+          "George",
         ]);
       }
 
@@ -219,7 +218,7 @@ describe("useOutlet", () => {
           <div>
             <h1>Profile</h1>
             <ul>
-              {outletContext.map(name => (
+              {outletContext.map((name) => (
                 <li key={name}>{name}</li>
               ))}
             </ul>
@@ -310,7 +309,7 @@ describe("useOutlet", () => {
           <div>
             <h1>Profile</h1>
             <ul>
-              {outletContext.map(name => (
+              {outletContext.map((name) => (
                 <li key={name}>{name}</li>
               ))}
             </ul>

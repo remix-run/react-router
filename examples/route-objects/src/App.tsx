@@ -14,12 +14,12 @@ export default function App() {
           element: <Courses />,
           children: [
             { index: true, element: <CoursesIndex /> },
-            { path: "/courses/:id", element: <Course /> }
-          ]
+            { path: "/courses/:id", element: <Course /> },
+          ],
         },
-        { path: "*", element: <NoMatch /> }
-      ]
-    }
+        { path: "*", element: <NoMatch /> },
+      ],
+    },
   ];
 
   // The useRoutes() hook allows you to define your routes as JavaScript objects

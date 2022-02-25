@@ -22,7 +22,7 @@ describe("<Routes> with a location", () => {
       search: "",
       hash: "",
       state: null,
-      key: "r9qntrej"
+      key: "r9qntrej",
     };
 
     let renderer: TestRenderer.ReactTestRenderer;

@@ -10,7 +10,7 @@ const fakeAuthProvider = {
   signout(callback: VoidFunction) {
     fakeAuthProvider.isAuthenticated = false;
     setTimeout(callback, 100);
-  }
+  },
 };
 
 export { fakeAuthProvider };

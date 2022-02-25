@@ -6,7 +6,7 @@ import {
   NativeRouter,
   Routes,
   Route,
-  useDeepLinking
+  useDeepLinking,
 } from "react-router-native";
 import { MockEvent, mockPromiseThatResolvesImmediatelyWith } from "./utils";
 
@@ -110,7 +110,7 @@ describe("deep linking", () => {
 
       function changeURL(url: string) {
         let event = new MockEvent("url", { url });
-        listeners.forEach(listener => listener(event));
+        listeners.forEach((listener) => listener(event));
       }
 
       function Home() {

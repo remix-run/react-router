@@ -5,7 +5,7 @@ import {
   Routes,
   Route,
   useNavigate,
-  useLocation
+  useLocation,
 } from "react-router";
 
 describe("useNavigate", () => {
