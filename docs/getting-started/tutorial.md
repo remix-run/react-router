@@ -812,6 +812,7 @@ import { getInvoice, deleteInvoice } from "../data";
 
 export default function Invoice() {
   let navigate = useNavigate();
+  let location = useLocation();
   let params = useParams();
   let invoice = getInvoice(parseInt(params.invoiceId, 10));
 
@@ -826,7 +827,7 @@ export default function Invoice() {
         <button
           onClick={() => {
             deleteInvoice(invoice.number);
-            navigate("/invoices");
+            navigate("/invoices" + location.search);
           }}
         >
           Delete
@@ -836,6 +837,8 @@ export default function Invoice() {
   );
 }
 ```
+
+Notice we used `useLocation` again to persist the query string by adding `location.search` to the navigation link.
 
 ## Getting Help
 
