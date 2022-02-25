@@ -1070,7 +1070,7 @@ function _renderMatches(
     return (
       <RouteContext.Provider
         children={
-          match.route.element !== undefined ? match.route.element : <Outlet />
+          match.route.element !== undefined ? match.route.element : outlet
         }
         value={{
           outlet,
