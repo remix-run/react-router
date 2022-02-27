@@ -807,7 +807,11 @@ export function deleteInvoice(number) {
 Now let's add the delete button, call our new function, and navigate to the index route:
 
 ```js lines=[1-2,5-6,17-26] filename=src/routes/invoice.jsx
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { getInvoice, deleteInvoice } from "../data";
 
 export default function Invoice() {
