@@ -24,7 +24,7 @@ import { render } from "react-dom";
 import {
   BrowserRouter,
   Routes,
-  Route
+  Route,
 } from "react-router-dom";
 // import your route components too
 
@@ -82,7 +82,7 @@ function Invoices() {
   return (
     <div>
       <NewInvoiceForm
-        onSubmit={async event => {
+        onSubmit={async (event) => {
           let newInvoice = await createInvoice(
             event.target
           );
@@ -225,7 +225,7 @@ import {
   Routes,
   Route,
   Link,
-  Outlet
+  Outlet,
 } from "react-router-dom";
 
 function App() {
@@ -339,7 +339,7 @@ import {
   Routes,
   Route,
   Link,
-  Outlet
+  Outlet,
 } from "react-router-dom";
 
 function Home() {

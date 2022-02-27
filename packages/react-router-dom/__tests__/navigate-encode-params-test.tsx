@@ -6,7 +6,7 @@ import {
   Routes,
   Route,
   useNavigate,
-  useParams
+  useParams,
 } from "react-router-dom";
 
 describe("navigate with params", () => {

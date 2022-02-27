@@ -6,7 +6,7 @@ import {
   Link,
   useLocation,
   useNavigate,
-  useParams
+  useParams,
 } from "react-router-dom";
 import { Dialog } from "@reach/dialog";
 import "@reach/dialog/styles.css";
@@ -121,10 +121,10 @@ function Gallery() {
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "24px"
+          gap: "24px",
         }}
       >
-        {IMAGES.map(image => (
+        {IMAGES.map((image) => (
           <Link
             key={image.id}
             to={`/img/${image.id}`}
@@ -140,7 +140,7 @@ function Gallery() {
                 width: "100%",
                 aspectRatio: "1 / 1",
                 height: "auto",
-                borderRadius: "8px"
+                borderRadius: "8px",
               }}
               src={image.src}
               alt={image.title}
@@ -188,7 +188,7 @@ function Modal() {
         style={{
           display: "grid",
           justifyContent: "center",
-          padding: "8px 8px"
+          padding: "8px 8px",
         }}
       >
         <h1 id="label" style={{ margin: 0 }}>
@@ -199,7 +199,7 @@ function Modal() {
             margin: "16px 0",
             borderRadius: "8px",
             width: "100%",
-            height: "auto"
+            height: "auto",
           }}
           width={400}
           height={400}

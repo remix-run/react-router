@@ -4,13 +4,13 @@ import {
   NativeRouter,
   Routes,
   Route,
-  useSearchParams
+  useSearchParams,
 } from "react-router-native";
 import * as TestRenderer from "react-test-renderer";
 
 describe("useSearchParams", () => {
   function SearchForm({
-    children
+    children,
   }: {
     children: React.ReactNode;
     onSubmit?: any;

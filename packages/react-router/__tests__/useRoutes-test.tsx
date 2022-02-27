@@ -7,7 +7,7 @@ describe("useRoutes", () => {
   it("returns the matching element from a route config", () => {
     let routes = [
       { path: "home", element: <h1>home</h1> },
-      { path: "about", element: <h1>about</h1> }
+      { path: "about", element: <h1>about</h1> },
     ];
 
     let renderer: TestRenderer.ReactTestRenderer;
@@ -31,9 +31,9 @@ describe("useRoutes", () => {
       let routes = [
         {
           path: "users",
-          children: [{ path: ":id", element: <h1>user profile</h1> }]
+          children: [{ path: ":id", element: <h1>user profile</h1> }],
         },
-        { path: "about", element: <h1>about</h1> }
+        { path: "about", element: <h1>about</h1> },
       ];
 
       let renderer: TestRenderer.ReactTestRenderer;
@@ -56,7 +56,7 @@ describe("useRoutes", () => {
   it("Uses the `location` prop instead of context location`", () => {
     let routes = [
       { path: "one", element: <h1>one</h1> },
-      { path: "two", element: <h1>two</h1> }
+      { path: "two", element: <h1>two</h1> },
     ];
 
     let renderer: TestRenderer.ReactTestRenderer;
@@ -89,8 +89,8 @@ describe("useRoutes", () => {
       let routes = [
         {
           path: "layout",
-          children: [{ path: "two", element: <h1>two</h1> }]
-        }
+          children: [{ path: "two", element: <h1>two</h1> }],
+        },
       ];
 
       TestRenderer.act(() => {
@@ -113,7 +113,7 @@ describe("useRoutes", () => {
 
 function RoutesRenderer({
   routes,
-  location
+  location,
 }: {
   routes: RouteObject[];
   location?: Partial<Location> & { pathname: string };

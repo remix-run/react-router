@@ -7,7 +7,7 @@ import {
   Routes,
   Route,
   useParams,
-  useRoutes
+  useRoutes,
 } from "react-router";
 
 describe("route matching", () => {
@@ -21,10 +21,10 @@ describe("route matching", () => {
       "/courses/react-fundamentals",
       "/courses/advanced-react",
       "/",
-      "/not-found"
+      "/not-found",
     ];
 
-    testPaths.forEach(path => {
+    testPaths.forEach((path) => {
       it(`renders the right elements at ${path}`, () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
@@ -48,11 +48,11 @@ describe("route matching", () => {
           {
             path: ":id",
             element: <Course />,
-            children: [{ path: "grades", element: <CourseGrades /> }]
+            children: [{ path: "grades", element: <CourseGrades /> }],
           },
           { path: "new", element: <NewCourse /> },
-          { path: "*", element: <CoursesNotFound /> }
-        ]
+          { path: "*", element: <CoursesNotFound /> },
+        ],
       },
       {
         path: "courses",
@@ -60,11 +60,11 @@ describe("route matching", () => {
         children: [
           { path: "react-fundamentals", element: <ReactFundamentals /> },
           { path: "advanced-react", element: <AdvancedReact /> },
-          { path: "*", element: <NeverRender /> }
-        ]
+          { path: "*", element: <NeverRender /> },
+        ],
       },
       { index: true, element: <Home /> },
-      { path: "*", element: <NotFound /> }
+      { path: "*", element: <NotFound /> },
     ];
 
     function RoutesRenderer({ routes }: { routes: RouteObject[] }) {
