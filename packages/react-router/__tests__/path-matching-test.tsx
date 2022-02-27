@@ -242,4 +242,27 @@ describe("path matching with splats", () => {
       pathnameBase: "/",
     });
   });
+
+  test("nested routes with partial matching", () => {
+    let routes = [{ path: '/', children: [{ path: 'courses', children: [{ path: '*' }] }] }];
+    let match = matchRoutes(routes, "/courses/abc")
+
+    expect(match).not.toBeNull();
+    expect(match).toHaveLength(3);
+    expect(match[0]).toMatchObject({
+      params: { "*": "abc" },
+      pathname: "/",
+      pathnameBase: "/"
+    });
+    expect(match[1]).toMatchObject({
+      params: { "*": "abc" },
+      pathname: "/courses",
+      pathnameBase: "/courses"
+    });
+    expect(match[2]).toMatchObject({
+      params: { "*": "abc" },
+      pathname: "/courses/abc",
+      pathnameBase: "/courses"
+    });
+  });
 });
