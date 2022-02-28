@@ -103,7 +103,7 @@ export type {
   RouterProps,
   Pathname,
   Search,
-  RoutesProps
+  RoutesProps,
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////

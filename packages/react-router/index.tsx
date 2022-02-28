@@ -8,13 +8,13 @@ import type {
   Path,
   Pathname,
   Search,
-  To
+  To,
 } from "history";
 import {
   Action as NavigationType,
   createMemoryHistory,
   parsePath,
-  createPath
+  createPath,
 } from "history";
 
 export { parsePath, createPath, NavigationType };
@@ -1044,7 +1044,9 @@ function matchRouteBranch<ParamKey extends string = string>(
     matches.push({
       params: matchedParams,
       pathname: joinPaths([matchedPathname, match.pathname]),
-      pathnameBase: normalizePathname(joinPaths([matchedPathname, match.pathnameBase])),
+      pathnameBase: normalizePathname(
+        joinPaths([matchedPathname, match.pathnameBase])
+      ),
       route,
     });
 

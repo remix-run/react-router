@@ -108,7 +108,7 @@ describe("Descendant <Routes> splat matching", () => {
 
       it("allows `-` to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
-          "/courses/react/-react-fundamentals"
+          "/courses/react/-react-fundamentals",
         ]);
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <div>
@@ -134,7 +134,7 @@ describe("Descendant <Routes> splat matching", () => {
       });
       it("allows `.` to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
-          "/courses/react/.react-fundamentals"
+          "/courses/react/.react-fundamentals",
         ]);
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <div>
@@ -160,7 +160,7 @@ describe("Descendant <Routes> splat matching", () => {
       });
       it("allows `~` to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
-          "/courses/react/~react-fundamentals"
+          "/courses/react/~react-fundamentals",
         ]);
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <div>
@@ -186,7 +186,7 @@ describe("Descendant <Routes> splat matching", () => {
       });
       it("allows url-encoded entities to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
-          "/courses/react/%20react-fundamentals"
+          "/courses/react/%20react-fundamentals",
         ]);
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <div>
