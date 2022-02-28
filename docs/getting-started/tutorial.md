@@ -53,7 +53,7 @@ Then install React Router dependencies:
 
 ```sh
 cd router-tutorial
-npm install react-router-dom@6 history@5
+npm install react-router-dom@6
 ```
 
 Then edit your App.js to be pretty boring:
@@ -114,7 +114,7 @@ Nothing changes in your app, but now we're ready to start messing with the URL.
 
 Open up `src/App.js`, import `Link` and add some global navigation. Side note: don't take the styling too seriously in this tutorial, we're just using inline styles for convenience, style your apps however you want.
 
-```tsx lines=[1,7-9] filename=src/App.js
+```tsx lines=[1,7-15] filename=src/App.js
 import { Link } from "react-router-dom";
 
 export default function App() {
@@ -170,7 +170,7 @@ export default function Invoices() {
 }
 ```
 
-Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx`.
+Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx` or `index.js`.
 
 ```tsx lines=[2,4-5,13-19] filename=src/main.jsx
 import { render } from "react-dom";
@@ -305,7 +305,7 @@ let invoices = [
     name: "Wide Open Spaces",
     number: 1998,
     amount: "$4,600",
-    due: "01/27/2998",
+    due: "01/27/1998",
   },
 ];
 
@@ -376,9 +376,9 @@ The `"*"` has special meaning here. It will match only when no other routes do.
 
 ## Reading URL Params
 
-Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, let's make a new component at `src/routes/invoice.js` to render at those URLs:
+Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, let's make a new component at `src/routes/invoice.jsx` to render at those URLs:
 
-```js filename=src/routes/invoice.js
+```js filename=src/routes/invoice.jsx
 export default function Invoice() {
   return <h2>Invoice #???</h2>;
 }
@@ -450,7 +450,7 @@ export default function Invoices() {
 
 Okay, let's close the circle here. Open up the invoice component again and let's get the `:invoiceId` param from the URL:
 
-```ts lines=[1,4] filename=src/routes/invoice.js
+```ts lines=[1,4] filename=src/routes/invoice.jsx
 import { useParams } from "react-router-dom";
 
 export default function Invoice() {
@@ -481,9 +481,9 @@ export function getInvoice(number) {
 }
 ```
 
-And now back in `invoice.js` we use the param to look up an invoice and display more information:
+And now back in `invoice.jsx` we use the param to look up an invoice and display more information:
 
-```js filename=routes/invoice.js lines=[2,6]
+```js filename=routes/invoice.jsx lines=[2,6]
 import { useParams } from "react-router-dom";
 import { getInvoice } from "../data";
 
@@ -806,12 +806,17 @@ export function deleteInvoice(number) {
 
 Now let's add the delete button, call our new function, and navigate to the index route:
 
-```js lines=[1-2,5,17-24] filename=src/routes/invoice.jsx
-import { useParams, useNavigate } from "react-router-dom";
+```js lines=[1-2,5-6,17-26] filename=src/routes/invoice.jsx
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { getInvoice, deleteInvoice } from "../data";
 
 export default function Invoice() {
   let navigate = useNavigate();
+  let location = useLocation();
   let params = useParams();
   let invoice = getInvoice(parseInt(params.invoiceId, 10));
 
@@ -826,7 +831,7 @@ export default function Invoice() {
         <button
           onClick={() => {
             deleteInvoice(invoice.number);
-            navigate("/invoices");
+            navigate("/invoices" + location.search);
           }}
         >
           Delete
@@ -836,6 +841,8 @@ export default function Invoice() {
   );
 }
 ```
+
+Notice we used `useLocation` again to persist the query string by adding `location.search` to the navigation link.
 
 ## Getting Help
 

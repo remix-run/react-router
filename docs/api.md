@@ -29,6 +29,7 @@ To get React Router working in your app, you need to render a router element at 
 - [`<StaticRouter>`](#staticrouter) should be used when server-rendering a website
 - [`<NativeRouter>`](#nativerouter) should be used in [React Native](https://reactnative.dev/) apps
 - [`<MemoryRouter>`](#memoryrouter) is useful in testing scenarios and as a reference implementation for the other routers
+- [`<unstable_HistoryRouter>`](#unstable_historyrouter) is used with your own [`history`](https://github.com/remix-run/history) instance.
 
 These routers provide the context that React Router needs to operate in a particular environment. Each one renders [a `<Router>`](#router) internally, which you may also do if you need more fine-grained control for some reason. But it is highly likely that one of the built-in routers is what you need.
 
@@ -233,6 +234,45 @@ describe("My app", () => {
 });
 ```
 
+### `<unstable_HistoryRouter>`
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function HistoryRouter(
+  props: HistoryRouterProps
+): React.ReactElement;
+
+interface HistoryRouterProps {
+  basename?: string;
+  children?: React.ReactNode;
+  history: History;
+}
+```
+
+</details>
+
+`<unstable_HistoryRouter>` takes an instance of the [`history`](https://github.com/remix-run/history) library as prop. This allows you to use that instance in non-React contexts or as a global variable.
+
+```tsx
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { unstable_HistoryRouter as HistoryRouter } from "react-router-dom";
+import { createBrowserHistory } from "history";
+
+const history = createBrowserHistory({ window });
+
+ReactDOM.render(
+  <HistoryRouter history={history}>
+    {/* The rest of your app goes here */}
+  </HistoryRouter>,
+  root
+);
+```
+
+<docs-warning>This API is currently prefixed as `unstable_` because you may unintentionally add two versions of the `history` library to your app, the one you have added to your package.json and whatever version React Router uses internally. If it is allowed by your tooling, it's recommended to not add `history` as a direct dependency and instead rely on the nested dependency from the `react-router` package. Once we have a mechanism to detect mis-matched versions, this API will remove its `unstable_` prefix.</docs-warning>
+
 ### `<Link>`
 
 > **Note:**
@@ -310,7 +350,7 @@ interface LinkProps extends TouchableHighlightProps {
   children?: React.ReactNode;
   onPress?(event: GestureResponderEvent): void;
   replace?: boolean;
-  state?: State;
+  state?: any;
   to: To;
 }
 ```
@@ -355,7 +395,9 @@ interface NavLinkProps
     | ((props: { isActive: boolean }) => React.ReactNode);
   className?:
     | string
-    | ((props: { isActive: boolean }) => string);
+    | ((props: {
+        isActive: boolean;
+      }) => string | undefined);
   end?: boolean;
   style?:
     | React.CSSProperties
@@ -473,7 +515,7 @@ declare function Navigate(props: NavigateProps): null;
 interface NavigateProps {
   to: To;
   replace?: boolean;
-  state?: State;
+  state?: any;
 }
 ```
 
@@ -594,6 +636,8 @@ function Parent() {
 ```
 
 ```tsx lines=[2]
+import { useOutletContext } from "react-router-dom";
+
 function Child() {
   const [count, setCount] = useOutletContext();
   const increment = () => setCount((c) => c + 1);
@@ -606,6 +650,7 @@ If you're using TypeScript, we recommend the parent component provide a custom h
 ```tsx filename=src/routes/dashboard.tsx lines=[12,17-19]
 import * as React from "react";
 import type { User } from "./types";
+import { Outlet, useOutletContext } from "react-router-dom";
 
 type ContextType = { user: User | null };
 
@@ -615,7 +660,7 @@ export default function Dashboard() {
   return (
     <div>
       <h1>Dashboard</h1>
-      <Outlet context={user} />
+      <Outlet context={{ user }} />
     </div>
   );
 }
@@ -629,7 +674,7 @@ export function useUser() {
 import { useUser } from "../dashboard";
 
 export default function DashboardMessages() {
-  const user = useUser();
+  const { user } = useUser();
   return (
     <div>
       <h2>Messages</h2>
@@ -831,7 +876,7 @@ The term "location" in React Router refers to [the `Location` interface](https:/
 >
 > The `history` package is React Router's only dependency and many of the
 > core types in React Router come directly from that library including
-> `Location`, `To`, `Path`, `State`, and others. You can read more about
+> `Location`, `To`, `Path`, and others. You can read more about
 > the history library in [its documentation](https://github.com/remix-run/history/tree/main/docs).
 
 ### `matchRoutes`
@@ -958,14 +1003,13 @@ The `useHref` hook returns a URL that may be used to link to the given `to` loca
 
 ```tsx
 declare function useLinkClickHandler<
-  E extends Element = HTMLAnchorElement,
-  S extends State = State
+  E extends Element = HTMLAnchorElement
 >(
   to: To,
   options?: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
-    state?: S;
+    state?: any;
   }
 ): (event: React.MouseEvent<E, MouseEvent>) => void;
 ```
@@ -1025,13 +1069,11 @@ const Link = React.forwardRef(
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useLinkPressHandler<
-  S extends State = State
->(
+declare function useLinkPressHandler(
   to: To,
   options?: {
     replace?: boolean;
-    state?: S;
+    state?: any;
   }
 ): (event: GestureResponderEvent) => void;
 ```
@@ -1091,9 +1133,8 @@ The `useInRouterContext` hooks returns `true` if the component is being rendered
 ```tsx
 declare function useLocation(): Location;
 
-interface Location<S extends State = object | null>
-  extends Path {
-  state: S;
+interface Location extends Path {
+  state: unknown;
   key: Key;
 }
 ```
@@ -1315,7 +1356,7 @@ function App() {
 ```tsx
 declare function useSearchParams(
   defaultInit?: URLSearchParamsInit
-): [URLSearchParams, URLSearchParamsSetter];
+): [URLSearchParams, SetURLSearchParams];
 
 type ParamKeyValuePair = [string, string];
 
@@ -1325,12 +1366,10 @@ type URLSearchParamsInit =
   | Record<string, string | string[]>
   | URLSearchParams;
 
-interface URLSearchParamsSetter {
-  (
-    nextInit: URLSearchParamsInit,
-    navigateOptions?: { replace?: boolean; state?: State }
-  ): void;
-}
+type SetURLSearchParams = (
+  nextInit?: URLSearchParamsInit,
+  navigateOpts?: : { replace?: boolean; state?: any }
+) => void;
 ```
 
 </details>
@@ -1381,7 +1420,7 @@ function App() {
 ```tsx
 declare function useSearchParams(
   defaultInit?: URLSearchParamsInit
-): [URLSearchParams, URLSearchParamsSetter];
+): [URLSearchParams, SetURLSearchParams];
 
 type ParamKeyValuePair = [string, string];
 
@@ -1391,11 +1430,14 @@ type URLSearchParamsInit =
   | Record<string, string | string[]>
   | URLSearchParams;
 
-interface URLSearchParamsSetter {
-  (
-    nextInit: URLSearchParamsInit,
-    navigateOptions?: { replace?: boolean; state?: State }
-  ): void;
+type SetURLSearchParams = (
+  nextInit?: URLSearchParamsInit,
+  navigateOpts?: : NavigateOptions
+) => void;
+
+interface NavigateOptions {
+  replace?: boolean;
+  state?: any;
 }
 ```
 

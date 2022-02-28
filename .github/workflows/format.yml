@@ -8,6 +8,7 @@ on:
 
 jobs:
   format:
+    if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
 
     steps:
@@ -40,6 +41,6 @@ jobs:
             echo "💿 no formatting changed"
             exit 0
           fi
-          git commit -m "chore: format" -m "formatted $GITHUB_SHA"
+          git commit -m "chore: format"
           git push
           echo "💿 pushed formatting changes https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"

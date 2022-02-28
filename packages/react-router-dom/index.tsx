@@ -294,7 +294,7 @@ export interface NavLinkProps
     | React.ReactNode
     | ((props: { isActive: boolean }) => React.ReactNode);
   caseSensitive?: boolean;
-  className?: string | ((props: { isActive: boolean }) => string);
+  className?: string | ((props: { isActive: boolean }) => string | undefined);
   end?: boolean;
   style?:
     | React.CSSProperties
@@ -336,7 +336,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
 
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
-    let className: string;
+    let className: string | undefined;
     if (typeof classNameProp === "function") {
       className = classNameProp({ isActive });
     } else {
