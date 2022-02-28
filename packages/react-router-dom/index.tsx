@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { BrowserHistory, HashHistory, History } from "history";
-import { createBrowserHistory, createHashHistory, createPath } from "history";
+import { createBrowserHistory, createHashHistory } from "history";
 import {
   MemoryRouter,
   Navigate,
@@ -12,6 +12,8 @@ import {
   generatePath,
   matchRoutes,
   matchPath,
+  createPath,
+  parsePath,
   resolvePath,
   renderMatches,
   useHref,
@@ -61,6 +63,8 @@ export {
   generatePath,
   matchRoutes,
   matchPath,
+  createPath,
+  parsePath,
   renderMatches,
   resolvePath,
   useHref,
@@ -78,6 +82,7 @@ export {
 
 export { NavigationType } from "react-router";
 export type {
+  Hash,
   Location,
   Path,
   To,
@@ -96,7 +101,9 @@ export type {
   LayoutRouteProps,
   IndexRouteProps,
   RouterProps,
-  RoutesProps,
+  Pathname,
+  Search,
+  RoutesProps
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////
