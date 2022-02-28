@@ -1,21 +1,23 @@
 import * as React from "react";
-import { Location, parsePath, Path, To } from "history";
-import { Action as NavigationType } from "history";
+import type { Location, Path, To } from "history";
+import { Action as NavigationType, parsePath } from "history";
 
 import { LocationContext, NavigationContext, RouteContext } from "./context";
+import type {
+  ParamParseKey,
+  Params,
+  PathMatch,
+  PathPattern,
+  RouteMatch,
+  RouteObject,
+} from "./router";
 import {
   getToPathname,
   invariant,
   joinPaths,
   matchPath,
   matchRoutes,
-  ParamParseKey,
-  Params,
-  PathMatch,
-  PathPattern,
   resolveTo,
-  RouteMatch,
-  RouteObject,
   warning,
   warningOnce,
 } from "./router";
