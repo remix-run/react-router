@@ -9,7 +9,7 @@
     "directory": "packages/react-router-dom"
   },
   "license": "MIT",
-  "main": "./main.cjs",
+  "main": "./index.cjs",
   "module": "./index.js",
   "types": "./index.d.ts",
   "exports": {
