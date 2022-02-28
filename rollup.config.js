@@ -1,6 +1,7 @@
 import babel from "rollup-plugin-babel";
 // import compiler from "@ampproject/rollup-plugin-closure-compiler";
 import copy from "rollup-plugin-copy";
+import extensions from "rollup-plugin-extensions";
 import prettier from "rollup-plugin-prettier";
 import replace from "@rollup/plugin-replace";
 import { terser } from "rollup-plugin-terser";
@@ -41,6 +42,7 @@ function reactRouter() {
       },
       external: ["history", "react"],
       plugins: [
+        extensions({ extensions: [".tsx", ".ts"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -75,6 +77,7 @@ function reactRouter() {
       },
       external: ["history", "react"],
       plugins: [
+        extensions({ extensions: [".tsx", ".ts"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -101,6 +104,7 @@ function reactRouter() {
       },
       external: ["history", "react"],
       plugins: [
+        extensions({ extensions: [".tsx", ".ts"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -147,6 +151,7 @@ function reactRouter() {
       },
       external: ["history", "react"],
       plugins: [
+        extensions({ extensions: [".tsx", ".ts"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -175,6 +180,7 @@ function reactRouter() {
       },
       external: ["history", "react"],
       plugins: [
+        extensions({ extensions: [".tsx", ".ts"] }),
         babel({
           exclude: /node_modules/,
           presets: [
