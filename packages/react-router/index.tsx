@@ -1,7 +1,6 @@
 import * as React from "react";
 import type {
   Hash,
-  History,
   InitialEntry,
   Location,
   MemoryHistory,
@@ -17,6 +16,12 @@ import {
   createPath,
 } from "history";
 
+import type { Navigator } from "./lib/context";
+import {
+  LocationContext,
+  NavigationContext,
+  RouteContext,
+} from "./lib/context";
 import {
   generatePath,
   getToPathname,
@@ -42,61 +47,12 @@ import {
 export type { Hash, Location, Path, Pathname, Search, To };
 export { parsePath, createPath, NavigationType };
 
+// re-export from lib/context.ts
+export type { Navigator };
+
 // re-export from lib/router.ts
 export type { Params, PathMatch, RouteMatch, RouteObject };
 export { generatePath, matchPath, matchRoutes, resolvePath };
-
-///////////////////////////////////////////////////////////////////////////////
-// CONTEXT
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * A Navigator is a "location changer"; it's how you get to different locations.
- *
- * Every history instance conforms to the Navigator interface, but the
- * distinction is useful primarily when it comes to the low-level <Router> API
- * where both the location and a navigator must be provided separately in order
- * to avoid "tearing" that may occur in a suspense-enabled app if the action
- * and/or location were to be read directly from the history instance.
- */
-export type Navigator = Pick<History, "go" | "push" | "replace" | "createHref">;
-
-interface NavigationContextObject {
-  basename: string;
-  navigator: Navigator;
-  static: boolean;
-}
-
-const NavigationContext = React.createContext<NavigationContextObject>(null!);
-
-if (__DEV__) {
-  NavigationContext.displayName = "Navigation";
-}
-
-interface LocationContextObject {
-  location: Location;
-  navigationType: NavigationType;
-}
-
-const LocationContext = React.createContext<LocationContextObject>(null!);
-
-if (__DEV__) {
-  LocationContext.displayName = "Location";
-}
-
-interface RouteContextObject {
-  outlet: React.ReactElement | null;
-  matches: RouteMatch[];
-}
-
-const RouteContext = React.createContext<RouteContextObject>({
-  outlet: null,
-  matches: [],
-});
-
-if (__DEV__) {
-  RouteContext.displayName = "Route";
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // COMPONENTS
