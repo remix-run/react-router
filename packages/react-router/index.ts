@@ -42,7 +42,13 @@ import {
   useResolvedPath,
   useRoutes,
 } from "./lib/hooks";
-import type { Params, PathMatch, RouteMatch, RouteObject } from "./lib/router";
+import type {
+  Params,
+  PathMatch,
+  PathPattern,
+  RouteMatch,
+  RouteObject,
+} from "./lib/router";
 import {
   generatePath,
   matchPath,
@@ -50,54 +56,59 @@ import {
   resolvePath,
 } from "./lib/router";
 
-// re-export from history
-export type { Hash, Location, Path, Pathname, Search, To };
-export { parsePath, createPath, NavigationType };
-
-// re-export from lib/context.ts
-export type { Navigator };
-
-// re-export from lib/router.ts
-export type { Params, PathMatch, RouteMatch, RouteObject };
-export { generatePath, matchPath, matchRoutes, resolvePath };
-
-// re-export from lib/hooks.ts
-export type { NavigateFunction, NavigateOptions };
+// Expose react-router public API
+export type {
+  Hash,
+  IndexRouteProps,
+  LayoutRouteProps,
+  Location,
+  MemoryRouterProps,
+  NavigateFunction,
+  NavigateOptions,
+  NavigateProps,
+  OutletProps,
+  PathMatch,
+  PathPattern,
+  PathRouteProps,
+  RouteMatch,
+  RouteObject,
+  RouteProps,
+  RouterProps,
+  RoutesProps,
+  Navigator,
+  Params,
+  Path,
+  Pathname,
+  Search,
+  To,
+};
 export {
+  MemoryRouter,
+  Navigate,
+  NavigationType,
+  Outlet,
+  Route,
+  Router,
+  Routes,
+  createPath,
+  createRoutesFromChildren,
+  generatePath,
+  matchPath,
+  matchRoutes,
+  parsePath,
+  renderMatches,
+  resolvePath,
   useHref,
   useInRouterContext,
   useLocation,
   useMatch,
-  useNavigationType,
   useNavigate,
+  useNavigationType,
   useOutlet,
   useOutletContext,
   useParams,
   useResolvedPath,
   useRoutes,
-};
-
-// re-export from lib/components.ts
-export type {
-  MemoryRouterProps,
-  NavigateProps,
-  OutletProps,
-  RouteProps,
-  PathRouteProps,
-  LayoutRouteProps,
-  IndexRouteProps,
-  RouterProps,
-  RoutesProps,
-};
-export {
-  createRoutesFromChildren,
-  renderMatches,
-  MemoryRouter,
-  Navigate,
-  Outlet,
-  Route,
-  Router,
-  Routes,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
