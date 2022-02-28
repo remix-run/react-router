@@ -8,40 +8,40 @@ function pickPaths(
   basename?: string
 ): string[] | null {
   let matches = matchRoutes(routes, pathname, basename);
-  return matches && matches.map(match => match.route.path || "");
+  return matches && matches.map((match) => match.route.path || "");
 }
 
 describe("matchRoutes", () => {
   let userEditRoute: RouteObject = {
     path: "edit",
-    element: <h1>User Edit</h1>
+    element: <h1>User Edit</h1>,
   };
   let userProfileRoute: RouteObject = {
     path: ":id",
     element: <h1>User Profile</h1>,
-    children: [userEditRoute]
+    children: [userEditRoute],
   };
   let usersRoute: RouteObject = {
     path: "/users",
     element: <h1>Users</h1>,
-    children: [{ index: true, element: <h1>Index</h1> }, userProfileRoute]
+    children: [{ index: true, element: <h1>Index</h1> }, userProfileRoute],
   };
   let indexWithPathRoute: RouteObject = {
     path: "/withpath",
-    index: true
+    index: true,
   };
   let layoutRouteIndex: RouteObject = {
     path: "/layout",
     index: true,
-    element: <h1>Layout</h1>
+    element: <h1>Layout</h1>,
   };
   let layoutRoute: RouteObject = {
     path: "/layout",
     children: [
       { path: "item", element: <h1>Item</h1> },
       { path: ":id", element: <h1>ID</h1> },
-      { path: "*", element: <h1>Not Found</h1> }
-    ]
+      { path: "*", element: <h1>Not Found</h1> },
+    ],
   };
 
   let routes = [
@@ -51,14 +51,14 @@ describe("matchRoutes", () => {
       element: <h1>Home</h1>,
       children: [
         { index: true, element: <h1>Index</h1> },
-        { path: "*", element: <h1>Not Found</h1> }
-      ]
+        { path: "*", element: <h1>Not Found</h1> },
+      ],
     },
     indexWithPathRoute,
     layoutRoute,
     layoutRouteIndex,
     usersRoute,
-    { path: "*", element: <h1>Not Found</h1> }
+    { path: "*", element: <h1>Not Found</h1> },
   ];
 
   it("matches root * routes correctly", () => {
@@ -96,7 +96,7 @@ describe("matchRoutes", () => {
     expect(pickPaths(routes, "/users/mj/edit")).toEqual([
       "/users",
       ":id",
-      "edit"
+      "edit",
     ]);
   });
 
@@ -105,7 +105,7 @@ describe("matchRoutes", () => {
     expect(pickPaths(routes, "/users/VXNlcnM6MQ==/edit")).toEqual([
       "/users",
       ":id",
-      "edit"
+      "edit",
     ]);
   });
 
@@ -123,13 +123,13 @@ describe("matchRoutes", () => {
     it("matches a pathname that starts with the basename", () => {
       expect(pickPaths(routes, "/app/users/mj", "/app")).toEqual([
         "/users",
-        ":id"
+        ":id",
       ]);
 
       // basename should not be case-sensitive
       expect(pickPaths(routes, "/APP/users/mj", "/app")).toEqual([
         "/users",
-        ":id"
+        ":id",
       ]);
     });
 

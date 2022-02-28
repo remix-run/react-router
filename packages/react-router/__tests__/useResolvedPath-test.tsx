@@ -43,7 +43,7 @@ describe("useResolvedPath", () => {
                   path={{
                     pathname: "/home",
                     search: new URLSearchParams({ user: "mj" }).toString(),
-                    hash: "#welcome"
+                    hash: "#welcome",
                   }}
                 />
               }

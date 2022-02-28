@@ -97,6 +97,6 @@ async function run() {
   return 0;
 }
 
-run().then(code => {
+run().then((code) => {
   process.exit(code);
 });

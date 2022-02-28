@@ -60,7 +60,7 @@ function reactRouter() {
         file: `${OUTPUT_DIR}/index.js`,
         format: "esm",
         sourcemap: !PRETTY,
-        banner: createBanner("React Router", version)
+        banner: createBanner("React Router", version),
       },
       external: ["history", "react"],
       plugins: [
@@ -69,10 +69,10 @@ function reactRouter() {
           presets: [
             ["@babel/preset-env", { loose: true }],
             "@babel/preset-react",
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
+          extensions: [".ts", ".tsx"],
         }),
         copy({
           targets: [
@@ -82,12 +82,12 @@ function reactRouter() {
               transform: addTypeModule
             },
             { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
-            { src: "LICENSE.md", dest: OUTPUT_DIR }
+            { src: "LICENSE.md", dest: OUTPUT_DIR },
           ],
-          verbose: true
-        })
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
-    }
+          verbose: true,
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
   ];
 
   // JS modules for <script type=module>
@@ -98,7 +98,7 @@ function reactRouter() {
         file: `${OUTPUT_DIR}/react-router.development.js`,
         format: "esm",
         sourcemap: !PRETTY,
-        banner: createBanner("React Router", version)
+        banner: createBanner("React Router", version),
       },
       external: ["history", "react"],
       plugins: [
@@ -107,16 +107,16 @@ function reactRouter() {
           presets: [
             "@babel/preset-modules",
             "@babel/preset-react",
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
+          extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
-          values: { "process.env.NODE_ENV": JSON.stringify("development") }
-        })
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
+          values: { "process.env.NODE_ENV": JSON.stringify("development") },
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
       input: `${SOURCE_DIR}/index.tsx`,
@@ -124,7 +124,7 @@ function reactRouter() {
         file: `${OUTPUT_DIR}/react-router.production.min.js`,
         format: "esm",
         sourcemap: !PRETTY,
-        banner: createBanner("React Router", version)
+        banner: createBanner("React Router", version),
       },
       external: ["history", "react"],
       plugins: [
@@ -135,29 +135,29 @@ function reactRouter() {
               "@babel/preset-modules",
               {
                 // Don't spoof `.name` for Arrow Functions, which breaks when minified anyway.
-                loose: true
-              }
+                loose: true,
+              },
             ],
             [
               "@babel/preset-react",
               {
                 // Compile JSX Spread to Object.assign(), which is reliable in ESM browsers.
-                useBuiltIns: true
-              }
+                useBuiltIns: true,
+              },
             ],
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
+          extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
-          values: { "process.env.NODE_ENV": JSON.stringify("production") }
+          values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
         // compiler(),
-        terser({ ecma: 8, safari10: true })
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
-    }
+        terser({ ecma: 8, safari10: true }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
   ];
 
   // UMD modules for <script> tags and CommonJS (node)
@@ -170,7 +170,7 @@ function reactRouter() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
         globals: { history: "HistoryLibrary", react: "React" },
-        name: "ReactRouter"
+        name: "ReactRouter",
       },
       external: ["history", "react"],
       plugins: [
@@ -179,16 +179,16 @@ function reactRouter() {
           presets: [
             ["@babel/preset-env", { loose: true }],
             "@babel/preset-react",
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
+          extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
-          values: { "process.env.NODE_ENV": JSON.stringify("development") }
-        })
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
+          values: { "process.env.NODE_ENV": JSON.stringify("development") },
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
       input: `${SOURCE_DIR}/index.tsx`,
@@ -198,7 +198,7 @@ function reactRouter() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
         globals: { history: "HistoryLibrary", react: "React" },
-        name: "ReactRouter"
+        name: "ReactRouter",
       },
       external: ["history", "react"],
       plugins: [
@@ -207,19 +207,19 @@ function reactRouter() {
           presets: [
             ["@babel/preset-env", { loose: true }],
             "@babel/preset-react",
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
+          extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
-          values: { "process.env.NODE_ENV": JSON.stringify("production") }
+          values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
         // compiler(),
-        terser()
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
-    }
+        terser(),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
   ];
 
   // Node entry points
@@ -229,12 +229,12 @@ function reactRouter() {
       output: {
         file: `${OUTPUT_DIR}/index.cjs`,
         format: "cjs",
-        banner: createBanner("React Router", version)
+        banner: createBanner("React Router", version),
       },
       plugins: [addTypeCommonjsFile(SOURCE_DIR, OUTPUT_DIR)].concat(
         PRETTY ? prettier({ parser: "babel" }) : []
       )
-    }
+    },
   ];
 
   return [...modules, ...webModules, ...globals, ...node];
@@ -253,7 +253,7 @@ function reactRouterDom() {
         file: `${OUTPUT_DIR}/index.js`,
         format: "esm",
         sourcemap: !PRETTY,
-        banner: createBanner("React Router DOM", version)
+        banner: createBanner("React Router DOM", version),
       },
       external: ["history", "react", "react-dom", "react-router"],
       plugins: [
@@ -262,10 +262,10 @@ function reactRouterDom() {
           presets: [
             ["@babel/preset-env", { loose: true }],
             "@babel/preset-react",
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
+          extensions: [".ts", ".tsx"],
         }),
         copy({
           targets: [
@@ -275,12 +275,12 @@ function reactRouterDom() {
               transform: addTypeModule
             },
             { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
-            { src: "LICENSE.md", dest: OUTPUT_DIR }
+            { src: "LICENSE.md", dest: OUTPUT_DIR },
           ],
-          verbose: true
-        })
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
-    }
+          verbose: true,
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
   ];
 
   // JS modules for <script type=module>
@@ -293,7 +293,7 @@ function reactRouterDom() {
         file: `${OUTPUT_DIR}/react-router-dom.development.js`,
         format: "esm",
         sourcemap: !PRETTY,
-        banner: createBanner("React Router DOM", version)
+        banner: createBanner("React Router DOM", version),
       },
       external: ["history", "react", "react-router"],
       plugins: [
@@ -302,16 +302,16 @@ function reactRouterDom() {
           presets: [
             "@babel/preset-modules",
             "@babel/preset-react",
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
+          extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
-          values: { "process.env.NODE_ENV": JSON.stringify("development") }
-        })
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
+          values: { "process.env.NODE_ENV": JSON.stringify("development") },
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
       input: `${SOURCE_DIR}/index.tsx`,
@@ -319,7 +319,7 @@ function reactRouterDom() {
         file: `${OUTPUT_DIR}/react-router-dom.production.min.js`,
         format: "esm",
         sourcemap: !PRETTY,
-        banner: createBanner("React Router DOM", version)
+        banner: createBanner("React Router DOM", version),
       },
       external: ["history", "react", "react-router"],
       plugins: [
@@ -330,29 +330,29 @@ function reactRouterDom() {
               "@babel/preset-modules",
               {
                 // Don't spoof `.name` for Arrow Functions, which breaks when minified anyway.
-                loose: true
-              }
+                loose: true,
+              },
             ],
             [
               "@babel/preset-react",
               {
                 // Compile JSX Spread to Object.assign(), which is reliable in ESM browsers.
-                useBuiltIns: true
-              }
+                useBuiltIns: true,
+              },
             ],
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
+          extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
-          values: { "process.env.NODE_ENV": JSON.stringify("production") }
+          values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
         // compiler(),
-        terser({ ecma: 8, safari10: true })
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
-    }
+        terser({ ecma: 8, safari10: true }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
   ];
 
   // UMD modules for <script> tags and CommonJS (node)
@@ -367,9 +367,9 @@ function reactRouterDom() {
         globals: {
           history: "HistoryLibrary",
           react: "React",
-          "react-router": "ReactRouter"
+          "react-router": "ReactRouter",
         },
-        name: "ReactRouterDOM"
+        name: "ReactRouterDOM",
       },
       external: ["history", "react", "react-router"],
       plugins: [
@@ -378,16 +378,16 @@ function reactRouterDom() {
           presets: [
             ["@babel/preset-env", { loose: true }],
             "@babel/preset-react",
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
+          extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
-          values: { "process.env.NODE_ENV": JSON.stringify("development") }
-        })
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
+          values: { "process.env.NODE_ENV": JSON.stringify("development") },
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
       input: `${SOURCE_DIR}/index.tsx`,
@@ -399,9 +399,9 @@ function reactRouterDom() {
         globals: {
           history: "HistoryLibrary",
           react: "React",
-          "react-router": "ReactRouter"
+          "react-router": "ReactRouter",
         },
-        name: "ReactRouterDOM"
+        name: "ReactRouterDOM",
       },
       external: ["history", "react", "react-router"],
       plugins: [
@@ -410,19 +410,19 @@ function reactRouterDom() {
           presets: [
             ["@babel/preset-env", { loose: true }],
             "@babel/preset-react",
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
+          extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
-          values: { "process.env.NODE_ENV": JSON.stringify("production") }
+          values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
         // compiler(),
-        terser()
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
-    }
+        terser(),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
   ];
 
   // Node entry points
@@ -432,24 +432,24 @@ function reactRouterDom() {
       output: {
         file: `${OUTPUT_DIR}/index.cjs`,
         format: "cjs",
-        banner: createBanner("React Router DOM", version)
+        banner: createBanner("React Router DOM", version),
       },
       plugins: [addTypeCommonjsFile(SOURCE_DIR, OUTPUT_DIR)].concat(
         PRETTY ? prettier({ parser: "babel" }) : []
-      )
+      ),
     },
     {
       input: `${SOURCE_DIR}/server.tsx`,
       output: {
         file: `${OUTPUT_DIR}/server.cjs`,
-        format: "cjs"
+        format: "cjs",
       },
       external: [
         "url",
         "history",
         "react",
         "react-dom/server",
-        "react-router-dom"
+        "react-router-dom",
       ],
       plugins: [
         babel({
@@ -457,26 +457,26 @@ function reactRouterDom() {
           presets: [
             ["@babel/preset-env", { loose: true, targets: { node: true } }],
             "@babel/preset-react",
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
-        })
+          extensions: [".ts", ".tsx"],
+        }),
         // compiler()
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
       input: `${SOURCE_DIR}/server.tsx`,
       output: {
         file: `${OUTPUT_DIR}/server.js`,
-        format: "esm"
+        format: "esm",
       },
       external: [
         "url",
         "history",
         "react",
         "react-dom/server",
-        "react-router-dom"
+        "react-router-dom",
       ],
       plugins: [
         babel({
@@ -486,18 +486,18 @@ function reactRouterDom() {
               "@babel/preset-modules",
               {
                 // Don't spoof `.name` for Arrow Functions, which breaks when minified anyway.
-                loose: true
-              }
+                loose: true,
+              },
             ],
             "@babel/preset-react",
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
-        })
+          extensions: [".ts", ".tsx"],
+        }),
         // compiler()
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
-    }
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
   ];
 
   return [...modules, ...webModules, ...globals, ...node];
@@ -515,7 +515,7 @@ function reactRouterNative() {
         file: `${OUTPUT_DIR}/index.js`,
         format: "esm",
         sourcemap: !PRETTY,
-        banner: createBanner("React Router Native", version)
+        banner: createBanner("React Router Native", version),
       },
       external: [
         "@babel/runtime/helpers/esm/extends",
@@ -524,7 +524,7 @@ function reactRouterNative() {
         "history",
         "react",
         "react-native",
-        "react-router"
+        "react-router",
       ],
       plugins: [
         babel({
@@ -535,24 +535,24 @@ function reactRouterNative() {
               "module:metro-react-native-babel-preset",
               {
                 disableImportExportTransform: true,
-                enableBabelRuntime: false
-              }
+                enableBabelRuntime: false,
+              },
             ],
-            "@babel/preset-typescript"
+            "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
-          extensions: [".ts", ".tsx"]
+          extensions: [".ts", ".tsx"],
         }),
         copy({
           targets: [
             { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
             { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
-            { src: "LICENSE.md", dest: OUTPUT_DIR }
+            { src: "LICENSE.md", dest: OUTPUT_DIR },
           ],
-          verbose: true
-        })
-      ].concat(PRETTY ? prettier({ parser: "babel" }) : [])
-    }
+          verbose: true,
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
   ];
 
   return modules;
@@ -562,7 +562,7 @@ export default function rollup(options) {
   let builds = [
     ...reactRouter(options),
     ...reactRouterDom(options),
-    ...reactRouterNative(options)
+    ...reactRouterNative(options),
   ];
 
   return builds;

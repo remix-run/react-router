@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
 
 jobs:
   format:
@@ -15,6 +16,8 @@ jobs:
 
       - name: Checkout Repository
         uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.FORMAT_TOKEN }}
 
       - name: Use Node.js
         uses: actions/setup-node@v2
@@ -29,7 +32,7 @@ jobs:
 
       - name: Commit
         run: |
-          git config --local user.email "github-actions@remix.run"
+          git config --local user.email "hello@remix.run"
           git config --local user.name "Remix Run Bot"
 
           git add .

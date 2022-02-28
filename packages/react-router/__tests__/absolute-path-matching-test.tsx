@@ -3,7 +3,7 @@ import { matchRoutes } from "react-router";
 
 function pickPaths(routes: RouteObject[], pathname: string): string[] | null {
   let matches = matchRoutes(routes, pathname);
-  return matches && matches.map(match => match.route.path || "");
+  return matches && matches.map((match) => match.route.path || "");
 }
 
 describe("absolute path matching", () => {
@@ -15,9 +15,9 @@ describe("absolute path matching", () => {
           { index: true },
           { path: "add" },
           { path: "remove" },
-          { path: "/users/:id" }
-        ]
-      }
+          { path: "/users/:id" },
+        ],
+      },
     ];
 
     expect(pickPaths(routes, "/users")).toEqual(["/users", ""]);
@@ -30,14 +30,14 @@ describe("absolute path matching", () => {
     let routes = [
       {
         path: "/users",
-        children: [{ path: "/users/*" }]
-      }
+        children: [{ path: "/users/*" }],
+      },
     ];
 
     expect(pickPaths(routes, "/users")).toEqual(["/users"]);
     expect(pickPaths(routes, "/users/not-found")).toEqual([
       "/users",
-      "/users/*"
+      "/users/*",
     ]);
   });
 
@@ -50,9 +50,9 @@ describe("absolute path matching", () => {
             children: [
               { path: ":id" },
               // This one should throw because it doesn't begin with /users
-              { path: "/not/users" }
-            ]
-          }
+              { path: "/not/users" },
+            ],
+          },
         ],
         "/users/123"
       );

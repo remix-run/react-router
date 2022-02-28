@@ -245,7 +245,7 @@ Once you have webpack configured and the necessary dependencies installed, somew
 import {
   BrowserRouter,
   Routes,
-  Route
+  Route,
 } from "react-router-dom";
 
 function App() {
