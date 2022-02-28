@@ -17,7 +17,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
         with:
-          token: ${{ secrets.FORMAT_TOKEN }}
+          token: ${{ secrets.FORMAT_PAT }}
 
       - name: Use Node.js
         uses: actions/setup-node@v2
