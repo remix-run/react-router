@@ -19,6 +19,8 @@ import {
   generatePath,
   matchRoutes,
   matchPath,
+  createPath,
+  parsePath,
   resolvePath,
   renderMatches,
   useHref,
@@ -53,6 +55,8 @@ export {
   generatePath,
   matchRoutes,
   matchPath,
+  createPath,
+  parsePath,
   resolvePath,
   renderMatches,
   useHref,
@@ -70,6 +74,7 @@ export {
 
 export { NavigationType } from "react-router";
 export type {
+  Hash,
   IndexRouteProps,
   LayoutRouteProps,
   Location,
@@ -88,6 +93,8 @@ export type {
   RouteProps,
   RouterProps,
   RoutesProps,
+  Pathname,
+  Search,
   To,
 } from "react-router";
 
