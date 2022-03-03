@@ -33,14 +33,16 @@ export async function setupRemix(platform: SetupPlatform): Promise<void> {
     }
   }
 
-  let platformPkgJsonFile = resolvePackageJsonFile(`@remix-run/${platform}`);
-  let serverPkgJsonFile = resolvePackageJsonFile(`@remix-run/server-runtime`);
-  let clientPkgJsonFile = resolvePackageJsonFile(`@remix-run/react`);
-
   // Update remix/package.json dependencies
   let remixDeps = {};
+
+  let platformPkgJsonFile = resolvePackageJsonFile(`@remix-run/${platform}`);
   await assignDependency(remixDeps, platformPkgJsonFile);
+
+  let serverPkgJsonFile = resolvePackageJsonFile(`@remix-run/server-runtime`);
   await assignDependency(remixDeps, serverPkgJsonFile);
+
+  let clientPkgJsonFile = resolvePackageJsonFile(`@remix-run/react`);
   await assignDependency(remixDeps, clientPkgJsonFile);
 
   let remixPkgJson = await fse.readJSON(remixPkgJsonFile);
@@ -79,8 +81,8 @@ export async function setupRemix(platform: SetupPlatform): Promise<void> {
     ".js"
   );
 
-  await fse.writeFile(path.join(remixPkgDir, "index.js"), magicCJS);
   await fse.writeFile(path.join(remixPkgDir, "index.d.ts"), magicTypes);
+  await fse.writeFile(path.join(remixPkgDir, "index.js"), magicCJS);
   await fse.writeFile(path.join(remixPkgDir, "esm/index.js"), magicESM);
 }
 

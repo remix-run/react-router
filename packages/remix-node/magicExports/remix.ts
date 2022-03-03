@@ -1,5 +1,4 @@
-// This file lists all exports from this package that are available to `import
-// "remix"`.
+// Re-export everything from this package that is available in `remix`.
 
 export {
   createFileSessionStorage,
