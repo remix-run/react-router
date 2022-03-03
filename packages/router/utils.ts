@@ -656,7 +656,8 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
 export function resolveTo(
   toArg: To,
   routePathnames: string[],
-  locationPathname: string
+  locationPathname: string,
+  isPathlessRoute = false
 ): Path {
   let to = typeof toArg === "string" ? parsePath(toArg) : { ...toArg };
   let toPathname = toArg === "" || to.pathname === "" ? "/" : to.pathname;
@@ -672,7 +673,9 @@ export function resolveTo(
   if (toPathname == null) {
     from = locationPathname;
   } else {
-    let routePathnameIndex = routePathnames.length - 1;
+    let routePathnameIndex = isPathlessRoute
+      ? routePathnames.length - 2
+      : routePathnames.length - 1;
 
     if (toPathname.startsWith("..")) {
       let toSegments = toPathname.split("/");
