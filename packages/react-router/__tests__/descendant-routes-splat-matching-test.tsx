@@ -184,6 +184,32 @@ describe("Descendant <Routes> splat matching", () => {
           </div>
         `);
       });
+      it("allows `@` to appear at the beginning", () => {
+        let renderer = renderNestedSplatRoute([
+          "/courses/react/@react-fundamentals",
+        ]);
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <div>
+            <h1>
+              Courses
+            </h1>
+            <div>
+              <h1>
+                React
+              </h1>
+              <div>
+                <h1>
+                  React Fundamentals
+                </h1>
+                <p>
+                  The params are 
+                  {"*":"@react-fundamentals","splat":"@react-fundamentals"}
+                </p>
+              </div>
+            </div>
+          </div>
+        `);
+      });
       it("allows url-encoded entities to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
           "/courses/react/%20react-fundamentals",

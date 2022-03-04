@@ -32,6 +32,47 @@ describe("A layout route", () => {
     `);
   });
   describe("matches when a nested splat route begins with a special character", () => {
+    it("allows routes starting with `@`", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/@splat"]}>
+            <Routes>
+              <Route
+                element={
+                  <div>
+                    <h1>Layout</h1>
+                    <Outlet />
+                  </div>
+                }
+              >
+                <Route
+                  path="*"
+                  element={
+                    <div>
+                      <h1>Splat</h1>
+                    </div>
+                  }
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          <h1>
+            Layout
+          </h1>
+          <div>
+            <h1>
+              Splat
+            </h1>
+          </div>
+        </div>
+      `);
+    });
     it("allows routes starting with `-`", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
