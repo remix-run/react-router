@@ -1,4 +1,5 @@
-import { createMemoryHistory, MemoryHistory } from "../index";
+import type { Location, MemoryHistory } from "../index";
+import { createMemoryHistory } from "../index";
 
 import Listen from "./TestSequences/Listen";
 import InitialLocationHasKey from "./TestSequences/InitialLocationHasKey";
@@ -13,6 +14,7 @@ import ReplaceState from "./TestSequences/ReplaceState";
 import EncodedReservedCharacters from "./TestSequences/EncodedReservedCharacters";
 import GoBack from "./TestSequences/GoBack";
 import GoForward from "./TestSequences/GoForward";
+import ListenPopOnly from "./TestSequences/ListenPopOnly";
 
 describe("a memory history", () => {
   let history: MemoryHistory;
@@ -59,8 +61,12 @@ describe("a memory history", () => {
   });
 
   describe("listen", () => {
-    it("does not immediately call listeners", (done) => {
-      Listen(history, done);
+    it("does not immediately call listeners", () => {
+      Listen(history);
+    });
+
+    it("calls listeners only for POP actions", () => {
+      ListenPopOnly(history);
     });
   });
 
@@ -110,11 +116,30 @@ describe("a memory history", () => {
 
   describe("go", () => {
     it("goes back", () => {
-      GoBack(history);
+      let spy: jest.SpyInstance = jest.fn();
+      //@ts-ignore
+      history.listen(spy);
+      GoBack(history, spy);
     });
     it("goes forward", () => {
-      GoForward(history);
+      let spy: jest.SpyInstance = jest.fn();
+      //@ts-ignore
+      history.listen(spy);
+      GoForward(history, spy);
     });
+  });
+});
+
+describe("a memory history without an onPopState callback", () => {
+  it("fails gracefully on go() calls", () => {
+    let history = createMemoryHistory();
+    history.push("/page1");
+    history.push("/page2");
+    expect(history.location.pathname).toBe("/page2");
+    history.go(-2);
+    expect(history.location.pathname).toBe("/");
+    history.go(1);
+    expect(history.location.pathname).toBe("/page1");
   });
 });
 

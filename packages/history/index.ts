@@ -267,15 +267,18 @@ export function createMemoryHistory(
   let { initialEntries = ["/"], initialIndex } = options;
   let entries: Location[]; // Declare so we can access from createLocation
   entries = initialEntries.map((entry) => createLocation(entry));
-  let index = clamp(
-    initialIndex == null ? entries.length - 1 : initialIndex,
-    0,
-    entries.length - 1
+  let index = clampIndex(
+    initialIndex == null ? entries.length - 1 : initialIndex
   );
   let action = Action.Pop;
-  let getCurrentLocation = (): Location => entries[index];
   let listeners = createEvents<Listener>();
 
+  function clampIndex(n: number): number {
+    return Math.min(Math.max(n, 0), entries.length - 1);
+  }
+  function getCurrentLocation(): Location {
+    return entries[index];
+  }
   function createLocation(to: To, state: any = null): Location {
     const location = readOnly<Location>({
       pathname: entries ? getCurrentLocation().pathname : "/",
@@ -304,23 +307,24 @@ export function createMemoryHistory(
     get location() {
       return getCurrentLocation();
     },
-    createHref(to: To) {
+    createHref(to) {
       return typeof to === "string" ? to : createPath(to);
     },
-    push(to: To, state?: any) {
+    push(to, state) {
       action = Action.Push;
       const nextLocation = createLocation(to, state);
       index += 1;
       entries.splice(index, entries.length, nextLocation);
     },
-    replace(to: To, state?: any) {
+    replace(to, state) {
       action = Action.Replace;
-      entries[index] = createLocation(to, state);
+      const nextLocation = createLocation(to, state);
+      entries[index] = nextLocation;
     },
-    go(delta: number) {
-      let nextIndex = clamp(index + delta, 0, entries.length - 1);
+    go(delta) {
       action = Action.Pop;
-      index = nextIndex;
+      index = clampIndex(index + delta);
+      listeners.call({ action, location: getCurrentLocation() });
     },
     listen(listener) {
       return listeners.push(listener);
@@ -354,10 +358,6 @@ function warning(cond: any, message: string) {
       // eslint-disable-next-line no-empty
     } catch (e) {}
   }
-}
-
-function clamp(n: number, lowerBound: number, upperBound: number) {
-  return Math.min(Math.max(n, lowerBound), upperBound);
 }
 
 type Events<F> = {

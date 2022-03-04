@@ -13,7 +13,7 @@ export default function PushRelativePathnameWarning(history: History) {
     hash: "#the-hash",
   });
 
-  let spy = jest.spyOn(console, "warn");
+  let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
   history.push("../other/path?another=query#another-hash");
   expect(spy).toHaveBeenCalledWith(
     expect.stringContaining("relative pathnames are not supported")
