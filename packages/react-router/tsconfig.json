@@ -1,5 +1,5 @@
 {
-  "files": ["index.tsx"],
+  "files": ["index.ts"],
   "compilerOptions": {
     "lib": ["ES2020"],
     "target": "ES2020",

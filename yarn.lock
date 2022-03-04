@@ -7510,6 +7510,11 @@ rollup-plugin-copy@^3.1.0:
     globby "10.0.1"
     is-plain-object "^3.0.0"
 
+rollup-plugin-extensions@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-extensions/-/rollup-plugin-extensions-0.1.0.tgz#a2e6922232245e1355ebe6972a89e57390d29cbb"
+  integrity sha512-d7RzW7iiiHNYRsqe3W2GTz9bClIVm9J3mbHQqetsCZHpPPgDfo/OpXmwiziyMhm3bgiJTswxqw4QNr6qX4NfHA==
+
 rollup-plugin-prettier@^0.6.0:
   version "0.6.0"
   resolved "https://registry.npmjs.org/rollup-plugin-prettier/-/rollup-plugin-prettier-0.6.0.tgz"

@@ -1,6 +1,7 @@
 import babel from "rollup-plugin-babel";
 // import compiler from "@ampproject/rollup-plugin-closure-compiler";
 import copy from "rollup-plugin-copy";
+import extensions from "rollup-plugin-extensions";
 import prettier from "rollup-plugin-prettier";
 import replace from "@rollup/plugin-replace";
 import { terser } from "rollup-plugin-terser";
@@ -32,7 +33,7 @@ function reactRouter() {
   // JS modules for bundlers
   const modules = [
     {
-      input: `${SOURCE_DIR}/index.tsx`,
+      input: `${SOURCE_DIR}/index.ts`,
       output: {
         file: `${OUTPUT_DIR}/index.js`,
         format: "esm",
@@ -41,6 +42,7 @@ function reactRouter() {
       },
       external: ["history", "react"],
       plugins: [
+        extensions({ extensions: [".tsx", ".ts"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -66,7 +68,7 @@ function reactRouter() {
   // JS modules for <script type=module>
   const webModules = [
     {
-      input: `${SOURCE_DIR}/index.tsx`,
+      input: `${SOURCE_DIR}/index.ts`,
       output: {
         file: `${OUTPUT_DIR}/react-router.development.js`,
         format: "esm",
@@ -75,6 +77,7 @@ function reactRouter() {
       },
       external: ["history", "react"],
       plugins: [
+        extensions({ extensions: [".tsx", ".ts"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -92,7 +95,7 @@ function reactRouter() {
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
-      input: `${SOURCE_DIR}/index.tsx`,
+      input: `${SOURCE_DIR}/index.ts`,
       output: {
         file: `${OUTPUT_DIR}/react-router.production.min.js`,
         format: "esm",
@@ -101,6 +104,7 @@ function reactRouter() {
       },
       external: ["history", "react"],
       plugins: [
+        extensions({ extensions: [".tsx", ".ts"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -136,7 +140,7 @@ function reactRouter() {
   // UMD modules for <script> tags and CommonJS (node)
   const globals = [
     {
-      input: `${SOURCE_DIR}/index.tsx`,
+      input: `${SOURCE_DIR}/index.ts`,
       output: {
         file: `${OUTPUT_DIR}/umd/react-router.development.js`,
         format: "umd",
@@ -147,6 +151,7 @@ function reactRouter() {
       },
       external: ["history", "react"],
       plugins: [
+        extensions({ extensions: [".tsx", ".ts"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -164,7 +169,7 @@ function reactRouter() {
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
-      input: `${SOURCE_DIR}/index.tsx`,
+      input: `${SOURCE_DIR}/index.ts`,
       output: {
         file: `${OUTPUT_DIR}/umd/react-router.production.min.js`,
         format: "umd",
@@ -175,6 +180,7 @@ function reactRouter() {
       },
       external: ["history", "react"],
       plugins: [
+        extensions({ extensions: [".tsx", ".ts"] }),
         babel({
           exclude: /node_modules/,
           presets: [
