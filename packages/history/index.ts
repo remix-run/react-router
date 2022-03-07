@@ -59,7 +59,7 @@ export type Hash = string;
  * @deprecated
  * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.state
  */
-export type State = unknown;
+export type State = any;
 
 /**
  * A unique string associated with a location. May be used to safely store
@@ -107,7 +107,7 @@ export interface Location extends Path {
    *
    * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.state
    */
-  state: unknown;
+  state: any;
 
   /**
    * A unique string associated with this location. May be used to safely store
