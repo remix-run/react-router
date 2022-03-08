@@ -1,4 +1,4 @@
-import type { Location, MemoryHistory } from "../index";
+import type { MemoryHistory } from "../index";
 import { createMemoryHistory } from "../index";
 
 import Listen from "./TestSequences/Listen";
