@@ -24,6 +24,7 @@ describe("creating routes from JSX", () => {
               "element": <h1>
                 home
               </h1>,
+              "id": "0-0",
               "index": undefined,
               "path": "home",
             },
@@ -32,6 +33,7 @@ describe("creating routes from JSX", () => {
               "element": <h1>
                 about
               </h1>,
+              "id": "0-1",
               "index": undefined,
               "path": "about",
             },
@@ -43,6 +45,7 @@ describe("creating routes from JSX", () => {
                   "element": <h1>
                     users index
                   </h1>,
+                  "id": "0-2-0",
                   "index": true,
                   "path": undefined,
                 },
@@ -51,16 +54,19 @@ describe("creating routes from JSX", () => {
                   "element": <h1>
                     user profile
                   </h1>,
+                  "id": "0-2-1",
                   "index": undefined,
                   "path": ":id",
                 },
               ],
               "element": undefined,
+              "id": "0-2",
               "index": undefined,
               "path": "users",
             },
           ],
           "element": undefined,
+          "id": "0",
           "index": undefined,
           "path": "/",
         },

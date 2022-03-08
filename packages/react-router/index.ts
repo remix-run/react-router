@@ -1,5 +1,18 @@
 import type { Hash, Location, Path, Pathname, Search, To } from "history";
 import { Action as NavigationType, parsePath, createPath } from "history";
+import type {
+  Params,
+  PathMatch,
+  PathPattern,
+  RouteMatch,
+  RouteObject,
+} from "remix-router";
+import {
+  generatePath,
+  matchPath,
+  matchRoutes,
+  resolvePath,
+} from "remix-router";
 
 import type {
   MemoryRouterProps,
@@ -42,19 +55,6 @@ import {
   useResolvedPath,
   useRoutes,
 } from "./lib/hooks";
-import type {
-  Params,
-  PathMatch,
-  PathPattern,
-  RouteMatch,
-  RouteObject,
-} from "./lib/router";
-import {
-  generatePath,
-  matchPath,
-  matchRoutes,
-  resolvePath,
-} from "./lib/router";
 
 // Expose react-router public API
 export type {

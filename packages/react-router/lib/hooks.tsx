@@ -1,8 +1,6 @@
 import * as React from "react";
 import type { Location, Path, To } from "history";
 import { Action as NavigationType, parsePath } from "history";
-
-import { LocationContext, NavigationContext, RouteContext } from "./context";
 import type {
   ParamParseKey,
   Params,
@@ -10,7 +8,7 @@ import type {
   PathPattern,
   RouteMatch,
   RouteObject,
-} from "./router";
+} from "remix-router";
 import {
   getToPathname,
   invariant,
@@ -20,7 +18,9 @@ import {
   resolveTo,
   warning,
   warningOnce,
-} from "./router";
+} from "remix-router";
+
+import { LocationContext, NavigationContext, RouteContext } from "./context";
 
 /**
  * Returns the full href for the given "to" value. This is useful for building

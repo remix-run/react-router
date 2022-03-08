@@ -66,7 +66,8 @@
       "packages/history",
       "packages/react-router",
       "packages/react-router-dom",
-      "packages/react-router-native"
+      "packages/react-router-native",
+      "packages/remix-router"
     ],
     "nohoist": [
       "**/react-native",
