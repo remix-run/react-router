@@ -5,6 +5,13 @@ import {
   createMemoryHistory,
   parsePath,
 } from "history";
+import type { RouteMatch, RouteObject } from "remix-router";
+import {
+  invariant,
+  normalizePathname,
+  stripBasename,
+  warning,
+} from "remix-router";
 
 import { LocationContext, NavigationContext, Navigator } from "./context";
 import {
@@ -14,8 +21,6 @@ import {
   useRoutes,
   _renderMatches,
 } from "./hooks";
-import type { RouteMatch, RouteObject } from "./router";
-import { invariant, normalizePathname, stripBasename, warning } from "./router";
 
 export interface MemoryRouterProps {
   basename?: string;
@@ -268,11 +273,12 @@ export function Routes({
  * @see https://reactrouter.com/docs/en/v6/api#createroutesfromchildren
  */
 export function createRoutesFromChildren(
-  children: React.ReactNode
+  children: React.ReactNode,
+  parentPath: number[] = []
 ): RouteObject[] {
   let routes: RouteObject[] = [];
 
-  React.Children.forEach(children, (element) => {
+  React.Children.forEach(children, (element, index) => {
     if (!React.isValidElement(element)) {
       // Ignore non-elements. This allows people to more easily inline
       // conditionals in their route config.
@@ -283,7 +289,7 @@ export function createRoutesFromChildren(
       // Transparently support React.Fragment and its children.
       routes.push.apply(
         routes,
-        createRoutesFromChildren(element.props.children)
+        createRoutesFromChildren(element.props.children, parentPath)
       );
       return;
     }
@@ -295,7 +301,9 @@ export function createRoutesFromChildren(
       }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
     );
 
+    let treePath = [...parentPath, index];
     let route: RouteObject = {
+      id: treePath.join("-"),
       caseSensitive: element.props.caseSensitive,
       element: element.props.element,
       index: element.props.index,
@@ -303,7 +311,10 @@ export function createRoutesFromChildren(
     };
 
     if (element.props.children) {
-      route.children = createRoutesFromChildren(element.props.children);
+      route.children = createRoutesFromChildren(
+        element.props.children,
+        treePath
+      );
     }
 
     routes.push(route);

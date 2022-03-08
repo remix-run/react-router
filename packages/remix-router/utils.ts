@@ -1,33 +1,37 @@
 import type { Location, Path, To } from "history";
 import { parsePath } from "history";
 
-export function invariant(cond: any, message: string): asserts cond {
-  if (!cond) throw new Error(message);
+/**
+ * Arguments passed to route loader functions
+ */
+export interface LoaderFunctionArgs {
+  request: Request;
+  params: Params;
+  signal: AbortSignal;
 }
 
-export function warning(cond: any, message: string): void {
-  if (!cond) {
-    // eslint-disable-next-line no-console
-    if (typeof console !== "undefined") console.warn(message);
-
-    try {
-      // Welcome to debugging React Router!
-      //
-      // This error is thrown as a convenience so you can more easily
-      // find the source for a warning that appears in the console by
-      // enabling "pause on exceptions" in your JavaScript debugger.
-      throw new Error(message);
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
-  }
+export interface ShouldReloadFunctionArgs {
+  request: Request;
+  prevRequest: Request;
+  params: Params;
 }
 
-const alreadyWarned: Record<string, boolean> = {};
-export function warningOnce(key: string, cond: boolean, message: string) {
-  if (!cond && !alreadyWarned[key]) {
-    alreadyWarned[key] = true;
-    warning(false, message);
-  }
+/**
+ * A route object represents a logical route, with (optionally) its child
+ * routes organized in a tree-like structure.
+ */
+export interface RouteObject {
+  id: string;
+  caseSensitive?: boolean;
+  children?: RouteObject[];
+  // TODO: Make framework agnostic
+  element?: React.ReactNode;
+  index?: boolean;
+  path?: string;
+  loader?: (obj: LoaderFunctionArgs) => Promise<any>;
+  action?: () => Promise<any>;
+  exceptionElement?: React.ReactNode;
+  shouldReload?: (obj: ShouldReloadFunctionArgs) => boolean;
 }
 
 type ParamParseFailed = { failed: true };
@@ -82,34 +86,6 @@ export type ParamParseKey<Segment extends string> =
 export type Params<Key extends string = string> = {
   readonly [key in Key]: string | undefined;
 };
-
-/**
- * A route object represents a logical route, with (optionally) its child
- * routes organized in a tree-like structure.
- */
-export interface RouteObject {
-  caseSensitive?: boolean;
-  children?: RouteObject[];
-  element?: React.ReactNode;
-  index?: boolean;
-  path?: string;
-}
-
-/**
- * Returns a path with params interpolated.
- *
- * @see https://reactrouter.com/docs/en/v6/api#generatepath
- */
-export function generatePath(path: string, params: Params = {}): string {
-  return path
-    .replace(/:(\w+)/g, (_, key) => {
-      invariant(params[key] != null, `Missing ":${key}" param`);
-      return params[key]!;
-    })
-    .replace(/\/*\*$/, (_) =>
-      params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
-    );
-}
 
 /**
  * A RouteMatch contains info about how a route matched a URL.
@@ -333,6 +309,22 @@ function matchRouteBranch<ParamKey extends string = string>(
 }
 
 /**
+ * Returns a path with params interpolated.
+ *
+ * @see https://reactrouter.com/docs/en/v6/api#generatepath
+ */
+export function generatePath(path: string, params: Params = {}): string {
+  return path
+    .replace(/:(\w+)/g, (_, key) => {
+      invariant(params[key] != null, `Missing ":${key}" param`);
+      return params[key]!;
+    })
+    .replace(/\/*\*$/, (_) =>
+      params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
+    );
+}
+
+/**
  * A PathPattern is used to match on some portion of a URL pathname.
  */
 export interface PathPattern<Path extends string = string> {
@@ -499,6 +491,61 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
   }
 }
 
+export function stripBasename(
+  pathname: string,
+  basename: string
+): string | null {
+  if (basename === "/") return pathname;
+
+  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
+    return null;
+  }
+
+  let nextChar = pathname.charAt(basename.length);
+  if (nextChar && nextChar !== "/") {
+    // pathname does not start with basename/
+    return null;
+  }
+
+  return pathname.slice(basename.length) || "/";
+}
+
+export function invariant(value: boolean, message?: string): asserts value;
+export function invariant<T>(
+  value: T | null | undefined,
+  message?: string
+): asserts value is T;
+export function invariant(value: any, message?: string) {
+  if (value === false || value === null || typeof value === "undefined") {
+    throw new Error(message);
+  }
+}
+
+export function warning(cond: any, message: string): void {
+  if (!cond) {
+    // eslint-disable-next-line no-console
+    if (typeof console !== "undefined") console.warn(message);
+
+    try {
+      // Welcome to debugging React Router!
+      //
+      // This error is thrown as a convenience so you can more easily
+      // find the source for a warning that appears in the console by
+      // enabling "pause on exceptions" in your JavaScript debugger.
+      throw new Error(message);
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
+  }
+}
+
+const alreadyWarned: Record<string, boolean> = {};
+export function warningOnce(key: string, cond: boolean, message: string) {
+  if (!cond && !alreadyWarned[key]) {
+    alreadyWarned[key] = true;
+    warning(false, message);
+  }
+}
+
 /**
  * Returns a resolved path object relative to the given pathname.
  *
@@ -604,37 +651,18 @@ export function getToPathname(to: To): string | undefined {
     : to.pathname;
 }
 
-export function stripBasename(
-  pathname: string,
-  basename: string
-): string | null {
-  if (basename === "/") return pathname;
-
-  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
-    return null;
-  }
-
-  let nextChar = pathname.charAt(basename.length);
-  if (nextChar && nextChar !== "/") {
-    // pathname does not start with basename/
-    return null;
-  }
-
-  return pathname.slice(basename.length) || "/";
-}
-
 export const joinPaths = (paths: string[]): string =>
   paths.join("/").replace(/\/\/+/g, "/");
 
 export const normalizePathname = (pathname: string): string =>
   pathname.replace(/\/+$/, "").replace(/^\/*/, "/");
 
-const normalizeSearch = (search: string): string =>
+export const normalizeSearch = (search: string): string =>
   !search || search === "?"
     ? ""
     : search.startsWith("?")
     ? search
     : "?" + search;
 
-const normalizeHash = (hash: string): string =>
+export const normalizeHash = (hash: string): string =>
   !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;

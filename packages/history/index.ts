@@ -198,8 +198,8 @@ export function createMemoryHistory(
   options: MemoryHistoryOptions = {}
 ): MemoryHistory {
   let { initialEntries = ["/"], initialIndex } = options;
-  let entries: Location[]; // Declare so we can access from createLocation
-  entries = initialEntries.map((entry) => createLocation(entry));
+  let entries: Location[]; // Declare so we can access from createMemoryLocation
+  entries = initialEntries.map((entry) => createMemoryLocation(entry));
   let index = clampIndex(
     initialIndex == null ? entries.length - 1 : initialIndex
   );
@@ -212,15 +212,12 @@ export function createMemoryHistory(
   function getCurrentLocation(): Location {
     return entries[index];
   }
-  function createLocation(to: To, state: any = null): Location {
-    let location = readOnly<Location>({
-      pathname: entries ? getCurrentLocation().pathname : "/",
-      search: "",
-      hash: "",
-      ...(typeof to === "string" ? parsePath(to) : to),
-      state,
-      key: createKey(),
-    });
+  function createMemoryLocation(to: To, state: any = null): Location {
+    let location = createLocation(
+      entries ? getCurrentLocation().pathname : "/",
+      to,
+      state
+    );
     warning(
       location.pathname.charAt(0) === "/",
       `relative pathnames are not supported in memory history: ${JSON.stringify(
@@ -245,13 +242,13 @@ export function createMemoryHistory(
     },
     push(to, state) {
       action = Action.Push;
-      let nextLocation = createLocation(to, state);
+      let nextLocation = createMemoryLocation(to, state);
       index += 1;
       entries.splice(index, entries.length, nextLocation);
     },
     replace(to, state) {
       action = Action.Replace;
-      let nextLocation = createLocation(to, state);
+      let nextLocation = createMemoryLocation(to, state);
       entries[index] = nextLocation;
     },
     go(delta) {
@@ -320,6 +317,24 @@ function createEvents<F extends Function>(): Events<F> {
 
 function createKey() {
   return Math.random().toString(36).substr(2, 8);
+}
+
+/**
+ * Creates a Location object with a unique key from the given Path
+ */
+export function createLocation(
+  current: string | Location,
+  to: To,
+  state: any = null
+): Location {
+  return readOnly<Location>({
+    pathname: typeof current === "string" ? current : current.pathname,
+    search: "",
+    hash: "",
+    ...(typeof to === "string" ? parsePath(to) : to),
+    state,
+    key: createKey(),
+  });
 }
 
 /**
