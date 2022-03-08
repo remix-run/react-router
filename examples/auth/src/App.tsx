@@ -9,6 +9,7 @@ import {
   Outlet,
 } from "react-router-dom";
 import { fakeAuthProvider } from "./auth";
+import { getPathname } from "./getPathname";
 
 export default function App() {
   return (
@@ -146,8 +147,8 @@ function LoginPage() {
   let navigate = useNavigate();
   let location = useLocation();
   let auth = useAuth();
-
-  let from = location.state?.from?.pathname || "/";
+  // Since location state is unknown we use type narrowing to ensure type safety
+  let from = getPathname(location) || "/";
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
