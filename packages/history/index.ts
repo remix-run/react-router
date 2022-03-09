@@ -4,8 +4,6 @@
 
 /**
  * Actions represent the type of change to a location value.
- *
- * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#action
  */
 export enum Action {
   /**
@@ -32,80 +30,32 @@ export enum Action {
 }
 
 /**
- * A URL pathname, beginning with a /.
- *
- * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.pathname
- */
-export type Pathname = string;
-
-/**
- * A URL search string, beginning with a ?.
- *
- * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.search
- */
-export type Search = string;
-
-/**
- * A URL fragment identifier, beginning with a #.
- *
- * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.hash
- */
-export type Hash = string;
-
-/**
- * An object that is used to associate some arbitrary data with a location, but
- * that does not appear in the URL path.
- *
- * @deprecated
- * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.state
- */
-export type State = any;
-
-/**
- * A unique string associated with a location. May be used to safely store
- * and retrieve data in some other storage API, like `localStorage`.
- *
- * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.key
- */
-export type Key = string;
-
-/**
  * The pathname, search, and hash values of a URL.
  */
 export interface Path {
   /**
    * A URL pathname, beginning with a /.
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.pathname
    */
-  pathname: Pathname;
+  pathname: string;
 
   /**
    * A URL search string, beginning with a ?.
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.search
    */
-  search: Search;
+  search: string;
 
   /**
    * A URL fragment identifier, beginning with a #.
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.hash
    */
-  hash: Hash;
+  hash: string;
 }
 
 /**
  * An entry in a history stack. A location contains information about the
  * URL path, as well as possibly some arbitrary state and a key.
- *
- * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location
  */
 export interface Location extends Path {
   /**
    * A value of arbitrary data associated with this location.
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.state
    */
   state: any;
 
@@ -114,10 +64,8 @@ export interface Location extends Path {
    * and retrieve data in some other storage API, like `localStorage`.
    *
    * Note: This value is always "default" on the initial location.
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#location.key
    */
-  key: Key;
+  key: string;
 }
 
 /**
@@ -161,15 +109,11 @@ export interface History {
   /**
    * The last action that modified the current location. This will always be
    * Action.Pop when a history instance is first created. This value is mutable.
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#history.action
    */
   readonly action: Action;
 
   /**
    * The current location. This value is mutable.
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#history.location
    */
   readonly location: Location;
 
@@ -178,8 +122,6 @@ export interface History {
    * the value of an <a href> attribute.
    *
    * @param to - The destination URL
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#history.createHref
    */
   createHref(to: To): string;
 
@@ -190,8 +132,6 @@ export interface History {
    *
    * @param to - The new URL
    * @param state - Data to associate with the new location
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#history.push
    */
   push(to: To, state?: any): void;
 
@@ -201,8 +141,6 @@ export interface History {
    *
    * @param to - The new URL
    * @param state - Data to associate with the new location
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#history.replace
    */
   replace(to: To, state?: any): void;
 
@@ -211,8 +149,6 @@ export interface History {
    * current index. For example, a "back" navigation would use go(-1).
    *
    * @param delta - The delta in the stack index
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#history.go
    */
   go(delta: number): void;
 
@@ -222,8 +158,6 @@ export interface History {
    *
    * @param listener - A function that will be called when the location changes
    * @returns unlisten - A function that may be used to stop listening
-   *
-   * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#history.listen
    */
   listen(listener: Listener): () => void;
 }
@@ -232,10 +166,11 @@ export interface History {
  * A memory history stores locations in memory. This is useful in stateful
  * environments where there is no web browser, such as node tests or React
  * Native.
- *
- * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#memoryhistory
  */
 export interface MemoryHistory extends History {
+  /**
+   * The current index in the history stack.
+   */
   readonly index: number;
 }
 //#endregion
@@ -258,8 +193,6 @@ export type MemoryHistoryOptions = {
 /**
  * Memory history stores the current location in memory. It is designed for use
  * in stateful non-browser environments like tests and React Native.
- *
- * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#creatememoryhistory
  */
 export function createMemoryHistory(
   options: MemoryHistoryOptions = {}
@@ -280,7 +213,7 @@ export function createMemoryHistory(
     return entries[index];
   }
   function createLocation(to: To, state: any = null): Location {
-    const location = readOnly<Location>({
+    let location = readOnly<Location>({
       pathname: entries ? getCurrentLocation().pathname : "/",
       search: "",
       hash: "",
@@ -312,13 +245,13 @@ export function createMemoryHistory(
     },
     push(to, state) {
       action = Action.Push;
-      const nextLocation = createLocation(to, state);
+      let nextLocation = createLocation(to, state);
       index += 1;
       entries.splice(index, entries.length, nextLocation);
     },
     replace(to, state) {
       action = Action.Replace;
-      const nextLocation = createLocation(to, state);
+      let nextLocation = createLocation(to, state);
       entries[index] = nextLocation;
     },
     go(delta) {
@@ -391,8 +324,6 @@ function createKey() {
 
 /**
  * Creates a string URL path from the given pathname, search, and hash components.
- *
- * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#createpath
  */
 export function createPath({
   pathname = "/",
@@ -408,8 +339,6 @@ export function createPath({
 
 /**
  * Parses a string URL path into its separate pathname, search, and hash components.
- *
- * @see https://github.com/remix-run/history/tree/main/docs/api-reference.md#parsepath
  */
 export function parsePath(path: string): Partial<Path> {
   let parsedPath: Partial<Path> = {};
