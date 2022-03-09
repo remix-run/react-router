@@ -27,6 +27,7 @@ import {
   useResolvedPath,
   useRoutes,
   useOutletContext,
+  useMatchRoutes,
 } from "react-router";
 import type { To } from "react-router";
 
@@ -78,6 +79,7 @@ export {
   useResolvedPath,
   useRoutes,
   useOutletContext,
+  useMatchRoutes,
 };
 
 export { NavigationType } from "react-router";

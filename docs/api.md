@@ -1470,6 +1470,21 @@ function App() {
 }
 ```
 
+### `useMatchRoutes`
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function useMatchRoutes(): RouteMatch[];
+```
+
+</details>
+
+Returns an array of `RouteMatch` objects, one for each route that matched.
+
+See [`matchRoutes`](#matchroutes) for more information.
+
 ### `createSearchParams`
 
 <details>

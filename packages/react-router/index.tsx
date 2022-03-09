@@ -90,11 +90,13 @@ if (__DEV__) {
 interface RouteContextObject {
   outlet: React.ReactElement | null;
   matches: RouteMatch[];
+  matchRoutes: RouteMatch[];
 }
 
 const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
   matches: [],
+  matchRoutes: []
 });
 
 if (__DEV__) {
@@ -746,6 +748,24 @@ export function useRoutes(
   );
 }
 
+/**
+ * Returns an array of `RouteMatch` objects, one for each route that matched.
+ * 
+ * @see https://reactrouter.com/docs/en/v6/api#usematchroutes
+ */
+ export function useMatchRoutes(): RouteMatch[] {
+  invariant(
+    useInRouterContext(),
+    // TODO: This error is probably because they somehow have 2 versions of the
+    // router loaded. We can help them understand how to avoid that.
+    `useMatchRoutes() may be used only in the context of a <Router> component.`
+  );
+
+  let { matchRoutes } = React.useContext(RouteContext);
+
+  return matchRoutes;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // UTILS
 ///////////////////////////////////////////////////////////////////////////////
@@ -1081,6 +1101,7 @@ function _renderMatches(
         }
         value={{
           outlet,
+          matchRoutes: matches,
           matches: parentMatches.concat(matches.slice(0, index + 1)),
         }}
       />
