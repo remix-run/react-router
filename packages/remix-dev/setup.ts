@@ -5,7 +5,6 @@ export enum SetupPlatform {
   CloudflarePages = "cloudflare-pages",
   CloudflareWorkers = "cloudflare-workers",
   Node = "node",
-  Deno = "deno",
 }
 
 export function isSetupPlatform(platform: any): platform is SetupPlatform {
@@ -13,7 +12,6 @@ export function isSetupPlatform(platform: any): platform is SetupPlatform {
     SetupPlatform.CloudflarePages,
     SetupPlatform.CloudflareWorkers,
     SetupPlatform.Node,
-    SetupPlatform.Deno,
   ].includes(platform);
 }
 
