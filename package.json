@@ -63,6 +63,7 @@
   },
   "workspaces": {
     "packages": [
+      "packages/history",
       "packages/react-router",
       "packages/react-router-dom",
       "packages/react-router-native"
