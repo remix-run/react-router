@@ -1093,6 +1093,8 @@ function _renderMatches(
 ): React.ReactElement | null {
   if (matches == null) return null;
 
+  let matchRoutes = parentMatches.concat(matches)
+
   return matches.reduceRight((outlet, match, index) => {
     return (
       <RouteContext.Provider
@@ -1101,7 +1103,7 @@ function _renderMatches(
         }
         value={{
           outlet,
-          matchRoutes: matches,
+          matchRoutes,
           matches: parentMatches.concat(matches.slice(0, index + 1)),
         }}
       />
