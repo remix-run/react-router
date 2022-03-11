@@ -172,7 +172,7 @@ export default function Invoices() {
 
 Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx` or `index.js`.
 
-```tsx lines=[2,4-5,13-19] filename=src/main.jsx
+```tsx lines=[2,4-5,8-9,13-19] filename=src/main.jsx
 import { render } from "react-dom";
 import {
   BrowserRouter,
