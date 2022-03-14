@@ -1,7 +1,8 @@
 {
   "name": "@remix-run/dev",
-  "description": "Dev tools and CLI for Remix",
   "version": "1.2.3",
+  "description": "Dev tools and CLI for Remix",
+  "homepage": "https://remix.run",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -18,26 +19,35 @@
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@remix-run/server-runtime": "1.2.3",
     "cacache": "^15.0.5",
+    "chalk": "^4.1.2",
     "chokidar": "^3.5.1",
     "dotenv": "^16.0.0",
     "esbuild": "0.14.22",
     "exit-hook": "2.2.1",
     "fs-extra": "^10.0.0",
     "get-port": "^5.1.1",
+    "gunzip-maybe": "^1.4.2",
+    "inquirer": "^8.2.1",
     "lodash.debounce": "^4.0.8",
     "meow": "^7.1.1",
     "minimatch": "^3.0.4",
+    "node-fetch": "^2.6.7",
     "pretty-ms": "^7.0.1",
     "read-package-json-fast": "^2.0.2",
     "remark-frontmatter": "^4.0.0",
     "remark-mdx-frontmatter": "^1.0.1",
+    "semver": "^7.3.5",
+    "sort-package-json": "^1.54.0",
+    "tar-fs": "^2.1.1",
     "ws": "^7.4.5",
     "xdm": "^2.0.0"
   },
   "devDependencies": {
     "@types/cacache": "^15.0.0",
+    "@types/inquirer": "^8.2.0",
     "@types/lodash.debounce": "^4.0.6",
-    "@types/ws": "^7.4.1",
-    "semver": "^7.3.4"
+    "@types/gunzip-maybe": "^1.4.0",
+    "@types/tar-fs": "^2.0.1",
+    "@types/ws": "^7.4.1"
   }
 }

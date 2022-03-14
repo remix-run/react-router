@@ -1,5 +1,6 @@
 import * as path from "path";
 import os from "os";
+import { execSync } from "child_process";
 import * as fse from "fs-extra";
 import exitHook from "exit-hook";
 import prettyMs from "pretty-ms";
@@ -14,9 +15,82 @@ import * as compiler from "../compiler";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
+import { createApp } from "../create";
 import { loadEnv } from "../env";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "../setup";
 import { log } from "../log";
+
+export async function create({
+  appTemplate,
+  projectDir,
+  remixVersion,
+  installDeps,
+  useTypeScript,
+  githubToken,
+}: {
+  appTemplate: string;
+  projectDir: string;
+  remixVersion?: string;
+  installDeps: boolean;
+  useTypeScript: boolean;
+  githubToken?: string;
+}) {
+  await createApp({
+    appTemplate,
+    projectDir,
+    remixVersion,
+    installDeps,
+    useTypeScript,
+    githubToken,
+  });
+
+  let initScriptDir = path.join(projectDir, "remix.init");
+  let hasInitScript = await fse.pathExists(initScriptDir);
+  if (hasInitScript) {
+    console.log("💿 Running remix.init script");
+    if (installDeps) {
+      await init(projectDir);
+      await fse.remove(initScriptDir);
+    } else {
+      console.log(
+        "💿 You've opted out of running the remix.init script, you can run it manually with `npx remix init`"
+      );
+    }
+  }
+
+  let relProjectDir = path.relative(process.cwd(), projectDir);
+  let projectDirIsCurrentDir = relProjectDir === "";
+
+  if (projectDirIsCurrentDir) {
+    console.log(
+      `💿 That's it! Check the README for development and deploy instructions!`
+    );
+  } else {
+    console.log(
+      `💿 That's it! \`cd\` into "${path.resolve(
+        process.cwd(),
+        projectDir
+      )}" and check the README for development and deploy instructions!`
+    );
+  }
+}
+
+export async function init(remixRoot: string) {
+  let initScriptDir = path.join(remixRoot, "remix.init");
+  let initScript = path.resolve(initScriptDir, "index.js");
+
+  if (await fse.pathExists(initScript)) {
+    // TODO: check for npm/yarn/pnpm
+    execSync("npm install", { stdio: "ignore", cwd: initScriptDir });
+    let initFn = require(initScript);
+    try {
+      await initFn({ rootDirectory: remixRoot });
+    } catch (error) {
+      console.error(`🚨 Oops, remix.init failed`);
+      throw error;
+    }
+  }
+}
 
 export async function setup(platformArg?: string) {
   let platform = isSetupPlatform(platformArg)

@@ -9,27 +9,26 @@ import cheerio from "cheerio";
 import prettier from "prettier";
 import getPort from "get-port";
 
-import { createRequestHandler } from "../../packages/remix-server-runtime";
-import { createApp } from "../../packages/create-remix";
-import { createRequestHandler as createExpressHandler } from "../../packages/remix-express";
 import type {
   ServerBuild,
   ServerPlatform,
 } from "../../packages/remix-server-runtime";
-import type { CreateAppArgs } from "../../packages/create-remix";
+import { createRequestHandler } from "../../packages/remix-server-runtime";
+import { createApp } from "../../packages/remix-dev";
+import { createRequestHandler as createExpressHandler } from "../../packages/remix-express";
 import { TMP_DIR } from "./global-setup";
 
 const REMIX_SOURCE_BUILD_DIR = path.join(process.cwd(), "build");
 
 interface FixtureInit {
   files: { [filename: string]: string };
-  server?: CreateAppArgs["server"];
+  template?: string;
 }
 
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
 export type AppFixture = Awaited<ReturnType<typeof createAppFixture>>;
 
-export let js = String.raw;
+export const js = String.raw;
 
 export async function createFixture(init: FixtureInit) {
   let projectDir = await createFixtureProject(init);
@@ -172,7 +171,7 @@ export async function createAppFixture(fixture: Fixture) {
 
       /**
        * Finds a link on the page with a matching href, clicks it, and waits for
-       * the network to be idle before contininuing.
+       * the network to be idle before continuing.
        *
        * @param href The href of the link you want to click
        * @param options `{ wait }` waits for the network to be idle before moving on
@@ -209,7 +208,7 @@ export async function createAppFixture(fixture: Fixture) {
       /**
        * Finds the first submit button with `formAction` that matches the
        * `action` supplied, clicks it, and optionally waits for the network to
-       * be idle before contininuing.
+       * be idle before continuing.
        *
        * @param action The formAction of the button you want to click
        * @param options `{ wait }` waits for the network to be idle before moving on
@@ -347,15 +346,20 @@ export async function createAppFixture(fixture: Fixture) {
 
 ////////////////////////////////////////////////////////////////////////////////
 export async function createFixtureProject(init: FixtureInit): Promise<string> {
+  let appTemplate = path.join(
+    process.cwd(),
+    "templates",
+    init.template ? init.template : "remix"
+  );
   let projectDir = path.join(TMP_DIR, Math.random().toString(32).slice(2));
 
   await createApp({
-    install: false,
-    lang: "js",
-    server: init.server || "remix",
+    appTemplate,
     projectDir,
-    quiet: true,
+    installDeps: false,
+    useTypeScript: false,
   });
+  // TODO: init if necessary?
   await Promise.all([
     writeTestFiles(init, projectDir),
     installRemix(projectDir),
@@ -403,7 +407,7 @@ async function writeTestFiles(init: FixtureInit, dir: string) {
  *
  * I found some github issues that says that `modulePathIgnorePatterns` should
  * help, so I added it to our `jest.config.js`, but it doesn't seem to help, so
- * I bruteforced it here.
+ * I brute-forced it here.
  */
 async function renamePkgJsonApp(dir: string) {
   let pkgPath = path.join(dir, "package.json");
