@@ -668,7 +668,7 @@ The `PageLayout` route is admittedly weird. We call it a [layout route](#layout-
 
 ```jsx bad lines=[14-16,22-24]
 <Routes>
-  <Routes path="/" element={<App />}>
+  <Route path="/" element={<App />}>
     <Route index element={<Home />} />
     <Route path="teams" element={<Teams />}>
       <Route path=":teamId" element={<Team />} />
