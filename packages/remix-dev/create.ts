@@ -345,8 +345,7 @@ async function isRemixTemplate(
   token?: string
 ): Promise<string | undefined> {
   let promise = await fetch(
-    // TODO: remove `?ref` before release
-    `https://api.github.com/repos/remix-run/remix/contents/templates?ref=dev`,
+    `https://api.github.com/repos/remix-run/remix/contents/templates`,
     {
       headers: {
         Accept: "application/vnd.github.v3+json",
@@ -369,9 +368,8 @@ async function isRemixTemplate(
 }
 
 async function isRemixExample(name: string, token?: string) {
-  // TODO: remove `?ref` before we merge
   let promise = await fetch(
-    `https://api.github.com/repos/remix-run/remix/contents/examples?ref=main`,
+    `https://api.github.com/repos/remix-run/remix/contents/examples`,
     {
       headers: {
         Accept: "application/vnd.github.v3+json",
@@ -410,14 +408,14 @@ async function detectTemplateType(
   if (template.startsWith("file://") || fse.existsSync(template)) {
     return "local";
   }
+  if (await getRepoInfo(template, token)) {
+    return "repo";
+  }
   if (await isRemixTemplate(template, useTypeScript, token)) {
     return "template";
   }
   if (await isRemixExample(template, token)) {
     return "example";
-  }
-  if (await getRepoInfo(template, token)) {
-    return "repo";
   }
   return "remoteTarball";
 }
