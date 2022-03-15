@@ -6,18 +6,18 @@ describe("ErrorBoundary", () => {
   let app: AppFixture;
   let _consoleError: any;
 
-  const ROOT_BOUNDARY_TEXT = "ROOT_BOUNDARY_TEXT";
-  const OWN_BOUNDARY_TEXT = "OWN_BOUNDARY_TEXT";
+  let ROOT_BOUNDARY_TEXT = "ROOT_BOUNDARY_TEXT";
+  let OWN_BOUNDARY_TEXT = "OWN_BOUNDARY_TEXT";
 
-  const HAS_BOUNDARY_LOADER = "/yes/loader";
-  const HAS_BOUNDARY_ACTION = "/yes/action";
-  const HAS_BOUNDARY_RENDER = "/yes/render";
+  let HAS_BOUNDARY_LOADER = "/yes/loader";
+  let HAS_BOUNDARY_ACTION = "/yes/action";
+  let HAS_BOUNDARY_RENDER = "/yes/render";
 
-  const NO_BOUNDARY_ACTION = "/no/action";
-  const NO_BOUNDARY_LOADER = "/no/loader";
-  const NO_BOUNDARY_RENDER = "/no/render";
+  let NO_BOUNDARY_ACTION = "/no/action";
+  let NO_BOUNDARY_LOADER = "/no/loader";
+  let NO_BOUNDARY_RENDER = "/no/render";
 
-  const NOT_FOUND_HREF = "/not/found";
+  let NOT_FOUND_HREF = "/not/found";
 
   beforeAll(async () => {
     _consoleError = console.error;

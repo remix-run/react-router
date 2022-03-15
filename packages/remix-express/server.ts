@@ -81,7 +81,7 @@ export function createRemixHeaders(
   for (let [key, values] of Object.entries(requestHeaders)) {
     if (values) {
       if (Array.isArray(values)) {
-        for (const value of values) {
+        for (let value of values) {
           headers.append(key, value);
         }
       } else {
@@ -123,7 +123,7 @@ function sendRemixResponse(
   res.status(response.status);
 
   for (let [key, values] of Object.entries(response.headers.raw())) {
-    for (const value of values) {
+    for (let value of values) {
       res.append(key, value);
     }
   }

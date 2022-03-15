@@ -322,7 +322,7 @@ async function getDefaultBranch(
   repo: string,
   token: string | undefined
 ): Promise<string> {
-  const response = await fetch(`https://api.github.com/repos/${repo}`, {
+  let response = await fetch(`https://api.github.com/repos/${repo}`, {
     headers: {
       Authorization: token ? `token ${token}` : "",
       Accept: "application/vnd.github.v3+json",

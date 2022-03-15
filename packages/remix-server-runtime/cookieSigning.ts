@@ -8,10 +8,12 @@ export type InternalUnsignFunctionDoNotUseMe = (
   secret: string
 ) => Promise<string | false>;
 
+/* eslint-disable prefer-let/prefer-let */
 declare global {
   var sign: InternalSignFunctionDoNotUseMe;
   var unsign: InternalUnsignFunctionDoNotUseMe;
 }
+/* eslint-enable prefer-let/prefer-let */
 
 // TODO: Once node v16 is available on AWS we should use the globally provided
 // webcrypto "crypto" variable and re-enable this code-path in "./cookies.ts"

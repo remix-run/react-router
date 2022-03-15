@@ -93,7 +93,7 @@ describe("server", () => {
 });
 
 describe("shared server runtime", () => {
-  const spy = spyConsole();
+  let spy = spyConsole();
 
   beforeEach(() => {
     spy.console.mockClear();

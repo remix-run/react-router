@@ -169,7 +169,7 @@ export class NodeOnDiskFile implements File {
     let stream = createReadStream(this.filepath);
 
     return new Promise((resolve, reject) => {
-      const buf: any[] = [];
+      let buf: any[] = [];
       stream.on("data", (chunk) => buf.push(chunk));
       stream.on("end", () => resolve(Buffer.concat(buf)));
       stream.on("error", (err) => reject(err));
