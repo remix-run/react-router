@@ -365,7 +365,7 @@ async function createBrowserBuild(
     platform: "browser",
     format: "esm",
     external: externals,
-    inject: config.serverBuildTarget === 'deno' ? [] : [reactShim],
+    inject: config.serverBuildTarget === "deno" ? [] : [reactShim],
     loader: loaders,
     bundle: true,
     logLevel: "silent",
@@ -444,7 +444,7 @@ async function createServerBuild(
           ? ["module", "main"]
           : ["main", "module"],
       target: options.target,
-      inject: config.serverBuildTarget === 'deno' ? [] : [reactShim],
+      inject: config.serverBuildTarget === "deno" ? [] : [reactShim],
       loader: loaders,
       bundle: true,
       logLevel: "silent",
