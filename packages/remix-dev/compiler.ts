@@ -341,13 +341,31 @@ async function createBrowserBuild(
       path.resolve(config.appDirectory, config.routes[id].file) + "?browser";
   }
 
+  let plugins = [
+    mdxPlugin(config),
+    browserRouteModulesPlugin(config, /\?browser$/),
+    emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/),
+    NodeModulesPolyfillPlugin(),
+  ];
+
+  if (config.serverBuildTarget === "deno") {
+    // @ts-expect-error
+    let { cache } = await import("esbuild-plugin-cache");
+    plugins.unshift(
+      cache({
+        importmap: {},
+        directory: path.join(config.cacheDirectory, "http-import-cache"),
+      })
+    );
+  }
+
   return esbuild.build({
     entryPoints,
     outdir: config.assetsBuildDirectory,
     platform: "browser",
     format: "esm",
     external: externals,
-    inject: [reactShim],
+    inject: config.serverBuildTarget === 'deno' ? [] : [reactShim],
     loader: loaders,
     bundle: true,
     logLevel: "silent",
@@ -368,12 +386,7 @@ async function createBrowserBuild(
         config.devServerPort
       ),
     },
-    plugins: [
-      mdxPlugin(config),
-      browserRouteModulesPlugin(config, /\?browser$/),
-      emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/),
-      NodeModulesPolyfillPlugin(),
-    ],
+    plugins,
   });
 }
 
@@ -431,7 +444,7 @@ async function createServerBuild(
           ? ["module", "main"]
           : ["main", "module"],
       target: options.target,
-      inject: [reactShim],
+      inject: config.serverBuildTarget === 'deno' ? [] : [reactShim],
       loader: loaders,
       bundle: true,
       logLevel: "silent",

@@ -45,7 +45,7 @@ ${colors.heading("Values")}:
   - ${colors.arg("template")}          The project template to use
   - ${colors.arg(
     "remixPlatform"
-  )}     node, cloudflare-pages, cloudflare-workers, or deno
+  )}     node, cloudflare-pages, or cloudflare-workers
 
 ${colors.heading("Creating a new project")}:
 
@@ -213,7 +213,6 @@ async function run() {
               { name: "Vercel", value: "vercel" },
               { name: "Cloudflare Pages", value: "cloudflare-pages" },
               { name: "Cloudflare Workers", value: "cloudflare-workers" },
-              { name: "Deno (experimental)", value: "deno" },
             ],
           },
           {

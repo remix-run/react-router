@@ -58,7 +58,7 @@ describe("remix cli", () => {
           Values:
             - projectDir        The Remix project directory
             - template          The project template to use
-            - remixPlatform     node, cloudflare-pages, cloudflare-workers, or deno
+            - remixPlatform     node, cloudflare-pages, or cloudflare-workers
 
           Creating a new project:
 
@@ -198,14 +198,14 @@ describe("remix cli", () => {
         "create",
         projectDir,
         "--template",
-        "https://github.com/remix-run/remix/blob/178f749972192fadac72139ae8b78908a898775b/packages/remix-dev/__tests__/fixtures/arc.tar.gz?raw=true",
+        "https://github.com/remix-run/remix/blob/fecc83d06f3a8528af84eded358811a13ab06b59/packages/remix-dev/__tests__/fixtures/arc.tar.gz?raw=true",
         "--no-install",
       ]);
       expect(stdout.trim()).toBe(
         `💿 That's it! \`cd\` into "${projectDir}" and check the README for development and deploy instructions!`
       );
       expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-      expect(fs.existsSync(path.join(projectDir, "app/root.jsx"))).toBeTruthy();
+      expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
     });
 
     it("works for a path to a tarball on disk", async () => {
@@ -222,7 +222,7 @@ describe("remix cli", () => {
         `💿 That's it! \`cd\` into "${projectDir}" and check the README for development and deploy instructions!`
       );
       expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-      expect(fs.existsSync(path.join(projectDir, "app/root.jsx"))).toBeTruthy();
+      expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
     });
 
     it("works for a file URL to a tarball on disk", async () => {
@@ -241,7 +241,7 @@ describe("remix cli", () => {
         `💿 That's it! \`cd\` into "${projectDir}" and check the README for development and deploy instructions!`
       );
       expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-      expect(fs.existsSync(path.join(projectDir, "app/root.jsx"))).toBeTruthy();
+      expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
     });
 
     it("works for a file path to a directory on disk", async () => {

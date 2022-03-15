@@ -9,7 +9,7 @@ type PackageDependencies = { [packageName: string]: string };
 export async function getPackageDependencies(
   packageJsonFile: string
 ): Promise<PackageDependencies> {
-  return (await readPackageJson(packageJsonFile)).dependencies;
+  return (await readPackageJson(packageJsonFile))?.dependencies || {};
 }
 
 export function getAppDependencies(
