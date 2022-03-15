@@ -115,7 +115,7 @@ async function handleDataRequest({
   let match: RouteMatch<ServerRoute>;
   try {
     if (isActionRequest(request)) {
-      match = getActionRequestMatch(url, matches);
+      match = getRequestMatch(url, matches);
 
       response = await callRouteAction({
         loadContext,
@@ -226,7 +226,7 @@ async function renderDocumentRequest({
   let actionResponse: Response | undefined;
 
   if (matches && isActionRequest(request)) {
-    actionMatch = getActionRequestMatch(url, matches);
+    actionMatch = getRequestMatch(url, matches);
 
     try {
       actionResponse = await callRouteAction({
@@ -603,18 +603,21 @@ async function errorBoundaryError(error: Error, status: number) {
 }
 
 function isIndexRequestUrl(url: URL) {
-  let indexRequest = false;
-
   for (let param of url.searchParams.getAll("index")) {
-    if (!param) {
-      indexRequest = true;
+    // only use bare `?index` params without a value
+    // ✅ /foo?index
+    // ✅ /foo?index&index=123
+    // ✅ /foo?index=123&index
+    // ❌ /foo?index=123
+    if (param === "") {
+      return true;
     }
   }
 
-  return indexRequest;
+  return false;
 }
 
-function getActionRequestMatch(url: URL, matches: RouteMatch<ServerRoute>[]) {
+function getRequestMatch(url: URL, matches: RouteMatch<ServerRoute>[]) {
   let match = matches.slice(-1)[0];
 
   if (!isIndexRequestUrl(url) && match.route.id.endsWith("/index")) {

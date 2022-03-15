@@ -7,17 +7,17 @@ let app: AppFixture;
 beforeAll(async () => {
   fixture = await createFixture({
     files: {
-      "app/routes/layout.jsx": js`
+      "app/routes/layout-action.jsx": js`
         import { json, Outlet, useFetcher, useFormAction } from "remix";
 
         export let action = ({ params }) => json("layout action data");
 
-        export default function Layout() {
+        export default function ActionLayout() {
           let fetcher = useFetcher();
           let action = useFormAction();
 
           let invokeFetcher = () => {
-            fetcher.submit({}, { method: "post", action })
+            fetcher.submit({}, { method: "post", action });
           };
 
           return (
@@ -31,21 +31,19 @@ beforeAll(async () => {
         }
       `,
 
-      "app/routes/layout/index.jsx": js`
+      "app/routes/layout-action/index.jsx": js`
         import { json, useFetcher, useFormAction, useLoaderData } from "remix";
 
         export let loader = ({ params }) => json("index data");
 
         export let action = ({ params }) => json("index action data");
 
-        export default function LayoutIndex() {
+        export default function ActionLayoutIndex() {
           let data = useLoaderData();
           let fetcher = useFetcher();
-          let action = useFormAction(".", "post");
-
+          let action = useFormAction();
           
           let invokeFetcher = () => {
-            console.log({action});
             fetcher.submit({}, { method: "post", action })
           };
 
@@ -59,15 +57,97 @@ beforeAll(async () => {
         }
       `,
 
-      "app/routes/layout/$param.jsx": js`
-        import { json, useLoaderData } from "remix";
+      "app/routes/layout-action/$param.jsx": js`
+        import { json, useFetcher, useFormAction, useLoaderData } from "remix";
 
         export let loader = ({ params }) => json(params.param);
 
-        export default function LayoutChild() {
-          let data = useLoaderData();
+        export let action = ({ params }) => json("param action data");
 
-          return <p id="child-data">{data}</p>;
+        export default function ActionLayoutChild() {
+          let data = useLoaderData();
+          let fetcher = useFetcher();
+          let action = useFormAction();
+          
+          let invokeFetcher = () => {
+            fetcher.submit({}, { method: "post", action })
+          };
+
+          return (
+            <>
+              <p id="child-data">{data}</p>
+              <button id="param-fetcher" onClick={invokeFetcher}>Invoke Param Fetcher</button>
+              {!!fetcher.data && <p id="param-fetcher-data">{fetcher.data}</p>}
+            </>
+          );
+        }
+      `,
+
+      "app/routes/layout-loader.jsx": js`
+        import { json, Outlet, useFetcher, useFormAction } from "remix";
+
+        export let loader = () => json("layout loader data");
+
+        export default function LoaderLayout() {
+          let fetcher = useFetcher();
+          let action = useFormAction();
+
+          let invokeFetcher = () => {
+            fetcher.load(action);
+          };
+
+          return (
+            <div>
+              <h1>Layout</h1>
+              <button onClick={invokeFetcher}>Invoke Fetcher</button>
+              {!!fetcher.data && <p id="layout-fetcher-data">{fetcher.data}</p>}
+              <Outlet />
+            </div>
+          );
+        }
+      `,
+
+      "app/routes/layout-loader/index.jsx": js`
+        import { json, useFetcher, useFormAction, useLoaderData } from "remix";
+
+        export let loader = ({ params }) => json("index data");
+
+        export default function ActionLayoutIndex() {
+          let fetcher = useFetcher();
+          let action = useFormAction();
+          
+          let invokeFetcher = () => {
+            fetcher.load(action);
+          };
+
+          return (
+            <>
+              <button id="index-fetcher" onClick={invokeFetcher}>Invoke Index Fetcher</button>
+              {!!fetcher.data && <p id="index-fetcher-data">{fetcher.data}</p>}
+            </>
+          );
+        }
+      `,
+
+      "app/routes/layout-loader/$param.jsx": js`
+        import { json, useFetcher, useFormAction, useLoaderData } from "remix";
+
+        export let loader = ({ params }) => json(params.param);
+
+        export default function ActionLayoutChild() {
+          let fetcher = useFetcher();
+          let action = useFormAction();
+          
+          let invokeFetcher = () => {
+            fetcher.load(action);
+          };
+
+          return (
+            <>
+              <button id="param-fetcher" onClick={invokeFetcher}>Invoke Param Fetcher</button>
+              {!!fetcher.data && <p id="param-fetcher-data">{fetcher.data}</p>}
+            </>
+          );
         }
       `,
     },
@@ -79,7 +159,7 @@ beforeAll(async () => {
 afterAll(async () => app.close());
 
 it("fetcher calls layout route action when at index route", async () => {
-  await app.goto("/layout");
+  await app.goto("/layout-action");
   await app.clickElement("button");
   let dataElement = await app.getElement("#layout-fetcher-data");
   expect(dataElement.text()).toBe("layout action data");
@@ -87,8 +167,15 @@ it("fetcher calls layout route action when at index route", async () => {
   expect(dataElement.text()).toBe("index data");
 });
 
+it("fetcher calls layout route loader when at index route", async () => {
+  await app.goto("/layout-loader");
+  await app.clickElement("button");
+  let dataElement = await app.getElement("#layout-fetcher-data");
+  expect(dataElement.text()).toBe("layout loader data");
+});
+
 it("fetcher calls index route action when at index route", async () => {
-  await app.goto("/layout");
+  await app.goto("/layout-action");
   await app.clickElement("#index-fetcher");
   let dataElement = await app.getElement("#index-fetcher-data");
   expect(dataElement.text()).toBe("index action data");
@@ -96,11 +183,41 @@ it("fetcher calls index route action when at index route", async () => {
   expect(dataElement.text()).toBe("index data");
 });
 
+it("fetcher calls index route loader when at index route", async () => {
+  await app.goto("/layout-loader");
+  await app.clickElement("#index-fetcher");
+  let dataElement = await app.getElement("#index-fetcher-data");
+  expect(dataElement.text()).toBe("index data");
+});
+
 it("fetcher calls layout route action when at paramaterized route", async () => {
-  await app.goto("/layout/foo");
+  await app.goto("/layout-action/foo");
   await app.clickElement("button");
   let dataElement = await app.getElement("#layout-fetcher-data");
   expect(dataElement.text()).toBe("layout action data");
   dataElement = await app.getElement("#child-data");
+  expect(dataElement.text()).toBe("foo");
+});
+
+it("fetcher calls layout route loader when at paramaterized route", async () => {
+  await app.goto("/layout-loader/foo");
+  await app.clickElement("button");
+  let dataElement = await app.getElement("#layout-fetcher-data");
+  expect(dataElement.text()).toBe("layout loader data");
+});
+
+it("fetcher calls paramaterized route route action", async () => {
+  await app.goto("/layout-action/foo");
+  await app.clickElement("#param-fetcher");
+  let dataElement = await app.getElement("#param-fetcher-data");
+  expect(dataElement.text()).toBe("param action data");
+  dataElement = await app.getElement("#child-data");
+  expect(dataElement.text()).toBe("foo");
+});
+
+it("fetcher calls paramaterized route route loader", async () => {
+  await app.goto("/layout-loader/foo");
+  await app.clickElement("#param-fetcher");
+  let dataElement = await app.getElement("#param-fetcher-data");
   expect(dataElement.text()).toBe("foo");
 });
