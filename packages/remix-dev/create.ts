@@ -344,9 +344,9 @@ async function isRemixTemplate(
   useTypeScript: boolean,
   token?: string
 ): Promise<string | undefined> {
-  // TODO: remove `?ref` before we merge
   let promise = await fetch(
-    `https://api.github.com/repos/remix-run/remix/contents/templates?ref=logan/support-remote-repos-in-create-remix`,
+    // TODO: remove `?ref` before release
+    `https://api.github.com/repos/remix-run/remix/contents/templates?ref=dev`,
     {
       headers: {
         Accept: "application/vnd.github.v3+json",
