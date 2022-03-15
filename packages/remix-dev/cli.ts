@@ -219,8 +219,10 @@ async function run() {
             name: "useTypeScript",
             type: "list",
             message: "TypeScript or JavaScript?",
-            when() {
-              return flags.template === undefined;
+            when(answers) {
+              return (
+                flags.template === undefined && answers.appType !== "stack"
+              );
             },
             choices: [
               { name: "TypeScript", value: true },
