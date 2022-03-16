@@ -115,11 +115,13 @@ async function run() {
   if (flags.help) showHelp();
   if (flags.version) showVersion();
 
-  let anim = chalkAnimation.rainbow(
-    `\nR E M I X - v${remixDevPackageVersion}\n`
-  );
-  await new Promise((res) => setTimeout(res, 1500));
-  anim.stop();
+  if (colors.supportsColor && process.env.NODE_ENV !== "test") {
+    let anim = chalkAnimation.rainbow(
+      `\nR E M I X - v${remixDevPackageVersion}\n`
+    );
+    await new Promise((res) => setTimeout(res, 1500));
+    anim.stop();
+  }
 
   console.log("💿 Welcome to Remix! Let's get you set up with a new project.");
   console.log();
