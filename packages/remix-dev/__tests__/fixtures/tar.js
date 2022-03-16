@@ -7,7 +7,7 @@ let dirs = files.filter((file) =>
   fs.statSync(path.join(__dirname, file)).isDirectory()
 );
 
-for (const dir of dirs) {
+for (let dir of dirs) {
   let fullPath = path.join(__dirname, dir);
   console.log(`Creating archive for ${fullPath}`);
   tar

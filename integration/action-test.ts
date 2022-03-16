@@ -10,12 +10,12 @@ describe("actions", () => {
   let fixture: Fixture;
   let app: AppFixture;
 
-  const FIELD_NAME = "message";
-  const WAITING_VALUE = "Waiting...";
-  const SUBMITTED_VALUE = "Submission";
-  const THROWS_REDIRECT = "redirect-throw";
-  const REDIRECT_TARGET = "page";
-  const PAGE_TEXT = "PAGE_TEXT";
+  let FIELD_NAME = "message";
+  let WAITING_VALUE = "Waiting...";
+  let SUBMITTED_VALUE = "Submission";
+  let THROWS_REDIRECT = "redirect-throw";
+  let REDIRECT_TARGET = "page";
+  let PAGE_TEXT = "PAGE_TEXT";
 
   beforeAll(async () => {
     fixture = await createFixture({
@@ -83,7 +83,7 @@ describe("actions", () => {
   });
 
   it("is called on document POST requests", async () => {
-    const FIELD_VALUE = "cheeseburger";
+    let FIELD_VALUE = "cheeseburger";
 
     let params = new URLSearchParams();
     params.append(FIELD_NAME, FIELD_VALUE);

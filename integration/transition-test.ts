@@ -5,13 +5,13 @@ describe("rendering", () => {
   let fixture: Fixture;
   let app: AppFixture;
 
-  const PAGE = "page";
-  const PAGE_TEXT = "PAGE_TEXT";
-  const PAGE_INDEX_TEXT = "PAGE_INDEX_TEXT";
-  const CHILD = "child";
-  const CHILD_TEXT = "CHILD_TEXT";
-  const REDIRECT = "redirect";
-  const REDIRECT_TARGET = "page";
+  let PAGE = "page";
+  let PAGE_TEXT = "PAGE_TEXT";
+  let PAGE_INDEX_TEXT = "PAGE_INDEX_TEXT";
+  let CHILD = "child";
+  let CHILD_TEXT = "CHILD_TEXT";
+  let REDIRECT = "redirect";
+  let REDIRECT_TARGET = "page";
 
   beforeAll(async () => {
     fixture = await createFixture({

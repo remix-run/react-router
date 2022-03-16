@@ -4,8 +4,8 @@ import type { Fixture } from "./helpers/create-fixture";
 describe("loader", () => {
   let fixture: Fixture;
 
-  const ROOT_DATA = "ROOT_DATA";
-  const INDEX_DATA = "INDEX_DATA";
+  let ROOT_DATA = "ROOT_DATA";
+  let INDEX_DATA = "INDEX_DATA";
 
   beforeAll(async () => {
     fixture = await createFixture({

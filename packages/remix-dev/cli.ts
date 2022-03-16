@@ -2,6 +2,7 @@ import * as path from "path";
 import meow from "meow";
 import inspector from "inspector";
 import inquirer from "inquirer";
+// import chalkAnimation from "chalk-animation";
 
 import * as colors from "./colors";
 import * as commands from "./cli/commands";
@@ -118,12 +119,21 @@ async function run() {
   if (flags.help) showHelp();
   if (flags.version) showVersion();
 
+  //   if (!flags.template) {
+  //     if (colors.supportsColor && process.env.NODE_ENV !== "test") {
+  //       let anim = chalkAnimation.rainbow(
+  //         `\nR E M I X - v${remixDevPackageVersion}\n`
+  //       );
+  //       await new Promise((res) => setTimeout(res, 1500));
+  //       anim.stop();
+  //     }
+  //   }
+
   switch (input[0]) {
     case "create":
     // `remix new` is an alias for `remix create`
     case "new": {
-      let projectDir = path.resolve(
-        process.cwd(),
+      let projectPath =
         input.length > 1
           ? input[1]
           : (
@@ -138,14 +148,19 @@ async function run() {
                 ])
                 .catch((error) => {
                   if (error.isTtyError) {
-                    showHelp(1);
-                    process.exit(1);
-                  } else {
-                    throw error;
+                    showHelp();
+                    return;
                   }
+                  throw error;
                 })
-            ).dir
-      );
+            )?.dir;
+
+      if (!projectPath) {
+        showHelp();
+        return;
+      }
+
+      let projectDir = path.resolve(process.cwd(), projectPath);
 
       let answers = await inquirer
         .prompt<{
@@ -242,18 +257,19 @@ async function run() {
         .catch((error) => {
           if (error.isTtyError) {
             console.warn(
-              `🚨 Your terminal doesn't support interactivity, using default configuration ` +
-                "\n" +
-                `if you'd like to use different settings, try passing them as arguments`
+              colors.warning(
+                "🚨 Your terminal doesn't support interactivity; using default configuration.\n\n" +
+                  "If you'd like to use different settings, try passing them as arguments. Run " +
+                  "`npx create-remix@latest --help` to see available options."
+              )
             );
             return {
               appTemplate: "remix",
               useTypeScript: true,
               install: true,
             };
-          } else {
-            throw error;
           }
+          throw error;
         });
 
       await commands.create({

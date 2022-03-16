@@ -4,8 +4,8 @@ import type { Fixture } from "./helpers/create-fixture";
 describe("Server Entry", () => {
   let fixture: Fixture;
 
-  const DATA_HEADER_NAME = "X-Macaroni-Salad";
-  const DATA_HEADER_VALUE = "Smoked Mozarella";
+  let DATA_HEADER_NAME = "X-Macaroni-Salad";
+  let DATA_HEADER_VALUE = "Smoked Mozarella";
 
   beforeAll(async () => {
     fixture = await createFixture({
