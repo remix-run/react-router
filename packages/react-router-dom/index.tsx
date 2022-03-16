@@ -288,6 +288,38 @@ if (__DEV__) {
   Link.displayName = "Link";
 }
 
+export interface IsActiveProps {
+  to: To;
+  caseSensitive?: boolean;
+  end?: boolean;
+}
+
+/**
+ * A hook that returns true if the given path is "active" or not.
+ */
+export const usePathIsActive = ({
+  to,
+  caseSensitive,
+  end,
+}: IsActiveProps): boolean => {
+  let location = useLocation();
+  let path = useResolvedPath(to);
+
+  let locationPathname = location.pathname;
+  let toPathname = path.pathname;
+  if (!caseSensitive) {
+    locationPathname = locationPathname.toLowerCase();
+    toPathname = toPathname.toLowerCase();
+  }
+
+  return (
+    locationPathname === toPathname ||
+    (!end &&
+      locationPathname.startsWith(toPathname) &&
+      locationPathname.charAt(toPathname.length) === "/")
+  );
+};
+
 export interface NavLinkProps
   extends Omit<LinkProps, "className" | "style" | "children"> {
   children:
@@ -318,22 +350,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     },
     ref
   ) {
-    let location = useLocation();
-    let path = useResolvedPath(to);
-
-    let locationPathname = location.pathname;
-    let toPathname = path.pathname;
-    if (!caseSensitive) {
-      locationPathname = locationPathname.toLowerCase();
-      toPathname = toPathname.toLowerCase();
-    }
-
-    let isActive =
-      locationPathname === toPathname ||
-      (!end &&
-        locationPathname.startsWith(toPathname) &&
-        locationPathname.charAt(toPathname.length) === "/");
-
+    let isActive = usePathIsActive({ to, caseSensitive, end });
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
     let className: string | undefined;
