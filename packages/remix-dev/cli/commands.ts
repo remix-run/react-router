@@ -47,8 +47,8 @@ export async function create({
   let initScriptDir = path.join(projectDir, "remix.init");
   let hasInitScript = await fse.pathExists(initScriptDir);
   if (hasInitScript) {
-    console.log("💿 Running remix.init script");
     if (installDeps) {
+      console.log("💿 Running remix.init script");
       await init(projectDir);
       await fse.remove(initScriptDir);
     } else {
