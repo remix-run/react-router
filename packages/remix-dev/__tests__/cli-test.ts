@@ -318,7 +318,6 @@ describe("remix cli", () => {
       });
 
       expect(initResult.stdout.trim()).toBe("");
-      expect(initResult.stderr.trim()).toBe("");
       expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
       expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
       expect(fs.existsSync(path.join(projectDir, "test.txt"))).toBeTruthy();

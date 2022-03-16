@@ -127,11 +127,6 @@ async function run() {
       await new Promise((res) => setTimeout(res, 1500));
       anim.stop();
     }
-
-    console.log(
-      "💿 Welcome to Remix! Let's get you set up with a new project."
-    );
-    console.log();
   }
 
   switch (input[0]) {
