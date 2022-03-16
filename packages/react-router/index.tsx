@@ -551,7 +551,11 @@ export function useNavigate(): NavigateFunction {
       );
 
       if (basename !== "/") {
-        path.pathname = joinPaths([basename, path.pathname]);
+        if (path.pathname === "/") {
+          path.pathname = basename;
+        } else {
+          path.pathname = joinPaths([basename, path.pathname]);
+        }
       }
 
       (!!options.replace ? navigator.replace : navigator.push)(
