@@ -119,15 +119,15 @@ async function run() {
   if (flags.help) showHelp();
   if (flags.version) showVersion();
 
-  if (!flags.template) {
-    if (colors.supportsColor && process.env.NODE_ENV !== "test") {
-      let anim = chalkAnimation.rainbow(
-        `\nR E M I X - v${remixDevPackageVersion}\n`
-      );
-      await new Promise((res) => setTimeout(res, 1500));
-      anim.stop();
-    }
-  }
+  //   if (!flags.template) {
+  //     if (colors.supportsColor && process.env.NODE_ENV !== "test") {
+  //       let anim = chalkAnimation.rainbow(
+  //         `\nR E M I X - v${remixDevPackageVersion}\n`
+  //       );
+  //       await new Promise((res) => setTimeout(res, 1500));
+  //       anim.stop();
+  //     }
+  //   }
 
   switch (input[0]) {
     case "create":
