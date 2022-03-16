@@ -2,7 +2,7 @@ import * as path from "path";
 import meow from "meow";
 import inspector from "inspector";
 import inquirer from "inquirer";
-import chalkAnimation from "chalk-animation";
+// import chalkAnimation from "chalk-animation";
 
 import * as colors from "./colors";
 import * as commands from "./cli/commands";
