@@ -11,6 +11,10 @@ import packageJson from "./package.json";
 const remixDevPackageVersion = packageJson.version;
 
 const helpText = `
+${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
+  "M"
+)} ${colors.logoPink("I")} ${colors.logoRed("X")}
+
 ${colors.heading("Usage")}:
   $ remix create <${colors.arg("projectDir")}> --template <${colors.arg(
   "template"
@@ -115,16 +119,20 @@ async function run() {
   if (flags.help) showHelp();
   if (flags.version) showVersion();
 
-  if (colors.supportsColor && process.env.NODE_ENV !== "test") {
-    let anim = chalkAnimation.rainbow(
-      `\nR E M I X - v${remixDevPackageVersion}\n`
-    );
-    await new Promise((res) => setTimeout(res, 1500));
-    anim.stop();
-  }
+  if (!flags.template) {
+    if (colors.supportsColor && process.env.NODE_ENV !== "test") {
+      let anim = chalkAnimation.rainbow(
+        `\nR E M I X - v${remixDevPackageVersion}\n`
+      );
+      await new Promise((res) => setTimeout(res, 1500));
+      anim.stop();
+    }
 
-  console.log("💿 Welcome to Remix! Let's get you set up with a new project.");
-  console.log();
+    console.log(
+      "💿 Welcome to Remix! Let's get you set up with a new project."
+    );
+    console.log();
+  }
 
   switch (input[0]) {
     case "create":
