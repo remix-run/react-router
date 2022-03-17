@@ -124,7 +124,7 @@ describe("rendering", () => {
                 <span>{fetcher.state}</span>
                 <fetcher.Form method="post">
                   <input type="hidden" name="source" value="fetcher" />
-                  <button type="submit" name="_action" value="add">
+                  <button type="submit" name="action" value="add">
                     Submit
                   </button>
                 </fetcher.Form>
