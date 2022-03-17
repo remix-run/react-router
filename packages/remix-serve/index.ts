@@ -9,7 +9,13 @@ export function createApp(buildPath: string, mode = "production") {
   app.disable("x-powered-by");
 
   app.use(compression());
-  app.use(express.static("public", { immutable: true, maxAge: "1y" }));
+
+  app.use(
+    "/build",
+    express.static("public/build", { immutable: true, maxAge: "1y" })
+  );
+
+  app.use(express.static("public", { maxAge: "1h" }));
 
   app.use(morgan("tiny"));
   app.all(
