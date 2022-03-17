@@ -53,7 +53,7 @@ export async function create({
       await fse.remove(initScriptDir);
     } else {
       console.log(
-        "💿 You've opted out of running the remix.init script, you can run it manually with `npx remix init`"
+        "💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with `npx remix init`"
       );
     }
   }
