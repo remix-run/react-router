@@ -148,6 +148,16 @@ export async function createApp({
 
   if (installDeps) {
     // TODO: use yarn/pnpm/npm
+    const npmConfig = execSync("npm config get @remix-run:registry", {
+      encoding: "utf8",
+    });
+    if (npmConfig?.startsWith("https://npm.remix.run")) {
+      console.log(
+        "🚨 Oops! You still have the private Remix registry configured. Please run `npm config delete @remix-run:registry` or edit your .npmrc file to remove it."
+      );
+      process.exit(1);
+    }
+
     execSync("npm install", { stdio: "inherit", cwd: projectDir });
   }
 }
