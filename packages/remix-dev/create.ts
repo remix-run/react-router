@@ -148,7 +148,7 @@ export async function createApp({
 
   if (installDeps) {
     // TODO: use yarn/pnpm/npm
-    const npmConfig = execSync("npm config get @remix-run:registry", {
+    let npmConfig = execSync("npm config get @remix-run:registry", {
       encoding: "utf8",
     });
     if (npmConfig?.startsWith("https://npm.remix.run")) {
