@@ -9,7 +9,7 @@ import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfil
 import { BuildMode, BuildTarget } from "./build";
 import type { RemixConfig } from "./config";
 import { readConfig } from "./config";
-import { warnOnce } from "./warnings";
+import { warnOnce } from "./compiler/warnings";
 import type { AssetsManifest } from "./compiler/assets";
 import { createAssetsManifest } from "./compiler/assets";
 import { getAppDependencies } from "./compiler/dependencies";

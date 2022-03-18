@@ -10,7 +10,7 @@ import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 import sortPackageJSON from "sort-package-json";
 
-import packageJson from "./package.json";
+import packageJson from "../package.json";
 
 const remixDevPackageVersion = packageJson.version;
 
