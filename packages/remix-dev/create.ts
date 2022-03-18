@@ -207,7 +207,11 @@ async function downloadAndExtractTemplateOrExample(
       map(header) {
         let originalDirName = header.name.split("/")[0];
         header.name = header.name.replace(originalDirName, desiredDir);
-        if (!header.name.startsWith(templateDir + path.sep)) {
+        // https://github.com/remix-run/remix/issues/2356#issuecomment-1071458832
+        if (path.sep === "\\") {
+          templateDir = templateDir.replace("\\", "/");
+        }
+        if (!header.name.startsWith(templateDir + "/")) {
           header.name = "__IGNORE__";
         } else {
           header.name = header.name.replace(templateDir, desiredDir);
@@ -233,7 +237,7 @@ async function downloadAndExtractTarball(
     filePath?: string | null | undefined;
   }
 ): Promise<void> {
-  let cwd = path.dirname(projectDir);
+  let desiredDir = path.basename(projectDir);
 
   let response = await fetch(
     url,
@@ -249,13 +253,33 @@ async function downloadAndExtractTarball(
   await pipeline(
     response.body.pipe(gunzip()),
     tar.extract(projectDir, {
-      strip: options.filePath ? options.filePath.split("/").length + 1 : 1,
-      ignore(name) {
-        if (options.filePath) {
-          return !name.startsWith(path.join(cwd, options.filePath));
-        } else {
-          return false;
+      map(header) {
+        let originalDirName = header.name.split("/")[0];
+        header.name = header.name.replace(originalDirName, desiredDir);
+
+        let templateFiles = options.filePath
+          ? path.join(desiredDir, options.filePath) + path.sep
+          : desiredDir + path.sep;
+
+        // https://github.com/remix-run/remix/issues/2356#issuecomment-1071458832
+        if (path.sep === "\\") {
+          templateFiles = templateFiles.replace("\\", "/");
         }
+
+        if (!header.name.startsWith(templateFiles)) {
+          header.name = "__IGNORE__";
+        } else {
+          header.name = header.name.replace(templateFiles, "");
+        }
+
+        return header;
+      },
+      ignore(_filename, header) {
+        if (!header) {
+          throw new Error(`Header is undefined`);
+        }
+
+        return header.name === "__IGNORE__";
       },
     })
   );
@@ -295,7 +319,7 @@ async function getRepoInfo(
     }
 
     let [, owner, name, t, branch, ...file] = url.pathname.split("/");
-    let filePath = file.join("/");
+    let filePath = file.join(path.sep);
 
     if (t === undefined) {
       let defaultBranch = await getDefaultBranch(`${owner}/${name}`, token);
