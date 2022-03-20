@@ -290,7 +290,7 @@ if (__DEV__) {
 
 export interface NavLinkProps
   extends Omit<LinkProps, "className" | "style" | "children"> {
-  children:
+  children?:
     | React.ReactNode
     | ((props: { isActive: boolean }) => React.ReactNode);
   caseSensitive?: boolean;
