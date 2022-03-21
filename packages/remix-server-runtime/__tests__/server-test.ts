@@ -68,7 +68,7 @@ describe("server", () => {
     ];
     for (let [method, to] of allowThrough) {
       it(`allows through ${method} request to ${to}`, async () => {
-        let handler = createRequestHandler(build, {});
+        let handler = createRequestHandler(build);
         let response = await handler(
           new Request(`http://localhost:3000${to}`, {
             method,
@@ -80,7 +80,7 @@ describe("server", () => {
     }
 
     it("strips body for HEAD requests", async () => {
-      let handler = createRequestHandler(build, {});
+      let handler = createRequestHandler(build);
       let response = await handler(
         new Request("http://localhost:3000/", {
           method: "HEAD",
@@ -119,7 +119,7 @@ describe("shared server runtime", () => {
           path: "resource",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/resource`, { method: "get" });
 
@@ -154,7 +154,7 @@ describe("shared server runtime", () => {
           path: "resource/sub",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/resource/sub`, { method: "get" });
 
@@ -183,7 +183,7 @@ describe("shared server runtime", () => {
           path: "resource",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/resource`, { method: "get" });
 
@@ -205,7 +205,7 @@ describe("shared server runtime", () => {
           path: "resource",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/resource`, { method: "get" });
 
@@ -224,7 +224,7 @@ describe("shared server runtime", () => {
           path: "resource",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Development);
+      let handler = createRequestHandler(build, ServerMode.Development);
 
       let request = new Request(`${baseUrl}/resource`, { method: "get" });
 
@@ -250,7 +250,7 @@ describe("shared server runtime", () => {
           path: "resource",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/resource`, { method: "post" });
 
@@ -285,7 +285,7 @@ describe("shared server runtime", () => {
           path: "resource/sub",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/resource/sub`, { method: "post" });
 
@@ -314,7 +314,7 @@ describe("shared server runtime", () => {
           path: "resource",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/resource`, { method: "post" });
 
@@ -336,7 +336,7 @@ describe("shared server runtime", () => {
           path: "resource",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/resource`, { method: "post" });
 
@@ -355,7 +355,7 @@ describe("shared server runtime", () => {
           path: "resource",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Development);
+      let handler = createRequestHandler(build, ServerMode.Development);
 
       let request = new Request(`${baseUrl}/resource`, { method: "post" });
 
@@ -376,7 +376,7 @@ describe("shared server runtime", () => {
           index: true,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?_data=routes/index`, {
         method: "get",
@@ -406,7 +406,7 @@ describe("shared server runtime", () => {
           index: true,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?_data=routes/index`, {
         method: "get",
@@ -437,7 +437,7 @@ describe("shared server runtime", () => {
           path: "test",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test?_data=root`, {
         method: "get",
@@ -471,7 +471,7 @@ describe("shared server runtime", () => {
           path: "test",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Development);
+      let handler = createRequestHandler(build, ServerMode.Development);
 
       let request = new Request(`${baseUrl}/test?_data=root`, {
         method: "get",
@@ -504,7 +504,7 @@ describe("shared server runtime", () => {
           path: "test",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test?_data=root`, {
         method: "get",
@@ -536,7 +536,7 @@ describe("shared server runtime", () => {
           path: "test",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test?_data=routes/test`, {
         method: "post",
@@ -567,7 +567,7 @@ describe("shared server runtime", () => {
           path: "test",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test?_data=routes/test`, {
         method: "post",
@@ -601,7 +601,7 @@ describe("shared server runtime", () => {
           path: "test",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Development);
+      let handler = createRequestHandler(build, ServerMode.Development);
 
       let request = new Request(`${baseUrl}/test?_data=routes/test`, {
         method: "post",
@@ -634,7 +634,7 @@ describe("shared server runtime", () => {
           path: "test",
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test?_data=routes/test`, {
         method: "post",
@@ -666,7 +666,7 @@ describe("shared server runtime", () => {
           index: true,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?_data=root`, { method: "post" });
 
@@ -695,7 +695,7 @@ describe("shared server runtime", () => {
           index: true,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?index&_data=routes/index`, {
         method: "post",
@@ -720,7 +720,7 @@ describe("shared server runtime", () => {
           loader: rootLoader,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/`, { method: "get" });
 
@@ -748,7 +748,7 @@ describe("shared server runtime", () => {
           CatchBoundary: {},
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/`, { method: "get" });
 
@@ -786,7 +786,7 @@ describe("shared server runtime", () => {
           loader: indexLoader,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/`, { method: "get" });
 
@@ -828,7 +828,7 @@ describe("shared server runtime", () => {
           CatchBoundary: {},
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/`, { method: "get" });
 
@@ -873,7 +873,7 @@ describe("shared server runtime", () => {
           action: testAction,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test`, { method: "post" });
 
@@ -919,7 +919,7 @@ describe("shared server runtime", () => {
           action: indexAction,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?index`, { method: "post" });
 
@@ -966,7 +966,7 @@ describe("shared server runtime", () => {
           CatchBoundary: {},
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test`, { method: "post" });
 
@@ -1013,7 +1013,7 @@ describe("shared server runtime", () => {
           CatchBoundary: {},
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?index`, { method: "post" });
 
@@ -1068,7 +1068,7 @@ describe("shared server runtime", () => {
           action: testAction,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test`, { method: "post" });
 
@@ -1125,7 +1125,7 @@ describe("shared server runtime", () => {
           action: indexAction,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?index`, { method: "post" });
 
@@ -1169,7 +1169,7 @@ describe("shared server runtime", () => {
           loader: indexLoader,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/`, { method: "get" });
 
@@ -1211,7 +1211,7 @@ describe("shared server runtime", () => {
           ErrorBoundary: {},
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/`, { method: "get" });
 
@@ -1256,7 +1256,7 @@ describe("shared server runtime", () => {
           action: testAction,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test`, { method: "post" });
 
@@ -1302,7 +1302,7 @@ describe("shared server runtime", () => {
           action: indexAction,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?index`, { method: "post" });
 
@@ -1349,7 +1349,7 @@ describe("shared server runtime", () => {
           ErrorBoundary: {},
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test`, { method: "post" });
 
@@ -1396,7 +1396,7 @@ describe("shared server runtime", () => {
           ErrorBoundary: {},
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?index`, { method: "post" });
 
@@ -1451,7 +1451,7 @@ describe("shared server runtime", () => {
           action: testAction,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/test`, { method: "post" });
 
@@ -1508,7 +1508,7 @@ describe("shared server runtime", () => {
           action: indexAction,
         },
       });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/?index`, { method: "post" });
 
@@ -1560,7 +1560,7 @@ describe("shared server runtime", () => {
         calledBefore = true;
         return ogHandleDocumentRequest.call(null, arguments);
       }) as any;
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/`, { method: "get" });
 
@@ -1602,7 +1602,7 @@ describe("shared server runtime", () => {
         lastThrownError = new Error("rofl");
         throw lastThrownError;
       }) as any;
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Test);
 
       let request = new Request(`${baseUrl}/`, { method: "get" });
 
@@ -1642,7 +1642,7 @@ describe("shared server runtime", () => {
         lastThrownError = new Error(errorMessage);
         throw lastThrownError;
       }) as any;
-      let handler = createRequestHandler(build, {}, ServerMode.Development);
+      let handler = createRequestHandler(build, ServerMode.Development);
 
       let request = new Request(`${baseUrl}/`, { method: "get" });
 

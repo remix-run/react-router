@@ -1,6 +1,10 @@
 // Re-export everything from this package that is available in `remix`.
 
 export {
+  createCookie,
+  createSessionStorage,
+  createCookieSessionStorage,
+  createMemorySessionStorage,
   createFileSessionStorage,
   unstable_createFileUploadHandler,
   unstable_createMemoryUploadHandler,

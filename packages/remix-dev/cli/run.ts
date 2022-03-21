@@ -43,7 +43,7 @@ ${colors.heading("Values")}:
   - ${colors.arg("template")}          The project template to use
   - ${colors.arg(
     "remixPlatform"
-  )}     node, cloudflare-pages, or cloudflare-workers
+  )}     node or cloudflare
 
 ${colors.heading("Creating a new project")}:
 

@@ -6,7 +6,6 @@ import type { EntryContext } from "./entry";
 import { createEntryMatches, createEntryRouteModules } from "./entry";
 import { serializeError } from "./errors";
 import { getDocumentHeaders } from "./headers";
-import type { ServerPlatform } from "./platform";
 import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import { ServerMode, isServerMode } from "./mode";
@@ -24,14 +23,18 @@ export interface RequestHandler {
   (request: Request, loadContext?: AppLoadContext): Promise<Response>;
 }
 
+export type CreateRequestHandlerFunction = (
+  build: ServerBuild,
+  mode?: string
+) => RequestHandler;
+
 /**
  * Creates a function that serves HTTP requests.
  */
-export function createRequestHandler(
-  build: ServerBuild,
-  platform: ServerPlatform,
-  mode?: string
-): RequestHandler {
+export const createRequestHandler: CreateRequestHandlerFunction = (
+  build,
+  mode
+) => {
   let routes = createRoutes(build.routes);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
 
@@ -81,7 +84,7 @@ export function createRequestHandler(
 
     return response;
   };
-}
+};
 async function handleDataRequest({
   handleDataRequest,
   loadContext,

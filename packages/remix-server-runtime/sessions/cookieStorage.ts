@@ -1,4 +1,5 @@
-import { createCookie, isCookie } from "../cookies";
+import type { CreateCookieFunction} from "../cookies";
+import { isCookie } from "../cookies";
 import type { SessionStorage, SessionIdStorageStrategy } from "../sessions";
 import { warnOnceAboutSigningSessionCookie, createSession } from "../sessions";
 
@@ -9,6 +10,10 @@ interface CookieSessionStorageOptions {
    */
   cookie?: SessionIdStorageStrategy["cookie"];
 }
+
+export type CreateCookieSessionStorageFunction = (
+  options?: CookieSessionStorageOptions
+) => SessionStorage;
 
 /**
  * Creates and returns a SessionStorage object that stores all session data
@@ -21,9 +26,11 @@ interface CookieSessionStorageOptions {
  *
  * @see https://remix.run/api/remix#createcookiesessionstorage
  */
-export function createCookieSessionStorage({
+export const createCookieSessionStorageFactory = (
+  createCookie: CreateCookieFunction
+): CreateCookieSessionStorageFunction => ({
   cookie: cookieArg,
-}: CookieSessionStorageOptions = {}): SessionStorage {
+} = {}) => {
   let cookie = isCookie(cookieArg)
     ? cookieArg
     : createCookie(cookieArg?.name || "__session", cookieArg);
@@ -46,4 +53,4 @@ export function createCookieSessionStorage({
       });
     },
   };
-}
+};

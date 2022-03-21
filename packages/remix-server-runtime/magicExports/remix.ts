@@ -34,13 +34,9 @@ export type {
 } from "@remix-run/server-runtime";
 
 export {
-  createCookie,
   isCookie,
   createSession,
   isSession,
-  createSessionStorage,
-  createCookieSessionStorage,
-  createMemorySessionStorage,
   json,
   redirect,
 } from "@remix-run/server-runtime";

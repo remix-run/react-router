@@ -62,7 +62,7 @@ describe("remix cli", () => {
           Values:
             - projectDir        The Remix project directory
             - template          The project template to use
-            - remixPlatform     node, cloudflare-pages, or cloudflare-workers
+            - remixPlatform     node or cloudflare
 
           Creating a new project:
 
