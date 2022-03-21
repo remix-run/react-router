@@ -518,28 +518,6 @@ describe("shared server runtime", () => {
       expect(testAction.mock.calls.length).toBe(0);
     });
 
-    test("data request that does not match action surfaces error for boundary", async () => {
-      let build = mockServerBuild({
-        root: {
-          default: {},
-        },
-        "routes/index": {
-          parentId: "root",
-          index: true,
-        },
-      });
-      let handler = createRequestHandler(build, {}, ServerMode.Test);
-
-      let request = new Request(`${baseUrl}/?index&_data=routes/index`, {
-        method: "post",
-      });
-
-      let result = await handler(request);
-      expect(result.status).toBe(500);
-      expect(result.headers.get("X-Remix-Error")).toBe("yes");
-      expect((await result.json()).message).toBeTruthy();
-    });
-
     test("data request calls action", async () => {
       let rootLoader = jest.fn(() => {
         return "root";
