@@ -1,6 +1,20 @@
 import type { Location, Path, To } from "history";
 import { parsePath } from "history";
 
+export type LoaderFormMethod = "GET";
+export type ActionFormMethod = "POST" | "PUT" | "PATCH" | "DELETE";
+export type FormMethod = LoaderFormMethod | ActionFormMethod;
+export type FormEncType = "application/x-www-form-urlencoded";
+
+/**
+ * Internal interface to pass around, not intended for external consumption
+ */
+export interface Submission {
+  formMethod: FormMethod;
+  formEncType: FormEncType;
+  formData: FormData;
+}
+
 /**
  * Arguments passed to route loader functions
  */
@@ -10,10 +24,22 @@ export interface LoaderFunctionArgs {
   signal: AbortSignal;
 }
 
+/**
+ * Arguments passed to route action functions
+ */
+export interface ActionFunctionArgs extends Submission {
+  request: Request;
+  params: Params;
+  signal: AbortSignal;
+}
+
 export interface ShouldReloadFunctionArgs {
   request: Request;
   prevRequest: Request;
   params: Params;
+  formMethod?: FormMethod;
+  formEncType?: FormEncType;
+  formData?: FormData;
 }
 
 /**
@@ -29,7 +55,7 @@ export interface RouteObject {
   index?: boolean;
   path?: string;
   loader?: (obj: LoaderFunctionArgs) => Promise<any>;
-  action?: () => Promise<any>;
+  action?: (obj: ActionFunctionArgs) => Promise<any>;
   exceptionElement?: React.ReactNode;
   shouldReload?: (obj: ShouldReloadFunctionArgs) => boolean;
 }

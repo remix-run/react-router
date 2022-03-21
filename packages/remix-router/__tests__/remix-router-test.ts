@@ -5,7 +5,13 @@ import type {
   NavigateOptions,
 } from "../index";
 import { createRemixRouter, IDLE_TRANSITION } from "../router";
-import { invariant, matchRoutes, RouteObject } from "../utils";
+import {
+  ActionFunctionArgs,
+  invariant,
+  matchRoutes,
+  RouteMatch,
+  RouteObject,
+} from "../utils";
 
 // TODO find a better way to handle this
 console.debug = () => {};
@@ -20,26 +26,31 @@ type Deferred = ReturnType<typeof defer>;
 // indicating they want a stub
 type TestRouteObject = Pick<RouteObject, "id" | "index" | "path"> & {
   loader?: boolean;
+  action?: boolean;
   exceptionElement?: boolean;
   children?: TestRouteObject[];
 };
 
 // Enhanced route objects are what is passed to the router for testing, as they
 // have been enhanced with stubbed loaders and actions
-type EnhancedRouteObject = Omit<TestRouteObject, "loader" | "children"> & {
+type EnhancedRouteObject = Omit<
+  TestRouteObject,
+  "loader" | "action" | "children"
+> & {
   loader?: (args: LoaderFunctionArgs) => Promise<unknown>;
+  action?: (args: ActionFunctionArgs) => Promise<unknown>;
   children?: EnhancedRouteObject[];
 };
 
 // A helper that includes the Deferred and stubs for any loaders/actions for the
 // route allowing fine-grained test execution
-type InternalLoaderHelpers = {
+type InternalHelpers = {
   dfd: Deferred;
   stub: jest.Mock;
   _signal?: AbortSignal;
 };
 
-type LoaderHelpers = InternalLoaderHelpers & {
+type Helpers = InternalHelpers & {
   get signal(): AbortSignal;
   resolve: (d: any) => Promise<void>;
   reject: (d: any) => Promise<void>;
@@ -49,7 +60,8 @@ type LoaderHelpers = InternalLoaderHelpers & {
 // Helpers returned from a TestHarness.navigate call, allowing fine grained
 // control and assertions over the loaders/actions
 type NavigationHelpers = {
-  loaders: Record<string, LoaderHelpers>;
+  loaders: Record<string, Helpers>;
+  actions: Record<string, Helpers>;
 };
 
 // Global array to stick any errors thrown from router.navigate() and then we
@@ -87,6 +99,12 @@ function defer() {
   };
 }
 
+function createFormData(obj: Record<string, string>): FormData {
+  let formData = new FormData();
+  Object.entries(obj).forEach((e) => formData.append(e[0], e[1]));
+  return formData;
+}
+
 type SetupOpts = {
   routes: TestRouteObject[];
   initialEntries?: InitialEntry[];
@@ -105,7 +123,12 @@ function setup({
   // this is the loader which will be waited on when the route loader is called.
   // If a navigation is interrupted, we put the the new (active) navigation in
   // here so the next execution of callLoaders will use the right hooks
-  let activeLoaderHelpers = new Map<string, InternalLoaderHelpers>();
+  let activeLoaderHelpers = new Map<string, InternalHelpers>();
+  // Global "active" loader helpers, keyed by guid:routeId.  "Active" indicates that
+  // this is the loader which will be waited on when the route loader is called.
+  // If a navigation is interrupted, we put the the new (active) navigation in
+  // here so the next execution of callLoaders will use the right hooks
+  let activeActionHelpers = new Map<string, InternalHelpers>();
   // A set of to-be-garbage-collected Deferred's to clean up at the end of a test
   let gcDfds = new Set<Deferred>();
   let onChangeListener: (() => void) | undefined;
@@ -117,12 +140,22 @@ function setup({
       let enhancedRoute: EnhancedRouteObject = {
         ...r,
         loader: undefined,
+        action: undefined,
         children: undefined,
       };
       if (r.loader) {
         enhancedRoute.loader = (args) => {
           let helpers = activeLoaderHelpers.get(`${guid}:${r.id}`);
           invariant(helpers, `No loader helpers found for guid: ${guid}`);
+          helpers.stub(args);
+          helpers._signal = args.signal;
+          return helpers.dfd.promise;
+        };
+      }
+      if (r.action) {
+        enhancedRoute.action = (args) => {
+          let helpers = activeActionHelpers.get(`${guid}:${r.id}`);
+          invariant(helpers, `No action helpers found for guid: ${guid}`);
           helpers.stub(args);
           helpers._signal = args.signal;
           return helpers.dfd.promise;
@@ -144,24 +177,21 @@ function setup({
     onChange: () => onChangeListener?.(),
   });
 
-  function getNavigationHelpers(
-    href: string,
-    navigationId: number
-  ): NavigationHelpers {
-    let matches = matchRoutes(enhancedRoutes, href);
-    let matchesWithLoaders = (matches || []).filter((m) => m.route.loader);
-
-    // Generate helpers for all route matches that container loaders
-    let loaderHelpers = matchesWithLoaders.reduce((acc, m) => {
+  function getHelpers(
+    matches: RouteMatch[],
+    navigationId: number,
+    map: Map<string, InternalHelpers>
+  ): Record<string, Helpers> {
+    return matches.reduce((acc, m) => {
       let routeId = m.route.id;
       // Internal methods we need access to from the route loader execution
-      let internalHelpers: InternalLoaderHelpers = {
+      let internalHelpers: InternalHelpers = {
         dfd: defer(),
         stub: jest.fn(),
       };
       // Set the active loader so the execution of the loader waits on the
       // correct promise
-      activeLoaderHelpers.set(`${navigationId}:${routeId}`, internalHelpers);
+      map.set(`${navigationId}:${routeId}`, internalHelpers);
       gcDfds.add(internalHelpers.dfd);
       return Object.assign(acc, {
         [routeId]: {
@@ -179,6 +209,8 @@ function setup({
             } catch (e) {}
           },
           async redirect(href, status = 301) {
+            let redirectNavigationId = ++guid;
+            let helpers = getNavigationHelpers(href, redirectNavigationId);
             try {
               //@ts-ignore
               await internalHelpers.dfd.reject(
@@ -191,16 +223,34 @@ function setup({
                 })
               );
             } catch (e) {}
-
-            let redirectNavigationId = ++guid;
-            return getNavigationHelpers(href, redirectNavigationId);
+            return helpers;
           },
-        } as LoaderHelpers,
+        } as Helpers,
       });
     }, {});
+  }
+
+  function getNavigationHelpers(
+    href: string,
+    navigationId: number
+  ): NavigationHelpers {
+    let matches = matchRoutes(enhancedRoutes, href);
+
+    // Generate helpers for all route matches that contain loaders
+    let loaderHelpers = getHelpers(
+      (matches || []).filter((m) => m.route.loader),
+      navigationId,
+      activeLoaderHelpers
+    );
+    let actionHelpers = getHelpers(
+      (matches || []).filter((m) => m.route.action),
+      navigationId,
+      activeActionHelpers
+    );
 
     return {
       loaders: loaderHelpers,
+      actions: actionHelpers,
     };
   }
 
@@ -262,7 +312,7 @@ function initializeTmTest() {
 //#region Tests
 ///////////////////////////////////////////////////////////////////////////////
 
-// Reusable routes for a simple todo app, for test cases that don't want
+// Reusable routes for a simple tasks app, for test cases that don't want
 // to create their own more complex routes
 const TASK_ROUTES: TestRouteObject[] = [
   {
@@ -310,7 +360,7 @@ const TM_ROUTES = [
         id: "index",
         hasLoader: true,
         loader: true,
-        // action: true,
+        action: true,
         element: {},
         module: "",
       },
@@ -318,7 +368,7 @@ const TM_ROUTES = [
         path: "/foo",
         id: "foo",
         loader: true,
-        // action: true,
+        action: true,
         element: {},
         module: "",
       },
@@ -326,7 +376,7 @@ const TM_ROUTES = [
         path: "/foo/bar",
         id: "foobar",
         loader: true,
-        // action: true,
+        action: true,
         element: {},
         module: "",
       },
@@ -334,7 +384,7 @@ const TM_ROUTES = [
         path: "/bar",
         id: "bar",
         loader: true,
-        // action: true,
+        action: true,
         element: {},
         module: "",
       },
@@ -342,7 +392,7 @@ const TM_ROUTES = [
         path: "/baz",
         id: "baz",
         loader: true,
-        // action: true,
+        action: true,
         element: {},
         module: "",
       },
@@ -350,7 +400,7 @@ const TM_ROUTES = [
         path: "/p/:param",
         id: "param",
         loader: true,
-        // action: true,
+        action: true,
         element: {},
         module: "",
       },
@@ -385,19 +435,21 @@ describe("a remix router", () => {
         history,
         hydrationData: {
           loaderData: { root: "LOADER DATA" },
-          // TODO
-          // actionData: { root: "ACTION DATA" },
+          actionData: { root: "ACTION DATA" },
           exceptions: { root: new Error("lol") },
         },
         onChange: () => {},
       });
       expect(router.state).toEqual({
         action: "POP",
-        exceptions: {
-          root: new Error("lol"),
-        },
         loaderData: {
           root: "LOADER DATA",
+        },
+        actionData: {
+          root: "ACTION DATA",
+        },
+        exceptions: {
+          root: new Error("lol"),
         },
         location: {
           hash: "",
@@ -447,7 +499,10 @@ describe("a remix router", () => {
       let t = initializeTmTest();
       let A = await t.navigate("/foo");
       await A.loaders.foo.resolve(null);
-      expect(t.router.state.loaderData.foo).toBe(null);
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: null,
+      });
     });
 
     it("does not fetch unchanging layout data", async () => {
@@ -510,12 +565,18 @@ describe("a remix router", () => {
       let A = await t.navigate("/p/one");
       await A.loaders.param.resolve("one");
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
-      expect(t.router.state.loaderData.param).toBe("one");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        param: "one",
+      });
 
       let B = await t.navigate("/p/two");
       await B.loaders.param.resolve("two");
       expect(B.loaders.root.stub.mock.calls.length).toBe(0);
-      expect(t.router.state.loaderData.param).toBe("two");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        param: "two",
+      });
     });
 
     it("reloads all routes on refresh", async () => {
@@ -542,8 +603,10 @@ describe("a remix router", () => {
 
     it("does not load anything on hash change only", async () => {
       let t = initializeTmTest();
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
       let A = await t.navigate("/#bar");
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
     });
 
     it("sets all right states on hash change only", async () => {
@@ -561,20 +624,36 @@ describe("a remix router", () => {
       let A = await t.navigate("/foo#bar");
       expect(t.router.state.transition.type).toBe("normalLoad");
       await A.loaders.foo.resolve("A");
-      expect(t.router.state.loaderData.foo).toBe("A");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: "A",
+      });
     });
 
     it("redirects from loaders", async () => {
       let t = initializeTmTest();
 
       let A = await t.navigate("/bar");
+      expect(t.router.state.transition.type).toBe("normalLoad");
+      expect(t.router.state.transition.location?.pathname).toBe("/bar");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+      });
+
       let B = await A.loaders.bar.redirect("/baz");
       expect(t.router.state.transition.type).toBe("normalRedirect");
       expect(t.router.state.transition.location?.pathname).toBe("/baz");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+      });
 
       await B.loaders.baz.resolve("B");
+      expect(t.router.state.transition.type).toBe("idle");
       expect(t.router.state.location.pathname).toBe("/baz");
-      expect(t.router.state.loaderData.baz).toBe("B");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        baz: "B",
+      });
     });
   });
 
@@ -610,6 +689,7 @@ describe("a remix router", () => {
                 path: "/child",
                 id: "child",
                 loader: async (...args) => childLoader(...args),
+                action: async () => null,
                 element: {},
               },
             ],
@@ -629,29 +709,23 @@ describe("a remix router", () => {
       await router.navigate("/child?reload=0");
       expect(rootLoader.mock.calls.length).toBe(1);
 
-      // TODO: Re-enable submission aspect
-      // await tm.send({
-      //   type: "navigation",
-      //   location: createLocation("/child"),
-      //   submission: createActionSubmission("/child"),
-      //   action: Action.Push,
-      // });
+      await router.navigate("/child", {
+        formMethod: "POST",
+        formData: createFormData({ gosh: "dang" }),
+      });
 
-      // let args = shouldReload.mock.calls[2][0];
-      // expect(args).toMatchInlineSnapshot(`
-      //   Object {
-      //     "params": Object {},
-      //     "prevUrl": "http://localhost/child?reload=0",
-      //     "submission": Object {
-      //       "action": "/child",
-      //       "encType": "application/x-www-form-urlencoded",
-      //       "formData": FormData {},
-      //       "key": "1",
-      //       "method": "POST",
-      //     },
-      //     "url": "http://localhost/child",
-      //   }
-      // `);
+      let expectedFormData = new FormData();
+      expectedFormData.append("gosh", "dang");
+      expect(shouldReload.mock.calls[2]).toMatchObject([
+        {
+          params: {},
+          prevRequest: new Request("/child?reload=0"),
+          request: new Request("/child"),
+          formMethod: "POST",
+          formEncType: "application/x-www-form-urlencoded",
+          formData: expectedFormData,
+        },
+      ]);
     });
   });
 
@@ -813,11 +887,284 @@ describe("a remix router", () => {
     });
   });
 
-  // TODO(submissions): describe("POP navigations after action redirect");
+  describe("POP navigations after action redirect", () => {
+    it("does a normal load when backing into an action redirect", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo", {
+        formMethod: "POST",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      let B = await A.actions.foo.redirect("/bar");
+      await B.loaders.root.resolve("ROOT DATA");
+      await B.loaders.bar.resolve("B LOADER");
+      expect(B.loaders.root.stub.mock.calls.length).toBe(1);
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT DATA",
+        bar: "B LOADER",
+      });
 
-  // TODO(submissions): describe("submission navigations");
+      let C = await t.navigate("/baz");
+      await C.loaders.baz.resolve("C LOADER");
+      expect(C.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT DATA",
+        baz: "C LOADER",
+      });
 
-  // TODO(submissions): describe("action errors");
+      let D = await t.navigate(-2);
+      await D.loaders.bar.resolve("D LOADER");
+      expect(D.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT DATA",
+        bar: "D LOADER",
+      });
+    });
+  });
+
+  describe("submission navigations", () => {
+    it("reloads all routes when a loader during an actionReload redirects", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo", {
+        formMethod: "POST",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+
+      await A.actions.foo.resolve("FOO ACTION");
+      expect(A.loaders.root.stub.mock.calls.length).toBe(1);
+
+      let B = await A.loaders.foo.redirect("/bar");
+      // TODO: Why does test harness require this?
+      await A.loaders.root.reject("ROOT ERROR");
+      await B.loaders.root.resolve("ROOT LOADER 2");
+      await B.loaders.bar.resolve("BAR LOADER");
+      expect(B.loaders.root.stub.mock.calls.length).toBe(1);
+      expect(t.router.state).toMatchObject({
+        loaderData: {
+          root: "ROOT LOADER 2",
+          bar: "BAR LOADER",
+        },
+        exceptions: {},
+      });
+    });
+
+    it("commits action data as soon as it lands", async () => {
+      let t = initializeTmTest();
+
+      let A = await t.navigate("/foo", {
+        formMethod: "POST",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      expect(t.router.state.actionData).toBeNull();
+
+      await A.actions.foo.resolve("A");
+      expect(t.router.state.actionData).toEqual({
+        foo: "A",
+      });
+    });
+
+    it("reloads all routes after the action", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo", {
+        formMethod: "POST",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+
+      await A.actions.foo.resolve(null);
+      expect(A.loaders.root.stub.mock.calls.length).toBe(1);
+
+      await A.loaders.foo.resolve("A LOADER");
+      expect(t.router.state.transition.state).toBe("loading");
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT", // old data
+      });
+
+      await A.loaders.root.resolve("ROOT LOADER");
+      expect(t.router.state.transition.state).toBe("idle");
+      expect(t.router.state.loaderData).toEqual({
+        foo: "A LOADER",
+        root: "ROOT LOADER",
+      });
+    });
+
+    it("reloads all routes after action redirect", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo", {
+        formMethod: "POST",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+
+      let B = await A.actions.foo.redirect("/bar");
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(B.loaders.root.stub.mock.calls.length).toBe(1);
+
+      await B.loaders.root.resolve("ROOT LOADER");
+      expect(t.router.state.transition.state).toBe("loading");
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT", // old data
+      });
+
+      await B.loaders.bar.resolve("B LOADER");
+      expect(t.router.state.transition.state).toBe("idle");
+      expect(t.router.state.loaderData).toEqual({
+        bar: "B LOADER",
+        root: "ROOT LOADER",
+      });
+    });
+
+    it("removes action data at new locations", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo", {
+        formMethod: "POST",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      await A.actions.foo.resolve("A ACTION");
+      await A.loaders.foo.resolve("A LOADER");
+      expect(t.router.state.actionData).toEqual({ foo: "A ACTION" });
+
+      let B = await t.navigate("/bar");
+      await B.loaders.bar.resolve("B LOADER");
+      expect(t.router.state.actionData).toBeNull();
+    });
+  });
+
+  describe("action errors", () => {
+    describe("with an error boundary in the action route", () => {
+      it("uses the action route's error boundary", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+              id: "parent",
+              children: [
+                {
+                  path: "/child",
+                  id: "child",
+                  exceptionElement: true,
+                  action: true,
+                },
+              ],
+            },
+          ],
+        });
+        let A = await t.navigate("/child", {
+          formMethod: "POST",
+          formData: createFormData({ gosh: "dang" }),
+        });
+        await A.actions.child.reject(new Error("Kaboom!"));
+        expect(t.router.state.exceptions).toEqual({
+          child: new Error("Kaboom!"),
+        });
+      });
+
+      it("loads parent data, but not action data", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+              id: "parent",
+              loader: true,
+              children: [
+                {
+                  path: "/child",
+                  id: "child",
+                  exceptionElement: true,
+                  loader: true,
+                  action: true,
+                },
+              ],
+            },
+          ],
+        });
+        let A = await t.navigate("/child", {
+          formMethod: "POST",
+          formData: createFormData({ gosh: "dang" }),
+        });
+        await A.actions.child.reject(new Error("Kaboom!"));
+        expect(A.loaders.parent.stub.mock.calls.length).toBe(1);
+        expect(A.loaders.child.stub.mock.calls.length).toBe(0);
+        await A.loaders.parent.resolve("PARENT LOADER");
+        expect(t.router.state.loaderData).toEqual({
+          parent: "PARENT LOADER",
+        });
+      });
+    });
+
+    describe("with an error boundary above the action route", () => {
+      it("uses the nearest error boundary", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+              id: "parent",
+              exceptionElement: true,
+              children: [
+                {
+                  path: "/child",
+                  id: "child",
+                  action: true,
+                },
+              ],
+            },
+          ],
+        });
+        let A = await t.navigate("/child", {
+          formMethod: "POST",
+          formData: createFormData({ gosh: "dang" }),
+        });
+        await A.actions.child.reject(new Error("Kaboom!"));
+        expect(t.router.state.exceptions).toEqual({
+          parent: new Error("Kaboom!"),
+        });
+      });
+    });
+
+    describe("with a parent loader that throws also, good grief!", () => {
+      it("uses action error but nearest errorBoundary to parent", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+              id: "root",
+              exceptionElement: true,
+              children: [
+                {
+                  path: "/parent",
+                  id: "parent",
+                  loader: true,
+                  children: [
+                    {
+                      path: "/parent/child",
+                      id: "child",
+                      action: true,
+                      exceptionElement: true,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        let A = await t.navigate("/parent/child", {
+          formMethod: "POST",
+          formData: createFormData({ gosh: "dang" }),
+        });
+        await A.actions.child.reject(new Error("Kaboom!"));
+        await A.loaders.parent.reject(new Error("Should not see this!"));
+        expect(t.router.state).toMatchObject({
+          loaderData: {},
+          // TODO Check on this, I think current state puts error in actionData as well?
+          actionData: {},
+          exceptions: {
+            root: new Error("Kaboom!"),
+          },
+        });
+      });
+    });
+  });
 
   describe("transition states", () => {
     it("initialization", async () => {
@@ -825,7 +1172,7 @@ describe("a remix router", () => {
       let transition = t.router.state.transition;
       expect(transition.state).toBe("idle");
       expect(transition.type).toBe("idle");
-      expect(transition.submission).toBeUndefined();
+      expect(transition.formData).toBeUndefined();
       expect(transition.location).toBeUndefined();
     });
 
@@ -835,7 +1182,7 @@ describe("a remix router", () => {
       let transition = t.router.state.transition;
       expect(transition.state).toBe("loading");
       expect(transition.type).toBe("normalLoad");
-      expect(transition.submission).toBeUndefined();
+      expect(transition.formData).toBeUndefined();
       expect(transition.location).toMatchObject({
         pathname: "/foo",
         search: "",
@@ -846,7 +1193,7 @@ describe("a remix router", () => {
       transition = t.router.state.transition;
       expect(transition.state).toBe("idle");
       expect(transition.type).toBe("idle");
-      expect(transition.submission).toBeUndefined();
+      expect(transition.formData).toBeUndefined();
       expect(transition.location).toBeUndefined();
     });
 
@@ -859,24 +1206,168 @@ describe("a remix router", () => {
       let transition = t.router.state.transition;
       expect(transition.state).toBe("loading");
       expect(transition.type).toBe("normalRedirect");
-      expect(transition.submission).toBeUndefined();
+      expect(transition.formData).toBeUndefined();
       expect(transition.location?.pathname).toBe("/bar");
 
       await B.loaders.bar.resolve("B");
       transition = t.router.state.transition;
       expect(transition.state).toBe("idle");
       expect(transition.type).toBe("idle");
-      expect(transition.submission).toBeUndefined();
+      expect(transition.formData).toBeUndefined();
       expect(transition.location).toBeUndefined();
     });
 
-    // TODO(submissions): it("action submission")
+    it("action submission", async () => {
+      let t = initializeTmTest();
 
-    // TODO(submissions): it("action submission + redirect")
+      let A = await t.navigate("/foo", {
+        formMethod: "POST",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      let transition = t.router.state.transition;
+      expect(transition.state).toBe("submitting");
+      expect(transition.type).toBe("actionSubmission");
 
-    // TODO(submissions): it("loader submission")
+      expect(
+        // @ts-expect-error
+        new URLSearchParams(transition.formData).toString()
+      ).toBe("gosh=dang");
+      expect(transition.formMethod).toBe("POST");
+      expect(transition.formEncType).toBe("application/x-www-form-urlencoded");
+      expect(transition.location).toMatchObject({
+        pathname: "/foo",
+        search: "",
+        hash: "",
+      });
 
-    // TODO(submissions): it("loader submission + redirect")
+      await A.actions.foo.resolve("A");
+      transition = t.router.state.transition;
+      expect(transition.state).toBe("loading");
+      expect(transition.type).toBe("actionReload");
+      expect(
+        // @ts-expect-error
+        new URLSearchParams(transition.formData).toString()
+      ).toBe("gosh=dang");
+      expect(transition.formMethod).toBe("POST");
+      expect(transition.formEncType).toBe("application/x-www-form-urlencoded");
+      expect(transition.location).toMatchObject({
+        pathname: "/foo",
+        search: "",
+        hash: "",
+      });
+
+      await A.loaders.foo.resolve("A");
+      transition = t.router.state.transition;
+      expect(transition.state).toBe("loading");
+      expect(transition.type).toBe("actionReload");
+
+      await A.loaders.root.resolve("B");
+      transition = t.router.state.transition;
+      expect(transition.state).toBe("idle");
+      expect(transition.type).toBe("idle");
+      expect(transition.formData).toBeUndefined();
+      expect(transition.location).toBeUndefined();
+    });
+
+    it("action submission + redirect", async () => {
+      let t = initializeTmTest();
+
+      let A = await t.navigate("/foo", {
+        formMethod: "POST",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      let B = await A.actions.foo.redirect("/bar");
+
+      let transition = t.router.state.transition;
+      expect(transition.state).toBe("loading");
+      expect(transition.type).toBe("submissionRedirect");
+      expect(
+        // @ts-expect-error
+        new URLSearchParams(transition.formData).toString()
+      ).toBe("gosh=dang");
+      expect(transition.formMethod).toBe("POST");
+      expect(transition.location).toMatchObject({
+        pathname: "/bar",
+        search: "",
+        hash: "",
+      });
+
+      await B.loaders.bar.resolve("B");
+      transition = t.router.state.transition;
+      expect(transition.state).toBe("loading");
+      expect(transition.type).toBe("submissionRedirect");
+
+      await B.loaders.root.resolve("C");
+      transition = t.router.state.transition;
+      expect(transition.state).toBe("idle");
+      expect(transition.type).toBe("idle");
+      expect(transition.formData).toBeUndefined();
+      expect(transition.location).toBeUndefined();
+    });
+
+    it("loader submission", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo", {
+        formData: createFormData({ gosh: "dang" }),
+      });
+      let transition = t.router.state.transition;
+      expect(transition.state).toBe("submitting");
+      expect(transition.type).toBe("loaderSubmission");
+      expect(
+        // @ts-expect-error
+        new URLSearchParams(transition.formData).toString()
+      ).toBe("gosh=dang");
+      expect(transition.formMethod).toBe("GET");
+      expect(transition.formEncType).toBe("application/x-www-form-urlencoded");
+      expect(transition.location).toMatchObject({
+        pathname: "/foo",
+        search: "",
+        hash: "",
+      });
+
+      await A.loaders.foo.resolve("A");
+      transition = t.router.state.transition;
+      expect(transition.state).toBe("idle");
+      expect(transition.type).toBe("idle");
+      expect(transition.formData).toBeUndefined();
+      expect(transition.location).toBeUndefined();
+    });
+
+    it("loader submission + redirect", async () => {
+      let t = initializeTmTest();
+
+      let A = await t.navigate("/foo", {
+        formData: createFormData({ gosh: "dang" }),
+      });
+      let B = await A.loaders.foo.redirect("/bar");
+
+      let transition = t.router.state.transition;
+      expect(transition.state).toBe("loading");
+      expect(transition.type).toBe("submissionRedirect");
+      expect(
+        // @ts-expect-error
+        new URLSearchParams(transition.formData).toString()
+      ).toBe("gosh=dang");
+      expect(transition.formMethod).toBe("GET");
+      expect(transition.formEncType).toBe("application/x-www-form-urlencoded");
+      expect(transition.location).toMatchObject({
+        pathname: "/bar",
+        search: "",
+        hash: "",
+      });
+
+      await B.loaders.bar.resolve("B");
+      transition = t.router.state.transition;
+      expect(transition.state).toBe("loading");
+      expect(transition.type).toBe("submissionRedirect");
+
+      await B.loaders.root.resolve("C");
+      transition = t.router.state.transition;
+      expect(transition.state).toBe("idle");
+      expect(transition.type).toBe("idle");
+      expect(transition.formData).toBeUndefined();
+      expect(transition.location).toBeUndefined();
+    });
   });
 
   describe("interruptions", () => {
@@ -892,55 +1383,73 @@ describe("a remix router", () => {
       });
     });
 
-    // TODO(submissions): describe(`
-    //   A) GET  /foo |---X
-    //   B) POST /bar     |---O
-    // `, () => {
-    //   it("aborts previous load", async () => {
-    //     let t = setup();
-    //     let A = t.navigate.get("/foo");
-    //     t.navigate.post("/bar");
-    //     expect(A.loader.abortMock.calls.length).toBe(1);
-    //   });
-    // });
+    describe(`
+      A) GET  /foo |---X
+      B) POST /bar     |---O
+    `, () => {
+      it("aborts previous load", async () => {
+        let t = initializeTmTest();
+        let A = await t.navigate("/foo");
+        await t.navigate("/bar", {
+          formMethod: "POST",
+          formData: new FormData(),
+        });
+        expect(A.loaders.foo.signal.aborted).toBe(true);
+      });
+    });
 
-    // TODO(submissions): describe(`
-    //   A) POST /foo |---X
-    //   B) POST /bar     |---O
-    // `, () => {
-    //   it("aborts previous action", async () => {
-    //     let t = setup();
-    //     let A = t.navigate.post("/foo");
-    //     t.navigate.post("/bar");
-    //     expect(A.action.abortMock.calls.length).toBe(1);
-    //   });
-    // });
+    describe(`
+      A) POST /foo |---X
+      B) POST /bar     |---O
+    `, () => {
+      it("aborts previous action", async () => {
+        let t = initializeTmTest();
+        let A = await t.navigate("/foo", {
+          formMethod: "POST",
+          formData: new FormData(),
+        });
+        await t.navigate("/bar", {
+          formMethod: "POST",
+          formData: new FormData(),
+        });
+        expect(A.actions.foo.signal.aborted).toBe(true);
+      });
+    });
 
-    // TODO(submissions): describe(`
-    //   A) POST /foo |--|--X
-    //   B) GET  /bar       |---O
-    // `, () => {
-    //   it("aborts previous action reload", async () => {
-    //     let t = setup();
-    //     let A = t.navigate.post("/foo");
-    //     await A.action.resolve("A ACTION");
-    //     t.navigate.get("/bar");
-    //     expect(A.loader.abortMock.calls.length).toBe(1);
-    //   });
-    // });
+    describe(`
+      A) POST /foo |--|--X
+      B) GET  /bar       |---O
+    `, () => {
+      it("aborts previous action reload", async () => {
+        let t = initializeTmTest();
+        let A = await t.navigate("/foo", {
+          formMethod: "POST",
+          formData: new FormData(),
+        });
+        await A.actions.foo.resolve("A ACTION");
+        await t.navigate("/bar");
+        expect(A.loaders.foo.signal.aborted).toBe(true);
+      });
+    });
 
-    // TODO(submissions): describe(`
-    //   A) POST /foo |--|--X
-    //   B) POST /bar       |---O
-    // `, () => {
-    //   it("aborts previous action reload", async () => {
-    //     let t = setup();
-    //     let A = t.navigate.post("/foo");
-    //     await A.action.resolve("A ACTION");
-    //     t.navigate.post("/bar");
-    //     expect(A.loader.abortMock.calls.length).toBe(1);
-    //   });
-    // });
+    describe(`
+      A) POST /foo |--|--X
+      B) POST /bar       |---O
+    `, () => {
+      it("aborts previous action reload", async () => {
+        let t = initializeTmTest();
+        let A = await t.navigate("/foo", {
+          formMethod: "POST",
+          formData: new FormData(),
+        });
+        await A.actions.foo.resolve("A ACTION");
+        await t.navigate("/bar", {
+          formMethod: "POST",
+          formData: new FormData(),
+        });
+        expect(A.loaders.foo.signal.aborted).toBe(true);
+      });
+    });
 
     describe(`
       A) GET /foo |--/bar--X
@@ -955,18 +1464,21 @@ describe("a remix router", () => {
       });
     });
 
-    // TODO(submissions): describe(`
-    //   A) POST /foo |--/bar--X
-    //   B) GET  /baz          |---O
-    // `, () => {
-    //   it("aborts previous action redirect load", async () => {
-    //     let t = setup();
-    //     let A = t.navigate.post("/foo");
-    //     let AR = await A.action.redirect("/bar");
-    //     t.navigate.get("/baz");
-    //     expect(AR.loader.abortMock.calls.length).toBe(1);
-    //   });
-    // });
+    describe(`
+      A) POST /foo |--/bar--X
+      B) GET  /baz          |---O
+    `, () => {
+      it("aborts previous action redirect load", async () => {
+        let t = initializeTmTest();
+        let A = await t.navigate("/foo", {
+          formMethod: "POST",
+          formData: new FormData(),
+        });
+        let AR = await A.actions.foo.redirect("/bar");
+        await t.navigate("/baz");
+        expect(AR.loaders.bar.signal.aborted).toBe(true);
+      });
+    });
   });
 
   describe("navigation (new)", () => {
@@ -1332,7 +1844,6 @@ describe("a remix router", () => {
       let nav3 = await t.navigate("/tasks?foo=bar#hash");
       expect(nav3.loaders.tasks.stub).toHaveBeenCalledWith({
         params: {},
-        // TODO: Fix this up - transition manager currently ignores hashes in createHref
         request: new Request("/tasks?foo=bar"),
         signal: expect.any(AbortSignal),
       });
