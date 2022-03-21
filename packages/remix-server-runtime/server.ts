@@ -147,6 +147,9 @@ async function handleDataRequest({
       let headers = new Headers(response.headers);
       headers.set("X-Remix-Redirect", headers.get("Location")!);
       headers.delete("Location");
+      if (response.headers.get("Set-Cookie") !== null) {
+        headers.set("X-Remix-Revalidate", "yes");
+      }
 
       return new Response(null, {
         status: 204,
