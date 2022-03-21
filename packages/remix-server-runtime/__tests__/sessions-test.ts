@@ -1,6 +1,10 @@
 import { createCookieFactory } from "../cookies";
 import type { SignFunction, UnsignFunction } from "../crypto";
-import { createSession, createSessionStorageFactory, isSession } from "../sessions";
+import {
+  createSession,
+  createSessionStorageFactory,
+  isSession,
+} from "../sessions";
 import { createCookieSessionStorageFactory } from "../sessions/cookieStorage";
 import { createMemorySessionStorageFactory } from "../sessions/memoryStorage";
 
@@ -21,9 +25,11 @@ const unsign: UnsignFunction = async (signed, secret) => {
   }
 };
 const createCookie = createCookieFactory({ sign, unsign });
-const createCookieSessionStorage = createCookieSessionStorageFactory(createCookie);
+const createCookieSessionStorage =
+  createCookieSessionStorageFactory(createCookie);
 const createSessionStorage = createSessionStorageFactory(createCookie);
-const createMemorySessionStorage = createMemorySessionStorageFactory(createSessionStorage);
+const createMemorySessionStorage =
+  createMemorySessionStorageFactory(createSessionStorage);
 
 describe("Session", () => {
   it("has an empty id by default", () => {

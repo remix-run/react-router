@@ -1,4 +1,4 @@
-import type { CreateCookieFunction} from "../cookies";
+import type { CreateCookieFunction } from "../cookies";
 import { isCookie } from "../cookies";
 import type { SessionStorage, SessionIdStorageStrategy } from "../sessions";
 import { warnOnceAboutSigningSessionCookie, createSession } from "../sessions";
@@ -26,31 +26,29 @@ export type CreateCookieSessionStorageFunction = (
  *
  * @see https://remix.run/api/remix#createcookiesessionstorage
  */
-export const createCookieSessionStorageFactory = (
-  createCookie: CreateCookieFunction
-): CreateCookieSessionStorageFunction => ({
-  cookie: cookieArg,
-} = {}) => {
-  let cookie = isCookie(cookieArg)
-    ? cookieArg
-    : createCookie(cookieArg?.name || "__session", cookieArg);
+export const createCookieSessionStorageFactory =
+  (createCookie: CreateCookieFunction): CreateCookieSessionStorageFunction =>
+  ({ cookie: cookieArg } = {}) => {
+    let cookie = isCookie(cookieArg)
+      ? cookieArg
+      : createCookie(cookieArg?.name || "__session", cookieArg);
 
-  warnOnceAboutSigningSessionCookie(cookie);
+    warnOnceAboutSigningSessionCookie(cookie);
 
-  return {
-    async getSession(cookieHeader, options) {
-      return createSession(
-        (cookieHeader && (await cookie.parse(cookieHeader, options))) || {}
-      );
-    },
-    async commitSession(session, options) {
-      return cookie.serialize(session.data, options);
-    },
-    async destroySession(_session, options) {
-      return cookie.serialize("", {
-        ...options,
-        expires: new Date(0),
-      });
-    },
+    return {
+      async getSession(cookieHeader, options) {
+        return createSession(
+          (cookieHeader && (await cookie.parse(cookieHeader, options))) || {}
+        );
+      },
+      async commitSession(session, options) {
+        return cookie.serialize(session.data, options);
+      },
+      async destroySession(_session, options) {
+        return cookie.serialize("", {
+          ...options,
+          expires: new Date(0),
+        });
+      },
+    };
   };
-};

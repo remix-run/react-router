@@ -93,15 +93,18 @@ export async function init(projectDir: string) {
 }
 
 export async function setup(platformArg?: string) {
-  let platform: SetupPlatform
-  if (platformArg === "cloudflare-workers" || platformArg === "cloudflare-pages") {
-    console.warn(`Using '${platformArg}' as a platform value is deprecated. Use 'cloudflare' instead.`);
-    console.log('HINT: check the `postinstall` script in `package.json`');
+  let platform: SetupPlatform;
+  if (
+    platformArg === "cloudflare-workers" ||
+    platformArg === "cloudflare-pages"
+  ) {
+    console.warn(
+      `Using '${platformArg}' as a platform value is deprecated. Use 'cloudflare' instead.`
+    );
+    console.log("HINT: check the `postinstall` script in `package.json`");
     platform = SetupPlatform.Cloudflare;
   } else {
-    platform = isSetupPlatform(platformArg)
-      ? platformArg
-      : SetupPlatform.Node;
+    platform = isSetupPlatform(platformArg) ? platformArg : SetupPlatform.Node;
   }
 
   await setupRemix(platform);

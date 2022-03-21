@@ -26,40 +26,40 @@ export type CreateMemorySessionStorageFunction = (
  *
  * @see https://remix.run/api/remix#creatememorysessionstorage
  */
-export const createMemorySessionStorageFactory = (
-  createSessionStorage: CreateSessionStorageFunction
-): CreateMemorySessionStorageFunction => ({
-  cookie,
-} = {}) => {
-  let uniqueId = 0;
-  let map = new Map<string, { data: SessionData; expires?: Date }>();
+export const createMemorySessionStorageFactory =
+  (
+    createSessionStorage: CreateSessionStorageFunction
+  ): CreateMemorySessionStorageFunction =>
+  ({ cookie } = {}) => {
+    let uniqueId = 0;
+    let map = new Map<string, { data: SessionData; expires?: Date }>();
 
-  return createSessionStorage({
-    cookie,
-    async createData(data, expires) {
-      let id = (++uniqueId).toString();
-      map.set(id, { data, expires });
-      return id;
-    },
-    async readData(id) {
-      if (map.has(id)) {
-        let { data, expires } = map.get(id)!;
+    return createSessionStorage({
+      cookie,
+      async createData(data, expires) {
+        let id = (++uniqueId).toString();
+        map.set(id, { data, expires });
+        return id;
+      },
+      async readData(id) {
+        if (map.has(id)) {
+          let { data, expires } = map.get(id)!;
 
-        if (!expires || expires > new Date()) {
-          return data;
+          if (!expires || expires > new Date()) {
+            return data;
+          }
+
+          // Remove expired session data.
+          if (expires) map.delete(id);
         }
 
-        // Remove expired session data.
-        if (expires) map.delete(id);
-      }
-
-      return null;
-    },
-    async updateData(id, data, expires) {
-      map.set(id, { data, expires });
-    },
-    async deleteData(id) {
-      map.delete(id);
-    },
-  });
-};
+        return null;
+      },
+      async updateData(id, data, expires) {
+        map.set(id, { data, expires });
+      },
+      async deleteData(id) {
+        map.delete(id);
+      },
+    });
+  };

@@ -7,10 +7,7 @@ export enum SetupPlatform {
 }
 
 export function isSetupPlatform(platform: any): platform is SetupPlatform {
-  return [
-    SetupPlatform.Cloudflare,
-    SetupPlatform.Node,
-  ].includes(platform);
+  return [SetupPlatform.Cloudflare, SetupPlatform.Node].includes(platform);
 }
 
 export async function setupRemix(platform: SetupPlatform): Promise<void> {

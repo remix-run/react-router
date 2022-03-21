@@ -41,9 +41,7 @@ ${colors.heading("Options")}:
 ${colors.heading("Values")}:
   - ${colors.arg("projectDir")}        The Remix project directory
   - ${colors.arg("template")}          The project template to use
-  - ${colors.arg(
-    "remixPlatform"
-  )}     node or cloudflare
+  - ${colors.arg("remixPlatform")}     node or cloudflare
 
 ${colors.heading("Creating a new project")}:
 

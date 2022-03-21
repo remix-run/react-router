@@ -76,56 +76,55 @@ export type CreateCookieFunction = (
  *
  * @see https://remix.run/api/remix#createcookie
  */
-export const createCookieFactory = ({
-  sign,
-  unsign,
-}: {
-  sign: SignFunction
-  unsign: UnsignFunction
-}): CreateCookieFunction => (
-  name,
-  cookieOptions = {}
-) => {
-  let { secrets, ...options } = {
-    secrets: [],
-    path: "/",
-    ...cookieOptions,
-  };
+export const createCookieFactory =
+  ({
+    sign,
+    unsign,
+  }: {
+    sign: SignFunction;
+    unsign: UnsignFunction;
+  }): CreateCookieFunction =>
+  (name, cookieOptions = {}) => {
+    let { secrets, ...options } = {
+      secrets: [],
+      path: "/",
+      ...cookieOptions,
+    };
 
-  return {
-    get name() {
-      return name;
-    },
-    get isSigned() {
-      return secrets.length > 0;
-    },
-    get expires() {
-      // Max-Age takes precedence over Expires
-      return typeof options.maxAge !== "undefined"
-        ? new Date(Date.now() + options.maxAge * 1000)
-        : options.expires;
-    },
-    async parse(cookieHeader, parseOptions) {
-      if (!cookieHeader) return null;
-      let cookies = parse(cookieHeader, { ...options, ...parseOptions });
-      return name in cookies
-        ? cookies[name] === ""
-          ? ""
-          : await decodeCookieValue(unsign, cookies[name], secrets)
-        : null;
-    },
-    async serialize(value, serializeOptions) {
-      return serialize(
-        name,
-        value === "" ? "" : await encodeCookieValue(sign, value, secrets),
-        {
-          ...options,
-          ...serializeOptions,
-        }
-      );
-    },
+    return {
+      get name() {
+        return name;
+      },
+      get isSigned() {
+        return secrets.length > 0;
+      },
+      get expires() {
+        // Max-Age takes precedence over Expires
+        return typeof options.maxAge !== "undefined"
+          ? new Date(Date.now() + options.maxAge * 1000)
+          : options.expires;
+      },
+      async parse(cookieHeader, parseOptions) {
+        if (!cookieHeader) return null;
+        let cookies = parse(cookieHeader, { ...options, ...parseOptions });
+        return name in cookies
+          ? cookies[name] === ""
+            ? ""
+            : await decodeCookieValue(unsign, cookies[name], secrets)
+          : null;
+      },
+      async serialize(value, serializeOptions) {
+        return serialize(
+          name,
+          value === "" ? "" : await encodeCookieValue(sign, value, secrets),
+          {
+            ...options,
+            ...serializeOptions,
+          }
+        );
+      },
+    };
   };
-};
 
 export type IsCookieFunction = (object: any) => object is Cookie;
 

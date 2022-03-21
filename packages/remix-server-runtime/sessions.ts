@@ -224,47 +224,41 @@ export type CreateSessionStorageFunction = (
  *
  * @see https://remix.run/api/remix#createsessionstorage
  */
-export const createSessionStorageFactory = (
-  createCookie: CreateCookieFunction
-): CreateSessionStorageFunction => ({
-  cookie: cookieArg,
-  createData,
-  readData,
-  updateData,
-  deleteData,
-}) => {
-  let cookie = isCookie(cookieArg)
-    ? cookieArg
-    : createCookie(cookieArg?.name || "__session", cookieArg);
+export const createSessionStorageFactory =
+  (createCookie: CreateCookieFunction): CreateSessionStorageFunction =>
+  ({ cookie: cookieArg, createData, readData, updateData, deleteData }) => {
+    let cookie = isCookie(cookieArg)
+      ? cookieArg
+      : createCookie(cookieArg?.name || "__session", cookieArg);
 
-  warnOnceAboutSigningSessionCookie(cookie);
+    warnOnceAboutSigningSessionCookie(cookie);
 
-  return {
-    async getSession(cookieHeader, options) {
-      let id = cookieHeader && (await cookie.parse(cookieHeader, options));
-      let data = id && (await readData(id));
-      return createSession(data || {}, id || "");
-    },
-    async commitSession(session, options) {
-      let { id, data } = session;
+    return {
+      async getSession(cookieHeader, options) {
+        let id = cookieHeader && (await cookie.parse(cookieHeader, options));
+        let data = id && (await readData(id));
+        return createSession(data || {}, id || "");
+      },
+      async commitSession(session, options) {
+        let { id, data } = session;
 
-      if (id) {
-        await updateData(id, data, cookie.expires);
-      } else {
-        id = await createData(data, cookie.expires);
-      }
+        if (id) {
+          await updateData(id, data, cookie.expires);
+        } else {
+          id = await createData(data, cookie.expires);
+        }
 
-      return cookie.serialize(id, options);
-    },
-    async destroySession(session, options) {
-      await deleteData(session.id);
-      return cookie.serialize("", {
-        ...options,
-        expires: new Date(0),
-      });
-    },
+        return cookie.serialize(id, options);
+      },
+      async destroySession(session, options) {
+        await deleteData(session.id);
+        return cookie.serialize("", {
+          ...options,
+          expires: new Date(0),
+        });
+      },
+    };
   };
-};
 
 export function warnOnceAboutSigningSessionCookie(cookie: Cookie) {
   warnOnce(

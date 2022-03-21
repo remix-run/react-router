@@ -18,8 +18,8 @@ import {
 jest.mock("@remix-run/node", () => {
   let original = jest.requireActual("@remix-run/node");
   return {
-      ...original,
-      createRequestHandler: jest.fn()
+    ...original,
+    createRequestHandler: jest.fn(),
   };
 });
 let mockedCreateRequestHandler =
