@@ -6,31 +6,24 @@ import type { EntryContext } from "./entry";
 import { createEntryMatches, createEntryRouteModules } from "./entry";
 import { serializeError } from "./errors";
 import { getDocumentHeaders } from "./headers";
+import { ServerMode, isServerMode } from "./mode";
 import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
-import { ServerMode, isServerMode } from "./mode";
 import type { ServerRoute } from "./routes";
 import { createRoutes } from "./routes";
 import { json, isRedirectResponse, isCatchResponse } from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
 
-/**
- * The main request handler for a Remix server. This handler runs in the context
- * of a cloud provider's server (e.g. Express on Firebase) or locally via their
- * dev tools.
- */
-export interface RequestHandler {
-  (request: Request, loadContext?: AppLoadContext): Promise<Response>;
-}
+export type RequestHandler = (
+  request: Request,
+  loadContext?: AppLoadContext
+) => Promise<Response>;
 
 export type CreateRequestHandlerFunction = (
   build: ServerBuild,
   mode?: string
 ) => RequestHandler;
 
-/**
- * Creates a function that serves HTTP requests.
- */
 export const createRequestHandler: CreateRequestHandlerFunction = (
   build,
   mode
@@ -41,37 +34,32 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   return async function requestHandler(request, loadContext) {
     let url = new URL(request.url);
     let matches = matchServerRoutes(routes, url.pathname);
-    let requestType = getRequestType(url, matches);
 
     let response: Response;
-    switch (requestType) {
-      case "data":
-        response = await handleDataRequest({
-          request,
-          loadContext,
-          matches: matches!,
-          handleDataRequest: build.entry.module.handleDataRequest,
-          serverMode,
-        });
-        break;
-      case "document":
-        response = await handleDocumentRequest({
-          build,
-          loadContext,
-          matches,
-          request,
-          routes,
-          serverMode,
-        });
-        break;
-      case "resource":
-        response = await handleResourceRequest({
-          request,
-          loadContext,
-          matches: matches!,
-          serverMode,
-        });
-        break;
+    if (url.searchParams.has("_data")) {
+      response = await handleDataRequest({
+        request,
+        loadContext,
+        matches: matches!,
+        handleDataRequest: build.entry.module.handleDataRequest,
+        serverMode,
+      });
+    } else if (matches && !matches[matches.length - 1].route.module.default) {
+      response = await handleResourceRequest({
+        request,
+        loadContext,
+        matches,
+        serverMode,
+      });
+    } else {
+      response = await handleDocumentRequest({
+        build,
+        loadContext,
+        matches,
+        request,
+        routes,
+        serverMode,
+      });
     }
 
     if (request.method.toLowerCase() === "head") {
@@ -85,6 +73,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     return response;
   };
 };
+
 async function handleDataRequest({
   handleDataRequest,
   loadContext,
@@ -553,28 +542,6 @@ async function handleResourceRequest({
       },
     });
   }
-}
-
-type RequestType = "data" | "document" | "resource";
-
-function getRequestType(
-  url: URL,
-  matches: RouteMatch<ServerRoute>[] | null
-): RequestType {
-  if (url.searchParams.has("_data")) {
-    return "data";
-  }
-
-  if (!matches) {
-    return "document";
-  }
-
-  let match = matches.slice(-1)[0];
-  if (!match.route.module.default) {
-    return "resource";
-  }
-
-  return "document";
 }
 
 function isActionRequest(request: Request): boolean {
