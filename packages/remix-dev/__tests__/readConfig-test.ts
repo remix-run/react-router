@@ -286,14 +286,6 @@ describe("readConfig", () => {
             "parentId": "routes/loader-errors",
             "path": "nested-catch",
           },
-          "routes/meta": Object {
-            "caseSensitive": undefined,
-            "file": "routes/meta.tsx",
-            "id": "routes/meta",
-            "index": undefined,
-            "parentId": "root",
-            "path": "meta",
-          },
           "routes/methods": Object {
             "caseSensitive": undefined,
             "file": "routes/methods.tsx",
