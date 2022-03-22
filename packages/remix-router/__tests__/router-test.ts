@@ -4,7 +4,7 @@ import type {
   LoaderFunctionArgs,
   NavigateOptions,
 } from "../index";
-import { createRemixRouter, IDLE_TRANSITION } from "../router";
+import { createRouter, IDLE_TRANSITION } from "../router";
 import {
   ActionFunctionArgs,
   invariant,
@@ -12,9 +12,6 @@ import {
   RouteMatch,
   RouteObject,
 } from "../utils";
-
-// TODO find a better way to handle this
-console.debug = () => {};
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
@@ -68,6 +65,7 @@ type NavigationHelpers = {
 // can assert against them and clear the array in afterEach
 let uncaughtExceptions: string[] = [];
 function handleUncaughtException(e: any): void {
+  console.error("Error caught from navigate()", e);
   uncaughtExceptions.push(
     e instanceof Error ? `${e.message}\n${e.stack}` : String(e)
   );
@@ -170,7 +168,7 @@ function setup({
 
   let history = createMemoryHistory({ initialEntries, initialIndex });
   let enhancedRoutes = enhanceRoutes(routes);
-  let router = createRemixRouter({
+  let router = createRouter({
     history,
     routes: enhancedRoutes,
     hydrationData,
@@ -202,10 +200,12 @@ function setup({
           // Public APIs only needed for test execution
           async resolve(value) {
             await internalHelpers.dfd.resolve(value);
+            await new Promise((r) => setImmediate(r));
           },
           async reject(value) {
             try {
               await internalHelpers.dfd.reject(value);
+              await new Promise((r) => setImmediate(r));
             } catch (e) {}
           },
           async redirect(href, status = 301) {
@@ -418,11 +418,11 @@ afterEach(() => {
   }
 });
 
-describe("a remix router", () => {
+describe("a router", () => {
   describe("init", () => {
     it("with initial values", async () => {
       let history = createMemoryHistory({ initialEntries: ["/"] });
-      let router = createRemixRouter({
+      let router = createRouter({
         routes: [
           {
             element: {},
@@ -441,7 +441,7 @@ describe("a remix router", () => {
         onChange: () => {},
       });
       expect(router.state).toEqual({
-        action: "POP",
+        historyAction: "POP",
         loaderData: {
           root: "LOADER DATA",
         },
@@ -661,16 +661,12 @@ describe("a remix router", () => {
     it("delegates to the route if it should reload or not", async () => {
       let rootLoader = jest.fn((args) => "ROOT");
       let childLoader = jest.fn((args) => "CHILD");
-      let shouldReload = jest.fn(({ request, prevRequest }) => {
-        expect(request.url).not.toEqual(prevRequest.url);
-        return (
-          new URLSearchParams(parsePath(request.url).search).get("reload") ===
-          "1"
-        );
+      let shouldReload = jest.fn(({ url }) => {
+        return new URLSearchParams(parsePath(url).search).get("reload") === "1";
       });
 
       let history = createMemoryHistory();
-      let router = createRemixRouter({
+      let router = createRouter({
         history,
         routes: [
           {
@@ -708,6 +704,11 @@ describe("a remix router", () => {
 
       await router.navigate("/child?reload=0");
       expect(rootLoader.mock.calls.length).toBe(1);
+      expect(shouldReload.mock.calls[1]).toMatchObject([
+        {
+          url: "/child?reload=0",
+        },
+      ]);
 
       await router.navigate("/child", {
         formMethod: "POST",
@@ -718,11 +719,7 @@ describe("a remix router", () => {
       expectedFormData.append("gosh", "dang");
       expect(shouldReload.mock.calls[2]).toMatchObject([
         {
-          params: {},
-          prevRequest: new Request("/child?reload=0"),
-          request: new Request("/child"),
-          formMethod: "POST",
-          formEncType: "application/x-www-form-urlencoded",
+          url: "/child",
           formData: expectedFormData,
         },
       ]);
@@ -842,7 +839,7 @@ describe("a remix router", () => {
 
         await t.navigate("/");
         expect(t.router.state.loaderData).toEqual({ root: "ROOT1" });
-        expect(t.router.state.exceptions).toEqual({});
+        expect(t.router.state.exceptions).toBe(null);
       });
     });
 
@@ -1028,6 +1025,50 @@ describe("a remix router", () => {
       await B.loaders.bar.resolve("B LOADER");
       expect(t.router.state.actionData).toBeNull();
     });
+
+    it("uses the proper action for index routes", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+            id: "parent",
+            children: [
+              {
+                path: "/child",
+                id: "child",
+                exceptionElement: true,
+                action: true,
+                children: [
+                  {
+                    index: true,
+                    id: "childIndex",
+                    exceptionElement: true,
+                    action: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+      let A = await t.navigate("/child", {
+        formMethod: "POST",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      await A.actions.child.resolve("CHILD");
+      expect(t.router.state.actionData).toEqual({
+        child: "CHILD",
+      });
+
+      let B = await t.navigate("/child?index", {
+        formMethod: "POST",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      await B.actions.childIndex.resolve("CHILD INDEX");
+      expect(t.router.state.actionData).toEqual({
+        childIndex: "CHILD INDEX",
+      });
+    });
   });
 
   describe("action errors", () => {
@@ -1086,8 +1127,14 @@ describe("a remix router", () => {
         expect(A.loaders.parent.stub.mock.calls.length).toBe(1);
         expect(A.loaders.child.stub.mock.calls.length).toBe(0);
         await A.loaders.parent.resolve("PARENT LOADER");
-        expect(t.router.state.loaderData).toEqual({
-          parent: "PARENT LOADER",
+        expect(t.router.state).toMatchObject({
+          loaderData: {
+            parent: "PARENT LOADER",
+          },
+          actionData: null,
+          exceptions: {
+            child: new Error("Kaboom!"),
+          },
         });
       });
     });
@@ -1162,6 +1209,36 @@ describe("a remix router", () => {
             root: new Error("Kaboom!"),
           },
         });
+      });
+    });
+
+    describe("with no corresponding action", () => {
+      it("throws a 405 Response", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+              id: "parent",
+              children: [
+                {
+                  path: "/child",
+                  id: "child",
+                  exceptionElement: true,
+                },
+              ],
+            },
+          ],
+        });
+        let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+        await t.navigate("/child", {
+          formMethod: "POST",
+          formData: createFormData({ gosh: "dang" }),
+        });
+        expect(t.router.state.exceptions).toEqual({
+          child: new Response(null, { status: 405 }),
+        });
+        expect(console.warn).toHaveBeenCalled();
+        spy.mockReset();
       });
     });
   });
@@ -1479,6 +1556,80 @@ describe("a remix router", () => {
         expect(AR.loaders.bar.signal.aborted).toBe(true);
       });
     });
+
+    describe(`
+      A) GET /foo |---X
+      B) GET /bar     |---X
+      C) GET /baz         |---O
+    `, () => {
+      it("aborts multiple subsequent loads", async () => {
+        let t = initializeTmTest();
+        // Start A navigation and immediately interrupt
+        let A = await t.navigate("/foo");
+        let B = await t.navigate("/bar");
+        // resolve A then interrupt B - ensure the A resolution doesn't clear
+        // the new pendingNavigationController which is now reflecting B's nav
+        await A.loaders.foo.resolve("A");
+        let C = await t.navigate("/baz");
+        await B.loaders.bar.resolve("B");
+        await C.loaders.baz.resolve("C");
+
+        expect(A.loaders.foo.stub.mock.calls.length).toBe(1);
+        expect(A.loaders.foo.signal.aborted).toBe(true);
+
+        expect(B.loaders.bar.stub.mock.calls.length).toBe(1);
+        expect(B.loaders.bar.signal.aborted).toBe(true);
+
+        expect(C.loaders.baz.stub.mock.calls.length).toBe(1);
+        expect(C.loaders.baz.signal.aborted).toBe(false);
+
+        expect(t.router.state.loaderData).toEqual({
+          root: "ROOT",
+          baz: "C",
+        });
+      });
+    });
+
+    describe(`
+      A) POST /foo |---X
+      B) POST /bar     |---X
+      C) POST /baz         |---O
+    `, () => {
+      it("aborts previous load", async () => {
+        let t = initializeTmTest();
+        // Start A navigation and immediately interrupt
+        let A = await t.navigate("/foo", {
+          formMethod: "POST",
+          formData: new FormData(),
+        });
+        let B = await t.navigate("/bar", {
+          formMethod: "POST",
+          formData: new FormData(),
+        });
+        // resolve A then interrupt B - ensure the A resolution doesn't clear
+        // the new pendingNavigationController which is now reflecting B's nav
+        await A.actions.foo.resolve("A");
+        let C = await t.navigate("/baz", {
+          formMethod: "POST",
+          formData: new FormData(),
+        });
+        await B.actions.bar.resolve("B");
+        await C.actions.baz.resolve("C");
+
+        expect(A.actions.foo.stub.mock.calls.length).toBe(1);
+        expect(A.actions.foo.signal.aborted).toBe(true);
+
+        expect(B.actions.bar.stub.mock.calls.length).toBe(1);
+        expect(B.actions.bar.signal.aborted).toBe(true);
+
+        expect(C.actions.baz.stub.mock.calls.length).toBe(1);
+        expect(C.actions.baz.signal.aborted).toBe(false);
+
+        expect(t.router.state.actionData).toEqual({
+          baz: "C",
+        });
+      });
+    });
   });
 
   describe("navigation (new)", () => {
@@ -1502,7 +1653,7 @@ describe("a remix router", () => {
       });
 
       expect(t.router.state).toMatchObject({
-        action: "POP",
+        historyAction: "POP",
         location: {
           pathname: "/",
           search: "",
@@ -1519,7 +1670,7 @@ describe("a remix router", () => {
 
       await t.navigate("/tasks");
       expect(t.router.state).toMatchObject({
-        action: "PUSH",
+        historyAction: "PUSH",
         location: {
           pathname: "/tasks",
           search: "",
@@ -1536,7 +1687,7 @@ describe("a remix router", () => {
 
       await t.navigate("/tasks/1", { replace: true });
       expect(t.router.state).toMatchObject({
-        action: "REPLACE",
+        historyAction: "REPLACE",
         location: {
           pathname: "/tasks/1",
           search: "",
@@ -1553,7 +1704,7 @@ describe("a remix router", () => {
 
       await t.router.navigate(-1);
       expect(t.router.state).toMatchObject({
-        action: "POP",
+        historyAction: "POP",
         location: {
           pathname: "/",
           search: "",
@@ -1570,7 +1721,7 @@ describe("a remix router", () => {
 
       await t.navigate("/tasks?foo=bar#hash");
       expect(t.router.state).toMatchObject({
-        action: "PUSH",
+        historyAction: "PUSH",
         location: {
           pathname: "/tasks",
           search: "?foo=bar",
@@ -1621,7 +1772,7 @@ describe("a remix router", () => {
       });
 
       expect(t.router.state).toMatchObject({
-        action: "POP",
+        historyAction: "POP",
         location: expect.objectContaining({ pathname: "/" }),
         transition: IDLE_TRANSITION,
         loaderData: {},
@@ -1640,7 +1791,7 @@ describe("a remix router", () => {
       });
 
       expect(t.router.state).toMatchObject({
-        action: "POP",
+        historyAction: "POP",
         location: {
           pathname: "/",
         },
@@ -1664,7 +1815,7 @@ describe("a remix router", () => {
 
       let nav1 = await t.navigate("/tasks");
       expect(t.router.state).toMatchObject({
-        action: "POP",
+        historyAction: "POP",
         location: {
           pathname: "/",
         },
@@ -1684,7 +1835,7 @@ describe("a remix router", () => {
 
       await nav1.loaders.tasks.resolve("TASKS_DATA");
       expect(t.router.state).toMatchObject({
-        action: "PUSH",
+        historyAction: "PUSH",
         location: {
           pathname: "/tasks",
         },
@@ -1700,7 +1851,7 @@ describe("a remix router", () => {
       let nav2 = await t.navigate("/tasks/1");
       await nav2.loaders.tasksId.resolve("TASKS_ID_DATA");
       expect(t.router.state).toMatchObject({
-        action: "PUSH",
+        historyAction: "PUSH",
         location: {
           pathname: "/tasks/1",
         },
@@ -1729,7 +1880,7 @@ describe("a remix router", () => {
 
       let nav = await t.navigate("/tasks", { replace: true });
       expect(t.router.state).toMatchObject({
-        action: "POP",
+        historyAction: "POP",
         location: {
           pathname: "/",
         },
@@ -1749,7 +1900,7 @@ describe("a remix router", () => {
 
       await nav.loaders.tasks.resolve("TASKS_DATA");
       expect(t.router.state).toMatchObject({
-        action: "REPLACE",
+        historyAction: "REPLACE",
         location: {
           pathname: "/tasks",
         },
@@ -1780,7 +1931,7 @@ describe("a remix router", () => {
       // pop forward to /tasks
       let nav2 = await t.navigate(1);
       expect(t.router.state).toMatchObject({
-        action: "POP",
+        historyAction: "POP",
         location: {
           pathname: "/",
         },
@@ -1800,7 +1951,7 @@ describe("a remix router", () => {
 
       await nav2.loaders.tasks.resolve("TASKS_DATA");
       expect(t.router.state).toMatchObject({
-        action: "POP",
+        historyAction: "POP",
         location: {
           pathname: "/tasks",
         },
@@ -1914,7 +2065,7 @@ describe("a remix router", () => {
         root: "ROOT_DATA",
         tasks: "TASKS_DATA",
       });
-      expect(t.router.state.exceptions).toEqual({});
+      expect(t.router.state.exceptions).toBe(null);
 
       t.cleanup();
     });
@@ -1995,7 +2146,7 @@ describe("a remix router", () => {
 
       let nav1 = await t.navigate("/tasks");
       expect(t.router.state).toMatchObject({
-        action: "POP",
+        historyAction: "POP",
         location: {
           pathname: "/",
         },
@@ -2018,7 +2169,7 @@ describe("a remix router", () => {
       // Should not abort if it redirected
       expect(nav1.loaders.tasks.signal.aborted).toBe(false);
       expect(t.router.state).toMatchObject({
-        action: "POP",
+        historyAction: "POP",
         location: {
           pathname: "/",
         },
@@ -2039,7 +2190,7 @@ describe("a remix router", () => {
 
       await nav2.loaders.tasksId.resolve("TASKS_ID_DATA");
       expect(t.router.state).toMatchObject({
-        action: "REPLACE",
+        historyAction: "REPLACE",
         location: {
           pathname: "/tasks/1",
         },

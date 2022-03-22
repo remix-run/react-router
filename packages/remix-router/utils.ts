@@ -15,6 +15,10 @@ export interface Submission {
   formData: FormData;
 }
 
+export interface ActionSubmission extends Submission {
+  formMethod: ActionFormMethod;
+}
+
 /**
  * Arguments passed to route loader functions
  */
@@ -34,11 +38,7 @@ export interface ActionFunctionArgs extends Submission {
 }
 
 export interface ShouldReloadFunctionArgs {
-  request: Request;
-  prevRequest: Request;
-  params: Params;
-  formMethod?: FormMethod;
-  formEncType?: FormEncType;
+  url: string;
   formData?: FormData;
 }
 
