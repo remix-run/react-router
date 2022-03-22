@@ -27,7 +27,7 @@ ${colors.heading("Options")}:
   --version, -v       Print the CLI version and exit
   --no-color          Disable ANSI colors in console output
 \`create\` Options:
-  --template          The template to use (required)
+  --template          The template to use
   --no-install        Skip installing dependencies after creation
   --no-typescript     Convert the template to JavaScript
   --remix-version     The version of Remix to use
