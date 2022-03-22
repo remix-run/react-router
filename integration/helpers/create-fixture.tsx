@@ -23,7 +23,16 @@ const REMIX_SOURCE_BUILD_DIR = path.join(process.cwd(), "build");
 
 interface FixtureInit {
   files: { [filename: string]: string };
-  template?: string;
+  template?:
+    | "arc"
+    | "cloudflare-pages"
+    | "cloudflare-workers"
+    | "deno"
+    | "express"
+    | "fly"
+    | "netlify"
+    | "remix"
+    | "vercel";
 }
 
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
