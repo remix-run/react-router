@@ -313,7 +313,7 @@ async function handleDocumentRequest({
   let actionError = appState.error;
   let actionCatchBoundaryRouteId = appState.catchBoundaryRouteId;
   let actionLoaderBoundaryRouteId = appState.loaderBoundaryRouteId;
-  // Reset the app error and catch state to propogate the loader states
+  // Reset the app error and catch state to propagate the loader states
   // from the results into the app state.
   appState.catch = undefined;
   appState.error = undefined;
