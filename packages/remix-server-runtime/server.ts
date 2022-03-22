@@ -55,7 +55,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         });
         break;
       case "document":
-        response = await renderDocumentRequest({
+        response = await handleDocumentRequest({
           build,
           loadContext,
           matches,
@@ -182,7 +182,7 @@ async function handleDataRequest({
   }
 }
 
-async function renderDocumentRequest({
+async function handleDocumentRequest({
   build,
   loadContext,
   matches,
