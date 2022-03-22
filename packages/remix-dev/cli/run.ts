@@ -118,6 +118,10 @@ export async function run(argv: string[] = process.argv.slice(2)) {
 
   if (flags.help) showHelp();
   if (flags.version) showVersion();
+  if (flags.template === "typescript") {
+    flags.template = undefined;
+    flags.typescript = true;
+  }
 
   //   if (!flags.template) {
   //     if (colors.supportsColor && process.env.NODE_ENV !== "test") {
