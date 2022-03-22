@@ -2,11 +2,11 @@ import type {
   HydrationState,
   NavigateOptions,
   Transition,
-  RemixRouter,
-  RemixRouterState,
+  Router,
+  RouterState,
   RouteData,
 } from "./router";
-import { IDLE_TRANSITION, createRemixRouter } from "./router";
+import { IDLE_TRANSITION, createRouter } from "./router";
 import type {
   LoaderFunctionArgs,
   ParamParseKey,
@@ -46,12 +46,12 @@ export type {
   RouteMatch,
   RouteObject,
   Transition,
-  RemixRouter,
-  RemixRouterState,
+  Router,
+  RouterState,
 };
 export {
   IDLE_TRANSITION,
-  createRemixRouter,
+  createRouter,
   generatePath,
   getToPathname,
   invariant,

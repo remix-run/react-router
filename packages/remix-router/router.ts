@@ -1,8 +1,9 @@
 import type { History, Location, Path } from "history";
-import { Action, createLocation } from "history";
+import { Action as HistoryAction, createLocation } from "history";
 
 import {
   ActionFormMethod,
+  ActionSubmission,
   FormEncType,
   FormMethod,
   invariant,
@@ -25,14 +26,14 @@ export interface RouteData {
 }
 
 /**
- * State maintained internally by the remix router.  During a navigation, all states
+ * State maintained internally by the router.  During a navigation, all states
  * reflect the the "old" location unless otherwise noted.
  */
-export interface RemixRouterState {
+export interface RouterState {
   /**
    * The action of the most recent navigation
    */
-  action: Action;
+  historyAction: HistoryAction;
 
   /**
    * The current location reflected by the router
@@ -62,24 +63,24 @@ export interface RemixRouterState {
   /**
    * Exceptions caught from loaders for the current matches
    */
-  exceptions: RouteData;
+  exceptions: RouteData | null;
 }
 
 /**
- * Data that can be passed into hydrate a Remix Router from a SSR
+ * Data that can be passed into hydrate a Router from SSR
  */
 export type HydrationState = Partial<
-  Pick<RemixRouterState, "loaderData" | "actionData" | "exceptions">
+  Pick<RouterState, "loaderData" | "actionData" | "exceptions">
 >;
 
 /**
- * Initialization options for createRemixRouter
+ * Initialization options for createRouter
  */
-export interface RemixRouterInit {
+export interface RouterInit {
   routes: RouteObject[];
   history: History;
   hydrationData?: HydrationState;
-  onChange: (state: RemixRouterState) => void;
+  onChange: (state: RouterState) => void;
 }
 
 /**
@@ -101,6 +102,9 @@ type SubmissionNavigateOptions = {
   formData: FormData;
 };
 
+/**
+ * Options to pass to navigate() for either a Link or Form navigation
+ */
 export type NavigateOptions = LinkNavigateOptions | SubmissionNavigateOptions;
 
 /**
@@ -167,10 +171,10 @@ export type TransitionStates = {
 
 export type Transition = TransitionStates[keyof TransitionStates];
 
-export type RemixRouter = ReturnType<typeof createRemixRouter>;
+export type Router = ReturnType<typeof createRouter>;
 
 /**
- * Successful result from a loader
+ * Successful result from a loader or action
  */
 export interface DataSuccess {
   isError: false;
@@ -178,14 +182,50 @@ export interface DataSuccess {
 }
 
 /**
- * Unsuccessful result from a loader
+ * Unsuccessful result from a loader or action
  */
 export interface DataException {
   isError: true;
   exception: any;
 }
 
+/**
+ * Result from a loader or action - potentially successful or unsuccessful
+ */
 export type DataResult = DataSuccess | DataException;
+
+interface ShortCircuitable {
+  /**
+   * startNavigation does not need to complete the navigation because we
+   * redirected or got interrupted
+   */
+  shortCircuited?: boolean;
+}
+
+interface HandleActionResult extends ShortCircuitable {
+  /**
+   * Exception thrown from the current action, keyed by the route containing the
+   * exceptionElement to render the exception.  To be committed to the state after
+   * loaders have completed
+   */
+  pendingActionException?: RouteData;
+  /**
+   * Data returned from the current action, keyed by the route owning the action.
+   * To be committed to the state after loaders have completed
+   */
+  pendingActionData?: RouteData;
+}
+
+interface HandleLoadersResult extends ShortCircuitable {
+  /**
+   * loaderData returned from the current set of loaders
+   */
+  loaderData?: RouterState["loaderData"];
+  /**
+   * exceptions thrown from the current set of loaders
+   */
+  exceptions?: RouterState["exceptions"];
+}
 
 export const IDLE_TRANSITION: TransitionStates["Idle"] = {
   state: "idle",
@@ -198,48 +238,39 @@ export const IDLE_TRANSITION: TransitionStates["Idle"] = {
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
-//#region createRemixRouter
+//#region createRouter
 ////////////////////////////////////////////////////////////////////////////////
 
-export function createRemixRouter(init: RemixRouterInit) {
+/**
+ * Create a router and listen to history POP navigations
+ */
+export function createRouter(init: RouterInit) {
   let { routes } = init;
 
-  // If we do not match a user-provided-route, fall back to the root
-  // to allow the exceptionElement to take over
-  let matches = matchRoutes(routes, init.history.location) || [
-    {
-      params: {},
-      pathname: "",
-      pathnameBase: "",
-      route: routes[0],
-    },
-  ];
-
-  let state: RemixRouterState = {
-    action: init.history.action,
+  let state: RouterState = {
+    historyAction: init.history.action,
     location: init.history.location,
-    matches,
+    // If we do not match a user-provided-route, fall back to the root
+    // to allow the exceptionElement to take over
+    matches:
+      matchRoutes(routes, init.history.location) || getNotFoundMatches(routes),
     transition: IDLE_TRANSITION,
     loaderData: init.hydrationData?.loaderData || {},
     actionData: init.hydrationData?.actionData || null,
-    exceptions: init.hydrationData?.exceptions || {},
+    exceptions: init.hydrationData?.exceptions || null,
   };
 
   // Stateful internal variables to manage navigations
-  let pendingLoadController: AbortController | null;
+  let pendingNavigationController: AbortController | null;
 
   // If history informs us of a POP navigation, start the transition but do not update
   // state.  We'll update our own state once the transition completes
-  init.history.listen(({ action, location }) =>
-    startNavigation(action, location)
+  init.history.listen(({ action: historyAction, location }) =>
+    startNavigation(historyAction, location)
   );
 
   // Update our state and notify the calling context of the change
-  function updateState(newState: Partial<RemixRouterState>): void {
-    if (newState.transition) {
-      let t = newState.transition;
-      console.debug(`[remix-router]   transition set to ${t.state}/${t.type}`);
-    }
+  function updateState(newState: Partial<RouterState>): void {
     state = {
       ...state,
       ...newState,
@@ -248,36 +279,36 @@ export function createRemixRouter(init: RemixRouterInit) {
   }
 
   // Complete a navigation returning the state.transition back to the IDLE_TRANSITION
-  // and setting state.[action/location/matches] to the new route.
-  // - Action and Location are required params
+  // and setting state.[historyAction/location/matches] to the new route.
+  // - HistoryAction and Location are required params
   // - Transition will always be set to IDLE_TRANSITION
   // - Can pass any other state in newState
   function completeNavigation(
-    action: Action,
+    historyAction: HistoryAction,
     location: Location,
-    newState: Partial<
-      Omit<RemixRouterState, "action" | "location" | "transition">
-    >
+    newState: Partial<Omit<RouterState, "action" | "location" | "transition">>
   ): void {
     updateState({
+      // Clear existing actionData on any completed navigation beyond the original
+      // action.  Do this prior to spearing in newState in case we've gotten back
+      // to back actions
+      ...(state.actionData != null && state.transition.type !== "actionReload"
+        ? { actionData: null }
+        : {}),
       ...newState,
-      action,
+      historyAction,
       location,
       transition: IDLE_TRANSITION,
       // Always preserve any existing loaderData from re-used routes
       loaderData: mergeLoaderData(state, newState),
-      // Reset actionData on any completed navigation beyond the original action
-      ...(state.actionData != null && state.transition.type !== "actionReload"
-        ? { actionData: null }
-        : {}),
     });
 
-    // Update history if this was push/replace - do nothing if this was a pop
-    // since it's already been updated
-    if (action === Action.Push) {
+    if (historyAction === HistoryAction.Push) {
       init.history.push(location, location.state);
-    } else if (action === Action.Replace) {
+    } else if (historyAction === HistoryAction.Replace) {
       init.history.replace(location, location.state);
+    } else {
+      // Do nothing for POP - URL has already been updated
     }
   }
 
@@ -293,20 +324,18 @@ export function createRemixRouter(init: RemixRouterInit) {
     opts?: NavigateOptions
   ): Promise<void> {
     if (typeof path === "number") {
-      console.debug(`[remix-router] navigate() - history.go(${path})`);
       init.history.go(path);
       return;
     }
 
     let location = createLocation(state.location, path, opts?.state);
-    let action = opts?.replace ? Action.Replace : Action.Push;
+    let historyAction = opts?.replace
+      ? HistoryAction.Replace
+      : HistoryAction.Push;
 
     if (isSubmissionNavigation(opts)) {
       let formMethod = opts.formMethod || "GET";
-      console.debug(
-        `[remix-router] navigate() with ${formMethod} submission - ${action} ${location.pathname}`
-      );
-      return await startNavigation(action, location, {
+      return await startNavigation(historyAction, location, {
         submission: {
           formMethod,
           formEncType: opts?.formEncType || "application/x-www-form-urlencoded",
@@ -315,47 +344,31 @@ export function createRemixRouter(init: RemixRouterInit) {
       });
     }
 
-    console.debug(`[remix-router] navigate() - ${action} ${location.pathname}`);
-    return await startNavigation(action, location);
+    return await startNavigation(historyAction, location);
   }
 
   // Start a navigation to the given action/location.  Can optionally provide a
   // overrideTransition which will override the normalLoad in the case of a redirect
   // navigation
   async function startNavigation(
-    action: Action,
+    historyAction: HistoryAction,
     location: Location,
     opts?: {
       submission?: Submission;
       overrideTransition?: Transition;
     }
   ): Promise<void> {
-    console.debug(
-      `[remix-router]   startTransition ${action} ${location.pathname}`
-    );
-
     // Abort any in-progress navigations and start a new one
-    if (pendingLoadController) {
-      console.debug("[remix-router]   aborting in-progress navigation");
-      pendingLoadController.abort();
-      pendingLoadController = null;
+    if (pendingNavigationController) {
+      pendingNavigationController.abort();
     }
 
     let matches = matchRoutes(routes, location);
 
-    // If we match nothing, short circuit with a 404 on the root error boundary
+    // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
-      console.debug("[remix-router]   completing navigation - 404");
-      completeNavigation(action, location, {
-        matches: [
-          {
-            params: {},
-            pathname: "",
-            pathnameBase: "",
-            route: routes[0],
-          },
-        ],
-        loaderData: {},
+      completeNavigation(historyAction, location, {
+        matches: getNotFoundMatches(routes),
         exceptions: {
           [init.routes[0].id]: new Response(null, { status: 404 }),
         },
@@ -364,169 +377,124 @@ export function createRemixRouter(init: RemixRouterInit) {
     }
 
     // Short circuit if it's only a hash change
-    let isHashChangeOnly =
-      location.pathname === state.location.pathname &&
-      location.search === state.location.search &&
-      location.hash !== state.location.hash;
-    if (isHashChangeOnly) {
-      console.debug("[remix-router]   completing navigation - hash change");
-      completeNavigation(action, location, {
+    if (isHashChangeOnly(state.location, location)) {
+      completeNavigation(historyAction, location, {
         matches,
       });
       return;
     }
 
-    // ----- Actions -----
-
+    // Call action if we received an action submission
     let pendingActionData: RouteData | null = null;
-    let pendingActionException: [string, RouteData] | null = null;
+    let pendingActionException: RouteData | null = null;
 
-    if (opts?.submission && opts?.submission.formMethod !== "GET") {
-      // TODO: handle isIndexRequestAction
-      let leafMatch = matches.slice(-1)[0];
-      invariant(
-        leafMatch.route.action,
-        "You're trying to submit to a route that does not have an action.  To fix " +
-          "this, please add an `action` function to the route"
-      );
-
-      let { formMethod, formEncType, formData } = opts.submission;
-      let transition: TransitionStates["SubmittingAction"] = {
-        state: "submitting",
-        type: "actionSubmission",
-        location,
-        formMethod,
-        formEncType,
-        formData,
-      };
-      updateState({ transition });
-
-      // Create a controller for this data load
-      let actionAbortController = new AbortController();
-      pendingLoadController = actionAbortController;
-
-      let result = await callAction(
-        leafMatch,
+    if (opts?.submission && isActionSubmission(opts.submission)) {
+      let actionOutput = await handleAction(
+        historyAction,
         location,
         opts.submission,
-        actionAbortController.signal
+        matches
       );
 
-      if (actionAbortController.signal.aborted) {
+      if (actionOutput.shortCircuited) {
         return;
       }
 
-      // Clean up now that the action has completed - there's nothing left to abort
-      pendingLoadController = null;
-
-      if (isDataException(result)) {
-        // If the action threw a redirect Response, start a new REPLACE navigation
-        if (isRedirect(result)) {
-          let href = result.exception.headers.get("location");
-          let redirectLocation = createLocation(state.location, href);
-          let { formMethod, formEncType, formData } = opts.submission;
-          let redirectTransition: TransitionStates["SubmissionRedirect"] = {
-            state: "loading",
-            type: "submissionRedirect",
-            location: redirectLocation,
-            formMethod,
-            formEncType,
-            formData,
-          };
-          startNavigation(Action.Replace, redirectLocation, {
-            overrideTransition: redirectTransition,
-          });
-          return;
-        }
-
-        // Store off the pending exception - we use it to determine which loaders
-        // to call and will commit it when we complete the navigation
-        let boundaryMatch = findNearestBoundary(matches, leafMatch.route.id);
-        pendingActionException = [
-          leafMatch.route.id,
-          {
-            [boundaryMatch.route.id]: result.exception,
-          },
-        ];
-      } else {
-        pendingActionData = {
-          [leafMatch.route.id]: result.data,
-        };
-      }
+      pendingActionData = actionOutput.pendingActionData || null;
+      pendingActionException = actionOutput.pendingActionException || null;
     }
 
-    // ----- Loaders -----
-
-    // At this point, we're planning to load data, so we can start with fresh
-    // empty objects here
-    let loaderData: RouteData = {};
-    let exceptions: RouteData = {};
-
-    // Figure out the right transition we want to use for loading
-    let loadingTransition =
-      opts?.overrideTransition ||
-      getLoadingTransition(location, state, opts?.submission);
-
-    // Filter out all routes below the problematic route as they aren't going
-    // to render so we don't need to load them.
-    let errorIdx = pendingActionException
-      ? matches.findIndex((m) => m.route.id === pendingActionException![0])
-      : matches.length;
-
-    // Short circuit if we have no loaders to run
-    let matchesToLoad = matches.filter(
-      (match, index) =>
-        match.route.loader &&
-        index < errorIdx &&
-        shouldRunLoader(state, loadingTransition, location, match, index)
+    // Call loaders
+    let { shortCircuited, loaderData, exceptions } = await handleLoaders(
+      historyAction,
+      location,
+      opts?.submission,
+      matches,
+      opts?.overrideTransition,
+      pendingActionData,
+      pendingActionException
     );
-    if (matchesToLoad.length === 0) {
-      console.debug(
-        "[remix-router]   completing navigation - no loaders to run"
-      );
-      completeNavigation(action, location, {
-        matches,
-        loaderData,
-        // Commit pending action exception if we're short circuiting
-        exceptions: pendingActionException?.[1] || {},
-        actionData: pendingActionData || {},
-      });
+
+    if (shortCircuited) {
       return;
     }
 
-    // Transition to our loading state
-    updateState({
-      transition: loadingTransition,
-      actionData: pendingActionData || {},
+    completeNavigation(historyAction, location, {
+      matches,
+      loaderData,
+      exceptions,
     });
+  }
+
+  async function handleAction(
+    historyAction: HistoryAction,
+    location: Location,
+    submission: ActionSubmission,
+    matches: RouteMatch[]
+  ): Promise<HandleActionResult> {
+    let hasNakedIndexQuery = new URLSearchParams(location.search)
+      .getAll("index")
+      .some((v) => v === "");
+    if (matches[matches.length - 1].route.index && !hasNakedIndexQuery) {
+      matches = matches.slice(0, -1);
+    }
+
+    let actionMatch = matches.slice(-1)[0];
+
+    if (!actionMatch.route.action) {
+      console.warn(
+        "You're trying to submit to a route that does not have an action.  To " +
+          "fix this, please add an `action` function to the route for " +
+          `[${createHref(location)}]`
+      );
+      let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+      completeNavigation(historyAction, location, {
+        matches,
+        exceptions: {
+          [boundaryMatch.route.id]: new Response(null, { status: 405 }),
+        },
+      });
+      return { shortCircuited: true };
+    }
+
+    let { formMethod, formEncType, formData } = submission;
+    let transition: TransitionStates["SubmittingAction"] = {
+      state: "submitting",
+      type: "actionSubmission",
+      location,
+      formMethod,
+      formEncType,
+      formData,
+    };
+    updateState({ transition });
 
     // Create a controller for this data load
-    let abortController = new AbortController();
-    pendingLoadController = abortController;
+    let actionAbortController = new AbortController();
+    pendingNavigationController = actionAbortController;
 
-    let results: DataResult[] = await Promise.all(
-      matchesToLoad.map((m) => callLoader(m, location, abortController.signal))
+    let result = await callLoaderOrAction(
+      actionMatch,
+      location,
+      actionAbortController.signal,
+      submission
     );
 
-    if (abortController.signal.aborted) {
-      return;
+    if (actionAbortController.signal.aborted) {
+      return { shortCircuited: true };
     }
 
-    // Clean up now that all loaders have completed - there's nothing left to abort
-    pendingLoadController = null;
+    // Clean up now that the loaders have completed.  We do do not clean up if
+    // we short circuited because pendingNavigationController will have already
+    // been assigned to a new controller for the next navigation
+    pendingNavigationController = null;
 
-    // If any loaders threw a redirect Response, start a new REPLACE navigation
-    let redirect = findRedirect(results);
-    if (redirect) {
-      let href = (redirect as DataException).exception.headers.get("location");
-      let redirectLocation = createLocation(state.location, href);
-      let redirectTransition: Transition;
-      if (
-        state.transition.type === "loaderSubmission" ||
-        state.transition.type === "actionReload"
-      ) {
-        let { formMethod, formEncType, formData } = state.transition;
-        let transition: TransitionStates["SubmissionRedirect"] = {
+    if (isDataException(result)) {
+      // If the action threw a redirect Response, start a new REPLACE navigation
+      if (isRedirect(result)) {
+        let href = result.exception.headers.get("Location");
+        let redirectLocation = createLocation(state.location, href);
+        let { formMethod, formEncType, formData } = submission;
+        let redirectTransition: TransitionStates["SubmissionRedirect"] = {
           state: "loading",
           type: "submissionRedirect",
           location: redirectLocation,
@@ -534,44 +502,110 @@ export function createRemixRouter(init: RemixRouterInit) {
           formEncType,
           formData,
         };
-        redirectTransition = transition;
-      } else {
-        let transition: TransitionStates["LoadingRedirect"] = {
-          state: "loading",
-          type: "normalRedirect",
-          location: redirectLocation,
-          formMethod: undefined,
-          formEncType: undefined,
-          formData: undefined,
-        };
-        redirectTransition = transition;
+        startNavigation(HistoryAction.Replace, redirectLocation, {
+          overrideTransition: redirectTransition,
+        });
+        return { shortCircuited: true };
       }
-      await startNavigation(Action.Replace, redirectLocation, {
-        overrideTransition: redirectTransition,
-      });
-      return;
+
+      // Store off the pending exception - we use it to determine which loaders
+      // to call and will commit it when we complete the navigation
+      let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+      return {
+        pendingActionException: { [boundaryMatch.route.id]: result.exception },
+      };
     }
 
-    // Process loader results into state.loaderData/state.exceptions
-    results.forEach((result, index) => {
-      let id = matchesToLoad[index].route.id;
-      if (isDataException(result)) {
-        // Look upwards from the matched route for the closest ancestor
-        // exceptionElement, defaulting to the root match
-        let boundaryMatch = findNearestBoundary(matches!, id);
-        exceptions[boundaryMatch!.route.id] = pendingActionException
-          ? Object.values(pendingActionException[1])[0]
-          : result.exception;
-      } else {
-        loaderData[id] = result.data;
-      }
+    return {
+      pendingActionData: { [actionMatch.route.id]: result.data },
+    };
+  }
+
+  async function handleLoaders(
+    historyAction: HistoryAction,
+    location: Location,
+    submission: Submission | undefined,
+    matches: RouteMatch[],
+    overrideTransition: Transition | undefined,
+    pendingActionData: RouteData | null,
+    pendingActionException: RouteData | null
+  ): Promise<HandleLoadersResult> {
+    // Figure out the right transition we want to use for data loading
+    let loadingTransition =
+      overrideTransition || getLoadingTransition(location, state, submission);
+
+    // Determine which routes to run loaders for, filter out all routes below
+    // any caught action exception as they aren't going to render so we don't
+    // need to load them
+    let deepestRenderableMatchIndex = pendingActionException
+      ? matches.findIndex(
+          (m) => m.route.id === Object.keys(pendingActionException)[0]
+        )
+      : matches.length;
+    let matchesToLoad = matches.filter(
+      (match, index) =>
+        match.route.loader &&
+        index < deepestRenderableMatchIndex &&
+        shouldRunLoader(state, loadingTransition, location, match, index)
+    );
+
+    // Short circuit if we have no loaders to run
+    if (matchesToLoad.length === 0) {
+      completeNavigation(historyAction, location, {
+        matches,
+        // Commit pending action exception if we're short circuiting
+        exceptions: pendingActionException || null,
+        actionData: pendingActionData || null,
+      });
+      return { shortCircuited: true };
+    }
+
+    // Transition to our loading state and load data
+    updateState({
+      transition: loadingTransition,
+      actionData: pendingActionData || null,
     });
 
-    completeNavigation(action, location, {
+    let abortController = new AbortController();
+    pendingNavigationController = abortController;
+
+    let results: DataResult[] = await Promise.all(
+      matchesToLoad.map((m) =>
+        callLoaderOrAction(m, location, abortController.signal)
+      )
+    );
+
+    if (abortController.signal.aborted) {
+      return { shortCircuited: true };
+    }
+
+    // Clean up now that the loaders have completed.  We do do not clean up if
+    // we short circuited because pendingNavigationController will have already
+    // been assigned to a new controller for the next navigation
+    pendingNavigationController = null;
+
+    // If any loaders threw a redirect Response, start a new REPLACE navigation
+    let redirect = findRedirect(results);
+    if (redirect) {
+      let { redirectLocation, redirectTransition } = getLoaderRedirect(
+        state,
+        redirect
+      );
+      await startNavigation(HistoryAction.Replace, redirectLocation, {
+        overrideTransition: redirectTransition,
+      });
+      return { shortCircuited: true };
+    }
+
+    // Process and commit output from loaders
+    let { loaderData, exceptions } = processLoaderData(
       matches,
-      loaderData,
-      exceptions,
-    });
+      matchesToLoad,
+      results,
+      pendingActionException
+    );
+
+    return { loaderData, exceptions };
   }
 
   return {
@@ -584,13 +618,13 @@ export function createRemixRouter(init: RemixRouterInit) {
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
-//#region createRemixRouter helpers
+//#region Helpers
 ////////////////////////////////////////////////////////////////////////////////
 
 // Determine the proper loading transition to use for the upcoming loaders execution
 function getLoadingTransition(
   location: Location,
-  state: RemixRouterState,
+  state: RouterState,
   submission?: Submission
 ): Transition {
   if (submission) {
@@ -629,8 +663,43 @@ function getLoadingTransition(
   } as TransitionStates["Loading"];
 }
 
+function getLoaderRedirect(
+  state: RouterState,
+  redirect: DataException
+): { redirectLocation: Location; redirectTransition: Transition } {
+  let href = redirect.exception.headers.get("Location");
+  let redirectLocation = createLocation(state.location, href);
+  let redirectTransition: Transition;
+  if (
+    state.transition.type === "loaderSubmission" ||
+    state.transition.type === "actionReload"
+  ) {
+    let { formMethod, formEncType, formData } = state.transition;
+    let transition: TransitionStates["SubmissionRedirect"] = {
+      state: "loading",
+      type: "submissionRedirect",
+      location: redirectLocation,
+      formMethod,
+      formEncType,
+      formData,
+    };
+    redirectTransition = transition;
+  } else {
+    let transition: TransitionStates["LoadingRedirect"] = {
+      state: "loading",
+      type: "normalRedirect",
+      location: redirectLocation,
+      formMethod: undefined,
+      formEncType: undefined,
+      formData: undefined,
+    };
+    redirectTransition = transition;
+  }
+  return { redirectLocation, redirectTransition };
+}
+
 function shouldRunLoader(
-  state: RemixRouterState,
+  state: RouterState,
   loadingTransition: Transition,
   location: Location,
   match: RouteMatch,
@@ -669,18 +738,10 @@ function shouldRunLoader(
 
   // Let routes control only when it's the same path, if the path changed
   if ((isSamePath || searchParamsChanged) && match.route.shouldReload) {
-    let { formMethod, formEncType, formData } = state.transition;
+    let { formData } = state.transition;
     return match.route.shouldReload?.({
-      request: new Request(createHref(location)),
-      prevRequest: new Request(createHref(state.location)),
-      params: match.params,
-      ...(formData
-        ? {
-            formMethod,
-            formEncType,
-            formData,
-          }
-        : {}),
+      url: createHref(location),
+      ...(formData ? { formData } : {}),
     });
   }
 
@@ -694,16 +755,24 @@ function shouldRunLoader(
   );
 }
 
-async function callLoader(
+async function callLoaderOrAction(
   match: RouteMatch,
   location: Location,
-  signal: AbortSignal
+  signal: AbortSignal,
+  submission?: Submission
 ): Promise<DataResult> {
   try {
-    let data = await match.route.loader?.({
+    let type: "loader" | "action" = submission ? "action" : "loader";
+    let handler: Function | undefined = match.route[type];
+    invariant<Function>(
+      handler,
+      `Could not find the ${type} to run on the "${match.route.id}" route`
+    );
+    let data = await handler({
       params: match.params,
       request: new Request(location.pathname + location.search),
       signal,
+      ...(submission ? { submission } : {}),
     });
     return { isError: false, data };
   } catch (exception) {
@@ -711,28 +780,54 @@ async function callLoader(
   }
 }
 
-async function callAction(
-  match: RouteMatch,
-  location: Location,
-  submission: Submission,
-  signal: AbortSignal
-): Promise<DataResult> {
-  try {
-    let data = await match.route.action?.({
-      params: match.params,
-      request: new Request(location.pathname + location.search),
-      ...submission,
-      signal,
-    });
-    return { isError: false, data };
-  } catch (exception) {
-    return { isError: true, exception };
+function processLoaderData(
+  matches: RouteMatch[],
+  matchesToLoad: RouteMatch[],
+  results: DataResult[],
+  pendingActionException: RouteData | null
+): {
+  loaderData: RouterState["loaderData"];
+  exceptions: RouterState["exceptions"];
+} {
+  // Fill in loaderData/exceptions from our loaders
+  let loaderData: RouterState["loaderData"] = {};
+  let exceptions: RouterState["exceptions"] = null;
+
+  // Process loader results into state.loaderData/state.exceptions
+  results.forEach((result, index) => {
+    let id = matchesToLoad[index].route.id;
+    if (isDataException(result)) {
+      // Look upwards from the matched route for the closest ancestor
+      // exceptionElement, defaulting to the root match
+      let boundaryMatch = findNearestBoundary(matches, id);
+      let exception = result.exception;
+      // If we have a pending action exception, we report it at the highest-route
+      // that throws a loader exception, and then clear it out to indicate that
+      // it was consumed
+      if (pendingActionException) {
+        exception = Object.values(pendingActionException)[0];
+        pendingActionException = null;
+      }
+      exceptions = Object.assign(exceptions || {}, {
+        [boundaryMatch.route.id]: exception,
+      });
+    } else {
+      loaderData[id] = result.data;
+    }
+  });
+
+  // If we didn't consume the pending action exception (i.e., all loaders
+  // resolved), then consume it here
+  if (pendingActionException) {
+    exceptions = pendingActionException;
   }
+
+  return { loaderData, exceptions };
 }
 
 function mergeLoaderData(
-  state: RemixRouterState,
-  newState: Partial<RemixRouterState>
+  state: RouterState,
+  newState: Partial<RouterState>
 ): RouteData {
   // Identify active routes that have current loaderData and didn't receive new
   // loaderData
@@ -753,17 +848,47 @@ function mergeLoaderData(
   };
 }
 
+// Find the nearest exception boundary, looking upwards from the matched route
+// for the closest ancestor exceptionElement, defaulting to the root match
 function findNearestBoundary(
   matches: RouteMatch[],
   routeId: string
 ): RouteMatch {
-  // Look upwards from the matched route for the closest ancestor
-  // exceptionElement, defaulting to the root match
   return (
     matches
-      .slice(0, matches!.findIndex((m) => m.route.id === routeId) + 1)
+      .slice(0, matches.findIndex((m) => m.route.id === routeId) + 1)
       .reverse()
-      .find((m) => m.route.exceptionElement) || matches![0]
+      .find((m) => m.route.exceptionElement) || matches[0]
+  );
+}
+
+function getNotFoundMatches(routes: RouteObject[]): RouteMatch[] {
+  return [
+    {
+      params: {},
+      pathname: "",
+      pathnameBase: "",
+      route: routes[0],
+    },
+  ];
+}
+
+// Find any returned redirect exceptions, starting from the lowest match
+function findRedirect(results: DataResult[]): DataException | null {
+  let redirect = [...results]
+    .reverse()
+    .find((r) => isDataException(r) && isRedirect(r));
+  return (redirect as DataException) || null;
+}
+
+// Create an href to represent a "server" URL without the hash
+function createHref(location: Location | URL) {
+  return location.pathname + location.search;
+}
+
+function isHashChangeOnly(a: Location, b: Location): boolean {
+  return (
+    a.pathname === b.pathname && a.search === b.search && a.hash !== b.hash
   );
 }
 
@@ -772,19 +897,8 @@ function isRedirect(result: DataException): boolean {
     result.exception instanceof Response &&
     result.exception.status >= 300 &&
     result.exception.status <= 399 &&
-    result.exception.headers.get("location") != null
+    result.exception.headers.get("Location") != null
   );
-}
-
-function findRedirect(results: DataResult[]): DataException | null {
-  let redirect = [...results]
-    .reverse()
-    .find((r) => isDataException(r) && isRedirect(r));
-  return (redirect as DataException) || null;
-}
-
-function createHref(location: Location | URL) {
-  return location.pathname + location.search;
 }
 
 function isDataException(result: DataResult): result is DataException {
@@ -795,5 +909,11 @@ function isSubmissionNavigation(
   opts?: NavigateOptions
 ): opts is SubmissionNavigateOptions {
   return opts != null && "formData" in opts;
+}
+
+function isActionSubmission(
+  submission: Submission
+): submission is ActionSubmission {
+  return submission && submission.formMethod !== "GET";
 }
 //#endregion
