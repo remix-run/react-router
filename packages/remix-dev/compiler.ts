@@ -318,7 +318,7 @@ async function createBrowserBuild(
   // *actually* be external in the browser build (we want to bundle all deps) so
   // this is really just making sure we don't accidentally have any dependencies
   // on node built-ins in browser bundles.
-  let dependencies = Object.keys(await getAppDependencies(config));
+  let dependencies = Object.keys(getAppDependencies(config));
   let externals = nodeBuiltins.filter((mod) => !dependencies.includes(mod));
   let fakeBuiltins = nodeBuiltins.filter((mod) => dependencies.includes(mod));
 
@@ -390,12 +390,12 @@ async function createBrowserBuild(
   });
 }
 
-async function createServerBuild(
+function createServerBuild(
   config: RemixConfig,
   options: Required<BuildOptions> & { incremental?: boolean },
   assetsManifestPromiseRef: AssetsManifestPromiseRef
 ): Promise<esbuild.BuildResult> {
-  let dependencies = await getAppDependencies(config);
+  let dependencies = getAppDependencies(config);
 
   let stdin: esbuild.StdinOptions | undefined;
   let entryPoints: string[] | undefined;

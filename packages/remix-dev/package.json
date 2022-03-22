@@ -35,7 +35,6 @@
     "minimatch": "^3.0.4",
     "node-fetch": "^2.6.7",
     "pretty-ms": "^7.0.1",
-    "read-package-json-fast": "^2.0.2",
     "remark-frontmatter": "^4.0.0",
     "remark-mdx-frontmatter": "^1.0.1",
     "semver": "^7.3.5",
