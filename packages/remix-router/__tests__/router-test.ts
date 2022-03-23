@@ -330,12 +330,14 @@ const TASK_ROUTES: TestRouteObject[] = [
         id: "tasks",
         path: "tasks",
         loader: true,
+        action: true,
         exceptionElement: true,
       },
       {
         id: "tasksId",
         path: "tasks/:id",
         loader: true,
+        action: true,
         exceptionElement: true,
       },
       {
@@ -2279,6 +2281,33 @@ describe("a router", () => {
       });
       expect(t.router.state.exceptions).toEqual({
         tasks: response,
+      });
+
+      t.cleanup();
+    });
+
+    it("sends proper arguments to actions", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+          },
+        },
+      });
+
+      let formData = new FormData();
+      formData.append("query", "param");
+
+      let nav = await t.navigate("/tasks", { formMethod: "POST", formData });
+      expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
+        params: {},
+        request: new Request("/tasks"),
+        signal: expect.any(AbortSignal),
+        formMethod: "POST",
+        formEncType: "application/x-www-form-urlencoded",
+        formData,
       });
 
       t.cleanup();
