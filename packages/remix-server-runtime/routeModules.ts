@@ -92,7 +92,7 @@ export interface MetaFunction {
  * `name` attribute.
  */
 export interface HtmlMetaDescriptor {
-  [name: string]: string | string[];
+  [name: string]: string | string[] | null | undefined;
 }
 
 export type MetaDescriptor = HtmlMetaDescriptor;

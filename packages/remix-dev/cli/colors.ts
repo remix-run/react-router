@@ -1,7 +1,9 @@
 import chalk, { supportsColor } from "chalk";
 
-// https://no-color.org/
-export const useColor = !process.env.NO_COLOR;
+export const useColor =
+  supportsColor &&
+  // https://no-color.org/
+  !process.env.NO_COLOR;
 
 const K = (x: any) => x;
 
@@ -15,5 +17,3 @@ export const logoGreen = useColor ? chalk.greenBright : K;
 export const logoYellow = useColor ? chalk.yellowBright : K;
 export const logoPink = useColor ? chalk.magentaBright : K;
 export const logoRed = useColor ? chalk.redBright : K;
-
-export { supportsColor };

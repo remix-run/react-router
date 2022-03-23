@@ -19,6 +19,9 @@ describe("ErrorBoundary", () => {
 
   let NOT_FOUND_HREF = "/not/found";
 
+  // packages/remix-react/errorBoundaries.tsx
+  let INTERNAL_ERROR_BOUNDARY_HEADING = "Application Error";
+
   beforeAll(async () => {
     _consoleError = console.error;
     console.error = () => {};
@@ -262,5 +265,120 @@ describe("ErrorBoundary", () => {
     await app.goto("/");
     await app.clickLink(HAS_BOUNDARY_RENDER);
     expect(await app.getHtml("main")).toMatch(OWN_BOUNDARY_TEXT);
+  });
+
+  describe("if no error boundary exists in the app", () => {
+    let NO_ROOT_BOUNDARY_LOADER = "/loader-bad";
+    let NO_ROOT_BOUNDARY_ACTION = "/action-bad";
+    let NO_ROOT_BOUNDARY_ACTION_RETURN = "/action-no-return";
+
+    beforeAll(async () => {
+      fixture = await createFixture({
+        files: {
+          "app/root.jsx": js`
+            import { Outlet, Scripts } from "remix";
+
+            export default function () {
+              return (
+                <html>
+                  <head />
+                  <body>
+                    <main>
+                      <Outlet />
+                    </main>
+                    <Scripts />
+                  </body>
+                </html>
+              )
+            }
+          `,
+
+          "app/routes/index.jsx": js`
+            import { Link, Form } from "remix";
+
+            export default function () {
+              return (
+                <div>
+                  <h1>Home</h1>
+                  <Form method="post">
+                    <button formAction="${NO_ROOT_BOUNDARY_ACTION}" type="submit">
+                      Action go boom
+                    </button>
+                    <button formAction="${NO_ROOT_BOUNDARY_ACTION_RETURN}" type="submit">
+                      Action no return
+                    </button>
+                  </Form>
+                </div>
+              )
+            }
+          `,
+
+          [`app/routes${NO_ROOT_BOUNDARY_LOADER}.jsx`]: js`
+            import { Link, Form } from "remix";
+
+            export async function loader() {
+              throw Error("BLARGH");
+            }
+
+            export default function () {
+              return (
+                <div>
+                  <h1>Hello</h1>
+                </div>
+              )
+            }
+          `,
+
+          [`app/routes${NO_ROOT_BOUNDARY_ACTION}.jsx`]: js`
+            import { Link, Form } from "remix";
+
+            export async function action() {
+              throw Error("YOOOOOOOO WHAT ARE YOU DOING");
+            }
+
+            export default function () {
+              return (
+                <div>
+                  <h1>Goodbye</h1>
+                </div>
+              )
+            }
+          `,
+
+          [`app/routes${NO_ROOT_BOUNDARY_ACTION_RETURN}.jsx`]: js`
+            import { Link, Form, useActionData } from "remix";
+
+            export async function action() {}
+
+            export default function () {
+              let data = useActionData();
+              return (
+                <div>
+                  <h1>{data}</h1>
+                </div>
+              )
+            }
+          `,
+        },
+      });
+      app = await createAppFixture(fixture);
+    });
+
+    it("bubbles to internal boundary in loader document requests", async () => {
+      await app.goto(NO_ROOT_BOUNDARY_LOADER);
+      expect(await app.getHtml("h1")).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
+    });
+
+    it("bubbles to internal boundary in action script transitions from other routes", async () => {
+      await app.goto("/");
+      await app.clickSubmitButton(NO_ROOT_BOUNDARY_ACTION);
+      expect(await app.getHtml("h1")).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
+    });
+
+    it("bubbles to internal boundary if action doesn't return", async () => {
+      await app.goto("/");
+      await app.clickSubmitButton(NO_ROOT_BOUNDARY_ACTION_RETURN);
+      expect(await app.getHtml("h1")).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
+    });
   });
 });

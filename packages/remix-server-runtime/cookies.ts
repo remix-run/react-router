@@ -1,10 +1,7 @@
 import type { CookieParseOptions, CookieSerializeOptions } from "cookie";
 import { parse, serialize } from "cookie";
 
-// TODO: Once node v16 is available on AWS we should use these instead of the
-// global `sign` and `unsign` functions.
-//import { sign, unsign } from "./cookieSigning";
-import "./cookieSigning";
+import type { SignFunction, UnsignFunction } from "./crypto";
 
 export type { CookieParseOptions, CookieSerializeOptions };
 
@@ -69,62 +66,74 @@ export interface Cookie {
   serialize(value: any, options?: CookieSerializeOptions): Promise<string>;
 }
 
+export type CreateCookieFunction = (
+  name: string,
+  cookieOptions?: CookieOptions
+) => Cookie;
+
 /**
  * Creates a logical container for managing a browser cookie from the server.
  *
  * @see https://remix.run/api/remix#createcookie
  */
-export function createCookie(
-  name: string,
-  cookieOptions: CookieOptions = {}
-): Cookie {
-  let { secrets, ...options } = {
-    secrets: [],
-    path: "/",
-    ...cookieOptions,
+export const createCookieFactory =
+  ({
+    sign,
+    unsign,
+  }: {
+    sign: SignFunction;
+    unsign: UnsignFunction;
+  }): CreateCookieFunction =>
+  (name, cookieOptions = {}) => {
+    let { secrets, ...options } = {
+      secrets: [],
+      path: "/",
+      ...cookieOptions,
+    };
+
+    return {
+      get name() {
+        return name;
+      },
+      get isSigned() {
+        return secrets.length > 0;
+      },
+      get expires() {
+        // Max-Age takes precedence over Expires
+        return typeof options.maxAge !== "undefined"
+          ? new Date(Date.now() + options.maxAge * 1000)
+          : options.expires;
+      },
+      async parse(cookieHeader, parseOptions) {
+        if (!cookieHeader) return null;
+        let cookies = parse(cookieHeader, { ...options, ...parseOptions });
+        return name in cookies
+          ? cookies[name] === ""
+            ? ""
+            : await decodeCookieValue(unsign, cookies[name], secrets)
+          : null;
+      },
+      async serialize(value, serializeOptions) {
+        return serialize(
+          name,
+          value === "" ? "" : await encodeCookieValue(sign, value, secrets),
+          {
+            ...options,
+            ...serializeOptions,
+          }
+        );
+      },
+    };
   };
 
-  return {
-    get name() {
-      return name;
-    },
-    get isSigned() {
-      return secrets.length > 0;
-    },
-    get expires() {
-      // Max-Age takes precedence over Expires
-      return typeof options.maxAge !== "undefined"
-        ? new Date(Date.now() + options.maxAge * 1000)
-        : options.expires;
-    },
-    async parse(cookieHeader, parseOptions) {
-      if (!cookieHeader) return null;
-      let cookies = parse(cookieHeader, { ...options, ...parseOptions });
-      return name in cookies
-        ? cookies[name] === ""
-          ? ""
-          : await decodeCookieValue(cookies[name], secrets)
-        : null;
-    },
-    async serialize(value, serializeOptions) {
-      return serialize(
-        name,
-        value === "" ? "" : await encodeCookieValue(value, secrets),
-        {
-          ...options,
-          ...serializeOptions,
-        }
-      );
-    },
-  };
-}
+export type IsCookieFunction = (object: any) => object is Cookie;
 
 /**
  * Returns true if an object is a Remix cookie container.
  *
  * @see https://remix.run/api/remix#iscookie
  */
-export function isCookie(object: any): object is Cookie {
+export const isCookie: IsCookieFunction = (object): object is Cookie => {
   return (
     object != null &&
     typeof object.name === "string" &&
@@ -132,9 +141,10 @@ export function isCookie(object: any): object is Cookie {
     typeof object.parse === "function" &&
     typeof object.serialize === "function"
   );
-}
+};
 
 async function encodeCookieValue(
+  sign: SignFunction,
   value: any,
   secrets: string[]
 ): Promise<string> {
@@ -148,6 +158,7 @@ async function encodeCookieValue(
 }
 
 async function decodeCookieValue(
+  unsign: UnsignFunction,
   value: string,
   secrets: string[]
 ): Promise<any> {

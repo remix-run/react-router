@@ -25,11 +25,9 @@ export async function callRouteAction({
   let action = match.route.module.action;
 
   if (!action) {
-    throw new Error(
-      `You made a ${request.method} request to ${request.url} but did not provide ` +
-        `an \`action\` for route "${match.route.id}", so there is no way to handle the ` +
-        `request.`
-    );
+    let response = new Response(null, { status: 405 });
+    response.headers.set("X-Remix-Catch", "yes");
+    return response;
   }
 
   let result;

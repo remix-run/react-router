@@ -1,13 +1,26 @@
-# Welcome to Remix!
+# @remix-run/server-runtime
 
-[Remix](https://remix.run) is a web framework that helps you build better websites with React.
+[Remix](https://remix.run) supports multiple server runtimes:
 
-To get started, open a new shell and run:
+- [Node](https://nodejs.org/en/)
+- [Cloudflare](https://developers.cloudflare.com/workers/learning/how-workers-works/)
+- [Deno](https://deno.land/) (Experimental 🧪)
 
-```sh
-npx create-remix@latest
-```
+Support for each runtime is provided by a corresponding Remix package:
 
-Then follow the prompts you see in your terminal.
+- [`@remix-run/node`](https://github.com/remix-run/remix/tree/main/packages/remix-node)
+- [`@remix-run/cloudflare`](https://github.com/remix-run/remix/tree/main/packages/remix-cloudflare)
+- [`remix-deno`](https://github.com/remix-run/remix/tree/main/templates/deno-ts/remix-deno) (will be renamed to `@remix-run/deno` when Deno support is stable)
 
-For more information about Remix, [visit remix.run](https://remix.run)!
+This package defines a "Remix server runtime interface" that each runtime package must conform to.
+
+Each Remix server runtime package MUST:
+
+- Implement and export values for each type in [`interface.ts`](./interface.ts)
+- Re-export types in [`reexport.ts`](./reexport.ts)
+
+Each Remix server runtime package MAY:
+
+- Re-export the [default implementations](./index.ts) as its implementations
+- Export custom implementations adhering to the [interface types](./interface.ts)
+- Provide additional exports relevant for that runtime

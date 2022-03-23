@@ -1,5 +1,6 @@
 import childProcess from "child_process";
 import fs from "fs";
+import fsp from "fs/promises";
 import path from "path";
 import util from "util";
 import { pathToFileURL } from "url";
@@ -47,7 +48,7 @@ describe("remix cli", () => {
             --version, -v       Print the CLI version and exit
             --no-color          Disable ANSI colors in console output
           \`create\` Options:
-            --template          The template to use (required)
+            --template          The template to use
             --no-install        Skip installing dependencies after creation
             --no-typescript     Convert the template to JavaScript
             --remix-version     The version of Remix to use
@@ -61,7 +62,7 @@ describe("remix cli", () => {
           Values:
             - projectDir        The Remix project directory
             - template          The project template to use
-            - remixPlatform     node, cloudflare-pages, or cloudflare-workers
+            - remixPlatform     node or cloudflare
 
           Creating a new project:
 
@@ -133,6 +134,31 @@ describe("remix cli", () => {
   });
 
   describe("the create command", () => {
+    afterAll(() => {
+      /**
+       * This prevents the console for spitting out a bunch of junk like this for
+       * every fixture:
+       *
+       *    jest-haste-map: Haste module naming collision: remix-app-template-js
+       *
+       * I found some github issues that says that `modulePathIgnorePatterns` should
+       * help, so I added it to our `jest.config.js`, but it doesn't seem to help, so
+       * I brute-forced it here.
+       */
+      async function renamePkgJsonApp(dir: string) {
+        let pkgPath = path.join(dir, "package.json");
+        let pkg = await fsp.readFile(pkgPath);
+        let obj = JSON.parse(pkg.toString());
+        obj.name = path.basename(dir);
+        await fsp.writeFile(pkgPath, JSON.stringify(obj, null, 2) + "\n");
+      }
+
+      let dirs = fs.readdirSync(path.join(process.cwd(), ".tmp"));
+      for (let dir of dirs) {
+        renamePkgJsonApp(path.join(process.cwd(), ".tmp", dir));
+      }
+    });
+
     function getProjectDir(name: string) {
       return path.join(
         process.cwd(),
@@ -226,7 +252,7 @@ describe("remix cli", () => {
         `💿 That's it! \`cd\` into "${projectDir}" and check the README for development and deploy instructions!`
       );
       expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-      expect(fs.existsSync(path.join(projectDir, "app/root.jsx"))).toBeTruthy();
+      expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
     });
 
     it("works for a path to a tarball on disk", async () => {

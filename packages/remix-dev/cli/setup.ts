@@ -2,17 +2,12 @@ import * as path from "path";
 import * as fse from "fs-extra";
 
 export enum SetupPlatform {
-  CloudflarePages = "cloudflare-pages",
-  CloudflareWorkers = "cloudflare-workers",
+  Cloudflare = "cloudflare",
   Node = "node",
 }
 
 export function isSetupPlatform(platform: any): platform is SetupPlatform {
-  return [
-    SetupPlatform.CloudflarePages,
-    SetupPlatform.CloudflareWorkers,
-    SetupPlatform.Node,
-  ].includes(platform);
+  return [SetupPlatform.Cloudflare, SetupPlatform.Node].includes(platform);
 }
 
 export async function setupRemix(platform: SetupPlatform): Promise<void> {
