@@ -775,7 +775,7 @@ async function callLoaderOrAction(
       params: match.params,
       request: new Request(location.pathname + location.search),
       signal,
-      ...(submission ? { submission } : {}),
+      ...(submission || {}),
     });
     return { isError: false, data };
   } catch (exception) {
