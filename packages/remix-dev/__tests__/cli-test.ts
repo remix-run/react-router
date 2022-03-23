@@ -251,7 +251,7 @@ describe("remix cli", () => {
         `💿 That's it! \`cd\` into "${projectDir}" and check the README for development and deploy instructions!`
       );
       expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-      expect(fs.existsSync(path.join(projectDir, "app/root.jsx"))).toBeTruthy();
+      expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
     });
 
     it("works for a path to a tarball on disk", async () => {
