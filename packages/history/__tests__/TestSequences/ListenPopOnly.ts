@@ -1,6 +1,6 @@
 import type { History } from "../../index";
 
-export default function Listen(history: History) {
+export default function ListenPopOnly(history: History) {
   let spy = jest.fn();
   let unlisten = history.listen(spy);
 

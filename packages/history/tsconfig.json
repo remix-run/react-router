@@ -1,7 +1,7 @@
 {
   "files": ["index.ts"],
   "compilerOptions": {
-    "lib": ["ES2020"],
+    "lib": ["DOM", "ES2020"],
     "target": "ES2020",
     "module": "ES2020",
     "moduleResolution": "node",

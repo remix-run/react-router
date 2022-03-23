@@ -1,6 +1,6 @@
 import type { History } from "../../index";
 
-export default function PushSamePath(history: History) {
+export default async function PushSamePath(history: History) {
   expect(history.location).toMatchObject({
     pathname: "/",
   });
@@ -17,7 +17,15 @@ export default function PushSamePath(history: History) {
     pathname: "/home",
   });
 
+  // JSDom doesn't fire the listener synchronously :(
+  let promise = new Promise((resolve) => {
+    let unlisten = history.listen(() => {
+      unlisten();
+      resolve(null);
+    });
+  });
   history.go(-1);
+  await promise;
   expect(history.action).toBe("POP");
   expect(history.location).toMatchObject({
     pathname: "/home",

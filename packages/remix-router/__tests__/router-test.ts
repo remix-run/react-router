@@ -2020,6 +2020,37 @@ describe("a router", () => {
       t.cleanup();
     });
 
+    it("persists location keys throughout navigations", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+          },
+        },
+      });
+
+      expect(t.router.state.location.key).toBe("default");
+
+      let A = await t.navigate("/tasks");
+      let transitionKey = t.router.state.transition.location?.key;
+      expect(t.router.state.location.key).toBe("default");
+      expect(t.router.state.transition.state).toBe("loading");
+      expect(transitionKey).not.toBe("default");
+      expect(Number(transitionKey?.length) > 0).toBe(true);
+
+      await A.loaders.tasks.resolve("TASKS");
+      expect(t.router.state.transition.state).toBe("idle");
+
+      // Make sure we keep the same location.key throughout the transition and
+      // history isn't creating a new one in history.push
+      expect(t.router.state.location.key).toBe(transitionKey);
+      expect(t.history.location.key).toBe(transitionKey);
+
+      t.cleanup();
+    });
+
     it("sends proper arguments to loaders", async () => {
       let t = setup({
         routes: TASK_ROUTES,

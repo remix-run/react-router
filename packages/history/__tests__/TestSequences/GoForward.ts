@@ -1,6 +1,9 @@
 import type { History } from "../../index";
 
-export default function GoForward(history: History, spy: jest.SpyInstance) {
+export default async function GoForward(
+  history: History,
+  spy: jest.SpyInstance
+) {
   expect(history.location).toMatchObject({
     pathname: "/",
   });
@@ -12,7 +15,15 @@ export default function GoForward(history: History, spy: jest.SpyInstance) {
   });
   expect(spy).not.toHaveBeenCalled();
 
+  // JSDom doesn't fire the listener synchronously :(
+  let promise1 = new Promise((resolve) => {
+    let unlisten = history.listen(() => {
+      unlisten();
+      resolve(null);
+    });
+  });
   history.go(-1);
+  await promise1;
   expect(history.action).toEqual("POP");
   expect(history.location).toMatchObject({
     pathname: "/",
@@ -29,7 +40,15 @@ export default function GoForward(history: History, spy: jest.SpyInstance) {
   });
   expect(spy.mock.calls.length).toBe(1);
 
+  // JSDom doesn't fire the listener synchronously :(
+  let promise2 = new Promise((resolve) => {
+    let unlisten = history.listen(() => {
+      unlisten();
+      resolve(null);
+    });
+  });
   history.go(1);
+  await promise2;
   expect(history.action).toEqual("POP");
   expect(history.location).toMatchObject({
     pathname: "/home",
