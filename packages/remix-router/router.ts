@@ -436,6 +436,9 @@ export function createRouter(init: RouterInit) {
       .getAll("index")
       .some((v) => v === "");
     if (matches[matches.length - 1].route.index && !hasNakedIndexQuery) {
+      // Note: OK to mutate this in-place since it's a scoped var inside
+      // handleAction and mutation will not impact the startNavigation matches
+      // variable that we use for revalidation
       matches = matches.slice(0, -1);
     }
 

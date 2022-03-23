@@ -1069,6 +1069,57 @@ describe("a router", () => {
         childIndex: "CHILD INDEX",
       });
     });
+
+    it("retains the index match when submitting to a layout route", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+            id: "parent",
+            loader: true,
+            action: true,
+            children: [
+              {
+                path: "/child",
+                id: "child",
+                loader: true,
+                action: true,
+                children: [
+                  {
+                    index: true,
+                    id: "childIndex",
+                    loader: true,
+                    action: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+      let A = await t.navigate("/child", {
+        formMethod: "POST",
+        formData: new FormData(),
+      });
+      await A.actions.child.resolve("CHILD ACTION");
+      await A.loaders.parent.resolve("PARENT LOADER");
+      await A.loaders.child.resolve("CHILD LOADER");
+      await A.loaders.childIndex.resolve("CHILD INDEX LOADER");
+      expect(t.router.state.transition.state).toBe("idle");
+      expect(t.router.state.loaderData).toEqual({
+        parent: "PARENT LOADER",
+        child: "CHILD LOADER",
+        childIndex: "CHILD INDEX LOADER",
+      });
+      expect(t.router.state.actionData).toEqual({
+        child: "CHILD ACTION",
+      });
+      expect(t.router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent",
+        "child",
+        "childIndex",
+      ]);
+    });
   });
 
   describe("action errors", () => {
