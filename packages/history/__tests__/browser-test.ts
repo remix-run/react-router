@@ -1,13 +1,19 @@
-import type { MemoryHistory } from "../index";
-import { createMemoryHistory } from "../index";
+/**
+ * @jest-environment ./__tests__/custom-environment.js
+ */
 
+import { JSDOM } from "jsdom";
+
+import type { BrowserHistory } from "../index";
+import { createBrowserHistory } from "../index";
+
+import InitialLocationDefaultKey from "./TestSequences/InitialLocationDefaultKey";
 import Listen from "./TestSequences/Listen";
-import InitialLocationHasKey from "./TestSequences/InitialLocationHasKey";
 import PushNewLocation from "./TestSequences/PushNewLocation";
 import PushSamePath from "./TestSequences/PushSamePath";
 import PushState from "./TestSequences/PushState";
 import PushMissingPathname from "./TestSequences/PushMissingPathname";
-import PushRelativePathnameWarning from "./TestSequences/PushRelativePathnameWarning";
+import PushRelativePathname from "./TestSequences/PushRelativePathname";
 import ReplaceNewLocation from "./TestSequences/ReplaceNewLocation";
 import ReplaceSamePath from "./TestSequences/ReplaceSamePath";
 import ReplaceState from "./TestSequences/ReplaceState";
@@ -16,18 +22,19 @@ import GoBack from "./TestSequences/GoBack";
 import GoForward from "./TestSequences/GoForward";
 import ListenPopOnly from "./TestSequences/ListenPopOnly";
 
-describe("a memory history", () => {
-  let history: MemoryHistory;
+describe("a browser history", () => {
+  let history: BrowserHistory;
 
   beforeEach(() => {
-    history = createMemoryHistory();
+    // Need to use our own custom DOM in order to get a working history
+    const dom = new JSDOM(`<!DOCTYPE html><p>History Example</p>`, {
+      url: "https://example.org/",
+    });
+    dom.window.history.replaceState(null, "", "/");
+    history = createBrowserHistory({ window: dom.window as unknown as Window });
   });
 
-  it("has an index property", () => {
-    expect(typeof history.index).toBe("number");
-  });
-
-  it("knows how to create hrefs", () => {
+  it("knows how to create hrefs from location objects", () => {
     const href = history.createHref({
       pathname: "/the/path",
       search: "?the=query",
@@ -54,12 +61,6 @@ describe("a memory history", () => {
     expect(unencodedHref).toEqual("/#abc");
   });
 
-  describe("the initial location", () => {
-    it("has a key", () => {
-      InitialLocationHasKey(history);
-    });
-  });
-
   describe("listen", () => {
     it("does not immediately call listeners", () => {
       Listen(history);
@@ -70,40 +71,56 @@ describe("a memory history", () => {
     });
   });
 
-  describe("push", () => {
-    it("pushes the new location", () => {
-      PushNewLocation(history);
-    });
-
-    it("pushes the same location", async () => {
-      await PushSamePath(history);
-    });
-
-    it("pushes with state", () => {
-      PushState(history);
-    });
-
-    it("reuses the current location pathname", () => {
-      PushMissingPathname(history);
-    });
-
-    it("issues a warning on relative pathnames", () => {
-      PushRelativePathnameWarning(history);
+  describe("the initial location", () => {
+    it('has the "default" key', () => {
+      InitialLocationDefaultKey(history);
     });
   });
 
-  describe("replace", () => {
-    it("replaces with a new location", () => {
+  describe("push a new path", () => {
+    it("calls change listeners with the new location", () => {
+      PushNewLocation(history);
+    });
+  });
+
+  describe("push the same path", () => {
+    it("calls change listeners with the new location", async () => {
+      await PushSamePath(history);
+    });
+  });
+
+  describe("push state", () => {
+    it("calls change listeners with the new location", () => {
+      PushState(history);
+    });
+  });
+
+  describe("push with no pathname", () => {
+    it("reuses the current location pathname", () => {
+      PushMissingPathname(history);
+    });
+  });
+
+  describe("push with a relative pathname", () => {
+    it("normalizes the pathname relative to the current location", () => {
+      PushRelativePathname(history);
+    });
+  });
+
+  describe("replace a new path", () => {
+    it("calls change listeners with the new location", () => {
       ReplaceNewLocation(history);
     });
   });
 
   describe("replace the same path", () => {
-    it("replaces with the same location", () => {
+    it("calls change listeners with the new location", () => {
       ReplaceSamePath(history);
     });
+  });
 
-    it("replaces the state", () => {
+  describe("replace state", () => {
+    it("calls change listeners with the new location", () => {
       ReplaceState(history);
     });
   });
@@ -114,67 +131,21 @@ describe("a memory history", () => {
     });
   });
 
-  describe("go", () => {
-    it("goes back", async () => {
+  describe("back", () => {
+    it("calls change listeners with the previous location", async () => {
       let spy: jest.SpyInstance = jest.fn();
       //@ts-ignore
       history.listen(spy);
       await GoBack(history, spy);
     });
-    it("goes forward", async () => {
+  });
+
+  describe("forward", () => {
+    it("calls change listeners with the next location", async () => {
       let spy: jest.SpyInstance = jest.fn();
       //@ts-ignore
       history.listen(spy);
       await GoForward(history, spy);
-    });
-  });
-});
-
-describe("a memory history without an onPopState callback", () => {
-  it("fails gracefully on go() calls", () => {
-    let history = createMemoryHistory();
-    history.push("/page1");
-    history.push("/page2");
-    expect(history.location.pathname).toBe("/page2");
-    history.go(-2);
-    expect(history.location.pathname).toBe("/");
-    history.go(1);
-    expect(history.location.pathname).toBe("/page1");
-  });
-});
-
-describe("a memory history with some initial entries", () => {
-  it("clamps the initial index to a valid value", () => {
-    let history = createMemoryHistory({
-      initialEntries: ["/one", "/two", "/three"],
-      initialIndex: 3, // invalid
-    });
-
-    expect(history.index).toBe(2);
-  });
-
-  it("starts at the last entry by default", () => {
-    let history = createMemoryHistory({
-      initialEntries: ["/one", "/two", "/three"],
-    });
-
-    expect(history.index).toBe(2);
-    expect(history.location).toMatchObject({
-      pathname: "/three",
-      search: "",
-      hash: "",
-      state: null,
-      key: expect.any(String),
-    });
-
-    history.go(-1);
-    expect(history.index).toBe(1);
-    expect(history.location).toMatchObject({
-      pathname: "/two",
-      search: "",
-      hash: "",
-      state: null,
-      key: expect.any(String),
     });
   });
 });

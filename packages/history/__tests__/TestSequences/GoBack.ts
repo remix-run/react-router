@@ -1,6 +1,6 @@
 import type { History } from "../../index";
 
-export default function GoBack(history: History, spy: jest.SpyInstance) {
+export default async function GoBack(history: History, spy: jest.SpyInstance) {
   expect(history.location).toMatchObject({
     pathname: "/",
   });
@@ -12,7 +12,15 @@ export default function GoBack(history: History, spy: jest.SpyInstance) {
   });
   expect(spy).not.toHaveBeenCalled();
 
+  // JSDom doesn't fire the listener synchronously :(
+  let promise = new Promise((resolve) => {
+    let unlisten = history.listen(() => {
+      unlisten();
+      resolve(null);
+    });
+  });
   history.go(-1);
+  await promise;
   expect(history.action).toEqual("POP");
   expect(history.location).toMatchObject({
     pathname: "/",
