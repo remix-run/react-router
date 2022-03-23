@@ -27,7 +27,7 @@ ${colors.heading("Options")}:
   --version, -v       Print the CLI version and exit
   --no-color          Disable ANSI colors in console output
 \`create\` Options:
-  --template          The template to use (required)
+  --template          The template to use
   --no-install        Skip installing dependencies after creation
   --no-typescript     Convert the template to JavaScript
   --remix-version     The version of Remix to use
@@ -118,6 +118,9 @@ export async function run(argv: string[] = process.argv.slice(2)) {
 
   if (flags.help) showHelp();
   if (flags.version) showVersion();
+  if (flags.template === "typescript" || flags.template === "ts") {
+    flags.template = "remix-ts";
+  }
 
   //   if (!flags.template) {
   //     if (colors.supportsColor && process.env.NODE_ENV !== "test") {
