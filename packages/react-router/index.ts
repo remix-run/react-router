@@ -29,6 +29,7 @@ import {
   createRoutesFromChildren,
   renderMatches,
   MemoryRouter,
+  DataMemoryRouter,
   Navigate,
   Outlet,
   Route,
@@ -84,6 +85,7 @@ export type {
 };
 export {
   MemoryRouter,
+  DataMemoryRouter,
   Navigate,
   NavigationType,
   Outlet,

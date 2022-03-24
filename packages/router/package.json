@@ -19,9 +19,6 @@
     "router",
     "location"
   ],
-  "dependencies": {
-    "history": "6.0.0"
-  },
   "devDependencies": {
     "jest-fetch-mock": "^3.0.3"
   }

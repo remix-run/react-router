@@ -1,7 +1,12 @@
 import * as React from "react";
-import type { History, Location } from "history";
-import { Action as NavigationType } from "history";
-import type { RouteMatch } from "@remix-run/router";
+import { Action as NavigationType } from "@remix-run/router";
+import type { RouteMatch, Router, History, Location } from "@remix-run/router";
+
+// Contexts for data routers
+export const DataRouterContext = React.createContext<Router | null>(null);
+export const DataRouterStateContext = React.createContext<
+  Router["state"] | null
+>(null);
 
 /**
  * A Navigator is a "location changer"; it's how you get to different locations.

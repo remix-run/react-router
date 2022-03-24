@@ -1,34 +1,19 @@
 import * as React from "react";
-import type { MemoryHistory } from "history";
+import type { InitialEntry, Location, MemoryHistory, To } from "history";
 import {
   Action as NavigationType,
   createMemoryHistory,
   parsePath,
 } from "history";
-import type {
-  InitialEntry,
-  RouteMatch,
-  RouteObject,
-  HydrationState,
-  To,
-  Location,
-  Router as DataRouter,
-} from "@remix-run/router";
+import type { RouteMatch, RouteObject } from "@remix-run/router";
 import {
-  createMemoryRouter,
   invariant,
   normalizePathname,
   stripBasename,
   warning,
 } from "@remix-run/router";
 
-import {
-  LocationContext,
-  NavigationContext,
-  Navigator,
-  DataRouterContext,
-  DataRouterStateContext,
-} from "./context";
+import { LocationContext, NavigationContext, Navigator } from "./context";
 import {
   useInRouterContext,
   useNavigate,
@@ -36,66 +21,6 @@ import {
   useRoutes,
   _renderMatches,
 } from "./hooks";
-
-////////////////////////////////////////////////////////////////////////////////
-export interface DataMemoryRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  initialEntries?: InitialEntry[];
-  initialIndex?: number;
-  hydrationData?: HydrationState;
-}
-
-export function DataMemoryRouter({
-  basename,
-  children,
-  initialEntries,
-  initialIndex,
-  hydrationData,
-}: DataMemoryRouterProps): React.ReactElement {
-  let routes = createRoutesFromChildren(children);
-
-  let [router] = React.useState<DataRouter>(
-    (): DataRouter =>
-      createMemoryRouter({
-        initialEntries,
-        initialIndex,
-        onChange: (state) => setState(state),
-        routes,
-        hydrationData,
-      })
-  );
-
-  let [state, setState] = React.useState<DataRouter["state"]>(
-    () => router.state
-  );
-
-  let navigator = React.useMemo((): Navigator => {
-    return {
-      createHref: router.createHref,
-      go: (n) => router.navigate(n),
-      push: (to, state) => router.navigate(to, { state }),
-      replace: (to, state) => router.navigate(to, { replace: true, state }),
-    };
-  }, [router]);
-
-  return (
-    <DataRouterContext.Provider value={router}>
-      <DataRouterStateContext.Provider value={state}>
-        <Router
-          basename={basename}
-          location={state.location}
-          navigationType={state.historyAction}
-          navigator={navigator}
-        >
-          <Routes children={children} />
-        </Router>
-      </DataRouterStateContext.Provider>
-    </DataRouterContext.Provider>
-  );
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 export interface MemoryRouterProps {
   basename?: string;

@@ -7,6 +7,7 @@ import type { BrowserHistory, HashHistory, History } from "history";
 import { createBrowserHistory, createHashHistory } from "history";
 import {
   MemoryRouter,
+  DataMemoryRouter,
   Navigate,
   Outlet,
   Route,
@@ -58,6 +59,7 @@ function warning(cond: boolean, message: string): void {
 // Note: Keep in sync with react-router exports!
 export {
   MemoryRouter,
+  DataMemoryRouter,
   Navigate,
   Outlet,
   Route,

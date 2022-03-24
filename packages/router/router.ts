@@ -1,5 +1,5 @@
-import type { History, Location, Path } from "history";
-import { Action as HistoryAction, createLocation } from "history";
+import type { History, Location, To } from "./history";
+import { Action as HistoryAction, createLocation } from "./history";
 
 import {
   ActionFormMethod,
@@ -315,12 +315,9 @@ export function createRouter(init: RouterInit) {
   // Pop Navigation
   async function navigate(path: number): Promise<void>;
   // Link/Form navigation
+  async function navigate(path: To, opts?: NavigateOptions): Promise<void>;
   async function navigate(
-    path: string | Path,
-    opts?: NavigateOptions
-  ): Promise<void>;
-  async function navigate(
-    path: number | string | Path,
+    path: number | To,
     opts?: NavigateOptions
   ): Promise<void> {
     if (typeof path === "number") {
@@ -616,6 +613,7 @@ export function createRouter(init: RouterInit) {
       return state;
     },
     navigate,
+    createHref,
   };
 }
 //#endregion

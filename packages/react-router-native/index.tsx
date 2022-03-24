@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import {
   MemoryRouter,
+  DataMemoryRouter,
   MemoryRouterProps,
   Navigate,
   NavigateOptions,
@@ -46,6 +47,7 @@ import URLSearchParams from "@ungap/url-search-params";
 // Note: Keep in sync with react-router exports!
 export {
   MemoryRouter,
+  DataMemoryRouter,
   Navigate,
   Outlet,
   Route,
