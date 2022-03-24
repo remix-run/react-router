@@ -8,7 +8,7 @@ import type {
   PathPattern,
   RouteMatch,
   RouteObject,
-} from "remix-router";
+} from "@remix-run/router";
 import {
   getToPathname,
   invariant,
@@ -18,7 +18,7 @@ import {
   resolveTo,
   warning,
   warningOnce,
-} from "remix-router";
+} from "@remix-run/router";
 
 import { LocationContext, NavigationContext, RouteContext } from "./context";
 

@@ -1,16 +1,16 @@
-# Remix Router
+# Router
 
-The `remix-router` package is the heart of [React Router](https://github.com/remix-run/react-router) and provides all the core functionality for routing, data loading, data mutations,
+The `@remix-run/router` package is the heart of [React Router](https://github.com/remix-run/react-router) and provides all the core functionality for routing, data loading, data mutations,
 and transitions.
 
 If you're using React Router, you should never `import` anything directly from
-the `remix-router` or `react-router` packages, but you should have everything
+the `@remix-run/router` or `react-router` packages, but you should have everything
 you need in either `react-router-dom` or `react-router-native`. Both of those
-packages re-export everything from `remix-router` and `react-router`.
+packages re-export everything from `@remix-run/router` and `react-router`.
 
 ## API
 
-A Remix Router instance can be created using `createRouter`:
+A Router instance can be created using `createRouter`:
 
 ```js
 let router = createRouter({
@@ -25,11 +25,11 @@ let router = createRouter({
 }
 ```
 
-Internally, Remix Router represents the state in an object of the following format, which is available through `router.state` or via the `onChange` callback function:
+Internally, the Router represents the state in an object of the following format, which is available through `router.state` or via the `onChange` callback function:
 
 ```ts
-interface RemixRouterState {
-  // The action of the most recently completed navigation
+interface RouterState {
+  // The `history` action of the most recently completed navigation
   action: Action;
   // The current location of the router.  During a transition this reflects
   // the "old" location and is updated upon completion of the navigation
@@ -43,7 +43,7 @@ interface RemixRouterState {
   // Data from the action for the current matches
   actionData: RouteData | null;
   // Exceptions thrown from loaders/actions for the current matches
-  exceptions: RouteData;
+  exceptions: RouteData | null;
 }
 ```
 
@@ -70,7 +70,7 @@ router.navigate('/page', {
 
 ## Transition Flows
 
-Each navigation (link click or form submission) in Remix Router is reflected via an internal `state.transition` that indicates the state of the navigation. This concept of a `transition` is a complex and heavily async bit of logic that is foundational to Remix Router's ability to manage data loading, submission, error handling, redirects, interruptions, and so on. Due to the user-driven nature of interruptions we don't quite believe it can be modeled as a finite state machine, however we have modeled some of the happy path flows below for clarity.
+Each navigation (link click or form submission) in the Router is reflected via an internal `state.transition` that indicates the state of the navigation. This concept of a `transition` is a complex and heavily async bit of logic that is foundational to the Router's ability to manage data loading, submission, error handling, redirects, interruptions, and so on. Due to the user-driven nature of interruptions we don't quite believe it can be modeled as a finite state machine, however we have modeled some of the happy path flows below for clarity.
 
 ```mermaid
 graph LR

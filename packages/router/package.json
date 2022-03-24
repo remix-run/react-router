@@ -1,18 +1,18 @@
 {
-  "name": "remix-router",
+  "name": "@remix-run/router",
   "version": "0.1.0",
   "author": "Remix Software <hello@remix.run>",
-  "description": "Remix-driven routing",
+  "description": "Nested/Data-driven/Framework-agnostic Routing",
   "repository": {
     "type": "git",
     "url": "https://github.com/remix-run/react-router.git",
-    "directory": "packages/remix-router"
+    "directory": "packages/router"
   },
   "license": "MIT",
   "main": "./main.js",
   "module": "./index.js",
   "types": "./index.d.ts",
-  "unpkg": "./umd/remix-router.production.min.js",
+  "unpkg": "./umd/router.production.min.js",
   "sideEffects": false,
   "keywords": [
     "remix",
