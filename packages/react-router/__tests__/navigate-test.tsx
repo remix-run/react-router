@@ -23,6 +23,32 @@ describe("<Navigate>", () => {
         </h1>
       `);
     });
+
+    it("does not cause an infinite loop when navigation does not change the current route", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter>
+            <Routes>
+              <Route
+                path="/*"
+                element={
+                  <>
+                    <h1>Home</h1>
+                    <Navigate to="/about" />
+                  </>
+                }
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <h1>
+          Home
+        </h1>
+      `);
+    });
   });
 
   describe("with a relative href", () => {

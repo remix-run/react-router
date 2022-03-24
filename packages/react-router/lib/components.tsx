@@ -92,7 +92,7 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
   let navigate = useNavigate();
   React.useEffect(() => {
     navigate(to, { replace, state });
-  });
+  }, [navigate, to, replace, state]);
 
   return null;
 }
