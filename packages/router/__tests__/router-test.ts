@@ -1,4 +1,4 @@
-import { createMemoryHistory, InitialEntry, parsePath } from "history";
+import { createMemoryHistory, InitialEntry, parsePath } from "../history";
 import type {
   HydrationState,
   LoaderFunctionArgs,

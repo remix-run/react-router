@@ -1,34 +1,19 @@
 import * as React from "react";
-import type { MemoryHistory } from "history";
+import type { InitialEntry, Location, MemoryHistory, To } from "history";
 import {
   Action as NavigationType,
   createMemoryHistory,
   parsePath,
 } from "history";
-import type {
-  InitialEntry,
-  RouteMatch,
-  RouteObject,
-  HydrationState,
-  To,
-  Location,
-  Router as DataRouter,
-} from "@remix-run/router";
+import type { RouteMatch, RouteObject } from "@remix-run/router";
 import {
-  createMemoryRouter,
   invariant,
   normalizePathname,
   stripBasename,
   warning,
 } from "@remix-run/router";
 
-import {
-  LocationContext,
-  NavigationContext,
-  Navigator,
-  DataRouterContext,
-  DataRouterStateContext,
-} from "./context";
+import { LocationContext, NavigationContext, Navigator } from "./context";
 import {
   useInRouterContext,
   useNavigate,
@@ -36,66 +21,6 @@ import {
   useRoutes,
   _renderMatches,
 } from "./hooks";
-
-////////////////////////////////////////////////////////////////////////////////
-export interface DataMemoryRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  initialEntries?: InitialEntry[];
-  initialIndex?: number;
-  hydrationData?: HydrationState;
-}
-
-export function DataMemoryRouter({
-  basename,
-  children,
-  initialEntries,
-  initialIndex,
-  hydrationData,
-}: DataMemoryRouterProps): React.ReactElement {
-  let routes = createRoutesFromChildren(children);
-
-  let [router] = React.useState<DataRouter>(
-    (): DataRouter =>
-      createMemoryRouter({
-        initialEntries,
-        initialIndex,
-        onChange: (state) => setState(state),
-        routes,
-        hydrationData,
-      })
-  );
-
-  let [state, setState] = React.useState<DataRouter["state"]>(
-    () => router.state
-  );
-
-  let navigator = React.useMemo((): Navigator => {
-    return {
-      createHref: router.createHref,
-      go: (n) => router.navigate(n),
-      push: (to, state) => router.navigate(to, { state }),
-      replace: (to, state) => router.navigate(to, { replace: true, state }),
-    };
-  }, [router]);
-
-  return (
-    <DataRouterContext.Provider value={router}>
-      <DataRouterStateContext.Provider value={state}>
-        <Router
-          basename={basename}
-          location={state.location}
-          navigationType={state.historyAction}
-          navigator={navigator}
-        >
-          <Routes children={children} />
-        </Router>
-      </DataRouterStateContext.Provider>
-    </DataRouterContext.Provider>
-  );
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 export interface MemoryRouterProps {
   basename?: string;
@@ -107,7 +32,7 @@ export interface MemoryRouterProps {
 /**
  * A <Router> that stores all entries in memory.
  *
- * @see https://reactrouter.com/docs/en/v6/routers/memory-router
+ * @see https://reactrouter.com/docs/en/v6/api#memoryrouter
  */
 export function MemoryRouter({
   basename,
@@ -152,7 +77,7 @@ export interface NavigateProps {
  * able to use hooks. In functional components, we recommend you use the
  * `useNavigate` hook instead.
  *
- * @see https://reactrouter.com/docs/en/v6/components/navigate
+ * @see https://reactrouter.com/docs/en/v6/api#navigate
  */
 export function Navigate({ to, replace, state }: NavigateProps): null {
   invariant(
@@ -184,7 +109,7 @@ export interface OutletProps {
 /**
  * Renders the child route's element, if there is one.
  *
- * @see https://reactrouter.com/docs/en/v6/components/outlet
+ * @see https://reactrouter.com/docs/en/v6/api#outlet
  */
 export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
@@ -219,7 +144,7 @@ export interface IndexRouteProps {
 /**
  * Declares an element that should be rendered at a certain URL path.
  *
- * @see https://reactrouter.com/docs/en/v6/components/route
+ * @see https://reactrouter.com/docs/en/v6/api#route
  */
 export function Route(
   _props: PathRouteProps | LayoutRouteProps | IndexRouteProps
@@ -247,7 +172,7 @@ export interface RouterProps {
  * router that is more specific to your environment such as a <BrowserRouter>
  * in web browsers or a <StaticRouter> for server rendering.
  *
- * @see https://reactrouter.com/docs/en/v6/routers/router
+ * @see https://reactrouter.com/docs/en/v6/api#router
  */
 export function Router({
   basename: basenameProp = "/",
@@ -327,7 +252,7 @@ export interface RoutesProps {
  * A container for a nested tree of <Route> elements that renders the branch
  * that best matches the current location.
  *
- * @see https://reactrouter.com/docs/en/v6/components/routes
+ * @see https://reactrouter.com/docs/en/v6/api#routes
  */
 export function Routes({
   children,
@@ -345,7 +270,7 @@ export function Routes({
  * either a `<Route>` element or an array of them. Used internally by
  * `<Routes>` to create a route config from its children.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/create-routes-from-children
+ * @see https://reactrouter.com/docs/en/v6/api#createroutesfromchildren
  */
 export function createRoutesFromChildren(
   children: React.ReactNode,

@@ -1,3 +1,4 @@
+import { createMemoryHistory, MemoryHistoryOptions } from "./history";
 import type {
   HydrationState,
   NavigateOptions,
@@ -5,6 +6,7 @@ import type {
   Router,
   RouterState,
   RouteData,
+  RouterInit,
 } from "./router";
 import { IDLE_TRANSITION, createRouter } from "./router";
 import type {
@@ -33,8 +35,12 @@ import {
   warningOnce,
 } from "./utils";
 
+export type { History, Location, InitialEntry, To } from "./history";
+export { Action, createMemoryHistory, parsePath } from "./history";
+
 // Re-exports for router usages
 export type {
+  RouterInit,
   HydrationState,
   LoaderFunctionArgs,
   NavigateOptions,
@@ -67,3 +73,14 @@ export {
   warning,
   warningOnce,
 };
+
+export type MemoryRouterInit = MemoryHistoryOptions &
+  Omit<RouterInit, "history">;
+export function createMemoryRouter({
+  initialEntries,
+  initialIndex,
+  ...routerInit
+}: MemoryRouterInit): Router {
+  let history = createMemoryHistory({ initialEntries, initialIndex });
+  return createRouter({ history, ...routerInit });
+}
