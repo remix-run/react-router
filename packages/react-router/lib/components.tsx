@@ -5,13 +5,13 @@ import {
   createMemoryHistory,
   parsePath,
 } from "history";
-import type { RouteMatch, RouteObject } from "remix-router";
+import type { RouteMatch, RouteObject } from "@remix-run/router";
 import {
   invariant,
   normalizePathname,
   stripBasename,
   warning,
-} from "remix-router";
+} from "@remix-run/router";
 
 import { LocationContext, NavigationContext, Navigator } from "./context";
 import {

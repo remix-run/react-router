@@ -6,13 +6,13 @@ import type {
   PathPattern,
   RouteMatch,
   RouteObject,
-} from "remix-router";
+} from "@remix-run/router";
 import {
   generatePath,
   matchPath,
   matchRoutes,
   resolvePath,
-} from "remix-router";
+} from "@remix-run/router";
 
 import type {
   MemoryRouterProps,
