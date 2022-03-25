@@ -6,6 +6,8 @@ import type {
   PathPattern,
   RouteMatch,
   RouteObject,
+  LoaderFunctionArgs,
+  ActionFunctionArgs,
 } from "@remix-run/router";
 import {
   generatePath,
@@ -56,6 +58,9 @@ import {
   useResolvedPath,
   useRoutes,
   useLoaderData,
+  useActionData,
+  useRouteException,
+  useTransition,
 } from "./lib/hooks";
 
 // Expose react-router public API
@@ -83,6 +88,8 @@ export type {
   Pathname,
   Search,
   To,
+  LoaderFunctionArgs,
+  ActionFunctionArgs,
 };
 export {
   MemoryRouter,
@@ -113,6 +120,9 @@ export {
   useResolvedPath,
   useRoutes,
   useLoaderData,
+  useActionData,
+  useRouteException,
+  useTransition,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
