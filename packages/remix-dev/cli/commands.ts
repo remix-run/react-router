@@ -231,6 +231,7 @@ export async function dev(remixRoot: string, modeArg?: string) {
   let createApp: typeof createAppType;
   let express: typeof Express;
   try {
+    // eslint-disable-next-line import/no-extraneous-dependencies
     let serve = require("@remix-run/serve");
     createApp = serve.createApp;
     express = require("express");
