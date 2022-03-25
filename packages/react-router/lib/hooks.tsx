@@ -6,8 +6,10 @@ import type {
   Params,
   PathMatch,
   PathPattern,
+  RouteData,
   RouteMatch,
   RouteObject,
+  Router,
 } from "@remix-run/router";
 import {
   getToPathname,
@@ -27,6 +29,34 @@ import {
   NavigationContext,
   RouteContext,
 } from "./context";
+
+/**
+ * Returns true if this component is a descendant of a <DataRouter>.
+ *
+ * @see https://reactrouter.com/docs/en/v6/api#useInDataRouterContext
+ */
+export function useInDataRouterContext(): boolean {
+  return React.useContext(DataRouterContext) != null;
+}
+
+/**
+ * Returns the current data router
+ *
+ * Note: If you're using this it may mean you're doing some of your own
+ * "routing" in your app, and we'd like to know what your use case is. We may
+ * be able to provide something higher-level to better suit your needs.
+ *
+ * @see https://reactrouter.com/docs/en/v6/api#uselocation
+ */
+export function useDataRouter(): Router {
+  let router = React.useContext(DataRouterContext);
+  invariant(
+    router,
+    `useDataRouter() may be used only in the context of a <DataRouter> component.`
+  );
+
+  return router;
+}
 
 /**
  * Returns the full href for the given "to" value. This is useful for building
@@ -280,6 +310,7 @@ export function useRoutes(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
+  let dataRouterStateContext = React.useContext(DataRouterStateContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
   let parentParams = routeMatch ? routeMatch.params : {};
@@ -376,25 +407,43 @@ export function useRoutes(
               : joinPaths([parentPathnameBase, match.pathnameBase]),
         })
       ),
-    parentMatches
+    parentMatches,
+    dataRouterStateContext?.exceptions
   );
 }
 
 export function _renderMatches(
   matches: RouteMatch[] | null,
-  parentMatches: RouteMatch[] = []
+  parentMatches: RouteMatch[] = [],
+  exceptions?: RouteData | null
 ): React.ReactElement | null {
   if (matches == null) return null;
+
+  // If we have data exceptions, trim matches to the highest exception boundary
+  if (exceptions != null) {
+    let exceptionIndex = matches.findIndex((m) => exceptions[m.route.id]);
+    invariant(
+      exceptionIndex >= 0,
+      `Could not find a matching route for the current exceptions: ${exceptions}`
+    );
+    matches = matches.slice(0, Math.min(matches.length, exceptionIndex + 1));
+  }
 
   return matches.reduceRight((outlet, match, index) => {
     return (
       <RouteContext.Provider
         children={
-          match.route.element !== undefined ? match.route.element : outlet
+          exceptions?.[match.route.id]
+            ? match.route.exceptionElement
+            : match.route.element !== undefined
+            ? match.route.element
+            : outlet
         }
         value={{
           outlet,
-          matches: parentMatches.concat(matches.slice(0, index + 1)),
+          // TODO: Why does TS think this can be null as soon as we introduce the
+          // above exceptions conditional?
+          matches: parentMatches.concat(matches!.slice(0, index + 1)),
         }}
       />
     );
@@ -409,5 +458,34 @@ export function useLoaderData() {
   invariant(route, "expected Route context");
 
   let thisRoute = route.matches[route.matches.length - 1];
-  return state.loaderData[thisRoute.pathname];
+  return state.loaderData[thisRoute.route.id];
+}
+
+export function useActionData() {
+  let state = React.useContext(DataRouterStateContext);
+  invariant(state, "useActionData must be rendered within a DataRouter");
+
+  let route = React.useContext(RouteContext);
+  invariant(route, "expected Route context");
+
+  let thisRoute = route.matches[route.matches.length - 1];
+  return state.actionData?.[thisRoute.route.id];
+}
+
+export function useRouteException() {
+  let state = React.useContext(DataRouterStateContext);
+  invariant(state, "useRouteException must be rendered within a DataRouter");
+
+  let route = React.useContext(RouteContext);
+  invariant(route, "expected Route context");
+
+  let thisRoute = route.matches[route.matches.length - 1];
+  return state.exceptions?.[thisRoute.route.id];
+}
+
+export function useTransition() {
+  let state = React.useContext(DataRouterStateContext);
+  invariant(state, "useTransition must be rendered within a DataRouter");
+
+  return state.transition;
 }

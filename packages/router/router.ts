@@ -909,7 +909,7 @@ function isDataException(result: DataResult): result is DataException {
 function isSubmissionNavigation(
   opts?: NavigateOptions
 ): opts is SubmissionNavigateOptions {
-  return opts != null && "formData" in opts;
+  return opts != null && "formData" in opts && opts.formData != null;
 }
 
 function isActionSubmission(

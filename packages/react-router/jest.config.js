@@ -6,4 +6,5 @@ module.exports = {
   globals: {
     __DEV__: true,
   },
+  setupFiles: ["./__tests__/setup.ts"],
 };

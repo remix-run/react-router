@@ -13,6 +13,9 @@ import type {
   To,
   Location,
   Router as DataRouter,
+  LoaderFunctionArgs,
+  ActionFunctionArgs,
+  RouteData,
 } from "@remix-run/router";
 import {
   createMemoryRouter,
@@ -37,13 +40,13 @@ import {
   _renderMatches,
 } from "./hooks";
 
-////////////////////////////////////////////////////////////////////////////////
 export interface DataMemoryRouterProps {
   basename?: string;
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
   hydrationData?: HydrationState;
+  fallbackElement?: React.ReactElement;
 }
 
 export function DataMemoryRouter({
@@ -52,15 +55,29 @@ export function DataMemoryRouter({
   initialEntries,
   initialIndex,
   hydrationData,
+  fallbackElement,
 }: DataMemoryRouterProps): React.ReactElement {
   let routes = createRoutesFromChildren(children);
 
+  invariant(
+    hydrationData || fallbackElement,
+    "<DataMemoryRouter> expects either `hydrationData` or a `fallbackElement` to be provided"
+  );
+
+  let [hydrated, setHydrated] = React.useState(hydrationData != null);
   let [router] = React.useState<DataRouter>(
     (): DataRouter =>
       createMemoryRouter({
         initialEntries,
         initialIndex,
-        onChange: (state) => setState(state),
+        onChange: (state) => {
+          setState(state);
+          // If we were not hydrated from SSR, consider us "hydrated" as soon as
+          // we return to an idle state
+          if (!hydrated && state.transition.state === "idle") {
+            setHydrated(true);
+          }
+        },
         routes,
         hydrationData,
       })
@@ -70,6 +87,13 @@ export function DataMemoryRouter({
     () => router.state
   );
 
+  // If we did not SSR, trigger a replacement navigation to ourself for initial data load
+  React.useLayoutEffect(() => {
+    if (!hydrated) {
+      router.navigate(router.state.location, { replace: true });
+    }
+  }, [router, hydrated]);
+
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
@@ -78,6 +102,10 @@ export function DataMemoryRouter({
       replace: (to, state) => router.navigate(to, { replace: true, state }),
     };
   }, [router]);
+
+  if (!hydrated && fallbackElement) {
+    return fallbackElement;
+  }
 
   return (
     <DataRouterContext.Provider value={router}>
@@ -94,8 +122,6 @@ export function DataMemoryRouter({
     </DataRouterContext.Provider>
   );
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 export interface MemoryRouterProps {
   basename?: string;
@@ -190,7 +216,13 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
 }
 
-export interface RouteProps {
+interface DataRouteProps {
+  loader?: (args: LoaderFunctionArgs) => Promise<any>;
+  action?: (args: ActionFunctionArgs) => Promise<any>;
+  exceptionElement?: React.ReactNode;
+}
+
+export interface RouteProps extends DataRouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactNode | null;
@@ -198,7 +230,7 @@ export interface RouteProps {
   path?: string;
 }
 
-export interface PathRouteProps {
+export interface PathRouteProps extends DataRouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactNode | null;
@@ -206,12 +238,12 @@ export interface PathRouteProps {
   path: string;
 }
 
-export interface LayoutRouteProps {
+export interface LayoutRouteProps extends DataRouteProps {
   children?: React.ReactNode;
   element?: React.ReactNode | null;
 }
 
-export interface IndexRouteProps {
+export interface IndexRouteProps extends DataRouteProps {
   element?: React.ReactNode | null;
   index: true;
 }
@@ -383,6 +415,9 @@ export function createRoutesFromChildren(
       element: element.props.element,
       index: element.props.index,
       path: element.props.path,
+      loader: element.props.loader,
+      action: element.props.action,
+      exceptionElement: element.props.exceptionElement,
     };
 
     if (element.props.children) {
@@ -402,7 +437,8 @@ export function createRoutesFromChildren(
  * Renders the result of `matchRoutes()` into a React element.
  */
 export function renderMatches(
-  matches: RouteMatch[] | null
+  matches: RouteMatch[] | null,
+  exceptions?: RouteData | null
 ): React.ReactElement | null {
-  return _renderMatches(matches);
+  return _renderMatches(matches, undefined, exceptions);
 }

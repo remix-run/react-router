@@ -11,6 +11,7 @@ import type {
 import { IDLE_TRANSITION, createRouter } from "./router";
 import type {
   LoaderFunctionArgs,
+  ActionFunctionArgs,
   ParamParseKey,
   Params,
   PathMatch,
@@ -43,6 +44,7 @@ export type {
   RouterInit,
   HydrationState,
   LoaderFunctionArgs,
+  ActionFunctionArgs,
   NavigateOptions,
   ParamParseKey,
   Params,
