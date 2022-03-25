@@ -20,7 +20,13 @@ import {
   warningOnce,
 } from "@remix-run/router";
 
-import { LocationContext, NavigationContext, RouteContext } from "./context";
+import {
+  DataRouterContext,
+  DataRouterStateContext,
+  LocationContext,
+  NavigationContext,
+  RouteContext,
+} from "./context";
 
 /**
  * Returns the full href for the given "to" value. This is useful for building
@@ -393,4 +399,15 @@ export function _renderMatches(
       />
     );
   }, null as React.ReactElement | null);
+}
+
+export function useLoaderData() {
+  let state = React.useContext(DataRouterStateContext);
+  invariant(state, "useLoaderData must be rendered within a DataRouter");
+
+  let route = React.useContext(RouteContext);
+  invariant(route, "expected Route context");
+
+  let thisRoute = route.matches[route.matches.length - 1];
+  return state.loaderData[thisRoute.pathname];
 }

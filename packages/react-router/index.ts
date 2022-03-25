@@ -55,6 +55,7 @@ import {
   useParams,
   useResolvedPath,
   useRoutes,
+  useLoaderData,
 } from "./lib/hooks";
 
 // Expose react-router public API
@@ -111,6 +112,7 @@ export {
   useParams,
   useResolvedPath,
   useRoutes,
+  useLoaderData,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
