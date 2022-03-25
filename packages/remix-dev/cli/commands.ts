@@ -267,10 +267,12 @@ export async function dev(remixRoot: string, modeArg?: string) {
   try {
     await watch(config, mode, {
       onInitialBuild: () => {
-        server = app.listen(port, () => {
-          let address = Object.values(os.networkInterfaces())
-            .flat()
-            .find((ip) => ip?.family === "IPv4" && !ip.internal)?.address;
+        let onListen = () => {
+          let address =
+            process.env.HOST ||
+            Object.values(os.networkInterfaces())
+              .flat()
+              .find((ip) => ip?.family === "IPv4" && !ip.internal)?.address;
 
           if (!address) {
             console.log(`Remix App Server started at http://localhost:${port}`);
@@ -279,7 +281,11 @@ export async function dev(remixRoot: string, modeArg?: string) {
               `Remix App Server started at http://localhost:${port} (http://${address}:${port})`
             );
           }
-        });
+        };
+
+        server = process.env.HOST
+          ? app.listen(port, process.env.HOST, onListen)
+          : app.listen(port, onListen);
       },
     });
   } finally {

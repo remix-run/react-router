@@ -4,7 +4,11 @@ import os from "os";
 
 import { createApp } from "./index";
 
-let port = process.env.PORT || 3000;
+let port = Number.parseInt(process.env.PORT || '3000', 10);
+if (Number.isNaN(port)) {
+  port = 3000;
+}
+
 let buildPathArg = process.argv[2];
 
 if (!buildPathArg) {
@@ -15,8 +19,8 @@ if (!buildPathArg) {
 
 let buildPath = path.resolve(process.cwd(), buildPathArg);
 
-createApp(buildPath).listen(port, () => {
-  let address = Object.values(os.networkInterfaces())
+let onListen = () => {
+  let address = process.env.HOST || Object.values(os.networkInterfaces())
     .flat()
     .find((ip) => ip?.family === "IPv4" && !ip.internal)?.address;
 
@@ -27,4 +31,12 @@ createApp(buildPath).listen(port, () => {
       `Remix App Server started at http://localhost:${port} (http://${address}:${port})`
     );
   }
-});
+};
+
+let app = createApp(buildPath);
+
+if (process.env.HOST) {
+  app.listen(port, process.env.HOST, onListen);
+} else {
+  app.listen(port, onListen);
+}
