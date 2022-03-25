@@ -4,8 +4,8 @@
 
 import { JSDOM } from "jsdom";
 
-import type { HashHistory } from "../index";
-import { createHashHistory } from "../index";
+import type { HashHistory } from "../history";
+import { createHashHistory } from "../history";
 
 import Listen from "./TestSequences/Listen";
 import InitialLocationDefaultKey from "./TestSequences/InitialLocationDefaultKey";

@@ -1,10 +1,10 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/history" },
     { "path": "packages/react-router" },
     { "path": "packages/react-router-dom" },
     { "path": "packages/react-router-dom-v5-compat" },
-    { "path": "packages/react-router-native" }
+    { "path": "packages/react-router-native" },
+    { "path": "packages/router" }
   ]
 }

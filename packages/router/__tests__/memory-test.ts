@@ -1,5 +1,5 @@
-import type { MemoryHistory } from "../index";
-import { createMemoryHistory } from "../index";
+import type { MemoryHistory } from "../history";
+import { createMemoryHistory } from "../history";
 
 import Listen from "./TestSequences/Listen";
 import InitialLocationHasKey from "./TestSequences/InitialLocationHasKey";

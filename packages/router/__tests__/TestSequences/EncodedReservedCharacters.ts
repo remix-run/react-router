@@ -1,4 +1,4 @@
-import type { History } from "../../index";
+import type { History } from "../../history";
 
 export default function EncodeReservedCharacters(history: History) {
   let pathname;
