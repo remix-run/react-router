@@ -1,6 +1,11 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { DataMemoryRouter, Routes, Route } from "../index";
+import {
+  DataMemoryRouter as MemoryRouter,
+  Route,
+  useLoaderData,
+} from "../index";
+import { Outlet } from "../lib/components";
 
 describe("<DataMemoryRouter>", () => {
   let consoleWarn: jest.SpyInstance;
@@ -19,9 +24,9 @@ describe("<DataMemoryRouter>", () => {
     let renderer: TestRenderer.ReactTestRenderer;
     TestRenderer.act(() => {
       renderer = TestRenderer.create(
-        <DataMemoryRouter initialEntries={["/"]}>
+        <MemoryRouter initialEntries={["/"]}>
           <Route path="/" element={<h1>Home</h1>} />
-        </DataMemoryRouter>
+        </MemoryRouter>
       );
     });
 
@@ -29,6 +34,47 @@ describe("<DataMemoryRouter>", () => {
       <h1>
         Home
       </h1>
+    `);
+  });
+
+  it("renders with hydration data", () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter
+          initialEntries={["/child"]}
+          hydrationData={{
+            loaderData: {
+              "/": "parent data",
+              "/child": "child data",
+            },
+          }}
+        >
+          <Route path="/" element={<Comp />}>
+            <Route path="child" element={<Comp />} />
+          </Route>
+        </MemoryRouter>
+      );
+    });
+
+    function Comp() {
+      let data = useLoaderData();
+      return (
+        <div>
+          {data}
+          <Outlet />
+        </div>
+      );
+    }
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <div>
+        parent data
+        <div>
+          child data
+        </div>
+      </div>
     `);
   });
 });
