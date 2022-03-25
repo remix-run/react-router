@@ -4,8 +4,8 @@
 
 import { JSDOM } from "jsdom";
 
-import type { HashHistory } from "../index";
-import { createHashHistory } from "../index";
+import type { HashHistory } from "../history";
+import { createHashHistory } from "../history";
 
 describe("a hash history on a page with a <base> tag", () => {
   let history: HashHistory;

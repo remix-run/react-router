@@ -4,8 +4,8 @@
 
 import { JSDOM } from "jsdom";
 
-import type { BrowserHistory } from "../index";
-import { createBrowserHistory } from "../index";
+import type { BrowserHistory } from "../history";
+import { createBrowserHistory } from "../history";
 
 import InitialLocationDefaultKey from "./TestSequences/InitialLocationDefaultKey";
 import Listen from "./TestSequences/Listen";

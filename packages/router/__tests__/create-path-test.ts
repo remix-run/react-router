@@ -1,4 +1,4 @@
-import { createPath } from "../index";
+import { createPath } from "../history";
 
 describe("createPath", () => {
   describe("given only a pathname", () => {

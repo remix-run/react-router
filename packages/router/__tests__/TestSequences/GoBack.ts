@@ -1,4 +1,4 @@
-import type { History } from "../../index";
+import type { History } from "../../history";
 
 export default async function GoBack(history: History, spy: jest.SpyInstance) {
   expect(history.location).toMatchObject({
