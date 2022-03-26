@@ -292,7 +292,7 @@ export function createRoutesFromChildren(
       element.type === Route,
       `[${
         typeof element.type === "string" ? element.type : element.type.name
-      }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
+      }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment> with <Route> inside of it`
     );
 
     let route: RouteObject = {
