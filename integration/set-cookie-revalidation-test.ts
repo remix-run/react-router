@@ -25,11 +25,11 @@ beforeAll(async () => {
       `,
 
       "app/root.jsx": js`
-        import { json, Outlet, Scripts, useLoaderData } from "remix";
+        import { json, Links, Meta, Outlet, Scripts, useLoaderData } from "remix";
 
         import { sessionStorage, MESSAGE_KEY } from "~/session.server";
 
-        export let loader = async ({ request }) => {
+        export const loader = async ({ request }) => {
           let session = await sessionStorage.getSession(request.headers.get("Cookie"));
           let message = session.get(MESSAGE_KEY) || null;
 
@@ -41,10 +41,14 @@ beforeAll(async () => {
         };
 
         export default function Root() {
-          let message = useLoaderData();
+          const message = useLoaderData();
 
           return (
-            <html>
+            <html lang="en">
+              <head>
+                <Meta />
+                <Links />
+              </head>
               <body>
                 {!!message && <p id="message">{message}</p>}
                 <Outlet />

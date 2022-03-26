@@ -6,15 +6,19 @@ function fixtureFactory(mode) {
   return {
     files: {
       "app/root.jsx": js`
-        import { Outlet, Scripts, Link, useLoaderData } from "remix";
+        import { Link, Links, Meta, Outlet, Scripts, useLoaderData } from "remix";
+
         export default function Root() {
           const styles =
           'a:hover { color: red; } a:hover:after { content: " (hovered)"; }' +
           'a:focus { color: green; } a:focus:after { content: " (focused)"; }';
 
           return (
-            <html>
-              <head />
+            <html lang="en">
+              <head>
+                <Meta />
+                <Links />
+              </head>
               <body>
                 <style>{styles}</style>
                 <h1>Root</h1>
@@ -31,7 +35,7 @@ function fixtureFactory(mode) {
                 <Scripts />
               </body>
             </html>
-          )
+          );
         }
       `,
 

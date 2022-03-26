@@ -17,11 +17,15 @@ describe("rendering", () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
-          import { Outlet, Scripts } from "remix";
+          import { Links, Meta, Outlet, Scripts } from "remix";
+
           export default function Root() {
             return (
-              <html>
-                <head />
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
                 <body>
                   <main>
                     <Outlet />
@@ -29,10 +33,10 @@ describe("rendering", () => {
                   <Scripts />
                 </body>
               </html>
-            )
+            );
           }
-
         `,
+
         "app/routes/index.jsx": js`
           import { Link } from "remix";
           export default function() {

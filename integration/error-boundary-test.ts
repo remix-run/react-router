@@ -28,12 +28,15 @@ describe("ErrorBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
-          import { Outlet, Scripts } from "remix";
+          import { Links, Meta, Outlet, Scripts } from "remix";
 
-          export default function () {
+          export default function Root() {
             return (
-              <html>
-                <head />
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
                 <body>
                   <main>
                     <Outlet />
@@ -41,7 +44,7 @@ describe("ErrorBoundary", () => {
                   <Scripts />
                 </body>
               </html>
-            )
+            );
           }
 
           export function ErrorBoundary() {
@@ -276,21 +279,22 @@ describe("ErrorBoundary", () => {
       fixture = await createFixture({
         files: {
           "app/root.jsx": js`
-            import { Outlet, Scripts } from "remix";
+            import { Links, Meta, Outlet, Scripts } from "remix";
 
-            export default function () {
-              return (
-                <html>
-                  <head />
-                  <body>
-                    <main>
-                      <Outlet />
-                    </main>
-                    <Scripts />
-                  </body>
-                </html>
-              )
-            }
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
           `,
 
           "app/routes/index.jsx": js`

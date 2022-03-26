@@ -19,13 +19,19 @@ beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/root.jsx": js`
-        import { Outlet, Scripts, useMatches, useLoaderData } from "remix";
-        export let loader = () => "${ROOT_DATA}";
+        import { json, Links, Meta, Outlet, Scripts, useLoaderData, useMatches } from "remix";
+
+        export const loader = () => json("${ROOT_DATA}");
+
         export default function Root() {
-          let data = useLoaderData();
+          const data = useLoaderData();
+
           return (
-            <html>
-              <head />
+            <html lang="en">
+              <head>
+                <Meta />
+                <Links />
+              </head>
               <body>
                 <div>{data}</div>
                 <Outlet />
@@ -34,6 +40,7 @@ beforeAll(async () => {
             </html>
           );
         }
+
         export function CatchBoundary() {
           let matches = useMatches();
           let { data } = matches.find(match => match.id === "root");

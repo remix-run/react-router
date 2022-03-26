@@ -21,18 +21,23 @@ describe("CatchBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
-          import { Outlet, Scripts } from "remix";
+          import { Links, Meta, Outlet, Scripts } from "remix";
+
           export default function Root() {
             return (
-              <html>
-                <head />
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
                 <body>
                   <Outlet />
                   <Scripts />
                 </body>
               </html>
-            )
+            );
           }
+
           export function CatchBoundary() {
             return (
               <html>

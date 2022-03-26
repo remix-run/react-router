@@ -13,14 +13,23 @@ describe("headers export", () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
-          import { Outlet } from "remix";
+          import { json, Links, Meta, Outlet, Scripts } from "remix";
 
-          export function loader() {
-            return null
-          }
+          export const loader = () => json({});
 
-          export default function Index() {
-            return <html><body><Outlet/></body></html>
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
           }
         `,
 
@@ -86,10 +95,21 @@ describe("headers export", () => {
     let fixture = await createFixture({
       files: {
         "app/root.jsx": js`
-          import { Outlet } from "remix";
+          import { Links, Meta, Outlet, Scripts } from "remix";
 
-          export default function Index() {
-            return <html><body><Outlet/></body></html>
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
           }
         `,
 
