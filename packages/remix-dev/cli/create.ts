@@ -376,21 +376,25 @@ async function isRemixTemplate(
   useTypeScript: boolean,
   token?: string
 ): Promise<string | undefined> {
-  let promise = await fetch(
+  let response = await fetch(
     `https://api.github.com/repos/remix-run/remix/contents/templates`,
     {
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-        Authorization: token ? `token ${token}` : "",
-      },
+      headers: token
+        ? {
+            Accept: "application/vnd.github.v3+json",
+            Authorization: `token ${token}`,
+          }
+        : {
+            Accept: "application/vnd.github.v3+json",
+          },
     }
   );
-  if (!promise.ok) {
+  if (!response.ok) {
     throw new Error(
-      `Error fetching repo: ${promise.status} ${promise.statusText}`
+      `Error fetching repo: ${response.status} ${response.statusText}`
     );
   }
-  let results = await promise.json();
+  let results = await response.json();
   let template = results.find((result: any) => {
     return result.name === name;
   });
@@ -399,7 +403,7 @@ async function isRemixTemplate(
 }
 
 async function isRemixExample(name: string, token?: string) {
-  let promise = await fetch(
+  let response = await fetch(
     `https://api.github.com/repos/remix-run/remix/contents/examples`,
     {
       headers: {
@@ -408,12 +412,12 @@ async function isRemixExample(name: string, token?: string) {
       },
     }
   );
-  if (!promise.ok) {
+  if (!response.ok) {
     throw new Error(
-      `Error fetching repo: ${promise.status} ${promise.statusText}`
+      `Error fetching repo: ${response.status} ${response.statusText}`
     );
   }
-  let results = await promise.json();
+  let results = await response.json();
   let example = results.find((result: any) => {
     return result.name === name;
   });
