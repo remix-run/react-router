@@ -129,6 +129,16 @@ describe("Cookie session storage", () => {
     expect(setCookie).toContain("Path=/");
   });
 
+  it("throws an error when the cookie size exceeds 4096 bytes", async () => {
+    let { getSession, commitSession } = createCookieSessionStorage({
+      cookie: { secrets: ["secret1"] },
+    });
+    let session = await getSession();
+    let longString = new Array(4097).fill("a").join("");
+    session.set("over4096bytes", longString);
+    await expect(() => commitSession(session)).rejects.toThrow();
+  });
+
   describe("when a new secret shows up in the rotation", () => {
     it("unsigns old session cookies using the old secret and encodes new cookies using the new secret", async () => {
       let { getSession, commitSession } = createCookieSessionStorage({
