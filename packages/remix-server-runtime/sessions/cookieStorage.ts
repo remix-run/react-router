@@ -35,27 +35,27 @@ export const createCookieSessionStorageFactory =
 
     warnOnceAboutSigningSessionCookie(cookie);
 
-  return {
-    async getSession(cookieHeader, options) {
-      return createSession(
-        (cookieHeader && (await cookie.parse(cookieHeader, options))) || {}
-      );
-    },
-    async commitSession(session, options) {
-      let serializedCookie = await cookie.serialize(session.data, options);
-      if (serializedCookie.length > 4096) {
-        throw new Error(
-          "Cookie length will exceed browser maximum. Length: " +
-            serializedCookie.length
+    return {
+      async getSession(cookieHeader, options) {
+        return createSession(
+          (cookieHeader && (await cookie.parse(cookieHeader, options))) || {}
         );
-      }
-      return serializedCookie;
-    },
-    async destroySession(_session, options) {
-      return cookie.serialize("", {
-        ...options,
-        expires: new Date(0),
-      });
-    },
+      },
+      async commitSession(session, options) {
+        let serializedCookie = await cookie.serialize(session.data, options);
+        if (serializedCookie.length > 4096) {
+          throw new Error(
+            "Cookie length will exceed browser maximum. Length: " +
+              serializedCookie.length
+          );
+        }
+        return serializedCookie;
+      },
+      async destroySession(_session, options) {
+        return cookie.serialize("", {
+          ...options,
+          expires: new Date(0),
+        });
+      },
+    };
   };
-};
