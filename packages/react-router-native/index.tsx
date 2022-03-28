@@ -126,6 +126,9 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
+  UNSAFE_useRenderDataRouter,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////

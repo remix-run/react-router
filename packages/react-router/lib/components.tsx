@@ -16,6 +16,7 @@ import type {
   LoaderFunctionArgs,
   ActionFunctionArgs,
   RouteData,
+  RouterState,
 } from "@remix-run/router";
 import {
   createMemoryRouter,
@@ -40,23 +41,22 @@ import {
   _renderMatches,
 } from "./hooks";
 
-export interface DataMemoryRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  initialEntries?: InitialEntry[];
-  initialIndex?: number;
-  hydrationData?: HydrationState;
-  fallbackElement?: React.ReactElement;
-}
-
-export function DataMemoryRouter({
+export function useRenderDataRouter({
   basename,
   children,
-  initialEntries,
-  initialIndex,
   hydrationData,
   fallbackElement,
-}: DataMemoryRouterProps): React.ReactElement {
+  createRouter,
+}: {
+  basename?: string;
+  children?: React.ReactNode;
+  hydrationData?: HydrationState;
+  fallbackElement?: React.ReactElement;
+  createRouter: (
+    routes: RouteObject[],
+    onChange: (s: RouterState) => void
+  ) => DataRouter;
+}): React.ReactElement {
   let routes = createRoutesFromChildren(children);
 
   invariant(
@@ -65,22 +65,16 @@ export function DataMemoryRouter({
   );
 
   let [hydrated, setHydrated] = React.useState(hydrationData != null);
-  let [router] = React.useState<DataRouter>(
-    (): DataRouter =>
-      createMemoryRouter({
-        initialEntries,
-        initialIndex,
-        onChange: (state) => {
-          setState(state);
-          // If we were not hydrated from SSR, consider us "hydrated" as soon as
-          // we return to an idle state
-          if (!hydrated && state.transition.state === "idle") {
-            setHydrated(true);
-          }
-        },
-        routes,
-        hydrationData,
-      })
+
+  let [router] = React.useState<DataRouter>(() =>
+    createRouter(routes, (newState: RouterState) => {
+      setState(newState);
+      // If we were not hydrated from SSR, consider us "hydrated" as soon as
+      // we return to an idle state
+      if (!hydrated && newState.transition.state === "idle") {
+        setHydrated(true);
+      }
+    })
   );
 
   let [state, setState] = React.useState<DataRouter["state"]>(
@@ -121,6 +115,39 @@ export function DataMemoryRouter({
       </DataRouterStateContext.Provider>
     </DataRouterContext.Provider>
   );
+}
+
+export interface DataMemoryRouterProps {
+  basename?: string;
+  children?: React.ReactNode;
+  initialEntries?: InitialEntry[];
+  initialIndex?: number;
+  hydrationData?: HydrationState;
+  fallbackElement?: React.ReactElement;
+}
+
+export function DataMemoryRouter({
+  basename,
+  children,
+  initialEntries,
+  initialIndex,
+  hydrationData,
+  fallbackElement,
+}: DataMemoryRouterProps): React.ReactElement {
+  return useRenderDataRouter({
+    basename,
+    children,
+    hydrationData,
+    fallbackElement,
+    createRouter: (routes, onChange) =>
+      createMemoryRouter({
+        initialEntries,
+        initialIndex,
+        onChange,
+        routes,
+        hydrationData,
+      }),
+  });
 }
 
 export interface MemoryRouterProps {

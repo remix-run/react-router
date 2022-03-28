@@ -331,7 +331,7 @@ export function createRouter(init: RouterInit) {
       : HistoryAction.Push;
 
     if (isSubmissionNavigation(opts)) {
-      let formMethod = opts.formMethod || "GET";
+      let formMethod = opts.formMethod || "get";
       return await startNavigation(historyAction, location, {
         submission: {
           formMethod,
@@ -630,7 +630,7 @@ function getLoadingTransition(
 ): Transition {
   if (submission) {
     let { formMethod, formEncType, formData } = submission;
-    if (formMethod === "GET") {
+    if (formMethod === "get") {
       return {
         state: "submitting",
         type: "loaderSubmission",
@@ -915,6 +915,6 @@ function isSubmissionNavigation(
 function isActionSubmission(
   submission: Submission
 ): submission is ActionSubmission {
-  return submission && submission.formMethod !== "GET";
+  return submission && submission.formMethod !== "get";
 }
 //#endregion

@@ -1,7 +1,8 @@
 /**
- * @jest-environment jsdom
+ * @jest-environment ./__tests__/custom-environment.js
  */
 
+import { JSDOM } from "jsdom";
 import * as React from "react";
 import {
   render,
@@ -13,17 +14,18 @@ import {
 import "@testing-library/jest-dom";
 
 import {
-  DataMemoryRouter as MemoryRouter,
+  DataBrowserRouter,
   Route,
+  Outlet,
   useLoaderData,
   useActionData,
-  UNSAFE_DataRouterContext,
+  useRouteException,
+  useTransition,
+  Link,
+  useSubmit,
 } from "../index";
-import { Outlet } from "../lib/components";
-import { useRouteException, useTransition } from "../lib/hooks";
-import { FormMethod } from "@remix-run/router/utils";
 
-describe("<DataMemoryRouter>", () => {
+describe("<DataBrowserRouter>", () => {
   let consoleWarn: jest.SpyInstance;
   let consoleError: jest.SpyInstance;
   beforeEach(() => {
@@ -38,24 +40,24 @@ describe("<DataMemoryRouter>", () => {
 
   it("renders the first route that matches the URL", () => {
     let { container } = render(
-      <MemoryRouter initialEntries={["/"]} hydrationData={{}}>
+      <DataBrowserRouter hydrationData={{}}>
         <Route path="/" element={<h1>Home</h1>} />
-      </MemoryRouter>
+      </DataBrowserRouter>
     );
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <h1>
-          Home
-        </h1>
-      </div>"
-    `);
+       "<div>
+         <h1>
+           Home
+         </h1>
+       </div>"
+     `);
   });
 
   it("renders with hydration data", async () => {
     let { container } = render(
-      <MemoryRouter
-        initialEntries={["/child"]}
+      <DataBrowserRouter
+        window={getWindow("/child")}
         hydrationData={{
           loaderData: {
             "0": "parent data",
@@ -70,7 +72,7 @@ describe("<DataMemoryRouter>", () => {
         <Route path="/" element={<Comp />}>
           <Route path="child" element={<Comp />} />
         </Route>
-      </MemoryRouter>
+      </DataBrowserRouter>
     );
 
     function Comp() {
@@ -106,15 +108,15 @@ describe("<DataMemoryRouter>", () => {
   it("renders fallbackElement while first data fetch happens", async () => {
     let fooDefer = defer();
     let { container } = render(
-      <MemoryRouter
-        initialEntries={["/foo"]}
+      <DataBrowserRouter
+        window={getWindow("/foo")}
         fallbackElement={<FallbackElement />}
       >
         <Route path="/" element={<Outlet />}>
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
-      </MemoryRouter>
+      </DataBrowserRouter>
     );
 
     function FallbackElement() {
@@ -153,15 +155,15 @@ describe("<DataMemoryRouter>", () => {
   it("does not render fallbackElement if no data fetch is required", async () => {
     let fooDefer = defer();
     let { container } = render(
-      <MemoryRouter
-        initialEntries={["/bar"]}
+      <DataBrowserRouter
+        window={getWindow("/bar")}
         fallbackElement={<FallbackElement />}
       >
         <Route path="/" element={<Outlet />}>
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
-      </MemoryRouter>
+      </DataBrowserRouter>
     );
 
     function FallbackElement() {
@@ -188,19 +190,19 @@ describe("<DataMemoryRouter>", () => {
 
   it("handles link navigations", async () => {
     render(
-      <MemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
-      </MemoryRouter>
+      </DataBrowserRouter>
     );
 
     function Layout() {
       return (
         <div>
-          <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
-          <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+          <Link to="/foo">Link to Foo</Link>
+          <Link to="/bar">Link to Bar</Link>
           <Outlet />
         </div>
       );
@@ -226,19 +228,19 @@ describe("<DataMemoryRouter>", () => {
     let barDefer = defer();
 
     let { container } = render(
-      <MemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<Foo />} />
           <Route path="bar" loader={() => barDefer.promise} element={<Bar />} />
         </Route>
-      </MemoryRouter>
+      </DataBrowserRouter>
     );
 
     function Layout() {
       let transition = useTransition();
       return (
         <div>
-          <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+          <Link to="/bar">Link to Bar</Link>
           <p>{transition.state}</p>
           <Outlet />
         </div>
@@ -311,14 +313,14 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
-  it("executes route actions/loaders on submission navigations", async () => {
+  it("executes route actions/loaders on useSubmit navigations", async () => {
     let barDefer = defer();
     let barActionDefer = defer();
     let formData = new FormData();
     formData.append("test", "value");
 
     let { container } = render(
-      <MemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<Foo />} />
           <Route
@@ -328,16 +330,34 @@ describe("<DataMemoryRouter>", () => {
             element={<Bar />}
           />
         </Route>
-      </MemoryRouter>
+      </DataBrowserRouter>
     );
+
+    function Form({
+      children,
+    }: {
+      children: React.ReactElement | React.ReactElement[];
+    }) {
+      let submit = useSubmit();
+      return (
+        <form
+          method="post"
+          action="/bar"
+          data-testid="test-form"
+          onClick={(e) => submit(e.target as HTMLFormElement)}
+          onSubmit={(e) => e.preventDefault()}
+          children={children}
+        ></form>
+      );
+    }
 
     function Layout() {
       let transition = useTransition();
       return (
         <div>
-          <MemoryNavigate to="/bar" formMethod="POST" formData={formData}>
-            Post to Bar
-          </MemoryNavigate>
+          <Form>
+            <input name="test" value="value" />
+          </Form>
           <p>{transition.state}</p>
           <Outlet />
         </div>
@@ -361,8 +381,15 @@ describe("<DataMemoryRouter>", () => {
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <div>
-          <form>
-            Post to Bar
+          <form
+            action=\\"/bar\\"
+            data-testid=\\"test-form\\"
+            method=\\"post\\"
+          >
+            <input
+              name=\\"test\\"
+              value=\\"value\\"
+            />
           </form>
           <p>
             idle
@@ -374,12 +401,20 @@ describe("<DataMemoryRouter>", () => {
       </div>"
     `);
 
-    fireEvent.click(screen.getByText("Post to Bar"));
+    fireEvent.click(screen.getByTestId("test-form"));
+    await waitFor(() => screen.getByText("submitting"));
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <div>
-          <form>
-            Post to Bar
+          <form
+            action=\\"/bar\\"
+            data-testid=\\"test-form\\"
+            method=\\"post\\"
+          >
+            <input
+              name=\\"test\\"
+              value=\\"value\\"
+            />
           </form>
           <p>
             submitting
@@ -396,8 +431,15 @@ describe("<DataMemoryRouter>", () => {
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <div>
-          <form>
-            Post to Bar
+          <form
+            action=\\"/bar\\"
+            data-testid=\\"test-form\\"
+            method=\\"post\\"
+          >
+            <input
+              name=\\"test\\"
+              value=\\"value\\"
+            />
           </form>
           <p>
             loading
@@ -414,8 +456,15 @@ describe("<DataMemoryRouter>", () => {
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <div>
-          <form>
-            Post to Bar
+          <form
+            action=\\"/bar\\"
+            data-testid=\\"test-form\\"
+            method=\\"post\\"
+          >
+            <input
+              name=\\"test\\"
+              value=\\"value\\"
+            />
           </form>
           <p>
             idle
@@ -429,11 +478,15 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
+  it.todo("executes route actions/loaders on <Form method=get> navigations");
+
+  it.todo("executes route actions/loaders on <Form method=post> navigations");
+
   describe("exceptions", () => {
     it("renders hydration exceptions on leaf elements", async () => {
       let { container } = render(
-        <MemoryRouter
-          initialEntries={["/child"]}
+        <DataBrowserRouter
+          window={getWindow("/child")}
           hydrationData={{
             loaderData: {
               "0": "parent data",
@@ -453,7 +506,7 @@ describe("<DataMemoryRouter>", () => {
               exceptionElement={<ErrorBoundary />}
             />
           </Route>
-        </MemoryRouter>
+        </DataBrowserRouter>
       );
 
       function Comp() {
@@ -491,8 +544,8 @@ describe("<DataMemoryRouter>", () => {
 
     it("renders hydration exceptions on parent elements", async () => {
       let { container } = render(
-        <MemoryRouter
-          initialEntries={["/child"]}
+        <DataBrowserRouter
+          window={getWindow("/child")}
           hydrationData={{
             loaderData: {},
             actionData: null,
@@ -508,7 +561,7 @@ describe("<DataMemoryRouter>", () => {
           >
             <Route path="child" element={<Comp />} />
           </Route>
-        </MemoryRouter>
+        </DataBrowserRouter>
       );
 
       function Comp() {
@@ -544,8 +597,8 @@ describe("<DataMemoryRouter>", () => {
       let barDefer = defer();
 
       let { container } = render(
-        <MemoryRouter
-          initialEntries={["/foo"]}
+        <DataBrowserRouter
+          window={getWindow("/foo")}
           hydrationData={{
             loaderData: {
               "0-0": {
@@ -568,15 +621,15 @@ describe("<DataMemoryRouter>", () => {
               exceptionElement={<BarException />}
             />
           </Route>
-        </MemoryRouter>
+        </DataBrowserRouter>
       );
 
       function Layout() {
         let transition = useTransition();
         return (
           <div>
-            <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
-            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <Link to="/foo">Link to Foo</Link>
+            <Link to="/bar">Link to Bar</Link>
             <p>{transition.state}</p>
             <Outlet />
           </div>
@@ -676,7 +729,7 @@ describe("<DataMemoryRouter>", () => {
             </p>
           </div>
         </div>"
-      `);
+       `);
     });
 
     it("renders navigation exceptions on parent elements", async () => {
@@ -684,8 +737,8 @@ describe("<DataMemoryRouter>", () => {
       let barDefer = defer();
 
       let { container } = render(
-        <MemoryRouter
-          initialEntries={["/foo"]}
+        <DataBrowserRouter
+          window={getWindow("/foo")}
           hydrationData={{
             loaderData: {
               "0-0": {
@@ -711,15 +764,15 @@ describe("<DataMemoryRouter>", () => {
               element={<Bar />}
             />
           </Route>
-        </MemoryRouter>
+        </DataBrowserRouter>
       );
 
       function Layout() {
         let transition = useTransition();
         return (
           <div>
-            <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
-            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <Link to="/foo">Link to Foo</Link>
+            <Link to="/bar">Link to Bar</Link>
             <p>{transition.state}</p>
             <Outlet />
           </div>
@@ -807,6 +860,13 @@ function defer() {
   };
 }
 
+function getWindow(initialUrl: string): Window {
+  // Need to use our own custom DOM in order to get a working history
+  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "https://remix.run/" });
+  dom.window.history.replaceState(null, "", initialUrl);
+  return dom.window as unknown as Window;
+}
+
 function getHtml(container: HTMLElement) {
   return prettyDOM(container, null, {
     highlight: false,
@@ -818,32 +878,4 @@ function getHtml(container: HTMLElement) {
       value: null,
     },
   });
-}
-
-function MemoryNavigate({
-  to,
-  formMethod,
-  formData,
-  children,
-}: {
-  to: string;
-  formMethod?: FormMethod;
-  formData?: FormData;
-  children: React.ReactNode;
-}) {
-  let router = React.useContext(UNSAFE_DataRouterContext);
-
-  let onClickHandler = React.useCallback(
-    async (event: React.MouseEvent) => {
-      event.preventDefault();
-      router.navigate(to, { formMethod, formData });
-    },
-    [router, to, formMethod, formData]
-  );
-
-  return formData ? (
-    <form onClick={onClickHandler} children={children} />
-  ) : (
-    <a href={to} onClick={onClickHandler} children={children} />
-  );
 }

@@ -36,8 +36,21 @@ import {
   useActionData,
   useRouteException,
   useTransition,
+  UNSAFE_useRenderDataRouter,
+  UNSAFE_RouteContext,
+  UNSAFE_DataRouterContext,
 } from "react-router";
 import type { To } from "react-router";
+import {
+  createBrowserRouter,
+  createHashRouter,
+  FormEncType,
+  FormMethod,
+  HydrationState,
+  invariant,
+  RouteObject,
+  RouterState,
+} from "@remix-run/router";
 
 function warning(cond: boolean, message: string): void {
   if (!cond) {
@@ -57,7 +70,7 @@ function warning(cond: boolean, message: string): void {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// RE-EXPORTS
+//#region Re-exports
 ////////////////////////////////////////////////////////////////////////////////
 
 // Note: Keep in sync with react-router exports!
@@ -138,11 +151,77 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
+  UNSAFE_useRenderDataRouter,
 } from "react-router";
+//#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
-// COMPONENTS
+//#region Components
 ////////////////////////////////////////////////////////////////////////////////
+
+export interface DataBrowserRouterProps {
+  basename?: string;
+  children?: React.ReactNode;
+  hydrationData?: HydrationState;
+  fallbackElement?: React.ReactElement;
+  window?: Window;
+}
+
+export function DataBrowserRouter({
+  basename,
+  children,
+  hydrationData,
+  fallbackElement,
+  window,
+}: DataBrowserRouterProps): React.ReactElement {
+  let element = UNSAFE_useRenderDataRouter({
+    basename,
+    children,
+    hydrationData,
+    fallbackElement,
+    createRouter: (routes: RouteObject[], onChange: (s: RouterState) => void) =>
+      createBrowserRouter({
+        onChange,
+        routes,
+        hydrationData,
+        window,
+      }),
+  });
+  return element;
+}
+
+export interface DataHashRouterProps {
+  basename?: string;
+  children?: React.ReactNode;
+  hydrationData?: HydrationState;
+  fallbackElement?: React.ReactElement;
+  window?: Window;
+}
+
+export function DataHashRouter({
+  basename,
+  children,
+  hydrationData,
+  fallbackElement,
+  window,
+}: DataBrowserRouterProps): React.ReactElement {
+  let element = UNSAFE_useRenderDataRouter({
+    basename,
+    children,
+    hydrationData,
+    fallbackElement,
+    createRouter: (routes: RouteObject[], onChange: (s: RouterState) => void) =>
+      createHashRouter({
+        onChange,
+        routes,
+        hydrationData,
+        window,
+      }),
+  });
+  return element;
+}
 
 export interface BrowserRouterProps {
   basename?: string;
@@ -385,9 +464,10 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
 if (__DEV__) {
   NavLink.displayName = "NavLink";
 }
+//#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
-// HOOKS
+//#region Hooks
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -480,6 +560,216 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   return [searchParams, setSearchParams] as const;
 }
 
+let defaultMethod = "get";
+let defaultEncType = "application/x-www-form-urlencoded";
+
+export interface SubmitOptions {
+  /**
+   * The HTTP method used to submit the form. Overrides `<form method>`.
+   * Defaults to "GET".
+   */
+  method?: FormMethod;
+
+  /**
+   * The action URL path used to submit the form. Overrides `<form action>`.
+   * Defaults to the path of the current route.
+   *
+   * Note: It is assumed the path is already resolved. If you need to resolve a
+   * relative path, use `useFormAction`.
+   */
+  action?: string;
+
+  /**
+   * The action URL used to submit the form. Overrides `<form encType>`.
+   * Defaults to "application/x-www-form-urlencoded".
+   */
+  encType?: FormEncType;
+
+  /**
+   * Set `true` to replace the current entry in the browser's history stack
+   * instead of creating a new one (i.e. stay on "the same page"). Defaults
+   * to `false`.
+   */
+  replace?: boolean;
+}
+
+/**
+ * Submits a HTML `<form>` to the server without reloading the page.
+ */
+export interface SubmitFunction {
+  (
+    /**
+     * Specifies the `<form>` to be submitted to the server, a specific
+     * `<button>` or `<input type="submit">` to use to submit the form, or some
+     * arbitrary data to submit.
+     *
+     * Note: When using a `<button>` its `name` and `value` will also be
+     * included in the form data that is submitted.
+     */
+    target:
+      | HTMLFormElement
+      | HTMLButtonElement
+      | HTMLInputElement
+      | FormData
+      | URLSearchParams
+      | { [name: string]: string }
+      | null,
+
+    /**
+     * Options that override the `<form>`'s own attributes. Required when
+     * submitting arbitrary data without a backing `<form>`.
+     */
+    options?: SubmitOptions
+  ): void;
+}
+
+export function useSubmit(): SubmitFunction {
+  let router = React.useContext(UNSAFE_DataRouterContext);
+  let defaultAction = useFormAction();
+
+  return React.useCallback(
+    (target, options = {}) => {
+      let method: string;
+      let action: string;
+      let encType: string;
+      let formData: FormData;
+
+      invariant(
+        router != null,
+        "useSubmit() must be used within a <DataRouter>"
+      );
+
+      if (isFormElement(target)) {
+        let submissionTrigger: HTMLButtonElement | HTMLInputElement = (
+          options as any
+        ).submissionTrigger;
+
+        method =
+          options.method || target.getAttribute("method") || defaultMethod;
+        action =
+          options.action || target.getAttribute("action") || defaultAction;
+        encType =
+          options.encType || target.getAttribute("enctype") || defaultEncType;
+
+        formData = new FormData(target);
+
+        if (submissionTrigger && submissionTrigger.name) {
+          formData.append(submissionTrigger.name, submissionTrigger.value);
+        }
+      } else if (
+        isButtonElement(target) ||
+        (isInputElement(target) &&
+          (target.type === "submit" || target.type === "image"))
+      ) {
+        let form = target.form;
+
+        if (form == null) {
+          throw new Error(`Cannot submit a <button> without a <form>`);
+        }
+
+        // <button>/<input type="submit"> may override attributes of <form>
+
+        method =
+          options.method ||
+          target.getAttribute("formmethod") ||
+          form.getAttribute("method") ||
+          defaultMethod;
+        action =
+          options.action ||
+          target.getAttribute("formaction") ||
+          form.getAttribute("action") ||
+          defaultAction;
+        encType =
+          options.encType ||
+          target.getAttribute("formenctype") ||
+          form.getAttribute("enctype") ||
+          defaultEncType;
+        formData = new FormData(form);
+
+        // Include name + value from a <button>
+        if (target.name) {
+          formData.set(target.name, target.value);
+        }
+      } else {
+        if (isHtmlElement(target)) {
+          throw new Error(
+            `Cannot submit element that is not <form>, <button>, or ` +
+              `<input type="submit|image">`
+          );
+        }
+
+        method = options.method || "get";
+        action = options.action || defaultAction;
+        encType = options.encType || "application/x-www-form-urlencoded";
+
+        if (target instanceof FormData) {
+          formData = target;
+        } else {
+          formData = new FormData();
+
+          if (target instanceof URLSearchParams) {
+            for (let [name, value] of target) {
+              formData.append(name, value);
+            }
+          } else if (target != null) {
+            for (let name of Object.keys(target)) {
+              formData.append(name, target[name]);
+            }
+          }
+        }
+      }
+
+      if (typeof document === "undefined") {
+        throw new Error(
+          "You are calling submit during the server render. " +
+            "Try calling submit within a `useEffect` or callback instead."
+        );
+      }
+
+      let { protocol, host } = window.location;
+      let url = new URL(action, `${protocol}//${host}`);
+
+      if (method.toLowerCase() === "get") {
+        for (let [name, value] of formData) {
+          if (typeof value === "string") {
+            url.searchParams.append(name, value);
+          } else {
+            throw new Error(`Cannot submit binary form data using GET`);
+          }
+        }
+      }
+
+      router.navigate(url.pathname + url.search, {
+        replace: options.replace,
+        formData,
+        formMethod: method as FormMethod,
+        formEncType: encType as FormEncType,
+      });
+    },
+    [defaultAction, router]
+  );
+}
+
+export function useFormAction(action = "."): string {
+  let routeContext = React.useContext(UNSAFE_RouteContext);
+  invariant(routeContext, "useLoaderData must be used inside a RouteContext");
+
+  let [match] = routeContext.matches.slice(-1);
+  let { pathname, search } = useResolvedPath(action);
+
+  if (action === "." && match.route.index) {
+    search = search ? search.replace(/^\?/, "?index&") : "?index";
+  }
+
+  return pathname + search;
+}
+
+//#endregion
+
+////////////////////////////////////////////////////////////////////////////////
+//#region Utils
+////////////////////////////////////////////////////////////////////////////////
+
 export type ParamKeyValuePair = [string, string];
 
 export type URLSearchParamsInit =
@@ -525,3 +815,20 @@ export function createSearchParams(
         }, [] as ParamKeyValuePair[])
   );
 }
+
+function isHtmlElement(object: any): object is HTMLElement {
+  return object != null && typeof object.tagName === "string";
+}
+
+function isButtonElement(object: any): object is HTMLButtonElement {
+  return isHtmlElement(object) && object.tagName.toLowerCase() === "button";
+}
+
+function isFormElement(object: any): object is HTMLFormElement {
+  return isHtmlElement(object) && object.tagName.toLowerCase() === "form";
+}
+
+function isInputElement(object: any): object is HTMLInputElement {
+  return isHtmlElement(object) && object.tagName.toLowerCase() === "input";
+}
+//#endregion
