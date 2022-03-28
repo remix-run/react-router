@@ -37,9 +37,12 @@ import {
   Route,
   Router,
   Routes,
+  useRenderDataRouter,
 } from "./lib/components";
 import type { Navigator } from "./lib/context";
 import {
+  DataRouterContext,
+  DataRouterStateContext,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -143,4 +146,7 @@ export {
   NavigationContext as UNSAFE_NavigationContext,
   LocationContext as UNSAFE_LocationContext,
   RouteContext as UNSAFE_RouteContext,
+  DataRouterContext as UNSAFE_DataRouterContext,
+  DataRouterStateContext as UNSAFE_DataRouterStateContext,
+  useRenderDataRouter as UNSAFE_useRenderDataRouter,
 };

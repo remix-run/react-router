@@ -1,8 +1,8 @@
 import type { Location, Path, To } from "./history";
 import { parsePath } from "./history";
 
-export type LoaderFormMethod = "GET";
-export type ActionFormMethod = "POST" | "PUT" | "PATCH" | "DELETE";
+export type LoaderFormMethod = "get";
+export type ActionFormMethod = "post" | "put" | "patch" | "delete";
 export type FormMethod = LoaderFormMethod | ActionFormMethod;
 export type FormEncType = "application/x-www-form-urlencoded";
 

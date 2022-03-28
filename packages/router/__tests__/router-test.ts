@@ -713,7 +713,7 @@ describe("a router", () => {
       ]);
 
       await router.navigate("/child", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
 
@@ -890,7 +890,7 @@ describe("a router", () => {
     it("does a normal load when backing into an action redirect", async () => {
       let t = initializeTmTest();
       let A = await t.navigate("/foo", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
       let B = await A.actions.foo.redirect("/bar");
@@ -924,7 +924,7 @@ describe("a router", () => {
     it("reloads all routes when a loader during an actionReload redirects", async () => {
       let t = initializeTmTest();
       let A = await t.navigate("/foo", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
@@ -951,7 +951,7 @@ describe("a router", () => {
       let t = initializeTmTest();
 
       let A = await t.navigate("/foo", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
       expect(t.router.state.actionData).toBeNull();
@@ -965,7 +965,7 @@ describe("a router", () => {
     it("reloads all routes after the action", async () => {
       let t = initializeTmTest();
       let A = await t.navigate("/foo", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
@@ -990,7 +990,7 @@ describe("a router", () => {
     it("reloads all routes after action redirect", async () => {
       let t = initializeTmTest();
       let A = await t.navigate("/foo", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
@@ -1016,7 +1016,7 @@ describe("a router", () => {
     it("removes action data at new locations", async () => {
       let t = initializeTmTest();
       let A = await t.navigate("/foo", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
       await A.actions.foo.resolve("A ACTION");
@@ -1054,7 +1054,7 @@ describe("a router", () => {
         ],
       });
       let A = await t.navigate("/child", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
       await A.actions.child.resolve("CHILD");
@@ -1063,7 +1063,7 @@ describe("a router", () => {
       });
 
       let B = await t.navigate("/child?index", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
       await B.actions.childIndex.resolve("CHILD INDEX");
@@ -1100,7 +1100,7 @@ describe("a router", () => {
         ],
       });
       let A = await t.navigate("/child", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: new FormData(),
       });
       await A.actions.child.resolve("CHILD ACTION");
@@ -1144,7 +1144,7 @@ describe("a router", () => {
           ],
         });
         let A = await t.navigate("/child", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: createFormData({ gosh: "dang" }),
         });
         await A.actions.child.reject(new Error("Kaboom!"));
@@ -1173,7 +1173,7 @@ describe("a router", () => {
           ],
         });
         let A = await t.navigate("/child", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: createFormData({ gosh: "dang" }),
         });
         await A.actions.child.reject(new Error("Kaboom!"));
@@ -1211,7 +1211,7 @@ describe("a router", () => {
           ],
         });
         let A = await t.navigate("/child", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: createFormData({ gosh: "dang" }),
         });
         await A.actions.child.reject(new Error("Kaboom!"));
@@ -1249,7 +1249,7 @@ describe("a router", () => {
         });
 
         let A = await t.navigate("/parent/child", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: createFormData({ gosh: "dang" }),
         });
         await A.actions.child.reject(new Error("Kaboom!"));
@@ -1284,7 +1284,7 @@ describe("a router", () => {
         });
         let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
         await t.navigate("/child", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: createFormData({ gosh: "dang" }),
         });
         expect(t.router.state.exceptions).toEqual({
@@ -1351,7 +1351,7 @@ describe("a router", () => {
       let t = initializeTmTest();
 
       let A = await t.navigate("/foo", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
       let transition = t.router.state.transition;
@@ -1362,7 +1362,7 @@ describe("a router", () => {
         // @ts-expect-error
         new URLSearchParams(transition.formData).toString()
       ).toBe("gosh=dang");
-      expect(transition.formMethod).toBe("POST");
+      expect(transition.formMethod).toBe("post");
       expect(transition.formEncType).toBe("application/x-www-form-urlencoded");
       expect(transition.location).toMatchObject({
         pathname: "/foo",
@@ -1378,7 +1378,7 @@ describe("a router", () => {
         // @ts-expect-error
         new URLSearchParams(transition.formData).toString()
       ).toBe("gosh=dang");
-      expect(transition.formMethod).toBe("POST");
+      expect(transition.formMethod).toBe("post");
       expect(transition.formEncType).toBe("application/x-www-form-urlencoded");
       expect(transition.location).toMatchObject({
         pathname: "/foo",
@@ -1403,7 +1403,7 @@ describe("a router", () => {
       let t = initializeTmTest();
 
       let A = await t.navigate("/foo", {
-        formMethod: "POST",
+        formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
       let B = await A.actions.foo.redirect("/bar");
@@ -1415,7 +1415,7 @@ describe("a router", () => {
         // @ts-expect-error
         new URLSearchParams(transition.formData).toString()
       ).toBe("gosh=dang");
-      expect(transition.formMethod).toBe("POST");
+      expect(transition.formMethod).toBe("post");
       expect(transition.location).toMatchObject({
         pathname: "/bar",
         search: "",
@@ -1447,7 +1447,7 @@ describe("a router", () => {
         // @ts-expect-error
         new URLSearchParams(transition.formData).toString()
       ).toBe("gosh=dang");
-      expect(transition.formMethod).toBe("GET");
+      expect(transition.formMethod).toBe("get");
       expect(transition.formEncType).toBe("application/x-www-form-urlencoded");
       expect(transition.location).toMatchObject({
         pathname: "/foo",
@@ -1478,7 +1478,7 @@ describe("a router", () => {
         // @ts-expect-error
         new URLSearchParams(transition.formData).toString()
       ).toBe("gosh=dang");
-      expect(transition.formMethod).toBe("GET");
+      expect(transition.formMethod).toBe("get");
       expect(transition.formEncType).toBe("application/x-www-form-urlencoded");
       expect(transition.location).toMatchObject({
         pathname: "/bar",
@@ -1521,7 +1521,7 @@ describe("a router", () => {
         let t = initializeTmTest();
         let A = await t.navigate("/foo");
         await t.navigate("/bar", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: new FormData(),
         });
         expect(A.loaders.foo.signal.aborted).toBe(true);
@@ -1535,11 +1535,11 @@ describe("a router", () => {
       it("aborts previous action", async () => {
         let t = initializeTmTest();
         let A = await t.navigate("/foo", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: new FormData(),
         });
         await t.navigate("/bar", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: new FormData(),
         });
         expect(A.actions.foo.signal.aborted).toBe(true);
@@ -1553,7 +1553,7 @@ describe("a router", () => {
       it("aborts previous action reload", async () => {
         let t = initializeTmTest();
         let A = await t.navigate("/foo", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: new FormData(),
         });
         await A.actions.foo.resolve("A ACTION");
@@ -1569,12 +1569,12 @@ describe("a router", () => {
       it("aborts previous action reload", async () => {
         let t = initializeTmTest();
         let A = await t.navigate("/foo", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: new FormData(),
         });
         await A.actions.foo.resolve("A ACTION");
         await t.navigate("/bar", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: new FormData(),
         });
         expect(A.loaders.foo.signal.aborted).toBe(true);
@@ -1601,7 +1601,7 @@ describe("a router", () => {
       it("aborts previous action redirect load", async () => {
         let t = initializeTmTest();
         let A = await t.navigate("/foo", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: new FormData(),
         });
         let AR = await A.actions.foo.redirect("/bar");
@@ -1652,18 +1652,18 @@ describe("a router", () => {
         let t = initializeTmTest();
         // Start A navigation and immediately interrupt
         let A = await t.navigate("/foo", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: new FormData(),
         });
         let B = await t.navigate("/bar", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: new FormData(),
         });
         // resolve A then interrupt B - ensure the A resolution doesn't clear
         // the new pendingNavigationController which is now reflecting B's nav
         await A.actions.foo.resolve("A");
         let C = await t.navigate("/baz", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: new FormData(),
         });
         await B.actions.bar.resolve("B");
@@ -2331,12 +2331,12 @@ describe("a router", () => {
       let formData = new FormData();
       formData.append("query", "param");
 
-      let nav = await t.navigate("/tasks", { formMethod: "POST", formData });
+      let nav = await t.navigate("/tasks", { formMethod: "post", formData });
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: new Request("/tasks"),
         signal: expect.any(AbortSignal),
-        formMethod: "POST",
+        formMethod: "post",
         formEncType: "application/x-www-form-urlencoded",
         formData,
       });
