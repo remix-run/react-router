@@ -77,6 +77,7 @@ export type HydrationState = Partial<
  * Initialization options for createRouter
  */
 export interface RouterInit {
+  basename?: string;
   routes: RouteObject[];
   history: History;
   hydrationData?: HydrationState;
@@ -259,7 +260,8 @@ export function createRouter(init: RouterInit) {
     // If we do not match a user-provided-route, fall back to the root
     // to allow the exceptionElement to take over
     matches:
-      matchRoutes(routes, init.history.location) || getNotFoundMatches(routes),
+      matchRoutes(routes, init.history.location, init.basename) ||
+      getNotFoundMatches(routes),
     transition: IDLE_TRANSITION,
     loaderData: init.hydrationData?.loaderData || {},
     actionData: init.hydrationData?.actionData || null,
@@ -366,7 +368,7 @@ export function createRouter(init: RouterInit) {
       pendingNavigationController.abort();
     }
 
-    let matches = matchRoutes(routes, location);
+    let matches = matchRoutes(routes, location, init.basename);
 
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
