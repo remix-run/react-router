@@ -194,6 +194,12 @@ export interface DataException {
  */
 export type DataResult = DataSuccess | DataException;
 
+interface RedirectResult {
+  status: number;
+  location: string;
+  response: Response;
+}
+
 interface ShortCircuitable {
   /**
    * startNavigation does not need to complete the navigation because we
@@ -488,26 +494,26 @@ export function createRouter(init: RouterInit) {
     // been assigned to a new controller for the next navigation
     pendingNavigationController = null;
 
-    if (isDataException(result)) {
-      // If the action threw a redirect Response, start a new REPLACE navigation
-      if (isRedirect(result)) {
-        let href = result.exception.headers.get("Location");
-        let redirectLocation = createLocation(state.location, href);
-        let { formMethod, formEncType, formData } = submission;
-        let redirectTransition: TransitionStates["SubmissionRedirect"] = {
-          state: "loading",
-          type: "submissionRedirect",
-          location: redirectLocation,
-          formMethod,
-          formEncType,
-          formData,
-        };
-        startNavigation(HistoryAction.Replace, redirectLocation, {
-          overrideTransition: redirectTransition,
-        });
-        return { shortCircuited: true };
-      }
+    // If the action threw a redirect Response, start a new REPLACE navigation
+    let redirect = findRedirect([result]);
+    if (redirect) {
+      let redirectLocation = createLocation(state.location, redirect.location);
+      let { formMethod, formEncType, formData } = submission;
+      let redirectTransition: TransitionStates["SubmissionRedirect"] = {
+        state: "loading",
+        type: "submissionRedirect",
+        location: redirectLocation,
+        formMethod,
+        formEncType,
+        formData,
+      };
+      startNavigation(HistoryAction.Replace, redirectLocation, {
+        overrideTransition: redirectTransition,
+      });
+      return { shortCircuited: true };
+    }
 
+    if (isDataException(result)) {
       // Store off the pending exception - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
@@ -666,10 +672,9 @@ function getLoadingTransition(
 
 function getLoaderRedirect(
   state: RouterState,
-  redirect: DataException
+  redirect: RedirectResult
 ): { redirectLocation: Location; redirectTransition: Transition } {
-  let href = redirect.exception.headers.get("Location");
-  let redirectLocation = createLocation(state.location, href);
+  let redirectLocation = createLocation(state.location, redirect.location);
   let redirectTransition: Transition;
   if (
     state.transition.type === "loaderSubmission" ||
@@ -875,11 +880,22 @@ function getNotFoundMatches(routes: RouteObject[]): RouteMatch[] {
 }
 
 // Find any returned redirect exceptions, starting from the lowest match
-function findRedirect(results: DataResult[]): DataException | null {
-  let redirect = [...results]
-    .reverse()
-    .find((r) => isDataException(r) && isRedirect(r));
-  return (redirect as DataException) || null;
+function findRedirect(results: DataResult[]): RedirectResult | undefined {
+  for (let i = results.length - 1; i >= 0; i--) {
+    let result = results[i];
+    let maybeRedirect = result.isError ? result.exception : result.data;
+    if (maybeRedirect && maybeRedirect instanceof Response) {
+      let status = maybeRedirect.status;
+      let location = maybeRedirect.headers.get("Location");
+      if (status >= 300 && status <= 399 && location != null) {
+        return {
+          status,
+          location,
+          response: maybeRedirect,
+        };
+      }
+    }
+  }
 }
 
 // Create an href to represent a "server" URL without the hash
@@ -890,15 +906,6 @@ function createHref(location: Location | URL) {
 function isHashChangeOnly(a: Location, b: Location): boolean {
   return (
     a.pathname === b.pathname && a.search === b.search && a.hash !== b.hash
-  );
-}
-
-function isRedirect(result: DataException): boolean {
-  return (
-    result.exception instanceof Response &&
-    result.exception.status >= 300 &&
-    result.exception.status <= 399 &&
-    result.exception.headers.get("Location") != null
   );
 }
 
