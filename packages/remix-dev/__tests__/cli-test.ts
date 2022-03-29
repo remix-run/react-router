@@ -256,6 +256,8 @@ describe("remix cli", () => {
       ).toBeTruthy();
     });
 
+    // TODO: mock api calls to github to prevent future ci breakage when we
+    // modify templates on one branch but not the other
     it.skip("works for different branches", async () => {
       let projectDir = getProjectDir("diff-branch");
       let { stdout } = await execFile("node", [
