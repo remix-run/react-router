@@ -52,6 +52,7 @@ type Helpers = InternalHelpers & {
   resolve: (d: any) => Promise<void>;
   reject: (d: any) => Promise<void>;
   redirect: (href: string, status?: number) => Promise<NavigationHelpers>;
+  redirectReturn: (href: string, status?: number) => Promise<NavigationHelpers>;
 };
 
 // Helpers returned from a TestHarness.navigate call, allowing fine grained
@@ -214,6 +215,23 @@ function setup({
             try {
               //@ts-ignore
               await internalHelpers.dfd.reject(
+                //@ts-ignore
+                new Response(null, {
+                  status,
+                  headers: {
+                    location: href,
+                  },
+                })
+              );
+            } catch (e) {}
+            return helpers;
+          },
+          async redirectReturn(href, status = 301) {
+            let redirectNavigationId = ++guid;
+            let helpers = getNavigationHelpers(href, redirectNavigationId);
+            try {
+              //@ts-ignore
+              await internalHelpers.dfd.resolve(
                 //@ts-ignore
                 new Response(null, {
                   status,
@@ -632,7 +650,7 @@ describe("a router", () => {
       });
     });
 
-    it("redirects from loaders", async () => {
+    it("redirects from loaders (throw)", async () => {
       let t = initializeTmTest();
 
       let A = await t.navigate("/bar");
@@ -643,6 +661,32 @@ describe("a router", () => {
       });
 
       let B = await A.loaders.bar.redirect("/baz");
+      expect(t.router.state.transition.type).toBe("normalRedirect");
+      expect(t.router.state.transition.location?.pathname).toBe("/baz");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+      });
+
+      await B.loaders.baz.resolve("B");
+      expect(t.router.state.transition.type).toBe("idle");
+      expect(t.router.state.location.pathname).toBe("/baz");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        baz: "B",
+      });
+    });
+
+    it("redirects from loaders (return)", async () => {
+      let t = initializeTmTest();
+
+      let A = await t.navigate("/bar");
+      expect(t.router.state.transition.type).toBe("normalLoad");
+      expect(t.router.state.transition.location?.pathname).toBe("/bar");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+      });
+
+      let B = await A.loaders.bar.redirectReturn("/baz");
       expect(t.router.state.transition.type).toBe("normalRedirect");
       expect(t.router.state.transition.location?.pathname).toBe("/baz");
       expect(t.router.state.loaderData).toMatchObject({
@@ -987,7 +1031,7 @@ describe("a router", () => {
       });
     });
 
-    it("reloads all routes after action redirect", async () => {
+    it("reloads all routes after action redirect (throw)", async () => {
       let t = initializeTmTest();
       let A = await t.navigate("/foo", {
         formMethod: "post",
@@ -996,6 +1040,32 @@ describe("a router", () => {
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
 
       let B = await A.actions.foo.redirect("/bar");
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(B.loaders.root.stub.mock.calls.length).toBe(1);
+
+      await B.loaders.root.resolve("ROOT LOADER");
+      expect(t.router.state.transition.state).toBe("loading");
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT", // old data
+      });
+
+      await B.loaders.bar.resolve("B LOADER");
+      expect(t.router.state.transition.state).toBe("idle");
+      expect(t.router.state.loaderData).toEqual({
+        bar: "B LOADER",
+        root: "ROOT LOADER",
+      });
+    });
+
+    it("reloads all routes after action redirect (return)", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+
+      let B = await A.actions.foo.redirectReturn("/bar");
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
       expect(B.loaders.root.stub.mock.calls.length).toBe(1);
 
@@ -2217,6 +2287,81 @@ describe("a router", () => {
       t.cleanup();
     });
 
+    it("handles redirects thrown from loaders", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+          },
+        },
+      });
+
+      let nav1 = await t.navigate("/tasks");
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: {
+          pathname: "/",
+        },
+        transition: {
+          location: {
+            pathname: "/tasks",
+          },
+          state: "loading",
+          type: "normalLoad",
+        },
+        loaderData: {
+          root: "ROOT_DATA",
+        },
+        exceptions: null,
+      });
+      expect(t.history.action).toEqual("POP");
+      expect(t.history.location.pathname).toEqual("/");
+
+      let nav2 = await nav1.loaders.tasks.redirect("/tasks/1");
+
+      // Should not abort if it redirected
+      expect(nav1.loaders.tasks.signal.aborted).toBe(false);
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: {
+          pathname: "/",
+        },
+        transition: {
+          location: {
+            pathname: "/tasks/1",
+          },
+          state: "loading",
+          type: "normalRedirect",
+        },
+        loaderData: {
+          root: "ROOT_DATA",
+        },
+        exceptions: null,
+      });
+      expect(t.history.action).toEqual("POP");
+      expect(t.history.location.pathname).toEqual("/");
+
+      await nav2.loaders.tasksId.resolve("TASKS_ID_DATA");
+      expect(t.router.state).toMatchObject({
+        historyAction: "REPLACE",
+        location: {
+          pathname: "/tasks/1",
+        },
+        transition: IDLE_TRANSITION,
+        loaderData: {
+          root: "ROOT_DATA",
+          tasksId: "TASKS_ID_DATA",
+        },
+        exceptions: null,
+      });
+      expect(t.history.action).toEqual("REPLACE");
+      expect(t.history.location.pathname).toEqual("/tasks/1");
+
+      t.cleanup();
+    });
+
     it("handles redirects returned from loaders", async () => {
       let t = setup({
         routes: TASK_ROUTES,
@@ -2244,11 +2389,12 @@ describe("a router", () => {
         loaderData: {
           root: "ROOT_DATA",
         },
+        exceptions: null,
       });
       expect(t.history.action).toEqual("POP");
       expect(t.history.location.pathname).toEqual("/");
 
-      let nav2 = await nav1.loaders.tasks.redirect("/tasks/1");
+      let nav2 = await nav1.loaders.tasks.redirectReturn("/tasks/1");
 
       // Should not abort if it redirected
       expect(nav1.loaders.tasks.signal.aborted).toBe(false);
@@ -2267,7 +2413,7 @@ describe("a router", () => {
         loaderData: {
           root: "ROOT_DATA",
         },
-        exceptions: {},
+        exceptions: null,
       });
       expect(t.history.action).toEqual("POP");
       expect(t.history.location.pathname).toEqual("/");
@@ -2283,7 +2429,7 @@ describe("a router", () => {
           root: "ROOT_DATA",
           tasksId: "TASKS_ID_DATA",
         },
-        exceptions: {},
+        exceptions: null,
       });
       expect(t.history.action).toEqual("REPLACE");
       expect(t.history.location.pathname).toEqual("/tasks/1");
@@ -2306,12 +2452,15 @@ describe("a router", () => {
       let nav = await t.navigate("/tasks");
       let response = new Response(null, { status: 400 });
       await nav.loaders.tasks.reject(response);
-      expect(t.router.state.transition).toEqual(IDLE_TRANSITION);
-      expect(t.router.state.loaderData).toEqual({
-        root: "ROOT_DATA",
-      });
-      expect(t.router.state.exceptions).toEqual({
-        tasks: response,
+      expect(t.router.state).toMatchObject({
+        transition: IDLE_TRANSITION,
+        loaderData: {
+          root: "ROOT_DATA",
+        },
+        actionData: null,
+        exceptions: {
+          tasks: response,
+        },
       });
 
       t.cleanup();
