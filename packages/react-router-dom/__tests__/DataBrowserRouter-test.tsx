@@ -21,6 +21,7 @@ import {
   useActionData,
   useRouteException,
   useTransition,
+  Form,
   Link,
   useSubmit,
 } from "../index";
@@ -314,173 +315,293 @@ describe("<DataBrowserRouter>", () => {
   });
 
   it("executes route actions/loaders on useSubmit navigations", async () => {
-    let barDefer = defer();
-    let barActionDefer = defer();
-    let formData = new FormData();
-    formData.append("test", "value");
+    let loaderDefer = defer();
+    let actionDefer = defer();
 
     let { container } = render(
-      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
-        <Route path="/" element={<Layout />}>
-          <Route path="foo" element={<Foo />} />
-          <Route
-            path="bar"
-            action={() => barActionDefer.promise}
-            loader={() => barDefer.promise}
-            element={<Bar />}
-          />
-        </Route>
+      <DataBrowserRouter window={getWindow("/")} hydrationData={{}}>
+        <Route
+          path="/"
+          action={() => actionDefer.promise}
+          loader={() => loaderDefer.promise}
+          element={<Home />}
+        />
       </DataBrowserRouter>
     );
 
-    function Form({
-      children,
-    }: {
-      children: React.ReactElement | React.ReactElement[];
-    }) {
-      let submit = useSubmit();
-      return (
-        <form
-          method="post"
-          action="/bar"
-          data-testid="test-form"
-          onClick={(e) => submit(e.target as HTMLFormElement)}
-          onSubmit={(e) => e.preventDefault()}
-          children={children}
-        ></form>
-      );
-    }
-
-    function Layout() {
+    function Home() {
+      let data = useLoaderData();
+      let actionData = useActionData();
       let transition = useTransition();
+      let submit = useSubmit();
+      let formRef = React.useRef();
       return (
         <div>
-          <Form>
+          <form method="post" action="/" ref={formRef}>
             <input name="test" value="value" />
-          </Form>
-          <p>{transition.state}</p>
+          </form>
+          <button
+            onClick={() => {
+              debugger;
+              submit(formRef.current);
+            }}
+          >
+            Submit Form
+          </button>
+          <div id="output">
+            <p>{transition.state}</p>
+            <p>{data}</p>
+            <p>{actionData}</p>
+          </div>
           <Outlet />
         </div>
       );
     }
 
-    function Foo() {
-      return <h1>Foo</h1>;
-    }
-    function Bar() {
-      let data = useLoaderData();
-      let actionData = useActionData();
-      return (
-        <h1>
-          {data}
-          {actionData}
-        </h1>
-      );
-    }
-
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <div>
-          <form
-            action=\\"/bar\\"
-            data-testid=\\"test-form\\"
-            method=\\"post\\"
-          >
-            <input
-              name=\\"test\\"
-              value=\\"value\\"
-            />
-          </form>
-          <p>
-            idle
-          </p>
-          <h1>
-            Foo
-          </h1>
-        </div>
+    expect(getHtml(container.querySelector("#output"))).toMatchInlineSnapshot(`
+      "<div
+        id=\\"output\\"
+      >
+        <p>
+          idle
+        </p>
+        <p />
+        <p />
       </div>"
     `);
 
-    fireEvent.click(screen.getByTestId("test-form"));
+    fireEvent.click(screen.getByText("Submit Form"));
     await waitFor(() => screen.getByText("submitting"));
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <div>
-          <form
-            action=\\"/bar\\"
-            data-testid=\\"test-form\\"
-            method=\\"post\\"
-          >
-            <input
-              name=\\"test\\"
-              value=\\"value\\"
-            />
-          </form>
-          <p>
-            submitting
-          </p>
-          <h1>
-            Foo
-          </h1>
-        </div>
+    expect(getHtml(container.querySelector("#output"))).toMatchInlineSnapshot(`
+      "<div
+        id=\\"output\\"
+      >
+        <p>
+          submitting
+        </p>
+        <p />
+        <p />
       </div>"
     `);
 
-    barActionDefer.resolve("Bar Action");
+    actionDefer.resolve("Action Data");
     await waitFor(() => screen.getByText("loading"));
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <div>
-          <form
-            action=\\"/bar\\"
-            data-testid=\\"test-form\\"
-            method=\\"post\\"
-          >
-            <input
-              name=\\"test\\"
-              value=\\"value\\"
-            />
-          </form>
-          <p>
-            loading
-          </p>
-          <h1>
-            Foo
-          </h1>
-        </div>
+    expect(getHtml(container.querySelector("#output"))).toMatchInlineSnapshot(`
+      "<div
+        id=\\"output\\"
+      >
+        <p>
+          loading
+        </p>
+        <p />
+        <p>
+          Action Data
+        </p>
       </div>"
     `);
 
-    barDefer.resolve("Bar Loader");
+    loaderDefer.resolve("Loader Data");
     await waitFor(() => screen.getByText("idle"));
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <div>
-          <form
-            action=\\"/bar\\"
-            data-testid=\\"test-form\\"
-            method=\\"post\\"
-          >
-            <input
-              name=\\"test\\"
-              value=\\"value\\"
-            />
-          </form>
-          <p>
-            idle
-          </p>
-          <h1>
-            Bar Loader
-            Bar Action
-          </h1>
-        </div>
+    expect(getHtml(container.querySelector("#output"))).toMatchInlineSnapshot(`
+      "<div
+        id=\\"output\\"
+      >
+        <p>
+          idle
+        </p>
+        <p>
+          Loader Data
+        </p>
+        <p>
+          Action Data
+        </p>
       </div>"
     `);
   });
 
-  it.todo("executes route actions/loaders on <Form method=get> navigations");
+  it("executes route loaders on <Form method=get> navigations", async () => {
+    let loaderDefer = defer();
+    let actionDefer = defer();
 
-  it.todo("executes route actions/loaders on <Form method=post> navigations");
+    let { container } = render(
+      <DataBrowserRouter window={getWindow("/")} hydrationData={{}}>
+        <Route
+          path="/"
+          action={() => actionDefer.promise}
+          loader={async ({ request }) => {
+            let resolvedValue = await loaderDefer.promise;
+            let urlParam = new URL(
+              `https://remix.run${request.url}`
+            ).searchParams.get("test");
+            return `${resolvedValue}:${urlParam}`;
+          }}
+          element={<Home />}
+        />
+      </DataBrowserRouter>
+    );
+
+    function Home() {
+      let data = useLoaderData();
+      let actionData = useActionData();
+      let transition = useTransition();
+      return (
+        <div>
+          <Form method="get">
+            <input name="test" value="value" />
+            <button type="submit">Submit Form</button>
+          </Form>
+          <div id="output">
+            <p>{transition.state}</p>
+            <p>{data}</p>
+            <p>{actionData}</p>
+          </div>
+          <Outlet />
+        </div>
+      );
+    }
+
+    expect(getHtml(container.querySelector("#output"))).toMatchInlineSnapshot(`
+      "<div
+        id=\\"output\\"
+      >
+        <p>
+          idle
+        </p>
+        <p />
+        <p />
+      </div>"
+    `);
+
+    fireEvent.click(screen.getByText("Submit Form"));
+    await waitFor(() => screen.getByText("submitting"));
+    expect(getHtml(container.querySelector("#output"))).toMatchInlineSnapshot(`
+      "<div
+        id=\\"output\\"
+      >
+        <p>
+          submitting
+        </p>
+        <p />
+        <p />
+      </div>"
+    `);
+
+    debugger;
+    loaderDefer.resolve("Loader Data");
+    await waitFor(() => screen.getByText("idle"));
+    expect(getHtml(container.querySelector("#output"))).toMatchInlineSnapshot(`
+      "<div
+        id=\\"output\\"
+      >
+        <p>
+          idle
+        </p>
+        <p>
+          Loader Data:value
+        </p>
+        <p />
+      </div>"
+    `);
+  });
+
+  it("executes route actions/loaders on <Form method=post> navigations", async () => {
+    let loaderDefer = defer();
+    let actionDefer = defer();
+
+    let { container } = render(
+      <DataBrowserRouter window={getWindow("/")} hydrationData={{}}>
+        <Route
+          path="/"
+          action={async ({ formData }) => {
+            let resolvedValue = await actionDefer.promise;
+            return `${resolvedValue}:${formData.get("test")}`;
+          }}
+          loader={() => loaderDefer.promise}
+          element={<Home />}
+        />
+      </DataBrowserRouter>
+    );
+
+    function Home() {
+      let data = useLoaderData();
+      let actionData = useActionData();
+      let transition = useTransition();
+      return (
+        <div>
+          <Form method="post">
+            <input name="test" value="value" />
+            <button type="submit">Submit Form</button>
+          </Form>
+          <div id="output">
+            <p>{transition.state}</p>
+            <p>{data}</p>
+            <p>{actionData}</p>
+          </div>
+          <Outlet />
+        </div>
+      );
+    }
+
+    expect(getHtml(container.querySelector("#output"))).toMatchInlineSnapshot(`
+      "<div
+        id=\\"output\\"
+      >
+        <p>
+          idle
+        </p>
+        <p />
+        <p />
+      </div>"
+    `);
+
+    fireEvent.click(screen.getByText("Submit Form"));
+    await waitFor(() => screen.getByText("submitting"));
+    expect(getHtml(container.querySelector("#output"))).toMatchInlineSnapshot(`
+      "<div
+        id=\\"output\\"
+      >
+        <p>
+          submitting
+        </p>
+        <p />
+        <p />
+      </div>"
+    `);
+
+    actionDefer.resolve("Action Data");
+    await waitFor(() => screen.getByText("loading"));
+    expect(getHtml(container.querySelector("#output"))).toMatchInlineSnapshot(`
+      "<div
+        id=\\"output\\"
+      >
+        <p>
+          loading
+        </p>
+        <p />
+        <p>
+          Action Data:value
+        </p>
+      </div>"
+    `);
+
+    loaderDefer.resolve("Loader Data");
+    await waitFor(() => screen.getByText("idle"));
+    expect(getHtml(container.querySelector("#output"))).toMatchInlineSnapshot(`
+      "<div
+        id=\\"output\\"
+      >
+        <p>
+          idle
+        </p>
+        <p>
+          Loader Data
+        </p>
+        <p>
+          Action Data:value
+        </p>
+      </div>"
+    `);
+  });
 
   describe("exceptions", () => {
     it("renders hydration exceptions on leaf elements", async () => {

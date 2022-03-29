@@ -40,7 +40,6 @@ function router() {
         sourcemap: !PRETTY,
         banner: createBanner("@remix-run/router", version),
       },
-      external: ["history"],
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
@@ -74,7 +73,6 @@ function router() {
         sourcemap: !PRETTY,
         banner: createBanner("@remix-run/router", version),
       },
-      external: ["history"],
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
@@ -97,7 +95,6 @@ function router() {
         sourcemap: !PRETTY,
         banner: createBanner("@remix-run/router", version),
       },
-      external: ["history"],
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
@@ -134,10 +131,8 @@ function router() {
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("@remix-run/router", version),
-        globals: { history: "HistoryLibrary" },
         name: "Router",
       },
-      external: ["history"],
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
@@ -162,10 +157,8 @@ function router() {
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("@remix-run/router", version),
-        globals: { history: "HistoryLibrary" },
         name: "Router",
       },
-      external: ["history"],
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
@@ -418,7 +411,13 @@ function reactRouterDom() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["history", "react", "react-dom", "react-router"],
+      external: [
+        "history",
+        "react",
+        "react-dom",
+        "react-router",
+        "@remix-run/router",
+      ],
       plugins: [
         babel({
           exclude: /node_modules/,
@@ -454,7 +453,7 @@ function reactRouterDom() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["history", "react", "react-router"],
+      external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
         babel({
           exclude: /node_modules/,
@@ -480,7 +479,7 @@ function reactRouterDom() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["history", "react", "react-router"],
+      external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
         babel({
           exclude: /node_modules/,
@@ -527,10 +526,11 @@ function reactRouterDom() {
           history: "HistoryLibrary",
           react: "React",
           "react-router": "ReactRouter",
+          "@remix-run/router": "Router",
         },
         name: "ReactRouterDOM",
       },
-      external: ["history", "react", "react-router"],
+      external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
         babel({
           exclude: /node_modules/,
@@ -559,10 +559,11 @@ function reactRouterDom() {
           history: "HistoryLibrary",
           react: "React",
           "react-router": "ReactRouter",
+          "@remix-run/router": "Router",
         },
         name: "ReactRouterDOM",
       },
-      external: ["history", "react", "react-router"],
+      external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
         babel({
           exclude: /node_modules/,
@@ -607,6 +608,7 @@ function reactRouterDom() {
         "react",
         "react-dom/server",
         "react-router-dom",
+        "@remix-run/router",
       ],
       plugins: [
         babel({
@@ -634,6 +636,7 @@ function reactRouterDom() {
         "react",
         "react-dom/server",
         "react-router-dom",
+        "@remix-run/router",
       ],
       plugins: [
         babel({
@@ -825,6 +828,7 @@ function reactRouterNative() {
         "react",
         "react-native",
         "react-router",
+        "@remix-run/router",
       ],
       plugins: [
         babel({

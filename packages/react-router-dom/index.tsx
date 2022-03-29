@@ -52,23 +52,6 @@ import {
   RouterState,
 } from "@remix-run/router";
 
-function warning(cond: boolean, message: string): void {
-  if (!cond) {
-    // eslint-disable-next-line no-console
-    if (typeof console !== "undefined") console.warn(message);
-
-    try {
-      // Welcome to debugging React Router!
-      //
-      // This error is thrown as a convenience so you can more easily
-      // find the source for a warning that appears in the console by
-      // enabling "pause on exceptions" in your JavaScript debugger.
-      throw new Error(message);
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //#region Re-exports
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,6 +138,14 @@ export {
   UNSAFE_DataRouterStateContext,
   UNSAFE_useRenderDataRouter,
 } from "react-router";
+//#endregion
+
+////////////////////////////////////////////////////////////////////////////////
+//#region Constants
+////////////////////////////////////////////////////////////////////////////////
+
+const defaultMethod = "get";
+const defaultEncType = "application/x-www-form-urlencoded";
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -464,6 +455,125 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
 if (__DEV__) {
   NavLink.displayName = "NavLink";
 }
+
+export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
+  /**
+   * The HTTP verb to use when the form is submit. Supports "get", "post",
+   * "put", "delete", "patch".
+   */
+  method?: FormMethod;
+
+  /**
+   * Normal `<form action>` but supports React Router's relative paths.
+   */
+  action?: string;
+
+  /**
+   * Normal `<form encType>`.
+   */
+  encType?: FormEncType;
+
+  /**
+   * Replaces the current entry in the browser history stack when the form
+   * navigates. Use this if you don't want the user to be able to click "back"
+   * to the page with the form on it.
+   */
+  replace?: boolean;
+
+  /**
+   * A function to call when the form is submitted. If you call
+   * `event.preventDefault()` then this form will not do anything.
+   */
+  onSubmit?: React.FormEventHandler<HTMLFormElement>;
+}
+
+export const Form = React.forwardRef<HTMLFormElement, FormProps>(
+  (
+    {
+      replace = false,
+      method = defaultMethod,
+      action = ".",
+      encType = defaultEncType,
+      onSubmit,
+      ...props
+    },
+    forwardedRef
+  ) => {
+    let submit = useSubmit();
+    let formMethod: FormMethod =
+      method.toLowerCase() === "get" ? "get" : "post";
+    let formAction = useFormAction(action);
+    let formRef = React.useRef<HTMLFormElement>();
+    let ref = useComposedRefs(forwardedRef, formRef);
+
+    // When calling `submit` on the form element itself, we don't get data from
+    // the button that submitted the event. For example:
+    //
+    //   <Form>
+    //     <button name="something" value="whatever">Submit</button>
+    //   </Form>
+    //
+    // formData.get("something") should be "whatever", but we don't get that
+    // unless we call submit on the clicked button itself.
+    //
+    // To figure out which button triggered the submit, we'll attach a click
+    // event listener to the form. The click event is always triggered before
+    // the submit event (even when submitting via keyboard when focused on
+    // another form field, yeeeeet) so we should have access to that button's
+    // data for use in the submit handler.
+    let clickedButtonRef = React.useRef<any>();
+
+    React.useEffect(() => {
+      let form = formRef.current;
+      if (!form) return;
+
+      function handleClick(event: MouseEvent) {
+        if (!(event.target instanceof Element)) return;
+        let submitButton = event.target.closest<
+          HTMLButtonElement | HTMLInputElement
+        >("button,input[type=submit]");
+
+        if (
+          submitButton &&
+          submitButton.form === form &&
+          submitButton.type === "submit"
+        ) {
+          clickedButtonRef.current = submitButton;
+        }
+      }
+
+      window.addEventListener("click", handleClick);
+      return () => {
+        window.removeEventListener("click", handleClick);
+      };
+    }, []);
+
+    return (
+      <form
+        ref={ref}
+        method={formMethod}
+        action={formAction}
+        encType={encType}
+        onSubmit={(event) => {
+          onSubmit && onSubmit(event);
+          if (event.defaultPrevented) return;
+          event.preventDefault();
+
+          submit(clickedButtonRef.current || event.currentTarget, {
+            method,
+            replace,
+          });
+          clickedButtonRef.current = null;
+        }}
+        {...props}
+      />
+    );
+  }
+);
+
+if (__DEV__) {
+  Form.displayName = "Form";
+}
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -559,9 +669,6 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
 
   return [searchParams, setSearchParams] as const;
 }
-
-let defaultMethod = "get";
-let defaultEncType = "application/x-www-form-urlencoded";
 
 export interface SubmitOptions {
   /**
@@ -764,11 +871,46 @@ export function useFormAction(action = "."): string {
   return pathname + search;
 }
 
+function useComposedRefs<RefValueType = any>(
+  ...refs: Array<React.Ref<RefValueType> | null | undefined>
+): React.RefCallback<RefValueType> {
+  return React.useCallback((node) => {
+    for (let ref of refs) {
+      if (ref == null) continue;
+      if (typeof ref === "function") {
+        ref(node);
+      } else {
+        try {
+          (ref as React.MutableRefObject<RefValueType>).current = node!;
+        } catch (_) {}
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, refs);
+}
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Utils
 ////////////////////////////////////////////////////////////////////////////////
+
+function warning(cond: boolean, message: string): void {
+  if (!cond) {
+    // eslint-disable-next-line no-console
+    if (typeof console !== "undefined") console.warn(message);
+
+    try {
+      // Welcome to debugging React Router!
+      //
+      // This error is thrown as a convenience so you can more easily
+      // find the source for a warning that appears in the console by
+      // enabling "pause on exceptions" in your JavaScript debugger.
+      throw new Error(message);
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
+  }
+}
 
 export type ParamKeyValuePair = [string, string];
 
