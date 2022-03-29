@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import * as React from "react";
 import {
   render,
@@ -11,17 +7,18 @@ import {
   prettyDOM,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
+import type { FormMethod } from "@remix-run/router/utils";
 
 import {
   DataMemoryRouter as MemoryRouter,
   Route,
-  useLoaderData,
+  Outlet,
   useActionData,
+  useLoaderData,
+  useRouteException,
+  useTransition,
   UNSAFE_DataRouterContext,
 } from "../index";
-import { Outlet } from "../lib/components";
-import { useRouteException, useTransition } from "../lib/hooks";
-import { FormMethod } from "@remix-run/router/utils";
 
 describe("<DataMemoryRouter>", () => {
   let consoleWarn: jest.SpyInstance;
@@ -47,6 +44,28 @@ describe("<DataMemoryRouter>", () => {
       "<div>
         <h1>
           Home
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("renders the first route that matches the URL when a basename exists", () => {
+    let { container } = render(
+      <MemoryRouter
+        basename="/base"
+        initialEntries={["/base/thing"]}
+        hydrationData={{}}
+      >
+        <Route path="/" element={<Outlet />}>
+          <Route path="thing" element={<h1>Heyooo</h1>} />
+        </Route>
+      </MemoryRouter>
+    );
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Heyooo
         </h1>
       </div>"
     `);
@@ -335,7 +354,7 @@ describe("<DataMemoryRouter>", () => {
       let transition = useTransition();
       return (
         <div>
-          <MemoryNavigate to="/bar" formMethod="POST" formData={formData}>
+          <MemoryNavigate to="/bar" formMethod="post" formData={formData}>
             Post to Bar
           </MemoryNavigate>
           <p>{transition.state}</p>

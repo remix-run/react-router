@@ -9,7 +9,6 @@ import type {
   RouteData,
   RouteMatch,
   RouteObject,
-  Router,
 } from "@remix-run/router";
 import {
   getToPathname,
@@ -23,7 +22,6 @@ import {
 } from "@remix-run/router";
 
 import {
-  DataRouterContext,
   DataRouterStateContext,
   LocationContext,
   NavigationContext,

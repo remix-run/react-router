@@ -141,6 +141,7 @@ export function DataMemoryRouter({
     fallbackElement,
     createRouter: (routes, onChange) =>
       createMemoryRouter({
+        basename,
         initialEntries,
         initialIndex,
         onChange,

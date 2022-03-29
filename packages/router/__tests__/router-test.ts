@@ -502,6 +502,100 @@ describe("a router", () => {
     });
   });
 
+  describe("basename", () => {
+    it("handles a basename", async () => {
+      let history = createMemoryHistory({
+        initialEntries: ["/app/"],
+      });
+      let router = createRouter({
+        basename: "/app",
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            children: [
+              {
+                id: "index",
+                index: true,
+              },
+              {
+                id: "child",
+                path: "child",
+              },
+            ],
+          },
+        ],
+        history,
+        hydrationData: {},
+        onChange: () => {},
+      });
+
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: {
+          hash: "",
+          key: expect.any(String),
+          pathname: "/app/",
+          search: "",
+          state: null,
+        },
+        matches: [
+          {
+            params: {},
+            pathname: "/",
+            pathnameBase: "/",
+            route: {
+              id: "root",
+              path: "/",
+            },
+          },
+          {
+            params: {},
+            pathname: "/",
+            pathnameBase: "/",
+            route: {
+              id: "index",
+              index: true,
+            },
+          },
+        ],
+      });
+
+      router.navigate("/app/child");
+
+      expect(router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: {
+          hash: "",
+          key: expect.any(String),
+          pathname: "/app/child",
+          search: "",
+          state: null,
+        },
+        matches: [
+          {
+            params: {},
+            pathname: "/",
+            pathnameBase: "/",
+            route: {
+              id: "root",
+              path: "/",
+            },
+          },
+          {
+            params: {},
+            pathname: "/child",
+            pathnameBase: "/child",
+            route: {
+              id: "child",
+              path: "child",
+            },
+          },
+        ],
+      });
+    });
+  });
+
   describe("normal navigation", () => {
     it("fetches data on navigation", async () => {
       let t = initializeTmTest();
