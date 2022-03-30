@@ -312,6 +312,62 @@ export function createRoutesFromChildren(
   return routes;
 }
 
+export type RouteObjectLessStrict =  RouteObject | any
+
+/**
+ * Creates a route config from a React "children" object, which is usually
+ * either a `<Route>` element or an array of them. Used internally by
+ * `<Routes>` to create a route config from its children.
+ * Can accept additional props
+ *
+ * @see https://reactrouter.com/docs/en/v6/api#createroutesfromchildren
+ */
+export function unsafeLessStrictCreateRoutesFromChildren(
+  children: React.ReactNode
+): RouteObjectLessStrict[] {
+  let routes: RouteObjectLessStrict[] = [];
+
+  React.Children.forEach(children, (element) => {
+    if (!React.isValidElement(element)) {
+      // Ignore non-elements. This allows people to more easily inline
+      // conditionals in their route config.
+      return;
+    }
+
+    if (element.type === React.Fragment) {
+      // Transparently support React.Fragment and its children.
+      routes.push.apply(
+        routes,
+        unsafeLessStrictCreateRoutesFromChildren(element.props.children)
+      );
+      return;
+    }
+
+    invariant(
+      element.type === Route,
+      `[${
+        typeof element.type === "string" ? element.type : element.type.name
+      }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
+    );
+
+    let route: RouteObject = {
+      caseSensitive: element.props.caseSensitive,
+      element: element.props.element,
+      index: element.props.index,
+      path: element.props.path,
+      ...element.props,
+    };
+
+    if (element.props.children) {
+      route.children = unsafeLessStrictCreateRoutesFromChildren(element.props.children);
+    }
+
+    routes.push(route);
+  });
+
+  return routes;
+}
+
 /**
  * Renders the result of `matchRoutes()` into a React element.
  */
