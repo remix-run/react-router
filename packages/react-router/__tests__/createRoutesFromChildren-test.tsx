@@ -31,6 +31,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "loader": undefined,
               "path": "home",
+              "shouldReload": undefined,
             },
             Object {
               "action": undefined,
@@ -43,6 +44,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "loader": undefined,
               "path": "about",
+              "shouldReload": undefined,
             },
             Object {
               "action": undefined,
@@ -59,6 +61,7 @@ describe("creating routes from JSX", () => {
                   "index": true,
                   "loader": undefined,
                   "path": undefined,
+                  "shouldReload": undefined,
                 },
                 Object {
                   "action": undefined,
@@ -71,6 +74,7 @@ describe("creating routes from JSX", () => {
                   "index": undefined,
                   "loader": undefined,
                   "path": ":id",
+                  "shouldReload": undefined,
                 },
               ],
               "element": undefined,
@@ -79,6 +83,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "loader": undefined,
               "path": "users",
+              "shouldReload": undefined,
             },
           ],
           "element": undefined,
@@ -87,6 +92,7 @@ describe("creating routes from JSX", () => {
           "index": undefined,
           "loader": undefined,
           "path": "/",
+          "shouldReload": undefined,
         },
       ]
     `);
@@ -96,7 +102,12 @@ describe("creating routes from JSX", () => {
     expect(
       createRoutesFromChildren(
         <Route exceptionElement={<h1>💥</h1>} path="/">
-          <Route path="home" loader={async () => {}} element={<h1>home</h1>} />
+          <Route
+            path="home"
+            loader={async () => {}}
+            shouldReload={() => true}
+            element={<h1>home</h1>}
+          />
           <Route path="users">
             <Route
               index
@@ -123,6 +134,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "loader": [Function],
               "path": "home",
+              "shouldReload": [Function],
             },
             Object {
               "action": undefined,
@@ -139,6 +151,7 @@ describe("creating routes from JSX", () => {
                   "index": true,
                   "loader": undefined,
                   "path": undefined,
+                  "shouldReload": undefined,
                 },
               ],
               "element": undefined,
@@ -147,6 +160,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "loader": undefined,
               "path": "users",
+              "shouldReload": undefined,
             },
           ],
           "element": undefined,
@@ -157,6 +171,7 @@ describe("creating routes from JSX", () => {
           "index": undefined,
           "loader": undefined,
           "path": "/",
+          "shouldReload": undefined,
         },
       ]
     `);

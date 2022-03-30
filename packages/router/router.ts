@@ -732,20 +732,22 @@ function shouldRunLoader(
 
   // Handle the case that we don't have data for a re-used route, potentially
   // from a prior exception
-  let isMissingData = state.loaderData[match.route.id] == null;
+  let isMissingData = state.loaderData[match.route.id] === undefined;
 
-  let needsSubmissionRevalidation =
+  if (isNew || matchPathChanged || isMissingData) {
+    return true;
+  }
+
+  let isReload =
     loadingTransition.type === "actionReload" ||
-    loadingTransition.type === "submissionRedirect";
+    loadingTransition.type === "submissionRedirect" ||
+    // Clicked the same link, resubmitted a GET form
+    createHref(location) === createHref(state.location) ||
+    // Search affects all loaders
+    location.search !== state.location.search;
 
-  // Clicked the same link, resubmitted a GET form
-  let isSamePath = createHref(location) === createHref(state.location);
-
-  // Search affects all loaders
-  let searchParamsChanged = location.search !== state.location.search;
-
-  // Let routes control only when it's the same path, if the path changed
-  if ((isSamePath || searchParamsChanged) && match.route.shouldReload) {
+  // Let routes control only when it's a data reload
+  if (isReload && match.route.shouldReload) {
     let { formData } = state.transition;
     return match.route.shouldReload?.({
       url: createHref(location),
@@ -753,14 +755,7 @@ function shouldRunLoader(
     });
   }
 
-  return Boolean(
-    isNew ||
-      matchPathChanged ||
-      isMissingData ||
-      needsSubmissionRevalidation ||
-      isSamePath ||
-      searchParamsChanged
-  );
+  return isReload;
 }
 
 async function callLoaderOrAction(
