@@ -14,8 +14,12 @@ import { Router, Routes, Route } from "../react-router-dom";
 // v5 isn't in TypeScript, they'll also lose the @types/react-router with this
 // but not worried about that for now.
 export function CompatRoute(props: any) {
-  let {path} = props
-  return <Route path={path} element={<RouteV5 {...props} />} />
+  let { path } = props;
+  return (
+    <Routes>
+      <Route path={path} element={<RouteV5 {...props} />} />
+    </Routes>
+  );
 }
 
 export function CompatRouter({ children }: { children: React.ReactNode }) {
