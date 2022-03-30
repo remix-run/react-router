@@ -831,36 +831,53 @@ describe("a router", () => {
             ],
           },
         ],
-        hydrationData: {
-          loaderData: {
-            "/": "ROOT",
-          },
-        },
         onChange: () => {},
       });
 
-      await router.navigate("/child?reload=1");
+      // Initial load - no existing data, should always call loader and should
+      // not give use ability to opt-out
+      await router.navigate("/", { replace: true });
       expect(rootLoader.mock.calls.length).toBe(1);
+      expect(shouldReload.mock.calls.length).toBe(0);
 
-      await router.navigate("/child?reload=0");
+      // Should not re-run on normal navigations re-using the loader
+      await router.navigate("/child");
+      await router.navigate("/");
+      await router.navigate("/child");
       expect(rootLoader.mock.calls.length).toBe(1);
-      expect(shouldReload.mock.calls[1]).toMatchObject([
+      expect(shouldReload.mock.calls.length).toBe(0);
+
+      // Should use shouldReload() if it's a same-path
+      await router.navigate("/child");
+      expect(rootLoader.mock.calls.length).toBe(1);
+      expect(shouldReload.mock.calls.length).toBe(1);
+      expect(shouldReload.mock.calls[0]).toMatchObject([
         {
-          url: "/child?reload=0",
+          url: "/child",
         },
       ]);
 
+      // Should use shouldReload() if it's a query string change
+      await router.navigate("/child?reload=1");
+      expect(rootLoader.mock.calls.length).toBe(2);
+      expect(shouldReload.mock.calls.length).toBe(2);
+      expect(shouldReload.mock.calls[1]).toMatchObject([
+        {
+          url: "/child?reload=1",
+        },
+      ]);
+
+      // Should use shouldReload() if it's a form submission revalidation
       await router.navigate("/child", {
         formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
-
-      let expectedFormData = new FormData();
-      expectedFormData.append("gosh", "dang");
+      expect(rootLoader.mock.calls.length).toBe(2);
+      expect(shouldReload.mock.calls.length).toBe(3);
       expect(shouldReload.mock.calls[2]).toMatchObject([
         {
           url: "/child",
-          formData: expectedFormData,
+          formData: createFormData({ gosh: "dang" }),
         },
       ]);
     });

@@ -40,6 +40,7 @@ import {
   useRoutes,
   _renderMatches,
 } from "./hooks";
+import { ShouldReloadFunctionArgs } from "@remix-run/router/utils";
 
 export function useRenderDataRouter({
   basename,
@@ -248,6 +249,7 @@ interface DataRouteProps {
   loader?: (args: LoaderFunctionArgs) => Promise<any>;
   action?: (args: ActionFunctionArgs) => Promise<any>;
   exceptionElement?: React.ReactNode;
+  shouldReload?: (arg: ShouldReloadFunctionArgs) => boolean;
 }
 
 export interface RouteProps extends DataRouteProps {
@@ -446,6 +448,7 @@ export function createRoutesFromChildren(
       loader: element.props.loader,
       action: element.props.action,
       exceptionElement: element.props.exceptionElement,
+      shouldReload: element.props.shouldReload,
     };
 
     if (element.props.children) {
