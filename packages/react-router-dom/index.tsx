@@ -52,6 +52,16 @@ import {
   RouterState,
 } from "@remix-run/router";
 
+import type { SubmitOptions, URLSearchParamsInit } from "./dom";
+import {
+  createSearchParams,
+  defaultEncType,
+  defaultMethod,
+  getFormSubmissionInfo,
+  getSearchParamsForLocation,
+  shouldProcessLinkClick,
+} from "./dom";
+
 ////////////////////////////////////////////////////////////////////////////////
 //#region Re-exports
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,14 +148,6 @@ export {
   UNSAFE_DataRouterStateContext,
   UNSAFE_useRenderDataRouter,
 } from "react-router";
-//#endregion
-
-////////////////////////////////////////////////////////////////////////////////
-//#region Constants
-////////////////////////////////////////////////////////////////////////////////
-
-const defaultMethod = "get";
-const defaultEncType = "application/x-www-form-urlencoded";
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -605,11 +607,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
 
   return React.useCallback(
     (event: React.MouseEvent<E, MouseEvent>) => {
-      if (
-        event.button === 0 && // Ignore everything but left clicks
-        (!target || target === "_self") && // Let browser handle "target=_blank" etc.
-        !isModifiedEvent(event) // Ignore clicks with modifier keys
-      ) {
+      if (shouldProcessLinkClick(event, target)) {
         event.preventDefault();
 
         // If the URL hasn't changed, a regular <a> will do a replace instead of
@@ -644,19 +642,14 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
 
   let location = useLocation();
-  let searchParams = React.useMemo(() => {
-    let searchParams = createSearchParams(location.search);
-
-    for (let key of defaultSearchParamsRef.current.keys()) {
-      if (!searchParams.has(key)) {
-        defaultSearchParamsRef.current.getAll(key).forEach((value) => {
-          searchParams.append(key, value);
-        });
-      }
-    }
-
-    return searchParams;
-  }, [location.search]);
+  let searchParams = React.useMemo(
+    () =>
+      getSearchParamsForLocation(
+        location.search,
+        defaultSearchParamsRef.current
+      ),
+    [location.search]
+  );
 
   let navigate = useNavigate();
   let setSearchParams = React.useCallback(
@@ -670,36 +663,6 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   );
 
   return [searchParams, setSearchParams] as const;
-}
-
-export interface SubmitOptions {
-  /**
-   * The HTTP method used to submit the form. Overrides `<form method>`.
-   * Defaults to "GET".
-   */
-  method?: FormMethod;
-
-  /**
-   * The action URL path used to submit the form. Overrides `<form action>`.
-   * Defaults to the path of the current route.
-   *
-   * Note: It is assumed the path is already resolved. If you need to resolve a
-   * relative path, use `useFormAction`.
-   */
-  action?: string;
-
-  /**
-   * The action URL used to submit the form. Overrides `<form encType>`.
-   * Defaults to "application/x-www-form-urlencoded".
-   */
-  encType?: FormEncType;
-
-  /**
-   * Set `true` to replace the current entry in the browser's history stack
-   * instead of creating a new one (i.e. stay on "the same page"). Defaults
-   * to `false`.
-   */
-  replace?: boolean;
 }
 
 /**
@@ -738,95 +701,10 @@ export function useSubmit(): SubmitFunction {
 
   return React.useCallback(
     (target, options = {}) => {
-      let method: string;
-      let action: string;
-      let encType: string;
-      let formData: FormData;
-
       invariant(
         router != null,
         "useSubmit() must be used within a <DataRouter>"
       );
-
-      if (isFormElement(target)) {
-        let submissionTrigger: HTMLButtonElement | HTMLInputElement = (
-          options as any
-        ).submissionTrigger;
-
-        method =
-          options.method || target.getAttribute("method") || defaultMethod;
-        action =
-          options.action || target.getAttribute("action") || defaultAction;
-        encType =
-          options.encType || target.getAttribute("enctype") || defaultEncType;
-
-        formData = new FormData(target);
-
-        if (submissionTrigger && submissionTrigger.name) {
-          formData.append(submissionTrigger.name, submissionTrigger.value);
-        }
-      } else if (
-        isButtonElement(target) ||
-        (isInputElement(target) &&
-          (target.type === "submit" || target.type === "image"))
-      ) {
-        let form = target.form;
-
-        if (form == null) {
-          throw new Error(`Cannot submit a <button> without a <form>`);
-        }
-
-        // <button>/<input type="submit"> may override attributes of <form>
-
-        method =
-          options.method ||
-          target.getAttribute("formmethod") ||
-          form.getAttribute("method") ||
-          defaultMethod;
-        action =
-          options.action ||
-          target.getAttribute("formaction") ||
-          form.getAttribute("action") ||
-          defaultAction;
-        encType =
-          options.encType ||
-          target.getAttribute("formenctype") ||
-          form.getAttribute("enctype") ||
-          defaultEncType;
-        formData = new FormData(form);
-
-        // Include name + value from a <button>
-        if (target.name) {
-          formData.set(target.name, target.value);
-        }
-      } else {
-        if (isHtmlElement(target)) {
-          throw new Error(
-            `Cannot submit element that is not <form>, <button>, or ` +
-              `<input type="submit|image">`
-          );
-        }
-
-        method = options.method || "get";
-        action = options.action || defaultAction;
-        encType = options.encType || "application/x-www-form-urlencoded";
-
-        if (target instanceof FormData) {
-          formData = target;
-        } else {
-          formData = new FormData();
-
-          if (target instanceof URLSearchParams) {
-            for (let [name, value] of target) {
-              formData.append(name, value);
-            }
-          } else if (target != null) {
-            for (let name of Object.keys(target)) {
-              formData.append(name, target[name]);
-            }
-          }
-        }
-      }
 
       if (typeof document === "undefined") {
         throw new Error(
@@ -835,18 +713,11 @@ export function useSubmit(): SubmitFunction {
         );
       }
 
-      let { protocol, host } = window.location;
-      let url = new URL(action, `${protocol}//${host}`);
-
-      if (method.toLowerCase() === "get") {
-        for (let [name, value] of formData) {
-          if (typeof value === "string") {
-            url.searchParams.append(name, value);
-          } else {
-            throw new Error(`Cannot submit binary form data using GET`);
-          }
-        }
-      }
+      let { method, encType, formData, url } = getFormSubmissionInfo(
+        target,
+        defaultAction,
+        options
+      );
 
       router.navigate(url.pathname + url.search, {
         replace: options.replace,
@@ -914,65 +785,4 @@ function warning(cond: boolean, message: string): void {
   }
 }
 
-export type ParamKeyValuePair = [string, string];
-
-export type URLSearchParamsInit =
-  | string
-  | ParamKeyValuePair[]
-  | Record<string, string | string[]>
-  | URLSearchParams;
-
-/**
- * Creates a URLSearchParams object using the given initializer.
- *
- * This is identical to `new URLSearchParams(init)` except it also
- * supports arrays as values in the object form of the initializer
- * instead of just strings. This is convenient when you need multiple
- * values for a given key, but don't want to use an array initializer.
- *
- * For example, instead of:
- *
- *   let searchParams = new URLSearchParams([
- *     ['sort', 'name'],
- *     ['sort', 'price']
- *   ]);
- *
- * you can do:
- *
- *   let searchParams = createSearchParams({
- *     sort: ['name', 'price']
- *   });
- */
-export function createSearchParams(
-  init: URLSearchParamsInit = ""
-): URLSearchParams {
-  return new URLSearchParams(
-    typeof init === "string" ||
-    Array.isArray(init) ||
-    init instanceof URLSearchParams
-      ? init
-      : Object.keys(init).reduce((memo, key) => {
-          let value = init[key];
-          return memo.concat(
-            Array.isArray(value) ? value.map((v) => [key, v]) : [[key, value]]
-          );
-        }, [] as ParamKeyValuePair[])
-  );
-}
-
-function isHtmlElement(object: any): object is HTMLElement {
-  return object != null && typeof object.tagName === "string";
-}
-
-function isButtonElement(object: any): object is HTMLButtonElement {
-  return isHtmlElement(object) && object.tagName.toLowerCase() === "button";
-}
-
-function isFormElement(object: any): object is HTMLFormElement {
-  return isHtmlElement(object) && object.tagName.toLowerCase() === "form";
-}
-
-function isInputElement(object: any): object is HTMLInputElement {
-  return isHtmlElement(object) && object.tagName.toLowerCase() === "input";
-}
 //#endregion

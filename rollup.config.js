@@ -419,6 +419,7 @@ function reactRouterDom() {
         "@remix-run/router",
       ],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -455,6 +456,7 @@ function reactRouterDom() {
       },
       external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -481,6 +483,7 @@ function reactRouterDom() {
       },
       external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -532,6 +535,7 @@ function reactRouterDom() {
       },
       external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -565,6 +569,7 @@ function reactRouterDom() {
       },
       external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -611,6 +616,7 @@ function reactRouterDom() {
         "@remix-run/router",
       ],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -639,6 +645,7 @@ function reactRouterDom() {
         "@remix-run/router",
       ],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
