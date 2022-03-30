@@ -529,7 +529,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         </div>"
       `);
 
-      debugger;
       loaderDefer.resolve("Loader Data");
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container.querySelector("#output")))

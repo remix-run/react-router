@@ -130,7 +130,6 @@ function setup({
   let activeActionHelpers = new Map<string, InternalHelpers>();
   // A set of to-be-garbage-collected Deferred's to clean up at the end of a test
   let gcDfds = new Set<Deferred>();
-  let onChangeListener: (() => void) | undefined;
 
   // Enhance routes with loaders/actions as requested that will call the
   // active navigation loader/action
@@ -173,7 +172,6 @@ function setup({
     history,
     routes: enhancedRoutes,
     hydrationData,
-    onChange: () => onChangeListener?.(),
   });
 
   function getHelpers(
@@ -288,14 +286,14 @@ function setup({
 
     if (typeof href === "number") {
       let promise = new Promise<void>((r) => {
-        onChangeListener = () => {
+        let unsubscribe = router.subscribe(() => {
           helpers = getNavigationHelpers(
             history.createHref(history.location),
             navigationId
           );
-          onChangeListener = undefined;
+          unsubscribe();
           r();
-        };
+        });
       });
       router.navigate(href).catch(handleUncaughtException);
       await promise;
@@ -458,7 +456,6 @@ describe("a router", () => {
           actionData: { root: "ACTION DATA" },
           exceptions: { root: new Error("lol") },
         },
-        onChange: () => {},
       });
       expect(router.state).toEqual({
         historyAction: "POP",
@@ -527,7 +524,6 @@ describe("a router", () => {
         ],
         history,
         hydrationData: {},
-        onChange: () => {},
       });
 
       expect(router.state).toMatchObject({
@@ -831,7 +827,6 @@ describe("a router", () => {
             ],
           },
         ],
-        onChange: () => {},
       });
 
       // Initial load - no existing data, should always call loader and should
