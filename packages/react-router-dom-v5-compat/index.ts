@@ -111,4 +111,4 @@ export {
 } from "./react-router-dom";
 
 export type { StaticRouterProps } from "./lib/components";
-export { CompatRouter, StaticRouter } from "./lib/components";
+export { CompatRouter, CompatRoute, StaticRouter } from "./lib/components";
