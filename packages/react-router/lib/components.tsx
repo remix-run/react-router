@@ -42,6 +42,8 @@ import {
 } from "./hooks";
 import { ShouldReloadFunctionArgs } from "@remix-run/router/utils";
 
+type DataState = "empty" | "loading" | "loaded";
+
 export function useRenderDataRouter({
   basename,
   children,
@@ -53,10 +55,7 @@ export function useRenderDataRouter({
   children?: React.ReactNode;
   hydrationData?: HydrationState;
   fallbackElement?: React.ReactElement;
-  createRouter: (
-    routes: RouteObject[],
-    onChange: (s: RouterState) => void
-  ) => DataRouter;
+  createRouter: (routes: RouteObject[]) => DataRouter;
 }): React.ReactElement {
   let routes = createRoutesFromChildren(children);
 
@@ -65,29 +64,35 @@ export function useRenderDataRouter({
     "<DataMemoryRouter> expects either `hydrationData` or a `fallbackElement` to be provided"
   );
 
-  let [hydrated, setHydrated] = React.useState(hydrationData != null);
-
-  let [router] = React.useState<DataRouter>(() =>
-    createRouter(routes, (newState: RouterState) => {
-      setState(newState);
-      // If we were not hydrated from SSR, consider us "hydrated" as soon as
-      // we return to an idle state
-      if (!hydrated && newState.transition.state === "idle") {
-        setHydrated(true);
-      }
-    })
+  let [dataState, setDataState] = React.useState<DataState>(
+    hydrationData == null ? "empty" : "loaded"
   );
+  let [router] = React.useState<DataRouter>(() => createRouter(routes));
+
+  // TODO: For React 18 we can move to useSyncExternalStore via feature detection
+  // state = React.useSyncExternalStore(router.subscribe, () => router.state);
 
   let [state, setState] = React.useState<DataRouter["state"]>(
     () => router.state
   );
+  React.useLayoutEffect(
+    () => router.subscribe((newState) => setState(newState)),
+    [router]
+  );
 
-  // If we did not SSR, trigger a replacement navigation to ourself for initial data load
+  // If we did not SSR, trigger a replacement navigation to ourself for initial
+  // data load and then mark us as loaded as soon as we return to idle
   React.useLayoutEffect(() => {
-    if (!hydrated) {
+    if (dataState === "empty") {
+      setDataState("loading");
       router.navigate(router.state.location, { replace: true });
+    } else if (
+      dataState === "loading" &&
+      router.state.transition.state === "idle"
+    ) {
+      setDataState("loaded");
     }
-  }, [router, hydrated]);
+  }, [router, router.state, dataState]);
 
   let navigator = React.useMemo((): Navigator => {
     return {
@@ -98,7 +103,7 @@ export function useRenderDataRouter({
     };
   }, [router]);
 
-  if (!hydrated && fallbackElement) {
+  if (dataState !== "loaded" && fallbackElement) {
     return fallbackElement;
   }
 
@@ -140,12 +145,11 @@ export function DataMemoryRouter({
     children,
     hydrationData,
     fallbackElement,
-    createRouter: (routes, onChange) =>
+    createRouter: (routes) =>
       createMemoryRouter({
         basename,
         initialEntries,
         initialIndex,
-        onChange,
         routes,
         hydrationData,
       }),

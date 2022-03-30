@@ -81,7 +81,10 @@ export interface RouterInit {
   routes: RouteObject[];
   history: History;
   hydrationData?: HydrationState;
-  onChange: (state: RouterState) => void;
+}
+
+export interface RouterSubscriber {
+  (state: RouterState): void;
 }
 
 /**
@@ -253,6 +256,7 @@ export const IDLE_TRANSITION: TransitionStates["Idle"] = {
  */
 export function createRouter(init: RouterInit) {
   let { routes } = init;
+  let subscriber: RouterSubscriber | null = null;
 
   let state: RouterState = {
     historyAction: init.history.action,
@@ -283,7 +287,7 @@ export function createRouter(init: RouterInit) {
       ...state,
       ...newState,
     };
-    init.onChange(state);
+    subscriber?.(state);
   }
 
   // Complete a navigation returning the state.transition back to the IDLE_TRANSITION
@@ -619,6 +623,15 @@ export function createRouter(init: RouterInit) {
   return {
     get state() {
       return state;
+    },
+    subscribe(fn: RouterSubscriber) {
+      if (subscriber) {
+        throw new Error("A router only accepts one active subscriber");
+      }
+      subscriber = fn;
+      return () => {
+        subscriber = null;
+      };
     },
     navigate,
     createHref,
