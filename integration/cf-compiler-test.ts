@@ -104,7 +104,7 @@ describe("cloudflare compiler", () => {
     expect(serverBundle).not.toMatch("browser-pkg/browser-cjs.js");
     expect(serverBundle).toMatch("browser-pkg/node-esm.mjs");
     expect(serverBundle).not.toMatch("browser-pkg/node-cjs.js");
-    
+
     expect(serverBundle).toMatch("esm-only-pkg/browser-esm.js");
     expect(serverBundle).not.toMatch("esm-only-pkg/node-esm.js");
 
@@ -119,6 +119,8 @@ describe("cloudflare compiler", () => {
     );
 
     expect(serverBundle).toMatch("__WORKER_EXPORTS_SHOULD_BE_IN_BUNDLE__");
-    expect(serverBundle).not.toMatch("__DEFAULT_EXPORTS_SHOULD_NOT_BE_IN_BUNDLE__");
+    expect(serverBundle).not.toMatch(
+      "__DEFAULT_EXPORTS_SHOULD_NOT_BE_IN_BUNDLE__"
+    );
   });
 });
