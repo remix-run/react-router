@@ -1,3 +1,7 @@
+/**
+ * NOTE: If you refactor this to split up the modules into separate files,
+ * you'll need to update the rollup config for react-router-dom-v5-compat.
+ */
 import * as React from "react";
 import type { BrowserHistory, HashHistory, History } from "history";
 import { createBrowserHistory, createHashHistory } from "history";

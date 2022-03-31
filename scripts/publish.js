@@ -86,6 +86,7 @@ async function run() {
     // 4. Publish to npm
     publishBuild("react-router", tag);
     publishBuild("react-router-dom", tag);
+    publishBuild("react-router-dom-v5-compat", tag);
     publishBuild("react-router-native", tag);
   } catch (error) {
     console.log();
