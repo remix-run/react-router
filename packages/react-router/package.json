@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "6.2.2",
+  "version": "6.3.0",
   "author": "Remix Software <hello@remix.run>",
   "description": "Declarative routing for React",
   "repository": {
