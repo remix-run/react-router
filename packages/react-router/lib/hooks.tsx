@@ -27,6 +27,7 @@ import {
   NavigationContext,
   RouteContext,
 } from "./context";
+import { DataRouteObject } from "@remix-run/router/utils";
 
 /**
  * Returns the full href for the given "to" value. This is useful for building
@@ -394,7 +395,7 @@ export function _renderMatches(
   // If we have data exceptions, trim matches to the highest exception boundary
   if (exceptions != null) {
     let exceptionIndex = renderedMatches.findIndex(
-      (m) => exceptions[m.route.id]
+      (m) => m.route.id && exceptions[m.route.id]
     );
     invariant(
       exceptionIndex >= 0,
@@ -410,7 +411,7 @@ export function _renderMatches(
     return (
       <RouteContext.Provider
         children={
-          exceptions?.[match.route.id]
+          match.route.id && exceptions?.[match.route.id]
             ? match.route.exceptionElement
             : match.route.element !== undefined
             ? match.route.element
@@ -425,42 +426,50 @@ export function _renderMatches(
   }, null as React.ReactElement | null);
 }
 
-export function useLoaderData() {
+type DataRouterHook =
+  | "useLoaderData"
+  | "useActionData"
+  | "useRouteException"
+  | "useTransition";
+
+function useDataRouterState(hookName: DataRouterHook) {
   let state = React.useContext(DataRouterStateContext);
-  invariant(state, "useLoaderData must be rendered within a DataRouter");
+  invariant(state, `${hookName} must be rendered within a DataRouter`);
+  return state;
+}
+
+// Internal utility to avoid 3 invariants per hook
+function useRouteData(
+  hookName: DataRouterHook,
+  fieldName: "loaderData" | "actionData" | "exceptions"
+) {
+  let state = useDataRouterState(hookName);
 
   let route = React.useContext(RouteContext);
-  invariant(route, "useLoaderData must be used inside a RouteContext");
+  invariant(route, `${hookName} must be used inside a RouteContext`);
 
   let thisRoute = route.matches[route.matches.length - 1];
-  return state.loaderData[thisRoute.route.id];
+  invariant(
+    thisRoute.route.id,
+    `${hookName} can only be used on routes that contain a unique "id"`
+  );
+
+  return state[fieldName]?.[thisRoute.route.id];
+}
+
+export function useLoaderData() {
+  return useRouteData("useLoaderData", "loaderData");
 }
 
 export function useActionData() {
-  let state = React.useContext(DataRouterStateContext);
-  invariant(state, "useActionData must be rendered within a DataRouter");
-
-  let route = React.useContext(RouteContext);
-  invariant(route, "useActionData must be used inside a RouteContext");
-
-  let thisRoute = route.matches[route.matches.length - 1];
-  return state.actionData?.[thisRoute.route.id];
+  return useRouteData("useActionData", "actionData");
 }
 
 export function useRouteException() {
-  let state = React.useContext(DataRouterStateContext);
-  invariant(state, "useRouteException must be rendered within a DataRouter");
-
-  let route = React.useContext(RouteContext);
-  invariant(route, "useRouteException must be used inside a RouteContext");
-
-  let thisRoute = route.matches[route.matches.length - 1];
-  return state.exceptions?.[thisRoute.route.id];
+  return useRouteData("useRouteException", "exceptions");
 }
 
 export function useTransition() {
-  let state = React.useContext(DataRouterStateContext);
-  invariant(state, "useTransition must be rendered within a DataRouter");
-
+  let state = useDataRouterState("useTransition");
   return state.transition;
 }

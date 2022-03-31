@@ -49,6 +49,30 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
+  it("accepts routes as a prop instead of children", () => {
+    let routes = [
+      {
+        path: "/",
+        element: <h1>Home</h1>,
+      },
+    ];
+    let { container } = render(
+      <MemoryRouter
+        initialEntries={["/"]}
+        hydrationData={{}}
+        todo_bikeshed_routes={routes}
+      />
+    );
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Home
+        </h1>
+      </div>"
+    `);
+  });
+
   it("renders the first route that matches the URL when a basename exists", () => {
     let { container } = render(
       <MemoryRouter

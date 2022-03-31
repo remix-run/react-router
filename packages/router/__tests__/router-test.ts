@@ -7,10 +7,10 @@ import type {
 import { createRouter, IDLE_TRANSITION } from "../router";
 import {
   ActionFunctionArgs,
+  DataRouteObject,
   invariant,
   matchRoutes,
   RouteMatch,
-  RouteObject,
 } from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -21,7 +21,7 @@ type Deferred = ReturnType<typeof defer>;
 
 // Routes passed into setup() should just have a boolean for loader/action
 // indicating they want a stub
-type TestRouteObject = Pick<RouteObject, "id" | "index" | "path"> & {
+type TestRouteObject = Pick<DataRouteObject, "id" | "index" | "path"> & {
   loader?: boolean;
   action?: boolean;
   exceptionElement?: boolean;
@@ -175,7 +175,7 @@ function setup({
   });
 
   function getHelpers(
-    matches: RouteMatch[],
+    matches: RouteMatch<string, DataRouteObject>[],
     navigationId: number,
     map: Map<string, InternalHelpers>
   ): Record<string, Helpers> {
@@ -500,6 +500,98 @@ describe("a router", () => {
           type: "idle",
         },
       });
+    });
+
+    it("requires routes", async () => {
+      let history = createMemoryHistory({ initialEntries: ["/"] });
+      expect(() =>
+        createRouter({
+          routes: [],
+          history,
+          hydrationData: {},
+        })
+      ).toThrowErrorMatchingInlineSnapshot(
+        `"You must provide a non-empty routes array to use Data Routers"`
+      );
+    });
+
+    it("converts routes to data routes", async () => {
+      let history = createMemoryHistory({
+        initialEntries: ["/child/grandchild"],
+      });
+      let routes = [
+        {
+          path: "/",
+          children: [
+            {
+              id: "child-keep-me",
+              path: "child",
+              children: [
+                {
+                  path: "grandchild",
+                },
+              ],
+            },
+          ],
+        },
+      ];
+      let originalRoutes = JSON.parse(JSON.stringify(routes));
+      let router = createRouter({
+        routes,
+        history,
+        hydrationData: {},
+      });
+      // routes are not mutated in place
+      expect(routes).toEqual(originalRoutes);
+      expect(router.state.matches).toMatchObject([
+        {
+          route: {
+            id: "0",
+          },
+        },
+        {
+          route: {
+            id: "child-keep-me",
+          },
+        },
+        {
+          route: {
+            id: "0-0-0",
+          },
+        },
+      ]);
+    });
+
+    it("throws if it finds duplicate route ids", async () => {
+      let history = createMemoryHistory({
+        initialEntries: ["/child/grandchild"],
+      });
+      let routes = [
+        {
+          path: "/",
+          children: [
+            {
+              id: "child",
+              path: "child",
+              children: [
+                {
+                  id: "child",
+                  path: "grandchild",
+                },
+              ],
+            },
+          ],
+        },
+      ];
+      expect(() =>
+        createRouter({
+          routes,
+          history,
+          hydrationData: {},
+        })
+      ).toThrowErrorMatchingInlineSnapshot(
+        `"Found a route id collision on id \\"child\\".  Route id's must be globally unique within Data Router usages"`
+      );
     });
   });
 

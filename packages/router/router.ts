@@ -4,6 +4,7 @@ import { Action as HistoryAction, createLocation } from "./history";
 import {
   ActionFormMethod,
   ActionSubmission,
+  DataRouteObject,
   FormEncType,
   FormMethod,
   invariant,
@@ -25,6 +26,8 @@ export interface RouteData {
   [routeId: string]: any;
 }
 
+export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
+
 /**
  * State maintained internally by the router.  During a navigation, all states
  * reflect the the "old" location unless otherwise noted.
@@ -43,7 +46,7 @@ export interface RouterState {
   /**
    * The current set of route matches
    */
-  matches: RouteMatch[];
+  matches: DataRouteMatch[];
 
   /**
    * Tracks the state of the current transition
@@ -255,7 +258,12 @@ export const IDLE_TRANSITION: TransitionStates["Idle"] = {
  * Create a router and listen to history POP navigations
  */
 export function createRouter(init: RouterInit) {
-  let { routes } = init;
+  invariant(
+    init.routes.length > 0,
+    "You must provide a non-empty routes array to use Data Routers"
+  );
+
+  let dataRoutes = convertRoutesToDataRoutes(init.routes);
   let subscriber: RouterSubscriber | null = null;
 
   let state: RouterState = {
@@ -264,8 +272,8 @@ export function createRouter(init: RouterInit) {
     // If we do not match a user-provided-route, fall back to the root
     // to allow the exceptionElement to take over
     matches:
-      matchRoutes(routes, init.history.location, init.basename) ||
-      getNotFoundMatches(routes),
+      matchRoutes(dataRoutes, init.history.location, init.basename) ||
+      getNotFoundMatches(dataRoutes),
     transition: IDLE_TRANSITION,
     loaderData: init.hydrationData?.loaderData || {},
     actionData: init.hydrationData?.actionData || null,
@@ -372,14 +380,14 @@ export function createRouter(init: RouterInit) {
       pendingNavigationController.abort();
     }
 
-    let matches = matchRoutes(routes, location, init.basename);
+    let matches = matchRoutes(dataRoutes, location, init.basename);
 
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
       completeNavigation(historyAction, location, {
-        matches: getNotFoundMatches(routes),
+        matches: getNotFoundMatches(dataRoutes),
         exceptions: {
-          [init.routes[0].id]: new Response(null, { status: 404 }),
+          [dataRoutes[0].id]: new Response(null, { status: 404 }),
         },
       });
       return;
@@ -439,7 +447,7 @@ export function createRouter(init: RouterInit) {
     historyAction: HistoryAction,
     location: Location,
     submission: ActionSubmission,
-    matches: RouteMatch[]
+    matches: DataRouteMatch[]
   ): Promise<HandleActionResult> {
     let hasNakedIndexQuery = new URLSearchParams(location.search)
       .getAll("index")
@@ -537,7 +545,7 @@ export function createRouter(init: RouterInit) {
     historyAction: HistoryAction,
     location: Location,
     submission: Submission | undefined,
-    matches: RouteMatch[],
+    matches: DataRouteMatch[],
     overrideTransition: Transition | undefined,
     pendingActionData: RouteData | null,
     pendingActionException: RouteData | null
@@ -643,6 +651,31 @@ export function createRouter(init: RouterInit) {
 //#region Helpers
 ////////////////////////////////////////////////////////////////////////////////
 
+function convertRoutesToDataRoutes(
+  routes: RouteObject[],
+  parentPath: number[] = [],
+  allIds: Set<string> = new Set<string>()
+): DataRouteObject[] {
+  return routes.map((route, index) => {
+    let treePath = [...parentPath, index];
+    let id = typeof route.id === "string" ? route.id : treePath.join("-");
+    invariant(
+      !allIds.has(id),
+      `Found a route id collision on id "${id}".  Route ` +
+        "id's must be globally unique within Data Router usages"
+    );
+    allIds.add(id);
+    let dataRoute: DataRouteObject = {
+      ...route,
+      id,
+      children: route.children
+        ? convertRoutesToDataRoutes(route.children, treePath, allIds)
+        : undefined,
+    };
+    return dataRoute;
+  });
+}
+
 // Determine the proper loading transition to use for the upcoming loaders execution
 function getLoadingTransition(
   location: Location,
@@ -723,7 +756,7 @@ function shouldRunLoader(
   state: RouterState,
   loadingTransition: Transition,
   location: Location,
-  match: RouteMatch,
+  match: DataRouteMatch,
   index: number
 ): boolean {
   let currentMatches = state.matches;
@@ -772,7 +805,7 @@ function shouldRunLoader(
 }
 
 async function callLoaderOrAction(
-  match: RouteMatch,
+  match: DataRouteMatch,
   location: Location,
   signal: AbortSignal,
   submission?: Submission
@@ -797,8 +830,8 @@ async function callLoaderOrAction(
 }
 
 function processLoaderData(
-  matches: RouteMatch[],
-  matchesToLoad: RouteMatch[],
+  matches: DataRouteMatch[],
+  matchesToLoad: DataRouteMatch[],
   results: DataResult[],
   pendingActionException: RouteData | null
 ): {
@@ -867,9 +900,9 @@ function mergeLoaderData(
 // Find the nearest exception boundary, looking upwards from the matched route
 // for the closest ancestor exceptionElement, defaulting to the root match
 function findNearestBoundary(
-  matches: RouteMatch[],
+  matches: DataRouteMatch[],
   routeId: string
-): RouteMatch {
+): DataRouteMatch {
   return (
     matches
       .slice(0, matches.findIndex((m) => m.route.id === routeId) + 1)
@@ -878,7 +911,7 @@ function findNearestBoundary(
   );
 }
 
-function getNotFoundMatches(routes: RouteObject[]): RouteMatch[] {
+function getNotFoundMatches(routes: DataRouteObject[]): DataRouteMatch[] {
   return [
     {
       params: {},
