@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as fs from "fs";
-import JSON5 from 'json5';
-import stripBom from 'strip-bom';
+import JSON5 from "json5";
+import stripBom from "strip-bom";
 
 /**
  * Typing for the parts of tsconfig that we care about
@@ -32,15 +32,13 @@ export interface TsConfigLoaderParams {
 }
 
 export function tsConfigLoader({
-  cwd
+  cwd,
 }: TsConfigLoaderParams): TsConfigLoaderResult {
   let loadResult = loadSync(cwd);
   return loadResult;
 }
 
-function loadSync(
-  cwd: string,
-): TsConfigLoaderResult {
+function loadSync(cwd: string): TsConfigLoaderResult {
   // Tsconfig.loadSync uses path.resolve. This is why we can use an absolute path as filename
   let configPath = resolveConfigPath(cwd);
 
@@ -55,8 +53,7 @@ function loadSync(
 
   return {
     tsConfigPath: configPath,
-    baseUrl:
-      (config && config.compilerOptions && config.compilerOptions.baseUrl),
+    baseUrl: config && config.compilerOptions && config.compilerOptions.baseUrl,
     paths: config && config.compilerOptions && config.compilerOptions.paths,
   };
 }
@@ -79,7 +76,7 @@ function walkForTsConfig(
     return configPath;
   }
 
-  configPath = path.join(directory, "./jsconfig.json");  
+  configPath = path.join(directory, "./jsconfig.json");
   if (existsSync(configPath)) {
     return configPath;
   }

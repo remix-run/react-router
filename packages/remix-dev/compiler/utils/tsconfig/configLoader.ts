@@ -29,9 +29,7 @@ export function loadTsConfig(cwd: string = process.cwd()): ConfigLoaderResult {
   return configLoader({ cwd: cwd });
 }
 
-export function configLoader({
-  cwd,
-}: ConfigLoaderParams): ConfigLoaderResult {
+export function configLoader({ cwd }: ConfigLoaderParams): ConfigLoaderResult {
   // Load tsconfig and create path matching function
   let loadResult = tsConfigLoader({
     cwd,
