@@ -382,7 +382,6 @@ export async function createFixtureProject(init: FixtureInit): Promise<string> {
   return projectDir;
 }
 
-
 function build(projectDir: string, buildStdio?: Writable, sourcemap?: boolean) {
   // TODO: log errors (like syntax errors in the fixture file strings)
   spawnSync("node", ["node_modules/@remix-run/dev/cli.js", "setup"], {
@@ -393,13 +392,9 @@ function build(projectDir: string, buildStdio?: Writable, sourcemap?: boolean) {
   if (sourcemap) {
     buildArgs.push("--sourcemap");
   }
-  let buildSpawn = spawnSync(
-    "node",
-    buildArgs,
-    {
-      cwd: projectDir
-    }
-  );
+  let buildSpawn = spawnSync("node", buildArgs, {
+    cwd: projectDir,
+  });
 
   if (buildStdio) {
     buildStdio.write(buildSpawn.stdout.toString("utf-8"));
