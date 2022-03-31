@@ -15,6 +15,21 @@ import { Router, Routes, Route } from "../react-router-dom";
 // but not worried about that for now.
 export function CompatRoute(props: any) {
   let { path } = props;
+  if (typeof path !== "string") {
+    console.warn(
+      `React Router v6 only supports strings for route paths, received: ${path}`
+    );
+  }
+  if (path.includes("?")) {
+    console.warn(
+      `React Router v6 does not support optional segements supports strings for route paths. Repeat the route definition with each set of params instead. Received ${path}`
+    );
+  }
+
+  if (!props.exact) {
+    path += "/*";
+  }
+
   return (
     <Routes>
       <Route path={path} element={<RouteV5 {...props} />} />
