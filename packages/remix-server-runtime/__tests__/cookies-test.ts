@@ -67,6 +67,14 @@ describe("cookies", () => {
     expect(value).toMatchInlineSnapshot(`"hello michael"`);
   });
 
+  it("parses/serializes string values containing utf8 characters", async () => {
+    let cookie = createCookie("my-cookie");
+    let setCookie = await cookie.serialize("日本語");
+    let value = await cookie.parse(getCookieFromSetCookie(setCookie));
+
+    expect(value).toBe("日本語");
+  });
+
   it("fails to parses signed string values with invalid signature", async () => {
     let cookie = createCookie("my-cookie", {
       secrets: ["secret1"],
