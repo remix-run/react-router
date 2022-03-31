@@ -256,40 +256,46 @@ BAM 💥 This entire branch of your UI is migrated to v6!
 
 Once your deepest `Switch` components are converted, go up to their parent `<Switch>` and repeat the process. Keep doing this all the way up the tree until all components are migrated to v6 APIs.
 
-If you have `<Routes>` rendered deeper in the tree of a `<Route>`, you'll need to use a **splat path** so that those deeper URLs continue to match.
+When you convert a `<Switch>` to `<Routes>` that has descendant `<Routes>` deeper in its tree, there are a couple things you need to do in both places for everything to continue matching correctly.
 
 👉️ Add splat paths to any `<Route>` with a **descendant** `<Routes>`
 
 ```diff
-  function Ancestor() {
+  function Root() {
     return (
--     <Switch>
--       <CompatRoute path="/projects" component={Descendant} />
--     </Switch>
-+     <Routes>
-+       {/* Note the trailing "*" in the path! */}
-+       <Route path="/projects/*" element={<Descendant />} />
-+     </Routes>
+      <Routes>
+-       <Route path="/projects" element={<Projects />} />
++       <Route path="/projects/*" element={<Projects />} />
+      </Routes>
     );
   }
+```
 
-  // This one was already migrated earlier but it won't match anymore
-  // if you don't add the "*" when you change <Switch> to <Routes>
-  function Descendant() {
+This ensures deeper URLs like `/projects/123` continue to match that route. Note that this isn't needed if the route doesn't have any descendant `<Routes>`.
+
+👉 Convert route paths from absolute to relative paths
+
+```diff
+- function Projects(props) {
+-   let { match } = props
+  function Projects() {
     return (
       <div>
         <h1>Projects</h1>
         <Routes>
-          <Route path="activity" element={<ProjectsActivity />} />
-          <Route path=":projectId" element={<Project />} />
-          <Route path=":projectId/edit" element={<EditProject />} />
+-         <Route path={match.path + "/activity"} element={<ProjectsActivity />} />
+-         <Route path={match.path + "/:projectId"} element={<Project />} />
+-         <Route path={match.path + "/:projectId/edit"} element={<EditProject />} />
++         <Route path="activity" element={<ProjectsActivity />} />
++         <Route path=":projectId" element={<Project />} />
++         <Route path=":projectId/edit" element={<EditProject />} />
         </Routes>
       </div>
     );
   }
 ```
 
-The splat is only needed for routes with **descendant routes** in their tree.
+Usually descendant Switch (and now Routes) were using the ancestor `match.path` to build their entire path. When the ancestor Switch is converted to `<Routes>` you no longer need to do this this manually, it happens automatically. Also, if you don't change them to relative paths, they will no longer match, so you need to do this step.
 
 ### 6) Remove the compatibility package!
 

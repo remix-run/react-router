@@ -15,6 +15,7 @@ import { Router, Routes, Route } from "../react-router-dom";
 // but not worried about that for now.
 export function CompatRoute(props: any) {
   let { path } = props;
+  if (!props.exact) path += "/*";
   return (
     <Routes>
       <Route path={path} element={<RouteV5 {...props} />} />
