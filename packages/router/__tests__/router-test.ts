@@ -192,10 +192,14 @@ function setup({
       gcDfds.add(internalHelpers.dfd);
       return Object.assign(acc, {
         [routeId]: {
-          ...internalHelpers,
           get signal() {
             return internalHelpers._signal;
           },
+          // Note: This spread has to come _after_ the above getter, otherwise
+          // we lose the getter nature of it somewhere in the babel/typescript
+          // transform.  Doesn't seem ot be an issue in ts-jest but that's a
+          // bit large of a change to look into at the moment
+          ...internalHelpers,
           // Public APIs only needed for test execution
           async resolve(value) {
             await internalHelpers.dfd.resolve(value);

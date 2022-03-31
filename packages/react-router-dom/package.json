@@ -29,10 +29,5 @@
     "routing",
     "history",
     "link"
-  ],
-  "devDependencies": {
-    "@types/jsdom": "16.2.14",
-    "jest-fetch-mock": "3.0.3",
-    "jsdom": "19.0.0"
-  }
+  ]
 }
