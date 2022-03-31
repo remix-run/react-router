@@ -8,6 +8,7 @@ import {
   serverBuildVirtualModule,
   assetsManifestVirtualModule,
 } from "../virtualModules";
+import { createMatchPath } from "../utils/tsconfig";
 
 /**
  * A plugin responsible for resolving bare module ids based on server target.
@@ -19,12 +20,23 @@ export function serverBareModulesPlugin(
   dependencies: Record<string, string>,
   onWarning?: (warning: string, key: string) => void
 ): Plugin {
+  let matchPath = createMatchPath();
+  // Resolve paths according to tsconfig paths property
+  function resolvePath(id: string) {
+    if (!matchPath) {
+      return id;
+    }
+    return (
+      matchPath(id, undefined, undefined, [".ts", ".tsx", ".js", ".jsx"]) || id
+    );
+  }
+
   return {
     name: "server-bare-modules",
     setup(build) {
       build.onResolve({ filter: /.*/ }, ({ importer, path }) => {
         // If it's not a bare module ID, bundle it.
-        if (!isBareModuleId(path)) {
+        if (!isBareModuleId(resolvePath(path))) {
           return undefined;
         }
 
@@ -114,12 +126,7 @@ function getNpmPackageName(id: string): string {
 }
 
 function isBareModuleId(id: string): boolean {
-  return (
-    !id.startsWith("node:") &&
-    !id.startsWith(".") &&
-    !id.startsWith("~") &&
-    !isAbsolute(id)
-  );
+  return !id.startsWith("node:") && !id.startsWith(".") && !isAbsolute(id);
 }
 
 function warnOnceIfEsmOnlyPackage(

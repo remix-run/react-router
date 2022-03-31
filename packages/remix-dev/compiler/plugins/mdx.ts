@@ -5,6 +5,7 @@ import { remarkMdxFrontmatter } from "remark-mdx-frontmatter";
 
 import type { RemixConfig } from "../../config";
 import { getLoaderForFile } from "../loaders";
+import { createMatchPath } from "../utils/tsconfig";
 
 export function mdxPlugin(config: RemixConfig): esbuild.Plugin {
   return {
@@ -16,17 +17,36 @@ export function mdxPlugin(config: RemixConfig): esbuild.Plugin {
       ]);
 
       build.onResolve({ filter: /\.mdx?$/ }, (args) => {
+        let matchPath = createMatchPath();
+        // Resolve paths according to tsconfig paths property
+        function resolvePath(id: string) {
+          if (!matchPath) {
+            return id;
+          }
+          return (
+            matchPath(id, undefined, undefined, [
+              ".ts",
+              ".tsx",
+              ".js",
+              ".jsx",
+              ".mdx",
+              ".md",
+            ]) || id
+          );
+        }
+
+        let resolvedPath = resolvePath(args.path);
+        let resolved = path.resolve(args.resolveDir, resolvedPath);
+
         return {
-          path: args.path.startsWith("~/")
-            ? path.resolve(config.appDirectory, args.path.replace(/^~\//, ""))
-            : path.resolve(args.resolveDir, args.path),
+          path: resolved,
           namespace: "mdx",
         };
       });
 
       build.onLoad({ filter: /\.mdx?$/ }, async (args) => {
         try {
-          let contents = await fsp.readFile(args.path, "utf-8");
+          let fileContents = await fsp.readFile(args.path, "utf-8");
 
           let rehypePlugins = [];
           let remarkPlugins = [
@@ -54,7 +74,7 @@ export const meta = typeof attributes !== "undefined" && attributes.meta;
 export const links = undefined;
           `;
 
-          let compiled = await xdm.compile(contents, {
+          let compiled = await xdm.compile(fileContents, {
             jsx: true,
             jsxRuntime: "classic",
             pragma: "React.createElement",
@@ -63,7 +83,7 @@ export const links = undefined;
             remarkPlugins,
           });
 
-          contents = `
+          let contents = `
 ${compiled.value}
 ${remixExports}`;
 
