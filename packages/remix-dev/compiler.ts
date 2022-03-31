@@ -416,7 +416,7 @@ function createServerBuild(
     serverRouteModulesPlugin(config),
     serverEntryModulePlugin(config),
     serverAssetsManifestPlugin(assetsManifestPromiseRef),
-    serverBareModulesPlugin(config, dependencies),
+    serverBareModulesPlugin(config, dependencies, options.onWarning),
   ];
 
   if (config.serverPlatform !== "node") {

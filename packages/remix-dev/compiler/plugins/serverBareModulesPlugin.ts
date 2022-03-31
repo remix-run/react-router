@@ -1,3 +1,4 @@
+import fs from "fs";
 import { builtinModules } from "module";
 import { isAbsolute, relative } from "path";
 import type { Plugin } from "esbuild";
@@ -82,6 +83,15 @@ export function serverBareModulesPlugin(
           }
         }
 
+        if (
+          onWarning &&
+          !isNodeBuiltIn(packageName) &&
+          (!remixConfig.serverBuildTarget ||
+            remixConfig.serverBuildTarget === "node-cjs")
+        ) {
+          warnOnceIfEsmOnlyPackage(packageName, path, onWarning);
+        }
+
         // Externalize everything else if we've gotten here.
         return {
           path,
@@ -110,4 +120,42 @@ function isBareModuleId(id: string): boolean {
     !id.startsWith("~") &&
     !isAbsolute(id)
   );
+}
+
+function warnOnceIfEsmOnlyPackage(
+  packageName: string,
+  path: string,
+  onWarning: (msg: string, key: string) => void
+) {
+  let packageJsonFile = require.resolve(`${packageName}/package.json`);
+  if (!fs.existsSync(packageJsonFile)) {
+    console.log(packageJsonFile, `does not exist`);
+    return;
+  }
+  let pkg = JSON.parse(fs.readFileSync(packageJsonFile, "utf8"));
+
+  let subImport = path.slice(packageName.length + 1);
+
+  if (pkg.type === "module") {
+    let isEsmOnly = true;
+    if (pkg.exports) {
+      if (!subImport) {
+        if (pkg.exports.require) {
+          isEsmOnly = false;
+        } else if (pkg.exports["."]?.require) {
+          isEsmOnly = false;
+        }
+      } else if (pkg.exports[`./${subImport}`]?.require) {
+        isEsmOnly = false;
+      }
+    }
+
+    if (isEsmOnly) {
+      onWarning(
+        `${packageName} is possibly an ESM only package and should be bundled with ` +
+          `"serverDependenciesToBundle in remix.config.js.`,
+        packageName + ":esm-only"
+      );
+    }
+  }
 }
