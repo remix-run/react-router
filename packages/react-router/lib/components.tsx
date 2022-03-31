@@ -16,7 +16,6 @@ import type {
   LoaderFunctionArgs,
   ActionFunctionArgs,
   RouteData,
-  RouterState,
 } from "@remix-run/router";
 import {
   createMemoryRouter,
@@ -49,16 +48,17 @@ export function useRenderDataRouter({
   children,
   hydrationData,
   fallbackElement,
+  // FIXME: Figure out if we want to use a direct prop or support useRoutes()
+  todo_bikeshed_routes,
   createRouter,
 }: {
   basename?: string;
   children?: React.ReactNode;
   hydrationData?: HydrationState;
   fallbackElement?: React.ReactElement;
+  todo_bikeshed_routes?: RouteObject[];
   createRouter: (routes: RouteObject[]) => DataRouter;
 }): React.ReactElement {
-  let routes = createRoutesFromChildren(children);
-
   invariant(
     hydrationData || fallbackElement,
     "<DataMemoryRouter> expects either `hydrationData` or a `fallbackElement` to be provided"
@@ -67,6 +67,8 @@ export function useRenderDataRouter({
   let [dataState, setDataState] = React.useState<DataState>(
     hydrationData == null ? "empty" : "loaded"
   );
+
+  let routes = todo_bikeshed_routes || createRoutesFromChildren(children);
   let [router] = React.useState<DataRouter>(() => createRouter(routes));
 
   // TODO: For React 18 we can move to useSyncExternalStore via feature detection
@@ -116,7 +118,11 @@ export function useRenderDataRouter({
           navigationType={state.historyAction}
           navigator={navigator}
         >
-          <Routes children={children} />
+          {todo_bikeshed_routes ? (
+            <DataRoutes routes={routes} />
+          ) : (
+            <Routes children={children} />
+          )}
         </Router>
       </DataRouterStateContext.Provider>
     </DataRouterContext.Provider>
@@ -130,6 +136,7 @@ export interface DataMemoryRouterProps {
   initialIndex?: number;
   hydrationData?: HydrationState;
   fallbackElement?: React.ReactElement;
+  todo_bikeshed_routes?: RouteObject[];
 }
 
 export function DataMemoryRouter({
@@ -139,12 +146,14 @@ export function DataMemoryRouter({
   initialIndex,
   hydrationData,
   fallbackElement,
+  todo_bikeshed_routes,
 }: DataMemoryRouterProps): React.ReactElement {
   return useRenderDataRouter({
     basename,
     children,
     hydrationData,
     fallbackElement,
+    todo_bikeshed_routes,
     createRouter: (routes) =>
       createMemoryRouter({
         basename,
@@ -402,6 +411,16 @@ export function Routes({
   return useRoutes(createRoutesFromChildren(children), location);
 }
 
+interface DataRoutesProps {
+  routes: RouteObject[];
+}
+
+// Internal wrapper to render routes provided to a DataRouter via props instead
+// of children.  This is primarily to avoid re-calling createRoutesFromChildren
+function DataRoutes({ routes }: DataRoutesProps): React.ReactElement | null {
+  return useRoutes(routes);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // UTILS
 ///////////////////////////////////////////////////////////////////////////////
@@ -444,7 +463,7 @@ export function createRoutesFromChildren(
 
     let treePath = [...parentPath, index];
     let route: RouteObject = {
-      id: treePath.join("-"),
+      id: element.props.id || treePath.join("-"),
       caseSensitive: element.props.caseSensitive,
       element: element.props.element,
       index: element.props.index,

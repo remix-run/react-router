@@ -47,17 +47,24 @@ export interface ShouldReloadFunctionArgs {
  * routes organized in a tree-like structure.
  */
 export interface RouteObject {
-  id: string;
   caseSensitive?: boolean;
   children?: RouteObject[];
-  // TODO: Make framework agnostic
   element?: React.ReactNode;
   index?: boolean;
   path?: string;
+  id?: string;
   loader?: (obj: LoaderFunctionArgs) => Promise<any>;
   action?: (obj: ActionFunctionArgs) => Promise<any>;
   exceptionElement?: React.ReactNode;
   shouldReload?: (obj: ShouldReloadFunctionArgs) => boolean;
+}
+
+/**
+ * A data route object, which is just a RouteObject with a required unique ID
+ */
+export interface DataRouteObject extends RouteObject {
+  children?: DataRouteObject[];
+  id: string;
 }
 
 type ParamParseFailed = { failed: true };
@@ -117,7 +124,10 @@ export type Params<Key extends string = string> = {
 /**
  * A RouteMatch contains info about how a route matched a URL.
  */
-export interface RouteMatch<ParamKey extends string = string> {
+export interface RouteMatch<
+  ParamKey extends string = string,
+  RouteObjectType extends RouteObject = RouteObject
+> {
   /**
    * The names and values of dynamic parameters in the URL.
    */
@@ -133,7 +143,7 @@ export interface RouteMatch<ParamKey extends string = string> {
   /**
    * The route object that was used to match.
    */
-  route: RouteObject;
+  route: RouteObjectType;
 }
 
 /**
@@ -141,11 +151,11 @@ export interface RouteMatch<ParamKey extends string = string> {
  *
  * @see https://reactrouter.com/docs/en/v6/utils/match-routes
  */
-export function matchRoutes(
-  routes: RouteObject[],
+export function matchRoutes<RouteObjectType extends RouteObject = RouteObject>(
+  routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
   basename = "/"
-): RouteMatch[] | null {
+): RouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
@@ -160,33 +170,33 @@ export function matchRoutes(
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    matches = matchRouteBranch(branches[i], pathname);
+    matches = matchRouteBranch<string, RouteObjectType>(branches[i], pathname);
   }
 
   return matches;
 }
 
-interface RouteMeta {
+interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
-  route: RouteObject;
+  route: RouteObjectType;
 }
 
-interface RouteBranch {
+interface RouteBranch<RouteObjectType extends RouteObject = RouteObject> {
   path: string;
   score: number;
-  routesMeta: RouteMeta[];
+  routesMeta: RouteMeta<RouteObjectType>[];
 }
 
-function flattenRoutes(
-  routes: RouteObject[],
-  branches: RouteBranch[] = [],
-  parentsMeta: RouteMeta[] = [],
+function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
+  routes: RouteObjectType[],
+  branches: RouteBranch<RouteObjectType>[] = [],
+  parentsMeta: RouteMeta<RouteObjectType>[] = [],
   parentPath = ""
-): RouteBranch[] {
+): RouteBranch<RouteObjectType>[] {
   routes.forEach((route, index) => {
-    let meta: RouteMeta = {
+    let meta: RouteMeta<RouteObjectType> = {
       relativePath: route.path || "",
       caseSensitive: route.caseSensitive === true,
       childrenIndex: index,
@@ -291,15 +301,18 @@ function compareIndexes(a: number[], b: number[]): number {
       0;
 }
 
-function matchRouteBranch<ParamKey extends string = string>(
-  branch: RouteBranch,
+function matchRouteBranch<
+  ParamKey extends string = string,
+  RouteObjectType extends RouteObject = RouteObject
+>(
+  branch: RouteBranch<RouteObjectType>,
   pathname: string
-): RouteMatch<ParamKey>[] | null {
+): RouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
   let matchedParams = {};
   let matchedPathname = "/";
-  let matches: RouteMatch[] = [];
+  let matches: RouteMatch<ParamKey, RouteObjectType>[] = [];
   for (let i = 0; i < routesMeta.length; ++i) {
     let meta = routesMeta[i];
     let end = i === routesMeta.length - 1;
@@ -319,7 +332,8 @@ function matchRouteBranch<ParamKey extends string = string>(
     let route = meta.route;
 
     matches.push({
-      params: matchedParams,
+      // TODO: Can this as be avoided?
+      params: matchedParams as Params<ParamKey>,
       pathname: joinPaths([matchedPathname, match.pathname]),
       pathnameBase: normalizePathname(
         joinPaths([matchedPathname, match.pathnameBase])
