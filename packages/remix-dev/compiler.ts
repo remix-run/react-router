@@ -494,9 +494,9 @@ async function writeServerBuildResult(
   for (let file of outputFiles) {
     if (file.path.endsWith(".js")) {
       // fix sourceMappingURL to be relative to current path instead of /build
-      const filename = file.path.substring(file.path.lastIndexOf("/") + 1);
-      const escapedFilename = filename.replace(/\./g, "\\.");
-      const pattern = `(//# sourceMappingURL=)(.*)${escapedFilename}`;
+      let filename = file.path.substring(file.path.lastIndexOf("/") + 1);
+      let escapedFilename = filename.replace(/\./g, "\\.");
+      let pattern = `(//# sourceMappingURL=)(.*)${escapedFilename}`;
       let contents = Buffer.from(file.contents).toString("utf-8");
       contents = contents.replace(new RegExp(pattern), `$1${filename}`);
       await fse.writeFile(file.path, contents);
