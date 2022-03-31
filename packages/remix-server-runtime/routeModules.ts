@@ -98,10 +98,9 @@ export interface HtmlMetaDescriptor {
   [name: string]:
     | null
     | string
-    | string[]
     | undefined
     | Record<string, string>
-    | Record<string, string>[];
+    | Array<Record<string, string> | string>;
 }
 
 export type MetaDescriptor = HtmlMetaDescriptor;
