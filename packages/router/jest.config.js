@@ -1,6 +1,8 @@
 module.exports = {
   testMatch: ["**/__tests__/*-test.(js|ts)"],
-  preset: "ts-jest",
+  transform: {
+    "\\.[jt]sx?$": "./jest-transformer.js",
+  },
   globals: {
     __DEV__: true,
   },
