@@ -449,7 +449,7 @@ function createServerBuild(
       bundle: true,
       logLevel: "silent",
       incremental: options.incremental,
-      sourcemap: options.sourcemap ? "inline" : false,
+      sourcemap: options.sourcemap, // use linked (true) to fix up .map file
       // The server build needs to know how to generate asset URLs for imports
       // of CSS and other files.
       assetNames: "_assets/[name]-[hash]",
@@ -492,9 +492,19 @@ async function writeServerBuildResult(
   await fse.ensureDir(path.dirname(config.serverBuildPath));
 
   for (let file of outputFiles) {
-    if (file.path === config.serverBuildPath) {
-      await fse.writeFile(file.path, file.contents);
-      break;
+    if (file.path.endsWith(".js")) {
+      // fix sourceMappingURL to be relative to current path instead of /build
+      const filename = file.path.substring(file.path.lastIndexOf("/") + 1);
+      const escapedFilename = filename.replace(/\./g, "\\.");
+      const pattern = `(//# sourceMappingURL=)(.*)${escapedFilename}`;
+      let contents = Buffer.from(file.contents).toString("utf-8");
+      contents = contents.replace(new RegExp(pattern), `$1${filename}`);
+      await fse.writeFile(file.path, contents);
+    } else if (file.path.endsWith(".map")) {
+      // remove route: prefix from source filenames so breakpoints work
+      let contents = Buffer.from(file.contents).toString("utf-8");
+      contents = contents.replace(/"route:/gm, '"');
+      await fse.writeFile(file.path, contents);
     }
   }
 }
