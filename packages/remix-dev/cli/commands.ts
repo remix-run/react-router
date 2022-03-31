@@ -20,6 +20,8 @@ import { loadEnv } from "../env";
 import { log } from "./logging";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "./setup";
 
+export * as codemod from "./codemod";
+
 export async function create({
   appTemplate,
   projectDir,

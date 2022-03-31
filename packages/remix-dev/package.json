@@ -28,13 +28,16 @@
     "dotenv": "^16.0.0",
     "esbuild": "0.14.22",
     "esbuild-plugin-cache": "^0.2.9",
+    "execa": "^5.1.1",
     "exit-hook": "2.2.1",
     "express": "4.17.3",
     "fast-glob": "3.2.11",
     "fs-extra": "^10.0.0",
     "get-port": "^5.1.1",
+    "globby": "^11.1.0",
     "gunzip-maybe": "^1.4.2",
     "inquirer": "^8.2.1",
+    "jscodeshift": "^0.13.1",
     "jsesc": "3.0.2",
     "json5": "^2.2.1",
     "lodash.debounce": "^4.0.8",
@@ -46,7 +49,7 @@
     "remark-frontmatter": "^4.0.0",
     "remark-mdx-frontmatter": "^1.0.1",
     "semver": "^7.3.5",
-    "sort-package-json": "^1.54.0",
+    "sort-package-json": "^1.55.0",
     "strip-bom": "^4.0.0",
     "tar-fs": "^2.1.1",
     "tsconfig-paths": "^3.14.0",
@@ -58,8 +61,10 @@
     "@types/chalk-animation": "^1.6.1",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/inquirer": "^8.2.0",
+    "@types/jscodeshift": "^0.11.3",
     "@types/lodash.debounce": "^4.0.6",
     "@types/tar-fs": "^2.0.1",
-    "@types/ws": "^7.4.1"
+    "@types/ws": "^7.4.1",
+    "type-fest": "^2.12.2"
   }
 }

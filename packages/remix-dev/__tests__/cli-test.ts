@@ -42,6 +42,7 @@ describe("remix cli", () => {
             $ remix dev [projectDir]
             $ remix routes [projectDir]
             $ remix setup [remixPlatform]
+            $ remix codemod <transform> [projectDir]
 
           Options:
             --help, -h          Print this help message and exit
@@ -58,11 +59,15 @@ describe("remix cli", () => {
             --debug             Attach Node.js inspector
           \`routes\` Options:
             --json              Print the routes as JSON
+          \`codemod\` Options:
+            --dry               Dry run (no changes are made to files)
+            --force             Bypass Git safety checks and forcibly run codemods
 
           Values:
             - projectDir        The Remix project directory
             - template          The project template to use
-            - remixPlatform     node or cloudflare
+            - remixPlatform     \`node\` or \`cloudflare\`
+            - transform         One of the choices from https://github.com/remix-run/remix/tree/main/packages/remix-dev/cli/codemod/transform-options
 
           Creating a new project:
 
