@@ -11,6 +11,7 @@ describe("rendering", () => {
   let CHILD = "child";
   let CHILD_TEXT = "CHILD_TEXT";
   let REDIRECT = "redirect";
+  let REDIRECT_HASH = "redirect-hash";
   let REDIRECT_TARGET = "page";
 
   beforeAll(async () => {
@@ -45,6 +46,7 @@ describe("rendering", () => {
                 <h2>Index</h2>
                 <Link to="/${PAGE}">${PAGE}</Link>
                 <Link to="/${REDIRECT}">${REDIRECT}</Link>
+                <Link to="/${REDIRECT_HASH}">${REDIRECT_HASH}</Link>
               </div>
             );
           }
@@ -103,6 +105,16 @@ describe("rendering", () => {
           import { redirect } from "remix";
           export function loader() {
             return redirect("/${REDIRECT_TARGET}")
+          }
+          export default function() {
+            return null;
+          }
+        `,
+
+        [`app/routes/${REDIRECT_HASH}.jsx`]: js`
+          import { redirect } from "remix";
+          export function loader() {
+            return redirect("/${REDIRECT_TARGET}#my-hash")
           }
           export default function() {
             return null;
@@ -188,6 +200,16 @@ describe("rendering", () => {
     let html = await app.getHtml("main");
     expect(html).toMatch(PAGE_TEXT);
     expect(html).toMatch(PAGE_INDEX_TEXT);
+  });
+
+  test("loader redirect with hash", async () => {
+    await app.goto("/");
+
+    await app.clickLink(`/${REDIRECT_HASH}`);
+
+    let url = new URL(app.page.url());
+    expect(url.pathname).toBe(`/${REDIRECT_TARGET}`);
+    expect(url.hash).toBe(`#my-hash`);
   });
 
   it("calls changing routes on POP", async () => {
