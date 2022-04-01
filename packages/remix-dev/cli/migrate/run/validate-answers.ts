@@ -2,7 +2,7 @@ import { sync as globbySync } from "globby";
 
 import * as colors from "../../colors";
 import type { Answers } from "../questions";
-import { transformOptions } from "../transform-options";
+import { migrationOptions } from "../migration-options";
 
 const expandFilePathsIfNeeded = (filesBeforeExpansion: string) => {
   let shouldExpandFiles = filesBeforeExpansion.includes("*");
@@ -12,9 +12,9 @@ const expandFilePathsIfNeeded = (filesBeforeExpansion: string) => {
     : [filesBeforeExpansion];
 };
 
-export const validateAnswers = ({ projectDir, transform }: Answers) => ({
+export const validateAnswers = ({ projectDir, migration }: Answers) => ({
   files: validateProjectDir(projectDir),
-  transform: validateTransform(transform),
+  migration: validateMigration(migration),
 });
 
 const validateProjectDir = (projectDir: Answers["projectDir"]) => {
@@ -27,15 +27,15 @@ const validateProjectDir = (projectDir: Answers["projectDir"]) => {
   return expandedFiles;
 };
 
-const validateTransform = (
-  transform: Answers["transform"]
-): typeof transformOptions[number]["value"] => {
-  if (!transformOptions.find(({ value }) => value === transform)) {
+const validateMigration = (
+  migration: Answers["migration"]
+): typeof migrationOptions[number]["value"] => {
+  if (!migrationOptions.find(({ value }) => value === migration)) {
     throw Error(`
 ${colors.error("Invalid transform choice, pick one of:")} 
-${transformOptions.map(({ value }) => colors.error(`- ${value}`)).join("\n")}   
+${migrationOptions.map(({ value }) => colors.error(`- ${value}`)).join("\n")}   
     `);
   }
 
-  return transform as typeof transformOptions[number]["value"];
+  return migration as typeof migrationOptions[number]["value"];
 };

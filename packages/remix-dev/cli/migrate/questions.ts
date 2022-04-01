@@ -1,29 +1,29 @@
 import inquirer from "inquirer";
 
-import { transformOptions } from "./transform-options";
+import { migrationOptions } from "./migration-options";
 
 export type Answers = {
   projectDir: string;
-  transform: string;
+  migration: string;
 };
 
 type QuestionsArgs = {
-  input: { projectDir: string; transform: string };
+  input: { projectDir?: string; migration?: string };
   showHelp: () => void;
 };
 export const questions = async ({
   input,
   showHelp,
 }: QuestionsArgs): Promise<Answers> => {
-  let { transform } = await inquirer
-    .prompt<Pick<Answers, "transform">>([
+  let { migration } = await inquirer
+    .prompt<Pick<Answers, "migration">>([
       {
         type: "list",
-        name: "transform",
-        message: "Which transform would you like to apply?",
-        when: !input.transform,
-        pageSize: transformOptions.length,
-        choices: transformOptions,
+        name: "migration",
+        message: "Which migration would you like to apply?",
+        when: !input.migration,
+        pageSize: migrationOptions.length,
+        choices: migrationOptions,
       },
     ])
     .catch((error) => {
@@ -32,7 +32,7 @@ export const questions = async ({
 
         return {
           files: ".",
-          transform: "",
+          migration: "",
         };
       }
 
@@ -41,6 +41,6 @@ export const questions = async ({
 
   return {
     projectDir: input.projectDir || process.env.REMIX_ROOT || process.cwd(),
-    transform: input.transform || transform,
+    migration: input.migration || migration,
   };
 };

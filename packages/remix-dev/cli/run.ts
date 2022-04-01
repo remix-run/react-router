@@ -21,7 +21,7 @@ ${colors.heading("Usage")}:
   $ remix dev [${colors.arg("projectDir")}]
   $ remix routes [${colors.arg("projectDir")}]
   $ remix setup [${colors.arg("remixPlatform")}]
-  $ remix codemod <${colors.arg("transform")}> [${colors.arg("projectDir")}]
+  $ remix migrate [-m ${colors.arg("migration")}] [${colors.arg("projectDir")}]
 
 ${colors.heading("Options")}:
   --help, -h          Print this help message and exit
@@ -38,17 +38,18 @@ ${colors.heading("Options")}:
   --debug             Attach Node.js inspector
 \`routes\` Options:
   --json              Print the routes as JSON
-\`codemod\` Options:
+\`migrate\` Options:
   --dry               Dry run (no changes are made to files)
-  --force             Bypass Git safety checks and forcibly run codemods
+  --force             Bypass Git safety checks and forcibly run migration
+  --migration, -m     Name of the migration to run
 
 ${colors.heading("Values")}:
   - ${colors.arg("projectDir")}        The Remix project directory
   - ${colors.arg("template")}          The project template to use
   - ${colors.arg("remixPlatform")}     \`node\` or \`cloudflare\`
   - ${colors.arg(
-    "transform"
-  )}         One of the choices from https://github.com/remix-run/remix/tree/main/packages/remix-dev/cli/codemod/transform-options
+    "migration"
+  )}         One of the choices from https://github.com/remix-run/remix/tree/main/packages/remix-dev/cli/migrate/migration-options
 
 ${colors.heading("Creating a new project")}:
 
@@ -117,6 +118,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       help: { type: "boolean", alias: "h" },
       install: { type: "boolean" },
       json: { type: "boolean" },
+      migration: { type: "string", alias: "m" },
       remixVersion: { type: "string" },
       sourcemap: { type: "boolean" },
       template: { type: "string" },
@@ -312,16 +314,16 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     case "setup":
       await commands.setup(input[1]);
       break;
-    case "codemod": {
-      let answers = await commands.codemod.questions({
+    case "migrate": {
+      let answers = await commands.migrate.questions({
         input: {
-          projectDir: input[2],
-          transform: input[1],
+          projectDir: input[1],
+          migration: flags.migration,
         },
         showHelp,
       });
 
-      await commands.codemod.run({ answers, flags });
+      await commands.migrate.run({ answers, flags });
       break;
     }
     case "dev":
