@@ -28,7 +28,7 @@ export async function internalParseFormData(
 
   let stream: Readable;
   if (typeof body === "string" || Buffer.isBuffer(body)) {
-    stream = Readable.from(body.toString());
+    stream = Readable.from(body);
   } else {
     stream = body;
   }
