@@ -34,76 +34,81 @@ export async function internalParseFormData(
   }
 
   await new Promise<void>(async (resolve, reject) => {
-    let busboy = new Busboy({
-      highWaterMark: 2 * 1024 * 1024,
-      headers: {
-        "content-type": contentType,
-      },
-    });
+    try {
+      let busboy = new Busboy({
+        highWaterMark: 2 * 1024 * 1024,
+        headers: {
+          "content-type": contentType,
+        },
+      });
 
-    let aborted = false;
-    function abort(error?: Error) {
-      if (aborted) return;
-      aborted = true;
+      let aborted = false;
+      function abort(error?: Error) {
+        console.log(error);
+        if (aborted) return;
+        aborted = true;
 
-      stream.unpipe();
-      stream.removeAllListeners();
-      busboy.removeAllListeners();
+        stream.unpipe();
+        stream.removeAllListeners();
+        busboy.removeAllListeners();
 
-      abortController?.abort();
-      reject(error || new Error("failed to parse form data"));
-    }
+        abortController?.abort();
+        reject(error || new Error("failed to parse form data"));
+      }
 
-    busboy.on("field", (name, value) => {
-      formData.append(name, value);
-    });
+      busboy.on("field", (name, value) => {
+        formData.append(name, value);
+      });
 
-    busboy.on("file", (name, filestream, filename, encoding, mimetype) => {
-      if (uploadHandler) {
-        fileWorkQueue.push(
-          (async () => {
-            try {
-              let value = await uploadHandler({
-                name,
-                stream: filestream,
-                filename,
-                encoding,
-                mimetype,
-              });
+      busboy.on("file", (name, filestream, filename, encoding, mimetype) => {
+        if (uploadHandler) {
+          fileWorkQueue.push(
+            (async () => {
+              try {
+                let value = await uploadHandler({
+                  name,
+                  stream: filestream,
+                  filename,
+                  encoding,
+                  mimetype,
+                });
 
-              if (typeof value !== "undefined") {
-                formData.append(name, value);
+                if (typeof value !== "undefined") {
+                  formData.append(name, value);
+                }
+              } catch (error: any) {
+                // Emit error to busboy to bail early if possible
+                busboy.emit("error", error);
+                // It's possible that the handler is doing stuff and fails
+                // *after* busboy has finished. Rethrow the error for surfacing
+                // in the Promise.all(fileWorkQueue) below.
+                throw error;
+              } finally {
+                filestream.resume();
               }
-            } catch (error: any) {
-              // Emit error to busboy to bail early if possible
-              busboy.emit("error", error);
-              // It's possible that the handler is doing stuff and fails
-              // *after* busboy has finished. Rethrow the error for surfacing
-              // in the Promise.all(fileWorkQueue) below.
-              throw error;
-            } finally {
-              filestream.resume();
-            }
-          })()
-        );
-      } else {
-        filestream.resume();
-      }
+            })()
+          );
+        } else {
+          filestream.resume();
+        }
 
-      if (!uploadHandler) {
-        console.warn(
-          `Tried to parse multipart file upload for field "${name}" but no uploadHandler was provided.` +
-            " Read more here: https://remix.run/api/remix#parseMultipartFormData-node"
-        );
-      }
-    });
+        if (!uploadHandler) {
+          console.warn(
+            `Tried to parse multipart file upload for field "${name}" but no uploadHandler was provided.` +
+              " Read more here: https://remix.run/api/remix#parseMultipartFormData-node"
+          );
+        }
+      });
 
-    stream.on("error", abort);
-    stream.on("aborted", abort);
-    busboy.on("error", abort);
-    busboy.on("finish", resolve);
+      stream.on("error", abort);
+      stream.on("aborted", abort);
+      busboy.on("error", abort);
+      busboy.on("finish", resolve);
 
-    stream.pipe(busboy);
+      stream.pipe(busboy);
+    } catch (err) {
+      reject(err);
+    }
   });
 
   await Promise.all(fileWorkQueue);

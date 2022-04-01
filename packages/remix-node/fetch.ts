@@ -89,7 +89,11 @@ class NodeRequest extends BaseNodeRequest {
 
   async formData(uploadHandler?: UploadHandler): Promise<FormData> {
     let contentType = this.headers.get("Content-Type");
-    if (contentType) {
+    if (
+      contentType &&
+      (/application\/x-www-form-urlencoded/.test(contentType) ||
+        /multipart\/form-data/.test(contentType))
+    ) {
       return await internalParseFormData(
         contentType,
         this.body as Readable,
