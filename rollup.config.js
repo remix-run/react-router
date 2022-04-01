@@ -527,9 +527,9 @@ function reactRouterDom() {
         banner: createBanner("React Router DOM", version),
         globals: {
           history: "HistoryLibrary",
+          "@remix-run/router": "Router",
           react: "React",
           "react-router": "ReactRouter",
-          "@remix-run/router": "Router",
         },
         name: "ReactRouterDOM",
       },
@@ -561,9 +561,9 @@ function reactRouterDom() {
         banner: createBanner("React Router DOM", version),
         globals: {
           history: "HistoryLibrary",
+          "@remix-run/router": "Router",
           react: "React",
           "react-router": "ReactRouter",
-          "@remix-run/router": "Router",
         },
         name: "ReactRouterDOM",
       },
@@ -674,7 +674,7 @@ function reactRouterDom() {
 function reactRouterDomV5Compat() {
   let SOURCE_DIR = "packages/react-router-dom-v5-compat";
   let OUTPUT_DIR = "build/node_modules/react-router-dom-v5-compat";
-  let ROUTER_DOM_SOURCE = "packages/react-router-dom/index.tsx";
+  let ROUTER_DOM_SOURCE = "packages/react-router-dom/(index|dom).ts*";
   let ROUTER_DOM_COPY_DEST = `${SOURCE_DIR}/react-router-dom`;
 
   let version = getVersion(SOURCE_DIR);
@@ -691,6 +691,7 @@ function reactRouterDomV5Compat() {
       },
       external: [
         "history",
+        "@remix-run/router",
         "react",
         "react-dom",
         "react-router",
@@ -735,13 +736,20 @@ function reactRouterDomV5Compat() {
         banner: createBanner("React Router DOM v5 Compat", version),
         globals: {
           history: "HistoryLibrary",
+          "@remix-run/router": "Router",
           react: "React",
           "react-router": "ReactRouter",
           "react-router-dom": "ReactRouterDOM",
         },
         name: "ReactRouterDOMv5Compat",
       },
-      external: ["history", "react", "react-router", "react-router-dom"],
+      external: [
+        "history",
+        "@remix-run/router",
+        "react",
+        "react-router",
+        "react-router-dom",
+      ],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -769,13 +777,20 @@ function reactRouterDomV5Compat() {
         banner: createBanner("React Router DOM v5 Compat", version),
         globals: {
           history: "HistoryLibrary",
+          "@remix-run/router": "Router",
           react: "React",
           "react-router": "ReactRouter",
           "react-router-dom": "ReactRouterDOM",
         },
         name: "ReactRouterDOMv5Compat",
       },
-      external: ["history", "react", "react-router", "react-router-dom"],
+      external: [
+        "history",
+        "@remix-run/router",
+        "react",
+        "react-router",
+        "react-router-dom",
+      ],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
