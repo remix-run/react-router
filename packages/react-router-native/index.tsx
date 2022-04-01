@@ -35,8 +35,10 @@ import {
   useResolvedPath,
   useRoutes,
   useOutletContext,
-  useLoaderData,
   useActionData,
+  useLoaderData,
+  useMatches,
+  useRouteData,
   useRouteException,
   useTransition,
 } from "react-router";
@@ -76,8 +78,10 @@ export {
   useResolvedPath,
   useRoutes,
   useOutletContext,
-  useLoaderData,
   useActionData,
+  useLoaderData,
+  useMatches,
+  useRouteData,
   useRouteException,
   useTransition,
 };

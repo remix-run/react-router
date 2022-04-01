@@ -27,7 +27,6 @@ import {
   NavigationContext,
   RouteContext,
 } from "./context";
-import { DataRouteObject } from "@remix-run/router/utils";
 
 /**
  * Returns the full href for the given "to" value. This is useful for building
@@ -383,6 +382,32 @@ export function useRoutes(
   );
 }
 
+interface DefaultExceptionElementProps {
+  routeId: string;
+}
+function DefaultExceptionElement({ routeId }: DefaultExceptionElementProps) {
+  let { exception } = useRouteData(routeId);
+  let lightgrey = "rgba(200,200,200, 0.5)";
+  let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
+  let codeStyles = { padding: "2px 4px", backgroundColor: lightgrey };
+  return (
+    <>
+      <h2>Unhandled Thrown Exception!</h2>
+      <p style={{ fontStyle: "italic" }}>{exception?.message || exception}</p>
+      {exception?.stack ? (
+        <pre style={preStyles}>{exception?.stack}</pre>
+      ) : null}
+      <p>💿 Hey developer 👋</p>
+      <p>
+        You can provide a way better UX than this when your app throws errors by
+        providing your own&nbsp;
+        <code style={codeStyles}>exceptionElement</code> props on&nbsp;
+        <code style={codeStyles}>&lt;Route&gt;</code>
+      </p>
+    </>
+  );
+}
+
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
@@ -412,7 +437,9 @@ export function _renderMatches(
       <RouteContext.Provider
         children={
           match.route.id && exceptions?.[match.route.id]
-            ? match.route.exceptionElement
+            ? match.route.exceptionElement || (
+                <DefaultExceptionElement routeId={match.route.id} />
+              )
             : match.route.element !== undefined
             ? match.route.element
             : outlet
@@ -430,7 +457,9 @@ type DataRouterHook =
   | "useLoaderData"
   | "useActionData"
   | "useRouteException"
-  | "useTransition";
+  | "useTransition"
+  | "useRouteData"
+  | "useMatches";
 
 function useDataRouterState(hookName: DataRouterHook) {
   let state = React.useContext(DataRouterStateContext);
@@ -438,8 +467,43 @@ function useDataRouterState(hookName: DataRouterHook) {
   return state;
 }
 
-// Internal utility to avoid 3 invariants per hook
-function useRouteData(
+export function useTransition() {
+  let state = useDataRouterState("useTransition");
+  return state.transition;
+}
+
+export function useMatches() {
+  let { matches, loaderData } = useDataRouterState("useMatches");
+  return React.useMemo(
+    () =>
+      matches.map((match) => {
+        let { pathname, params } = match;
+        return {
+          id: match.route.id,
+          pathname,
+          params,
+          data: loaderData[match.route.id],
+        };
+      }),
+    [matches, loaderData]
+  );
+}
+
+export function useRouteData(routeId: string): {
+  actionData?: any;
+  loaderData?: any;
+  exception?: any;
+} {
+  let state = useDataRouterState("useRouteData");
+  return {
+    actionData: state.actionData?.[routeId],
+    loaderData: state.loaderData?.[routeId],
+    exception: state.exceptions?.[routeId],
+  };
+}
+
+// Internal utility to avoid multiple repeated invariants per hook
+function useRouteDataField(
   hookName: DataRouterHook,
   fieldName: "loaderData" | "actionData" | "exceptions"
 ) {
@@ -458,18 +522,13 @@ function useRouteData(
 }
 
 export function useLoaderData() {
-  return useRouteData("useLoaderData", "loaderData");
+  return useRouteDataField("useLoaderData", "loaderData");
 }
 
 export function useActionData() {
-  return useRouteData("useActionData", "actionData");
+  return useRouteDataField("useActionData", "actionData");
 }
 
 export function useRouteException() {
-  return useRouteData("useRouteException", "exceptions");
-}
-
-export function useTransition() {
-  let state = useDataRouterState("useTransition");
-  return state.transition;
+  return useRouteDataField("useRouteException", "exceptions");
 }

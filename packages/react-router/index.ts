@@ -60,8 +60,10 @@ import {
   useParams,
   useResolvedPath,
   useRoutes,
-  useLoaderData,
   useActionData,
+  useLoaderData,
+  useMatches,
+  useRouteData,
   useRouteException,
   useTransition,
 } from "./lib/hooks";
@@ -122,8 +124,10 @@ export {
   useParams,
   useResolvedPath,
   useRoutes,
-  useLoaderData,
   useActionData,
+  useLoaderData,
+  useMatches,
+  useRouteData,
   useRouteException,
   useTransition,
 };
