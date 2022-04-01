@@ -81,6 +81,7 @@ export {
   matchRoutes,
   matchPath,
   createPath,
+  createSearchParams,
   parsePath,
   renderMatches,
   resolvePath,

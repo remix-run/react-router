@@ -25,7 +25,7 @@
  * - TSC needs to generate the types, and it has to derive the output paths from
  *   the import paths. If we have a weird require *outside of this package* to
  *   "../../react-router-dom" it's going to generate types from the common root
- *   of all module paths (Which makes sense becuase what else would it do? It
+ *   of all module paths (Which makes sense because what else would it do? It
  *   needs to write the type files next to the source files so that typescript
  *   can resolve the types for tooling in the same location as the modules).
  *   Because tsc isn't as flexible as rollup, we have no control over this
