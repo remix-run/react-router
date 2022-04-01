@@ -59,11 +59,6 @@ export function useRenderDataRouter({
   todo_bikeshed_routes?: RouteObject[];
   createRouter: (routes: RouteObject[]) => DataRouter;
 }): React.ReactElement {
-  invariant(
-    hydrationData || fallbackElement,
-    "<DataMemoryRouter> expects either `hydrationData` or a `fallbackElement` to be provided"
-  );
-
   let [dataState, setDataState] = React.useState<DataState>(
     hydrationData == null ? "empty" : "loaded"
   );
@@ -105,8 +100,8 @@ export function useRenderDataRouter({
     };
   }, [router]);
 
-  if (dataState !== "loaded" && fallbackElement) {
-    return fallbackElement;
+  if (dataState !== "loaded") {
+    return fallbackElement || <p>Loading your application...</p>;
   }
 
   return (

@@ -15,6 +15,8 @@ import {
   Outlet,
   useActionData,
   useLoaderData,
+  useMatches,
+  useRouteData,
   useRouteException,
   useTransition,
   UNSAFE_DataRouterContext,
@@ -177,6 +179,46 @@ describe("<DataMemoryRouter>", () => {
       "<div>
         <p>
           Loading...
+        </p>
+      </div>"
+    `);
+
+    fooDefer.resolve({ message: "From Foo Loader" });
+    await waitFor(() => screen.getByText("Foo:From Foo Loader"));
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Foo:
+          From Foo Loader
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("renders a default fallbackElement if none is provided", async () => {
+    let fooDefer = defer();
+    let { container } = render(
+      <MemoryRouter initialEntries={["/foo"]}>
+        <Route path="/" element={<Outlet />}>
+          <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
+          <Route path="bar" element={<Bar />} />
+        </Route>
+      </MemoryRouter>
+    );
+
+    function Foo() {
+      let data = useLoaderData();
+      return <h1>Foo:{data?.message}</h1>;
+    }
+
+    function Bar() {
+      return <h1>Bar Heading</h1>;
+    }
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <p>
+          Loading your application...
         </p>
       </div>"
     `);
@@ -470,6 +512,156 @@ describe("<DataMemoryRouter>", () => {
         </div>
       </div>"
     `);
+  });
+
+  it("provides useMatches and useRouteData", async () => {
+    let spy = jest.fn();
+
+    render(
+      <MemoryRouter initialEntries={["/"]} hydrationData={{}}>
+        <Route path="/" element={<Layout />}>
+          <Route
+            path="foo"
+            loader={async () => "FOO LOADER"}
+            element={<Foo />}
+          />
+          <Route
+            path="bar"
+            loader={async () => "BAR LOADER"}
+            element={<Bar />}
+          />
+        </Route>
+      </MemoryRouter>
+    );
+
+    function Layout() {
+      spy({
+        component: "Layout",
+        useMatches: useMatches(),
+        useRouteData: useRouteData("0"),
+      });
+      return (
+        <div>
+          <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+          <Outlet />
+        </div>
+      );
+    }
+
+    function Foo() {
+      spy({
+        component: "Foo",
+        useMatches: useMatches(),
+        useRouteData: useRouteData("0-0"),
+      });
+      return <h1>Foo</h1>;
+    }
+    function Bar() {
+      spy({
+        component: "Bar",
+        useMatches: useMatches(),
+        useRouteData: useRouteData("0-1"),
+      });
+      return <h1>Bar</h1>;
+    }
+
+    expect(spy.mock.calls[0]).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "component": "Layout",
+          "useMatches": Array [
+            Object {
+              "data": undefined,
+              "id": "0",
+              "params": Object {},
+              "pathname": "/",
+            },
+          ],
+          "useRouteData": Object {
+            "actionData": undefined,
+            "exception": undefined,
+            "loaderData": undefined,
+          },
+        },
+      ]
+    `);
+    expect(spy.mock.calls.length).toBe(1);
+    fireEvent.click(screen.getByText("Link to Bar"));
+    expect(spy.mock.calls[1]).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "component": "Layout",
+          "useMatches": Array [
+            Object {
+              "data": undefined,
+              "id": "0",
+              "params": Object {},
+              "pathname": "/",
+            },
+          ],
+          "useRouteData": Object {
+            "actionData": undefined,
+            "exception": undefined,
+            "loaderData": undefined,
+          },
+        },
+      ]
+    `);
+    expect(spy.mock.calls.length).toBe(2);
+    await waitFor(() => screen.getByText("Bar"));
+    expect(spy.mock.calls[2]).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "component": "Layout",
+          "useMatches": Array [
+            Object {
+              "data": undefined,
+              "id": "0",
+              "params": Object {},
+              "pathname": "/",
+            },
+            Object {
+              "data": "BAR LOADER",
+              "id": "0-1",
+              "params": Object {},
+              "pathname": "/bar",
+            },
+          ],
+          "useRouteData": Object {
+            "actionData": undefined,
+            "exception": undefined,
+            "loaderData": undefined,
+          },
+        },
+      ]
+    `);
+    expect(spy.mock.calls[3]).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "component": "Bar",
+          "useMatches": Array [
+            Object {
+              "data": undefined,
+              "id": "0",
+              "params": Object {},
+              "pathname": "/",
+            },
+            Object {
+              "data": "BAR LOADER",
+              "id": "0-1",
+              "params": Object {},
+              "pathname": "/bar",
+            },
+          ],
+          "useRouteData": Object {
+            "actionData": undefined,
+            "exception": undefined,
+            "loaderData": "BAR LOADER",
+          },
+        },
+      ]
+    `);
+    expect(spy.mock.calls.length).toBe(4);
   });
 
   describe("exceptions", () => {
@@ -817,6 +1009,121 @@ describe("<DataMemoryRouter>", () => {
           <p>
             Layout Exception:
             Kaboom!
+          </p>
+        </div>"
+      `);
+    });
+
+    it("renders navigation exceptions with a default if no exceptionElements are provided", async () => {
+      let fooDefer = defer();
+      let barDefer = defer();
+
+      let { container } = render(
+        <MemoryRouter
+          initialEntries={["/foo"]}
+          hydrationData={{
+            loaderData: {
+              "0-0": {
+                message: "hydrated from foo",
+              },
+            },
+          }}
+        >
+          <Route path="/" element={<Layout />}>
+            <Route
+              path="foo"
+              loader={() => fooDefer.promise}
+              element={<Foo />}
+            />
+            <Route
+              path="bar"
+              loader={() => barDefer.promise}
+              element={<Bar />}
+            />
+          </Route>
+        </MemoryRouter>
+      );
+
+      function Layout() {
+        let transition = useTransition();
+        return (
+          <div>
+            <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
+            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <p>{transition.state}</p>
+            <Outlet />
+          </div>
+        );
+      }
+      function Foo() {
+        let data = useLoaderData();
+        return <h1>Foo:{data?.message}</h1>;
+      }
+      function Bar() {
+        let data = useLoaderData();
+        return <h1>Bar:{data?.message}</h1>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href=\\"/foo\\"
+            >
+              Link to Foo
+            </a>
+            <a
+              href=\\"/bar\\"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo:
+              hydrated from foo
+            </h1>
+          </div>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      let error = new Error("Kaboom!");
+      error.stack = "FAKE STACK TRACE";
+      barDefer.reject(error);
+      await waitFor(() => screen.getByText("Unhandled Thrown Exception!"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h2>
+            Unhandled Thrown Exception!
+          </h2>
+          <p
+            style=\\"font-style: italic;\\"
+          >
+            Kaboom!
+          </p>
+          <pre
+            style=\\"padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);\\"
+          >
+            FAKE STACK TRACE
+          </pre>
+          <p>
+            💿 Hey developer 👋
+          </p>
+          <p>
+            You can provide a way better UX than this when your app throws errors by providing your own 
+            <code
+              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+            >
+              exceptionElement
+            </code>
+             props on 
+            <code
+              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+            >
+              &lt;Route&gt;
+            </code>
           </p>
         </div>"
       `);

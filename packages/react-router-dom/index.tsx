@@ -32,8 +32,10 @@ import {
   useResolvedPath,
   useRoutes,
   useOutletContext,
-  useLoaderData,
   useActionData,
+  useLoaderData,
+  useMatches,
+  useRouteData,
   useRouteException,
   useTransition,
   UNSAFE_useRenderDataRouter,
@@ -49,7 +51,6 @@ import {
   HydrationState,
   invariant,
   RouteObject,
-  RouterState,
 } from "@remix-run/router";
 
 import type { SubmitOptions, URLSearchParamsInit } from "./dom";
@@ -94,8 +95,10 @@ export {
   useResolvedPath,
   useRoutes,
   useOutletContext,
-  useLoaderData,
   useActionData,
+  useLoaderData,
+  useMatches,
+  useRouteData,
   useRouteException,
   useTransition,
 };
@@ -323,10 +326,6 @@ if (__DEV__) {
 }
 
 export { HistoryRouter as unstable_HistoryRouter };
-
-function isModifiedEvent(event: React.MouseEvent) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
 
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
