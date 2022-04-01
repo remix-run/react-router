@@ -63,9 +63,9 @@ import {
   useActionData,
   useLoaderData,
   useMatches,
-  useRouteData,
+  useRouteLoaderData,
   useRouteException,
-  useTransition,
+  useNavigation,
 } from "./lib/hooks";
 
 // Expose react-router public API
@@ -127,9 +127,9 @@ export {
   useActionData,
   useLoaderData,
   useMatches,
-  useRouteData,
+  useRouteLoaderData,
   useRouteException,
-  useTransition,
+  useNavigation,
 };
 
 ///////////////////////////////////////////////////////////////////////////////

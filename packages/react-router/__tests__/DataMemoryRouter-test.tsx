@@ -16,9 +16,9 @@ import {
   useActionData,
   useLoaderData,
   useMatches,
-  useRouteData,
+  useRouteLoaderData,
   useRouteException,
-  useTransition,
+  useNavigation,
   UNSAFE_DataRouterContext,
 } from "../index";
 
@@ -107,7 +107,6 @@ describe("<DataMemoryRouter>", () => {
             "0-0": "child data",
           },
           actionData: {
-            "0": "parent action",
             "0-0": "child action",
           },
         }}
@@ -121,7 +120,7 @@ describe("<DataMemoryRouter>", () => {
     function Comp() {
       let data = useLoaderData();
       let actionData = useActionData();
-      let transition = useTransition();
+      let transition = useNavigation();
       return (
         <div>
           {data}
@@ -136,7 +135,7 @@ describe("<DataMemoryRouter>", () => {
       "<div>
         <div>
           parent data
-          parent action
+          child action
           idle
           <div>
             child data
@@ -217,9 +216,11 @@ describe("<DataMemoryRouter>", () => {
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
-        <p>
-          Loading your application...
-        </p>
+        <div
+          class=\\"ghost\\"
+        >
+          👻
+        </div>
       </div>"
     `);
 
@@ -320,7 +321,7 @@ describe("<DataMemoryRouter>", () => {
     );
 
     function Layout() {
-      let transition = useTransition();
+      let transition = useNavigation();
       return (
         <div>
           <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
@@ -417,7 +418,7 @@ describe("<DataMemoryRouter>", () => {
     );
 
     function Layout() {
-      let transition = useTransition();
+      let transition = useNavigation();
       return (
         <div>
           <MemoryNavigate to="/bar" formMethod="post" formData={formData}>
@@ -514,7 +515,7 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
-  it("provides useMatches and useRouteData", async () => {
+  it("provides useMatches and useRouteLoaderData", async () => {
     let spy = jest.fn();
 
     render(
@@ -538,7 +539,7 @@ describe("<DataMemoryRouter>", () => {
       spy({
         component: "Layout",
         useMatches: useMatches(),
-        useRouteData: useRouteData("0"),
+        useRouteLoaderData: useRouteLoaderData("0"),
       });
       return (
         <div>
@@ -552,7 +553,7 @@ describe("<DataMemoryRouter>", () => {
       spy({
         component: "Foo",
         useMatches: useMatches(),
-        useRouteData: useRouteData("0-0"),
+        useRouteLoaderData: useRouteLoaderData("0-0"),
       });
       return <h1>Foo</h1>;
     }
@@ -560,7 +561,7 @@ describe("<DataMemoryRouter>", () => {
       spy({
         component: "Bar",
         useMatches: useMatches(),
-        useRouteData: useRouteData("0-1"),
+        useRouteLoaderData: useRouteLoaderData("0-1"),
       });
       return <h1>Bar</h1>;
     }
@@ -577,11 +578,7 @@ describe("<DataMemoryRouter>", () => {
               "pathname": "/",
             },
           ],
-          "useRouteData": Object {
-            "actionData": undefined,
-            "exception": undefined,
-            "loaderData": undefined,
-          },
+          "useRouteLoaderData": undefined,
         },
       ]
     `);
@@ -599,11 +596,7 @@ describe("<DataMemoryRouter>", () => {
               "pathname": "/",
             },
           ],
-          "useRouteData": Object {
-            "actionData": undefined,
-            "exception": undefined,
-            "loaderData": undefined,
-          },
+          "useRouteLoaderData": undefined,
         },
       ]
     `);
@@ -627,11 +620,7 @@ describe("<DataMemoryRouter>", () => {
               "pathname": "/bar",
             },
           ],
-          "useRouteData": Object {
-            "actionData": undefined,
-            "exception": undefined,
-            "loaderData": undefined,
-          },
+          "useRouteLoaderData": undefined,
         },
       ]
     `);
@@ -653,11 +642,7 @@ describe("<DataMemoryRouter>", () => {
               "pathname": "/bar",
             },
           ],
-          "useRouteData": Object {
-            "actionData": undefined,
-            "exception": undefined,
-            "loaderData": "BAR LOADER",
-          },
+          "useRouteLoaderData": "BAR LOADER",
         },
       ]
     `);
@@ -694,7 +679,7 @@ describe("<DataMemoryRouter>", () => {
       function Comp() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useTransition();
+        let transition = useNavigation();
         return (
           <div>
             {data}
@@ -749,7 +734,7 @@ describe("<DataMemoryRouter>", () => {
       function Comp() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useTransition();
+        let transition = useNavigation();
         return (
           <div>
             {data}
@@ -807,7 +792,7 @@ describe("<DataMemoryRouter>", () => {
       );
 
       function Layout() {
-        let transition = useTransition();
+        let transition = useNavigation();
         return (
           <div>
             <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
@@ -950,7 +935,7 @@ describe("<DataMemoryRouter>", () => {
       );
 
       function Layout() {
-        let transition = useTransition();
+        let transition = useNavigation();
         return (
           <div>
             <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
@@ -1045,7 +1030,7 @@ describe("<DataMemoryRouter>", () => {
       );
 
       function Layout() {
-        let transition = useTransition();
+        let transition = useNavigation();
         return (
           <div>
             <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>

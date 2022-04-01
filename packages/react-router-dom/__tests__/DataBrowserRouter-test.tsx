@@ -21,7 +21,7 @@ import {
   useLoaderData,
   useActionData,
   useRouteException,
-  useTransition,
+  useNavigation,
   Form,
   Link,
   useSubmit,
@@ -97,7 +97,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
               "0-0": "child data",
             },
             actionData: {
-              "0": "parent action",
               "0-0": "child action",
             },
           }}
@@ -111,7 +110,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       function Comp() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useTransition();
+        let transition = useNavigation();
         return (
           <div>
             {data}
@@ -126,7 +125,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         "<div>
           <div>
             parent data
-            parent action
+            child action
             idle
             <div>
               child data
@@ -282,7 +281,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       );
 
       function Layout() {
-        let transition = useTransition();
+        let transition = useNavigation();
         return (
           <div>
             <Link to="/bar">Link to Bar</Link>
@@ -376,7 +375,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       function Home() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useTransition();
+        let transition = useNavigation();
         let submit = useSubmit();
         let formRef = React.useRef();
         return (
@@ -484,7 +483,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       function Home() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useTransition();
+        let transition = useNavigation();
         return (
           <div>
             <Form method="get">
@@ -568,7 +567,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       function Home() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useTransition();
+        let transition = useNavigation();
         return (
           <div>
             <Form method="post">
@@ -680,7 +679,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         function Comp() {
           let data = useLoaderData();
           let actionData = useActionData();
-          let transition = useTransition();
+          let transition = useNavigation();
           return (
             <div>
               {data}
@@ -735,7 +734,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         function Comp() {
           let data = useLoaderData();
           let actionData = useActionData();
-          let transition = useTransition();
+          let transition = useNavigation();
           return (
             <div>
               {data}
@@ -793,7 +792,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         );
 
         function Layout() {
-          let transition = useTransition();
+          let transition = useNavigation();
           return (
             <div>
               <Link to="/foo">Link to Foo</Link>
@@ -936,7 +935,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         );
 
         function Layout() {
-          let transition = useTransition();
+          let transition = useNavigation();
           return (
             <div>
               <Link to="/foo">Link to Foo</Link>
