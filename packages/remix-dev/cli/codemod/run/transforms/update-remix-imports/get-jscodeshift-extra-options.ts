@@ -1,14 +1,16 @@
 import type { PackageJson } from "type-fest";
 
 import type { ExtraOptions } from "./jscodeshift-transform";
-import { adapters } from "./jscodeshift-transform";
+import { adapters, runtimes } from "./jscodeshift-transform";
 
 const getAdapter = ({ dependencies }: PackageJson): ExtraOptions["adapter"] =>
   Object.keys(dependencies || {})
     .filter(
       (key) =>
         key.startsWith("@remix-run/") &&
-        !["@remix-run/react", "@remix-run/serve"].includes(key)
+        !["react", "serve", "server-runtime", ...runtimes]
+          .map((pkgName) => `@remix-run/${pkgName}`)
+          .includes(key)
     )
     .map((key) => key.replace("@remix-run/", ""))
     .find((key) =>

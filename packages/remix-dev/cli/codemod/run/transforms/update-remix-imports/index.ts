@@ -19,11 +19,16 @@ export const updateRemixImports: Transform = async ({
   let packageJson: PackageJson = JSON.parse(
     await readFile(pkgJsonPath, "utf-8")
   );
+  let extraOptions = getJSCodeshiftExtraOptions(packageJson);
 
-  await cleanupPackageJson({ content: packageJson, path: pkgJsonPath });
+  await cleanupPackageJson({
+    content: packageJson,
+    path: pkgJsonPath,
+    runtime: extraOptions.runtime,
+  });
 
   return JSCodeshiftTransform<ExtraOptions>({
-    extraOptions: getJSCodeshiftExtraOptions(packageJson),
+    extraOptions,
     files,
     flags,
     transformPath,

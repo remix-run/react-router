@@ -13,15 +13,20 @@ const getNewPostInstall = (postinstall?: string) =>
 type CleanupPackageJsonArgs = {
   content: PackageJson;
   path: string;
+  runtime: typeof runtimes[number];
 };
 export const cleanupPackageJson = async ({
   content: { dependencies, scripts, ...packageJson },
   path,
+  runtime,
 }: CleanupPackageJsonArgs) => {
   let newPackageJson = {
     ...packageJson,
     dependencies: {
       ...dependencies,
+      ...(dependencies?.remix
+        ? { [`@remix-run/${runtime}`]: dependencies.remix }
+        : {}),
       remix: undefined,
     },
     scripts: {
