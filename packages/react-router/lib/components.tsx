@@ -72,14 +72,14 @@ export function useRenderDataRouter({
   let [state, setState] = React.useState<DataRouter["state"]>(
     () => router.state
   );
-  React.useLayoutEffect(
+  React.useEffect(
     () => router.subscribe((newState) => setState(newState)),
     [router]
   );
 
   // If we did not SSR, trigger a replacement navigation to ourself for initial
   // data load and then mark us as loaded as soon as we return to idle
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     if (dataState === "empty") {
       setDataState("loading");
       router.navigate(router.state.location, { replace: true });
@@ -101,7 +101,7 @@ export function useRenderDataRouter({
   }, [router]);
 
   if (dataState !== "loaded") {
-    return fallbackElement || <p>Loading your application...</p>;
+    return fallbackElement || <DefaultFallbackElement />;
   }
 
   return (
@@ -121,6 +121,66 @@ export function useRenderDataRouter({
         </Router>
       </DataRouterStateContext.Provider>
     </DataRouterContext.Provider>
+  );
+}
+
+function DefaultFallbackElement() {
+  return (
+    <>
+      <style>{`
+        .ghost {
+          font-size: 33vh;
+          text-align: center;
+          width: 100vh;
+          height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: shake 5s ease-in-out both;
+          animation-iteration-count: infinite;
+          transform: translate3d(0, 0, 0);
+          backface-visibility: hidden;
+          perspective: 100px;
+        }
+
+        @media (prefers-reduced-motion) {
+          .ghost {
+            animation-iteration-count: 0;
+          }
+        }
+
+        @keyframes shake {
+          0%, 50%, 100% {
+            transform: translate3d(0, 0, 0);
+          }
+
+          12.5% {
+            transform: translate3d(5px, 5px, 0);
+          }
+
+          25% {
+            transform: translate3d(0, 10px, 0);
+          }
+
+          37.5% {
+            transform: translate3d(-5px, 5px, 0);
+          }
+
+          62.5% {
+            transform: translate3d(5px, -5px, 0);
+          }
+
+          75% {
+            transform: translate3d(0, -10px, 0);
+          }
+
+          87.5% {
+            transform: translate3d(-5px, -5px, 0);
+          }
+        }
+    `}</style>
+      <div className="ghost">👻</div>
+    </>
   );
 }
 

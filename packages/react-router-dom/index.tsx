@@ -35,9 +35,9 @@ import {
   useActionData,
   useLoaderData,
   useMatches,
-  useRouteData,
+  useNavigation,
+  useRouteLoaderData,
   useRouteException,
-  useTransition,
   UNSAFE_useRenderDataRouter,
   UNSAFE_RouteContext,
   UNSAFE_DataRouterContext,
@@ -99,9 +99,9 @@ export {
   useActionData,
   useLoaderData,
   useMatches,
-  useRouteData,
+  useNavigation,
+  useRouteLoaderData,
   useRouteException,
-  useTransition,
 };
 
 export { NavigationType } from "react-router";

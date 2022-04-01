@@ -382,11 +382,8 @@ export function useRoutes(
   );
 }
 
-interface DefaultExceptionElementProps {
-  routeId: string;
-}
-function DefaultExceptionElement({ routeId }: DefaultExceptionElementProps) {
-  let { exception } = useRouteData(routeId);
+function DefaultExceptionElement() {
+  let exception = useRouteException();
   let lightgrey = "rgba(200,200,200, 0.5)";
   let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
   let codeStyles = { padding: "2px 4px", backgroundColor: lightgrey };
@@ -434,12 +431,13 @@ export function _renderMatches(
 
   return renderedMatches.reduceRight((outlet, match, index) => {
     return (
+      //TODO: add <RouteRenderErrorBoundary element={exceptionElement || DefaultExceptionElement} />
+      // to handle render exceptions.  Make sure it gets the right useRouteException()
+      // based on where it live sin the hierarchy
       <RouteContext.Provider
         children={
           match.route.id && exceptions?.[match.route.id]
-            ? match.route.exceptionElement || (
-                <DefaultExceptionElement routeId={match.route.id} />
-              )
+            ? match.route.exceptionElement || <DefaultExceptionElement />
             : match.route.element !== undefined
             ? match.route.element
             : outlet
@@ -457,8 +455,8 @@ type DataRouterHook =
   | "useLoaderData"
   | "useActionData"
   | "useRouteException"
-  | "useTransition"
-  | "useRouteData"
+  | "useNavigation"
+  | "useRouteLoaderData"
   | "useMatches";
 
 function useDataRouterState(hookName: DataRouterHook) {
@@ -467,8 +465,8 @@ function useDataRouterState(hookName: DataRouterHook) {
   return state;
 }
 
-export function useTransition() {
-  let state = useDataRouterState("useTransition");
+export function useNavigation() {
+  let state = useDataRouterState("useNavigation");
   return state.transition;
 }
 
@@ -489,46 +487,46 @@ export function useMatches() {
   );
 }
 
-export function useRouteData(routeId: string): {
-  actionData?: any;
-  loaderData?: any;
-  exception?: any;
-} {
-  let state = useDataRouterState("useRouteData");
-  return {
-    actionData: state.actionData?.[routeId],
-    loaderData: state.loaderData?.[routeId],
-    exception: state.exceptions?.[routeId],
-  };
+export function useRouteLoaderData(routeId: string): any {
+  let state = useDataRouterState("useRouteLoaderData");
+  return state.loaderData?.[routeId];
 }
 
-// Internal utility to avoid multiple repeated invariants per hook
-function useRouteDataField(
-  hookName: DataRouterHook,
-  fieldName: "loaderData" | "actionData" | "exceptions"
-) {
-  let state = useDataRouterState(hookName);
+export function useLoaderData() {
+  let state = useDataRouterState("useLoaderData");
 
   let route = React.useContext(RouteContext);
-  invariant(route, `${hookName} must be used inside a RouteContext`);
+  invariant(route, `useLoaderData must be used inside a RouteContext`);
 
   let thisRoute = route.matches[route.matches.length - 1];
   invariant(
     thisRoute.route.id,
-    `${hookName} can only be used on routes that contain a unique "id"`
+    `${useLoaderData} can only be used on routes that contain a unique "id"`
   );
 
-  return state[fieldName]?.[thisRoute.route.id];
-}
-
-export function useLoaderData() {
-  return useRouteDataField("useLoaderData", "loaderData");
+  return state.loaderData?.[thisRoute.route.id];
 }
 
 export function useActionData() {
-  return useRouteDataField("useActionData", "actionData");
+  let state = useDataRouterState("useRouteException");
+
+  let route = React.useContext(RouteContext);
+  invariant(route, `useRouteException must be used inside a RouteContext`);
+
+  return Object.values(state?.actionData || {})[0];
 }
 
 export function useRouteException() {
-  return useRouteDataField("useRouteException", "exceptions");
+  let state = useDataRouterState("useRouteException");
+
+  let route = React.useContext(RouteContext);
+  invariant(route, `useRouteException must be used inside a RouteContext`);
+
+  let thisRoute = route.matches[route.matches.length - 1];
+  invariant(
+    thisRoute.route.id,
+    `useRouteException can only be used on routes that contain a unique "id"`
+  );
+
+  return state.exceptions?.[thisRoute.route.id];
 }

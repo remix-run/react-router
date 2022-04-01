@@ -38,9 +38,9 @@ import {
   useActionData,
   useLoaderData,
   useMatches,
-  useRouteData,
+  useNavigation,
+  useRouteLoaderData,
   useRouteException,
-  useTransition,
 } from "react-router";
 import type { To } from "react-router";
 
@@ -81,9 +81,9 @@ export {
   useActionData,
   useLoaderData,
   useMatches,
-  useRouteData,
+  useNavigation,
+  useRouteLoaderData,
   useRouteException,
-  useTransition,
 };
 
 export { NavigationType } from "react-router";
