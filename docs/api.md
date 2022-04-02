@@ -457,7 +457,7 @@ function NavList() {
               <span className={isActive ? activeClassName : undefined}>
                 Tasks
               </span>
-            ))}
+            )}
           </NavLink>
         </li>
       </ul>
