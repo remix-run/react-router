@@ -421,10 +421,10 @@ function NavList() {
   // This styling will be applied to a <NavLink> when the
   // route that it links to is currently selected.
   let activeStyle = {
-    textDecoration: "underline"
+    textDecoration: "underline",
   };
 
-  let activeClassName = "underline"
+  let activeClassName = "underline";
 
   return (
     <nav>
@@ -450,11 +450,13 @@ function NavList() {
           </NavLink>
         </li>
         <li>
-          <NavLink
-            to="tasks"
-          >
+          <NavLink to="tasks">
             {({ isActive }) => (
-              <span className={isActive ? activeClassName : undefined}>
+              <span
+                className={
+                  isActive ? activeClassName : undefined
+                }
+              >
                 Tasks
               </span>
             )}
