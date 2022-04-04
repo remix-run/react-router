@@ -176,7 +176,6 @@ export function DataBrowserRouter({
   return UNSAFE_useRenderDataRouter({
     basename,
     children,
-    hydrationData,
     fallbackElement,
     createRouter: (routes: RouteObject[]) =>
       createBrowserRouter({
@@ -206,7 +205,6 @@ export function DataHashRouter({
   return UNSAFE_useRenderDataRouter({
     basename,
     children,
-    hydrationData,
     fallbackElement,
     createRouter: (routes: RouteObject[]) =>
       createHashRouter({
