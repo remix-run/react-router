@@ -84,7 +84,7 @@ export const packageExports: Record<Package, Exports> = {
   },
   "cloudflare-pages": {
     value: [...defaultAdapterExports.value, "createPagesFunctionHandler"],
-    type: ["createPagesFunctionHandlerParams"],
+    type: [...defaultAdapterExports.type, "createPagesFunctionHandlerParams"],
   },
   "cloudflare-workers": {
     value: [
