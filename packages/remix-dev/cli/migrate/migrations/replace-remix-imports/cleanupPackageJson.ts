@@ -2,7 +2,7 @@ import { writeFile } from "fs/promises";
 import sort from "sort-package-json";
 import type { PackageJson } from "type-fest";
 
-import { runtimes } from "./jscodeshift-transform";
+import { runtimes } from "./transform";
 
 const getNewPostInstall = (postinstall?: string) =>
   postinstall &&

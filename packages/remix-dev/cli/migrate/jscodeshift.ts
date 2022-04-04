@@ -2,29 +2,27 @@ import { sync as execaSync } from "execa";
 
 const jscodeshiftExecutable = require.resolve(".bin/jscodeshift");
 
-type ExtraOptions = Record<string, unknown>;
-const normalizeExtraOptions = (extraOptions: ExtraOptions = {}) =>
-  Object.entries(extraOptions)
+type Options = Record<string, unknown>;
+const toFlags = (options: Options = {}) =>
+  Object.entries(options)
     .filter(([_key, value]) => Boolean(value))
     .map(
       ([key, value]) =>
         `--${key}${typeof value === "boolean" ? "" : `=${value}`}`
     );
 
-type JSCodeshiftTransformArgs<ExtraOptionsType extends ExtraOptions = {}> = {
-  extraOptions?: ExtraOptionsType;
+type Args<TransformOptions extends Options = {}> = {
+  transformPath: string;
   files: string[];
   flags: { dry?: boolean; print?: boolean; runInBand?: boolean };
-  transformPath: string;
+  transformOptions?: TransformOptions;
 };
-export const JSCodeshiftTransform = <
-  ExtraOptionsType extends ExtraOptions = {}
->({
-  extraOptions,
+export const run = <TransformOptions extends Options = {}>({
+  transformPath,
   files,
   flags: { dry, print, runInBand },
-  transformPath,
-}: JSCodeshiftTransformArgs<ExtraOptionsType>) => {
+  transformOptions,
+}: Args<TransformOptions>) => {
   let args = [
     dry ? "--dry" : "",
     print ? "--print" : "",
@@ -37,10 +35,14 @@ export const JSCodeshiftTransform = <
     "--parser=tsx",
     ...["--transform", transformPath],
     ...files,
-    ...normalizeExtraOptions(extraOptions),
+    ...toFlags(transformOptions || {}),
   ];
 
-  console.log(`Executing command: jscodeshift ${args.join(" ")}`);
+  console.log(
+    `Executing command: jscodeshift ${args
+      .filter((arg) => arg !== "")
+      .join(" ")}`
+  );
 
   let result = execaSync(jscodeshiftExecutable, args, {
     stdio: "inherit",

@@ -34,7 +34,6 @@
     "fast-glob": "3.2.11",
     "fs-extra": "^10.0.0",
     "get-port": "^5.1.1",
-    "globby": "^11.1.0",
     "gunzip-maybe": "^1.4.2",
     "inquirer": "^8.2.1",
     "jscodeshift": "^0.13.1",

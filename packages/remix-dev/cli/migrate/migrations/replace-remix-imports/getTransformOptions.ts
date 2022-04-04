@@ -1,7 +1,7 @@
 import type { PackageJson } from "type-fest";
 
-import type { ExtraOptions } from "./jscodeshift-transform";
-import { adapters, runtimes } from "./jscodeshift-transform";
+import type { ExtraOptions } from "./transform";
+import { adapters, runtimes } from "./transform";
 
 const getAdapter = ({ dependencies }: PackageJson): ExtraOptions["adapter"] =>
   Object.keys(dependencies || {})
@@ -26,7 +26,7 @@ const getRuntime = ({ scripts }: PackageJson): ExtraOptions["runtime"] =>
     ""
   ) as ExtraOptions["runtime"]) || "node";
 
-export const getJSCodeshiftExtraOptions = (
+export const getTransformOptions = (
   packageJson: PackageJson
 ): ExtraOptions => ({
   adapter: getAdapter(packageJson),

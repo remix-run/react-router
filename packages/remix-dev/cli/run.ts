@@ -315,15 +315,11 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       await commands.setup(input[1]);
       break;
     case "migrate": {
-      let answers = await commands.migrate.questions({
-        input: {
-          projectDir: input[1],
-          migration: flags.migration,
-        },
-        showHelp,
+      let { migrationId, projectDir } = await commands.migrate.resolveInput({
+        migrationId: flags.migration,
+        projectDir: input[1],
       });
-
-      await commands.migrate.run({ answers, flags });
+      await commands.migrate.run({ migrationId, projectDir, flags });
       break;
     }
     case "dev":
