@@ -184,6 +184,7 @@ export type InitialEntry = string | Partial<Location>;
 export type MemoryHistoryOptions = {
   initialEntries?: InitialEntry[];
   initialIndex?: number;
+  v5Compat?: boolean;
 };
 
 /**
@@ -205,7 +206,7 @@ export interface MemoryHistory extends History {
 export function createMemoryHistory(
   options: MemoryHistoryOptions = {}
 ): MemoryHistory {
-  let { initialEntries = ["/"], initialIndex } = options;
+  let { initialEntries = ["/"], initialIndex, v5Compat = false } = options;
   let entries: Location[]; // Declare so we can access from createMemoryLocation
   entries = initialEntries.map((entry, index) =>
     createMemoryLocation(entry, null, index === 0 ? "default" : undefined)
@@ -260,11 +261,17 @@ export function createMemoryHistory(
       let nextLocation = createMemoryLocation(to, state);
       index += 1;
       entries.splice(index, entries.length, nextLocation);
+      if (v5Compat) {
+        listeners.call({ action, location: nextLocation });
+      }
     },
     replace(to, state) {
       action = Action.Replace;
       let nextLocation = createMemoryLocation(to, state);
       entries[index] = nextLocation;
+      if (v5Compat) {
+        listeners.call({ action, location: nextLocation });
+      }
     },
     go(delta) {
       action = Action.Pop;
@@ -293,7 +300,10 @@ export function createMemoryHistory(
  */
 export interface BrowserHistory extends History {}
 
-export type BrowserHistoryOptions = { window?: Window };
+export type BrowserHistoryOptions = {
+  window?: Window;
+  v5Compat?: boolean;
+};
 
 /**
  * Browser history stores the location in regular URLs. This is the standard for
@@ -305,7 +315,7 @@ export type BrowserHistoryOptions = { window?: Window };
 export function createBrowserHistory(
   options: BrowserHistoryOptions = {}
 ): BrowserHistory {
-  let { window = document.defaultView! } = options;
+  let { window = document.defaultView!, v5Compat = false } = options;
   let globalHistory = window.history;
 
   window.addEventListener(PopStateEventType, () => {
@@ -330,6 +340,10 @@ export function createBrowserHistory(
       // way to warn them about it since the page will refresh...
       window.location.assign(url);
     }
+
+    if (v5Compat) {
+      listeners.call({ action, location });
+    }
   }
 
   function replace(to: To, state?: any) {
@@ -339,6 +353,10 @@ export function createBrowserHistory(
 
     // TODO: Support forced reloading
     globalHistory.replaceState(getHistoryState(location), "", url);
+
+    if (v5Compat) {
+      listeners.call({ action, location: location });
+    }
   }
 
   let history: BrowserHistory = {
@@ -389,7 +407,10 @@ export function createBrowserHistory(
  */
 export interface HashHistory extends History {}
 
-export type HashHistoryOptions = { window?: Window };
+export type HashHistoryOptions = {
+  window?: Window;
+  v5Compat?: boolean;
+};
 
 /**
  * Hash history stores the location in window.location.hash. This makes it ideal
@@ -402,7 +423,7 @@ export type HashHistoryOptions = { window?: Window };
 export function createHashHistory(
   options: HashHistoryOptions = {}
 ): HashHistory {
-  let { window = document.defaultView! } = options;
+  let { window = document.defaultView!, v5Compat = false } = options;
   let globalHistory = window.history;
   let action = Action.Pop;
   // hash history still needs to track this internally for use in hashchange events
@@ -451,6 +472,10 @@ export function createHashHistory(
     }
 
     location = nextLocation;
+
+    if (v5Compat) {
+      listeners.call({ action, location });
+    }
   }
 
   function replace(to: To, state?: any) {
@@ -470,6 +495,10 @@ export function createHashHistory(
     // TODO: Support forced reloading
     globalHistory.replaceState(historyState, "", url);
     location = nextLocation;
+
+    if (v5Compat) {
+      listeners.call({ action, location });
+    }
   }
 
   let history: HashHistory = {

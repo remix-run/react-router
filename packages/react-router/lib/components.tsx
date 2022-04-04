@@ -1,25 +1,23 @@
 import * as React from "react";
-import type { MemoryHistory } from "history";
+import type {
+  ActionFunctionArgs,
+  HydrationState,
+  InitialEntry,
+  LoaderFunctionArgs,
+  Location,
+  MemoryHistory,
+  RouteMatch,
+  RouteObject,
+  Router as DataRouter,
+  To,
+} from "@remix-run/router";
 import {
   Action as NavigationType,
   createMemoryHistory,
-  parsePath,
-} from "history";
-import type {
-  InitialEntry,
-  RouteMatch,
-  RouteObject,
-  HydrationState,
-  To,
-  Location,
-  Router as DataRouter,
-  LoaderFunctionArgs,
-  ActionFunctionArgs,
-} from "@remix-run/router";
-import {
   createMemoryRouter,
   invariant,
   normalizePathname,
+  parsePath,
   stripBasename,
   warning,
 } from "@remix-run/router";
@@ -39,8 +37,6 @@ import {
   _renderMatches,
 } from "./hooks";
 import { ShouldReloadFunctionArgs } from "@remix-run/router/utils";
-
-type DataState = "empty" | "loading" | "loaded";
 
 export function useRenderDataRouter({
   basename,
@@ -218,7 +214,11 @@ export function MemoryRouter({
 }: MemoryRouterProps): React.ReactElement {
   let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
-    historyRef.current = createMemoryHistory({ initialEntries, initialIndex });
+    historyRef.current = createMemoryHistory({
+      initialEntries,
+      initialIndex,
+      v5Compat: true,
+    });
   }
 
   let history = historyRef.current;

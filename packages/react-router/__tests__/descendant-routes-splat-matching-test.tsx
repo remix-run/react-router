@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Outlet, Routes, Route, useParams } from "react-router";
-import type { InitialEntry } from "history";
+import type { InitialEntry } from "@remix-run/router";
 
 describe("Descendant <Routes> splat matching", () => {
   describe("when the parent route path ends with /*", () => {

@@ -13,8 +13,7 @@
   "types": "./index.d.ts",
   "dependencies": {
     "@ungap/url-search-params": "^0.1.4",
-    "react-router": "6.3.0",
-    "history": "^5.2.0"
+    "react-router": "6.3.0"
   },
   "peerDependencies": {
     "react": ">=16.8",

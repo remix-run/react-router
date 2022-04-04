@@ -1,6 +1,6 @@
 import * as React from "react";
+import type { History, Location, RouteMatch, Router } from "@remix-run/router";
 import { Action as NavigationType } from "@remix-run/router";
-import type { RouteMatch, Router, History, Location } from "@remix-run/router";
 
 // Contexts for data routers
 export const DataRouterContext = React.createContext<Router | null>(null);
