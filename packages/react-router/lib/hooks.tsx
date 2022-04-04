@@ -1,21 +1,24 @@
 import * as React from "react";
-import type { Location, Path, To } from "history";
-import { Action as NavigationType, parsePath } from "history";
 import type {
+  Location,
   ParamParseKey,
   Params,
+  Path,
   PathMatch,
   PathPattern,
   RouteMatch,
   RouteObject,
   Router as DataRouter,
+  To,
 } from "@remix-run/router";
 import {
+  Action as NavigationType,
   getToPathname,
   invariant,
   joinPaths,
   matchPath,
   matchRoutes,
+  parsePath,
   resolveTo,
   warning,
   warningOnce,

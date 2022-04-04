@@ -1,18 +1,22 @@
-import type { Hash, Location, Path, Pathname, Search, To } from "history";
-import { Action as NavigationType, parsePath, createPath } from "history";
 import type {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  Location,
   Params,
+  Path,
   PathMatch,
   PathPattern,
   RouteMatch,
   RouteObject,
-  LoaderFunctionArgs,
-  ActionFunctionArgs,
+  To,
 } from "@remix-run/router";
 import {
+  Action as NavigationType,
+  createPath,
   generatePath,
   matchPath,
   matchRoutes,
+  parsePath,
   resolvePath,
 } from "@remix-run/router";
 
@@ -67,6 +71,11 @@ import {
   useRouteException,
   useNavigation,
 } from "./lib/hooks";
+
+// FIXME: Do we need to still export these to be non-breaking?
+type Hash = string;
+type Pathname = string;
+type Search = string;
 
 // Expose react-router public API
 export type {

@@ -3,8 +3,6 @@
  * you'll need to update the rollup config for react-router-dom-v5-compat.
  */
 import * as React from "react";
-import type { BrowserHistory, HashHistory, History } from "history";
-import { createBrowserHistory, createHashHistory } from "history";
 import {
   MemoryRouter,
   DataMemoryRouter,
@@ -43,7 +41,10 @@ import {
   UNSAFE_DataRouterContext,
 } from "react-router";
 import type { To } from "react-router";
+import type { BrowserHistory, HashHistory, History } from "@remix-run/router";
 import {
+  createBrowserHistory,
+  createHashHistory,
   createBrowserRouter,
   createHashRouter,
   FormEncType,
@@ -232,7 +233,7 @@ export function BrowserRouter({
 }: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
   if (historyRef.current == null) {
-    historyRef.current = createBrowserHistory({ window });
+    historyRef.current = createBrowserHistory({ window, v5Compat: true });
   }
 
   let history = historyRef.current;
@@ -267,7 +268,7 @@ export interface HashRouterProps {
 export function HashRouter({ basename, children, window }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
-    historyRef.current = createHashHistory({ window });
+    historyRef.current = createHashHistory({ window, v5Compat: true });
   }
 
   let history = historyRef.current;

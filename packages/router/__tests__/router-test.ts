@@ -2302,7 +2302,6 @@ describe("a router", () => {
       let childSpy = jest.fn(() => childDfd.promise);
       let child2Dfd = defer();
       let child2Spy = jest.fn(() => child2Dfd.promise);
-      debugger;
       let router = createRouter({
         history: createMemoryHistory({ initialEntries: ["/child"] }),
         routes: [

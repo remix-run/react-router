@@ -1,10 +1,23 @@
-import {
+import type {
+  BrowserHistory,
   BrowserHistoryOptions,
+  HashHistory,
+  HashHistoryOptions,
+  History,
+  InitialEntry,
+  Location,
+  MemoryHistory,
+  MemoryHistoryOptions,
+  Path,
+  To,
+} from "./history";
+import {
+  Action,
   createBrowserHistory,
   createHashHistory,
   createMemoryHistory,
-  HashHistoryOptions,
-  MemoryHistoryOptions,
+  createPath,
+  parsePath,
 } from "./history";
 import type {
   HydrationState,
@@ -46,19 +59,51 @@ import {
   warningOnce,
 } from "./utils";
 
-export type { History, Location, InitialEntry, To } from "./history";
-export { Action, createMemoryHistory, parsePath } from "./history";
+type MemoryRouterInit = MemoryHistoryOptions & Omit<RouterInit, "history">;
+function createMemoryRouter({
+  initialEntries,
+  initialIndex,
+  ...routerInit
+}: MemoryRouterInit): Router {
+  let history = createMemoryHistory({ initialEntries, initialIndex });
+  return createRouter({ history, ...routerInit });
+}
 
-// Re-exports for router usages
+type BrowserRouterInit = BrowserHistoryOptions & Omit<RouterInit, "history">;
+function createBrowserRouter({
+  window,
+  ...routerInit
+}: BrowserRouterInit): Router {
+  let history = createBrowserHistory({ window });
+  return createRouter({ history, ...routerInit });
+}
+
+type HashRouterInit = HashHistoryOptions & Omit<RouterInit, "history">;
+function createHashRouter({ window, ...routerInit }: HashRouterInit): Router {
+  let history = createHashHistory({ window });
+  return createRouter({ history, ...routerInit });
+}
+
+// @remix-run/router public Type API
 export type {
   ActionFunctionArgs,
+  BrowserHistory,
+  BrowserRouterInit,
   FormEncType,
   FormMethod,
+  HashHistory,
+  HashRouterInit,
+  History,
   HydrationState,
+  InitialEntry,
   LoaderFunctionArgs,
+  Location,
+  MemoryHistory,
+  MemoryRouterInit,
   NavigateOptions,
   ParamParseKey,
   Params,
+  Path,
   PathMatch,
   PathPattern,
   RouteData,
@@ -68,10 +113,21 @@ export type {
   RouterInit,
   RouterState,
   Submission,
+  To,
   Transition,
 };
+
+// @remix-run/router public API
 export {
+  Action,
   IDLE_TRANSITION,
+  createBrowserHistory,
+  createBrowserRouter,
+  createHashHistory,
+  createHashRouter,
+  createMemoryRouter,
+  createMemoryHistory,
+  createPath,
   createRouter,
   generatePath,
   getToPathname,
@@ -82,39 +138,10 @@ export {
   normalizeHash,
   normalizePathname,
   normalizeSearch,
+  parsePath,
   resolvePath,
   resolveTo,
   stripBasename,
   warning,
   warningOnce,
 };
-
-export type MemoryRouterInit = MemoryHistoryOptions &
-  Omit<RouterInit, "history">;
-export function createMemoryRouter({
-  initialEntries,
-  initialIndex,
-  ...routerInit
-}: MemoryRouterInit): Router {
-  let history = createMemoryHistory({ initialEntries, initialIndex });
-  return createRouter({ history, ...routerInit });
-}
-
-export type BrowserRouterInit = BrowserHistoryOptions &
-  Omit<RouterInit, "history">;
-export function createBrowserRouter({
-  window,
-  ...routerInit
-}: BrowserRouterInit): Router {
-  let history = createBrowserHistory({ window });
-  return createRouter({ history, ...routerInit });
-}
-
-export type HashRouterInit = HashHistoryOptions & Omit<RouterInit, "history">;
-export function createHashRouter({
-  window,
-  ...routerInit
-}: HashRouterInit): Router {
-  let history = createHashHistory({ window });
-  return createRouter({ history, ...routerInit });
-}
