@@ -6,9 +6,9 @@ import type {
   Params,
   PathMatch,
   PathPattern,
-  RouteData,
   RouteMatch,
   RouteObject,
+  Router as DataRouter,
 } from "@remix-run/router";
 import {
   getToPathname,
@@ -379,7 +379,7 @@ export function useRoutes(
         })
       ),
     parentMatches,
-    dataRouterStateContext?.exceptions
+    dataRouterStateContext
   );
 }
 
@@ -451,16 +451,17 @@ export class RenderErrorBoundary extends React.Component<
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  exceptions?: RouteData | null
+  dataRouterState?: DataRouter["state"] | null
 ): React.ReactElement | null {
   if (matches == null) return null;
 
   let renderedMatches = matches;
 
   // If we have data exceptions, trim matches to the highest exception boundary
+  let exceptions = dataRouterState?.exceptions;
   if (exceptions != null) {
     let exceptionIndex = renderedMatches.findIndex(
-      (m) => m.route.id && exceptions[m.route.id]
+      (m) => m.route.id && exceptions?.[m.route.id]
     );
     invariant(
       exceptionIndex >= 0,
@@ -477,9 +478,10 @@ export function _renderMatches(
   // based on where it lives in the hierarchy
   return renderedMatches.reduceRight((outlet, match, index) => {
     let exception = match.route.id ? exceptions?.[match.route.id] : null;
-    let exceptionElement = match.route.exceptionElement || (
-      <DefaultExceptionElement />
-    );
+    // Only data routers handle exceptions
+    let exceptionElement = dataRouterState
+      ? match.route.exceptionElement || <DefaultExceptionElement />
+      : null;
     let getChildren = () => (
       <RouteContext.Provider
         children={
@@ -496,9 +498,10 @@ export function _renderMatches(
       />
     );
 
-    // Only wrap in an error boundary if we have an exception element, which
-    // lets render errors bubble up to the proper exceptionElement
-    return match.route.exceptionElement || index === 0 ? (
+    // Only wrap in an error boundary within data router usages when we have an
+    // exceptionElement on this route.  Otherwise let it bubble up to an ancestor
+    // exceptionElement
+    return dataRouterState && (match.route.exceptionElement || index === 0) ? (
       <RenderErrorBoundary
         component={exceptionElement}
         exception={exception}

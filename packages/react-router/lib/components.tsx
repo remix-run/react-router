@@ -15,7 +15,6 @@ import type {
   Router as DataRouter,
   LoaderFunctionArgs,
   ActionFunctionArgs,
-  RouteData,
 } from "@remix-run/router";
 import {
   createMemoryRouter,
@@ -46,7 +45,6 @@ type DataState = "empty" | "loading" | "loaded";
 export function useRenderDataRouter({
   basename,
   children,
-  hydrationData,
   fallbackElement,
   // FIXME: Figure out if we want to use a direct prop or support useRoutes()
   todo_bikeshed_routes,
@@ -54,7 +52,6 @@ export function useRenderDataRouter({
 }: {
   basename?: string;
   children?: React.ReactNode;
-  hydrationData?: HydrationState;
   fallbackElement?: React.ReactElement;
   todo_bikeshed_routes?: RouteObject[];
   createRouter: (routes: RouteObject[]) => DataRouter;
@@ -188,7 +185,6 @@ export function DataMemoryRouter({
   return useRenderDataRouter({
     basename,
     children,
-    hydrationData,
     fallbackElement,
     todo_bikeshed_routes,
     createRouter: (routes) =>
@@ -529,7 +525,7 @@ export function createRoutesFromChildren(
  */
 export function renderMatches(
   matches: RouteMatch[] | null,
-  exceptions?: RouteData | null
+  dataRouterState: DataRouter["state"] | null
 ): React.ReactElement | null {
-  return _renderMatches(matches, undefined, exceptions);
+  return _renderMatches(matches, undefined, dataRouterState);
 }
