@@ -4,9 +4,16 @@ import type { RouteMatch, Router, History, Location } from "@remix-run/router";
 
 // Contexts for data routers
 export const DataRouterContext = React.createContext<Router | null>(null);
+if (__DEV__) {
+  DataRouterContext.displayName = "DataRouter";
+}
+
 export const DataRouterStateContext = React.createContext<
   Router["state"] | null
 >(null);
+if (__DEV__) {
+  DataRouterStateContext.displayName = "DataRouterState";
+}
 
 /**
  * A Navigator is a "location changer"; it's how you get to different locations.
@@ -58,4 +65,15 @@ export const RouteContext = React.createContext<RouteContextObject>({
 
 if (__DEV__) {
   RouteContext.displayName = "Route";
+}
+
+interface RouteContextObject {
+  outlet: React.ReactElement | null;
+  matches: RouteMatch[];
+}
+
+export const RouteExceptionContext = React.createContext<any>(null);
+
+if (__DEV__) {
+  RouteExceptionContext.displayName = "RouteException";
 }

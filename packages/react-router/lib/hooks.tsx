@@ -26,6 +26,7 @@ import {
   LocationContext,
   NavigationContext,
   RouteContext,
+  RouteExceptionContext,
 } from "./context";
 
 /**
@@ -405,6 +406,48 @@ function DefaultExceptionElement() {
   );
 }
 
+type RenderErrorBoundaryProps = React.PropsWithChildren<{
+  exception: any;
+  component: React.ReactNode;
+}>;
+
+type RenderErrorBoundaryState = {
+  exception: any;
+};
+
+export class RenderErrorBoundary extends React.Component<
+  RenderErrorBoundaryProps,
+  RenderErrorBoundaryState
+> {
+  constructor(props: RenderErrorBoundaryProps) {
+    super(props);
+    this.state = { exception: props.exception || null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { exception: error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error(
+      "React Router caught the following error during render",
+      error,
+      errorInfo
+    );
+  }
+
+  render() {
+    return this.state.exception ? (
+      <RouteExceptionContext.Provider
+        value={this.state.exception}
+        children={this.props.component}
+      />
+    ) : (
+      this.props.children
+    );
+  }
+}
+
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
@@ -429,15 +472,19 @@ export function _renderMatches(
     );
   }
 
+  //TODO: add <RouteRenderErrorBoundary element={exceptionElement || DefaultExceptionElement} />
+  // to handle render exceptions.  Make sure it gets the right useRouteException()
+  // based on where it lives in the hierarchy
   return renderedMatches.reduceRight((outlet, match, index) => {
-    return (
-      //TODO: add <RouteRenderErrorBoundary element={exceptionElement || DefaultExceptionElement} />
-      // to handle render exceptions.  Make sure it gets the right useRouteException()
-      // based on where it live sin the hierarchy
+    let exception = match.route.id ? exceptions?.[match.route.id] : null;
+    let exceptionElement = match.route.exceptionElement || (
+      <DefaultExceptionElement />
+    );
+    let getChildren = () => (
       <RouteContext.Provider
         children={
-          match.route.id && exceptions?.[match.route.id]
-            ? match.route.exceptionElement || <DefaultExceptionElement />
+          exception
+            ? exceptionElement
             : match.route.element !== undefined
             ? match.route.element
             : outlet
@@ -447,6 +494,18 @@ export function _renderMatches(
           matches: parentMatches.concat(renderedMatches.slice(0, index + 1)),
         }}
       />
+    );
+
+    // Only wrap in an error boundary if we have an exception element, which
+    // lets render errors bubble up to the proper exceptionElement
+    return match.route.exceptionElement || index === 0 ? (
+      <RenderErrorBoundary
+        component={exceptionElement}
+        exception={exception}
+        children={getChildren()}
+      />
+    ) : (
+      getChildren()
     );
   }, null as React.ReactElement | null);
 }
@@ -487,11 +546,6 @@ export function useMatches() {
   );
 }
 
-export function useRouteLoaderData(routeId: string): any {
-  let state = useDataRouterState("useRouteLoaderData");
-  return state.loaderData?.[routeId];
-}
-
 export function useLoaderData() {
   let state = useDataRouterState("useLoaderData");
 
@@ -507,6 +561,11 @@ export function useLoaderData() {
   return state.loaderData?.[thisRoute.route.id];
 }
 
+export function useRouteLoaderData(routeId: string): any {
+  let state = useDataRouterState("useRouteLoaderData");
+  return state.loaderData?.[routeId];
+}
+
 export function useActionData() {
   let state = useDataRouterState("useRouteException");
 
@@ -517,16 +576,23 @@ export function useActionData() {
 }
 
 export function useRouteException() {
+  let exception = React.useContext(RouteExceptionContext);
   let state = useDataRouterState("useRouteException");
-
   let route = React.useContext(RouteContext);
-  invariant(route, `useRouteException must be used inside a RouteContext`);
-
   let thisRoute = route.matches[route.matches.length - 1];
+
+  // If this was a render error, we put it in a RouteException context inside
+  // of RenderErrorBoundary
+  if (exception) {
+    return exception;
+  }
+
+  invariant(route, `useRouteException must be used inside a RouteContext`);
   invariant(
     thisRoute.route.id,
     `useRouteException can only be used on routes that contain a unique "id"`
   );
 
+  // Otherwise look for exceptions from our data router state
   return state.exceptions?.[thisRoute.route.id];
 }
