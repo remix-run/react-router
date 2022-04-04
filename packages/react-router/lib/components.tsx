@@ -59,10 +59,6 @@ export function useRenderDataRouter({
   todo_bikeshed_routes?: RouteObject[];
   createRouter: (routes: RouteObject[]) => DataRouter;
 }): React.ReactElement {
-  let [dataState, setDataState] = React.useState<DataState>(
-    hydrationData == null ? "empty" : "loaded"
-  );
-
   let routes = todo_bikeshed_routes || createRoutesFromChildren(children);
   let [router] = React.useState<DataRouter>(() => createRouter(routes));
 
@@ -77,20 +73,6 @@ export function useRenderDataRouter({
     [router]
   );
 
-  // If we did not SSR, trigger a replacement navigation to ourself for initial
-  // data load and then mark us as loaded as soon as we return to idle
-  React.useEffect(() => {
-    if (dataState === "empty") {
-      setDataState("loading");
-      router.navigate(router.state.location, { replace: true });
-    } else if (
-      dataState === "loading" &&
-      router.state.transition.state === "idle"
-    ) {
-      setDataState("loaded");
-    }
-  }, [router, router.state, dataState]);
-
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
@@ -100,7 +82,7 @@ export function useRenderDataRouter({
     };
   }, [router]);
 
-  if (dataState !== "loaded") {
+  if (!state.initialized) {
     return fallbackElement || <DefaultFallbackElement />;
   }
 

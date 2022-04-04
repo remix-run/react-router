@@ -49,6 +49,11 @@ export interface RouterState {
   matches: DataRouteMatch[];
 
   /**
+   * Tracks whether we've completed our initial data load
+   */
+  initialized: boolean;
+
+  /**
    * Tracks the state of the current transition
    */
   transition: Transition;
@@ -266,16 +271,38 @@ export function createRouter(init: RouterInit) {
   let dataRoutes = convertRoutesToDataRoutes(init.routes);
   let subscriber: RouterSubscriber | null = null;
 
+  let initialMatches =
+    matchRoutes(dataRoutes, init.history.location, init.basename) ||
+    getNotFoundMatches(dataRoutes);
+
+  // If we received hydration data without exceptions - detect if any matched
+  // routes with loaders did not get provided loaderData, and if so launch an
+  // initial data re-load to fetch everything
+  let foundMissingHydrationData =
+    init.hydrationData?.exceptions == null &&
+    init.hydrationData?.loaderData != null &&
+    initialMatches
+      .filter((m) => m.route.loader)
+      .some((m) => init.hydrationData?.loaderData?.[m.route.id] === undefined);
+
+  if (foundMissingHydrationData) {
+    console.warn(
+      `The provided hydration data did not find loaderData for all matched ` +
+        `routes with loaders.  Performing a full initial data load`
+    );
+  }
+
   let state: RouterState = {
     historyAction: init.history.action,
     location: init.history.location,
     // If we do not match a user-provided-route, fall back to the root
     // to allow the exceptionElement to take over
-    matches:
-      matchRoutes(dataRoutes, init.history.location, init.basename) ||
-      getNotFoundMatches(dataRoutes),
+    matches: initialMatches,
+    initialized: init.hydrationData != null && !foundMissingHydrationData,
     transition: IDLE_TRANSITION,
-    loaderData: init.hydrationData?.loaderData || {},
+    loaderData: foundMissingHydrationData
+      ? {}
+      : init.hydrationData?.loaderData || {},
     actionData: init.hydrationData?.actionData || null,
     exceptions: init.hydrationData?.exceptions || null,
   };
@@ -288,6 +315,11 @@ export function createRouter(init: RouterInit) {
   init.history.listen(({ action: historyAction, location }) =>
     startNavigation(historyAction, location)
   );
+
+  // Kick off initial data load if needed.  Use Pop to avoid modifying history
+  if (!state.initialized) {
+    startNavigation(HistoryAction.Pop, state.location);
+  }
 
   // Update our state and notify the calling context of the change
   function updateState(newState: Partial<RouterState>): void {
@@ -318,6 +350,7 @@ export function createRouter(init: RouterInit) {
       ...newState,
       historyAction,
       location,
+      initialized: true,
       transition: IDLE_TRANSITION,
       // Always preserve any existing loaderData from re-used routes
       loaderData: mergeLoaderData(state, newState),

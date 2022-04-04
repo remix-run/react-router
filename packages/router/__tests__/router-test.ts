@@ -323,7 +323,7 @@ function setup({
 function initializeTmTest() {
   return setup({
     routes: TM_ROUTES,
-    hydrationData: { loaderData: { root: "ROOT" } },
+    hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
   });
 }
 //#endregion
@@ -430,8 +430,14 @@ const TM_ROUTES = [
   },
 ];
 
+beforeEach(() => {
+  jest.spyOn(console, "warn").mockImplementation(() => {});
+});
+
 // Detect any failures inside the router navigate code
 afterEach(() => {
+  // @ts-ignore
+  console.warn.mockReset();
   if (uncaughtExceptions.length) {
     let NO_UNCAUGHT_EXCEPTIONS = "No Uncaught Exceptions";
     let strExceptions = uncaughtExceptions.join(",") || NO_UNCAUGHT_EXCEPTIONS;
@@ -493,6 +499,7 @@ describe("a router", () => {
             },
           },
         ],
+        initialized: true,
         transition: {
           location: undefined,
           state: "idle",
@@ -927,7 +934,7 @@ describe("a router", () => {
 
       // Initial load - no existing data, should always call loader and should
       // not give use ability to opt-out
-      await router.navigate("/", { replace: true });
+      await new Promise((r) => setImmediate(r));
       expect(rootLoader.mock.calls.length).toBe(1);
       expect(shouldReload.mock.calls.length).toBe(0);
 
@@ -1223,6 +1230,7 @@ describe("a router", () => {
       expect(t.router.state.transition.state).toBe("loading");
       expect(t.router.state.loaderData).toEqual({
         root: "ROOT", // old data
+        index: "INDEX", // old data
       });
 
       await A.loaders.root.resolve("ROOT LOADER");
@@ -1249,6 +1257,7 @@ describe("a router", () => {
       expect(t.router.state.transition.state).toBe("loading");
       expect(t.router.state.loaderData).toEqual({
         root: "ROOT", // old data
+        index: "INDEX", // old data
       });
 
       await B.loaders.bar.resolve("B LOADER");
@@ -1275,6 +1284,7 @@ describe("a router", () => {
       expect(t.router.state.transition.state).toBe("loading");
       expect(t.router.state.loaderData).toEqual({
         root: "ROOT", // old data
+        index: "INDEX", // old data
       });
 
       await B.loaders.bar.resolve("B LOADER");
@@ -2090,39 +2100,283 @@ describe("a router", () => {
   });
 
   describe("data loading (new)", () => {
-    it("starts in an idle state if no hydration data is provided", async () => {
-      let t = setup({
-        routes: TASK_ROUTES,
-        initialEntries: ["/"],
-      });
-
-      expect(t.router.state).toMatchObject({
-        historyAction: "POP",
-        location: expect.objectContaining({ pathname: "/" }),
-        transition: IDLE_TRANSITION,
-        loaderData: {},
-      });
-    });
-
     it("hydrates initial data", async () => {
       let t = setup({
         routes: TASK_ROUTES,
         initialEntries: ["/"],
         hydrationData: {
           loaderData: {
-            root: "ROOT_DATA",
+            root: "ROOT DATA",
+            index: "INDEX DATA",
           },
         },
       });
 
+      expect(console.warn).not.toHaveBeenCalled();
       expect(t.router.state).toMatchObject({
         historyAction: "POP",
         location: {
           pathname: "/",
         },
+        initialized: true,
         transition: IDLE_TRANSITION,
         loaderData: {
-          root: "ROOT_DATA",
+          root: "ROOT DATA",
+          index: "INDEX DATA",
+        },
+      });
+    });
+
+    it("kicks off initial data load if no hydration data is provided", async () => {
+      let parentDfd = defer();
+      let parentSpy = jest.fn(() => parentDfd.promise);
+      let childDfd = defer();
+      let childSpy = jest.fn(() => childDfd.promise);
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/child"] }),
+        routes: [
+          {
+            path: "/",
+            loader: parentSpy,
+            children: [
+              {
+                path: "child",
+                loader: childSpy,
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(console.warn).not.toHaveBeenCalled();
+      expect(parentSpy.mock.calls.length).toBe(1);
+      expect(childSpy.mock.calls.length).toBe(1);
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/child" }),
+        initialized: false,
+        transition: {
+          state: "loading",
+          type: "normalLoad",
+          location: { pathname: "/child" },
+        },
+      });
+      expect(router.state.loaderData).toEqual({});
+
+      await parentDfd.resolve("PARENT DATA");
+      await new Promise((r) => setImmediate(r));
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/child" }),
+        initialized: false,
+        transition: {
+          state: "loading",
+          type: "normalLoad",
+          location: { pathname: "/child" },
+        },
+      });
+      expect(router.state.loaderData).toEqual({});
+
+      await childDfd.resolve("CHILD DATA");
+      await new Promise((r) => setImmediate(r));
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/child" }),
+        initialized: true,
+        transition: IDLE_TRANSITION,
+        loaderData: {
+          "0": "PARENT DATA",
+          "0-0": "CHILD DATA",
+        },
+      });
+    });
+
+    it("kicks off initial data load if partial hydration data is provided", async () => {
+      let parentDfd = defer();
+      let parentSpy = jest.fn(() => parentDfd.promise);
+      let childDfd = defer();
+      let childSpy = jest.fn(() => childDfd.promise);
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/child"] }),
+        routes: [
+          {
+            path: "/",
+            loader: parentSpy,
+            children: [
+              {
+                path: "child",
+                loader: childSpy,
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            "0": "PARENT DATA",
+          },
+        },
+      });
+
+      expect(console.warn).toHaveBeenCalledWith(
+        "The provided hydration data did not find loaderData for all matched " +
+          "routes with loaders.  Performing a full initial data load"
+      );
+      expect(parentSpy.mock.calls.length).toBe(1);
+      expect(childSpy.mock.calls.length).toBe(1);
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/child" }),
+        initialized: false,
+        transition: {
+          state: "loading",
+          type: "normalLoad",
+        },
+      });
+      expect(router.state.loaderData).toEqual({});
+
+      await parentDfd.resolve("PARENT DATA 2");
+      await childDfd.resolve("CHILD DATA");
+      await new Promise((r) => setImmediate(r));
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/child" }),
+        initialized: true,
+        transition: IDLE_TRANSITION,
+        loaderData: {
+          "0": "PARENT DATA 2",
+          "0-0": "CHILD DATA",
+        },
+      });
+    });
+
+    it("does not kick off initial data load due to partial hydration if exceptions exist", async () => {
+      let parentDfd = defer();
+      let parentSpy = jest.fn(() => parentDfd.promise);
+      let childDfd = defer();
+      let childSpy = jest.fn(() => childDfd.promise);
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/child"] }),
+        routes: [
+          {
+            path: "/",
+            loader: parentSpy,
+            children: [
+              {
+                path: "child",
+                loader: childSpy,
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          exceptions: {
+            "0": "PARENT ERROR",
+          },
+          loaderData: {
+            "0-0": "CHILD_DATA",
+          },
+        },
+      });
+
+      expect(console.warn).not.toHaveBeenCalled();
+      expect(parentSpy).not.toHaveBeenCalled();
+      expect(childSpy).not.toHaveBeenCalled();
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/child" }),
+        initialized: true,
+        transition: IDLE_TRANSITION,
+        exceptions: {
+          "0": "PARENT ERROR",
+        },
+        loaderData: {
+          "0-0": "CHILD_DATA",
+        },
+      });
+    });
+
+    it("handles interruptions of initial data load", async () => {
+      let parentDfd = defer();
+      let parentSpy = jest.fn(() => parentDfd.promise);
+      let childDfd = defer();
+      let childSpy = jest.fn(() => childDfd.promise);
+      let child2Dfd = defer();
+      let child2Spy = jest.fn(() => child2Dfd.promise);
+      debugger;
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/child"] }),
+        routes: [
+          {
+            path: "/",
+            loader: parentSpy,
+            children: [
+              {
+                path: "child",
+                loader: childSpy,
+              },
+              {
+                path: "child2",
+                loader: child2Spy,
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(console.warn).not.toHaveBeenCalled();
+      expect(parentSpy.mock.calls.length).toBe(1);
+      expect(childSpy.mock.calls.length).toBe(1);
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/child" }),
+        initialized: false,
+        transition: {
+          state: "loading",
+          type: "normalLoad",
+          location: { pathname: "/child" },
+        },
+      });
+      expect(router.state.loaderData).toEqual({});
+
+      await parentDfd.resolve("PARENT DATA");
+      await new Promise((r) => setImmediate(r));
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/child" }),
+        initialized: false,
+        transition: {
+          state: "loading",
+          type: "normalLoad",
+          location: { pathname: "/child" },
+        },
+      });
+      expect(router.state.loaderData).toEqual({});
+
+      router.navigate("/child2");
+      await childDfd.resolve("CHILD DATA");
+      await new Promise((r) => setImmediate(r));
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/child" }),
+        initialized: false,
+        transition: {
+          state: "loading",
+          type: "normalLoad",
+          location: { pathname: "/child2" },
+        },
+      });
+      expect(router.state.loaderData).toEqual({});
+
+      await child2Dfd.resolve("CHILD2 DATA");
+      await new Promise((r) => setImmediate(r));
+      expect(router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: expect.objectContaining({ pathname: "/child2" }),
+        initialized: true,
+        transition: IDLE_TRANSITION,
+        loaderData: {
+          "0": "PARENT DATA",
+          "0-1": "CHILD2 DATA",
         },
       });
     });
@@ -2134,6 +2388,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
@@ -2153,6 +2408,7 @@ describe("a router", () => {
         },
         loaderData: {
           root: "ROOT_DATA",
+          index: "INDEX_DATA",
         },
       });
       expect(t.history.action).toEqual("POP");
@@ -2199,6 +2455,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
@@ -2218,6 +2475,7 @@ describe("a router", () => {
         },
         loaderData: {
           root: "ROOT_DATA",
+          index: "INDEX_DATA",
         },
       });
       expect(t.history.action).toEqual("POP");
@@ -2249,6 +2507,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
@@ -2269,6 +2528,7 @@ describe("a router", () => {
         },
         loaderData: {
           root: "ROOT_DATA",
+          index: "INDEX_DATA",
         },
       });
       expect(t.history.action).toEqual("POP");
@@ -2299,6 +2559,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
@@ -2365,6 +2626,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
@@ -2433,6 +2695,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
@@ -2496,6 +2759,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
@@ -2571,6 +2835,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
@@ -2646,6 +2911,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
