@@ -1113,6 +1113,164 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
     });
+
+    it("handles render errors in parent exceptionElement", async () => {
+      let { container } = render(
+        <MemoryRouter
+          initialEntries={["/child"]}
+          hydrationData={{
+            loaderData: {},
+            actionData: null,
+          }}
+        >
+          <Route
+            path="/"
+            element={
+              <div>
+                <h1>This should not show</h1>
+                <Outlet />
+              </div>
+            }
+            exceptionElement={<ErrorBoundary />}
+          >
+            <Route path="child" element={<ChildComp />} />
+          </Route>
+        </MemoryRouter>
+      );
+
+      function ChildComp(): React.ReactElement {
+        throw new Error("Kaboom!");
+      }
+
+      function ErrorBoundary() {
+        let error = useRouteException();
+        return <p>{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Kaboom!
+          </p>
+        </div>"
+      `);
+    });
+
+    it("handles render errors in child exceptionElement", async () => {
+      let { container } = render(
+        <MemoryRouter
+          initialEntries={["/child"]}
+          hydrationData={{
+            loaderData: {},
+            actionData: null,
+          }}
+        >
+          <Route
+            path="/"
+            element={
+              <div>
+                <h1>Parent</h1>
+                <Outlet />
+              </div>
+            }
+            exceptionElement={<p>Don't show this</p>}
+          >
+            <Route
+              path="child"
+              element={<ChildComp />}
+              exceptionElement={<ErrorBoundary />}
+            />
+          </Route>
+        </MemoryRouter>
+      );
+
+      function ChildComp(): React.ReactElement {
+        throw new Error("Kaboom!");
+      }
+
+      function ErrorBoundary() {
+        let error = useRouteException();
+        return <p>{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <h1>
+              Parent
+            </h1>
+            <p>
+              Kaboom!
+            </p>
+          </div>
+        </div>"
+      `);
+    });
+
+    it("handles render errors in default exceptionElement", async () => {
+      let { container } = render(
+        <MemoryRouter
+          initialEntries={["/child"]}
+          hydrationData={{
+            loaderData: {},
+            actionData: null,
+          }}
+        >
+          <Route
+            path="/"
+            element={
+              <div>
+                <h1>Parent</h1>
+                <Outlet />
+              </div>
+            }
+          >
+            <Route path="child" element={<ChildComp />} />
+          </Route>
+        </MemoryRouter>
+      );
+
+      function ChildComp(): React.ReactElement {
+        let error = new Error("Kaboom!");
+        error.stack = "FAKE STACK TRACE";
+        throw error;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h2>
+            Unhandled Thrown Exception!
+          </h2>
+          <p
+            style=\\"font-style: italic;\\"
+          >
+            Kaboom!
+          </p>
+          <pre
+            style=\\"padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);\\"
+          >
+            FAKE STACK TRACE
+          </pre>
+          <p>
+            💿 Hey developer 👋
+          </p>
+          <p>
+            You can provide a way better UX than this when your app throws errors by providing your own 
+            <code
+              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+            >
+              exceptionElement
+            </code>
+             props on 
+            <code
+              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+            >
+              &lt;Route&gt;
+            </code>
+          </p>
+        </div>"
+      `);
+    });
   });
 });
 
