@@ -1,12 +1,12 @@
 import type { Transform } from "jscodeshift";
 
-import { getNewImportDeclarations } from "./get-new-import-declarations";
-import { getRemixImports } from "./get-remix-imports";
-import type { MapNormalizedImportsArgs } from "./map-normalized-imports";
-import { mapNormalizedImports } from "./map-normalized-imports";
-import { normalizeImports } from "./normalize-imports";
+import { getNewImportDeclarations } from "./getNewImportDeclarations";
+import { getRemixImports } from "./getRemixImports";
+import type { MapNormalizedImportsArgs } from "./mapNormalizedImports";
+import { mapNormalizedImports } from "./mapNormalizedImports";
+import { normalizeImports } from "./normalizeImports";
 
-export { adapters, runtimes } from "./map-normalized-imports/package-exports";
+export { adapters, runtimes } from "./mapNormalizedImports/packageExports";
 
 export type ExtraOptions = Pick<
   MapNormalizedImportsArgs,

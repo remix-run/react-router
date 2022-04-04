@@ -1,7 +1,7 @@
 import type { JSCodeshift } from "jscodeshift";
 
-import type { MappedNormalizedImports } from "./map-normalized-imports";
-import type { NormalizedImport } from "./normalize-imports";
+import type { MappedNormalizedImports } from "./mapNormalizedImports";
+import type { NormalizedImport } from "./normalizeImports";
 
 const orgName = "@remix-run";
 

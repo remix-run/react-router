@@ -1,6 +1,6 @@
-import type { NormalizedImport } from "../normalize-imports";
-import type { Adapter, Client, Package, Runtime } from "./package-exports";
-import { packageExports } from "./package-exports";
+import type { NormalizedImport } from "../normalizeImports";
+import type { Adapter, Client, Package, Runtime } from "./packageExports";
+import { packageExports } from "./packageExports";
 
 const getFilteredNormalizedImportsForPackage = (
   normalizedImports: NormalizedImport[],
