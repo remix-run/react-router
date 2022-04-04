@@ -58,8 +58,8 @@ There are a few low-level APIs that we use internally that may also prove useful
 - [`useResolvedPath`](#useresolvedpath) - resolves a relative path against the current [location](#location)
 - [`useHref`](#usehref) - resolves a relative path suitable for use as a `<a href>`
 - [`useLocation`](#uselocation) and [`useNavigationType`](#usenavigationtype) - these describe the current [location](#location) and how we got there
-- [`useLinkClickHandler`](#uselinkclickhandler) - returns an event handler to for navigation when building a custom `<Link>` in `react-router-dom`
-- [`useLinkPressHandler`](#uselinkpresshandler) - returns an event handler to for navigation when building a custom `<Link>` in `react-router-native`
+- [`useLinkClickHandler`](#uselinkclickhandler) - returns an event handler for navigation when building a custom `<Link>` in `react-router-dom`
+- [`useLinkPressHandler`](#uselinkpresshandler) - returns an event handler for navigation when building a custom `<Link>` in `react-router-native`
 - [`resolvePath`](#resolvepath) - resolves a relative path against a given URL pathname
 
 ### Search Parameters
@@ -411,7 +411,7 @@ interface NavLinkProps
 
 A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not it is "active". This is useful when building a navigation menu such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected. It also provides useful context for assistive technology like screen readers.
 
-By default, an `active` class is added to a `<NavLink>` component when it is active. This provides the same simple styling mechanism for most users who are upgrading from v5. One difference as of `v6.0.0-beta.3` is that `activeClassName` and `activeStyle` have been removed from `NavLinkProps`. Instead, you can pass a function to either `style` or `className` that will allow you to customize the inline styling or the class string based on the component's active state. you can also pass a function as children to customize the content of the `<NavLink>` component based on their active state, specially useful to change styles on internal elements.
+By default, an `active` class is added to a `<NavLink>` component when it is active. This provides the same simple styling mechanism for most users who are upgrading from v5. One difference as of `v6.0.0-beta.3` is that `activeClassName` and `activeStyle` have been removed from `NavLinkProps`. Instead, you can pass a function to either `style` or `className` that will allow you to customize the inline styling or the class string based on the component's active state. You can also pass a function as children to customize the content of the `<NavLink>` component based on their active state, specially useful to change styles on internal elements.
 
 ```tsx
 import * as React from "react";
@@ -1018,7 +1018,7 @@ declare function useLinkClickHandler<
 
 </details>
 
-The `useLinkClickHandler` hook returns a click event handler to for navigation when building a custom `<Link>` in `react-router-dom`.
+The `useLinkClickHandler` hook returns a click event handler for navigation when building a custom `<Link>` in `react-router-dom`.
 
 ```tsx
 import {
