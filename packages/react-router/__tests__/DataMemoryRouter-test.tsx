@@ -19,6 +19,7 @@ import {
   useRouteLoaderData,
   useRouteException,
   useNavigation,
+  useRevalidator,
   UNSAFE_DataRouterContext,
   MemoryRouter,
   Routes,
@@ -649,6 +650,113 @@ describe("<DataMemoryRouter>", () => {
       ]
     `);
     expect(spy.mock.calls.length).toBe(4);
+  });
+
+  it("reloads data using useRevalidate", async () => {
+    let count = 1;
+
+    let { container } = render(
+      <DataMemoryRouter
+        initialEntries={["/foo"]}
+        hydrationData={{
+          loaderData: {
+            "0-0": "count=1",
+          },
+        }}
+      >
+        <Route path="/" element={<Layout />}>
+          <Route
+            path="foo"
+            loader={async () => `count=${++count}`}
+            element={<Foo />}
+          />
+        </Route>
+      </DataMemoryRouter>
+    );
+
+    function Layout() {
+      let transition = useNavigation();
+      let { revalidate, state } = useRevalidator();
+      return (
+        <div>
+          <button
+            onClick={() => {
+              debugger;
+              revalidate();
+            }}
+          >
+            Revalidate
+          </button>
+          <p>{transition.state}</p>
+          <p>{state}</p>
+          <Outlet />
+        </div>
+      );
+    }
+
+    function Foo() {
+      let data = useLoaderData();
+      return <p>{data}</p>;
+    }
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <div>
+          <button>
+            Revalidate
+          </button>
+          <p>
+            idle
+          </p>
+          <p>
+            idle
+          </p>
+          <p>
+            count=1
+          </p>
+        </div>
+      </div>"
+    `);
+
+    fireEvent.click(screen.getByText("Revalidate"));
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <div>
+          <button>
+            Revalidate
+          </button>
+          <p>
+            idle
+          </p>
+          <p>
+            loading
+          </p>
+          <p>
+            count=1
+          </p>
+        </div>
+      </div>"
+    `);
+
+    await waitFor(() => screen.getByText("count=2"));
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <div>
+          <button>
+            Revalidate
+          </button>
+          <p>
+            idle
+          </p>
+          <p>
+            idle
+          </p>
+          <p>
+            count=2
+          </p>
+        </div>
+      </div>"
+    `);
   });
 
   describe("exceptions", () => {

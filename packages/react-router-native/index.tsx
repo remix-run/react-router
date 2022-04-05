@@ -41,6 +41,7 @@ import {
   useNavigation,
   useRouteLoaderData,
   useRouteException,
+  useRevalidator,
 } from "react-router";
 import type { To } from "react-router";
 
@@ -84,6 +85,7 @@ export {
   useNavigation,
   useRouteLoaderData,
   useRouteException,
+  useRevalidator,
 };
 
 export { NavigationType } from "react-router";

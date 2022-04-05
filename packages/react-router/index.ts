@@ -70,6 +70,7 @@ import {
   useRouteLoaderData,
   useRouteException,
   useNavigation,
+  useRevalidator,
 } from "./lib/hooks";
 
 // FIXME: Do we need to still export these to be non-breaking?
@@ -139,6 +140,7 @@ export {
   useRouteLoaderData,
   useRouteException,
   useNavigation,
+  useRevalidator,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
