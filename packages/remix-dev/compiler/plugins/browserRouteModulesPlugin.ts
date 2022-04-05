@@ -67,9 +67,12 @@ export function browserRouteModulesPlugin(
               ],
             };
           }
-          let spec =
-            theExports.length > 0 ? `{ ${theExports.join(", ")} }` : "*";
-          let contents = `export ${spec} from ${JSON.stringify(file)};`;
+
+          let contents = "module.exports = {};";
+          if (theExports.length !== 0) {
+            let spec = `{ ${theExports.join(", ")} }`;
+            contents = `export ${spec} from ${JSON.stringify(file)};`;
+          }
 
           return {
             contents,
