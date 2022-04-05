@@ -1,6 +1,6 @@
 import { execFileSync } from "child_process";
 
-import * as colors from "./colors";
+import * as colors from "../colors";
 
 export const checkGitStatus = (projectDir: string, { force = false }) => {
   let clean = false;

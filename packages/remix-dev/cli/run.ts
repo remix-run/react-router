@@ -4,7 +4,7 @@ import inspector from "inspector";
 import inquirer from "inquirer";
 // import chalkAnimation from "chalk-animation";
 
-import * as colors from "./colors";
+import * as colors from "../colors";
 import * as commands from "./commands";
 
 const helpText = `

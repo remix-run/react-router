@@ -4,7 +4,7 @@ import { checkGitStatus } from "../checkGitStatus";
 import type { Flags } from "./flags";
 import { migrations } from "./migrations";
 import type { Migration } from "./types";
-import * as colors from "../colors";
+import * as colors from "../../colors";
 
 const parseMigration = (migrationId: string): Migration => {
   let migration = migrations.find(({ id }) => id === migrationId);

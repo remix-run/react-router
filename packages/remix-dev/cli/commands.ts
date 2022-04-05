@@ -17,7 +17,7 @@ import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
 import { createApp } from "./create";
 import { loadEnv } from "../env";
-import { log } from "./logging";
+import { log } from "../logging";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "./setup";
 
 export * as migrate from "./migrate";
