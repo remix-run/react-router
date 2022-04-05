@@ -878,11 +878,7 @@ function shouldRunLoader(
   // from a prior exception
   let isMissingData = state.loaderData[match.route.id] === undefined;
 
-  // If we are actively revalidating, or if we revalidated and were interrupted,
-  // we run all loaders
-  let forceRevalidation = state.revalidation === "loading";
-
-  if (forceRevalidation || isNew || matchPathChanged || isMissingData) {
+  if (isNew || matchPathChanged || isMissingData) {
     return true;
   }
 
@@ -892,7 +888,9 @@ function shouldRunLoader(
     // Clicked the same link, resubmitted a GET form
     createHref(location) === createHref(state.location) ||
     // Search affects all loaders
-    location.search !== state.location.search;
+    location.search !== state.location.search ||
+    // We are actively revalidating, force all loaders
+    state.revalidation === "loading";
 
   // Let routes control only when it's a data reload
   if (isReload && match.route.shouldReload) {
