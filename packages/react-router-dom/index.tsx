@@ -36,6 +36,7 @@ import {
   useNavigation,
   useRouteLoaderData,
   useRouteException,
+  useRevalidator,
   UNSAFE_useRenderDataRouter,
   UNSAFE_RouteContext,
   UNSAFE_DataRouterContext,
@@ -103,6 +104,7 @@ export {
   useNavigation,
   useRouteLoaderData,
   useRouteException,
+  useRevalidator,
 };
 
 export { NavigationType } from "react-router";

@@ -25,6 +25,7 @@ import {
 } from "@remix-run/router";
 
 import {
+  DataRouterContext,
   DataRouterStateContext,
   LocationContext,
   NavigationContext,
@@ -522,7 +523,8 @@ type DataRouterHook =
   | "useRouteException"
   | "useNavigation"
   | "useRouteLoaderData"
-  | "useMatches";
+  | "useMatches"
+  | "useRevalidator";
 
 function useDataRouterState(hookName: DataRouterHook) {
   let state = React.useContext(DataRouterStateContext);
@@ -533,6 +535,13 @@ function useDataRouterState(hookName: DataRouterHook) {
 export function useNavigation() {
   let state = useDataRouterState("useNavigation");
   return state.transition;
+}
+
+export function useRevalidator() {
+  let router = React.useContext(DataRouterContext);
+  invariant(router, `useRevalidator must be rendered within a DataRouter`);
+  let state = useDataRouterState("useRevalidator");
+  return { revalidate: router.revalidate, state: state.revalidation };
 }
 
 export function useMatches() {
