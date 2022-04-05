@@ -59,6 +59,11 @@ export interface RouterState {
   transition: Transition;
 
   /**
+   * Tracks any in-progress revalidations
+   */
+  revalidation: RevalidationState;
+
+  /**
    * Data from the loaders for the current matches
    */
   loaderData: RouteData;
@@ -183,6 +188,8 @@ export type TransitionStates = {
 
 export type Transition = TransitionStates[keyof TransitionStates];
 
+export type RevalidationState = "idle" | "loading";
+
 export type Router = ReturnType<typeof createRouter>;
 
 /**
@@ -300,6 +307,7 @@ export function createRouter(init: RouterInit) {
     matches: initialMatches,
     initialized: init.hydrationData != null && !foundMissingHydrationData,
     transition: IDLE_TRANSITION,
+    revalidation: "idle",
     loaderData: foundMissingHydrationData
       ? {}
       : init.hydrationData?.loaderData || {},
@@ -307,8 +315,13 @@ export function createRouter(init: RouterInit) {
     exceptions: init.hydrationData?.exceptions || null,
   };
 
+  // Current navigation in progress (to be committed in completeNavigation)
+  let pendingAction: HistoryAction | null = null;
   // Stateful internal variables to manage navigations
   let pendingNavigationController: AbortController | null;
+  // We use this to avoid touching history in completeNavigation if a
+  // revalidation is entirely uninterrupted
+  let isUninterruptedRevalidation = false;
 
   // If history informs us of a POP navigation, start the transition but do not update
   // state.  We'll update our own state once the transition completes
@@ -342,7 +355,7 @@ export function createRouter(init: RouterInit) {
   ): void {
     updateState({
       // Clear existing actionData on any completed navigation beyond the original
-      // action.  Do this prior to spearing in newState in case we've gotten back
+      // action.  Do this prior to spreading in newState in case we've gotten back
       // to back actions
       ...(state.actionData != null && state.transition.type !== "actionReload"
         ? { actionData: null }
@@ -352,11 +365,17 @@ export function createRouter(init: RouterInit) {
       location,
       initialized: true,
       transition: IDLE_TRANSITION,
+      revalidation: "idle",
       // Always preserve any existing loaderData from re-used routes
       loaderData: mergeLoaderData(state, newState),
     });
 
-    if (historyAction === HistoryAction.Push) {
+    pendingAction = null;
+
+    if (isUninterruptedRevalidation) {
+      // If this was an uninterrupted revalidation then do not touch history
+      isUninterruptedRevalidation = false;
+    } else if (historyAction === HistoryAction.Push) {
       init.history.push(location, location.state);
     } else if (historyAction === HistoryAction.Replace) {
       init.history.replace(location, location.state);
@@ -397,6 +416,40 @@ export function createRouter(init: RouterInit) {
     return await startNavigation(historyAction, location);
   }
 
+  async function revalidate(): Promise<void> {
+    let { state: transitionState, type } = state.transition;
+
+    // If we're currently submitting an action, we don't need to start a new
+    // transition.  Just set state.revalidation='loading' which will force all
+    // loaders to run on actionReload
+    if (transitionState === "submitting" && type === "actionSubmission") {
+      updateState({ revalidation: "loading" });
+      return;
+    }
+
+    // If we're currently in an idle state, mark an uninterrupted revalidation
+    // and start a new navigation for the current action/location.  Pass in the
+    // current (idle) transition as an override so we don't ever switch to a
+    // loading state.  If we finish uninterrupted, we will not touch history on
+    // completion
+    if (state.transition.state === "idle") {
+      updateState({ revalidation: "loading" });
+      return await startNavigation(state.historyAction, state.location, {
+        startUninterruptedRevalidation: true,
+      });
+    }
+
+    // Otherwise, if we're currently in a loading state, just start a new
+    // navigation to the transition.location but do not set isValidating so
+    // that history correctly updates once the navigation completes
+    updateState({ revalidation: "loading" });
+    return await startNavigation(
+      pendingAction || state.historyAction,
+      state.transition.location,
+      { overrideTransition: state.transition }
+    );
+  }
+
   // Start a navigation to the given action/location.  Can optionally provide a
   // overrideTransition which will override the normalLoad in the case of a redirect
   // navigation
@@ -406,12 +459,18 @@ export function createRouter(init: RouterInit) {
     opts?: {
       submission?: Submission;
       overrideTransition?: Transition;
+      startUninterruptedRevalidation?: boolean;
     }
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one
     if (pendingNavigationController) {
       pendingNavigationController.abort();
     }
+    pendingAction = historyAction;
+
+    // Unset any ongoing uninterrupted revalidations (unless told otherwise),
+    // since we want this new navigation to update history normally
+    isUninterruptedRevalidation = opts?.startUninterruptedRevalidation === true;
 
     let matches = matchRoutes(dataRoutes, location, init.basename);
 
@@ -613,11 +672,16 @@ export function createRouter(init: RouterInit) {
       return { shortCircuited: true };
     }
 
-    // Transition to our loading state and load data
-    updateState({
-      transition: loadingTransition,
-      actionData: pendingActionData || null,
-    });
+    // If this is an uninterrupted revalidation, remain in out current idle state.
+    // Otherwise, transition to our loading state and load data, preserving any
+    // new action data or existing action data (in the case of a revalidation
+    // interrupting an actionReload)
+    if (!isUninterruptedRevalidation) {
+      updateState({
+        transition: loadingTransition,
+        actionData: pendingActionData || state.actionData || null,
+      });
+    }
 
     let abortController = new AbortController();
     pendingNavigationController = abortController;
@@ -675,6 +739,7 @@ export function createRouter(init: RouterInit) {
       };
     },
     navigate,
+    revalidate,
     createHref,
   };
 }
@@ -813,7 +878,11 @@ function shouldRunLoader(
   // from a prior exception
   let isMissingData = state.loaderData[match.route.id] === undefined;
 
-  if (isNew || matchPathChanged || isMissingData) {
+  // If we are actively revalidating, or if we revalidated and were interrupted,
+  // we run all loaders
+  let forceRevalidation = state.revalidation === "loading";
+
+  if (forceRevalidation || isNew || matchPathChanged || isMissingData) {
     return true;
   }
 
