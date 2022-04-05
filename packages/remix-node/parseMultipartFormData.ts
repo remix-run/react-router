@@ -44,7 +44,6 @@ export async function internalParseFormData(
 
       let aborted = false;
       function abort(error?: Error) {
-        console.log(error);
         if (aborted) return;
         aborted = true;
 
