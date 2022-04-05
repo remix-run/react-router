@@ -168,6 +168,8 @@ function setup({
 
   let history = createMemoryHistory({ initialEntries, initialIndex });
   let enhancedRoutes = enhanceRoutes(routes);
+  jest.spyOn(history, "push");
+  jest.spyOn(history, "replace");
   let router = createRouter({
     history,
     routes: enhancedRoutes,
@@ -310,10 +312,23 @@ function setup({
     return helpers;
   }
 
+  // Simulate a navigation, returning a series of helpers to manually
+  // control/assert loader/actions
+  async function revalidate(): Promise<NavigationHelpers> {
+    let navigationId = ++guid;
+    let href = router.createHref(
+      router.state.transition.location || router.state.location
+    );
+    let helpers = getNavigationHelpers(href, navigationId);
+    router.revalidate().catch(handleUncaughtException);
+    return helpers;
+  }
+
   return {
     history,
     router,
     navigate,
+    revalidate,
     cleanup() {
       gcDfds.forEach((dfd) => dfd.resolve());
     },
@@ -506,6 +521,7 @@ describe("a router", () => {
           submission: undefined,
           type: "idle",
         },
+        revalidation: "idle",
       });
     });
 
@@ -1130,8 +1146,6 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         a: "LOADER A",
         b: "LOADER B",
-        // TODO: Check with Ryan on this - the transition manager test had the c
-        // error in loaderData?
       });
       expect(t.router.state.exceptions).toEqual({
         b: "Kaboom!",
@@ -1186,7 +1200,6 @@ describe("a router", () => {
       expect(A.loaders.root.stub.mock.calls.length).toBe(1);
 
       let B = await A.loaders.foo.redirect("/bar");
-      // TODO: Why does test harness require this?
       await A.loaders.root.reject("ROOT ERROR");
       await B.loaders.root.resolve("ROOT LOADER 2");
       await B.loaders.bar.resolve("BAR LOADER");
@@ -1538,7 +1551,6 @@ describe("a router", () => {
         await A.loaders.parent.reject(new Error("Should not see this!"));
         expect(t.router.state).toMatchObject({
           loaderData: {},
-          // TODO Check on this, I think current state puts error in actionData as well?
           actionData: {},
           exceptions: {
             root: new Error("Kaboom!"),
@@ -2956,6 +2968,739 @@ describe("a router", () => {
         formEncType: "application/x-www-form-urlencoded",
         formData,
       });
+
+      t.cleanup();
+    });
+  });
+
+  describe("router.revalidate", () => {
+    it("handles uninterrupted revalidation in an idle state (from POP)", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let key = t.router.state.location.key;
+      let R = await t.revalidate();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      await R.loaders.root.resolve("ROOT_DATA*");
+      await R.loaders.index.resolve("INDEX_DATA*");
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA*",
+          index: "INDEX_DATA*",
+        },
+      });
+      expect(t.router.state.location.key).toBe(key);
+      expect(t.history.push).not.toHaveBeenCalled();
+      expect(t.history.replace).not.toHaveBeenCalled();
+
+      t.cleanup();
+    });
+
+    it("handles uninterrupted revalidation in an idle state (from PUSH)", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let N = await t.navigate("/");
+      await N.loaders.root.resolve("ROOT_DATA");
+      await N.loaders.index.resolve("INDEX_DATA");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+      // @ts-ignore
+      expect(t.history.push.mock.calls.length).toBe(1);
+
+      let key = t.router.state.location.key;
+      let R = await t.revalidate();
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      await R.loaders.root.resolve("ROOT_DATA*");
+      await R.loaders.index.resolve("INDEX_DATA*");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA*",
+          index: "INDEX_DATA*",
+        },
+      });
+      expect(t.router.state.location.key).toBe(key);
+      // @ts-ignore
+      expect(t.history.push.mock.calls.length).toBe(1);
+      expect(t.history.replace).not.toHaveBeenCalled();
+
+      t.cleanup();
+    });
+
+    it("handles revalidation interrupted by a <Link> navigation", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let R = await t.revalidate();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      let N = await t.navigate("/tasks");
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: {
+          state: "loading",
+          location: { pathname: "/tasks" },
+        },
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+      await R.loaders.root.resolve("ROOT_DATA interrupted");
+      await R.loaders.index.resolve("INDEX_DATA interrupted");
+      await N.loaders.root.resolve("ROOT_DATA*");
+      await N.loaders.tasks.resolve("TASKS_DATA");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/tasks" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA*",
+          tasks: "TASKS_DATA",
+        },
+      });
+      expect(t.history.push).toHaveBeenCalledWith(
+        t.router.state.location,
+        t.router.state.location.state
+      );
+
+      t.cleanup();
+    });
+
+    it("handles revalidation interrupted by a <Form method=get> navigation", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let R = await t.revalidate();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      let formData = new FormData();
+      formData.append("key", "value");
+      let N = await t.navigate("/tasks", {
+        formMethod: "get",
+        formData,
+      });
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: {
+          state: "submitting",
+          location: { pathname: "/tasks" },
+        },
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+      await R.loaders.root.resolve("ROOT_DATA interrupted");
+      await R.loaders.index.resolve("INDEX_DATA interrupted");
+      await N.loaders.root.resolve("ROOT_DATA*");
+      await N.loaders.tasks.resolve("TASKS_DATA");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/tasks" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA*",
+          tasks: "TASKS_DATA",
+        },
+      });
+      expect(t.history.push).toHaveBeenCalledWith(
+        t.router.state.location,
+        t.router.state.location.state
+      );
+
+      t.cleanup();
+    });
+
+    it("handles revalidation interrupted by a <Form method=post> navigation", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let R = await t.revalidate();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      let formData = new FormData();
+      formData.append("key", "value");
+      let N = await t.navigate("/tasks", {
+        formMethod: "post",
+        formData,
+      });
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: {
+          state: "submitting",
+          location: { pathname: "/tasks" },
+        },
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      // Aborted by the navigation, resolving should no-op
+      expect(R.loaders.root.signal.aborted).toBe(true);
+      expect(R.loaders.index.signal.aborted).toBe(true);
+      await R.loaders.root.resolve("ROOT_DATA interrupted");
+      await R.loaders.index.resolve("INDEX_DATA interrupted");
+
+      await N.actions.tasks.resolve("TASKS_ACTION");
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: {
+          state: "loading",
+          location: { pathname: "/tasks" },
+        },
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      await N.loaders.root.resolve("ROOT_DATA*");
+      await N.loaders.tasks.resolve("TASKS_DATA");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/tasks" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA*",
+          tasks: "TASKS_DATA",
+        },
+        actionData: {
+          tasks: "TASKS_ACTION",
+        },
+      });
+      expect(t.history.push).toHaveBeenCalledWith(
+        t.router.state.location,
+        t.router.state.location.state
+      );
+
+      t.cleanup();
+    });
+
+    it("handles <Link> navigation interrupted by a revalidation", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let N = await t.navigate("/tasks");
+      expect(N.loaders.root.stub).not.toHaveBeenCalled();
+      expect(N.loaders.tasks.stub).toHaveBeenCalled();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: { state: "loading" },
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      let R = await t.revalidate();
+      expect(R.loaders.root.stub).toHaveBeenCalled();
+      expect(R.loaders.tasks.stub).toHaveBeenCalled();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: { state: "loading" },
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      await N.loaders.tasks.resolve("TASKS_DATA interrupted");
+      await R.loaders.root.resolve("ROOT_DATA*");
+      await R.loaders.tasks.resolve("TASKS_DATA*");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/tasks" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA*",
+          tasks: "TASKS_DATA*",
+        },
+      });
+      expect(t.history.push).toHaveBeenCalledWith(
+        t.router.state.location,
+        t.router.state.location.state
+      );
+
+      t.cleanup();
+    });
+
+    it("handles <Form method=get> navigation interrupted by a revalidation", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let formData = new FormData();
+      formData.append("key", "value");
+      let N = await t.navigate("/tasks?key=value", {
+        formMethod: "get",
+        formData,
+      });
+      // Called due to search param changing
+      expect(N.loaders.root.stub).toHaveBeenCalled();
+      expect(N.loaders.tasks.stub).toHaveBeenCalled();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: { state: "submitting" },
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      let R = await t.revalidate();
+      expect(R.loaders.root.stub).toHaveBeenCalled();
+      expect(R.loaders.tasks.stub).toHaveBeenCalled();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: { state: "submitting" },
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      await N.loaders.root.resolve("ROOT_DATA interrupted");
+      await N.loaders.tasks.resolve("TASKS_DATA interrupted");
+      await R.loaders.root.resolve("ROOT_DATA*");
+      await R.loaders.tasks.resolve("TASKS_DATA*");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/tasks" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA*",
+          tasks: "TASKS_DATA*",
+        },
+      });
+      expect(t.history.push).toHaveBeenCalledWith(
+        t.router.state.location,
+        t.router.state.location.state
+      );
+
+      t.cleanup();
+    });
+
+    it("handles <Form method=post> navigation interrupted by a revalidation during action phase", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let formData = new FormData();
+      formData.append("key", "value");
+      let N = await t.navigate("/tasks", {
+        formMethod: "post",
+        formData,
+      });
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: { state: "submitting" },
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      let R = await t.revalidate();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: { state: "submitting" },
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      await N.actions.tasks.resolve("TASKS_ACTION");
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: { state: "loading" },
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+        actionData: {
+          tasks: "TASKS_ACTION",
+        },
+      });
+
+      await N.loaders.root.resolve("ROOT_DATA interrupted");
+      await N.loaders.tasks.resolve("TASKS_DATA interrupted");
+      await R.loaders.root.resolve("ROOT_DATA*");
+      await R.loaders.tasks.resolve("TASKS_DATA*");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/tasks" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA*",
+          tasks: "TASKS_DATA*",
+        },
+      });
+      expect(t.history.push).toHaveBeenCalledWith(
+        t.router.state.location,
+        t.router.state.location.state
+      );
+
+      // Action was not resubmitted
+      expect(N.actions.tasks.stub.mock.calls.length).toBe(1);
+      // This is sort of an implementation detail.  Internally we do not start
+      // a new navigation, but our helpers return the new "loaders" from the
+      // revalidate.  The key here is that together, loaders only got called once
+      expect(N.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(N.loaders.tasks.stub.mock.calls.length).toBe(0);
+      expect(R.loaders.root.stub.mock.calls.length).toBe(1);
+      expect(R.loaders.tasks.stub.mock.calls.length).toBe(1);
+
+      t.cleanup();
+    });
+
+    it("handles <Form method=post> navigation interrupted by a revalidation during loading phase", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let formData = new FormData();
+      formData.append("key", "value");
+      let N = await t.navigate("/tasks", {
+        formMethod: "post",
+        formData,
+      });
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: { state: "submitting" },
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      await N.actions.tasks.resolve("TASKS_ACTION");
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: { state: "loading" },
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+        actionData: {
+          tasks: "TASKS_ACTION",
+        },
+      });
+
+      let R = await t.revalidate();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: { state: "loading" },
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+        actionData: {
+          tasks: "TASKS_ACTION",
+        },
+      });
+
+      await N.loaders.root.resolve("ROOT_DATA interrupted");
+      await N.loaders.tasks.resolve("TASKS_DATA interrupted");
+      await R.loaders.root.resolve("ROOT_DATA*");
+      await R.loaders.tasks.resolve("TASKS_DATA*");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/tasks" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA*",
+          tasks: "TASKS_DATA*",
+        },
+        actionData: {
+          tasks: "TASKS_ACTION",
+        },
+      });
+      expect(t.history.push).toHaveBeenCalledWith(
+        t.router.state.location,
+        t.router.state.location.state
+      );
+
+      // Action was not resubmitted
+      expect(N.actions.tasks.stub.mock.calls.length).toBe(1);
+      // Because we interrupted during the loading phase, all loaders got re-called
+      expect(N.loaders.root.stub.mock.calls.length).toBe(1);
+      expect(N.loaders.tasks.stub.mock.calls.length).toBe(1);
+      expect(R.loaders.root.stub.mock.calls.length).toBe(1);
+      expect(R.loaders.tasks.stub.mock.calls.length).toBe(1);
+
+      t.cleanup();
+    });
+
+    it("handles redirects returned from revalidations", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let key = t.router.state.location.key;
+      let R = await t.revalidate();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      await R.loaders.root.resolve("ROOT_DATA*");
+      let N = await R.loaders.index.redirectReturn("/tasks");
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: {
+          state: "loading",
+          type: "normalRedirect",
+        },
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+      expect(t.router.state.location.key).toBe(key);
+
+      await N.loaders.root.resolve("ROOT_DATA redirect");
+      await N.loaders.tasks.resolve("TASKS_DATA");
+      expect(t.router.state).toMatchObject({
+        historyAction: "REPLACE",
+        location: { pathname: "/tasks" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA redirect",
+          tasks: "TASKS_DATA",
+        },
+      });
+      expect(t.router.state.location.key).not.toBe(key);
+
+      t.cleanup();
+    });
+
+    it("handles exceptions from revalidations", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let key = t.router.state.location.key;
+      let R = await t.revalidate();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      await R.loaders.root.reject("ROOT_ERROR");
+      await R.loaders.index.resolve("INDEX_DATA*");
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA*",
+        },
+        exceptions: {
+          root: "ROOT_ERROR",
+        },
+      });
+      expect(t.router.state.location.key).toBe(key);
 
       t.cleanup();
     });
