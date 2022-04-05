@@ -29,7 +29,7 @@ describe("compiler", () => {
           }
         `,
         "app/routes/built-ins.jsx": js`
-          import { useLoaderData } from "remix";
+          import { useLoaderData } from "@remix-run/react";
           import * as path from "path";
 
           export let loader = () => {
@@ -41,7 +41,7 @@ describe("compiler", () => {
           }
         `,
         "app/routes/built-ins-polyfill.jsx": js`
-          import { useLoaderData } from "remix";
+          import { useLoaderData } from "@remix-run/react";
           import * as path from "path";
 
           export default function BuiltIns() {

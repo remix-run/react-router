@@ -50,7 +50,7 @@ describe("useFetcher", () => {
         `,
 
         "app/routes/index.jsx": js`
-          import { useFetcher } from "remix";
+          import { useFetcher } from "@remix-run/react";
           export default function Index() {
             let fetcher = useFetcher();
             return (

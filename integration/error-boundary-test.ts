@@ -28,7 +28,7 @@ describe("ErrorBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
-          import { Links, Meta, Outlet, Scripts } from "remix";
+          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
             return (
@@ -63,7 +63,7 @@ describe("ErrorBoundary", () => {
         `,
 
         "app/routes/index.jsx": js`
-          import { Link, Form } from "remix";
+          import { Link, Form } from "@remix-run/react";
           export default function () {
             return (
               <div>
@@ -96,7 +96,7 @@ describe("ErrorBoundary", () => {
         `,
 
         [`app/routes${HAS_BOUNDARY_ACTION}.jsx`]: js`
-          import { Form } from "remix";
+          import { Form } from "@remix-run/react";
           export async function action() {
             throw new Error("Kaboom!")
           }
@@ -115,7 +115,7 @@ describe("ErrorBoundary", () => {
         `,
 
         [`app/routes${NO_BOUNDARY_ACTION}.jsx`]: js`
-          import { Form } from "remix";
+          import { Form } from "@remix-run/react";
           export function action() {
             throw new Error("Kaboom!")
           }
@@ -279,7 +279,7 @@ describe("ErrorBoundary", () => {
       fixture = await createFixture({
         files: {
           "app/root.jsx": js`
-            import { Links, Meta, Outlet, Scripts } from "remix";
+            import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
             return (
@@ -298,7 +298,7 @@ describe("ErrorBoundary", () => {
           `,
 
           "app/routes/index.jsx": js`
-            import { Link, Form } from "remix";
+            import { Link, Form } from "@remix-run/react";
 
             export default function () {
               return (
@@ -318,7 +318,7 @@ describe("ErrorBoundary", () => {
           `,
 
           [`app/routes${NO_ROOT_BOUNDARY_LOADER}.jsx`]: js`
-            import { Link, Form } from "remix";
+            import { Link, Form } from "@remix-run/react";
 
             export async function loader() {
               throw Error("BLARGH");
@@ -334,7 +334,7 @@ describe("ErrorBoundary", () => {
           `,
 
           [`app/routes${NO_ROOT_BOUNDARY_ACTION}.jsx`]: js`
-            import { Link, Form } from "remix";
+            import { Link, Form } from "@remix-run/react";
 
             export async function action() {
               throw Error("YOOOOOOOO WHAT ARE YOU DOING");
@@ -350,7 +350,7 @@ describe("ErrorBoundary", () => {
           `,
 
           [`app/routes${NO_ROOT_BOUNDARY_ACTION_RETURN}.jsx`]: js`
-            import { Link, Form, useActionData } from "remix";
+            import { Link, Form, useActionData } from "@remix-run/react";
 
             export async function action() {}
 

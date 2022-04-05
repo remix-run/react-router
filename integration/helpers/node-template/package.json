@@ -1,0 +1,22 @@
+{
+  "name": "remix-template-remix",
+  "private": true,
+  "description": "",
+  "license": "",
+  "sideEffects": false,
+  "scripts": {
+    "build": "node ../../../build/node_modules/@remix-run/dev/cli.js build",
+    "dev": "node ../../../build/node_modules/@remix-run/dev/cli.js dev",
+    "start": "node ../../../build/node_modules/@remix-run/serve/cli.js build"
+  },
+  "dependencies": {
+    "@remix-run/node": "0.0.0-local-version",
+    "@remix-run/react": "0.0.0-local-version",
+    "@remix-run/serve": "0.0.0-local-version",
+    "react": "0.0.0-local-version",
+    "react-dom": "0.0.0-local-version"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "0.0.0-local-version"
+  }
+}

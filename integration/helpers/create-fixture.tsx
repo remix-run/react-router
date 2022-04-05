@@ -11,33 +11,18 @@ import cheerio from "cheerio";
 import prettier from "prettier";
 import getPort from "get-port";
 import stripIndent from "strip-indent";
+import chalk from "chalk";
 
-import type {
-  ServerBuild,
-  ServerPlatform,
-} from "../../packages/remix-server-runtime";
+import type { ServerBuild } from "../../packages/remix-server-runtime";
 import { createRequestHandler } from "../../packages/remix-server-runtime";
-import { createApp } from "../../packages/remix-dev";
-import { SetupPlatform } from "../../packages/remix-dev/cli/setup";
 import { createRequestHandler as createExpressHandler } from "../../packages/remix-express";
 import { TMP_DIR } from "./global-setup";
-
-const REMIX_SOURCE_BUILD_DIR = path.join(process.cwd(), "build");
 
 interface FixtureInit {
   buildStdio?: Writable;
   sourcemap?: boolean;
   files: { [filename: string]: string };
-  template?:
-    | "arc"
-    | "cloudflare-pages"
-    | "cloudflare-workers"
-    | "deno"
-    | "express"
-    | "fly"
-    | "netlify"
-    | "remix"
-    | "vercel";
+  template?: "cf-template" | "node-template";
 }
 
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
@@ -46,12 +31,22 @@ export type AppFixture = Awaited<ReturnType<typeof createAppFixture>>;
 export const js = String.raw;
 export const json = String.raw;
 export const mdx = String.raw;
+export const css = String.raw;
 
 export async function createFixture(init: FixtureInit) {
   let projectDir = await createFixtureProject(init);
-  let app: ServerBuild = await import(path.resolve(projectDir, "build"));
-  let platform: ServerPlatform = {};
-  let handler = createRequestHandler(app, platform);
+  let buildPath = path.resolve(projectDir, "build");
+  if (!fse.existsSync(buildPath)) {
+    throw new Error(
+      chalk.red(
+        `Expected build directory to exist at ${chalk.dim(
+          buildPath
+        )}. The build probably failed. Did you maybe have a syntax error in your test code strings?`
+      )
+    );
+  }
+  let app: ServerBuild = await import(buildPath);
+  let handler = createRequestHandler(app, "production");
 
   let requestDocument = async (href: string, init?: RequestInit) => {
     let url = new URL(href, "test://test");
@@ -302,6 +297,13 @@ export async function createAppFixture(fixture: Fixture) {
       collectDataResponses: () => collectDataResponses(page),
 
       /**
+       * Collects all responses from the network, usually after a link click or
+       * form submission. A filter can be provided to only collect responses
+       * that meet a certain criteria.
+       */
+      collectResponses: (filter?: UrlFilter) => collectResponses(page, filter),
+
+      /**
        * Disables JavaScript for the page, make sure to enable it again by
        * calling and awaiting the returned function!
        *
@@ -363,49 +365,26 @@ export async function createAppFixture(fixture: Fixture) {
 
 ////////////////////////////////////////////////////////////////////////////////
 export async function createFixtureProject(init: FixtureInit): Promise<string> {
-  let appTemplate = path.join(
-    process.cwd(),
-    "templates",
-    init.template ? init.template : "remix"
-  );
-  let projectDir = path.join(TMP_DIR, Math.random().toString(32).slice(2));
-  let isCloudflareRuntime = ["cloudflare-pages", "cloudflare-workers"].includes(
-    init.template
-  );
+  let template = init.template ?? "node-template";
+  let integrationTemplateDir = path.join(__dirname, template);
+  let projectName = `remix-${template}-${Math.random().toString(32).slice(2)}`;
+  let projectDir = path.join(TMP_DIR, projectName);
 
-  await createApp({
-    appTemplate,
-    projectDir,
-    installDeps: false,
-    useTypeScript: false,
-  });
-  // TODO: init if necessary?
-  await Promise.all([
-    writeTestFiles(init, projectDir),
-    installRemix(projectDir),
-  ]);
-
-  build(
-    projectDir,
-    isCloudflareRuntime ? SetupPlatform.Cloudflare : SetupPlatform.Node,
-    init.buildStdio,
-    init.sourcemap
+  await fse.ensureDir(projectDir);
+  await fse.copy(integrationTemplateDir, projectDir);
+  await fse.copy(
+    path.join(__dirname, "../../build/node_modules"),
+    path.join(projectDir, "node_modules"),
+    { overwrite: true }
   );
+  await renamePkgJsonApp(projectDir);
+  await writeTestFiles(init, projectDir);
+  build(projectDir, init.buildStdio, init.sourcemap);
 
   return projectDir;
 }
 
-function build(
-  projectDir: string,
-  platform: SetupPlatform,
-  buildStdio?: Writable,
-  sourcemap?: boolean
-) {
-  // TODO: log errors (like syntax errors in the fixture file strings)
-  spawnSync("node", ["node_modules/@remix-run/dev/cli.js", "setup", platform], {
-    cwd: projectDir,
-  });
-
+function build(projectDir: string, buildStdio?: Writable, sourcemap?: boolean) {
   let buildArgs = ["node_modules/@remix-run/dev/cli.js", "build"];
   if (sourcemap) {
     buildArgs.push("--sourcemap");
@@ -413,21 +392,11 @@ function build(
   let buildSpawn = spawnSync("node", buildArgs, {
     cwd: projectDir,
   });
-
   if (buildStdio) {
     buildStdio.write(buildSpawn.stdout.toString("utf-8"));
     buildStdio.write(buildSpawn.stderr.toString("utf-8"));
     buildStdio.end();
   }
-}
-
-async function installRemix(projectDir: string) {
-  let buildDir = path.resolve(REMIX_SOURCE_BUILD_DIR, "node_modules");
-  let installDir = path.resolve(projectDir, "node_modules");
-
-  // Install all remix packages
-  await fse.ensureDir(installDir);
-  await fse.copy(buildDir, installDir);
 }
 
 async function writeTestFiles(init: FixtureInit, dir: string) {
@@ -438,7 +407,6 @@ async function writeTestFiles(init: FixtureInit, dir: string) {
       await fs.writeFile(filePath, stripIndent(init.files[filename]));
     })
   );
-  await renamePkgJsonApp(dir);
 }
 
 /**

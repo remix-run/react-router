@@ -14,7 +14,7 @@ describe("rendering", () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
-          import { Links, Meta, Outlet, Scripts } from "remix";
+          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
             return (

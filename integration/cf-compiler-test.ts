@@ -1,15 +1,37 @@
 import fs from "fs/promises";
 import path from "path";
 
-import { createFixtureProject, js } from "./helpers/create-fixture";
+import { createFixtureProject, js, json } from "./helpers/create-fixture";
 
 describe("cloudflare compiler", () => {
   let projectDir: string;
 
   beforeAll(async () => {
     projectDir = await createFixtureProject({
-      template: "cloudflare-workers",
+      template: "cf-template",
       files: {
+        "package.json": json`
+          {
+            "name": "remix-template-cloudflare-workers",
+            "private": true,
+            "sideEffects": false,
+            "main": "build/index.js",
+            "dependencies": {
+              "@remix-run/cloudflare-workers": "0.0.0-local-version",
+              "@remix-run/react": "0.0.0-local-version",
+              "react": "0.0.0-local-version",
+              "react-dom": "0.0.0-local-version",
+              "worker-pkg": "0.0.0-local-version",
+              "browser-pkg": "0.0.0-local-version",
+              "esm-only-pkg": "0.0.0-local-version",
+              "cjs-only-pkg": "0.0.0-local-version"
+            },
+            "devDependencies": {
+              "@remix-run/dev": "0.0.0-local-version",
+              "@remix-run/eslint-config": "0.0.0-local-version"
+            }
+          }
+        `,
         "app/routes/index.jsx": js`
           import fake from "worker-pkg";
           import { content as browserPackage } from "browser-pkg";

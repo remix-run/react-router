@@ -1,6 +1,6 @@
 import { PassThrough } from "stream";
 
-import { createFixtureProject, js } from "./helpers/create-fixture";
+import { createFixtureProject, js, json } from "./helpers/create-fixture";
 
 let buildOutput: string;
 
@@ -10,8 +10,35 @@ beforeAll(async () => {
   await createFixtureProject({
     buildStdio,
     files: {
+      "package.json": json`
+      {
+        "name": "remix-integration-9v4bpv66vd",
+        "private": true,
+        "sideEffects": false,
+        "scripts": {
+          "build": "remix build",
+          "dev": "remix dev",
+          "start": "remix-serve build"
+        },
+        "dependencies": {
+          "@remix-run/node": "0.0.0-local-version",
+          "@remix-run/react": "0.0.0-local-version",
+          "@remix-run/serve": "0.0.0-local-version",
+          "react": "0.0.0-local-version",
+          "react-dom": "0.0.0-local-version",
+          "esm-only-no-exports": "0.0.0-local-version",
+          "esm-only-exports": "0.0.0-local-version",
+          "esm-only-sub-exports": "0.0.0-local-version",
+          "esm-cjs-exports": "0.0.0-local-version"
+        },
+        "devDependencies": {
+          "@remix-run/dev": "0.0.0-local-version"
+        }
+      }
+      `,
       "app/routes/index.jsx": js`
-        import { json, useLoaderData, Link } from "remix";
+        import { json } from "@remix-run/node";
+        import { useLoaderData, Link } from "@remix-run/react";
         import a from "esm-only-no-exports";
         import b from "esm-only-exports";
         import c from "esm-only-sub-exports";
@@ -32,7 +59,7 @@ beforeAll(async () => {
         }
       `,
       "node_modules/esm-only-no-exports/package.json": `{
-  "name": "esm-only",
+  "name": "esm-only-no-exports",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js"
@@ -41,7 +68,7 @@ beforeAll(async () => {
         export default () => "esm-only-no-exports";
       `,
       "node_modules/esm-only-exports/package.json": `{
-  "name": "esm-only",
+  "name": "esm-only-exports",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
@@ -54,7 +81,7 @@ beforeAll(async () => {
         export default () => "esm-only-no-exports";
       `,
       "node_modules/esm-only-sub-exports/package.json": `{
-  "name": "esm-only",
+  "name": "esm-only-sub-exports",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
@@ -71,7 +98,7 @@ beforeAll(async () => {
         export default () => "esm-only-no-exports/sub";
       `,
       "node_modules/esm-cjs-exports/package.json": `{
-  "name": "esm-only",
+  "name": "esm-cjs-exports",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",

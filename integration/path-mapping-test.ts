@@ -19,7 +19,8 @@ beforeAll(async () => {
 
       "app/routes/index.tsx": js`
         import { pizza } from "@mylib";
-        import { json, useLoaderData, Link } from "remix";
+        import { json } from "@remix-run/node";
+        import { useLoaderData, Link } from "@remix-run/react";
 
         export function loader() {
           return json(pizza);
@@ -37,7 +38,8 @@ beforeAll(async () => {
 
       "app/routes/tilde-alias.tsx": js`
         import { pizza } from "~/components/my-lib";
-        import { json, useLoaderData, Link } from "remix";
+        import { json } from "@remix-run/node";
+        import { useLoaderData, Link } from "@remix-run/react";
 
         export function loader() {
           return json(pizza);

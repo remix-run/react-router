@@ -1,5 +1,5 @@
-import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
-import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { createFixture, js } from "./helpers/create-fixture";
+import type { Fixture } from "./helpers/create-fixture";
 
 let fixture: Fixture;
 
@@ -7,7 +7,7 @@ beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/index.jsx": js`
-        import { json } from "remix";
+        import { json } from "@remix-run/node";
 
         export async function action({ request }) {
           try {

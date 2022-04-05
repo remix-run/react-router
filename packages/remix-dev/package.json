@@ -43,6 +43,7 @@
     "meow": "^7.1.1",
     "minimatch": "^3.0.4",
     "node-fetch": "^2.6.7",
+    "ora": "^5.4.1",
     "prettier": "2.6.1",
     "pretty-ms": "^7.0.1",
     "remark-frontmatter": "^4.0.0",
@@ -64,6 +65,9 @@
     "@types/lodash.debounce": "^4.0.6",
     "@types/tar-fs": "^2.0.1",
     "@types/ws": "^7.4.1",
-    "type-fest": "^2.12.2"
+    "esbuild-register": "^3.3.2",
+    "msw": "^0.39.2",
+    "type-fest": "^2.12.2",
+    "tiny-invariant": "^1.2.0"
   }
 }

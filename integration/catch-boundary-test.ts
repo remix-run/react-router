@@ -21,7 +21,7 @@ describe("CatchBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
-          import { Links, Meta, Outlet, Scripts } from "remix";
+          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
             return (
@@ -52,7 +52,7 @@ describe("CatchBoundary", () => {
         `,
 
         "app/routes/index.jsx": js`
-          import { Link, Form } from "remix";
+          import { Link, Form } from "@remix-run/react";
           export default function() {
             return (
               <div>
@@ -77,7 +77,7 @@ describe("CatchBoundary", () => {
         `,
 
         "app/routes/fetcher-boundary.jsx": js`
-          import { useFetcher } from "remix";
+          import { useFetcher } from "@remix-run/react";
           export function CatchBoundary() {
             return <p>${OWN_BOUNDARY_TEXT}</p>
           }
@@ -95,7 +95,7 @@ describe("CatchBoundary", () => {
         `,
 
         "app/routes/fetcher-no-boundary.jsx": js`
-          import { useFetcher } from "remix";
+          import { useFetcher } from "@remix-run/react";
           export default function() {
             let fetcher = useFetcher();
 
@@ -110,7 +110,7 @@ describe("CatchBoundary", () => {
         `,
 
         [`app/routes${HAS_BOUNDARY_ACTION}.jsx`]: js`
-          import { Form } from "remix";
+          import { Form } from "@remix-run/react";
           export async function action() {
             throw new Response("", { status: 401 })
           }
@@ -129,7 +129,7 @@ describe("CatchBoundary", () => {
         `,
 
         [`app/routes${NO_BOUNDARY_ACTION}.jsx`]: js`
-          import { Form } from "remix";
+          import { Form } from "@remix-run/react";
           export function action() {
             throw new Response("", { status: 401 })
           }

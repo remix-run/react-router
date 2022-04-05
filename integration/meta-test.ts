@@ -9,7 +9,8 @@ describe("meta", () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
-          import { json, Meta, Links, Outlet, Scripts } from "remix";
+          import { json } from "@remix-run/node";
+          import { Meta, Links, Outlet, Scripts } from "@remix-run/react";
 
           export const loader = async () =>
             json({

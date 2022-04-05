@@ -10,7 +10,7 @@ beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/session.server.js": js`
-        import { createCookieSessionStorage } from "remix";
+        import { createCookieSessionStorage } from "@remix-run/node";
 
         export let MESSAGE_KEY = "message";
 
@@ -25,7 +25,14 @@ beforeAll(async () => {
       `,
 
       "app/root.jsx": js`
-        import { json, Links, Meta, Outlet, Scripts, useLoaderData } from "remix";
+        import { json } from "@remix-run/node";
+        import {
+          Links,
+          Meta,
+          Outlet,
+          Scripts,
+          useLoaderData,
+        } from "@remix-run/react";
 
         import { sessionStorage, MESSAGE_KEY } from "~/session.server";
 
@@ -60,7 +67,7 @@ beforeAll(async () => {
       `,
 
       "app/routes/index.jsx": js`
-        import { Link } from "remix";
+        import { Link } from "@remix-run/react";
 
         export default function Index() {
           return (
@@ -78,7 +85,7 @@ beforeAll(async () => {
       `,
 
       "app/routes/protected.jsx": js`
-        import { redirect } from "remix";
+        import { redirect } from "@remix-run/node";
 
         import { sessionStorage, MESSAGE_KEY } from "~/session.server";
 

@@ -6,7 +6,14 @@ function fixtureFactory(mode) {
   return {
     files: {
       "app/root.jsx": js`
-        import { Link, Links, Meta, Outlet, Scripts, useLoaderData } from "remix";
+        import {
+          Link,
+          Links,
+          Meta,
+          Outlet,
+          Scripts,
+          useLoaderData,
+        } from "@remix-run/react";
 
         export default function Root() {
           const styles =

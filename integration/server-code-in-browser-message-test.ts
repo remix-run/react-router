@@ -18,7 +18,8 @@ beforeAll(async () => {
         module.exports = () => message;
       `,
       "app/routes/index.jsx": js`
-        import { json, useLoaderData, Link } from "remix";
+        import { json } from "@remix-run/node";
+        import { useLoaderData, Link } from "@remix-run/react";
         import sideEffectModules from "has-side-effects";
 
         export let loader = () => json(sideEffectModules());

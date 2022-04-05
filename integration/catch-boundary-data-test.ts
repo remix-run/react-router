@@ -19,7 +19,15 @@ beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/root.jsx": js`
-        import { json, Links, Meta, Outlet, Scripts, useLoaderData, useMatches } from "remix";
+        import { json } from "@remix-run/node";
+        import {
+          Links,
+          Meta,
+          Outlet,
+          Scripts,
+          useLoaderData,
+          useMatches,
+        } from "@remix-run/react";
 
         export const loader = () => json("${ROOT_DATA}");
 
@@ -59,7 +67,7 @@ beforeAll(async () => {
       `,
 
       "app/routes/index.jsx": js`
-        import { Link } from "remix";
+        import { Link } from "@remix-run/react";
         export default function Index() {
           return (
             <div>
@@ -81,7 +89,7 @@ beforeAll(async () => {
       `,
 
       [`app/routes${HAS_BOUNDARY_LAYOUT_NESTED_LOADER}.jsx`]: js`
-        import { useMatches } from "remix";
+        import { useMatches } from "@remix-run/react";
         export function loader() {
           return "${LAYOUT_DATA}";
         }
@@ -111,7 +119,7 @@ beforeAll(async () => {
       `,
 
       [`app/routes${HAS_BOUNDARY_NESTED_LOADER}.jsx`]: js`
-        import { Outlet, useLoaderData } from "remix";
+        import { Outlet, useLoaderData } from "@remix-run/react";
         export function loader() {
           return "${LAYOUT_DATA}";
         }

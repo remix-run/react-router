@@ -47,7 +47,7 @@ describe("Forms", () => {
     fixture = await createFixture({
       files: {
         "app/routes/get-submission.jsx": js`
-          import { useLoaderData, Form } from "remix";
+          import { useLoaderData, Form } from "@remix-run/react";
 
           export function loader({ request }) {
             let url = new URL(request.url);
@@ -129,7 +129,7 @@ describe("Forms", () => {
         `,
 
         "app/routes/inbox.jsx": js`
-          import { Form } from "remix";
+          import { Form } from "@remix-run/react";
           export default function() {
             return (
               <>
@@ -151,7 +151,7 @@ describe("Forms", () => {
         `,
 
         "app/routes/blog.jsx": js`
-          import { Form, Outlet } from "remix";
+          import { Form, Outlet } from "@remix-run/react";
           export default function() {
             return (
               <>
@@ -175,7 +175,7 @@ describe("Forms", () => {
         `,
 
         "app/routes/blog/index.jsx": js`
-          import { Form } from "remix";
+          import { Form } from "@remix-run/react";
           export default function() {
             return (
               <>
@@ -197,7 +197,7 @@ describe("Forms", () => {
         `,
 
         "app/routes/blog/$postId.jsx": js`
-          import { Form } from "remix";
+          import { Form } from "@remix-run/react";
           export default function() {
             return (
               <>
@@ -219,7 +219,7 @@ describe("Forms", () => {
         `,
 
         "app/routes/projects.jsx": js`
-          import { Form, Outlet } from "remix";
+          import { Form, Outlet } from "@remix-run/react";
           export default function() {
             return (
               <>
@@ -237,7 +237,7 @@ describe("Forms", () => {
         `,
 
         "app/routes/projects/$.jsx": js`
-          import { Form } from "remix";
+          import { Form } from "@remix-run/react";
           export default function() {
             return (
               <>

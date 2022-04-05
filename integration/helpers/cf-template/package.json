@@ -1,0 +1,22 @@
+{
+  "name": "remix-template-cloudflare-workers",
+  "private": true,
+  "description": "",
+  "license": "",
+  "sideEffects": false,
+  "main": "build/index.js",
+  "scripts": {},
+  "dependencies": {
+    "@remix-run/cloudflare-workers": "0.0.0-local-version",
+    "@remix-run/react": "0.0.0-local-version",
+    "react": "0.0.0-local-version",
+    "react-dom": "0.0.0-local-version"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "0.0.0-local-version",
+    "@remix-run/eslint-config": "0.0.0-local-version"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}

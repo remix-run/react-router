@@ -1,0 +1,17 @@
+name = "remix-cloudflare-workers"
+type = "javascript"
+
+zone_id = ""
+account_id = ""
+route = ""
+workers_dev = true
+
+[site]
+bucket = "./public"
+entry-point = "."
+
+[build]
+command = "npm run build"
+
+[build.upload]
+format="service-worker"

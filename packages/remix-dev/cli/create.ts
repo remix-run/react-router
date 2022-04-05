@@ -3,6 +3,7 @@ import { promisify } from "util";
 import path from "path";
 import fse from "fs-extra";
 import fetch from "node-fetch";
+import ora from "ora";
 import gunzip from "gunzip-maybe";
 import tar from "tar-fs";
 import * as semver from "semver";
@@ -42,19 +43,9 @@ export async function createApp({
   let versions = process.versions;
   if (versions?.node && semver.major(versions.node) < 14) {
     throw new Error(
-      `️🚨 Oops, Node v${versions.node} detected. Remix requires a Node version greater than 14.`
+      `️🚨 Oops, Node v${versions.node} detected. Remix requires a Node version ` +
+        `greater than 14.`
     );
-  }
-
-  // Create the app directory
-  let relativeProjectDir = path.relative(process.cwd(), projectDir);
-  let projectDirIsCurrentDir = relativeProjectDir === "";
-  if (!projectDirIsCurrentDir) {
-    if (fse.existsSync(projectDir)) {
-      throw new Error(
-        `️🚨 Oops, "${relativeProjectDir}" already exists. Please try again with a different directory.`
-      );
-    }
   }
 
   /**
@@ -67,20 +58,15 @@ export async function createApp({
    * - example in remix-run org
    * - template in remix-run org
    */
-  let templateType = await detectTemplateType(
-    appTemplate,
-    useTypeScript,
-    githubToken
-  );
+
+  let templateType = detectTemplateType(appTemplate);
   let options = { useTypeScript, token: githubToken };
   switch (templateType) {
     case "local": {
       let filepath = appTemplate.startsWith("file://")
         ? fileURLToPath(appTemplate)
         : appTemplate;
-      if (!fse.existsSync(filepath)) {
-        throw new Error(`️🚨 Oops, "${filepath}" does not exist.`);
-      }
+
       if (fse.statSync(filepath).isDirectory()) {
         await fse.copy(filepath, projectDir);
         break;
@@ -94,45 +80,64 @@ export async function createApp({
       await downloadAndExtractTarball(projectDir, appTemplate, options);
       break;
     }
-    case "example": {
-      await downloadAndExtractTemplateOrExample(
+    case "repoTemplate": {
+      let owner = "remix-run";
+      let name = appTemplate.split("/").slice(-1)[0];
+      await downloadAndExtractRepoTarball(
         projectDir,
-        appTemplate,
-        "examples",
+        getRepoInfo(`${owner}/${name}`),
+        options
+      );
+      break;
+    }
+    case "example": {
+      let name = appTemplate.split("/").slice(-1)[0];
+      await downloadAndExtractRepoTarball(
+        projectDir,
+        getRepoInfo(
+          `https://github.com/remix-run/remix/tree/main/examples/${name}`
+        ),
         options
       );
       break;
     }
     case "template": {
-      await downloadAndExtractTemplateOrExample(
+      await downloadAndExtractRepoTarball(
         projectDir,
-        appTemplate,
-        "templates",
+        getRepoInfo(
+          `https://github.com/remix-run/remix/tree/main/templates/${appTemplate}`
+        ),
         options
       );
       break;
     }
     case "repo": {
-      let { filePath, tarballURL } = await getTarballUrl(
-        appTemplate,
-        githubToken
+      await downloadAndExtractRepoTarball(
+        projectDir,
+        getRepoInfo(appTemplate),
+        options
       );
-      await downloadAndExtractTarball(projectDir, tarballURL, {
-        ...options,
-        filePath,
-      });
       break;
     }
-    default:
-      throw new Error(`Unable to determine template type for "${appTemplate}"`);
   }
 
   // Update remix deps
-  let appPkg = require(path.join(projectDir, "package.json"));
+  let pkgJsonPath = path.join(projectDir, "package.json");
+  let appPkg: any;
+  try {
+    appPkg = require(pkgJsonPath);
+  } catch (err) {
+    throw Error(
+      "🚨 The provided template must be a Remix project with a `package.json` " +
+        `file, but that file does not exist in ${pkgJsonPath}.`
+    );
+  }
+
   ["dependencies", "devDependencies"].forEach((pkgKey) => {
-    for (let key in appPkg[pkgKey]) {
-      if (appPkg[pkgKey][key] === "*") {
-        appPkg[pkgKey][key] = semver.prerelease(remixVersion)
+    for (let dependency in appPkg[pkgKey]) {
+      let version = appPkg[pkgKey][dependency];
+      if (version === "*") {
+        appPkg[pkgKey][dependency] = semver.prerelease(remixVersion)
           ? // Templates created from prereleases should pin to a specific version
             remixVersion
           : "^" + remixVersion;
@@ -140,9 +145,7 @@ export async function createApp({
     }
   });
   appPkg = sortPackageJSON(appPkg);
-  await fse.writeJSON(path.join(projectDir, "package.json"), appPkg, {
-    spaces: 2,
-  });
+  await fse.writeJSON(pkgJsonPath, appPkg, { spaces: 2 });
 
   if (!useTypeScript) {
     await convertTemplateToJavaScript(projectDir);
@@ -154,12 +157,12 @@ export async function createApp({
       encoding: "utf8",
     });
     if (npmConfig?.startsWith("https://npm.remix.run")) {
-      console.log(
-        "🚨 Oops! You still have the private Remix registry configured. Please run `npm config delete @remix-run:registry` or edit your .npmrc file to remove it."
+      throw Error(
+        "🚨 Oops! You still have the private Remix registry configured. Please " +
+          "run `npm config delete @remix-run:registry` or edit your .npmrc file " +
+          "to remove it."
       );
-      process.exit(1);
     }
-
     execSync("npm install", { stdio: "inherit", cwd: projectDir });
   }
 }
@@ -171,290 +174,482 @@ async function extractLocalTarball(
   projectDir: string,
   filePath: string
 ): Promise<void> {
-  await pipeline(
-    fse.createReadStream(filePath),
-    gunzip(),
-    tar.extract(projectDir, { strip: 1 })
-  );
+  try {
+    await pipeline(
+      fse.createReadStream(filePath),
+      gunzip(),
+      tar.extract(projectDir, { strip: 1 })
+    );
+  } catch (err) {
+    throw Error(
+      "🚨 There was a problem extracting the file from the provided template.\n\n" +
+        `  Template filepath: \`${filePath}\`\n` +
+        `  Destination directory: \`${projectDir}\``
+    );
+  }
 }
 
-async function downloadAndExtractTemplateOrExample(
+async function downloadAndExtractRepoTarball(
   projectDir: string,
-  name: string,
-  type: "templates" | "examples",
+  repo: RepoInfo,
   options: {
     token?: string;
-    useTypeScript: boolean;
+    filePath?: string | null | undefined;
   }
 ) {
-  let response = await fetch(
-    "https://codeload.github.com/remix-run/remix/tar.gz/main",
-    options.token
-      ? { headers: { Authorization: `token ${options.token}` } }
-      : {}
-  );
-
-  if (response.status !== 200) {
-    throw new Error(`Error fetching repo: ${response.status}`);
+  // If we have a direct file path we will also have the branch. We can skip the
+  // redirect and get the tarball URL directly.
+  if (repo.branch && repo.filePath) {
+    let { filePath, tarballURL } = getTarballUrl(repo);
+    return downloadAndExtractTarball(projectDir, tarballURL, {
+      ...options,
+      filePath,
+    });
   }
 
-  let cwd = path.dirname(projectDir);
-  let desiredDir = path.basename(projectDir);
-  let templateDir = path.join(desiredDir, type, name);
-  await pipeline(
-    response.body.pipe(gunzip()),
-    tar.extract(cwd, {
-      map(header) {
-        let originalDirName = header.name.split("/")[0];
-        header.name = header.name.replace(originalDirName, desiredDir);
-        // https://github.com/remix-run/remix/issues/2356#issuecomment-1071458832
-        if (path.sep === "\\") {
-          templateDir = templateDir.replace("\\", "/");
-        }
-        if (!header.name.startsWith(templateDir + "/")) {
-          header.name = "__IGNORE__";
-        } else {
-          header.name = header.name.replace(templateDir, desiredDir);
-        }
-        return header;
-      },
-      ignore(_filename, header) {
-        if (!header) {
-          throw new Error(`Header is undefined`);
-        }
+  // If we don't know the branch, the GitHub API will figure out the default and
+  // redirect the request to the tarball.
+  // https://docs.github.com/en/rest/reference/repos#download-a-repository-archive-tar
+  let url = `https://api.github.com/repos/${repo.owner}/${repo.name}/tarball`;
+  if (repo.branch) {
+    url += `/${repo.branch}`;
+  }
 
-        return header.name === "__IGNORE__";
-      },
-    })
-  );
+  return downloadAndExtractTarball(projectDir, url, {
+    ...options,
+    filePath: null,
+  });
 }
 
 async function downloadAndExtractTarball(
   projectDir: string,
   url: string,
-  options: {
+  {
+    token,
+    filePath,
+  }: {
     token?: string;
-    filePath?: string | null | undefined;
+    filePath?: string | null;
   }
 ): Promise<void> {
-  let desiredDir = path.basename(projectDir);
-
   let response = await fetch(
     url,
-    options.token
-      ? { headers: { Authorization: `token ${options.token}` } }
-      : {}
+    token ? { headers: { Authorization: `token ${token}` } } : {}
   );
 
   if (response.status !== 200) {
-    throw new Error(`Error fetching repo: ${response.status}`);
+    throw Error(
+      "🚨 There was a problem fetching the file from GitHub. The request " +
+        `responded with a ${response.status} status. Please try again later.`
+    );
   }
 
-  await pipeline(
-    response.body.pipe(gunzip()),
-    tar.extract(projectDir, {
-      map(header) {
-        let originalDirName = header.name.split("/")[0];
-        header.name = header.name.replace(originalDirName, desiredDir);
+  try {
+    await pipeline(
+      response.body.pipe(gunzip()),
+      tar.extract(projectDir, {
+        map(header) {
+          let originalDirName = header.name.split("/")[0];
+          header.name = header.name.replace(`${originalDirName}/`, "");
 
-        let templateFiles = options.filePath
-          ? path.join(desiredDir, options.filePath) + path.sep
-          : desiredDir + path.sep;
+          if (filePath) {
+            if (header.name.startsWith(filePath)) {
+              header.name = header.name.replace(filePath, "");
+            } else {
+              header.name = "__IGNORE__";
+            }
+          }
 
-        // https://github.com/remix-run/remix/issues/2356#issuecomment-1071458832
-        if (path.sep === "\\") {
-          templateFiles = templateFiles.replace("\\", "/");
-        }
+          return header;
+        },
+        ignore(_filename, header) {
+          if (!header) {
+            throw new Error(`Header is undefined`);
+          }
 
-        if (!header.name.startsWith(templateFiles)) {
-          header.name = "__IGNORE__";
-        } else {
-          header.name = header.name.replace(templateFiles, "");
-        }
-
-        return header;
-      },
-      ignore(_filename, header) {
-        if (!header) {
-          throw new Error(`Header is undefined`);
-        }
-
-        return header.name === "__IGNORE__";
-      },
-    })
-  );
+          return header.name === "__IGNORE__";
+        },
+      })
+    );
+  } catch (_) {
+    throw Error(
+      "🚨 There was a problem extracting the file from the provided template.\n\n" +
+        `  Template URL: \`${url}\`\n` +
+        `  Destination directory: \`${projectDir}\``
+    );
+  }
 }
 
-async function getTarballUrl(
-  from: string,
-  token?: string | undefined
-): Promise<{ tarballURL: string; filePath: string }> {
-  let info = await getRepoInfo(from, token);
-
-  if (!info) {
-    throw new Error(`Could not find repo: ${from}`);
-  }
-
+function getTarballUrl(repoInfo: RepoInfo): {
+  tarballURL: string;
+  filePath: string;
+} {
   return {
-    tarballURL: `https://codeload.github.com/${info.owner}/${info.name}/tar.gz/${info.branch}`,
-    filePath: info.filePath,
+    tarballURL: `https://codeload.github.com/${repoInfo.owner}/${repoInfo.name}/tar.gz/${repoInfo.branch}`,
+    filePath: repoInfo.filePath || "/",
   };
 }
 
-interface RepoInfo {
+interface RepoInfoWithBranch {
+  url: string;
   owner: string;
   name: string;
   branch: string;
-  filePath: string;
+  filePath: string | null;
 }
 
-async function getRepoInfo(
-  from: string,
-  token?: string | undefined
-): Promise<RepoInfo | undefined> {
-  try {
-    let url = new URL(from);
-    if (url.hostname !== "github.com") {
+interface RepoInfoWithoutBranch {
+  url: string;
+  owner: string;
+  name: string;
+  branch: null;
+  filePath: null;
+}
+
+type RepoInfo = RepoInfoWithBranch | RepoInfoWithoutBranch;
+
+function isGithubRepoShorthand(value: string) {
+  return /^[\w-]+\/[\w-]+$/.test(value);
+}
+
+function getGithubUrl(info: Omit<RepoInfo, "url">) {
+  let url = `https://github.com/${info.owner}/${info.name}`;
+  if (info.branch) {
+    url += `/${info.branch}`;
+    if (info.filePath && info.filePath !== "/") {
+      url += `/${info.filePath}`;
+    }
+  }
+  return url;
+}
+
+function getRepoInfo(validatedGithubUrl: string): RepoInfo {
+  if (isGithubRepoShorthand(validatedGithubUrl)) {
+    let [owner, name] = validatedGithubUrl.split("/");
+    return {
+      url: getGithubUrl({ owner, name, branch: null, filePath: null }),
+      owner,
+      name,
+      branch: null,
+      filePath: null,
+    };
+  }
+
+  let url = new URL(validatedGithubUrl);
+  let [, owner, name, tree, branch, ...file] = url.pathname.split("/") as [
+    _: string,
+    Owner: string,
+    Name: string,
+    Tree: string | undefined,
+    Branch: string | undefined,
+    FileInfo: string | undefined
+  ];
+  let filePath = file.join(path.sep);
+
+  if (tree === undefined) {
+    return {
+      url: validatedGithubUrl,
+      owner,
+      name,
+      branch: null,
+      filePath: null,
+    };
+  }
+
+  return {
+    url: validatedGithubUrl,
+    owner,
+    name,
+    // If we've validated the GitHub URL and there is a tree, there will also be
+    // a branch
+    branch: branch!,
+    filePath: filePath === "" || filePath === "/" ? null : filePath,
+  };
+}
+
+export async function validateNewProjectPath(input: string): Promise<void> {
+  let cwd = process.cwd();
+  let projectDir = path.resolve(cwd, input);
+  if (
+    (await fse.pathExists(projectDir)) &&
+    (await fse.stat(projectDir)).isDirectory()
+  ) {
+    let contents = await fse.readdir(projectDir);
+    if (contents.length > 0) {
+      throw Error(
+        "🚨 The current directory must be empty to create a new project. Please " +
+          "clear the contents of the directory or choose a different path."
+      );
+    }
+    return;
+  }
+
+  if (
+    (await fse.pathExists(projectDir)) &&
+    (await fse.stat(projectDir)).isDirectory()
+  ) {
+    throw Error(
+      "🚨 The directory provided already exists. Please try again with a " +
+        "different directory."
+    );
+  }
+}
+
+function isRemixStack(input: string) {
+  return [
+    "remix-run/blues-stack",
+    "remix-run/indie-stack",
+    "remix-run/grunge-stack",
+    "blues-stack",
+    "indie-stack",
+    "grunge-stack",
+  ].includes(input);
+}
+
+function isRemixTemplate(input: string) {
+  return [
+    "remix",
+    "express",
+    "arc",
+    "fly",
+    "netlify",
+    "vercel",
+    "cloudflare-pages",
+    "cloudflare-workers",
+  ].includes(input);
+}
+
+export async function validateTemplate(input: string) {
+  // If a template string matches one of the choices in our interactive prompt,
+  // we can skip all fetching and manual validation.
+  if (isRemixStack(input)) {
+    return;
+  }
+  if (isRemixTemplate(input)) {
+    return;
+  }
+
+  let templateType = detectTemplateType(input);
+  switch (templateType) {
+    case "local": {
+      if (input.startsWith("file://")) {
+        input = fileURLToPath(input);
+      }
+      if (!(await fse.pathExists(input))) {
+        throw Error(`🚨 Oops, the file \`${input}\` does not exist.`);
+      }
       return;
     }
-
-    let [, owner, name, t, branch, ...file] = url.pathname.split("/");
-    let filePath = file.join(path.sep);
-
-    if (t === undefined) {
-      let defaultBranch = await getDefaultBranch(`${owner}/${name}`, token);
-
-      return { owner, name, branch: defaultBranch, filePath };
-    }
-
-    if (owner && name && branch && t === "tree") {
-      return { owner, name, branch, filePath };
-    }
-
-    return;
-  } catch (error: unknown) {
-    // invalid url, but it could be a github shorthand for
-    // :owner/:repo
-    try {
-      let parts = from.split("/");
-      if (parts.length === 1) {
-        parts.unshift("remix-run");
+    case "remoteTarball": {
+      let spinner = ora("Validating the template file…").start();
+      try {
+        let response = await fetch(input, { method: "HEAD" });
+        spinner.stop();
+        switch (response.status) {
+          case 200:
+            return;
+          case 404:
+            throw Error(
+              "🚨 The template file could not be verified. Please double check " +
+                "the URL and try again."
+            );
+          default:
+            throw Error(
+              "🚨 The template file could not be verified. The server returned " +
+                `a response with a ${response.status} status. Please double ` +
+                "check the URL and try again."
+            );
+        }
+      } catch (err) {
+        spinner.stop();
+        throw Error(
+          "🚨 There was a problem verifying the template file. Please ensure " +
+            "you are connected to the internet and try again later."
+        );
       }
-      let [owner, name] = parts;
-      let branch = await getDefaultBranch(`${owner}/${name}`, token);
-      return { owner, name, branch, filePath: "" };
-    } catch (error) {
-      // invalid url, but we can try to match a template or example
-      return undefined;
+    }
+    case "repo": {
+      let spinner = ora("Validating the template repo…").start();
+      let { url, filePath } = getRepoInfo(input);
+      try {
+        let response = await fetch(url, { method: "HEAD" });
+        spinner.stop();
+        switch (response.status) {
+          case 200:
+            return;
+          case 403:
+            throw Error(
+              "🚨 The template could not be verified because you do not have " +
+                "access to the repository. Please double check the access " +
+                "rights of this repo and try again."
+            );
+          case 404:
+            throw Error(
+              "🚨 The template could not be verified. Please double check that " +
+                "the template is a valid GitHub repository" +
+                (filePath && filePath !== "/"
+                  ? " and that the filepath points to a directory in the repo"
+                  : "") +
+                " and try again."
+            );
+          default:
+            throw Error(
+              "🚨 The template could not be verified. The server returned a " +
+                `response with a ${response.status} status. Please double check ` +
+                "that the template is a valid GitHub repository  and try again."
+            );
+        }
+      } catch (_) {
+        spinner.stop();
+        throw Error(
+          "🚨 There was a problem verifying the template. Please ensure you " +
+            "are connected to the internet and try again later."
+        );
+      }
+    }
+    case "example":
+    case "template": {
+      let spinner = ora("Validating the template…").start();
+      let name = input;
+      if (templateType === "example") {
+        name = name.split("/")[1];
+      }
+      let typeDir = templateType + "s";
+      let templateUrl = `https://github.com/remix-run/remix/tree/main/${typeDir}/${name}`;
+      try {
+        let response = await fetch(templateUrl, { method: "HEAD" });
+        spinner.stop();
+        switch (response.status) {
+          case 200:
+            return;
+          case 404:
+            throw Error(
+              "🚨 The template could not be verified. Please double check that " +
+                "the template is a valid project directory in " +
+                `https://github.com/remix-run/remix/tree/main/${typeDir} and ` +
+                "try again."
+            );
+          default:
+            throw Error(
+              "🚨 The template could not be verified. The server returned a " +
+                `response with a ${response.status} status. Please double ` +
+                "check that the template is a valid project directory in " +
+                `https://github.com/remix-run/remix/tree/main/${typeDir} and ` +
+                "try again."
+            );
+        }
+      } catch (_) {
+        spinner.stop();
+        throw Error(
+          "🚨 There was a problem verifying the template. Please ensure you are " +
+            "connected to the internet and try again later."
+        );
+      }
     }
   }
+
+  throw Error("🚨 Invalid template selected. Please try again.");
 }
 
-async function getDefaultBranch(
-  repo: string,
-  token: string | undefined
-): Promise<string> {
-  let response = await fetch(`https://api.github.com/repos/${repo}`, {
-    headers: {
-      Authorization: token ? `token ${token}` : "",
-      Accept: "application/vnd.github.v3+json",
-    },
-  });
-
-  if (response.status !== 200) {
-    throw new Error(
-      `Error fetching repo: ${response.status} ${response.statusText}`
-    );
-  }
-
-  let info = await response.json();
-  return info.default_branch;
-}
-
-async function isRemixTemplate(
-  name: string,
-  useTypeScript: boolean,
-  token?: string
-): Promise<string | undefined> {
-  let response = await fetch(
-    `https://api.github.com/repos/remix-run/remix/contents/templates`,
-    {
-      headers: token
-        ? {
-            Accept: "application/vnd.github.v3+json",
-            Authorization: `token ${token}`,
-          }
-        : {
-            Accept: "application/vnd.github.v3+json",
-          },
-    }
-  );
-  if (!response.ok) {
-    throw new Error(
-      `Error fetching repo: ${response.status} ${response.statusText}`
-    );
-  }
-  let results = await response.json();
-  let template = results.find((result: any) => {
-    return result.name === name;
-  });
-  if (!template) return undefined;
-  return template.name;
-}
-
-async function isRemixExample(name: string, token?: string) {
-  let response = await fetch(
-    `https://api.github.com/repos/remix-run/remix/contents/examples`,
-    {
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-        Authorization: token ? `token ${token}` : "",
-      },
-    }
-  );
-  if (!response.ok) {
-    throw new Error(
-      `Error fetching repo: ${response.status} ${response.statusText}`
-    );
-  }
-  let results = await response.json();
-  let example = results.find((result: any) => {
-    return result.name === name;
-  });
-  if (!example) return undefined;
-  return example.name;
-}
-
-type TemplateType =
+export type TemplateType =
   // in the remix repo
   | "template"
   // in the remix repo
   | "example"
   // a github repo
   | "repo"
+  // a remix repo template (like "remix-run/blues-stack" or "indie-stack")
+  | "repoTemplate"
   // remote tarball url
   | "remoteTarball"
   // local directory
   | "local";
 
-async function detectTemplateType(
-  template: string,
-  useTypeScript: boolean,
-  token?: string
-): Promise<TemplateType> {
-  if (template.startsWith("file://") || fse.existsSync(template)) {
+export function detectTemplateType(template: string): TemplateType | null {
+  // 1. Check if the user passed a local file. If they hand us an explicit file
+  //    URL, we'll validate it first. Otherwise we just ping the filesystem to
+  //    see if the string references a filepath and, if not, move on.
+  if (template.startsWith("file://")) {
     return "local";
   }
-  if (await isRemixTemplate(template, useTypeScript, token)) {
-    return "template";
+
+  // 2. Check if it's a path to a local directory.
+  try {
+    if (
+      fse.existsSync(
+        path.isAbsolute(template)
+          ? template
+          : path.resolve(process.cwd(), template)
+      )
+    ) {
+      return "local";
+    }
+  } catch (_) {
+    // ignore FS errors and move on
   }
-  if (await isRemixExample(template, token)) {
+
+  // 3. check if it's one of the pre-built remix stacks
+  if (isRemixStack(template)) {
+    return "repoTemplate";
+  }
+
+  // 4. examples/<template> will use an example folder in the Remix repo
+  if (/^examples?\/[\w-]+$/.test(template)) {
     return "example";
   }
-  if (await getRepoInfo(template, token)) {
+
+  // 5. If the string contains no slashes, spaces, or special chars, we assume
+  //    it is one of our remix-run/remix/templates.
+  if (/^[\w-]+$/.test(template)) {
+    return "template";
+  }
+
+  // 6. Handle GitHub repos (URLs or :org/:repo shorthand)
+  if (isValidGithubUrl(template) || isGithubRepoShorthand(template)) {
     return "repo";
   }
-  return "remoteTarball";
+
+  // 7. Any other valid URL should be treated as a tarball.
+  if (isUrl(template)) {
+    return "remoteTarball";
+  }
+
+  return null;
+}
+
+function isUrl(value: string) {
+  try {
+    new URL(value);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+type GithubUrlString =
+  | `https://github.com/${string}/${string}`
+  | `https://www.github.com/${string}/${string}`;
+
+function isValidGithubUrl(value: string | URL): value is URL | GithubUrlString {
+  try {
+    let url = typeof value === "string" ? new URL(value) : value;
+    let pathSegments = url.pathname.slice(1).split("/");
+
+    return (
+      url.protocol === "https:" &&
+      url.hostname === "github.com" &&
+      // The pathname must have at least 2 segments. If it has more than 2, the
+      // third must be "tree" and it must have at least 4 segments.
+      // https://github.com/remix-run/remix
+      // https://github.com/remix-run/remix/tree/dev
+      pathSegments.length >= 2 &&
+      (pathSegments.length > 2
+        ? pathSegments[2] === "tree" && pathSegments.length >= 4
+        : true)
+    );
+  } catch (_) {
+    return false;
+  }
 }
 
 function convertToJavaScript(
