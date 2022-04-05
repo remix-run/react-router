@@ -21,7 +21,10 @@ type Deferred = ReturnType<typeof defer>;
 
 // Routes passed into setup() should just have a boolean for loader/action
 // indicating they want a stub
-type TestRouteObject = Pick<DataRouteObject, "id" | "index" | "path"> & {
+type TestRouteObject = Pick<
+  DataRouteObject,
+  "id" | "index" | "path" | "shouldReload"
+> & {
   loader?: boolean;
   action?: boolean;
   exceptionElement?: boolean;
@@ -3701,6 +3704,91 @@ describe("a router", () => {
         },
       });
       expect(t.router.state.location.key).toBe(key);
+
+      t.cleanup();
+    });
+
+    it("leverages shouldReload on revalidation routes", async () => {
+      let shouldReload = jest.fn(({ url }) => {
+        return new URLSearchParams(parsePath(url).search).get("reload") === "1";
+      });
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            loader: true,
+            shouldReload: (...args) => shouldReload(...args),
+            children: [
+              {
+                id: "index",
+                index: true,
+                loader: true,
+                shouldReload: (...args) => shouldReload(...args),
+              },
+            ],
+          },
+        ],
+        initialEntries: ["/?reload=0"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let R = await t.revalidate();
+      expect(R.loaders.root.stub).not.toHaveBeenCalled();
+      expect(R.loaders.index.stub).not.toHaveBeenCalled();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      let N = await t.navigate("/?reload=1");
+      await N.loaders.root.resolve("ROOT_DATA*");
+      await N.loaders.index.resolve("INDEX_DATA*");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA*",
+          index: "INDEX_DATA*",
+        },
+      });
+
+      let R2 = await t.revalidate();
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA*",
+          index: "INDEX_DATA*",
+        },
+      });
+
+      await R2.loaders.root.resolve("ROOT_DATA**");
+      await R2.loaders.index.resolve("INDEX_DATA**");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: { pathname: "/" },
+        transition: IDLE_TRANSITION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA**",
+          index: "INDEX_DATA**",
+        },
+      });
 
       t.cleanup();
     });
