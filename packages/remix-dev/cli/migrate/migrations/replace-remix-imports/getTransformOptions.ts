@@ -1,9 +1,13 @@
 import type { PackageJson } from "type-fest";
 
-import type { ExtraOptions } from "./transform";
+import type { Options } from "./transform";
 import { adapters, runtimes } from "./transform";
+import type {
+  Adapter,
+  Runtime,
+} from "./transform/mapNormalizedImports/packageExports";
 
-const getAdapter = ({ dependencies }: PackageJson): ExtraOptions["adapter"] =>
+const getAdapter = ({ dependencies }: PackageJson): Adapter =>
   Object.keys(dependencies || {})
     .filter(
       (key) =>
@@ -15,21 +19,12 @@ const getAdapter = ({ dependencies }: PackageJson): ExtraOptions["adapter"] =>
     .map((key) => key.replace("@remix-run/", ""))
     .find((key) =>
       adapters.includes(key as typeof adapters[number])
-    ) as ExtraOptions["adapter"];
+    ) as Adapter;
 
-const getClient = (_packageJson: PackageJson): ExtraOptions["client"] =>
-  "react";
+const getRuntime = ({ scripts }: PackageJson): Runtime =>
+  (scripts?.postinstall?.replace("remix setup ", "") as Runtime) || "node";
 
-const getRuntime = ({ scripts }: PackageJson): ExtraOptions["runtime"] =>
-  (scripts?.postinstall?.replace(
-    "remix setup ",
-    ""
-  ) as ExtraOptions["runtime"]) || "node";
-
-export const getTransformOptions = (
-  packageJson: PackageJson
-): ExtraOptions => ({
+export const getTransformOptions = (packageJson: PackageJson): Options => ({
   adapter: getAdapter(packageJson),
-  client: getClient(packageJson),
   runtime: getRuntime(packageJson),
 });

@@ -7,20 +7,31 @@ const resolveProjectDir = (input?: string): string => {
 };
 
 const resolveMigrationId = async (input?: string): Promise<string> => {
-  let { migrationId } = await inquirer.prompt<{ migrationId: string }>([
+  if (input !== undefined) return input;
+  let { migrationId } = await inquirer.prompt<{ migrationId?: string }>([
     {
       name: "migrationId",
       message: "Which migration would you like to apply?",
       type: "list",
       when: !input,
-      pageSize: migrations.length,
-      choices: migrations.map(({ id, description }) => ({
-        name: `${id}: ${description}`,
-        value: id,
-      })),
+      pageSize: migrations.length + 1,
+      choices: [
+        ...migrations.map(({ id, description }) => ({
+          name: `${id}: ${description}`,
+          value: id,
+        })),
+        {
+          name: "Nevermind...",
+          value: undefined,
+        },
+      ],
     },
   ]);
-  return input || migrationId;
+  if (migrationId === undefined) {
+    // user selected "Nevermind..."
+    process.exit(0);
+  }
+  return migrationId;
 };
 
 export const resolveInput = async ({

@@ -11,13 +11,13 @@ const toFlags = (options: Options = {}) =>
         `--${key}${typeof value === "boolean" ? "" : `=${value}`}`
     );
 
-type Args<TransformOptions extends Options = {}> = {
+type Args<TransformOptions> = {
   transformPath: string;
   files: string[];
   flags: { dry?: boolean; print?: boolean; runInBand?: boolean };
   transformOptions?: TransformOptions;
 };
-export const run = <TransformOptions extends Options = {}>({
+export const run = <TransformOptions>({
   transformPath,
   files,
   flags: { dry, print, runInBand },
