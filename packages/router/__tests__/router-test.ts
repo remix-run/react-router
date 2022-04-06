@@ -1590,6 +1590,57 @@ describe("a router", () => {
         expect(console.warn).toHaveBeenCalled();
         spy.mockReset();
       });
+
+      it("still calls appropriate loaders after 405", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+              id: "parent",
+              loader: true,
+              children: [
+                {
+                  path: "child",
+                  id: "child",
+                  loader: true,
+                  children: [
+                    {
+                      path: "grandchild",
+                      id: "grandchild",
+                      loader: true,
+                      // no action to post to
+                      exceptionElement: true,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          hydrationData: {
+            loaderData: {
+              parent: "PARENT DATA",
+            },
+          },
+        });
+        let A = await t.navigate("/child/grandchild", {
+          formMethod: "post",
+          formData: createFormData({ gosh: "dang" }),
+        });
+        expect(t.router.state.exceptions).toBe(null);
+        expect(A.loaders.parent.stub.mock.calls.length).toBe(1); // called again for revalidation
+        expect(A.loaders.child.stub.mock.calls.length).toBe(1); // called because it's above exception
+        expect(A.loaders.grandchild.stub.mock.calls.length).toBe(0); // dont call due to exception
+        await A.loaders.parent.resolve("PARENT DATA*");
+        await A.loaders.child.resolve("CHILD DATA");
+        expect(t.router.state.loaderData).toEqual({
+          parent: "PARENT DATA*",
+          child: "CHILD DATA",
+        });
+        expect(t.router.state.actionData).toBe(null);
+        expect(t.router.state.exceptions).toEqual({
+          grandchild: new Response(null, { status: 405 }),
+        });
+      });
     });
   });
 

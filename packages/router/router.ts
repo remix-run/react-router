@@ -551,24 +551,7 @@ export function createRouter(init: RouterInit) {
       matches = matches.slice(0, -1);
     }
 
-    let actionMatch = matches.slice(-1)[0];
-
-    if (!actionMatch.route.action) {
-      console.warn(
-        "You're trying to submit to a route that does not have an action.  To " +
-          "fix this, please add an `action` function to the route for " +
-          `[${createHref(location)}]`
-      );
-      let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-      completeNavigation(historyAction, location, {
-        matches,
-        exceptions: {
-          [boundaryMatch.route.id]: new Response(null, { status: 405 }),
-        },
-      });
-      return { shortCircuited: true };
-    }
-
+    // Put us in a submitting state
     let { formMethod, formEncType, formData } = submission;
     let transition: TransitionStates["SubmittingAction"] = {
       state: "submitting",
@@ -580,25 +563,43 @@ export function createRouter(init: RouterInit) {
     };
     updateState({ transition });
 
-    // Create a controller for this data load
-    let actionAbortController = new AbortController();
-    pendingNavigationController = actionAbortController;
+    // Call our action and get the result
+    let result: DataResult;
 
-    let result = await callLoaderOrAction(
-      actionMatch,
-      location,
-      actionAbortController.signal,
-      submission
-    );
+    let actionMatch = matches.slice(-1)[0];
+    if (!actionMatch.route.action) {
+      if (__DEV__) {
+        console.warn(
+          "You're trying to submit to a route that does not have an action.  To " +
+            "fix this, please add an `action` function to the route for " +
+            `[${createHref(location)}]`
+        );
+      }
+      result = {
+        isError: true,
+        exception: new Response(null, { status: 405 }),
+      };
+    } else {
+      // Create a controller for this data load
+      let actionAbortController = new AbortController();
+      pendingNavigationController = actionAbortController;
 
-    if (actionAbortController.signal.aborted) {
-      return { shortCircuited: true };
+      result = await callLoaderOrAction(
+        actionMatch,
+        location,
+        actionAbortController.signal,
+        submission
+      );
+
+      if (actionAbortController.signal.aborted) {
+        return { shortCircuited: true };
+      }
+
+      // Clean up now that the loaders have completed.  We do do not clean up if
+      // we short circuited because pendingNavigationController will have already
+      // been assigned to a new controller for the next navigation
+      pendingNavigationController = null;
     }
-
-    // Clean up now that the loaders have completed.  We do do not clean up if
-    // we short circuited because pendingNavigationController will have already
-    // been assigned to a new controller for the next navigation
-    pendingNavigationController = null;
 
     // If the action threw a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect([result]);
