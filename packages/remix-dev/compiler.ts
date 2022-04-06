@@ -23,7 +23,6 @@ import { serverBareModulesPlugin } from "./compiler/plugins/serverBareModulesPlu
 import { serverEntryModulePlugin } from "./compiler/plugins/serverEntryModulePlugin";
 import { serverRouteModulesPlugin } from "./compiler/plugins/serverRouteModulesPlugin";
 import { writeFileSafe } from "./compiler/utils/fs";
-import { deprecation } from "./logging";
 
 // When we build Remix, this shim file is copied directly into the output
 // directory in the same place relative to this file. It is eventually injected
@@ -320,13 +319,6 @@ async function createBrowserBuild(
   // this is really just making sure we don't accidentally have any dependencies
   // on node built-ins in browser bundles.
   let dependencies = Object.keys(getAppDependencies(config));
-  if (dependencies.includes("remix")) {
-    warnOnce(
-      deprecation(
-        "Importing from `remix` is deprecated. Import from `@remix-run/*` packages instead."
-      )
-    );
-  }
   let externals = nodeBuiltins.filter((mod) => !dependencies.includes(mod));
   let fakeBuiltins = nodeBuiltins.filter((mod) => dependencies.includes(mod));
 
@@ -404,13 +396,6 @@ function createServerBuild(
   assetsManifestPromiseRef: AssetsManifestPromiseRef
 ): Promise<esbuild.BuildResult> {
   let dependencies = getAppDependencies(config);
-  if (Object.keys(dependencies).includes("remix")) {
-    warnOnce(
-      deprecation(
-        "Importing from `remix` is deprecated. Import from `@remix-run/*` packages instead."
-      )
-    );
-  }
 
   let stdin: esbuild.StdinOptions | undefined;
   let entryPoints: string[] | undefined;
