@@ -54,8 +54,16 @@ type Helpers = InternalHelpers & {
   get signal(): AbortSignal;
   resolve: (d: any) => Promise<void>;
   reject: (d: any) => Promise<void>;
-  redirect: (href: string, status?: number) => Promise<NavigationHelpers>;
-  redirectReturn: (href: string, status?: number) => Promise<NavigationHelpers>;
+  redirect: (
+    href: string,
+    status?: number,
+    headers?: Record<string, string>
+  ) => Promise<NavigationHelpers>;
+  redirectReturn: (
+    href: string,
+    status?: number,
+    headers?: Record<string, string>
+  ) => Promise<NavigationHelpers>;
 };
 
 // Helpers returned from a TestHarness.navigate call, allowing fine grained
@@ -216,7 +224,7 @@ function setup({
               await new Promise((r) => setImmediate(r));
             } catch (e) {}
           },
-          async redirect(href, status = 301) {
+          async redirect(href, status = 301, headers = {}) {
             let redirectNavigationId = ++guid;
             let helpers = getNavigationHelpers(href, redirectNavigationId);
             try {
@@ -227,13 +235,14 @@ function setup({
                   status,
                   headers: {
                     location: href,
+                    ...headers,
                   },
                 })
               );
             } catch (e) {}
             return helpers;
           },
-          async redirectReturn(href, status = 301) {
+          async redirectReturn(href, status = 301, headers = {}) {
             let redirectNavigationId = ++guid;
             let helpers = getNavigationHelpers(href, redirectNavigationId);
             try {
@@ -244,6 +253,7 @@ function setup({
                   status,
                   headers: {
                     location: href,
+                    ...headers,
                   },
                 })
               );
@@ -910,6 +920,35 @@ describe("a router", () => {
       expect(t.router.state.location.pathname).toBe("/baz");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
+        baz: "B",
+      });
+    });
+
+    it("reloads all routes if X-Remix-Revalidate was set in a loader redirect header", async () => {
+      let t = initializeTmTest();
+
+      let A = await t.navigate("/bar");
+      expect(t.router.state.transition.type).toBe("normalLoad");
+      expect(t.router.state.transition.location?.pathname).toBe("/bar");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+      });
+
+      let B = await A.loaders.bar.redirectReturn("/baz", undefined, {
+        "X-Remix-Revalidate": "yes",
+      });
+      expect(t.router.state.transition.type).toBe("normalRedirect");
+      expect(t.router.state.transition.location?.pathname).toBe("/baz");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+      });
+
+      await B.loaders.root.resolve("ROOT*");
+      await B.loaders.baz.resolve("B");
+      expect(t.router.state.transition.type).toBe("idle");
+      expect(t.router.state.location.pathname).toBe("/baz");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT*",
         baz: "B",
       });
     });
