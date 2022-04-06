@@ -322,6 +322,9 @@ export function createRouter(init: RouterInit) {
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
   let isUninterruptedRevalidation = false;
+  // Use this internal flag to force revalidation if we receive an
+  // X-Remix-Revalidate header on a redirect response
+  let foundXRemixRevalidate = false;
 
   // If history informs us of a POP navigation, start the transition but do not update
   // state.  We'll update our own state once the transition completes
@@ -370,18 +373,20 @@ export function createRouter(init: RouterInit) {
       loaderData: mergeLoaderData(state, newState),
     });
 
-    pendingAction = null;
-
     if (isUninterruptedRevalidation) {
       // If this was an uninterrupted revalidation then do not touch history
-      isUninterruptedRevalidation = false;
+    } else if (historyAction === HistoryAction.Pop) {
+      // Do nothing for POP - URL has already been updated
     } else if (historyAction === HistoryAction.Push) {
       init.history.push(location, location.state);
     } else if (historyAction === HistoryAction.Replace) {
       init.history.replace(location, location.state);
-    } else {
-      // Do nothing for POP - URL has already been updated
     }
+
+    // Reset stateful navigation vars
+    pendingAction = null;
+    isUninterruptedRevalidation = false;
+    foundXRemixRevalidate = false;
   }
 
   // Pop Navigation
@@ -659,7 +664,14 @@ export function createRouter(init: RouterInit) {
       (match, index) =>
         match.route.loader &&
         index < deepestRenderableMatchIndex &&
-        shouldRunLoader(state, loadingTransition, location, match, index)
+        shouldRunLoader(
+          state,
+          loadingTransition,
+          location,
+          match,
+          index,
+          foundXRemixRevalidate
+        )
     );
 
     // Short circuit if we have no loaders to run
@@ -709,6 +721,8 @@ export function createRouter(init: RouterInit) {
         state,
         redirect
       );
+      foundXRemixRevalidate =
+        redirect.response.headers.get("X-Remix-Revalidate") != null;
       await startNavigation(HistoryAction.Replace, redirectLocation, {
         overrideTransition: redirectTransition,
       });
@@ -856,7 +870,8 @@ function shouldRunLoader(
   loadingTransition: Transition,
   location: Location,
   match: DataRouteMatch,
-  index: number
+  index: number,
+  foundXRemixRevalidate: boolean
 ): boolean {
   let currentMatches = state.matches;
 
@@ -891,7 +906,10 @@ function shouldRunLoader(
     // Search affects all loaders
     location.search !== state.location.search ||
     // We are actively revalidating, force all loaders
-    state.revalidation === "loading";
+    state.revalidation === "loading" ||
+    // One of our loaders redirected with an X-Remix-Revalidate header to force
+    // revalidation
+    foundXRemixRevalidate;
 
   // Let routes control only when it's a data reload
   if (isReload && match.route.shouldReload) {
