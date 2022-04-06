@@ -73,7 +73,8 @@ export async function create({
     }
   }
 
-  let relProjectDir = path.relative(process.cwd(), projectDir);
+  let cwd = process.cwd();
+  let relProjectDir = path.relative(cwd, projectDir);
   let projectDirIsCurrentDir = relProjectDir === "";
 
   if (projectDirIsCurrentDir) {
@@ -83,7 +84,7 @@ export async function create({
   } else {
     console.log(
       "💿 That's it! `cd` into " +
-        colors.logoGreen(path.resolve(process.cwd(), projectDir)) +
+        colors.logoGreen(path.relative(cwd, path.resolve(cwd, projectDir))) +
         " and check the README for development and deploy instructions!"
     );
   }
