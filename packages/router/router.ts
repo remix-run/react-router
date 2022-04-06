@@ -1,4 +1,4 @@
-import type { History, Location, To } from "./history";
+import { History, Location, parsePath, To } from "./history";
 import { Action as HistoryAction, createLocation } from "./history";
 
 import {
@@ -77,6 +77,11 @@ export interface RouterState {
    * Exceptions caught from loaders for the current matches
    */
   exceptions: RouteData | null;
+
+  /**
+   * Map of current fetchers
+   */
+  fetchers: Map<string, Fetcher>;
 }
 
 /**
@@ -190,6 +195,68 @@ export type Transition = TransitionStates[keyof TransitionStates];
 
 export type RevalidationState = "idle" | "loading";
 
+type FetcherStates<TData = any> = {
+  Idle: {
+    state: "idle";
+    type: "init";
+    formMethod: undefined;
+    formEncType: undefined;
+    formData: undefined;
+    data: undefined;
+  };
+  Loading: {
+    state: "loading";
+    type: "normalLoad";
+    formMethod: undefined;
+    formEncType: undefined;
+    formData: undefined;
+    data: TData | undefined;
+  };
+  SubmittingLoader: {
+    state: "submitting";
+    type: "loaderSubmission";
+    formMethod: FormMethod;
+    formEncType: "application/x-www-form-urlencoded";
+    formData: FormData;
+    data: TData | undefined;
+  };
+  SubmittingAction: {
+    state: "submitting";
+    type: "actionSubmission";
+    formMethod: ActionFormMethod;
+    formEncType: FormEncType;
+    formData: FormData;
+    data: undefined;
+  };
+  ReloadingAction: {
+    state: "loading";
+    type: "actionReload";
+    formMethod: ActionFormMethod;
+    formEncType: FormEncType;
+    formData: FormData;
+    data: TData;
+  };
+  LoadingActionRedirect: {
+    state: "loading";
+    type: "actionRedirect";
+    formMethod: ActionFormMethod;
+    formEncType: FormEncType;
+    formData: FormData;
+    data: undefined;
+  };
+  Done: {
+    state: "idle";
+    type: "done";
+    formMethod: undefined;
+    formEncType: undefined;
+    formData: undefined;
+    data: TData;
+  };
+};
+
+export type Fetcher<TData = any> =
+  FetcherStates<TData>[keyof FetcherStates<TData>];
+
 export type Router = ReturnType<typeof createRouter>;
 
 /**
@@ -260,6 +327,15 @@ export const IDLE_TRANSITION: TransitionStates["Idle"] = {
   formEncType: undefined,
   formData: undefined,
 };
+
+export const IDLE_FETCHER: FetcherStates["Idle"] = {
+  state: "idle",
+  type: "init",
+  data: undefined,
+  formMethod: undefined,
+  formEncType: undefined,
+  formData: undefined,
+};
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -313,11 +389,13 @@ export function createRouter(init: RouterInit) {
       : init.hydrationData?.loaderData || {},
     actionData: init.hydrationData?.actionData || null,
     exceptions: init.hydrationData?.exceptions || null,
+    fetchers: new Map(),
   };
 
+  // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
   let pendingAction: HistoryAction | null = null;
-  // Stateful internal variables to manage navigations
+  // AbortController for the active navigation
   let pendingNavigationController: AbortController | null;
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
@@ -325,6 +403,18 @@ export function createRouter(init: RouterInit) {
   // Use this internal flag to force revalidation if we receive an
   // X-Remix-Revalidate header on a redirect response
   let foundXRemixRevalidate = false;
+  // AbortControllers for any in-flight fetchers
+  let fetchControllers = new Map();
+  // Track loads based on the order in which they started
+  let incrementingLoadId = 0;
+  // Track the outstanding pending navigation data load to be compared against
+  // the globally incrementing load when a fetcher load lands after a completed
+  // navigation
+  let pendingNavigationLoadId = -1;
+  // Fetchers that triggered data reloads as a result of their actions
+  let fetchReloadIds = new Map<string, number>();
+  // Fetchers that triggered redirect navigations from their actions
+  let fetchRedirectIds = new Set<string>();
 
   // If history informs us of a POP navigation, start the transition but do not update
   // state.  We'll update our own state once the transition completes
@@ -408,10 +498,9 @@ export function createRouter(init: RouterInit) {
       : HistoryAction.Push;
 
     if (isSubmissionNavigation(opts)) {
-      let formMethod = opts.formMethod || "get";
       return await startNavigation(historyAction, location, {
         submission: {
-          formMethod,
+          formMethod: opts.formMethod || "get",
           formEncType: opts?.formEncType || "application/x-www-form-urlencoded",
           formData: opts.formData,
         },
@@ -468,9 +557,7 @@ export function createRouter(init: RouterInit) {
     }
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one
-    if (pendingNavigationController) {
-      pendingNavigationController.abort();
-    }
+    pendingNavigationController?.abort();
     pendingAction = historyAction;
 
     // Unset any ongoing uninterrupted revalidations (unless told otherwise),
@@ -546,10 +633,10 @@ export function createRouter(init: RouterInit) {
     submission: ActionSubmission,
     matches: DataRouteMatch[]
   ): Promise<HandleActionResult> {
-    let hasNakedIndexQuery = new URLSearchParams(location.search)
-      .getAll("index")
-      .some((v) => v === "");
-    if (matches[matches.length - 1].route.index && !hasNakedIndexQuery) {
+    if (
+      matches[matches.length - 1].route.index &&
+      !hasNakedIndexQuery(location.search)
+    ) {
       // Note: OK to mutate this in-place since it's a scoped var inside
       // handleAction and mutation will not impact the startNavigation matches
       // variable that we use for revalidation
@@ -652,26 +739,13 @@ export function createRouter(init: RouterInit) {
     let loadingTransition =
       overrideTransition || getLoadingTransition(location, state, submission);
 
-    // Determine which routes to run loaders for, filter out all routes below
-    // any caught action exception as they aren't going to render so we don't
-    // need to load them
-    let deepestRenderableMatchIndex = pendingActionException
-      ? matches.findIndex(
-          (m) => m.route.id === Object.keys(pendingActionException)[0]
-        )
-      : matches.length;
-    let matchesToLoad = matches.filter(
-      (match, index) =>
-        match.route.loader &&
-        index < deepestRenderableMatchIndex &&
-        shouldRunLoader(
-          state,
-          loadingTransition,
-          location,
-          match,
-          index,
-          foundXRemixRevalidate
-        )
+    let matchesToLoad = getMatchesToLoad(
+      state,
+      matches,
+      loadingTransition,
+      location,
+      foundXRemixRevalidate,
+      pendingActionException
     );
 
     // Short circuit if we have no loaders to run
@@ -696,8 +770,10 @@ export function createRouter(init: RouterInit) {
       });
     }
 
+    // Start the data load
     let abortController = new AbortController();
     pendingNavigationController = abortController;
+    pendingNavigationLoadId = ++incrementingLoadId;
 
     let results: DataResult[] = await Promise.all(
       matchesToLoad.map((m) =>
@@ -717,15 +793,8 @@ export function createRouter(init: RouterInit) {
     // If any loaders threw a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
     if (redirect) {
-      let { redirectLocation, redirectTransition } = getLoaderRedirect(
-        state,
-        redirect
-      );
-      foundXRemixRevalidate =
-        redirect.response.headers.get("X-Remix-Revalidate") != null;
-      await startNavigation(HistoryAction.Replace, redirectLocation, {
-        overrideTransition: redirectTransition,
-      });
+      let redirectTransition = getLoaderRedirect(state, redirect);
+      await startRedirectNavigation(redirect, redirectTransition);
       return { shortCircuited: true };
     }
 
@@ -737,7 +806,366 @@ export function createRouter(init: RouterInit) {
       pendingActionException
     );
 
-    return { loaderData, exceptions };
+    markFetchRedirectsDone();
+    let didAbortFetchLoads = abortStaleFetchLoads(pendingNavigationLoadId);
+
+    return {
+      loaderData,
+      exceptions,
+      ...(didAbortFetchLoads ? { fetchers: new Map(state.fetchers) } : {}),
+    };
+  }
+
+  function getFetcher<TData = any>(key: string): Fetcher<TData> {
+    let existingFetcher = state.fetchers.get(key);
+    if (existingFetcher) {
+      return existingFetcher;
+    }
+    state.fetchers.set(key, IDLE_FETCHER);
+    return IDLE_FETCHER;
+  }
+
+  async function fetch(key: string, href: string, opts?: NavigateOptions) {
+    if (typeof AbortController === "undefined") {
+      throw new Error(
+        "router.fetch() was called during the server render, but it shouldn't be. " +
+          "You are likely calling a useFetcher() method in the body of your component. " +
+          "Try moving it to a useEffect or a callback."
+      );
+    }
+
+    let matches = matchRoutes(dataRoutes, href);
+    invariant(matches, `No matches found for fetch url: ${href}`);
+
+    if (fetchControllers.has(key)) abortFetcher(key);
+
+    let match =
+      matches[matches.length - 1].route.index &&
+      !hasNakedIndexQuery(parsePath(href).search || "")
+        ? matches.slice(-2)[0]
+        : matches.slice(-1)[0];
+
+    if (isSubmissionNavigation(opts)) {
+      let submission: Submission = {
+        formMethod: opts.formMethod || "get",
+        formEncType: opts.formEncType || "application/x-www-form-urlencoded",
+        formData: opts.formData,
+      };
+      if (isActionSubmission(submission)) {
+        await handleFetcherAction(key, href, match, submission);
+      } else {
+        let loadingFetcher: FetcherStates["SubmittingLoader"] = {
+          state: "submitting",
+          type: "loaderSubmission",
+          ...submission,
+          data: state.fetchers.get(key)?.data || undefined,
+        };
+        await handleFetcherLoader(key, href, match, loadingFetcher);
+      }
+    } else {
+      let loadingFetcher: FetcherStates["Loading"] = {
+        state: "loading",
+        type: "normalLoad",
+        formMethod: undefined,
+        formEncType: undefined,
+        formData: undefined,
+        data: state.fetchers.get(key)?.data || undefined,
+      };
+      await handleFetcherLoader(key, href, match, loadingFetcher);
+    }
+  }
+
+  async function handleFetcherAction(
+    key: string,
+    href: string,
+    match: DataRouteMatch,
+    submission: ActionSubmission
+  ) {
+    // Put this fetcher into it's submitting state
+    let fetcher: FetcherStates["SubmittingAction"] = {
+      state: "submitting",
+      type: "actionSubmission",
+      ...submission,
+      data: state.fetchers.get(key)?.data || undefined,
+    };
+    state.fetchers.set(key, fetcher);
+    updateState({ fetchers: new Map(state.fetchers) });
+
+    // Call the action for the fetcher
+    let abortController = new AbortController();
+    fetchControllers.set(key, abortController);
+
+    let actionResult = await callLoaderOrAction(
+      match,
+      href,
+      abortController.signal,
+      submission
+    );
+
+    if (abortController.signal.aborted) {
+      return;
+    }
+
+    let actionRedirect = findRedirect([actionResult]);
+    if (actionRedirect) {
+      fetchRedirectIds.add(key);
+      let loadingFetcher: FetcherStates["LoadingActionRedirect"] = {
+        state: "loading",
+        type: "actionRedirect",
+        ...submission,
+        data: undefined,
+      };
+      state.fetchers.set(key, loadingFetcher);
+      updateState({ fetchers: new Map(state.fetchers) });
+
+      let redirectTransition: TransitionStates["SubmissionRedirect"] = {
+        state: "loading",
+        type: "submissionRedirect",
+        location: createLocation(state.location, actionRedirect.location),
+        ...submission,
+      };
+      await startRedirectNavigation(actionRedirect, redirectTransition);
+      return;
+    }
+
+    // Process any non-redirect exceptions thrown
+    if (isDataException(actionResult)) {
+      let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
+      state.fetchers.delete(key);
+      updateState({
+        fetchers: new Map(state.fetchers),
+        exceptions: {
+          [boundaryMatch.route.id]: actionResult.exception,
+        },
+      });
+      return;
+    }
+
+    // Start the data load
+    let loadId = ++incrementingLoadId;
+    fetchReloadIds.set(key, loadId);
+
+    let loadFetcher: FetcherStates["ReloadingAction"] = {
+      state: "loading",
+      type: "actionReload",
+      data: actionResult.data,
+      ...submission,
+    };
+    state.fetchers.set(key, loadFetcher);
+    updateState({ fetchers: new Map(state.fetchers) });
+
+    let matches =
+      state.transition.type !== "idle"
+        ? matchRoutes(dataRoutes, state.transition.location)
+        : state.matches;
+
+    invariant(matches, "Didn't find any matches after fetcher action");
+
+    let matchesToLoad = getMatchesToLoad(
+      state,
+      matches,
+      state.transition,
+      state.location,
+      foundXRemixRevalidate,
+      null
+    );
+
+    let loaderResults: DataResult[] = await Promise.all(
+      matchesToLoad.map((m) =>
+        callLoaderOrAction(m, state.location, abortController.signal)
+      )
+    );
+
+    if (abortController.signal.aborted) {
+      return;
+    }
+
+    fetchReloadIds.delete(key);
+    fetchControllers.delete(key);
+
+    let loaderRedirect = findRedirect(loaderResults);
+    if (loaderRedirect) {
+      let redirectTransition = getLoaderRedirect(state, loaderRedirect);
+      await startRedirectNavigation(loaderRedirect, redirectTransition);
+      return;
+    }
+
+    // Process and commit output from loaders
+    let { loaderData, exceptions } = processLoaderData(
+      state.matches,
+      matchesToLoad,
+      loaderResults
+    );
+
+    let doneFetcher: FetcherStates["Done"] = {
+      state: "idle",
+      type: "done",
+      data: actionResult.data,
+      formMethod: undefined,
+      formEncType: undefined,
+      formData: undefined,
+    };
+    state.fetchers.set(key, doneFetcher);
+
+    let didAbortFetchLoads = abortStaleFetchLoads(loadId);
+
+    // If we are currently in a navigation loading state and this fetcher is
+    // more recent than the navigation, we want to newer data so abort the
+    // navigation and complete it with the fetcher data
+    if (
+      state.transition.state === "loading" &&
+      loadId > pendingNavigationLoadId
+    ) {
+      invariant(pendingAction, "Expected pending action");
+      pendingNavigationController?.abort();
+
+      completeNavigation(pendingAction, state.transition.location, {
+        matches,
+        loaderData,
+        exceptions,
+        fetchers: new Map(state.fetchers),
+      });
+    } else {
+      // otherwise just update the info for the data
+      updateState({
+        exceptions,
+        loaderData,
+        ...(didAbortFetchLoads ? { fetchers: new Map(state.fetchers) } : {}),
+      });
+    }
+  }
+
+  async function handleFetcherLoader(
+    key: string,
+    href: string,
+    match: DataRouteMatch,
+    loadingFetcher: Fetcher
+  ) {
+    // Put this fetcher into it's loading state
+    state.fetchers.set(key, loadingFetcher);
+    updateState({ fetchers: new Map(state.fetchers) });
+
+    // Call the loader for this fetrcher route match
+    let abortController = new AbortController();
+    fetchControllers.set(key, abortController);
+    let result: DataResult = await callLoaderOrAction(
+      match,
+      href,
+      abortController.signal
+    );
+
+    if (abortController.signal.aborted) return;
+    fetchControllers.delete(key);
+
+    // If the loader threw a redirect Response, start a new REPLACE navigation
+    let redirect = findRedirect([result]);
+    if (redirect) {
+      let redirectTransition = getLoaderRedirect(state, redirect);
+      await startRedirectNavigation(redirect, redirectTransition);
+      return;
+    }
+
+    // Process any non-redirect exceptions thrown
+    if (isDataException(result)) {
+      let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
+      state.fetchers.delete(key);
+      // TODO: In remix, this would reset to IDLE_TRANSITION if it was a catch -
+      // do we need to behave any differently with our non-redirect exceptions?
+      // What if it was a non-redirect Response?
+      updateState({
+        fetchers: new Map(state.fetchers),
+        exceptions: {
+          [boundaryMatch.route.id]: result.exception,
+        },
+      });
+      return;
+    }
+
+    // Mark the fetcher as done
+    let doneFetcher: FetcherStates["Done"] = {
+      state: "idle",
+      type: "done",
+      data: result.data,
+      formMethod: undefined,
+      formEncType: undefined,
+      formData: undefined,
+    };
+    state.fetchers.set(key, doneFetcher);
+    updateState({ fetchers: new Map(state.fetchers) });
+  }
+
+  async function startRedirectNavigation(
+    redirect: RedirectResult,
+    transition: Transition
+  ) {
+    foundXRemixRevalidate =
+      redirect.response.headers.get("X-Remix-Revalidate") != null;
+    invariant(
+      transition.location,
+      "Expected a location on the redirect transition"
+    );
+    await startNavigation(HistoryAction.Replace, transition.location, {
+      overrideTransition: transition,
+    });
+  }
+
+  function deleteFetcher(key: string): void {
+    if (fetchControllers.has(key)) abortFetcher(key);
+    fetchReloadIds.delete(key);
+    fetchRedirectIds.delete(key);
+    state.fetchers.delete(key);
+  }
+
+  function abortFetcher(key: string) {
+    let controller = fetchControllers.get(key);
+    invariant(controller, `Expected fetch controller: ${key}`);
+    controller.abort();
+    fetchControllers.delete(key);
+  }
+
+  function markFetchersDone(keys: string[]) {
+    for (let key of keys) {
+      let fetcher = getFetcher(key);
+      let doneFetcher: FetcherStates["Done"] = {
+        state: "idle",
+        type: "done",
+        data: fetcher.data,
+        formMethod: undefined,
+        formEncType: undefined,
+        formData: undefined,
+      };
+      state.fetchers.set(key, doneFetcher);
+    }
+  }
+
+  function markFetchRedirectsDone(): void {
+    let doneKeys = [];
+    for (let key of fetchRedirectIds) {
+      let fetcher = state.fetchers.get(key);
+      invariant(fetcher, `Expected fetcher: ${key}`);
+      if (fetcher.type === "actionRedirect") {
+        fetchRedirectIds.delete(key);
+        doneKeys.push(key);
+      }
+    }
+    markFetchersDone(doneKeys);
+  }
+
+  function abortStaleFetchLoads(landedId: number): boolean {
+    let yeetedKeys = [];
+    for (let [key, id] of fetchReloadIds) {
+      if (id < landedId) {
+        let fetcher = state.fetchers.get(key);
+        invariant(fetcher, `Expected fetcher: ${key}`);
+        if (fetcher.state === "loading") {
+          abortFetcher(key);
+          fetchReloadIds.delete(key);
+          yeetedKeys.push(key);
+        }
+      }
+    }
+    markFetchersDone(yeetedKeys);
+    return yeetedKeys.length > 0;
   }
 
   return {
@@ -754,8 +1182,12 @@ export function createRouter(init: RouterInit) {
       };
     },
     navigate,
+    fetch,
     revalidate,
     createHref,
+    getFetcher,
+    deleteFetcher,
+    _internalFetchControllers: fetchControllers,
   };
 }
 //#endregion
@@ -834,9 +1266,8 @@ function getLoadingTransition(
 function getLoaderRedirect(
   state: RouterState,
   redirect: RedirectResult
-): { redirectLocation: Location; redirectTransition: Transition } {
+): Transition {
   let redirectLocation = createLocation(state.location, redirect.location);
-  let redirectTransition: Transition;
   if (
     state.transition.type === "loaderSubmission" ||
     state.transition.type === "actionReload"
@@ -850,7 +1281,7 @@ function getLoaderRedirect(
       formEncType,
       formData,
     };
-    redirectTransition = transition;
+    return transition;
   } else {
     let transition: TransitionStates["LoadingRedirect"] = {
       state: "loading",
@@ -860,9 +1291,39 @@ function getLoaderRedirect(
       formEncType: undefined,
       formData: undefined,
     };
-    redirectTransition = transition;
+    return transition;
   }
-  return { redirectLocation, redirectTransition };
+}
+
+function getMatchesToLoad(
+  state: RouterState,
+  matches: DataRouteMatch[],
+  loadingTransition: Transition,
+  location: Location,
+  foundXRemixRevalidate: boolean,
+  pendingActionException: RouteData | null
+): DataRouteMatch[] {
+  // Determine which routes to run loaders for, filter out all routes below
+  // any caught action exception as they aren't going to render so we don't
+  // need to load them
+  let deepestRenderableMatchIndex = pendingActionException
+    ? matches.findIndex(
+        (m) => m.route.id === Object.keys(pendingActionException)[0]
+      )
+    : matches.length;
+  return matches.filter(
+    (match, index) =>
+      match.route.loader &&
+      index < deepestRenderableMatchIndex &&
+      shouldRunLoader(
+        state,
+        loadingTransition,
+        location,
+        match,
+        index,
+        foundXRemixRevalidate
+      )
+  );
 }
 
 function shouldRunLoader(
@@ -925,7 +1386,19 @@ function shouldRunLoader(
 
 async function callLoaderOrAction(
   match: DataRouteMatch,
+  href: string,
+  signal: AbortSignal,
+  submission?: Submission
+): Promise<DataResult>;
+async function callLoaderOrAction(
+  match: DataRouteMatch,
   location: Location,
+  signal: AbortSignal,
+  submission?: Submission
+): Promise<DataResult>;
+async function callLoaderOrAction(
+  match: DataRouteMatch,
+  location: string | Location,
   signal: AbortSignal,
   submission?: Submission
 ): Promise<DataResult> {
@@ -938,7 +1411,10 @@ async function callLoaderOrAction(
     );
     let data = await handler({
       params: match.params,
-      request: new Request(location.pathname + location.search),
+      request:
+        typeof location === "string"
+          ? new Request(location)
+          : new Request(location.pathname + location.search),
       signal,
       ...(submission || {}),
     });
@@ -952,7 +1428,7 @@ function processLoaderData(
   matches: DataRouteMatch[],
   matchesToLoad: DataRouteMatch[],
   results: DataResult[],
-  pendingActionException: RouteData | null
+  pendingActionException?: RouteData | null
 ): {
   loaderData: RouterState["loaderData"];
   exceptions: RouterState["exceptions"];
@@ -1085,5 +1561,9 @@ function isActionSubmission(
   submission: Submission
 ): submission is ActionSubmission {
   return submission && submission.formMethod !== "get";
+}
+
+function hasNakedIndexQuery(search: string): boolean {
+  return new URLSearchParams(search).getAll("index").some((v) => v === "");
 }
 //#endregion

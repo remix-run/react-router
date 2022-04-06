@@ -4,7 +4,12 @@ import type {
   LoaderFunctionArgs,
   NavigateOptions,
 } from "../index";
-import { createRouter, IDLE_TRANSITION } from "../router";
+import {
+  createRouter,
+  Fetcher,
+  IDLE_FETCHER,
+  IDLE_TRANSITION,
+} from "../router";
 import {
   ActionFunctionArgs,
   DataRouteObject,
@@ -45,6 +50,7 @@ type EnhancedRouteObject = Omit<
 // A helper that includes the Deferred and stubs for any loaders/actions for the
 // route allowing fine-grained test execution
 type InternalHelpers = {
+  navigationId: number;
   dfd: Deferred;
   stub: jest.Mock;
   _signal?: AbortSignal;
@@ -69,8 +75,15 @@ type Helpers = InternalHelpers & {
 // Helpers returned from a TestHarness.navigate call, allowing fine grained
 // control and assertions over the loaders/actions
 type NavigationHelpers = {
+  navigationId: number;
   loaders: Record<string, Helpers>;
   actions: Record<string, Helpers>;
+};
+
+type FetcherHelpers = NavigationHelpers & {
+  key: string;
+  fetcher: Fetcher;
+  shimLoaderHelper: (routeId: string) => void;
 };
 
 // Global array to stick any errors thrown from router.navigate() and then we
@@ -115,6 +128,12 @@ function createFormData(obj: Record<string, string>): FormData {
   return formData;
 }
 
+function isRedirect(result: any) {
+  return (
+    result instanceof Response && result.status >= 300 && result.status <= 399
+  );
+}
+
 type SetupOpts = {
   routes: TestRouteObject[];
   initialEntries?: InitialEntry[];
@@ -129,16 +148,22 @@ function setup({
   hydrationData,
 }: SetupOpts) {
   let guid = 0;
-  // Global "active" loader helpers, keyed by guid:routeId.  "Active" indicates that
-  // this is the loader which will be waited on when the route loader is called.
-  // If a navigation is interrupted, we put the the new (active) navigation in
-  // here so the next execution of callLoaders will use the right hooks
-  let activeLoaderHelpers = new Map<string, InternalHelpers>();
-  // Global "active" loader helpers, keyed by guid:routeId.  "Active" indicates that
-  // this is the loader which will be waited on when the route loader is called.
-  // If a navigation is interrupted, we put the the new (active) navigation in
-  // here so the next execution of callLoaders will use the right hooks
-  let activeActionHelpers = new Map<string, InternalHelpers>();
+  // Global "active" helpers, keyed by navType:guid:loaderOrAction:routeId.
+  // For example, the first navigation for /parent/foo would generate:
+  //   navigation:1:action:parent -> helpers
+  //   navigation:1:action:foo -> helpers
+  //   navigation:1:loader:parent -> helpers
+  //   navigation:1:loader:foo -> helpers
+  //
+  let activeHelpers = new Map<string, InternalHelpers>();
+  // "Active" flags to indicate which helpers should be used the next time a
+  // router calls an action or loader internally.
+  let activeActionType: "navigation" | "fetch" = "navigation";
+  let activeLoaderType: "navigation" | "fetch" = "navigation";
+  let activeLoaderNavigationId = guid;
+  let activeActionNavigationId = guid;
+  let activeLoaderFetchId = guid;
+  let activeActionFetchId = guid;
   // A set of to-be-garbage-collected Deferred's to clean up at the end of a test
   let gcDfds = new Set<Deferred>();
 
@@ -154,8 +179,13 @@ function setup({
       };
       if (r.loader) {
         enhancedRoute.loader = (args) => {
-          let helpers = activeLoaderHelpers.get(`${guid}:${r.id}`);
-          invariant(helpers, `No loader helpers found for guid: ${guid}`);
+          let navigationId =
+            activeLoaderType === "fetch"
+              ? activeLoaderFetchId
+              : activeLoaderNavigationId;
+          let helperKey = `${activeLoaderType}:${navigationId}:loader:${r.id}`;
+          let helpers = activeHelpers.get(helperKey);
+          invariant(helpers, `No helpers found for: ${helperKey}`);
           helpers.stub(args);
           helpers._signal = args.signal;
           return helpers.dfd.promise;
@@ -163,11 +193,44 @@ function setup({
       }
       if (r.action) {
         enhancedRoute.action = (args) => {
-          let helpers = activeActionHelpers.get(`${guid}:${r.id}`);
-          invariant(helpers, `No action helpers found for guid: ${guid}`);
+          let type = activeActionType;
+          let navigationId =
+            activeActionType === "fetch"
+              ? activeActionFetchId
+              : activeActionNavigationId;
+          let helperKey = `${activeActionType}:${navigationId}:action:${r.id}`;
+          let helpers = activeHelpers.get(helperKey);
+          invariant(helpers, `No helpers found for: ${helperKey}`);
           helpers.stub(args);
           helpers._signal = args.signal;
-          return helpers.dfd.promise;
+          return helpers.dfd.promise.then(
+            (result) => {
+              // After a successful non-redirect action, ensure we call the right
+              // loaders as a follow up.  In the case of a redirect, ths navigation
+              // is aborted and we will use whatever new navigationId the redirect
+              // already assigned
+              if (!isRedirect(result)) {
+                if (type === "navigation") {
+                  activeLoaderType = "navigation";
+                  activeLoaderNavigationId = navigationId;
+                } else {
+                  activeLoaderType = "fetch";
+                  activeLoaderFetchId = navigationId;
+                }
+              }
+              return result;
+            },
+            (result) => {
+              // After a non-redirect rejected navigation action, we may still call
+              // ancestor loaders so set the right values to ensure we trigger the
+              // right ones.
+              if (type === "navigation" && !isRedirect(result)) {
+                activeLoaderType = "navigation";
+                activeLoaderNavigationId = navigationId;
+              }
+              return Promise.reject(result);
+            }
+          );
         };
       }
       if (r.children) {
@@ -187,82 +250,101 @@ function setup({
     hydrationData,
   });
 
+  function getRouteHelpers(
+    routeId: string,
+    navigationId: number,
+    addHelpers: (routeId: string, helpers: InternalHelpers) => void
+  ): Helpers {
+    // Internal methods we need access to from the route loader execution
+    let internalHelpers: InternalHelpers = {
+      navigationId,
+      dfd: defer(),
+      stub: jest.fn(),
+    };
+    // Allow the caller to store off the helpers in the right spot so eventual
+    // executions by the router can access the right ones
+    addHelpers(routeId, internalHelpers);
+    gcDfds.add(internalHelpers.dfd);
+
+    let routeHelpers: Helpers = {
+      // @ts-expect-error
+      get signal() {
+        return internalHelpers._signal;
+      },
+      // Note: This spread has to come _after_ the above getter, otherwise
+      // we lose the getter nature of it somewhere in the babel/typescript
+      // transform.  Doesn't seem ot be an issue in ts-jest but that's a
+      // bit large of a change to look into at the moment
+      ...internalHelpers,
+      // Public APIs only needed for test execution
+      async resolve(value) {
+        await internalHelpers.dfd.resolve(value);
+        await new Promise((r) => setImmediate(r));
+      },
+      async reject(value) {
+        try {
+          await internalHelpers.dfd.reject(value);
+          await new Promise((r) => setImmediate(r));
+        } catch (e) {}
+      },
+      async redirect(href, status = 301, headers = {}) {
+        let redirectNavigationId = ++guid;
+        activeLoaderType = "navigation";
+        activeLoaderNavigationId = redirectNavigationId;
+        let helpers = getNavigationHelpers(href, redirectNavigationId);
+        try {
+          //@ts-ignore
+          await internalHelpers.dfd.reject(
+            //@ts-ignore
+            new Response(null, {
+              status,
+              headers: {
+                location: href,
+                ...headers,
+              },
+            })
+          );
+          await new Promise((r) => setImmediate(r));
+        } catch (e) {}
+        return helpers;
+      },
+      async redirectReturn(href, status = 301, headers = {}) {
+        let redirectNavigationId = ++guid;
+        activeLoaderType = "navigation";
+        activeLoaderNavigationId = redirectNavigationId;
+        let helpers = getNavigationHelpers(href, redirectNavigationId);
+        try {
+          //@ts-ignore
+          await internalHelpers.dfd.resolve(
+            //@ts-ignore
+            new Response(null, {
+              status,
+              headers: {
+                location: href,
+                ...headers,
+              },
+            })
+          );
+          await new Promise((r) => setImmediate(r));
+        } catch (e) {}
+        return helpers;
+      },
+    };
+    return routeHelpers;
+  }
+
   function getHelpers(
     matches: RouteMatch<string, DataRouteObject>[],
     navigationId: number,
-    map: Map<string, InternalHelpers>
+    addHelpers: (routeId: string, helpers: InternalHelpers) => void
   ): Record<string, Helpers> {
-    return matches.reduce((acc, m) => {
-      let routeId = m.route.id;
-      // Internal methods we need access to from the route loader execution
-      let internalHelpers: InternalHelpers = {
-        dfd: defer(),
-        stub: jest.fn(),
-      };
-      // Set the active loader so the execution of the loader waits on the
-      // correct promise
-      map.set(`${navigationId}:${routeId}`, internalHelpers);
-      gcDfds.add(internalHelpers.dfd);
-      return Object.assign(acc, {
-        [routeId]: {
-          get signal() {
-            return internalHelpers._signal;
-          },
-          // Note: This spread has to come _after_ the above getter, otherwise
-          // we lose the getter nature of it somewhere in the babel/typescript
-          // transform.  Doesn't seem ot be an issue in ts-jest but that's a
-          // bit large of a change to look into at the moment
-          ...internalHelpers,
-          // Public APIs only needed for test execution
-          async resolve(value) {
-            await internalHelpers.dfd.resolve(value);
-            await new Promise((r) => setImmediate(r));
-          },
-          async reject(value) {
-            try {
-              await internalHelpers.dfd.reject(value);
-              await new Promise((r) => setImmediate(r));
-            } catch (e) {}
-          },
-          async redirect(href, status = 301, headers = {}) {
-            let redirectNavigationId = ++guid;
-            let helpers = getNavigationHelpers(href, redirectNavigationId);
-            try {
-              //@ts-ignore
-              await internalHelpers.dfd.reject(
-                //@ts-ignore
-                new Response(null, {
-                  status,
-                  headers: {
-                    location: href,
-                    ...headers,
-                  },
-                })
-              );
-            } catch (e) {}
-            return helpers;
-          },
-          async redirectReturn(href, status = 301, headers = {}) {
-            let redirectNavigationId = ++guid;
-            let helpers = getNavigationHelpers(href, redirectNavigationId);
-            try {
-              //@ts-ignore
-              await internalHelpers.dfd.resolve(
-                //@ts-ignore
-                new Response(null, {
-                  status,
-                  headers: {
-                    location: href,
-                    ...headers,
-                  },
-                })
-              );
-            } catch (e) {}
-            return helpers;
-          },
-        } as Helpers,
-      });
-    }, {});
+    return matches.reduce(
+      (acc, m) =>
+        Object.assign(acc, {
+          [m.route.id]: getRouteHelpers(m.route.id, navigationId, addHelpers),
+        }),
+      {}
+    );
   }
 
   function getNavigationHelpers(
@@ -275,18 +357,106 @@ function setup({
     let loaderHelpers = getHelpers(
       (matches || []).filter((m) => m.route.loader),
       navigationId,
-      activeLoaderHelpers
+      (routeId, helpers) =>
+        activeHelpers.set(
+          `navigation:${navigationId}:loader:${routeId}`,
+          helpers
+        )
     );
     let actionHelpers = getHelpers(
       (matches || []).filter((m) => m.route.action),
       navigationId,
-      activeActionHelpers
+      (routeId, helpers) =>
+        activeHelpers.set(
+          `navigation:${navigationId}:action:${routeId}`,
+          helpers
+        )
     );
 
     return {
+      navigationId,
       loaders: loaderHelpers,
       actions: actionHelpers,
     };
+  }
+
+  function getFetcherHelpers(
+    key: string,
+    href: string,
+    navigationId: number,
+    opts?: NavigateOptions
+  ): FetcherHelpers {
+    let matches = matchRoutes(enhancedRoutes, href);
+    invariant(matches, `No matches found for fetcher href:${href}`);
+    let search = parsePath(href).search || "";
+    let hasNakedIndexQuery = new URLSearchParams(search)
+      .getAll("index")
+      .some((v) => v === "");
+
+    let match =
+      matches[matches.length - 1].route.index && !hasNakedIndexQuery
+        ? matches.slice(-2)[0]
+        : matches.slice(-1)[0];
+
+    // If this is an action submission we need loaders for all current matches.
+    // Otherwise we should only need a loader for the leaf match
+    let activeLoaderMatches = [match];
+    // @ts-expect-error
+    if (opts?.formMethod === "post") {
+      if (router.state.transition?.location) {
+        activeLoaderMatches = matchRoutes(
+          enhancedRoutes,
+          router.state.transition.location
+        ) as RouteMatch<string, EnhancedRouteObject>[];
+      } else {
+        activeLoaderMatches = router.state.matches as RouteMatch<
+          string,
+          EnhancedRouteObject
+        >[];
+      }
+    }
+
+    // Generate helpers for all route matches that contain loaders
+    let loaderHelpers = getHelpers(
+      activeLoaderMatches.filter((m) => m.route.loader),
+      navigationId,
+      (routeId, helpers) =>
+        activeHelpers.set(`fetch:${navigationId}:loader:${routeId}`, helpers)
+    );
+    let actionHelpers = getHelpers(
+      match.route.action ? [match] : [],
+      navigationId,
+      (routeId, helpers) =>
+        activeHelpers.set(`fetch:${navigationId}:action:${routeId}`, helpers)
+    );
+
+    let fetcherHelpers: FetcherHelpers;
+
+    function shimLoaderHelper(routeId: string) {
+      invariant(
+        !fetcherHelpers.loaders[routeId],
+        "Can;t overwrite existing helpers"
+      );
+      fetcherHelpers.loaders[routeId] = getRouteHelpers(
+        routeId,
+        navigationId,
+        (routeId, helpers) =>
+          activeHelpers.set(`fetch:${navigationId}:loader:${routeId}`, helpers)
+      );
+    }
+
+    fetcherHelpers = {
+      key,
+      navigationId,
+      get fetcher() {
+        return router.getFetcher(key);
+      },
+      loaders: loaderHelpers,
+      actions: actionHelpers,
+      shimLoaderHelper,
+    };
+
+    return fetcherHelpers;
   }
 
   // Simulate a navigation, returning a series of helpers to manually
@@ -302,6 +472,20 @@ function setup({
   ): Promise<NavigationHelpers> {
     let navigationId = ++guid;
     let helpers: NavigationHelpers;
+
+    // @ts-expect-error
+    if (opts?.formMethod === "post") {
+      activeActionType = "navigation";
+      activeActionNavigationId = navigationId;
+      // Assume happy path and mark this navigations loaders as active.  Even if
+      // we never call them from the router (if the action rejects) we'll want
+      // this to be accurate so we can assert against the stubs
+      activeLoaderType = "navigation";
+      activeLoaderNavigationId = navigationId;
+    } else {
+      activeLoaderType = "navigation";
+      activeLoaderNavigationId = navigationId;
+    }
 
     if (typeof href === "number") {
       let promise = new Promise<void>((r) => {
@@ -325,10 +509,51 @@ function setup({
     return helpers;
   }
 
-  // Simulate a navigation, returning a series of helpers to manually
+  // Simulate a fetcher call, returning a series of helpers to manually
+  // control/assert loader/actions
+  async function fetch(href: string): Promise<FetcherHelpers>;
+  async function fetch(href: string, key: string): Promise<FetcherHelpers>;
+  async function fetch(
+    href: string,
+    opts: NavigateOptions
+  ): Promise<FetcherHelpers>;
+  async function fetch(
+    href: string,
+    key: string,
+    opts: NavigateOptions
+  ): Promise<FetcherHelpers>;
+  async function fetch(
+    href: string,
+    keyOrOpts?: string | NavigateOptions,
+    opts?: NavigateOptions
+  ): Promise<FetcherHelpers> {
+    let navigationId = ++guid;
+    let key = typeof keyOrOpts === "string" ? keyOrOpts : String(navigationId);
+    opts = typeof keyOrOpts === "object" ? keyOrOpts : opts;
+
+    // @ts-expect-error
+    if (opts?.formMethod === "post") {
+      activeActionType = "fetch";
+      activeActionFetchId = navigationId;
+    } else {
+      activeLoaderType = "fetch";
+      activeLoaderFetchId = navigationId;
+    }
+
+    let helpers = getFetcherHelpers(key, href, navigationId, opts);
+    router.fetch(key, href, opts).catch(handleUncaughtException);
+    return helpers;
+  }
+
+  // Simulate a revalidation, returning a series of helpers to manually
   // control/assert loader/actions
   async function revalidate(): Promise<NavigationHelpers> {
-    let navigationId = ++guid;
+    // if a revalidation interrupts an action submission, we don't actually
+    // start a new new navigation so don't increment here
+    let navigationId =
+      router.state.transition.type === "actionSubmission" ? guid : ++guid;
+    activeLoaderType = "navigation";
+    activeLoaderNavigationId = navigationId;
     let href = router.createHref(
       router.state.transition.location || router.state.location
     );
@@ -341,6 +566,7 @@ function setup({
     history,
     router,
     navigate,
+    fetch,
     revalidate,
     cleanup() {
       gcDfds.forEach((dfd) => dfd.resolve());
@@ -348,10 +574,16 @@ function setup({
   };
 }
 
-function initializeTmTest() {
+function initializeTmTest(init?: {
+  url?: string;
+  hydrationData?: HydrationState;
+}) {
   return setup({
     routes: TM_ROUTES,
-    hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
+    hydrationData: init?.hydrationData || {
+      loaderData: { root: "ROOT", index: "INDEX" },
+    },
+    ...(init?.url ? { initialEntries: [init.url] } : {}),
   });
 }
 //#endregion
@@ -535,6 +767,7 @@ describe("a router", () => {
           type: "idle",
         },
         revalidation: "idle",
+        fetchers: new Map(),
       });
     });
 
@@ -3081,8 +3314,7 @@ describe("a router", () => {
         },
       });
 
-      let formData = new FormData();
-      formData.append("query", "param");
+      let formData = createFormData({ query: "params" });
 
       let nav = await t.navigate("/tasks", { formMethod: "post", formData });
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
@@ -3308,8 +3540,7 @@ describe("a router", () => {
         },
       });
 
-      let formData = new FormData();
-      formData.append("key", "value");
+      let formData = createFormData({ key: "value" });
       let N = await t.navigate("/tasks", {
         formMethod: "get",
         formData,
@@ -3373,11 +3604,9 @@ describe("a router", () => {
         },
       });
 
-      let formData = new FormData();
-      formData.append("key", "value");
       let N = await t.navigate("/tasks", {
         formMethod: "post",
-        formData,
+        formData: createFormData({ key: "value" }),
       });
       expect(t.router.state).toMatchObject({
         historyAction: "POP",
@@ -3510,11 +3739,9 @@ describe("a router", () => {
         },
       });
 
-      let formData = new FormData();
-      formData.append("key", "value");
       let N = await t.navigate("/tasks?key=value", {
         formMethod: "get",
-        formData,
+        formData: createFormData({ key: "value" }),
       });
       // Called due to search param changing
       expect(N.loaders.root.stub).toHaveBeenCalled();
@@ -3578,11 +3805,9 @@ describe("a router", () => {
         },
       });
 
-      let formData = new FormData();
-      formData.append("key", "value");
       let N = await t.navigate("/tasks", {
         formMethod: "post",
-        formData,
+        formData: createFormData({ key: "value" }),
       });
       expect(t.router.state).toMatchObject({
         historyAction: "POP",
@@ -3666,11 +3891,9 @@ describe("a router", () => {
         },
       });
 
-      let formData = new FormData();
-      formData.append("key", "value");
       let N = await t.navigate("/tasks", {
         formMethod: "post",
-        formData,
+        formData: createFormData({ key: "value" }),
       });
       expect(t.router.state).toMatchObject({
         historyAction: "POP",
@@ -3938,657 +4161,961 @@ describe("a router", () => {
 
   describe("fetchers", () => {
     describe("fetcher states", () => {
-      test("loader fetch", async () => {
-        let t = setup({ url: "/foo" });
+      // TODO: Remove once confident in below tests
+      it("unabstracted loader fetch", async () => {
+        let dfd = defer();
+        let router = createRouter({
+          history: createMemoryHistory({ initialEntries: ["/"] }),
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              loader: () => dfd.promise,
+            },
+          ],
+          hydrationData: {
+            loaderData: { root: "ROOT DATA" },
+          },
+        });
 
-        let A = t.fetch.get("/foo");
-        let fetcher = t.getFetcher(A.key);
-        expect(fetcher.state).toBe("loading");
-        expect(fetcher.type).toBe("normalLoad");
+        let key = "key";
+        router.fetch(key, "/");
+        expect(router.state.fetchers.get(key)).toEqual({
+          state: "loading",
+          type: "normalLoad",
+          formMethod: undefined,
+          formEncType: undefined,
+          formData: undefined,
+          data: undefined,
+        });
 
-        await A.loader.resolve("A DATA");
-        fetcher = t.getFetcher(A.key);
-        expect(fetcher.state).toBe("idle");
-        expect(fetcher.type).toBe("done");
-        expect(fetcher.data).toBe("A DATA");
+        await dfd.resolve("DATA");
+        expect(router.state.fetchers.get(key)).toEqual({
+          state: "idle",
+          type: "done",
+          formMethod: undefined,
+          formEncType: undefined,
+          formData: undefined,
+          data: "DATA",
+        });
       });
 
-      test("loader re-fetch", async () => {
-        let t = setup({ url: "/foo" });
+      it("loader fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
+
+        let A = await t.fetch("/foo");
+        expect(A.fetcher.state).toBe("loading");
+        expect(A.fetcher.type).toBe("normalLoad");
+
+        await A.loaders.foo.resolve("A DATA");
+        expect(A.fetcher.state).toBe("idle");
+        expect(A.fetcher.type).toBe("done");
+        expect(A.fetcher.data).toBe("A DATA");
+      });
+
+      it("loader re-fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
         let key = "key";
 
-        let A = t.fetch.get("/foo", key);
-        await A.loader.resolve("A DATA");
-        let fetcher = t.getFetcher(key);
-        expect(fetcher.state).toBe("idle");
-        expect(fetcher.type).toBe("done");
-        expect(fetcher.data).toBe("A DATA");
+        let A = await t.fetch("/foo", key);
+        await A.loaders.foo.resolve("A DATA");
+        expect(A.fetcher.state).toBe("idle");
+        expect(A.fetcher.type).toBe("done");
+        expect(A.fetcher.data).toBe("A DATA");
 
-        let B = t.fetch.get("/foo", key);
-        fetcher = t.getFetcher(key);
-        expect(fetcher.state).toBe("loading");
-        expect(fetcher.type).toBe("normalLoad");
-        expect(fetcher.data).toBe("A DATA");
+        let B = await t.fetch("/foo", key);
+        expect(B.fetcher.state).toBe("loading");
+        expect(B.fetcher.type).toBe("normalLoad");
+        expect(B.fetcher.data).toBe("A DATA");
 
-        await B.loader.resolve("B DATA");
-        fetcher = t.getFetcher(key);
-        expect(fetcher.state).toBe("idle");
-        expect(fetcher.type).toBe("done");
-        expect(fetcher.data).toBe("B DATA");
+        await B.loaders.foo.resolve("B DATA");
+        expect(B.fetcher.state).toBe("idle");
+        expect(B.fetcher.type).toBe("done");
+        expect(B.fetcher.data).toBe("B DATA");
+
+        expect(A.fetcher).toBe(B.fetcher);
       });
 
-      test("loader submission fetch", async () => {
-        let t = setup({ url: "/foo" });
+      it("loader submission fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
 
-        let A = t.fetch.submitGet("/foo");
-        let fetcher = t.getFetcher(A.key);
-        expect(fetcher.state).toBe("submitting");
-        expect(fetcher.type).toBe("loaderSubmission");
+        let A = await t.fetch("/foo?key=value", {
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
+        });
+        expect(A.fetcher.state).toBe("submitting");
+        expect(A.fetcher.type).toBe("loaderSubmission");
 
-        await A.loader.resolve("A DATA");
-        fetcher = t.getFetcher(A.key);
-        expect(fetcher.state).toBe("idle");
-        expect(fetcher.type).toBe("done");
-        expect(fetcher.data).toBe("A DATA");
+        await A.loaders.foo.resolve("A DATA");
+        expect(A.fetcher.state).toBe("idle");
+        expect(A.fetcher.type).toBe("done");
+        expect(A.fetcher.data).toBe("A DATA");
       });
 
-      test("loader submission re-fetch", async () => {
-        let t = setup({ url: "/foo" });
+      it("loader submission re-fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
         let key = "key";
 
-        let A = t.fetch.submitGet("/foo", key);
-        await A.loader.resolve("A DATA");
-        t.fetch.submitGet("/foo", key);
-        let fetcher = t.getFetcher(key);
-        expect(fetcher.state).toBe("submitting");
-        expect(fetcher.type).toBe("loaderSubmission");
-        expect(fetcher.data).toBe("A DATA");
+        let A = await t.fetch("/foo", key, {
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
+        });
+        await A.loaders.foo.resolve("A DATA");
+        expect(A.fetcher.state).toBe("idle");
+        expect(A.fetcher.type).toBe("done");
+        expect(A.fetcher.data).toBe("A DATA");
+
+        let B = await t.fetch("/foo", key, {
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
+        });
+        expect(B.fetcher.state).toBe("submitting");
+        expect(B.fetcher.type).toBe("loaderSubmission");
+        expect(B.fetcher.data).toBe("A DATA");
+
+        await B.loaders.foo.resolve("B DATA");
+        expect(A.fetcher.state).toBe("idle");
+        expect(A.fetcher.type).toBe("done");
+        expect(A.fetcher.data).toBe("B DATA");
       });
 
-      test("action fetch", async () => {
-        let t = setup({ url: "/foo" });
+      it("action fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
 
-        let A = t.fetch.post("/foo");
-        let fetcher = t.getFetcher(A.key);
-        expect(fetcher.state).toBe("submitting");
-        expect(fetcher.type).toBe("actionSubmission");
+        let A = await t.fetch("/foo", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        expect(A.fetcher.state).toBe("submitting");
+        expect(A.fetcher.type).toBe("actionSubmission");
 
-        await A.action.resolve("A ACTION");
-        fetcher = t.getFetcher(A.key);
-        expect(fetcher.state).toBe("loading");
-        expect(fetcher.type).toBe("actionReload");
-        expect(fetcher.data).toBe("A ACTION");
+        await A.actions.foo.resolve("A ACTION");
+        expect(A.fetcher.state).toBe("loading");
+        expect(A.fetcher.type).toBe("actionReload");
+        expect(A.fetcher.data).toBe("A ACTION");
 
-        await A.loader.resolve("A DATA");
-        fetcher = t.getFetcher(A.key);
-        expect(fetcher.state).toBe("idle");
-        expect(fetcher.type).toBe("done");
-        expect(fetcher.data).toBe("A ACTION");
-        expect(t.getState().loaderData).toMatchInlineSnapshot(`
-        Object {
-          "foo": "A DATA",
-          "root": "ROOT",
-        }
-      `);
+        await A.loaders.root.resolve("ROOT DATA");
+        expect(A.fetcher.state).toBe("loading");
+        expect(A.fetcher.type).toBe("actionReload");
+        expect(A.fetcher.data).toBe("A ACTION");
+
+        await A.loaders.foo.resolve("A DATA");
+        expect(A.fetcher.state).toBe("idle");
+        expect(A.fetcher.type).toBe("done");
+        expect(A.fetcher.data).toBe("A ACTION");
+        expect(t.router.state.loaderData).toEqual({
+          root: "ROOT DATA",
+          foo: "A DATA",
+        });
       });
 
-      test("action re-fetch", async () => {
-        let t = setup({ url: "/foo" });
+      it("action re-fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
         let key = "key";
 
-        let A = t.fetch.post("/foo", key);
-        await A.action.resolve("A ACTION");
-        await A.loader.resolve("A DATA");
-        t.fetch.post("/foo", key);
-        let fetcher = t.getFetcher(key);
-        expect(fetcher.state).toBe("submitting");
-        expect(fetcher.data).toBe("A ACTION");
+        let A = await t.fetch("/foo", key, {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        expect(A.fetcher.state).toBe("submitting");
+
+        await A.actions.foo.resolve("A ACTION");
+        expect(A.fetcher.state).toBe("loading");
+        expect(A.fetcher.data).toBe("A ACTION");
+
+        await A.loaders.root.resolve("ROOT DATA");
+        await A.loaders.foo.resolve("A DATA");
+        expect(A.fetcher.state).toBe("idle");
+        expect(A.fetcher.data).toBe("A ACTION");
+
+        let B = await t.fetch("/foo", key, {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        expect(B.fetcher.state).toBe("submitting");
+        expect(B.fetcher.data).toBe("A ACTION");
       });
     });
 
-    xdescribe("fetchers", () => {
+    describe("fetchers", () => {
       it("gives an idle fetcher before submission", async () => {
-        let t = setup();
-        let fetcher = t.getFetcher("randomKey");
+        let t = initializeTmTest();
+        let fetcher = t.router.getFetcher("randomKey");
         expect(fetcher).toBe(IDLE_FETCHER);
       });
 
       it("removes fetchers", async () => {
-        let t = setup();
-        let A = t.fetch.get("/foo");
-        await A.loader.resolve("A");
-        expect(t.getFetcher(A.key).data).toBe("A");
+        let t = initializeTmTest();
+        let A = await t.fetch("/foo");
+        await A.loaders.foo.resolve("A");
+        expect(t.router.getFetcher(A.key).data).toBe("A");
 
-        t.tm.deleteFetcher(A.key);
-        expect(t.getFetcher(A.key)).toBe(IDLE_FETCHER);
+        t.router.deleteFetcher(A.key);
+        expect(t.router.getFetcher(A.key)).toBe(IDLE_FETCHER);
       });
 
       it("cleans up abort controllers", async () => {
-        let t = setup();
-        let A = t.fetch.get("/foo");
-        expect(t.tm._internalFetchControllers.size).toBe(1);
-        let B = t.fetch.get("/bar");
-        expect(t.tm._internalFetchControllers.size).toBe(2);
-        await A.loader.resolve();
-        expect(t.tm._internalFetchControllers.size).toBe(1);
-        await B.loader.resolve();
-        expect(t.tm._internalFetchControllers.size).toBe(0);
+        let t = initializeTmTest();
+        let A = await t.fetch("/foo");
+        expect(t.router._internalFetchControllers.size).toBe(1);
+        let B = await t.fetch("/bar");
+        expect(t.router._internalFetchControllers.size).toBe(2);
+        await A.loaders.foo.resolve(null);
+        expect(t.router._internalFetchControllers.size).toBe(1);
+        await B.loaders.bar.resolve(null);
+        expect(t.router._internalFetchControllers.size).toBe(0);
       });
 
       it("uses current page matches and URL when reloading routes after submissions", async () => {
         let pagePathname = "/foo";
-        let t = setup({ url: pagePathname });
-        let A = t.fetch.post("/bar");
-        await A.action.resolve("ACTION");
-        await A.loader.resolve("LOADER");
-        let expectedReloadedRoute = "foo";
-        expect(t.getState().loaderData[expectedReloadedRoute]).toBe("LOADER");
-        // @ts-expect-error
-        let urlArg = t.rootLoaderMock.calls[0][0].url as URL;
-        expect(urlArg.pathname).toBe(pagePathname);
+        let t = initializeTmTest({
+          url: pagePathname,
+          hydrationData: {
+            loaderData: { root: "ROOT", foo: "FOO" },
+          },
+        });
+
+        let A = await t.fetch("/bar", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        await A.actions.bar.resolve("ACTION");
+        await A.loaders.root.resolve("ROOT DATA");
+        await A.loaders.foo.resolve("FOO DATA");
+        expect(t.router.state.loaderData).toEqual({
+          root: "ROOT DATA",
+          foo: "FOO DATA",
+        });
+        expect(A.loaders.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: new Request("/foo"),
+          signal: expect.any(AbortSignal),
+        });
       });
     });
 
-    xdescribe("fetcher catch states", () => {
-      test("loader fetch", async () => {
-        let t = setup({ url: "/foo" });
-        let A = t.fetch.get("/foo");
-        await A.loader.catch();
-        let fetcher = t.getFetcher(A.key);
-        expect(fetcher).toBe(IDLE_FETCHER);
-        expect(t.getState().catch).toBeDefined();
-        expect(t.getState().catchBoundaryId).toBe(t.routes[0].id);
+    describe("fetcher exception states (4xx Response)", () => {
+      it("loader fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
+        let A = await t.fetch("/foo");
+        await A.loaders.foo.reject(new Response(null, { status: 400 }));
+        expect(A.fetcher).toBe(IDLE_FETCHER);
+        expect(t.router.state.exceptions).toEqual({
+          root: new Response(null, { status: 400 }),
+        });
       });
 
-      test("loader submission fetch", async () => {
-        let t = setup({ url: "/foo" });
-        let A = t.fetch.submitGet("/foo");
-        await A.loader.catch();
-        let fetcher = t.getFetcher(A.key);
-        expect(fetcher).toBe(IDLE_FETCHER);
-        expect(t.getState().catch).toBeDefined();
-        expect(t.getState().catchBoundaryId).toBe(t.routes[0].id);
+      it("loader submission fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
+        let A = await t.fetch("/foo?key=value", {
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
+        });
+        await A.loaders.foo.reject(new Response(null, { status: 400 }));
+        expect(A.fetcher).toBe(IDLE_FETCHER);
+        expect(t.router.state.exceptions).toEqual({
+          root: new Response(null, { status: 400 }),
+        });
       });
 
-      test("action fetch", async () => {
-        let t = setup({ url: "/foo" });
-        let A = t.fetch.post("/foo");
-        await A.action.catch();
-        let fetcher = t.getFetcher(A.key);
-        expect(fetcher).toBe(IDLE_FETCHER);
-        expect(t.getState().catch).toBeDefined();
-        expect(t.getState().catchBoundaryId).toBe(t.routes[0].id);
-      });
-    });
-
-    xdescribe("fetcher error states", () => {
-      test("loader fetch", async () => {
-        let t = setup({ url: "/foo" });
-        let A = t.fetch.get("/foo");
-        await A.loader.throw();
-        let fetcher = t.getFetcher(A.key);
-        expect(fetcher).toBe(IDLE_FETCHER);
-        expect(t.getState().error).toBeDefined();
-        expect(t.getState().errorBoundaryId).toBe(t.routes[0].id);
-      });
-
-      test("loader submission fetch", async () => {
-        let t = setup({ url: "/foo" });
-        let A = t.fetch.submitGet("/foo");
-        await A.loader.throw();
-        let fetcher = t.getFetcher(A.key);
-        expect(fetcher).toBe(IDLE_FETCHER);
-        expect(t.getState().error).toBeDefined();
-        expect(t.getState().errorBoundaryId).toBe(t.routes[0].id);
-      });
-
-      test("action fetch", async () => {
-        let t = setup({ url: "/foo" });
-        let A = t.fetch.post("/foo");
-        await A.action.throw();
-        let fetcher = t.getFetcher(A.key);
-        expect(fetcher).toBe(IDLE_FETCHER);
-        expect(t.getState().error).toBeDefined();
-        expect(t.getState().errorBoundaryId).toBe(t.routes[0].id);
+      it("action fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
+        let A = await t.fetch("/foo", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        await A.actions.foo.reject(new Response(null, { status: 400 }));
+        expect(A.fetcher).toBe(IDLE_FETCHER);
+        expect(t.router.state.exceptions).toEqual({
+          root: new Response(null, { status: 400 }),
+        });
       });
     });
 
-    xdescribe("fetcher redirects", () => {
-      test("loader fetch", async () => {
-        let t = setup({ url: "/foo" });
-        let A = t.fetch.get("/foo");
-        let fetcher = t.getFetcher(A.key);
-        let AR = await A.loader.redirect("/bar");
-        expect(t.getFetcher(A.key)).toBe(fetcher);
-        expect(t.getState().transition.type).toBe("normalRedirect");
-        expect(t.getState().transition.location).toBe(AR.location);
+    describe("fetcher exception states (Error)", () => {
+      it("loader fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
+        let A = await t.fetch("/foo");
+        await A.loaders.foo.reject(new Error("Kaboom!"));
+        expect(A.fetcher).toBe(IDLE_FETCHER);
+        expect(t.router.state.exceptions).toEqual({
+          root: new Error("Kaboom!"),
+        });
       });
 
-      test("loader submission fetch", async () => {
-        let t = setup({ url: "/foo" });
-        let A = t.fetch.submitGet("/foo");
-        let fetcher = t.getFetcher(A.key);
-        let AR = await A.loader.redirect("/bar");
-        expect(t.getFetcher(A.key)).toBe(fetcher);
-        expect(t.getState().transition.type).toBe("normalRedirect");
-        expect(t.getState().transition.location).toBe(AR.location);
+      it("loader submission fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
+        let A = await t.fetch("/foo?key=value", {
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
+        });
+        await A.loaders.foo.reject(new Error("Kaboom!"));
+        expect(A.fetcher).toBe(IDLE_FETCHER);
+        expect(t.router.state.exceptions).toEqual({
+          root: new Error("Kaboom!"),
+        });
       });
 
-      test("action fetch", async () => {
-        let t = setup({ url: "/foo" });
-        let A = t.fetch.post("/foo");
-        expect(t.getFetcher(A.key).state).toBe("submitting");
-        expect(t.getFetcher(A.key).type).toBe("actionSubmission");
-        let AR = await A.action.redirect("/bar");
-        expect(t.getFetcher(A.key).state).toBe("loading");
-        expect(t.getFetcher(A.key).type).toBe("actionRedirect");
-        let state = t.getState();
-        expect(state.transition.type).toBe("fetchActionRedirect");
-        expect(state.transition.location).toBe(AR.location);
-        await AR.loader.resolve("stuff");
-        expect(t.getFetcher(A.key)).toMatchInlineSnapshot(`
-        Object {
-          "data": undefined,
-          "state": "idle",
-          "submission": undefined,
-          "type": "done",
-        }
-      `);
+      it("action fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
+        let A = await t.fetch("/foo", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        await A.actions.foo.reject(new Error("Kaboom!"));
+        expect(A.fetcher).toBe(IDLE_FETCHER);
+        expect(t.router.state.exceptions).toEqual({
+          root: new Error("Kaboom!"),
+        });
       });
     });
 
-    xdescribe("fetcher resubmissions/re-gets", () => {
+    describe("fetcher redirects", () => {
+      it("loader fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
+        let A = await t.fetch("/foo");
+        let fetcher = A.fetcher;
+        await A.loaders.foo.redirect("/bar");
+        expect(t.router.getFetcher(A.key)).toBe(fetcher);
+        expect(t.router.state.transition.type).toBe("normalRedirect");
+        expect(t.router.state.transition.location?.pathname).toBe("/bar");
+      });
+
+      it("loader submission fetch", async () => {
+        let t = initializeTmTest({ url: "/foo" });
+        let A = await t.fetch("/foo?key=value", {
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
+        });
+        let fetcher = A.fetcher;
+        await A.loaders.foo.redirect("/bar");
+        expect(t.router.getFetcher(A.key)).toBe(fetcher);
+        expect(t.router.state.transition.type).toBe("normalRedirect");
+        expect(t.router.state.transition.location?.pathname).toBe("/bar");
+      });
+
+      it("action fetch", async () => {
+        let t = initializeTmTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
+        let A = await t.fetch("/foo", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        expect(A.fetcher.state).toBe("submitting");
+        expect(A.fetcher.type).toBe("actionSubmission");
+        let AR = await A.actions.foo.redirect("/bar");
+        expect(A.fetcher.state).toBe("loading");
+        expect(A.fetcher.type).toBe("actionRedirect");
+        // TODO: ok that fetchActionRedirect is collapsed into submissionRedirect now?
+        expect(t.router.state.transition.type).toBe("submissionRedirect");
+        expect(t.router.state.transition.location?.pathname).toBe("/bar");
+        await AR.loaders.root.resolve("root");
+        await AR.loaders.bar.resolve("stuff");
+        expect(A.fetcher).toEqual({
+          data: undefined,
+          state: "idle",
+          formMethod: undefined,
+          formEncType: undefined,
+          formData: undefined,
+          type: "done",
+        });
+      });
+    });
+
+    describe("fetcher resubmissions/re-gets", () => {
       it("aborts re-gets", async () => {
-        let t = setup();
+        let t = initializeTmTest();
         let key = "KEY";
-        let A = t.fetch.get("/foo", key);
-        let B = t.fetch.get("/foo", key);
-        await A.loader.resolve(null);
-        let C = t.fetch.get("/foo", key);
-        await B.loader.resolve(null);
-        await C.loader.resolve(null);
-        expect(A.loader.abortMock.calls.length).toBe(1);
-        expect(B.loader.abortMock.calls.length).toBe(1);
-        expect(C.loader.abortMock.calls.length).toBe(0);
+        let A = await t.fetch("/foo", key);
+        let B = await t.fetch("/foo", key);
+        await A.loaders.foo.resolve(null);
+        let C = await t.fetch("/foo", key);
+        await B.loaders.foo.resolve(null);
+        await C.loaders.foo.resolve(null);
+        expect(A.loaders.foo.signal.aborted).toBe(true);
+        expect(B.loaders.foo.signal.aborted).toBe(true);
+        expect(C.loaders.foo.signal.aborted).toBe(false);
       });
 
       it("aborts re-get-submissions", async () => {
-        let t = setup();
+        let t = initializeTmTest();
         let key = "KEY";
-        let A = t.fetch.submitGet("/foo", key);
-        let B = t.fetch.submitGet("/foo", key);
-        t.fetch.get("/foo", key);
-        expect(A.loader.abortMock.calls.length).toBe(1);
-        expect(B.loader.abortMock.calls.length).toBe(1);
+        let A = await t.fetch("/foo", key, {
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
+        });
+        let B = await t.fetch("/foo", key, {
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
+        });
+        t.fetch("/foo", key);
+        expect(A.loaders.foo.signal.aborted).toBe(true);
+        expect(B.loaders.foo.signal.aborted).toBe(true);
       });
 
       it("aborts resubmissions action call", async () => {
-        let t = setup();
+        let t = initializeTmTest();
         let key = "KEY";
-        let A = t.fetch.post("/foo", key);
-        let B = t.fetch.post("/foo", key);
-        t.fetch.post("/foo", key);
-        expect(A.action.abortMock.calls.length).toBe(1);
-        expect(B.action.abortMock.calls.length).toBe(1);
+        let A = await t.fetch("/foo", key, {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        let B = await t.fetch("/foo", key, {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        t.fetch("/foo", key, {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        expect(A.actions.foo.signal.aborted).toBe(true);
+        expect(B.actions.foo.signal.aborted).toBe(true);
       });
 
       it("aborts resubmissions loader call", async () => {
-        let t = setup({ url: "/foo" });
+        let t = initializeTmTest({ url: "/foo" });
         let key = "KEY";
-        let A = t.fetch.post("/foo", key);
-        await A.action.resolve("A ACTION");
-        t.fetch.post("/foo", key);
-        expect(A.loader.abortMock.calls.length).toBe(1);
+        let A = await t.fetch("/foo", key, {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        await A.actions.foo.resolve("A ACTION");
+        t.fetch("/foo", key, {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        expect(A.loaders.foo.signal.aborted).toBe(true);
       });
 
       describe(`
-      A) POST |--|--XXX
-      B) POST       |----XXX|XXX
-      C) POST            |----|---O
-    `, () => {
+        A) POST |--|--XXX
+        B) POST       |----XXX|XXX
+        C) POST            |----|---O
+      `, () => {
         it("aborts A load, ignores A resolve, aborts B action", async () => {
-          let t = setup({ url: "/foo" });
+          let t = initializeTmTest({ url: "/foo" });
           let key = "KEY";
 
-          let A = t.fetch.post("/foo", key);
-          await A.action.resolve("A ACTION");
-          expect(t.getFetcher(key).data).toBe("A ACTION");
+          let A = await t.fetch("/foo", key, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await A.actions.foo.resolve("A ACTION");
+          expect(t.router.getFetcher(key).data).toBe("A ACTION");
 
-          let B = t.fetch.post("/foo", key);
-          expect(A.loader.abortMock.calls.length).toBe(1);
-          expect(t.getFetcher(key).data).toBe("A ACTION");
+          let B = await t.fetch("/foo", key, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          expect(A.loaders.foo.signal.aborted).toBe(true);
+          expect(t.router.getFetcher(key).data).toBe("A ACTION");
 
-          await A.loader.resolve("A LOADER");
-          expect(t.getState().loaderData.foo).toBeUndefined();
+          await A.loaders.root.resolve("A ROOT LOADER");
+          await A.loaders.foo.resolve("A LOADER");
+          expect(t.router.state.loaderData.foo).toBeUndefined();
 
-          let C = t.fetch.post("/foo", key);
-          expect(B.action.abortMock.calls.length).toBe(1);
+          let C = await t.fetch("/foo", key, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          expect(B.actions.foo.signal.aborted).toBe(true);
 
-          await B.action.resolve("B ACTION");
-          expect(t.getFetcher(key).data).toBe("A ACTION");
+          await B.actions.foo.resolve("B ACTION");
+          expect(t.router.getFetcher(key).data).toBe("A ACTION");
 
-          await C.action.resolve("C ACTION");
-          expect(t.getFetcher(key).data).toBe("C ACTION");
+          await C.actions.foo.resolve("C ACTION");
+          expect(t.router.getFetcher(key).data).toBe("C ACTION");
 
-          await B.loader.resolve("B LOADER");
-          expect(t.getState().loaderData.foo).toBeUndefined();
+          await B.loaders.root.resolve("B ROOT LOADER");
+          await B.loaders.foo.resolve("B LOADER");
+          expect(t.router.state.loaderData.foo).toBeUndefined();
 
-          await C.loader.resolve("C LOADER");
-          expect(t.getFetcher(key).data).toBe("C ACTION");
-          expect(t.getState().loaderData.foo).toBe("C LOADER");
+          await C.loaders.root.resolve("C ROOT LOADER");
+          await C.loaders.foo.resolve("C LOADER");
+          expect(t.router.getFetcher(key).data).toBe("C ACTION");
+          expect(t.router.state.loaderData.foo).toBe("C LOADER");
         });
       });
 
       describe(`
-      A) k1 |----|----X
-      B) k2   |----|-----O
-      C) k1           |-----|---O
-    `, () => {
+        A) k1 |----|----X
+        B) k2   |----|-----O
+        C) k1           |-----|---O
+      `, () => {
         it("aborts A load, commits B and C loads", async () => {
-          let t = setup({ url: "/foo" });
+          let t = initializeTmTest({ url: "/foo" });
           let k1 = "1";
           let k2 = "2";
 
-          let Ak1 = t.fetch.post("/foo", k1);
-          let Bk2 = t.fetch.post("/foo", k2);
+          let Ak1 = await t.fetch("/foo", k1, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          let Bk2 = await t.fetch("/foo", k2, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
 
-          await Ak1.action.resolve("A ACTION");
-          await Bk2.action.resolve("B ACTION");
-          expect(t.getFetcher(k2).data).toBe("B ACTION");
+          await Ak1.actions.foo.resolve("A ACTION");
+          await Bk2.actions.foo.resolve("B ACTION");
+          expect(t.router.getFetcher(k2).data).toBe("B ACTION");
 
-          let Ck1 = t.fetch.post("/foo", k1);
-          expect(Ak1.loader.abortMock.calls.length).toBe(1);
+          let Ck1 = await t.fetch("/foo", k1, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          expect(Ak1.loaders.foo.signal.aborted).toBe(true);
 
-          await Ak1.loader.resolve("A LOADER");
-          expect(t.getState().loaderData.foo).toBeUndefined();
+          await Ak1.loaders.root.resolve("A ROOT LOADER");
+          await Ak1.loaders.foo.resolve("A LOADER");
+          expect(t.router.state.loaderData.foo).toBeUndefined();
 
-          await Bk2.loader.resolve("B LOADER");
-          expect(Ck1.action.abortMock.calls.length).toBe(0);
-          expect(t.getState().loaderData.foo).toBe("B LOADER");
+          await Bk2.loaders.root.resolve("B ROOT LOADER");
+          await Bk2.loaders.foo.resolve("B LOADER");
+          expect(Ck1.actions.foo.signal.aborted).toBe(false);
+          expect(t.router.state.loaderData.foo).toBe("B LOADER");
 
-          await Ck1.action.resolve("C ACTION");
-          await Ck1.loader.resolve("C LOADER");
+          await Ck1.actions.foo.resolve("C ACTION");
+          await Ck1.loaders.root.resolve("C ROOT LOADER");
+          await Ck1.loaders.foo.resolve("C LOADER");
 
-          expect(t.getFetcher(k1).data).toBe("C ACTION");
-          expect(t.getState().loaderData.foo).toBe("C LOADER");
+          expect(t.router.getFetcher(k1).data).toBe("C ACTION");
+          expect(t.router.state.loaderData.foo).toBe("C LOADER");
         });
       });
     });
 
-    xdescribe("multiple fetcher action reloads", () => {
+    describe("multiple fetcher action reloads", () => {
       describe(`
-      A) POST /foo |---[A]------O
-      B) POST /foo   |-----[A,B]---O
-    `, () => {
+        A) POST /foo |---[A]------O
+        B) POST /foo   |-----[A,B]---O
+      `, () => {
         it("commits A, commits B", async () => {
-          let t = setup({ url: "/foo" });
-          let A = t.fetch.post("/foo");
-          let B = t.fetch.post("/foo");
-          await A.action.resolve();
-          await B.action.resolve();
+          let t = initializeTmTest({ url: "/foo" });
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          let B = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await A.actions.foo.resolve("A action");
+          await B.actions.foo.resolve("B action");
 
-          await A.loader.resolve("A");
-          expect(t.getState().loaderData.foo).toBe("A");
+          await A.loaders.root.resolve("A root");
+          await A.loaders.foo.resolve("A loader");
+          expect(t.router.state.loaderData).toEqual({
+            root: "A root",
+            foo: "A loader",
+          });
 
-          await B.loader.resolve("A,B");
-          expect(t.getState().loaderData.foo).toBe("A,B");
+          await B.loaders.root.resolve("A,B root");
+          await B.loaders.foo.resolve("A,B loader");
+          expect(t.router.state.loaderData).toEqual({
+            root: "A,B root",
+            foo: "A,B loader",
+          });
         });
       });
 
       describe(`
-      A) POST /foo |----🧤
-      B) POST /foo   |--X
-    `, () => {
+        A) POST /foo |----🧤
+        B) POST /foo   |--X
+      `, () => {
         it("catches A, persists boundary for B", async () => {
-          let t = setup({ url: "/foo" });
-          let A = t.fetch.post("/foo");
-          let B = t.fetch.post("/foo");
+          let t = initializeTmTest({ url: "/foo" });
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          let B = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
 
-          await A.action.catch();
-          let catchVal = t.getState().catch;
-          expect(catchVal).toBeDefined();
-          expect(t.getState().catchBoundaryId).toBe(t.routes[0].id);
+          await A.actions.foo.reject(new Response(null, { status: 400 }));
+          expect(t.router.state.exceptions).toEqual({
+            root: new Response(null, { status: 400 }),
+          });
 
-          await B.action.resolve();
-          expect(t.getState().catch).toBe(catchVal);
-          expect(t.getState().catchBoundaryId).toBe(t.routes[0].id);
+          await B.actions.foo.resolve("B");
+          expect(t.router.state.exceptions).toEqual({
+            root: new Response(null, { status: 400 }),
+          });
+          expect(t.router.state.actionData).toEqual(null);
         });
       });
 
       describe(`
-      A) POST /foo |----[A]-|
-      B) POST /foo   |------🧤
-    `, () => {
+        A) POST /foo |----[A]-|
+        B) POST /foo   |------🧤
+      `, () => {
         it("commits A, catches B", async () => {
-          let t = setup({ url: "/foo" });
-          let A = t.fetch.post("/foo");
-          let B = t.fetch.post("/foo");
+          let t = initializeTmTest({ url: "/foo" });
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          let B = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
 
-          await A.action.resolve();
-          await A.loader.resolve("A");
-          expect(t.getState().loaderData.foo).toBe("A");
+          await A.actions.foo.resolve("A action");
+          await A.loaders.root.resolve("A root");
+          await A.loaders.foo.resolve("A loader");
+          expect(t.router.state.loaderData).toEqual({
+            root: "A root",
+            foo: "A loader",
+          });
 
-          await B.action.catch();
-          expect(t.getState().catch).toBeDefined();
-          expect(t.getState().catchBoundaryId).toBe(t.routes[0].id);
+          await B.actions.foo.reject(new Response(null, { status: 400 }));
+          expect(t.router.state.exceptions).toEqual({
+            root: new Response(null, { status: 400 }),
+          });
         });
       });
 
       describe(`
-      A) POST /foo |---[A]-------X
-      B) POST /foo   |----[A,B]--O
-    `, () => {
+        A) POST /foo |---[A]-------X
+        B) POST /foo   |----[A,B]--O
+      `, () => {
         it("aborts A, commits B, sets A done", async () => {
-          let t = setup({ url: "/foo" });
-          let A = t.fetch.post("/foo");
-          let B = t.fetch.post("/foo");
-          await A.action.resolve("A");
-          await B.action.resolve();
+          let t = initializeTmTest({ url: "/foo" });
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          let B = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await A.actions.foo.resolve("A");
+          await B.actions.foo.resolve("B");
 
-          await B.loader.resolve("A,B");
-          expect(t.getState().loaderData.foo).toBe("A,B");
-          expect(A.loader.abortMock.calls.length).toBe(1);
-          expect(t.getFetcher(A.key).type).toBe("done");
-          expect(t.getFetcher(A.key).data).toBe("A");
+          await B.loaders.root.resolve("A,B root");
+          await B.loaders.foo.resolve("A,B");
+          expect(t.router.state.loaderData).toEqual({
+            root: "A,B root",
+            foo: "A,B",
+          });
+          expect(A.loaders.foo.signal.aborted).toBe(true);
+          expect(A.fetcher.type).toBe("done");
+          expect(A.fetcher.data).toBe("A");
         });
       });
 
       describe(`
-      A) POST /foo |--------[B,A]---O
-      B) POST /foo   |--[B]-------O
-    `, () => {
+        A) POST /foo |--------[B,A]---O
+        B) POST /foo   |--[B]-------O
+      `, () => {
         it("commits B, commits A", async () => {
-          let t = setup({ url: "/foo" });
-          let A = t.fetch.post("/foo");
-          let B = t.fetch.post("/foo");
+          let t = initializeTmTest({ url: "/foo" });
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          let B = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
 
-          await B.action.resolve();
-          await A.action.resolve();
+          await B.actions.foo.resolve("B action");
+          await A.actions.foo.resolve("A action");
 
-          await B.loader.resolve("B");
-          expect(t.getState().loaderData.foo).toBe("B");
+          await B.loaders.root.resolve("B root");
+          await B.loaders.foo.resolve("B");
+          expect(t.router.state.loaderData).toEqual({
+            root: "B root",
+            foo: "B",
+          });
 
-          await A.loader.resolve("B,A");
-          expect(t.getState().loaderData.foo).toBe("B,A");
+          await A.loaders.root.resolve("B,A root");
+          await A.loaders.foo.resolve("B,A");
+          expect(t.router.state.loaderData).toEqual({
+            root: "B,A root",
+            foo: "B,A",
+          });
         });
       });
 
       describe(`
-      A) POST /foo |------|---O
-      B) POST /foo   |--|-----X
-    `, () => {
+        A) POST /foo |------|---O
+        B) POST /foo   |--|-----X
+      `, () => {
         it("aborts B, commits A, sets B done", async () => {
-          let t = setup({ url: "/foo" });
+          let t = initializeTmTest({ url: "/foo" });
 
-          let A = t.fetch.post("/foo");
-          let B = t.fetch.post("/foo");
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          let B = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
 
-          await B.action.resolve("B");
-          await A.action.resolve();
+          await B.actions.foo.resolve("B");
+          await A.actions.foo.resolve("A");
 
-          await A.loader.resolve("B,A");
-          expect(t.getState().loaderData.foo).toBe("B,A");
-          expect(B.loader.abortMock.calls.length).toBe(1);
-          expect(t.getFetcher(B.key).type).toBe("done");
-          expect(t.getFetcher(B.key).data).toBe("B");
+          await A.loaders.root.resolve("B,A root");
+          await A.loaders.foo.resolve("B,A");
+          expect(t.router.state.loaderData).toEqual({
+            root: "B,A root",
+            foo: "B,A",
+          });
+          expect(B.loaders.foo.signal.aborted).toBe(true);
+          expect(B.fetcher.type).toBe("done");
+          expect(B.fetcher.data).toBe("B");
         });
       });
     });
 
-    xdescribe("navigating with inflight fetchers", () => {
+    describe("navigating with inflight fetchers", () => {
       describe(`
-      A) fetch POST |-------|--O
-      B) nav GET      |---O
-    `, () => {
+        A) fetch POST |-------|--O
+        B) nav GET      |---O
+      `, () => {
         it("does not abort A action or data reload", async () => {
-          let t = setup({ url: "/foo" });
+          let t = initializeTmTest({ url: "/foo" });
 
-          let A = t.fetch.post("/foo");
-          let B = t.navigate.get("/foo");
-          expect(A.action.abortMock.calls.length).toBe(0);
-          expect(t.getState().transition.type).toBe("normalLoad");
-          expect(t.getState().transition.location).toBe(B.location);
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          let B = await t.navigate("/foo");
+          expect(A.actions.foo.signal.aborted).toBe(false);
+          expect(t.router.state.transition.type).toBe("normalLoad");
+          expect(t.router.state.transition.location?.pathname).toBe("/foo");
 
-          await B.loader.resolve("B");
-          expect(t.getState().transition.type).toBe("idle");
-          expect(t.getState().location).toBe(B.location);
-          expect(t.getState().loaderData.foo).toBe("B");
-          expect(A.loader.abortMock.calls.length).toBe(0);
+          await B.loaders.root.resolve("B root");
+          await B.loaders.foo.resolve("B");
+          expect(t.router.state.transition.type).toBe("idle");
+          expect(t.router.state.location.pathname).toBe("/foo");
+          expect(t.router.state.loaderData.foo).toBe("B");
+          expect(A.loaders.foo.signal).toBe(undefined); // A loaders not called yet
 
-          await A.action.resolve();
-          await A.loader.resolve("A");
-          expect(t.getState().loaderData.foo).toBe("A");
+          await A.actions.foo.resolve("A root");
+          await A.loaders.root.resolve("A root");
+          await A.loaders.foo.resolve("A");
+          expect(A.loaders.foo.signal.aborted).toBe(false);
+          expect(t.router.state.loaderData).toEqual({
+            root: "A root",
+            foo: "A",
+          });
         });
       });
 
       describe(`
-      A) fetch POST |----|-----O
-      B) nav GET      |-----O
-    `, () => {
+        A) fetch POST |----|-----O
+        B) nav GET      |-----O
+      `, () => {
         it("Commits A and uses next matches", async () => {
-          let t = setup({ url: "/" });
+          let t = initializeTmTest({ url: "/" });
 
-          let A = t.fetch.post("/foo");
-          let B = t.navigate.get("/foo");
-          await A.action.resolve();
-          await B.loader.resolve("B");
-          expect(A.action.abortMock.calls.length).toBe(0);
-          expect(A.loader.abortMock.calls.length).toBe(0);
-          expect(t.getState().transition.type).toBe("idle");
-          expect(t.getState().location).toBe(B.location);
-          expect(t.getState().loaderData.foo).toBe("B");
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          // This fetcher's helpers take the current locations loaders (root/index).
+          // Since we know we're about to interrupt with /foo let's shim in a
+          // loader helper for foo ahead of time
+          A.shimLoaderHelper("foo");
 
-          await A.loader.resolve("A");
-          expect(t.getState().loaderData.foo).toBe("A");
+          let B = await t.navigate("/foo");
+          await A.actions.foo.resolve("A action");
+          await B.loaders.root.resolve("B root");
+          await B.loaders.foo.resolve("B");
+          expect(A.actions.foo.signal.aborted).toBe(false);
+          expect(A.loaders.foo.signal.aborted).toBe(false);
+          expect(t.router.state.transition.type).toBe("idle");
+          expect(t.router.state.location.pathname).toBe("/foo");
+          expect(t.router.state.loaderData.foo).toBe("B");
+
+          await A.loaders.root.resolve("A root");
+          await A.loaders.foo.resolve("A");
+          expect(t.router.state.loaderData).toEqual({
+            root: "A root",
+            foo: "A",
+          });
         });
       });
 
       describe(`
-      A) fetch POST |--|----X
-      B) nav GET         |--O
-    `, () => {
+        A) fetch POST |--|----X
+        B) nav GET         |--O
+      `, () => {
         it("aborts A, sets fetcher done", async () => {
-          let t = setup({ url: "/foo" });
+          let t = initializeTmTest({
+            url: "/foo",
+            hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+          });
 
-          let A = t.fetch.post("/foo");
-          await A.action.resolve("A");
-          let B = t.navigate.get("/foo");
-          await B.loader.resolve("B");
-          expect(t.getState().transition.type).toBe("idle");
-          expect(t.getState().location).toBe(B.location);
-          expect(t.getState().loaderData.foo).toBe("B");
-          expect(A.loader.abortMock.calls.length).toBe(1);
-          expect(t.getFetcher(A.key).type).toBe("done");
-          expect(t.getFetcher(A.key).data).toBe("A");
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await A.actions.foo.resolve("A");
+          let B = await t.navigate("/foo");
+          await B.loaders.root.resolve("ROOT*");
+          await B.loaders.foo.resolve("B");
+          expect(t.router.state.transition.type).toBe("idle");
+          expect(t.router.state.location.pathname).toBe("/foo");
+          expect(t.router.state.loaderData).toEqual({
+            root: "ROOT*",
+            foo: "B",
+          });
+          expect(A.loaders.foo.signal.aborted).toBe(true);
+          expect(A.fetcher.type).toBe("done");
+          expect(A.fetcher.data).toBe("A");
         });
       });
 
       describe(`
-      A) fetch POST |--|---O
-      B) nav GET         |---O
-    `, () => {
+        A) fetch POST |--|---O
+        B) nav GET         |---O
+      `, () => {
         it("commits both", async () => {
-          let t = setup({ url: "/foo" });
+          let t = initializeTmTest({ url: "/foo" });
 
-          let A = t.fetch.post("/foo");
-          await A.action.resolve();
-          let B = t.navigate.get("/foo");
-          await A.loader.resolve("A");
-          expect(t.getState().loaderData.foo).toBe("A");
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await A.actions.foo.resolve("A action");
+          let B = await t.navigate("/foo");
+          await A.loaders.root.resolve("A ROOT");
+          await A.loaders.foo.resolve("A");
+          expect(t.router.state.loaderData).toEqual({
+            root: "A ROOT",
+            foo: "A",
+          });
 
-          await B.loader.resolve("B");
-          expect(t.getState().loaderData.foo).toBe("B");
+          await B.loaders.root.resolve("B ROOT");
+          await B.loaders.foo.resolve("B");
+          expect(t.router.state.loaderData).toEqual({
+            root: "B ROOT",
+            foo: "B",
+          });
         });
       });
 
       describe(`
-      A) fetch POST |---[A]---O
-      B) nav POST           |---[A,B]--O
-    `, () => {
+        A) fetch POST |---[A]---O
+        B) nav POST           |---[A,B]--O
+      `, () => {
         it("keeps both", async () => {
-          let t = setup({ url: "/foo" });
-          let A = t.fetch.post("/foo");
-          await A.action.resolve();
-          let B = t.navigate.post("/foo");
-          await A.loader.resolve("A");
-          expect(t.getState().loaderData.foo).toBe("A");
+          let t = initializeTmTest({ url: "/foo" });
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await A.actions.foo.resolve("A action");
+          let B = await t.navigate("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await A.loaders.root.resolve("A ROOT");
+          await A.loaders.foo.resolve("A");
+          expect(t.router.state.loaderData).toEqual({
+            root: "A ROOT",
+            foo: "A",
+          });
 
-          await B.action.resolve();
-          await B.loader.resolve("A,B");
-          expect(t.getState().loaderData.foo).toBe("A,B");
+          await B.actions.foo.resolve("A,B");
+          await B.loaders.root.resolve("A,B ROOT");
+          await B.loaders.foo.resolve("A,B");
+          expect(t.router.state.loaderData).toEqual({
+            root: "A,B ROOT",
+            foo: "A,B",
+          });
         });
       });
 
       describe(`
-      A) fetch POST |---[A]--------X
-      B) nav POST     |-----[A,B]--O
-    `, () => {
+        A) fetch POST |---[A]--------X
+        B) nav POST     |-----[A,B]--O
+      `, () => {
         it("aborts A, commits B, marks fetcher done", async () => {
-          let t = setup({ url: "/foo" });
-          let A = t.fetch.post("/foo");
-          let B = t.navigate.post("/foo");
-          await A.action.resolve("A");
-          await B.action.resolve();
-          await B.loader.resolve("A,B");
-          expect(t.getState().loaderData.foo).toBe("A,B");
-          expect(A.loader.abortMock.calls.length).toBe(1);
-          let fetcher = t.getFetcher(A.key);
-          expect(fetcher.type).toBe("done");
-          expect(fetcher.data).toBe("A");
+          let t = initializeTmTest({ url: "/foo" });
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          let B = await t.navigate("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await A.actions.foo.resolve("A");
+          await B.actions.foo.resolve("A,B");
+          await B.loaders.root.resolve("A,B ROOT");
+          await B.loaders.foo.resolve("A,B");
+          expect(t.router.state.loaderData).toEqual({
+            root: "A,B ROOT",
+            foo: "A,B",
+          });
+          expect(A.loaders.foo.signal.aborted).toBe(true);
+          expect(A.fetcher.type).toBe("done");
+          expect(A.fetcher.data).toBe("A");
         });
       });
 
       describe(`
-      A) fetch POST |-----------[B,A]--O
-      B) nav POST     |--[B]--O
-    `, () => {
+        A) fetch POST |-----------[B,A]--O
+        B) nav POST     |--[B]--O
+      `, () => {
         it("commits both, uses the nav's href", async () => {
-          let t = setup({ url: "/foo" });
-          let A = t.fetch.post("/foo");
-          let B = t.navigate.post("/bar");
-          await B.action.resolve();
-          await B.loader.resolve("B");
-          await A.action.resolve();
-          await A.loader.resolve("B,A");
-          expect(t.getState().loaderData.bar).toBe("B,A");
+          let t = initializeTmTest({ url: "/foo" });
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          A.shimLoaderHelper("bar");
+          let B = await t.navigate("/bar", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await B.actions.bar.resolve("B");
+          await B.loaders.root.resolve("B");
+          await B.loaders.bar.resolve("B");
+          await A.actions.foo.resolve("B,A");
+          await A.loaders.root.resolve("B,A ROOT");
+          await A.loaders.bar.resolve("B,A");
+          expect(t.router.state.loaderData).toEqual({
+            root: "B,A ROOT",
+            bar: "B,A",
+          });
         });
       });
 
       describe(`
-      A) fetch POST |-------[B,A]--O
-      B) nav POST     |--[B]-------X
-    `, () => {
+        A) fetch POST |-------[B,A]--O
+        B) nav POST     |--[B]-------X
+      `, () => {
         it("aborts B, commits A, uses the nav's href", async () => {
-          let t = setup({ url: "/foo" });
-          let A = t.fetch.post("/foo");
-          let B = t.navigate.post("/bar");
-          await B.action.resolve();
-          await A.action.resolve();
-          await A.loader.resolve("B,A");
-          expect(B.loader.abortMock.calls.length).toBe(1);
-          expect(t.getState().loaderData.foo).toBeUndefined();
-          expect(t.getState().loaderData.bar).toBe("B,A");
-          expect(t.getState().transition).toBe(IDLE_TRANSITION);
+          let t = initializeTmTest({ url: "/foo" });
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          A.shimLoaderHelper("bar");
+          let B = await t.navigate("/bar", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await B.actions.bar.resolve("B");
+          await A.actions.foo.resolve("B,A");
+          await A.loaders.root.resolve("B,A ROOT");
+          await A.loaders.bar.resolve("B,A");
+          expect(B.loaders.bar.signal.aborted).toBe(true);
+          expect(t.router.state.loaderData).toEqual({
+            root: "B,A ROOT",
+            bar: "B,A",
+          });
+          expect(t.router.state.transition).toBe(IDLE_TRANSITION);
         });
       });
     });
