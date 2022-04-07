@@ -5,10 +5,13 @@ import {
   waitFor,
   screen,
   prettyDOM,
+  queryByText,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import type { FormMethod } from "@remix-run/router/utils";
+import type { FormMethod, Router } from "@remix-run/router";
+import { createMemoryRouter } from "@remix-run/router";
 
+import type { DataMemoryRouterProps } from "../index";
 import {
   DataMemoryRouter,
   Route,
@@ -23,6 +26,7 @@ import {
   UNSAFE_DataRouterContext,
   MemoryRouter,
   Routes,
+  UNSAFE_useRenderDataRouter,
 } from "../index";
 
 describe("<DataMemoryRouter>", () => {
@@ -1187,7 +1191,7 @@ describe("<DataMemoryRouter>", () => {
       let error = new Error("Kaboom!");
       error.stack = "FAKE STACK TRACE";
       barDefer.reject(error);
-      await waitFor(() => screen.getByText("Unhandled Thrown Exception!"));
+      await waitFor(() => screen.getByText("Kaboom!"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <h2>
@@ -1406,6 +1410,242 @@ describe("<DataMemoryRouter>", () => {
       function ChildComp(): React.ReactElement {
         throw new Error("Kaboom!");
       }
+    });
+
+    it("handles back button routing away from a child error boundary", async () => {
+      let router: Router;
+
+      // Need this to capture a copy of the router so we can trigger a back
+      // navigation from _outside_ the DataMemoryRouter scope to most closely
+      // resemble a browser back button
+      function LocalDataMemoryRouter({
+        basename,
+        children,
+        initialEntries,
+        initialIndex,
+        hydrationData,
+        fallbackElement,
+        todo_bikeshed_routes,
+      }: DataMemoryRouterProps): React.ReactElement {
+        return UNSAFE_useRenderDataRouter({
+          basename,
+          children,
+          fallbackElement,
+          todo_bikeshed_routes,
+          createRouter: (routes) => {
+            router = createMemoryRouter({
+              basename,
+              initialEntries,
+              initialIndex,
+              routes,
+              hydrationData,
+            });
+            return router;
+          },
+        });
+      }
+
+      let { container } = render(
+        <div>
+          <LocalDataMemoryRouter
+            initialEntries={["/"]}
+            hydrationData={{ loaderData: {} }}
+          >
+            <Route
+              path="/"
+              element={<Parent />}
+              exceptionElement={<p>Don't show this</p>}
+            >
+              <Route
+                path="child"
+                element={<Child />}
+                exceptionElement={<ErrorBoundary />}
+              />
+            </Route>
+          </LocalDataMemoryRouter>
+        </div>
+      );
+
+      function Parent() {
+        return (
+          <>
+            <h1>Parent</h1>
+            <Outlet />
+          </>
+        );
+      }
+      function Child(): React.ReactElement {
+        throw new Error("Kaboom!");
+      }
+
+      function ErrorBoundary() {
+        let error = useRouteException();
+        return <p>{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <h1>
+              Parent
+            </h1>
+          </div>
+        </div>"
+      `);
+
+      router.navigate("/child");
+      await waitFor(() => screen.getByText("Kaboom!"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <h1>
+              Parent
+            </h1>
+            <p>
+              Kaboom!
+            </p>
+          </div>
+        </div>"
+      `);
+
+      router.navigate(-1);
+      await waitFor(() => {
+        expect(queryByText(container, "Kaboom!")).not.toBeInTheDocument();
+      });
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <h1>
+              Parent
+            </h1>
+          </div>
+        </div>"
+      `);
+    });
+
+    it("handles back button routing away from a default error boundary", async () => {
+      let router: Router;
+
+      // Need this to capture a copy of the router so we can trigger a back
+      // navigation from _outside_ the DataMemoryRouter scope to most closely
+      // resemble a browser back button
+      function LocalDataMemoryRouter({
+        basename,
+        children,
+        initialEntries,
+        initialIndex,
+        hydrationData,
+        fallbackElement,
+        todo_bikeshed_routes,
+      }: DataMemoryRouterProps): React.ReactElement {
+        return UNSAFE_useRenderDataRouter({
+          basename,
+          children,
+          fallbackElement,
+          todo_bikeshed_routes,
+          createRouter: (routes) => {
+            router = createMemoryRouter({
+              basename,
+              initialEntries,
+              initialIndex,
+              routes,
+              hydrationData,
+            });
+            return router;
+          },
+        });
+      }
+
+      let { container } = render(
+        <div>
+          <LocalDataMemoryRouter
+            initialEntries={["/"]}
+            hydrationData={{ loaderData: {} }}
+          >
+            <Route path="/" element={<Parent />}>
+              <Route path="child" element={<Child />} />
+            </Route>
+          </LocalDataMemoryRouter>
+        </div>
+      );
+
+      function Parent() {
+        return (
+          <>
+            <h1>Parent</h1>
+            <Outlet />
+          </>
+        );
+      }
+
+      function Child(): React.ReactElement {
+        let error = new Error("Kaboom!");
+        error.stack = "FAKE STACK TRACE";
+        throw error;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <h1>
+              Parent
+            </h1>
+          </div>
+        </div>"
+      `);
+
+      router.navigate("/child");
+      await waitFor(() => screen.getByText("Kaboom!"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <h2>
+              Unhandled Thrown Exception!
+            </h2>
+            <p
+              style=\\"font-style: italic;\\"
+            >
+              Kaboom!
+            </p>
+            <pre
+              style=\\"padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);\\"
+            >
+              FAKE STACK TRACE
+            </pre>
+            <p>
+              💿 Hey developer 👋
+            </p>
+            <p>
+              You can provide a way better UX than this when your app throws errors by providing your own 
+              <code
+                style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+              >
+                exceptionElement
+              </code>
+               props on 
+              <code
+                style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+              >
+                &lt;Route&gt;
+              </code>
+            </p>
+          </div>
+        </div>"
+      `);
+
+      router.navigate(-1);
+      await waitFor(() => {
+        expect(queryByText(container, "Kaboom!")).not.toBeInTheDocument();
+      });
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <h1>
+              Parent
+            </h1>
+          </div>
+        </div>"
+      `);
     });
   });
 });

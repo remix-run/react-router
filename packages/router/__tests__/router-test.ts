@@ -2485,6 +2485,38 @@ describe("a router", () => {
       });
     });
 
+    it("handles exceptions in initial data load", async () => {
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/child"] }),
+        routes: [
+          {
+            path: "/",
+            loader: () => Promise.reject("Kaboom!"),
+            children: [
+              {
+                path: "child",
+                loader: () => Promise.resolve("child"),
+              },
+            ],
+          },
+        ],
+      });
+
+      await new Promise((r) => setImmediate(r));
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/child" }),
+        initialized: true,
+        transition: IDLE_TRANSITION,
+        loaderData: {
+          "0-0": "child",
+        },
+        exceptions: {
+          "0": "Kaboom!",
+        },
+      });
+    });
+
     it("executes loaders on push navigations", async () => {
       let t = setup({
         routes: TASK_ROUTES,
@@ -3136,7 +3168,7 @@ describe("a router", () => {
           index: "INDEX_DATA",
         },
       });
-      // @ts-ignore
+      // @ts-expect-error
       expect(t.history.push.mock.calls.length).toBe(1);
 
       let key = t.router.state.location.key;
@@ -3197,6 +3229,9 @@ describe("a router", () => {
       });
 
       let N = await t.navigate("/tasks");
+      // Revalidation was aborted
+      expect(R.loaders.root.signal.aborted).toBe(true);
+      expect(R.loaders.index.signal.aborted).toBe(true);
       expect(t.router.state).toMatchObject({
         historyAction: "POP",
         location: { pathname: "/" },
@@ -3210,8 +3245,25 @@ describe("a router", () => {
           index: "INDEX_DATA",
         },
       });
+
+      // Land the revalidation calls - should no-op
       await R.loaders.root.resolve("ROOT_DATA interrupted");
       await R.loaders.index.resolve("INDEX_DATA interrupted");
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        transition: {
+          state: "loading",
+          location: { pathname: "/tasks" },
+        },
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      // Land the navigation calls - should update state and end the revalidation
       await N.loaders.root.resolve("ROOT_DATA*");
       await N.loaders.tasks.resolve("TASKS_DATA");
       expect(t.router.state).toMatchObject({
