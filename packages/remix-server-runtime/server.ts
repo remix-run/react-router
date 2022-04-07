@@ -62,7 +62,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       });
     }
 
-    if (request.method.toLowerCase() === "head") {
+    if (request.method === "HEAD") {
       return new Response(null, {
         headers: response.headers,
         status: response.status,
@@ -544,26 +544,16 @@ async function handleResourceRequest({
   }
 }
 
-function isActionRequest(request: Request): boolean {
-  let method = request.method.toLowerCase();
-  return (
-    method === "post" ||
-    method === "put" ||
-    method === "patch" ||
-    method === "delete"
-  );
+const validActionMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function isActionRequest({ method }: Request): boolean {
+  return validActionMethods.has(method.toUpperCase());
 }
 
-function isHeadRequest(request: Request): boolean {
-  return request.method.toLowerCase() === "head";
-}
+const validRequestMethods = new Set(["GET", "HEAD", ...validActionMethods]);
 
-function isValidRequestMethod(request: Request): boolean {
-  return (
-    request.method.toLowerCase() === "get" ||
-    isHeadRequest(request) ||
-    isActionRequest(request)
-  );
+function isValidRequestMethod({ method }: Request): boolean {
+  return validRequestMethods.has(method.toUpperCase());
 }
 
 async function errorBoundaryError(error: Error, status: number) {
