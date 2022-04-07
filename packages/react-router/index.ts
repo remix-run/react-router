@@ -21,6 +21,7 @@ import {
 } from "@remix-run/router";
 
 import type {
+  DataMemoryRouterProps,
   MemoryRouterProps,
   NavigateProps,
   OutletProps,
@@ -80,6 +81,7 @@ type Search = string;
 
 // Expose react-router public API
 export type {
+  DataMemoryRouterProps,
   Hash,
   IndexRouteProps,
   LayoutRouteProps,

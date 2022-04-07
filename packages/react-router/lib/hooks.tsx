@@ -411,11 +411,13 @@ function DefaultExceptionElement() {
 }
 
 type RenderErrorBoundaryProps = React.PropsWithChildren<{
+  location: Location;
   exception: any;
   component: React.ReactNode;
 }>;
 
 type RenderErrorBoundaryState = {
+  location: Location;
   exception: any;
 };
 
@@ -425,11 +427,43 @@ export class RenderErrorBoundary extends React.Component<
 > {
   constructor(props: RenderErrorBoundaryProps) {
     super(props);
-    this.state = { exception: props.exception || null };
+    this.state = {
+      location: props.location,
+      exception: props.exception,
+    };
   }
 
   static getDerivedStateFromError(error: any) {
     return { exception: error };
+  }
+
+  static getDerivedStateFromProps(
+    props: RenderErrorBoundaryProps,
+    state: RenderErrorBoundaryState
+  ) {
+    // When we get into an error state, the user will likely click "back" to the
+    // previous page that didn't have an error. Because this wraps the entire
+    // application, that will have no effect--the error page continues to display.
+    // This gives us a mechanism to recover from the error when the location changes.
+    //
+    // Whether we're in an error state or not, we update the location in state
+    // so that when we are in an error state, it gets reset when a new location
+    // comes in and the user recovers from the error.
+    if (state.location !== props.location) {
+      return {
+        exception: props.exception,
+        location: props.location,
+      };
+    }
+
+    // If we're not changing locations, preserve the location but still surface
+    // any new errors that may come through. We retain the existing error, we do
+    // this because the error provided from the app state may be cleared without
+    // the location changing.
+    return {
+      exception: props.exception || state.exception,
+      location: state.location,
+    };
   }
 
   componentDidCatch(error: any, errorInfo: any) {
@@ -477,9 +511,6 @@ export function _renderMatches(
     );
   }
 
-  //TODO: add <RouteRenderErrorBoundary element={exceptionElement || DefaultExceptionElement} />
-  // to handle render exceptions.  Make sure it gets the right useRouteException()
-  // based on where it lives in the hierarchy
   return renderedMatches.reduceRight((outlet, match, index) => {
     let exception = match.route.id ? exceptions?.[match.route.id] : null;
     // Only data routers handle exceptions
@@ -507,6 +538,7 @@ export function _renderMatches(
     // exceptionElement
     return dataRouterState && (match.route.exceptionElement || index === 0) ? (
       <RenderErrorBoundary
+        location={dataRouterState.location}
         component={exceptionElement}
         exception={exception}
         children={getChildren()}
@@ -517,14 +549,15 @@ export function _renderMatches(
   }, null as React.ReactElement | null);
 }
 
-type DataRouterHook =
-  | "useLoaderData"
-  | "useActionData"
-  | "useRouteException"
-  | "useNavigation"
-  | "useRouteLoaderData"
-  | "useMatches"
-  | "useRevalidator";
+enum DataRouterHook {
+  UseLoaderData = "useLoaderData",
+  UseActionData = "useActionData",
+  UseRouteException = "useRouteException",
+  UseNavigation = "useNavigation",
+  UseRouteLoaderData = "useRouteLoaderData",
+  UseMatches = "useMatches",
+  UseRevalidator = "useRevalidator",
+}
 
 function useDataRouterState(hookName: DataRouterHook) {
   let state = React.useContext(DataRouterStateContext);
@@ -533,19 +566,19 @@ function useDataRouterState(hookName: DataRouterHook) {
 }
 
 export function useNavigation() {
-  let state = useDataRouterState("useNavigation");
+  let state = useDataRouterState(DataRouterHook.UseNavigation);
   return state.transition;
 }
 
 export function useRevalidator() {
   let router = React.useContext(DataRouterContext);
   invariant(router, `useRevalidator must be rendered within a DataRouter`);
-  let state = useDataRouterState("useRevalidator");
+  let state = useDataRouterState(DataRouterHook.UseRevalidator);
   return { revalidate: router.revalidate, state: state.revalidation };
 }
 
 export function useMatches() {
-  let { matches, loaderData } = useDataRouterState("useMatches");
+  let { matches, loaderData } = useDataRouterState(DataRouterHook.UseMatches);
   return React.useMemo(
     () =>
       matches.map((match) => {
@@ -562,7 +595,7 @@ export function useMatches() {
 }
 
 export function useLoaderData() {
-  let state = useDataRouterState("useLoaderData");
+  let state = useDataRouterState(DataRouterHook.UseLoaderData);
 
   let route = React.useContext(RouteContext);
   invariant(route, `useLoaderData must be used inside a RouteContext`);
@@ -577,12 +610,12 @@ export function useLoaderData() {
 }
 
 export function useRouteLoaderData(routeId: string): any {
-  let state = useDataRouterState("useRouteLoaderData");
+  let state = useDataRouterState(DataRouterHook.UseRouteLoaderData);
   return state.loaderData?.[routeId];
 }
 
 export function useActionData() {
-  let state = useDataRouterState("useRouteException");
+  let state = useDataRouterState(DataRouterHook.UseRouteException);
 
   let route = React.useContext(RouteContext);
   invariant(route, `useRouteException must be used inside a RouteContext`);
@@ -592,7 +625,7 @@ export function useActionData() {
 
 export function useRouteException() {
   let exception = React.useContext(RouteExceptionContext);
-  let state = useDataRouterState("useRouteException");
+  let state = useDataRouterState(DataRouterHook.UseRouteException);
   let route = React.useContext(RouteContext);
   let thisRoute = route.matches[route.matches.length - 1];
 
