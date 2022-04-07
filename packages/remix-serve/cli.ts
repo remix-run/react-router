@@ -36,9 +36,10 @@ let onListen = () => {
 };
 
 let app = createApp(buildPath);
+let server = process.env.HOST
+  ? app.listen(port, process.env.HOST, onListen)
+  : app.listen(port, onListen);
 
-if (process.env.HOST) {
-  app.listen(port, process.env.HOST, onListen);
-} else {
-  app.listen(port, onListen);
-}
+["SIGTERM", "SIGINT"].forEach((signal) => {
+  process.once(signal, () => server?.close(console.error));
+});
