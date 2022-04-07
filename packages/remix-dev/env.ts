@@ -1,11 +1,11 @@
-import * as fsp from "fs/promises";
+import * as fse from "fs-extra";
 import * as path from "path";
 
 // Import environment variables from: .env, failing gracefully if it doesn't exist
 export async function loadEnv(rootDirectory: string): Promise<void> {
   let envPath = path.join(rootDirectory, ".env");
   try {
-    await fsp.readFile(envPath);
+    await fse.readFile(envPath);
   } catch (e) {
     return;
   }

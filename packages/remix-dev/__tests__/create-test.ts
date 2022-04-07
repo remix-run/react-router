@@ -116,10 +116,11 @@ describe("the create command", () => {
       "--template",
       "examples/basic",
       "--no-install",
+      "--typescript",
     ]);
     expect(output).toMatchInlineSnapshot(`
       "
-      💿 That's it! \`cd\` into <TEMP_DIR>/example and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/example\\" and check the README for development and deploy instructions!"
     `);
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
@@ -133,13 +134,14 @@ describe("the create command", () => {
       "--template",
       "grunge-stack",
       "--no-install",
+      "--typescript",
     ]);
     expect(output).toMatchInlineSnapshot(`
       "
 
       💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with \`npx remix init\`
 
-      💿 That's it! \`cd\` into <TEMP_DIR>/template and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/template\\" and check the README for development and deploy instructions!"
     `);
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
@@ -153,13 +155,14 @@ describe("the create command", () => {
       "--template",
       "remix-fake-tester-username/remix-fake-tester-repo",
       "--no-install",
+      "--typescript",
     ]);
     expect(output).toMatchInlineSnapshot(`
       "
 
       💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with \`npx remix init\`
 
-      💿 That's it! \`cd\` into <TEMP_DIR>/repo and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/repo\\" and check the README for development and deploy instructions!"
     `);
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
@@ -173,13 +176,14 @@ describe("the create command", () => {
       "--template",
       "https://example.com/remix-stack.tar.gz",
       "--no-install",
+      "--typescript",
     ]);
     expect(output).toMatchInlineSnapshot(`
       "
 
       💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with \`npx remix init\`
 
-      💿 That's it! \`cd\` into <TEMP_DIR>/remote-tarball and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/remote-tarball\\" and check the README for development and deploy instructions!"
     `);
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
@@ -193,13 +197,14 @@ describe("the create command", () => {
       "--template",
       "https://github.com/fake-remix-tester/nested-dir/tree/dev/stack",
       "--no-install",
+      "--typescript",
     ]);
     expect(output).toMatchInlineSnapshot(`
       "
 
       💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with \`npx remix init\`
 
-      💿 That's it! \`cd\` into <TEMP_DIR>/diff-branch and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/diff-branch\\" and check the README for development and deploy instructions!"
     `);
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
@@ -213,10 +218,11 @@ describe("the create command", () => {
       "--template",
       path.join(__dirname, "fixtures", "arc.tar.gz"),
       "--no-install",
+      "--typescript",
     ]);
     expect(output).toMatchInlineSnapshot(`
       "
-      💿 That's it! \`cd\` into <TEMP_DIR>/local-tarball and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/local-tarball\\" and check the README for development and deploy instructions!"
     `);
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
@@ -230,10 +236,11 @@ describe("the create command", () => {
       "--template",
       pathToFileURL(path.join(__dirname, "fixtures", "arc.tar.gz")).toString(),
       "--no-install",
+      "--typescript",
     ]);
     expect(output).toMatchInlineSnapshot(`
       "
-      💿 That's it! \`cd\` into <TEMP_DIR>/file-url-tarball and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/file-url-tarball\\" and check the README for development and deploy instructions!"
     `);
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
@@ -254,7 +261,7 @@ describe("the create command", () => {
 
       💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with \`npx remix init\`
 
-      💿 That's it! \`cd\` into <TEMP_DIR>/template-to-js and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/template-to-js\\" and check the README for development and deploy instructions!"
     `);
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.jsx"))).toBeTruthy();
@@ -266,7 +273,6 @@ describe("the create command", () => {
       fse.readFileSync(path.join(projectDir, "package.json"), "utf-8")
     );
     expect(Object.keys(pkgJSON.devDependencies)).not.toContain("typescript");
-    expect(Object.keys(pkgJSON.scripts)).not.toContain("typecheck");
   });
 
   it("works for a file path to a directory on disk", async () => {
@@ -277,13 +283,14 @@ describe("the create command", () => {
       "--template",
       path.join(__dirname, "fixtures/stack"),
       "--no-install",
+      "--typescript",
     ]);
     expect(output).toMatchInlineSnapshot(`
       "
 
       💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with \`npx remix init\`
 
-      💿 That's it! \`cd\` into <TEMP_DIR>/local-directory and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/local-directory\\" and check the README for development and deploy instructions!"
     `);
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
@@ -297,13 +304,14 @@ describe("the create command", () => {
       "--template",
       pathToFileURL(path.join(__dirname, "fixtures/stack")).toString(),
       "--no-install",
+      "--typescript",
     ]);
     expect(output).toMatchInlineSnapshot(`
       "
 
       💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with \`npx remix init\`
 
-      💿 That's it! \`cd\` into <TEMP_DIR>/file-url-directory and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/file-url-directory\\" and check the README for development and deploy instructions!"
     `);
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
@@ -317,11 +325,12 @@ describe("the create command", () => {
       "--template",
       path.join(__dirname, "fixtures", "successful-remix-init.tar.gz"),
       "--install",
+      "--typescript",
     ]);
     expect(output).toMatchInlineSnapshot(`
       "
       💿 Running remix.init script
-      💿 That's it! \`cd\` into <TEMP_DIR>/remix-init-auto and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/remix-init-auto\\" and check the README for development and deploy instructions!"
     `);
     expect(output).toContain(`💿 Running remix.init script`);
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
@@ -338,13 +347,14 @@ describe("the create command", () => {
       "--template",
       path.join(__dirname, "fixtures", "successful-remix-init.tar.gz"),
       "--no-install",
+      "--typescript",
     ]);
     expect(output).toMatchInlineSnapshot(`
       "
 
       💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with \`npx remix init\`
 
-      💿 That's it! \`cd\` into <TEMP_DIR>/remix-init-manual and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/remix-init-manual\\" and check the README for development and deploy instructions!"
     `);
 
     output = "";
@@ -369,6 +379,7 @@ describe("the create command", () => {
         "--template",
         path.join(__dirname, "fixtures", "failing-remix-init.tar.gz"),
         "--install",
+        "--typescript",
       ])
     ).rejects.toThrowError(`🚨 Oops, remix.init failed`);
 
@@ -387,6 +398,7 @@ describe("the create command", () => {
       "--template",
       path.join(__dirname, "fixtures", "failing-remix-init.tar.gz"),
       "--no-install",
+      "--typescript",
     ]);
 
     expect(output).toMatchInlineSnapshot(`
@@ -394,7 +406,7 @@ describe("the create command", () => {
 
       💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with \`npx remix init\`
 
-      💿 That's it! \`cd\` into <TEMP_DIR>/invalid-remix-init-manual and check the README for development and deploy instructions!"
+      💿 That's it! \`cd\` into \\"<TEMP_DIR>/invalid-remix-init-manual\\" and check the README for development and deploy instructions!"
     `);
 
     process.chdir(projectDir);

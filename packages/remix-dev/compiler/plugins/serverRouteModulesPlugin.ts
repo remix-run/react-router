@@ -1,5 +1,5 @@
 import * as path from "path";
-import * as fsp from "fs/promises";
+import * as fse from "fs-extra";
 import type esbuild from "esbuild";
 
 import type { RemixConfig } from "../../config";
@@ -27,7 +27,7 @@ export function serverRouteModulesPlugin(config: RemixConfig): esbuild.Plugin {
 
       build.onLoad({ filter: /.*/, namespace: "route" }, async (args) => {
         let file = args.path;
-        let contents = await fsp.readFile(file, "utf-8");
+        let contents = await fse.readFile(file, "utf-8");
 
         // Default to `export {}` if the file is empty so esbuild interprets
         // this file as ESM instead of CommonJS with `default: {}`. This helps
