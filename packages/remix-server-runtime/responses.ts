@@ -10,10 +10,7 @@ export type JsonFunction = <Data>(
  * @see https://remix.run/api/remix#json
  */
 export const json: JsonFunction = (data, init = {}) => {
-  let responseInit: any = init;
-  if (typeof init === "number") {
-    responseInit = { status: init };
-  }
+  let responseInit = typeof init === "number" ? { status: init } : init;
 
   let headers = new Headers(responseInit.headers);
   if (!headers.has("Content-Type")) {
