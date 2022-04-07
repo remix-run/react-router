@@ -34,10 +34,10 @@ export function createRoutes(
   manifest: ServerRouteManifest,
   parentId?: string
 ): ServerRoute[] {
-  return Object.keys(manifest)
-    .filter((key) => manifest[key].parentId === parentId)
-    .map((id) => ({
-      ...manifest[id],
+  return Object.entries(manifest)
+    .filter(([, route]) => route.parentId === parentId)
+    .map(([id, route]) => ({
+      ...route,
       children: createRoutes(manifest, id),
     }));
 }
