@@ -275,7 +275,9 @@ export async function readConfig(
   try {
     appConfig = require(configFile);
   } catch (error) {
-    throw new Error(`Error loading Remix config in ${configFile}`);
+    throw new Error(
+      `Error loading Remix config in ${configFile}\n${String(error)}`
+    );
   }
 
   let customServerEntryPoint = appConfig.server;

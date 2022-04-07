@@ -36,7 +36,12 @@ function getPackageDependenciesRecursive(
 ): void {
   visitedPackages.add(pkg);
 
-  let pkgJson = require.resolve(`${pkg}/package.json`);
+  let pkgPath = require.resolve(pkg);
+  let lastIndexOfPackageName = pkgPath.lastIndexOf(pkg);
+  if (lastIndexOfPackageName !== -1) {
+    pkgPath = pkgPath.substring(0, lastIndexOfPackageName);
+  }
+  let pkgJson = path.join(pkgPath, "package.json");
   if (!fs.existsSync(pkgJson)) {
     console.log(pkgJson, `does not exist`);
     return;
