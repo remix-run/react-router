@@ -561,7 +561,7 @@ enum DataRouterHook {
 
 function useDataRouterState(hookName: DataRouterHook) {
   let state = React.useContext(DataRouterStateContext);
-  invariant(state, `${hookName} must be rendered within a DataRouter`);
+  invariant(state, `${hookName} must be used within a DataRouter`);
   return state;
 }
 
@@ -572,7 +572,7 @@ export function useNavigation() {
 
 export function useRevalidator() {
   let router = React.useContext(DataRouterContext);
-  invariant(router, `useRevalidator must be rendered within a DataRouter`);
+  invariant(router, `useRevalidator must be used within a DataRouter`);
   let state = useDataRouterState(DataRouterHook.UseRevalidator);
   return { revalidate: router.revalidate, state: state.revalidation };
 }

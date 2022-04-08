@@ -20,6 +20,7 @@ import {
   parsePath,
 } from "./history";
 import type {
+  Fetcher,
   HydrationState,
   NavigateOptions,
   Transition,
@@ -89,6 +90,7 @@ export type {
   ActionFunctionArgs,
   BrowserHistory,
   BrowserRouterInit,
+  Fetcher,
   FormEncType,
   FormMethod,
   HashHistory,
