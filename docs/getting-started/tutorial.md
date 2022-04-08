@@ -196,7 +196,7 @@ render(
 );
 ```
 
-Notice at `"/"` it renders `<App>`. At `"/invoices"` it render `<Invoices>`. Nice work!
+Notice at `"/"` it renders `<App>`. At `"/invoices"` it renders `<Invoices>`. Nice work!
 
 <docs-info>Remember if you're using StackBlitz to click the "Open in New Window" button in the inline browser's toolbar to be able to click the back/forward buttons in your browser.</docs-info>
 

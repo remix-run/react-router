@@ -281,7 +281,7 @@ function useFakeFetch(URL) {
       fetch(URL, { signal: controller.signal })
         .then((res) => res.json())
         .then((data) => {
-          if (controller.aborted) return;
+          if (controller.signal.aborted) return;
           // set the cache
           cache.set(cacheKey, data);
           setData(data);
