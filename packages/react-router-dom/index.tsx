@@ -42,7 +42,12 @@ import {
   UNSAFE_DataRouterContext,
 } from "react-router";
 import type { To } from "react-router";
-import type { BrowserHistory, HashHistory, History } from "@remix-run/router";
+import type {
+  BrowserHistory,
+  Fetcher,
+  HashHistory,
+  History,
+} from "@remix-run/router";
 import {
   createBrowserHistory,
   createHashHistory,
@@ -488,7 +493,27 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
 }
 
+/**
+ * A `@remix-run/router`-aware `<form>`. It behaves like a normal form except
+ * that the interaction with the server is with `fetch` instead of new document
+ * requests, allowing components to add nicer UX to the page as the form is
+ * submitted and returns with data.
+ */
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
+  (props, ref) => {
+    return <FormImpl {...props} ref={ref} />;
+  }
+);
+
+if (__DEV__) {
+  Form.displayName = "Form";
+}
+
+interface FormImplProps extends FormProps {
+  fetcherKey?: string;
+}
+
+const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
   (
     {
       replace = false,
@@ -496,11 +521,12 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
       action = ".",
       encType = defaultEncType,
       onSubmit,
+      fetcherKey,
       ...props
     },
     forwardedRef
   ) => {
-    let submit = useSubmit();
+    let submit = useSubmitImpl(fetcherKey);
     let formMethod: FormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
     let formAction = useFormAction(action);
@@ -549,23 +575,25 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
       };
     }, []);
 
+    let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
+      onSubmit && onSubmit(event);
+      if (event.defaultPrevented) return;
+      event.preventDefault();
+
+      submit(clickedButtonRef.current || event.currentTarget, {
+        method,
+        replace,
+      });
+      clickedButtonRef.current = null;
+    };
+
     return (
       <form
         ref={ref}
         method={formMethod}
         action={formAction}
         encType={encType}
-        onSubmit={(event) => {
-          onSubmit && onSubmit(event);
-          if (event.defaultPrevented) return;
-          event.preventDefault();
-
-          submit(clickedButtonRef.current || event.currentTarget, {
-            method,
-            replace,
-          });
-          clickedButtonRef.current = null;
-        }}
+        onSubmit={submitHandler}
         {...props}
       />
     );
@@ -692,7 +720,15 @@ export interface SubmitFunction {
   ): void;
 }
 
+/**
+ * Returns a function that may be used to programmatically submit a form (or
+ * some arbitrary data) to the server.
+ */
 export function useSubmit(): SubmitFunction {
+  return useSubmitImpl();
+}
+
+function useSubmitImpl(fetcherKey?: string): SubmitFunction {
   let router = React.useContext(UNSAFE_DataRouterContext);
   let defaultAction = useFormAction();
 
@@ -716,14 +752,20 @@ export function useSubmit(): SubmitFunction {
         options
       );
 
-      router.navigate(url.pathname + url.search, {
+      let href = url.pathname + url.search;
+      let opts = {
         replace: options.replace,
         formData,
         formMethod: method as FormMethod,
         formEncType: encType as FormEncType,
-      });
+      };
+      if (fetcherKey) {
+        router.fetch(fetcherKey, href, opts);
+      } else {
+        router.navigate(href, opts);
+      }
     },
-    [defaultAction, router]
+    [defaultAction, router, fetcherKey]
   );
 }
 
@@ -759,6 +801,79 @@ function useComposedRefs<RefValueType = any>(
   }, refs);
 }
 
+function createFetcherForm(fetcherKey: string) {
+  let FetcherForm = React.forwardRef<HTMLFormElement, FormProps>(
+    (props, ref) => {
+      return <FormImpl {...props} ref={ref} fetcherKey={fetcherKey} />;
+    }
+  );
+  if (__DEV__) {
+    FetcherForm.displayName = "fetcher.Form";
+  }
+  return FetcherForm;
+}
+
+let fetcherId = 0;
+
+type FetcherWithComponents<TData> = Fetcher<TData> & {
+  Form: ReturnType<typeof createFetcherForm>;
+  submit: ReturnType<typeof useSubmitImpl>;
+  load: (href: string) => void;
+};
+
+/**
+ * Interacts with route loaders and actions without causing a navigation. Great
+ * for any interaction that stays on the same page.
+ */
+export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
+  let router = React.useContext(UNSAFE_DataRouterContext);
+  invariant(router, `useFetcher must be used within a DataRouter`);
+
+  let [fetcherKey] = React.useState(() => String(++fetcherId));
+  let [Form] = React.useState(() => createFetcherForm(fetcherKey));
+  let [load] = React.useState(() => (href: string) => {
+    invariant(router, `No router available for fetcher.load()`);
+    router.fetch(fetcherKey, href);
+  });
+  let submit = useSubmitImpl(fetcherKey);
+
+  let fetcher = router.getFetcher<TData>(fetcherKey);
+
+  let fetcherWithComponents = React.useMemo(
+    () => ({
+      Form,
+      submit,
+      load,
+      ...fetcher,
+    }),
+    [fetcher, Form, submit, load]
+  );
+
+  React.useEffect(() => {
+    // Is this busted when the React team gets real weird and calls effects
+    // twice on mount?  We really just need to garbage collect here when this
+    // fetcher is no longer around.
+    return () => {
+      if (!router) {
+        console.warn("No fetcher available to clean up from useFetcher()");
+        return;
+      }
+      router.deleteFetcher(fetcherKey);
+    };
+  }, [router, fetcherKey]);
+
+  return fetcherWithComponents;
+}
+
+/**
+ * Provides all fetchers currently on the page. Useful for layouts and parent
+ * routes that need to provide pending/optimistic UI regarding the fetch.
+ */
+export function useFetchers(): Fetcher[] {
+  let router = React.useContext(UNSAFE_DataRouterContext);
+  invariant(router, `useFetcher must be used within a DataRouter`);
+  return [...router.state.fetchers.values()];
+}
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
