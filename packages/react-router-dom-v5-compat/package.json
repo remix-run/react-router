@@ -1,25 +1,26 @@
 {
-  "name": "react-router-dom",
+  "name": "react-router-dom-v5-compat",
   "version": "6.3.0",
   "author": "Remix Software <hello@remix.run>",
-  "description": "Declarative routing for React web applications",
+  "description": "Migration path to React Router v6 from v4/5",
   "repository": {
     "type": "git",
     "url": "https://github.com/remix-run/react-router.git",
-    "directory": "packages/react-router-dom"
+    "directory": "packages/react-router-dom-v5-compat"
   },
   "license": "MIT",
   "main": "./main.js",
   "module": "./index.js",
   "types": "./index.d.ts",
-  "unpkg": "./umd/react-router-dom.production.min.js",
+  "unpkg": "./umd/react-router.production.min.js",
   "dependencies": {
-    "react-router": "6.3.0",
-    "history": "^5.2.0"
+    "history": "^5.3.0",
+    "react-router": "6.3.0"
   },
   "peerDependencies": {
     "react": ">=16.8",
-    "react-dom": ">=16.8"
+    "react-dom": ">=16.8",
+    "react-router-dom": "4 || 5"
   },
   "sideEffects": false,
   "keywords": [

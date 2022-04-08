@@ -14,4 +14,7 @@ node_modules/
 /packages/*/esm/
 /packages/*/umd/
 
+# compat module copies
+/packages/react-router-dom-v5-compat/react-router-dom
+
 .eslintcache

@@ -54,6 +54,7 @@
     "rollup": "^1.27.9",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-copy": "^3.1.0",
+    "rollup-plugin-extensions": "^0.1.0",
     "rollup-plugin-prettier": "^0.6.0",
     "rollup-plugin-terser": "^7.0.2",
     "semver": "^7.3.5",

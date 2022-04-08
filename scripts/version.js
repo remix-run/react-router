@@ -141,6 +141,15 @@ async function run() {
       chalk.green(`  Updated react-router-dom to version ${version}`)
     );
 
+    // 4.1 Update react-router-dom-v5-compat version + react-router dep
+    await updatePackageConfig("react-router-dom-v5-compat", (config) => {
+      config.version = version;
+      config.dependencies["react-router"] = version;
+    });
+    console.log(
+      chalk.green(`  Updated react-router-dom-v5-compat to version ${version}`)
+    );
+
     // 5. Update react-router-native version + react-router dep
     await updatePackageConfig("react-router-native", (config) => {
       config.version = version;
