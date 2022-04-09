@@ -1,3 +1,4 @@
+import path from "path";
 import fs from "fs";
 import { builtinModules } from "module";
 import { isAbsolute, relative } from "path";
@@ -46,7 +47,7 @@ export function serverBareModulesPlugin(
           return undefined;
         }
 
-        // These are our virutal modules, always bundle them because there is no
+        // These are our virtual modules, always bundle them because there is no
         // "real" file on disk to externalize.
         if (
           path === serverBuildVirtualModule.id ||
@@ -131,17 +132,19 @@ function isBareModuleId(id: string): boolean {
 
 function warnOnceIfEsmOnlyPackage(
   packageName: string,
-  path: string,
+  fullImportPath: string,
   onWarning: (msg: string, key: string) => void
 ) {
-  let packageJsonFile = require.resolve(`${packageName}/package.json`);
+  let packageDir = resolveModuleBasePath(packageName);
+  let packageJsonFile = path.join(packageDir, "package.json");
+
   if (!fs.existsSync(packageJsonFile)) {
     console.log(packageJsonFile, `does not exist`);
     return;
   }
-  let pkg = JSON.parse(fs.readFileSync(packageJsonFile, "utf8"));
+  let pkg = JSON.parse(fs.readFileSync(packageJsonFile, "utf-8"));
 
-  let subImport = path.slice(packageName.length + 1);
+  let subImport = fullImportPath.slice(packageName.length + 1);
 
   if (pkg.type === "module") {
     let isEsmOnly = true;
@@ -165,4 +168,31 @@ function warnOnceIfEsmOnlyPackage(
       );
     }
   }
+}
+
+// https://github.com/nodejs/node/issues/33460#issuecomment-919184789
+function resolveModuleBasePath(packageName: string) {
+  let moduleMainFilePath = require.resolve(packageName);
+
+  let packageNameParts = packageName.split("/");
+
+  let searchForPathSection;
+
+  if (packageName.startsWith("@") && packageNameParts.length > 1) {
+    let [org, mod] = packageNameParts;
+    searchForPathSection = `node_modules${path.sep}${org}${path.sep}${mod}`;
+  } else {
+    let [mod] = packageNameParts;
+    searchForPathSection = `node_modules${path.sep}${mod}`;
+  }
+
+  let lastIndex = moduleMainFilePath.lastIndexOf(searchForPathSection);
+
+  if (lastIndex === -1) {
+    throw new Error(
+      `Couldn't resolve the base path of "${packageName}". Searched inside the resolved main file path "${moduleMainFilePath}" using "${searchForPathSection}"`
+    );
+  }
+
+  return moduleMainFilePath.slice(0, lastIndex + searchForPathSection.length);
 }
