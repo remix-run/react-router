@@ -39,14 +39,12 @@ import {
 import { ShouldReloadFunctionArgs } from "@remix-run/router/utils";
 
 export function useRenderDataRouter({
-  basename,
   children,
   fallbackElement,
   // FIXME: Figure out if we want to use a direct prop or support useRoutes()
   todo_bikeshed_routes,
   createRouter,
 }: {
-  basename?: string;
   children?: React.ReactNode;
   fallbackElement?: React.ReactElement;
   todo_bikeshed_routes?: RouteObject[];
@@ -83,7 +81,6 @@ export function useRenderDataRouter({
     <DataRouterContext.Provider value={router}>
       <DataRouterStateContext.Provider value={state}>
         <Router
-          basename={basename}
           location={state.location}
           navigationType={state.historyAction}
           navigator={navigator}
@@ -160,7 +157,6 @@ function DefaultFallbackElement() {
 }
 
 export interface DataMemoryRouterProps {
-  basename?: string;
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
@@ -170,7 +166,6 @@ export interface DataMemoryRouterProps {
 }
 
 export function DataMemoryRouter({
-  basename,
   children,
   initialEntries,
   initialIndex,
@@ -179,13 +174,11 @@ export function DataMemoryRouter({
   todo_bikeshed_routes,
 }: DataMemoryRouterProps): React.ReactElement {
   return useRenderDataRouter({
-    basename,
     children,
     fallbackElement,
     todo_bikeshed_routes,
     createRouter: (routes) =>
       createMemoryRouter({
-        basename,
         initialEntries,
         initialIndex,
         routes,
