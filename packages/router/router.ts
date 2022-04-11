@@ -138,6 +138,7 @@ export type TransitionStates = {
     type: "idle";
     location: undefined;
     formMethod: undefined;
+    formAction: undefined;
     formEncType: undefined;
     formData: undefined;
   };
@@ -146,6 +147,7 @@ export type TransitionStates = {
     type: "normalLoad";
     location: Location;
     formMethod: undefined;
+    formAction: undefined;
     formEncType: undefined;
     formData: undefined;
   };
@@ -154,6 +156,7 @@ export type TransitionStates = {
     type: "normalRedirect";
     location: Location;
     formMethod: undefined;
+    formAction: undefined;
     formEncType: undefined;
     formData: undefined;
   };
@@ -162,6 +165,7 @@ export type TransitionStates = {
     type: "loaderSubmission";
     location: Location;
     formMethod: LoaderFormMethod;
+    formAction: string;
     formEncType: "application/x-www-form-urlencoded";
     formData: FormData;
   };
@@ -170,6 +174,7 @@ export type TransitionStates = {
     type: "submissionRedirect";
     location: Location;
     formMethod: FormMethod;
+    formAction: string;
     formEncType: FormEncType;
     formData: FormData;
   };
@@ -178,6 +183,7 @@ export type TransitionStates = {
     type: "actionSubmission";
     location: Location;
     formMethod: ActionFormMethod;
+    formAction: string;
     formEncType: FormEncType;
     formData: FormData;
   };
@@ -186,6 +192,7 @@ export type TransitionStates = {
     type: "actionReload";
     location: Location;
     formMethod: ActionFormMethod;
+    formAction: string;
     formEncType: FormEncType;
     formData: FormData;
   };
@@ -200,6 +207,7 @@ type FetcherStates<TData = any> = {
     state: "idle";
     type: "init";
     formMethod: undefined;
+    formAction: undefined;
     formEncType: undefined;
     formData: undefined;
     data: undefined;
@@ -208,6 +216,7 @@ type FetcherStates<TData = any> = {
     state: "loading";
     type: "normalLoad";
     formMethod: undefined;
+    formAction: undefined;
     formEncType: undefined;
     formData: undefined;
     data: TData | undefined;
@@ -216,6 +225,7 @@ type FetcherStates<TData = any> = {
     state: "submitting";
     type: "loaderSubmission";
     formMethod: FormMethod;
+    formAction: string;
     formEncType: "application/x-www-form-urlencoded";
     formData: FormData;
     data: TData | undefined;
@@ -224,6 +234,7 @@ type FetcherStates<TData = any> = {
     state: "submitting";
     type: "actionSubmission";
     formMethod: ActionFormMethod;
+    formAction: string;
     formEncType: FormEncType;
     formData: FormData;
     data: undefined;
@@ -232,6 +243,7 @@ type FetcherStates<TData = any> = {
     state: "loading";
     type: "actionReload";
     formMethod: ActionFormMethod;
+    formAction: string;
     formEncType: FormEncType;
     formData: FormData;
     data: TData;
@@ -240,6 +252,7 @@ type FetcherStates<TData = any> = {
     state: "loading";
     type: "actionRedirect";
     formMethod: ActionFormMethod;
+    formAction: string;
     formEncType: FormEncType;
     formData: FormData;
     data: undefined;
@@ -248,6 +261,7 @@ type FetcherStates<TData = any> = {
     state: "idle";
     type: "done";
     formMethod: undefined;
+    formAction: undefined;
     formEncType: undefined;
     formData: undefined;
     data: TData;
@@ -324,6 +338,7 @@ export const IDLE_TRANSITION: TransitionStates["Idle"] = {
   location: undefined,
   type: "idle",
   formMethod: undefined,
+  formAction: undefined,
   formEncType: undefined,
   formData: undefined,
 };
@@ -333,6 +348,7 @@ export const IDLE_FETCHER: FetcherStates["Idle"] = {
   type: "init",
   data: undefined,
   formMethod: undefined,
+  formAction: undefined,
   formEncType: undefined,
   formData: undefined,
 };
@@ -501,6 +517,7 @@ export function createRouter(init: RouterInit) {
       return await startNavigation(historyAction, location, {
         submission: {
           formMethod: opts.formMethod || "get",
+          formAction: createHref(location),
           formEncType: opts?.formEncType || "application/x-www-form-urlencoded",
           formData: opts.formData,
         },
@@ -644,12 +661,13 @@ export function createRouter(init: RouterInit) {
     }
 
     // Put us in a submitting state
-    let { formMethod, formEncType, formData } = submission;
+    let { formMethod, formAction, formEncType, formData } = submission;
     let transition: TransitionStates["SubmittingAction"] = {
       state: "submitting",
       type: "actionSubmission",
       location,
       formMethod,
+      formAction,
       formEncType,
       formData,
     };
@@ -697,12 +715,13 @@ export function createRouter(init: RouterInit) {
     let redirect = findRedirect([result]);
     if (redirect) {
       let redirectLocation = createLocation(state.location, redirect.location);
-      let { formMethod, formEncType, formData } = submission;
+      let { formMethod, formAction, formEncType, formData } = submission;
       let redirectTransition: TransitionStates["SubmissionRedirect"] = {
         state: "loading",
         type: "submissionRedirect",
         location: redirectLocation,
         formMethod,
+        formAction,
         formEncType,
         formData,
       };
@@ -843,6 +862,7 @@ export function createRouter(init: RouterInit) {
     if (isSubmissionNavigation(opts)) {
       let submission: Submission = {
         formMethod: opts.formMethod || "get",
+        formAction: href,
         formEncType: opts.formEncType || "application/x-www-form-urlencoded",
         formData: opts.formData,
       };
@@ -862,6 +882,7 @@ export function createRouter(init: RouterInit) {
         state: "loading",
         type: "normalLoad",
         formMethod: undefined,
+        formAction: undefined,
         formEncType: undefined,
         formData: undefined,
         data: state.fetchers.get(key)?.data || undefined,
@@ -997,6 +1018,7 @@ export function createRouter(init: RouterInit) {
       type: "done",
       data: actionResult.data,
       formMethod: undefined,
+      formAction: undefined,
       formEncType: undefined,
       formData: undefined,
     };
@@ -1082,6 +1104,7 @@ export function createRouter(init: RouterInit) {
       type: "done",
       data: result.data,
       formMethod: undefined,
+      formAction: undefined,
       formEncType: undefined,
       formData: undefined,
     };
@@ -1126,6 +1149,7 @@ export function createRouter(init: RouterInit) {
         type: "done",
         data: fetcher.data,
         formMethod: undefined,
+        formAction: undefined,
         formEncType: undefined,
         formData: undefined,
       };
@@ -1223,13 +1247,14 @@ function getLoadingTransition(
   submission?: Submission
 ): Transition {
   if (submission) {
-    let { formMethod, formEncType, formData } = submission;
+    let { formMethod, formAction, formEncType, formData } = submission;
     if (formMethod === "get") {
       return {
         state: "submitting",
         type: "loaderSubmission",
         location,
         formMethod,
+        formAction,
         formEncType,
         formData,
       } as TransitionStates["SubmittingLoader"];
@@ -1242,6 +1267,7 @@ function getLoadingTransition(
         type: "actionReload",
         location,
         formMethod,
+        formAction,
         formEncType,
         formData,
       } as TransitionStates["LoadingAction"];
@@ -1253,6 +1279,7 @@ function getLoadingTransition(
     type: "normalLoad",
     location,
     formMethod: undefined,
+    formAction: undefined,
     formEncType: undefined,
     formData: undefined,
   } as TransitionStates["Loading"];
@@ -1267,12 +1294,13 @@ function getLoaderRedirect(
     state.transition.type === "loaderSubmission" ||
     state.transition.type === "actionReload"
   ) {
-    let { formMethod, formEncType, formData } = state.transition;
+    let { formMethod, formAction, formEncType, formData } = state.transition;
     let transition: TransitionStates["SubmissionRedirect"] = {
       state: "loading",
       type: "submissionRedirect",
       location: redirectLocation,
       formMethod,
+      formAction,
       formEncType,
       formData,
     };
@@ -1283,6 +1311,7 @@ function getLoaderRedirect(
       type: "normalRedirect",
       location: redirectLocation,
       formMethod: undefined,
+      formAction: undefined,
       formEncType: undefined,
       formData: undefined,
     };
@@ -1409,7 +1438,7 @@ async function callLoaderOrAction(
       request:
         typeof location === "string"
           ? new Request(location)
-          : new Request(location.pathname + location.search),
+          : new Request(createHref(location)),
       signal,
       ...(submission || {}),
     });

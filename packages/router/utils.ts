@@ -11,6 +11,7 @@ export type FormEncType = "application/x-www-form-urlencoded";
  */
 export interface Submission {
   formMethod: FormMethod;
+  formAction: string;
   formEncType: FormEncType;
   formData: FormData;
 }

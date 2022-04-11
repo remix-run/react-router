@@ -3322,6 +3322,37 @@ describe("a router", () => {
         request: new Request("/tasks"),
         signal: expect.any(AbortSignal),
         formMethod: "post",
+        formAction: "/tasks",
+        formEncType: "application/x-www-form-urlencoded",
+        formData,
+      });
+
+      t.cleanup();
+    });
+
+    it("sends proper arguments to actions (using query string)", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+          },
+        },
+      });
+
+      let formData = createFormData({ query: "params" });
+
+      let nav = await t.navigate("/tasks?foo=bar", {
+        formMethod: "post",
+        formData,
+      });
+      expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
+        params: {},
+        request: new Request("/tasks?foo=bar"),
+        signal: expect.any(AbortSignal),
+        formMethod: "post",
+        formAction: "/tasks?foo=bar",
         formEncType: "application/x-www-form-urlencoded",
         formData,
       });
