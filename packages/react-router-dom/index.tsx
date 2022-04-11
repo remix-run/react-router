@@ -40,6 +40,7 @@ import {
   UNSAFE_useRenderDataRouter,
   UNSAFE_RouteContext,
   UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
 } from "react-router";
 import type { To } from "react-router";
 import type {
@@ -870,9 +871,9 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
  * routes that need to provide pending/optimistic UI regarding the fetch.
  */
 export function useFetchers(): Fetcher[] {
-  let router = React.useContext(UNSAFE_DataRouterContext);
-  invariant(router, `useFetcher must be used within a DataRouter`);
-  return [...router.state.fetchers.values()];
+  let state = React.useContext(UNSAFE_DataRouterStateContext);
+  invariant(state, `useFetchers must be used within a DataRouter`);
+  return [...state.fetchers.values()];
 }
 //#endregion
 
