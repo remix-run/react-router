@@ -139,7 +139,7 @@ export async function build(
     onBuildFailure: (failure: compiler.BuildError) => {
       compiler.formatBuildFailure(failure);
       throw Error();
-    }
+    },
   });
 
   log(`Built in ${prettyMs(Date.now() - start)}`);
