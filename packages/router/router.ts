@@ -1398,8 +1398,12 @@ function shouldRunLoader(
   // Let routes control only when it's a data reload
   if (isReload && match.route.shouldReload) {
     let { formData } = state.transition;
+    let base =
+      typeof window !== "undefined" && typeof window.location !== "undefined"
+        ? window.location.origin
+        : "unknown://unknown";
     return match.route.shouldReload?.({
-      url: createHref(location),
+      url: new URL(createHref(location), base),
       ...(formData ? { formData } : {}),
     });
   }
