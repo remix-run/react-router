@@ -1,3 +1,5 @@
+import { test, expect } from "@playwright/test";
+
 import {
   css,
   js,
@@ -5,6 +7,7 @@ import {
   createAppFixture,
 } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
 const fakeGists = [
   {
@@ -23,10 +26,11 @@ const fakeGists = [
   },
 ];
 
-describe("route module link export", () => {
+test.describe("route module link export", () => {
   let fixture: Fixture;
-  let app: AppFixture;
-  beforeAll(async () => {
+  let appFixture: AppFixture;
+
+  test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
         "app/favicon.ico": js``,
@@ -427,22 +431,25 @@ describe("route module link export", () => {
         `,
       },
     });
-    app = await createAppFixture(fixture);
+    appFixture = await createAppFixture(fixture);
   });
 
-  afterAll(async () => {
-    await app.close();
+  test.afterAll(async () => {
+    await appFixture.close();
   });
 
-  it("waits for new styles to load before transitioning", async () => {
+  test("waits for new styles to load before transitioning", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
 
     let cssResponses = app.collectResponses((url) =>
       url.pathname.endsWith(".css")
     );
 
-    await app.page.click('a[href="/gists"]');
-    await app.page.waitForSelector('[data-test-id="/gists/index"]');
+    await page.click('a[href="/gists"]');
+    await page.waitForSelector('[data-test-id="/gists/index"]');
 
     let stylesheetResponses = cssResponses.filter((res) => {
       // ignore prefetches
@@ -452,47 +459,18 @@ describe("route module link export", () => {
     expect(stylesheetResponses.length).toEqual(1);
   });
 
-  it("adds links to the document", async () => {
-    let restoreJavaScript = await app.disableJavaScript();
-    let responses = app.collectResponses((url) =>
-      url.pathname.endsWith(".css")
-    );
+  test.describe("no js", () => {
+    test.use({ javaScriptEnabled: false });
 
-    await app.goto("/links");
-    await app.page.waitForSelector('[data-test-id="/links"]');
-    expect(responses.length).toEqual(4);
+    test("adds links to the document", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      let responses = app.collectResponses((url) =>
+        url.pathname.endsWith(".css")
+      );
 
-    await restoreJavaScript();
-  });
-
-  it("preloads assets for other pages and serves from browser cache on navigation", async () => {
-    await app.goto("/links", true);
-    let jsResponses = app.collectResponses((url) =>
-      url.pathname.endsWith(".js")
-    );
-
-    await app.page.click('a[href="/gists/ryanflorence"]');
-    await app.page.waitForSelector('[data-test-id="/gists/$username"]');
-
-    expect(jsResponses.every((res) => res.fromCache())).toBe(true);
-  });
-
-  it("preloads data for other pages and serves from browser cache on navigation", async () => {
-    let dataResponses = app.collectDataResponses();
-    await app.goto("/links", true);
-
-    expect(dataResponses.length).toBe(2);
-    let [prefetchGists, prefetchUser] = dataResponses;
-    expect(prefetchGists.request().resourceType()).toBe("other");
-    expect(prefetchUser.request().resourceType()).toBe("other");
-
-    await app.page.click('a[href="/gists/mjackson"]');
-    await app.page.waitForSelector('[data-test-id="/gists/$username"]');
-
-    expect(dataResponses.length).toBe(4);
-    let [, , gists, username] = dataResponses;
-    expect(gists.request().resourceType()).toBe("fetch");
-    expect(gists.fromCache()).toBe(true);
-    expect(username.fromCache()).toBe(true);
+      await app.goto("/links");
+      await page.waitForSelector('[data-test-id="/links"]');
+      expect(responses.length).toEqual(4);
+    });
   });
 });

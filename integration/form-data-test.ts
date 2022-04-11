@@ -1,9 +1,11 @@
+import { test, expect } from "@playwright/test";
+
 import { createFixture, js } from "./helpers/create-fixture";
 import type { Fixture } from "./helpers/create-fixture";
 
 let fixture: Fixture;
 
-beforeAll(async () => {
+test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/index.jsx": js`
@@ -22,7 +24,7 @@ beforeAll(async () => {
   });
 });
 
-it("invalid content-type does not crash server", async () => {
+test("invalid content-type does not crash server", async () => {
   let response = await fixture.requestDocument("/", {
     method: "post",
     headers: { "content-type": "application/json" },
@@ -30,7 +32,7 @@ it("invalid content-type does not crash server", async () => {
   expect(await response.text()).toMatch("no pizza");
 });
 
-it("invalid urlencoded body does not crash server", async () => {
+test("invalid urlencoded body does not crash server", async () => {
   let response = await fixture.requestDocument("/", {
     method: "post",
     headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -39,7 +41,7 @@ it("invalid urlencoded body does not crash server", async () => {
   expect(await response.text()).toMatch("pizza");
 });
 
-it("invalid multipart content-type does not crash server", async () => {
+test("invalid multipart content-type does not crash server", async () => {
   let response = await fixture.requestDocument("/", {
     method: "post",
     headers: { "content-type": "multipart/form-data" },
@@ -48,7 +50,7 @@ it("invalid multipart content-type does not crash server", async () => {
   expect(await response.text()).toMatch("pizza");
 });
 
-it("invalid multipart body does not crash server", async () => {
+test("invalid multipart body does not crash server", async () => {
   let response = await fixture.requestDocument("/", {
     method: "post",
     headers: { "content-type": "multipart/form-data; boundary=abc" },

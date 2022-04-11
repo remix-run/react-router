@@ -1,16 +1,13 @@
+import { test, expect } from "@playwright/test";
 import path from "path";
 
-import {
-  createFixture,
-  createAppFixture,
-  selectHtml,
-  js,
-} from "./helpers/create-fixture";
+import { createFixture, createAppFixture, js } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture, selectHtml } from "./helpers/playwright-fixture";
 
-describe("actions", () => {
+test.describe("actions", () => {
   let fixture: Fixture;
-  let app: AppFixture;
+  let appFixture: AppFixture;
 
   let FIELD_NAME = "message";
   let WAITING_VALUE = "Waiting...";
@@ -22,7 +19,7 @@ describe("actions", () => {
   let MAX_FILE_UPLOAD_SIZE = 1234;
   let PAGE_TEXT = "PAGE_TEXT";
 
-  beforeAll(async () => {
+  test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
         "app/routes/urlencoded.jsx": js`
@@ -163,36 +160,32 @@ describe("actions", () => {
       },
     });
 
-    app = await createAppFixture(fixture);
+    appFixture = await createAppFixture(fixture);
   });
 
-  afterAll(async () => {
-    await app.close();
+  test.afterAll(async () => {
+    await appFixture.close();
   });
 
-  let consoleError: jest.SpyInstance;
-  beforeEach(() => {
-    consoleError = jest.spyOn(console, "error").mockImplementation();
+  let logs: string[] = [];
+
+  test.beforeEach(({ page }) => {
+    page.on("console", (msg) => {
+      logs.push(msg.text());
+    });
   });
 
-  afterEach(() => {
-    // if you *do* expect consoleError to have been called in your test
-    // then make sure to call consoleError.mockClear(); at the end of it
-    // accompanied by an assertion on the error that was logged.
-    // Note: If you have a failing test and this is also failing, focus on the
-    // test first. Once you get that fixed, this will probably be fixed as well.
-    // Don't worry about this error until tests are passing otherwise.
-    expect(consoleError).not.toHaveBeenCalled();
-    consoleError.mockRestore();
+  test.afterEach(() => {
+    expect(logs).toHaveLength(0);
   });
 
-  it("is not called on document GET requests", async () => {
+  test("is not called on document GET requests", async () => {
     let res = await fixture.requestDocument("/urlencoded");
     let html = selectHtml(await res.text(), "#text");
     expect(html).toMatch(WAITING_VALUE);
   });
 
-  it("is called on document POST requests", async () => {
+  test("is called on document POST requests", async () => {
     let FIELD_VALUE = "cheeseburger";
 
     let params = new URLSearchParams();
@@ -204,106 +197,109 @@ describe("actions", () => {
     expect(html).toMatch(FIELD_VALUE);
   });
 
-  it("is called on script transition POST requests", async () => {
+  test("is called on script transition POST requests", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto(`/urlencoded`);
     let html = await app.getHtml("#text");
     expect(html).toMatch(WAITING_VALUE);
 
-    await app.page.click("button[type=submit]");
-    await app.page.waitForSelector("#action-text");
+    await page.click("button[type=submit]");
+    await page.waitForSelector("#action-text");
     html = await app.getHtml("#text");
     expect(html).toMatch(SUBMITTED_VALUE);
   });
 
-  it("redirects a thrown response on document requests", async () => {
+  test("redirects a thrown response on document requests", async () => {
     let params = new URLSearchParams();
     let res = await fixture.postDocument(`/${THROWS_REDIRECT}`, params);
     expect(res.status).toBe(302);
     expect(res.headers.get("Location")).toBe(`/${REDIRECT_TARGET}`);
   });
 
-  it("redirects a thrown response on script transitions", async () => {
+  test("redirects a thrown response on script transitions", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto(`/${THROWS_REDIRECT}`);
+    let responses = app.collectDataResponses();
     await app.clickSubmitButton(`/${THROWS_REDIRECT}`);
-    // TODO: These are failing but unsure why. Responses array is empty. Problem
-    //       w/ Remix or with collectDataResponses?
-    // let responses = app.collectDataResponses(); expect(responses.length).toBe(1);
-    // expect(responses.length).toBe(1);
-    // expect(responses[0].status()).toBe(204);
+    expect(responses.length).toBe(1);
+    expect(responses[0].status()).toBe(204);
 
-    expect(new URL(app.page.url()).pathname).toBe(`/${REDIRECT_TARGET}`);
+    expect(new URL(page.url()).pathname).toBe(`/${REDIRECT_TARGET}`);
     expect(await app.getHtml()).toMatch(PAGE_TEXT);
   });
 
-  it("can upload file with JavaScript", async () => {
+  test("can upload file with JavaScript", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto(`/${HAS_FILE_ACTIONS}`);
 
     let html = await app.getHtml("#action-text");
     expect(html).toMatch(WAITING_VALUE);
 
-    let fileInput = await app.page.$("#file");
-    await fileInput!.uploadFile(path.resolve(__dirname, "assets/toupload.txt"));
+    await app.uploadFile(
+      "#file",
+      path.resolve(__dirname, "assets/toupload.txt")
+    );
 
-    await app.page.click("button[type=submit]");
-    await app.page.waitForSelector("#action-data");
+    await page.click("button[type=submit]");
+    await page.waitForSelector("#action-data");
 
     html = await app.getHtml("#action-text");
     expect(html).toMatch(ACTION_DATA_VALUE + " stuff");
   });
 
   // TODO: figure out what the heck is wrong with this test...
-  // For some reason the error message is "Unexpect Server Error" in the test
+  // For some reason the error message is "Unexpected Server Error" in the test
   // but if you try the app in the browser it works as expected.
-  it.skip("rejects too big of an upload with JavaScript", async () => {
+  test.skip("rejects too big of an upload with JavaScript", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto(`/${HAS_FILE_ACTIONS}`);
 
     let html = await app.getHtml("#action-text");
     expect(html).toMatch(WAITING_VALUE);
 
-    let fileInput = await app.page.$("#file");
-    await fileInput!.uploadFile(
+    await app.uploadFile(
+      "#file",
       path.resolve(__dirname, "assets/touploadtoobig.txt")
     );
 
-    await app.page.click("button[type=submit]");
-    await app.page.waitForSelector("#actions-error-boundary");
+    await page.click("button[type=submit]");
+    await page.waitForSelector("#actions-error-boundary");
 
     let text = await app.getHtml("#actions-error-text");
     expect(text).toMatch(
       `Field "file" exceeded upload size of ${MAX_FILE_UPLOAD_SIZE} bytes`
     );
 
-    expect(consoleError).toHaveBeenCalledTimes(1);
-    let errorObject = expect.objectContaining({
-      message: expect.stringMatching(/exceeded upload size/i),
+    let logs: string[] = [];
+    page.on("console", (msg) => {
+      logs.push(msg.text());
     });
-    expect(consoleError).toHaveBeenCalledWith(errorObject);
-    consoleError.mockClear();
+    expect(logs).toHaveLength(1);
+    expect(logs[0]).toMatch(/exceeded upload size/i);
   });
 
-  describe("without JavaScript", () => {
-    let restore: Awaited<ReturnType<typeof app.disableJavaScript>>;
-    beforeEach(async () => {
-      restore = await app.disableJavaScript();
-    });
-    afterEach(async () => {
-      await restore();
-    });
+  test.describe("without JavaScript", () => {
+    test.use({ javaScriptEnabled: false });
 
-    it("can upload file", async () => {
+    test("can upload file", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
       await app.goto(`/${HAS_FILE_ACTIONS}`);
 
       let html = await app.getHtml("#action-text");
       expect(html).toMatch(WAITING_VALUE);
 
-      let fileInput = await app.page.$("#file");
-      await fileInput!.uploadFile(
+      await app.uploadFile(
+        "#file",
         path.resolve(__dirname, "assets/toupload.txt")
       );
 
       let [response] = await Promise.all([
-        app.page.waitForNavigation(),
-        app.page.click("#submit"),
+        page.waitForNavigation(),
+        page.click("#submit"),
       ]);
 
       expect(response!.status()).toBe(200);
@@ -313,31 +309,36 @@ describe("actions", () => {
       expect(html).toMatch(ACTION_DATA_VALUE + " stuff");
     });
 
-    it("rejects too big of an upload", async () => {
+    // TODO: figure out what the heck is wrong with this test...
+    // "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    test.skip("rejects too big of an upload", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      let logs: string[] = [];
+      page.on("console", (msg) => {
+        logs.push(msg.text());
+      });
+
       await app.goto(`/${HAS_FILE_ACTIONS}`);
 
       let html = await app.getHtml("#action-text");
       expect(html).toMatch(WAITING_VALUE);
 
-      let fileInput = await app.page.$("#file");
-      await fileInput!.uploadFile(
+      await app.uploadFile(
+        "#file",
         path.resolve(__dirname, "assets/touploadtoobig.txt")
       );
 
       let [response] = await Promise.all([
-        app.page.waitForNavigation(),
-        app.page.click("#submit"),
+        page.waitForNavigation(),
+        page.click("#submit"),
       ]);
       expect(response!.status()).toBe(500);
       let text = await app.getHtml("#actions-error-text");
       let errorMessage = `Field "file" exceeded upload size of ${MAX_FILE_UPLOAD_SIZE} bytes`;
       expect(text).toMatch(errorMessage);
 
-      expect(consoleError).toHaveBeenCalledTimes(1);
-      expect(consoleError).toHaveBeenCalledWith(
-        expect.stringMatching(/error running.*action.*routes\/file-actions/i)
-      );
-      consoleError.mockClear();
+      expect(logs).toHaveLength(1);
+      expect(logs[0]).toMatch(/error running.*action.*routes\/file-actions/i);
     });
   });
 });

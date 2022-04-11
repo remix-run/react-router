@@ -1,11 +1,14 @@
+import { test } from "@playwright/test";
+
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 import type { AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
-describe("pathless layout routes", () => {
-  let app: AppFixture;
+test.describe("pathless layout routes", () => {
+  let appFixture: AppFixture;
 
-  beforeAll(async () => {
-    app = await createAppFixture(
+  test.beforeAll(async () => {
+    appFixture = await createAppFixture(
       await createFixture({
         files: {
           "app/routes/__layout.jsx": js`
@@ -32,25 +35,28 @@ describe("pathless layout routes", () => {
     );
   });
 
-  afterAll(async () => {
-    await app?.close();
+  test.afterAll(async () => {
+    await appFixture.close();
   });
 
-  it("should render pathless index route", async () => {
+  test("should render pathless index route", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
-    await app.page.waitForSelector("[data-testid='layout-route']");
-    await app.page.waitForSelector("[data-testid='layout-index']");
+    await page.waitForSelector("[data-testid='layout-route']");
+    await page.waitForSelector("[data-testid='layout-index']");
   });
 
-  it("should render pathless sub route", async () => {
+  test("should render pathless sub route", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/subroute");
-    await app.page.waitForSelector("[data-testid='layout-route']");
-    await app.page.waitForSelector("[data-testid='layout-subroute']");
+    await page.waitForSelector("[data-testid='layout-route']");
+    await page.waitForSelector("[data-testid='layout-subroute']");
   });
 
-  it("should render pathless index as a sub route", async () => {
+  test("should render pathless index as a sub route", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/sandwiches");
-    await app.page.waitForSelector("[data-testid='sandwiches-pathless-route']");
-    await app.page.waitForSelector("[data-testid='sandwiches-pathless-index']");
+    await page.waitForSelector("[data-testid='sandwiches-pathless-route']");
+    await page.waitForSelector("[data-testid='sandwiches-pathless-index']");
   });
 });

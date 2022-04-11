@@ -1,8 +1,11 @@
-import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
+import { test, expect } from "@playwright/test";
+
+import { PlaywrightFixture } from "./helpers/playwright-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 
 let fixture: Fixture;
-let app: AppFixture;
+let appFixture: AppFixture;
 
 ////////////////////////////////////////////////////////////////////////////////
 // 💿 👋 Hola! It's me, Dora the Remix Disc, I'm here to help you write a great
@@ -29,7 +32,7 @@ let app: AppFixture;
 //    ```
 ////////////////////////////////////////////////////////////////////////////////
 
-beforeAll(async () => {
+test.beforeAll(async () => {
   fixture = await createFixture({
     ////////////////////////////////////////////////////////////////////////////
     // 💿 Next, add files to this object, just like files in a real app,
@@ -64,17 +67,18 @@ beforeAll(async () => {
   });
 
   // This creates an interactive app using puppeteer.
-  app = await createAppFixture(fixture);
+  appFixture = await createAppFixture(fixture);
 });
 
-afterAll(async () => app.close());
+test.afterAll(async () => appFixture.close());
 
 ////////////////////////////////////////////////////////////////////////////////
 // 💿 Almost done, now write your failing test case(s) down here Make sure to
 // add a good description for what you expect Remix to do 👇🏽
 ////////////////////////////////////////////////////////////////////////////////
 
-it("[description of what you expect it to do]", async () => {
+test("[description of what you expect it to do]", async ({ page }) => {
+  let app = new PlaywrightFixture(appFixture, page);
   // You can test any request your app might get using `fixture`.
   let response = await fixture.requestDocument("/");
   expect(await response.text()).toMatch("pizza");

@@ -1,7 +1,9 @@
+import { test, expect } from "@playwright/test";
+
 import { createFixture, js } from "./helpers/create-fixture";
 import type { Fixture } from "./helpers/create-fixture";
 
-describe("rendering", () => {
+test.describe("rendering", () => {
   let fixture: Fixture;
 
   let ROOT_$ = "FLAT";
@@ -12,7 +14,7 @@ describe("rendering", () => {
   let NESTED_INDEX = "NESTED_INDEX";
   let PARENTLESS_$ = "PARENTLESS_$";
 
-  beforeAll(async () => {
+  test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
@@ -95,17 +97,17 @@ describe("rendering", () => {
     expect(await res.text()).toMatch(FLAT_$);
   });
 
-  it("prioritizes index over root splat", async () => {
+  test("prioritizes index over root splat", async () => {
     let res = await fixture.requestDocument("/");
     expect(await res.text()).toMatch(ROOT_INDEX);
   });
 
-  it("matches root splat", async () => {
+  test("matches root splat", async () => {
     let res = await fixture.requestDocument("/twisted/sugar");
     expect(await res.text()).toMatch(ROOT_$);
   });
 
-  it("prioritizes index over splat for parent route match", async () => {
+  test("prioritizes index over splat for parent route match", async () => {
     let res = await fixture.requestDocument("/nested");
     expect(await res.text()).toMatch(NESTED_INDEX);
   });

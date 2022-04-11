@@ -1,14 +1,17 @@
+import { test, expect } from "@playwright/test";
+
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
-describe("useFetcher", () => {
+test.describe("useFetcher", () => {
   let fixture: Fixture;
-  let app: AppFixture;
+  let appFixture: AppFixture;
 
   let CHEESESTEAK = "CHEESESTEAK";
   let LUNCH = "LUNCH";
 
-  beforeAll(async () => {
+  test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
         "app/routes/resource-route-action-only.ts": js`
@@ -80,50 +83,61 @@ describe("useFetcher", () => {
       },
     });
 
-    app = await createAppFixture(fixture);
+    appFixture = await createAppFixture(fixture);
   });
 
-  afterAll(async () => {
-    await app.close();
+  test.afterAll(async () => {
+    await appFixture.close();
   });
 
-  test("Form can hit a loader", async () => {
-    let enableJavaScript = await app.disableJavaScript();
-    await app.goto("/");
-    await app.clickSubmitButton("/resource-route", {
-      wait: false,
-      method: "get",
+  test.describe("No JavaScript", () => {
+    test.use({ javaScriptEnabled: false });
+
+    test("Form can hit a loader", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+
+      await Promise.all([
+        page.waitForNavigation(),
+        app.clickSubmitButton("/resource-route", {
+          wait: false,
+          method: "get",
+        }),
+      ]);
+
+      expect(await app.getHtml("pre")).toMatch(LUNCH);
     });
-    await app.page.waitForNavigation();
-    expect(await app.getHtml("pre")).toMatch(LUNCH);
-    await enableJavaScript();
-  });
 
-  test("Form can hit an action", async () => {
-    let enableJavaScript = await app.disableJavaScript();
-    await app.goto("/");
-    await app.clickSubmitButton("/resource-route", {
-      wait: false,
-      method: "post",
+    test("Form can hit an action", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: "load" }),
+        app.clickSubmitButton("/resource-route", {
+          wait: false,
+          method: "post",
+        }),
+      ]);
+      expect(await app.getHtml("pre")).toMatch(CHEESESTEAK);
     });
-    await app.page.waitForNavigation();
-    expect(await app.getHtml("pre")).toMatch(CHEESESTEAK);
-    await enableJavaScript();
   });
 
-  test("load can hit a loader", async () => {
+  test("load can hit a loader", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickElement("#fetcher-load");
     expect(await app.getHtml("pre")).toMatch(LUNCH);
   });
 
-  test("submit can hit an action", async () => {
+  test("submit can hit an action", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickElement("#fetcher-submit");
     expect(await app.getHtml("pre")).toMatch(CHEESESTEAK);
   });
 
-  test("submit can hit an action only route", async () => {
+  test("submit can hit an action only route", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/fetcher-action-only-call");
     await app.clickElement("#fetcher-submit");
     expect(await app.getHtml("pre")).toMatch(CHEESESTEAK);

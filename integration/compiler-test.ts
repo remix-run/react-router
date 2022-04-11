@@ -1,11 +1,14 @@
+import { test, expect } from "@playwright/test";
+
 import { createFixture, createAppFixture, js } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
-describe("compiler", () => {
+test.describe("compiler", () => {
   let fixture: Fixture;
-  let app: AppFixture;
+  let appFixture: AppFixture;
 
-  beforeAll(async () => {
+  test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
         "app/fake.server.js": js`
@@ -112,40 +115,39 @@ describe("compiler", () => {
       },
     });
 
-    app = await createAppFixture(fixture);
+    appFixture = await createAppFixture(fixture);
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
+  test.afterAll(async () => appFixture.close());
 
-  it("removes server code with `*.server` files", async () => {
+  test("removes server code with `*.server` files", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     let res = await app.goto("/", true);
     expect(res.status()).toBe(200); // server rendered fine
 
     // rendered the page instead of the error boundary
-    expect(await app.getHtml("#index")).toMatchInlineSnapshot(
-      `"<div id=\\"index\\">true</div>"`
-    );
+    expect(await app.getHtml("#index")).toBe('<div id="index">true</div>');
   });
-  it("removes server code with `*.client` files", async () => {
-    await app.disableJavaScript();
+
+  test("removes server code with `*.client` files", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     let res = await app.goto("/", true);
     expect(res.status()).toBe(200); // server rendered fine
 
     // rendered the page instead of the error boundary
-    expect(await app.getHtml("#index")).toMatchInlineSnapshot(
-      `"<div id=\\"index\\">true</div>"`
-    );
+    expect(await app.getHtml("#index")).toBe('<div id="index">true</div>');
   });
 
-  it("removes node built-ins from client bundle when used in just loader", async () => {
+  test("removes node built-ins from client bundle when used in just loader", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     let res = await app.goto("/built-ins", true);
     expect(res.status()).toBe(200); // server rendered fine
 
     // rendered the page instead of the error boundary
-    expect(await app.getHtml("#built-ins")).toMatchInlineSnapshot(
-      `"<div id=\\"built-ins\\">test/file.txt</div>"`
+    expect(await app.getHtml("#built-ins")).toBe(
+      '<div id="built-ins">test/file.txt</div>'
     );
 
     let routeModule = await fixture.getBrowserAsset(
@@ -155,13 +157,16 @@ describe("compiler", () => {
     expect(routeModule).not.toMatch(/from\s*"path/);
   });
 
-  it("bundles node built-ins polyfill for client bundle when used in client code", async () => {
+  test("bundles node built-ins polyfill for client bundle when used in client code", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     let res = await app.goto("/built-ins-polyfill", true);
     expect(res.status()).toBe(200); // server rendered fine
 
     // rendered the page instead of the error boundary
-    expect(await app.getHtml("#built-ins-polyfill")).toMatchInlineSnapshot(
-      `"<div id=\\"built-ins-polyfill\\">test/file.txt</div>"`
+    expect(await app.getHtml("#built-ins-polyfill")).toBe(
+      '<div id="built-ins-polyfill">test/file.txt</div>'
     );
 
     let routeModule = await fixture.getBrowserAsset(
@@ -171,30 +176,39 @@ describe("compiler", () => {
     expect(routeModule).not.toMatch(/from\s*"path/);
   });
 
-  it("allows consumption of ESM modules in CJS builds with `serverDependenciesToBundle`", async () => {
+  test("allows consumption of ESM modules in CJS builds with `serverDependenciesToBundle`", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     let res = await app.goto("/esm-only-pkg", true);
     expect(res.status()).toBe(200); // server rendered fine
     // rendered the page instead of the error boundary
-    expect(await app.getHtml("#esm-only-pkg")).toMatchInlineSnapshot(
-      `"<div id=\\"esm-only-pkg\\">esm-only-pkg</div>"`
+    expect(await app.getHtml("#esm-only-pkg")).toBe(
+      '<div id="esm-only-pkg">esm-only-pkg</div>'
     );
   });
 
-  it("allows consumption of ESM modules in CJS builds with `serverDependenciesToBundle` when the package only exports a single file", async () => {
+  test("allows consumption of ESM modules in CJS builds with `serverDependenciesToBundle` when the package only exports a single file", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     let res = await app.goto("/esm-only-single-export", true);
     expect(res.status()).toBe(200); // server rendered fine
     // rendered the page instead of the error boundary
-    expect(await app.getHtml("#esm-only-single-export")).toMatchInlineSnapshot(
-      `"<div id=\\"esm-only-single-export\\">esm-only-single-export</div>"`
+    expect(await app.getHtml("#esm-only-single-export")).toBe(
+      '<div id="esm-only-single-export">esm-only-single-export</div>'
     );
   });
 
-  it("allows consumption of ESM modules with exports in CJS builds with `serverDependenciesToBundle` and `getDependenciesToBundle`", async () => {
+  test("allows consumption of ESM modules with exports in CJS builds with `serverDependenciesToBundle` and `getDependenciesToBundle`", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     let res = await app.goto("/esm-only-exports-pkg", true);
     expect(res.status()).toBe(200); // server rendered fine
     // rendered the page instead of the error boundary
-    expect(await app.getHtml("#esm-only-exports-pkg")).toMatchInlineSnapshot(
-      `"<div id=\\"esm-only-exports-pkg\\">esm-only-exports-pkg</div>"`
+    expect(await app.getHtml("#esm-only-exports-pkg")).toBe(
+      '<div id="esm-only-exports-pkg">esm-only-exports-pkg</div>'
     );
   });
 });

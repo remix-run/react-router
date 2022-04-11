@@ -1,13 +1,16 @@
+import { test, expect } from "@playwright/test";
+
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
-describe("loader", () => {
+test.describe("loader", () => {
   let fixture: Fixture;
 
   let ROOT_DATA = "ROOT_DATA";
   let INDEX_DATA = "INDEX_DATA";
 
-  beforeAll(async () => {
+  test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
@@ -47,7 +50,7 @@ describe("loader", () => {
     });
   });
 
-  it("returns responses for a specific route", async () => {
+  test("returns responses for a specific route", async () => {
     let [root, index] = await Promise.all([
       fixture.requestData("/", "root"),
       fixture.requestData("/", "routes/index"),
@@ -62,13 +65,13 @@ describe("loader", () => {
   });
 });
 
-describe("loader in an app", () => {
-  let app: AppFixture;
+test.describe("loader in an app", () => {
+  let appFixture: AppFixture;
 
   let HOME_PAGE_TEXT = "hello world";
 
-  beforeAll(async () => {
-    app = await createAppFixture(
+  test.beforeAll(async () => {
+    appFixture = await createAppFixture(
       await createFixture({
         files: {
           "app/root.jsx": js`
@@ -84,7 +87,6 @@ describe("loader in an app", () => {
           `,
           "app/routes/redirect.jsx": js`
             import { redirect } from "@remix-run/node";
-      
             export const loader = () => redirect("/");
             export default () => <div>Yo</div>
           `,
@@ -93,11 +95,12 @@ describe("loader in an app", () => {
     );
   });
 
-  afterAll(async () => {
-    await app.close();
+  test.afterAll(async () => {
+    await appFixture.close();
   });
 
-  it("sends a redirect", async () => {
+  test("sends a redirect", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/redirect");
     expect(await app.getHtml()).toMatch(HOME_PAGE_TEXT);
   });

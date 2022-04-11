@@ -1,9 +1,12 @@
+import { test, expect } from "@playwright/test";
+
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
-describe("CatchBoundary", () => {
+test.describe("CatchBoundary", () => {
   let fixture: Fixture;
-  let app: AppFixture;
+  let appFixture: AppFixture;
 
   let ROOT_BOUNDARY_TEXT = "ROOT_TEXT";
   let OWN_BOUNDARY_TEXT = "OWN_BOUNDARY_TEXT";
@@ -17,7 +20,7 @@ describe("CatchBoundary", () => {
 
   let NOT_FOUND_HREF = "/not/found";
 
-  beforeAll(async () => {
+  test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
@@ -182,12 +185,10 @@ describe("CatchBoundary", () => {
       },
     });
 
-    app = await createAppFixture(fixture);
+    appFixture = await createAppFixture(fixture);
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
+  test.afterAll(() => appFixture.close());
 
   test("non-matching urls on document requests", async () => {
     let res = await fixture.requestDocument(NOT_FOUND_HREF);
@@ -195,16 +196,15 @@ describe("CatchBoundary", () => {
     expect(await res.text()).toMatch(ROOT_BOUNDARY_TEXT);
   });
 
-  test("non-matching urls on client transitions", async () => {
+  test("non-matching urls on client transitions", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickLink(NOT_FOUND_HREF, { wait: false });
     expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
   });
 
   test("invalid request methods", async () => {
-    let res = await fixture.requestDocument("/", {
-      method: "OPTIONS",
-    });
+    let res = await fixture.requestDocument("/", { method: "OPTIONS" });
     expect(res.status).toBe(405);
     expect(await res.text()).toMatch(ROOT_BOUNDARY_TEXT);
   });
@@ -216,32 +216,44 @@ describe("CatchBoundary", () => {
     expect(await res.text()).toMatch(OWN_BOUNDARY_TEXT);
   });
 
-  test("own boundary, action, client transition from other route", async () => {
+  test("own boundary, action, client transition from other route", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton(HAS_BOUNDARY_ACTION);
     expect(await app.getHtml()).toMatch(OWN_BOUNDARY_TEXT);
   });
 
-  test("own boundary, action, client transition from itself", async () => {
+  test("own boundary, action, client transition from itself", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto(HAS_BOUNDARY_ACTION);
     await app.clickSubmitButton(HAS_BOUNDARY_ACTION);
     expect(await app.getHtml()).toMatch(OWN_BOUNDARY_TEXT);
   });
 
-  it("bubbles to parent in action document requests", async () => {
+  test("bubbles to parent in action document requests", async () => {
     let params = new URLSearchParams();
     let res = await fixture.postDocument(NO_BOUNDARY_ACTION, params);
     expect(res.status).toBe(401);
     expect(await res.text()).toMatch(ROOT_BOUNDARY_TEXT);
   });
 
-  it("bubbles to parent in action script transitions from other routes", async () => {
+  test("bubbles to parent in action script transitions from other routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton(NO_BOUNDARY_ACTION);
     expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
   });
 
-  it("bubbles to parent in action script transitions from self", async () => {
+  test("bubbles to parent in action script transitions from self", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto(NO_BOUNDARY_ACTION);
     await app.clickSubmitButton(NO_BOUNDARY_ACTION);
     expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
@@ -253,25 +265,29 @@ describe("CatchBoundary", () => {
     expect(await res.text()).toMatch(OWN_BOUNDARY_TEXT);
   });
 
-  test("own boundary, loader, client transition", async () => {
+  test("own boundary, loader, client transition", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickLink(HAS_BOUNDARY_LOADER);
     expect(await app.getHtml()).toMatch(OWN_BOUNDARY_TEXT);
   });
 
-  it("bubbles to parent in loader document requests", async () => {
+  test("bubbles to parent in loader document requests", async () => {
     let res = await fixture.requestDocument(NO_BOUNDARY_LOADER);
     expect(res.status).toBe(401);
     expect(await res.text()).toMatch(ROOT_BOUNDARY_TEXT);
   });
 
-  it("bubbles to parent in action script transitions from other routes", async () => {
+  test("bubbles to parent in loader transitions from other routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickLink(NO_BOUNDARY_LOADER);
     expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
   });
 
-  it("renders root boundary in document POST without action requests", async () => {
+  test("renders root boundary in document POST without action requests", async () => {
     let res = await fixture.requestDocument(NO_BOUNDARY_NO_LOADER_OR_ACTION, {
       method: "post",
     });
@@ -279,13 +295,16 @@ describe("CatchBoundary", () => {
     expect(await res.text()).toMatch(ROOT_BOUNDARY_TEXT);
   });
 
-  it("renders root boundary in action script transitions without action from other routes", async () => {
+  test("renders root boundary in action script transitions without action from other routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton(NO_BOUNDARY_NO_LOADER_OR_ACTION);
     expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
   });
 
-  it("renders own boundary in document POST without action requests", async () => {
+  test("renders own boundary in document POST without action requests", async () => {
     let res = await fixture.requestDocument(HAS_BOUNDARY_NO_LOADER_OR_ACTION, {
       method: "post",
     });
@@ -293,18 +312,28 @@ describe("CatchBoundary", () => {
     expect(await res.text()).toMatch(OWN_BOUNDARY_TEXT);
   });
 
-  it("renders own boundary in action script transitions without action from other routes", async () => {
+  test("renders own boundary in action script transitions without action from other routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton(HAS_BOUNDARY_NO_LOADER_OR_ACTION);
     expect(await app.getHtml()).toMatch(OWN_BOUNDARY_TEXT);
   });
 
-  it("renders own boundary in fetcher action submission without action from other routes", async () => {
+  test("renders own boundary in fetcher action submission without action from other routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/fetcher-boundary");
     await app.clickSubmitButton(NO_BOUNDARY_NO_LOADER_OR_ACTION);
     expect(await app.getHtml()).toMatch(OWN_BOUNDARY_TEXT);
   });
-  it("renders root boundary in fetcher action submission without action from other routes", async () => {
+
+  test("renders root boundary in fetcher action submission without action from other routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/fetcher-no-boundary");
     await app.clickSubmitButton(NO_BOUNDARY_NO_LOADER_OR_ACTION);
     expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);

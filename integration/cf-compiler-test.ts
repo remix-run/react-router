@@ -1,12 +1,13 @@
+import { test, expect } from "@playwright/test";
 import fs from "fs/promises";
 import path from "path";
 
 import { createFixtureProject, js, json } from "./helpers/create-fixture";
 
-describe("cloudflare compiler", () => {
+test.describe("cloudflare compiler", () => {
   let projectDir: string;
 
-  beforeAll(async () => {
+  test.beforeAll(async () => {
     projectDir = await createFixtureProject({
       template: "cf-template",
       files: {
@@ -49,32 +50,36 @@ describe("cloudflare compiler", () => {
             )
           }
         `,
-        "node_modules/worker-pkg/package.json": `{
-          "name": "worker-pkg",
-          "version": "1.0.0",
-          "type": "module",
-          "main": "./default.js",
-          "exports": {
-            "worker": "./worker.js",
-            "default": "./default.js"
+        "node_modules/worker-pkg/package.json": json`
+          {
+            "name": "worker-pkg",
+            "version": "1.0.0",
+            "type": "module",
+            "main": "./default.js",
+            "exports": {
+              "worker": "./worker.js",
+              "default": "./default.js"
+            }
           }
-        }`,
+        `,
         "node_modules/worker-pkg/worker.js": js`
           export default "__WORKER_EXPORTS_SHOULD_BE_IN_BUNDLE__";
         `,
         "node_modules/worker-pkg/default.js": js`
           export default "__DEFAULT_EXPORTS_SHOULD_NOT_BE_IN_BUNDLE__";
         `,
-        "node_modules/browser-pkg/package.json": `{
-          "name": "browser-pkg",
-          "version": "1.0.0",
-          "main": "./node-cjs.js",
-          "module": "./node-esm.mjs",
-          "browser": {
-              "./node-cjs.js": "./browser-cjs.js",
-              "./node-esm.mjs": "./browser-esm.mjs"
+        "node_modules/browser-pkg/package.json": json`
+          {
+            "name": "browser-pkg",
+            "version": "1.0.0",
+            "main": "./node-cjs.js",
+            "module": "./node-esm.mjs",
+            "browser": {
+                "./node-cjs.js": "./browser-cjs.js",
+                "./node-esm.mjs": "./browser-esm.mjs"
+            }
           }
-        }`,
+        `,
         "node_modules/browser-pkg/browser-esm.mjs": js`
           export const content = "browser-pkg/browser-esm.mjs";
         `,
@@ -87,25 +92,29 @@ describe("cloudflare compiler", () => {
         "node_modules/browser-pkg/node-cjs.js": js`
           module.exports = { content: "browser-pkg/node-cjs.js" };
         `,
-        "node_modules/esm-only-pkg/package.json": `{
-          "name": "esm-only-pkg",
-          "version": "1.0.0",
-          "type": "module",
-          "main": "./node-esm.js",
-          "browser": "./browser-esm.js"
-        }`,
+        "node_modules/esm-only-pkg/package.json": json`
+          {
+            "name": "esm-only-pkg",
+            "version": "1.0.0",
+            "type": "module",
+            "main": "./node-esm.js",
+            "browser": "./browser-esm.js"
+          }
+        `,
         "node_modules/esm-only-pkg/browser-esm.js": js`
           export const content = "esm-only-pkg/browser-esm.js";
         `,
         "node_modules/esm-only-pkg/node-esm.js": js`
           export const content = "esm-only-pkg/node-esm.js";
         `,
-        "node_modules/cjs-only-pkg/package.json": `{
-          "name": "cjs-only-pkg",
-          "version": "1.0.0",
-          "main": "./node-cjs.js",
-          "browser": "./browser-cjs.js"
-        }`,
+        "node_modules/cjs-only-pkg/package.json": json`
+          {
+            "name": "cjs-only-pkg",
+            "version": "1.0.0",
+            "main": "./node-cjs.js",
+            "browser": "./browser-cjs.js"
+          }
+        `,
         "node_modules/cjs-only-pkg/browser-cjs.js": js`
           module.exports = { content: "cjs-only-pkg/browser-cjs.js" };
         `,
@@ -116,7 +125,7 @@ describe("cloudflare compiler", () => {
     });
   });
 
-  it("bundles browser entry of 3rd party package correctly", async () => {
+  test("bundles browser entry of 3rd party package correctly", async () => {
     let serverBundle = await fs.readFile(
       path.resolve(projectDir, "build/index.js"),
       "utf8"
@@ -134,7 +143,7 @@ describe("cloudflare compiler", () => {
     expect(serverBundle).not.toMatch("cjs-only-pkg/node-cjs.js");
   });
 
-  it("bundles worker export of 3rd party package", async () => {
+  test("bundles worker export of 3rd party package", async () => {
     let serverBundle = await fs.readFile(
       path.resolve(projectDir, "build/index.js"),
       "utf8"

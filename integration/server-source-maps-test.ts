@@ -1,3 +1,4 @@
+import { test, expect } from "@playwright/test";
 import path from "path";
 import fsp from "fs/promises";
 
@@ -6,7 +7,7 @@ import type { Fixture } from "./helpers/create-fixture";
 
 let fixture: Fixture;
 
-beforeAll(async () => {
+test.beforeAll(async () => {
   fixture = await createFixture({
     sourcemap: true,
     files: {
@@ -35,7 +36,7 @@ beforeAll(async () => {
   });
 });
 
-it("re-writes stack traces to point to the correct file", async () => {
+test("re-writes stack traces to point to the correct file", async () => {
   let buildIndex = await fsp.readFile(
     path.join(fixture.projectDir, "build/index.js"),
     "utf-8"

@@ -1,11 +1,14 @@
+import { test, expect } from "@playwright/test";
+
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 import type { AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
-describe("loader in an app", () => {
-  let app: AppFixture;
+test.describe("loader in an app", () => {
+  let appFixture: AppFixture;
 
-  beforeAll(async () => {
-    app = await createAppFixture(
+  test.beforeAll(async () => {
+    appFixture = await createAppFixture(
       await createFixture({
         files: {
           "app/routes/index.jsx": js`
@@ -49,42 +52,38 @@ describe("loader in an app", () => {
     );
   });
 
-  afterAll(async () => {
-    await app?.close();
+  test.afterAll(async () => {
+    await appFixture.close();
   });
 
-  describe("with JavaScript", () => {
+  test.describe("with JavaScript", () => {
     runTests();
   });
 
-  describe("without JavaScript", () => {
-    let restore: Awaited<ReturnType<typeof app.disableJavaScript>>;
-    beforeEach(async () => {
-      restore = await app.disableJavaScript();
-    });
-    afterEach(async () => {
-      await restore();
-    });
-
+  test.describe("without JavaScript", () => {
+    test.use({ javaScriptEnabled: false });
     runTests();
   });
 
   function runTests() {
-    it("should redirect to redirected", async () => {
+    test("should redirect to redirected", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
-      await app.page.click("a[href='/redirect']");
-      await app.page.waitForSelector("[data-testid='redirected']");
+      await page.click("a[href='/redirect']");
+      await page.waitForSelector("[data-testid='redirected']");
     });
 
-    it("should handle post to destination", async () => {
+    test("should handle post to destination", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
-      await app.page.click("button[type='submit']");
-      await app.page.waitForSelector("[data-testid='redirect-destination']");
+      await page.click("button[type='submit']");
+      await page.waitForSelector("[data-testid='redirect-destination']");
     });
 
-    it("should handle reloadDocument to resource route", async () => {
+    test("should handle reloadDocument to resource route", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/data.json");
-      expect(await app.page.content()).toContain('{"hello":"world"}');
+      expect(await page.content()).toContain('{"hello":"world"}');
     });
   }
 });

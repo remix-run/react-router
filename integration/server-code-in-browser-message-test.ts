@@ -1,17 +1,27 @@
-import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
+import { test, expect } from "@playwright/test";
+
+import {
+  createAppFixture,
+  createFixture,
+  js,
+  json,
+} from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
 let fixture: Fixture;
-let app: AppFixture;
+let appFixture: AppFixture;
 
-beforeAll(async () => {
+test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
-      "node_modules/has-side-effects/package.json": `{
-        "name": "has-side-effects",
-        "version": "1.0.0",
-        "main": "index.js"
-      }`,
+      "node_modules/has-side-effects/package.json": json`
+        {
+          "name": "has-side-effects",
+          "version": "1.0.0",
+          "main": "index.js"
+        }
+      `,
       "node_modules/has-side-effects/index.js": js`
         let message;
         (() => { message = process.env.___SOMETHING___ || "hello, world"; })();
@@ -38,12 +48,13 @@ beforeAll(async () => {
     },
   });
 
-  app = await createAppFixture(fixture);
+  appFixture = await createAppFixture(fixture);
 });
 
-afterAll(async () => app.close());
+test.afterAll(() => appFixture.close());
 
-it("should log relevant error message", async () => {
+test.skip("should log relevant error message", async ({ page }) => {
+  let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/");
   expect(await app.getHtml()).toMatch(
     "https://remix.run/pages/gotchas#server-code-in-client-bundles"
