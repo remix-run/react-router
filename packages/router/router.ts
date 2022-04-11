@@ -817,12 +817,7 @@ export function createRouter(init: RouterInit) {
   }
 
   function getFetcher<TData = any>(key: string): Fetcher<TData> {
-    let existingFetcher = state.fetchers.get(key);
-    if (existingFetcher) {
-      return existingFetcher;
-    }
-    state.fetchers.set(key, IDLE_FETCHER);
-    return IDLE_FETCHER;
+    return state.fetchers.get(key) || IDLE_FETCHER;
   }
 
   async function fetch(key: string, href: string, opts?: NavigateOptions) {

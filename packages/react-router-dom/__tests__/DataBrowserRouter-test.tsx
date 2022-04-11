@@ -25,6 +25,8 @@ import {
   Form,
   Link,
   useSubmit,
+  useFetcher,
+  useFetchers,
 } from "../index";
 
 testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
@@ -647,6 +649,755 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           </p>
         </div>"
       `);
+    });
+
+    describe("useFetcher(s)", () => {
+      it("handles fetcher.load and fetcher.submit", async () => {
+        let count = 0;
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/")}
+            hydrationData={{ loaderData: { "0": null } }}
+          >
+            <Route
+              path="/"
+              element={<Comp />}
+              action={async ({ formData }) => {
+                count = count + parseInt(String(formData.get("increment")), 10);
+                return { count };
+              }}
+              loader={async ({ request }) => {
+                // Need to add a domain on here in node unit testing so it's a
+                // valid URL. When running in the browser the domain is
+                // automatically added in new Request()
+                let increment =
+                  new URL(`https://remix.test${request.url}`).searchParams.get(
+                    "increment"
+                  ) || "1";
+                count = count + parseInt(increment, 10);
+                return { count };
+              }}
+            />
+          </TestDataRouter>
+        );
+
+        function Comp() {
+          let fetcher = useFetcher();
+          let fd = new FormData();
+          fd.append("increment", "10");
+          return (
+            <>
+              <p id="output">
+                {fetcher.state}
+                {fetcher.type}
+                {fetcher.data ? JSON.stringify(fetcher.data) : null}
+              </p>
+              <button onClick={() => fetcher.load("/")}>load 1</button>
+              <button onClick={() => fetcher.load("/?increment=5")}>
+                load 5
+              </button>
+              <button onClick={() => fetcher.submit(fd, { method: "post" })}>
+                submit 10
+              </button>
+            </>
+          );
+        }
+
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            init
+          </p>"
+        `);
+
+        fireEvent.click(screen.getByText("load 1"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            loading
+            normalLoad
+          </p>"
+        `);
+
+        await waitFor(() => screen.getByText(/idle/));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            done
+            {\\"count\\":1}
+          </p>"
+        `);
+
+        fireEvent.click(screen.getByText("load 5"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            loading
+            normalLoad
+            {\\"count\\":1}
+          </p>"
+        `);
+
+        await waitFor(() => screen.getByText(/idle/));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            done
+            {\\"count\\":6}
+          </p>"
+        `);
+
+        fireEvent.click(screen.getByText("submit 10"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            submitting
+            actionSubmission
+            {\\"count\\":6}
+          </p>"
+        `);
+
+        await waitFor(() => screen.getByText(/idle/));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            done
+            {\\"count\\":16}
+          </p>"
+        `);
+      });
+
+      it("handles fetcher.load errors", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/")}
+            hydrationData={{ loaderData: { "0": null } }}
+          >
+            <Route
+              path="/"
+              element={<Comp />}
+              exceptionElement={<Exception />}
+              loader={async () => {
+                throw new Error("Kaboom!");
+              }}
+            />
+          </TestDataRouter>
+        );
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p>
+                {fetcher.state}
+                {fetcher.type}
+                {fetcher.data ? JSON.stringify(fetcher.data) : null}
+              </p>
+              <button onClick={() => fetcher.load("/")}>load</button>
+            </>
+          );
+        }
+
+        function Exception() {
+          let error = useRouteException();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              idle
+              init
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        fireEvent.click(screen.getByText("load"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              loading
+              normalLoad
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        await waitFor(() => screen.getByText("Kaboom!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom!
+            </p>
+          </div>"
+        `);
+      });
+
+      it("handles fetcher.submit errors", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/")}
+            hydrationData={{ loaderData: { "0": null } }}
+          >
+            <Route
+              path="/"
+              element={<Comp />}
+              exceptionElement={<Exception />}
+              action={async () => {
+                throw new Error("Kaboom!");
+              }}
+            />
+          </TestDataRouter>
+        );
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p>
+                {fetcher.state}
+                {fetcher.type}
+                {fetcher.data ? JSON.stringify(fetcher.data) : null}
+              </p>
+              <button
+                onClick={() =>
+                  fetcher.submit(new FormData(), { method: "post" })
+                }
+              >
+                submit
+              </button>
+            </>
+          );
+        }
+
+        function Exception() {
+          let error = useRouteException();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              idle
+              init
+            </p>
+            <button>
+              submit
+            </button>
+          </div>"
+        `);
+
+        fireEvent.click(screen.getByText("submit"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              submitting
+              actionSubmission
+            </p>
+            <button>
+              submit
+            </button>
+          </div>"
+        `);
+
+        await waitFor(() => screen.getByText("Kaboom!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom!
+            </p>
+          </div>"
+        `);
+      });
+
+      it("handles fetcher.Form", async () => {
+        let count = 0;
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/")}
+            hydrationData={{ loaderData: { "0": null } }}
+          >
+            <Route
+              path="/"
+              element={<Comp />}
+              action={async ({ formData }) => {
+                count = count + parseInt(String(formData.get("increment")), 10);
+                return { count };
+              }}
+              loader={async ({ request }) => {
+                // Need to add a domain on here in node unit testing so it's a
+                // valid URL. When running in the browser the domain is
+                // automatically added in new Request()
+                let increment =
+                  new URL(`https://remix.test${request.url}`).searchParams.get(
+                    "increment"
+                  ) || "1";
+                count = count + parseInt(increment, 10);
+                return { count };
+              }}
+            />
+          </TestDataRouter>
+        );
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p id="output">
+                {fetcher.state}
+                {fetcher.type}
+                {fetcher.data ? JSON.stringify(fetcher.data) : null}
+              </p>
+              <fetcher.Form>
+                <button type="submit" name="increment" value="1">
+                  submit get 1
+                </button>
+              </fetcher.Form>
+              <fetcher.Form method="post">
+                <button type="submit" name="increment" value="10">
+                  submit post 10
+                </button>
+              </fetcher.Form>
+            </>
+          );
+        }
+
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            init
+          </p>"
+        `);
+
+        fireEvent.click(screen.getByText("submit get 1"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            submitting
+            loaderSubmission
+          </p>"
+        `);
+
+        await waitFor(() => screen.getByText(/idle/));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            done
+            {\\"count\\":1}
+          </p>"
+        `);
+
+        fireEvent.click(screen.getByText("submit post 10"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            submitting
+            actionSubmission
+            {\\"count\\":1}
+          </p>"
+        `);
+
+        await waitFor(() => screen.getByText(/idle/));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            done
+            {\\"count\\":11}
+          </p>"
+        `);
+      });
+
+      it("handles fetcher.Form get errors", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/")}
+            hydrationData={{ loaderData: { "0": null } }}
+          >
+            <Route
+              path="/"
+              element={<Comp />}
+              exceptionElement={<Exception />}
+              loader={async () => {
+                throw new Error("Kaboom!");
+              }}
+            />
+          </TestDataRouter>
+        );
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p id="output">
+                {fetcher.state}
+                {fetcher.type}
+                {fetcher.data ? JSON.stringify(fetcher.data) : null}
+              </p>
+              <fetcher.Form>
+                <button type="submit">submit</button>
+              </fetcher.Form>
+            </>
+          );
+        }
+
+        function Exception() {
+          let error = useRouteException();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            init
+          </p>"
+        `);
+
+        fireEvent.click(screen.getByText("submit"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            submitting
+            loaderSubmission
+          </p>"
+        `);
+
+        await waitFor(() => screen.getByText("Kaboom!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom!
+            </p>
+          </div>"
+        `);
+      });
+
+      it("handles fetcher.Form post errors", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/")}
+            hydrationData={{ loaderData: { "0": null } }}
+          >
+            <Route
+              path="/"
+              element={<Comp />}
+              exceptionElement={<Exception />}
+              action={async ({ formData }) => {
+                throw new Error("Kaboom!");
+              }}
+            />
+          </TestDataRouter>
+        );
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p id="output">
+                {fetcher.state}
+                {fetcher.type}
+                {fetcher.data ? JSON.stringify(fetcher.data) : null}
+              </p>
+              <fetcher.Form method="post">
+                <button type="submit">submit</button>
+              </fetcher.Form>
+            </>
+          );
+        }
+
+        function Exception() {
+          let error = useRouteException();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            init
+          </p>"
+        `);
+
+        fireEvent.click(screen.getByText("submit"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            submitting
+            actionSubmission
+          </p>"
+        `);
+
+        await waitFor(() => screen.getByText("Kaboom!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom!
+            </p>
+          </div>"
+        `);
+      });
+
+      it("show all fetchers via useFetchers and cleans up fetchers on unmount", async () => {
+        let dfd1 = defer();
+        let dfd2 = defer();
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/1")}
+            hydrationData={{ loaderData: { "0": null, "0-0": null } }}
+          >
+            <Route path="/" element={<Parent />}>
+              <Route
+                path="/1"
+                loader={async () => await dfd1.promise}
+                element={<Comp1 />}
+              />
+              <Route
+                path="/2"
+                loader={async () => await dfd2.promise}
+                element={<Comp2 />}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        function Parent() {
+          let fetchers = useFetchers();
+          return (
+            <>
+              <Link to="/1">Link to 1</Link>
+              <Link to="/2">Link to 2</Link>
+              <div id="output">
+                <p>
+                  {JSON.stringify(fetchers.map((f) => `${f.state}-${f.type}`))}
+                </p>
+                <Outlet />
+              </div>
+            </>
+          );
+        }
+
+        function Comp1() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p>
+                1{fetcher.state}
+                {fetcher.data || "null"}
+              </p>
+              <button onClick={() => fetcher.load("/1")}>load</button>
+            </>
+          );
+        }
+
+        function Comp2() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p>
+                2{fetcher.state}
+                {fetcher.data || "null"}
+              </p>
+              <button onClick={() => fetcher.load("/2")}>load</button>
+            </>
+          );
+        }
+
+        // Initial state - no useFetchers reflected yet
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              []
+            </p>
+            <p>
+              1
+              idle
+              null
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        // Activate Comp2 fetcher
+        fireEvent.click(screen.getByText("load"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              [\\"loading-normalLoad\\"]
+            </p>
+            <p>
+              1
+              loading
+              null
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        // Resolve Comp1 fetcher - UI updates
+        dfd1.resolve("data 1");
+        await waitFor(() => screen.getByText(/data 1/));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              [\\"idle-done\\"]
+            </p>
+            <p>
+              1
+              idle
+              data 1
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        // Link to Comp2 - loaders run
+        fireEvent.click(screen.getByText("Link to 2"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              [\\"idle-done\\"]
+            </p>
+            <p>
+              1
+              idle
+              data 1
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        // Resolve Comp2 loader and complete navigation - Comp2 fetcher is still
+        // reflected here since deleteFetcher doesn't updateState
+        // TODO: Is this expected?
+        // TODO: Should getFetcher reflect the Comp2 idle fetcher in useFetchers?
+        dfd2.resolve("data 2");
+        await waitFor(() => screen.getByText(/2.*idle/));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              [\\"idle-done\\"]
+            </p>
+            <p>
+              2
+              idle
+              null
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        // Activate Comp2 fetcher, which now officially kicks out Comp1's
+        // fetcher from useFetchers and reflects Comp2's fetcher
+        fireEvent.click(screen.getByText("load"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              [\\"loading-normalLoad\\"]
+            </p>
+            <p>
+              2
+              loading
+              null
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        // Comp2 loader resolves with the same data, useFetchers reflects idle-done
+        await waitFor(() => screen.getByText(/2.*idle/));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              [\\"idle-done\\"]
+            </p>
+            <p>
+              2
+              idle
+              data 2
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+      });
     });
 
     describe("exceptions", () => {

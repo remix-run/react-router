@@ -20,6 +20,7 @@ import {
   parsePath,
 } from "./history";
 import type {
+  DataRouteMatch,
   Fetcher,
   HydrationState,
   NavigateOptions,
@@ -32,6 +33,7 @@ import type {
 import { IDLE_TRANSITION, createRouter } from "./router";
 import type {
   ActionFunctionArgs,
+  DataRouteObject,
   FormEncType,
   FormMethod,
   LoaderFunctionArgs,
@@ -90,6 +92,8 @@ export type {
   ActionFunctionArgs,
   BrowserHistory,
   BrowserRouterInit,
+  DataRouteMatch,
+  DataRouteObject,
   Fetcher,
   FormEncType,
   FormMethod,

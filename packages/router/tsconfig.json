@@ -13,7 +13,7 @@
 
     "skipLibCheck": true,
 
-    "outDir": "../../build/node_modules/router",
+    "outDir": "../../build/node_modules/@remix-run/router",
     "rootDir": "."
   }
 }
