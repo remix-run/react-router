@@ -82,15 +82,17 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
-  it("renders the first route that matches the URL when a basename exists", () => {
+  it("renders the first route that matches the URL when wrapped in a 'basename' route", () => {
+    // In data routers there is no basename and you should instead use a root route
     let { container } = render(
       <DataMemoryRouter
-        basename="/base"
-        initialEntries={["/base/thing"]}
+        initialEntries={["/my/base/path/thing"]}
         hydrationData={{}}
       >
-        <Route path="/" element={<Outlet />}>
-          <Route path="thing" element={<h1>Heyooo</h1>} />
+        <Route path="/my/base/path">
+          <Route element={<Outlet />}>
+            <Route path="thing" element={<h1>Heyooo</h1>} />
+          </Route>
         </Route>
       </DataMemoryRouter>
     );
@@ -683,14 +685,7 @@ describe("<DataMemoryRouter>", () => {
       let { revalidate, state } = useRevalidator();
       return (
         <div>
-          <button
-            onClick={() => {
-              debugger;
-              revalidate();
-            }}
-          >
-            Revalidate
-          </button>
+          <button onClick={() => revalidate()}>Revalidate</button>
           <p>{transition.state}</p>
           <p>{state}</p>
           <Outlet />
@@ -1419,7 +1414,6 @@ describe("<DataMemoryRouter>", () => {
       // navigation from _outside_ the DataMemoryRouter scope to most closely
       // resemble a browser back button
       function LocalDataMemoryRouter({
-        basename,
         children,
         initialEntries,
         initialIndex,
@@ -1428,13 +1422,11 @@ describe("<DataMemoryRouter>", () => {
         todo_bikeshed_routes,
       }: DataMemoryRouterProps): React.ReactElement {
         return UNSAFE_useRenderDataRouter({
-          basename,
           children,
           fallbackElement,
           todo_bikeshed_routes,
           createRouter: (routes) => {
             router = createMemoryRouter({
-              basename,
               initialEntries,
               initialIndex,
               routes,
@@ -1530,7 +1522,6 @@ describe("<DataMemoryRouter>", () => {
       // navigation from _outside_ the DataMemoryRouter scope to most closely
       // resemble a browser back button
       function LocalDataMemoryRouter({
-        basename,
         children,
         initialEntries,
         initialIndex,
@@ -1539,13 +1530,11 @@ describe("<DataMemoryRouter>", () => {
         todo_bikeshed_routes,
       }: DataMemoryRouterProps): React.ReactElement {
         return UNSAFE_useRenderDataRouter({
-          basename,
           children,
           fallbackElement,
           todo_bikeshed_routes,
           createRouter: (routes) => {
             router = createMemoryRouter({
-              basename,
               initialEntries,
               initialIndex,
               routes,

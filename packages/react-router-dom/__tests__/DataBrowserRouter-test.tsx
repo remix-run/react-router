@@ -67,15 +67,17 @@ function testDomRouter(name, TestDataRouter, getWindow) {
        `);
     });
 
-    it("renders the first route that matches the URL when a basename exists", () => {
+    it("renders the first route that matches the URL when wrapped in a 'basename' Route", () => {
+      // In data routers there is no basename and you should instead use a root route
       let { container } = render(
         <TestDataRouter
-          basename="/base"
-          window={getWindow("/base/thing")}
+          window={getWindow("/my/base/path/thing")}
           hydrationData={{}}
         >
-          <Route path="/" element={<Outlet />}>
-            <Route path="thing" element={<h1>Heyooo</h1>} />
+          <Route path="/my/base/path">
+            <Route element={<Outlet />}>
+              <Route path="thing" element={<h1>Heyooo</h1>} />
+            </Route>
           </Route>
         </TestDataRouter>
       );

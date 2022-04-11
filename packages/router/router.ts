@@ -95,7 +95,6 @@ export type HydrationState = Partial<
  * Initialization options for createRouter
  */
 export interface RouterInit {
-  basename?: string;
   routes: RouteObject[];
   history: History;
   hydrationData?: HydrationState;
@@ -371,7 +370,7 @@ export function createRouter(init: RouterInit) {
   let subscriber: RouterSubscriber | null = null;
 
   let initialMatches =
-    matchRoutes(dataRoutes, init.history.location, init.basename) ||
+    matchRoutes(dataRoutes, init.history.location) ||
     getNotFoundMatches(dataRoutes);
 
   // If we received hydration data without exceptions - detect if any matched
@@ -581,7 +580,7 @@ export function createRouter(init: RouterInit) {
     // since we want this new navigation to update history normally
     isUninterruptedRevalidation = opts?.startUninterruptedRevalidation === true;
 
-    let matches = matchRoutes(dataRoutes, location, init.basename);
+    let matches = matchRoutes(dataRoutes, location);
 
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
