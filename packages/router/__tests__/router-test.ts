@@ -1099,7 +1099,7 @@ describe("a router", () => {
       let rootLoader = jest.fn((args) => "ROOT");
       let childLoader = jest.fn((args) => "CHILD");
       let shouldReload = jest.fn(({ url }) => {
-        return new URLSearchParams(parsePath(url).search).get("reload") === "1";
+        return url.searchParams.get("reload") === "1";
       });
 
       let history = createMemoryHistory();
@@ -1147,21 +1147,19 @@ describe("a router", () => {
       await router.navigate("/child");
       expect(rootLoader.mock.calls.length).toBe(1);
       expect(shouldReload.mock.calls.length).toBe(1);
-      expect(shouldReload.mock.calls[0]).toMatchObject([
-        {
-          url: "/child",
-        },
-      ]);
+      expect(shouldReload.mock.calls[0][0].url.href).toEqual(
+        new URL("http://localhost/child").href
+      );
+      expect(shouldReload.mock.calls[0][0].formData).toBeUndefined();
 
       // Should use shouldReload() if it's a query string change
       await router.navigate("/child?reload=1");
       expect(rootLoader.mock.calls.length).toBe(2);
       expect(shouldReload.mock.calls.length).toBe(2);
-      expect(shouldReload.mock.calls[1]).toMatchObject([
-        {
-          url: "/child?reload=1",
-        },
-      ]);
+      expect(shouldReload.mock.calls[1][0].url.href).toEqual(
+        new URL("http://localhost/child?reload=1").href
+      );
+      expect(shouldReload.mock.calls[1][0].formData).toBeUndefined();
 
       // Should use shouldReload() if it's a form submission revalidation
       await router.navigate("/child", {
@@ -1170,12 +1168,12 @@ describe("a router", () => {
       });
       expect(rootLoader.mock.calls.length).toBe(2);
       expect(shouldReload.mock.calls.length).toBe(3);
-      expect(shouldReload.mock.calls[2]).toMatchObject([
-        {
-          url: "/child",
-          formData: createFormData({ gosh: "dang" }),
-        },
-      ]);
+      expect(shouldReload.mock.calls[2][0].url.href).toEqual(
+        new URL("http://localhost/child").href
+      );
+      expect(shouldReload.mock.calls[2][0].formData).toEqual(
+        createFormData({ gosh: "dang" })
+      );
     });
   });
 
@@ -4013,7 +4011,7 @@ describe("a router", () => {
 
     it("leverages shouldReload on revalidation routes", async () => {
       let shouldReload = jest.fn(({ url }) => {
-        return new URLSearchParams(parsePath(url).search).get("reload") === "1";
+        return url.searchParams.get("reload") === "1";
       });
       let t = setup({
         routes: [

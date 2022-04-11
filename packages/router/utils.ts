@@ -39,7 +39,7 @@ export interface ActionFunctionArgs extends Submission {
 }
 
 export interface ShouldReloadFunctionArgs {
-  url: string;
+  url: URL;
   formData?: FormData;
 }
 
