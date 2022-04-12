@@ -1,6 +1,11 @@
 import { test, expect } from "@playwright/test";
 
-import { createFixture, createAppFixture, js } from "./helpers/create-fixture";
+import {
+  createFixture,
+  createAppFixture,
+  js,
+  json,
+} from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
 import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
@@ -72,6 +77,13 @@ test.describe("compiler", () => {
             return <div id="esm-only-single-export">{esmOnlyPkg}</div>;
           }
         `,
+        "app/routes/package-with-submodule.jsx": js`
+          import { submodule } from "@org/package/sub-package";
+
+          export default function PackageWithSubModule() {
+            return <div id="package-with-submodule">{submodule()}</div>;
+          }
+        `,
         "remix.config.js": js`
           let { getDependenciesToBundle } = require("@remix-run/dev");
           module.exports = {
@@ -82,35 +94,74 @@ test.describe("compiler", () => {
             ],
           };
         `,
-        "node_modules/esm-only-pkg/package.json": `{
-          "name": "esm-only-pkg",
-          "version": "1.0.0",
-          "type": "module",
-          "main": "./esm-only-pkg.js"
-        }`,
+        "node_modules/esm-only-pkg/package.json": json`
+          {
+            "name": "esm-only-pkg",
+            "version": "1.0.0",
+            "type": "module",
+            "main": "./esm-only-pkg.js"
+          }
+        `,
         "node_modules/esm-only-pkg/esm-only-pkg.js": js`
           export default "esm-only-pkg";
         `,
-        "node_modules/esm-only-exports-pkg/package.json": `{
-          "name": "esm-only-exports-pkg",
-          "version": "1.0.0",
-          "type": "module",
-          "exports": {
-            ".": "./esm-only-exports-pkg.js"
+        "node_modules/esm-only-exports-pkg/package.json": json`
+          {
+            "name": "esm-only-exports-pkg",
+            "version": "1.0.0",
+            "type": "module",
+            "exports": {
+              ".": "./esm-only-exports-pkg.js"
+            }
           }
-        }`,
+        `,
         "node_modules/esm-only-exports-pkg/esm-only-exports-pkg.js": js`
           export default "esm-only-exports-pkg";
         `,
-
-        "node_modules/esm-only-single-export/package.json": `{
-          "name": "esm-only-exports-pkg",
-          "version": "1.0.0",
-          "type": "module",
-          "exports": "./esm-only-single-export.js"
-        }`,
+        "node_modules/esm-only-single-export/package.json": json`
+          {
+            "name": "esm-only-exports-pkg",
+            "version": "1.0.0",
+            "type": "module",
+            "exports": "./esm-only-single-export.js"
+          }
+        `,
         "node_modules/esm-only-single-export/esm-only-single-export.js": js`
           export default "esm-only-single-export";
+        `,
+        "node_modules/@org/package/package.json": json`
+          {
+            "name": "@org/package",
+            "version": "1.0.0"
+          }
+        `,
+        "node_modules/@org/package/sub-package/package.json": json`
+          {
+            "module": "./esm/index.js",
+            "sideEffects": false
+          }
+        `,
+        "node_modules/@org/package/sub-package/esm/package.json": json`
+          {
+            "type": "module",
+            "sideEffects": false
+          }
+        `,
+        "node_modules/@org/package/sub-package/esm/index.js": js`
+          export { default as submodule } from "./submodule.js";
+        `,
+        "node_modules/@org/package/sub-package/esm/submodule.js": js`
+          export default function submodule() {
+            return "package-with-submodule";
+          }
+        `,
+        "node_modules/@org/package/sub-package/index.js": js`
+          module.exports.submodule = require("./submodule.js");
+        `,
+        "node_modules/@org/package/sub-package/submodule.js": js`
+          module.exports = function submodule() {
+            return "package-with-submodule";
+          }
         `,
       },
     });
@@ -209,6 +260,16 @@ test.describe("compiler", () => {
     // rendered the page instead of the error boundary
     expect(await app.getHtml("#esm-only-exports-pkg")).toBe(
       '<div id="esm-only-exports-pkg">esm-only-exports-pkg</div>'
+    );
+  });
+
+  test("allows consumption of packages with sub modules", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/package-with-submodule", true);
+    expect(res.status()).toBe(200); // server rendered fine
+    // rendered the page instead of the error boundary
+    expect(await app.getHtml("#package-with-submodule")).toBe(
+      '<div id="package-with-submodule">package-with-submodule</div>'
     );
   });
 });

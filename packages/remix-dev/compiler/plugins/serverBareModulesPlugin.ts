@@ -68,7 +68,6 @@ export function serverBareModulesPlugin(
           onWarning &&
           !isNodeBuiltIn(packageName) &&
           !/\bnode_modules\b/.test(importer) &&
-          !builtinModules.includes(packageName) &&
           !dependencies[packageName]
         ) {
           onWarning(
@@ -135,7 +134,7 @@ function warnOnceIfEsmOnlyPackage(
   fullImportPath: string,
   onWarning: (msg: string, key: string) => void
 ) {
-  let packageDir = resolveModuleBasePath(packageName);
+  let packageDir = resolveModuleBasePath(packageName, fullImportPath);
   let packageJsonFile = path.join(packageDir, "package.json");
 
   if (!fs.existsSync(packageJsonFile)) {
@@ -171,8 +170,9 @@ function warnOnceIfEsmOnlyPackage(
 }
 
 // https://github.com/nodejs/node/issues/33460#issuecomment-919184789
-function resolveModuleBasePath(packageName: string) {
-  let moduleMainFilePath = require.resolve(packageName);
+// adapted to use the fullImportPath to resolve sub packages like @heroicons/react/solid
+function resolveModuleBasePath(packageName: string, fullImportPath: string) {
+  let moduleMainFilePath = require.resolve(fullImportPath);
 
   let packageNameParts = packageName.split("/");
 
