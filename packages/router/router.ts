@@ -1464,6 +1464,14 @@ async function callLoaderOrAction(
       signal,
       ...(submission || {}),
     });
+    if (data instanceof Response) {
+      let contentType = data.headers.get("Content-Type");
+      if (contentType?.startsWith("application/json")) {
+        data = await data.json();
+      } else {
+        data = await data.text();
+      }
+    }
     return { isError: false, data };
   } catch (exception) {
     return { isError: true, exception };
