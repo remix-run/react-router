@@ -275,7 +275,7 @@ test.describe("compiler", () => {
       '<div id="package-with-submodule">package-with-submodule</div>'
     );
   });
-  
+
   // TODO: remove this when we get rid of that feature.
   test("magic imports still works", async () => {
     let magicExportsForNode = [
