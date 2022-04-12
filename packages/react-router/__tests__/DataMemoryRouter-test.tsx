@@ -226,9 +226,17 @@ describe("<DataMemoryRouter>", () => {
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <div
-          class=\\"ghost\\"
+          class=\\"rr-fallback__flex\\"
         >
-          👻
+          <div
+            class=\\"rr-fallback__rotate\\"
+          >
+            <p
+              class=\\"rr-fallback__cd\\"
+            >
+              💿
+            </p>
+          </div>
         </div>
       </div>"
     `);

@@ -100,58 +100,55 @@ function DefaultFallbackElement() {
   return (
     <>
       <style>{`
-        .ghost {
-          font-size: 33vh;
+        :root {
+          --size: 25vh;
+        }
+
+        .rr-fallback__flex {
           text-align: center;
-          width: 100vh;
+          width: 100%;
           height: 100vh;
           display: flex;
           align-items: center;
-          justify-content: center;
-          animation: shake 5s ease-in-out both;
+          justify-content: center;  
+        }
+
+        .rr-fallback__rotate {
+          display: block;
+          width: var(--size);
+          height: var(--size);
+          font-size: var(--size);
+          animation-name: spin;
+          animation-duration: 1s;
+          animation-timing-function: ease-in-out;
           animation-iteration-count: infinite;
-          transform: translate3d(0, 0, 0);
-          backface-visibility: hidden;
-          perspective: 100px;
+          transform: rotate(0deg);
+          transform-origin: 50% 50%;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         @media (prefers-reduced-motion) {
-          .ghost {
+          .rr-fallback__rotate {
             animation-iteration-count: 0;
           }
         }
 
-        @keyframes shake {
-          0%, 50%, 100% {
-            transform: translate3d(0, 0, 0);
-          }
-
-          12.5% {
-            transform: translate3d(5px, 5px, 0);
-          }
-
-          25% {
-            transform: translate3d(0, 10px, 0);
-          }
-
-          37.5% {
-            transform: translate3d(-5px, 5px, 0);
-          }
-
-          62.5% {
-            transform: translate3d(5px, -5px, 0);
-          }
-
-          75% {
-            transform: translate3d(0, -10px, 0);
-          }
-
-          87.5% {
-            transform: translate3d(-5px, -5px, 0);
-          }
+        .rr-fallback__cd {
+          width: var(--size);
+          height: var(--size);
+          line-height: var(--size);
+          margin-top: 5%;
         }
-    `}</style>
-      <div className="ghost">👻</div>
+      `}</style>
+      <div className="rr-fallback__flex">
+        <div className="rr-fallback__rotate">
+          <p className="rr-fallback__cd">💿</p>
+        </div>
+      </div>
     </>
   );
 }
