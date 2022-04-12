@@ -9,8 +9,16 @@ let appFixture: AppFixture;
 
 ////////////////////////////////////////////////////////////////////////////////
 // 💿 👋 Hola! It's me, Dora the Remix Disc, I'm here to help you write a great
-// bug report pull request. You don't need to fix the bug, this is just to
-// report one.
+// bug report pull request.
+//
+// You don't need to fix the bug, this is just to report one.
+//
+// The pull request you are submitting is supposed to fail when created, to let
+// the team see the erroneous behavior, and understand what's going wrong.
+//
+// If you happen to have a fix as well, it will have to be applied in a subsequent
+// commit to this pull request, and your now-succeeding test will have to be moved
+// to the appropriate file.
 //
 // First, make sure to install dependencies and build Remix. From the root of
 // the project, run this:
