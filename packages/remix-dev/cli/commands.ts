@@ -9,7 +9,7 @@ import WebSocket from "ws";
 import type { Server } from "http";
 import type * as Express from "express";
 import type { createApp as createAppType } from "@remix-run/serve";
-import getPort from "get-port";
+import getPort, { makeRange } from "get-port";
 
 import { BuildMode, isBuildMode } from "../build";
 import * as colors from "../colors";
@@ -242,7 +242,7 @@ export async function dev(remixRoot: string, modeArg?: string) {
   await loadEnv(config.rootDirectory);
 
   let port = await getPort({
-    port: process.env.PORT ? Number(process.env.PORT) : 3000,
+    port: makeRange(process.env.PORT ? Number(process.env.PORT) : 3000, 3100),
   });
 
   if (config.serverEntryPoint) {
