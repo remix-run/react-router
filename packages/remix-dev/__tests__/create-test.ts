@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execSync } from "child_process";
 import fse from "fs-extra";
 import os from "os";
 import path from "path";
@@ -35,21 +35,29 @@ jest.mock("child_process", () => {
 
   return {
     ...cp,
-    execSync: jest.fn((command: string, options: Parameters<typeof cp.execSync>[1]) => {
-      // this prevents us from having to run the install process
-      // and keeps our console output clean
-      if (installDepsCmdPattern.test(command) || configGetCmdPattern.test(command)) {
-        return 'sample stdout';
+    execSync: jest.fn(
+      (command: string, options: Parameters<typeof cp.execSync>[1]) => {
+        // this prevents us from having to run the install process
+        // and keeps our console output clean
+        if (
+          installDepsCmdPattern.test(command) ||
+          configGetCmdPattern.test(command)
+        ) {
+          return "sample stdout";
+        }
+        return cp.execSync(command, options);
       }
-      return cp.execSync(command, options);
-    }),
+    ),
   };
 });
 
 // this is so we can verify the prompts for the users
-jest.mock('inquirer', () => {
-  let inquirerActual = jest.requireActual('inquirer');
-  return { ...inquirerActual, prompt: jest.fn().mockImplementation(inquirerActual.prompt) }
+jest.mock("inquirer", () => {
+  let inquirerActual = jest.requireActual("inquirer");
+  return {
+    ...inquirerActual,
+    prompt: jest.fn().mockImplementation(inquirerActual.prompt),
+  };
 });
 
 const TEMP_DIR = path.join(
@@ -449,10 +457,7 @@ describe("the create command", () => {
       "--typescript",
     ]);
 
-    expect(execSync).toBeCalledWith(
-      "yarn install",
-      expect.anything()
-    );
+    expect(execSync).toBeCalledWith("yarn install", expect.anything());
     process.env.npm_user_agent = originalUserAgent;
   });
 
@@ -470,10 +475,7 @@ describe("the create command", () => {
       "--typescript",
     ]);
 
-    expect(execSync).toBeCalledWith(
-      "pnpm install",
-      expect.anything()
-    );
+    expect(execSync).toBeCalledWith("pnpm install", expect.anything());
     process.env.npm_user_agent = originalUserAgent;
   });
 
@@ -497,7 +499,7 @@ describe("the create command", () => {
       "--typescript",
     ]);
 
-    let lastCallArgs = mockPrompt.mock.calls.at(-1)[0]
+    let lastCallArgs = mockPrompt.mock.calls.at(-1)[0];
     expect((lastCallArgs as Array<unknown>).at(-1)).toHaveProperty(
       "message",
       "Do you want me to run `pnpm install`?"
@@ -517,7 +519,14 @@ describe("the create command", () => {
       }) as unknown as ReturnType<typeof inquirer.prompt>;
     });
 
-    await run(["create", projectDir, "--template", "grunge-stack", "--no-install", "--typescript"]);
+    await run([
+      "create",
+      projectDir,
+      "--template",
+      "grunge-stack",
+      "--no-install",
+      "--typescript",
+    ]);
 
     expect(output).toContain(
       "💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with `pnpm exec remix init`"
