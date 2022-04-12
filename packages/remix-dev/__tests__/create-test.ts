@@ -1,14 +1,19 @@
+import { execSync } from 'child_process';
 import fse from "fs-extra";
 import os from "os";
 import path from "path";
 import { pathToFileURL } from "url";
 import stripAnsi from "strip-ansi";
+import inquirer from "inquirer";
 
 import { run } from "../cli/run";
 import { server } from "./msw";
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterAll(() => server.close());
+
+const yarnUserAgent = "yarn/1.22.18 npm/? node/v14.17.0 linux x64";
+const pnpmUserAgent = "pnpm/6.32.3 npm/? node/v14.17.0 linux x64";
 
 // keep the console clear
 jest.mock("ora", () => {
@@ -20,22 +25,31 @@ jest.mock("ora", () => {
   }));
 });
 
-// this is so we can mock execSync for "npm install"
+// this is so we can mock execSync for "npm install" and the like
 jest.mock("child_process", () => {
   let cp = jest.requireActual(
     "child_process"
   ) as typeof import("child_process");
+  let installDepsCmdPattern = /^(npm|yarn|pnpm) install$/;
+  let configGetCmdPattern = /^(npm|yarn|pnpm) config get/;
+
   return {
     ...cp,
-    execSync(command: string, options: Parameters<typeof cp.execSync>[1]) {
+    execSync: jest.fn((command: string, options: Parameters<typeof cp.execSync>[1]) => {
       // this prevents us from having to run the install process
       // and keeps our console output clean
-      if (command.startsWith("npm install")) {
-        return { stdout: "mocked", stderr: "mocked" };
+      if (installDepsCmdPattern.test(command) || configGetCmdPattern.test(command)) {
+        return 'sample stdout';
       }
       return cp.execSync(command, options);
-    },
+    }),
   };
+});
+
+// this is so we can verify the prompts for the users
+jest.mock('inquirer', () => {
+  let inquirerActual = jest.requireActual('inquirer');
+  return { ...inquirerActual, prompt: jest.fn().mockImplementation(inquirerActual.prompt) }
 });
 
 const TEMP_DIR = path.join(
@@ -91,6 +105,7 @@ describe("the create command", () => {
 
   beforeEach(() => {
     process.chdir(TEMP_DIR);
+    jest.clearAllMocks();
   });
 
   afterEach(async () => {
@@ -418,6 +433,96 @@ describe("the create command", () => {
     // we should keep remix.init around if the init script fails
     expect(fse.existsSync(path.join(projectDir, "remix.init"))).toBeTruthy();
     // deps can take a bit to install
+  });
+
+  it("recognizes when Yarn was used to run the command", async () => {
+    let originalUserAgent = process.env.npm_user_agent;
+    process.env.npm_user_agent = yarnUserAgent;
+
+    let projectDir = await getProjectDir("yarn-create");
+    await run([
+      "create",
+      projectDir,
+      "--template",
+      path.join(__dirname, "fixtures", "successful-remix-init.tar.gz"),
+      "--install",
+      "--typescript",
+    ]);
+
+    expect(execSync).toBeCalledWith(
+      "yarn install",
+      expect.anything()
+    );
+    process.env.npm_user_agent = originalUserAgent;
+  });
+
+  it("recognizes when pnpm was used to run the command", async () => {
+    let originalUserAgent = process.env.npm_user_agent;
+    process.env.npm_user_agent = pnpmUserAgent;
+
+    let projectDir = await getProjectDir("pnpm-create");
+    await run([
+      "create",
+      projectDir,
+      "--template",
+      path.join(__dirname, "fixtures", "successful-remix-init.tar.gz"),
+      "--install",
+      "--typescript",
+    ]);
+
+    expect(execSync).toBeCalledWith(
+      "pnpm install",
+      expect.anything()
+    );
+    process.env.npm_user_agent = originalUserAgent;
+  });
+
+  it("prompts to run the install command for the preferred package manager", async () => {
+    let originalUserAgent = process.env.npm_user_agent;
+    process.env.npm_user_agent = pnpmUserAgent;
+
+    let projectDir = await getProjectDir("pnpm-prompt-install");
+    let mockPrompt = jest.mocked(inquirer.prompt);
+    mockPrompt.mockImplementationOnce(() => {
+      return Promise.resolve({
+        install: false,
+      }) as unknown as ReturnType<typeof inquirer.prompt>;
+    });
+
+    await run([
+      "create",
+      projectDir,
+      "--template",
+      "grunge-stack",
+      "--typescript",
+    ]);
+
+    let lastCallArgs = mockPrompt.mock.calls.at(-1)[0]
+    expect((lastCallArgs as Array<unknown>).at(-1)).toHaveProperty(
+      "message",
+      "Do you want me to run `pnpm install`?"
+    );
+    process.env.npm_user_agent = originalUserAgent;
+  });
+
+  it("suggests to run the init command with the preferred package manager", async () => {
+    let originalUserAgent = process.env.npm_user_agent;
+    process.env.npm_user_agent = pnpmUserAgent;
+
+    let projectDir = await getProjectDir("pnpm-suggest-install");
+    let mockPrompt = jest.mocked(inquirer.prompt);
+    mockPrompt.mockImplementationOnce(() => {
+      return Promise.resolve({
+        install: false,
+      }) as unknown as ReturnType<typeof inquirer.prompt>;
+    });
+
+    await run(["create", projectDir, "--template", "grunge-stack", "--no-install", "--typescript"]);
+
+    expect(output).toContain(
+      "💿 You've opted out of installing dependencies so we won't run the remix.init/index.js script for you just yet. Once you've installed dependencies, you can run it manually with `pnpm exec remix init`"
+    );
+    process.env.npm_user_agent = originalUserAgent;
   });
 });
 

@@ -29,6 +29,7 @@ export async function create({
   projectDir,
   remixVersion,
   installDeps,
+  packageManager,
   useTypeScript,
   githubToken,
 }: {
@@ -36,6 +37,7 @@ export async function create({
   projectDir: string;
   remixVersion?: string;
   installDeps: boolean;
+  packageManager: "npm" | "yarn" | "pnpm";
   useTypeScript: boolean;
   githubToken?: string;
 }) {
@@ -45,6 +47,7 @@ export async function create({
     projectDir,
     remixVersion,
     installDeps,
+    packageManager,
     useTypeScript,
     githubToken,
   });
@@ -52,15 +55,20 @@ export async function create({
   spinner.clear();
 }
 
-export async function init(projectDir: string) {
+export async function init(
+  projectDir: string,
+  packageManager: "npm" | "yarn" | "pnpm"
+) {
   let initScriptDir = path.join(projectDir, "remix.init");
   let initScript = path.resolve(initScriptDir, "index.js");
 
   let isTypeScript = fse.existsSync(path.join(projectDir, "tsconfig.json"));
 
   if (await fse.pathExists(initScript)) {
-    // TODO: check for npm/yarn/pnpm
-    execSync("npm install", { stdio: "ignore", cwd: initScriptDir });
+    execSync(`${packageManager} install`, {
+      stdio: "ignore",
+      cwd: initScriptDir,
+    });
     let initFn = require(initScript);
     try {
       await initFn({ rootDirectory: projectDir, isTypeScript });

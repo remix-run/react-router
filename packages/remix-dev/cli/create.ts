@@ -21,6 +21,7 @@ interface CreateAppArgs {
   projectDir: string;
   remixVersion?: string;
   installDeps: boolean;
+  packageManager: "npm" | "yarn" | "pnpm";
   useTypeScript: boolean;
   githubToken?: string;
 }
@@ -30,6 +31,7 @@ export async function createApp({
   projectDir,
   remixVersion = remixDevPackageVersion,
   installDeps,
+  packageManager,
   useTypeScript = true,
   githubToken = process.env.GITHUB_TOKEN,
 }: CreateAppArgs) {
@@ -148,18 +150,24 @@ export async function createApp({
   }
 
   if (installDeps) {
-    // TODO: use yarn/pnpm/npm
-    let npmConfig = execSync("npm config get @remix-run:registry", {
-      encoding: "utf8",
-    });
+    let npmConfig = execSync(
+      `${packageManager} config get @remix-run:registry`,
+      {
+        encoding: "utf8",
+      }
+    );
     if (npmConfig?.startsWith("https://npm.remix.run")) {
       throw Error(
         "🚨 Oops! You still have the private Remix registry configured. Please " +
-          "run `npm config delete @remix-run:registry` or edit your .npmrc file " +
+          `run \`${packageManager} config delete @remix-run:registry\` or edit your .npmrc file ` +
           "to remove it."
       );
     }
-    execSync("npm install", { stdio: "inherit", cwd: projectDir });
+
+    execSync(`${packageManager} install`, {
+      stdio: "inherit",
+      cwd: projectDir,
+    });
   }
 }
 
