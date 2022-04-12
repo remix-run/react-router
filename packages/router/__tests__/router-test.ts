@@ -4095,6 +4095,47 @@ describe("a router", () => {
     });
   });
 
+  describe("router.cleanup", () => {
+    it("should cancel pending navigations", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT DATA",
+            index: "INDEX DATA",
+          },
+        },
+      });
+
+      let A = await t.navigate("/tasks");
+      expect(t.router.state.transition.state).toBe("loading");
+
+      t.router.cleanup();
+      expect(A.loaders.tasks.signal.aborted).toBe(true);
+    });
+
+    it("should cancel pending fetchers", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT DATA",
+            index: "INDEX DATA",
+          },
+        },
+      });
+
+      let A = await t.fetch("/tasks");
+      let B = await t.fetch("/tasks");
+
+      t.router.cleanup();
+      expect(A.loaders.tasks.signal.aborted).toBe(true);
+      expect(B.loaders.tasks.signal.aborted).toBe(true);
+    });
+  });
+
   describe("fetchers", () => {
     describe("fetcher states", () => {
       // TODO: Remove once confident in below tests

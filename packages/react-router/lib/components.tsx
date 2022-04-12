@@ -59,10 +59,13 @@ export function useRenderDataRouter({
   let [state, setState] = React.useState<DataRouter["state"]>(
     () => router.state
   );
-  React.useEffect(
-    () => router.subscribe((newState) => setState(newState)),
-    [router]
-  );
+  React.useEffect(() => {
+    let unsubscribe = router.subscribe((newState) => setState(newState));
+    return () => {
+      unsubscribe();
+      router.cleanup();
+    };
+  }, [router]);
 
   let navigator = React.useMemo((): Navigator => {
     return {

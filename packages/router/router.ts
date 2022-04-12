@@ -29,6 +29,23 @@ export interface RouteData {
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
 /**
+ * A Router instance manages all navigation and data loading/mutations
+ */
+export interface Router {
+  get state(): RouterState;
+  subscribe(fn: RouterSubscriber): () => void;
+  navigate(path: number): Promise<void>;
+  navigate(path: To, opts?: NavigateOptions): Promise<void>;
+  fetch(key: string, href: string, opts?: NavigateOptions): Promise<void>;
+  revalidate(): Promise<void>;
+  createHref(location: Location | URL): string;
+  getFetcher<TData = any>(key?: string): Fetcher<TData>;
+  deleteFetcher(key?: string): void;
+  cleanup(): void;
+  _internalFetchControllers: Map<string, AbortController>;
+}
+
+/**
  * State maintained internally by the router.  During a navigation, all states
  * reflect the the "old" location unless otherwise noted.
  */
@@ -270,8 +287,6 @@ type FetcherStates<TData = any> = {
 export type Fetcher<TData = any> =
   FetcherStates<TData>[keyof FetcherStates<TData>];
 
-export type Router = ReturnType<typeof createRouter>;
-
 /**
  * Successful result from a loader or action
  */
@@ -360,7 +375,7 @@ export const IDLE_FETCHER: FetcherStates["Idle"] = {
 /**
  * Create a router and listen to history POP navigations
  */
-export function createRouter(init: RouterInit) {
+export function createRouter(init: RouterInit): Router {
   invariant(
     init.routes.length > 0,
     "You must provide a non-empty routes array to use Data Routers"
@@ -494,10 +509,6 @@ export function createRouter(init: RouterInit) {
     foundXRemixRevalidate = false;
   }
 
-  // Pop Navigation
-  async function navigate(path: number): Promise<void>;
-  // Link/Form navigation
-  async function navigate(path: To, opts?: NavigateOptions): Promise<void>;
   async function navigate(
     path: number | To,
     opts?: NavigateOptions
@@ -1186,7 +1197,7 @@ export function createRouter(init: RouterInit) {
     return yeetedKeys.length > 0;
   }
 
-  return {
+  let router: Router = {
     get state() {
       return state;
     },
@@ -1199,6 +1210,12 @@ export function createRouter(init: RouterInit) {
         subscriber = null;
       };
     },
+    cleanup() {
+      pendingNavigationController?.abort();
+      for (let [, controller] of fetchControllers) {
+        controller.abort();
+      }
+    },
     navigate,
     fetch,
     revalidate,
@@ -1207,6 +1224,8 @@ export function createRouter(init: RouterInit) {
     deleteFetcher,
     _internalFetchControllers: fetchControllers,
   };
+
+  return router;
 }
 //#endregion
 
