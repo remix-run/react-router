@@ -887,6 +887,33 @@ describe("a router", () => {
       });
     });
 
+    it("unwraps non-redirect json Responses", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve(
+        new Response(JSON.stringify({ key: "value" }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      );
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: { key: "value" },
+      });
+    });
+
+    it("unwraps non-redirect text Responses", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve(new Response("FOO", { status: 200 }));
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: "FOO",
+      });
+    });
+
     it("does not fetch unchanging layout data", async () => {
       let t = initializeTmTest();
       let A = await t.navigate("/foo");
@@ -2872,21 +2899,21 @@ describe("a router", () => {
       let nav = await t.navigate("/tasks");
       expect(nav.loaders.tasks.stub).toHaveBeenCalledWith({
         params: {},
-        request: new Request("/tasks"),
+        request: new Request("http://localhost/tasks"),
         signal: expect.any(AbortSignal),
       });
 
       let nav2 = await t.navigate("/tasks/1");
       expect(nav2.loaders.tasksId.stub).toHaveBeenCalledWith({
         params: { id: "1" },
-        request: new Request("/tasks/1"),
+        request: new Request("http://localhost/tasks/1"),
         signal: expect.any(AbortSignal),
       });
 
       let nav3 = await t.navigate("/tasks?foo=bar#hash");
       expect(nav3.loaders.tasks.stub).toHaveBeenCalledWith({
         params: {},
-        request: new Request("/tasks?foo=bar"),
+        request: new Request("http://localhost/tasks?foo=bar"),
         signal: expect.any(AbortSignal),
       });
 
@@ -3219,18 +3246,25 @@ describe("a router", () => {
         },
       });
 
-      let formData = createFormData({ query: "params" });
-
-      let nav = await t.navigate("/tasks", { formMethod: "post", formData });
+      let nav = await t.navigate("/tasks", {
+        formMethod: "post",
+        formData: createFormData({ query: "params" }),
+      });
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
-        request: new Request("/tasks"),
+        request: expect.any(Request),
         signal: expect.any(AbortSignal),
-        formMethod: "post",
-        formAction: "/tasks",
-        formEncType: "application/x-www-form-urlencoded",
-        formData,
       });
+
+      // Assert request internals, cannot do a deep comparison above since some
+      // internals aren't the same on separate creations
+      let request = nav.actions.tasks.stub.mock.calls[0][0].request;
+      expect(request.url).toBe("http://localhost/tasks");
+      expect(request.method).toBe("POST");
+      expect(request.headers.get("Content-Type")).toBe(
+        "application/x-www-form-urlencoded"
+      );
+      expect((await request.formData()).get("query")).toBe("params");
 
       t.cleanup();
     });
@@ -3254,13 +3288,18 @@ describe("a router", () => {
       });
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
-        request: new Request("/tasks?foo=bar"),
+        request: expect.any(Request),
         signal: expect.any(AbortSignal),
-        formMethod: "post",
-        formAction: "/tasks?foo=bar",
-        formEncType: "application/x-www-form-urlencoded",
-        formData,
       });
+      // Assert request internals, cannot do a deep comparison above since some
+      // internals aren't the same on separate creations
+      let request = nav.actions.tasks.stub.mock.calls[0][0].request;
+      expect(request.url).toBe("http://localhost/tasks?foo=bar");
+      expect(request.method).toBe("POST");
+      expect(request.headers.get("Content-Type")).toBe(
+        "application/x-www-form-urlencoded"
+      );
+      expect((await request.formData()).get("query")).toBe("params");
 
       t.cleanup();
     });
@@ -4365,7 +4404,7 @@ describe("a router", () => {
         });
         expect(A.loaders.root.stub).toHaveBeenCalledWith({
           params: {},
-          request: new Request("/foo"),
+          request: new Request("http://localhost/foo"),
           signal: expect.any(AbortSignal),
         });
       });

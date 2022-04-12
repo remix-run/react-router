@@ -558,8 +558,9 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         <TestDataRouter window={getWindow("/")} hydrationData={{}}>
           <Route
             path="/"
-            action={async ({ formData }) => {
+            action={async ({ request }) => {
               let resolvedValue = await actionDefer.promise;
+              let formData = await request.formData();
               return `${resolvedValue}:${formData.get("test")}`;
             }}
             loader={() => loaderDefer.promise}
@@ -664,7 +665,8 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <Route
               path="/"
               element={<Comp />}
-              action={async ({ formData }) => {
+              action={async ({ request }) => {
+                let formData = await request.formData();
                 count = count + parseInt(String(formData.get("increment")), 10);
                 return { count };
               }}
@@ -945,7 +947,8 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <Route
               path="/"
               element={<Comp />}
-              action={async ({ formData }) => {
+              action={async ({ request }) => {
+                let formData = await request.formData();
                 count = count + parseInt(String(formData.get("increment")), 10);
                 return { count };
               }}
@@ -1124,7 +1127,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
               path="/"
               element={<Comp />}
               exceptionElement={<Exception />}
-              action={async ({ formData }) => {
+              action={async () => {
                 throw new Error("Kaboom!");
               }}
             />
