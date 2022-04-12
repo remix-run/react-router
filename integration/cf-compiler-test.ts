@@ -9,6 +9,7 @@ test.describe("cloudflare compiler", () => {
 
   test.beforeAll(async () => {
     projectDir = await createFixtureProject({
+      setup: "cloudflare",
       template: "cf-template",
       files: {
         "package.json": json`
@@ -153,5 +154,59 @@ test.describe("cloudflare compiler", () => {
     expect(serverBundle).not.toMatch(
       "__DEFAULT_EXPORTS_SHOULD_NOT_BE_IN_BUNDLE__"
     );
+  });
+
+  // TODO: remove this when we get rid of that feature.
+  test("magic imports still works", async () => {
+    let magicExportsForNode = [
+      "createCloudflareKVSessionStorage",
+      "createCookie",
+      "createCookieSessionStorage",
+      "createMemorySessionStorage",
+      "createSessionStorage",
+      "createSession",
+      "isCookie",
+      "isSession",
+      "json",
+      "redirect",
+      "Form",
+      "Link",
+      "Links",
+      "LiveReload",
+      "Meta",
+      "NavLink",
+      "Outlet",
+      "PrefetchPageLinks",
+      "RemixBrowser",
+      "RemixServer",
+      "Scripts",
+      "ScrollRestoration",
+      "useActionData",
+      "useBeforeUnload",
+      "useCatch",
+      "useFetcher",
+      "useFetchers",
+      "useFormAction",
+      "useHref",
+      "useLoaderData",
+      "useLocation",
+      "useMatches",
+      "useNavigate",
+      "useNavigationType",
+      "useOutlet",
+      "useOutletContext",
+      "useParams",
+      "useResolvedPath",
+      "useSearchParams",
+      "useSubmit",
+      "useTransition",
+    ];
+    let magicRemix = await fs.readFile(
+      path.resolve(projectDir, "node_modules/remix/index.js"),
+      "utf8"
+    );
+    for (let name of magicExportsForNode) {
+      expect(magicRemix).toContain(name);
+    }
   });
 });
