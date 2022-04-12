@@ -44,6 +44,7 @@ ${colors.heading("Options")}:
 \`routes\` Options:
   --json              Print the routes as JSON
 \`migrate\` Options:
+  --debug             Show debugging logs
   --dry               Dry run (no changes are made to files)
   --force             Bypass Git safety checks and forcibly run migration
   --migration, -m     Name of the migration to run
@@ -405,10 +406,13 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       await commands.setup(input[1]);
       break;
     case "migrate": {
-      let { migrationId, projectDir } = await commands.migrate.resolveInput({
-        migrationId: flags.migration,
-        projectDir: input[1],
-      });
+      let { projectDir, migrationId } = await commands.migrate.resolveInput(
+        {
+          projectId: input[1],
+          migrationId: flags.migration,
+        },
+        flags
+      );
       await commands.migrate.run({ migrationId, projectDir, flags });
       break;
     }

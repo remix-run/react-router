@@ -3,22 +3,26 @@ export type Exports = {
   value: string[];
 };
 
-export const adapters = [
+export type Adapter =
+  | "architect"
+  | "cloudflare-pages"
+  | "cloudflare-workers"
+  | "express"
+  | "netlify"
+  | "vercel";
+export const adapters: Adapter[] = [
   "architect",
   "cloudflare-pages",
   "cloudflare-workers",
   "express",
   "netlify",
   "vercel",
-] as const;
-export type Adapter = typeof adapters[number];
-const clients = ["react"] as const;
-export type Client = typeof clients[number];
-export const runtimes = ["cloudflare", "node"] as const;
-export type Runtime = typeof runtimes[number];
+];
 
-const packages = [...adapters, ...clients, ...runtimes] as const;
-export type Package = typeof packages[number];
+export type Runtime = "cloudflare" | "node";
+export const runtimes: Runtime[] = ["cloudflare", "node"];
+
+export type Package = Adapter | Runtime | "react";
 
 const defaultAdapterExports: Exports = {
   value: ["createRequestHandler"],

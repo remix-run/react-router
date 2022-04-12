@@ -3,15 +3,8 @@ import type { Transform } from "jscodeshift";
 import { getNewImportDeclarations } from "./getNewImportDeclarations";
 import { getRemixImports } from "./getRemixImports";
 import { mapNormalizedImports } from "./mapNormalizedImports";
-import type { Adapter, Runtime } from "./mapNormalizedImports/packageExports";
 import { normalizeImports } from "./normalizeImports";
 
-export { adapters, runtimes } from "./mapNormalizedImports/packageExports";
-
-export interface Options {
-  runtime: Runtime;
-  adapter: Adapter;
-}
 const transform: Transform = (file, api, options) => {
   let j = api.jscodeshift;
   let root = j(file.source);
@@ -28,7 +21,6 @@ const transform: Transform = (file, api, options) => {
 
   let normalizedImports = normalizeImports(remixImports);
   let mappedNormalizedImports = mapNormalizedImports({
-    client: "react",
     adapter: options.adapter,
     normalizedImports,
     runtime: options.runtime,

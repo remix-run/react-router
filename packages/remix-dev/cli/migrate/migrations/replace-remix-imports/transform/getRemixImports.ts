@@ -34,13 +34,16 @@ const checkNoInvalidImports = (
   }
 };
 
-export const getRemixImports = (j: JSCodeshift, root: Collection) => {
+export const getRemixImports = (
+  j: JSCodeshift,
+  root: Collection
+): Collection<ImportDeclaration> => {
   let allRemixImports = root.find(j.ImportDeclaration, {
     source: { value: "remix" },
   });
 
   if (allRemixImports.length === 0) {
-    return fromNodes([]) as Collection<ImportDeclaration>;
+    return fromNodes([]);
   }
 
   checkNoImpossibleImports(j, allRemixImports);

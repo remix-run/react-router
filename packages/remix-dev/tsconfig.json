@@ -1,5 +1,5 @@
 {
-  "include": ["../../types/mdx-js__mdx.d.ts", "**/*"],
+  "include": ["**/*"],
   "exclude": ["__tests__", "./compiler/shims/*"],
   "compilerOptions": {
     "lib": ["ES2019", "DOM.Iterable"],

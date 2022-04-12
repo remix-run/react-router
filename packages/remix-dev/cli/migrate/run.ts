@@ -1,6 +1,5 @@
 import fse from "fs-extra";
 
-import { checkGitStatus } from "../checkGitStatus";
 import type { Flags } from "./flags";
 import { migrations } from "./migrations";
 import type { Migration } from "./types";
@@ -33,10 +32,6 @@ export const run = async (input: {
   flags: Flags;
 }) => {
   let projectDir = checkProjectDir(input.projectDir);
-  if (!input.flags.dry) {
-    checkGitStatus(projectDir, { force: input.flags.force });
-  }
-
   let migration = parseMigration(input.migrationId);
   return migration.function({ projectDir, flags: input.flags });
 };

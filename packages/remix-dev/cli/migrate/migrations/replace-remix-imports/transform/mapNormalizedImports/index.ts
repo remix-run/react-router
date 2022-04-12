@@ -1,5 +1,5 @@
 import type { NormalizedImport } from "../normalizeImports";
-import type { Adapter, Client, Package, Runtime } from "./packageExports";
+import type { Adapter, Package, Runtime } from "./packageExports";
 import { packageExports } from "./packageExports";
 
 const getFilteredNormalizedImportsForPackage = (
@@ -33,22 +33,20 @@ const getRemainingNormalizedImports = (
 export type MappedNormalizedImports = ReturnType<typeof mapNormalizedImports>;
 export type MapNormalizedImportsArgs = {
   adapter?: Adapter;
-  client: Client;
   normalizedImports: NormalizedImport[];
   runtime: Runtime;
 };
 export const mapNormalizedImports = ({
   adapter,
-  client,
   normalizedImports,
   runtime,
 }: MapNormalizedImportsArgs) => {
   let filteredAdapterNormalizedImports = adapter
     ? getFilteredNormalizedImportsForPackage(normalizedImports, adapter)
     : [];
-  let filteredClientNormalizedImports = getFilteredNormalizedImportsForPackage(
+  let filteredReactNormalizedImports = getFilteredNormalizedImportsForPackage(
     normalizedImports,
-    client
+    "react"
   );
   let filteredRuntimeNormalizedImports = getFilteredNormalizedImportsForPackage(
     normalizedImports,
@@ -57,11 +55,11 @@ export const mapNormalizedImports = ({
 
   return {
     ...(adapter ? { [adapter]: filteredAdapterNormalizedImports } : {}),
-    [client]: filteredClientNormalizedImports,
+    react: filteredReactNormalizedImports,
     [runtime]: filteredRuntimeNormalizedImports,
     remix: getRemainingNormalizedImports(normalizedImports, [
       ...filteredAdapterNormalizedImports,
-      ...filteredClientNormalizedImports,
+      ...filteredReactNormalizedImports,
       ...filteredRuntimeNormalizedImports,
     ]),
   };

@@ -1,8 +1,4 @@
-import type {
-  Collection,
-  ImportDeclaration,
-  ImportSpecifier,
-} from "jscodeshift";
+import type { Collection, ImportDeclaration } from "jscodeshift";
 
 export type NormalizedImport = Pick<ImportDeclaration, "importKind"> & {
   alias: string;
@@ -14,13 +10,26 @@ export const normalizeImports = (
 ): NormalizedImport[] =>
   allImports
     .nodes()
-    .flatMap(
-      ({ importKind, specifiers }) =>
-        specifiers!.map((specifier) => ({
-          ...specifier,
-          importKind,
-        })) as Array<ImportSpecifier & Pick<ImportDeclaration, "importKind">>
-    )
+    .flatMap(({ importKind, specifiers }) => {
+      if (!specifiers) return [];
+      return (
+        specifiers
+          /**
+           * HACK: Can't use casts nor type guards in a `jscodeshift` transform
+           * https://github.com/facebook/jscodeshift/issues/467
+           *
+           * So to narrow specifier type, we use `flatMap` instead.
+           * (`filter` can't narrow type without type guards)
+           */
+          .flatMap((specifier) => {
+            return specifier.type === "ImportSpecifier" ? specifier : [];
+          })
+          .map((specifier) => ({
+            ...specifier,
+            importKind,
+          }))
+      );
+    })
     .map(({ imported: { name }, importKind, local }) => ({
       alias: local?.name || name,
       importKind,

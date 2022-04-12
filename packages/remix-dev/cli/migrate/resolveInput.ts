@@ -1,5 +1,7 @@
 import inquirer from "inquirer";
 
+import { checkGitStatus } from "../checkGitStatus";
+import type { Flags } from "./flags";
 import { migrations } from "./migrations";
 
 const resolveProjectDir = (input?: string): string => {
@@ -13,7 +15,6 @@ const resolveMigrationId = async (input?: string): Promise<string> => {
       name: "migrationId",
       message: "Which migration would you like to apply?",
       type: "list",
-      when: !input,
       pageSize: migrations.length + 1,
       choices: [
         ...migrations.map(({ id, description }) => ({
@@ -34,15 +35,20 @@ const resolveMigrationId = async (input?: string): Promise<string> => {
   return migrationId;
 };
 
-export const resolveInput = async ({
-  migrationId,
-  projectDir,
-}: {
-  migrationId?: string;
-  projectDir?: string;
-}) => {
+export const resolveInput = async (
+  input: {
+    projectId: string;
+    migrationId?: string;
+  },
+  flags: Flags
+) => {
+  let projectDir = resolveProjectDir(input.projectId);
+  if (!flags.dry) {
+    checkGitStatus(projectDir, { force: flags.force });
+  }
+  let migrationId = await resolveMigrationId(input.migrationId);
   return {
-    projectDir: resolveProjectDir(projectDir),
-    migrationId: await resolveMigrationId(migrationId),
+    projectDir,
+    migrationId,
   };
 };
