@@ -287,32 +287,42 @@ type FetcherStates<TData = any> = {
 export type Fetcher<TData = any> =
   FetcherStates<TData>[keyof FetcherStates<TData>];
 
+enum ResultType {
+  data = "data",
+  redirect = "redirect",
+  exception = "exception",
+}
+
 /**
  * Successful result from a loader or action
  */
-export interface DataSuccess {
-  isError: false;
+export interface SuccessResult {
+  type: ResultType.data;
   data: any;
+}
+
+/**
+ * Redirect result from a loader or action
+ */
+export interface RedirectResult {
+  type: ResultType.redirect;
+  status: number;
+  location: string;
+  revalidate: boolean;
 }
 
 /**
  * Unsuccessful result from a loader or action
  */
-export interface DataException {
-  isError: true;
+export interface ExceptionResult {
+  type: ResultType.exception;
   exception: any;
 }
 
 /**
  * Result from a loader or action - potentially successful or unsuccessful
  */
-export type DataResult = DataSuccess | DataException;
-
-interface RedirectResult {
-  status: number;
-  location: string;
-  response: Response;
-}
+export type DataResult = SuccessResult | RedirectResult | ExceptionResult;
 
 interface ShortCircuitable {
   /**
@@ -696,7 +706,7 @@ export function createRouter(init: RouterInit): Router {
         );
       }
       result = {
-        isError: true,
+        type: ResultType.exception,
         exception: new Response(null, { status: 405 }),
       };
     } else {
@@ -722,9 +732,8 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // If the action threw a redirect Response, start a new REPLACE navigation
-    let redirect = findRedirect([result]);
-    if (redirect) {
-      let redirectLocation = createLocation(state.location, redirect.location);
+    if (isRedirectResult(result)) {
+      let redirectLocation = createLocation(state.location, result.location);
       let { formMethod, formAction, formEncType, formData } = submission;
       let redirectTransition: TransitionStates["SubmissionRedirect"] = {
         state: "loading",
@@ -741,7 +750,7 @@ export function createRouter(init: RouterInit): Router {
       return { shortCircuited: true };
     }
 
-    if (isDataException(result)) {
+    if (isExceptionResult(result)) {
       // Store off the pending exception - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
@@ -932,8 +941,7 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let actionRedirect = findRedirect([actionResult]);
-    if (actionRedirect) {
+    if (isRedirectResult(actionResult)) {
       fetchRedirectIds.add(key);
       let loadingFetcher: FetcherStates["LoadingActionRedirect"] = {
         state: "loading",
@@ -947,15 +955,15 @@ export function createRouter(init: RouterInit): Router {
       let redirectTransition: TransitionStates["SubmissionRedirect"] = {
         state: "loading",
         type: "submissionRedirect",
-        location: createLocation(state.location, actionRedirect.location),
+        location: createLocation(state.location, actionResult.location),
         ...submission,
       };
-      await startRedirectNavigation(actionRedirect, redirectTransition);
+      await startRedirectNavigation(actionResult, redirectTransition);
       return;
     }
 
     // Process any non-redirect exceptions thrown
-    if (isDataException(actionResult)) {
+    if (isExceptionResult(actionResult)) {
       let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
       state.fetchers.delete(key);
       updateState({
@@ -1085,15 +1093,14 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.delete(key);
 
     // If the loader threw a redirect Response, start a new REPLACE navigation
-    let redirect = findRedirect([result]);
-    if (redirect) {
-      let redirectTransition = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(redirect, redirectTransition);
+    if (isRedirectResult(result)) {
+      let redirectTransition = getLoaderRedirect(state, result);
+      await startRedirectNavigation(result, redirectTransition);
       return;
     }
 
     // Process any non-redirect exceptions thrown
-    if (isDataException(result)) {
+    if (isExceptionResult(result)) {
       let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
       state.fetchers.delete(key);
       // TODO: In remix, this would reset to IDLE_TRANSITION if it was a catch -
@@ -1126,8 +1133,7 @@ export function createRouter(init: RouterInit): Router {
     redirect: RedirectResult,
     transition: Transition
   ) {
-    foundXRemixRevalidate =
-      redirect.response.headers.get("X-Remix-Revalidate") != null;
+    foundXRemixRevalidate = redirect.revalidate;
     invariant(
       transition.location,
       "Expected a location on the redirect transition"
@@ -1417,12 +1423,8 @@ function shouldRunLoader(
   // Let routes control only when it's a data reload
   if (isReload && match.route.shouldReload) {
     let { formData } = state.transition;
-    let base =
-      typeof window !== "undefined" && typeof window.location !== "undefined"
-        ? window.location.origin
-        : "unknown://unknown";
     return match.route.shouldReload?.({
-      url: new URL(createHref(location), base),
+      url: createURL(location),
       ...(formData ? { formData } : {}),
     });
   }
@@ -1434,48 +1436,128 @@ async function callLoaderOrAction(
   match: DataRouteMatch,
   href: string,
   signal: AbortSignal,
-  submission?: Submission
+  submission?: ActionSubmission
 ): Promise<DataResult>;
 async function callLoaderOrAction(
   match: DataRouteMatch,
   location: Location,
   signal: AbortSignal,
-  submission?: Submission
+  submission?: ActionSubmission
 ): Promise<DataResult>;
 async function callLoaderOrAction(
   match: DataRouteMatch,
   location: string | Location,
   signal: AbortSignal,
-  submission?: Submission
+  actionSubmission?: ActionSubmission
 ): Promise<DataResult> {
+  let resultType = ResultType.data;
+  let result;
+
   try {
-    let type: "loader" | "action" = submission ? "action" : "loader";
-    let handler: Function | undefined = match.route[type];
+    let type: "action" | "loader" = actionSubmission ? "action" : "loader";
+    let handler = match.route[type];
     invariant<Function>(
       handler,
       `Could not find the ${type} to run on the "${match.route.id}" route`
     );
-    let data = await handler({
+
+    let href = typeof location === "string" ? location : createHref(location);
+    let url = createURL(href).toString();
+    let request = actionSubmission
+      ? createActionRequest(url, actionSubmission)
+      : new Request(url);
+
+    result = await handler({
       params: match.params,
-      request:
-        typeof location === "string"
-          ? new Request(location)
-          : new Request(createHref(location)),
+      request,
       signal,
-      ...(submission || {}),
     });
-    if (data instanceof Response) {
-      let contentType = data.headers.get("Content-Type");
+  } catch (e) {
+    resultType = ResultType.exception;
+    result = e;
+  }
+
+  if (result instanceof Response) {
+    // Process redirects
+    let status = result.status;
+    let location = result.headers.get("Location");
+    if (status >= 300 && status <= 399 && location != null) {
+      return {
+        type: ResultType.redirect,
+        status,
+        location,
+        revalidate: result.headers.get("X-Remix-Revalidate") !== null,
+      };
+    }
+
+    // Automatically unwrap non-redirect success responses
+    if (resultType === ResultType.data) {
+      let contentType = result.headers.get("Content-Type");
       if (contentType?.startsWith("application/json")) {
-        data = await data.json();
+        result = await result.json();
       } else {
-        data = await data.text();
+        result = await result.text();
       }
     }
-    return { isError: false, data };
-  } catch (exception) {
-    return { isError: true, exception };
   }
+
+  if (resultType === ResultType.exception) {
+    return { type: resultType, exception: result };
+  }
+
+  return { type: resultType, data: result };
+}
+
+function createActionRequest(
+  url: string,
+  actionSubmission: ActionSubmission
+): Request {
+  let { formMethod, formEncType, formData } = actionSubmission;
+  let body = formData;
+
+  // If we're submitting application/x-www-form-urlencoded, then body should
+  // be of type URLSearchParams
+  if (formEncType === "application/x-www-form-urlencoded") {
+    body = new URLSearchParams();
+
+    for (let [key, value] of formData.entries()) {
+      invariant(
+        typeof value === "string",
+        'File inputs are not supported with encType "application/x-www-form-urlencoded", ' +
+          'please use "multipart/form-data" instead.'
+      );
+      body.append(key, value);
+    }
+  }
+
+  let request = new Request(url, {
+    method: formMethod.toUpperCase(),
+    headers: {
+      "Content-Type": formEncType,
+    },
+    body,
+  });
+
+  // Temporary patch util @web-std/fetch properly supports this
+  // See: https://github.com/web-std/io/pull/60
+  if (formEncType === "application/x-www-form-urlencoded") {
+    let oldFormData = request.formData;
+    request.formData = async function stubFormData() {
+      let contentType = this.headers?.get("Content-Type") || "";
+      if (
+        contentType.startsWith("application/x-www-form-urlencoded") &&
+        this.body != null
+      ) {
+        const form = new FormData();
+        let bodyText = await this.text();
+        new URLSearchParams(bodyText).forEach((v, k) => form.append(k, v));
+        return form;
+      }
+      return oldFormData.call(this);
+    };
+  }
+
+  return request;
 }
 
 function processLoaderData(
@@ -1494,7 +1576,11 @@ function processLoaderData(
   // Process loader results into state.loaderData/state.exceptions
   results.forEach((result, index) => {
     let id = matchesToLoad[index].route.id;
-    if (isDataException(result)) {
+    invariant(
+      !isRedirectResult(result),
+      "Cannot handle redirect results in processLoaderData"
+    );
+    if (isExceptionResult(result)) {
       // Look upwards from the matched route for the closest ancestor
       // exceptionElement, defaulting to the root match
       let boundaryMatch = findNearestBoundary(matches, id);
@@ -1575,17 +1661,8 @@ function getNotFoundMatches(routes: DataRouteObject[]): DataRouteMatch[] {
 function findRedirect(results: DataResult[]): RedirectResult | undefined {
   for (let i = results.length - 1; i >= 0; i--) {
     let result = results[i];
-    let maybeRedirect = result.isError ? result.exception : result.data;
-    if (maybeRedirect && maybeRedirect instanceof Response) {
-      let status = maybeRedirect.status;
-      let location = maybeRedirect.headers.get("Location");
-      if (status >= 300 && status <= 399 && location != null) {
-        return {
-          status,
-          location,
-          response: maybeRedirect,
-        };
-      }
+    if (isRedirectResult(result)) {
+      return result;
     }
   }
 }
@@ -1601,8 +1678,12 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   );
 }
 
-function isDataException(result: DataResult): result is DataException {
-  return result.isError;
+function isExceptionResult(result: DataResult): result is ExceptionResult {
+  return result.type === ResultType.exception;
+}
+
+function isRedirectResult(result?: DataResult): result is RedirectResult {
+  return result?.type === ResultType.redirect;
 }
 
 function isSubmissionNavigation(
@@ -1620,4 +1701,14 @@ function isActionSubmission(
 function hasNakedIndexQuery(search: string): boolean {
   return new URLSearchParams(search).getAll("index").some((v) => v === "");
 }
+
+function createURL(location: Location | string): URL {
+  let base =
+    typeof window !== "undefined" && typeof window.location !== "undefined"
+      ? window.location.origin
+      : "unknown://unknown";
+  let href = typeof location === "string" ? location : createHref(location);
+  return new URL(href, base);
+}
+
 //#endregion

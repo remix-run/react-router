@@ -1,3 +1,10 @@
-import jestFetchMock from "jest-fetch-mock";
+import fetch, { Request, Response, FormData } from "@web-std/fetch";
 
-jestFetchMock.enableMocks();
+if (!globalThis.fetch) {
+  globalThis.fetch = fetch;
+  globalThis.Request = Request;
+  // web-std/fetch Response does not currently implement Response.error()
+  // @ts-expect-error
+  globalThis.Response = Response;
+  globalThis.FormData = FormData;
+}

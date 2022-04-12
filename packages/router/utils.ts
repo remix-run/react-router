@@ -32,7 +32,7 @@ export interface LoaderFunctionArgs {
 /**
  * Arguments passed to route action functions
  */
-export interface ActionFunctionArgs extends Submission {
+export interface ActionFunctionArgs {
   request: Request;
   params: Params;
   signal: AbortSignal;
