@@ -340,6 +340,35 @@ describe("the create command", () => {
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
+  it("prioritizes built-in templates when validating input", async () => {
+    let projectDir = await getProjectDir("built-in-template");
+
+    // create a local directory in our cwd with the same name as our chosen
+    // template and give it a package.json so we can check it against the one in
+    // our template
+    let dupedDir = path.join(process.cwd(), "express");
+    await fse.mkdir(dupedDir);
+    await fse.writeFile(
+      path.join(dupedDir, "package.json"),
+      '{ "name": "dummy" }'
+    );
+
+    await run([
+      "create",
+      projectDir,
+      "--template",
+      "express",
+      "--install",
+      "--typescript",
+    ]);
+
+    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    let pkgJSON = JSON.parse(
+      fse.readFileSync(path.join(projectDir, "package.json"), "utf-8")
+    );
+    expect(pkgJSON.name).not.toBe("dummy");
+  });
+
   it("runs remix.init script when installing dependencies", async () => {
     let projectDir = await getProjectDir("remix-init-auto");
     await run([
