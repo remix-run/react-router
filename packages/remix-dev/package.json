@@ -24,7 +24,6 @@
     "@npmcli/package-json": "^2.0.0",
     "cacache": "^15.0.5",
     "chalk": "^4.1.2",
-    "chalk-animation": "^1.6.0",
     "chokidar": "^3.5.1",
     "dotenv": "^16.0.0",
     "esbuild": "0.14.22",
@@ -60,7 +59,6 @@
   },
   "devDependencies": {
     "@types/cacache": "^15.0.0",
-    "@types/chalk-animation": "^1.6.1",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/inquirer": "^8.2.0",
     "@types/jscodeshift": "^0.11.3",
