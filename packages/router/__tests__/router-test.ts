@@ -28,7 +28,7 @@ type Deferred = ReturnType<typeof defer>;
 // indicating they want a stub
 type TestRouteObject = Pick<
   DataRouteObject,
-  "id" | "index" | "path" | "shouldReload"
+  "id" | "index" | "path" | "shouldRevalidate"
 > & {
   loader?: boolean;
   action?: boolean;
@@ -1121,13 +1121,99 @@ describe("a router", () => {
     });
   });
 
-  describe("shouldReload", () => {
+  describe("shouldRevalidate", () => {
+    it("provides a default implementation", async () => {
+      let rootLoader = jest.fn((args) => "ROOT");
+
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "",
+            loader: async (...args) => rootLoader(...args),
+            children: [
+              {
+                path: "/",
+                id: "index",
+              },
+              {
+                path: "/child",
+                action: async () => null,
+              },
+              {
+                path: "/redirect",
+                action: async () =>
+                  new Response(null, {
+                    status: 301,
+                    headers: { location: "/" },
+                  }),
+              },
+              {
+                path: "/cookie",
+                loader: async () =>
+                  new Response(null, {
+                    status: 301,
+                    headers: {
+                      location: "/",
+                      "X-Remix-Revalidate": "1",
+                    },
+                  }),
+              },
+            ],
+          },
+        ],
+      });
+
+      // Initial load - no existing data, should always call loader
+      await new Promise((r) => setImmediate(r));
+      expect(rootLoader.mock.calls.length).toBe(1);
+      rootLoader.mockClear();
+
+      // Should not re-run on normal navigations re-using the loader
+      await router.navigate("/child");
+      await router.navigate("/");
+      await router.navigate("/child");
+      expect(rootLoader.mock.calls.length).toBe(0);
+      rootLoader.mockClear();
+
+      // Should call on same-path navigations
+      await router.navigate("/child");
+      expect(rootLoader.mock.calls.length).toBe(1);
+      rootLoader.mockClear();
+
+      // Should call on query string changes
+      await router.navigate("/child?key=value");
+      expect(rootLoader.mock.calls.length).toBe(1);
+      rootLoader.mockClear();
+
+      // Should call after form submission revalidation
+      await router.navigate("/child", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      expect(rootLoader.mock.calls.length).toBe(1);
+      rootLoader.mockClear();
+
+      // Should call after form submission redirect
+      await router.navigate("/redirect", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      expect(rootLoader.mock.calls.length).toBe(1);
+      rootLoader.mockClear();
+
+      // Should call after loader redirect with X-Remix-Revalidate
+      await router.navigate("/cookie");
+      expect(rootLoader.mock.calls.length).toBe(1);
+      rootLoader.mockClear();
+    });
+
     it("delegates to the route if it should reload or not", async () => {
       let rootLoader = jest.fn((args) => "ROOT");
       let childLoader = jest.fn((args) => "CHILD");
-      let shouldReload = jest.fn(({ url }) => {
-        return url.searchParams.get("reload") === "1";
-      });
+      let paramsLoader = jest.fn((args) => "PARAMS");
+      let shouldRevalidate = jest.fn((args) => false);
 
       let history = createMemoryHistory();
       let router = createRouter({
@@ -1137,20 +1223,23 @@ describe("a router", () => {
             path: "",
             id: "root",
             loader: async (...args) => rootLoader(...args),
-            shouldReload: (args) => shouldReload(args) === true,
+            shouldRevalidate: (args) => shouldRevalidate(args) === true,
             element: {},
             children: [
               {
                 path: "/",
                 id: "index",
-                element: {},
               },
               {
                 path: "/child",
                 id: "child",
                 loader: async (...args) => childLoader(...args),
                 action: async () => null,
-                element: {},
+              },
+              {
+                path: "/params/:a/:b",
+                id: "params",
+                loader: async (...args) => paramsLoader(...args),
               },
             ],
           },
@@ -1161,46 +1250,138 @@ describe("a router", () => {
       // not give use ability to opt-out
       await new Promise((r) => setImmediate(r));
       expect(rootLoader.mock.calls.length).toBe(1);
-      expect(shouldReload.mock.calls.length).toBe(0);
+      expect(shouldRevalidate.mock.calls.length).toBe(0);
+      rootLoader.mockClear();
+      shouldRevalidate.mockClear();
 
       // Should not re-run on normal navigations re-using the loader
       await router.navigate("/child");
       await router.navigate("/");
       await router.navigate("/child");
-      expect(rootLoader.mock.calls.length).toBe(1);
-      expect(shouldReload.mock.calls.length).toBe(0);
+      expect(rootLoader.mock.calls.length).toBe(0);
+      expect(shouldRevalidate.mock.calls.length).toBe(3);
+      rootLoader.mockClear();
+      shouldRevalidate.mockClear();
 
-      // Should use shouldReload() if it's a same-path
+      // Check that we pass the right args to shouldRevalidate and respect it's answer
+      shouldRevalidate.mockImplementation(() => true);
+      await router.navigate("/params/aValue/bValue");
+      expect(rootLoader.mock.calls.length).toBe(1);
+      expect(shouldRevalidate.mock.calls[0][0]).toMatchObject({
+        currentParams: {},
+        currentUrl: new URL("http://localhost/child"),
+        defaultShouldRevalidate: expect.any(Function),
+        isForcedRevalidate: false,
+        nextParams: {
+          a: "aValue",
+          b: "bValue",
+        },
+        nextUrl: new URL("http://localhost/params/aValue/bValue"),
+        transition: {
+          formAction: undefined,
+          formData: undefined,
+          formEncType: undefined,
+          formMethod: undefined,
+          location: {
+            hash: "",
+            key: expect.any(String),
+            pathname: "/params/aValue/bValue",
+            search: "",
+            state: null,
+          },
+          state: "loading",
+          type: "normalLoad",
+        },
+      });
+    });
+
+    it("provides the default implementation to the route function", async () => {
+      let rootLoader = jest.fn((args) => "ROOT");
+
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "",
+            loader: async (...args) => rootLoader(...args),
+            shouldRevalidate: ({ defaultShouldRevalidate }) =>
+              defaultShouldRevalidate(),
+            children: [
+              {
+                path: "/",
+                id: "index",
+              },
+              {
+                path: "/child",
+                action: async () => null,
+              },
+              {
+                path: "/redirect",
+                action: async () =>
+                  new Response(null, {
+                    status: 301,
+                    headers: { location: "/" },
+                  }),
+              },
+              {
+                path: "/cookie",
+                loader: async () =>
+                  new Response(null, {
+                    status: 301,
+                    headers: {
+                      location: "/",
+                      "X-Remix-Revalidate": "1",
+                    },
+                  }),
+              },
+            ],
+          },
+        ],
+      });
+
+      // Initial load - no existing data, should always call loader
+      await new Promise((r) => setImmediate(r));
+      expect(rootLoader.mock.calls.length).toBe(1);
+      rootLoader.mockClear();
+
+      // Should not re-run on normal navigations re-using the loader
+      await router.navigate("/child");
+      await router.navigate("/");
+      await router.navigate("/child");
+      expect(rootLoader.mock.calls.length).toBe(0);
+      rootLoader.mockClear();
+
+      // Should call on same-path navigations
       await router.navigate("/child");
       expect(rootLoader.mock.calls.length).toBe(1);
-      expect(shouldReload.mock.calls.length).toBe(1);
-      expect(shouldReload.mock.calls[0][0].url.href).toEqual(
-        new URL("http://localhost/child").href
-      );
-      expect(shouldReload.mock.calls[0][0].formData).toBeUndefined();
+      rootLoader.mockClear();
 
-      // Should use shouldReload() if it's a query string change
-      await router.navigate("/child?reload=1");
-      expect(rootLoader.mock.calls.length).toBe(2);
-      expect(shouldReload.mock.calls.length).toBe(2);
-      expect(shouldReload.mock.calls[1][0].url.href).toEqual(
-        new URL("http://localhost/child?reload=1").href
-      );
-      expect(shouldReload.mock.calls[1][0].formData).toBeUndefined();
+      // Should call on query string changes
+      await router.navigate("/child?key=value");
+      expect(rootLoader.mock.calls.length).toBe(1);
+      rootLoader.mockClear();
 
-      // Should use shouldReload() if it's a form submission revalidation
+      // Should call after form submission revalidation
       await router.navigate("/child", {
         formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
-      expect(rootLoader.mock.calls.length).toBe(2);
-      expect(shouldReload.mock.calls.length).toBe(3);
-      expect(shouldReload.mock.calls[2][0].url.href).toEqual(
-        new URL("http://localhost/child").href
-      );
-      expect(shouldReload.mock.calls[2][0].formData).toEqual(
-        createFormData({ gosh: "dang" })
-      );
+      expect(rootLoader.mock.calls.length).toBe(1);
+      rootLoader.mockClear();
+
+      // Should call after form submission redirect
+      await router.navigate("/redirect", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      expect(rootLoader.mock.calls.length).toBe(1);
+      rootLoader.mockClear();
+
+      // Should call after loader redirect with X-Remix-Revalidate
+      await router.navigate("/cookie");
+      expect(rootLoader.mock.calls.length).toBe(1);
+      rootLoader.mockClear();
     });
   });
 
@@ -1276,6 +1457,7 @@ describe("a router", () => {
               ],
             },
           ],
+          hydrationData: { loaderData: { parent: "stuff" } },
         });
         let nav = await t.navigate("/child");
         await nav.loaders.child.reject(new Error("Kaboom!"));
@@ -1307,16 +1489,16 @@ describe("a router", () => {
               ],
             },
           ],
+          hydrationData: { loaderData: { root: "ROOT" } },
         });
 
         let nav = await t.navigate("/child");
-        await nav.loaders.root.resolve("ROOT1");
         await nav.loaders.child.reject("Kaboom!");
-        expect(t.router.state.loaderData).toEqual({ root: "ROOT1" });
+        expect(t.router.state.loaderData).toEqual({ root: "ROOT" });
         expect(t.router.state.exceptions).toEqual({ child: "Kaboom!" });
 
         await t.navigate("/");
-        expect(t.router.state.loaderData).toEqual({ root: "ROOT1" });
+        expect(t.router.state.loaderData).toEqual({ root: "ROOT" });
         expect(t.router.state.exceptions).toBe(null);
       });
     });
@@ -4048,22 +4230,22 @@ describe("a router", () => {
       t.cleanup();
     });
 
-    it("leverages shouldReload on revalidation routes", async () => {
-      let shouldReload = jest.fn(({ url }) => {
-        return url.searchParams.get("reload") === "1";
+    it("leverages shouldRevalidate on revalidation routes", async () => {
+      let shouldRevalidate = jest.fn(({ nextUrl }) => {
+        return nextUrl.searchParams.get("reload") === "1";
       });
       let t = setup({
         routes: [
           {
             id: "root",
             loader: true,
-            shouldReload: (...args) => shouldReload(...args),
+            shouldRevalidate: (...args) => shouldRevalidate(...args),
             children: [
               {
                 id: "index",
                 index: true,
                 loader: true,
-                shouldReload: (...args) => shouldReload(...args),
+                shouldRevalidate: (...args) => shouldRevalidate(...args),
               },
             ],
           },

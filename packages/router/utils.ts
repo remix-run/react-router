@@ -1,5 +1,6 @@
 import type { Location, Path, To } from "./history";
 import { parsePath } from "./history";
+import { DataRouteMatch, Transition } from "./router";
 
 export type LoaderFormMethod = "get";
 export type ActionFormMethod = "post" | "put" | "patch" | "delete";
@@ -38,9 +39,14 @@ export interface ActionFunctionArgs {
   signal: AbortSignal;
 }
 
-export interface ShouldReloadFunctionArgs {
-  url: URL;
-  formData?: FormData;
+export interface ShouldRevalidateFunctionArgs {
+  currentUrl: URL;
+  currentParams: DataRouteMatch["params"];
+  nextUrl: URL;
+  nextParams: DataRouteMatch["params"];
+  transition: Transition;
+  isForcedRevalidate: boolean;
+  defaultShouldRevalidate: () => boolean;
 }
 
 /**
@@ -57,7 +63,7 @@ export interface RouteObject {
   loader?: (obj: LoaderFunctionArgs) => Promise<any>;
   action?: (obj: ActionFunctionArgs) => Promise<any>;
   exceptionElement?: React.ReactNode;
-  shouldReload?: (obj: ShouldReloadFunctionArgs) => boolean;
+  shouldRevalidate?: (obj: ShouldRevalidateFunctionArgs) => boolean;
 }
 
 /**

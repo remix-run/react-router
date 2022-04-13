@@ -11,6 +11,7 @@ import {
   LoaderFormMethod,
   RouteMatch,
   RouteObject,
+  ShouldRevalidateFunctionArgs,
   Submission,
 } from "./utils";
 import { matchRoutes } from "./utils";
@@ -780,7 +781,10 @@ export function createRouter(init: RouterInit): Router {
     let matchesToLoad = getMatchesToLoad(
       state,
       matches,
-      loadingTransition,
+      // Pass the current transition if this is an uninterrupted revalidation,
+      // since we aren't actually "navigating".  Otherwise pass the transition
+      // we're about to commit
+      isUninterruptedRevalidation ? state.transition : loadingTransition,
       location,
       foundXRemixRevalidate,
       pendingActionException
@@ -1346,7 +1350,7 @@ function getLoaderRedirect(
 function getMatchesToLoad(
   state: RouterState,
   matches: DataRouteMatch[],
-  loadingTransition: Transition,
+  transition: Transition,
   location: Location,
   foundXRemixRevalidate: boolean,
   pendingActionException: RouteData | null
@@ -1365,7 +1369,7 @@ function getMatchesToLoad(
       index < deepestRenderableMatchIndex &&
       shouldRunLoader(
         state,
-        loadingTransition,
+        transition,
         location,
         match,
         index,
@@ -1376,60 +1380,78 @@ function getMatchesToLoad(
 
 function shouldRunLoader(
   state: RouterState,
-  loadingTransition: Transition,
+  transition: Transition,
   location: Location,
   match: DataRouteMatch,
   index: number,
   foundXRemixRevalidate: boolean
 ): boolean {
-  let currentMatches = state.matches;
+  let currentMatch = state.matches[index];
 
   let isNew =
     // [a] -> [a, b]
-    !currentMatches[index] ||
+    !currentMatch ||
     // [a, b] -> [a, c]
-    match.route.id !== currentMatches[index].route.id;
-
-  let matchPathChanged =
-    !isNew &&
-    // param change, /users/123 -> /users/456
-    (currentMatches[index].pathname !== match.pathname ||
-      // splat param changed, which is not present in match.path
-      // e.g. /files/images/avatar.jpg -> files/finances.xls
-      (currentMatches[index].route.path?.endsWith("*") &&
-        currentMatches[index].params["*"] !== match.params["*"]));
+    match.route.id !== currentMatch.route.id;
 
   // Handle the case that we don't have data for a re-used route, potentially
   // from a prior exception
   let isMissingData = state.loaderData[match.route.id] === undefined;
 
-  if (isNew || matchPathChanged || isMissingData) {
+  // Always load if this is a net-new route or we don't yet have data
+  if (isNew || isMissingData) {
     return true;
   }
 
-  let isReload =
-    loadingTransition.type === "actionReload" ||
-    loadingTransition.type === "submissionRedirect" ||
-    // Clicked the same link, resubmitted a GET form
-    createHref(location) === createHref(state.location) ||
-    // Search affects all loaders
-    location.search !== state.location.search ||
-    // We are actively revalidating, force all loaders
+  let currentUrl = createURL(state.location);
+  let currentParams = currentMatch.params;
+  let nextUrl = createURL(location);
+  let nextParams = match.params;
+  let isForcedRevalidate =
     state.revalidation === "loading" ||
-    // One of our loaders redirected with an X-Remix-Revalidate header to force
-    // revalidation
+    // One of our loaders redirected with an X-Remix-Revalidate header
     foundXRemixRevalidate;
 
-  // Let routes control only when it's a data reload
-  if (isReload && match.route.shouldReload) {
-    let { formData } = state.transition;
-    return match.route.shouldReload?.({
-      url: createURL(location),
-      ...(formData ? { formData } : {}),
+  // This is the default implementation as to when we revalidate.  If the route
+  // provides it's own implementation, then we give full control to them but
+  // provide this to them so they can leverage it if needed after they check
+  // their own specific use cases
+  let defaultShouldRevalidate = () => {
+    let matchPathChanged =
+      // param change, /users/123 -> /users/456
+      currentMatch.pathname !== match.pathname ||
+      // splat param changed, which is not present in match.path
+      // e.g. /files/images/avatar.jpg -> files/finances.xls
+      (currentMatch.route.path?.endsWith("*") &&
+        currentMatch.params["*"] !== match.params["*"]);
+
+    return (
+      matchPathChanged ||
+      // Revalidating after an action submission
+      transition.type === "actionReload" ||
+      transition.type === "submissionRedirect" ||
+      // Clicked the same link, resubmitted a GET form
+      currentUrl.toString() === nextUrl.toString() ||
+      // Search params affect all loaders
+      currentUrl.search !== nextUrl.search ||
+      // Forced revalidation due to useRevalidate or X-Remix-Revalidate
+      isForcedRevalidate
+    );
+  };
+
+  if (match.route.shouldRevalidate) {
+    return match.route.shouldRevalidate({
+      currentUrl,
+      currentParams,
+      nextUrl,
+      nextParams,
+      transition,
+      isForcedRevalidate,
+      defaultShouldRevalidate,
     });
   }
 
-  return isReload;
+  return defaultShouldRevalidate();
 }
 
 async function callLoaderOrAction(
@@ -1461,15 +1483,9 @@ async function callLoaderOrAction(
       `Could not find the ${type} to run on the "${match.route.id}" route`
     );
 
-    let href = typeof location === "string" ? location : createHref(location);
-    let url = createURL(href).toString();
-    let request = actionSubmission
-      ? createActionRequest(url, actionSubmission)
-      : new Request(url);
-
     result = await handler({
       params: match.params,
-      request,
+      request: createRequest(location, actionSubmission),
       signal,
     });
   } catch (e) {
@@ -1508,39 +1524,46 @@ async function callLoaderOrAction(
   return { type: resultType, data: result };
 }
 
-function createActionRequest(
-  url: string,
-  actionSubmission: ActionSubmission
+function createRequest(
+  location: string | Location,
+  actionSubmission?: ActionSubmission
 ): Request {
-  let { formMethod, formEncType, formData } = actionSubmission;
-  let body = formData;
+  let init: RequestInit | undefined = undefined;
 
-  // If we're submitting application/x-www-form-urlencoded, then body should
-  // be of type URLSearchParams
-  if (formEncType === "application/x-www-form-urlencoded") {
-    body = new URLSearchParams();
+  if (actionSubmission) {
+    let { formMethod, formEncType, formData } = actionSubmission;
+    let body = formData;
 
-    for (let [key, value] of formData.entries()) {
-      invariant(
-        typeof value === "string",
-        'File inputs are not supported with encType "application/x-www-form-urlencoded", ' +
-          'please use "multipart/form-data" instead.'
-      );
-      body.append(key, value);
+    // If we're submitting application/x-www-form-urlencoded, then body should
+    // be of type URLSearchParams
+    if (formEncType === "application/x-www-form-urlencoded") {
+      body = new URLSearchParams();
+
+      for (let [key, value] of formData.entries()) {
+        invariant(
+          typeof value === "string",
+          'File inputs are not supported with encType "application/x-www-form-urlencoded", ' +
+            'please use "multipart/form-data" instead.'
+        );
+        body.append(key, value);
+      }
     }
+
+    init = {
+      method: formMethod.toUpperCase(),
+      headers: {
+        "Content-Type": formEncType,
+      },
+      body,
+    };
   }
 
-  let request = new Request(url, {
-    method: formMethod.toUpperCase(),
-    headers: {
-      "Content-Type": formEncType,
-    },
-    body,
-  });
+  let url = createURL(location).toString();
+  let request = new Request(url, init);
 
   // Temporary patch util @web-std/fetch properly supports this
   // See: https://github.com/web-std/io/pull/60
-  if (formEncType === "application/x-www-form-urlencoded") {
+  if (actionSubmission?.formEncType === "application/x-www-form-urlencoded") {
     let oldFormData = request.formData;
     request.formData = async function stubFormData() {
       let contentType = this.headers?.get("Content-Type") || "";
