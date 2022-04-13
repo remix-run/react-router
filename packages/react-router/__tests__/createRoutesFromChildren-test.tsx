@@ -31,7 +31,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "loader": undefined,
               "path": "home",
-              "shouldReload": undefined,
+              "shouldRevalidate": undefined,
             },
             Object {
               "action": undefined,
@@ -44,7 +44,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "loader": undefined,
               "path": "about",
-              "shouldReload": undefined,
+              "shouldRevalidate": undefined,
             },
             Object {
               "action": undefined,
@@ -61,7 +61,7 @@ describe("creating routes from JSX", () => {
                   "index": true,
                   "loader": undefined,
                   "path": undefined,
-                  "shouldReload": undefined,
+                  "shouldRevalidate": undefined,
                 },
                 Object {
                   "action": undefined,
@@ -74,7 +74,7 @@ describe("creating routes from JSX", () => {
                   "index": undefined,
                   "loader": undefined,
                   "path": ":id",
-                  "shouldReload": undefined,
+                  "shouldRevalidate": undefined,
                 },
               ],
               "element": undefined,
@@ -83,7 +83,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "loader": undefined,
               "path": "users",
-              "shouldReload": undefined,
+              "shouldRevalidate": undefined,
             },
           ],
           "element": undefined,
@@ -92,7 +92,7 @@ describe("creating routes from JSX", () => {
           "index": undefined,
           "loader": undefined,
           "path": "/",
-          "shouldReload": undefined,
+          "shouldRevalidate": undefined,
         },
       ]
     `);
@@ -105,7 +105,7 @@ describe("creating routes from JSX", () => {
           <Route
             path="home"
             loader={async () => {}}
-            shouldReload={() => true}
+            shouldRevalidate={() => true}
             element={<h1>home</h1>}
           />
           <Route path="users">
@@ -134,7 +134,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "loader": [Function],
               "path": "home",
-              "shouldReload": [Function],
+              "shouldRevalidate": [Function],
             },
             Object {
               "action": undefined,
@@ -151,7 +151,7 @@ describe("creating routes from JSX", () => {
                   "index": true,
                   "loader": undefined,
                   "path": undefined,
-                  "shouldReload": undefined,
+                  "shouldRevalidate": undefined,
                 },
               ],
               "element": undefined,
@@ -160,7 +160,7 @@ describe("creating routes from JSX", () => {
               "index": undefined,
               "loader": undefined,
               "path": "users",
-              "shouldReload": undefined,
+              "shouldRevalidate": undefined,
             },
           ],
           "element": undefined,
@@ -171,7 +171,7 @@ describe("creating routes from JSX", () => {
           "index": undefined,
           "loader": undefined,
           "path": "/",
-          "shouldReload": undefined,
+          "shouldRevalidate": undefined,
         },
       ]
     `);
