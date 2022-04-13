@@ -98,7 +98,9 @@ const resolveAdapter = (packageJson: PackageJson): Adapter | undefined => {
   // find adapter in package.json dependencies
   let deps = depsToEntries(packageJson.dependencies);
   let remixDeps = deps.filter(({ name }) => isRemixPackage(name));
-  let adapters = remixDeps.map(({ name }) => name).filter(isAdapter);
+  let adapters = remixDeps
+    .map(({ name }) => name.replace(/^@remix-run\//, ""))
+    .filter(isAdapter);
 
   if (adapters.length > 1) {
     console.error(
