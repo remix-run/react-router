@@ -1,9 +1,7 @@
 import * as React from "react";
 import type {
-  ActionFunctionArgs,
   HydrationState,
   InitialEntry,
-  LoaderFunctionArgs,
   Location,
   MemoryHistory,
   RouteMatch,
@@ -36,7 +34,6 @@ import {
   useRoutes,
   _renderMatches,
 } from "./hooks";
-import { ShouldRevalidateFunctionArgs } from "@remix-run/router/utils";
 
 export function useRenderDataRouter({
   children,
@@ -61,11 +58,19 @@ export function useRenderDataRouter({
   );
   React.useEffect(() => {
     let unsubscribe = router.subscribe((newState) => setState(newState));
+
+    // If we have loaders to run for an initial data load, and all of those loaders
+    // are synchronous, then they'll actually trigger completeNavigation _before_
+    // we get here, so we'll never call setState.  Capture that scenario here
+    if (!state.initialized && router.state.initialized) {
+      setState(router.state);
+    }
+
     return () => {
       unsubscribe();
       router.cleanup();
     };
-  }, [router]);
+  }, [router, state.initialized]);
 
   let navigator = React.useMemo((): Navigator => {
     return {
@@ -285,10 +290,11 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
 }
 
 interface DataRouteProps {
-  loader?: (args: LoaderFunctionArgs) => Promise<any>;
-  action?: (args: ActionFunctionArgs) => Promise<any>;
-  exceptionElement?: React.ReactNode;
-  shouldRevalidate?: (arg: ShouldRevalidateFunctionArgs) => boolean;
+  id?: RouteObject["id"];
+  loader?: RouteObject["loader"];
+  action?: RouteObject["action"];
+  exceptionElement?: RouteObject["exceptionElement"];
+  shouldRevalidate?: RouteObject["shouldRevalidate"];
 }
 
 export interface RouteProps extends DataRouteProps {

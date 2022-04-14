@@ -11,7 +11,6 @@ import {
   LoaderFormMethod,
   RouteMatch,
   RouteObject,
-  ShouldRevalidateFunctionArgs,
   Submission,
 } from "./utils";
 import { matchRoutes } from "./utils";
@@ -1221,6 +1220,7 @@ export function createRouter(init: RouterInit): Router {
       };
     },
     cleanup() {
+      subscriber = null;
       pendingNavigationController?.abort();
       for (let [, controller] of fetchControllers) {
         controller.abort();
