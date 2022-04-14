@@ -47,7 +47,7 @@ const getRemixVersionSpec = (remixDeps: Dependency[]): string => {
     )
   );
   console.log(because("you're already using a compatible Remix version."));
-  return candidateMin.raw;
+  return candidate.versionSpec;
 };
 
 const shouldKeepPostinstall = (original?: string): boolean => {
