@@ -348,7 +348,7 @@ function getRepoInfo(validatedGithubUrl: string): RepoInfo {
     Branch: string | undefined,
     FileInfo: string | undefined
   ];
-  let filePath = file.join(path.sep);
+  let filePath = file.join("/");
 
   if (tree === undefined) {
     return {
