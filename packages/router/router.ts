@@ -1559,28 +1559,7 @@ function createRequest(
   }
 
   let url = createURL(location).toString();
-  let request = new Request(url, init);
-
-  // Temporary patch util @web-std/fetch properly supports this
-  // See: https://github.com/web-std/io/pull/60
-  if (actionSubmission?.formEncType === "application/x-www-form-urlencoded") {
-    let oldFormData = request.formData;
-    request.formData = async function stubFormData() {
-      let contentType = this.headers?.get("Content-Type") || "";
-      if (
-        contentType.startsWith("application/x-www-form-urlencoded") &&
-        this.body != null
-      ) {
-        const form = new FormData();
-        let bodyText = await this.text();
-        new URLSearchParams(bodyText).forEach((v, k) => form.append(k, v));
-        return form;
-      }
-      return oldFormData.call(this);
-    };
-  }
-
-  return request;
+  return new Request(url, init);
 }
 
 function processLoaderData(
