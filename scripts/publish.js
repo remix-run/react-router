@@ -60,7 +60,7 @@ async function run() {
 
     // 2. Determine the appropriate npm tag to use
     let tag =
-      semver.prerelease(version) == null && semver.compare(version, "v6") > 0
+      semver.prerelease(version) == null && semver.compare(version, "6.0.0") > 0
         ? "latest"
         : null;
 
