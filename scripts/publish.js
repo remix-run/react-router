@@ -23,7 +23,7 @@ async function ensureBuildVersion(packageName, version) {
   let file = path.join(rootDir, "packages", packageName, "package.json");
   let json = await jsonfile.readFile(file);
   invariant(
-    json.version === version,
+    semver.compare(json.version, version) === 0,
     `Package ${packageName} is on version ${json.version}, but should be on ${version}`
   );
 }
