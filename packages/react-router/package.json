@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "5.2.1",
+  "version": "5.3.1",
   "description": "Declarative routing for React",
   "homepage": "https://reactrouter.com/",
   "repository": {
@@ -9,8 +9,10 @@
     "directory": "packages/react-router"
   },
   "license": "MIT",
-  "author": "React Training <hello@reacttraining.com>",
+  "author": "Remix Software <hello@remix.run>",
   "files": [
+    "LICENSE",
+    "README.md",
     "MemoryRouter.js",
     "Prompt.js",
     "Redirect.js",

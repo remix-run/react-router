@@ -1,6 +1,6 @@
 {
   "name": "react-router-native",
-  "version": "5.2.1",
+  "version": "5.3.1",
   "description": "React Native bindings for React Router",
   "homepage": "https://reactrouter.com/",
   "repository": {
@@ -9,13 +9,15 @@
     "directory": "packages/react-router-native"
   },
   "license": "MIT",
-  "author": "React Training <hello@reacttraining.com>",
+  "author": "Remix Software <hello@remix.run>",
   "main": "main.js",
   "sideEffects": false,
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start"
   },
   "files": [
+    "LICENSE",
+    "README.md",
     "BackButton.js",
     "DeepLinking.js",
     "Link.js",
@@ -30,6 +32,6 @@
   },
   "dependencies": {
     "prop-types": "^15.6.1",
-    "react-router": "5.2.1"
+    "react-router": "5.3.1"
   }
 }

@@ -51,8 +51,8 @@ function NavBar() {
   return (
     <Row textTransform="uppercase" fontWeight="bold" width="100%">
       <Block flex="1" fontSize="14px">
-        <Inline component="a" props={{ href: "https://reacttraining.com" }}>
-          React Training
+        <Inline component="a" props={{ href: "https://remix.run" }}>
+          Remix
         </Inline>
         <Inline> / </Inline>
         <Inline

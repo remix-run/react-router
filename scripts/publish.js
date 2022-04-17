@@ -23,7 +23,7 @@ async function ensureBuildVersion(packageName, version) {
   let file = path.join(rootDir, "packages", packageName, "package.json");
   let json = await jsonfile.readFile(file);
   invariant(
-    json.version === version,
+    semver.compare(json.version, version) === 0,
     `Package ${packageName} is on version ${json.version}, but should be on ${version}`
   );
 }
@@ -59,7 +59,10 @@ async function run() {
     );
 
     // 2. Determine the appropriate npm tag to use
-    let tag = semver.prerelease(version) == null ? "latest" : null;
+    let tag =
+      semver.prerelease(version) == null && semver.compare(version, "6.0.0") > 0
+        ? "latest"
+        : null;
 
     console.log();
     console.log(

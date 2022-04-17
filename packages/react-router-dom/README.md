@@ -34,4 +34,4 @@ If you find a bug, please file an issue on [our issue tracker on GitHub](https:/
 
 ## Credits
 
-React Router is built and maintained by [React Training](https://reacttraining.com).
+React Router is built and maintained by [Remix Software](https://remix.run).

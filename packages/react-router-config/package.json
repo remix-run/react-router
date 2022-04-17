@@ -1,6 +1,6 @@
 {
   "name": "react-router-config",
-  "version": "5.2.1",
+  "version": "5.3.1",
   "description": "Static route config matching for React Router",
   "homepage": "https://reactrouter.com/",
   "repository": {
@@ -9,8 +9,10 @@
     "directory": "packages/react-router-config"
   },
   "license": "MIT",
-  "author": "React Training <hello@reacttraining.com>",
+  "author": "Remix Software <hello@remix.run>",
   "files": [
+    "LICENSE",
+    "README.md",
     "cjs",
     "es",
     "esm",

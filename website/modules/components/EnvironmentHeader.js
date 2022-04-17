@@ -63,8 +63,8 @@ function Branding() {
         fontWeight="bold"
         fontSize="90%"
       >
-        <Inline component="a" props={{ href: "https://reacttraining.com" }}>
-          React Training
+        <Inline component="a" props={{ href: "https://remix.run" }}>
+          Remix
         </Inline>
         <Inline> / </Inline>
         <Inline
