@@ -11,6 +11,8 @@
   "license": "MIT",
   "author": "React Training <hello@reacttraining.com>",
   "files": [
+    "LICENSE",
+    "README.md",
     "MemoryRouter.js",
     "Prompt.js",
     "Redirect.js",

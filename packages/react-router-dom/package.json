@@ -11,6 +11,8 @@
   "license": "MIT",
   "author": "React Training <hello@reacttraining.com>",
   "files": [
+    "LICENSE",
+    "README.md",
     "BrowserRouter.js",
     "HashRouter.js",
     "Link.js",

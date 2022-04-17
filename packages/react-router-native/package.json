@@ -16,6 +16,8 @@
     "start": "node node_modules/react-native/local-cli/cli.js start"
   },
   "files": [
+    "LICENSE",
+    "README.md",
     "BackButton.js",
     "DeepLinking.js",
     "Link.js",
