@@ -9,7 +9,7 @@
     "directory": "packages/react-router-dom"
   },
   "license": "MIT",
-  "author": "React Training <hello@reacttraining.com>",
+  "author": "Remix Software <hello@remix.run>",
   "files": [
     "LICENSE",
     "README.md",

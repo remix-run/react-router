@@ -15,10 +15,8 @@ function FooterLink({ href, ...rest }) {
   );
 }
 
-function ReactTraining() {
-  return (
-    <FooterLink href="https://reacttraining.com">React Training</FooterLink>
-  );
+function Remix() {
+  return <FooterLink href="https://remix.run">Remix Software</FooterLink>;
 }
 
 function Contributors() {
@@ -51,11 +49,11 @@ export default function Footer() {
         fontSize="80%"
       >
         <Block component="p">
-          React Router is built and maintained by <ReactTraining /> and hundreds
-          of <Contributors />.
+          React Router is built and maintained by <Remix /> and hundreds of{" "}
+          <Contributors />.
         </Block>
         <Block marginTop="20px" color={LIGHT_GRAY}>
-          &copy; {year} React Training
+          &copy; {year} Remix Software
         </Block>
         <Block color={LIGHT_GRAY}>
           Code examples and documentation <CC />

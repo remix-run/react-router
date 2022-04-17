@@ -9,7 +9,7 @@
     "directory": "packages/react-router-native"
   },
   "license": "MIT",
-  "author": "React Training <hello@reacttraining.com>",
+  "author": "Remix Software <hello@remix.run>",
   "main": "main.js",
   "sideEffects": false,
   "scripts": {
