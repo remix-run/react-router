@@ -65,7 +65,9 @@ export async function createApp({
   switch (templateType) {
     case "local": {
       if (debug) {
-        console.log(colors.warning(`🔍  Using local template: ${appTemplate}`));
+        console.log(
+          colors.warning(` 🔍  Using local template: ${appTemplate}`)
+        );
       }
 
       let filepath = appTemplate.startsWith("file://")
@@ -85,7 +87,7 @@ export async function createApp({
       if (debug) {
         console.log(
           colors.warning(
-            `🔍  Using template from remote tarball: ${appTemplate}`
+            ` 🔍  Using template from remote tarball: ${appTemplate}`
           )
         );
       }
@@ -100,7 +102,7 @@ export async function createApp({
       if (debug) {
         console.log(
           colors.warning(
-            `🔍  Using template from the ${`${owner}/${name}`} repo`
+            ` 🔍  Using template from the ${`${owner}/${name}`} repo`
           )
         );
       }
@@ -117,7 +119,7 @@ export async function createApp({
       if (debug) {
         console.log(
           colors.warning(
-            `🔍  Using the ${name} example template from the remix-run/remix repo`
+            ` 🔍  Using the ${name} example template from the remix-run/remix repo`
           )
         );
       }
@@ -135,7 +137,7 @@ export async function createApp({
       if (debug) {
         console.log(
           colors.warning(
-            `🔍  Using the ${appTemplate} template from the remix-run/remix repo`
+            ` 🔍  Using the ${appTemplate} template from the remix-run/remix repo`
           )
         );
       }
@@ -154,7 +156,7 @@ export async function createApp({
       if (debug) {
         console.log(
           colors.warning(
-            `🔍  Using the ${`${repoInfo.owner}/${repoInfo.name}`} repo as a template.`
+            ` 🔍  Using the ${`${repoInfo.owner}/${repoInfo.name}`} repo as a template.`
           )
         );
       }
