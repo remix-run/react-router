@@ -250,7 +250,7 @@ export async function dev(remixRoot: string, modeArg?: string) {
   await loadEnv(config.rootDirectory);
 
   let port = await getPort({
-    port: makeRange(process.env.PORT ? Number(process.env.PORT) : 3000, 3100),
+    port: process.env.PORT ? Number(process.env.PORT) : makeRange(3000, 3100),
   });
 
   if (config.serverEntryPoint) {
