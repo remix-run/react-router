@@ -72,6 +72,8 @@ router.navigate('/page', {
 
 Each navigation (link click or form submission) in the Router is reflected via an internal `state.transition` that indicates the state of the navigation. This concept of a `transition` is a complex and heavily async bit of logic that is foundational to the Router's ability to manage data loading, submission, error handling, redirects, interruptions, and so on. Due to the user-driven nature of interruptions we don't quite believe it can be modeled as a finite state machine, however we have modeled some of the happy path flows below for clarity.
 
+_Note: This does not depict error or interruption flows._
+
 ```mermaid
 graph LR
   %% Link click
@@ -102,4 +104,53 @@ graph LR
   end
   loading/actionReload -->|loaders completed| idle
   R2[loading/submissionRedirect] -->|loaders completed| idle
+
+  idle -->|fetcher action redirect| R3[loading/submissionRedirect]
+  subgraph "Fetcher action redirect"
+  R3[loading/submissionRedirect] --> R3[loading/submissionRedirect]
+  end
+  R3[loading/submissionRedirect] -->|loaders completed| idle
+```
+
+## Fetcher Flows
+
+Fetcher submissions and loads in the Router can each have their own internal states, indicated on `fetcher.state` and `fetcher.type`. As with transitions, these states are a complex and heavily async bit of logic that is foundational to the Router's ability to manage data loading, submission, error handling, redirects, interruptions, and so on. Due to the user-driven nature of interruptions we don't quite believe it can be modeled as a finite state machine, however we have modeled some of the happy path flows below for clarity.
+
+_Note: This does not depict error or interruption flows, nor the ability to re-use fetchers once they've reached `idle/done`._
+
+```mermaid
+graph LR
+  idle/init -->|"load"| loading/normalLoad
+  subgraph "Normal Fetch"
+  loading/normalLoad -.->|loader redirected| T1{{transition}}
+  end
+  loading/normalLoad -->|loader completed| idle/done
+  T1{{transition}} -.-> idle/done
+
+  idle/init -->|"submit (get)"| submitting/loaderSubmission
+  subgraph "Loader Submission"
+  submitting/loaderSubmission -.->|"loader redirected"| T2{{transition}}
+  end
+  submitting/loaderSubmission -->|loader completed| idle/done
+  T2{{transition}} -.-> idle/done
+
+  idle/init -->|"submit (post)"| submitting/actionSubmission
+  subgraph "Action Submission"
+  submitting/actionSubmission -->|action completed| loading/actionReload
+  submitting/actionSubmission -->|action redirected| loading/submissionRedirect
+  loading/submissionRedirect -.-> T3{{transition}}
+  loading/actionReload -.-> |loaders redirected| T3{{transition}}
+  end
+  T3{{transition}} -.-> idle/done
+  loading/actionReload --> |loaders completed| idle/done
+
+  idle/done -->|"revalidate"| loading/revalidate
+  subgraph "Fetcher Revalidation"
+  loading/revalidate -.->|loader redirected| T4{{transition}}
+  end
+  loading/revalidate -->|loader completed| idle/done
+  T4{{transition}} -.-> idle/done
+
+  classDef transition fill:lightgreen;
+  class T1,T2,T3,T4 transition;
 ```
