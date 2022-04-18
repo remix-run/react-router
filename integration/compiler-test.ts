@@ -201,7 +201,7 @@ test.describe("compiler", () => {
 
     // rendered the page instead of the error boundary
     expect(await app.getHtml("#built-ins")).toBe(
-      '<div id="built-ins">test/file.txt</div>'
+      `<div id="built-ins">test${path.sep}file.txt</div>`
     );
 
     let routeModule = await fixture.getBrowserAsset(

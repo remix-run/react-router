@@ -248,6 +248,11 @@ async function downloadAndExtractTarball(
     );
   }
 
+  // file paths returned from github are always unix style
+  if (filePath) {
+    filePath = filePath.replaceAll("\\", "/");
+  }
+
   try {
     await pipeline(
       response.body.pipe(gunzip()),

@@ -8,10 +8,7 @@ import semver from "semver";
 let DOWN = "\x1B\x5B\x42";
 let ENTER = "\x0D";
 
-let execFile =
-  process.platform === "win32"
-    ? util.promisify(childProcess.exec)
-    : util.promisify(childProcess.execFile);
+let execFile = util.promisify(childProcess.execFile);
 
 const TEMP_DIR = path.join(
   fse.realpathSync(os.tmpdir()),
@@ -31,30 +28,57 @@ async function execRemix(
   args: Array<string>,
   options: Parameters<typeof execFile>[2] = {}
 ) {
-  let result = await execFile(
-    "node",
-    [
-      "--require",
-      require.resolve("esbuild-register"),
-      "--require",
-      path.join(__dirname, "./msw.ts"),
-      path.resolve(__dirname, "../cli.ts"),
-      ...args,
-    ],
-    {
-      cwd: TEMP_DIR,
-      ...options,
-      env: {
-        ...process.env,
-        NO_COLOR: "1",
-        ...options.env,
-      },
-    }
-  );
-  return {
-    ...result,
-    stdout: result.stdout.replace(TEMP_DIR, "<TEMP_DIR>").trim(),
-  };
+  if (process.platform === "win32") {
+    let cp = childProcess.spawnSync(
+      "node",
+      [
+        "--require",
+        require.resolve("esbuild-register"),
+        "--require",
+        path.join(__dirname, "./msw.ts"),
+        path.resolve(__dirname, "../cli.ts"),
+        ...args,
+      ],
+      {
+        cwd: TEMP_DIR,
+        ...options,
+        env: {
+          ...process.env,
+          NO_COLOR: "1",
+          ...options.env,
+        },
+      }
+    );
+
+    return {
+      stdout: cp.stdout?.toString("utf-8"),
+    };
+  } else {
+    let result = await execFile(
+      "node",
+      [
+        "--require",
+        require.resolve("esbuild-register"),
+        "--require",
+        path.join(__dirname, "./msw.ts"),
+        path.resolve(__dirname, "../cli.ts"),
+        ...args,
+      ],
+      {
+        cwd: TEMP_DIR,
+        ...options,
+        env: {
+          ...process.env,
+          NO_COLOR: "1",
+          ...options.env,
+        },
+      }
+    );
+    return {
+      ...result,
+      stdout: result.stdout.replace(TEMP_DIR, "<TEMP_DIR>").trim(),
+    };
+  }
 }
 
 describe("remix CLI", () => {
@@ -280,7 +304,7 @@ async function interactWithShell(
         let currentSelection = chunk
           .split("\n")
           .slice(1)
-          .find((l) => l.includes("❯"));
+          .find((l) => l.includes("❯") || l.includes(">"));
 
         if (currentSelection && answer.test(currentSelection)) {
           proc.stdin.write(ENTER);

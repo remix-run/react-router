@@ -384,7 +384,8 @@ export async function run(argv: string[] = process.argv.slice(2)) {
           console.log(
             colors.warning(
               "💿 You've opted out of installing dependencies so we won't run the " +
-                "remix.init/index.js script for you just yet. Once you've installed " +
+                path.join("remix.init", "index.js") +
+                " script for you just yet. Once you've installed " +
                 `dependencies, you can run it manually with \`${npxInterop[pm]} remix init\``
             )
           );
