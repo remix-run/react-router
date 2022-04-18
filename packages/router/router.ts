@@ -785,7 +785,7 @@ export function createRouter(init: RouterInit): Router {
     let loadingTransition =
       overrideTransition || getLoadingTransition(location, state, submission);
 
-    let [matchesToLoad, staleFetchers] = getMatchesToLoad(
+    let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
       state,
       matches,
       // Pass the current transition if this is an uninterrupted revalidation,
@@ -800,7 +800,7 @@ export function createRouter(init: RouterInit): Router {
     );
 
     // Short circuit if we have no loaders to run
-    if (matchesToLoad.length === 0 && staleFetchers.length === 0) {
+    if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
       completeNavigation(historyAction, location, {
         matches,
         // Commit pending action exception if we're short circuiting
@@ -815,7 +815,7 @@ export function createRouter(init: RouterInit): Router {
     // new action data or existing action data (in the case of a revalidation
     // interrupting an actionReload)
     if (!isUninterruptedRevalidation) {
-      staleFetchers.forEach(([key]) => {
+      revalidatingFetchers.forEach(([key]) => {
         let revalidatingFetcher: FetcherStates["Revalidating"] = {
           state: "loading",
           type: "revalidate",
@@ -830,7 +830,7 @@ export function createRouter(init: RouterInit): Router {
       updateState({
         transition: loadingTransition,
         actionData: pendingActionData || state.actionData || null,
-        ...(staleFetchers.length > 0
+        ...(revalidatingFetchers.length > 0
           ? { fetchers: new Map(state.fetchers) }
           : {}),
       });
@@ -840,7 +840,7 @@ export function createRouter(init: RouterInit): Router {
     let abortController = new AbortController();
     pendingNavigationController = abortController;
     pendingNavigationLoadId = ++incrementingLoadId;
-    staleFetchers.forEach(([key]) =>
+    revalidatingFetchers.forEach(([key]) =>
       fetchControllers.set(key, abortController)
     );
 
@@ -851,7 +851,7 @@ export function createRouter(init: RouterInit): Router {
       ...matchesToLoad.map((m) =>
         callLoaderOrAction(m, location, abortController.signal)
       ),
-      ...staleFetchers.map(([, href, match]) =>
+      ...revalidatingFetchers.map(([, href, match]) =>
         callLoaderOrAction(match, href, abortController.signal)
       ),
     ]);
@@ -866,7 +866,7 @@ export function createRouter(init: RouterInit): Router {
     // we short circuited because pendingNavigationController will have already
     // been assigned to a new controller for the next navigation
     pendingNavigationController = null;
-    staleFetchers.forEach((key) => fetchControllers.delete(key));
+    revalidatingFetchers.forEach((key) => fetchControllers.delete(key));
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
@@ -878,42 +878,14 @@ export function createRouter(init: RouterInit): Router {
 
     // Process and commit output from loaders
     let { loaderData, exceptions } = processLoaderData(
+      state,
       matches,
       matchesToLoad,
       navigationResults,
-      pendingActionException
+      pendingActionException,
+      revalidatingFetchers,
+      fetcherResults
     );
-
-    staleFetchers.forEach(([key, href, match], index) => {
-      let result = fetcherResults[index];
-
-      // Process fetcher non-redirect exceptions
-      if (isExceptionResult(result)) {
-        let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
-        if (!exceptions?.[boundaryMatch.route.id]) {
-          exceptions = {
-            ...exceptions,
-            [boundaryMatch.route.id]: result.exception,
-          };
-        }
-        state.fetchers.delete(key);
-      } else if (isRedirectResult(result)) {
-        // Should never get here, redirects should get processed above, but we
-        // keep this to type narrow to a success result in the else
-        invariant(false, "Unhandled fetcher revalidation redirect");
-      } else {
-        let doneFetcher: FetcherStates["Done"] = {
-          state: "idle",
-          type: "done",
-          data: result.data,
-          formMethod: undefined,
-          formAction: undefined,
-          formEncType: undefined,
-          formData: undefined,
-        };
-        state.fetchers.set(key, doneFetcher);
-      }
-    });
 
     markFetchRedirectsDone();
     let didAbortFetchLoads = abortStaleFetchLoads(pendingNavigationLoadId);
@@ -921,7 +893,7 @@ export function createRouter(init: RouterInit): Router {
     return {
       loaderData,
       exceptions,
-      ...(didAbortFetchLoads || staleFetchers.length > 0
+      ...(didAbortFetchLoads || revalidatingFetchers.length > 0
         ? { fetchers: new Map(state.fetchers) }
         : {}),
     };
@@ -1081,7 +1053,7 @@ export function createRouter(init: RouterInit): Router {
     };
     state.fetchers.set(key, loadFetcher);
 
-    let [matchesToLoad, staleFetchers] = getMatchesToLoad(
+    let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
       state,
       matches,
       state.transition,
@@ -1092,11 +1064,9 @@ export function createRouter(init: RouterInit): Router {
       true
     );
 
-    // TODO: Short circuit if no loaders to run?
-
     // Put all revalidating fetchers into the revalidating state, except for the
     // current fetcher which we want to keep in the actionReload state
-    staleFetchers
+    revalidatingFetchers
       .filter(([staleKey]) => staleKey !== key)
       .forEach(([staleKey]) => {
         let revalidatingFetcher: FetcherStates["Revalidating"] = {
@@ -1121,7 +1091,7 @@ export function createRouter(init: RouterInit): Router {
       ...matchesToLoad.map((m) =>
         callLoaderOrAction(m, nextLocation, abortController.signal)
       ),
-      ...staleFetchers.map(([, href, match]) =>
+      ...revalidatingFetchers.map(([, href, match]) =>
         callLoaderOrAction(match, href, abortController.signal)
       ),
     ]);
@@ -1134,7 +1104,9 @@ export function createRouter(init: RouterInit): Router {
 
     fetchReloadIds.delete(key);
     fetchControllers.delete(key);
-    staleFetchers.forEach((staleKey) => fetchControllers.delete(staleKey));
+    revalidatingFetchers.forEach((staleKey) =>
+      fetchControllers.delete(staleKey)
+    );
 
     let loaderRedirect = findRedirect(loaderResults);
     if (loaderRedirect) {
@@ -1145,9 +1117,13 @@ export function createRouter(init: RouterInit): Router {
 
     // Process and commit output from loaders
     let { loaderData, exceptions } = processLoaderData(
+      state,
       state.matches,
       matchesToLoad,
-      loaderResults
+      loaderResults,
+      null,
+      revalidatingFetchers,
+      fetcherResults
     );
 
     let doneFetcher: FetcherStates["Done"] = {
@@ -1160,37 +1136,6 @@ export function createRouter(init: RouterInit): Router {
       formData: undefined,
     };
     state.fetchers.set(key, doneFetcher);
-
-    staleFetchers.forEach(([staleKey, href, match], index) => {
-      let result = fetcherResults[index];
-
-      // Process fetcher non-redirect exceptions
-      if (isExceptionResult(result)) {
-        let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
-        if (!exceptions?.[boundaryMatch.route.id]) {
-          exceptions = {
-            ...exceptions,
-            [boundaryMatch.route.id]: result.exception,
-          };
-        }
-        state.fetchers.delete(staleKey);
-      } else if (isRedirectResult(result)) {
-        // Should never get here, redirects should get processed above, but we
-        // keep this to type narrow to a success result in the else
-        invariant(false, "Unhandled fetcher revalidation redirect");
-      } else {
-        let doneFetcher: FetcherStates["Done"] = {
-          state: "idle",
-          type: "done",
-          data: result.data,
-          formMethod: undefined,
-          formAction: undefined,
-          formEncType: undefined,
-          formData: undefined,
-        };
-        state.fetchers.set(staleKey, doneFetcher);
-      }
-    });
 
     let didAbortFetchLoads = abortStaleFetchLoads(loadId);
 
@@ -1536,7 +1481,7 @@ function getMatchesToLoad(
   });
 
   // Pick fetchers that qualify for revalidation
-  let staleFetchers: [string, string, DataRouteMatch][] = [];
+  let revalidatingFetchers: [string, string, DataRouteMatch][] = [];
   if (transition.state)
     for (let entry of revalidatingFetcherMatches.entries()) {
       let [key, [href, match]] = entry;
@@ -1552,11 +1497,11 @@ function getMatchesToLoad(
         true
       );
       if (shouldRevalidate) {
-        staleFetchers.push([key, href, match]);
+        revalidatingFetchers.push([key, href, match]);
       }
     }
 
-  return [navigationMatches, staleFetchers];
+  return [navigationMatches, revalidatingFetchers];
 }
 
 function isNewLoader(
@@ -1744,10 +1689,13 @@ function createRequest(
 }
 
 function processLoaderData(
+  state: RouterState,
   matches: DataRouteMatch[],
   matchesToLoad: DataRouteMatch[],
   results: DataResult[],
-  pendingActionException?: RouteData | null
+  pendingActionException: RouteData | null,
+  revalidatingFetchers: [string, string, DataRouteMatch][],
+  fetcherResults: DataResult[]
 ): {
   loaderData: RouterState["loaderData"];
   exceptions: RouterState["exceptions"];
@@ -1788,6 +1736,38 @@ function processLoaderData(
   if (pendingActionException) {
     exceptions = pendingActionException;
   }
+
+  // Process results from our revalidating fetchers
+  revalidatingFetchers.forEach(([key, href, match], index) => {
+    let result = fetcherResults[index];
+
+    // Process fetcher non-redirect exceptions
+    if (isExceptionResult(result)) {
+      let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
+      if (!exceptions?.[boundaryMatch.route.id]) {
+        exceptions = {
+          ...exceptions,
+          [boundaryMatch.route.id]: result.exception,
+        };
+      }
+      state.fetchers.delete(key);
+    } else if (isRedirectResult(result)) {
+      // Should never get here, redirects should get processed above, but we
+      // keep this to type narrow to a success result in the else
+      invariant(false, "Unhandled fetcher revalidation redirect");
+    } else {
+      let doneFetcher: FetcherStates["Done"] = {
+        state: "idle",
+        type: "done",
+        data: result.data,
+        formMethod: undefined,
+        formAction: undefined,
+        formEncType: undefined,
+        formData: undefined,
+      };
+      state.fetchers.set(key, doneFetcher);
+    }
+  });
 
   return { loaderData, exceptions };
 }
