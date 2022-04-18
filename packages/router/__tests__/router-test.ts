@@ -14,7 +14,6 @@ import {
 import {
   ActionFunctionArgs,
   DataRouteObject,
-  invariant,
   matchRoutes,
   RouteMatch,
 } from "../utils";
@@ -64,12 +63,14 @@ type Helpers = InternalHelpers & {
   redirect: (
     href: string,
     status?: number,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
+    shims?: string[]
   ) => Promise<NavigationHelpers>;
   redirectReturn: (
     href: string,
     status?: number,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
+    shims?: string[]
   ) => Promise<NavigationHelpers>;
 };
 
@@ -79,12 +80,12 @@ type NavigationHelpers = {
   navigationId: number;
   loaders: Record<string, Helpers>;
   actions: Record<string, Helpers>;
+  shimLoaderHelper: (routeId: string) => void;
 };
 
 type FetcherHelpers = NavigationHelpers & {
   key: string;
   fetcher: Fetcher;
-  shimLoaderHelper: (routeId: string) => void;
 };
 
 // Global array to stick any errors thrown from router.navigate() and then we
@@ -95,6 +96,18 @@ function handleUncaughtException(e: any): void {
   uncaughtExceptions.push(
     e instanceof Error ? `${e.message}\n${e.stack}` : String(e)
   );
+}
+
+export function invariant(value: boolean, message?: string): asserts value;
+export function invariant<T>(
+  value: T | null | undefined,
+  message?: string
+): asserts value is T;
+export function invariant(value: any, message?: string) {
+  if (value === false || value === null || typeof value === "undefined") {
+    console.warn("Test invaeriant failed:", message);
+    throw new Error(message);
+  }
 }
 
 function defer() {
@@ -267,6 +280,55 @@ function setup({
     addHelpers(routeId, internalHelpers);
     gcDfds.add(internalHelpers.dfd);
 
+    async function _redirect(
+      isRejection: boolean,
+      href: string,
+      status = 301,
+      headers = {},
+      shims: string[] = []
+    ) {
+      let redirectNavigationId = ++guid;
+      activeLoaderType = "navigation";
+      activeLoaderNavigationId = redirectNavigationId;
+      let helpers = getNavigationHelpers(href, redirectNavigationId);
+
+      // Since a redirect kicks off and awaits a new navigation we can't shim
+      // these _after_ the redirect, so we allow the caller to pass in loader
+      // shims with the redirect
+      shims.forEach((routeId) => {
+        invariant(
+          !helpers.loaders[routeId],
+          "Can't overwrite existing helpers"
+        );
+        helpers.loaders[routeId] = getRouteHelpers(
+          routeId,
+          redirectNavigationId,
+          (routeId, helpers) =>
+            activeHelpers.set(
+              `navigation:${redirectNavigationId}:loader:${routeId}`,
+              helpers
+            )
+        );
+      });
+
+      try {
+        //@ts-ignore
+        let method: "reject" | "resolve" = isRejection ? "reject" : "resolve";
+        await internalHelpers.dfd[method](
+          //@ts-ignore
+          new Response(null, {
+            status,
+            headers: {
+              location: href,
+              ...headers,
+            },
+          })
+        );
+        await new Promise((r) => setImmediate(r));
+      } catch (e) {}
+      return helpers;
+    }
+
     let routeHelpers: Helpers = {
       // @ts-expect-error
       get signal() {
@@ -288,47 +350,11 @@ function setup({
           await new Promise((r) => setImmediate(r));
         } catch (e) {}
       },
-      async redirect(href, status = 301, headers = {}) {
-        let redirectNavigationId = ++guid;
-        activeLoaderType = "navigation";
-        activeLoaderNavigationId = redirectNavigationId;
-        let helpers = getNavigationHelpers(href, redirectNavigationId);
-        try {
-          //@ts-ignore
-          await internalHelpers.dfd.reject(
-            //@ts-ignore
-            new Response(null, {
-              status,
-              headers: {
-                location: href,
-                ...headers,
-              },
-            })
-          );
-          await new Promise((r) => setImmediate(r));
-        } catch (e) {}
-        return helpers;
+      async redirect(href, status = 301, headers = {}, shims = []) {
+        return _redirect(true, href, status, headers, shims);
       },
-      async redirectReturn(href, status = 301, headers = {}) {
-        let redirectNavigationId = ++guid;
-        activeLoaderType = "navigation";
-        activeLoaderNavigationId = redirectNavigationId;
-        let helpers = getNavigationHelpers(href, redirectNavigationId);
-        try {
-          //@ts-ignore
-          await internalHelpers.dfd.resolve(
-            //@ts-ignore
-            new Response(null, {
-              status,
-              headers: {
-                location: href,
-                ...headers,
-              },
-            })
-          );
-          await new Promise((r) => setImmediate(r));
-        } catch (e) {}
-        return helpers;
+      async redirectReturn(href, status = 301, headers = {}, shims = []) {
+        return _redirect(false, href, status, headers, shims);
       },
     };
     return routeHelpers;
@@ -374,10 +400,24 @@ function setup({
         )
     );
 
+    function shimLoaderHelper(routeId: string) {
+      invariant(!loaderHelpers[routeId], "Can't overwrite existing helpers");
+      loaderHelpers[routeId] = getRouteHelpers(
+        routeId,
+        navigationId,
+        (routeId, helpers) =>
+          activeHelpers.set(
+            `navigation:${navigationId}:loader:${routeId}`,
+            helpers
+          )
+      );
+    }
+
     return {
       navigationId,
       loaders: loaderHelpers,
       actions: actionHelpers,
+      shimLoaderHelper,
     };
   }
 
@@ -431,14 +471,9 @@ function setup({
         activeHelpers.set(`fetch:${navigationId}:action:${routeId}`, helpers)
     );
 
-    let fetcherHelpers: FetcherHelpers;
-
     function shimLoaderHelper(routeId: string) {
-      invariant(
-        !fetcherHelpers.loaders[routeId],
-        "Can;t overwrite existing helpers"
-      );
-      fetcherHelpers.loaders[routeId] = getRouteHelpers(
+      invariant(!loaderHelpers[routeId], "Can't overwrite existing helpers");
+      loaderHelpers[routeId] = getRouteHelpers(
         routeId,
         navigationId,
         (routeId, helpers) =>
@@ -446,7 +481,7 @@ function setup({
       );
     }
 
-    fetcherHelpers = {
+    return {
       key,
       navigationId,
       get fetcher() {
@@ -456,8 +491,6 @@ function setup({
       actions: actionHelpers,
       shimLoaderHelper,
     };
-
-    return fetcherHelpers;
   }
 
   // Simulate a navigation, returning a series of helpers to manually
@@ -4740,10 +4773,9 @@ describe("a router", () => {
         let AR = await A.actions.foo.redirect("/bar");
         expect(A.fetcher.state).toBe("loading");
         expect(A.fetcher.type).toBe("actionRedirect");
-        // TODO: ok that fetchActionRedirect is collapsed into submissionRedirect now?
         expect(t.router.state.transition.type).toBe("submissionRedirect");
         expect(t.router.state.transition.location?.pathname).toBe("/bar");
-        await AR.loaders.root.resolve("root");
+        await AR.loaders.root.resolve("ROOT*");
         await AR.loaders.bar.resolve("stuff");
         expect(A.fetcher).toEqual({
           data: undefined,
@@ -4752,6 +4784,11 @@ describe("a router", () => {
           formEncType: undefined,
           formData: undefined,
           type: "done",
+        });
+        // Root loader should be re-called after fetchActionRedirect
+        expect(t.router.state.loaderData).toEqual({
+          root: "ROOT*",
+          bar: "stuff",
         });
       });
     });
@@ -5353,188 +5390,186 @@ describe("a router", () => {
     });
 
     describe("opt-in fetcher revalidation", () => {
-      function setupRevalidatingFetchers() {
-        let count = 0;
-
-        return createRouter({
-          history: createMemoryHistory({ initialEntries: ["/"] }),
-          routes: [
-            {
-              id: "root",
-              path: "/",
-              loader: () => Promise.resolve(++count),
-              action: () => Promise.resolve(null),
-            },
-            {
-              id: "redirect",
-              path: "/redirect",
-              loader: () => Promise.resolve(++count),
-              action: () =>
-                new Response(null, { status: 301, headers: { location: "/" } }),
-            },
-            {
-              id: "error",
-              path: "/error",
-              loader: () => Promise.resolve(++count),
-              action: () => {
-                throw new Error("Kaboom!");
-              },
-            },
-          ],
-          hydrationData: {
-            loaderData: { root: count },
-          },
+      it("revalidates opted in fetchers on action submissions", async () => {
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
         });
-      }
+        expect(t.router.state.transition).toBe(IDLE_TRANSITION);
 
-      it("revalidates opted-in fetchers on action submissions", async () => {
         let key = "key";
-        let revalidatingKey = "revalidatingKey";
-        let router = setupRevalidatingFetchers();
+        let A = await t.fetch("/tasks/1", key);
+        await A.loaders.tasksId.resolve("TASKS-1");
+        expect(A.fetcher.state).toBe("idle");
+        expect(A.fetcher.data).toBe("TASKS-1");
 
-        expect(router.state.loaderData).toMatchObject({
-          root: 0,
+        let revalidatingKey = "r-key";
+        let B = await t.fetch("/tasks/2", revalidatingKey, {
+          revalidate: true,
         });
-        expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
-        expect(router.getFetcher(revalidatingKey)).toBe(IDLE_FETCHER);
+        await B.loaders.tasksId.resolve("TASKS-2");
+        expect(B.fetcher.state).toBe("idle");
+        expect(B.fetcher.data).toBe("TASKS-2");
 
-        router.fetch(key, "/");
-        router.fetch(revalidatingKey, "/", { revalidate: true });
-        await new Promise((r) => setImmediate(r));
-        expect(router.getFetcher(key)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 1,
-        });
-        expect(router.getFetcher(revalidatingKey)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 2,
-        });
-
-        router.navigate("/", {
+        let C = await t.navigate("/tasks", {
           formMethod: "post",
           formData: createFormData({}),
         });
-        await new Promise((r) => setImmediate(r));
-        expect(router.state.loaderData).toMatchObject({
-          root: 3,
-        });
-        expect(router.getFetcher(key)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 1, // Not a revalidating fetcher
-        });
-        expect(router.getFetcher(revalidatingKey)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 4,
-        });
+        // Add a helper for the fetcher that will be revalidating
+        C.shimLoaderHelper("tasksId");
+
+        // Resolve the action
+        await C.actions.tasks.resolve("TASKS ACTION");
+
+        // Only the revalidating fetcher should go back into a loading state
+        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
+          "loading"
+        );
+
+        // Resolve navigation loaders + fetcher loader
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.tasks.resolve("TASKS LOADER");
+        await C.loaders.tasksId.resolve("TASKS-2*");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)?.data).toBe("TASKS-1");
+        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
+          "idle"
+        );
+        expect(t.router.state.fetchers.get(revalidatingKey)?.data).toBe(
+          "TASKS-2*"
+        );
       });
 
-      it("revalidates opted-in fetchers on action redirects", async () => {
+      it("revalidates opted in fetchers on action redirects", async () => {
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
+        });
+        expect(t.router.state.transition).toBe(IDLE_TRANSITION);
+
         let key = "key";
-        let revalidatingKey = "revalidatingKey";
-        let router = setupRevalidatingFetchers();
+        let A = await t.fetch("/tasks/1", key);
+        await A.loaders.tasksId.resolve("TASKS-1");
+        expect(A.fetcher.state).toBe("idle");
+        expect(A.fetcher.data).toBe("TASKS-1");
 
-        expect(router.state.loaderData).toMatchObject({
-          root: 0,
+        let revalidatingKey = "r-key";
+        let B = await t.fetch("/tasks/2", revalidatingKey, {
+          revalidate: true,
         });
-        expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
-        expect(router.getFetcher(revalidatingKey)).toBe(IDLE_FETCHER);
+        await B.loaders.tasksId.resolve("TASKS-2");
+        expect(B.fetcher.state).toBe("idle");
+        expect(B.fetcher.data).toBe("TASKS-2");
 
-        router.fetch(key, "/");
-        router.fetch(revalidatingKey, "/", { revalidate: true });
-        await new Promise((r) => setImmediate(r));
-        expect(router.getFetcher(key)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 1,
-        });
-        expect(router.getFetcher(revalidatingKey)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 2,
-        });
-
-        router.navigate("/redirect", {
+        let C = await t.navigate("/tasks", {
           formMethod: "post",
           formData: createFormData({}),
         });
-        await new Promise((r) => setImmediate(r));
-        expect(router.state.loaderData).toMatchObject({
-          root: 3,
-        });
-        expect(router.getFetcher(key)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 1, // Not a revalidating fetcher
-        });
-        expect(router.getFetcher(revalidatingKey)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 4,
-        });
+
+        // Redirect the action
+        let D = await C.actions.tasks.redirect("/", undefined, undefined, [
+          "tasksId",
+        ]);
+
+        // Only the revalidating fetcher should go back into a loading state
+        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
+          "loading"
+        );
+
+        // Resolve navigation loaders + fetcher loader
+        await D.loaders.root.resolve("ROOT*");
+        await D.loaders.index.resolve("INDEX*");
+        await D.loaders.tasksId.resolve("TASKS-2*");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)?.data).toBe("TASKS-1");
+        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
+          "idle"
+        );
+        expect(t.router.state.fetchers.get(revalidatingKey)?.data).toBe(
+          "TASKS-2*"
+        );
       });
 
-      it("revalidates opted-in fetchers on an action error", async () => {
+      it("revalidates opted in fetchers on action redirects", async () => {
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
+        });
+        expect(t.router.state.transition).toBe(IDLE_TRANSITION);
+
         let key = "key";
-        let router = setupRevalidatingFetchers();
+        let A = await t.fetch("/tasks/1", key);
+        await A.loaders.tasksId.resolve("TASKS-1");
+        expect(A.fetcher.state).toBe("idle");
+        expect(A.fetcher.data).toBe("TASKS-1");
 
-        expect(router.state.loaderData).toMatchObject({
-          root: 0,
+        let revalidatingKey = "r-key";
+        let B = await t.fetch("/tasks/2", revalidatingKey, {
+          revalidate: true,
         });
-        expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
+        await B.loaders.tasksId.resolve("TASKS-2");
+        expect(B.fetcher.state).toBe("idle");
+        expect(B.fetcher.data).toBe("TASKS-2");
 
-        router.fetch(key, "/", { revalidate: true });
-        await new Promise((r) => setImmediate(r));
-        expect(router.getFetcher(key)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 1,
-        });
-
-        router.navigate("/error", {
+        let C = await t.navigate("/tasks", {
           formMethod: "post",
           formData: createFormData({}),
         });
-        await new Promise((r) => setImmediate(r));
-        expect(router.state.exceptions).toMatchObject({
-          error: new Error("Kaboom!"),
-        });
-        expect(router.getFetcher(key)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 2,
-        });
+        C.shimLoaderHelper("tasksId");
+
+        // Redirect the action
+        await C.actions.tasks.reject(new Error("Kaboom!"));
+
+        // Only the revalidating fetcher should go back into a loading state
+        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
+          "loading"
+        );
+
+        // Resolve navigation loaders + fetcher loader
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.tasksId.resolve("TASKS-2*");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)?.data).toBe("TASKS-1");
+        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
+          "idle"
+        );
+        expect(t.router.state.fetchers.get(revalidatingKey)?.data).toBe(
+          "TASKS-2*"
+        );
       });
 
       it("does not revalidate idle fetchers when a loader navigation is performed", async () => {
         let key = "key";
-        let router = setupRevalidatingFetchers();
-
-        expect(router.state.loaderData).toMatchObject({
-          root: 0,
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
         });
-        expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
 
-        router.fetch(key, "/", { revalidate: true });
-        await new Promise((r) => setImmediate(r));
-        expect(router.state.fetchers.get(key)).toMatchObject({
+        let A = await t.fetch("/", key, { revalidate: true });
+        await A.loaders.root.resolve("ROOT FETCH");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
           state: "idle",
           type: "done",
-          data: 1,
+          data: "ROOT FETCH",
         });
 
-        router.navigate("/");
-        await new Promise((r) => setImmediate(r));
-        expect(router.state.loaderData).toMatchObject({
-          root: 2,
+        let B = await t.navigate("/tasks");
+        await B.loaders.tasks.resolve("TASKS");
+        expect(t.router.state.loaderData).toMatchObject({
+          root: "ROOT",
+          tasks: "TASKS",
         });
-        expect(router.getFetcher(key)).toMatchObject({
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
           state: "idle",
           type: "done",
-          data: 1,
+          data: "ROOT FETCH",
         });
       });
 
@@ -5623,112 +5658,105 @@ describe("a router", () => {
 
       it("handles opted-in fetcher revalidation errors", async () => {
         let key = "key";
-        let count = 0;
-
-        let router = createRouter({
-          history: createMemoryHistory({ initialEntries: ["/"] }),
-          routes: [
-            {
-              id: "root",
-              path: "/",
-              loader: () => {
-                if (++count <= 2) {
-                  // First fetch and navigation load should resolve
-                  return Promise.resolve(count);
-                } else {
-                  // Revalidating fetch should reject
-                  return Promise.reject(new Error("Fetcher error"));
-                }
-              },
-              action: () => Promise.resolve(null),
-            },
-          ],
-          hydrationData: {
-            loaderData: { root: count },
-          },
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
         });
 
-        expect(router.state).toMatchObject({
+        expect(t.router.state).toMatchObject({
           loaderData: {
-            root: 0,
+            root: "ROOT",
+            index: "INDEX",
           },
           exceptions: null,
         });
-        expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
 
-        router.fetch(key, "/", { revalidate: true });
-        await new Promise((r) => setImmediate(r));
-        expect(router.getFetcher(key)).toMatchObject({
+        let A = await t.fetch("/tasks/1", key, { revalidate: true });
+        await A.loaders.tasksId.resolve("ROOT FETCH");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
           state: "idle",
           type: "done",
-          data: 1,
+          data: "ROOT FETCH",
         });
 
-        router.navigate("/", {
+        let B = await t.navigate("/tasks", {
           formMethod: "post",
           formData: createFormData({}),
         });
-        await new Promise((r) => setImmediate(r));
-        expect(router.state).toMatchObject({
+        B.shimLoaderHelper("tasksId");
+        await B.actions.tasks.resolve("TASKS ACTION");
+        await B.loaders.root.resolve("ROOT*");
+        await B.loaders.tasks.resolve("TASKS*");
+        await B.loaders.tasksId.reject(new Error("Fetcher error"));
+        expect(t.router.state).toMatchObject({
           loaderData: {
-            root: 2,
+            root: "ROOT*",
+            tasks: "TASKS*",
           },
           exceptions: {
+            // Even though tasksId has an exceptionElement, this bubbles up to
+            // the root since it's the closest "active" rendered route with an
+            // exceptionElement
             root: new Error("Fetcher error"),
           },
         });
-        expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
+        expect(t.router.state.fetchers.get(key)).toBe(undefined);
       });
 
       it("revalidates opted-in fetchers on fetcher action submissions", async () => {
         let key = "key";
         let revalidatingKey = "revalidatingKey";
         let actionKey = "actionKey";
-        let router = setupRevalidatingFetchers();
-
-        expect(router.state.loaderData).toMatchObject({
-          root: 0,
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
         });
-        expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
-        expect(router.getFetcher(revalidatingKey)).toBe(IDLE_FETCHER);
-        expect(router.getFetcher(actionKey)).toBe(IDLE_FETCHER);
 
-        router.fetch(key, "/");
-        router.fetch(revalidatingKey, "/", { revalidate: true });
-        await new Promise((r) => setImmediate(r));
-        expect(router.getFetcher(key)).toMatchObject({
-          state: "idle",
+        let A = await t.fetch("/tasks/1", key);
+        await A.loaders.tasksId.resolve("ROOT 1");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
           type: "done",
-          data: 1,
-        });
-        expect(router.getFetcher(revalidatingKey)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 2,
+          data: "ROOT 1",
         });
 
-        await router.fetch(actionKey, "/", {
+        let B = await t.fetch("/tasks/2", revalidatingKey, {
+          revalidate: true,
+        });
+        await B.loaders.tasksId.resolve("ROOT 2");
+        expect(t.router.state.fetchers.get(revalidatingKey)).toMatchObject({
+          type: "done",
+          data: "ROOT 2",
+        });
+
+        let C = await t.fetch("/tasks", actionKey, {
           formMethod: "post",
           formData: createFormData({}),
         });
-        await new Promise((r) => setImmediate(r));
-        expect(router.state.loaderData).toMatchObject({
-          root: 3,
+        C.shimLoaderHelper("tasksId");
+
+        await C.actions.tasks.resolve("TASKS ACTION");
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.index.resolve("INDEX*");
+        await C.loaders.tasksId.resolve("ROOT 2*");
+
+        expect(t.router.state.loaderData).toMatchObject({
+          root: "ROOT*",
+          index: "INDEX*",
         });
-        expect(router.getFetcher(key)).toMatchObject({
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          type: "done",
+          data: "ROOT 1", // Not a revalidating fetcher
+        });
+        expect(t.router.state.fetchers.get(revalidatingKey)).toMatchObject({
+          type: "done",
+          data: "ROOT 2*", // revalidated data
+        });
+        expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
           state: "idle",
           type: "done",
-          data: 1, // Not a revalidating fetcher
-        });
-        expect(router.getFetcher(revalidatingKey)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: 4,
-        });
-        expect(router.getFetcher(actionKey)).toMatchObject({
-          state: "idle",
-          type: "done",
-          data: null,
+          data: "TASKS ACTION", // action data
         });
       });
     });
