@@ -1403,6 +1403,89 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           </div>"
         `);
       });
+
+      it("handles revalidating fetchers", async () => {
+        let count = 0;
+        let fetchCount = 0;
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/")}
+            hydrationData={{ loaderData: { "0": null } }}
+          >
+            <Route
+              path="/"
+              element={<Comp />}
+              action={async ({ request }) => {
+                let formData = await request.formData();
+                count = count + parseInt(String(formData.get("increment")), 10);
+                return { count };
+              }}
+              loader={async () => ({ count: ++count })}
+            />
+            <Route
+              path="/fetch"
+              loader={async () => ({ fetchCount: ++fetchCount })}
+            />
+          </TestDataRouter>
+        );
+
+        function Comp() {
+          let fetcher = useFetcher({ revalidate: true });
+          return (
+            <>
+              <p id="output">
+                {fetcher.state}
+                {fetcher.type}
+                {fetcher.data ? JSON.stringify(fetcher.data) : null}
+              </p>
+              <button onClick={() => fetcher.load("/fetch")}>
+                load fetcher
+              </button>
+              <Form method="post">
+                <button type="submit" name="increment" value="10">
+                  submit
+                </button>
+              </Form>
+            </>
+          );
+        }
+
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            init
+          </p>"
+        `);
+
+        fireEvent.click(screen.getByText("load fetcher"));
+        await waitFor(() => screen.getByText(/idle/));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            done
+            {\\"fetchCount\\":1}
+          </p>"
+        `);
+
+        fireEvent.click(screen.getByText("submit"));
+        await waitFor(() => screen.getByText(/idle/));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<p
+            id=\\"output\\"
+          >
+            idle
+            done
+            {\\"fetchCount\\":2}
+          </p>"
+        `);
+      });
     });
 
     describe("exceptions", () => {

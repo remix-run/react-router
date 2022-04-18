@@ -931,6 +931,7 @@ export function createRouter(init: RouterInit): Router {
         formData: opts.formData,
       };
       if (isActionSubmission(submission)) {
+        revalidatingFetcherMatches.delete(key);
         await handleFetcherAction(key, href, match, submission);
       } else {
         let loadingFetcher: FetcherStates["SubmittingLoader"] = {

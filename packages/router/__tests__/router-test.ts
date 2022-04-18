@@ -5400,17 +5400,17 @@ describe("a router", () => {
 
         let key = "key";
         let A = await t.fetch("/tasks/1", key);
-        await A.loaders.tasksId.resolve("TASKS-1");
+        await A.loaders.tasksId.resolve("TASKS 1");
         expect(A.fetcher.state).toBe("idle");
-        expect(A.fetcher.data).toBe("TASKS-1");
+        expect(A.fetcher.data).toBe("TASKS 1");
 
         let revalidatingKey = "r-key";
         let B = await t.fetch("/tasks/2", revalidatingKey, {
           revalidate: true,
         });
-        await B.loaders.tasksId.resolve("TASKS-2");
+        await B.loaders.tasksId.resolve("TASKS 2");
         expect(B.fetcher.state).toBe("idle");
-        expect(B.fetcher.data).toBe("TASKS-2");
+        expect(B.fetcher.data).toBe("TASKS 2");
 
         let C = await t.navigate("/tasks", {
           formMethod: "post",
@@ -5431,15 +5431,44 @@ describe("a router", () => {
         // Resolve navigation loaders + fetcher loader
         await C.loaders.root.resolve("ROOT*");
         await C.loaders.tasks.resolve("TASKS LOADER");
-        await C.loaders.tasksId.resolve("TASKS-2*");
+        await C.loaders.tasksId.resolve("TASKS 2*");
         expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-        expect(t.router.state.fetchers.get(key)?.data).toBe("TASKS-1");
-        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
-          "idle"
-        );
-        expect(t.router.state.fetchers.get(revalidatingKey)?.data).toBe(
-          "TASKS-2*"
-        );
+        expect(t.router.state.fetchers.get(key)?.data).toBe("TASKS 1");
+        expect(t.router.state.fetchers.get(revalidatingKey)).toMatchObject({
+          state: "idle",
+          type: "done",
+          data: "TASKS 2*",
+        });
+
+        // If a fetcher does a submission, it unsets the revalidation aspect
+        let D = await t.fetch("/tasks/3", revalidatingKey, {
+          formMethod: "post",
+          formData: createFormData({}),
+          revalidate: true,
+        });
+        await D.actions.tasksId.resolve("TASKS 3");
+        await D.loaders.root.resolve("ROOT**");
+        await D.loaders.tasks.resolve("TASKS**");
+        expect(t.router.state.fetchers.get(revalidatingKey)).toMatchObject({
+          state: "idle",
+          type: "done",
+          data: "TASKS 3",
+        });
+
+        let E = await t.navigate("/tasks", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        await E.actions.tasks.resolve("TASKS ACTION");
+        await E.loaders.root.resolve("ROOT***");
+        await E.actions.tasks.resolve("TASKS***");
+
+        // Remains the same state as it was after the submission
+        expect(t.router.state.fetchers.get(revalidatingKey)).toMatchObject({
+          state: "idle",
+          type: "done",
+          data: "TASKS 3",
+        });
       });
 
       it("revalidates opted in fetchers on action redirects", async () => {
