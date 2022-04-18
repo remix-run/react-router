@@ -11,6 +11,7 @@ import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 import sortPackageJSON from "sort-package-json";
 
+import * as colors from "../colors";
 import packageJson from "../package.json";
 import { convertTemplateToJavaScript } from "./convert-to-javascript";
 
@@ -24,6 +25,7 @@ interface CreateAppArgs {
   packageManager: "npm" | "yarn" | "pnpm";
   useTypeScript: boolean;
   githubToken?: string;
+  debug?: boolean;
 }
 
 export async function createApp({
@@ -34,6 +36,7 @@ export async function createApp({
   packageManager,
   useTypeScript = true,
   githubToken = process.env.GITHUB_TOKEN,
+  debug,
 }: CreateAppArgs) {
   // Create the app directory
   let relativeProjectDir = path.relative(process.cwd(), projectDir);
@@ -61,6 +64,10 @@ export async function createApp({
   let options = { useTypeScript, token: githubToken };
   switch (templateType) {
     case "local": {
+      if (debug) {
+        console.log(colors.warning(`🔍  Using local template: ${appTemplate}`));
+      }
+
       let filepath = appTemplate.startsWith("file://")
         ? fileURLToPath(appTemplate)
         : appTemplate;
@@ -75,12 +82,29 @@ export async function createApp({
       }
     }
     case "remoteTarball": {
+      if (debug) {
+        console.log(
+          colors.warning(
+            `🔍  Using template from remote tarball: ${appTemplate}`
+          )
+        );
+      }
+
       await downloadAndExtractTarball(projectDir, appTemplate, options);
       break;
     }
     case "repoTemplate": {
       let owner = "remix-run";
       let name = appTemplate.split("/").slice(-1)[0];
+
+      if (debug) {
+        console.log(
+          colors.warning(
+            `🔍  Using template from the ${`${owner}/${name}`} repo`
+          )
+        );
+      }
+
       await downloadAndExtractRepoTarball(
         projectDir,
         getRepoInfo(`${owner}/${name}`),
@@ -90,6 +114,14 @@ export async function createApp({
     }
     case "example": {
       let name = appTemplate.split("/").slice(-1)[0];
+      if (debug) {
+        console.log(
+          colors.warning(
+            `🔍  Using the ${name} example template from the remix-run/remix repo`
+          )
+        );
+      }
+
       await downloadAndExtractRepoTarball(
         projectDir,
         getRepoInfo(
@@ -100,6 +132,14 @@ export async function createApp({
       break;
     }
     case "template": {
+      if (debug) {
+        console.log(
+          colors.warning(
+            `🔍  Using the ${appTemplate} template from the remix-run/remix repo`
+          )
+        );
+      }
+
       await downloadAndExtractRepoTarball(
         projectDir,
         getRepoInfo(
@@ -110,11 +150,16 @@ export async function createApp({
       break;
     }
     case "repo": {
-      await downloadAndExtractRepoTarball(
-        projectDir,
-        getRepoInfo(appTemplate),
-        options
-      );
+      let repoInfo = getRepoInfo(appTemplate);
+      if (debug) {
+        console.log(
+          colors.warning(
+            `🔍  Using the ${`${repoInfo.owner}/${repoInfo.name}`} repo as a template.`
+          )
+        );
+      }
+
+      await downloadAndExtractRepoTarball(projectDir, repoInfo, options);
       break;
     }
   }

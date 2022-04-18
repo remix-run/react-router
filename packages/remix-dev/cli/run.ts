@@ -345,6 +345,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
         packageManager: pm,
         useTypeScript: flags.typescript !== false,
         githubToken: process.env.GITHUB_TOKEN,
+        debug: flags.debug,
       });
 
       let isTypeScript = fse.existsSync(path.join(projectDir, "tsconfig.json"));

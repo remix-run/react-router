@@ -32,6 +32,7 @@ export async function create({
   packageManager,
   useTypeScript,
   githubToken,
+  debug,
 }: {
   appTemplate: string;
   projectDir: string;
@@ -40,6 +41,7 @@ export async function create({
   packageManager: "npm" | "yarn" | "pnpm";
   useTypeScript: boolean;
   githubToken?: string;
+  debug?: boolean;
 }) {
   let spinner = ora("Creating your app…").start();
   await createApp({
@@ -50,6 +52,7 @@ export async function create({
     packageManager,
     useTypeScript,
     githubToken,
+    debug,
   });
   spinner.stop();
   spinner.clear();
