@@ -220,7 +220,7 @@ describe("the create command", () => {
     expect(output.trim()).toBe(
       getOptOutOfInstallMessage() +
         "\n\n" +
-        getSuccessMessage(path.join("<TEMP_DIR>","diff-branch"))
+        getSuccessMessage(path.join("<TEMP_DIR>", "diff-branch"))
     );
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();

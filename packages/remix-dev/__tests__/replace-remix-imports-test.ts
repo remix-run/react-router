@@ -98,7 +98,8 @@ describe("`replace-remix-imports` migration", () => {
 
     expect(output).toContain("✅ Your Remix imports look good!");
     if (process.platform === "win32") {
-      let res = await PowerShell.$`Get-ChildItem ${projectDir} | Select-String 'from "remix"'`;
+      let res =
+        await PowerShell.$`Get-ChildItem ${projectDir} | Select-String 'from "remix"'`;
       let err = res.stderr?.toString("utf-8");
       let out = res.stdout?.toString("utf-8");
       expect(err).toBeFalsy();
