@@ -4772,7 +4772,7 @@ describe("a router", () => {
         expect(A.fetcher.type).toBe("actionSubmission");
         let AR = await A.actions.foo.redirect("/bar");
         expect(A.fetcher.state).toBe("loading");
-        expect(A.fetcher.type).toBe("actionRedirect");
+        expect(A.fetcher.type).toBe("submissionRedirect");
         expect(t.router.state.transition.type).toBe("submissionRedirect");
         expect(t.router.state.transition.location?.pathname).toBe("/bar");
         await AR.loaders.root.resolve("ROOT*");

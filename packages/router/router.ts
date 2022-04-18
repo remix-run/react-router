@@ -268,9 +268,9 @@ type FetcherStates<TData = any> = {
     formData: FormData;
     data: TData;
   };
-  LoadingActionRedirect: {
+  SubmissionRedirect: {
     state: "loading";
-    type: "actionRedirect";
+    type: "submissionRedirect";
     formMethod: ActionFormMethod;
     formAction: string;
     formEncType: FormEncType;
@@ -616,6 +616,7 @@ export function createRouter(init: RouterInit): Router {
     // since we want this new navigation to update history normally
     isUninterruptedRevalidation = opts?.startUninterruptedRevalidation === true;
 
+    let loadingTransition = opts?.overrideTransition;
     let matches = matchRoutes(dataRoutes, location);
 
     // Short circuit with a 404 on the root error boundary if we match nothing
@@ -655,6 +656,12 @@ export function createRouter(init: RouterInit): Router {
 
       pendingActionData = actionOutput.pendingActionData || null;
       pendingActionException = actionOutput.pendingActionException || null;
+      loadingTransition = {
+        state: "loading",
+        type: "actionReload",
+        location,
+        ...opts.submission,
+      } as TransitionStates["LoadingAction"];
     }
 
     // Call loaders
@@ -663,7 +670,7 @@ export function createRouter(init: RouterInit): Router {
       location,
       opts?.submission,
       matches,
-      opts?.overrideTransition,
+      loadingTransition,
       pendingActionData,
       pendingActionException
     );
@@ -782,8 +789,28 @@ export function createRouter(init: RouterInit): Router {
     pendingActionException: RouteData | null
   ): Promise<HandleLoadersResult> {
     // Figure out the right transition we want to use for data loading
-    let loadingTransition =
-      overrideTransition || getLoadingTransition(location, state, submission);
+    let loadingTransition;
+
+    if (overrideTransition) {
+      loadingTransition = overrideTransition;
+    } else if (submission?.formMethod === "get") {
+      loadingTransition = {
+        state: "submitting",
+        type: "loaderSubmission",
+        location,
+        ...submission,
+      } as TransitionStates["SubmittingLoader"];
+    } else {
+      loadingTransition = {
+        state: "loading",
+        type: "normalLoad",
+        location,
+        formMethod: undefined,
+        formAction: undefined,
+        formEncType: undefined,
+        formData: undefined,
+      } as TransitionStates["Loading"];
+    }
 
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
       state,
@@ -1001,9 +1028,9 @@ export function createRouter(init: RouterInit): Router {
 
     if (isRedirectResult(actionResult)) {
       fetchRedirectIds.add(key);
-      let loadingFetcher: FetcherStates["LoadingActionRedirect"] = {
+      let loadingFetcher: FetcherStates["SubmissionRedirect"] = {
         state: "loading",
-        type: "actionRedirect",
+        type: "submissionRedirect",
         ...submission,
         data: undefined,
       };
@@ -1275,7 +1302,7 @@ export function createRouter(init: RouterInit): Router {
     for (let key of fetchRedirectIds) {
       let fetcher = state.fetchers.get(key);
       invariant(fetcher, `Expected fetcher: ${key}`);
-      if (fetcher.type === "actionRedirect") {
+      if (fetcher.type === "submissionRedirect") {
         fetchRedirectIds.delete(key);
         doneKeys.push(key);
       }
@@ -1360,51 +1387,6 @@ function convertRoutesToDataRoutes(
     };
     return dataRoute;
   });
-}
-
-// Determine the proper loading transition to use for the upcoming loaders execution
-function getLoadingTransition(
-  location: Location,
-  state: RouterState,
-  submission?: Submission
-): Transition {
-  if (submission) {
-    let { formMethod, formAction, formEncType, formData } = submission;
-    if (formMethod === "get") {
-      return {
-        state: "submitting",
-        type: "loaderSubmission",
-        location,
-        formMethod,
-        formAction,
-        formEncType,
-        formData,
-      } as TransitionStates["SubmittingLoader"];
-    }
-
-    // We're currently submitting an action, need to revalidate
-    if (state.transition.type === "actionSubmission") {
-      return {
-        state: "loading",
-        type: "actionReload",
-        location,
-        formMethod,
-        formAction,
-        formEncType,
-        formData,
-      } as TransitionStates["LoadingAction"];
-    }
-  }
-
-  return {
-    state: "loading",
-    type: "normalLoad",
-    location,
-    formMethod: undefined,
-    formAction: undefined,
-    formEncType: undefined,
-    formData: undefined,
-  } as TransitionStates["Loading"];
 }
 
 function getLoaderRedirect(
