@@ -164,6 +164,17 @@ export async function createApp({
       await downloadAndExtractRepoTarball(projectDir, repoInfo, options);
       break;
     }
+
+    case null: {
+      console.error(
+        `🚨  Could not find a template for "${appTemplate}". Please open an issue at https://github.com/remix-run/remix/issues to report the bug.`
+      );
+      if (debug) {
+        throw Error(`Invalid template "${appTemplate}"`);
+      } else {
+        process.exit(1);
+      }
+    }
   }
 
   // Update remix deps
@@ -252,7 +263,7 @@ async function downloadAndExtractRepoTarball(
   // redirect and get the tarball URL directly.
   if (repo.branch && repo.filePath) {
     let { filePath, tarballURL } = getTarballUrl(repo);
-    return downloadAndExtractTarball(projectDir, tarballURL, {
+    return await downloadAndExtractTarball(projectDir, tarballURL, {
       ...options,
       filePath,
     });
@@ -266,7 +277,7 @@ async function downloadAndExtractRepoTarball(
     url += `/${repo.branch}`;
   }
 
-  return downloadAndExtractTarball(projectDir, url, {
+  return await downloadAndExtractTarball(projectDir, url, {
     ...options,
     filePath: null,
   });
