@@ -152,6 +152,44 @@ test.describe("rendering", () => {
             );
           }
         `,
+
+        "app/routes/parent.jsx": js`
+          import { Outlet, useLoaderData } from "@remix-run/react";
+
+          let count = 0;
+          export const loader = async ({ request }) => {
+            return { count: ++count };
+          };
+
+          export default function Parent() {
+            const data = useLoaderData();
+            return (
+              <div>
+                <div id="parent">{data.count}</div>
+                <Outlet />
+              </div>
+            );
+          }
+        `,
+
+        "app/routes/parent/child.jsx": js`
+          import { redirect } from "@remix-run/node";
+          import { useFetcher} from "@remix-run/react";
+
+          export const action = async ({ request }) => {
+            return redirect("/parent");
+          };
+
+          export default function Child() {
+            const fetcher = useFetcher();
+
+            return (
+              <fetcher.Form method="post">
+                <button id="fetcher-submit-redirect" type="submit">Submit</button>
+              </fetcher.Form>
+            );
+          }
+        `,
       },
     });
 
@@ -247,5 +285,14 @@ test.describe("rendering", () => {
 
     await app.clickSubmitButton("/gh-1691");
     expect(await app.getHtml("span")).toMatch("idle");
+  });
+
+  test("fetcher action redirects re-call parent loaders", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/parent/child");
+    expect(await app.getHtml("#parent")).toMatch("1");
+
+    await app.clickElement("#fetcher-submit-redirect");
+    expect(await app.getHtml("#parent")).toMatch("2");
   });
 });
