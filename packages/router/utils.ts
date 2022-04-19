@@ -45,8 +45,7 @@ export interface ShouldRevalidateFunctionArgs {
   nextUrl: URL;
   nextParams: DataRouteMatch["params"];
   transition: Transition;
-  isForcedRevalidate: boolean;
-  defaultShouldRevalidate: () => boolean;
+  defaultShouldRevalidate: boolean;
 }
 
 /**
