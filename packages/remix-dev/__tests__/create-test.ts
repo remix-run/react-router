@@ -508,8 +508,10 @@ describe("the create command", () => {
       "--typescript",
     ]);
 
-    let lastCallArgs = mockPrompt.mock.calls.at(-1)[0];
-    expect((lastCallArgs as Array<unknown>).at(-1)).toHaveProperty(
+    let mockPromptCalls = mockPrompt.mock.calls;
+    let lastCallArgs = mockPromptCalls[mockPromptCalls.length - 1][0];
+    let lastCallUnknown = lastCallArgs as Array<unknown>;
+    expect(lastCallUnknown[lastCallUnknown.length - 1]).toHaveProperty(
       "message",
       "Do you want me to run `pnpm install`?"
     );
