@@ -504,6 +504,7 @@ export function createRoutesFromChildren(
       action: element.props.action,
       errorElement: element.props.errorElement,
       shouldRevalidate: element.props.shouldRevalidate,
+      handle: element.props.handle,
     };
 
     if (element.props.children) {

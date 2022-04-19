@@ -34,6 +34,11 @@ export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 export interface Router {
   get state(): RouterState;
   subscribe(fn: RouterSubscriber): () => void;
+  enableScrollRestoration(
+    savedScrollPositions: Record<string, number>,
+    getScrollPosition: GetScrollPositionFunction,
+    getKey?: GetScrollRestorationKeyFunction
+  ): () => void;
   navigate(path: number): Promise<void>;
   navigate(path: To, opts?: NavigateOptions): Promise<void>;
   fetch(key: string, href: string, opts?: NavigateOptions): Promise<void>;
@@ -69,6 +74,20 @@ export interface RouterState {
    * Tracks whether we've completed our initial data load
    */
   initialized: boolean;
+
+  /**
+   * Current scroll position we should start at for a new view
+   *  - number -> scroll position to restore to
+   *  - false -> do not restore scroll at all (used during submissions)
+   *  - null -> don't have a saved position, scroll to hash or top of page
+   */
+  restoreScrollPosition: number | false | null;
+
+  /**
+   * Indicate whether this navigation should reset the scroll position if we
+   * are unable to restore the scroll position
+   */
+  resetScrollPosition: boolean;
 
   /**
    * Tracks the state of the current transition
@@ -117,8 +136,26 @@ export interface RouterInit {
   hydrationData?: HydrationState;
 }
 
+/**
+ * Subscriber function signature for changes to router state
+ */
 export interface RouterSubscriber {
   (state: RouterState): void;
+}
+
+/**
+ * Function signature for determining the key to be used in scroll restoration
+ * for a given location
+ */
+export interface GetScrollRestorationKeyFunction {
+  (location: Location, matches: DataRouteMatch[]): string | null;
+}
+
+/**
+ * Function signature for determining the current scroll position
+ */
+export interface GetScrollPositionFunction {
+  (): number;
 }
 
 /**
@@ -401,7 +438,19 @@ export function createRouter(init: RouterInit): Router {
   );
 
   let dataRoutes = convertRoutesToDataRoutes(init.routes);
+  // Externally-provided function to call on all state changes
   let subscriber: RouterSubscriber | null = null;
+  // Externally-provided object to hold scroll restoration locations during routing
+  let savedScrollPositions: Record<string, number> | null = null;
+  // Externally-provided function to get scroll restoration keys
+  let getScrollRestorationKey: GetScrollRestorationKeyFunction | null = null;
+  // Externally-provided function to get current scroll position
+  let getScrollPosition: GetScrollPositionFunction | null = null;
+  // One-time flag to control the initial hydration scroll restoration.  Because
+  // we don't get the saved positions from <ScrollRestoration /> until _after_
+  // the initial render, we need to manually trigger a separate updateState to
+  // send along the restoreScrollPosition
+  let initialScrollRestored = false;
 
   let initialMatches =
     matchRoutes(dataRoutes, init.history.location) ||
@@ -432,6 +481,8 @@ export function createRouter(init: RouterInit): Router {
     matches: initialMatches,
     initialized: init.hydrationData != null && !foundMissingHydrationData,
     transition: IDLE_TRANSITION,
+    restoreScrollPosition: null,
+    resetScrollPosition: true,
     revalidation: "idle",
     loaderData: foundMissingHydrationData
       ? {}
@@ -514,6 +565,12 @@ export function createRouter(init: RouterInit): Router {
       revalidation: "idle",
       // Always preserve any existing loaderData from re-used routes
       loaderData: mergeLoaderData(state, newState),
+      // Don't restore on submission navigations
+      restoreScrollPosition: state.transition.formData
+        ? false
+        : getSavedScrollPosition(location, newState.matches || state.matches),
+      // Always reset scroll unless explicitly told not to
+      resetScrollPosition: location.state?.__resetScrollPosition !== false,
     });
 
     if (isUninterruptedRevalidation) {
@@ -613,6 +670,9 @@ export function createRouter(init: RouterInit): Router {
     // since we want this new navigation to update history normally
     isUninterruptedRevalidation = opts?.startUninterruptedRevalidation === true;
 
+    // Save the current scroll position every time we start a new navigation
+    saveScrollPosition(state.location, state.matches);
+
     let loadingTransition = opts?.overrideTransition;
     let matches = matchRoutes(dataRoutes, location);
 
@@ -702,15 +762,11 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Put us in a submitting state
-    let { formMethod, formAction, formEncType, formData } = submission;
     let transition: TransitionStates["SubmittingAction"] = {
       state: "submitting",
       type: "actionSubmission",
       location,
-      formMethod,
-      formAction,
-      formEncType,
-      formData,
+      ...submission,
     };
     updateState({ transition });
 
@@ -1324,6 +1380,30 @@ export function createRouter(init: RouterInit): Router {
     return yeetedKeys.length > 0;
   }
 
+  function saveScrollPosition(
+    location: Location,
+    matches: DataRouteMatch[]
+  ): void {
+    if (savedScrollPositions && getScrollRestorationKey && getScrollPosition) {
+      let key = getScrollRestorationKey(location, matches) || location.key;
+      savedScrollPositions[key] = getScrollPosition();
+    }
+  }
+
+  function getSavedScrollPosition(
+    location: Location,
+    matches: DataRouteMatch[]
+  ): number | null {
+    if (savedScrollPositions && getScrollRestorationKey && getScrollPosition) {
+      let key = getScrollRestorationKey(location, matches) || location.key;
+      let y = savedScrollPositions[key];
+      if (typeof y === "number") {
+        return y;
+      }
+    }
+    return null;
+  }
+
   let router: Router = {
     get state() {
       return state;
@@ -1335,6 +1415,28 @@ export function createRouter(init: RouterInit): Router {
       subscriber = fn;
       return () => {
         subscriber = null;
+      };
+    },
+    enableScrollRestoration(positions, getPosition, getKey) {
+      savedScrollPositions = positions;
+      getScrollPosition = getPosition;
+      getScrollRestorationKey = getKey || ((location) => location.key);
+
+      // Perform initial hydration scroll restoration, since we miss the boat on
+      // the initial updateState() because we've not yet rendered <ScrollRestoration/>
+      // and therefore have no savedScrollPositions available
+      if (!initialScrollRestored && state.transition === IDLE_TRANSITION) {
+        initialScrollRestored = true;
+        let y = getSavedScrollPosition(state.location, state.matches);
+        if (y != null) {
+          updateState({ restoreScrollPosition: y });
+        }
+      }
+
+      return () => {
+        savedScrollPositions = null;
+        getScrollPosition = null;
+        getScrollRestorationKey = null;
       };
     },
     cleanup() {
@@ -1836,5 +1938,4 @@ function createURL(location: Location | string): URL {
   let href = typeof location === "string" ? location : createHref(location);
   return new URL(href, base);
 }
-
 //#endregion

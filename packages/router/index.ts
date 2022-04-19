@@ -22,6 +22,7 @@ import {
 import type {
   DataRouteMatch,
   Fetcher,
+  GetScrollRestorationKeyFunction,
   HydrationState,
   NavigateOptions,
   Transition,
@@ -97,6 +98,7 @@ export type {
   Fetcher,
   FormEncType,
   FormMethod,
+  GetScrollRestorationKeyFunction,
   HashHistory,
   HashRouterInit,
   History,

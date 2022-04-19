@@ -48,6 +48,7 @@ import type {
   Fetcher,
   HashHistory,
   History,
+  GetScrollRestorationKeyFunction,
 } from "@remix-run/router";
 import {
   createBrowserHistory,
@@ -332,6 +333,7 @@ export interface LinkProps
   reloadDocument?: boolean;
   replace?: boolean;
   state?: any;
+  resetScroll?: boolean;
   to: To;
 }
 
@@ -340,11 +342,25 @@ export interface LinkProps
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
-    { onClick, reloadDocument, replace = false, state, target, to, ...rest },
+    {
+      onClick,
+      reloadDocument,
+      replace = false,
+      state,
+      target,
+      to,
+      resetScroll,
+      ...rest
+    },
     ref
   ) {
     let href = useHref(to);
-    let internalOnClick = useLinkClickHandler(to, { replace, state, target });
+    let internalOnClick = useLinkClickHandler(to, {
+      replace,
+      state,
+      target,
+      resetScroll,
+    });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
     ) {
@@ -596,6 +612,27 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
 if (__DEV__) {
   Form.displayName = "Form";
 }
+
+interface ScrollRestorationProps {
+  getKey?: GetScrollRestorationKeyFunction;
+  storageKey?: string;
+}
+
+/**
+ * This component will emulate the browser's scroll restoration on location
+ * changes.
+ */
+export function ScrollRestoration({
+  getKey,
+  storageKey,
+}: ScrollRestorationProps) {
+  useScrollRestoration({ getKey, storageKey });
+  return null;
+}
+
+if (__DEV__) {
+  ScrollRestoration.displayName = "ScrollRestoration";
+}
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -613,10 +650,12 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     target,
     replace: replaceProp,
     state,
+    resetScroll,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
+    resetScroll?: boolean;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -633,10 +672,18 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         let replace =
           !!replaceProp || createPath(location) === createPath(path);
 
-        navigate(to, { replace, state });
+        let newState = state;
+        if (resetScroll === false) {
+          newState = {
+            ...state,
+            __resetScrollPosition: false,
+          };
+        }
+
+        navigate(to, { replace, state: newState });
       }
     },
-    [location, navigate, path, replaceProp, state, target, to]
+    [location, navigate, path, replaceProp, state, target, to, resetScroll]
   );
 }
 
@@ -867,6 +914,126 @@ export function useFetchers(): Fetcher[] {
   invariant(state, `useFetchers must be used within a DataRouter`);
   return [...state.fetchers.values()];
 }
+
+const SCROLL_RESTORATION_STORAGE_KEY = "react-router-scroll-positions";
+let savedScrollPositions: Record<string, number> = {};
+
+/**
+ * When rendered inside a DataRouter, will restore scroll positions on navigations
+ */
+function useScrollRestoration({
+  getKey,
+  storageKey,
+}: {
+  getKey?: GetScrollRestorationKeyFunction;
+  storageKey?: string;
+} = {}) {
+  let location = useLocation();
+  let router = React.useContext(UNSAFE_DataRouterContext);
+  let state = React.useContext(UNSAFE_DataRouterStateContext);
+
+  invariant(
+    router != null && state != null,
+    "useScrollRestoration must be used within a DataRouter"
+  );
+  let { restoreScrollPosition, resetScrollPosition } = state;
+
+  // Trigger manual scroll restoration while we're active
+  React.useEffect(() => {
+    window.history.scrollRestoration = "manual";
+    return () => {
+      window.history.scrollRestoration = "auto";
+    };
+  }, []);
+
+  // Save positions on unload
+  useBeforeUnload(
+    React.useCallback(() => {
+      if (state?.transition.state === "idle") {
+        let key =
+          (getKey ? getKey(state.location, state.matches) : null) ||
+          state.location.key;
+        savedScrollPositions[key] = window.scrollY;
+      }
+      sessionStorage.setItem(
+        storageKey || SCROLL_RESTORATION_STORAGE_KEY,
+        JSON.stringify(savedScrollPositions)
+      );
+      window.history.scrollRestoration = "auto";
+    }, [
+      storageKey,
+      getKey,
+      state.transition.state,
+      state.location,
+      state.matches,
+    ])
+  );
+
+  // Read in any saved scroll locations
+  React.useLayoutEffect(() => {
+    try {
+      let sessionPositions = sessionStorage.getItem(
+        storageKey || SCROLL_RESTORATION_STORAGE_KEY
+      );
+      if (sessionPositions) {
+        savedScrollPositions = JSON.parse(sessionPositions);
+      }
+    } catch (e) {
+      // no-op, use default empty object
+    }
+  }, [storageKey]);
+
+  // Enable scroll restoration in the router
+  React.useLayoutEffect(() => {
+    let disableScrollRestoration = router?.enableScrollRestoration(
+      savedScrollPositions,
+      () => window.scrollY,
+      getKey
+    );
+    return () => disableScrollRestoration && disableScrollRestoration();
+  }, [router, getKey]);
+
+  // Restore scrolling when state.restoreScrollPosition changes
+  React.useLayoutEffect(() => {
+    // Explicit false means don't do anything (used for submissions)
+    if (restoreScrollPosition === false) {
+      return;
+    }
+
+    // been here before, scroll to it
+    if (typeof restoreScrollPosition === "number") {
+      window.scrollTo(0, restoreScrollPosition);
+      return;
+    }
+
+    // try to scroll to the hash
+    if (location.hash) {
+      let el = document.getElementById(location.hash.slice(1));
+      if (el) {
+        el.scrollIntoView();
+        return;
+      }
+    }
+
+    // Opt out of scroll reset if this link requested it
+    if (resetScrollPosition === false) {
+      return;
+    }
+
+    // otherwise go to the top on new locations
+    window.scrollTo(0, 0);
+  }, [location, restoreScrollPosition, resetScrollPosition]);
+}
+
+function useBeforeUnload(callback: () => any): void {
+  React.useEffect(() => {
+    window.addEventListener("beforeunload", callback);
+    return () => {
+      window.removeEventListener("beforeunload", callback);
+    };
+  }, [callback]);
+}
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -889,5 +1056,4 @@ function warning(cond: boolean, message: string): void {
     } catch (e) {}
   }
 }
-
 //#endregion

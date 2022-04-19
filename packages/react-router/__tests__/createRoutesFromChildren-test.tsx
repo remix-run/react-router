@@ -27,6 +27,7 @@ describe("creating routes from JSX", () => {
                 home
               </h1>,
               "errorElement": undefined,
+              "handle": undefined,
               "id": "0-0",
               "index": undefined,
               "loader": undefined,
@@ -40,6 +41,7 @@ describe("creating routes from JSX", () => {
                 about
               </h1>,
               "errorElement": undefined,
+              "handle": undefined,
               "id": "0-1",
               "index": undefined,
               "loader": undefined,
@@ -57,6 +59,7 @@ describe("creating routes from JSX", () => {
                     users index
                   </h1>,
                   "errorElement": undefined,
+                  "handle": undefined,
                   "id": "0-2-0",
                   "index": true,
                   "loader": undefined,
@@ -70,6 +73,7 @@ describe("creating routes from JSX", () => {
                     user profile
                   </h1>,
                   "errorElement": undefined,
+                  "handle": undefined,
                   "id": "0-2-1",
                   "index": undefined,
                   "loader": undefined,
@@ -79,6 +83,7 @@ describe("creating routes from JSX", () => {
               ],
               "element": undefined,
               "errorElement": undefined,
+              "handle": undefined,
               "id": "0-2",
               "index": undefined,
               "loader": undefined,
@@ -88,6 +93,7 @@ describe("creating routes from JSX", () => {
           ],
           "element": undefined,
           "errorElement": undefined,
+          "handle": undefined,
           "id": "0",
           "index": undefined,
           "loader": undefined,
@@ -130,6 +136,7 @@ describe("creating routes from JSX", () => {
                 home
               </h1>,
               "errorElement": undefined,
+              "handle": undefined,
               "id": "0-0",
               "index": undefined,
               "loader": [Function],
@@ -147,6 +154,7 @@ describe("creating routes from JSX", () => {
                     users index
                   </h1>,
                   "errorElement": undefined,
+                  "handle": undefined,
                   "id": "0-1-0",
                   "index": true,
                   "loader": undefined,
@@ -156,6 +164,7 @@ describe("creating routes from JSX", () => {
               ],
               "element": undefined,
               "errorElement": undefined,
+              "handle": undefined,
               "id": "0-1",
               "index": undefined,
               "loader": undefined,
@@ -167,6 +176,7 @@ describe("creating routes from JSX", () => {
           "errorElement": <h1>
             💥
           </h1>,
+          "handle": undefined,
           "id": "0",
           "index": undefined,
           "loader": undefined,
