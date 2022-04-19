@@ -796,9 +796,10 @@ describe("a router", () => {
         transition: {
           location: undefined,
           state: "idle",
-          submission: undefined,
           type: "idle",
         },
+        resetScrollPosition: true,
+        restoreScrollPosition: null,
         revalidation: "idle",
         fetchers: new Map(),
       });
@@ -3686,6 +3687,150 @@ describe("a router", () => {
         "application/x-www-form-urlencoded"
       );
       expect((await request.formData()).get("query")).toBe("params");
+
+      t.cleanup();
+    });
+  });
+
+  describe("scroll restoration", () => {
+    it("restores scroll on navigations", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.resetScrollPosition).toBe(true);
+
+      let positions = {};
+      let activeScrollPosition = 100;
+      t.router.enableScrollRestoration(positions, () => activeScrollPosition);
+
+      // No restoration on first click to tasks
+      let nav1 = await t.navigate("/tasks");
+      await nav1.loaders.tasks.resolve("TASKS");
+      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.resetScrollPosition).toBe(true);
+
+      // Simulate scrolling down on /tasks
+      activeScrollPosition = 200;
+
+      // Restore on pop to previous location
+      let nav2 = await t.navigate(-1);
+      expect(t.router.state.restoreScrollPosition).toBe(null);
+      await nav2.loaders.index.resolve("INDEX");
+      expect(t.router.state.restoreScrollPosition).toBe(100);
+      expect(t.router.state.resetScrollPosition).toBe(true);
+
+      // Forward to /tasks
+      let nav3 = await t.navigate(1);
+      await nav3.loaders.tasks.resolve("TASKS");
+      expect(t.router.state.restoreScrollPosition).toBe(200);
+      expect(t.router.state.resetScrollPosition).toBe(true);
+
+      t.cleanup();
+    });
+
+    it("restores scroll using custom key", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.resetScrollPosition).toBe(true);
+
+      let positions = { "/tasks": 100 };
+      let activeScrollPosition = 0;
+      t.router.enableScrollRestoration(
+        positions,
+        () => activeScrollPosition,
+        (l) => l.pathname
+      );
+
+      let nav1 = await t.navigate("/tasks");
+      await nav1.loaders.tasks.resolve("TASKS");
+      expect(t.router.state.restoreScrollPosition).toBe(100);
+      expect(t.router.state.resetScrollPosition).toBe(true);
+
+      t.cleanup();
+    });
+
+    it("does not restore scroll on submissions", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.resetScrollPosition).toBe(true);
+
+      let positions = { "/tasks": 100 };
+      let activeScrollPosition = 0;
+      t.router.enableScrollRestoration(
+        positions,
+        () => activeScrollPosition,
+        (l) => l.pathname
+      );
+
+      let nav1 = await t.navigate("/tasks", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      await nav1.actions.tasks.resolve("ACTION");
+      await nav1.loaders.root.resolve("ROOT");
+      await nav1.loaders.tasks.resolve("TASKS");
+      expect(t.router.state.restoreScrollPosition).toBe(false);
+      expect(t.router.state.resetScrollPosition).toBe(true);
+
+      t.cleanup();
+    });
+
+    it("does not reset scroll", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.resetScrollPosition).toBe(true);
+
+      let positions = {};
+      let activeScrollPosition = 0;
+      t.router.enableScrollRestoration(positions, () => activeScrollPosition);
+
+      let nav1 = await t.navigate("/tasks", {
+        state: {
+          __resetScrollPosition: false,
+        },
+      });
+      await nav1.loaders.tasks.resolve("TASKS");
+      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.resetScrollPosition).toBe(false);
 
       t.cleanup();
     });

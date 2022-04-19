@@ -82,17 +82,23 @@
     ]
   },
   "filesize": {
+    "build/node_modules/@remix-run/router/router.production.min.js": {
+      "none": "21 kB"
+    },
+    "build/node_modules/@remix-run/router/umd/router.production.min.js": {
+      "none": "23 kB"
+    },
     "build/node_modules/react-router/react-router.production.min.js": {
       "none": "10 kB"
     },
     "build/node_modules/react-router/umd/react-router.production.min.js": {
-      "none": "11.5 kB"
+      "none": "12 kB"
     },
     "build/node_modules/react-router-dom/react-router-dom.production.min.js": {
-      "none": "8 kB"
+      "none": "10 kB"
     },
     "build/node_modules/react-router-dom/umd/react-router-dom.production.min.js": {
-      "none": "12.5 kB"
+      "none": "14 kB"
     }
   }
 }

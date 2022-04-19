@@ -64,6 +64,7 @@ export interface RouteObject {
   action?: (obj: ActionFunctionArgs) => any | Promise<any>;
   errorElement?: React.ReactNode;
   shouldRevalidate?: (obj: ShouldRevalidateFunctionArgs) => boolean;
+  handle?: any;
 }
 
 /**
