@@ -308,7 +308,7 @@ async function downloadAndExtractTarball(
 
   // file paths returned from github are always unix style
   if (filePath) {
-    filePath = filePath.replaceAll("\\", "/");
+    filePath = filePath.split(path.sep).join(path.posix.sep)
   }
 
   try {
