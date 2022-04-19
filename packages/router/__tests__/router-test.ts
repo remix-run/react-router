@@ -1304,8 +1304,6 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls[0][0]).toMatchObject({
         currentParams: {},
         currentUrl: new URL("http://localhost/child"),
-        defaultShouldRevalidate: expect.any(Function),
-        isForcedRevalidate: false,
         nextParams: {
           a: "aValue",
           b: "bValue",
@@ -1326,6 +1324,7 @@ describe("a router", () => {
           state: "loading",
           type: "normalLoad",
         },
+        defaultShouldRevalidate: false,
       });
     });
 
@@ -1340,7 +1339,7 @@ describe("a router", () => {
             path: "",
             loader: async (...args) => rootLoader(...args),
             shouldRevalidate: ({ defaultShouldRevalidate }) =>
-              defaultShouldRevalidate(),
+              defaultShouldRevalidate,
             children: [
               {
                 path: "/",
@@ -1738,6 +1737,7 @@ describe("a router", () => {
         formData: createFormData({ gosh: "dang" }),
       });
       await A.actions.foo.resolve("A ACTION");
+      await A.loaders.root.resolve("A ROOT");
       await A.loaders.foo.resolve("A LOADER");
       expect(t.router.state.actionData).toEqual({ foo: "A ACTION" });
 
@@ -2247,19 +2247,9 @@ describe("a router", () => {
         new URLSearchParams(transition.formData).toString()
       ).toBe("gosh=dang");
       expect(transition.formMethod).toBe("get");
-      expect(transition.formEncType).toBe("application/x-www-form-urlencoded");
-      expect(transition.location).toMatchObject({
-        pathname: "/bar",
-        search: "",
-        hash: "",
-      });
+      expect(transition.location?.pathname).toBe("/bar");
 
       await B.loaders.bar.resolve("B");
-      transition = t.router.state.transition;
-      expect(transition.state).toBe("loading");
-      expect(transition.type).toBe("submissionRedirect");
-
-      await B.loaders.root.resolve("C");
       transition = t.router.state.transition;
       expect(transition.state).toBe("idle");
       expect(transition.type).toBe("idle");
@@ -2448,6 +2438,88 @@ describe("a router", () => {
 
         expect(t.router.state.actionData).toEqual({
           baz: "C",
+        });
+      });
+    });
+
+    describe(`
+      A) POST /foo |--X
+      B) GET  /bar    |-----O
+    `, () => {
+      it("forces all loaders to revalidate on interrupted submission", async () => {
+        let t = initializeTmTest();
+        let A = await t.navigate("/foo", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        // Interrupting the submission should cause the next load to call all loaders
+        let B = await t.navigate("/bar");
+        await A.actions.foo.resolve("A ACTION");
+        await B.loaders.root.resolve("ROOT*");
+        await B.loaders.bar.resolve("BAR");
+        expect(t.router.state).toMatchObject({
+          transition: IDLE_TRANSITION,
+          location: { pathname: "/bar" },
+          actionData: null,
+          loaderData: {
+            root: "ROOT*",
+            bar: "BAR",
+          },
+        });
+      });
+    });
+
+    describe(`
+      A) POST /foo |--|--X
+      B) GET  /bar       |-----O
+    `, () => {
+      it("forces all loaders to revalidate on interrupted actionReload", async () => {
+        let t = initializeTmTest();
+        let A = await t.navigate("/foo", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        await A.actions.foo.resolve("A ACTION");
+        expect(t.router.state.transition.type).toBe("actionReload");
+        // Interrupting the actionReload should cause the next load to call all loaders
+        let B = await t.navigate("/bar");
+        await B.loaders.root.resolve("ROOT*");
+        await B.loaders.bar.resolve("BAR");
+        expect(t.router.state).toMatchObject({
+          transition: IDLE_TRANSITION,
+          location: { pathname: "/bar" },
+          actionData: null,
+          loaderData: {
+            root: "ROOT*",
+            bar: "BAR",
+          },
+        });
+      });
+    });
+
+    describe(`
+      A) POST /foo |--|--X
+      B) GET  /bar       |-----O
+    `, () => {
+      it("forces all loaders to revalidate on interrupted submissionRedirect", async () => {
+        let t = initializeTmTest();
+        let A = await t.navigate("/foo", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        await A.actions.foo.redirect("/baz");
+        expect(t.router.state.transition.type).toBe("submissionRedirect");
+        // Interrupting the submissionRedirect should cause the next load to call all loaders
+        let B = await t.navigate("/bar");
+        await B.loaders.root.resolve("ROOT*");
+        await B.loaders.bar.resolve("BAR");
+        expect(t.router.state).toMatchObject({
+          transition: IDLE_TRANSITION,
+          location: { pathname: "/bar" },
+          loaderData: {
+            root: "ROOT*",
+            bar: "BAR",
+          },
         });
       });
     });
@@ -5387,6 +5459,92 @@ describe("a router", () => {
           expect(t.router.state.transition).toBe(IDLE_TRANSITION);
         });
       });
+
+      describe(`
+        A) fetch POST /foo |--X
+        B) nav   GET  /bar    |-----O
+      `, () => {
+        it("forces all loaders to revalidate on interrupted fetcher submission", async () => {
+          let t = initializeTmTest();
+          let A = await t.fetch("/foo", {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          // Interrupting the submission should cause the next load to call all loaders
+          let B = await t.navigate("/bar");
+          await A.actions.foo.resolve("A ACTION");
+          await B.loaders.root.resolve("ROOT*");
+          await B.loaders.bar.resolve("BAR");
+          expect(t.router.state).toMatchObject({
+            transition: IDLE_TRANSITION,
+            location: { pathname: "/bar" },
+            actionData: null,
+            loaderData: {
+              root: "ROOT*",
+              bar: "BAR",
+            },
+          });
+        });
+      });
+
+      describe(`
+        A) fetch POST /foo |--|--X
+        B) nav   GET  /bar       |-----O
+      `, () => {
+        it("forces all loaders to revalidate on interrupted fetcher actionReload", async () => {
+          let key = "key";
+          let t = initializeTmTest();
+          let A = await t.fetch("/foo", key, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await A.actions.foo.resolve("A ACTION");
+          expect(t.router.state.fetchers.get(key)?.type).toBe("actionReload");
+          // Interrupting the actionReload should cause the next load to call all loaders
+          let B = await t.navigate("/bar");
+          await B.loaders.root.resolve("ROOT*");
+          await B.loaders.bar.resolve("BAR");
+          expect(t.router.state).toMatchObject({
+            transition: IDLE_TRANSITION,
+            location: { pathname: "/bar" },
+            actionData: null,
+            loaderData: {
+              root: "ROOT*",
+              bar: "BAR",
+            },
+          });
+        });
+      });
+
+      describe(`
+        A) fetch POST /foo |--|--X
+        B) nav   GET  /bar       |-----O
+      `, () => {
+        it("forces all loaders to revalidate on interrupted fetcher submissionRedirect", async () => {
+          let key = "key";
+          let t = initializeTmTest();
+          let A = await t.fetch("/foo", key, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await A.actions.foo.redirect("/baz");
+          expect(t.router.state.fetchers.get(key)?.type).toBe(
+            "submissionRedirect"
+          );
+          // Interrupting the actionReload should cause the next load to call all loaders
+          let B = await t.navigate("/bar");
+          await B.loaders.root.resolve("ROOT*");
+          await B.loaders.bar.resolve("BAR");
+          expect(t.router.state).toMatchObject({
+            transition: IDLE_TRANSITION,
+            location: { pathname: "/bar" },
+            loaderData: {
+              root: "ROOT*",
+              bar: "BAR",
+            },
+          });
+        });
+      });
     });
 
     describe("opt-in fetcher revalidation", () => {
@@ -5679,10 +5837,7 @@ describe("a router", () => {
           formEncType: "application/x-www-form-urlencoded",
           formData: createFormData({}),
         });
-        expect(shouldRevalidateArgs.isForcedRevalidate).toEqual(false);
-        expect(shouldRevalidateArgs.defaultShouldRevalidate).toEqual(
-          expect.any(Function)
-        );
+        expect(shouldRevalidateArgs.defaultShouldRevalidate).toBe(true);
       });
 
       it("handles opted-in fetcher revalidation errors", async () => {

@@ -453,9 +453,11 @@ export function createRouter(init: RouterInit): Router {
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
   let isUninterruptedRevalidation = false;
-  // Use this internal flag to force revalidation if we receive an
-  // X-Remix-Revalidate header on a redirect response
-  let foundXRemixRevalidate = false;
+  // Use this internal flag to force revalidation of all loaders:
+  //  - submissions (completed or interrupted)
+  //  - useRevalidate()
+  //  - X-Remix-Revalidate (from redirect)
+  let isRevalidationRequired = false;
   // AbortControllers for any in-flight fetchers
   let fetchControllers = new Map();
   // Track loads based on the order in which they started
@@ -531,7 +533,7 @@ export function createRouter(init: RouterInit): Router {
     // Reset stateful navigation vars
     pendingAction = null;
     isUninterruptedRevalidation = false;
-    foundXRemixRevalidate = false;
+    isRevalidationRequired = false;
   }
 
   async function navigate(
@@ -565,30 +567,29 @@ export function createRouter(init: RouterInit): Router {
   async function revalidate(): Promise<void> {
     let { state: transitionState, type } = state.transition;
 
+    // Toggle isRevalidationRequired so the next data load will call all loaders,
+    // and mark us in a revalidating state
+    isRevalidationRequired = true;
+    updateState({ revalidation: "loading" });
+
     // If we're currently submitting an action, we don't need to start a new
-    // transition.  Just set state.revalidation='loading' which will force all
-    // loaders to run on actionReload
+    // transition, we'll just let the follow up loader execution call all loaders
     if (transitionState === "submitting" && type === "actionSubmission") {
-      updateState({ revalidation: "loading" });
       return;
     }
 
-    // If we're currently in an idle state, mark an uninterrupted revalidation
-    // and start a new navigation for the current action/location.  Pass in the
-    // current (idle) transition as an override so we don't ever switch to a
-    // loading state.  If we finish uninterrupted, we will not touch history on
-    // completion
+    // If we're currently in an idle state, start a new navigation for the current
+    // action/location and mark it as uninterrupted, which will skip the history
+    // update in completeNavigation
     if (state.transition.state === "idle") {
-      updateState({ revalidation: "loading" });
       return await startNavigation(state.historyAction, state.location, {
         startUninterruptedRevalidation: true,
       });
     }
 
     // Otherwise, if we're currently in a loading state, just start a new
-    // navigation to the transition.location but do not set isValidating so
-    // that history correctly updates once the navigation completes
-    updateState({ revalidation: "loading" });
+    // navigation to the transition.location but do not trigger an uninterrupted
+    // revalidation so that history correctly updates once the navigation completes
     return await startNavigation(
       pendingAction || state.historyAction,
       state.transition.location,
@@ -692,6 +693,8 @@ export function createRouter(init: RouterInit): Router {
     submission: ActionSubmission,
     matches: DataRouteMatch[]
   ): Promise<HandleActionResult> {
+    isRevalidationRequired = true;
+
     if (
       matches[matches.length - 1].route.index &&
       !hasNakedIndexQuery(location.search)
@@ -820,10 +823,9 @@ export function createRouter(init: RouterInit): Router {
       // we're about to commit
       isUninterruptedRevalidation ? state.transition : loadingTransition,
       location,
-      foundXRemixRevalidate,
+      isRevalidationRequired,
       pendingActionError,
-      revalidatingFetcherMatches,
-      false
+      revalidatingFetcherMatches
     );
 
     // Short circuit if we have no loaders to run
@@ -1001,6 +1003,8 @@ export function createRouter(init: RouterInit): Router {
     match: DataRouteMatch,
     submission: ActionSubmission
   ) {
+    isRevalidationRequired = true;
+
     // Put this fetcher into it's submitting state
     let fetcher: FetcherStates["SubmittingAction"] = {
       state: "submitting",
@@ -1086,10 +1090,9 @@ export function createRouter(init: RouterInit): Router {
       matches,
       state.transition,
       nextLocation,
-      foundXRemixRevalidate,
+      isRevalidationRequired,
       null,
-      revalidatingFetcherMatches,
-      true
+      revalidatingFetcherMatches
     );
 
     // Put all revalidating fetchers into the revalidating state, except for the
@@ -1190,6 +1193,7 @@ export function createRouter(init: RouterInit): Router {
         loaderData,
         ...(didAbortFetchLoads ? { fetchers: new Map(state.fetchers) } : {}),
       });
+      isRevalidationRequired = false;
     }
   }
 
@@ -1256,7 +1260,9 @@ export function createRouter(init: RouterInit): Router {
     redirect: RedirectResult,
     transition: Transition
   ) {
-    foundXRemixRevalidate = redirect.revalidate;
+    if (redirect.revalidate) {
+      isRevalidationRequired = true;
+    }
     invariant(
       transition.location,
       "Expected a location on the redirect transition"
@@ -1428,10 +1434,9 @@ function getMatchesToLoad(
   matches: DataRouteMatch[],
   transition: Transition,
   location: Location,
-  foundXRemixRevalidate: boolean,
+  isRevalidationRequired: boolean,
   pendingActionError: RouteData | null,
-  revalidatingFetcherMatches: Map<string, [string, DataRouteMatch]>,
-  isFetcherReload: boolean
+  revalidatingFetcherMatches: Map<string, [string, DataRouteMatch]>
 ): [DataRouteMatch[], [string, string, DataRouteMatch][]] {
   // Determine which routes to run loaders for, filter out all routes below
   // any caught action error as they aren't going to render so we don't
@@ -1455,9 +1460,7 @@ function getMatchesToLoad(
         transition,
         location,
         match,
-        state.revalidation,
-        foundXRemixRevalidate,
-        isFetcherReload,
+        isRevalidationRequired,
         false
       )
     );
@@ -1474,9 +1477,7 @@ function getMatchesToLoad(
         transition,
         href,
         match,
-        state.revalidation,
-        foundXRemixRevalidate,
-        isFetcherReload,
+        isRevalidationRequired,
         true
       );
       if (shouldRevalidate) {
@@ -1512,52 +1513,37 @@ function shouldRevalidateLoader(
   transition: Transition,
   location: string | Location,
   match: DataRouteMatch,
-  revalidationState: RevalidationState,
-  foundXRemixRevalidate: boolean,
-  isFetcherReload: boolean,
+  isRevalidationRequired: boolean,
   isFetcherRevalidation: boolean
 ) {
   let currentUrl = createURL(currentLocation);
   let currentParams = currentMatch.params;
   let nextUrl = createURL(location);
   let nextParams = match.params;
-  let isForcedRevalidate =
-    // User manually called router.revalidate()
-    revalidationState === "loading" ||
-    // One of our loaders redirected with an X-Remix-Revalidate header
-    foundXRemixRevalidate;
 
   // This is the default implementation as to when we revalidate.  If the route
-  // provides it's own implementation, then we give full control to them but
-  // provide this to them so they can leverage it if needed after they check
+  // provides it's own implementation, then we give them full control but
+  // provide this value so they can leverage it if needed after they check
   // their own specific use cases
-  function defaultShouldRevalidate() {
-    let matchPathChanged =
-      // param change, /users/123 -> /users/456
+  let defaultShouldRevalidate =
+    // Search params affect all loaders
+    currentUrl.search !== nextUrl.search ||
+    // Forced revalidation due to submission, useRevalidate, or X-Remix-Revalidate
+    isRevalidationRequired;
+
+  // Only apply url checks to navigation loaders, we don't want revalidating
+  // fetchers to qualify since their url never changes
+  if (!isFetcherRevalidation) {
+    defaultShouldRevalidate =
+      defaultShouldRevalidate ||
+      // param change for this match, /users/123 -> /users/456
       currentMatch.pathname !== match.pathname ||
       // splat param changed, which is not present in match.path
       // e.g. /files/images/avatar.jpg -> files/finances.xls
       (currentMatch.route.path?.endsWith("*") &&
-        currentMatch.params["*"] !== match.params["*"]);
-
-    return (
-      // Only apply url checks to navigation loaders, we don't want revalidating
-      // fetchers to qualify since their url never changes
-      (!isFetcherRevalidation &&
-        // Path changed for the same match,
-        (matchPathChanged ||
-          // Clicked the same link, resubmitted a GET form
-          currentUrl.toString() === nextUrl.toString())) ||
-      // Revalidating after an action submission
-      transition.type === "actionReload" ||
-      transition.type === "submissionRedirect" ||
-      // Or a fetcher action submission
-      isFetcherReload ||
-      // Search params affect all loaders
-      currentUrl.search !== nextUrl.search ||
-      // Forced revalidation due to useRevalidate or X-Remix-Revalidate
-      isForcedRevalidate
-    );
+        currentMatch.params["*"] !== match.params["*"]) ||
+      // Clicked the same link, resubmitted a GET form
+      currentUrl.toString() === nextUrl.toString();
   }
 
   if (match.route.shouldRevalidate) {
@@ -1567,12 +1553,11 @@ function shouldRevalidateLoader(
       nextUrl,
       nextParams,
       transition,
-      isForcedRevalidate,
       defaultShouldRevalidate,
     });
   }
 
-  return defaultShouldRevalidate();
+  return defaultShouldRevalidate;
 }
 
 async function callLoaderOrAction(
