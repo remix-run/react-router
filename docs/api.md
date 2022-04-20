@@ -574,11 +574,11 @@ class LoginForm extends React.Component {
   <summary>Type declaration</summary>
 
 ```tsx
-interface OutletProps {
-  context?: unknown;
+interface OutletProps<Context = unknown> {
+  context?: Context;
 }
-declare function Outlet(
-  props: OutletProps
+declare function Outlet<Context = unknown>(
+  props: OutletProps<Context>
 ): React.ReactElement | null;
 ```
 
@@ -662,7 +662,7 @@ export default function Dashboard() {
   return (
     <div>
       <h1>Dashboard</h1>
-      <Outlet context={{ user }} />
+      <Outlet<ContextType> context={{ user }} />
     </div>
   );
 }

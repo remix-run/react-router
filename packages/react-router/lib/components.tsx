@@ -97,8 +97,8 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
   return null;
 }
 
-export interface OutletProps {
-  context?: unknown;
+export interface OutletProps<Context = unknown> {
+  context?: Context;
 }
 
 /**
@@ -106,7 +106,9 @@ export interface OutletProps {
  *
  * @see https://reactrouter.com/docs/en/v6/api#outlet
  */
-export function Outlet(props: OutletProps): React.ReactElement | null {
+export function Outlet<Context = unknown>(
+  props: OutletProps<Context>
+): React.ReactElement | null {
   return useOutlet(props.context);
 }
 
