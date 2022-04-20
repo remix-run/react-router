@@ -144,6 +144,9 @@ export async function build(
 
   let start = Date.now();
   let config = await readConfig(remixRoot);
+
+  cleanBuildDirectories(config);
+
   await compiler.build(config, {
     mode: mode,
     sourcemap,
@@ -192,6 +195,8 @@ export async function watch(
     console.log(message);
     broadcast({ type: "LOG", message });
   }
+
+  cleanBuildDirectories(config);
 
   let closeWatcher = await compiler.watch(config, {
     mode,
@@ -304,5 +309,14 @@ function purgeAppRequireCache(buildPath: string) {
     if (key.startsWith(buildPath)) {
       delete require.cache[key];
     }
+  }
+}
+
+function cleanBuildDirectories(config: RemixConfig) {
+  try {
+    fse.emptyDirSync(config.assetsBuildDirectory);
+    fse.emptyDirSync(path.dirname(config.serverBuildPath));
+  } catch (err) {
+    console.error("Could not clean build directories");
   }
 }
