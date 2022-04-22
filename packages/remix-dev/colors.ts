@@ -21,3 +21,4 @@ export const logoRed = useColor ? chalk.redBright : K;
 
 export const gray = useColor ? chalk.gray : K;
 export const blue = useColor ? chalk.blue : K;
+export const bold = useColor ? chalk.bold : K;
