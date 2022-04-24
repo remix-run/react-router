@@ -159,7 +159,7 @@ You can pull a trick though and use both routers at the same time as you migrate
 ### Install React Router v6
 
 ```sh
-npm install react-router@next
+npm install react-router@6 react-router-dom@6
 ```
 
 ### Update `LocationProvider` to `BrowserRouter`
