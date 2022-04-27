@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/dev",
-  "version": "1.4.2",
+  "version": "1.4.3-pre.0",
   "description": "Dev tools and CLI for Remix",
   "homepage": "https://remix.run",
   "license": "MIT",
@@ -20,7 +20,7 @@
     "@babel/plugin-syntax-jsx": "7.16.7",
     "@babel/preset-typescript": "7.16.7",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
-    "@remix-run/server-runtime": "1.4.2",
+    "@remix-run/server-runtime": "1.4.3-pre.0",
     "@npmcli/package-json": "^2.0.0",
     "cacache": "^15.0.5",
     "chalk": "^4.1.2",
