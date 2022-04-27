@@ -112,5 +112,5 @@ describe("`replace-remix-imports` migration", () => {
 
     expect(output).toContain("successfully migrated");
     expect(output).toContain("npm install");
-  });
+  }, 25_000);
 });
