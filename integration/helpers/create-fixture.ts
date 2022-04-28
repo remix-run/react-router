@@ -6,6 +6,7 @@ import getPort from "get-port";
 import stripIndent from "strip-indent";
 import chalk from "chalk";
 import { sync as spawnSync } from "cross-spawn";
+import type { JsonObject } from "type-fest";
 
 import type { ServerBuild } from "../../build/node_modules/@remix-run/server-runtime";
 import { createRequestHandler } from "../../build/node_modules/@remix-run/server-runtime";
@@ -25,9 +26,11 @@ export type Fixture = Awaited<ReturnType<typeof createFixture>>;
 export type AppFixture = Awaited<ReturnType<typeof createAppFixture>>;
 
 export const js = String.raw;
-export const json = String.raw;
 export const mdx = String.raw;
 export const css = String.raw;
+export function json(value: JsonObject) {
+  return JSON.stringify(value, null, 2);
+}
 
 export async function createFixture(init: FixtureInit) {
   let projectDir = await createFixtureProject(init);

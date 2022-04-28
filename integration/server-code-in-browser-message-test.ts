@@ -15,13 +15,11 @@ let appFixture: AppFixture;
 test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
-      "node_modules/has-side-effects/package.json": json`
-        {
-          "name": "has-side-effects",
-          "version": "1.0.0",
-          "main": "index.js"
-        }
-      `,
+      "node_modules/has-side-effects/package.json": json({
+        name: "has-side-effects",
+        version: "1.0.0",
+        main: "index.js",
+      }),
       "node_modules/has-side-effects/index.js": js`
         let message;
         (() => { message = process.env.___SOMETHING___ || "hello, world"; })();
