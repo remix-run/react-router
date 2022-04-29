@@ -74,30 +74,28 @@ test.beforeAll(async () => {
         <PizzaComponent />
       `,
 
-      "tsconfig.json": json`
-        {
-          "include": ["remix.env.d.ts", "**/*.ts", "**/*.tsx"],
-          "compilerOptions": {
-            "lib": ["DOM", "DOM.Iterable", "ES2019"],
-            "isolatedModules": true,
-            "esModuleInterop": true,
-            "jsx": "react-jsx",
-            "moduleResolution": "node",
-            "resolveJsonModule": true,
-            "target": "ES2019",
-            "strict": true,
-            "baseUrl": ".",
-            "paths": {
-              "~/*": ["./app/*"],
-              "@mylib": ["./app/components/my-lib/index"],
-              "@component": ["./app/components/component.jsx"],
-            },
+      "tsconfig.json": json({
+        include: ["remix.env.d.ts", "**/*.ts", "**/*.tsx"],
+        compilerOptions: {
+          lib: ["DOM", "DOM.Iterable", "ES2019"],
+          isolatedModules: true,
+          esModuleInterop: true,
+          jsx: "react-jsx",
+          moduleResolution: "node",
+          resolveJsonModule: true,
+          target: "ES2019",
+          strict: true,
+          baseUrl: ".",
+          paths: {
+            "~/*": ["./app/*"],
+            "@mylib": ["./app/components/my-lib/index"],
+            "@component": ["./app/components/component.jsx"],
+          },
 
-            // Remix takes care of building everything in \`remix build\`.
-            "noEmit": true
-          }
-        }
-      `,
+          // Remix takes care of building everything in \`remix build\`.
+          noEmit: true,
+        },
+      }),
     },
   });
 });

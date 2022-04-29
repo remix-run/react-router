@@ -12,28 +12,26 @@ test.describe("cloudflare compiler", () => {
       setup: "cloudflare",
       template: "cf-template",
       files: {
-        "package.json": json`
-          {
-            "name": "remix-template-cloudflare-workers",
-            "private": true,
-            "sideEffects": false,
-            "main": "build/index.js",
-            "dependencies": {
-              "@remix-run/cloudflare-workers": "0.0.0-local-version",
-              "@remix-run/react": "0.0.0-local-version",
-              "react": "0.0.0-local-version",
-              "react-dom": "0.0.0-local-version",
-              "worker-pkg": "0.0.0-local-version",
-              "browser-pkg": "0.0.0-local-version",
-              "esm-only-pkg": "0.0.0-local-version",
-              "cjs-only-pkg": "0.0.0-local-version"
-            },
-            "devDependencies": {
-              "@remix-run/dev": "0.0.0-local-version",
-              "@remix-run/eslint-config": "0.0.0-local-version"
-            }
-          }
-        `,
+        "package.json": json({
+          name: "remix-template-cloudflare-workers",
+          private: true,
+          sideEffects: false,
+          main: "build/index.js",
+          dependencies: {
+            "@remix-run/cloudflare-workers": "0.0.0-local-version",
+            "@remix-run/react": "0.0.0-local-version",
+            react: "0.0.0-local-version",
+            "react-dom": "0.0.0-local-version",
+            "worker-pkg": "0.0.0-local-version",
+            "browser-pkg": "0.0.0-local-version",
+            "esm-only-pkg": "0.0.0-local-version",
+            "cjs-only-pkg": "0.0.0-local-version",
+          },
+          devDependencies: {
+            "@remix-run/dev": "0.0.0-local-version",
+            "@remix-run/eslint-config": "0.0.0-local-version",
+          },
+        }),
         "app/routes/index.jsx": js`
           import fake from "worker-pkg";
           import { content as browserPackage } from "browser-pkg";
@@ -51,36 +49,32 @@ test.describe("cloudflare compiler", () => {
             )
           }
         `,
-        "node_modules/worker-pkg/package.json": json`
-          {
-            "name": "worker-pkg",
-            "version": "1.0.0",
-            "type": "module",
-            "main": "./default.js",
-            "exports": {
-              "worker": "./worker.js",
-              "default": "./default.js"
-            }
-          }
-        `,
+        "node_modules/worker-pkg/package.json": json({
+          name: "worker-pkg",
+          version: "1.0.0",
+          type: "module",
+          main: "./default.js",
+          exports: {
+            worker: "./worker.js",
+            default: "./default.js",
+          },
+        }),
         "node_modules/worker-pkg/worker.js": js`
           export default "__WORKER_EXPORTS_SHOULD_BE_IN_BUNDLE__";
         `,
         "node_modules/worker-pkg/default.js": js`
           export default "__DEFAULT_EXPORTS_SHOULD_NOT_BE_IN_BUNDLE__";
         `,
-        "node_modules/browser-pkg/package.json": json`
-          {
-            "name": "browser-pkg",
-            "version": "1.0.0",
-            "main": "./node-cjs.js",
-            "module": "./node-esm.mjs",
-            "browser": {
-                "./node-cjs.js": "./browser-cjs.js",
-                "./node-esm.mjs": "./browser-esm.mjs"
-            }
-          }
-        `,
+        "node_modules/browser-pkg/package.json": json({
+          name: "browser-pkg",
+          version: "1.0.0",
+          main: "./node-cjs.js",
+          module: "./node-esm.mjs",
+          browser: {
+            "./node-cjs.js": "./browser-cjs.js",
+            "./node-esm.mjs": "./browser-esm.mjs",
+          },
+        }),
         "node_modules/browser-pkg/browser-esm.mjs": js`
           export const content = "browser-pkg/browser-esm.mjs";
         `,
@@ -93,29 +87,25 @@ test.describe("cloudflare compiler", () => {
         "node_modules/browser-pkg/node-cjs.js": js`
           module.exports = { content: "browser-pkg/node-cjs.js" };
         `,
-        "node_modules/esm-only-pkg/package.json": json`
-          {
-            "name": "esm-only-pkg",
-            "version": "1.0.0",
-            "type": "module",
-            "main": "./node-esm.js",
-            "browser": "./browser-esm.js"
-          }
-        `,
+        "node_modules/esm-only-pkg/package.json": json({
+          name: "esm-only-pkg",
+          version: "1.0.0",
+          type: "module",
+          main: "./node-esm.js",
+          browser: "./browser-esm.js",
+        }),
         "node_modules/esm-only-pkg/browser-esm.js": js`
           export const content = "esm-only-pkg/browser-esm.js";
         `,
         "node_modules/esm-only-pkg/node-esm.js": js`
           export const content = "esm-only-pkg/node-esm.js";
         `,
-        "node_modules/cjs-only-pkg/package.json": json`
-          {
-            "name": "cjs-only-pkg",
-            "version": "1.0.0",
-            "main": "./node-cjs.js",
-            "browser": "./browser-cjs.js"
-          }
-        `,
+        "node_modules/cjs-only-pkg/package.json": json({
+          name: "cjs-only-pkg",
+          version: "1.0.0",
+          main: "./node-cjs.js",
+          browser: "./browser-cjs.js",
+        }),
         "node_modules/cjs-only-pkg/browser-cjs.js": js`
           module.exports = { content: "cjs-only-pkg/browser-cjs.js" };
         `,
