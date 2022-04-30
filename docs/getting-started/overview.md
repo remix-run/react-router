@@ -208,11 +208,11 @@ function Invoices() {
 
 function Invoice() {
   let { invoiceId } = useParams();
-  return <h1>Invoice {invoiceId}</h1>;
+  return <h2>Invoice {invoiceId}</h2>;
 }
 
 function SentInvoices() {
-  return <h1>Sent Invoices</h1>;
+  return <h2>Sent Invoices</h2>;
 }
 ```
 
@@ -255,11 +255,11 @@ function Layout() {
 }
 
 function Invoices() {
-  return <h1>Invoices</h1>;
+  return <h2>Invoices</h2>;
 }
 
 function Dashboard() {
-  return <h1>Dashboard</h1>;
+  return <h2>Dashboard</h2>;
 }
 ```
 
@@ -361,11 +361,11 @@ function Dashboard() {
 }
 
 function Invoices() {
-  return <h1>Invoices</h1>;
+  return <h2>Invoices</h2>;
 }
 
 function Team() {
-  return <h1>Team</h1>;
+  return <h2>Team</h2>;
 }
 
 function App() {
