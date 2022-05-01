@@ -30,11 +30,7 @@ class Router extends React.Component {
 
     if (!props.staticContext) {
       this.unlisten = props.history.listen(location => {
-        if (this._isMounted) {
-          this.setState({ location });
-        } else {
-          this._pendingLocation = location;
-        }
+        this._pendingLocation = location;
       });
     }
   }
@@ -42,6 +38,18 @@ class Router extends React.Component {
   componentDidMount() {
     this._isMounted = true;
 
+    if (this.unlisten) {
+      // Any pre-mount location changes have been captured at
+      // this point, so unregister the listener.
+      this.unlisten();
+    }
+    if (!this.props.staticContext) {
+      this.unlisten = this.props.history.listen(location => {
+        if (this._isMounted) {
+          this.setState({ location });
+        }
+      });
+    }
     if (this._pendingLocation) {
       this.setState({ location: this._pendingLocation });
     }
