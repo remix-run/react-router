@@ -108,55 +108,134 @@ function DefaultFallbackElement() {
   return (
     <>
       <style>{`
-        :root {
-          --size: 25vh;
+        .rr-loading {
+        	box-sizing: border-box;
+        	display: flex;
+        	align-items: center;
+        	justify-content: center;
+        	width: 100vw;
+        	height: 100vh;
         }
 
-        .rr-fallback__flex {
-          text-align: center;
-          width: 100%;
-          height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;  
+        .rr-loading-cd {
+        	box-sizing: border-box;
+        	--diameter: 200px;
+        	--c-white: #fff;
+        	/* naming things is hard */
+        	/* https://www.color-name.com */
+        	--c-anti-flash-white: #f3f3f3;
+        	--c-gainsboro: #ddd;
+        	--c-mid-gray: #bbb;
+        	--c-dark-gray: #aaa;
+        	--c-granite-gray: #666;
+        	--c-light-periwinkle: #c0c8e3;
+        	--c-platinum: #e8d4e9;
+        	--c-violet-100: #d9ccee;
+        	--c-pink-lavender: #d7b0c5;
+        	--c-languid-lavender: #cec0e3;
+        	--c-violet-150: #ccbccd;
+        	--c-black-shadows: #c6b1bc;
+        	--c-stale-beige: #eef6d3;
+        	--c-light-moss-green: #a7dda7;
+        	flex: 0 0 auto;
+        	position: relative;
+        	width: var(--diameter);
+        	height: var(--diameter);
+        	border-radius: 9999px;
+        	border: 5px solid var(--c-gainsboro);
+        	background-color: var(--c-mid-gray);
+        	background-image: conic-gradient(
+        		var(--c-white),
+        		var(--c-anti-flash-white),
+        		var(--c-gainsboro),
+        		var(--c-mid-gray),
+        		var(--c-dark-gray),
+        		var(--c-black-shadows),
+        		var(--c-pink-lavender),
+        		var(--c-white),
+        		var(--c-stale-beige),
+        		var(--c-light-moss-green),
+        		var(--c-languid-lavender),
+        		var(--c-platinum),
+        		var(--c-pink-lavender),
+        		var(--c-gainsboro),
+        		var(--c-anti-flash-white),
+        		var(--c-white),
+        		var(--c-gainsboro),
+        		var(--c-mid-gray),
+        		var(--c-dark-gray),
+        		var(--c-black-shadows),
+        		var(--c-pink-lavender),
+        		var(--c-white),
+        		var(--c-stale-beige),
+        		var(--c-light-moss-green),
+        		var(--c-light-periwinkle),
+        		var(--c-languid-lavender),
+        		var(--c-platinum),
+        		var(--c-pink-lavender),
+        		var(--c-mid-gray),
+        		var(--c-gainsboro),
+        		var(--c-white)
+        	);
+        	clip-path: url(#rr-loading-cd-clip-path);
+        	animation-name: rr-loading-spin;
+        	animation-duration: 1.5s;
+        	animation-iteration-count: infinite;
+        	animation-timing-function: ease-in-out;
         }
 
-        .rr-fallback__rotate {
-          display: block;
-          width: var(--size);
-          height: var(--size);
-          font-size: var(--size);
-          animation-name: spin;
-          animation-duration: 1s;
-          animation-timing-function: ease-in-out;
-          animation-iteration-count: infinite;
-          transform: rotate(0deg);
-          transform-origin: 50% 50%;
-        }
-
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        .rr-loading-cd::before {
+        	--diameter: 84px;
+        	box-sizing: border-box;
+        	content: "";
+        	display: block;
+        	position: absolute;
+        	z-index: 1;
+        	left: 50%;
+        	top: 50%;
+        	transform: translate(-50%, -50%);
+        	background: transparent;
+        	height: var(--diameter);
+        	width: var(--diameter);
+        	border: 19px solid var(--c-granite-gray);
+        	border-radius: inherit;
+        	opacity: 0.8;
+        	mix-blend-mode: hard-light;
         }
 
         @media (prefers-reduced-motion) {
-          .rr-fallback__rotate {
-            animation-iteration-count: 0;
-          }
+        	.rr-loading-cd {
+        		animation-timing-function: linear;
+        		animation-duration: 30s;
+        	}
         }
 
-        .rr-fallback__cd {
-          width: var(--size);
-          height: var(--size);
-          line-height: var(--size);
-          margin-top: 5%;
+        @keyframes rr-loading-spin {
+        	0% {
+        		transform: rotate(0deg);
+        	}
+        	100% {
+        		transform: rotate(720deg);
+        	}
         }
       `}</style>
-      <div className="rr-fallback__flex">
-        <div className="rr-fallback__rotate">
-          <p className="rr-fallback__cd">💿</p>
-        </div>
+
+      <div className="rr-loading">
+        <div className="rr-loading-cd" role="img" aria-label="Spinning CD" />
       </div>
+      <svg width="0" height="0">
+        <defs>
+          <clipPath
+            id="rr-loading-cd-clip-path"
+            clipPathUnits="objectBoundingBox"
+          >
+            <path
+              clipRule="evenodd"
+              d="M0.5 1C0.776154 1 1 0.776146 1 0.5C1 0.223854 0.776154 0 0.5 0C0.223846 0 0 0.223854 0 0.5C0 0.776146 0.223846 1 0.5 1ZM0.5 0.589996C0.549713 0.589996 0.589996 0.549706 0.589996 0.5C0.589996 0.450294 0.549713 0.410004 0.5 0.410004C0.450287 0.410004 0.410004 0.450294 0.410004 0.5C0.410004 0.549706 0.450287 0.589996 0.5 0.589996Z"
+            />
+          </clipPath>
+        </defs>
+      </svg>
     </>
   );
 }
