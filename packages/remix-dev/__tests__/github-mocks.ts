@@ -76,6 +76,12 @@ let githubHandlers: Array<RequestHandler> = [
       return res(ctx.status(200));
     }
   ),
+  rest.head(
+    `https://github.com/error-username/:status`,
+    async (req, res, ctx) => {
+      return res(ctx.status(Number(req.params.status)));
+    }
+  ),
   rest.head(`https://github.com/:owner/:repo`, async (req, res, ctx) => {
     return res(ctx.status(200));
   }),

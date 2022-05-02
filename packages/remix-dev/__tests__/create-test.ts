@@ -542,6 +542,88 @@ describe("the create command", () => {
     expect(output).toContain(getOptOutOfInstallMessage("pnpm exec remix init"));
     process.env.npm_user_agent = originalUserAgent;
   });
+
+  describe("errors", () => {
+    it("identifies when a github repo is not accessible (403)", async () => {
+      let projectDir = await getProjectDir("repo");
+      await expect(() =>
+        run([
+          "create",
+          projectDir,
+          "--template",
+          "error-username/403",
+          "--no-install",
+          "--typescript",
+        ])
+      ).rejects.toMatchInlineSnapshot(
+        `[Error: 🚨 The template could not be verified because you do not have access to the repository. Please double check the access rights of this repo and try again.]`
+      );
+    });
+
+    it("identifies when a github repo does not exist (404)", async () => {
+      let projectDir = await getProjectDir("repo");
+      await expect(() =>
+        run([
+          "create",
+          projectDir,
+          "--template",
+          "error-username/404",
+          "--no-install",
+          "--typescript",
+        ])
+      ).rejects.toMatchInlineSnapshot(
+        `[Error: 🚨 The template could not be verified. Please double check that the template is a valid GitHub repository and try again.]`
+      );
+    });
+
+    it("identifies when something unknown goes wrong with the repo request (4xx)", async () => {
+      let projectDir = await getProjectDir("repo");
+      await expect(() =>
+        run([
+          "create",
+          projectDir,
+          "--template",
+          "error-username/400",
+          "--no-install",
+          "--typescript",
+        ])
+      ).rejects.toMatchInlineSnapshot(
+        `[Error: 🚨 The template could not be verified. The server returned a response with a 400 status. Please double check that the template is a valid GitHub repository and try again.]`
+      );
+    });
+
+    it("identifies when a remote tarball does not exist (404)", async () => {
+      let projectDir = await getProjectDir("remote-tarball");
+      await expect(() =>
+        run([
+          "create",
+          projectDir,
+          "--template",
+          "https://example.com/error/404/remix-stack.tar.gz",
+          "--no-install",
+          "--typescript",
+        ])
+      ).rejects.toMatchInlineSnapshot(
+        `[Error: 🚨 The template file could not be verified. Please double check the URL and try again.]`
+      );
+    });
+
+    it("identifies when a remote tarball does not exist (4xx)", async () => {
+      let projectDir = await getProjectDir("remote-tarball");
+      await expect(() =>
+        run([
+          "create",
+          projectDir,
+          "--template",
+          "https://example.com/error/400/remix-stack.tar.gz",
+          "--no-install",
+          "--typescript",
+        ])
+      ).rejects.toMatchInlineSnapshot(
+        `[Error: 🚨 The template file could not be verified. The server returned a response with a 400 status. Please double check the URL and try again.]`
+      );
+    });
+  });
 });
 
 function getSuccessMessage(projectDirectory: string) {

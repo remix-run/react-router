@@ -8,6 +8,12 @@ import { githubHandlers } from "./github-mocks";
 type RequestHandler = Parameters<typeof setupServer>[0];
 
 let miscHandlers: Array<RequestHandler> = [
+  rest.head(
+    "https://example.com/error/:status/remix-stack.tar.gz",
+    async (req, res, ctx) => {
+      return res(ctx.status(Number(req.params.status)));
+    }
+  ),
   rest.head("https://example.com/remix-stack.tar.gz", async (req, res, ctx) => {
     return res(ctx.status(200));
   }),
