@@ -1958,13 +1958,14 @@
     "@web-std/stream" "1.0.0"
     web-encoding "1.1.5"
 
-"@web-std/fetch@4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@web-std/fetch/-/fetch-4.0.0.tgz#32cb02e38c25518599843a51c4518b7ccb108d2c"
-  integrity sha512-RZUY1m7WoSsNGLfBeef3oAsmskU/IrlDSCMEakQZjD1csC91bdq3MJG7GiKijKJNg/PKRC45YxOo5yeSrAz5mA==
+"@web-std/fetch@4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@web-std/fetch/-/fetch-4.1.0.tgz#db1eb659198376dad692421896b7119fb13e6e52"
+  integrity sha512-ZRizMcP8YyuRlhIsRYNFD9x/w28K7kbUhNGmKM9hDy4qeQ5xMTk//wA89EF+Clbl6EP4ksmCcN+4TqBMSRL8Zw==
   dependencies:
     "@web-std/blob" "^3.0.3"
     "@web-std/form-data" "^3.0.2"
+    "@web-std/stream" "^1.0.1"
     "@web3-storage/multipart-parser" "^1.0.0"
     data-uri-to-buffer "^3.0.1"
     mrmime "^1.0.0"
@@ -1980,6 +1981,13 @@
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@web-std/stream/-/stream-1.0.0.tgz#01066f40f536e4329d9b696dc29872f3a14b93c1"
   integrity sha512-jyIbdVl+0ZJyKGTV0Ohb9E6UnxP+t7ZzX4Do3AHjZKxUXKMs9EmqnBDQgHF7bEw0EzbQygOjtt/7gvtmi//iCQ==
+  dependencies:
+    web-streams-polyfill "^3.1.1"
+
+"@web-std/stream@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@web-std/stream/-/stream-1.0.1.tgz#af2972654848e20a683781b0a50bef2ce3f011a0"
+  integrity sha512-tsz4Y0WNDgFA5jwLSeV7/UV5rfMIlj0cPsSLVfTihjaVW0OJPd5NxJ3le1B3yLyqqzRpeG5OAfJAADLc4VoGTA==
   dependencies:
     web-streams-polyfill "^3.1.1"
 
