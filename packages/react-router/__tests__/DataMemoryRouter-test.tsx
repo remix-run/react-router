@@ -226,18 +226,30 @@ describe("<DataMemoryRouter>", () => {
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <div
-          class=\\"rr-fallback__flex\\"
+          class=\\"rr-loading\\"
         >
           <div
-            class=\\"rr-fallback__rotate\\"
-          >
-            <p
-              class=\\"rr-fallback__cd\\"
-            >
-              💿
-            </p>
-          </div>
+            aria-label=\\"Spinning CD\\"
+            class=\\"rr-loading-cd\\"
+            role=\\"img\\"
+          />
         </div>
+        <svg
+          height=\\"0\\"
+          width=\\"0\\"
+        >
+          <defs>
+            <clippath
+              clipPathUnits=\\"objectBoundingBox\\"
+              id=\\"rr-loading-cd-clip-path\\"
+            >
+              <path
+                clip-rule=\\"evenodd\\"
+                d=\\"M0.5 1C0.776154 1 1 0.776146 1 0.5C1 0.223854 0.776154 0 0.5 0C0.223846 0 0 0.223854 0 0.5C0 0.776146 0.223846 1 0.5 1ZM0.5 0.589996C0.549713 0.589996 0.589996 0.549706 0.589996 0.5C0.589996 0.450294 0.549713 0.410004 0.5 0.410004C0.450287 0.410004 0.410004 0.450294 0.410004 0.5C0.410004 0.549706 0.450287 0.589996 0.5 0.589996Z\\"
+              />
+            </clippath>
+          </defs>
+        </svg>
       </div>"
     `);
 
