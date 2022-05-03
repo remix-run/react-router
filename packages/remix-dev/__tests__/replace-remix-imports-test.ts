@@ -3,8 +3,7 @@ import fse from "fs-extra";
 import os from "os";
 import stripAnsi from "strip-ansi";
 import type { PackageJson } from "type-fest";
-import { spawnSync } from "child_process";
-import { PowerShell } from "node-powershell";
+import shell from "shelljs";
 
 import { run } from "../cli/run";
 
@@ -97,18 +96,9 @@ describe("`replace-remix-imports` migration", () => {
     expect(packageJson.scripts).not.toContain("postinstall");
 
     expect(output).toContain("✅ Your Remix imports look good!");
-    if (process.platform === "win32") {
-      let res =
-        await PowerShell.$`Get-ChildItem ${projectDir} | Select-String 'from "remix"'`;
-      let err = res.stderr?.toString("utf-8");
-      let out = res.stdout?.toString("utf-8");
-      expect(err).toBeFalsy();
-      expect(out).toBeFalsy();
-    } else {
-      let { status } = spawnSync("grep", ["-nri", 'from "remix"', projectDir]);
-      // `grep` exits with status code `1` when no matches are found
-      expect(status).toBe(1);
-    }
+    let { code } = shell.grep("-nri", 'from "remix"', projectDir);
+    // `grep` exits with status code `1` when no matches are found
+    expect(code).toBe(1);
 
     expect(output).toContain("successfully migrated");
     expect(output).toContain("npm install");

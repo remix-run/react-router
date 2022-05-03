@@ -20,8 +20,8 @@
     "@babel/plugin-syntax-jsx": "7.16.7",
     "@babel/preset-typescript": "7.16.7",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
-    "@remix-run/server-runtime": "1.4.3",
     "@npmcli/package-json": "^2.0.0",
+    "@remix-run/server-runtime": "1.4.3",
     "cacache": "^15.0.5",
     "chalk": "^4.1.2",
     "chokidar": "^3.5.1",
@@ -63,10 +63,12 @@
     "@types/inquirer": "^8.2.0",
     "@types/jscodeshift": "^0.11.3",
     "@types/lodash.debounce": "^4.0.6",
+    "@types/shelljs": "^0.8.11",
     "@types/tar-fs": "^2.0.1",
     "@types/ws": "^7.4.1",
     "esbuild-register": "^3.3.2",
     "msw": "^0.39.2",
+    "shelljs": "^0.8.5",
     "tiny-invariant": "^1.2.0",
     "type-fest": "^2.12.2"
   }
