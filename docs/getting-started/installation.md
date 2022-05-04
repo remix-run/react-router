@@ -61,7 +61,7 @@ import * as serviceWorker from "./serviceWorker";
 ReactDOM.render(
   <BrowserRouter>
     <App />
-  </BrowserRouter>,
+  </BrowserRouter>
   document.getElementById("root")
 );
 ```
