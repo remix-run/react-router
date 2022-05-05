@@ -402,7 +402,6 @@ describe("the create command", () => {
     expect(fse.existsSync(path.join(projectDir, "test.txt"))).toBeTruthy();
     // if you run `remix init` keep around the remix.init directory for future use
     expect(fse.existsSync(path.join(projectDir, "remix.init"))).toBeTruthy();
-    // deps can take a bit to install
   });
 
   it("throws an error when invalid remix.init script when automatically ran", async () => {
@@ -422,7 +421,6 @@ describe("the create command", () => {
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
     // we should keep remix.init around if the init script fails
     expect(fse.existsSync(path.join(projectDir, "remix.init"))).toBeTruthy();
-    // deps can take a bit to install
   });
 
   it("throws an error when invalid remix.init script when manually ran", async () => {
@@ -449,7 +447,6 @@ describe("the create command", () => {
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
     // we should keep remix.init around if the init script fails
     expect(fse.existsSync(path.join(projectDir, "remix.init"))).toBeTruthy();
-    // deps can take a bit to install
   });
 
   it("recognizes when Yarn was used to run the command", async () => {
@@ -622,6 +619,81 @@ describe("the create command", () => {
       ).rejects.toMatchInlineSnapshot(
         `[Error: 🚨 The template file could not be verified. The server returned a response with a 400 status. Please double check the URL and try again.]`
       );
+    });
+
+    it("allows creating an app in a dir if it's empty", async () => {
+      let projectDir = await getProjectDir("other-empty-dir");
+      await run([
+        "create",
+        projectDir,
+        "--template",
+        "grunge-stack",
+        "--no-install",
+        "--typescript",
+      ]);
+
+      expect(
+        fse.existsSync(path.join(projectDir, "package.json"))
+      ).toBeTruthy();
+    });
+
+    it("doesn't allow creating an app in a dir if it's not empty", async () => {
+      let projectDir = await getProjectDir("not-empty-dir");
+      fse.mkdirSync(projectDir);
+      fse.createFileSync(path.join(projectDir, "some-file.txt"));
+      await expect(() =>
+        run([
+          "create",
+          projectDir,
+          "--template",
+          "grunge-stack",
+          "--no-install",
+          "--typescript",
+        ])
+      ).rejects.toMatchInlineSnapshot(
+        `[Error: 🚨 The project directory must be empty to create a new project. Please clear the contents of the directory or choose a different path.]`
+      );
+    });
+
+    it("allows creating an app in the current dir if it's empty", async () => {
+      let projectDir = await getProjectDir("empty-dir");
+      let cwd = process.cwd();
+      fse.mkdirSync(projectDir);
+      process.chdir(projectDir);
+      await run([
+        "create",
+        ".",
+        "--template",
+        "grunge-stack",
+        "--no-install",
+        "--typescript",
+      ]);
+      process.chdir(cwd);
+
+      expect(
+        fse.existsSync(path.join(projectDir, "package.json"))
+      ).toBeTruthy();
+    });
+
+    it("doesn't allow creating an app in the current dir if it's not empty", async () => {
+      let projectDir = await getProjectDir("not-empty-dir");
+      let cwd = process.cwd();
+      fse.mkdirSync(projectDir);
+      fse.createFileSync(path.join(projectDir, "some-file.txt"));
+      process.chdir(projectDir);
+      await expect(() =>
+        run([
+          "create",
+          ".",
+          "--template",
+          "grunge-stack",
+          "--no-install",
+          "--typescript",
+        ])
+      ).rejects.toMatchInlineSnapshot(
+        `[Error: 🚨 The project directory must be empty to create a new project. Please clear the contents of the directory or choose a different path.]`
+      );
+      process.chdir(cwd);
     });
   });
 });

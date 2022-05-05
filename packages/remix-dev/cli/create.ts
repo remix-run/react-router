@@ -38,17 +38,6 @@ export async function createApp({
   githubToken = process.env.GITHUB_TOKEN,
   debug,
 }: CreateAppArgs) {
-  // Create the app directory
-  let relativeProjectDir = path.relative(process.cwd(), projectDir);
-  let projectDirIsCurrentDir = relativeProjectDir === "";
-  if (!projectDirIsCurrentDir) {
-    if (fse.existsSync(projectDir)) {
-      throw new Error(
-        `️🚨 Oops, "${relativeProjectDir}" already exists. Please try again with a different directory.`
-      );
-    }
-  }
-
   /**
    * Grab the template
    * First we'll need to determine if the template we got is
@@ -443,13 +432,8 @@ export async function validateNewProjectPath(input: string): Promise<void> {
   ) {
     if ((await fse.readdir(projectDir)).length > 0) {
       throw Error(
-        "🚨 The current directory must be empty to create a new project. Please " +
+        "🚨 The project directory must be empty to create a new project. Please " +
           "clear the contents of the directory or choose a different path."
-      );
-    } else {
-      throw Error(
-        "🚨 The directory provided already exists. Please try again with a " +
-          "different directory."
       );
     }
   }
