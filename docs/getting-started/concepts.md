@@ -509,7 +509,9 @@ React Router will create an array of [matches](#match) from these routes and the
 The final concept is rendering. Consider that the entry to your app looks like this:
 
 ```jsx
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(
+  document.getElementById("root")
+);
 root.render(
   <BrowserRouter>
     <Routes>
@@ -787,7 +789,9 @@ Let's put it all together from the top!
 1. You render your app:
 
    ```jsx
-   const root = ReactDOM.createRoot(document.getElementById("root"));
+   const root = ReactDOM.createRoot(
+     document.getElementById("root")
+   );
    root.render(
      <BrowserRouter>
        <Routes>

@@ -28,7 +28,9 @@ import {
 } from "react-router-dom";
 // import your route components too
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(
+  document.getElementById("root")
+);
 root.render(
   <BrowserRouter>
     <Routes>
