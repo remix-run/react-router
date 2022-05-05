@@ -73,11 +73,11 @@ Actually, that "!" doesn't look boring at all. This is pretty exciting. We sat o
 Finally, go make sure `index.js` or `main.jsx` (depending on the bundler you used) is actually boring:
 
 ```tsx filename=src/main.jsx
-import { render } from "react-dom";
+import ReactDOM from "react-dom/client";
 import App from "./App";
 
-const rootElement = document.getElementById("root");
-render(<App />, rootElement);
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
 ```
 
 Finally, start your app:
@@ -95,16 +95,15 @@ npm run dev
 First things first, we want to connect your app to the browser's URL: import `BrowserRouter` and render it around your whole app.
 
 ```tsx lines=[2,7-9] filename=src/main.jsx
-import { render } from "react-dom";
+import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 
-const rootElement = document.getElementById("root");
-render(
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
   <BrowserRouter>
     <App />
-  </BrowserRouter>,
-  rootElement
+  </BrowserRouter>
 );
 ```
 
@@ -173,7 +172,7 @@ export default function Invoices() {
 Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx` or `index.js`.
 
 ```tsx lines=[2,4-5,8-9,13-19] filename=src/main.jsx
-import { render } from "react-dom";
+import ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
   Routes,
@@ -183,16 +182,15 @@ import App from "./App";
 import Expenses from "./routes/expenses";
 import Invoices from "./routes/invoices";
 
-const rootElement = document.getElementById("root");
-render(
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />} />
       <Route path="expenses" element={<Expenses />} />
       <Route path="invoices" element={<Invoices />} />
     </Routes>
-  </BrowserRouter>,
-  rootElement
+  </BrowserRouter>
 );
 ```
 
@@ -212,7 +210,7 @@ Let's get some automatic, persistent layout handling by doing just two things:
 First let's nest the routes. Right now the expenses and invoices routes are siblings to the app, we want to make them _children_ of the app route:
 
 ```jsx lines=[15-18] filename=src/main.jsx
-import { render } from "react-dom";
+import ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
   Routes,
@@ -222,8 +220,8 @@ import App from "./App";
 import Expenses from "./routes/expenses";
 import Invoices from "./routes/invoices";
 
-const rootElement = document.getElementById("root");
-render(
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />}>
@@ -231,8 +229,7 @@ render(
         <Route path="invoices" element={<Invoices />} />
       </Route>
     </Routes>
-  </BrowserRouter>,
-  rootElement
+  </BrowserRouter>
 );
 ```
 

@@ -20,7 +20,7 @@ npm install react-router-dom@6
 ## Configuring Routes
 
 ```jsx
-import { render } from "react-dom";
+import ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
   Routes,
@@ -28,7 +28,8 @@ import {
 } from "react-router-dom";
 // import your route components too
 
-render(
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />}>
@@ -40,8 +41,7 @@ render(
         </Route>
       </Route>
     </Routes>
-  </BrowserRouter>,
-  document.getElementById("root")
+  </BrowserRouter>
 );
 ```
 
