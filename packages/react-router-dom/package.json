@@ -14,11 +14,11 @@
   "types": "./index.d.ts",
   "exports": {
     ".": {
+      "types": "./index.d.ts",
       "node": {
         "require": "./index.cjs",
         "import": "./index.js"
       },
-      "types": "./index.d.ts",
       "default": "./index.js"
     },
     "./server": {
