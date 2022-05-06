@@ -7,7 +7,6 @@ import type {
 import {
   createRouter,
   Fetcher,
-  FetchOptions,
   IDLE_FETCHER,
   IDLE_TRANSITION,
 } from "../router";
@@ -549,17 +548,17 @@ function setup({
   async function fetch(href: string, key: string): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
-    opts: FetchOptions
+    opts: NavigateOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
-    opts: FetchOptions
+    opts: NavigateOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     keyOrOpts?: string | NavigateOptions,
-    opts?: FetchOptions
+    opts?: NavigateOptions
   ): Promise<FetcherHelpers> {
     let navigationId = ++guid;
     let key = typeof keyOrOpts === "string" ? keyOrOpts : String(navigationId);
@@ -1415,6 +1414,92 @@ describe("a router", () => {
       await router.navigate("/cookie");
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
+    });
+
+    it("applies to fetcher loads", async () => {
+      let count = 0;
+      let fetchLoader = jest.fn((args) => `FETCH ${++count}`);
+      let shouldRevalidate = jest.fn((args) => false);
+
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "",
+            id: "root",
+            element: {},
+            children: [
+              {
+                path: "/",
+                id: "index",
+              },
+              {
+                path: "/child",
+                id: "child",
+              },
+              {
+                path: "/fetch",
+                id: "fetch",
+                loader: async (...args) => fetchLoader(...args),
+                shouldRevalidate: (args) => shouldRevalidate(args) === true,
+              },
+            ],
+          },
+        ],
+      });
+      await new Promise((r) => setImmediate(r));
+
+      let key = "key";
+      await router.fetch(key, "/fetch");
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        type: "done",
+        data: "FETCH 1",
+      });
+      expect(shouldRevalidate.mock.calls.length).toBe(0);
+
+      // Normal navigations should not trigger fetcher revalidations
+      await router.navigate("/child");
+      await router.navigate("/");
+      expect(shouldRevalidate.mock.calls.length).toBe(0);
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        type: "done",
+        data: "FETCH 1",
+      });
+      expect(shouldRevalidate.mock.calls.length).toBe(0);
+
+      // Post navigation should trigger shouldRevalidate, and loader should not re-run
+      await router.navigate("/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        type: "done",
+        data: "FETCH 1",
+      });
+      expect(shouldRevalidate.mock.calls.length).toBe(1);
+      expect(shouldRevalidate.mock.calls[0][0]).toMatchObject({
+        currentParams: {},
+        currentUrl: new URL("http://localhost/fetch"),
+        nextParams: {},
+        nextUrl: new URL("http://localhost/fetch"),
+        transition: {
+          formAction: "/child",
+          formData: createFormData({}),
+          formEncType: "application/x-www-form-urlencoded",
+          formMethod: "post",
+          location: {
+            hash: "",
+            key: expect.any(String),
+            pathname: "/child",
+            search: "",
+            state: null,
+          },
+          state: "loading",
+          type: "actionReload",
+        },
+        defaultShouldRevalidate: true,
+      });
     });
   });
 
@@ -4434,7 +4519,7 @@ describe("a router", () => {
       });
 
       let key = "key";
-      let F = await t.fetch("/", key, { revalidate: true });
+      let F = await t.fetch("/", key);
       await F.loaders.root.resolve("ROOT_DATA*");
       expect(t.router.state.fetchers.get(key)).toMatchObject({
         state: "idle",
@@ -5547,8 +5632,8 @@ describe("a router", () => {
       });
     });
 
-    describe("opt-in fetcher revalidation", () => {
-      it("revalidates opted in fetchers on action submissions", async () => {
+    describe("fetcher revalidation", () => {
+      it("revalidates fetchers on action submissions", async () => {
         let t = setup({
           routes: TASK_ROUTES,
           initialEntries: ["/"],
@@ -5556,16 +5641,14 @@ describe("a router", () => {
         });
         expect(t.router.state.transition).toBe(IDLE_TRANSITION);
 
-        let key = "key";
-        let A = await t.fetch("/tasks/1", key);
+        let key1 = "key1";
+        let A = await t.fetch("/tasks/1", key1);
         await A.loaders.tasksId.resolve("TASKS 1");
         expect(A.fetcher.state).toBe("idle");
         expect(A.fetcher.data).toBe("TASKS 1");
 
-        let revalidatingKey = "r-key";
-        let B = await t.fetch("/tasks/2", revalidatingKey, {
-          revalidate: true,
-        });
+        let key2 = "key2";
+        let B = await t.fetch("/tasks/2", key2);
         await B.loaders.tasksId.resolve("TASKS 2");
         expect(B.fetcher.state).toBe("idle");
         expect(B.fetcher.data).toBe("TASKS 2");
@@ -5581,33 +5664,33 @@ describe("a router", () => {
         await C.actions.tasks.resolve("TASKS ACTION");
 
         // Only the revalidating fetcher should go back into a loading state
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
-          "loading"
-        );
+        expect(t.router.state.fetchers.get(key1)?.state).toBe("loading");
+        expect(t.router.state.fetchers.get(key1)?.state).toBe("loading");
 
         // Resolve navigation loaders + fetcher loader
         await C.loaders.root.resolve("ROOT*");
         await C.loaders.tasks.resolve("TASKS LOADER");
-        await C.loaders.tasksId.resolve("TASKS 2*");
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-        expect(t.router.state.fetchers.get(key)?.data).toBe("TASKS 1");
-        expect(t.router.state.fetchers.get(revalidatingKey)).toMatchObject({
+        await C.loaders.tasksId.resolve("TASKS ID*");
+        expect(t.router.state.fetchers.get(key1)).toMatchObject({
           state: "idle",
           type: "done",
-          data: "TASKS 2*",
+          data: "TASKS ID*",
+        });
+        expect(t.router.state.fetchers.get(key2)).toMatchObject({
+          state: "idle",
+          type: "done",
+          data: "TASKS ID*",
         });
 
         // If a fetcher does a submission, it unsets the revalidation aspect
-        let D = await t.fetch("/tasks/3", revalidatingKey, {
+        let D = await t.fetch("/tasks/3", key1, {
           formMethod: "post",
           formData: createFormData({}),
-          revalidate: true,
         });
         await D.actions.tasksId.resolve("TASKS 3");
         await D.loaders.root.resolve("ROOT**");
         await D.loaders.tasks.resolve("TASKS**");
-        expect(t.router.state.fetchers.get(revalidatingKey)).toMatchObject({
+        expect(t.router.state.fetchers.get(key1)).toMatchObject({
           state: "idle",
           type: "done",
           data: "TASKS 3",
@@ -5622,14 +5705,14 @@ describe("a router", () => {
         await E.actions.tasks.resolve("TASKS***");
 
         // Remains the same state as it was after the submission
-        expect(t.router.state.fetchers.get(revalidatingKey)).toMatchObject({
+        expect(t.router.state.fetchers.get(key1)).toMatchObject({
           state: "idle",
           type: "done",
           data: "TASKS 3",
         });
       });
 
-      it("revalidates opted in fetchers on action redirects", async () => {
+      it("revalidates fetchers on action redirects", async () => {
         let t = setup({
           routes: TASK_ROUTES,
           initialEntries: ["/"],
@@ -5639,17 +5722,9 @@ describe("a router", () => {
 
         let key = "key";
         let A = await t.fetch("/tasks/1", key);
-        await A.loaders.tasksId.resolve("TASKS-1");
+        await A.loaders.tasksId.resolve("TASKS ID");
         expect(A.fetcher.state).toBe("idle");
-        expect(A.fetcher.data).toBe("TASKS-1");
-
-        let revalidatingKey = "r-key";
-        let B = await t.fetch("/tasks/2", revalidatingKey, {
-          revalidate: true,
-        });
-        await B.loaders.tasksId.resolve("TASKS-2");
-        expect(B.fetcher.state).toBe("idle");
-        expect(B.fetcher.data).toBe("TASKS-2");
+        expect(A.fetcher.data).toBe("TASKS ID");
 
         let C = await t.navigate("/tasks", {
           formMethod: "post",
@@ -5660,28 +5735,20 @@ describe("a router", () => {
         let D = await C.actions.tasks.redirect("/", undefined, undefined, [
           "tasksId",
         ]);
-
-        // Only the revalidating fetcher should go back into a loading state
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
-          "loading"
-        );
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
         // Resolve navigation loaders + fetcher loader
         await D.loaders.root.resolve("ROOT*");
         await D.loaders.index.resolve("INDEX*");
-        await D.loaders.tasksId.resolve("TASKS-2*");
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-        expect(t.router.state.fetchers.get(key)?.data).toBe("TASKS-1");
-        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
-          "idle"
-        );
-        expect(t.router.state.fetchers.get(revalidatingKey)?.data).toBe(
-          "TASKS-2*"
-        );
+        await D.loaders.tasksId.resolve("TASKS ID*");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          type: "done",
+          data: "TASKS ID*",
+        });
       });
 
-      it("revalidates opted in fetchers on action redirects", async () => {
+      it("revalidates fetchers on action errors", async () => {
         let t = setup({
           routes: TASK_ROUTES,
           initialEntries: ["/"],
@@ -5691,17 +5758,9 @@ describe("a router", () => {
 
         let key = "key";
         let A = await t.fetch("/tasks/1", key);
-        await A.loaders.tasksId.resolve("TASKS-1");
+        await A.loaders.tasksId.resolve("TASKS ID");
         expect(A.fetcher.state).toBe("idle");
-        expect(A.fetcher.data).toBe("TASKS-1");
-
-        let revalidatingKey = "r-key";
-        let B = await t.fetch("/tasks/2", revalidatingKey, {
-          revalidate: true,
-        });
-        await B.loaders.tasksId.resolve("TASKS-2");
-        expect(B.fetcher.state).toBe("idle");
-        expect(B.fetcher.data).toBe("TASKS-2");
+        expect(A.fetcher.data).toBe("TASKS ID");
 
         let C = await t.navigate("/tasks", {
           formMethod: "post",
@@ -5709,26 +5768,18 @@ describe("a router", () => {
         });
         C.shimLoaderHelper("tasksId");
 
-        // Redirect the action
+        // Reject the action
         await C.actions.tasks.reject(new Error("Kaboom!"));
-
-        // Only the revalidating fetcher should go back into a loading state
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
-          "loading"
-        );
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
         // Resolve navigation loaders + fetcher loader
         await C.loaders.root.resolve("ROOT*");
-        await C.loaders.tasksId.resolve("TASKS-2*");
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-        expect(t.router.state.fetchers.get(key)?.data).toBe("TASKS-1");
-        expect(t.router.state.fetchers.get(revalidatingKey)?.state).toBe(
-          "idle"
-        );
-        expect(t.router.state.fetchers.get(revalidatingKey)?.data).toBe(
-          "TASKS-2*"
-        );
+        await C.loaders.tasksId.resolve("TASKS ID*");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          type: "done",
+          data: "TASKS ID*",
+        });
       });
 
       it("does not revalidate idle fetchers when a loader navigation is performed", async () => {
@@ -5739,7 +5790,7 @@ describe("a router", () => {
           hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
         });
 
-        let A = await t.fetch("/", key, { revalidate: true });
+        let A = await t.fetch("/", key);
         await A.loaders.root.resolve("ROOT FETCH");
         expect(t.router.state.fetchers.get(key)).toMatchObject({
           state: "idle",
@@ -5790,8 +5841,8 @@ describe("a router", () => {
         });
         expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
 
-        // Fetch from a different route and opt into revalidations
-        router.fetch(key, "/fetch", { revalidate: true });
+        // Fetch from a different route
+        router.fetch(key, "/fetch");
         await new Promise((r) => setImmediate(r));
         expect(router.getFetcher(key)).toMatchObject({
           state: "idle",
@@ -5840,7 +5891,7 @@ describe("a router", () => {
         expect(shouldRevalidateArgs.defaultShouldRevalidate).toBe(true);
       });
 
-      it("handles opted-in fetcher revalidation errors", async () => {
+      it("handles fetcher revalidation errors", async () => {
         let key = "key";
         let t = setup({
           routes: TASK_ROUTES,
@@ -5856,7 +5907,7 @@ describe("a router", () => {
           errors: null,
         });
 
-        let A = await t.fetch("/tasks/1", key, { revalidate: true });
+        let A = await t.fetch("/tasks/1", key);
         await A.loaders.tasksId.resolve("ROOT FETCH");
         expect(t.router.state.fetchers.get(key)).toMatchObject({
           state: "idle",
@@ -5888,9 +5939,8 @@ describe("a router", () => {
         expect(t.router.state.fetchers.get(key)).toBe(undefined);
       });
 
-      it("revalidates opted-in fetchers on fetcher action submissions", async () => {
+      it("revalidates fetchers on fetcher action submissions", async () => {
         let key = "key";
-        let revalidatingKey = "revalidatingKey";
         let actionKey = "actionKey";
         let t = setup({
           routes: TASK_ROUTES,
@@ -5899,19 +5949,11 @@ describe("a router", () => {
         });
 
         let A = await t.fetch("/tasks/1", key);
-        await A.loaders.tasksId.resolve("ROOT 1");
+        await A.loaders.tasksId.resolve("TASKS ID");
         expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
           type: "done",
-          data: "ROOT 1",
-        });
-
-        let B = await t.fetch("/tasks/2", revalidatingKey, {
-          revalidate: true,
-        });
-        await B.loaders.tasksId.resolve("ROOT 2");
-        expect(t.router.state.fetchers.get(revalidatingKey)).toMatchObject({
-          type: "done",
-          data: "ROOT 2",
+          data: "TASKS ID",
         });
 
         let C = await t.fetch("/tasks", actionKey, {
@@ -5923,7 +5965,7 @@ describe("a router", () => {
         await C.actions.tasks.resolve("TASKS ACTION");
         await C.loaders.root.resolve("ROOT*");
         await C.loaders.index.resolve("INDEX*");
-        await C.loaders.tasksId.resolve("ROOT 2*");
+        await C.loaders.tasksId.resolve("TASKS ID*");
 
         expect(t.router.state.loaderData).toMatchObject({
           root: "ROOT*",
@@ -5931,16 +5973,12 @@ describe("a router", () => {
         });
         expect(t.router.state.fetchers.get(key)).toMatchObject({
           type: "done",
-          data: "ROOT 1", // Not a revalidating fetcher
-        });
-        expect(t.router.state.fetchers.get(revalidatingKey)).toMatchObject({
-          type: "done",
-          data: "ROOT 2*", // revalidated data
+          data: "TASKS ID*",
         });
         expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
           state: "idle",
           type: "done",
-          data: "TASKS ACTION", // action data
+          data: "TASKS ACTION",
         });
       });
     });

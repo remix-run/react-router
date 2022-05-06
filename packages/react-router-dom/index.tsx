@@ -818,18 +818,15 @@ type FetcherWithComponents<TData> = Fetcher<TData> & {
  * Interacts with route loaders and actions without causing a navigation. Great
  * for any interaction that stays on the same page.
  */
-export function useFetcher<TData = any>(
-  opts: { revalidate?: boolean } = { revalidate: false }
-): FetcherWithComponents<TData> {
+export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
   let router = React.useContext(UNSAFE_DataRouterContext);
   invariant(router, `useFetcher must be used within a DataRouter`);
 
   let [fetcherKey] = React.useState(() => String(++fetcherId));
   let [Form] = React.useState(() => createFetcherForm(fetcherKey));
   let [load] = React.useState(() => (href: string) => {
-    let revalidate = opts.revalidate === true;
     invariant(router, `No router available for fetcher.load()`);
-    router.fetch(fetcherKey, href, { revalidate });
+    router.fetch(fetcherKey, href);
   });
   let submit = useSubmitImpl(fetcherKey);
 
