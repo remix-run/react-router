@@ -1267,7 +1267,7 @@ describe("a router", () => {
                 path: "/child",
                 id: "child",
                 loader: async (...args) => childLoader(...args),
-                action: async () => null,
+                action: async () => ({ ok: false }),
               },
               {
                 path: "/params/:a/:b",
@@ -1324,7 +1324,20 @@ describe("a router", () => {
           type: "normalLoad",
         },
         defaultShouldRevalidate: false,
+        actionResult: null,
       });
+      rootLoader.mockClear();
+      shouldRevalidate.mockClear();
+
+      // On actions we send along the action result
+      shouldRevalidate.mockImplementation(
+        ({ actionResult }) => actionResult.ok === true
+      );
+      await router.navigate("/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(rootLoader.mock.calls.length).toBe(0);
     });
 
     it("provides the default implementation to the route function", async () => {
