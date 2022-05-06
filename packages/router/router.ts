@@ -820,6 +820,7 @@ export function createRouter(init: RouterInit): Router {
       isUninterruptedRevalidation ? state.transition : loadingTransition,
       location,
       isRevalidationRequired,
+      pendingActionData,
       pendingActionError,
       fetchLoadMatches
     );
@@ -1077,6 +1078,7 @@ export function createRouter(init: RouterInit): Router {
       state.transition,
       nextLocation,
       isRevalidationRequired,
+      null,
       null,
       fetchLoadMatches
     );
@@ -1424,6 +1426,7 @@ function getMatchesToLoad(
   transition: Transition,
   location: Location,
   isRevalidationRequired: boolean,
+  pendingActionData: RouteData | null,
   pendingActionError: RouteData | null,
   revalidatingFetcherMatches: Map<string, [string, DataRouteMatch]>
 ): [DataRouteMatch[], [string, string, DataRouteMatch][]] {
@@ -1435,6 +1438,12 @@ function getMatchesToLoad(
         (m) => m.route.id === Object.keys(pendingActionError)[0]
       )
     : matches.length;
+
+  let actionResult = pendingActionError
+    ? Object.values(pendingActionError)[0]
+    : pendingActionData
+    ? Object.values(pendingActionData)[0]
+    : null;
 
   // Pick navigation matches that are net-new or qualify for revalidation
   let navigationMatches = matches.filter((match, index) => {
@@ -1449,7 +1458,8 @@ function getMatchesToLoad(
         transition,
         location,
         match,
-        isRevalidationRequired
+        isRevalidationRequired,
+        actionResult
       )
     );
   });
@@ -1465,7 +1475,8 @@ function getMatchesToLoad(
         transition,
         href,
         match,
-        isRevalidationRequired
+        isRevalidationRequired,
+        actionResult
       );
       if (shouldRevalidate) {
         revalidatingFetchers.push([key, href, match]);
@@ -1501,7 +1512,8 @@ function shouldRevalidateLoader(
   transition: Transition,
   location: string | Location,
   match: DataRouteMatch,
-  isRevalidationRequired: boolean
+  isRevalidationRequired: boolean,
+  actionResult: DataResult | null
 ) {
   let currentUrl = createURL(currentLocation);
   let currentParams = currentMatch.params;
@@ -1535,6 +1547,7 @@ function shouldRevalidateLoader(
       nextUrl,
       nextParams,
       transition,
+      actionResult,
       defaultShouldRevalidate,
     });
   }
