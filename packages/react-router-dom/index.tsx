@@ -35,7 +35,7 @@ import {
   useMatches,
   useNavigation,
   useRouteLoaderData,
-  useRouteException,
+  useRouteError,
   useRevalidator,
   UNSAFE_useRenderDataRouter,
   UNSAFE_RouteContext,
@@ -109,7 +109,7 @@ export {
   useMatches,
   useNavigation,
   useRouteLoaderData,
-  useRouteException,
+  useRouteError,
   useRevalidator,
 };
 

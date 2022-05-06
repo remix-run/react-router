@@ -42,8 +42,8 @@ interface RouterState {
   loaderData: RouteData;
   // Data from the action for the current matches
   actionData: RouteData | null;
-  // Exceptions thrown from loaders/actions for the current matches
-  exceptions: RouteData | null;
+  // Errors thrown from loaders/actions for the current matches
+  errors: RouteData | null;
 }
 ```
 

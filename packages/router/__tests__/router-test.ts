@@ -32,7 +32,7 @@ type TestRouteObject = Pick<
 > & {
   loader?: boolean;
   action?: boolean;
-  exceptionElement?: boolean;
+  errorElement?: boolean;
   children?: TestRouteObject[];
 };
 
@@ -90,10 +90,10 @@ type FetcherHelpers = NavigationHelpers & {
 
 // Global array to stick any errors thrown from router.navigate() and then we
 // can assert against them and clear the array in afterEach
-let uncaughtExceptions: string[] = [];
-function handleUncaughtException(e: any): void {
+let uncaughtErrors: string[] = [];
+function handleUncaughtError(e: any): void {
   console.error("Error caught from navigate()", e);
-  uncaughtExceptions.push(
+  uncaughtErrors.push(
     e instanceof Error ? `${e.message}\n${e.stack}` : String(e)
   );
 }
@@ -532,14 +532,14 @@ function setup({
           r();
         });
       });
-      router.navigate(href).catch(handleUncaughtException);
+      router.navigate(href).catch(handleUncaughtError);
       await promise;
       //@ts-ignore
       return helpers;
     }
 
     helpers = getNavigationHelpers(href, navigationId);
-    router.navigate(href, opts).catch(handleUncaughtException);
+    router.navigate(href, opts).catch(handleUncaughtError);
     return helpers;
   }
 
@@ -575,7 +575,7 @@ function setup({
     }
 
     let helpers = getFetcherHelpers(key, href, navigationId, opts);
-    router.fetch(key, href, opts).catch(handleUncaughtException);
+    router.fetch(key, href, opts).catch(handleUncaughtError);
     return helpers;
   }
 
@@ -592,7 +592,7 @@ function setup({
       router.state.transition.location || router.state.location
     );
     let helpers = getNavigationHelpers(href, navigationId);
-    router.revalidate().catch(handleUncaughtException);
+    router.revalidate().catch(handleUncaughtError);
     return helpers;
   }
 
@@ -633,7 +633,7 @@ const TASK_ROUTES: TestRouteObject[] = [
     id: "root",
     path: "/",
     loader: true,
-    exceptionElement: true,
+    errorElement: true,
     children: [
       {
         id: "index",
@@ -645,14 +645,14 @@ const TASK_ROUTES: TestRouteObject[] = [
         path: "tasks",
         loader: true,
         action: true,
-        exceptionElement: true,
+        errorElement: true,
       },
       {
         id: "tasksId",
         path: "tasks/:id",
         loader: true,
         action: true,
-        exceptionElement: true,
+        errorElement: true,
       },
       {
         id: "noLoader",
@@ -668,7 +668,7 @@ const TM_ROUTES = [
     id: "root",
     element: {},
     module: "",
-    exceptionElement: true,
+    errorElement: true,
     loader: true,
     children: [
       {
@@ -732,11 +732,11 @@ beforeEach(() => {
 afterEach(() => {
   // @ts-ignore
   console.warn.mockReset();
-  if (uncaughtExceptions.length) {
-    let NO_UNCAUGHT_EXCEPTIONS = "No Uncaught Exceptions";
-    let strExceptions = uncaughtExceptions.join(",") || NO_UNCAUGHT_EXCEPTIONS;
-    uncaughtExceptions = [];
-    expect(strExceptions).toEqual(NO_UNCAUGHT_EXCEPTIONS);
+  if (uncaughtErrors.length) {
+    let NO_UNCAUGHT_ERRORS = "No Uncaught Errors";
+    let strErrors = uncaughtErrors.join(",") || NO_UNCAUGHT_ERRORS;
+    uncaughtErrors = [];
+    expect(strErrors).toEqual(NO_UNCAUGHT_ERRORS);
   }
 });
 
@@ -750,7 +750,7 @@ describe("a router", () => {
             element: {},
             id: "root",
             path: "/",
-            exceptionElement: {},
+            errorElement: {},
             loader: () => Promise.resolve(),
           },
         ],
@@ -758,7 +758,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: { root: "LOADER DATA" },
           actionData: { root: "ACTION DATA" },
-          exceptions: { root: new Error("lol") },
+          errors: { root: new Error("lol") },
         },
       });
       expect(router.state).toEqual({
@@ -769,7 +769,7 @@ describe("a router", () => {
         actionData: {
           root: "ACTION DATA",
         },
-        exceptions: {
+        errors: {
           root: new Error("lol"),
         },
         location: {
@@ -786,7 +786,7 @@ describe("a router", () => {
             pathnameBase: "/",
             route: {
               element: {},
-              exceptionElement: {},
+              errorElement: {},
               id: "root",
               loader: expect.any(Function),
               path: "/",
@@ -1426,7 +1426,7 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         root: "ROOT",
       });
-      expect(t.router.state.exceptions).toEqual({
+      expect(t.router.state.errors).toEqual({
         root: new Response(null, { status: 404 }),
       });
       expect(t.router.state.matches).toMatchObject([
@@ -1434,7 +1434,7 @@ describe("a router", () => {
           params: {},
           pathname: "",
           route: {
-            exceptionElement: true,
+            errorElement: true,
             children: expect.any(Array),
             element: {},
             id: "root",
@@ -1459,7 +1459,7 @@ describe("a router", () => {
                 {
                   path: "/child",
                   id: "child",
-                  exceptionElement: true,
+                  errorElement: true,
                   loader: true,
                 },
               ],
@@ -1468,7 +1468,7 @@ describe("a router", () => {
         });
         let nav = await t.navigate("/child");
         await nav.loaders.child.reject(new Error("Kaboom!"));
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           child: new Error("Kaboom!"),
         });
       });
@@ -1481,7 +1481,7 @@ describe("a router", () => {
             {
               path: "/",
               id: "parent",
-              exceptionElement: true,
+              errorElement: true,
               children: [
                 {
                   path: "/child",
@@ -1495,7 +1495,7 @@ describe("a router", () => {
         });
         let nav = await t.navigate("/child");
         await nav.loaders.child.reject(new Error("Kaboom!"));
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           parent: new Error("Kaboom!"),
         });
       });
@@ -1515,7 +1515,7 @@ describe("a router", () => {
                     {
                       path: "/child",
                       id: "child",
-                      exceptionElement: true,
+                      errorElement: true,
                       loader: true,
                     },
                   ],
@@ -1529,11 +1529,11 @@ describe("a router", () => {
         let nav = await t.navigate("/child");
         await nav.loaders.child.reject("Kaboom!");
         expect(t.router.state.loaderData).toEqual({ root: "ROOT" });
-        expect(t.router.state.exceptions).toEqual({ child: "Kaboom!" });
+        expect(t.router.state.errors).toEqual({ child: "Kaboom!" });
 
         await t.navigate("/");
         expect(t.router.state.loaderData).toEqual({ root: "ROOT" });
-        expect(t.router.state.exceptions).toBe(null);
+        expect(t.router.state.errors).toBe(null);
       });
     });
 
@@ -1549,7 +1549,7 @@ describe("a router", () => {
                 path: "/b",
                 id: "b",
                 loader: true,
-                exceptionElement: true,
+                errorElement: true,
                 children: [
                   {
                     path: "/b/c",
@@ -1570,7 +1570,7 @@ describe("a router", () => {
         a: "LOADER A",
         b: "LOADER B",
       });
-      expect(t.router.state.exceptions).toEqual({
+      expect(t.router.state.errors).toEqual({
         b: "Kaboom!",
       });
     });
@@ -1632,7 +1632,7 @@ describe("a router", () => {
           root: "ROOT LOADER 2",
           bar: "BAR LOADER",
         },
-        exceptions: {},
+        errors: {},
       });
     });
 
@@ -1756,13 +1756,13 @@ describe("a router", () => {
               {
                 path: "/child",
                 id: "child",
-                exceptionElement: true,
+                errorElement: true,
                 action: true,
                 children: [
                   {
                     index: true,
                     id: "childIndex",
-                    exceptionElement: true,
+                    errorElement: true,
                     action: true,
                   },
                 ],
@@ -1854,7 +1854,7 @@ describe("a router", () => {
                 {
                   path: "/child",
                   id: "child",
-                  exceptionElement: true,
+                  errorElement: true,
                   action: true,
                 },
               ],
@@ -1866,7 +1866,7 @@ describe("a router", () => {
           formData: createFormData({ gosh: "dang" }),
         });
         await A.actions.child.reject(new Error("Kaboom!"));
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           child: new Error("Kaboom!"),
         });
       });
@@ -1882,7 +1882,7 @@ describe("a router", () => {
                 {
                   path: "/child",
                   id: "child",
-                  exceptionElement: true,
+                  errorElement: true,
                   loader: true,
                   action: true,
                 },
@@ -1903,7 +1903,7 @@ describe("a router", () => {
             parent: "PARENT LOADER",
           },
           actionData: null,
-          exceptions: {
+          errors: {
             child: new Error("Kaboom!"),
           },
         });
@@ -1917,7 +1917,7 @@ describe("a router", () => {
             {
               path: "/",
               id: "parent",
-              exceptionElement: true,
+              errorElement: true,
               children: [
                 {
                   path: "/child",
@@ -1933,7 +1933,7 @@ describe("a router", () => {
           formData: createFormData({ gosh: "dang" }),
         });
         await A.actions.child.reject(new Error("Kaboom!"));
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           parent: new Error("Kaboom!"),
         });
       });
@@ -1946,7 +1946,7 @@ describe("a router", () => {
             {
               path: "/",
               id: "root",
-              exceptionElement: true,
+              errorElement: true,
               children: [
                 {
                   path: "/parent",
@@ -1957,7 +1957,7 @@ describe("a router", () => {
                       path: "/parent/child",
                       id: "child",
                       action: true,
-                      exceptionElement: true,
+                      errorElement: true,
                     },
                   ],
                 },
@@ -1975,7 +1975,7 @@ describe("a router", () => {
         expect(t.router.state).toMatchObject({
           loaderData: {},
           actionData: {},
-          exceptions: {
+          errors: {
             root: new Error("Kaboom!"),
           },
         });
@@ -1993,7 +1993,7 @@ describe("a router", () => {
                 {
                   path: "/child",
                   id: "child",
-                  exceptionElement: true,
+                  errorElement: true,
                 },
               ],
             },
@@ -2004,7 +2004,7 @@ describe("a router", () => {
           formMethod: "post",
           formData: createFormData({ gosh: "dang" }),
         });
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           child: new Response(null, { status: 405 }),
         });
         expect(console.warn).toHaveBeenCalled();
@@ -2029,7 +2029,7 @@ describe("a router", () => {
                       id: "grandchild",
                       loader: true,
                       // no action to post to
-                      exceptionElement: true,
+                      errorElement: true,
                     },
                   ],
                 },
@@ -2046,10 +2046,10 @@ describe("a router", () => {
           formMethod: "post",
           formData: createFormData({ gosh: "dang" }),
         });
-        expect(t.router.state.exceptions).toBe(null);
+        expect(t.router.state.errors).toBe(null);
         expect(A.loaders.parent.stub.mock.calls.length).toBe(1); // called again for revalidation
-        expect(A.loaders.child.stub.mock.calls.length).toBe(1); // called because it's above exception
-        expect(A.loaders.grandchild.stub.mock.calls.length).toBe(0); // dont call due to exception
+        expect(A.loaders.child.stub.mock.calls.length).toBe(1); // called because it's above error
+        expect(A.loaders.grandchild.stub.mock.calls.length).toBe(0); // dont call due to error
         await A.loaders.parent.resolve("PARENT DATA*");
         await A.loaders.child.resolve("CHILD DATA");
         expect(t.router.state.loaderData).toEqual({
@@ -2057,7 +2057,7 @@ describe("a router", () => {
           child: "CHILD DATA",
         });
         expect(t.router.state.actionData).toBe(null);
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           grandchild: new Response(null, { status: 405 }),
         });
       });
@@ -2578,7 +2578,7 @@ describe("a router", () => {
         },
         transition: IDLE_TRANSITION,
         loaderData: {},
-        exceptions: {
+        errors: {
           root: new Response(null, { status: 404 }),
         },
       });
@@ -2735,7 +2735,7 @@ describe("a router", () => {
       });
     });
 
-    it("does not kick off initial data load due to partial hydration if exceptions exist", async () => {
+    it("does not kick off initial data load due to partial hydration if errors exist", async () => {
       let parentDfd = defer();
       let parentSpy = jest.fn(() => parentDfd.promise);
       let childDfd = defer();
@@ -2755,7 +2755,7 @@ describe("a router", () => {
           },
         ],
         hydrationData: {
-          exceptions: {
+          errors: {
             "0": "PARENT ERROR",
           },
           loaderData: {
@@ -2772,7 +2772,7 @@ describe("a router", () => {
         location: expect.objectContaining({ pathname: "/child" }),
         initialized: true,
         transition: IDLE_TRANSITION,
-        exceptions: {
+        errors: {
           "0": "PARENT ERROR",
         },
         loaderData: {
@@ -2866,7 +2866,7 @@ describe("a router", () => {
       });
     });
 
-    it("handles exceptions in initial data load", async () => {
+    it("handles errors in initial data load", async () => {
       let router = createRouter({
         history: createMemoryHistory({ initialEntries: ["/child"] }),
         routes: [
@@ -2892,7 +2892,7 @@ describe("a router", () => {
         loaderData: {
           "0-0": "child",
         },
-        exceptions: {
+        errors: {
           "0": "Kaboom!",
         },
       });
@@ -3136,7 +3136,7 @@ describe("a router", () => {
       t.cleanup();
     });
 
-    it("handles exceptions thrown from loaders", async () => {
+    it("handles errors thrown from loaders", async () => {
       let t = setup({
         routes: TASK_ROUTES,
         initialEntries: ["/"],
@@ -3155,7 +3155,7 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         root: "ROOT_DATA",
       });
-      expect(t.router.state.exceptions).toEqual({
+      expect(t.router.state.errors).toEqual({
         tasks: "TASKS_ERROR",
       });
 
@@ -3166,31 +3166,31 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         root: "ROOT_DATA",
       });
-      expect(t.router.state.exceptions).toEqual({
+      expect(t.router.state.errors).toEqual({
         root: "INDEX_ERROR",
       });
 
       t.cleanup();
     });
 
-    it("re-runs loaders on post-exception navigations", async () => {
+    it("re-runs loaders on post-error navigations", async () => {
       let t = setup({
         routes: TASK_ROUTES,
         initialEntries: ["/"],
         hydrationData: {
-          exceptions: {
+          errors: {
             root: "ROOT_ERROR",
           },
         },
       });
 
-      // If a route has an exception, we should call the loader if that route is
+      // If a route has an error, we should call the loader if that route is
       // re-used on a navigation
       let nav = await t.navigate("/tasks");
       await nav.loaders.tasks.resolve("TASKS_DATA");
       expect(t.router.state.transition.state).toEqual("loading");
       expect(t.router.state.loaderData).toEqual({});
-      expect(t.router.state.exceptions).toEqual({
+      expect(t.router.state.errors).toEqual({
         root: "ROOT_ERROR",
       });
 
@@ -3200,7 +3200,7 @@ describe("a router", () => {
         root: "ROOT_DATA",
         tasks: "TASKS_DATA",
       });
-      expect(t.router.state.exceptions).toBe(null);
+      expect(t.router.state.errors).toBe(null);
 
       t.cleanup();
     });
@@ -3297,7 +3297,7 @@ describe("a router", () => {
         loaderData: {
           root: "ROOT_DATA",
         },
-        exceptions: null,
+        errors: null,
       });
       expect(t.history.action).toEqual("POP");
       expect(t.history.location.pathname).toEqual("/");
@@ -3321,7 +3321,7 @@ describe("a router", () => {
         loaderData: {
           root: "ROOT_DATA",
         },
-        exceptions: null,
+        errors: null,
       });
       expect(t.history.action).toEqual("POP");
       expect(t.history.location.pathname).toEqual("/");
@@ -3337,7 +3337,7 @@ describe("a router", () => {
           root: "ROOT_DATA",
           tasksId: "TASKS_ID_DATA",
         },
-        exceptions: null,
+        errors: null,
       });
       expect(t.history.action).toEqual("REPLACE");
       expect(t.history.location.pathname).toEqual("/tasks/1");
@@ -3373,7 +3373,7 @@ describe("a router", () => {
         loaderData: {
           root: "ROOT_DATA",
         },
-        exceptions: null,
+        errors: null,
       });
       expect(t.history.action).toEqual("POP");
       expect(t.history.location.pathname).toEqual("/");
@@ -3397,7 +3397,7 @@ describe("a router", () => {
         loaderData: {
           root: "ROOT_DATA",
         },
-        exceptions: null,
+        errors: null,
       });
       expect(t.history.action).toEqual("POP");
       expect(t.history.location.pathname).toEqual("/");
@@ -3413,7 +3413,7 @@ describe("a router", () => {
           root: "ROOT_DATA",
           tasksId: "TASKS_ID_DATA",
         },
-        exceptions: null,
+        errors: null,
       });
       expect(t.history.action).toEqual("REPLACE");
       expect(t.history.location.pathname).toEqual("/tasks/1");
@@ -3421,7 +3421,7 @@ describe("a router", () => {
       t.cleanup();
     });
 
-    it("handles thrown non-redirect Responses as normal exceptions", async () => {
+    it("handles thrown non-redirect Responses as normal errors", async () => {
       let t = setup({
         routes: TASK_ROUTES,
         initialEntries: ["/"],
@@ -3443,7 +3443,7 @@ describe("a router", () => {
           root: "ROOT_DATA",
         },
         actionData: null,
-        exceptions: {
+        errors: {
           tasks: response,
         },
       });
@@ -4219,7 +4219,7 @@ describe("a router", () => {
       t.cleanup();
     });
 
-    it("handles exceptions from revalidations", async () => {
+    it("handles errors from revalidations", async () => {
       let t = setup({
         routes: TASK_ROUTES,
         initialEntries: ["/"],
@@ -4255,7 +4255,7 @@ describe("a router", () => {
           root: "ROOT_DATA",
           index: "INDEX_DATA*",
         },
-        exceptions: {
+        errors: {
           root: "ROOT_ERROR",
         },
       });
@@ -4659,13 +4659,13 @@ describe("a router", () => {
       });
     });
 
-    describe("fetcher exception states (4xx Response)", () => {
+    describe("fetcher error states (4xx Response)", () => {
       it("loader fetch", async () => {
         let t = initializeTmTest({ url: "/foo" });
         let A = await t.fetch("/foo");
         await A.loaders.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           root: new Response(null, { status: 400 }),
         });
       });
@@ -4678,7 +4678,7 @@ describe("a router", () => {
         });
         await A.loaders.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           root: new Response(null, { status: 400 }),
         });
       });
@@ -4691,19 +4691,19 @@ describe("a router", () => {
         });
         await A.actions.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           root: new Response(null, { status: 400 }),
         });
       });
     });
 
-    describe("fetcher exception states (Error)", () => {
+    describe("fetcher error states (Error)", () => {
       it("loader fetch", async () => {
         let t = initializeTmTest({ url: "/foo" });
         let A = await t.fetch("/foo");
         await A.loaders.foo.reject(new Error("Kaboom!"));
         expect(A.fetcher).toBe(IDLE_FETCHER);
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           root: new Error("Kaboom!"),
         });
       });
@@ -4716,7 +4716,7 @@ describe("a router", () => {
         });
         await A.loaders.foo.reject(new Error("Kaboom!"));
         expect(A.fetcher).toBe(IDLE_FETCHER);
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           root: new Error("Kaboom!"),
         });
       });
@@ -4729,7 +4729,7 @@ describe("a router", () => {
         });
         await A.actions.foo.reject(new Error("Kaboom!"));
         expect(A.fetcher).toBe(IDLE_FETCHER);
-        expect(t.router.state.exceptions).toEqual({
+        expect(t.router.state.errors).toEqual({
           root: new Error("Kaboom!"),
         });
       });
@@ -5006,12 +5006,12 @@ describe("a router", () => {
           });
 
           await A.actions.foo.reject(new Response(null, { status: 400 }));
-          expect(t.router.state.exceptions).toEqual({
+          expect(t.router.state.errors).toEqual({
             root: new Response(null, { status: 400 }),
           });
 
           await B.actions.foo.resolve("B");
-          expect(t.router.state.exceptions).toEqual({
+          expect(t.router.state.errors).toEqual({
             root: new Response(null, { status: 400 }),
           });
           expect(t.router.state.actionData).toEqual(null);
@@ -5042,7 +5042,7 @@ describe("a router", () => {
           });
 
           await B.actions.foo.reject(new Response(null, { status: 400 }));
-          expect(t.router.state.exceptions).toEqual({
+          expect(t.router.state.errors).toEqual({
             root: new Response(null, { status: 400 }),
           });
         });
@@ -5698,7 +5698,7 @@ describe("a router", () => {
             root: "ROOT",
             index: "INDEX",
           },
-          exceptions: null,
+          errors: null,
         });
 
         let A = await t.fetch("/tasks/1", key, { revalidate: true });
@@ -5723,10 +5723,10 @@ describe("a router", () => {
             root: "ROOT*",
             tasks: "TASKS*",
           },
-          exceptions: {
-            // Even though tasksId has an exceptionElement, this bubbles up to
+          errors: {
+            // Even though tasksId has an errorElement, this bubbles up to
             // the root since it's the closest "active" rendered route with an
-            // exceptionElement
+            // errorElement
             root: new Error("Fetcher error"),
           },
         });

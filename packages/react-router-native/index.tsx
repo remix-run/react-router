@@ -40,7 +40,7 @@ import {
   useMatches,
   useNavigation,
   useRouteLoaderData,
-  useRouteException,
+  useRouteError,
   useRevalidator,
 } from "react-router";
 import type { To } from "react-router";
@@ -84,7 +84,7 @@ export {
   useMatches,
   useNavigation,
   useRouteLoaderData,
-  useRouteException,
+  useRouteError,
   useRevalidator,
 };
 

@@ -72,8 +72,8 @@ interface RouteContextObject {
   matches: RouteMatch[];
 }
 
-export const RouteExceptionContext = React.createContext<any>(null);
+export const RouteErrorContext = React.createContext<any>(null);
 
 if (__DEV__) {
-  RouteExceptionContext.displayName = "RouteException";
+  RouteErrorContext.displayName = "RouteError";
 }

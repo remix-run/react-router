@@ -69,7 +69,7 @@ import {
   useLoaderData,
   useMatches,
   useRouteLoaderData,
-  useRouteException,
+  useRouteError,
   useNavigation,
   useRevalidator,
 } from "./lib/hooks";
@@ -140,7 +140,7 @@ export {
   useLoaderData,
   useMatches,
   useRouteLoaderData,
-  useRouteException,
+  useRouteError,
   useNavigation,
   useRevalidator,
 };
