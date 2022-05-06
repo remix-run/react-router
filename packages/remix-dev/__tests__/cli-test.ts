@@ -345,9 +345,10 @@ async function interactWithShell(
   // output as possible.
   let timeout = setTimeout(() => {
     if (deferred.state.current === "pending") {
+      proc.kill();
       deferred.reject({ status: "timeout", stdout, stderr });
     }
-  }, 6_000);
+  }, 10_000);
 
   await deferred.promise;
   clearTimeout(timeout);
