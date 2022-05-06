@@ -36,7 +36,7 @@ export interface Router {
   subscribe(fn: RouterSubscriber): () => void;
   navigate(path: number): Promise<void>;
   navigate(path: To, opts?: NavigateOptions): Promise<void>;
-  fetch(key: string, href: string, opts?: FetchOptions): Promise<void>;
+  fetch(key: string, href: string, opts?: NavigateOptions): Promise<void>;
   revalidate(): Promise<void>;
   createHref(location: Location | URL): string;
   getFetcher<TData = any>(key?: string): Fetcher<TData>;
@@ -144,10 +144,6 @@ type SubmissionNavigateOptions = {
  * Options to pass to navigate() for either a Link or Form navigation
  */
 export type NavigateOptions = LinkNavigateOptions | SubmissionNavigateOptions;
-
-export type FetchOptions = NavigateOptions & {
-  revalidate?: boolean;
-};
 
 /**
  * Potential states for state.transition
@@ -470,8 +466,8 @@ export function createRouter(init: RouterInit): Router {
   let fetchReloadIds = new Map<string, number>();
   // Fetchers that triggered redirect navigations from their actions
   let fetchRedirectIds = new Set<string>();
-  // Most recent href/match for fetcher.load calls for fetchers with opt-in revalidation
-  let revalidatingFetcherMatches = new Map<string, [string, DataRouteMatch]>();
+  // Most recent href/match for fetcher.load calls for fetchers
+  let fetchLoadMatches = new Map<string, [string, DataRouteMatch]>();
 
   // If history informs us of a POP navigation, start the transition but do not update
   // state.  We'll update our own state once the transition completes
@@ -825,7 +821,7 @@ export function createRouter(init: RouterInit): Router {
       location,
       isRevalidationRequired,
       pendingActionError,
-      revalidatingFetcherMatches
+      fetchLoadMatches
     );
 
     // Short circuit if we have no loaders to run
@@ -932,7 +928,7 @@ export function createRouter(init: RouterInit): Router {
     return state.fetchers.get(key) || IDLE_FETCHER;
   }
 
-  async function fetch(key: string, href: string, opts?: FetchOptions) {
+  async function fetch(key: string, href: string, opts?: NavigateOptions) {
     if (typeof AbortController === "undefined") {
       throw new Error(
         "router.fetch() was called during the server render, but it shouldn't be. " +
@@ -960,7 +956,6 @@ export function createRouter(init: RouterInit): Router {
         formData: opts.formData,
       };
       if (isActionSubmission(submission)) {
-        revalidatingFetcherMatches.delete(key);
         await handleFetcherAction(key, href, match, submission);
       } else {
         let loadingFetcher: FetcherStates["SubmittingLoader"] = {
@@ -970,11 +965,6 @@ export function createRouter(init: RouterInit): Router {
           data: state.fetchers.get(key)?.data || undefined,
         };
 
-        // If this fetcher opts into revalidation, store off the match so we can
-        // call it's shouldRevalidate
-        if (opts?.revalidate) {
-          revalidatingFetcherMatches.set(key, [href, match]);
-        }
         await handleFetcherLoader(key, href, match, loadingFetcher);
       }
     } else {
@@ -988,11 +978,6 @@ export function createRouter(init: RouterInit): Router {
         data: state.fetchers.get(key)?.data || undefined,
       };
 
-      // If this fetcher opts into revalidation, store off the match so we can
-      // call it's shouldRevalidate
-      if (opts?.revalidate) {
-        revalidatingFetcherMatches.set(key, [href, match]);
-      }
       await handleFetcherLoader(key, href, match, loadingFetcher);
     }
   }
@@ -1004,6 +989,7 @@ export function createRouter(init: RouterInit): Router {
     submission: ActionSubmission
   ) {
     isRevalidationRequired = true;
+    fetchLoadMatches.delete(key);
 
     // Put this fetcher into it's submitting state
     let fetcher: FetcherStates["SubmittingAction"] = {
@@ -1092,7 +1078,7 @@ export function createRouter(init: RouterInit): Router {
       nextLocation,
       isRevalidationRequired,
       null,
-      revalidatingFetcherMatches
+      fetchLoadMatches
     );
 
     // Put all revalidating fetchers into the revalidating state, except for the
@@ -1207,6 +1193,9 @@ export function createRouter(init: RouterInit): Router {
     state.fetchers.set(key, loadingFetcher);
     updateState({ fetchers: new Map(state.fetchers) });
 
+    // Store off the match so we can call it's shouldRevalidate
+    fetchLoadMatches.set(key, [href, match]);
+
     // Call the loader for this fetcher route match
     let abortController = new AbortController();
     fetchControllers.set(key, abortController);
@@ -1274,7 +1263,7 @@ export function createRouter(init: RouterInit): Router {
 
   function deleteFetcher(key: string): void {
     if (fetchControllers.has(key)) abortFetcher(key);
-    revalidatingFetcherMatches.delete(key);
+    fetchLoadMatches.delete(key);
     fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);
     state.fetchers.delete(key);
@@ -1460,15 +1449,14 @@ function getMatchesToLoad(
         transition,
         location,
         match,
-        isRevalidationRequired,
-        false
+        isRevalidationRequired
       )
     );
   });
 
-  // Pick fetchers that qualify for revalidation
+  // If revalidation is required, pick fetchers that qualify
   let revalidatingFetchers: [string, string, DataRouteMatch][] = [];
-  if (transition.state)
+  if (isRevalidationRequired) {
     for (let entry of revalidatingFetcherMatches.entries()) {
       let [key, [href, match]] = entry;
       let shouldRevalidate = shouldRevalidateLoader(
@@ -1477,13 +1465,13 @@ function getMatchesToLoad(
         transition,
         href,
         match,
-        isRevalidationRequired,
-        true
+        isRevalidationRequired
       );
       if (shouldRevalidate) {
         revalidatingFetchers.push([key, href, match]);
       }
     }
+  }
 
   return [navigationMatches, revalidatingFetchers];
 }
@@ -1513,8 +1501,7 @@ function shouldRevalidateLoader(
   transition: Transition,
   location: string | Location,
   match: DataRouteMatch,
-  isRevalidationRequired: boolean,
-  isFetcherRevalidation: boolean
+  isRevalidationRequired: boolean
 ) {
   let currentUrl = createURL(currentLocation);
   let currentParams = currentMatch.params;
@@ -1525,26 +1512,21 @@ function shouldRevalidateLoader(
   // provides it's own implementation, then we give them full control but
   // provide this value so they can leverage it if needed after they check
   // their own specific use cases
+  // Note that fetchers always provide the same current/next locations so the
+  // URL-based checks here don't apply to fetcher shouldRevalidate calls
   let defaultShouldRevalidate =
+    // param change for this match, /users/123 -> /users/456
+    currentMatch.pathname !== match.pathname ||
+    // splat param changed, which is not present in match.path
+    // e.g. /files/images/avatar.jpg -> files/finances.xls
+    (currentMatch.route.path?.endsWith("*") &&
+      currentMatch.params["*"] !== match.params["*"]) ||
+    // Clicked the same link, resubmitted a GET form
+    currentUrl.toString() === nextUrl.toString() ||
     // Search params affect all loaders
     currentUrl.search !== nextUrl.search ||
     // Forced revalidation due to submission, useRevalidate, or X-Remix-Revalidate
     isRevalidationRequired;
-
-  // Only apply url checks to navigation loaders, we don't want revalidating
-  // fetchers to qualify since their url never changes
-  if (!isFetcherRevalidation) {
-    defaultShouldRevalidate =
-      defaultShouldRevalidate ||
-      // param change for this match, /users/123 -> /users/456
-      currentMatch.pathname !== match.pathname ||
-      // splat param changed, which is not present in match.path
-      // e.g. /files/images/avatar.jpg -> files/finances.xls
-      (currentMatch.route.path?.endsWith("*") &&
-        currentMatch.params["*"] !== match.params["*"]) ||
-      // Clicked the same link, resubmitted a GET form
-      currentUrl.toString() === nextUrl.toString();
-  }
 
   if (match.route.shouldRevalidate) {
     return match.route.shouldRevalidate({
