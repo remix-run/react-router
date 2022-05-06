@@ -26,7 +26,7 @@ describe("creating routes from JSX", () => {
               "element": <h1>
                 home
               </h1>,
-              "exceptionElement": undefined,
+              "errorElement": undefined,
               "id": "0-0",
               "index": undefined,
               "loader": undefined,
@@ -39,7 +39,7 @@ describe("creating routes from JSX", () => {
               "element": <h1>
                 about
               </h1>,
-              "exceptionElement": undefined,
+              "errorElement": undefined,
               "id": "0-1",
               "index": undefined,
               "loader": undefined,
@@ -56,7 +56,7 @@ describe("creating routes from JSX", () => {
                   "element": <h1>
                     users index
                   </h1>,
-                  "exceptionElement": undefined,
+                  "errorElement": undefined,
                   "id": "0-2-0",
                   "index": true,
                   "loader": undefined,
@@ -69,7 +69,7 @@ describe("creating routes from JSX", () => {
                   "element": <h1>
                     user profile
                   </h1>,
-                  "exceptionElement": undefined,
+                  "errorElement": undefined,
                   "id": "0-2-1",
                   "index": undefined,
                   "loader": undefined,
@@ -78,7 +78,7 @@ describe("creating routes from JSX", () => {
                 },
               ],
               "element": undefined,
-              "exceptionElement": undefined,
+              "errorElement": undefined,
               "id": "0-2",
               "index": undefined,
               "loader": undefined,
@@ -87,7 +87,7 @@ describe("creating routes from JSX", () => {
             },
           ],
           "element": undefined,
-          "exceptionElement": undefined,
+          "errorElement": undefined,
           "id": "0",
           "index": undefined,
           "loader": undefined,
@@ -101,7 +101,7 @@ describe("creating routes from JSX", () => {
   it("creates a data-aware route config of nested JavaScript objects", () => {
     expect(
       createRoutesFromChildren(
-        <Route exceptionElement={<h1>💥</h1>} path="/">
+        <Route errorElement={<h1>💥</h1>} path="/">
           <Route
             path="home"
             loader={async () => {}}
@@ -129,7 +129,7 @@ describe("creating routes from JSX", () => {
               "element": <h1>
                 home
               </h1>,
-              "exceptionElement": undefined,
+              "errorElement": undefined,
               "id": "0-0",
               "index": undefined,
               "loader": [Function],
@@ -146,7 +146,7 @@ describe("creating routes from JSX", () => {
                   "element": <h1>
                     users index
                   </h1>,
-                  "exceptionElement": undefined,
+                  "errorElement": undefined,
                   "id": "0-1-0",
                   "index": true,
                   "loader": undefined,
@@ -155,7 +155,7 @@ describe("creating routes from JSX", () => {
                 },
               ],
               "element": undefined,
-              "exceptionElement": undefined,
+              "errorElement": undefined,
               "id": "0-1",
               "index": undefined,
               "loader": undefined,
@@ -164,7 +164,7 @@ describe("creating routes from JSX", () => {
             },
           ],
           "element": undefined,
-          "exceptionElement": <h1>
+          "errorElement": <h1>
             💥
           </h1>,
           "id": "0",

@@ -62,7 +62,7 @@ export interface RouteObject {
   id?: string;
   loader?: (obj: LoaderFunctionArgs) => any | Promise<any>;
   action?: (obj: ActionFunctionArgs) => any | Promise<any>;
-  exceptionElement?: React.ReactNode;
+  errorElement?: React.ReactNode;
   shouldRevalidate?: (obj: ShouldRevalidateFunctionArgs) => boolean;
 }
 

@@ -20,7 +20,7 @@ import {
   useLoaderData,
   useMatches,
   useRouteLoaderData,
-  useRouteException,
+  useRouteError,
   useNavigation,
   useRevalidator,
   UNSAFE_DataRouterContext,
@@ -832,8 +832,8 @@ describe("<DataMemoryRouter>", () => {
     expect(signal.aborted).toBe(true);
   });
 
-  describe("exceptions", () => {
-    it("renders hydration exceptions on leaf elements", async () => {
+  describe("errors", () => {
+    it("renders hydration errors on leaf elements", async () => {
       let { container } = render(
         <DataMemoryRouter
           initialEntries={["/child"]}
@@ -844,7 +844,7 @@ describe("<DataMemoryRouter>", () => {
             actionData: {
               "0": "parent action",
             },
-            exceptions: {
+            errors: {
               "0-0": new Error("Kaboom 💥"),
             },
           }}
@@ -853,7 +853,7 @@ describe("<DataMemoryRouter>", () => {
             <Route
               path="child"
               element={<Comp />}
-              exceptionElement={<ErrorBoundary />}
+              errorElement={<ErrorBoundary />}
             />
           </Route>
         </DataMemoryRouter>
@@ -874,7 +874,7 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function ErrorBoundary() {
-        let error = useRouteException();
+        let error = useRouteError();
         return <p>{error.message}</p>;
       }
 
@@ -892,14 +892,14 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
 
-    it("renders hydration exceptions on parent elements", async () => {
+    it("renders hydration errors on parent elements", async () => {
       let { container } = render(
         <DataMemoryRouter
           initialEntries={["/child"]}
           hydrationData={{
             loaderData: {},
             actionData: null,
-            exceptions: {
+            errors: {
               "0": new Error("Kaboom 💥"),
             },
           }}
@@ -907,7 +907,7 @@ describe("<DataMemoryRouter>", () => {
           <Route
             path="/"
             element={<Comp />}
-            exceptionElement={<ErrorBoundary />}
+            errorElement={<ErrorBoundary />}
           >
             <Route path="child" element={<Comp />} />
           </Route>
@@ -929,7 +929,7 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function ErrorBoundary() {
-        let error = useRouteException();
+        let error = useRouteError();
         return <p>{error.message}</p>;
       }
 
@@ -942,7 +942,7 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
 
-    it("renders navigation exceptions on leaf elements", async () => {
+    it("renders navigation errors on leaf elements", async () => {
       let fooDefer = defer();
       let barDefer = defer();
 
@@ -962,13 +962,13 @@ describe("<DataMemoryRouter>", () => {
               path="foo"
               loader={() => fooDefer.promise}
               element={<Foo />}
-              exceptionElement={<FooException />}
+              errorElement={<FooError />}
             />
             <Route
               path="bar"
               loader={() => barDefer.promise}
               element={<Bar />}
-              exceptionElement={<BarException />}
+              errorElement={<BarError />}
             />
           </Route>
         </DataMemoryRouter>
@@ -990,17 +990,17 @@ describe("<DataMemoryRouter>", () => {
         let data = useLoaderData();
         return <h1>Foo:{data?.message}</h1>;
       }
-      function FooException() {
-        let exception = useRouteException();
-        return <p>Foo Exception:{exception.message}</p>;
+      function FooError() {
+        let error = useRouteError();
+        return <p>Foo Error:{error.message}</p>;
       }
       function Bar() {
         let data = useLoaderData();
         return <h1>Bar:{data?.message}</h1>;
       }
-      function BarException() {
-        let exception = useRouteException();
-        return <p>Bar Exception:{exception.message}</p>;
+      function BarError() {
+        let error = useRouteError();
+        return <p>Bar Error:{error.message}</p>;
       }
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -1047,7 +1047,7 @@ describe("<DataMemoryRouter>", () => {
               idle
             </p>
             <p>
-              Bar Exception:
+              Bar Error:
               Kaboom!
             </p>
           </div>
@@ -1074,7 +1074,7 @@ describe("<DataMemoryRouter>", () => {
               idle
             </p>
             <p>
-              Foo Exception:
+              Foo Error:
               Kaboom!
             </p>
           </div>
@@ -1082,7 +1082,7 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
 
-    it("renders navigation exceptions on parent elements", async () => {
+    it("renders navigation errors on parent elements", async () => {
       let fooDefer = defer();
       let barDefer = defer();
 
@@ -1100,13 +1100,13 @@ describe("<DataMemoryRouter>", () => {
           <Route
             path="/"
             element={<Layout />}
-            exceptionElement={<LayoutException />}
+            errorElement={<LayoutError />}
           >
             <Route
               path="foo"
               loader={() => fooDefer.promise}
               element={<Foo />}
-              exceptionElement={<FooException />}
+              errorElement={<FooError />}
             />
             <Route
               path="bar"
@@ -1128,17 +1128,17 @@ describe("<DataMemoryRouter>", () => {
           </div>
         );
       }
-      function LayoutException() {
-        let exception = useRouteException();
-        return <p>Layout Exception:{exception.message}</p>;
+      function LayoutError() {
+        let error = useRouteError();
+        return <p>Layout Error:{error.message}</p>;
       }
       function Foo() {
         let data = useLoaderData();
         return <h1>Foo:{data?.message}</h1>;
       }
-      function FooException() {
-        let exception = useRouteException();
-        return <p>Foo Exception:{exception.message}</p>;
+      function FooError() {
+        let error = useRouteError();
+        return <p>Foo Error:{error.message}</p>;
       }
       function Bar() {
         let data = useLoaderData();
@@ -1171,18 +1171,18 @@ describe("<DataMemoryRouter>", () => {
 
       fireEvent.click(screen.getByText("Link to Bar"));
       barDefer.reject(new Error("Kaboom!"));
-      await waitFor(() => screen.getByText("Layout Exception:Kaboom!"));
+      await waitFor(() => screen.getByText("Layout Error:Kaboom!"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <p>
-            Layout Exception:
+            Layout Error:
             Kaboom!
           </p>
         </div>"
       `);
     });
 
-    it("renders navigation exceptions with a default if no exceptionElements are provided", async () => {
+    it("renders navigation errors with a default if no errorElements are provided", async () => {
       let fooDefer = defer();
       let barDefer = defer();
 
@@ -1264,7 +1264,7 @@ describe("<DataMemoryRouter>", () => {
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <h2>
-            Unhandled Thrown Exception!
+            Unhandled Thrown Error!
           </h2>
           <p
             style=\\"font-style: italic;\\"
@@ -1284,7 +1284,7 @@ describe("<DataMemoryRouter>", () => {
             <code
               style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
             >
-              exceptionElement
+              errorElement
             </code>
              props on 
             <code
@@ -1297,7 +1297,7 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
 
-    it("handles render errors in parent exceptionElement", async () => {
+    it("handles render errors in parent errorElement", async () => {
       let { container } = render(
         <DataMemoryRouter
           initialEntries={["/child"]}
@@ -1314,7 +1314,7 @@ describe("<DataMemoryRouter>", () => {
                 <Outlet />
               </div>
             }
-            exceptionElement={<ErrorBoundary />}
+            errorElement={<ErrorBoundary />}
           >
             <Route path="child" element={<ChildComp />} />
           </Route>
@@ -1326,7 +1326,7 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function ErrorBoundary() {
-        let error = useRouteException();
+        let error = useRouteError();
         return <p>{error.message}</p>;
       }
 
@@ -1339,7 +1339,7 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
 
-    it("handles render errors in child exceptionElement", async () => {
+    it("handles render errors in child errorElement", async () => {
       let { container } = render(
         <DataMemoryRouter
           initialEntries={["/child"]}
@@ -1356,12 +1356,12 @@ describe("<DataMemoryRouter>", () => {
                 <Outlet />
               </div>
             }
-            exceptionElement={<p>Don't show this</p>}
+            errorElement={<p>Don't show this</p>}
           >
             <Route
               path="child"
               element={<ChildComp />}
-              exceptionElement={<ErrorBoundary />}
+              errorElement={<ErrorBoundary />}
             />
           </Route>
         </DataMemoryRouter>
@@ -1372,7 +1372,7 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function ErrorBoundary() {
-        let error = useRouteException();
+        let error = useRouteError();
         return <p>{error.message}</p>;
       }
 
@@ -1390,7 +1390,7 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
 
-    it("handles render errors in default exceptionElement", async () => {
+    it("handles render errors in default errorElement", async () => {
       let { container } = render(
         <DataMemoryRouter
           initialEntries={["/child"]}
@@ -1422,7 +1422,7 @@ describe("<DataMemoryRouter>", () => {
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <h2>
-            Unhandled Thrown Exception!
+            Unhandled Thrown Error!
           </h2>
           <p
             style=\\"font-style: italic;\\"
@@ -1442,7 +1442,7 @@ describe("<DataMemoryRouter>", () => {
             <code
               style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
             >
-              exceptionElement
+              errorElement
             </code>
              props on 
             <code
@@ -1520,12 +1520,12 @@ describe("<DataMemoryRouter>", () => {
             <Route
               path="/"
               element={<Parent />}
-              exceptionElement={<p>Don't show this</p>}
+              errorElement={<p>Don't show this</p>}
             >
               <Route
                 path="child"
                 element={<Child />}
-                exceptionElement={<ErrorBoundary />}
+                errorElement={<ErrorBoundary />}
               />
             </Route>
           </LocalDataMemoryRouter>
@@ -1545,7 +1545,7 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function ErrorBoundary() {
-        let error = useRouteException();
+        let error = useRouteError();
         return <p>{error.message}</p>;
       }
 
@@ -1663,7 +1663,7 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <h2>
-              Unhandled Thrown Exception!
+              Unhandled Thrown Error!
             </h2>
             <p
               style=\\"font-style: italic;\\"
@@ -1683,7 +1683,7 @@ describe("<DataMemoryRouter>", () => {
               <code
                 style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
               >
-                exceptionElement
+                errorElement
               </code>
                props on 
               <code

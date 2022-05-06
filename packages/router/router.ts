@@ -20,7 +20,7 @@ import { matchRoutes } from "./utils";
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Map of routeId -> data returned from a loader/action/exception
+ * Map of routeId -> data returned from a loader/action/error
  */
 export interface RouteData {
   [routeId: string]: any;
@@ -91,9 +91,9 @@ export interface RouterState {
   actionData: RouteData | null;
 
   /**
-   * Exceptions caught from loaders for the current matches
+   * Errors caught from loaders for the current matches
    */
-  exceptions: RouteData | null;
+  errors: RouteData | null;
 
   /**
    * Map of current fetchers
@@ -105,7 +105,7 @@ export interface RouterState {
  * Data that can be passed into hydrate a Router from SSR
  */
 export type HydrationState = Partial<
-  Pick<RouterState, "loaderData" | "actionData" | "exceptions">
+  Pick<RouterState, "loaderData" | "actionData" | "errors">
 >;
 
 /**
@@ -303,7 +303,7 @@ export type Fetcher<TData = any> =
 enum ResultType {
   data = "data",
   redirect = "redirect",
-  exception = "exception",
+  error = "error",
 }
 
 /**
@@ -327,15 +327,15 @@ export interface RedirectResult {
 /**
  * Unsuccessful result from a loader or action
  */
-export interface ExceptionResult {
-  type: ResultType.exception;
-  exception: any;
+export interface ErrorResult {
+  type: ResultType.error;
+  error: any;
 }
 
 /**
  * Result from a loader or action - potentially successful or unsuccessful
  */
-export type DataResult = SuccessResult | RedirectResult | ExceptionResult;
+export type DataResult = SuccessResult | RedirectResult | ErrorResult;
 
 interface ShortCircuitable {
   /**
@@ -347,11 +347,11 @@ interface ShortCircuitable {
 
 interface HandleActionResult extends ShortCircuitable {
   /**
-   * Exception thrown from the current action, keyed by the route containing the
-   * exceptionElement to render the exception.  To be committed to the state after
+   * Error thrown from the current action, keyed by the route containing the
+   * errorElement to render the error.  To be committed to the state after
    * loaders have completed
    */
-  pendingActionException?: RouteData;
+  pendingActionError?: RouteData;
   /**
    * Data returned from the current action, keyed by the route owning the action.
    * To be committed to the state after loaders have completed
@@ -365,9 +365,9 @@ interface HandleLoadersResult extends ShortCircuitable {
    */
   loaderData?: RouterState["loaderData"];
   /**
-   * exceptions thrown from the current set of loaders
+   * errors thrown from the current set of loaders
    */
-  exceptions?: RouterState["exceptions"];
+  errors?: RouterState["errors"];
 }
 
 export const IDLE_TRANSITION: TransitionStates["Idle"] = {
@@ -411,11 +411,11 @@ export function createRouter(init: RouterInit): Router {
     matchRoutes(dataRoutes, init.history.location) ||
     getNotFoundMatches(dataRoutes);
 
-  // If we received hydration data without exceptions - detect if any matched
+  // If we received hydration data without errors - detect if any matched
   // routes with loaders did not get provided loaderData, and if so launch an
   // initial data re-load to fetch everything
   let foundMissingHydrationData =
-    init.hydrationData?.exceptions == null &&
+    init.hydrationData?.errors == null &&
     init.hydrationData?.loaderData != null &&
     initialMatches
       .filter((m) => m.route.loader)
@@ -432,7 +432,7 @@ export function createRouter(init: RouterInit): Router {
     historyAction: init.history.action,
     location: init.history.location,
     // If we do not match a user-provided-route, fall back to the root
-    // to allow the exceptionElement to take over
+    // to allow the errorElement to take over
     matches: initialMatches,
     initialized: init.hydrationData != null && !foundMissingHydrationData,
     transition: IDLE_TRANSITION,
@@ -441,7 +441,7 @@ export function createRouter(init: RouterInit): Router {
       ? {}
       : init.hydrationData?.loaderData || {},
     actionData: init.hydrationData?.actionData || null,
-    exceptions: init.hydrationData?.exceptions || null,
+    errors: init.hydrationData?.errors || null,
     fetchers: new Map(),
   };
 
@@ -623,7 +623,7 @@ export function createRouter(init: RouterInit): Router {
     if (!matches) {
       completeNavigation(historyAction, location, {
         matches: getNotFoundMatches(dataRoutes),
-        exceptions: {
+        errors: {
           [dataRoutes[0].id]: new Response(null, { status: 404 }),
         },
       });
@@ -640,7 +640,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Call action if we received an action submission
     let pendingActionData: RouteData | null = null;
-    let pendingActionException: RouteData | null = null;
+    let pendingActionError: RouteData | null = null;
 
     if (opts?.submission && isActionSubmission(opts.submission)) {
       let actionOutput = await handleAction(
@@ -655,7 +655,7 @@ export function createRouter(init: RouterInit): Router {
       }
 
       pendingActionData = actionOutput.pendingActionData || null;
-      pendingActionException = actionOutput.pendingActionException || null;
+      pendingActionError = actionOutput.pendingActionError || null;
       loadingTransition = {
         state: "loading",
         type: "actionReload",
@@ -665,14 +665,14 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Call loaders
-    let { shortCircuited, loaderData, exceptions } = await handleLoaders(
+    let { shortCircuited, loaderData, errors } = await handleLoaders(
       historyAction,
       location,
       opts?.submission,
       matches,
       loadingTransition,
       pendingActionData,
-      pendingActionException
+      pendingActionError
     );
 
     if (shortCircuited) {
@@ -682,7 +682,7 @@ export function createRouter(init: RouterInit): Router {
     completeNavigation(historyAction, location, {
       matches,
       loaderData,
-      exceptions,
+      errors,
     });
   }
 
@@ -728,8 +728,8 @@ export function createRouter(init: RouterInit): Router {
         );
       }
       result = {
-        type: ResultType.exception,
-        exception: new Response(null, { status: 405 }),
+        type: ResultType.error,
+        error: new Response(null, { status: 405 }),
       };
     } else {
       // Create a controller for this data load
@@ -765,12 +765,12 @@ export function createRouter(init: RouterInit): Router {
       return { shortCircuited: true };
     }
 
-    if (isExceptionResult(result)) {
-      // Store off the pending exception - we use it to determine which loaders
+    if (isErrorResult(result)) {
+      // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
       return {
-        pendingActionException: { [boundaryMatch.route.id]: result.exception },
+        pendingActionError: { [boundaryMatch.route.id]: result.error },
       };
     }
 
@@ -786,7 +786,7 @@ export function createRouter(init: RouterInit): Router {
     matches: DataRouteMatch[],
     overrideTransition: Transition | undefined,
     pendingActionData: RouteData | null,
-    pendingActionException: RouteData | null
+    pendingActionError: RouteData | null
   ): Promise<HandleLoadersResult> {
     // Figure out the right transition we want to use for data loading
     let loadingTransition;
@@ -821,7 +821,7 @@ export function createRouter(init: RouterInit): Router {
       isUninterruptedRevalidation ? state.transition : loadingTransition,
       location,
       foundXRemixRevalidate,
-      pendingActionException,
+      pendingActionError,
       revalidatingFetcherMatches,
       false
     );
@@ -830,8 +830,8 @@ export function createRouter(init: RouterInit): Router {
     if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
       completeNavigation(historyAction, location, {
         matches,
-        // Commit pending action exception if we're short circuiting
-        exceptions: pendingActionException || null,
+        // Commit pending action error if we're short circuiting
+        errors: pendingActionError || null,
         actionData: pendingActionData || null,
       });
       return { shortCircuited: true };
@@ -904,12 +904,12 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Process and commit output from loaders
-    let { loaderData, exceptions } = processLoaderData(
+    let { loaderData, errors } = processLoaderData(
       state,
       matches,
       matchesToLoad,
       navigationResults,
-      pendingActionException,
+      pendingActionError,
       revalidatingFetchers,
       fetcherResults
     );
@@ -919,7 +919,7 @@ export function createRouter(init: RouterInit): Router {
 
     return {
       loaderData,
-      exceptions,
+      errors,
       ...(didAbortFetchLoads || revalidatingFetchers.length > 0
         ? { fetchers: new Map(state.fetchers) }
         : {}),
@@ -1047,14 +1047,14 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // Process any non-redirect exceptions thrown
-    if (isExceptionResult(actionResult)) {
+    // Process any non-redirect errors thrown
+    if (isErrorResult(actionResult)) {
       let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
       state.fetchers.delete(key);
       updateState({
         fetchers: new Map(state.fetchers),
-        exceptions: {
-          [boundaryMatch.route.id]: actionResult.exception,
+        errors: {
+          [boundaryMatch.route.id]: actionResult.error,
         },
       });
       return;
@@ -1144,7 +1144,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Process and commit output from loaders
-    let { loaderData, exceptions } = processLoaderData(
+    let { loaderData, errors } = processLoaderData(
       state,
       state.matches,
       matchesToLoad,
@@ -1180,13 +1180,13 @@ export function createRouter(init: RouterInit): Router {
       completeNavigation(pendingAction, state.transition.location, {
         matches,
         loaderData,
-        exceptions,
+        errors,
         fetchers: new Map(state.fetchers),
       });
     } else {
       // otherwise just update with the fetcher data
       updateState({
-        exceptions,
+        errors,
         loaderData,
         ...(didAbortFetchLoads ? { fetchers: new Map(state.fetchers) } : {}),
       });
@@ -1222,17 +1222,17 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // Process any non-redirect exceptions thrown
-    if (isExceptionResult(result)) {
+    // Process any non-redirect errors thrown
+    if (isErrorResult(result)) {
       let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
       state.fetchers.delete(key);
       // TODO: In remix, this would reset to IDLE_TRANSITION if it was a catch -
-      // do we need to behave any differently with our non-redirect exceptions?
+      // do we need to behave any differently with our non-redirect errors?
       // What if it was a non-redirect Response?
       updateState({
         fetchers: new Map(state.fetchers),
-        exceptions: {
-          [boundaryMatch.route.id]: result.exception,
+        errors: {
+          [boundaryMatch.route.id]: result.error,
         },
       });
       return;
@@ -1429,16 +1429,16 @@ function getMatchesToLoad(
   transition: Transition,
   location: Location,
   foundXRemixRevalidate: boolean,
-  pendingActionException: RouteData | null,
+  pendingActionError: RouteData | null,
   revalidatingFetcherMatches: Map<string, [string, DataRouteMatch]>,
   isFetcherReload: boolean
 ): [DataRouteMatch[], [string, string, DataRouteMatch][]] {
   // Determine which routes to run loaders for, filter out all routes below
-  // any caught action exception as they aren't going to render so we don't
+  // any caught action error as they aren't going to render so we don't
   // need to load them
-  let deepestRenderableMatchIndex = pendingActionException
+  let deepestRenderableMatchIndex = pendingActionError
     ? matches.findIndex(
-        (m) => m.route.id === Object.keys(pendingActionException)[0]
+        (m) => m.route.id === Object.keys(pendingActionError)[0]
       )
     : matches.length;
 
@@ -1499,7 +1499,7 @@ function isNewLoader(
     match.route.id !== currentMatch.route.id;
 
   // Handle the case that we don't have data for a re-used route, potentially
-  // from a prior exception
+  // from a prior error
   let isMissingData = currentLoaderData[match.route.id] === undefined;
 
   // Always load if this is a net-new route or we don't yet have data
@@ -1598,7 +1598,7 @@ async function callLoaderOrAction(
       signal,
     });
   } catch (e) {
-    resultType = ResultType.exception;
+    resultType = ResultType.error;
     result = e;
   }
 
@@ -1626,8 +1626,8 @@ async function callLoaderOrAction(
     }
   }
 
-  if (resultType === ResultType.exception) {
-    return { type: resultType, exception: result };
+  if (resultType === ResultType.error) {
+    return { type: resultType, error: result };
   }
 
   return { type: resultType, data: result };
@@ -1676,61 +1676,61 @@ function processLoaderData(
   matches: DataRouteMatch[],
   matchesToLoad: DataRouteMatch[],
   results: DataResult[],
-  pendingActionException: RouteData | null,
+  pendingActionError: RouteData | null,
   revalidatingFetchers: [string, string, DataRouteMatch][],
   fetcherResults: DataResult[]
 ): {
   loaderData: RouterState["loaderData"];
-  exceptions: RouterState["exceptions"];
+  errors: RouterState["errors"];
 } {
-  // Fill in loaderData/exceptions from our loaders
+  // Fill in loaderData/errors from our loaders
   let loaderData: RouterState["loaderData"] = {};
-  let exceptions: RouterState["exceptions"] = null;
+  let errors: RouterState["errors"] = null;
 
-  // Process loader results into state.loaderData/state.exceptions
+  // Process loader results into state.loaderData/state.errors
   results.forEach((result, index) => {
     let id = matchesToLoad[index].route.id;
     invariant(
       !isRedirectResult(result),
       "Cannot handle redirect results in processLoaderData"
     );
-    if (isExceptionResult(result)) {
+    if (isErrorResult(result)) {
       // Look upwards from the matched route for the closest ancestor
-      // exceptionElement, defaulting to the root match
+      // errorElement, defaulting to the root match
       let boundaryMatch = findNearestBoundary(matches, id);
-      let exception = result.exception;
-      // If we have a pending action exception, we report it at the highest-route
-      // that throws a loader exception, and then clear it out to indicate that
+      let error = result.error;
+      // If we have a pending action error, we report it at the highest-route
+      // that throws a loader error, and then clear it out to indicate that
       // it was consumed
-      if (pendingActionException) {
-        exception = Object.values(pendingActionException)[0];
-        pendingActionException = null;
+      if (pendingActionError) {
+        error = Object.values(pendingActionError)[0];
+        pendingActionError = null;
       }
-      exceptions = Object.assign(exceptions || {}, {
-        [boundaryMatch.route.id]: exception,
+      errors = Object.assign(errors || {}, {
+        [boundaryMatch.route.id]: error,
       });
     } else {
       loaderData[id] = result.data;
     }
   });
 
-  // If we didn't consume the pending action exception (i.e., all loaders
+  // If we didn't consume the pending action error (i.e., all loaders
   // resolved), then consume it here
-  if (pendingActionException) {
-    exceptions = pendingActionException;
+  if (pendingActionError) {
+    errors = pendingActionError;
   }
 
   // Process results from our revalidating fetchers
   revalidatingFetchers.forEach(([key, href, match], index) => {
     let result = fetcherResults[index];
 
-    // Process fetcher non-redirect exceptions
-    if (isExceptionResult(result)) {
+    // Process fetcher non-redirect errors
+    if (isErrorResult(result)) {
       let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
-      if (!exceptions?.[boundaryMatch.route.id]) {
-        exceptions = {
-          ...exceptions,
-          [boundaryMatch.route.id]: result.exception,
+      if (!errors?.[boundaryMatch.route.id]) {
+        errors = {
+          ...errors,
+          [boundaryMatch.route.id]: result.error,
         };
       }
       state.fetchers.delete(key);
@@ -1752,7 +1752,7 @@ function processLoaderData(
     }
   });
 
-  return { loaderData, exceptions };
+  return { loaderData, errors };
 }
 
 function mergeLoaderData(
@@ -1778,8 +1778,8 @@ function mergeLoaderData(
   };
 }
 
-// Find the nearest exception boundary, looking upwards from the matched route
-// for the closest ancestor exceptionElement, defaulting to the root match
+// Find the nearest error boundary, looking upwards from the matched route
+// for the closest ancestor errorElement, defaulting to the root match
 function findNearestBoundary(
   matches: DataRouteMatch[],
   routeId: string
@@ -1788,7 +1788,7 @@ function findNearestBoundary(
     matches
       .slice(0, matches.findIndex((m) => m.route.id === routeId) + 1)
       .reverse()
-      .find((m) => m.route.exceptionElement) || matches[0]
+      .find((m) => m.route.errorElement) || matches[0]
   );
 }
 
@@ -1803,7 +1803,7 @@ function getNotFoundMatches(routes: DataRouteObject[]): DataRouteMatch[] {
   ];
 }
 
-// Find any returned redirect exceptions, starting from the lowest match
+// Find any returned redirect errors, starting from the lowest match
 function findRedirect(results: DataResult[]): RedirectResult | undefined {
   for (let i = results.length - 1; i >= 0; i--) {
     let result = results[i];
@@ -1824,8 +1824,8 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   );
 }
 
-function isExceptionResult(result: DataResult): result is ExceptionResult {
-  return result.type === ResultType.exception;
+function isErrorResult(result: DataResult): result is ErrorResult {
+  return result.type === ResultType.error;
 }
 
 function isRedirectResult(result?: DataResult): result is RedirectResult {

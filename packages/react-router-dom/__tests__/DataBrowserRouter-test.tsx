@@ -20,7 +20,7 @@ import {
   Outlet,
   useLoaderData,
   useActionData,
-  useRouteException,
+  useRouteError,
   useNavigation,
   Form,
   Link,
@@ -798,7 +798,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <Route
               path="/"
               element={<Comp />}
-              exceptionElement={<Exception />}
+              errorElement={<ErrorElement />}
               loader={async () => {
                 throw new Error("Kaboom!");
               }}
@@ -820,8 +820,8 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           );
         }
 
-        function Exception() {
-          let error = useRouteException();
+        function ErrorElement() {
+          let error = useRouteError();
           return <p>{error.message}</p>;
         }
 
@@ -869,7 +869,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <Route
               path="/"
               element={<Comp />}
-              exceptionElement={<Exception />}
+              errorElement={<ErrorElement />}
               action={async () => {
                 throw new Error("Kaboom!");
               }}
@@ -897,8 +897,8 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           );
         }
 
-        function Exception() {
-          let error = useRouteException();
+        function ErrorElement() {
+          let error = useRouteError();
           return <p>{error.message}</p>;
         }
 
@@ -1057,7 +1057,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <Route
               path="/"
               element={<Comp />}
-              exceptionElement={<Exception />}
+              errorElement={<ErrorElement />}
               loader={async () => {
                 throw new Error("Kaboom!");
               }}
@@ -1081,8 +1081,8 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           );
         }
 
-        function Exception() {
-          let error = useRouteException();
+        function ErrorElement() {
+          let error = useRouteError();
           return <p>{error.message}</p>;
         }
 
@@ -1126,7 +1126,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <Route
               path="/"
               element={<Comp />}
-              exceptionElement={<Exception />}
+              errorElement={<ErrorElement />}
               action={async () => {
                 throw new Error("Kaboom!");
               }}
@@ -1150,8 +1150,8 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           );
         }
 
-        function Exception() {
-          let error = useRouteException();
+        function ErrorElement() {
+          let error = useRouteError();
           return <p>{error.message}</p>;
         }
 
@@ -1488,8 +1488,8 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       });
     });
 
-    describe("exceptions", () => {
-      it("renders hydration exceptions on leaf elements", async () => {
+    describe("errors", () => {
+      it("renders hydration errors on leaf elements", async () => {
         let { container } = render(
           <TestDataRouter
             window={getWindow("/child")}
@@ -1500,7 +1500,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
               actionData: {
                 "0": "parent action",
               },
-              exceptions: {
+              errors: {
                 "0-0": new Error("Kaboom 💥"),
               },
             }}
@@ -1509,7 +1509,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
               <Route
                 path="child"
                 element={<Comp />}
-                exceptionElement={<ErrorBoundary />}
+                errorElement={<ErrorBoundary />}
               />
             </Route>
           </TestDataRouter>
@@ -1530,7 +1530,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         }
 
         function ErrorBoundary() {
-          let error = useRouteException();
+          let error = useRouteError();
           return <p>{error.message}</p>;
         }
 
@@ -1548,23 +1548,19 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         `);
       });
 
-      it("renders hydration exceptions on parent elements", async () => {
+      it("renders hydration errors on parent elements", async () => {
         let { container } = render(
           <TestDataRouter
             window={getWindow("/child")}
             hydrationData={{
               loaderData: {},
               actionData: null,
-              exceptions: {
+              errors: {
                 "0": new Error("Kaboom 💥"),
               },
             }}
           >
-            <Route
-              path="/"
-              element={<Comp />}
-              exceptionElement={<ErrorBoundary />}
-            >
+            <Route path="/" element={<Comp />} errorElement={<ErrorBoundary />}>
               <Route path="child" element={<Comp />} />
             </Route>
           </TestDataRouter>
@@ -1585,7 +1581,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         }
 
         function ErrorBoundary() {
-          let error = useRouteException();
+          let error = useRouteError();
           return <p>{error.message}</p>;
         }
 
@@ -1598,7 +1594,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         `);
       });
 
-      it("renders navigation exceptions on leaf elements", async () => {
+      it("renders navigation errors on leaf elements", async () => {
         let fooDefer = defer();
         let barDefer = defer();
 
@@ -1618,13 +1614,13 @@ function testDomRouter(name, TestDataRouter, getWindow) {
                 path="foo"
                 loader={() => fooDefer.promise}
                 element={<Foo />}
-                exceptionElement={<FooException />}
+                errorElement={<FooError />}
               />
               <Route
                 path="bar"
                 loader={() => barDefer.promise}
                 element={<Bar />}
-                exceptionElement={<BarException />}
+                errorElement={<BarError />}
               />
             </Route>
           </TestDataRouter>
@@ -1646,17 +1642,17 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           let data = useLoaderData();
           return <h1>Foo:{data?.message}</h1>;
         }
-        function FooException() {
-          let exception = useRouteException();
-          return <p>Foo Exception:{exception.message}</p>;
+        function FooError() {
+          let error = useRouteError();
+          return <p>Foo Error:{error.message}</p>;
         }
         function Bar() {
           let data = useLoaderData();
           return <h1>Bar:{data?.message}</h1>;
         }
-        function BarException() {
-          let exception = useRouteException();
-          return <p>Bar Exception:{exception.message}</p>;
+        function BarError() {
+          let error = useRouteError();
+          return <p>Bar Error:{error.message}</p>;
         }
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -1703,7 +1699,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
                 idle
               </p>
               <p>
-                Bar Exception:
+                Bar Error:
                 Kaboom!
               </p>
             </div>
@@ -1730,7 +1726,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
                 idle
               </p>
               <p>
-                Foo Exception:
+                Foo Error:
                 Kaboom!
               </p>
             </div>
@@ -1738,7 +1734,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
          `);
       });
 
-      it("renders navigation exceptions on parent elements", async () => {
+      it("renders navigation errors on parent elements", async () => {
         let fooDefer = defer();
         let barDefer = defer();
 
@@ -1753,16 +1749,12 @@ function testDomRouter(name, TestDataRouter, getWindow) {
               },
             }}
           >
-            <Route
-              path="/"
-              element={<Layout />}
-              exceptionElement={<LayoutException />}
-            >
+            <Route path="/" element={<Layout />} errorElement={<LayoutError />}>
               <Route
                 path="foo"
                 loader={() => fooDefer.promise}
                 element={<Foo />}
-                exceptionElement={<FooException />}
+                errorElement={<FooError />}
               />
               <Route
                 path="bar"
@@ -1784,17 +1776,17 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             </div>
           );
         }
-        function LayoutException() {
-          let exception = useRouteException();
-          return <p>Layout Exception:{exception.message}</p>;
+        function LayoutError() {
+          let error = useRouteError();
+          return <p>Layout Error:{error.message}</p>;
         }
         function Foo() {
           let data = useLoaderData();
           return <h1>Foo:{data?.message}</h1>;
         }
-        function FooException() {
-          let exception = useRouteException();
-          return <p>Foo Exception:{exception.message}</p>;
+        function FooError() {
+          let error = useRouteError();
+          return <p>Foo Error:{error.message}</p>;
         }
         function Bar() {
           let data = useLoaderData();
@@ -1827,11 +1819,11 @@ function testDomRouter(name, TestDataRouter, getWindow) {
 
         fireEvent.click(screen.getByText("Link to Bar"));
         barDefer.reject(new Error("Kaboom!"));
-        await waitFor(() => screen.getByText("Layout Exception:Kaboom!"));
+        await waitFor(() => screen.getByText("Layout Error:Kaboom!"));
         expect(getHtml(container)).toMatchInlineSnapshot(`
           "<div>
             <p>
-              Layout Exception:
+              Layout Error:
               Kaboom!
             </p>
           </div>"

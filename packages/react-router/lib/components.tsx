@@ -293,7 +293,7 @@ interface DataRouteProps {
   id?: RouteObject["id"];
   loader?: RouteObject["loader"];
   action?: RouteObject["action"];
-  exceptionElement?: RouteObject["exceptionElement"];
+  errorElement?: RouteObject["errorElement"];
   shouldRevalidate?: RouteObject["shouldRevalidate"];
 }
 
@@ -502,7 +502,7 @@ export function createRoutesFromChildren(
       path: element.props.path,
       loader: element.props.loader,
       action: element.props.action,
-      exceptionElement: element.props.exceptionElement,
+      errorElement: element.props.errorElement,
       shouldRevalidate: element.props.shouldRevalidate,
     };
 
