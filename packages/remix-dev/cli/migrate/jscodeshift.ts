@@ -1,11 +1,10 @@
-import { sync as execaSync } from "execa";
+// @ts-expect-error `@types/jscodeshift` doesn't have types for this
+import { run as jscodeshift } from "jscodeshift/src/Runner";
 
 import type { Flags } from "./flags";
 
-const jscodeshiftExecutable = require.resolve(".bin/jscodeshift");
-
 type Options = Record<string, unknown>;
-const toFlags = (options: Options = {}) =>
+const toCLIOptions = (options: Options = {}) =>
   Object.entries(options)
     .filter(([_key, value]) => Boolean(value))
     .map(
@@ -13,48 +12,40 @@ const toFlags = (options: Options = {}) =>
         `--${key}${typeof value === "boolean" ? "" : `=${value}`}`
     );
 
-type Args<TransformOptions> = {
-  transformPath: string;
+type Args<TransformOptions extends Options = Options> = {
   files: string[];
   flags: Flags;
   transformOptions?: TransformOptions;
+  transformPath: string;
 };
-export const run = <TransformOptions>({
-  transformPath,
+export const run = async <TransformOptions extends Options = Options>({
   files,
   flags: { debug, dry, print, runInBand },
   transformOptions,
-}: Args<TransformOptions>): boolean => {
-  let args = [
-    dry ? "--dry" : "",
-    print ? "--print" : "",
-    runInBand ? "--run-in-band" : "",
-    "--fail-on-error",
-    "--verbose=2",
-    "--ignore-pattern=**/node_modules/**",
-    "--ignore-pattern=**/.cache/**",
-    "--ignore-pattern=**/build/**",
-    "--extensions=tsx,ts,jsx,js",
-    "--parser=tsx",
-    ...["--transform", transformPath],
-    ...files,
-    ...toFlags(transformOptions || {}),
-  ];
+  transformPath,
+}: Args<TransformOptions>): Promise<boolean> => {
+  let options = {
+    babel: true, // without this, `jscodeshift` will not be able to parse TS transforms
+    dry,
+    extensions: "tsx,ts,jsx,js",
+    failOnError: true,
+    ignorePattern: ["**/node_modules/**", "**/.cache/**", "**/build/**"],
+    parser: "tsx",
+    print,
+    runInBand,
+    verbose: 2,
+    ...transformOptions,
+  };
 
   if (debug) {
     console.log(
-      `Executing command: jscodeshift ${args
-        .filter((arg) => arg !== "")
-        .join(" ")}`
+      `Executing command: jscodeshift ${toCLIOptions(options).join(" ")}`
     );
   }
 
   try {
-    let result = execaSync(jscodeshiftExecutable, args, {
-      stdio: debug ? "inherit" : "ignore",
-      stripFinalNewline: false,
-    });
-    return result.exitCode === 0;
+    let { error } = await jscodeshift(transformPath, files, options);
+    return error === 0;
   } catch (error) {
     return false;
   }

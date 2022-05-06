@@ -151,11 +151,11 @@ export const replaceRemixImports: MigrationFunction = async ({
     cwd: config.appDirectory,
     absolute: true,
   });
-  let codemodOk = jscodeshift.run<Options>({
-    transformPath: TRANSFORM_PATH,
+  let codemodOk = await jscodeshift.run<Options>({
     files,
     flags,
-    transformOptions: { runtime, adapter },
+    transformOptions: { adapter, runtime },
+    transformPath: TRANSFORM_PATH,
   });
   if (!codemodOk) {
     console.error("❌ I couldn't replace all of your `remix` imports.");

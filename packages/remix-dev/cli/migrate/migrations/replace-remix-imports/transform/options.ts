@@ -7,7 +7,7 @@
 import type { Adapter } from "./adapter";
 import type { Runtime } from "./runtime";
 
-export interface Options {
-  runtime: Runtime;
+export type Options = {
   adapter?: Adapter;
-}
+  runtime: Runtime;
+};
