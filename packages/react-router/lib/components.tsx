@@ -393,7 +393,8 @@ export function Routes({
   children,
   location,
 }: RoutesProps): React.ReactElement | null {
-  return useRoutes(createRoutesFromChildren(children), location);
+  let routes = React.useMemo(() => createRoutesFromChildren(children), [children]);
+  return useRoutes(routes, location);
 }
 
 interface DataRoutesProps extends RoutesProps {

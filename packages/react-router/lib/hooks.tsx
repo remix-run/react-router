@@ -273,6 +273,8 @@ export function useResolvedPath(to: To): Path {
   );
 }
 
+let emptyParams = {};
+
 /**
  * Returns the element of the route that matched the current location, prepared
  * with the correct context to render the remainder of the route tree. Route
@@ -295,7 +297,7 @@ export function useRoutes(
   let dataRouterStateContext = React.useContext(DataRouterStateContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
-  let parentParams = routeMatch ? routeMatch.params : {};
+  let parentParams = routeMatch ? routeMatch.params : emptyParams;
   let parentPathname = routeMatch ? routeMatch.pathname : "/";
   let parentPathnameBase = routeMatch ? routeMatch.pathnameBase : "/";
   let parentRoute = routeMatch && routeMatch.route;
@@ -362,7 +364,7 @@ export function useRoutes(
       ? pathname
       : pathname.slice(parentPathnameBase.length) || "/";
 
-  let matches = matchRoutes(routes, { pathname: remainingPathname });
+  let matches = React.useMemo(() => matchRoutes(routes, { pathname: remainingPathname }), [remainingPathname, routes]);
 
   if (__DEV__) {
     warning(
@@ -378,7 +380,7 @@ export function useRoutes(
     );
   }
 
-  return _renderMatches(
+  return React.useMemo(() => _renderMatches(
     matches &&
       matches.map((match) =>
         Object.assign({}, match, {
@@ -392,7 +394,7 @@ export function useRoutes(
       ),
     parentMatches,
     dataRouterStateContext || undefined
-  );
+  ), [dataRouterStateContext, matches, parentMatches, parentParams, parentPathnameBase]);
 }
 
 function DefaultErrorElement() {
