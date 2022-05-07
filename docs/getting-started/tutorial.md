@@ -96,7 +96,7 @@ npm run dev
 
 First things first, we want to connect your app to the browser's URL: import `BrowserRouter` and render it around your whole app.
 
-```tsx lines=[2,7-9] filename=src/main.jsx
+```tsx lines=[2,9-11] filename=src/main.jsx
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
@@ -175,7 +175,7 @@ export default function Invoices() {
 
 Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx` or `index.js`.
 
-```tsx lines=[2,4-5,8-9,13-19] filename=src/main.jsx
+```tsx lines=[2,4-5,8-9,15-21] filename=src/main.jsx
 import ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
@@ -215,7 +215,7 @@ Let's get some automatic, persistent layout handling by doing just two things:
 
 First let's nest the routes. Right now the expenses and invoices routes are siblings to the app, we want to make them _children_ of the app route:
 
-```jsx lines=[15-18] filename=src/main.jsx
+```jsx lines=[17-20] filename=src/main.jsx
 import ReactDOM from "react-dom/client";
 import {
   BrowserRouter,

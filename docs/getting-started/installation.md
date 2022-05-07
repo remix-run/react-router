@@ -50,7 +50,7 @@ Follow the instructions in the [React documentation to set up a new project with
 
 Once your project is set up and React Router is installed as a dependency, open the `src/index.js` in your text editor. Import `BrowserRouter` from `react-router-dom` near the top of your file and wrap your app in a `<BrowserRouter>`:
 
-```js [3, 11-13]
+```js [3, 13-15]
 import * as React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
