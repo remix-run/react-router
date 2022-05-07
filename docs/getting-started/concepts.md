@@ -815,7 +815,7 @@ Let's put it all together from the top!
 
 2. `<BrowserRouter>` creates a [history](#history), puts the initial [location](#location) in to state, and subscribes to the [URL](#url).
 
-3. `<Routes>` recurses it's [child routes](#child-route) to build a [route config](#route-config), matches those routes against the [location](#location), creates some route [matches](#match), and renders the first match's route element.
+3. `<Routes>` recurses its [child routes](#child-route) to build a [route config](#route-config), matches those routes against the [location](#location), creates some route [matches](#match), and renders the first match's route element.
 
 4. You render an [`<Outlet/>`](#outlet) in each [parent route](#parent-route).
 
