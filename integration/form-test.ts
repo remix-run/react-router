@@ -255,6 +255,28 @@ test.describe("Forms", () => {
             )
           }
         `,
+
+        "app/routes/stop-propagation.jsx": js`
+          import { json } from "@remix-run/node";
+          import { Form, useActionData } from "@remix-run/react";
+
+          export async function action({ request }) {
+            let formData = await request.formData();
+            return json(Object.fromEntries(formData));
+          }
+
+          export default function Index() {
+            let actionData = useActionData();
+            return (
+              <div onClick={(event) => event.stopPropagation()}>
+                <pre>{JSON.stringify(actionData)}</pre>
+                <Form method="post">
+                  <button type="submit" name="action" value="add">Add</button>
+                </Form>
+              </div>
+            )
+          }
+        `,
       },
     });
 
@@ -331,6 +353,15 @@ test.describe("Forms", () => {
     await app.goto("/get-submission");
     await app.clickElement(`#${ORPHAN_BUTTON}`);
     expect(await app.getHtml("pre")).toMatch(SQUID_INK_HOTDOG);
+  });
+
+  test("when clicking on a submit button as a descendant of an element that stops propagation on click, still passes the clicked submit button's `name` and `value` props to the request payload", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/stop-propagation");
+    await app.clickSubmitButton("/stop-propagation");
+    expect(await app.getHtml()).toMatch('{"action":"add"}');
   });
 
   test.describe("<Form> action", () => {
