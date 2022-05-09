@@ -7,14 +7,18 @@
   "main": "build/index.js",
   "scripts": {},
   "dependencies": {
+    "@remix-run/cloudflare": "0.0.0-local-version",
     "@remix-run/cloudflare-workers": "0.0.0-local-version",
     "@remix-run/react": "0.0.0-local-version",
     "react": "0.0.0-local-version",
     "react-dom": "0.0.0-local-version"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "0.0.0-local-version",
     "@remix-run/dev": "0.0.0-local-version",
-    "@remix-run/eslint-config": "0.0.0-local-version"
+    "@types/react": "0.0.0-local-version",
+    "@types/react-dom": "0.0.0-local-version",
+    "typescript": "0.0.0-local-version"
   },
   "engines": {
     "node": ">=14"

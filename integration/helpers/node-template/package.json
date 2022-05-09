@@ -17,6 +17,12 @@
     "react-dom": "0.0.0-local-version"
   },
   "devDependencies": {
-    "@remix-run/dev": "0.0.0-local-version"
+    "@remix-run/dev": "0.0.0-local-version",
+    "@types/react": "0.0.0-local-version",
+    "@types/react-dom": "0.0.0-local-version",
+    "typescript": "0.0.0-local-version"
+  },
+  "engines": {
+    "node": ">=14"
   }
 }
