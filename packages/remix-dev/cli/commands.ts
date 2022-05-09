@@ -64,14 +64,18 @@ export async function init(
 ) {
   let initScriptDir = path.join(projectDir, "remix.init");
   let initScript = path.resolve(initScriptDir, "index.js");
+  let initPackageJson = path.resolve(initScriptDir, "package.json");
 
   let isTypeScript = fse.existsSync(path.join(projectDir, "tsconfig.json"));
 
   if (await fse.pathExists(initScript)) {
-    execSync(`${packageManager} install`, {
-      stdio: "ignore",
-      cwd: initScriptDir,
-    });
+    if (await fse.pathExists(initPackageJson)) {
+      execSync(`${packageManager} install`, {
+        stdio: "ignore",
+        cwd: initScriptDir,
+      });
+    }
+
     let initFn = require(initScript);
     try {
       await initFn({ rootDirectory: projectDir, isTypeScript });
