@@ -78,7 +78,7 @@ export async function init(
 
     let initFn = require(initScript);
     try {
-      await initFn({ rootDirectory: projectDir, isTypeScript });
+      await initFn({ isTypeScript, packageManager, rootDirectory: projectDir });
     } catch (error) {
       if (error instanceof Error) {
         error.message = `${colors.error("🚨 Oops, remix.init failed")}\n\n${
