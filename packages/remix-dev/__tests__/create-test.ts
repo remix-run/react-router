@@ -450,8 +450,8 @@ describe("the create command", () => {
   });
 
   it("recognizes when Yarn was used to run the command", async () => {
-    let originalUserAgent = process.env.npm_user_agent;
-    process.env.npm_user_agent = yarnUserAgent;
+    let originalUserAgent = process.env.npm_config_user_agent;
+    process.env.npm_config_user_agent = yarnUserAgent;
 
     let projectDir = await getProjectDir("yarn-create");
     await run([
@@ -464,12 +464,12 @@ describe("the create command", () => {
     ]);
 
     expect(execSync).toBeCalledWith("yarn install", expect.anything());
-    process.env.npm_user_agent = originalUserAgent;
+    process.env.npm_config_user_agent = originalUserAgent;
   });
 
   it("recognizes when pnpm was used to run the command", async () => {
-    let originalUserAgent = process.env.npm_user_agent;
-    process.env.npm_user_agent = pnpmUserAgent;
+    let originalUserAgent = process.env.npm_config_user_agent;
+    process.env.npm_config_user_agent = pnpmUserAgent;
 
     let projectDir = await getProjectDir("pnpm-create");
     await run([
@@ -482,12 +482,12 @@ describe("the create command", () => {
     ]);
 
     expect(execSync).toBeCalledWith("pnpm install", expect.anything());
-    process.env.npm_user_agent = originalUserAgent;
+    process.env.npm_config_user_agent = originalUserAgent;
   });
 
   it("prompts to run the install command for the preferred package manager", async () => {
-    let originalUserAgent = process.env.npm_user_agent;
-    process.env.npm_user_agent = pnpmUserAgent;
+    let originalUserAgent = process.env.npm_config_user_agent;
+    process.env.npm_config_user_agent = pnpmUserAgent;
 
     let projectDir = await getProjectDir("pnpm-prompt-install");
     let mockPrompt = jest.mocked(inquirer.prompt);
@@ -512,12 +512,12 @@ describe("the create command", () => {
       "message",
       "Do you want me to run `pnpm install`?"
     );
-    process.env.npm_user_agent = originalUserAgent;
+    process.env.npm_config_user_agent = originalUserAgent;
   });
 
   it("suggests to run the init command with the preferred package manager", async () => {
-    let originalUserAgent = process.env.npm_user_agent;
-    process.env.npm_user_agent = pnpmUserAgent;
+    let originalUserAgent = process.env.npm_config_user_agent;
+    process.env.npm_config_user_agent = pnpmUserAgent;
 
     let projectDir = await getProjectDir("pnpm-suggest-install");
     let mockPrompt = jest.mocked(inquirer.prompt);
@@ -537,7 +537,7 @@ describe("the create command", () => {
     ]);
 
     expect(output).toContain(getOptOutOfInstallMessage("pnpm exec remix init"));
-    process.env.npm_user_agent = originalUserAgent;
+    process.env.npm_config_user_agent = originalUserAgent;
   });
 
   describe("errors", () => {
@@ -702,14 +702,11 @@ function getSuccessMessage(projectDirectory: string) {
   return `💿 That's it! \`cd\` into "${projectDirectory}" and check the README for development and deploy instructions!`;
 }
 
-function getOptOutOfInstallMessage(command = "npx remix init") {
-  return (
-    "💿 You've opted out of installing dependencies so we won't run the " +
-    path.join("remix.init", "index.js") +
-    " script for you just yet. Once you've installed dependencies, you can run " +
-    `it manually with \`${command}\``
-  );
-}
+const getOptOutOfInstallMessage = (command = "yarn remix init") =>
+  "💿 You've opted out of installing dependencies so we won't run the " +
+  path.join("remix.init", "index.js") +
+  " script for you just yet. Once you've installed dependencies, you can run " +
+  `it manually with \`${command}\``;
 
 /*
 eslint
