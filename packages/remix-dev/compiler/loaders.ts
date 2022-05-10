@@ -28,6 +28,7 @@ export const loaders: { [ext: string]: esbuild.Loader } = {
   ".ttf": "file",
   ".wav": "file",
   ".webm": "file",
+  ".webmanifest": "file",
   ".webp": "file",
   ".woff": "file",
   ".woff2": "file",
