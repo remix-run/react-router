@@ -967,6 +967,9 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           </TestDataRouter>
         );
 
+        // Note: jsdom doesn't properly attach event.submitter for
+        // <button type="submit"> clicks, so we have to use an input to drive
+        // this.  See https://github.com/jsdom/jsdom/issues/3117
         function Comp() {
           let fetcher = useFetcher();
           return (
@@ -977,14 +980,12 @@ function testDomRouter(name, TestDataRouter, getWindow) {
                 {fetcher.data ? JSON.stringify(fetcher.data) : null}
               </p>
               <fetcher.Form>
-                <button type="submit" name="increment" value="1">
-                  submit get 1
-                </button>
+                <input name="increment" value="1" />
+                <button type="submit">submit get 1</button>
               </fetcher.Form>
               <fetcher.Form method="post">
-                <button type="submit" name="increment" value="10">
-                  submit post 10
-                </button>
+                <input name="increment" value="10" />
+                <button type="submit">submit post 10</button>
               </fetcher.Form>
             </>
           );
