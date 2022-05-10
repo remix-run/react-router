@@ -870,10 +870,7 @@ export function createRouter(init: RouterInit): Router {
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
       state,
       matches,
-      // Pass the current navigation if this is an uninterrupted revalidation,
-      // since we aren't actually "navigating".  Otherwise pass the navigation
-      // we're about to commit
-      isUninterruptedRevalidation ? state.navigation : loadingNavigation,
+      submission,
       location,
       isRevalidationRequired,
       pendingActionData,
@@ -1131,7 +1128,7 @@ export function createRouter(init: RouterInit): Router {
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
       state,
       matches,
-      state.navigation,
+      submission,
       nextLocation,
       isRevalidationRequired,
       null,
@@ -1525,7 +1522,7 @@ function getLoaderRedirect(
 function getMatchesToLoad(
   state: RouterState,
   matches: DataRouteMatch[],
-  navigation: Navigation,
+  submission: Submission | undefined,
   location: Location,
   isRevalidationRequired: boolean,
   pendingActionData: RouteData | null,
@@ -1557,7 +1554,7 @@ function getMatchesToLoad(
       shouldRevalidateLoader(
         state.location,
         state.matches[index],
-        navigation,
+        submission,
         location,
         match,
         isRevalidationRequired,
@@ -1574,7 +1571,7 @@ function getMatchesToLoad(
       let shouldRevalidate = shouldRevalidateLoader(
         href,
         match,
-        navigation,
+        submission,
         href,
         match,
         isRevalidationRequired,
@@ -1611,11 +1608,11 @@ function isNewLoader(
 function shouldRevalidateLoader(
   currentLocation: string | Location,
   currentMatch: DataRouteMatch,
-  navigation: Navigation,
+  submission: Submission | undefined,
   location: string | Location,
   match: DataRouteMatch,
   isRevalidationRequired: boolean,
-  actionResult: DataResult | null
+  actionResult: DataResult | undefined
 ) {
   let currentUrl = createURL(currentLocation);
   let currentParams = currentMatch.params;
@@ -1648,7 +1645,7 @@ function shouldRevalidateLoader(
       currentParams,
       nextUrl,
       nextParams,
-      navigation: navigation,
+      ...submission,
       actionResult,
       defaultShouldRevalidate,
     });

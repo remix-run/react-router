@@ -1309,21 +1309,6 @@ describe("a router", () => {
           b: "bValue",
         },
         nextUrl: new URL("http://localhost/params/aValue/bValue"),
-        navigation: {
-          formAction: undefined,
-          formData: undefined,
-          formEncType: undefined,
-          formMethod: undefined,
-          location: {
-            hash: "",
-            key: expect.any(String),
-            pathname: "/params/aValue/bValue",
-            search: "",
-            state: null,
-          },
-          state: "loading",
-          type: "normalLoad",
-        },
         defaultShouldRevalidate: false,
         actionResult: null,
       });
@@ -1497,21 +1482,10 @@ describe("a router", () => {
         currentUrl: new URL("http://localhost/fetch"),
         nextParams: {},
         nextUrl: new URL("http://localhost/fetch"),
-        navigation: {
-          formAction: "/child",
-          formData: createFormData({}),
-          formEncType: "application/x-www-form-urlencoded",
-          formMethod: "post",
-          location: {
-            hash: "",
-            key: expect.any(String),
-            pathname: "/child",
-            search: "",
-            state: null,
-          },
-          state: "loading",
-          type: "actionReload",
-        },
+        formAction: "/child",
+        formData: createFormData({}),
+        formEncType: "application/x-www-form-urlencoded",
+        formMethod: "post",
         defaultShouldRevalidate: true,
       });
     });
@@ -6022,31 +5996,20 @@ describe("a router", () => {
           type: "done",
           data: 1,
         });
-        let shouldRevalidateArgs = shouldRevalidate.mock.calls[0][0];
-        expect(shouldRevalidateArgs.currentParams).toEqual({});
-        expect(shouldRevalidateArgs.currentUrl.toString()).toEqual(
-          "http://localhost/fetch"
-        );
-        expect(shouldRevalidateArgs.nextUrl.toString()).toEqual(
-          "http://localhost/fetch"
-        );
-        expect(shouldRevalidateArgs.nextParams).toEqual({});
-        expect(shouldRevalidateArgs.navigation).toEqual({
-          state: "loading",
-          type: "actionReload",
-          location: {
-            pathname: "/",
-            search: "",
-            hash: "",
-            state: null,
-            key: expect.any(String),
-          },
-          formMethod: "post",
-          formAction: "/",
-          formEncType: "application/x-www-form-urlencoded",
-          formData: createFormData({}),
-        });
-        expect(shouldRevalidateArgs.defaultShouldRevalidate).toBe(true);
+        expect(shouldRevalidate.mock.calls[0][0]).toMatchInlineSnapshot(`
+          Object {
+            "actionResult": null,
+            "currentParams": Object {},
+            "currentUrl": "http://localhost/fetch",
+            "defaultShouldRevalidate": true,
+            "formAction": "/",
+            "formData": FormData {},
+            "formEncType": "application/x-www-form-urlencoded",
+            "formMethod": "post",
+            "nextParams": Object {},
+            "nextUrl": "http://localhost/fetch",
+          }
+        `);
       });
 
       it("handles fetcher revalidation errors", async () => {
