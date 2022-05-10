@@ -1,6 +1,6 @@
 import type { Location, Path, To } from "./history";
 import { parsePath } from "./history";
-import { DataResult, DataRouteMatch, Navigation } from "./router";
+import { DataResult, DataRouteMatch } from "./router";
 
 export type LoaderFormMethod = "get";
 export type ActionFormMethod = "post" | "put" | "patch" | "delete";
@@ -22,42 +22,48 @@ export interface ActionSubmission extends Submission {
 }
 
 /**
- * Arguments passed to route loader functions
+ * Arguments passed to route loader/action functions
  */
-export interface LoaderFunctionArgs {
+export interface DataFunctionArgs {
   request: Request;
   params: Params;
   signal: AbortSignal;
 }
 
 /**
- * Arguments passed to route action functions
+ * Route loader function signature
  */
-export interface ActionFunctionArgs {
-  request: Request;
-  params: Params;
-  signal: AbortSignal;
+export interface LoaderFunction {
+  (args: DataFunctionArgs): Promise<Response> | Response | Promise<any> | any;
 }
 
 /**
- * Arguments passed to a Route's shouldRevalidate method.  This runs after both
- * navigations and fetcher submissions, so we flatten the navigation/fetcher
- * submission onto the arguments.  It shouldn't matter whether it came from a
- * navigation or a fetcher, what really matters is the URLs and the formData
- * since loaders have to re-run based on the data models that were potentially
- * mutated
+ * Route action function signature
  */
-export interface ShouldRevalidateFunctionArgs {
-  currentUrl: URL;
-  currentParams: DataRouteMatch["params"];
-  nextUrl: URL;
-  nextParams: DataRouteMatch["params"];
-  formMethod?: FormMethod;
-  formAction?: string;
-  formEncType?: FormEncType;
-  formData?: FormData;
-  actionResult?: DataResult;
-  defaultShouldRevalidate: boolean;
+export interface ActionFunction {
+  (args: DataFunctionArgs): Promise<Response> | Response | Promise<any> | any;
+}
+
+/**
+ * Route shouldRevalidate function signature.  This runs after any submission
+ * (navigation or fetcher), so we flatten the navigation/fetcher submission
+ * onto the arguments.  It shouldn't matter whether it came from a navigation
+ * or a fetcher, what really matters is the URLs and the formData since loaders
+ * have to re-run based on the data models that were potentially mutated.
+ */
+export interface ShouldRevalidateFunction {
+  (args: {
+    currentUrl: URL;
+    currentParams: DataRouteMatch["params"];
+    nextUrl: URL;
+    nextParams: DataRouteMatch["params"];
+    formMethod?: Submission["formMethod"];
+    formAction?: Submission["formAction"];
+    formEncType?: Submission["formEncType"];
+    formData?: Submission["formData"];
+    actionResult?: DataResult;
+    defaultShouldRevalidate: boolean;
+  }): boolean;
 }
 
 /**
@@ -71,10 +77,10 @@ export interface RouteObject {
   index?: boolean;
   path?: string;
   id?: string;
-  loader?: (obj: LoaderFunctionArgs) => any | Promise<any>;
-  action?: (obj: ActionFunctionArgs) => any | Promise<any>;
+  loader?: LoaderFunction;
+  action?: ActionFunction;
   errorElement?: React.ReactNode;
-  shouldRevalidate?: (obj: ShouldRevalidateFunctionArgs) => boolean;
+  shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
 }
 

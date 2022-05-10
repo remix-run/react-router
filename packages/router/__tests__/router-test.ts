@@ -1,9 +1,5 @@
 import { createMemoryHistory, InitialEntry, parsePath } from "../history";
-import type {
-  HydrationState,
-  LoaderFunctionArgs,
-  NavigateOptions,
-} from "../index";
+import type { HydrationState, LoaderFunction, NavigateOptions } from "../index";
 import {
   createRouter,
   Fetcher,
@@ -11,7 +7,7 @@ import {
   IDLE_NAVIGATION,
 } from "../router";
 import {
-  ActionFunctionArgs,
+  ActionFunction,
   DataRouteObject,
   matchRoutes,
   RouteMatch,
@@ -41,8 +37,8 @@ type EnhancedRouteObject = Omit<
   TestRouteObject,
   "loader" | "action" | "children"
 > & {
-  loader?: (args: LoaderFunctionArgs) => Promise<unknown>;
-  action?: (args: ActionFunctionArgs) => Promise<unknown>;
+  loader?: LoaderFunction;
+  action?: ActionFunction;
   children?: EnhancedRouteObject[];
 };
 
