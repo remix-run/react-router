@@ -28,7 +28,7 @@ function Layout() {
           <li>
             {/* Using a normal link here will cause the browser to reload the
                 document when following this link, which is exactly what we want
-                when transitioning to the "Home" app so we execute its entry
+                when navigating to the "Home" app so we execute its entry
                 point (see home/main.jsx). */}
             <a href="/">Home</a>
           </li>

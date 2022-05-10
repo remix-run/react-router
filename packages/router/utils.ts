@@ -1,6 +1,6 @@
 import type { Location, Path, To } from "./history";
 import { parsePath } from "./history";
-import { DataResult, DataRouteMatch, Transition } from "./router";
+import { DataResult, DataRouteMatch, Navigation } from "./router";
 
 export type LoaderFormMethod = "get";
 export type ActionFormMethod = "post" | "put" | "patch" | "delete";
@@ -44,7 +44,7 @@ export interface ShouldRevalidateFunctionArgs {
   currentParams: DataRouteMatch["params"];
   nextUrl: URL;
   nextParams: DataRouteMatch["params"];
-  transition: Transition;
+  navigation: Navigation;
   actionResult: DataResult | null;
   defaultShouldRevalidate: boolean;
 }

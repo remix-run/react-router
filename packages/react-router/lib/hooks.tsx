@@ -396,9 +396,7 @@ function DefaultErrorElement() {
     <>
       <h2>Unhandled Thrown Error!</h2>
       <p style={{ fontStyle: "italic" }}>{error?.message || error}</p>
-      {error?.stack ? (
-        <pre style={preStyles}>{error?.stack}</pre>
-      ) : null}
+      {error?.stack ? <pre style={preStyles}>{error?.stack}</pre> : null}
       <p>💿 Hey developer 👋</p>
       <p>
         You can provide a way better UX than this when your app throws errors by
@@ -567,7 +565,7 @@ function useDataRouterState(hookName: DataRouterHook) {
 
 export function useNavigation() {
   let state = useDataRouterState(DataRouterHook.UseNavigation);
-  return state.transition;
+  return state.navigation;
 }
 
 export function useRevalidator() {

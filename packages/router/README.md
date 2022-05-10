@@ -1,7 +1,6 @@
 # Router
 
-The `@remix-run/router` package is the heart of [React Router](https://github.com/remix-run/react-router) and provides all the core functionality for routing, data loading, data mutations,
-and transitions.
+The `@remix-run/router` package is the heart of [React Router](https://github.com/remix-run/react-router) and provides all the core functionality for routing, data loading, data mutations, and navigation.
 
 If you're using React Router, you should never `import` anything directly from
 the `@remix-run/router` or `react-router` packages, but you should have everything
@@ -31,13 +30,13 @@ Internally, the Router represents the state in an object of the following format
 interface RouterState {
   // The `history` action of the most recently completed navigation
   action: Action;
-  // The current location of the router.  During a transition this reflects
+  // The current location of the router.  During a navigation this reflects
   // the "old" location and is updated upon completion of the navigation
   location: Location;
   // The current set of route matches
   matches: RouteMatch[];
-  // The state of the current transition
-  transition: Transition;
+  // The state of the current navigation
+  navigation: Navigation;
   // Data from the loaders for the current matches
   loaderData: RouteData;
   // Data from the action for the current matches
@@ -68,9 +67,9 @@ router.navigate('/page', {
 });
 ```
 
-## Transition Flows
+## Navigation Flows
 
-Each navigation (link click or form submission) in the Router is reflected via an internal `state.transition` that indicates the state of the navigation. This concept of a `transition` is a complex and heavily async bit of logic that is foundational to the Router's ability to manage data loading, submission, error handling, redirects, interruptions, and so on. Due to the user-driven nature of interruptions we don't quite believe it can be modeled as a finite state machine, however we have modeled some of the happy path flows below for clarity.
+Each navigation (link click or form submission) in the Router is reflected via an internal `state.navigation` that indicates the state of the navigation. This concept of a `navigation` is a complex and heavily async bit of logic that is foundational to the Router's ability to manage data loading, submission, error handling, redirects, interruptions, and so on. Due to the user-driven nature of interruptions we don't quite believe it can be modeled as a finite state machine, however we have modeled some of the happy path flows below for clarity.
 
 _Note: This does not depict error or interruption flows._
 
@@ -114,7 +113,7 @@ graph LR
 
 ## Fetcher Flows
 
-Fetcher submissions and loads in the Router can each have their own internal states, indicated on `fetcher.state` and `fetcher.type`. As with transitions, these states are a complex and heavily async bit of logic that is foundational to the Router's ability to manage data loading, submission, error handling, redirects, interruptions, and so on. Due to the user-driven nature of interruptions we don't quite believe it can be modeled as a finite state machine, however we have modeled some of the happy path flows below for clarity.
+Fetcher submissions and loads in the Router can each have their own internal states, indicated on `fetcher.state` and `fetcher.type`. As with navigations, these states are a complex and heavily async bit of logic that is foundational to the Router's ability to manage data loading, submission, error handling, redirects, interruptions, and so on. Due to the user-driven nature of interruptions we don't quite believe it can be modeled as a finite state machine, however we have modeled some of the happy path flows below for clarity.
 
 _Note: This does not depict error or interruption flows, nor the ability to re-use fetchers once they've reached `idle/done`._
 
@@ -122,35 +121,35 @@ _Note: This does not depict error or interruption flows, nor the ability to re-u
 graph LR
   idle/init -->|"load"| loading/normalLoad
   subgraph "Normal Fetch"
-  loading/normalLoad -.->|loader redirected| T1{{transition}}
+  loading/normalLoad -.->|loader redirected| T1{{navigation}}
   end
   loading/normalLoad -->|loader completed| idle/done
-  T1{{transition}} -.-> idle/done
+  T1{{navigation}} -.-> idle/done
 
   idle/init -->|"submit (get)"| submitting/loaderSubmission
   subgraph "Loader Submission"
-  submitting/loaderSubmission -.->|"loader redirected"| T2{{transition}}
+  submitting/loaderSubmission -.->|"loader redirected"| T2{{navigation}}
   end
   submitting/loaderSubmission -->|loader completed| idle/done
-  T2{{transition}} -.-> idle/done
+  T2{{navigation}} -.-> idle/done
 
   idle/init -->|"submit (post)"| submitting/actionSubmission
   subgraph "Action Submission"
   submitting/actionSubmission -->|action completed| loading/actionReload
   submitting/actionSubmission -->|action redirected| loading/submissionRedirect
-  loading/submissionRedirect -.-> T3{{transition}}
-  loading/actionReload -.-> |loaders redirected| T3{{transition}}
+  loading/submissionRedirect -.-> T3{{navigation}}
+  loading/actionReload -.-> |loaders redirected| T3{{navigation}}
   end
-  T3{{transition}} -.-> idle/done
+  T3{{navigation}} -.-> idle/done
   loading/actionReload --> |loaders completed| idle/done
 
   idle/done -->|"revalidate"| loading/revalidate
   subgraph "Fetcher Revalidation"
-  loading/revalidate -.->|loader redirected| T4{{transition}}
+  loading/revalidate -.->|loader redirected| T4{{navigation}}
   end
   loading/revalidate -->|loader completed| idle/done
-  T4{{transition}} -.-> idle/done
+  T4{{navigation}} -.-> idle/done
 
-  classDef transition fill:lightgreen;
-  class T1,T2,T3,T4 transition;
+  classDef navigation fill:lightgreen;
+  class T1,T2,T3,T4 navigation;
 ```

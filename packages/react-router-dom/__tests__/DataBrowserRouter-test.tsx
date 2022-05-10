@@ -114,12 +114,12 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       function Comp() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useNavigation();
+        let navigation = useNavigation();
         return (
           <div>
             {data}
             {actionData}
-            {transition.state}
+            {navigation.state}
             <Outlet />
           </div>
         );
@@ -285,11 +285,11 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       );
 
       function Layout() {
-        let transition = useNavigation();
+        let navigation = useNavigation();
         return (
           <div>
             <Link to="/bar">Link to Bar</Link>
-            <p>{transition.state}</p>
+            <p>{navigation.state}</p>
             <Outlet />
           </div>
         );
@@ -379,7 +379,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       function Home() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useNavigation();
+        let navigation = useNavigation();
         let submit = useSubmit();
         let formRef = React.useRef();
         return (
@@ -389,7 +389,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             </form>
             <button onClick={() => submit(formRef.current)}>Submit Form</button>
             <div id="output">
-              <p>{transition.state}</p>
+              <p>{navigation.state}</p>
               <p>{data}</p>
               <p>{actionData}</p>
             </div>
@@ -487,7 +487,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       function Home() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useNavigation();
+        let navigation = useNavigation();
         return (
           <div>
             <Form method="get">
@@ -495,7 +495,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
               <button type="submit">Submit Form</button>
             </Form>
             <div id="output">
-              <p>{transition.state}</p>
+              <p>{navigation.state}</p>
               <p>{data}</p>
               <p>{actionData}</p>
             </div>
@@ -572,7 +572,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       function Home() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useNavigation();
+        let navigation = useNavigation();
         return (
           <div>
             <Form method="post">
@@ -580,7 +580,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
               <button type="submit">Submit Form</button>
             </Form>
             <div id="output">
-              <p>{transition.state}</p>
+              <p>{navigation.state}</p>
               <p>{data}</p>
               <p>{actionData}</p>
             </div>
@@ -1518,12 +1518,12 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         function Comp() {
           let data = useLoaderData();
           let actionData = useActionData();
-          let transition = useNavigation();
+          let navigation = useNavigation();
           return (
             <div>
               {data}
               {actionData}
-              {transition.state}
+              {navigation.state}
               <Outlet />
             </div>
           );
@@ -1569,12 +1569,12 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         function Comp() {
           let data = useLoaderData();
           let actionData = useActionData();
-          let transition = useNavigation();
+          let navigation = useNavigation();
           return (
             <div>
               {data}
               {actionData}
-              {transition.state}
+              {navigation.state}
               <Outlet />
             </div>
           );
@@ -1627,12 +1627,12 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         );
 
         function Layout() {
-          let transition = useNavigation();
+          let navigation = useNavigation();
           return (
             <div>
               <Link to="/foo">Link to Foo</Link>
               <Link to="/bar">Link to Bar</Link>
-              <p>{transition.state}</p>
+              <p>{navigation.state}</p>
               <Outlet />
             </div>
           );
@@ -1766,12 +1766,12 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         );
 
         function Layout() {
-          let transition = useNavigation();
+          let navigation = useNavigation();
           return (
             <div>
               <Link to="/foo">Link to Foo</Link>
               <Link to="/bar">Link to Bar</Link>
-              <p>{transition.state}</p>
+              <p>{navigation.state}</p>
               <Outlet />
             </div>
           );
