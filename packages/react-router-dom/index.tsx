@@ -949,7 +949,7 @@ function useScrollRestoration({
   // Save positions on unload
   useBeforeUnload(
     React.useCallback(() => {
-      if (state?.transition.state === "idle") {
+      if (state?.navigation.state === "idle") {
         let key =
           (getKey ? getKey(state.location, state.matches) : null) ||
           state.location.key;
@@ -963,7 +963,7 @@ function useScrollRestoration({
     }, [
       storageKey,
       getKey,
-      state.transition.state,
+      state.navigation.state,
       state.location,
       state.matches,
     ])

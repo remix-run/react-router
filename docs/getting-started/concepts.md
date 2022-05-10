@@ -211,7 +211,7 @@ Hashes in URLs indicate a scroll position _on the current page_. Before the `win
 
 You may have wondered why the `window.history.pushState()` API is called "push state". State? Aren't we just changing the [URL](#url)? Shouldn't it be `history.push`? Well, we weren't in the room when the API was designed, so we're not sure why "state" was the focus, but it is a cool feature of browsers nonetheless.
 
-Browsers let us persist information about a transition by passing a value to `pushState`. When the user clicks back, the value on `history.state` changes to whatever was "pushed" before.
+Browsers let us persist information about a navigation by passing a value to `pushState`. When the user clicks back, the value on `history.state` changes to whatever was "pushed" before.
 
 ```js
 window.history.pushState("look ma!", undefined, "/contact");

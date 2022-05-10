@@ -90,9 +90,9 @@ export interface RouterState {
   resetScrollPosition: boolean;
 
   /**
-   * Tracks the state of the current transition
+   * Tracks the state of the current navigation
    */
-  transition: Transition;
+  navigation: Navigation;
 
   /**
    * Tracks any in-progress revalidations
@@ -183,9 +183,9 @@ type SubmissionNavigateOptions = {
 export type NavigateOptions = LinkNavigateOptions | SubmissionNavigateOptions;
 
 /**
- * Potential states for state.transition
+ * Potential states for state.navigation
  */
-export type TransitionStates = {
+export type NavigationStates = {
   Idle: {
     state: "idle";
     type: "idle";
@@ -251,7 +251,7 @@ export type TransitionStates = {
   };
 };
 
-export type Transition = TransitionStates[keyof TransitionStates];
+export type Navigation = NavigationStates[keyof NavigationStates];
 
 export type RevalidationState = "idle" | "loading";
 
@@ -403,7 +403,7 @@ interface HandleLoadersResult extends ShortCircuitable {
   errors?: RouterState["errors"];
 }
 
-export const IDLE_TRANSITION: TransitionStates["Idle"] = {
+export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
   state: "idle",
   location: undefined,
   type: "idle",
@@ -480,7 +480,7 @@ export function createRouter(init: RouterInit): Router {
     // to allow the errorElement to take over
     matches: initialMatches,
     initialized: init.hydrationData != null && !foundMissingHydrationData,
-    transition: IDLE_TRANSITION,
+    navigation: IDLE_NAVIGATION,
     restoreScrollPosition: null,
     resetScrollPosition: true,
     revalidation: "idle",
@@ -520,8 +520,8 @@ export function createRouter(init: RouterInit): Router {
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, [string, DataRouteMatch]>();
 
-  // If history informs us of a POP navigation, start the transition but do not update
-  // state.  We'll update our own state once the transition completes
+  // If history informs us of a POP navigation, start the navigation but do not update
+  // state.  We'll update our own state once the navigation completes
   init.history.listen(({ action: historyAction, location }) =>
     startNavigation(historyAction, location)
   );
@@ -540,33 +540,33 @@ export function createRouter(init: RouterInit): Router {
     subscriber?.(state);
   }
 
-  // Complete a navigation returning the state.transition back to the IDLE_TRANSITION
+  // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
   // and setting state.[historyAction/location/matches] to the new route.
   // - HistoryAction and Location are required params
-  // - Transition will always be set to IDLE_TRANSITION
+  // - Navigation will always be set to IDLE_NAVIGATION
   // - Can pass any other state in newState
   function completeNavigation(
     historyAction: HistoryAction,
     location: Location,
-    newState: Partial<Omit<RouterState, "action" | "location" | "transition">>
+    newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>
   ): void {
     updateState({
       // Clear existing actionData on any completed navigation beyond the original
       // action.  Do this prior to spreading in newState in case we've gotten back
       // to back actions
-      ...(state.actionData != null && state.transition.type !== "actionReload"
+      ...(state.actionData != null && state.navigation.type !== "actionReload"
         ? { actionData: null }
         : {}),
       ...newState,
       historyAction,
       location,
       initialized: true,
-      transition: IDLE_TRANSITION,
+      navigation: IDLE_NAVIGATION,
       revalidation: "idle",
       // Always preserve any existing loaderData from re-used routes
       loaderData: mergeLoaderData(state, newState),
       // Don't restore on submission navigations
-      restoreScrollPosition: state.transition.formData
+      restoreScrollPosition: state.navigation.formData
         ? false
         : getSavedScrollPosition(location, newState.matches || state.matches),
       // Always reset scroll unless explicitly told not to
@@ -618,7 +618,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   async function revalidate(): Promise<void> {
-    let { state: transitionState, type } = state.transition;
+    let { state: navigationState, type } = state.navigation;
 
     // Toggle isRevalidationRequired so the next data load will call all loaders,
     // and mark us in a revalidating state
@@ -626,39 +626,39 @@ export function createRouter(init: RouterInit): Router {
     updateState({ revalidation: "loading" });
 
     // If we're currently submitting an action, we don't need to start a new
-    // transition, we'll just let the follow up loader execution call all loaders
-    if (transitionState === "submitting" && type === "actionSubmission") {
+    // navigation, we'll just let the follow up loader execution call all loaders
+    if (navigationState === "submitting" && type === "actionSubmission") {
       return;
     }
 
     // If we're currently in an idle state, start a new navigation for the current
     // action/location and mark it as uninterrupted, which will skip the history
     // update in completeNavigation
-    if (state.transition.state === "idle") {
+    if (state.navigation.state === "idle") {
       return await startNavigation(state.historyAction, state.location, {
         startUninterruptedRevalidation: true,
       });
     }
 
     // Otherwise, if we're currently in a loading state, just start a new
-    // navigation to the transition.location but do not trigger an uninterrupted
+    // navigation to the navigation.location but do not trigger an uninterrupted
     // revalidation so that history correctly updates once the navigation completes
     return await startNavigation(
       pendingAction || state.historyAction,
-      state.transition.location,
-      { overrideTransition: state.transition }
+      state.navigation.location,
+      { overrideNavigation: state.navigation }
     );
   }
 
   // Start a navigation to the given action/location.  Can optionally provide a
-  // overrideTransition which will override the normalLoad in the case of a redirect
+  // overrideNavigation which will override the normalLoad in the case of a redirect
   // navigation
   async function startNavigation(
     historyAction: HistoryAction,
     location: Location,
     opts?: {
       submission?: Submission;
-      overrideTransition?: Transition;
+      overrideNavigation?: Navigation;
       startUninterruptedRevalidation?: boolean;
     }
   ): Promise<void> {
@@ -673,7 +673,7 @@ export function createRouter(init: RouterInit): Router {
     // Save the current scroll position every time we start a new navigation
     saveScrollPosition(state.location, state.matches);
 
-    let loadingTransition = opts?.overrideTransition;
+    let loadingNavigation = opts?.overrideNavigation;
     let matches = matchRoutes(dataRoutes, location);
 
     // Short circuit with a 404 on the root error boundary if we match nothing
@@ -713,12 +713,12 @@ export function createRouter(init: RouterInit): Router {
 
       pendingActionData = actionOutput.pendingActionData || null;
       pendingActionError = actionOutput.pendingActionError || null;
-      loadingTransition = {
+      loadingNavigation = {
         state: "loading",
         type: "actionReload",
         location,
         ...opts.submission,
-      } as TransitionStates["LoadingAction"];
+      } as NavigationStates["LoadingAction"];
     }
 
     // Call loaders
@@ -727,7 +727,7 @@ export function createRouter(init: RouterInit): Router {
       location,
       opts?.submission,
       matches,
-      loadingTransition,
+      loadingNavigation,
       pendingActionData,
       pendingActionError
     );
@@ -762,13 +762,13 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Put us in a submitting state
-    let transition: TransitionStates["SubmittingAction"] = {
+    let navigation: NavigationStates["SubmittingAction"] = {
       state: "submitting",
       type: "actionSubmission",
       location,
       ...submission,
     };
-    updateState({ transition });
+    updateState({ navigation });
 
     // Call our action and get the result
     let result: DataResult;
@@ -810,13 +810,13 @@ export function createRouter(init: RouterInit): Router {
 
     // If the action threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
-      let redirectTransition: TransitionStates["SubmissionRedirect"] = {
+      let redirectNavigation: NavigationStates["SubmissionRedirect"] = {
         state: "loading",
         type: "submissionRedirect",
         location: createLocation(state.location, result.location),
         ...submission,
       };
-      await startRedirectNavigation(result, redirectTransition);
+      await startRedirectNavigation(result, redirectNavigation);
       return { shortCircuited: true };
     }
 
@@ -839,24 +839,24 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     submission: Submission | undefined,
     matches: DataRouteMatch[],
-    overrideTransition: Transition | undefined,
+    overrideNavigation: Navigation | undefined,
     pendingActionData: RouteData | null,
     pendingActionError: RouteData | null
   ): Promise<HandleLoadersResult> {
-    // Figure out the right transition we want to use for data loading
-    let loadingTransition;
+    // Figure out the right navigation we want to use for data loading
+    let loadingNavigation;
 
-    if (overrideTransition) {
-      loadingTransition = overrideTransition;
+    if (overrideNavigation) {
+      loadingNavigation = overrideNavigation;
     } else if (submission?.formMethod === "get") {
-      loadingTransition = {
+      loadingNavigation = {
         state: "submitting",
         type: "loaderSubmission",
         location,
         ...submission,
-      } as TransitionStates["SubmittingLoader"];
+      } as NavigationStates["SubmittingLoader"];
     } else {
-      loadingTransition = {
+      loadingNavigation = {
         state: "loading",
         type: "normalLoad",
         location,
@@ -864,16 +864,16 @@ export function createRouter(init: RouterInit): Router {
         formAction: undefined,
         formEncType: undefined,
         formData: undefined,
-      } as TransitionStates["Loading"];
+      } as NavigationStates["Loading"];
     }
 
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
       state,
       matches,
-      // Pass the current transition if this is an uninterrupted revalidation,
-      // since we aren't actually "navigating".  Otherwise pass the transition
+      // Pass the current navigation if this is an uninterrupted revalidation,
+      // since we aren't actually "navigating".  Otherwise pass the navigation
       // we're about to commit
-      isUninterruptedRevalidation ? state.transition : loadingTransition,
+      isUninterruptedRevalidation ? state.navigation : loadingNavigation,
       location,
       isRevalidationRequired,
       pendingActionData,
@@ -893,7 +893,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // If this is an uninterrupted revalidation, remain in our current idle state.
-    // Otherwise, transition to our loading state and load data, preserving any
+    // Otherwise, switch to our loading state and load data, preserving any
     // new action data or existing action data (in the case of a revalidation
     // interrupting an actionReload)
     if (!isUninterruptedRevalidation) {
@@ -910,7 +910,7 @@ export function createRouter(init: RouterInit): Router {
         state.fetchers.set(key, revalidatingFetcher);
       });
       updateState({
-        transition: loadingTransition,
+        navigation: loadingNavigation,
         actionData: pendingActionData || state.actionData || null,
         ...(revalidatingFetchers.length > 0
           ? { fetchers: new Map(state.fetchers) }
@@ -953,8 +953,8 @@ export function createRouter(init: RouterInit): Router {
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
     if (redirect) {
-      let redirectTransition = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(redirect, redirectTransition);
+      let redirectNavigation = getLoaderRedirect(state, redirect);
+      await startRedirectNavigation(redirect, redirectNavigation);
       return { shortCircuited: true };
     }
 
@@ -1084,13 +1084,13 @@ export function createRouter(init: RouterInit): Router {
       state.fetchers.set(key, loadingFetcher);
       updateState({ fetchers: new Map(state.fetchers) });
 
-      let redirectTransition: TransitionStates["SubmissionRedirect"] = {
+      let redirectNavigation: NavigationStates["SubmissionRedirect"] = {
         state: "loading",
         type: "submissionRedirect",
         location: createLocation(state.location, actionResult.location),
         ...submission,
       };
-      await startRedirectNavigation(actionResult, redirectTransition);
+      await startRedirectNavigation(actionResult, redirectNavigation);
       return;
     }
 
@@ -1109,10 +1109,10 @@ export function createRouter(init: RouterInit): Router {
 
     // Start the data load for current matches, or the next location if we're
     // in the middle of a navigation
-    let nextLocation = state.transition.location || state.location;
+    let nextLocation = state.navigation.location || state.location;
     let matches =
-      state.transition.type !== "idle"
-        ? matchRoutes(dataRoutes, state.transition.location)
+      state.navigation.type !== "idle"
+        ? matchRoutes(dataRoutes, state.navigation.location)
         : state.matches;
 
     invariant(matches, "Didn't find any matches after fetcher action");
@@ -1131,7 +1131,7 @@ export function createRouter(init: RouterInit): Router {
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
       state,
       matches,
-      state.transition,
+      state.navigation,
       nextLocation,
       isRevalidationRequired,
       null,
@@ -1185,8 +1185,8 @@ export function createRouter(init: RouterInit): Router {
 
     let loaderRedirect = findRedirect(loaderResults);
     if (loaderRedirect) {
-      let redirectTransition = getLoaderRedirect(state, loaderRedirect);
-      await startRedirectNavigation(loaderRedirect, redirectTransition);
+      let redirectNavigation = getLoaderRedirect(state, loaderRedirect);
+      await startRedirectNavigation(loaderRedirect, redirectNavigation);
       return;
     }
 
@@ -1218,13 +1218,13 @@ export function createRouter(init: RouterInit): Router {
     // more recent than the navigation, we want the newer data so abort the
     // navigation and complete it with the fetcher data
     if (
-      state.transition.state === "loading" &&
+      state.navigation.state === "loading" &&
       loadId > pendingNavigationLoadId
     ) {
       invariant(pendingAction, "Expected pending action");
       pendingNavigationController?.abort();
 
-      completeNavigation(pendingAction, state.transition.location, {
+      completeNavigation(pendingAction, state.navigation.location, {
         matches,
         loaderData,
         errors,
@@ -1268,8 +1268,8 @@ export function createRouter(init: RouterInit): Router {
 
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
-      let redirectTransition = getLoaderRedirect(state, result);
-      await startRedirectNavigation(result, redirectTransition);
+      let redirectNavigation = getLoaderRedirect(state, result);
+      await startRedirectNavigation(result, redirectNavigation);
       return;
     }
 
@@ -1277,7 +1277,7 @@ export function createRouter(init: RouterInit): Router {
     if (isErrorResult(result)) {
       let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
       state.fetchers.delete(key);
-      // TODO: In remix, this would reset to IDLE_TRANSITION if it was a catch -
+      // TODO: In remix, this would reset to IDLE_NAVIGATION if it was a catch -
       // do we need to behave any differently with our non-redirect errors?
       // What if it was a non-redirect Response?
       updateState({
@@ -1305,17 +1305,17 @@ export function createRouter(init: RouterInit): Router {
 
   async function startRedirectNavigation(
     redirect: RedirectResult,
-    transition: Transition
+    navigation: Navigation
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
     }
     invariant(
-      transition.location,
-      "Expected a location on the redirect transition"
+      navigation.location,
+      "Expected a location on the redirect navigation"
     );
-    await startNavigation(HistoryAction.Replace, transition.location, {
-      overrideTransition: transition,
+    await startNavigation(HistoryAction.Replace, navigation.location, {
+      overrideNavigation: navigation,
     });
   }
 
@@ -1425,7 +1425,7 @@ export function createRouter(init: RouterInit): Router {
       // Perform initial hydration scroll restoration, since we miss the boat on
       // the initial updateState() because we've not yet rendered <ScrollRestoration/>
       // and therefore have no savedScrollPositions available
-      if (!initialScrollRestored && state.transition === IDLE_TRANSITION) {
+      if (!initialScrollRestored && state.navigation === IDLE_NAVIGATION) {
         initialScrollRestored = true;
         let y = getSavedScrollPosition(state.location, state.matches);
         if (y != null) {
@@ -1491,14 +1491,14 @@ function convertRoutesToDataRoutes(
 function getLoaderRedirect(
   state: RouterState,
   redirect: RedirectResult
-): Transition {
+): Navigation {
   let redirectLocation = createLocation(state.location, redirect.location);
   if (
-    state.transition.type === "loaderSubmission" ||
-    state.transition.type === "actionReload"
+    state.navigation.type === "loaderSubmission" ||
+    state.navigation.type === "actionReload"
   ) {
-    let { formMethod, formAction, formEncType, formData } = state.transition;
-    let transition: TransitionStates["SubmissionRedirect"] = {
+    let { formMethod, formAction, formEncType, formData } = state.navigation;
+    let navigation: NavigationStates["SubmissionRedirect"] = {
       state: "loading",
       type: "submissionRedirect",
       location: redirectLocation,
@@ -1507,9 +1507,9 @@ function getLoaderRedirect(
       formEncType,
       formData,
     };
-    return transition;
+    return navigation;
   } else {
-    let transition: TransitionStates["LoadingRedirect"] = {
+    let navigation: NavigationStates["LoadingRedirect"] = {
       state: "loading",
       type: "normalRedirect",
       location: redirectLocation,
@@ -1518,14 +1518,14 @@ function getLoaderRedirect(
       formEncType: undefined,
       formData: undefined,
     };
-    return transition;
+    return navigation;
   }
 }
 
 function getMatchesToLoad(
   state: RouterState,
   matches: DataRouteMatch[],
-  transition: Transition,
+  navigation: Navigation,
   location: Location,
   isRevalidationRequired: boolean,
   pendingActionData: RouteData | null,
@@ -1557,7 +1557,7 @@ function getMatchesToLoad(
       shouldRevalidateLoader(
         state.location,
         state.matches[index],
-        transition,
+        navigation,
         location,
         match,
         isRevalidationRequired,
@@ -1574,7 +1574,7 @@ function getMatchesToLoad(
       let shouldRevalidate = shouldRevalidateLoader(
         href,
         match,
-        transition,
+        navigation,
         href,
         match,
         isRevalidationRequired,
@@ -1611,7 +1611,7 @@ function isNewLoader(
 function shouldRevalidateLoader(
   currentLocation: string | Location,
   currentMatch: DataRouteMatch,
-  transition: Transition,
+  navigation: Navigation,
   location: string | Location,
   match: DataRouteMatch,
   isRevalidationRequired: boolean,
@@ -1648,7 +1648,7 @@ function shouldRevalidateLoader(
       currentParams,
       nextUrl,
       nextParams,
-      transition,
+      navigation: navigation,
       actionResult,
       defaultShouldRevalidate,
     });

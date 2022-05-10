@@ -25,13 +25,13 @@ import type {
   GetScrollRestorationKeyFunction,
   HydrationState,
   NavigateOptions,
-  Transition,
+  Navigation,
   Router,
   RouterState,
   RouteData,
   RouterInit,
 } from "./router";
-import { IDLE_TRANSITION, createRouter } from "./router";
+import { IDLE_NAVIGATION, createRouter } from "./router";
 import type {
   ActionFunctionArgs,
   DataRouteObject,
@@ -122,13 +122,13 @@ export type {
   RouterState,
   Submission,
   To,
-  Transition,
+  Navigation,
 };
 
 // @remix-run/router public API
 export {
   Action,
-  IDLE_TRANSITION,
+  IDLE_NAVIGATION,
   createBrowserHistory,
   createBrowserRouter,
   createHashHistory,

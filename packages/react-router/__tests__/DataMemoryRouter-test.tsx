@@ -129,12 +129,12 @@ describe("<DataMemoryRouter>", () => {
     function Comp() {
       let data = useLoaderData();
       let actionData = useActionData();
-      let transition = useNavigation();
+      let navigation = useNavigation();
       return (
         <div>
           {data}
           {actionData}
-          {transition.state}
+          {navigation.state}
           <Outlet />
         </div>
       );
@@ -338,11 +338,11 @@ describe("<DataMemoryRouter>", () => {
     );
 
     function Layout() {
-      let transition = useNavigation();
+      let navigation = useNavigation();
       return (
         <div>
           <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
-          <p>{transition.state}</p>
+          <p>{navigation.state}</p>
           <Outlet />
         </div>
       );
@@ -435,13 +435,13 @@ describe("<DataMemoryRouter>", () => {
     );
 
     function Layout() {
-      let transition = useNavigation();
+      let navigation = useNavigation();
       return (
         <div>
           <MemoryNavigate to="/bar" formMethod="post" formData={formData}>
             Post to Bar
           </MemoryNavigate>
-          <p>{transition.state}</p>
+          <p>{navigation.state}</p>
           <Outlet />
         </div>
       );
@@ -689,12 +689,12 @@ describe("<DataMemoryRouter>", () => {
     );
 
     function Layout() {
-      let transition = useNavigation();
+      let navigation = useNavigation();
       let { revalidate, state } = useRevalidator();
       return (
         <div>
           <button onClick={() => revalidate()}>Revalidate</button>
-          <p>{transition.state}</p>
+          <p>{navigation.state}</p>
           <p>{state}</p>
           <Outlet />
         </div>
@@ -862,12 +862,12 @@ describe("<DataMemoryRouter>", () => {
       function Comp() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useNavigation();
+        let navigation = useNavigation();
         return (
           <div>
             {data}
             {actionData}
-            {transition.state}
+            {navigation.state}
             <Outlet />
           </div>
         );
@@ -904,11 +904,7 @@ describe("<DataMemoryRouter>", () => {
             },
           }}
         >
-          <Route
-            path="/"
-            element={<Comp />}
-            errorElement={<ErrorBoundary />}
-          >
+          <Route path="/" element={<Comp />} errorElement={<ErrorBoundary />}>
             <Route path="child" element={<Comp />} />
           </Route>
         </DataMemoryRouter>
@@ -917,12 +913,12 @@ describe("<DataMemoryRouter>", () => {
       function Comp() {
         let data = useLoaderData();
         let actionData = useActionData();
-        let transition = useNavigation();
+        let navigation = useNavigation();
         return (
           <div>
             {data}
             {actionData}
-            {transition.state}
+            {navigation.state}
             <Outlet />
           </div>
         );
@@ -975,12 +971,12 @@ describe("<DataMemoryRouter>", () => {
       );
 
       function Layout() {
-        let transition = useNavigation();
+        let navigation = useNavigation();
         return (
           <div>
             <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
             <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
-            <p>{transition.state}</p>
+            <p>{navigation.state}</p>
             <Outlet />
           </div>
         );
@@ -1097,11 +1093,7 @@ describe("<DataMemoryRouter>", () => {
             },
           }}
         >
-          <Route
-            path="/"
-            element={<Layout />}
-            errorElement={<LayoutError />}
-          >
+          <Route path="/" element={<Layout />} errorElement={<LayoutError />}>
             <Route
               path="foo"
               loader={() => fooDefer.promise}
@@ -1118,12 +1110,12 @@ describe("<DataMemoryRouter>", () => {
       );
 
       function Layout() {
-        let transition = useNavigation();
+        let navigation = useNavigation();
         return (
           <div>
             <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
             <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
-            <p>{transition.state}</p>
+            <p>{navigation.state}</p>
             <Outlet />
           </div>
         );
@@ -1213,12 +1205,12 @@ describe("<DataMemoryRouter>", () => {
       );
 
       function Layout() {
-        let transition = useNavigation();
+        let navigation = useNavigation();
         return (
           <div>
             <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
             <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
-            <p>{transition.state}</p>
+            <p>{navigation.state}</p>
             <Outlet />
           </div>
         );
