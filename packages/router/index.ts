@@ -33,17 +33,18 @@ import type {
 } from "./router";
 import { IDLE_NAVIGATION, createRouter } from "./router";
 import type {
-  ActionFunctionArgs,
+  ActionFunction,
   DataRouteObject,
   FormEncType,
   FormMethod,
-  LoaderFunctionArgs,
+  LoaderFunction,
   ParamParseKey,
   Params,
   PathMatch,
   PathPattern,
   RouteMatch,
   RouteObject,
+  ShouldRevalidateFunction,
   Submission,
 } from "./utils";
 import {
@@ -90,7 +91,7 @@ function createHashRouter({ window, ...routerInit }: HashRouterInit): Router {
 
 // @remix-run/router public Type API
 export type {
-  ActionFunctionArgs,
+  ActionFunction,
   BrowserHistory,
   BrowserRouterInit,
   DataRouteMatch,
@@ -104,7 +105,7 @@ export type {
   History,
   HydrationState,
   InitialEntry,
-  LoaderFunctionArgs,
+  LoaderFunction,
   Location,
   MemoryHistory,
   MemoryRouterInit,
@@ -120,6 +121,7 @@ export type {
   Router,
   RouterInit,
   RouterState,
+  ShouldRevalidateFunction,
   Submission,
   To,
   Navigation,
