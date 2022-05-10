@@ -1,16 +1,15 @@
-import inquirer from "inquirer";
-// @ts-ignore https://github.com/DefinitelyTyped/DefinitelyTyped/pull/59806
 import type { PackageJson } from "@npmcli/package-json";
+import inquirer from "inquirer";
 
 import * as colors from "../../../../colors";
-import type { Options } from "./transform/options";
-import { isAdapter } from "./transform/adapter";
+import { depsToEntries, isRemixPackage } from "./dependency";
+import { because, detected } from "./messages";
+import { remixSetup, remixSetupRuntime } from "./remixSetup";
 import type { Adapter } from "./transform/adapter";
+import { isAdapter } from "./transform/adapter";
+import type { Options } from "./transform/options";
 import type { Runtime } from "./transform/runtime";
 import { runtimes, isRuntime } from "./transform/runtime";
-import { depsToEntries, isRemixPackage } from "./dependency";
-import { remixSetup, remixSetupRuntime } from "./remixSetup";
-import { because, detected } from "./messages";
 
 const adapterToRuntime: Record<Adapter, Runtime> = {
   architect: "node",
