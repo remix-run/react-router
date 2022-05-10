@@ -39,13 +39,24 @@ export interface ActionFunctionArgs {
   signal: AbortSignal;
 }
 
+/**
+ * Arguments passed to a Route's shouldRevalidate method.  This runs after both
+ * navigations and fetcher submissions, so we flatten the navigation/fetcher
+ * submission onto the arguments.  It shouldn't matter whether it came from a
+ * navigation or a fetcher, what really matters is the URLs and the formData
+ * since loaders have to re-run based on the data models that were potentially
+ * mutated
+ */
 export interface ShouldRevalidateFunctionArgs {
   currentUrl: URL;
   currentParams: DataRouteMatch["params"];
   nextUrl: URL;
   nextParams: DataRouteMatch["params"];
-  navigation: Navigation;
-  actionResult: DataResult | null;
+  formMethod?: FormMethod;
+  formAction?: string;
+  formEncType?: FormEncType;
+  formData?: FormData;
+  actionResult?: DataResult;
   defaultShouldRevalidate: boolean;
 }
 
