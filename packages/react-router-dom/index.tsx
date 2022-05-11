@@ -157,7 +157,7 @@ export {
 export interface DataBrowserRouterProps {
   children?: React.ReactNode;
   hydrationData?: HydrationState;
-  fallbackElement?: React.ReactElement;
+  fallbackElement: React.ReactElement;
   window?: Window;
 }
 
@@ -182,7 +182,7 @@ export function DataBrowserRouter({
 export interface DataHashRouterProps {
   children?: React.ReactNode;
   hydrationData?: HydrationState;
-  fallbackElement?: React.ReactElement;
+  fallbackElement: React.ReactElement;
   window?: Window;
 }
 
