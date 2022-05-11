@@ -133,19 +133,13 @@ describe("a browser history", () => {
 
   describe("back", () => {
     it("calls change listeners with the previous location", async () => {
-      let spy: jest.SpyInstance = jest.fn();
-      //@ts-ignore
-      history.listen(spy);
-      await GoBack(history, spy);
+      await GoBack(history);
     });
   });
 
   describe("forward", () => {
     it("calls change listeners with the next location", async () => {
-      let spy: jest.SpyInstance = jest.fn();
-      //@ts-ignore
-      history.listen(spy);
-      await GoForward(history, spy);
+      await GoForward(history);
     });
   });
 });

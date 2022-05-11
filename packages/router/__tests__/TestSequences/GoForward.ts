@@ -1,9 +1,8 @@
 import type { History } from "../../history";
 
-export default async function GoForward(
-  history: History,
-  spy: jest.SpyInstance
-) {
+export default async function GoForward(history: History) {
+  let spy: jest.SpyInstance = jest.fn();
+
   expect(history.location).toMatchObject({
     pathname: "/",
   });
@@ -17,7 +16,9 @@ export default async function GoForward(
 
   // JSDom doesn't fire the listener synchronously :(
   let promise1 = new Promise((resolve) => {
-    let unlisten = history.listen(() => {
+    let unlisten = history.listen((...args) => {
+      //@ts-expect-error
+      spy(...args);
       unlisten();
       resolve(null);
     });
@@ -42,7 +43,9 @@ export default async function GoForward(
 
   // JSDom doesn't fire the listener synchronously :(
   let promise2 = new Promise((resolve) => {
-    let unlisten = history.listen(() => {
+    let unlisten = history.listen((...args) => {
+      //@ts-expect-error
+      spy(...args);
       unlisten();
       resolve(null);
     });
