@@ -7,6 +7,7 @@ import type {
   RouteMatch,
   RouteObject,
   Router as DataRouter,
+  RouterState,
   To,
 } from "@remix-run/router";
 import {
@@ -19,6 +20,7 @@ import {
   stripBasename,
   warning,
 } from "@remix-run/router";
+import { useSyncExternalStore as useSyncExternalStoreShim } from "use-sync-external-store/shim";
 
 import {
   LocationContext,
@@ -35,42 +37,46 @@ import {
   _renderMatches,
 } from "./hooks";
 
+let IS_REACT_18 =
+  "useSyncExternalStore" in React &&
+  window.location.search.indexOf("17") === -1;
+
+// Module-scoped singleton to hold the router.  Extracted from the React lifecycle
+// to avoid issues w.r.t. dual initialization fetches in concurrent rendering.
+// Data router apps are expected to have a static route tree and are not intended
+// to be unmounted/remounted at runtime.
+let routerSingleton: DataRouter;
+
+/**
+ * Unit-testing-only function to reset the router between tests
+ * @private
+ */
+export function _resetModuleScope() {
+  // @ts-expect-error
+  routerSingleton = null;
+}
+
 export function useRenderDataRouter({
   children,
   fallbackElement,
-  // FIXME: Figure out if we want to use a direct prop or support useRoutes()
-  todo_bikeshed_routes,
   createRouter,
 }: {
   children?: React.ReactNode;
   fallbackElement?: React.ReactElement;
-  todo_bikeshed_routes?: RouteObject[];
   createRouter: (routes: RouteObject[]) => DataRouter;
 }): React.ReactElement {
-  let routes = todo_bikeshed_routes || createRoutesFromChildren(children);
-  let [router] = React.useState<DataRouter>(() => createRouter(routes));
+  if (!routerSingleton) {
+    routerSingleton = createRouter(
+      createRoutesFromChildren(children)
+    ).initialize();
+  }
+  let router = routerSingleton;
 
-  // TODO: For React 18 we can move to useSyncExternalStore via feature detection
-  // state = React.useSyncExternalStore(router.subscribe, () => router.state);
-
-  let [state, setState] = React.useState<DataRouter["state"]>(
+  // Sync router state to our component state to force re-renders
+  let state: RouterState = useSyncExternalStoreShim(
+    router.subscribe,
     () => router.state
   );
-  React.useEffect(() => {
-    let unsubscribe = router.subscribe((newState) => setState(newState));
-
-    // If we have loaders to run for an initial data load, and all of those loaders
-    // are synchronous, then they'll actually trigger completeNavigation _before_
-    // we get here, so we'll never call setState.  Capture that scenario here
-    if (!state.initialized && router.state.initialized) {
-      setState(router.state);
-    }
-
-    return () => {
-      unsubscribe();
-      router.cleanup();
-    };
-  }, [router, state.initialized]);
 
   let navigator = React.useMemo((): Navigator => {
     return {
@@ -93,11 +99,7 @@ export function useRenderDataRouter({
           navigationType={state.historyAction}
           navigator={navigator}
         >
-          {todo_bikeshed_routes ? (
-            <DataRoutes routes={routes} />
-          ) : (
-            <Routes children={children} />
-          )}
+          <Routes children={children} />
         </Router>
       </DataRouterStateContext.Provider>
     </DataRouterContext.Provider>
@@ -167,7 +169,6 @@ export interface DataMemoryRouterProps {
   initialIndex?: number;
   hydrationData?: HydrationState;
   fallbackElement?: React.ReactElement;
-  todo_bikeshed_routes?: RouteObject[];
 }
 
 export function DataMemoryRouter({
@@ -176,12 +177,10 @@ export function DataMemoryRouter({
   initialIndex,
   hydrationData,
   fallbackElement,
-  todo_bikeshed_routes,
 }: DataMemoryRouterProps): React.ReactElement {
   return useRenderDataRouter({
     children,
     fallbackElement,
-    todo_bikeshed_routes,
     createRouter: (routes) =>
       createMemoryRouter({
         initialEntries,
@@ -441,16 +440,6 @@ export function Routes({
   location,
 }: RoutesProps): React.ReactElement | null {
   return useRoutes(createRoutesFromChildren(children), location);
-}
-
-interface DataRoutesProps {
-  routes: RouteObject[];
-}
-
-// Internal wrapper to render routes provided to a DataRouter via props instead
-// of children.  This is primarily to avoid re-calling createRoutesFromChildren
-function DataRoutes({ routes }: DataRoutesProps): React.ReactElement | null {
-  return useRoutes(routes);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -28,6 +28,7 @@ import {
   useFetcher,
   useFetchers,
 } from "../index";
+import { _resetModuleScope } from "react-router/lib/components";
 
 testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
   getWindowImpl(url, false)
@@ -49,6 +50,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
     afterEach(() => {
       consoleWarn.mockRestore();
       consoleError.mockRestore();
+      _resetModuleScope();
     });
 
     it("renders the first route that matches the URL", () => {

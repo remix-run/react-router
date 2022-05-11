@@ -116,16 +116,10 @@ describe("a memory history", () => {
 
   describe("go", () => {
     it("goes back", async () => {
-      let spy: jest.SpyInstance = jest.fn();
-      //@ts-ignore
-      history.listen(spy);
-      await GoBack(history, spy);
+      await GoBack(history);
     });
     it("goes forward", async () => {
-      let spy: jest.SpyInstance = jest.fn();
-      //@ts-ignore
-      history.listen(spy);
-      await GoForward(history, spy);
+      await GoForward(history);
     });
   });
 });

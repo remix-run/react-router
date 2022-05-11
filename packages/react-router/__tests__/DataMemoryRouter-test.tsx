@@ -28,6 +28,7 @@ import {
   Routes,
   UNSAFE_useRenderDataRouter,
 } from "../index";
+import { _resetModuleScope } from "../lib/components";
 
 describe("<DataMemoryRouter>", () => {
   let consoleWarn: jest.SpyInstance;
@@ -40,6 +41,7 @@ describe("<DataMemoryRouter>", () => {
   afterEach(() => {
     consoleWarn.mockRestore();
     consoleError.mockRestore();
+    _resetModuleScope();
   });
 
   it("renders the first route that matches the URL", () => {
@@ -47,30 +49,6 @@ describe("<DataMemoryRouter>", () => {
       <DataMemoryRouter initialEntries={["/"]} hydrationData={{}}>
         <Route path="/" element={<h1>Home</h1>} />
       </DataMemoryRouter>
-    );
-
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <h1>
-          Home
-        </h1>
-      </div>"
-    `);
-  });
-
-  it("accepts routes as a prop instead of children", () => {
-    let routes = [
-      {
-        path: "/",
-        element: <h1>Home</h1>,
-      },
-    ];
-    let { container } = render(
-      <DataMemoryRouter
-        initialEntries={["/"]}
-        hydrationData={{}}
-        todo_bikeshed_routes={routes}
-      />
     );
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -766,72 +744,6 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
-  it("cleans up the router on unmount", async () => {
-    let dfd = defer();
-    let signal;
-
-    function AppWrapper() {
-      let [showApp, setShowApp] = React.useState(true);
-      return (
-        <div>
-          This is outside the app
-          <button onClick={() => setShowApp(false)}>Hide App</button>
-          {showApp ? (
-            <DataMemoryRouter hydrationData={{ loaderData: { "0": "null" } }}>
-              <Route
-                path="/"
-                element={
-                  <>
-                    <h1>Root</h1>
-                    <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
-                  </>
-                }
-              />
-              <Route
-                path="/foo"
-                element={<h1>Foo</h1>}
-                loader={async ({ signal: s }) => {
-                  signal = s;
-                  let val = await dfd.promise;
-                  return val;
-                }}
-              />
-            </DataMemoryRouter>
-          ) : (
-            <p>Nothing to see here</p>
-          )}
-        </div>
-      );
-    }
-
-    let { container } = render(<AppWrapper />);
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <div>
-          This is outside the app
-          <button>
-            Hide App
-          </button>
-          <h1>
-            Root
-          </h1>
-          <a
-            href=\\"/foo\\"
-          >
-            Link to Foo
-          </a>
-        </div>
-      </div>"
-    `);
-
-    fireEvent.click(screen.getByText("Link to Foo"));
-    expect(signal.aborted).toBe(false);
-
-    fireEvent.click(screen.getByText("Hide App"));
-    await waitFor(() => screen.getByText("Nothing to see here"));
-    expect(signal.aborted).toBe(true);
-  });
-
   describe("errors", () => {
     it("renders hydration errors on leaf elements", async () => {
       let { container } = render(
@@ -1485,12 +1397,10 @@ describe("<DataMemoryRouter>", () => {
         initialIndex,
         hydrationData,
         fallbackElement,
-        todo_bikeshed_routes,
       }: DataMemoryRouterProps): React.ReactElement {
         return UNSAFE_useRenderDataRouter({
           children,
           fallbackElement,
-          todo_bikeshed_routes,
           createRouter: (routes) => {
             router = createMemoryRouter({
               initialEntries,
@@ -1593,12 +1503,10 @@ describe("<DataMemoryRouter>", () => {
         initialIndex,
         hydrationData,
         fallbackElement,
-        todo_bikeshed_routes,
       }: DataMemoryRouterProps): React.ReactElement {
         return UNSAFE_useRenderDataRouter({
           children,
           fallbackElement,
-          todo_bikeshed_routes,
           createRouter: (routes) => {
             router = createMemoryRouter({
               initialEntries,

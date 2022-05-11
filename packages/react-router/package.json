@@ -17,7 +17,8 @@
     "react": ">=16.8"
   },
   "dependencies": {
-    "@remix-run/router": "^0.1.0"
+    "@remix-run/router": "^0.1.0",
+    "use-sync-external-store": "1.1.0"
   },
   "sideEffects": false,
   "keywords": [

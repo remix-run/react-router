@@ -214,7 +214,7 @@ export function createMemoryHistory(
     initialIndex == null ? entries.length - 1 : initialIndex
   );
   let action = Action.Pop;
-  let listeners = createEvents<Listener>();
+  let listener: Listener | null = null;
 
   function clampIndex(n: number): number {
     return Math.min(Math.max(n, 0), entries.length - 1);
@@ -260,25 +260,30 @@ export function createMemoryHistory(
       let nextLocation = createMemoryLocation(to, state);
       index += 1;
       entries.splice(index, entries.length, nextLocation);
-      if (v5Compat) {
-        listeners.call({ action, location: nextLocation });
+      if (v5Compat && listener) {
+        listener({ action, location: nextLocation });
       }
     },
     replace(to, state) {
       action = Action.Replace;
       let nextLocation = createMemoryLocation(to, state);
       entries[index] = nextLocation;
-      if (v5Compat) {
-        listeners.call({ action, location: nextLocation });
+      if (v5Compat && listener) {
+        listener({ action, location: nextLocation });
       }
     },
     go(delta) {
       action = Action.Pop;
       index = clampIndex(index + delta);
-      listeners.call({ action, location: getCurrentLocation() });
+      if (listener) {
+        listener({ action, location: getCurrentLocation() });
+      }
     },
-    listen(listener) {
-      return listeners.push(listener);
+    listen(fn: Listener) {
+      listener = fn;
+      return () => {
+        listener = null;
+      };
     },
   };
 
@@ -448,25 +453,6 @@ type Events<F> = {
   call: (arg: any) => void;
 };
 
-function createEvents<F extends Function>(): Events<F> {
-  let handlers: F[] = [];
-
-  return {
-    get length() {
-      return handlers.length;
-    },
-    push(fn: F) {
-      handlers.push(fn);
-      return function () {
-        handlers = handlers.filter((handler) => handler !== fn);
-      };
-    },
-    call(arg) {
-      handlers.forEach((fn) => fn && fn(arg));
-    },
-  };
-}
-
 function createKey() {
   return Math.random().toString(36).substr(2, 8);
 }
@@ -562,12 +548,14 @@ function getUrlBasedHistory(
   let { window = document.defaultView!, v5Compat = false } = options;
   let globalHistory = window.history;
   let action = Action.Pop;
-  let listeners = createEvents<Listener>();
+  let listener: Listener | null = null;
 
-  window.addEventListener(PopStateEventType, () => {
+  function handlePop() {
     action = Action.Pop;
-    listeners.call({ action, location: history.location });
-  });
+    if (listener) {
+      listener({ action, location: history.location });
+    }
+  }
 
   function push(to: To, state?: any) {
     action = Action.Push;
@@ -586,8 +574,8 @@ function getUrlBasedHistory(
       window.location.assign(url);
     }
 
-    if (v5Compat) {
-      listeners.call({ action, location });
+    if (v5Compat && listener) {
+      listener({ action, location });
     }
   }
 
@@ -600,8 +588,8 @@ function getUrlBasedHistory(
     let url = history.createHref(location);
     globalHistory.replaceState(historyState, "", url);
 
-    if (v5Compat) {
-      listeners.call({ action, location: location });
+    if (v5Compat && listener) {
+      listener({ action, location: location });
     }
   }
 
@@ -612,6 +600,18 @@ function getUrlBasedHistory(
     get location() {
       return getLocation(window, globalHistory);
     },
+    listen(fn: Listener) {
+      if (listener) {
+        throw new Error("A history only accepts one active listener");
+      }
+      window.addEventListener(PopStateEventType, handlePop);
+      listener = fn;
+
+      return () => {
+        window.removeEventListener(PopStateEventType, handlePop);
+        listener = null;
+      };
+    },
     createHref(to) {
       return createHref(window, to);
     },
@@ -619,9 +619,6 @@ function getUrlBasedHistory(
     replace,
     go(n) {
       return globalHistory.go(n);
-    },
-    listen(listener) {
-      return listeners.push(listener);
     },
   };
 
