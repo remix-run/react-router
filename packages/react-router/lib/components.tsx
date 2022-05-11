@@ -37,10 +37,6 @@ import {
   _renderMatches,
 } from "./hooks";
 
-let IS_REACT_18 =
-  "useSyncExternalStore" in React &&
-  window.location.search.indexOf("17") === -1;
-
 // Module-scoped singleton to hold the router.  Extracted from the React lifecycle
 // to avoid issues w.r.t. dual initialization fetches in concurrent rendering.
 // Data router apps are expected to have a static route tree and are not intended
