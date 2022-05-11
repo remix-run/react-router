@@ -58,7 +58,7 @@ export function useRenderDataRouter({
   createRouter,
 }: {
   children?: React.ReactNode;
-  fallbackElement?: React.ReactElement;
+  fallbackElement: React.ReactElement;
   createRouter: (routes: RouteObject[]) => DataRouter;
 }): React.ReactElement {
   if (!routerSingleton) {
@@ -84,7 +84,7 @@ export function useRenderDataRouter({
   }, [router]);
 
   if (!state.initialized) {
-    return fallbackElement || <DefaultFallbackElement />;
+    return fallbackElement || null;
   }
 
   return (
@@ -102,69 +102,12 @@ export function useRenderDataRouter({
   );
 }
 
-function DefaultFallbackElement() {
-  return (
-    <>
-      <style>{`
-        :root {
-          --size: 25vh;
-        }
-
-        .rr-fallback__flex {
-          text-align: center;
-          width: 100%;
-          height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;  
-        }
-
-        .rr-fallback__rotate {
-          display: block;
-          width: var(--size);
-          height: var(--size);
-          font-size: var(--size);
-          animation-name: spin;
-          animation-duration: 1s;
-          animation-timing-function: ease-in-out;
-          animation-iteration-count: infinite;
-          transform: rotate(0deg);
-          transform-origin: 50% 50%;
-        }
-
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        @media (prefers-reduced-motion) {
-          .rr-fallback__rotate {
-            animation-iteration-count: 0;
-          }
-        }
-
-        .rr-fallback__cd {
-          width: var(--size);
-          height: var(--size);
-          line-height: var(--size);
-          margin-top: 5%;
-        }
-      `}</style>
-      <div className="rr-fallback__flex">
-        <div className="rr-fallback__rotate">
-          <p className="rr-fallback__cd">💿</p>
-        </div>
-      </div>
-    </>
-  );
-}
-
 export interface DataMemoryRouterProps {
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
   hydrationData?: HydrationState;
-  fallbackElement?: React.ReactElement;
+  fallbackElement: React.ReactElement;
 }
 
 export function DataMemoryRouter({

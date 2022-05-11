@@ -181,7 +181,7 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
-  it("renders a default fallbackElement if none is provided", async () => {
+  it("renders a null fallbackElement if none is provided", async () => {
     let fooDefer = defer();
     let { container } = render(
       <DataMemoryRouter initialEntries={["/foo"]}>
@@ -201,23 +201,7 @@ describe("<DataMemoryRouter>", () => {
       return <h1>Bar Heading</h1>;
     }
 
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <div
-          class=\\"rr-fallback__flex\\"
-        >
-          <div
-            class=\\"rr-fallback__rotate\\"
-          >
-            <p
-              class=\\"rr-fallback__cd\\"
-            >
-              💿
-            </p>
-          </div>
-        </div>
-      </div>"
-    `);
+    expect(getHtml(container)).toMatchInlineSnapshot(`"<div />"`);
 
     fooDefer.resolve({ message: "From Foo Loader" });
     await waitFor(() => screen.getByText("Foo:From Foo Loader"));
