@@ -447,12 +447,6 @@ function warning(cond: any, message: string) {
   }
 }
 
-type Events<F> = {
-  length: number;
-  push: (fn: F) => () => void;
-  call: (arg: any) => void;
-};
-
 function createKey() {
   return Math.random().toString(36).substr(2, 8);
 }
