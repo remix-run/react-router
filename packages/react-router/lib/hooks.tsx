@@ -179,7 +179,9 @@ export function useNavigate(): NavigateFunction {
       );
 
       if (basename !== "/") {
-        path.pathname = joinPaths([basename, path.pathname]);
+        // joinPaths will always add trailing slash to the basename
+        // If pathname is the default ('/'), basename value should decide about trailing slash
+        path.pathname = path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
       }
 
       (!!options.replace ? navigator.replace : navigator.push)(
