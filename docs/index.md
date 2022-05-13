@@ -25,7 +25,7 @@ order: 1
       <p>Level up your understanding of React Router with the concepts, vocabulary, and design principles of React Router and routing in general. A must read for would-be contributors.</p>
     </docs-card>
   </a>
-  <a href="v6/faq" aria-label="Frequently Asked Questions">
+  <a href="v6/getting-started/faq" aria-label="Frequently Asked Questions">
     <docs-card>
       <h3>Frequently Asked Questions</h3> 
       <p>Running into a problem? Chances are, you're not the first! Explore some of the questions that people commonly have about React Router v6.</p>
