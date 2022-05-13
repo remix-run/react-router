@@ -1,6 +1,7 @@
 ---
 title: DataBrowserRouter
 new: true
+hidden: true
 ---
 
 # `DataBrowserRouter`
