@@ -1,5 +1,6 @@
 ---
 title: Pending UI
+hidden: true
 ---
 
 # Pending UI

@@ -1,5 +1,6 @@
 ---
 title: Data Synchronization
+hidden: true
 ---
 
 # Data Synchronization
