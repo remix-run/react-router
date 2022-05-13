@@ -5,7 +5,7 @@ order: 4
 
 # Main Concepts
 
-<docs-warning>This document is a deep dive into the core concepts behind routing as implemented in React Router. It's pretty long, so if you're looking for a more practical guide check out our [quick start tutorial](tutorial.md).</docs-warning>
+<docs-warning>This document is a deep dive into the core concepts behind routing as implemented in React Router. It's pretty long, so if you're looking for a more practical guide check out our [quick start tutorial][tutorial].</docs-warning>
 
 You might be wondering what exactly React Router does. How can it help you build your app? What exactly is a **router**, anyway?
 
@@ -830,3 +830,5 @@ Let's put it all together from the top!
 9. `<BrowserRouter>` rerenders, start over at (2)!
 
 That's it! We hope this guide has helped you gain a deeper understanding of the main concepts in React Router.
+
+[tutorial]: ./tutorial
