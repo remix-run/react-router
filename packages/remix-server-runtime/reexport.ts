@@ -5,6 +5,12 @@ export type {
   ServerEntryModule,
 } from "./build";
 
+export type { UploadHandlerPart, UploadHandler } from "./formData";
+export type {
+  MemoryUploadHandlerOptions,
+  MemoryUploadHandlerFilterArgs,
+} from "./upload/memoryUploadHandler";
+
 export type {
   Cookie,
   CookieOptions,

@@ -1,4 +1,3 @@
-import { PassThrough } from "stream";
 import type * as express from "express";
 import type {
   AppLoadContext,
@@ -7,11 +6,11 @@ import type {
   Response as NodeResponse,
 } from "@remix-run/node";
 import {
-  // This has been added as a global in node 15+
   AbortController,
   createRequestHandler as createRemixRequestHandler,
   Headers as NodeHeaders,
   Request as NodeRequest,
+  writeReadableStreamToWritable,
 } from "@remix-run/node";
 
 /**
@@ -53,19 +52,18 @@ export function createRequestHandler({
     next: express.NextFunction
   ) => {
     try {
-      let abortController = new AbortController();
-      let request = createRemixRequest(req, abortController);
+      let request = createRemixRequest(req);
       let loadContext =
         typeof getLoadContext === "function"
           ? getLoadContext(req, res)
           : undefined;
 
       let response = (await handleRequest(
-        request as unknown as Request,
+        request,
         loadContext
-      )) as unknown as NodeResponse;
+      )) as NodeResponse;
 
-      sendRemixResponse(res, response, abortController);
+      await sendRemixResponse(res, response);
     } catch (error) {
       // Express doesn't support async functions, so we have to pass along the
       // error manually using next().
@@ -94,32 +92,33 @@ export function createRemixHeaders(
   return headers;
 }
 
-export function createRemixRequest(
-  req: express.Request,
-  abortController?: AbortController
-): NodeRequest {
+export function createRemixRequest(req: express.Request): NodeRequest {
   let origin = `${req.protocol}://${req.get("host")}`;
   let url = new URL(req.url, origin);
+
+  let controller = new AbortController();
+
+  req.on("close", () => {
+    controller.abort();
+  });
 
   let init: NodeRequestInit = {
     method: req.method,
     headers: createRemixHeaders(req.headers),
-    signal: abortController?.signal,
-    abortController,
+    signal: controller.signal,
   };
 
   if (req.method !== "GET" && req.method !== "HEAD") {
-    init.body = req.pipe(new PassThrough({ highWaterMark: 16384 }));
+    init.body = req;
   }
 
   return new NodeRequest(url.href, init);
 }
 
-export function sendRemixResponse(
+export async function sendRemixResponse(
   res: express.Response,
-  nodeResponse: NodeResponse,
-  abortController: AbortController
-): void {
+  nodeResponse: NodeResponse
+): Promise<void> {
   res.statusMessage = nodeResponse.statusText;
   res.status(nodeResponse.status);
 
@@ -129,14 +128,8 @@ export function sendRemixResponse(
     }
   }
 
-  if (abortController.signal.aborted) {
-    res.set("Connection", "close");
-  }
-
-  if (Buffer.isBuffer(nodeResponse.body)) {
-    res.end(nodeResponse.body);
-  } else if (nodeResponse.body?.pipe) {
-    nodeResponse.body.pipe(res);
+  if (nodeResponse.body) {
+    await writeReadableStreamToWritable(nodeResponse.body, res);
   } else {
     res.end();
   }

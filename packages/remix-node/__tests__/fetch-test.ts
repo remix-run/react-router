@@ -1,7 +1,6 @@
 import { PassThrough } from "stream";
 
 import { Request } from "../fetch";
-import { createMemoryUploadHandler } from "../upload/memoryUploadHandler";
 
 let test = {
   source: [
@@ -70,11 +69,10 @@ let test = {
 };
 
 describe("Request", () => {
-  let uploadHandler = createMemoryUploadHandler({});
-
   it("clones", async () => {
     let body = new PassThrough();
     test.source.forEach((chunk) => body.write(chunk));
+    body.end();
 
     let req = new Request("http://test.com", {
       method: "post",
@@ -85,10 +83,8 @@ describe("Request", () => {
     });
 
     let cloned = req.clone();
-    expect(Object.getPrototypeOf(req)).toBe(Object.getPrototypeOf(cloned));
-
-    let formData = await req.formData(uploadHandler);
-    let clonedFormData = await cloned.formData(uploadHandler);
+    let formData = await req.formData();
+    let clonedFormData = await cloned.formData();
 
     expect(formData.get("file_name_0")).toBe("super alpha file");
     expect(clonedFormData.get("file_name_0")).toBe("super alpha file");
@@ -108,4 +104,10 @@ describe("Request", () => {
     expect(file.name).toBe("1k_b.dat");
     expect(file.size).toBe(1023);
   });
+});
+
+describe("fetch", () => {
+  // fetch a gzip-encoded json blob
+  // call res.json() and make sure it's decoded properly
+  it.todo("decodes gzip encoded body");
 });

@@ -15,17 +15,24 @@ test.describe("file-uploads", () => {
       files: {
         "app/fileUploadHandler.js": js`
           import * as path from "path";
-          import { unstable_createFileUploadHandler as createFileUploadHandler } from "@remix-run/node";
+          import {
+            unstable_composeUploadHandlers as composeUploadHandlers,
+            unstable_createFileUploadHandler as createFileUploadHandler,
+            unstable_createMemoryUploadHandler as createMemoryUploadHandler,
+          } from "@remix-run/node";
 
-          export let uploadHandler = createFileUploadHandler({
-            directory: path.resolve(__dirname, "..", "uploads"),
-            maxFileSize: 10_000, // 10kb
-            // you probably want to avoid conflicts in production
-            // do not set to false or passthrough filename in real
-            // applications.
-            avoidFileConflicts: false,
-            file: ({ filename }) => filename
-          });
+          export let uploadHandler = composeUploadHandlers(
+            createFileUploadHandler({
+              directory: path.resolve(__dirname, "..", "uploads"),
+              maxPartSize: 10_000, // 10kb
+              // you probably want to avoid conflicts in production
+              // do not set to false or passthrough filename in real
+              // applications.
+              avoidFileConflicts: false,
+              file: ({ filename }) => filename
+            }),
+            createMemoryUploadHandler(),
+          );
         `,
         "app/routes/file-upload.jsx": js`
           import {
@@ -38,10 +45,13 @@ test.describe("file-uploads", () => {
             try {
               let formData = await parseMultipartFormData(request, uploadHandler);
 
-              let file = formData.get("file");
+              if (formData.get("test") !== "hidden") {
+                return { errorMessage: "hidden field not in form data" };
+              }
 
+              let file = formData.get("file");
               if (typeof file === "string" || !file) {
-                throw new Error("invalid file type");
+                return { errorMessage: "invalid file type" };
               }
 
               return { name: file.name, size: file.size };
@@ -56,6 +66,7 @@ test.describe("file-uploads", () => {
                 <Form method="post" encType="multipart/form-data">
                   <label htmlFor="file">Choose a file:</label>
                   <input type="file" id="file" name="file" />
+                  <input type="hidden" name="test" value="hidden" />
                   <button type="submit">Submit</button>
                 </Form>
                 <pre>{JSON.stringify(useActionData(), null, 2)}</pre>

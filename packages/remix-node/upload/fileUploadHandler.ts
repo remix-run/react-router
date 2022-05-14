@@ -1,22 +1,31 @@
 import { randomBytes } from "crypto";
-import { createReadStream, createWriteStream } from "fs";
-import { rm, mkdir, readFile, stat } from "fs/promises";
+import { createReadStream, createWriteStream, statSync } from "fs";
+import { rm, mkdir, stat as statAsync } from "fs/promises";
 import { tmpdir } from "os";
 import { basename, dirname, extname, resolve as resolvePath } from "path";
+import type { Readable } from "stream";
+import { finished } from "stream";
+import { promisify } from "util";
+import { MaxPartSizeExceededError } from "@remix-run/server-runtime";
+import type { UploadHandler } from "@remix-run/server-runtime";
+// @ts-expect-error
+import * as streamSlice from "stream-slice";
 
-import { Meter } from "./meter";
-import type { UploadHandler } from "../formData";
+import {
+  createReadableStreamFromReadable,
+  readableStreamToString,
+} from "../stream";
 
 export type FileUploadHandlerFilterArgs = {
   filename: string;
-  encoding: string;
-  mimetype: string;
+  contentType: string;
+  name: string;
 };
 
 export type FileUploadHandlerPathResolverArgs = {
   filename: string;
-  encoding: string;
-  mimetype: string;
+  contentType: string;
+  name: string;
 };
 
 /**
@@ -46,7 +55,7 @@ export type FileUploadHandlerOptions = {
    * The maximum upload size allowed. If the size is exceeded an error will be thrown.
    * Defaults to 3000000B (3MB).
    */
-  maxFileSize?: number;
+  maxPartSize?: number;
   /**
    *
    * @param filename
@@ -67,7 +76,7 @@ async function uniqueFile(filepath: string) {
 
   for (
     let i = 1;
-    await stat(uniqueFilepath)
+    await statAsync(uniqueFilepath)
       .then(() => true)
       .catch(() => false);
     i++
@@ -85,31 +94,31 @@ export function createFileUploadHandler({
   avoidFileConflicts = true,
   file = defaultFilePathResolver,
   filter,
-  maxFileSize = 3000000,
-}: FileUploadHandlerOptions): UploadHandler {
-  return async ({ name, stream, filename, encoding, mimetype }) => {
-    if (filter && !(await filter({ filename, encoding, mimetype }))) {
-      stream.resume();
-      return;
+  maxPartSize = 3000000,
+}: FileUploadHandlerOptions = {}): UploadHandler {
+  return async ({ name, filename, contentType, data }) => {
+    if (
+      !filename ||
+      (filter && !(await filter({ name, filename, contentType })))
+    ) {
+      return undefined;
     }
 
     let dir =
       typeof directory === "string"
         ? directory
-        : directory({ filename, encoding, mimetype });
+        : directory({ name, filename, contentType });
 
     if (!dir) {
-      stream.resume();
-      return;
+      return undefined;
     }
 
     let filedir = resolvePath(dir);
     let path =
-      typeof file === "string" ? file : file({ filename, encoding, mimetype });
+      typeof file === "string" ? file : file({ name, filename, contentType });
 
     if (!path) {
-      stream.resume();
-      return;
+      return undefined;
     }
 
     let filepath = resolvePath(filedir, path);
@@ -120,35 +129,28 @@ export function createFileUploadHandler({
 
     await mkdir(dirname(filepath), { recursive: true }).catch(() => {});
 
-    let meter = new Meter(name, maxFileSize);
-    await new Promise<void>((resolve, reject) => {
-      let writeFileStream = createWriteStream(filepath);
-
-      let aborted = false;
-      async function abort(error: Error) {
-        if (aborted) return;
-        aborted = true;
-
-        stream.unpipe();
-        meter.unpipe();
-        stream.removeAllListeners();
-        meter.removeAllListeners();
-        writeFileStream.removeAllListeners();
-
-        await rm(filepath, { force: true }).catch(() => {});
-
-        reject(error);
+    let writeFileStream = createWriteStream(filepath);
+    let size = 0;
+    let deleteFile = false;
+    try {
+      for await (let chunk of data) {
+        size += chunk.byteLength;
+        if (size > maxPartSize) {
+          deleteFile = true;
+          throw new MaxPartSizeExceededError(name, maxPartSize);
+        }
+        writeFileStream.write(chunk);
       }
+    } finally {
+      writeFileStream.end();
+      await promisify(finished)(writeFileStream);
 
-      stream.on("error", abort);
-      meter.on("error", abort);
-      writeFileStream.on("error", abort);
-      writeFileStream.on("finish", resolve);
+      if (deleteFile) {
+        await rm(filepath).catch(() => {});
+      }
+    }
 
-      stream.pipe(meter).pipe(writeFileStream);
-    });
-
-    return new NodeOnDiskFile(filepath, meter.bytes, mimetype);
+    return new NodeOnDiskFile(filepath, contentType);
   };
 }
 
@@ -159,14 +161,48 @@ export class NodeOnDiskFile implements File {
 
   constructor(
     private filepath: string,
-    public size: number,
-    public type: string
+    public type: string,
+    private slicer?: { start: number; end: number }
   ) {
     this.name = basename(filepath);
   }
 
+  get size(): number {
+    let stats = statSync(this.filepath);
+
+    if (this.slicer) {
+      let slice = this.slicer.end - this.slicer.start;
+      return slice < 0 ? 0 : slice > stats.size ? stats.size : slice;
+    }
+
+    return stats.size;
+  }
+
+  slice(start?: number, end?: number, type?: string): Blob {
+    if (typeof start === "number" && start < 0) start = this.size + start;
+    if (typeof end === "number" && end < 0) end = this.size + end;
+
+    let startOffset = this.slicer?.start || 0;
+
+    start = startOffset + (start || 0);
+    end = startOffset + (end || this.size);
+    return new NodeOnDiskFile(
+      this.filepath,
+      typeof type === "string" ? type : this.type,
+      {
+        start,
+        end,
+      }
+    );
+  }
+
   async arrayBuffer(): Promise<ArrayBuffer> {
-    let stream = createReadStream(this.filepath);
+    let stream: Readable = createReadStream(this.filepath);
+    if (this.slicer) {
+      stream = stream.pipe(
+        streamSlice.slice(this.slicer.start, this.slicer.end)
+      );
+    }
 
     return new Promise((resolve, reject) => {
       let buf: any[] = [];
@@ -176,15 +212,23 @@ export class NodeOnDiskFile implements File {
     });
   }
 
-  slice(start?: any, end?: any, contentType?: any): Blob {
-    throw new Error("Method not implemented.");
-  }
   stream(): ReadableStream<any>;
   stream(): NodeJS.ReadableStream;
   stream(): ReadableStream<any> | NodeJS.ReadableStream {
-    return createReadStream(this.filepath);
+    let stream: Readable = createReadStream(this.filepath);
+    if (this.slicer) {
+      stream = stream.pipe(
+        streamSlice.slice(this.slicer.start, this.slicer.end)
+      );
+    }
+    return createReadableStreamFromReadable(stream);
   }
-  text(): Promise<string> {
-    return readFile(this.filepath, "utf-8");
+
+  async text(): Promise<string> {
+    return readableStreamToString(this.stream());
+  }
+
+  public get [Symbol.toStringTag]() {
+    return "File";
   }
 }

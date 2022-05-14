@@ -150,10 +150,10 @@ async function handleDataRequest({
     }
 
     if (handleDataRequest) {
-      response = await handleDataRequest(response.clone(), {
+      response = await handleDataRequest(response, {
         context: loadContext,
         params: match.params,
-        request: request.clone(),
+        request,
       });
     }
 
@@ -457,7 +457,7 @@ async function handleDocumentRequest({
   let handleDocumentRequest = build.entry.module.default;
   try {
     return await handleDocumentRequest(
-      request.clone(),
+      request,
       responseStatusCode,
       responseHeaders,
       entryContext
@@ -477,7 +477,7 @@ async function handleDocumentRequest({
 
     try {
       return await handleDocumentRequest(
-        request.clone(),
+        request,
         responseStatusCode,
         responseHeaders,
         entryContext

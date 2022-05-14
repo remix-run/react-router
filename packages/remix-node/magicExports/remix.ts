@@ -13,4 +13,4 @@ export {
   unstable_parseMultipartFormData,
 } from "@remix-run/node";
 
-export type { UploadHandler, UploadHandlerArgs } from "@remix-run/node";
+export type { UploadHandler, UploadHandlerPart } from "@remix-run/node";

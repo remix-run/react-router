@@ -1,13 +1,18 @@
-import { Blob as NodeBlob, File as NodeFile } from "@web-std/file";
+import {
+  ReadableStream as NodeReadableStream,
+  WritableStream as NodeWritableStream,
+} from "@remix-run/web-stream";
 
 import { atob, btoa } from "./base64";
 import {
+  Blob as NodeBlob,
+  File as NodeFile,
+  FormData as NodeFormData,
   Headers as NodeHeaders,
   Request as NodeRequest,
   Response as NodeResponse,
   fetch as nodeFetch,
 } from "./fetch";
-import { FormData as NodeFormData } from "./formData";
 
 declare global {
   namespace NodeJS {
@@ -27,6 +32,9 @@ declare global {
       Response: typeof Response;
       fetch: typeof fetch;
       FormData: typeof FormData;
+
+      ReadableStream: typeof ReadableStream;
+      WritableStream: typeof WritableStream;
     }
   }
 }
@@ -35,12 +43,15 @@ export function installGlobals() {
   global.atob = atob;
   global.btoa = btoa;
 
-  global.Blob = NodeBlob as unknown as typeof Blob;
-  global.File = NodeFile as unknown as typeof File;
+  global.Blob = NodeBlob;
+  global.File = NodeFile;
 
-  global.Headers = NodeHeaders as unknown as typeof Headers;
-  global.Request = NodeRequest as unknown as typeof Request;
+  global.Headers = NodeHeaders as typeof Headers;
+  global.Request = NodeRequest as typeof Request;
   global.Response = NodeResponse as unknown as typeof Response;
-  global.fetch = nodeFetch as unknown as typeof fetch;
-  global.FormData = NodeFormData as unknown as typeof FormData;
+  global.fetch = nodeFetch as typeof fetch;
+  global.FormData = NodeFormData;
+
+  global.ReadableStream = NodeReadableStream;
+  global.WritableStream = NodeWritableStream;
 }
