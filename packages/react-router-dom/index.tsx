@@ -17,24 +17,24 @@ import {
   UNSAFE_DataRouterStateContext,
 } from "react-router";
 import type { To } from "react-router";
-import {
+import type {
   BrowserHistory,
   Fetcher,
+  FormEncType,
+  FormMethod,
   HashHistory,
   History,
+  HydrationState,
   GetScrollRestorationKeyFunction,
-  matchPath,
+  RouteObject,
 } from "@remix-run/router";
 import {
   createBrowserHistory,
   createHashHistory,
   createBrowserRouter,
   createHashRouter,
-  FormEncType,
-  FormMethod,
-  HydrationState,
   invariant,
-  RouteObject,
+  matchPath,
 } from "@remix-run/router";
 
 import type {
