@@ -2,15 +2,16 @@ import React from "react";
 import type { ActionFunction, LoaderFunction } from "react-router-dom";
 import {
   DataBrowserRouter,
-  useLoaderData,
-  useNavigation,
-  useFetcher,
-  useFetchers,
-  useRouteError,
   Form,
   Link,
   Route,
   Outlet,
+  useFetcher,
+  useFetchers,
+  useLoaderData,
+  useNavigation,
+  useParams,
+  useRouteError,
 } from "react-router-dom";
 
 import type { Todos } from "./todos";
@@ -197,11 +198,13 @@ const todoLoader: LoaderFunction = async ({ params }) => {
 };
 
 function Todo() {
+  let params = useParams();
   let todo = useLoaderData();
   return (
     <>
-      <h2>Error 💥</h2>
-      <p>{todo}</p>
+      <h2>Nested Todo Route:</h2>
+      <p>id: {params.id}</p>
+      <p>todo: {todo}</p>
     </>
   );
 }
