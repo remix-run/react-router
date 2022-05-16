@@ -20,7 +20,7 @@ import {
   stripBasename,
   warning,
 } from "@remix-run/router";
-import { useSyncExternalStore as useSyncExternalStoreShim } from "use-sync-external-store/shim";
+import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
 import {
   LocationContext,
