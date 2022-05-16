@@ -52,7 +52,7 @@ function fixtureFactory(mode: RemixLinkProps["prefetch"]) {
 
       "app/routes/index.jsx": js`
         export default function() {
-          return <h2>Index</h2>;
+          return <h2 className="index">Index</h2>;
         }
       `,
 
@@ -61,13 +61,13 @@ function fixtureFactory(mode: RemixLinkProps["prefetch"]) {
           return { message: 'data from the loader' };
         }
         export default function() {
-          return <h2>With Loader</h2>;
+          return <h2 className="with-loader">With Loader</h2>;
         }
       `,
 
       "app/routes/without-loader.jsx": js`
         export default function() {
-          return <h2>Without Loader</h2>;
+          return <h2 className="without-loader">Without Loader</h2>;
         }
       `,
     },
@@ -185,7 +185,29 @@ test.describe("prefetch=intent (hover)", () => {
       "#nav link[rel='modulepreload'][href^='/build/routes/without-loader-']",
       { state: "attached" }
     );
-    expect(await page.locator("#nav link").count()).toBe(3);
+    expect(await page.locator("#nav link").count()).toBe(1);
+  });
+
+  test("removes prefetch tags after navigating to/from the page", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+
+    // Links added on hover
+    await page.hover("a[href='/with-loader']");
+    await page.waitForSelector("#nav link", { state: "attached" });
+    expect(await page.locator("#nav link").count()).toBe(2);
+
+    // Links removed upon navigating to the page
+    await page.click("a[href='/with-loader']");
+    await page.waitForSelector("h2.with-loader", { state: "attached" });
+    expect(await page.locator("#nav link").count()).toBe(0);
+
+    // Links stay removed upon navigating away from the page
+    await page.click("a[href='/without-loader']");
+    await page.waitForSelector("h2.without-loader", { state: "attached" });
+    expect(await page.locator("#nav link").count()).toBe(0);
   });
 });
 
@@ -237,6 +259,6 @@ test.describe("prefetch=intent (focus)", () => {
       "#nav link[rel='modulepreload'][href^='/build/routes/without-loader-']",
       { state: "attached" }
     );
-    expect(await page.locator("#nav link").count()).toBe(3);
+    expect(await page.locator("#nav link").count()).toBe(1);
   });
 });
