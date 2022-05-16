@@ -417,13 +417,18 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let match = useMatch({ path: path.pathname, end, caseSensitive });
 
     let routerState = React.useContext(UNSAFE_DataRouterStateContext);
-    let nextPath = useResolvedPath(routerState?.navigation.location || "");
-    let nextMatch = routerState?.navigation.location
-      ? matchPath(
-          { path: path.pathname, end, caseSensitive },
-          nextPath.pathname
-        )
-      : null;
+    let nextLocation = routerState?.navigation.location;
+    let nextPath = useResolvedPath(nextLocation || "");
+    let nextMatch = React.useMemo(
+      () =>
+        nextLocation
+          ? matchPath(
+              { path: path.pathname, end, caseSensitive },
+              nextPath.pathname
+            )
+          : null,
+      [nextLocation, path.pathname, caseSensitive, end, nextPath.pathname]
+    );
 
     let isPending = nextMatch != null;
     let isActive = match != null;
