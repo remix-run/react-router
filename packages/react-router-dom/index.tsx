@@ -8,6 +8,7 @@ import {
   createPath,
   useHref,
   useLocation,
+  useMatch,
   useNavigate,
   useResolvedPath,
   UNSAFE_useRenderDataRouter,
@@ -16,12 +17,13 @@ import {
   UNSAFE_DataRouterStateContext,
 } from "react-router";
 import type { To } from "react-router";
-import type {
+import {
   BrowserHistory,
   Fetcher,
   HashHistory,
   History,
   GetScrollRestorationKeyFunction,
+  matchPath,
 } from "@remix-run/router";
 import {
   createBrowserHistory,
@@ -377,13 +379,21 @@ export interface NavLinkProps
   extends Omit<LinkProps, "className" | "style" | "children"> {
   children?:
     | React.ReactNode
-    | ((props: { isActive: boolean }) => React.ReactNode);
+    | ((props: { isActive: boolean; isPending: boolean }) => React.ReactNode);
   caseSensitive?: boolean;
-  className?: string | ((props: { isActive: boolean }) => string | undefined);
+  className?:
+    | string
+    | ((props: {
+        isActive: boolean;
+        isPending: boolean;
+      }) => string | undefined);
   end?: boolean;
   style?:
     | React.CSSProperties
-    | ((props: { isActive: boolean }) => React.CSSProperties);
+    | ((props: {
+        isActive: boolean;
+        isPending: boolean;
+      }) => React.CSSProperties);
 }
 
 /**
@@ -403,40 +413,45 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     },
     ref
   ) {
-    let location = useLocation();
     let path = useResolvedPath(to);
+    let match = useMatch({ path: path.pathname, end, caseSensitive });
 
-    let locationPathname = location.pathname;
-    let toPathname = path.pathname;
-    if (!caseSensitive) {
-      locationPathname = locationPathname.toLowerCase();
-      toPathname = toPathname.toLowerCase();
-    }
+    let routerState = React.useContext(UNSAFE_DataRouterStateContext);
+    let nextPath = useResolvedPath(routerState?.navigation.location || "");
+    let nextMatch = routerState?.navigation.location
+      ? matchPath(
+          { path: path.pathname, end, caseSensitive },
+          nextPath.pathname
+        )
+      : null;
 
-    let isActive =
-      locationPathname === toPathname ||
-      (!end &&
-        locationPathname.startsWith(toPathname) &&
-        locationPathname.charAt(toPathname.length) === "/");
+    let isPending = nextMatch != null;
+    let isActive = match != null;
 
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
     let className: string | undefined;
     if (typeof classNameProp === "function") {
-      className = classNameProp({ isActive });
+      className = classNameProp({ isActive, isPending });
     } else {
       // If the className prop is not a function, we use a default `active`
       // class for <NavLink />s that are active. In v5 `active` was the default
       // value for `activeClassName`, but we are removing that API and can still
       // use the old default behavior for a cleaner upgrade path and keep the
       // simple styling rules working as they currently do.
-      className = [classNameProp, isActive ? "active" : null]
+      className = [
+        classNameProp,
+        isActive ? "active" : null,
+        isPending ? "pending" : null,
+      ]
         .filter(Boolean)
         .join(" ");
     }
 
     let style =
-      typeof styleProp === "function" ? styleProp({ isActive }) : styleProp;
+      typeof styleProp === "function"
+        ? styleProp({ isActive, isPending })
+        : styleProp;
 
     return (
       <Link
@@ -447,7 +462,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         style={style}
         to={to}
       >
-        {typeof children === "function" ? children({ isActive }) : children}
+        {typeof children === "function"
+          ? children({ isActive, isPending })
+          : children}
       </Link>
     );
   }
