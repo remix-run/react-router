@@ -62,7 +62,7 @@ async function run() {
     let tag =
       semver.prerelease(version) == null && semver.compare(version, "6.0.0") > 0
         ? "latest"
-        : "previous";
+        : "v5";
 
     console.log();
     console.log(
