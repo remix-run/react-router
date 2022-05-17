@@ -452,14 +452,15 @@ function isRemixStack(input: string) {
 
 function isRemixTemplate(input: string) {
   return [
-    "remix",
-    "express",
     "arc",
-    "fly",
-    "netlify",
-    "vercel",
     "cloudflare-pages",
     "cloudflare-workers",
+    "deno",
+    "express",
+    "fly",
+    "netlify",
+    "remix",
+    "vercel",
   ].includes(input);
 }
 

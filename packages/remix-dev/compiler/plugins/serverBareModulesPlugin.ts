@@ -21,8 +21,10 @@ export function serverBareModulesPlugin(
   dependencies: Record<string, string>,
   onWarning?: (warning: string, key: string) => void
 ): Plugin {
-  let matchPath = createMatchPath();
+  let isDenoRuntime = remixConfig.serverBuildTarget === "deno";
+
   // Resolve paths according to tsconfig paths property
+  let matchPath = isDenoRuntime ? undefined : createMatchPath();
   function resolvePath(id: string) {
     if (!matchPath) {
       return id;
@@ -83,6 +85,7 @@ export function serverBareModulesPlugin(
           // Always bundle everything for cloudflare.
           case "cloudflare-pages":
           case "cloudflare-workers":
+          case "deno":
             return undefined;
         }
 
