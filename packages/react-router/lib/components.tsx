@@ -233,6 +233,7 @@ interface DataRouteProps {
   action?: RouteObject["action"];
   errorElement?: RouteObject["errorElement"];
   shouldRevalidate?: RouteObject["shouldRevalidate"];
+  handle?: RouteObject["handle"];
 }
 
 export interface RouteProps extends DataRouteProps {

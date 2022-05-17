@@ -327,6 +327,9 @@ export type Navigation = NavigationStates[keyof NavigationStates];
 
 export type RevalidationState = "idle" | "loading";
 
+/**
+ * Potential states for fetchers
+ */
 type FetcherStates<TData = any> = {
   Idle: {
     state: "idle";
@@ -595,6 +598,9 @@ export function createRouter(init: RouterInit): Router {
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, [string, DataRouteMatch]>();
 
+  // Initialize the router, all side effects should be kicked off from here.
+  // Implemented as a Fluent API for ease of:
+  //   let router = createRouter(init).initialize();
   function initialize() {
     // If history informs us of a POP navigation, start the navigation but do not update
     // state.  We'll update our own state once the navigation completes
@@ -611,6 +617,7 @@ export function createRouter(init: RouterInit): Router {
     return router;
   }
 
+  // Clean up a router and it's side effects
   function dispose() {
     if (unlistenHistory) {
       unlistenHistory();
@@ -622,6 +629,7 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
+  // Subscribe to state updates for the router
   function subscribe(fn: RouterSubscriber) {
     if (subscriber) {
       throw new Error("A router only accepts one active subscriber");
@@ -690,6 +698,8 @@ export function createRouter(init: RouterInit): Router {
     isRevalidationRequired = false;
   }
 
+  // Trigger a navigation event, which can either be a numerical POP or a PUSH
+  // replace with an optional submission
   async function navigate(
     path: number | To,
     opts?: NavigateOptions
@@ -718,6 +728,9 @@ export function createRouter(init: RouterInit): Router {
     return await startNavigation(historyAction, location);
   }
 
+  // Revalidate all current loaders.  If a navigation is in progress or if this
+  // is interrupted by a navigation, allow this to "succeed" by calling all
+  // loaders during the next loader round
   async function revalidate(): Promise<void> {
     let { state: navigationState, type } = state.navigation;
 
@@ -844,6 +857,8 @@ export function createRouter(init: RouterInit): Router {
     });
   }
 
+  // Call the action matched by the leaf route for this navigation and handle
+  // redirects/errors
   async function handleAction(
     historyAction: HistoryAction,
     location: Location,
@@ -935,6 +950,8 @@ export function createRouter(init: RouterInit): Router {
     };
   }
 
+  // Call all applicable loaders for the given matches, handling redirects,
+  // errors, etc.
   async function handleLoaders(
     historyAction: HistoryAction,
     location: Location,
@@ -1083,6 +1100,7 @@ export function createRouter(init: RouterInit): Router {
     return state.fetchers.get(key) || IDLE_FETCHER;
   }
 
+  // Trigger a fetcher load/submit for the given fetcher key
   async function fetch(key: string, href: string, opts?: NavigateOptions) {
     if (typeof AbortController === "undefined") {
       throw new Error(
@@ -1137,6 +1155,8 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
+  // Call the action for the matched fetcher.submit(), and then handle redirects,
+  // errors, and revalidation
   async function handleFetcherAction(
     key: string,
     href: string,
@@ -1339,6 +1359,7 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
+  // Call the matched loader for fetcher.load(), handling redirects, errors, etc.
   async function handleFetcherLoader(
     key: string,
     href: string,
@@ -1401,6 +1422,7 @@ export function createRouter(init: RouterInit): Router {
     updateState({ fetchers: new Map(state.fetchers) });
   }
 
+  // Utility function to handle redirects returned from an action or loader
   async function startRedirectNavigation(
     redirect: RedirectResult,
     navigation: Navigation
@@ -1478,6 +1500,8 @@ export function createRouter(init: RouterInit): Router {
     return yeetedKeys.length > 0;
   }
 
+  // Opt in to capturing and reporting scroll positions during navigations,
+  // used by the <ScrollRestoration> component
   function enableScrollRestoration(
     positions: Record<string, number>,
     getPosition: GetScrollPositionFunction,

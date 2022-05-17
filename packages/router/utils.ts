@@ -17,6 +17,9 @@ export interface Submission {
   formData: FormData;
 }
 
+/**
+ * Narrowed type enforcing a non-GET method
+ */
 export interface ActionSubmission extends Submission {
   formMethod: ActionFormMethod;
 }
@@ -557,6 +560,9 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
   }
 }
 
+/**
+ * @private
+ */
 export function stripBasename(
   pathname: string,
   basename: string
@@ -576,6 +582,9 @@ export function stripBasename(
   return pathname.slice(basename.length) || "/";
 }
 
+/**
+ * @private
+ */
 export function invariant(value: boolean, message?: string): asserts value;
 export function invariant<T>(
   value: T | null | undefined,
@@ -587,6 +596,9 @@ export function invariant(value: any, message?: string) {
   }
 }
 
+/**
+ * @private
+ */
 export function warning(cond: any, message: string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
@@ -601,14 +613,6 @@ export function warning(cond: any, message: string): void {
       throw new Error(message);
       // eslint-disable-next-line no-empty
     } catch (e) {}
-  }
-}
-
-const alreadyWarned: Record<string, boolean> = {};
-export function warningOnce(key: string, cond: boolean, message: string) {
-  if (!cond && !alreadyWarned[key]) {
-    alreadyWarned[key] = true;
-    warning(false, message);
   }
 }
 
@@ -653,6 +657,9 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
   return segments.length > 1 ? segments.join("/") : "/";
 }
 
+/**
+ * @private
+ */
 export function resolveTo(
   toArg: To,
   routePathnames: string[],
@@ -708,6 +715,9 @@ export function resolveTo(
   return path;
 }
 
+/**
+ * @private
+ */
 export function getToPathname(to: To): string | undefined {
   // Empty strings should be treated the same as / paths
   return to === "" || (to as Path).pathname === ""
@@ -717,12 +727,21 @@ export function getToPathname(to: To): string | undefined {
     : to.pathname;
 }
 
+/**
+ * @private
+ */
 export const joinPaths = (paths: string[]): string =>
   paths.join("/").replace(/\/\/+/g, "/");
 
+/**
+ * @private
+ */
 export const normalizePathname = (pathname: string): string =>
   pathname.replace(/\/+$/, "").replace(/^\/*/, "/");
 
+/**
+ * @private
+ */
 export const normalizeSearch = (search: string): string =>
   !search || search === "?"
     ? ""
@@ -730,5 +749,8 @@ export const normalizeSearch = (search: string): string =>
     ? search
     : "?" + search;
 
+/**
+ * @private
+ */
 export const normalizeHash = (hash: string): string =>
   !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;

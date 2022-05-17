@@ -451,7 +451,7 @@ describe("NavLink using a data router", () => {
             to="/bar"
             style={({ isActive, isPending }) =>
               isPending
-                ? { textTransform: "underline" }
+                ? { textTransform: "lowercase" }
                 : isActive
                 ? { textTransform: "uppercase" }
                 : undefined
@@ -469,7 +469,7 @@ describe("NavLink using a data router", () => {
 
     fireEvent.click(screen.getByText("Link to Bar"));
     expect(screen.getByText("Link to Bar").style.textTransform).toBe(
-      "underline"
+      "lowercase"
     );
 
     deferred.resolve();

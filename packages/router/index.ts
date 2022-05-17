@@ -1,157 +1,91 @@
 import type {
-  BrowserHistory,
   BrowserHistoryOptions,
-  HashHistory,
   HashHistoryOptions,
-  History,
-  InitialEntry,
-  Location,
-  MemoryHistory,
   MemoryHistoryOptions,
-  Path,
-  To,
 } from "./history";
 import {
-  Action,
   createBrowserHistory,
   createHashHistory,
   createMemoryHistory,
-  createPath,
-  parsePath,
 } from "./history";
-import type {
-  DataRouteMatch,
-  Fetcher,
-  GetScrollRestorationKeyFunction,
-  HydrationState,
-  NavigateOptions,
-  Navigation,
-  Router,
-  RouterState,
-  RouteData,
-  RouterInit,
-} from "./router";
-import { IDLE_NAVIGATION, createRouter } from "./router";
-import type {
-  ActionFunction,
-  DataRouteObject,
-  FormEncType,
-  FormMethod,
-  LoaderFunction,
-  ParamParseKey,
-  Params,
-  PathMatch,
-  PathPattern,
-  RouteMatch,
-  RouteObject,
-  ShouldRevalidateFunction,
-  Submission,
-} from "./utils";
-import {
-  generatePath,
-  getToPathname,
-  invariant,
-  joinPaths,
-  matchPath,
-  matchRoutes,
-  normalizePathname,
-  normalizeSearch,
-  normalizeHash,
-  resolvePath,
-  resolveTo,
-  stripBasename,
-  warning,
-  warningOnce,
-} from "./utils";
+import type { Router, RouterInit } from "./router";
+import { createRouter } from "./router";
 
-type MemoryRouterInit = MemoryHistoryOptions & Omit<RouterInit, "history">;
 function createMemoryRouter({
   initialEntries,
   initialIndex,
   ...routerInit
-}: MemoryRouterInit): Router {
+}: MemoryHistoryOptions & Omit<RouterInit, "history">): Router {
   let history = createMemoryHistory({ initialEntries, initialIndex });
   return createRouter({ history, ...routerInit });
 }
 
-type BrowserRouterInit = BrowserHistoryOptions & Omit<RouterInit, "history">;
 function createBrowserRouter({
   window,
   ...routerInit
-}: BrowserRouterInit): Router {
+}: BrowserHistoryOptions & Omit<RouterInit, "history">): Router {
   let history = createBrowserHistory({ window });
   return createRouter({ history, ...routerInit });
 }
 
-type HashRouterInit = HashHistoryOptions & Omit<RouterInit, "history">;
-function createHashRouter({ window, ...routerInit }: HashRouterInit): Router {
+function createHashRouter({
+  window,
+  ...routerInit
+}: HashHistoryOptions & Omit<RouterInit, "history">): Router {
   let history = createHashHistory({ window });
   return createRouter({ history, ...routerInit });
 }
 
-// @remix-run/router public Type API
+export * from "./router";
+
 export type {
   ActionFunction,
-  BrowserHistory,
-  BrowserRouterInit,
-  DataRouteMatch,
   DataRouteObject,
-  Fetcher,
   FormEncType,
   FormMethod,
-  GetScrollRestorationKeyFunction,
-  HashHistory,
-  HashRouterInit,
-  History,
-  HydrationState,
-  InitialEntry,
   LoaderFunction,
-  Location,
-  MemoryHistory,
-  MemoryRouterInit,
-  NavigateOptions,
   ParamParseKey,
   Params,
-  Path,
   PathMatch,
   PathPattern,
-  RouteData,
   RouteMatch,
   RouteObject,
-  Router,
-  RouterInit,
-  RouterState,
   ShouldRevalidateFunction,
   Submission,
-  To,
-  Navigation,
-};
+} from "./utils";
 
-// @remix-run/router public API
 export {
-  Action,
-  IDLE_NAVIGATION,
-  createBrowserHistory,
-  createBrowserRouter,
-  createHashHistory,
-  createHashRouter,
-  createMemoryRouter,
-  createMemoryHistory,
-  createPath,
-  createRouter,
   generatePath,
   getToPathname,
   invariant,
   joinPaths,
   matchPath,
   matchRoutes,
-  normalizeHash,
   normalizePathname,
-  normalizeSearch,
-  parsePath,
   resolvePath,
   resolveTo,
   stripBasename,
   warning,
-  warningOnce,
-};
+} from "./utils";
+
+export type {
+  BrowserHistory,
+  HashHistory,
+  History,
+  InitialEntry,
+  Location,
+  MemoryHistory,
+  Path,
+  To,
+} from "./history";
+
+export {
+  Action,
+  createBrowserHistory,
+  createPath,
+  createHashHistory,
+  createMemoryHistory,
+  parsePath,
+} from "./history";
+
+export { createBrowserRouter, createHashRouter, createMemoryRouter };
