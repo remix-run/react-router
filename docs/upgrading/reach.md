@@ -125,10 +125,6 @@ Not polluting props also helps with TypeScript a bit and also prevents you from 
 
 Also, as a page grows, you naturally break it into multiple components and end up "prop drilling" that data all the way down the tree. Now you can access the route data anywhere in the tree. Not only is it more convenient, but it makes creating router-centric composable abstractions possible. If a custom hook needs the location, it can now simply ask for it with `useLocation()` etc..
 
-```sh
-npm install react-router@6 react-router-dom@6
-```
-
 ### Add a LocationProvider
 
 While `@reach/router` doesn't require a location provider at the top of the application tree, React Router v6 does, so might as well get ready for that now.
@@ -163,7 +159,7 @@ You can pull a trick though and use both routers at the same time as you migrate
 ### Install React Router v6
 
 ```sh
-npm install react-router@next
+npm install react-router@6 react-router-dom@6
 ```
 
 ### Update `LocationProvider` to `BrowserRouter`

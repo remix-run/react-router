@@ -1,6 +1,6 @@
 {
   "name": "react-router-native",
-  "version": "6.2.2",
+  "version": "6.3.0",
   "author": "Remix Software <hello@remix.run>",
   "description": "Declarative routing for React Native applications",
   "repository": {
@@ -13,7 +13,7 @@
   "types": "./index.d.ts",
   "dependencies": {
     "@ungap/url-search-params": "^0.1.4",
-    "react-router": "6.2.2",
+    "react-router": "6.3.0",
     "history": "^5.2.0"
   },
   "peerDependencies": {
