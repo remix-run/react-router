@@ -63,8 +63,9 @@ type ParamParseSegment<Segment extends string> =
       : ParamParseFailed
     : // If there's no forward slash, then check if this segment starts with a
     // colon. If it does, then this is a dynamic segment, so the result is
-    // just the remainder of the string. Otherwise, it's a failure.
-    Segment extends `:${infer Remaining}`
+    // just the remainder of the string, optionally prefixed with another string.
+    // Otherwise, it's a failure.
+    Segment extends `${string}:${infer Remaining}`
     ? Remaining
     : ParamParseFailed;
 
