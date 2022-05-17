@@ -50,9 +50,8 @@
     "remark-mdx-frontmatter": "^1.0.1",
     "semver": "^7.3.5",
     "sort-package-json": "^1.55.0",
-    "strip-bom": "^4.0.0",
     "tar-fs": "^2.1.1",
-    "tsconfig-paths": "^3.14.0",
+    "tsconfig-paths": "^4.0.0",
     "ws": "^7.4.5",
     "xdm": "^2.0.0"
   },
