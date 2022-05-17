@@ -253,17 +253,18 @@ export async function run(argv: string[] = process.argv.slice(2)) {
             name: "appType",
             type: "list",
             message: "What type of app do you want to create?",
+            default: "template",
             when() {
               return flags.template === undefined;
             },
             choices: [
               {
-                name: "A pre-configured stack ready for production",
-                value: "stack",
-              },
-              {
                 name: "Just the basics",
                 value: "template",
+              },
+              {
+                name: "A pre-configured stack ready for production",
+                value: "stack",
               },
             ],
           },
