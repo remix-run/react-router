@@ -46,7 +46,11 @@ describe("<DataMemoryRouter>", () => {
 
   it("renders the first route that matches the URL", () => {
     let { container } = render(
-      <DataMemoryRouter initialEntries={["/"]} hydrationData={{}}>
+      <DataMemoryRouter
+        fallbackElement={<span />}
+        initialEntries={["/"]}
+        hydrationData={{}}
+      >
         <Route path="/" element={<h1>Home</h1>} />
       </DataMemoryRouter>
     );
@@ -64,6 +68,7 @@ describe("<DataMemoryRouter>", () => {
     // In data routers there is no basename and you should instead use a root route
     let { container } = render(
       <DataMemoryRouter
+        fallbackElement={<span />}
         initialEntries={["/my/base/path/thing"]}
         hydrationData={{}}
       >
@@ -87,6 +92,7 @@ describe("<DataMemoryRouter>", () => {
   it("renders with hydration data", async () => {
     let { container } = render(
       <DataMemoryRouter
+        fallbackElement={<span />}
         initialEntries={["/child"]}
         hydrationData={{
           loaderData: {
@@ -138,8 +144,8 @@ describe("<DataMemoryRouter>", () => {
     let fooDefer = defer();
     let { container } = render(
       <DataMemoryRouter
-        initialEntries={["/foo"]}
         fallbackElement={<FallbackElement />}
+        initialEntries={["/foo"]}
       >
         <Route path="/" element={<Outlet />}>
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
@@ -184,6 +190,7 @@ describe("<DataMemoryRouter>", () => {
   it("renders a null fallbackElement if none is provided", async () => {
     let fooDefer = defer();
     let { container } = render(
+      // @ts-expect-error
       <DataMemoryRouter initialEntries={["/foo"]}>
         <Route path="/" element={<Outlet />}>
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
@@ -219,8 +226,8 @@ describe("<DataMemoryRouter>", () => {
     let fooDefer = defer();
     let { container } = render(
       <DataMemoryRouter
-        initialEntries={["/bar"]}
         fallbackElement={<FallbackElement />}
+        initialEntries={["/bar"]}
       >
         <Route path="/" element={<Outlet />}>
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
@@ -253,7 +260,11 @@ describe("<DataMemoryRouter>", () => {
 
   it("handles link navigations", async () => {
     render(
-      <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+      <DataMemoryRouter
+        fallbackElement={<span />}
+        initialEntries={["/foo"]}
+        hydrationData={{}}
+      >
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<Foo />} />
           <Route path="bar" element={<Bar />} />
@@ -291,7 +302,11 @@ describe("<DataMemoryRouter>", () => {
     let barDefer = defer();
 
     let { container } = render(
-      <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+      <DataMemoryRouter
+        fallbackElement={<span />}
+        initialEntries={["/foo"]}
+        hydrationData={{}}
+      >
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<Foo />} />
           <Route path="bar" loader={() => barDefer.promise} element={<Bar />} />
@@ -383,7 +398,11 @@ describe("<DataMemoryRouter>", () => {
     formData.append("test", "value");
 
     let { container } = render(
-      <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+      <DataMemoryRouter
+        fallbackElement={<span />}
+        initialEntries={["/foo"]}
+        hydrationData={{}}
+      >
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<Foo />} />
           <Route
@@ -498,7 +517,11 @@ describe("<DataMemoryRouter>", () => {
     let spy = jest.fn();
 
     render(
-      <DataMemoryRouter initialEntries={["/"]} hydrationData={{}}>
+      <DataMemoryRouter
+        fallbackElement={<span />}
+        initialEntries={["/"]}
+        hydrationData={{}}
+      >
         <Route path="/" element={<Layout />}>
           <Route
             path="foo"
@@ -509,6 +532,7 @@ describe("<DataMemoryRouter>", () => {
             path="bar"
             loader={async () => "BAR LOADER"}
             element={<Bar />}
+            handle={{ key: "value" }}
           />
         </Route>
       </DataMemoryRouter>
@@ -552,6 +576,7 @@ describe("<DataMemoryRouter>", () => {
           "useMatches": Array [
             Object {
               "data": undefined,
+              "handle": undefined,
               "id": "0",
               "params": Object {},
               "pathname": "/",
@@ -570,6 +595,7 @@ describe("<DataMemoryRouter>", () => {
           "useMatches": Array [
             Object {
               "data": undefined,
+              "handle": undefined,
               "id": "0",
               "params": Object {},
               "pathname": "/",
@@ -588,12 +614,16 @@ describe("<DataMemoryRouter>", () => {
           "useMatches": Array [
             Object {
               "data": undefined,
+              "handle": undefined,
               "id": "0",
               "params": Object {},
               "pathname": "/",
             },
             Object {
               "data": "BAR LOADER",
+              "handle": Object {
+                "key": "value",
+              },
               "id": "0-1",
               "params": Object {},
               "pathname": "/bar",
@@ -610,12 +640,16 @@ describe("<DataMemoryRouter>", () => {
           "useMatches": Array [
             Object {
               "data": undefined,
+              "handle": undefined,
               "id": "0",
               "params": Object {},
               "pathname": "/",
             },
             Object {
               "data": "BAR LOADER",
+              "handle": Object {
+                "key": "value",
+              },
               "id": "0-1",
               "params": Object {},
               "pathname": "/bar",
@@ -633,6 +667,7 @@ describe("<DataMemoryRouter>", () => {
 
     let { container } = render(
       <DataMemoryRouter
+        fallbackElement={<span />}
         initialEntries={["/foo"]}
         hydrationData={{
           loaderData: {
@@ -732,6 +767,7 @@ describe("<DataMemoryRouter>", () => {
     it("renders hydration errors on leaf elements", async () => {
       let { container } = render(
         <DataMemoryRouter
+          fallbackElement={<span />}
           initialEntries={["/child"]}
           hydrationData={{
             loaderData: {
@@ -791,6 +827,7 @@ describe("<DataMemoryRouter>", () => {
     it("renders hydration errors on parent elements", async () => {
       let { container } = render(
         <DataMemoryRouter
+          fallbackElement={<span />}
           initialEntries={["/child"]}
           hydrationData={{
             loaderData: {},
@@ -840,6 +877,7 @@ describe("<DataMemoryRouter>", () => {
 
       let { container } = render(
         <DataMemoryRouter
+          fallbackElement={<span />}
           initialEntries={["/foo"]}
           hydrationData={{
             loaderData: {
@@ -980,6 +1018,7 @@ describe("<DataMemoryRouter>", () => {
 
       let { container } = render(
         <DataMemoryRouter
+          fallbackElement={<span />}
           initialEntries={["/foo"]}
           hydrationData={{
             loaderData: {
@@ -1076,6 +1115,7 @@ describe("<DataMemoryRouter>", () => {
 
       let { container } = render(
         <DataMemoryRouter
+          fallbackElement={<span />}
           initialEntries={["/foo"]}
           hydrationData={{
             loaderData: {
@@ -1188,6 +1228,7 @@ describe("<DataMemoryRouter>", () => {
     it("handles render errors in parent errorElement", async () => {
       let { container } = render(
         <DataMemoryRouter
+          fallbackElement={<span />}
           initialEntries={["/child"]}
           hydrationData={{
             loaderData: {},
@@ -1230,6 +1271,7 @@ describe("<DataMemoryRouter>", () => {
     it("handles render errors in child errorElement", async () => {
       let { container } = render(
         <DataMemoryRouter
+          fallbackElement={<span />}
           initialEntries={["/child"]}
           hydrationData={{
             loaderData: {},
@@ -1281,6 +1323,7 @@ describe("<DataMemoryRouter>", () => {
     it("handles render errors in default errorElement", async () => {
       let { container } = render(
         <DataMemoryRouter
+          fallbackElement={<span />}
           initialEntries={["/child"]}
           hydrationData={{
             loaderData: {},
@@ -1400,6 +1443,7 @@ describe("<DataMemoryRouter>", () => {
       let { container } = render(
         <div>
           <LocalDataMemoryRouter
+            fallbackElement={<span />}
             initialEntries={["/"]}
             hydrationData={{ loaderData: {} }}
           >
@@ -1506,6 +1550,7 @@ describe("<DataMemoryRouter>", () => {
       let { container } = render(
         <div>
           <LocalDataMemoryRouter
+            fallbackElement={<span />}
             initialEntries={["/"]}
             hydrationData={{ loaderData: {} }}
           >

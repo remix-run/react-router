@@ -21,7 +21,6 @@ import {
   parsePath,
   resolveTo,
   warning,
-  warningOnce,
 } from "@remix-run/router";
 
 import {
@@ -563,11 +562,19 @@ function useDataRouterState(hookName: DataRouterHook) {
   return state;
 }
 
+/**
+ * Returns the current navigation, defaulting to an "idle" navigation when
+ * no navigation is in progress
+ */
 export function useNavigation() {
   let state = useDataRouterState(DataRouterHook.UseNavigation);
   return state.navigation;
 }
 
+/**
+ * Returns a revalidate function for manually triggering revalidation, as well
+ * as the current state of any manual revalidations
+ */
 export function useRevalidator() {
   let router = React.useContext(DataRouterContext);
   invariant(router, `useRevalidator must be used within a DataRouter`);
@@ -575,6 +582,10 @@ export function useRevalidator() {
   return { revalidate: router.revalidate, state: state.revalidation };
 }
 
+/**
+ * Returns the active route matches, useful for accessing loaderData for
+ * parent/child routes or the route "handle" property
+ */
 export function useMatches() {
   let { matches, loaderData } = useDataRouterState(DataRouterHook.UseMatches);
   return React.useMemo(
@@ -586,12 +597,16 @@ export function useMatches() {
           pathname,
           params,
           data: loaderData[match.route.id],
+          handle: match.route.handle,
         };
       }),
     [matches, loaderData]
   );
 }
 
+/**
+ * Returns the loader data for the nearest ancestor Route loader
+ */
 export function useLoaderData() {
   let state = useDataRouterState(DataRouterHook.UseLoaderData);
 
@@ -607,11 +622,17 @@ export function useLoaderData() {
   return state.loaderData?.[thisRoute.route.id];
 }
 
+/**
+ * Returns the loaderData for the given routeId
+ */
 export function useRouteLoaderData(routeId: string): any {
   let state = useDataRouterState(DataRouterHook.UseRouteLoaderData);
   return state.loaderData?.[routeId];
 }
 
+/**
+ * Returns the action data for the nearest ancestor Route action
+ */
 export function useActionData() {
   let state = useDataRouterState(DataRouterHook.UseRouteError);
 
@@ -621,6 +642,11 @@ export function useActionData() {
   return Object.values(state?.actionData || {})[0];
 }
 
+/**
+ * Returns the nearest ancestor Route error, which could be a loader/action
+ * error or a render error.  This is intended to be called from your
+ * errorElement to display a proper error message.
+ */
 export function useRouteError() {
   let error = React.useContext(RouteErrorContext);
   let state = useDataRouterState(DataRouterHook.UseRouteError);
@@ -641,4 +667,13 @@ export function useRouteError() {
 
   // Otherwise look for errors from our data router state
   return state.errors?.[thisRoute.route.id];
+}
+
+const alreadyWarned: Record<string, boolean> = {};
+
+function warningOnce(key: string, cond: boolean, message: string) {
+  if (!cond && !alreadyWarned[key]) {
+    alreadyWarned[key] = true;
+    warning(false, message);
+  }
 }
