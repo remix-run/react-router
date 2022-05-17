@@ -69,19 +69,3 @@ export function isRedirectResponse(response: Response): boolean {
 export function isCatchResponse(response: Response) {
   return response.headers.get("X-Remix-Catch") != null;
 }
-
-export function extractData(response: Response): Promise<unknown> {
-  let contentType = response.headers.get("Content-Type");
-
-  if (contentType && /\bapplication\/json\b/.test(contentType)) {
-    return response.json();
-  }
-
-  // What other data types do we need to handle here? What other kinds of
-  // responses are people going to be returning from their loaders?
-  // - application/x-www-form-urlencoded ?
-  // - multipart/form-data ?
-  // - binary (audio/video) ?
-
-  return response.text();
-}

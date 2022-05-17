@@ -1,11 +1,9 @@
 import tsConfigPaths from "tsconfig-paths";
 
-import { loadTsConfig } from "./configLoader";
 import { writeConfigDefaults } from "./write-config-defaults";
-export { loadTsConfig } from "./configLoader";
 
 export function createMatchPath() {
-  let configLoaderResult = loadTsConfig();
+  let configLoaderResult = tsConfigPaths.loadConfig();
   if (configLoaderResult.resultType === "failed") {
     if (configLoaderResult.message === "Missing baseUrl in compilerOptions") {
       throw new Error(

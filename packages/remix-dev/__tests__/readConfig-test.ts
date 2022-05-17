@@ -52,4 +52,9 @@ describe("readConfig", () => {
     `
     );
   });
+
+  it("returns the same devServerPort value across reloads", async () => {
+    let newConfig = await readConfig(remixRoot);
+    expect(newConfig.devServerPort).toBe(config.devServerPort);
+  });
 });

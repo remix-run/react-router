@@ -27,7 +27,6 @@
     "chokidar": "^3.5.1",
     "dotenv": "^16.0.0",
     "esbuild": "0.14.22",
-    "esbuild-plugin-cache": "^0.2.9",
     "exit-hook": "2.2.1",
     "express": "4.17.3",
     "fast-glob": "3.2.11",
@@ -50,9 +49,8 @@
     "remark-mdx-frontmatter": "^1.0.1",
     "semver": "^7.3.5",
     "sort-package-json": "^1.55.0",
-    "strip-bom": "^4.0.0",
     "tar-fs": "^2.1.1",
-    "tsconfig-paths": "^3.14.0",
+    "tsconfig-paths": "^4.0.0",
     "ws": "^7.4.5",
     "xdm": "^2.0.0"
   },
