@@ -1,10 +1,10 @@
+import os from "os";
 import path from "path";
 import fse from "fs-extra";
-import os from "os";
+import glob from "fast-glob";
+import shell from "shelljs";
 import stripAnsi from "strip-ansi";
 import type { PackageJson } from "type-fest";
-import shell from "shelljs";
-import glob from "fast-glob";
 
 import { run } from "../cli/run";
 import { readConfig } from "../config";
@@ -110,6 +110,5 @@ describe("`replace-remix-imports` migration", () => {
     expect(result.code).toBe(0);
 
     expect(output).toContain("successfully migrated");
-    expect(output).toContain("npm install");
-  }, 25_000);
+  }, 200_000);
 });

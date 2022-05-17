@@ -1,8 +1,8 @@
 import type { Flags } from "./flags";
 
 export type MigrationFunction = (args: {
-  projectDir: string;
   flags: Flags;
+  projectDir: string;
 }) => Promise<void>;
 
 export interface Migration {

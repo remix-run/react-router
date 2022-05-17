@@ -1,9 +1,9 @@
 import fse from "fs-extra";
 
+import * as colors from "../../colors";
 import type { Flags } from "./flags";
 import { migrations } from "./migrations";
 import type { Migration } from "./types";
-import * as colors from "../../colors";
 
 const parseMigration = (migrationId: string): Migration => {
   let migration = migrations.find(({ id }) => id === migrationId);
@@ -27,11 +27,12 @@ const checkProjectDir = (projectDir: string): string => {
 };
 
 export const run = async (input: {
+  flags: Flags;
   migrationId: string;
   projectDir: string;
-  flags: Flags;
 }) => {
   let projectDir = checkProjectDir(input.projectDir);
   let migration = parseMigration(input.migrationId);
-  return migration.function({ projectDir, flags: input.flags });
+
+  return migration.function({ flags: input.flags, projectDir });
 };

@@ -17,9 +17,10 @@ import * as compiler from "../compiler";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
-import { createApp } from "./create";
 import { loadEnv } from "../env";
 import { log } from "../logging";
+import { createApp } from "./create";
+import { getPreferredPackageManager } from "./getPreferredPackageManager";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "./setup";
 
 export * as migrate from "./migrate";
@@ -29,7 +30,6 @@ export async function create({
   projectDir,
   remixVersion,
   installDeps,
-  packageManager,
   useTypeScript,
   githubToken,
   debug,
@@ -38,7 +38,6 @@ export async function create({
   projectDir: string;
   remixVersion?: string;
   installDeps: boolean;
-  packageManager: "npm" | "yarn" | "pnpm";
   useTypeScript: boolean;
   githubToken?: string;
   debug?: boolean;
@@ -49,7 +48,6 @@ export async function create({
     projectDir,
     remixVersion,
     installDeps,
-    packageManager,
     useTypeScript,
     githubToken,
     debug,
@@ -58,10 +56,7 @@ export async function create({
   spinner.clear();
 }
 
-export async function init(
-  projectDir: string,
-  packageManager: "npm" | "yarn" | "pnpm"
-) {
+export async function init(projectDir: string) {
   let initScriptDir = path.join(projectDir, "remix.init");
   let initScript = path.resolve(initScriptDir, "index.js");
   let initPackageJson = path.resolve(initScriptDir, "package.json");
@@ -69,10 +64,12 @@ export async function init(
   let isTypeScript = fse.existsSync(path.join(projectDir, "tsconfig.json"));
 
   if (await fse.pathExists(initScript)) {
+    let packageManager = getPreferredPackageManager();
+
     if (await fse.pathExists(initPackageJson)) {
       execSync(`${packageManager} install`, {
-        stdio: "ignore",
         cwd: initScriptDir,
+        stdio: "ignore",
       });
     }
 
