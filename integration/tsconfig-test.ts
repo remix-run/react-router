@@ -27,9 +27,6 @@ const DEFAULT_CONFIG = {
     strict: true,
     target: "ES2019",
     baseUrl: ".",
-    paths: {
-      "~/*": ["./app/*"],
-    },
   },
 };
 

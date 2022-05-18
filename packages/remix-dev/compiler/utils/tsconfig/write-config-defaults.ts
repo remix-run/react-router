@@ -13,9 +13,6 @@ let suggestedCompilerOptions: TsConfigJson.CompilerOptions = {
   allowJs: true,
   forceConsistentCasingInFileNames: true,
   lib: ["DOM", "DOM.Iterable", "ES2019"],
-  paths: {
-    "~/*": ["./app/*"],
-  },
   strict: true,
   target: "ES2019",
 };
