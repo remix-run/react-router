@@ -66,5 +66,5 @@ function App() {
 > of the URL. Also note that the second arg to `setSearchParams` is
 > the same type as the second arg to `navigate`.
 
-[usesearchparams-native]: ./use-search-params-rn.md
+[usesearchparams-native]: ./use-search-params-rn
 [usenavigate]: ./use-navigate
