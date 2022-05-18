@@ -32,4 +32,6 @@ interface PathPattern {
 
 `matchPath` matches a route path pattern against a URL pathname and returns information about the match. This is useful whenever you need to manually run the router's matching algorithm to determine if a route path matches or not. It returns `null` if the pattern does not match the given pathname.
 
-The [`useMatch` hook](#usematch) uses this function internally to match a route path relative to the current location.
+The [`useMatch` hook][usematch] uses this function internally to match a route path relative to the current location.
+
+[usematch]: ../hooks/use-match
