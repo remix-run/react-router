@@ -1,6 +1,6 @@
 {
   "name": "react-router-native",
-  "version": "5.3.2",
+  "version": "5.3.3",
   "description": "React Native bindings for React Router",
   "homepage": "https://reactrouter.com/",
   "repository": {
@@ -32,6 +32,6 @@
   },
   "dependencies": {
     "prop-types": "^15.6.1",
-    "react-router": "2"
+    "react-router": "5.3.3"
   }
 }
