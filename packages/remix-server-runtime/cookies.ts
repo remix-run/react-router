@@ -2,6 +2,7 @@ import type { CookieParseOptions, CookieSerializeOptions } from "cookie";
 import { parse, serialize } from "cookie";
 
 import type { SignFunction, UnsignFunction } from "./crypto";
+import { warnOnce } from "./warnings";
 
 export type { CookieParseOptions, CookieSerializeOptions };
 
@@ -90,6 +91,8 @@ export const createCookieFactory =
       path: "/",
       ...cookieOptions,
     };
+
+    warnOnceAboutExpiresCookie(name, options.expires);
 
     return {
       get name() {
@@ -244,4 +247,15 @@ function myUnescape(value: string): string {
     result += chr;
   }
   return result;
+}
+
+function warnOnceAboutExpiresCookie(name: string, expires?: Date) {
+  warnOnce(
+    !expires,
+    `The "${name}" cookie has an "expires" property set. ` +
+      `This will cause the expires value to not be updated when the session is committed. ` +
+      `Instead, you should set the expires value when serializing the cookie. ` +
+      `You can use \`commitSession(session, { expires })\` if using a session storage object, ` +
+      `or \`cookie.serialize("value", { expires })\` if you're using the cookie directly.`
+  );
 }
