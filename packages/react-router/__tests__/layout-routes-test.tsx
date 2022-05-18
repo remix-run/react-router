@@ -31,7 +31,7 @@ describe("A layout route", () => {
       </h1>
     `);
   });
-  
+
   it("allows routes starting with `@`", () => {
     let renderer: TestRenderer.ReactTestRenderer;
     TestRenderer.act(() => {
@@ -59,7 +59,7 @@ describe("A layout route", () => {
         </MemoryRouter>
       );
     });
-    
+
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>
         <h1>
