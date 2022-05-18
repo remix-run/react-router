@@ -99,7 +99,7 @@ export interface RouteObject {
 /**
  * Returns a path with params interpolated.
  *
- * @see https://reactrouter.com/docs/en/v6/api#generatepath
+ * @see https://reactrouter.com/docs/en/v6/utils/generate-path
  */
 export function generatePath(path: string, params: Params = {}): string {
   return path
@@ -137,7 +137,7 @@ export interface RouteMatch<ParamKey extends string = string> {
 /**
  * Matches the given routes to a location and returns the match data.
  *
- * @see https://reactrouter.com/docs/en/v6/api#matchroutes
+ * @see https://reactrouter.com/docs/en/v6/utils/match-routes
  */
 export function matchRoutes(
   routes: RouteObject[],
@@ -384,7 +384,7 @@ type Mutable<T> = {
  * Performs pattern matching on a URL pathname and returns information about
  * the match.
  *
- * @see https://reactrouter.com/docs/en/v6/api#matchpath
+ * @see https://reactrouter.com/docs/en/v6/utils/match-path
  */
 export function matchPath<
   ParamKey extends ParamParseKey<Path>,
@@ -503,7 +503,7 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
 /**
  * Returns a resolved path object relative to the given pathname.
  *
- * @see https://reactrouter.com/docs/en/v6/api#resolvepath
+ * @see https://reactrouter.com/docs/en/v6/utils/resolve-path
  */
 export function resolvePath(to: To, fromPathname = "/"): Path {
   let {
