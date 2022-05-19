@@ -288,7 +288,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
               return answers.appType === "template";
             },
             message:
-              "Where do you want to deploy? Choose Remix if you're unsure; " +
+              "Where do you want to deploy? Choose Remix App Server if you're unsure; " +
               "it's easy to change deployment targets.",
             loop: false,
             choices: templateChoices,
