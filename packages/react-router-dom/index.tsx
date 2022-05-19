@@ -541,7 +541,7 @@ interface FormImplProps extends FormProps {
 const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
   (
     {
-      replace = false,
+      replace,
       method = defaultMethod,
       action = ".",
       encType = defaultEncType,
@@ -764,7 +764,10 @@ function useSubmitImpl(fetcherKey?: string): SubmitFunction {
 
       let href = url.pathname + url.search;
       let opts = {
-        replace: options.replace,
+        // If replace is not specified, we'll default to false for GET and
+        // true otherwise
+        replace:
+          options.replace != null ? options.replace === true : method !== "get",
         formData,
         formMethod: method as FormMethod,
         formEncType: encType as FormEncType,

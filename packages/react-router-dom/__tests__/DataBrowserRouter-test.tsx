@@ -29,6 +29,7 @@ import {
   useFetchers,
 } from "../index";
 import { _resetModuleScope } from "react-router/lib/components";
+import { useNavigate } from "react-router/lib/hooks";
 
 testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
   getWindowImpl(url, false)
@@ -652,6 +653,315 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           <p>
             Action Data:value
           </p>
+        </div>"
+      `);
+    });
+
+    it('defaults <Form method="get"> to be a PUSH navigation', async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route element={<Layout />}>
+            <Route index loader={() => "index"} element={<h1>index</h1>} />
+            <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
+            <Route path="2" loader={() => "2"} element={<h1>Page 2</h1>} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Layout() {
+        let navigate = useNavigate();
+        return (
+          <>
+            <Form action="1">
+              <input name="test" defaultValue="value" />
+              <button type="submit">Submit Form</button>
+            </Form>
+            <button onClick={() => navigate(-1)}>Go back</button>
+            <div className="output">
+              <Outlet />
+            </div>
+          </>
+        );
+      }
+
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      await waitFor(() => screen.getByText("Page 1"));
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            Page 1
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Go back"));
+      await waitFor(() => screen.getByText("index"));
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+    });
+
+    it('defaults <Form method="post"> to be a REPLACE navigation', async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route element={<Layout />}>
+            <Route index loader={() => "index"} element={<h1>index</h1>} />
+            <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
+            <Route
+              path="2"
+              action={() => "action"}
+              loader={() => "2"}
+              element={<h1>Page 2</h1>}
+            />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Layout() {
+        let navigate = useNavigate();
+        return (
+          <>
+            <Link to="1">Go to 1</Link>
+            <Form action="2" method="post">
+              <input name="test" defaultValue="value" />
+              <button type="submit">Submit Form</button>
+            </Form>
+            <button onClick={() => navigate(-1)}>Go back</button>
+            <div className="output">
+              <Outlet />
+            </div>
+          </>
+        );
+      }
+
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Go to 1"));
+      await waitFor(() => screen.getByText("Page 1"));
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            Page 1
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      await waitFor(() => screen.getByText("Page 2"));
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            Page 2
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Go back"));
+      await waitFor(() => screen.getByText("index"));
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+    });
+
+    it('defaults useSubmit({ method: "get" }) to be a PUSH navigation', async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route element={<Layout />}>
+            <Route index loader={() => "index"} element={<h1>index</h1>} />
+            <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
+            <Route path="2" loader={() => "2"} element={<h1>Page 2</h1>} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Layout() {
+        let navigate = useNavigate();
+        let submit = useSubmit();
+        let formData = new FormData();
+        formData.append("test", "value");
+        return (
+          <>
+            <button
+              onClick={() => submit(formData, { action: "1", method: "get" })}
+            >
+              Submit
+            </button>
+            <button onClick={() => navigate(-1)}>Go back</button>
+            <div className="output">
+              <Outlet />
+            </div>
+          </>
+        );
+      }
+
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("Page 1"));
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            Page 1
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Go back"));
+      await waitFor(() => screen.getByText("index"));
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+    });
+
+    it('defaults useSubmit({ method: "post" }) to be a REPLACE navigation', async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route element={<Layout />}>
+            <Route index loader={() => "index"} element={<h1>index</h1>} />
+            <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
+            <Route
+              path="2"
+              action={() => "action"}
+              loader={() => "2"}
+              element={<h1>Page 2</h1>}
+            />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Layout() {
+        let navigate = useNavigate();
+        let submit = useSubmit();
+        let formData = new FormData();
+        formData.append("test", "value");
+        return (
+          <>
+            <Link to="1">Go to 1</Link>
+            <button
+              onClick={() => {
+                debugger;
+                submit(formData, { action: "2", method: "post" });
+              }}
+            >
+              Submit
+            </button>
+            <button onClick={() => navigate(-1)}>Go back</button>
+            <div className="output">
+              <Outlet />
+            </div>
+          </>
+        );
+      }
+
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Go to 1"));
+      await waitFor(() => screen.getByText("Page 1"));
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            Page 1
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("Page 2"));
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            Page 2
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Go back"));
+      await waitFor(() => screen.getByText("index"));
+      expect(getHtml(container.querySelector(".output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          class=\\"output\\"
+        >
+          <h1>
+            index
+          </h1>
         </div>"
       `);
     });
