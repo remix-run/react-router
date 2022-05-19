@@ -7,11 +7,11 @@ order: 2
 
 ## Introduction
 
-[Check out the completed version of the app here](https://stackblitz.com/edit/github-agqlf5?file=src/App.jsx).
+[Check out the completed version of the app here][stackblitz-app].
 
 React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, and on React Native.
 
-If you're just getting started with React generally, we recommend you follow [the excellent Getting Started guide](https://reactjs.org/docs/getting-started.html) in the official docs. There is plenty of information there to get you up and running. React Router is compatible with React >= 16.8.
+If you're just getting started with React generally, we recommend you follow [the excellent Getting Started guide][reactjs-getting-started] in the official docs. There is plenty of information there to get you up and running. React Router is compatible with React >= 16.8.
 
 We'll keep this tutorial quick and to the point. By the end you'll know the APIs you deal with day-to-day with React Router. After that, you can dig into some of the other docs to get a deeper understanding.
 
@@ -31,15 +31,15 @@ While building a little bookkeeping app we'll cover:
 
 ### Recommended: StackBlitz
 
-To do this tutorial you'll need a working React app. We recommend skipping bundlers and using [this demo on StackBlitz](https://stackblitz.com/github/remix-run/react-router/tree/main/tutorial?file=src/App.jsx) to code along in your browser:
+To do this tutorial you'll need a working React app. We recommend skipping bundlers and using [this demo on StackBlitz][stackblitz-template] to code along in your browser:
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/main/tutorial?file=src/App.jsx)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)][stackblitz-template]
 
 As you edit files, the tutorial will update live.
 
 ### Using a bundler
 
-Feel free to use your bundler of choice like [Create React App](https://create-react-app.dev/) or [Vite](https://vitejs.dev/guide/#scaffolding-your-first-vite-project).
+Feel free to use your bundler of choice like [Create React App][cra] or [Vite][vite].
 
 ```sh
 # create react app
@@ -73,11 +73,13 @@ Actually, that "!" doesn't look boring at all. This is pretty exciting. We sat o
 Finally, go make sure `index.js` or `main.jsx` (depending on the bundler you used) is actually boring:
 
 ```tsx filename=src/main.jsx
-import { render } from "react-dom";
+import ReactDOM from "react-dom/client";
 import App from "./App";
 
-const rootElement = document.getElementById("root");
-render(<App />, rootElement);
+const root = ReactDOM.createRoot(
+  document.getElementById("root")
+);
+root.render(<App />);
 ```
 
 Finally, start your app:
@@ -94,17 +96,18 @@ npm run dev
 
 First things first, we want to connect your app to the browser's URL: import `BrowserRouter` and render it around your whole app.
 
-```tsx lines=[2,7-9] filename=src/main.jsx
-import { render } from "react-dom";
+```tsx lines=[2,9-11] filename=src/main.jsx
+import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 
-const rootElement = document.getElementById("root");
-render(
+const root = ReactDOM.createRoot(
+  document.getElementById("root")
+);
+root.render(
   <BrowserRouter>
     <App />
-  </BrowserRouter>,
-  rootElement
+  </BrowserRouter>
 );
 ```
 
@@ -146,7 +149,7 @@ Add a couple new files:
 - `src/routes/invoices.jsx`
 - `src/routes/expenses.jsx`
 
-(The location of the files doesn't matter, but when you decide you'd like an automatic backend API, server rendering, code splitting bundler and more for this app, naming your files like this way makes it easy to port this app to our other project, [Remix](https://remix.run) 😉)
+(The location of the files doesn't matter, but when you decide you'd like an automatic backend API, server rendering, code splitting bundler and more for this app, naming your files like this way makes it easy to port this app to our other project, [Remix][remix] 😉)
 
 Now fill 'em up with some code:
 
@@ -172,8 +175,8 @@ export default function Invoices() {
 
 Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx` or `index.js`.
 
-```tsx lines=[2,4-5,8-9,13-19] filename=src/main.jsx
-import { render } from "react-dom";
+```tsx lines=[2,4-5,8-9,15-21] filename=src/main.jsx
+import ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
   Routes,
@@ -183,16 +186,17 @@ import App from "./App";
 import Expenses from "./routes/expenses";
 import Invoices from "./routes/invoices";
 
-const rootElement = document.getElementById("root");
-render(
+const root = ReactDOM.createRoot(
+  document.getElementById("root")
+);
+root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />} />
       <Route path="expenses" element={<Expenses />} />
       <Route path="invoices" element={<Invoices />} />
     </Routes>
-  </BrowserRouter>,
-  rootElement
+  </BrowserRouter>
 );
 ```
 
@@ -211,8 +215,8 @@ Let's get some automatic, persistent layout handling by doing just two things:
 
 First let's nest the routes. Right now the expenses and invoices routes are siblings to the app, we want to make them _children_ of the app route:
 
-```jsx lines=[15-18] filename=src/main.jsx
-import { render } from "react-dom";
+```jsx lines=[17-20] filename=src/main.jsx
+import ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
   Routes,
@@ -222,8 +226,10 @@ import App from "./App";
 import Expenses from "./routes/expenses";
 import Invoices from "./routes/invoices";
 
-const rootElement = document.getElementById("root");
-render(
+const root = ReactDOM.createRoot(
+  document.getElementById("root")
+);
+root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />}>
@@ -231,8 +237,7 @@ render(
         <Route path="invoices" element={<Invoices />} />
       </Route>
     </Routes>
-  </BrowserRouter>,
-  rootElement
+  </BrowserRouter>
 );
 ```
 
@@ -806,7 +811,7 @@ export function deleteInvoice(number) {
 
 Now let's add the delete button, call our new function, and navigate to the index route:
 
-```js lines=[1-6,20-29] filename=src/routes/invoice.jsx
+```js lines=[1-6,9-10,21-30] filename=src/routes/invoice.jsx
 import {
   useParams,
   useNavigate,
@@ -849,3 +854,10 @@ Notice we used `useLocation` again to persist the query string by adding `locati
 Congrats! You're all done with this tutorial. We hope it helped you get your bearings with React Router.
 
 If you're having trouble, check out the [Resources](/resources) page to get help. Good luck!
+
+[stackblitz-app]: https://stackblitz.com/edit/github-agqlf5?file=src/App.jsx
+[stackblitz-template]: https://stackblitz.com/github/remix-run/react-router/tree/main/tutorial?file=src/App.jsx
+[reactjs-getting-started]: https://reactjs.org/docs/getting-started.html
+[cra]: https://create-react-app.dev/
+[vite]: https://vitejs.dev/guide/#scaffolding-your-first-vite-project
+[remix]: https://remix.run

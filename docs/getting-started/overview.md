@@ -1,15 +1,14 @@
 ---
-title: Overview
+title: Quick Start
 order: 2
 ---
 
-# Overview
+# Quick Start Overview
 
 If you're familiar with the JavaScript ecosystem, React, and React Router, this serves as a quick overview of React Router v6 with lots of code and minimal explanations.
 
-- For a complete introduction to React Router, do the [Tutorial](tutorial.md)
-- For extensive documentation on every API, see [API Reference](../api.md)
-- For a deeper understanding of concepts, see [Main Concepts](concepts.md)
+- For a complete introduction to React Router, do the [Tutorial][tutorial]
+- For a deeper understanding of concepts, see [Main Concepts][concepts]
 
 ## Installation
 
@@ -20,7 +19,7 @@ npm install react-router-dom@6
 ## Configuring Routes
 
 ```jsx
-import { render } from "react-dom";
+import ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
   Routes,
@@ -28,7 +27,10 @@ import {
 } from "react-router-dom";
 // import your route components too
 
-render(
+const root = ReactDOM.createRoot(
+  document.getElementById("root")
+);
+root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />}>
@@ -40,8 +42,7 @@ render(
         </Route>
       </Route>
     </Routes>
-  </BrowserRouter>,
-  document.getElementById("root")
+  </BrowserRouter>
 );
 ```
 
@@ -435,7 +436,7 @@ function App() {
 
 ## Descendant `<Routes>`
 
-You can render [a `<Routes>` element](../api.md#routes) anywhere you need one, including deep within the component tree of another `<Routes>`. These will work just the same as any other `<Routes>`, except they will automatically build on the path of the route that rendered them. If you do this, _make sure to put a \* at the end of the parent route's path_. Otherwise, the parent route won't match the URL when it is longer than the parent route's path, and your descendant `<Routes>` won't ever show up.
+You can render [a `<Routes>` element][routes] anywhere you need one, including deep within the component tree of another `<Routes>`. These will work just the same as any other `<Routes>`, except they will automatically build on the path of the route that rendered them. If you do this, _make sure to put a \* at the end of the parent route's path_. Otherwise, the parent route won't match the URL when it is longer than the parent route's path, and your descendant `<Routes>` won't ever show up.
 
 ```tsx [5]
 function App() {
@@ -460,4 +461,8 @@ function Dashboard() {
 }
 ```
 
-And that's just about it! We haven't covered every API here, but these are definitely the most common ones you'll use. If you'd like to learn more, go ahead and follow [our tutorial](tutorial.md) or browse [the full API reference](../api.md).
+And that's just about it! We haven't covered every API here, but these are definitely the most common ones you'll use. If you'd like to learn more, go ahead and follow [our tutorial][tutorial].
+
+[tutorial]: ./tutorial
+[concepts]: ./concepts
+[routes]: ../components/routes
