@@ -52,6 +52,9 @@ export function _resetModuleScope() {
   routerSingleton = null;
 }
 
+/**
+ * @private
+ */
 export function useRenderDataRouter({
   children,
   fallbackElement,

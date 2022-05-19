@@ -10,8 +10,8 @@ import {
   useLocation,
   useMatch,
   useNavigate,
+  useRenderDataRouter,
   useResolvedPath,
-  UNSAFE_useRenderDataRouter,
   UNSAFE_RouteContext,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
@@ -148,7 +148,7 @@ export {
   UNSAFE_RouteContext,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
-  UNSAFE_useRenderDataRouter,
+  useRenderDataRouter,
 } from "react-router";
 //#endregion
 
@@ -169,7 +169,7 @@ export function DataBrowserRouter({
   hydrationData,
   window,
 }: DataBrowserRouterProps): React.ReactElement {
-  return UNSAFE_useRenderDataRouter({
+  return useRenderDataRouter({
     children,
     fallbackElement,
     createRouter: (routes: RouteObject[]) =>
@@ -194,7 +194,7 @@ export function DataHashRouter({
   fallbackElement,
   window,
 }: DataBrowserRouterProps): React.ReactElement {
-  return UNSAFE_useRenderDataRouter({
+  return useRenderDataRouter({
     children,
     fallbackElement,
     createRouter: (routes: RouteObject[]) =>

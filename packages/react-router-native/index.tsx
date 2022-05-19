@@ -111,7 +111,7 @@ export {
   UNSAFE_RouteContext,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
-  UNSAFE_useRenderDataRouter,
+  useRenderDataRouter,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////
