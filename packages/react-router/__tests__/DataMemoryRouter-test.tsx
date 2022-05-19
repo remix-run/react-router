@@ -22,11 +22,11 @@ import {
   useRouteLoaderData,
   useRouteError,
   useNavigation,
+  useRenderDataRouter,
   useRevalidator,
   UNSAFE_DataRouterContext,
   MemoryRouter,
   Routes,
-  UNSAFE_useRenderDataRouter,
 } from "../index";
 import { _resetModuleScope } from "../lib/components";
 
@@ -1425,7 +1425,7 @@ describe("<DataMemoryRouter>", () => {
         hydrationData,
         fallbackElement,
       }: DataMemoryRouterProps): React.ReactElement {
-        return UNSAFE_useRenderDataRouter({
+        return useRenderDataRouter({
           children,
           fallbackElement,
           createRouter: (routes) => {
@@ -1532,7 +1532,7 @@ describe("<DataMemoryRouter>", () => {
         hydrationData,
         fallbackElement,
       }: DataMemoryRouterProps): React.ReactElement {
-        return UNSAFE_useRenderDataRouter({
+        return useRenderDataRouter({
           children,
           fallbackElement,
           createRouter: (routes) => {

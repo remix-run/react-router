@@ -173,5 +173,5 @@ export {
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  useRenderDataRouter as UNSAFE_useRenderDataRouter,
+  useRenderDataRouter,
 };
