@@ -3,13 +3,13 @@
   "private": true,
   "sideEffects": false,
   "dependencies": {
-    "@remix-run/deno": "*",
-    "@remix-run/react": "*",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "@remix-run/deno": "0.0.0-local-version",
+    "@remix-run/react": "0.0.0-local-version",
+    "react": "0.0.0-local-version",
+    "react-dom": "0.0.0-local-version"
   },
   "devDependencies": {
-    "@remix-run/dev": "*"
+    "@remix-run/dev": "0.0.0-local-version"
   },
   "engines": {
     "node": ">=14"
