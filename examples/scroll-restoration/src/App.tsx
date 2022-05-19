@@ -2,14 +2,18 @@ import React from "react";
 import type { DataRouteMatch, Location } from "react-router-dom";
 import {
   DataBrowserRouter,
-  ScrollRestoration,
-  useLocation,
   Link,
-  Route,
   Outlet,
+  Route,
+  ScrollRestoration,
+  useLoaderData,
+  useLocation,
+  useNavigation,
 } from "react-router-dom";
 
 function Layout() {
+  let navigation = useNavigation();
+
   // You can provide a custom implementation of what "key" should be used to
   // cache scroll positions for a given location.  Using the location.key will
   // provide standard browser behavior and only restore on back/forward
@@ -48,32 +52,48 @@ function Layout() {
         .navitem {
           margin: 1rem 0;
         }
+
+        .spinner {
+          position: fixed;
+          top: 0;
+          right: 0;
+          padding: 5px;
+          background-color: lightgreen;
+        }
       `}</style>
+      <div
+        className="spinner"
+        style={{
+          display: navigation.state === "idle" ? "none" : "block",
+        }}
+      >
+        Navigating...
+      </div>
       <div className="wrapper">
         <div className="left">
           <div className="fixed">
             <nav>
               <ul>
-                <li class="navitem">
+                <li className="navitem">
                   <Link to="/">Home</Link>
                 </li>
-                <li class="navitem">
+                <li className="navitem">
                   <Link to="/restore-by-key">
                     This page restores by location.key
                   </Link>
                 </li>
-                <li class="navitem">
+                <li className="navitem">
                   <Link to="/restore-by-pathname">
                     {" "}
                     This page restores by location.pathname
                   </Link>
                 </li>
-                <li class="navitem">
+                <li className="navitem">
                   <Link to="/link-to-hash#heading">
                     This link will link to a nested heading via hash
                   </Link>
                 </li>
-                <li class="navitem">
+                <li className="navitem">
                   <a href="https://www.google.com">
                     Thi links to an external site (google)
                   </a>
@@ -95,20 +115,28 @@ function Layout() {
   );
 }
 
+async function getArrayLoader() {
+  await new Promise((r) => setTimeout(r, 1000));
+  return {
+    arr: new Array(100).fill(null).map((_, i) => i),
+  };
+}
+
 function LongPage() {
+  let data = useLoaderData();
   let location = useLocation();
   return (
     <>
       <h2>Long Page</h2>
-      {new Array(100).fill(null).map((n, i) => (
-        <p key={i}>
-          Item {i} on {location.pathname}
+      {data.arr.map((n) => (
+        <p key={n}>
+          Item {n} on {location.pathname}
         </p>
       ))}
       <h3 id="heading">This is a linkable heading</h3>
-      {new Array(100).fill(null).map((n, i) => (
-        <p key={i}>
-          Item {i + 100} on {location.pathname}
+      {data.arr.map((n) => (
+        <p key={n}>
+          Item {n + 100} on {location.pathname}
         </p>
       ))}
     </>
@@ -117,16 +145,25 @@ function LongPage() {
 
 function App() {
   return (
-    <DataBrowserRouter>
+    <DataBrowserRouter fallbackElement={<p>Loading...</p>}>
       <Route path="/" element={<Layout />}>
         <Route index element={<h2>Home</h2>} />
-        <Route path="restore-by-key" element={<LongPage />} />
+        <Route
+          path="restore-by-key"
+          loader={getArrayLoader}
+          element={<LongPage />}
+        />
         <Route
           path="restore-by-pathname"
+          loader={getArrayLoader}
           element={<LongPage />}
           handle={{ scrollMode: "pathname" }}
         />
-        <Route path="link-to-hash" element={<LongPage />} />
+        <Route
+          path="link-to-hash"
+          loader={getArrayLoader}
+          element={<LongPage />}
+        />
       </Route>
     </DataBrowserRouter>
   );
