@@ -10,7 +10,7 @@ Support for each runtime is provided by a corresponding Remix package:
 
 - [`@remix-run/node`](https://github.com/remix-run/remix/tree/main/packages/remix-node)
 - [`@remix-run/cloudflare`](https://github.com/remix-run/remix/tree/main/packages/remix-cloudflare)
-- [`@remix-run/deno`](https://github.com/remix-run/remix/tree/main/packages/remix-deno)
+- [`remix-deno`](https://github.com/remix-run/remix/tree/main/templates/deno/remix-deno) (will be renamed to `@remix-run/deno` when Deno support is stable)
 
 This package defines a "Remix server runtime interface" that each runtime package must conform to.
 
