@@ -44,7 +44,6 @@ import type {
 } from "./dom";
 import {
   createSearchParams,
-  defaultEncType,
   defaultMethod,
   getFormSubmissionInfo,
   getSearchParamsForLocation,
@@ -492,11 +491,6 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   action?: string;
 
   /**
-   * Normal `<form encType>`.
-   */
-  encType?: FormEncType;
-
-  /**
    * Replaces the current entry in the browser history stack when the form
    * navigates. Use this if you don't want the user to be able to click "back"
    * to the page with the form on it.
@@ -544,7 +538,6 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       replace,
       method = defaultMethod,
       action = ".",
-      encType = defaultEncType,
       onSubmit,
       fetcherKey,
       ...props
@@ -571,7 +564,6 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         ref={forwardedRef}
         method={formMethod}
         action={formAction}
-        encType={encType}
         onSubmit={submitHandler}
         {...props}
       />

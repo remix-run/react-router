@@ -1,7 +1,7 @@
 import type { FormEncType, FormMethod } from "@remix-run/router";
 
 export const defaultMethod = "get";
-export const defaultEncType = "application/x-www-form-urlencoded";
+const defaultEncType = "application/x-www-form-urlencoded";
 
 export function isHtmlElement(object: any): object is HTMLElement {
   return object != null && typeof object.tagName === "string";
