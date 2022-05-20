@@ -64,6 +64,31 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
+  it("supports a `routes` prop instead of <Route /> children", () => {
+    let routes = [
+      {
+        path: "/",
+        element: <h1>Home</h1>,
+      },
+    ];
+    let { container } = render(
+      <DataMemoryRouter
+        fallbackElement={<span />}
+        initialEntries={["/"]}
+        hydrationData={{}}
+        routes={routes}
+      />
+    );
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Home
+        </h1>
+      </div>"
+    `);
+  });
+
   it("renders the first route that matches the URL when wrapped in a 'basename' route", () => {
     // In data routers there is no basename and you should instead use a root route
     let { container } = render(

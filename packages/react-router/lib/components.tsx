@@ -58,15 +58,17 @@ export function _resetModuleScope() {
 export function useRenderDataRouter({
   children,
   fallbackElement,
+  routes,
   createRouter,
 }: {
   children?: React.ReactNode;
   fallbackElement: React.ReactElement;
+  routes?: RouteObject[];
   createRouter: (routes: RouteObject[]) => DataRouter;
 }): React.ReactElement {
   if (!routerSingleton) {
     routerSingleton = createRouter(
-      createRoutesFromChildren(children)
+      routes || createRoutesFromChildren(children)
     ).initialize();
   }
   let router = routerSingleton;
@@ -98,7 +100,7 @@ export function useRenderDataRouter({
           navigationType={state.historyAction}
           navigator={navigator}
         >
-          <Routes children={children} />
+          <DataRoutes routes={routes} children={children} />
         </Router>
       </DataRouterStateContext.Provider>
     </DataRouterContext.Provider>
@@ -111,6 +113,7 @@ export interface DataMemoryRouterProps {
   initialIndex?: number;
   hydrationData?: HydrationState;
   fallbackElement: React.ReactElement;
+  routes?: RouteObject[];
 }
 
 export function DataMemoryRouter({
@@ -119,10 +122,12 @@ export function DataMemoryRouter({
   initialIndex,
   hydrationData,
   fallbackElement,
+  routes,
 }: DataMemoryRouterProps): React.ReactElement {
   return useRenderDataRouter({
     children,
     fallbackElement,
+    routes,
     createRouter: (routes) =>
       createMemoryRouter({
         initialEntries,
@@ -383,6 +388,24 @@ export function Routes({
   location,
 }: RoutesProps): React.ReactElement | null {
   return useRoutes(createRoutesFromChildren(children), location);
+}
+
+interface DataRoutesProps extends RoutesProps {
+  routes?: RouteObject[];
+}
+
+/**
+ * @private
+ * Used as an extension to <Routes> and accepts a manual `routes` array to be
+ * instead of using JSX children.  Extracted to it's own component to avoid
+ * conditional usage of `useRoutes` if we have to render a `fallbackElement`
+ */
+function DataRoutes({
+  children,
+  location,
+  routes,
+}: DataRoutesProps): React.ReactElement | null {
+  return useRoutes(routes || createRoutesFromChildren(children), location);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
