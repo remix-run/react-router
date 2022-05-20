@@ -86,14 +86,8 @@ type FetcherHelpers = NavigationHelpers & {
   fetcher: Fetcher;
 };
 
-// Global array to stick any errors thrown from router.navigate() and then we
-// can assert against them and clear the array in afterEach
-let uncaughtErrors: string[] = [];
-function handleUncaughtError(e: any): void {
-  console.error("Error caught from navigate()", e);
-  uncaughtErrors.push(
-    e instanceof Error ? `${e.message}\n${e.stack}` : String(e)
-  );
+async function tick() {
+  await new Promise((r) => setImmediate(r));
 }
 
 export function invariant(value: boolean, message?: string): asserts value;
@@ -325,7 +319,7 @@ function setup({
             },
           })
         );
-        await new Promise((r) => setImmediate(r));
+        await tick();
       } catch (e) {}
       return helpers;
     }
@@ -343,12 +337,12 @@ function setup({
       // Public APIs only needed for test execution
       async resolve(value) {
         await internalHelpers.dfd.resolve(value);
-        await new Promise((r) => setImmediate(r));
+        await tick();
       },
       async reject(value) {
         try {
           await internalHelpers.dfd.reject(value);
-          await new Promise((r) => setImmediate(r));
+          await tick();
         } catch (e) {}
       },
       async redirect(href, status = 301, headers = {}, shims = []) {
@@ -538,14 +532,14 @@ function setup({
           r();
         });
       });
-      currentRouter.navigate(href).catch(handleUncaughtError);
+      currentRouter.navigate(href);
       await promise;
       //@ts-ignore
       return helpers;
     }
 
     helpers = getNavigationHelpers(href, navigationId);
-    currentRouter.navigate(href, opts).catch(handleUncaughtError);
+    currentRouter.navigate(href, opts);
     return helpers;
   }
 
@@ -582,7 +576,7 @@ function setup({
     }
 
     let helpers = getFetcherHelpers(key, href, navigationId, opts);
-    currentRouter.fetch(key, href, opts).catch(handleUncaughtError);
+    currentRouter.fetch(key, href, opts);
     return helpers;
   }
 
@@ -602,7 +596,7 @@ function setup({
       currentRouter.state.navigation.location || currentRouter.state.location
     );
     let helpers = getNavigationHelpers(href, navigationId);
-    currentRouter.revalidate().catch(handleUncaughtError);
+    currentRouter.revalidate();
     return helpers;
   }
 
@@ -749,12 +743,6 @@ afterEach(() => {
 
   // @ts-ignore
   console.warn.mockReset();
-  if (uncaughtErrors.length) {
-    let NO_UNCAUGHT_ERRORS = "No Uncaught Errors";
-    let strErrors = uncaughtErrors.join(",") || NO_UNCAUGHT_ERRORS;
-    uncaughtErrors = [];
-    expect(strErrors).toEqual(NO_UNCAUGHT_ERRORS);
-  }
 });
 
 describe("a router", () => {
@@ -1219,45 +1207,53 @@ describe("a router", () => {
       router.initialize();
 
       // Initial load - no existing data, should always call loader
-      await new Promise((r) => setImmediate(r));
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
       // Should not re-run on normal navigations re-using the loader
-      await router.navigate("/child");
-      await router.navigate("/");
-      await router.navigate("/child");
+      router.navigate("/child");
+      await tick();
+      router.navigate("/");
+      await tick();
+      router.navigate("/child");
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(0);
       rootLoader.mockClear();
 
       // Should call on same-path navigations
-      await router.navigate("/child");
+      router.navigate("/child");
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
       // Should call on query string changes
-      await router.navigate("/child?key=value");
+      router.navigate("/child?key=value");
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
       // Should call after form submission revalidation
-      await router.navigate("/child", {
+      router.navigate("/child", {
         formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
       // Should call after form submission redirect
-      await router.navigate("/redirect", {
+      router.navigate("/redirect", {
         formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
       // Should call after loader redirect with X-Remix-Revalidate
-      await router.navigate("/cookie");
+      router.navigate("/cookie");
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
@@ -1304,16 +1300,19 @@ describe("a router", () => {
 
       // Initial load - no existing data, should always call loader and should
       // not give use ability to opt-out
-      await new Promise((r) => setImmediate(r));
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       expect(shouldRevalidate.mock.calls.length).toBe(0);
       rootLoader.mockClear();
       shouldRevalidate.mockClear();
 
       // Should not re-run on normal navigations re-using the loader
-      await router.navigate("/child");
-      await router.navigate("/");
-      await router.navigate("/child");
+      router.navigate("/child");
+      await tick();
+      router.navigate("/");
+      await tick();
+      router.navigate("/child");
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(0);
       expect(shouldRevalidate.mock.calls.length).toBe(3);
       rootLoader.mockClear();
@@ -1321,7 +1320,8 @@ describe("a router", () => {
 
       // Check that we pass the right args to shouldRevalidate and respect it's answer
       shouldRevalidate.mockImplementation(() => true);
-      await router.navigate("/params/aValue/bValue");
+      router.navigate("/params/aValue/bValue");
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       expect(shouldRevalidate.mock.calls[0][0]).toMatchObject({
         currentParams: {},
@@ -1341,10 +1341,11 @@ describe("a router", () => {
       shouldRevalidate.mockImplementation(
         ({ actionResult }) => actionResult.ok === true
       );
-      await router.navigate("/child", {
+      router.navigate("/child", {
         formMethod: "post",
         formData: createFormData({}),
       });
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(0);
 
       router.dispose();
@@ -1397,45 +1398,53 @@ describe("a router", () => {
       router.initialize();
 
       // Initial load - no existing data, should always call loader
-      await new Promise((r) => setImmediate(r));
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
       // Should not re-run on normal navigations re-using the loader
-      await router.navigate("/child");
-      await router.navigate("/");
-      await router.navigate("/child");
+      router.navigate("/child");
+      await tick();
+      router.navigate("/");
+      await tick();
+      router.navigate("/child");
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(0);
       rootLoader.mockClear();
 
       // Should call on same-path navigations
-      await router.navigate("/child");
+      router.navigate("/child");
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
       // Should call on query string changes
-      await router.navigate("/child?key=value");
+      router.navigate("/child?key=value");
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
       // Should call after form submission revalidation
-      await router.navigate("/child", {
+      router.navigate("/child", {
         formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
       // Should call after form submission redirect
-      await router.navigate("/redirect", {
+      router.navigate("/redirect", {
         formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
       // Should call after loader redirect with X-Remix-Revalidate
-      await router.navigate("/cookie");
+      router.navigate("/cookie");
+      await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
       rootLoader.mockClear();
 
@@ -1475,10 +1484,11 @@ describe("a router", () => {
         ],
       });
       router.initialize();
-      await new Promise((r) => setImmediate(r));
+      await tick();
 
       let key = "key";
-      await router.fetch(key, "/fetch");
+      router.fetch(key, "/fetch");
+      await tick();
       expect(router.state.fetchers.get(key)).toMatchObject({
         state: "idle",
         data: "FETCH 1",
@@ -1486,8 +1496,10 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(0);
 
       // Normal navigations should not trigger fetcher revalidations
-      await router.navigate("/child");
-      await router.navigate("/");
+      router.navigate("/child");
+      await tick();
+      router.navigate("/");
+      await tick();
       expect(shouldRevalidate.mock.calls.length).toBe(0);
       expect(router.state.fetchers.get(key)).toMatchObject({
         state: "idle",
@@ -1496,10 +1508,11 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(0);
 
       // Post navigation should trigger shouldRevalidate, and loader should not re-run
-      await router.navigate("/child", {
+      router.navigate("/child", {
         formMethod: "post",
         formData: createFormData({}),
       });
+      await tick();
       expect(router.state.fetchers.get(key)).toMatchObject({
         state: "idle",
         data: "FETCH 1",
@@ -2698,7 +2711,8 @@ describe("a router", () => {
       expect(t.history.action).toEqual("REPLACE");
       expect(t.history.location.pathname).toEqual("/tasks/1");
 
-      await t.router.navigate(-1);
+      t.router.navigate(-1);
+      await tick();
       expect(t.router.state).toMatchObject({
         historyAction: "POP",
         location: {
@@ -2824,7 +2838,7 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await parentDfd.resolve("PARENT DATA");
-      await new Promise((r) => setImmediate(r));
+      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -2838,7 +2852,7 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await childDfd.resolve("CHILD DATA");
-      await new Promise((r) => setImmediate(r));
+      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -2899,7 +2913,7 @@ describe("a router", () => {
 
       await parentDfd.resolve("PARENT DATA 2");
       await childDfd.resolve("CHILD DATA");
-      await new Promise((r) => setImmediate(r));
+      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3007,7 +3021,7 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await parentDfd.resolve("PARENT DATA");
-      await new Promise((r) => setImmediate(r));
+      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3022,7 +3036,7 @@ describe("a router", () => {
 
       router.navigate("/child2");
       await childDfd.resolve("CHILD DATA");
-      await new Promise((r) => setImmediate(r));
+      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3036,7 +3050,7 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await child2Dfd.resolve("CHILD2 DATA");
-      await new Promise((r) => setImmediate(r));
+      await tick();
       expect(router.state).toMatchObject({
         historyAction: "PUSH",
         location: expect.objectContaining({ pathname: "/child2" }),
@@ -3069,7 +3083,7 @@ describe("a router", () => {
       });
       router.initialize();
 
-      await new Promise((r) => setImmediate(r));
+      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -5934,7 +5948,7 @@ describe("a router", () => {
 
         // Fetch from a different route
         router.fetch(key, "/fetch");
-        await new Promise((r) => setImmediate(r));
+        await tick();
         expect(router.getFetcher(key)).toMatchObject({
           state: "idle",
           data: 1,
@@ -5945,7 +5959,7 @@ describe("a router", () => {
           formMethod: "post",
           formData: createFormData({}),
         });
-        await new Promise((r) => setImmediate(r));
+        await tick();
         expect(router.state.loaderData).toMatchObject({
           root: 2,
         });

@@ -69,14 +69,14 @@ export interface Router {
    * Navigate forward/backward in the history stack
    * @param path Delta to move in the history stack
    */
-  navigate(path: number): Promise<void>;
+  navigate(path: number): void;
 
   /**
    * Navigate to the given path
    * @param path Path to navigate to
    * @param opts Navigation options (method, submission, etc.)
    */
-  navigate(path: To, opts?: NavigateOptions): Promise<void>;
+  navigate(path: To, opts?: NavigateOptions): void;
 
   /**
    * Trigger a fetcher load/submission
@@ -85,12 +85,12 @@ export interface Router {
    * @param href href to fetch
    * @param opts Fetcher options, (method, submission, etc.)
    */
-  fetch(key: string, href: string, opts?: NavigateOptions): Promise<void>;
+  fetch(key: string, href: string, opts?: NavigateOptions): void;
 
   /**
    * Trigger a revalidation of all current route loaders and fetcher loads
    */
-  revalidate(): Promise<void>;
+  revalidate(): void;
 
   /**
    * Utility function to create an href for the given location
@@ -682,7 +682,7 @@ export function createRouter(init: RouterInit): Router {
   // Revalidate all current loaders.  If a navigation is in progress or if this
   // is interrupted by a navigation, allow this to "succeed" by calling all
   // loaders during the next loader round
-  async function revalidate(): Promise<void> {
+  function revalidate() {
     let { state: navigationState, type } = state.navigation;
 
     // Toggle isRevalidationRequired so the next data load will call all loaders,
@@ -700,15 +700,16 @@ export function createRouter(init: RouterInit): Router {
     // action/location and mark it as uninterrupted, which will skip the history
     // update in completeNavigation
     if (state.navigation.state === "idle") {
-      return await startNavigation(state.historyAction, state.location, {
+      startNavigation(state.historyAction, state.location, {
         startUninterruptedRevalidation: true,
       });
+      return;
     }
 
     // Otherwise, if we're currently in a loading state, just start a new
     // navigation to the navigation.location but do not trigger an uninterrupted
     // revalidation so that history correctly updates once the navigation completes
-    return await startNavigation(
+    startNavigation(
       pendingAction || state.historyAction,
       state.navigation.location,
       { overrideNavigation: state.navigation }
@@ -1051,7 +1052,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   // Trigger a fetcher load/submit for the given fetcher key
-  async function fetch(key: string, href: string, opts?: NavigateOptions) {
+  function fetch(key: string, href: string, opts?: NavigateOptions) {
     if (typeof AbortController === "undefined") {
       throw new Error(
         "router.fetch() was called during the server render, but it shouldn't be. " +
@@ -1078,29 +1079,30 @@ export function createRouter(init: RouterInit): Router {
         formEncType: opts.formEncType || "application/x-www-form-urlencoded",
         formData: opts.formData,
       };
-      if (isActionSubmission(submission)) {
-        await handleFetcherAction(key, href, match, submission);
-      } else {
-        let loadingFetcher: FetcherStates["Submitting"] = {
-          state: "submitting",
-          ...submission,
-          data: state.fetchers.get(key)?.data || undefined,
-        };
 
-        await handleFetcherLoader(key, href, match, loadingFetcher);
+      if (isActionSubmission(submission)) {
+        handleFetcherAction(key, href, match, submission);
+        return;
       }
-    } else {
-      let loadingFetcher: FetcherStates["Loading"] = {
-        state: "loading",
-        formMethod: undefined,
-        formAction: undefined,
-        formEncType: undefined,
-        formData: undefined,
+
+      let loadingFetcher: FetcherStates["Submitting"] = {
+        state: "submitting",
+        ...submission,
         data: state.fetchers.get(key)?.data || undefined,
       };
-
-      await handleFetcherLoader(key, href, match, loadingFetcher);
+      handleFetcherLoader(key, href, match, loadingFetcher);
+      return;
     }
+
+    let loadingFetcher: FetcherStates["Loading"] = {
+      state: "loading",
+      formMethod: undefined,
+      formAction: undefined,
+      formEncType: undefined,
+      formData: undefined,
+      data: state.fetchers.get(key)?.data || undefined,
+    };
+    handleFetcherLoader(key, href, match, loadingFetcher);
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
