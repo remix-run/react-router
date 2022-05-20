@@ -10,7 +10,10 @@ import {
 import {
   ActionFunction,
   DataRouteObject,
+  ErrorResponse,
+  json,
   matchRoutes,
+  redirect,
   RouteMatch,
 } from "../utils";
 
@@ -307,18 +310,13 @@ function setup({
       });
 
       try {
-        //@ts-ignore
-        let method: "reject" | "resolve" = isRejection ? "reject" : "resolve";
-        await internalHelpers.dfd[method](
-          //@ts-ignore
-          new Response(null, {
-            status,
-            headers: {
-              location: href,
-              ...headers,
-            },
-          })
-        );
+        let redirectResponse = redirect(href, { status, headers });
+        if (isRejection) {
+          // @ts-ignore
+          await internalHelpers.dfd.reject(redirectResponse);
+        } else {
+          await internalHelpers.dfd.resolve(redirectResponse);
+        }
         await tick();
       } catch (e) {}
       return helpers;
@@ -938,6 +936,12 @@ describe("a router", () => {
           },
         })
       );
+    });
+
+    it("unwraps non-redirect json Responses (json helper)", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve(json({ key: "value" }, 200));
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
         foo: { key: "value" },
@@ -3604,7 +3608,7 @@ describe("a router", () => {
       expect(t.history.location.pathname).toEqual("/tasks/1");
     });
 
-    it("handles thrown non-redirect Responses as normal errors", async () => {
+    it("handles thrown non-redirect Responses as ErrorResponse's (text)", async () => {
       let t = setup({
         routes: TASK_ROUTES,
         initialEntries: ["/"],
@@ -3618,8 +3622,9 @@ describe("a router", () => {
 
       // Throw from tasks, handled by tasks
       let nav = await t.navigate("/tasks");
-      let response = new Response(null, { status: 400 });
-      await nav.loaders.tasks.reject(response);
+      await nav.loaders.tasks.reject(
+        new Response("broken", { status: 400, statusText: "Bad Request" })
+      );
       expect(t.router.state).toMatchObject({
         navigation: IDLE_NAVIGATION,
         loaderData: {
@@ -3627,7 +3632,77 @@ describe("a router", () => {
         },
         actionData: null,
         errors: {
-          tasks: response,
+          tasks: new ErrorResponse(400, "Bad Request", "broken"),
+        },
+      });
+    });
+
+    it("handles thrown non-redirect Responses as ErrorResponse's (json)", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      // Throw from tasks, handled by tasks
+      let nav = await t.navigate("/tasks");
+      await nav.loaders.tasks.reject(
+        new Response(JSON.stringify({ key: "value" }), {
+          status: 400,
+          statusText: "Bad Request",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      );
+      expect(t.router.state).toMatchObject({
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          root: "ROOT_DATA",
+        },
+        actionData: null,
+        errors: {
+          tasks: new ErrorResponse(400, "Bad Request", { key: "value" }),
+        },
+      });
+    });
+
+    it("handles thrown non-redirect Responses as ErrorResponse's (json utf8)", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      // Throw from tasks, handled by tasks
+      let nav = await t.navigate("/tasks");
+      await nav.loaders.tasks.reject(
+        new Response(JSON.stringify({ key: "value" }), {
+          status: 400,
+          statusText: "Bad Request",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+          },
+        })
+      );
+      expect(t.router.state).toMatchObject({
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          root: "ROOT_DATA",
+        },
+        actionData: null,
+        errors: {
+          tasks: new ErrorResponse(400, "Bad Request", { key: "value" }),
         },
       });
     });
@@ -4934,7 +5009,7 @@ describe("a router", () => {
         await A.loaders.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new Response(null, { status: 400 }),
+          root: new ErrorResponse(400, undefined, ""),
         });
       });
 
@@ -4947,7 +5022,7 @@ describe("a router", () => {
         await A.loaders.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new Response(null, { status: 400 }),
+          root: new ErrorResponse(400, undefined, ""),
         });
       });
 
@@ -4960,7 +5035,7 @@ describe("a router", () => {
         await A.actions.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new Response(null, { status: 400 }),
+          root: new ErrorResponse(400, undefined, ""),
         });
       });
     });
@@ -5273,12 +5348,12 @@ describe("a router", () => {
 
           await A.actions.foo.reject(new Response(null, { status: 400 }));
           expect(t.router.state.errors).toEqual({
-            root: new Response(null, { status: 400 }),
+            root: new ErrorResponse(400, undefined, ""),
           });
 
           await B.actions.foo.resolve("B");
           expect(t.router.state.errors).toEqual({
-            root: new Response(null, { status: 400 }),
+            root: new ErrorResponse(400, undefined, ""),
           });
           expect(t.router.state.actionData).toEqual(null);
         });
@@ -5309,7 +5384,7 @@ describe("a router", () => {
 
           await B.actions.foo.reject(new Response(null, { status: 400 }));
           expect(t.router.state.errors).toEqual({
-            root: new Response(null, { status: 400 }),
+            root: new ErrorResponse(400, undefined, ""),
           });
         });
       });

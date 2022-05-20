@@ -754,3 +754,76 @@ export const normalizeSearch = (search: string): string =>
  */
 export const normalizeHash = (hash: string): string =>
   !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
+
+export type JsonFunction = <Data>(
+  data: Data,
+  init?: number | ResponseInit
+) => Response;
+
+/**
+ * This is a shortcut for creating `application/json` responses. Converts `data`
+ * to JSON and sets the `Content-Type` header.
+ */
+export const json: JsonFunction = (data, init = {}) => {
+  let responseInit = typeof init === "number" ? { status: init } : init;
+
+  let headers = new Headers(responseInit.headers);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json; charset=utf-8");
+  }
+
+  return new Response(JSON.stringify(data), {
+    ...responseInit,
+    headers,
+  });
+};
+
+export type RedirectFunction = (
+  url: string,
+  init?: number | ResponseInit
+) => Response;
+
+/**
+ * A redirect response. Sets the status code and the `Location` header.
+ * Defaults to "302 Found".
+ */
+export const redirect: RedirectFunction = (url, init = 302) => {
+  let responseInit = init;
+  if (typeof responseInit === "number") {
+    responseInit = { status: responseInit };
+  } else if (typeof responseInit.status === "undefined") {
+    responseInit.status = 302;
+  }
+
+  let headers = new Headers(responseInit.headers);
+  headers.set("Location", url);
+
+  return new Response(null, {
+    ...responseInit,
+    headers,
+  });
+};
+
+/**
+ * @private
+ * Utility class we use to hold auto-unwrapped 4xx/5xx Response bodies
+ */
+export class ErrorResponse {
+  status: number;
+  statusText: string;
+  data: any;
+
+  constructor(status: number, statusText: string | undefined, data: any) {
+    this.status = status;
+    this.statusText = statusText || "";
+    this.data = data;
+  }
+}
+
+/**
+ * Check if the given error is an ErrorResponse generated from a 4xx/5xx
+ * Response throw from an action/loader
+ */
+export function isRouteErrorResponse(e: any): e is ErrorResponse {
+  return e instanceof ErrorResponse;
+}

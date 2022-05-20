@@ -13,7 +13,7 @@ import {
   RouteObject,
   Submission,
 } from "./utils";
-import { matchRoutes } from "./utils";
+import { ErrorResponse, matchRoutes } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
@@ -1757,15 +1757,21 @@ async function callLoaderOrAction(
       };
     }
 
-    // Automatically unwrap non-redirect success responses
-    if (resultType === ResultType.data) {
-      let contentType = result.headers.get("Content-Type");
-      if (contentType?.startsWith("application/json")) {
-        result = await result.json();
-      } else {
-        result = await result.text();
-      }
+    let data: any;
+    if (result.headers.get("Content-Type")?.startsWith("application/json")) {
+      data = await result.json();
+    } else {
+      data = await result.text();
     }
+
+    if (resultType === ResultType.error) {
+      return {
+        type: resultType,
+        error: new ErrorResponse(status, result.statusText, data),
+      };
+    }
+
+    return { type: resultType, data };
   }
 
   if (resultType === ResultType.error) {
