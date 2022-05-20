@@ -37,6 +37,10 @@ test.describe("route module link export", () => {
 
         "app/guitar.jpg": js``,
 
+        "app/guitar-600.jpg": js``,
+
+        "app/guitar-900.jpg": js``,
+
         "app/reset.css": css`
           * {
             box-sizing: border-box;
@@ -267,6 +271,39 @@ test.describe("route module link export", () => {
           }
         `,
 
+        "app/routes/responsive-image-preload.jsx": js`
+          import { Link } from "@remix-run/react";
+          import guitar600 from "~/guitar-600.jpg";
+          import guitar900 from "~/guitar-900.jpg";
+
+          export function links()  {
+            return [
+              {
+                rel: "preload",
+                as: "image",
+                imageSrcSet: guitar600 + " 600w, " + guitar900 + " 900w",
+                imageSizes: "100vw",
+              },
+            ];
+          }
+          export default function LinksPage() {
+            return (
+              <div data-test-id="/responsive-image-preload">
+                <h2>Responsive Guitar</h2>
+                <p>
+                  <img
+                    alt="a guitar"
+                    srcSet={guitar600 + " 600w, " + guitar900 + " 900w"}
+                    sizes="100vw"
+                    data-test-id="blocked"
+                  />{" "}
+                  Prefetched because it's a preload.
+                </p>
+              </div>
+            );
+          }
+        `,
+
         "app/routes/gists.jsx": js`
           import { json } from "@remix-run/node";
           import { Link, Outlet, useLoaderData, useTransition } from "@remix-run/react";
@@ -438,6 +475,16 @@ test.describe("route module link export", () => {
     await appFixture.close();
   });
 
+  test("adds responsive image preload links to the document", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/responsive-image-preload");
+    await page.waitForSelector('[data-test-id="/responsive-image-preload"]');
+    let locator = page.locator("link[rel=preload][as=image]");
+    expect(await locator.getAttribute("imagesizes")).toBe("100vw");
+  });
+
   test("waits for new styles to load before transitioning", async ({
     page,
   }) => {
@@ -471,6 +518,16 @@ test.describe("route module link export", () => {
       await app.goto("/links");
       await page.waitForSelector('[data-test-id="/links"]');
       expect(responses.length).toEqual(4);
+    });
+
+    test("adds responsive image preload links to the document", async ({
+      page,
+    }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/responsive-image-preload");
+      await page.waitForSelector('[data-test-id="/responsive-image-preload"]');
+      let locator = page.locator("link[rel=preload][as=image]");
+      expect(await locator.getAttribute("imagesizes")).toBe("100vw");
     });
   });
 });
