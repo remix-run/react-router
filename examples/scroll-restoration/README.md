@@ -1,21 +1,19 @@
 ---
-title: Basics
+title: Scroll Restoration
 toc: false
 order: 1
 ---
 
-# Basic Example
+# Scroll Restoration
 
-This example demonstrates some of the basic features of React Router, including:
+This example demonstrates the basic usage of the `<ScrollRestoration>` component, including:
 
-- Layouts and nested `<Route>`s
-- Index `<Route>`s
-- Catch-all `<Route>`s
-- Using `<Outlet>` as a placeholder for child routes
-- Using `<Link>`s for navigation
+- Restoring scroll position via `location.key`
+- Restoring scroll position via `location.pathname`
+- Preventing scroll resetting via `<Link>`
 
 ## Preview
 
 Open this example on [StackBlitz](https://stackblitz.com):
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/main/examples/basic?file=src/App.tsx)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/main/examples/scroll-restoration?file=src/App.tsx)
