@@ -1,5 +1,6 @@
 ---
 title: Route
+new: true
 ---
 
 # `<Routes>` and `<Route>`
