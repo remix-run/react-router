@@ -39,9 +39,9 @@ export function useHref(to: To): string {
   let { basename, navigator } = React.useContext(NavigationContext);
   let { hash, pathname, search } = useResolvedPath(to);
 
+  let toPathname = getToPathname(to);
   let joinedPathname = pathname;
-  if (basename !== "/") {
-    let toPathname = getToPathname(to);
+  if (basename !== "/" && !toPathname?.startsWith("~")) {
     let endsWithSlash = toPathname != null && toPathname.endsWith("/");
     joinedPathname =
       pathname === "/"
@@ -178,7 +178,7 @@ export function useNavigate(): NavigateFunction {
         locationPathname
       );
 
-      if (basename !== "/") {
+      if (basename !== "/" && !getToPathname(to)?.startsWith("~")) {
         path.pathname = joinPaths([basename, path.pathname]);
       }
 

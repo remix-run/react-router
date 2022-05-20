@@ -7,6 +7,46 @@ function ShowHref({ to }: { to: string }) {
 }
 
 describe("useHref under a basename", () => {
+  describe("to a home route", () => {
+    it("returns the correct href", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
+              <Route path="admin" element={<ShowHref to="~/invoices" />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <p>
+          /invoices
+        </p>
+      `);
+    });
+
+    it("returns the correct href for ~", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter basename="/app" initialEntries={["/app/admin"]}>
+            <Routes>
+              <Route path="admin" element={<ShowHref to="~" />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <p>
+          /
+        </p>
+      `);
+    });
+  });
+
   describe("to an absolute route", () => {
     it("returns the correct href", () => {
       let renderer: TestRenderer.ReactTestRenderer;

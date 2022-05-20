@@ -513,7 +513,9 @@ export function resolvePath(to: To, fromPathname = "/"): Path {
   } = typeof to === "string" ? parsePath(to) : to;
 
   let pathname = toPathname
-    ? toPathname.startsWith("/")
+    ? toPathname.startsWith("~")
+      ? toPathname.substring(1) || "/"
+      : toPathname.startsWith("/")
       ? toPathname
       : resolvePathname(toPathname, fromPathname)
     : fromPathname;
