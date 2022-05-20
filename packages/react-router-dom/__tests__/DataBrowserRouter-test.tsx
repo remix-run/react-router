@@ -1005,7 +1005,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <>
               <p id="output">
                 {fetcher.state}
-                {fetcher.type}
                 {fetcher.data ? JSON.stringify(fetcher.data) : null}
               </p>
               <button onClick={() => fetcher.load("/")}>load 1</button>
@@ -1025,7 +1024,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            init
           </p>"
         `);
 
@@ -1036,7 +1034,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             loading
-            normalLoad
           </p>"
         `);
 
@@ -1047,7 +1044,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            done
             {\\"count\\":1}
           </p>"
         `);
@@ -1059,7 +1055,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             loading
-            normalLoad
             {\\"count\\":1}
           </p>"
         `);
@@ -1071,7 +1066,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            done
             {\\"count\\":6}
           </p>"
         `);
@@ -1083,7 +1077,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             submitting
-            actionSubmission
             {\\"count\\":6}
           </p>"
         `);
@@ -1095,7 +1088,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            done
             {\\"count\\":16}
           </p>"
         `);
@@ -1124,7 +1116,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <>
               <p>
                 {fetcher.state}
-                {fetcher.type}
                 {fetcher.data ? JSON.stringify(fetcher.data) : null}
               </p>
               <button onClick={() => fetcher.load("/")}>load</button>
@@ -1141,7 +1132,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           "<div>
             <p>
               idle
-              init
             </p>
             <button>
               load
@@ -1154,7 +1144,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           "<div>
             <p>
               loading
-              normalLoad
             </p>
             <button>
               load
@@ -1195,7 +1184,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <>
               <p>
                 {fetcher.state}
-                {fetcher.type}
                 {fetcher.data ? JSON.stringify(fetcher.data) : null}
               </p>
               <button
@@ -1218,7 +1206,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           "<div>
             <p>
               idle
-              init
             </p>
             <button>
               submit
@@ -1231,7 +1218,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           "<div>
             <p>
               submitting
-              actionSubmission
             </p>
             <button>
               submit
@@ -1288,7 +1274,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <>
               <p id="output">
                 {fetcher.state}
-                {fetcher.type}
                 {fetcher.data ? JSON.stringify(fetcher.data) : null}
               </p>
               <fetcher.Form>
@@ -1309,7 +1294,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            init
           </p>"
         `);
 
@@ -1320,7 +1304,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             submitting
-            loaderSubmission
           </p>"
         `);
 
@@ -1331,7 +1314,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            done
             {\\"count\\":1}
           </p>"
         `);
@@ -1343,7 +1325,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             submitting
-            actionSubmission
             {\\"count\\":1}
           </p>"
         `);
@@ -1355,7 +1336,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            done
             {\\"count\\":11}
           </p>"
         `);
@@ -1384,7 +1364,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <>
               <p id="output">
                 {fetcher.state}
-                {fetcher.type}
                 {fetcher.data ? JSON.stringify(fetcher.data) : null}
               </p>
               <fetcher.Form>
@@ -1405,7 +1384,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            init
           </p>"
         `);
 
@@ -1416,7 +1394,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             submitting
-            loaderSubmission
           </p>"
         `);
 
@@ -1453,7 +1430,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <>
               <p id="output">
                 {fetcher.state}
-                {fetcher.type}
                 {fetcher.data ? JSON.stringify(fetcher.data) : null}
               </p>
               <fetcher.Form method="post">
@@ -1474,7 +1450,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            init
           </p>"
         `);
 
@@ -1485,7 +1460,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             submitting
-            actionSubmission
           </p>"
         `);
 
@@ -1529,9 +1503,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
               <Link to="/1">Link to 1</Link>
               <Link to="/2">Link to 2</Link>
               <div id="output">
-                <p>
-                  {JSON.stringify(fetchers.map((f) => `${f.state}-${f.type}`))}
-                </p>
+                <p>{JSON.stringify(fetchers.map((f) => f.state))}</p>
                 <Outlet />
               </div>
             </>
@@ -1584,7 +1556,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           </div>"
         `);
 
-        // Activate Comp2 fetcher
+        // Activate Comp1 fetcher
         fireEvent.click(screen.getByText("load"));
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
@@ -1592,7 +1564,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             <p>
-              [\\"loading-normalLoad\\"]
+              [\\"loading\\"]
             </p>
             <p>
               1
@@ -1614,7 +1586,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             <p>
-              [\\"idle-done\\"]
+              [\\"idle\\"]
             </p>
             <p>
               1
@@ -1635,7 +1607,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             <p>
-              [\\"idle-done\\"]
+              [\\"idle\\"]
             </p>
             <p>
               1
@@ -1648,10 +1620,9 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           </div>"
         `);
 
-        // Resolve Comp2 loader and complete navigation - Comp2 fetcher is still
+        // Resolve Comp2 loader and complete navigation - Comp1 fetcher is still
         // reflected here since deleteFetcher doesn't updateState
         // TODO: Is this expected?
-        // TODO: Should getFetcher reflect the Comp2 idle fetcher in useFetchers?
         dfd2.resolve("data 2");
         await waitFor(() => screen.getByText(/2.*idle/));
         expect(getHtml(container.querySelector("#output")))
@@ -1660,7 +1631,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             <p>
-              [\\"idle-done\\"]
+              [\\"idle\\"]
             </p>
             <p>
               2
@@ -1682,7 +1653,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             <p>
-              [\\"loading-normalLoad\\"]
+              [\\"loading\\"]
             </p>
             <p>
               2
@@ -1703,7 +1674,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             <p>
-              [\\"idle-done\\"]
+              [\\"idle\\"]
             </p>
             <p>
               2
@@ -1743,12 +1714,11 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         );
 
         function Comp() {
-          let fetcher = useFetcher({ revalidate: true });
+          let fetcher = useFetcher();
           return (
             <>
               <p id="output">
                 {fetcher.state}
-                {fetcher.type}
                 {fetcher.data ? JSON.stringify(fetcher.data) : null}
               </p>
               <button onClick={() => fetcher.load("/fetch")}>
@@ -1769,7 +1739,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            init
           </p>"
         `);
 
@@ -1781,7 +1750,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            done
             {\\"fetchCount\\":1}
           </p>"
         `);
@@ -1794,7 +1762,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             id=\\"output\\"
           >
             idle
-            done
             {\\"fetchCount\\":2}
           </p>"
         `);

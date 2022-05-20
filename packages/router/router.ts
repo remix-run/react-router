@@ -333,75 +333,27 @@ export type RevalidationState = "idle" | "loading";
 type FetcherStates<TData = any> = {
   Idle: {
     state: "idle";
-    type: "init";
     formMethod: undefined;
     formAction: undefined;
     formEncType: undefined;
     formData: undefined;
-    data: undefined;
+    data: TData | undefined;
   };
   Loading: {
     state: "loading";
-    type: "normalLoad";
-    formMethod: undefined;
-    formAction: undefined;
-    formEncType: undefined;
-    formData: undefined;
+    formMethod: FormMethod | undefined;
+    formAction: string | undefined;
+    formEncType: FormEncType | undefined;
+    formData: FormData | undefined;
     data: TData | undefined;
   };
-  SubmittingLoader: {
+  Submitting: {
     state: "submitting";
-    type: "loaderSubmission";
     formMethod: FormMethod;
     formAction: string;
-    formEncType: "application/x-www-form-urlencoded";
+    formEncType: FormEncType;
     formData: FormData;
     data: TData | undefined;
-  };
-  SubmittingAction: {
-    state: "submitting";
-    type: "actionSubmission";
-    formMethod: ActionFormMethod;
-    formAction: string;
-    formEncType: FormEncType;
-    formData: FormData;
-    data: undefined;
-  };
-  ReloadingAction: {
-    state: "loading";
-    type: "actionReload";
-    formMethod: ActionFormMethod;
-    formAction: string;
-    formEncType: FormEncType;
-    formData: FormData;
-    data: TData;
-  };
-  SubmissionRedirect: {
-    state: "loading";
-    type: "submissionRedirect";
-    formMethod: ActionFormMethod;
-    formAction: string;
-    formEncType: FormEncType;
-    formData: FormData;
-    data: undefined;
-  };
-  Revalidating: {
-    state: "loading";
-    type: "revalidate";
-    formMethod: undefined;
-    formAction: undefined;
-    formEncType: undefined;
-    formData: undefined;
-    data: TData | undefined;
-  };
-  Done: {
-    state: "idle";
-    type: "done";
-    formMethod: undefined;
-    formAction: undefined;
-    formEncType: undefined;
-    formData: undefined;
-    data: TData;
   };
 };
 
@@ -490,7 +442,6 @@ export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
 
 export const IDLE_FETCHER: FetcherStates["Idle"] = {
   state: "idle",
-  type: "init",
   data: undefined,
   formMethod: undefined,
   formAction: undefined,
@@ -1013,9 +964,8 @@ export function createRouter(init: RouterInit): Router {
     // interrupting an actionReload)
     if (!isUninterruptedRevalidation) {
       revalidatingFetchers.forEach(([key]) => {
-        let revalidatingFetcher: FetcherStates["Revalidating"] = {
+        let revalidatingFetcher: FetcherStates["Loading"] = {
           state: "loading",
-          type: "revalidate",
           data: state.fetchers.get(key)?.data,
           formMethod: undefined,
           formAction: undefined,
@@ -1131,9 +1081,8 @@ export function createRouter(init: RouterInit): Router {
       if (isActionSubmission(submission)) {
         await handleFetcherAction(key, href, match, submission);
       } else {
-        let loadingFetcher: FetcherStates["SubmittingLoader"] = {
+        let loadingFetcher: FetcherStates["Submitting"] = {
           state: "submitting",
-          type: "loaderSubmission",
           ...submission,
           data: state.fetchers.get(key)?.data || undefined,
         };
@@ -1143,7 +1092,6 @@ export function createRouter(init: RouterInit): Router {
     } else {
       let loadingFetcher: FetcherStates["Loading"] = {
         state: "loading",
-        type: "normalLoad",
         formMethod: undefined,
         formAction: undefined,
         formEncType: undefined,
@@ -1167,9 +1115,8 @@ export function createRouter(init: RouterInit): Router {
     fetchLoadMatches.delete(key);
 
     // Put this fetcher into it's submitting state
-    let fetcher: FetcherStates["SubmittingAction"] = {
+    let fetcher: FetcherStates["Submitting"] = {
       state: "submitting",
-      type: "actionSubmission",
       ...submission,
       data: state.fetchers.get(key)?.data || undefined,
     };
@@ -1193,9 +1140,8 @@ export function createRouter(init: RouterInit): Router {
 
     if (isRedirectResult(actionResult)) {
       fetchRedirectIds.add(key);
-      let loadingFetcher: FetcherStates["SubmissionRedirect"] = {
+      let loadingFetcher: FetcherStates["Loading"] = {
         state: "loading",
-        type: "submissionRedirect",
         ...submission,
         data: undefined,
       };
@@ -1238,9 +1184,8 @@ export function createRouter(init: RouterInit): Router {
     let loadId = ++incrementingLoadId;
     fetchReloadIds.set(key, loadId);
 
-    let loadFetcher: FetcherStates["ReloadingAction"] = {
+    let loadFetcher: FetcherStates["Loading"] = {
       state: "loading",
-      type: "actionReload",
       data: actionResult.data,
       ...submission,
     };
@@ -1257,14 +1202,14 @@ export function createRouter(init: RouterInit): Router {
       fetchLoadMatches
     );
 
-    // Put all revalidating fetchers into the revalidating state, except for the
-    // current fetcher which we want to keep in the actionReload state
+    // Put all revalidating fetchers into the loading state, except for the
+    // current fetcher which we want to keep in it's current loading state which
+    // contains it's action submission info + action data
     revalidatingFetchers
       .filter(([staleKey]) => staleKey !== key)
       .forEach(([staleKey]) => {
-        let revalidatingFetcher: FetcherStates["Revalidating"] = {
+        let revalidatingFetcher: FetcherStates["Loading"] = {
           state: "loading",
-          type: "revalidate",
           data: state.fetchers.get(key)?.data,
           formMethod: undefined,
           formAction: undefined,
@@ -1319,9 +1264,8 @@ export function createRouter(init: RouterInit): Router {
       fetcherResults
     );
 
-    let doneFetcher: FetcherStates["Done"] = {
+    let doneFetcher: FetcherStates["Idle"] = {
       state: "idle",
-      type: "done",
       data: actionResult.data,
       formMethod: undefined,
       formAction: undefined,
@@ -1370,7 +1314,8 @@ export function createRouter(init: RouterInit): Router {
     state.fetchers.set(key, loadingFetcher);
     updateState({ fetchers: new Map(state.fetchers) });
 
-    // Store off the match so we can call it's shouldRevalidate
+    // Store off the match so we can call it's shouldRevalidate on subsequent
+    // revalidations
     fetchLoadMatches.set(key, [href, match]);
 
     // Call the loader for this fetcher route match
@@ -1408,10 +1353,9 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // Mark the fetcher as done
-    let doneFetcher: FetcherStates["Done"] = {
+    // Put the fetcher back into an idle state
+    let doneFetcher: FetcherStates["Idle"] = {
       state: "idle",
-      type: "done",
       data: result.data,
       formMethod: undefined,
       formAction: undefined,
@@ -1457,9 +1401,8 @@ export function createRouter(init: RouterInit): Router {
   function markFetchersDone(keys: string[]) {
     for (let key of keys) {
       let fetcher = getFetcher(key);
-      let doneFetcher: FetcherStates["Done"] = {
+      let doneFetcher: FetcherStates["Idle"] = {
         state: "idle",
-        type: "done",
         data: fetcher.data,
         formMethod: undefined,
         formAction: undefined,
@@ -1475,7 +1418,7 @@ export function createRouter(init: RouterInit): Router {
     for (let key of fetchRedirectIds) {
       let fetcher = state.fetchers.get(key);
       invariant(fetcher, `Expected fetcher: ${key}`);
-      if (fetcher.type === "submissionRedirect") {
+      if (fetcher.state === "loading") {
         fetchRedirectIds.delete(key);
         doneKeys.push(key);
       }
@@ -1936,9 +1879,8 @@ function processLoaderData(
       // keep this to type narrow to a success result in the else
       invariant(false, "Unhandled fetcher revalidation redirect");
     } else {
-      let doneFetcher: FetcherStates["Done"] = {
+      let doneFetcher: FetcherStates["Idle"] = {
         state: "idle",
-        type: "done",
         data: result.data,
         formMethod: undefined,
         formAction: undefined,
