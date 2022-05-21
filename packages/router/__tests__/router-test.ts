@@ -585,7 +585,8 @@ function setup({
     // if a revalidation interrupts an action submission, we don't actually
     // start a new new navigation so don't increment here
     let navigationId =
-      currentRouter.state.navigation.type === "actionSubmission"
+      currentRouter.state.navigation.state === "submitting" &&
+      currentRouter.state.navigation.formMethod !== "get"
         ? guid
         : ++guid;
     activeLoaderType = "navigation";
@@ -800,7 +801,6 @@ describe("a router", () => {
         navigation: {
           location: undefined,
           state: "idle",
-          type: "idle",
         },
         resetScrollPosition: true,
         restoreScrollPosition: null,
@@ -1075,7 +1075,7 @@ describe("a router", () => {
     it("loads new data on new routes even if there's also a hash change", async () => {
       let t = initializeTmTest();
       let A = await t.navigate("/foo#bar");
-      expect(t.router.state.navigation.type).toBe("normalLoad");
+      expect(t.router.state.navigation.state).toBe("loading");
       await A.loaders.foo.resolve("A");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
@@ -1087,21 +1087,21 @@ describe("a router", () => {
       let t = initializeTmTest();
 
       let A = await t.navigate("/bar");
-      expect(t.router.state.navigation.type).toBe("normalLoad");
+      expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location?.pathname).toBe("/bar");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
       });
 
       let B = await A.loaders.bar.redirect("/baz");
-      expect(t.router.state.navigation.type).toBe("normalRedirect");
+      expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location?.pathname).toBe("/baz");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
       });
 
       await B.loaders.baz.resolve("B");
-      expect(t.router.state.navigation.type).toBe("idle");
+      expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.location.pathname).toBe("/baz");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
@@ -1113,21 +1113,21 @@ describe("a router", () => {
       let t = initializeTmTest();
 
       let A = await t.navigate("/bar");
-      expect(t.router.state.navigation.type).toBe("normalLoad");
+      expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location?.pathname).toBe("/bar");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
       });
 
       let B = await A.loaders.bar.redirectReturn("/baz");
-      expect(t.router.state.navigation.type).toBe("normalRedirect");
+      expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location?.pathname).toBe("/baz");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
       });
 
       await B.loaders.baz.resolve("B");
-      expect(t.router.state.navigation.type).toBe("idle");
+      expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.location.pathname).toBe("/baz");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
@@ -1139,7 +1139,7 @@ describe("a router", () => {
       let t = initializeTmTest();
 
       let A = await t.navigate("/bar");
-      expect(t.router.state.navigation.type).toBe("normalLoad");
+      expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location?.pathname).toBe("/bar");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
@@ -1148,7 +1148,7 @@ describe("a router", () => {
       let B = await A.loaders.bar.redirectReturn("/baz", undefined, {
         "X-Remix-Revalidate": "yes",
       });
-      expect(t.router.state.navigation.type).toBe("normalRedirect");
+      expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location?.pathname).toBe("/baz");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
@@ -1156,7 +1156,7 @@ describe("a router", () => {
 
       await B.loaders.root.resolve("ROOT*");
       await B.loaders.baz.resolve("B");
-      expect(t.router.state.navigation.type).toBe("idle");
+      expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.location.pathname).toBe("/baz");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT*",
@@ -2189,7 +2189,6 @@ describe("a router", () => {
       let t = initializeTmTest();
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("idle");
-      expect(navigation.type).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
     });
@@ -2199,7 +2198,6 @@ describe("a router", () => {
       let A = await t.navigate("/foo");
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(navigation.type).toBe("normalLoad");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toMatchObject({
         pathname: "/foo",
@@ -2210,7 +2208,6 @@ describe("a router", () => {
       await A.loaders.foo.resolve("A");
       navigation = t.router.state.navigation;
       expect(navigation.state).toBe("idle");
-      expect(navigation.type).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
     });
@@ -2223,14 +2220,12 @@ describe("a router", () => {
 
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(navigation.type).toBe("normalRedirect");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location?.pathname).toBe("/bar");
 
       await B.loaders.bar.resolve("B");
       navigation = t.router.state.navigation;
       expect(navigation.state).toBe("idle");
-      expect(navigation.type).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
     });
@@ -2244,7 +2239,6 @@ describe("a router", () => {
       });
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("submitting");
-      expect(navigation.type).toBe("actionSubmission");
 
       expect(
         // @ts-expect-error
@@ -2261,7 +2255,6 @@ describe("a router", () => {
       await A.actions.foo.resolve("A");
       navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(navigation.type).toBe("actionReload");
       expect(
         // @ts-expect-error
         new URLSearchParams(navigation.formData).toString()
@@ -2277,12 +2270,10 @@ describe("a router", () => {
       await A.loaders.foo.resolve("A");
       navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(navigation.type).toBe("actionReload");
 
       await A.loaders.root.resolve("B");
       navigation = t.router.state.navigation;
       expect(navigation.state).toBe("idle");
-      expect(navigation.type).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
     });
@@ -2298,7 +2289,6 @@ describe("a router", () => {
 
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(navigation.type).toBe("submissionRedirect");
       expect(
         // @ts-expect-error
         new URLSearchParams(navigation.formData).toString()
@@ -2313,12 +2303,10 @@ describe("a router", () => {
       await B.loaders.bar.resolve("B");
       navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(navigation.type).toBe("submissionRedirect");
 
       await B.loaders.root.resolve("C");
       navigation = t.router.state.navigation;
       expect(navigation.state).toBe("idle");
-      expect(navigation.type).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
     });
@@ -2330,7 +2318,6 @@ describe("a router", () => {
       });
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("submitting");
-      expect(navigation.type).toBe("loaderSubmission");
       expect(
         // @ts-expect-error
         new URLSearchParams(navigation.formData).toString()
@@ -2346,7 +2333,6 @@ describe("a router", () => {
       await A.loaders.foo.resolve("A");
       navigation = t.router.state.navigation;
       expect(navigation.state).toBe("idle");
-      expect(navigation.type).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
     });
@@ -2361,7 +2347,6 @@ describe("a router", () => {
 
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(navigation.type).toBe("submissionRedirect");
       expect(
         // @ts-expect-error
         new URLSearchParams(navigation.formData).toString()
@@ -2372,7 +2357,6 @@ describe("a router", () => {
       await B.loaders.bar.resolve("B");
       navigation = t.router.state.navigation;
       expect(navigation.state).toBe("idle");
-      expect(navigation.type).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
     });
@@ -2600,7 +2584,7 @@ describe("a router", () => {
           formData: createFormData({ key: "value" }),
         });
         await A.actions.foo.resolve("A ACTION");
-        expect(t.router.state.navigation.type).toBe("actionReload");
+        expect(t.router.state.navigation.state).toBe("loading");
         // Interrupting the actionReload should cause the next load to call all loaders
         let B = await t.navigate("/bar");
         await B.loaders.root.resolve("ROOT*");
@@ -2628,7 +2612,7 @@ describe("a router", () => {
           formData: createFormData({ key: "value" }),
         });
         await A.actions.foo.redirect("/baz");
-        expect(t.router.state.navigation.type).toBe("submissionRedirect");
+        expect(t.router.state.navigation.state).toBe("loading");
         // Interrupting the submissionRedirect should cause the next load to call all loaders
         let B = await t.navigate("/bar");
         await B.loaders.root.resolve("ROOT*");
@@ -2835,7 +2819,6 @@ describe("a router", () => {
         initialized: false,
         navigation: {
           state: "loading",
-          type: "normalLoad",
           location: { pathname: "/child" },
         },
       });
@@ -2849,7 +2832,6 @@ describe("a router", () => {
         initialized: false,
         navigation: {
           state: "loading",
-          type: "normalLoad",
           location: { pathname: "/child" },
         },
       });
@@ -2910,7 +2892,6 @@ describe("a router", () => {
         initialized: false,
         navigation: {
           state: "loading",
-          type: "normalLoad",
         },
       });
       expect(router.state.loaderData).toEqual({});
@@ -3018,7 +2999,6 @@ describe("a router", () => {
         initialized: false,
         navigation: {
           state: "loading",
-          type: "normalLoad",
           location: { pathname: "/child" },
         },
       });
@@ -3032,7 +3012,6 @@ describe("a router", () => {
         initialized: false,
         navigation: {
           state: "loading",
-          type: "normalLoad",
           location: { pathname: "/child" },
         },
       });
@@ -3047,7 +3026,6 @@ describe("a router", () => {
         initialized: false,
         navigation: {
           state: "loading",
-          type: "normalLoad",
           location: { pathname: "/child2" },
         },
       });
@@ -3127,7 +3105,6 @@ describe("a router", () => {
             pathname: "/tasks",
           },
           state: "loading",
-          type: "normalLoad",
         },
         loaderData: {
           root: "ROOT_DATA",
@@ -3192,7 +3169,6 @@ describe("a router", () => {
             pathname: "/tasks",
           },
           state: "loading",
-          type: "normalLoad",
         },
         loaderData: {
           root: "ROOT_DATA",
@@ -3243,7 +3219,6 @@ describe("a router", () => {
             pathname: "/tasks",
           },
           state: "loading",
-          type: "normalLoad",
         },
         loaderData: {
           root: "ROOT_DATA",
@@ -3412,7 +3387,7 @@ describe("a router", () => {
       let historySpy = jest.spyOn(t.history, "push");
 
       let nav = await t.navigate("/tasks");
-      expect(t.router.state.navigation.type).toEqual("normalLoad");
+      expect(t.router.state.navigation.state).toEqual("loading");
       expect(t.router.state.location.pathname).toEqual("/");
       expect(nav.loaders.tasks.signal.aborted).toBe(false);
       expect(t.history.action).toEqual("POP");
@@ -3420,7 +3395,7 @@ describe("a router", () => {
 
       // Interrupt and confirm prior loader was aborted
       let nav2 = await t.navigate("/tasks/1");
-      expect(t.router.state.navigation.type).toEqual("normalLoad");
+      expect(t.router.state.navigation.state).toEqual("loading");
       expect(t.router.state.location.pathname).toEqual("/");
       expect(nav.loaders.tasks.signal.aborted).toBe(true);
       expect(t.history.action).toEqual("POP");
@@ -3483,7 +3458,6 @@ describe("a router", () => {
             pathname: "/tasks",
           },
           state: "loading",
-          type: "normalLoad",
         },
         loaderData: {
           root: "ROOT_DATA",
@@ -3507,7 +3481,6 @@ describe("a router", () => {
             pathname: "/tasks/1",
           },
           state: "loading",
-          type: "normalRedirect",
         },
         loaderData: {
           root: "ROOT_DATA",
@@ -3557,7 +3530,6 @@ describe("a router", () => {
             pathname: "/tasks",
           },
           state: "loading",
-          type: "normalLoad",
         },
         loaderData: {
           root: "ROOT_DATA",
@@ -3581,7 +3553,6 @@ describe("a router", () => {
             pathname: "/tasks/1",
           },
           state: "loading",
-          type: "normalRedirect",
         },
         loaderData: {
           root: "ROOT_DATA",
@@ -4562,7 +4533,6 @@ describe("a router", () => {
         location: { pathname: "/" },
         navigation: {
           state: "loading",
-          type: "normalRedirect",
         },
         revalidation: "loading",
         loaderData: {
@@ -5085,7 +5055,7 @@ describe("a router", () => {
         let fetcher = A.fetcher;
         await A.loaders.foo.redirect("/bar");
         expect(t.router.getFetcher(A.key)).toBe(fetcher);
-        expect(t.router.state.navigation.type).toBe("normalRedirect");
+        expect(t.router.state.navigation.state).toBe("loading");
         expect(t.router.state.navigation.location?.pathname).toBe("/bar");
       });
 
@@ -5098,7 +5068,7 @@ describe("a router", () => {
         let fetcher = A.fetcher;
         await A.loaders.foo.redirect("/bar");
         expect(t.router.getFetcher(A.key)).toBe(fetcher);
-        expect(t.router.state.navigation.type).toBe("normalRedirect");
+        expect(t.router.state.navigation.state).toBe("loading");
         expect(t.router.state.navigation.location?.pathname).toBe("/bar");
       });
 
@@ -5114,7 +5084,7 @@ describe("a router", () => {
         expect(A.fetcher.state).toBe("submitting");
         let AR = await A.actions.foo.redirect("/bar");
         expect(A.fetcher.state).toBe("loading");
-        expect(t.router.state.navigation.type).toBe("submissionRedirect");
+        expect(t.router.state.navigation.state).toBe("loading");
         expect(t.router.state.navigation.location?.pathname).toBe("/bar");
         await AR.loaders.root.resolve("ROOT*");
         await AR.loaders.bar.resolve("stuff");
@@ -5498,12 +5468,12 @@ describe("a router", () => {
           });
           let B = await t.navigate("/foo");
           expect(A.actions.foo.signal.aborted).toBe(false);
-          expect(t.router.state.navigation.type).toBe("normalLoad");
+          expect(t.router.state.navigation.state).toBe("loading");
           expect(t.router.state.navigation.location?.pathname).toBe("/foo");
 
           await B.loaders.root.resolve("B root");
           await B.loaders.foo.resolve("B");
-          expect(t.router.state.navigation.type).toBe("idle");
+          expect(t.router.state.navigation.state).toBe("idle");
           expect(t.router.state.location.pathname).toBe("/foo");
           expect(t.router.state.loaderData.foo).toBe("B");
           expect(A.loaders.foo.signal).toBe(undefined); // A loaders not called yet
@@ -5541,7 +5511,7 @@ describe("a router", () => {
           await B.loaders.foo.resolve("B");
           expect(A.actions.foo.signal.aborted).toBe(false);
           expect(A.loaders.foo.signal.aborted).toBe(false);
-          expect(t.router.state.navigation.type).toBe("idle");
+          expect(t.router.state.navigation.state).toBe("idle");
           expect(t.router.state.location.pathname).toBe("/foo");
           expect(t.router.state.loaderData.foo).toBe("B");
 
@@ -5572,7 +5542,7 @@ describe("a router", () => {
           let B = await t.navigate("/foo");
           await B.loaders.root.resolve("ROOT*");
           await B.loaders.foo.resolve("B");
-          expect(t.router.state.navigation.type).toBe("idle");
+          expect(t.router.state.navigation.state).toBe("idle");
           expect(t.router.state.location.pathname).toBe("/foo");
           expect(t.router.state.loaderData).toEqual({
             root: "ROOT*",

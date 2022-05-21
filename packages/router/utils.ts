@@ -2,9 +2,7 @@ import type { Location, Path, To } from "./history";
 import { parsePath } from "./history";
 import { DataResult, DataRouteMatch } from "./router";
 
-export type LoaderFormMethod = "get";
-export type ActionFormMethod = "post" | "put" | "patch" | "delete";
-export type FormMethod = LoaderFormMethod | ActionFormMethod;
+export type FormMethod = "get" | "post" | "put" | "patch" | "delete";
 export type FormEncType = "application/x-www-form-urlencoded";
 
 /**
@@ -21,7 +19,7 @@ export interface Submission {
  * Narrowed type enforcing a non-GET method
  */
 export interface ActionSubmission extends Submission {
-  formMethod: ActionFormMethod;
+  formMethod: Exclude<FormMethod, "get">;
 }
 
 /**

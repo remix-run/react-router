@@ -2,13 +2,11 @@ import { History, Location, parsePath, To } from "./history";
 import { Action as HistoryAction, createLocation } from "./history";
 
 import {
-  ActionFormMethod,
   ActionSubmission,
   DataRouteObject,
   FormEncType,
   FormMethod,
   invariant,
-  LoaderFormMethod,
   RouteMatch,
   RouteObject,
   Submission,
@@ -260,7 +258,6 @@ export type NavigateOptions = LinkNavigateOptions | SubmissionNavigateOptions;
 export type NavigationStates = {
   Idle: {
     state: "idle";
-    type: "idle";
     location: undefined;
     formMethod: undefined;
     formAction: undefined;
@@ -269,54 +266,16 @@ export type NavigationStates = {
   };
   Loading: {
     state: "loading";
-    type: "normalLoad";
     location: Location;
-    formMethod: undefined;
-    formAction: undefined;
-    formEncType: undefined;
-    formData: undefined;
+    formMethod: FormMethod | undefined;
+    formAction: string | undefined;
+    formEncType: FormEncType | undefined;
+    formData: FormData | undefined;
   };
-  LoadingRedirect: {
-    state: "loading";
-    type: "normalRedirect";
-    location: Location;
-    formMethod: undefined;
-    formAction: undefined;
-    formEncType: undefined;
-    formData: undefined;
-  };
-  SubmittingLoader: {
+  Submitting: {
     state: "submitting";
-    type: "loaderSubmission";
-    location: Location;
-    formMethod: LoaderFormMethod;
-    formAction: string;
-    formEncType: "application/x-www-form-urlencoded";
-    formData: FormData;
-  };
-  SubmissionRedirect: {
-    state: "loading";
-    type: "submissionRedirect";
     location: Location;
     formMethod: FormMethod;
-    formAction: string;
-    formEncType: FormEncType;
-    formData: FormData;
-  };
-  SubmittingAction: {
-    state: "submitting";
-    type: "actionSubmission";
-    location: Location;
-    formMethod: ActionFormMethod;
-    formAction: string;
-    formEncType: FormEncType;
-    formData: FormData;
-  };
-  LoadingAction: {
-    state: "loading";
-    type: "actionReload";
-    location: Location;
-    formMethod: ActionFormMethod;
     formAction: string;
     formEncType: FormEncType;
     formData: FormData;
@@ -433,7 +392,6 @@ interface HandleLoadersResult extends ShortCircuitable {
 export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
   state: "idle",
   location: undefined,
-  type: "idle",
   formMethod: undefined,
   formAction: undefined,
   formEncType: undefined,
@@ -610,13 +568,24 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>
   ): void {
+    // Deduce if we're in a loading/actionReload state:
+    // - We have committed actionData in the store
+    // - The current navigation was a submission
+    // - We're past the submitting state and into the loading state
+    // - This should not be susceptible to false positives for
+    //   loading/submissionRedirect since there would not be actionData in the
+    //   state since the prior action would have returned a redirect response
+    //   and short circuited
+    let isActionReload =
+      state.actionData != null &&
+      state.navigation.formMethod != null &&
+      state.navigation.state === "loading";
+
     updateState({
       // Clear existing actionData on any completed navigation beyond the original
-      // action.  Do this prior to spreading in newState in case we've gotten back
-      // to back actions
-      ...(state.actionData != null && state.navigation.type !== "actionReload"
-        ? { actionData: null }
-        : {}),
+      // action, unless we're currently finishing the loading/actionReload state.
+      // Do this prior to spreading in newState in case we got back to back actions
+      ...(isActionReload ? {} : { actionData: null }),
       ...newState,
       historyAction,
       location,
@@ -683,8 +652,6 @@ export function createRouter(init: RouterInit): Router {
   // is interrupted by a navigation, allow this to "succeed" by calling all
   // loaders during the next loader round
   function revalidate() {
-    let { state: navigationState, type } = state.navigation;
-
     // Toggle isRevalidationRequired so the next data load will call all loaders,
     // and mark us in a revalidating state
     isRevalidationRequired = true;
@@ -692,7 +659,10 @@ export function createRouter(init: RouterInit): Router {
 
     // If we're currently submitting an action, we don't need to start a new
     // navigation, we'll just let the follow up loader execution call all loaders
-    if (navigationState === "submitting" && type === "actionSubmission") {
+    if (
+      state.navigation.state === "submitting" &&
+      state.navigation.formMethod !== "get"
+    ) {
       return;
     }
 
@@ -779,12 +749,12 @@ export function createRouter(init: RouterInit): Router {
 
       pendingActionData = actionOutput.pendingActionData || null;
       pendingActionError = actionOutput.pendingActionError || null;
-      loadingNavigation = {
+      let navigation: NavigationStates["Loading"] = {
         state: "loading",
-        type: "actionReload",
         location,
         ...opts.submission,
-      } as NavigationStates["LoadingAction"];
+      };
+      loadingNavigation = navigation;
     }
 
     // Call loaders
@@ -830,9 +800,8 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Put us in a submitting state
-    let navigation: NavigationStates["SubmittingAction"] = {
+    let navigation: NavigationStates["Submitting"] = {
       state: "submitting",
-      type: "actionSubmission",
       location,
       ...submission,
     };
@@ -878,9 +847,8 @@ export function createRouter(init: RouterInit): Router {
 
     // If the action threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
-      let redirectNavigation: NavigationStates["SubmissionRedirect"] = {
+      let redirectNavigation: NavigationStates["Loading"] = {
         state: "loading",
-        type: "submissionRedirect",
         location: createLocation(state.location, result.location),
         ...submission,
       };
@@ -919,22 +887,22 @@ export function createRouter(init: RouterInit): Router {
     if (overrideNavigation) {
       loadingNavigation = overrideNavigation;
     } else if (submission?.formMethod === "get") {
-      loadingNavigation = {
+      let navigation: NavigationStates["Submitting"] = {
         state: "submitting",
-        type: "loaderSubmission",
         location,
         ...submission,
-      } as NavigationStates["SubmittingLoader"];
+      };
+      loadingNavigation = navigation;
     } else {
-      loadingNavigation = {
+      let navigation: NavigationStates["Loading"] = {
         state: "loading",
-        type: "normalLoad",
         location,
         formMethod: undefined,
         formAction: undefined,
         formEncType: undefined,
         formData: undefined,
-      } as NavigationStates["Loading"];
+      };
+      loadingNavigation = navigation;
     }
 
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
@@ -1150,9 +1118,8 @@ export function createRouter(init: RouterInit): Router {
       state.fetchers.set(key, loadingFetcher);
       updateState({ fetchers: new Map(state.fetchers) });
 
-      let redirectNavigation: NavigationStates["SubmissionRedirect"] = {
+      let redirectNavigation: NavigationStates["Loading"] = {
         state: "loading",
-        type: "submissionRedirect",
         location: createLocation(state.location, actionResult.location),
         ...submission,
       };
@@ -1177,7 +1144,7 @@ export function createRouter(init: RouterInit): Router {
     // in the middle of a navigation
     let nextLocation = state.navigation.location || state.location;
     let matches =
-      state.navigation.type !== "idle"
+      state.navigation.state !== "idle"
         ? matchRoutes(dataRoutes, state.navigation.location)
         : state.matches;
 
@@ -1552,34 +1519,16 @@ function getLoaderRedirect(
   state: RouterState,
   redirect: RedirectResult
 ): Navigation {
-  let redirectLocation = createLocation(state.location, redirect.location);
-  if (
-    state.navigation.type === "loaderSubmission" ||
-    state.navigation.type === "actionReload"
-  ) {
-    let { formMethod, formAction, formEncType, formData } = state.navigation;
-    let navigation: NavigationStates["SubmissionRedirect"] = {
-      state: "loading",
-      type: "submissionRedirect",
-      location: redirectLocation,
-      formMethod,
-      formAction,
-      formEncType,
-      formData,
-    };
-    return navigation;
-  } else {
-    let navigation: NavigationStates["LoadingRedirect"] = {
-      state: "loading",
-      type: "normalRedirect",
-      location: redirectLocation,
-      formMethod: undefined,
-      formAction: undefined,
-      formEncType: undefined,
-      formData: undefined,
-    };
-    return navigation;
-  }
+  let { formMethod, formAction, formEncType, formData } = state.navigation;
+  let navigation: NavigationStates["Loading"] = {
+    state: "loading",
+    location: createLocation(state.location, redirect.location),
+    formMethod: formMethod || undefined,
+    formAction: formAction || undefined,
+    formEncType: formEncType || undefined,
+    formData: formData || undefined,
+  };
+  return navigation;
 }
 
 function getMatchesToLoad(
