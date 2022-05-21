@@ -171,7 +171,7 @@ The last two, `{ state, key }`, are React Router specific.
 
 **Location Pathname**
 
-This is the part of [URL](#url) after the origin, so for `https://example.com/teams/hotspurs` the pathname is `/teams/hostspurs`. This is the only part of the location that routes match against.
+This is the part of [URL](#url) after the origin, so for `https://example.com/teams/hotspurs` the pathname is `/teams/hotspurs`. This is the only part of the location that routes match against.
 
 **Location Search**
 
