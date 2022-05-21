@@ -4,7 +4,7 @@ new: true
 order: 1
 ---
 
-# Route
+# `Route`
 
 Routes are perhaps the most important part of a React Router app. They couple URL segments to components, data loading and data mutations. Through route nesting, complex application layouts and data dependencies become simple and declarative.
 

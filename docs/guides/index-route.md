@@ -1,5 +1,6 @@
 ---
 title: Index Route
+new: true
 ---
 
 # Index Route

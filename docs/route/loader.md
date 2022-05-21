@@ -46,7 +46,7 @@ Route params are parsed from [dynamic segments][dynamicsegments] and passed to y
 
 ## `request`
 
-This is a [Fetch Request][request] instance about the what is being requested from your application.
+This is a [Fetch Request][request] instance being made to your application.
 
 ```tsx
 <Route loader={({ request }) => {}} />

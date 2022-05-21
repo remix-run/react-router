@@ -5,9 +5,46 @@ new: true
 
 # `errorElement`
 
-When dealing with external data, you can't always plan on it being found, the user having access to it, or the service even being up!
+When exceptions are thrown in [loaders][loader], [actions][action], or component rendering, instead of the normal render path for your Routes (`<Route element>`), the error path will be rendered (`<Route errorElement>`) and the error made available with [`useRouteError`][userouteerror].
 
-Here's a simple "not found" case:
+```tsx
+<Route
+  path="/invoices/:id"
+  // if an exception is thrown here
+  loader={loadInvoice}
+  // here
+  action={updateInvoice}
+  // or here
+  element={<Invoice />}
+  // this will render instead of `element`
+  errorElement={<ErrorBoundary />}
+/>;
+
+function Invoice() {
+  return <div>Happy {path}</div>;
+}
+
+function ErrorBoundary() {
+  let error = useRouteError();
+  console.error(error);
+  // Uncaught ReferenceError: path is not defined
+  return <div>Dang!</div>;
+}
+```
+
+## Bubbling
+
+When a route does not have an `errorElement`, errors will bubble up through parent routes. This let's you get as granular or general as you like.
+
+Put an `errorElement` at the top of your route tree and handle nearly every error in your app in one place. Or, put them on all of your routes and allow the parts of the app that don't have errors to continue to render normally. This gives the user more options to recover from errors instead of a hard refresh and 🤞.
+
+## Throwing Manually
+
+While `errorElement` handles unexpected errors, it can also be used to handle exceptions you expect.
+
+Particularly in loaders and actions, where you work with external data not in your control, you can't always plan on the data existing, the service being available, or the user having access to it. In these cases you can `throw` your own exceptions.
+
+Here's a "not found" case in a [loader][loader]:
 
 ```tsx [4,7-9]
 <Route
@@ -28,112 +65,147 @@ Here's a simple "not found" case:
 />
 ```
 
-As soon as you know you can't render the route with the data your'e loading, you can throw to break the call stack. You don't have to worry about the rest of the work in the loader like parsing the user's markdown bio when it doesn't exist.
+As soon as you know you can't render the route with the data you're loading, you can throw to break the call stack. You don't have to worry about the rest of the work in the loader (like parsing the user's markdown bio) when it doesn't exist. Just throw and get out of there.
 
-React Router will catch the response and render the `errorElement` instead. This keeps your route components super clean because they don't have to worry about exceptions.
+This also means you don't have to worry about a bunch of error branching code in your route component, it won't even try to render if you throw in the loader or action, instead your `errorElement` will render.
 
-Here is a full example showing how you can create utility functions that throw responses to stop code execution in the loader and move over to an alternative UI.
+You can throw anything from a loader or action just like you can return anything: responses (like the previous example), errors, or plain objects.
 
-```ts filename=app/db.ts
-import { json } from "@remix-run/{runtime}";
-import type { ThrownResponse } from "@remix-run/react";
+## Throwing Responses
 
-export type InvoiceNotFoundResponse = ThrownResponse<
-  404,
-  string
->;
+While you can throw anything and it will be provided back to you through [`useRouteError`][userouteerror], If you throw a [Response][response], React Router will automatically parse the response data before returning it to your components.
 
-export function getInvoice(id, user) {
-  const invoice = db.invoice.find({ where: { id } });
-  if (invoice === null) {
-    throw json("Not Found", { status: 404 });
+Additionally, [`isRouteErrorResponse`][isrouteerrorresponse] lets you check for this specific type in your boundaries. Coupled with [`json`][json], you can easily throw responses with some data and render different cases in your boundary:
+
+```tsx
+import { json } from "react-router-dom";
+
+function loader() {
+  const stillWorksHere = await userStillWorksHere();
+  if (!stillWorksHere) {
+    throw json(
+      {
+        sorry: "You have been fired.",
+        hrEmail: "hr@bigco.com",
+      },
+      { status: 401 }
+    );
   }
-  return invoice;
+}
+
+function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    // the response json is automatically parsed to
+    // `error.data`, you also have access to the status
+    return (
+      <div>
+        <h1>{error.status}</h1>
+        <h2>{error.data.sorry}</h2>
+        <p>
+          Go ahead and email {error.data.hrEmail} if you
+          feel like this is a mistake.
+        </p>
+      </div>
+    );
+  }
+
+  return <div>There was a problem</div>;
 }
 ```
 
-```ts filename=app/http.ts
-import { redirect } from "@remix-run/{runtime}";
+This makes it possible to create a general error boundary, usually on your root route, that handles many cases:
 
-import { getSession } from "./session";
+```tsx
+function RootBoundary() {
+  const error = useRouteError();
 
-export async function requireUserSession(request) {
-  const session = await getSession(
-    request.headers.get("cookie")
-  );
-  if (!session) {
-    // can throw our helpers like `redirect` and `json` because they
-    // return responses.
-    throw redirect("/login", 302);
+  if (isRouteErrorResponse(error)) {
+    if (error.status === 404) {
+      return <div>This page doesn't exist!</div>;
+    }
+
+    if (error.status === 401) {
+      return <div>You aren't authorized to see this</div>;
+    }
+
+    if (error.status === 503) {
+      return <div>Looks like our API is down</div>;
+    }
+
+    if (error.status === 418) {
+      return <div>🫖</div>;
+    }
   }
-  return session.get("user");
+
+  return <div>Something went wrong</div>;
 }
 ```
 
-```tsx filename=app/routes/invoice/$invoiceId.tsx
-import { useCatch, useLoaderData } from "@remix-run/react";
-import type { ThrownResponse } from "@remix-run/react";
+## Abstractions
 
-import { requireUserSession } from "~/http";
-import { getInvoice } from "~/db";
-import type {
-  Invoice,
-  InvoiceNotFoundResponse,
-} from "~/db";
+This pattern of throwing when you know you can't continue down the data loading path you're on makes it pretty simple to properly handle exceptional situations.
 
-type InvoiceCatchData = {
-  invoiceOwnerEmail: string;
-};
+Imagine a function that gets the user's web token for authorized requests looking something like this:
 
-type ThrownResponses =
-  | InvoiceNotFoundResponse
-  | ThrownResponse<401, InvoiceCatchData>;
-
-export const loader = async ({ request, params }) => {
-  const user = await requireUserSession(request);
-  const invoice: Invoice = getInvoice(params.invoiceId);
-
-  if (!invoice.userIds.includes(user.id)) {
-    const data: InvoiceCatchData = {
-      invoiceOwnerEmail: invoice.owner.email,
-    };
-    throw json(data, { status: 401 });
+```tsx
+async function getUserToken() {
+  const token = await getTokenFromWebWorker();
+  if (!token) {
+    throw new Response("", { status: 401 });
   }
-
-  return json(invoice);
-};
-
-export default function InvoiceRoute() {
-  const invoice = useLoaderData<Invoice>();
-  return <InvoiceView invoice={invoice} />;
-}
-
-export function CatchBoundary() {
-  // this returns { status, statusText, data }
-  const caught = useCatch<ThrownResponses>();
-
-  switch (caught.status) {
-    case 401:
-      return (
-        <div>
-          <p>You don't have access to this invoice.</p>
-          <p>
-            Contact {caught.data.invoiceOwnerEmail} to get
-            access
-          </p>
-        </div>
-      );
-    case 404:
-      return <div>Invoice not found!</div>;
-  }
-
-  // You could also `throw new Error("Unknown status in catch boundary")`.
-  // This will be caught by the closest `ErrorBoundary`.
-  return (
-    <div>
-      Something went wrong: {caught.status}{" "}
-      {caught.statusText}
-    </div>
-  );
+  return token;
 }
 ```
+
+No matter which loader or action uses that function, it will stop executing code in the current call stack and send the app over to the error path instead.
+
+Now let's add a function that fetches a project:
+
+```tsx
+function fetchProject(id) {
+  const token = await getUserToken();
+  const response = await fetch(`/projects/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 404) {
+    throw new Response("Not Found", { status: 404 });
+  }
+
+  // the fetch failed
+  if (!res.ok) {
+    throw new Error("Could not fetch project");
+  }
+}
+```
+
+Thanks to `getUserToken`, this code can assume it gets a token. If there isn't one, the error path will be rendered. Then if the project doesn't exist, no matter which loader is calling this function, it will throw a 404 over to the `errorElement`. Finally, if the fetch fails completely, it will send an error.
+
+At any time you realize "I don't have what I need", you can simply `throw`, knowing that you're still rendering something useful for the end user.
+
+Let's put it together into a route:
+
+```tsx
+<Route
+  path="/"
+  element={<Root />}
+  errorElement={<RootBoundary />}
+>
+  <Route
+    path="projects/:projectId"
+    loader={({ params }) => fetchProject(params.projectId)}
+    element={<Project />}
+  />
+</Route>
+```
+
+The project route doesn't have to think about errors at all. Between the loader utility functions like `fetchProject` and `getUserToken` throwing whenever something isn't right, and the `RootBoundary` handling all of the cases, the project route gets to focus strictly on the happy path.
+
+[loader]: ./loader
+[action]: ./action
+[userouteerror]: ../hooks/use-route-error
+[response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
+[isrouteerrorresponse]: ../fetch/is-route-error-response
+[json]: ../fetch/json
