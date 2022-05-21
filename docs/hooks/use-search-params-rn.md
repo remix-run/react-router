@@ -1,5 +1,5 @@
 ---
-title: useSearchParams (React Native)
+title: useSearchParams (RN)
 ---
 
 # `useSearchParams` (React Native)

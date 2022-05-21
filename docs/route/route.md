@@ -156,6 +156,12 @@ You can destructure the `*`, you just have to assign it a new name. A common nam
 let { org, "*": splat } = params;
 ```
 
+### Layout Routes
+
+<docs-info>TODO: expand with example</docs-info>
+
+Omitting the path makes this route a "layout route". It participates in UI nesting, but it does not add any segments to the URL.
+
 ## `index`
 
 Determines if the route is an index route. Index routes render into their parent's [Outlet][outlet] at their parent's URL (like a default child route).
