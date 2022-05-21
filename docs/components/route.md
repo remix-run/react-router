@@ -3,35 +3,59 @@ title: Route
 new: true
 ---
 
-# `<Routes>` and `<Route>`
+# `<Route>`
 
-<details>
-  <summary>Type declaration</summary>
+Routes are perhaps the most important part of a React Router app. They couple URL segments to components, data loading, and data mutations.
 
 ```tsx
-declare function Routes(
-  props: RoutesProps
-): React.ReactElement | null;
+<Route
+  // it renders this element
+  element={<Team />}
+  // when the URL matches this segment
+  path="teams/:teamId"
+  // with this data before rendering
+  loader={async ({ params }) => {
+    return fetch(`/fake/api/teams/${params.teamId}.json`);
+  }}
+  // performs this mutation when data is submitted to it
+  action={async ({ request }) => {
+    return updateFakeTeam(await request.formData());
+  }}
+  // and renders this element in case something went wrong
+  errorElement={<ErrorBoundary />}
+/>
+```
 
-interface RoutesProps {
-  children?: React.ReactNode;
-  location?: Partial<Location> | string;
-}
+Routes can also exist to simply be submitted to:
 
+```tsx
+<Route
+  path="/projects/:projectId/delete"
+  action={async ({ params }) => {
+    await fakeDeleteProject(params.projectId)
+    return redirect("/projects");
+  }}
+>
+```
+
+## Type declaration
+
+```tsx
 declare function Route(
   props: RouteProps
 ): React.ReactElement | null;
 
 interface RouteProps {
-  caseSensitive?: boolean;
-  children?: React.ReactNode;
-  element?: React.ReactNode | null;
-  index?: boolean;
   path?: string;
+  index?: boolean;
+  caseSensitive?: boolean;
+  loader?: DataFunction;
+  action?: DataFunction;
+  element?: React.ReactNode | null;
+  errorElement?: React.Node | null;
+  children?: React.ReactNode;
 }
 ```
-
-</details>
 
 `<Routes>` and `<Route>` are the primary ways to render something in React Router based on the current [`location`][location]. You can think about a `<Route>` kind of like an `if` statement; if its `path` matches the current URL, it renders its `element`! The `<Route caseSensitive>` prop determines if the matching should be done in a case-sensitive manner (defaults to `false`).
 
