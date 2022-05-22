@@ -172,7 +172,7 @@ When the URL is `"/invoices/sent"` the component tree will be:
 </App>
 ```
 
-When the URL is `"/invoices/123"`, the component tree will:
+When the URL is `"/invoices/123"`, the component tree will be:
 
 ```tsx
 <App>
