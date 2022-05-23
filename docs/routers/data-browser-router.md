@@ -109,8 +109,8 @@ If you are not server rendering your app, `DataBrowserRouter` will initiate all 
 <DataBrowserRouter fallbackElement={<SpinnerOfDoom />} />
 ```
 
-[loader]: ../components/route#loader
-[action]: ../components/route#action
+[loader]: ../route/loader
+[action]: ../route/action
 [fetcher]: ../hooks/use-fetcher
 [browser-router]: ./browser-router
 [form]: ../components/form

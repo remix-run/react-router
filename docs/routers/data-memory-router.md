@@ -78,7 +78,7 @@ The initial index in the history stack to render. This allows you to start a tes
 
 For all other props, see [`DataBrowserRouter`][databrowserrouter]
 
-[loader]: ../components/route#loader
+[loader]: ../route/loader
 [route]: ../components/route
 [routes]: ../components/routes
 [action]: ../components/route#action

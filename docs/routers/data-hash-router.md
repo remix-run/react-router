@@ -42,8 +42,8 @@ export interface DataHashRouterProps {
 }
 ```
 
-[loader]: ../components/route#loader
-[action]: ../components/route#action
+[loader]: ../route/loader
+[action]: ../route/action
 [fetcher]: ../hooks/use-fetcher
 [browser-router]: ./browser-router
 [form]: ../components/form
