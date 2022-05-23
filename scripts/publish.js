@@ -49,9 +49,11 @@ async function ensureBuildVersion(packageName, version) {
 function publishBuild(packageName, tag) {
   let buildDir = path.join(rootDir, "build", "node_modules", packageName);
   console.log();
-  console.log(`  npm publish ${buildDir} --tag ${tag}`);
+  console.log(`  npm publish ${buildDir} --tag ${tag} --access public`);
   console.log();
-  execSync(`npm publish ${buildDir} --tag ${tag}`, { stdio: "inherit" });
+  execSync(`npm publish ${buildDir} --tag ${tag} --access public`, {
+    stdio: "inherit",
+  });
 }
 
 /**
@@ -83,7 +85,8 @@ async function run() {
     await ensureBuildVersion("react-router-dom", version);
     await ensureBuildVersion("react-router-dom-v5-compat", version);
     await ensureBuildVersion("react-router-native", version);
-    await ensureBuildVersion("@remix-run/router", version);
+    // FIXME: @remix-run/router is versioned differently and isn't being
+    // validated here
 
     // 4. Publish to npm
     publishBuild("react-router", tag);
