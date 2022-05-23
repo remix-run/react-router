@@ -6,6 +6,8 @@ order: 3
 
 # Data APIs Quick Start
 
+Follow along with the [completed demo on stackblitz][demo].
+
 This guide is intended for people with some experience with React Router v6 already. If you are brand new to React Router, you will probably want to review the normal [Quick Start][quickstart] first.
 
 React Router v6.4 introduces all of the data abstractions from [Remix][remix] for React Router SPAs. Now you can keep your UI _and your data_ in sync with the URL automatically.
@@ -391,3 +393,4 @@ Good luck!
 [loader]: ../route/loader
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
+[demo]: https://stackblitz.com/github/remix-run/react-router/tree/remixing/examples/notes?file=src%2Fmain.jsx
