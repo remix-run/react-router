@@ -81,13 +81,16 @@ async function run() {
     // 3. Ensure build versions match the release version
     await ensureBuildVersion("react-router", version);
     await ensureBuildVersion("react-router-dom", version);
+    await ensureBuildVersion("react-router-dom-v5-compat", version);
     await ensureBuildVersion("react-router-native", version);
+    await ensureBuildVersion("@remix-run/router", version);
 
     // 4. Publish to npm
     publishBuild("react-router", tag);
     publishBuild("react-router-dom", tag);
     publishBuild("react-router-dom-v5-compat", tag);
     publishBuild("react-router-native", tag);
+    publishBuild("@remix-run/router", tag);
   } catch (error) {
     console.log();
     console.error(`  ${error.message}`);
