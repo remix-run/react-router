@@ -90,9 +90,16 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
   );
 
   let navigate = useNavigate();
+
+  const navigateRef = React.useRef(navigate);
+
   React.useEffect(() => {
-    navigate(to, { replace, state });
-  }, [navigate, to, replace, state]);
+    navigateRef.current = navigate;
+  }, [navigate]);
+
+  React.useEffect(() => {
+    navigateRef.current(to, { replace, state });
+  }, [to, replace, state]);
 
   return null;
 }
