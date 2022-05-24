@@ -1,8 +1,6 @@
 {
   "name": "remix-example-blog-tutorial",
   "private": true,
-  "description": "",
-  "license": "",
   "sideEffects": false,
   "scripts": {
     "build": "run-s build:*",

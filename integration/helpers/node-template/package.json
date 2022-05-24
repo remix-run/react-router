@@ -1,8 +1,6 @@
 {
   "name": "remix-template-remix",
   "private": true,
-  "description": "",
-  "license": "",
   "sideEffects": false,
   "scripts": {
     "build": "node ../../../build/node_modules/@remix-run/dev/cli.js build",

@@ -1,8 +1,6 @@
 {
   "name": "remix-template-cloudflare-workers",
   "private": true,
-  "description": "",
-  "license": "",
   "sideEffects": false,
   "main": "build/index.js",
   "scripts": {},
