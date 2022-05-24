@@ -1546,7 +1546,11 @@ describe("a router", () => {
         root: "ROOT",
       });
       expect(t.router.state.errors).toEqual({
-        root: new Response(null, { status: 404 }),
+        root: {
+          status: 404,
+          statusText: "Not Found",
+          data: null,
+        },
       });
       expect(t.router.state.matches).toMatchObject([
         {
@@ -2754,7 +2758,11 @@ describe("a router", () => {
         navigation: IDLE_NAVIGATION,
         loaderData: {},
         errors: {
-          root: new Response(null, { status: 404 }),
+          root: {
+            status: 404,
+            statusText: "Not Found",
+            data: null,
+          },
         },
       });
     });
@@ -5765,7 +5773,6 @@ describe("a router", () => {
         it("forces all loaders to revalidate on interrupted fetcher submissionRedirect", async () => {
           let key = "key";
           let t = initializeTmTest();
-          debugger;
           let A = await t.fetch("/foo", key, {
             formMethod: "post",
             formData: createFormData({ key: "value" }),

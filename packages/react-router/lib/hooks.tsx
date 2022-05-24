@@ -1,5 +1,6 @@
 import * as React from "react";
-import type {
+import {
+  isRouteErrorResponse,
   Location,
   ParamParseKey,
   Params,
@@ -353,7 +354,11 @@ export function useRoutes(
     parentPathnameBase === "/"
       ? pathname
       : pathname.slice(parentPathnameBase.length) || "/";
-  let matches = matchRoutes(routes, { pathname: remainingPathname });
+
+  // Don't re-match if we're using a data router
+  let matches = dataRouterStateContext
+    ? dataRouterStateContext.matches
+    : matchRoutes(routes, { pathname: remainingPathname });
 
   if (__DEV__) {
     warning(
@@ -388,13 +393,16 @@ export function useRoutes(
 
 function DefaultErrorElement() {
   let error = useRouteError();
+  let message = isRouteErrorResponse(error)
+    ? `${error.status} ${error.statusText}`
+    : error?.message || JSON.stringify(error);
   let lightgrey = "rgba(200,200,200, 0.5)";
   let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
   let codeStyles = { padding: "2px 4px", backgroundColor: lightgrey };
   return (
     <>
       <h2>Unhandled Thrown Error!</h2>
-      <p style={{ fontStyle: "italic" }}>{error?.message || error}</p>
+      <h3 style={{ fontStyle: "italic" }}>{message}</h3>
       {error?.stack ? <pre style={preStyles}>{error?.stack}</pre> : null}
       <p>💿 Hey developer 👋</p>
       <p>

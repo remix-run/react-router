@@ -1,4 +1,4 @@
-import { History, Location, parsePath, To } from "./history";
+import { History, InitialEntry, Location, parsePath, To } from "./history";
 import { Action as HistoryAction, createLocation } from "./history";
 
 import {
@@ -438,9 +438,15 @@ export function createRouter(init: RouterInit): Router {
   // send along the restoreScrollPosition
   let initialScrollRestored = false;
 
-  let initialMatches =
-    matchRoutes(dataRoutes, init.history.location) ||
-    getNotFoundMatches(dataRoutes);
+  let initialMatches = matchRoutes(dataRoutes, init.history.location);
+  let initialErrors: RouteData | null = null;
+
+  if (initialMatches == null) {
+    initialMatches = getNotFoundMatches(dataRoutes);
+    initialErrors = {
+      [dataRoutes[0].id]: new ErrorResponse(404, "Not Found", null),
+    };
+  }
 
   // If we received hydration data without errors - detect if any matched
   // routes with loaders did not get provided loaderData, and if so launch an
@@ -475,7 +481,7 @@ export function createRouter(init: RouterInit): Router {
       ? {}
       : init.hydrationData?.loaderData || {},
     actionData: init.hydrationData?.actionData || null,
-    errors: init.hydrationData?.errors || null,
+    errors: init.hydrationData?.errors || initialErrors,
     fetchers: new Map(),
   };
 
@@ -717,7 +723,7 @@ export function createRouter(init: RouterInit): Router {
       completeNavigation(historyAction, location, {
         matches: getNotFoundMatches(dataRoutes),
         errors: {
-          [dataRoutes[0].id]: new Response(null, { status: 404 }),
+          [dataRoutes[0].id]: new ErrorResponse(404, "Not Found", null),
         },
       });
       return;

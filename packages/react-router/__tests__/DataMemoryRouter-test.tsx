@@ -1134,6 +1134,54 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
 
+    it("renders 404 errors using error boundary", async () => {
+      let { container } = render(
+        <DataMemoryRouter
+          fallbackElement={<span />}
+          initialEntries={["/foo"]}
+          hydrationData={{
+            loaderData: {
+              "0": {
+                message: "hydrated from foo",
+              },
+            },
+          }}
+        >
+          <Route
+            path="/"
+            element={
+              <div>
+                <h1>Hello</h1>
+                <Outlet />
+              </div>
+            }
+            errorElement={<Boundary />}
+          />
+        </DataMemoryRouter>
+      );
+
+      function Boundary() {
+        let error = useRouteError();
+        return (
+          <p>
+            Error:
+            {error.status}
+            {error.statusText}
+          </p>
+        );
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Error:
+            404
+            Not Found
+          </p>
+        </div>"
+      `);
+    });
+
     it("renders navigation errors with a default if no errorElements are provided", async () => {
       let fooDefer = defer();
       let barDefer = defer();
@@ -1219,11 +1267,11 @@ describe("<DataMemoryRouter>", () => {
           <h2>
             Unhandled Thrown Error!
           </h2>
-          <p
+          <h3
             style=\\"font-style: italic;\\"
           >
             Kaboom!
-          </p>
+          </h3>
           <pre
             style=\\"padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);\\"
           >
@@ -1380,11 +1428,11 @@ describe("<DataMemoryRouter>", () => {
           <h2>
             Unhandled Thrown Error!
           </h2>
-          <p
+          <h3
             style=\\"font-style: italic;\\"
           >
             Kaboom!
-          </p>
+          </h3>
           <pre
             style=\\"padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);\\"
           >
@@ -1619,11 +1667,11 @@ describe("<DataMemoryRouter>", () => {
             <h2>
               Unhandled Thrown Error!
             </h2>
-            <p
+            <h3
               style=\\"font-style: italic;\\"
             >
               Kaboom!
-            </p>
+            </h3>
             <pre
               style=\\"padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);\\"
             >

@@ -36,6 +36,8 @@ function Layout() {
         <Link to="/">Home</Link>
         &nbsp;|&nbsp;
         <Link to="/todos">Todos</Link>
+        &nbsp;|&nbsp;
+        <Link to="/404">404 Link</Link>
       </nav>
       <div style={{ position: "fixed", top: 0, right: 0 }}>
         {navigation.state !== "idle" && <p>Navigation in progress...</p>}

@@ -901,7 +901,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <Link to="1">Go to 1</Link>
             <button
               onClick={() => {
-                debugger;
                 submit(formData, { action: "2", method: "post" });
               }}
             >

@@ -787,7 +787,7 @@ function useSubmitImpl(fetcherKey?: string): SubmitFunction {
 
 export function useFormAction(action = "."): string {
   let routeContext = React.useContext(UNSAFE_RouteContext);
-  invariant(routeContext, "useLoaderData must be used inside a RouteContext");
+  invariant(routeContext, "useFormAction must be used inside a RouteContext");
 
   let [match] = routeContext.matches.slice(-1);
   let { pathname, search } = useResolvedPath(action);
