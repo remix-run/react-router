@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Outlet, Routes, Route, useParams } from "react-router";
+import {MemoryRouter, Outlet, Routes, Route, useParams, useNavigate} from "react-router";
 
 function ShowParams() {
   return <pre>{JSON.stringify(useParams())}</pre>;
@@ -209,4 +209,47 @@ describe("useParams", () => {
       `);
     });
   });
+
+  describe("when only non-pathname parts of the URL change", () => {
+    it("doesn't trigger a re-render", () => {
+      function NavigateButton() {
+        let navigate = useNavigate();
+
+        function handleClick() {
+          navigate({search: 'a=b', hash: 'c'});
+        }
+
+        return <button onClick={handleClick}>click me</button>;
+      }
+      let trackRender = jest.fn();
+      const TrackedShowParams = React.memo(function TrackedShowParams() {
+        trackRender();
+        return (
+          <>
+            <NavigateButton />
+            <pre>{JSON.stringify(useParams())}</pre>
+          </>
+        );
+      });
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/blog/react-router"]}>
+            <Routes>
+              <Route path="/blog/:slug" element={<TrackedShowParams />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      })
+
+      let button = renderer.root.findByType("button");
+
+      TestRenderer.act(() => {
+        button.props.onClick();
+      });
+
+      expect(trackRender).toHaveBeenCalledTimes(1);
+    })
+  })
 });
