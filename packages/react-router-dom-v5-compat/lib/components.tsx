@@ -17,7 +17,7 @@ export function CompatRoute(props: any) {
   let { location, path } = props;
   if (!props.exact) path += "/*";
   return (
-    <Routes {...(location && { location })}>
+    <Routes location={location}>
       <Route path={path} element={<RouteV5 {...props} />} />
     </Routes>
   );
