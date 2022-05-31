@@ -142,6 +142,8 @@ export interface BrowserRouterProps {
 
 /**
  * A `<Router>` for use in web browsers. Provides the cleanest URLs.
+ * 
+ * @see https://reactrouter.com/docs/en/v6/routers/browser-router
  */
 export function BrowserRouter({
   basename,
@@ -181,6 +183,8 @@ export interface HashRouterProps {
 /**
  * A `<Router>` for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
+ *
+ * @see https://reactrouter.com/docs/en/v6/routers/hash-router
  */
 export function HashRouter({ basename, children, window }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
@@ -218,6 +222,8 @@ export interface HistoryRouterProps {
  * to note that using your own history object is highly discouraged and may add
  * two versions of the history library to your bundles unless you use the same
  * version of the history library that React Router uses internally.
+ *
+ * @see https://reactrouter.com/docs/en/v6/routers/history-router
  */
 function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
   const [state, setState] = React.useState({
@@ -258,6 +264,8 @@ export interface LinkProps
 
 /**
  * The public API for rendering a history-aware <a>.
+ *
+ * @see https://reactrouter.com/docs/en/v6/components/link
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -307,6 +315,8 @@ export interface NavLinkProps
 
 /**
  * A <Link> wrapper that knows if it's "active" or not.
+ *
+ * @see https://reactrouter.com/docs/en/v6/components/nav-link
  */
 export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   function NavLinkWithRef(
@@ -384,6 +394,8 @@ if (__DEV__) {
  * Handles the click behavior for router `<Link>` components. This is useful if
  * you need to create custom `<Link>` components with the same click behavior we
  * use in our exported `<Link>`.
+ *
+ * @see https://reactrouter.com/docs/en/v6/hooks/use-link-click-handler
  */
 export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   to: To,
@@ -425,6 +437,8 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
 /**
  * A convenient wrapper for reading and writing search parameters via the
  * URLSearchParams interface.
+ *
+ * @see https://reactrouter.com/docs/en/v6/hooks/use-search-params
  */
 export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   warning(
@@ -498,6 +512,8 @@ export type URLSearchParamsInit =
  *   let searchParams = createSearchParams({
  *     sort: ['name', 'price']
  *   });
+ *
+ * @see https://reactrouter.com/docs/en/v6/utils/create-search-params
  */
 export function createSearchParams(
   init: URLSearchParamsInit = ""

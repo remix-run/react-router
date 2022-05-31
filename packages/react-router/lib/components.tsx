@@ -27,7 +27,7 @@ export interface MemoryRouterProps {
 /**
  * A <Router> that stores all entries in memory.
  *
- * @see https://reactrouter.com/docs/en/v6/api#memoryrouter
+ * @see https://reactrouter.com/docs/en/v6/routers/memory-router
  */
 export function MemoryRouter({
   basename,
@@ -72,7 +72,7 @@ export interface NavigateProps {
  * able to use hooks. In functional components, we recommend you use the
  * `useNavigate` hook instead.
  *
- * @see https://reactrouter.com/docs/en/v6/api#navigate
+ * @see https://reactrouter.com/docs/en/v6/components/navigate
  */
 export function Navigate({ to, replace, state }: NavigateProps): null {
   invariant(
@@ -104,7 +104,7 @@ export interface OutletProps {
 /**
  * Renders the child route's element, if there is one.
  *
- * @see https://reactrouter.com/docs/en/v6/api#outlet
+ * @see https://reactrouter.com/docs/en/v6/components/outlet
  */
 export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
@@ -139,7 +139,7 @@ export interface IndexRouteProps {
 /**
  * Declares an element that should be rendered at a certain URL path.
  *
- * @see https://reactrouter.com/docs/en/v6/api#route
+ * @see https://reactrouter.com/docs/en/v6/components/route
  */
 export function Route(
   _props: PathRouteProps | LayoutRouteProps | IndexRouteProps
@@ -167,7 +167,7 @@ export interface RouterProps {
  * router that is more specific to your environment such as a <BrowserRouter>
  * in web browsers or a <StaticRouter> for server rendering.
  *
- * @see https://reactrouter.com/docs/en/v6/api#router
+ * @see https://reactrouter.com/docs/en/v6/routers/router
  */
 export function Router({
   basename: basenameProp = "/",
@@ -247,7 +247,7 @@ export interface RoutesProps {
  * A container for a nested tree of <Route> elements that renders the branch
  * that best matches the current location.
  *
- * @see https://reactrouter.com/docs/en/v6/api#routes
+ * @see https://reactrouter.com/docs/en/v6/components/routes
  */
 export function Routes({
   children,
@@ -265,7 +265,7 @@ export function Routes({
  * either a `<Route>` element or an array of them. Used internally by
  * `<Routes>` to create a route config from its children.
  *
- * @see https://reactrouter.com/docs/en/v6/api#createroutesfromchildren
+ * @see https://reactrouter.com/docs/en/v6/utils/create-routes-from-children
  */
 export function createRoutesFromChildren(
   children: React.ReactNode
