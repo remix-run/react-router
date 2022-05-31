@@ -142,7 +142,7 @@ export interface BrowserRouterProps {
 
 /**
  * A `<Router>` for use in web browsers. Provides the cleanest URLs.
- * 
+ *
  * @see https://reactrouter.com/docs/en/v6/routers/browser-router
  */
 export function BrowserRouter({
