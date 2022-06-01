@@ -3,15 +3,15 @@
   "version": "1.5.1",
   "description": "Dev tools and CLI for Remix",
   "homepage": "https://remix.run",
-  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/remix-run/remix/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/remix-run/remix",
     "directory": "packages/remix-dev"
   },
-  "bugs": {
-    "url": "https://github.com/remix-run/remix/issues"
-  },
+  "license": "MIT",
   "bin": {
     "remix": "cli.js"
   },

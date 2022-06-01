@@ -1,16 +1,17 @@
 {
   "name": "@remix-run/node",
-  "description": "Node.js platform abstractions for Remix",
   "version": "1.5.1",
-  "license": "MIT",
+  "description": "Node.js platform abstractions for Remix",
+  "bugs": {
+    "url": "https://github.com/remix-run/remix/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/remix-run/remix",
     "directory": "packages/remix-node"
   },
-  "bugs": {
-    "url": "https://github.com/remix-run/remix/issues"
-  },
+  "license": "MIT",
+  "sideEffects": false,
   "dependencies": {
     "@remix-run/server-runtime": "1.5.1",
     "@remix-run/web-fetch": "^4.1.3",
@@ -25,6 +26,5 @@
   "devDependencies": {
     "@types/cookie-signature": "^1.0.3",
     "@types/source-map-support": "^0.5.4"
-  },
-  "sideEffects": false
+  }
 }

@@ -1,26 +1,26 @@
 {
   "name": "@remix-run/express",
-  "description": "Express server request handler for Remix",
   "version": "1.5.1",
-  "license": "MIT",
+  "description": "Express server request handler for Remix",
+  "bugs": {
+    "url": "https://github.com/remix-run/remix/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/remix-run/remix",
     "directory": "packages/remix-express"
   },
-  "bugs": {
-    "url": "https://github.com/remix-run/remix/issues"
-  },
+  "license": "MIT",
   "dependencies": {
     "@remix-run/node": "1.5.1"
-  },
-  "peerDependencies": {
-    "express": "^4.17.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.9",
     "@types/supertest": "^2.0.10",
     "node-mocks-http": "^1.10.1",
     "supertest": "^6.0.1"
+  },
+  "peerDependencies": {
+    "express": "^4.17.1"
   }
 }
