@@ -12,6 +12,14 @@ This guide is intended for people with some experience with React Router v6 alre
 
 React Router v6.4 introduces all of the data abstractions from [Remix][remix] for React Router SPAs. Now you can keep your UI _and your data_ in sync with the URL automatically.
 
+## Installation
+
+The new Data APIs are available on the `next` tag:
+
+```sh
+npm install react-router-dom@next
+```
+
 ## Configuring Routes
 
 Configuring routes is the same, except you need to use [`DataBrowserRouter`][databrowserrouter] to enable the data APIs. note you no longer render `<Routes>` either, just `<Route>`.
