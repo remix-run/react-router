@@ -355,10 +355,12 @@ export function useRoutes(
       ? pathname
       : pathname.slice(parentPathnameBase.length) || "/";
 
-  // Don't re-match if we're using a data router
-  let matches = dataRouterStateContext
-    ? dataRouterStateContext.matches
-    : matchRoutes(routes, { pathname: remainingPathname });
+  // Prefer data router matches when they exist, but only at the top of the tree in case we're
+  // inside a descendant route tree within a data router
+  let matches =
+    dataRouterStateContext && parentMatches.length === 0
+      ? dataRouterStateContext.matches
+      : matchRoutes(routes, { pathname: remainingPathname });
 
   if (__DEV__) {
     warning(

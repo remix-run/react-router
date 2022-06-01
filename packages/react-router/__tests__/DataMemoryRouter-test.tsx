@@ -788,6 +788,49 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
+  it("renders descendent routes inside a data router", () => {
+    function GrandChild() {
+      return (
+        <Routes>
+          <Route path="descendant">
+            <Route
+              path="routes"
+              element={<h1>👋 Hello from the other side!</h1>}
+            />
+          </Route>
+        </Routes>
+      );
+    }
+
+    function Child() {
+      return (
+        <Routes>
+          <Route path="to/*" element={<GrandChild />} />
+        </Routes>
+      );
+    }
+
+    let { container } = render(
+      <DataMemoryRouter
+        fallbackElement={<span />}
+        initialEntries={["/deep/path/to/descendant/routes"]}
+        hydrationData={{}}
+      >
+        <Route path="/deep">
+          <Route path="path/*" element={<Child />} />
+        </Route>
+      </DataMemoryRouter>
+    );
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          👋 Hello from the other side!
+        </h1>
+      </div>"
+    `);
+  });
+
   describe("errors", () => {
     it("renders hydration errors on leaf elements", async () => {
       let { container } = render(
