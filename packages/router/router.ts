@@ -634,7 +634,11 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let { path: normalizedPath, submission } = normalizeNavigateOptions(
+    let {
+      path: normalizedPath,
+      submission,
+      error,
+    } = normalizeNavigateOptions(
       typeof path === "string" ? parsePath(path) : path,
       opts
     );
@@ -644,7 +648,12 @@ export function createRouter(init: RouterInit): Router {
       ? HistoryAction.Replace
       : HistoryAction.Push;
 
-    return await startNavigation(historyAction, location, { submission });
+    return await startNavigation(historyAction, location, {
+      submission,
+      // Send through the formData serialization error if we have one so we can
+      // render at the right errorElement after we match routes
+      pendingError: error,
+    });
   }
 
   // Revalidate all current loaders.  If a navigation is in progress or if this
@@ -694,6 +703,7 @@ export function createRouter(init: RouterInit): Router {
     opts?: {
       submission?: Submission;
       overrideNavigation?: Navigation;
+      pendingError?: ErrorResponse;
       startUninterruptedRevalidation?: boolean;
     }
   ): Promise<void> {
@@ -717,6 +727,17 @@ export function createRouter(init: RouterInit): Router {
         matches: getNotFoundMatches(dataRoutes),
         errors: {
           [dataRoutes[0].id]: new ErrorResponse(404, "Not Found", null),
+        },
+      });
+      return;
+    }
+
+    if (opts?.pendingError) {
+      let boundaryMatch = findNearestBoundary(matches);
+      completeNavigation(historyAction, location, {
+        matches: getNotFoundMatches(dataRoutes),
+        errors: {
+          [boundaryMatch.route.id]: opts?.pendingError,
         },
       });
       return;
@@ -820,7 +841,11 @@ export function createRouter(init: RouterInit): Router {
       }
       result = {
         type: ResultType.error,
-        error: new Response(null, { status: 405 }),
+        error: new ErrorResponse(
+          405,
+          "Method Not Allowed",
+          `No action found for [${createHref(location)}]`
+        ),
       };
     } else {
       // Create a controller for this data load
@@ -1500,6 +1525,7 @@ function normalizeNavigateOptions(
 ): {
   path: Partial<Path>;
   submission?: Submission;
+  error?: ErrorResponse;
 } {
   // Return location verbatim on non-submission navigations
   if (!opts || (!("formMethod" in opts) && !("formData" in opts))) {
@@ -1530,7 +1556,14 @@ function normalizeNavigateOptions(
     if (typeof value === "string") {
       searchParams.append(name, value);
     } else {
-      throw new Error(`Cannot submit binary form data using GET`);
+      return {
+        path,
+        error: new ErrorResponse(
+          400,
+          "Bad Request",
+          "Cannot submit binary form data using GET"
+        ),
+      };
     }
   }
 
@@ -1897,17 +1930,18 @@ function mergeLoaderData(
   };
 }
 
-// Find the nearest error boundary, looking upwards from the matched route
-// for the closest ancestor errorElement, defaulting to the root match
+// Find the nearest error boundary, looking upwards from the leaf route (or the
+// route specified by routeId) for the closest ancestor errorElement, defaulting
+// to the root match
 function findNearestBoundary(
   matches: DataRouteMatch[],
-  routeId: string
+  routeId?: string
 ): DataRouteMatch {
+  let eligibleMatches = routeId
+    ? matches.slice(0, matches.findIndex((m) => m.route.id === routeId) + 1)
+    : [...matches];
   return (
-    matches
-      .slice(0, matches.findIndex((m) => m.route.id === routeId) + 1)
-      .reverse()
-      .find((m) => m.route.errorElement) || matches[0]
+    eligibleMatches.reverse().find((m) => m.route.errorElement) || matches[0]
   );
 }
 

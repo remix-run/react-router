@@ -2107,7 +2107,7 @@ describe("a router", () => {
     });
 
     describe("with no corresponding action", () => {
-      it("throws a 405 Response", async () => {
+      it("throws a 405 ErrorResponse", async () => {
         let t = setup({
           routes: [
             {
@@ -2129,13 +2129,17 @@ describe("a router", () => {
           formData: createFormData({ gosh: "dang" }),
         });
         expect(t.router.state.errors).toEqual({
-          child: new Response(null, { status: 405 }),
+          child: new ErrorResponse(
+            405,
+            "Method Not Allowed",
+            "No action found for [/child]"
+          ),
         });
         expect(console.warn).toHaveBeenCalled();
         spy.mockReset();
       });
 
-      it("still calls appropriate loaders after 405", async () => {
+      it("still calls appropriate loaders after 405 ErrorResponse", async () => {
         let t = setup({
           routes: [
             {
@@ -2182,7 +2186,11 @@ describe("a router", () => {
         });
         expect(t.router.state.actionData).toBe(null);
         expect(t.router.state.errors).toEqual({
-          grandchild: new Response(null, { status: 405 }),
+          grandchild: new ErrorResponse(
+            405,
+            "Method Not Allowed",
+            "No action found for [/child/grandchild]"
+          ),
         });
       });
     });
@@ -2815,6 +2823,38 @@ describe("a router", () => {
       });
       expect(t.router.state.navigation.formMethod).toBeUndefined();
       expect(t.router.state.navigation.formData).toBeUndefined();
+    });
+
+    it("returns a 400 error if binary data is attempted to be submitted using formMethod=GET", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+      });
+
+      let formData = new FormData();
+      formData.append(
+        "blob",
+        new Blob(["<h1>Some html file contents</h1>"], {
+          type: "text/html",
+        })
+      );
+
+      await t.navigate("/tasks", {
+        formMethod: "get",
+        formData: formData,
+      });
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.location).toMatchObject({
+        pathname: "/tasks",
+        search: "",
+      });
+      expect(t.router.state.errors).toEqual({
+        tasks: new ErrorResponse(
+          400,
+          "Bad Request",
+          "Cannot submit binary form data using GET"
+        ),
+      });
     });
   });
 
