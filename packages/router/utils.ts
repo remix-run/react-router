@@ -6,20 +6,15 @@ export type FormMethod = "get" | "post" | "put" | "patch" | "delete";
 export type FormEncType = "application/x-www-form-urlencoded";
 
 /**
- * Internal interface to pass around, not intended for external consumption
+ * @private
+ * Internal interface to pass around for action submissions, not intended for
+ * external consumption
  */
 export interface Submission {
-  formMethod: FormMethod;
+  formMethod: Exclude<FormMethod, "get">;
   formAction: string;
   formEncType: FormEncType;
   formData: FormData;
-}
-
-/**
- * Narrowed type enforcing a non-GET method
- */
-export interface ActionSubmission extends Submission {
-  formMethod: Exclude<FormMethod, "get">;
 }
 
 /**

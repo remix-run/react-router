@@ -2321,19 +2321,17 @@ describe("a router", () => {
         formData: createFormData({ gosh: "dang" }),
       });
       let navigation = t.router.state.navigation;
-      expect(navigation.state).toBe("submitting");
-      expect(
-        // @ts-expect-error
-        new URLSearchParams(navigation.formData).toString()
-      ).toBe("gosh=dang");
-      expect(navigation.formMethod).toBe("get");
-      expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
+      expect(navigation.state).toBe("loading");
+      expect(navigation.formData).toBeUndefined();
+      expect(navigation.formMethod).toBeUndefined();
+      expect(navigation.formEncType).toBeUndefined();
       expect(navigation.location).toMatchObject({
         pathname: "/foo",
-        search: "",
+        search: "?gosh=dang",
         hash: "",
       });
 
+      await A.loaders.root.resolve("ROOT");
       await A.loaders.foo.resolve("A");
       navigation = t.router.state.navigation;
       expect(navigation.state).toBe("idle");
@@ -2347,15 +2345,14 @@ describe("a router", () => {
       let A = await t.navigate("/foo", {
         formData: createFormData({ gosh: "dang" }),
       });
+      await A.loaders.root.resolve("ROOT");
       let B = await A.loaders.foo.redirect("/bar");
 
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(
-        // @ts-expect-error
-        new URLSearchParams(navigation.formData).toString()
-      ).toBe("gosh=dang");
-      expect(navigation.formMethod).toBe("get");
+      expect(navigation.formData).toBeUndefined();
+      expect(navigation.formMethod).toBeUndefined();
+      expect(navigation.formEncType).toBeUndefined();
       expect(navigation.location?.pathname).toBe("/bar");
 
       await B.loaders.bar.resolve("B");
@@ -2765,6 +2762,59 @@ describe("a router", () => {
           },
         },
       });
+    });
+
+    it("converts formData to URLSearchParams for unspecified formMethod", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+      });
+      await t.navigate("/tasks", {
+        formData: createFormData({ key: "value" }),
+      });
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.navigation.location).toMatchObject({
+        pathname: "/tasks",
+        search: "?key=value",
+      });
+      expect(t.router.state.navigation.formMethod).toBeUndefined();
+      expect(t.router.state.navigation.formData).toBeUndefined();
+    });
+
+    it("converts formData to URLSearchParams for formMethod=get", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+      });
+      await t.navigate("/tasks", {
+        formMethod: "get",
+        formData: createFormData({ key: "value" }),
+      });
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.navigation.location).toMatchObject({
+        pathname: "/tasks",
+        search: "?key=value",
+      });
+      expect(t.router.state.navigation.formMethod).toBeUndefined();
+      expect(t.router.state.navigation.formData).toBeUndefined();
+    });
+
+    it("merges URLSearchParams for formMethod=get", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+      });
+      await t.navigate("/tasks?key=1", {
+        formMethod: "get",
+        formData: createFormData({ key: "2" }),
+      });
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.navigation.location).toMatchObject({
+        pathname: "/tasks",
+        search: "?key=1&key=2",
+      });
+      expect(t.router.state.navigation.formMethod).toBeUndefined();
+      expect(t.router.state.navigation.formData).toBeUndefined();
     });
   });
 
@@ -4092,17 +4142,21 @@ describe("a router", () => {
         },
       });
 
-      let formData = createFormData({ key: "value" });
       let N = await t.navigate("/tasks", {
         formMethod: "get",
-        formData,
+        formData: createFormData({ key: "value" }),
       });
       expect(t.router.state).toMatchObject({
         historyAction: "POP",
         location: { pathname: "/" },
         navigation: {
-          state: "submitting",
-          location: { pathname: "/tasks" },
+          state: "loading",
+          location: {
+            pathname: "/tasks",
+            search: "?key=value",
+          },
+          formMethod: undefined,
+          formData: undefined,
         },
         revalidation: "loading",
         loaderData: {
@@ -4285,7 +4339,7 @@ describe("a router", () => {
         },
       });
 
-      let N = await t.navigate("/tasks?key=value", {
+      let N = await t.navigate("/tasks", {
         formMethod: "get",
         formData: createFormData({ key: "value" }),
       });
@@ -4295,7 +4349,13 @@ describe("a router", () => {
       expect(t.router.state).toMatchObject({
         historyAction: "POP",
         location: { pathname: "/" },
-        navigation: { state: "submitting" },
+        navigation: {
+          state: "loading",
+          location: {
+            pathname: "/tasks",
+            search: "?key=value",
+          },
+        },
         revalidation: "idle",
         loaderData: {
           root: "ROOT_DATA",
@@ -4309,7 +4369,13 @@ describe("a router", () => {
       expect(t.router.state).toMatchObject({
         historyAction: "POP",
         location: { pathname: "/" },
-        navigation: { state: "submitting" },
+        navigation: {
+          state: "loading",
+          location: {
+            pathname: "/tasks",
+            search: "?key=value",
+          },
+        },
         revalidation: "loading",
         loaderData: {
           root: "ROOT_DATA",
@@ -4834,11 +4900,16 @@ describe("a router", () => {
       it("loader submission fetch", async () => {
         let t = initializeTmTest({ url: "/foo" });
 
-        let A = await t.fetch("/foo?key=value", {
+        let A = await t.fetch("/foo", {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
         });
-        expect(A.fetcher.state).toBe("submitting");
+        expect(A.fetcher.state).toBe("loading");
+        expect(
+          new URL(
+            A.loaders.foo.stub.mock.calls[0][0].request.url
+          ).searchParams.toString()
+        ).toBe("key=value");
 
         await A.loaders.foo.resolve("A DATA");
         expect(A.fetcher.state).toBe("idle");
@@ -4853,6 +4924,7 @@ describe("a router", () => {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
         });
+        expect(A.fetcher.state).toBe("loading");
         await A.loaders.foo.resolve("A DATA");
         expect(A.fetcher.state).toBe("idle");
         expect(A.fetcher.data).toBe("A DATA");
@@ -4861,7 +4933,7 @@ describe("a router", () => {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
         });
-        expect(B.fetcher.state).toBe("submitting");
+        expect(B.fetcher.state).toBe("loading");
         expect(B.fetcher.data).toBe("A DATA");
 
         await B.loaders.foo.resolve("B DATA");

@@ -521,14 +521,14 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       `);
 
       fireEvent.click(screen.getByText("Submit Form"));
-      await waitFor(() => screen.getByText("submitting"));
+      await waitFor(() => screen.getByText("loading"));
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
           id=\\"output\\"
         >
           <p>
-            submitting
+            loading
           </p>
           <p />
           <p />
@@ -1302,7 +1302,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           "<p
             id=\\"output\\"
           >
-            submitting
+            loading
           </p>"
         `);
 
@@ -1392,7 +1392,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
           "<p
             id=\\"output\\"
           >
-            submitting
+            loading
           </p>"
         `);
 

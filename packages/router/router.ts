@@ -1,8 +1,7 @@
-import { History, InitialEntry, Location, parsePath, To } from "./history";
-import { Action as HistoryAction, createLocation } from "./history";
+import { createPath, History, Location, Path, To } from "./history";
+import { Action as HistoryAction, createLocation, parsePath } from "./history";
 
 import {
-  ActionSubmission,
   DataRouteObject,
   FormEncType,
   FormMethod,
@@ -635,23 +634,17 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let location = createLocation(state.location, path, opts?.state);
+    let { path: normalizedPath, submission } = normalizeNavigateOptions(
+      typeof path === "string" ? parsePath(path) : path,
+      opts
+    );
+
+    let location = createLocation(state.location, normalizedPath, opts?.state);
     let historyAction = opts?.replace
       ? HistoryAction.Replace
       : HistoryAction.Push;
 
-    if (isSubmissionNavigation(opts)) {
-      return await startNavigation(historyAction, location, {
-        submission: {
-          formMethod: opts.formMethod || "get",
-          formAction: createHref(location),
-          formEncType: opts?.formEncType || "application/x-www-form-urlencoded",
-          formData: opts.formData,
-        },
-      });
-    }
-
-    return await startNavigation(historyAction, location);
+    return await startNavigation(historyAction, location, { submission });
   }
 
   // Revalidate all current loaders.  If a navigation is in progress or if this
@@ -741,7 +734,7 @@ export function createRouter(init: RouterInit): Router {
     let pendingActionData: RouteData | null = null;
     let pendingActionError: RouteData | null = null;
 
-    if (opts?.submission && isActionSubmission(opts.submission)) {
+    if (opts?.submission) {
       let actionOutput = await handleAction(
         historyAction,
         location,
@@ -790,7 +783,7 @@ export function createRouter(init: RouterInit): Router {
   async function handleAction(
     historyAction: HistoryAction,
     location: Location,
-    submission: ActionSubmission,
+    submission: Submission,
     matches: DataRouteMatch[]
   ): Promise<HandleActionResult> {
     isRevalidationRequired = true;
@@ -888,18 +881,9 @@ export function createRouter(init: RouterInit): Router {
     pendingActionError: RouteData | null
   ): Promise<HandleLoadersResult> {
     // Figure out the right navigation we want to use for data loading
-    let loadingNavigation;
+    let loadingNavigation = overrideNavigation;
 
-    if (overrideNavigation) {
-      loadingNavigation = overrideNavigation;
-    } else if (submission?.formMethod === "get") {
-      let navigation: NavigationStates["Submitting"] = {
-        state: "submitting",
-        location,
-        ...submission,
-      };
-      loadingNavigation = navigation;
-    } else {
+    if (!loadingNavigation) {
       let navigation: NavigationStates["Loading"] = {
         state: "loading",
         location,
@@ -1046,25 +1030,10 @@ export function createRouter(init: RouterInit): Router {
         ? matches.slice(-2)[0]
         : matches.slice(-1)[0];
 
-    if (isSubmissionNavigation(opts)) {
-      let submission: Submission = {
-        formMethod: opts.formMethod || "get",
-        formAction: href,
-        formEncType: opts.formEncType || "application/x-www-form-urlencoded",
-        formData: opts.formData,
-      };
+    let { path, submission } = normalizeNavigateOptions(parsePath(href), opts);
 
-      if (isActionSubmission(submission)) {
-        handleFetcherAction(key, href, match, submission);
-        return;
-      }
-
-      let loadingFetcher: FetcherStates["Submitting"] = {
-        state: "submitting",
-        ...submission,
-        data: state.fetchers.get(key)?.data || undefined,
-      };
-      handleFetcherLoader(key, href, match, loadingFetcher);
+    if (submission) {
+      handleFetcherAction(key, href, match, submission);
       return;
     }
 
@@ -1076,7 +1045,7 @@ export function createRouter(init: RouterInit): Router {
       formData: undefined,
       data: state.fetchers.get(key)?.data || undefined,
     };
-    handleFetcherLoader(key, href, match, loadingFetcher);
+    handleFetcherLoader(key, createPath(path), match, loadingFetcher);
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -1085,7 +1054,7 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     href: string,
     match: DataRouteMatch,
-    submission: ActionSubmission
+    submission: Submission
   ) {
     isRevalidationRequired = true;
     fetchLoadMatches.delete(key);
@@ -1496,6 +1465,8 @@ export function createRouter(init: RouterInit): Router {
 //#region Helpers
 ////////////////////////////////////////////////////////////////////////////////
 
+// Walk the route tree generating unique IDs where necessary so we are working
+// solely with DataRouteObject's within the Router
 function convertRoutesToDataRoutes(
   routes: RouteObject[],
   parentPath: number[] = [],
@@ -1519,6 +1490,53 @@ function convertRoutesToDataRoutes(
     };
     return dataRoute;
   });
+}
+
+// Normalize navigation options by converting formMethod=GET formData objects to
+// URLSearchParams so they behave identically to links with query params
+function normalizeNavigateOptions(
+  path: Partial<Path>,
+  opts?: NavigateOptions
+): {
+  path: Partial<Path>;
+  submission?: Submission;
+} {
+  // Return location verbatim on non-submission navigations
+  if (!opts || (!("formMethod" in opts) && !("formData" in opts))) {
+    return { path };
+  }
+
+  // Create a Submission on non-GET navigations
+  if (opts.formMethod != null && opts.formMethod !== "get") {
+    return {
+      path,
+      submission: {
+        formMethod: opts.formMethod,
+        formAction: createHref(path),
+        formEncType: opts?.formEncType || "application/x-www-form-urlencoded",
+        formData: opts.formData,
+      },
+    };
+  }
+
+  // No formData to flatten for GET submission
+  if (!opts.formData) {
+    return { path };
+  }
+
+  // Flatten submission onto URLSearchParams for GET submissions
+  let searchParams = new URLSearchParams(path.search);
+  for (let [name, value] of opts.formData) {
+    if (typeof value === "string") {
+      searchParams.append(name, value);
+    } else {
+      throw new Error(`Cannot submit binary form data using GET`);
+    }
+  }
+
+  return {
+    path: { ...path, search: `?${searchParams}` },
+  };
 }
 
 function getLoaderRedirect(
@@ -1676,13 +1694,13 @@ async function callLoaderOrAction(
   match: DataRouteMatch,
   location: string | Location,
   signal: AbortSignal,
-  actionSubmission?: ActionSubmission
+  submission?: Submission
 ): Promise<DataResult> {
   let resultType = ResultType.data;
   let result;
 
   try {
-    let type: "action" | "loader" = actionSubmission ? "action" : "loader";
+    let type: "action" | "loader" = submission ? "action" : "loader";
     let handler = match.route[type];
     invariant<Function>(
       handler,
@@ -1691,7 +1709,7 @@ async function callLoaderOrAction(
 
     result = await handler({
       params: match.params,
-      request: createRequest(location, actionSubmission),
+      request: createRequest(location, submission),
       signal,
     });
   } catch (e) {
@@ -1738,40 +1756,39 @@ async function callLoaderOrAction(
 
 function createRequest(
   location: string | Location,
-  actionSubmission?: ActionSubmission
+  submission?: Submission
 ): Request {
-  let init: RequestInit | undefined = undefined;
+  let url = createURL(location).toString();
 
-  if (actionSubmission) {
-    let { formMethod, formEncType, formData } = actionSubmission;
-    let body = formData;
-
-    // If we're submitting application/x-www-form-urlencoded, then body should
-    // be of type URLSearchParams
-    if (formEncType === "application/x-www-form-urlencoded") {
-      body = new URLSearchParams();
-
-      for (let [key, value] of formData.entries()) {
-        invariant(
-          typeof value === "string",
-          'File inputs are not supported with encType "application/x-www-form-urlencoded", ' +
-            'please use "multipart/form-data" instead.'
-        );
-        body.append(key, value);
-      }
-    }
-
-    init = {
-      method: formMethod.toUpperCase(),
-      headers: {
-        "Content-Type": formEncType,
-      },
-      body,
-    };
+  if (!submission) {
+    return new Request(url);
   }
 
-  let url = createURL(location).toString();
-  return new Request(url, init);
+  let { formMethod, formEncType, formData } = submission;
+  let body = formData;
+
+  // If we're submitting application/x-www-form-urlencoded, then body should
+  // be of type URLSearchParams
+  if (formEncType === "application/x-www-form-urlencoded") {
+    body = new URLSearchParams();
+
+    for (let [key, value] of formData.entries()) {
+      invariant(
+        typeof value === "string",
+        'File inputs are not supported with encType "application/x-www-form-urlencoded", ' +
+          'please use "multipart/form-data" instead.'
+      );
+      body.append(key, value);
+    }
+  }
+
+  return new Request(url, {
+    method: formMethod.toUpperCase(),
+    headers: {
+      "Content-Type": formEncType,
+    },
+    body,
+  });
 }
 
 function processLoaderData(
@@ -1916,8 +1933,8 @@ function findRedirect(results: DataResult[]): RedirectResult | undefined {
 }
 
 // Create an href to represent a "server" URL without the hash
-function createHref(location: Location | URL) {
-  return location.pathname + location.search;
+function createHref(location: Partial<Path> | Location | URL) {
+  return (location.pathname || "") + (location.search || "");
 }
 
 function isHashChangeOnly(a: Location, b: Location): boolean {
@@ -1932,18 +1949,6 @@ function isErrorResult(result: DataResult): result is ErrorResult {
 
 function isRedirectResult(result?: DataResult): result is RedirectResult {
   return result?.type === ResultType.redirect;
-}
-
-function isSubmissionNavigation(
-  opts?: NavigateOptions
-): opts is SubmissionNavigateOptions {
-  return opts != null && "formData" in opts && opts.formData != null;
-}
-
-function isActionSubmission(
-  submission: Submission
-): submission is ActionSubmission {
-  return submission && submission.formMethod !== "get";
 }
 
 function hasNakedIndexQuery(search: string): boolean {

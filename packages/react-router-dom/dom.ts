@@ -236,15 +236,5 @@ export function getFormSubmissionInfo(
   let { protocol, host } = window.location;
   let url = new URL(action, `${protocol}//${host}`);
 
-  if (method.toLowerCase() === "get") {
-    for (let [name, value] of formData) {
-      if (typeof value === "string") {
-        url.searchParams.append(name, value);
-      } else {
-        throw new Error(`Cannot submit binary form data using GET`);
-      }
-    }
-  }
-
   return { url, method, encType, formData };
 }

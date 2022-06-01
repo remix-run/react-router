@@ -29,22 +29,16 @@ function SomeComponent() {
 ## `navigation.state`
 
 - **idle** - There is no navigation pending.
-- **submitting** - A form has been submitted. If GET, then route loaders are being called. If POST, PUT, PATCH, DELETE, then a route action is being called.
-- **loading** - The loaders for the next routes are being called to render the next page.
+- **submitting** - A route action is being called due to a form submission using POST, PUT, PATCH, or DELETE
+- **loading** - The loaders for the next routes are being called to render the next page
 
-Normal navigation transitions through these states:
+Normal navigations and GET form submissions transition through these states:
 
 ```
 idle → loading → idle
 ```
 
-GET form submissions:
-
-```
-idle → submitting → idle
-```
-
-Form submissions with POST, PUT, PATCH, or DELETE navigation:
+Form submissions with POST, PUT, PATCH, or DELETE transition through these states:
 
 ```
 idle → submitting → loading → idle
@@ -69,7 +63,9 @@ function SubmitButton() {
 
 ## `navigation.formData`
 
-Any navigation that started from a `<Form>` or `useSubmit` will have your form's submission data attached to it. This is primarily useful to build "Optimistic UI" with the `submission.formData` [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
+Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useSubmit` will have your form's submission data attached to it. This is primarily useful to build "Optimistic UI" with the `submission.formData` [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
+
+In the case of a GET form submission, `formData` will be empty and the data will be reflected in `navigation.location.search`.
 
 ## `navigation.location`
 
