@@ -69,5 +69,8 @@
     "shelljs": "^0.8.5",
     "tiny-invariant": "^1.2.0",
     "type-fest": "^2.12.2"
+  },
+  "engines": {
+    "node": ">=14"
   }
 }

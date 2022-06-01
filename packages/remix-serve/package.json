@@ -24,5 +24,8 @@
     "@types/compression": "^1.7.0",
     "@types/express": "^4.17.9",
     "@types/morgan": "^1.9.2"
+  },
+  "engines": {
+    "node": ">=14"
   }
 }

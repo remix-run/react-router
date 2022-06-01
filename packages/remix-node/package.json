@@ -26,5 +26,8 @@
   "devDependencies": {
     "@types/cookie-signature": "^1.0.3",
     "@types/source-map-support": "^0.5.4"
+  },
+  "engines": {
+    "node": ">=14"
   }
 }
