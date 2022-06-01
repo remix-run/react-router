@@ -61,6 +61,27 @@ function SubmitButton() {
 }
 ```
 
+While `navigation.state` provides the high-level state of the active navigation, you can deduce more granular information by combining it with other `navigation` aspects:
+
+```js
+// Is this just a normal load?
+let isNormalLoad =
+  navigation.state === "loading" &&
+  navigation.formData == null;
+
+// Are we reloading after an action?
+let isReloading =
+  navigation.state === "loading" &&
+  navigation.formData != null &&
+  navigation.formAction === navigation.location.pathname;
+
+// Are we redirecting after an action?
+let isRedirecting =
+  navigation.state === "loading" &&
+  navigation.formData != null &&
+  navigation.formAction !== navigation.location.pathname;
+```
+
 ## `navigation.formData`
 
 Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useSubmit` will have your form's submission data attached to it. This is primarily useful to build "Optimistic UI" with the `submission.formData` [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.

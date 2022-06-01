@@ -39,6 +39,8 @@ A `match` has the following shape:
 
 Pairing `<Route handle>` with `useMatches` gets very powerful since you can put whatever you want on a route `handle` and have access to `useMatches` anywhere.
 
+<docs-warning>`useMatches` only works with Data Routers, since they know the full route tree up front and can provide all of the current matches.</docs-warning>
+
 ## Breadcrumbs
 
 The proverbial use case here is adding breadcrumbs to a parent layout that uses data from the child routes.
