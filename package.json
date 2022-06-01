@@ -20,6 +20,7 @@
     "@babel/preset-modules": "^0.1.4",
     "@babel/preset-react": "^7.14.5",
     "@babel/preset-typescript": "^7.15.0",
+    "@changesets/cli": "^2.22.0",
     "@rollup/plugin-replace": "^2.2.1",
     "@types/jest": "26.x",
     "@types/jsonfile": "^6.0.1",
