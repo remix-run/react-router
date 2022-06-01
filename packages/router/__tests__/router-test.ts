@@ -1,5 +1,9 @@
 import { createMemoryHistory, InitialEntry, parsePath } from "../history";
-import type { HydrationState, LoaderFunction, NavigateOptions } from "../index";
+import type {
+  HydrationState,
+  LoaderFunction,
+  RouterNavigateOptions,
+} from "../index";
 import type { Router } from "../router";
 import {
   createRouter,
@@ -418,7 +422,7 @@ function setup({
     key: string,
     href: string,
     navigationId: number,
-    opts?: NavigateOptions
+    opts?: RouterNavigateOptions
   ): FetcherHelpers {
     let matches = matchRoutes(enhancedRoutes, href);
     invariant(matches, `No matches found for fetcher href:${href}`);
@@ -493,11 +497,11 @@ function setup({
   function navigate(n: number): Promise<NavigationHelpers>;
   function navigate(
     href: string,
-    opts?: NavigateOptions
+    opts?: RouterNavigateOptions
   ): Promise<NavigationHelpers>;
   async function navigate(
     href: number | string,
-    opts?: NavigateOptions
+    opts?: RouterNavigateOptions
   ): Promise<NavigationHelpers> {
     let navigationId = ++guid;
     let helpers: NavigationHelpers;
@@ -547,17 +551,17 @@ function setup({
   async function fetch(href: string, key: string): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
-    opts: NavigateOptions
+    opts: RouterNavigateOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
-    opts: NavigateOptions
+    opts: RouterNavigateOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
-    keyOrOpts?: string | NavigateOptions,
-    opts?: NavigateOptions
+    keyOrOpts?: string | RouterNavigateOptions,
+    opts?: RouterNavigateOptions
   ): Promise<FetcherHelpers> {
     let navigationId = ++guid;
     let key = typeof keyOrOpts === "string" ? keyOrOpts : String(navigationId);
@@ -3968,9 +3972,7 @@ describe("a router", () => {
       t.router.enableScrollRestoration(positions, () => activeScrollPosition);
 
       let nav1 = await t.navigate("/tasks", {
-        state: {
-          __resetScrollPosition: false,
-        },
+        resetScroll: false,
       });
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(null);

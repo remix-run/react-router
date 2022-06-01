@@ -29,6 +29,7 @@ import {
   DataRouterStateContext,
   LocationContext,
   NavigationContext,
+  NavigateOptions,
   RouteContext,
   RouteErrorContext,
 } from "./context";
@@ -136,11 +137,6 @@ export interface NavigateFunction {
   (delta: number): void;
 }
 
-export interface NavigateOptions {
-  replace?: boolean;
-  state?: any;
-}
-
 /**
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
@@ -195,7 +191,8 @@ export function useNavigate(): NavigateFunction {
 
       (!!options.replace ? navigator.replace : navigator.push)(
         path,
-        options.state
+        options.state,
+        options
       );
     },
     [basename, navigator, routePathnamesJson, locationPathname]

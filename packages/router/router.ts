@@ -73,7 +73,7 @@ export interface Router {
    * @param path Path to navigate to
    * @param opts Navigation options (method, submission, etc.)
    */
-  navigate(path: To, opts?: NavigateOptions): void;
+  navigate(path: To, opts?: RouterNavigateOptions): void;
 
   /**
    * Trigger a fetcher load/submission
@@ -82,7 +82,7 @@ export interface Router {
    * @param href href to fetch
    * @param opts Fetcher options, (method, submission, etc.)
    */
-  fetch(key: string, href: string, opts?: NavigateOptions): void;
+  fetch(key: string, href: string, opts?: RouterNavigateOptions): void;
 
   /**
    * Trigger a revalidation of all current route loaders and fetcher loads
@@ -233,6 +233,7 @@ export interface GetScrollPositionFunction {
 type LinkNavigateOptions = {
   replace?: boolean;
   state?: any;
+  resetScroll?: boolean;
 };
 
 /**
@@ -249,7 +250,9 @@ type SubmissionNavigateOptions = {
 /**
  * Options to pass to navigate() for either a Link or Form navigation
  */
-export type NavigateOptions = LinkNavigateOptions | SubmissionNavigateOptions;
+export type RouterNavigateOptions =
+  | LinkNavigateOptions
+  | SubmissionNavigateOptions;
 
 /**
  * Potential states for state.navigation
@@ -486,6 +489,9 @@ export function createRouter(init: RouterInit): Router {
   // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
   let pendingAction: HistoryAction | null = null;
+  // Should the current navigation reset the scroll position if scroll cannot
+  // be restored?
+  let pendingResetScroll = true;
   // AbortController for the active navigation
   let pendingNavigationController: AbortController | null;
   // We use this to avoid touching history in completeNavigation if a
@@ -603,7 +609,7 @@ export function createRouter(init: RouterInit): Router {
         ? false
         : getSavedScrollPosition(location, newState.matches || state.matches),
       // Always reset scroll unless explicitly told not to
-      resetScrollPosition: location.state?.__resetScrollPosition !== false,
+      resetScrollPosition: pendingResetScroll,
     });
 
     if (isUninterruptedRevalidation) {
@@ -618,6 +624,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Reset stateful navigation vars
     pendingAction = null;
+    pendingResetScroll = true;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
   }
@@ -626,7 +633,7 @@ export function createRouter(init: RouterInit): Router {
   // replace with an optional submission
   async function navigate(
     path: number | To,
-    opts?: NavigateOptions
+    opts?: RouterNavigateOptions
   ): Promise<void> {
     if (typeof path === "number") {
       init.history.go(path);
@@ -646,12 +653,15 @@ export function createRouter(init: RouterInit): Router {
     let historyAction = opts?.replace
       ? HistoryAction.Replace
       : HistoryAction.Push;
+    let resetScroll =
+      opts && "resetScroll" in opts ? opts.resetScroll : undefined;
 
     return await startNavigation(historyAction, location, {
       submission,
       // Send through the formData serialization error if we have one so we can
       // render at the right errorElement after we match routes
       pendingError: error,
+      resetScroll,
     });
   }
 
@@ -704,6 +714,7 @@ export function createRouter(init: RouterInit): Router {
       overrideNavigation?: Navigation;
       pendingError?: ErrorResponse;
       startUninterruptedRevalidation?: boolean;
+      resetScroll?: boolean;
     }
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one
@@ -716,6 +727,9 @@ export function createRouter(init: RouterInit): Router {
 
     // Save the current scroll position every time we start a new navigation
     saveScrollPosition(state.location, state.matches);
+
+    // Track whether we should reset scroll on completion
+    pendingResetScroll = opts?.resetScroll !== false;
 
     let loadingNavigation = opts?.overrideNavigation;
     let matches = matchRoutes(dataRoutes, location);
@@ -1039,7 +1053,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   // Trigger a fetcher load/submit for the given fetcher key
-  function fetch(key: string, href: string, opts?: NavigateOptions) {
+  function fetch(key: string, href: string, opts?: RouterNavigateOptions) {
     if (typeof AbortController === "undefined") {
       throw new Error(
         "router.fetch() was called during the server render, but it shouldn't be. " +
@@ -1525,7 +1539,7 @@ function convertRoutesToDataRoutes(
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
   path: Partial<Path>,
-  opts?: NavigateOptions
+  opts?: RouterNavigateOptions
 ): {
   path: Partial<Path>;
   submission?: Submission;

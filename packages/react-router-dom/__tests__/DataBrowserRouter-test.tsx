@@ -30,6 +30,7 @@ import {
 } from "../index";
 import { _resetModuleScope } from "react-router/lib/components";
 import { useNavigate } from "react-router/lib/hooks";
+import { UNSAFE_DataRouterStateContext } from "react-router";
 
 testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
   getWindowImpl(url, false)
@@ -239,8 +240,8 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       render(
         <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
           <Route path="/" element={<Layout />}>
-            <Route path="foo" element={<Foo />} />
-            <Route path="bar" element={<Bar />} />
+            <Route path="foo" element={<h1>Foo Heading</h1>} />
+            <Route path="bar" element={<h1>Bar Heading</h1>} />
           </Route>
         </TestDataRouter>
       );
@@ -253,14 +254,6 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             <Outlet />
           </div>
         );
-      }
-
-      function Foo() {
-        return <h1>Foo Heading</h1>;
-      }
-
-      function Bar() {
-        return <h1>Bar Heading</h1>;
       }
 
       expect(screen.getByText("Foo Heading")).toBeDefined();
@@ -361,6 +354,53 @@ function testDomRouter(name, TestDataRouter, getWindow) {
             </h1>
           </div>
         </div>"
+      `);
+    });
+
+    it("handles link navigations with resetScroll=false", async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<h1>Foo Heading</h1>} />
+            <Route path="bar" element={<h1>Bar Heading</h1>} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Layout() {
+        let state = React.useContext(UNSAFE_DataRouterStateContext);
+        return (
+          <div>
+            <Link to="/foo" resetScroll={false}>
+              Link to Foo
+            </Link>
+            <Link to="/bar">Link to Bar</Link>
+            <p id="resetScrollPosition">{String(state.resetScrollPosition)}</p>
+            <Outlet />
+          </div>
+        );
+      }
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      await waitFor(() => screen.getByText("Bar Heading"));
+      expect(getHtml(container.querySelector("#resetScrollPosition")))
+        .toMatchInlineSnapshot(`
+        "<p
+          id=\\"resetScrollPosition\\"
+        >
+          true
+        </p>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Foo"));
+      await waitFor(() => screen.getByText("Foo Heading"));
+      expect(getHtml(container.querySelector("#resetScrollPosition")))
+        .toMatchInlineSnapshot(`
+        "<p
+          id=\\"resetScrollPosition\\"
+        >
+          false
+        </p>"
       `);
     });
 

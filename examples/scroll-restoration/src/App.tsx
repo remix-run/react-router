@@ -94,6 +94,11 @@ function Layout() {
                   </Link>
                 </li>
                 <li className="navitem">
+                  <Link to="/restore-by-key" resetScroll={false}>
+                    This link will not scroll to the top
+                  </Link>
+                </li>
+                <li className="navitem">
                   <a href="https://www.google.com">
                     Thi links to an external site (google)
                   </a>
@@ -106,9 +111,9 @@ function Layout() {
           <Outlet />
         </div>
       </div>
-      {/* 
-        Including this component inside a DataRouter component tree is what 
-        enables restoration 
+      {/*
+        Including this component inside a DataRouter component tree is what
+        enables restoration
       */}
       <ScrollRestoration getKey={getKey} />
     </>

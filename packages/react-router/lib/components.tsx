@@ -83,8 +83,14 @@ export function useRenderDataRouter({
     return {
       createHref: router.createHref,
       go: (n) => router.navigate(n),
-      push: (to, state) => router.navigate(to, { state }),
-      replace: (to, state) => router.navigate(to, { replace: true, state }),
+      push: (to, state, opts) =>
+        router.navigate(to, { state, resetScroll: opts?.resetScroll }),
+      replace: (to, state, opts) =>
+        router.navigate(to, {
+          replace: true,
+          state,
+          resetScroll: opts?.resetScroll,
+        }),
     };
   }, [router]);
 

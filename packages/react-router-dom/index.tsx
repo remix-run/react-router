@@ -645,15 +645,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         let replace =
           !!replaceProp || createPath(location) === createPath(path);
 
-        let newState = state;
-        if (resetScroll === false) {
-          newState = {
-            ...state,
-            __resetScrollPosition: false,
-          };
-        }
-
-        navigate(to, { replace, state: newState });
+        navigate(to, { replace, state, resetScroll });
       }
     },
     [location, navigate, path, replaceProp, state, target, to, resetScroll]

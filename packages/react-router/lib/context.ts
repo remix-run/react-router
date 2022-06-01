@@ -1,5 +1,11 @@
 import * as React from "react";
-import type { History, Location, RouteMatch, Router } from "@remix-run/router";
+import type {
+  History,
+  Location,
+  RouteMatch,
+  Router,
+  To,
+} from "@remix-run/router";
 import { Action as NavigationType } from "@remix-run/router";
 
 // Contexts for data routers
@@ -15,6 +21,12 @@ if (__DEV__) {
   DataRouterStateContext.displayName = "DataRouterState";
 }
 
+export interface NavigateOptions {
+  replace?: boolean;
+  state?: any;
+  resetScroll?: boolean;
+}
+
 /**
  * A Navigator is a "location changer"; it's how you get to different locations.
  *
@@ -24,7 +36,12 @@ if (__DEV__) {
  * to avoid "tearing" that may occur in a suspense-enabled app if the action
  * and/or location were to be read directly from the history instance.
  */
-export type Navigator = Pick<History, "go" | "push" | "replace" | "createHref">;
+export interface Navigator {
+  createHref: History["createHref"];
+  go: History["go"];
+  push(to: To, state?: any, opts?: NavigateOptions): void;
+  replace(to: To, state?: any, opts?: NavigateOptions): void;
+}
 
 interface NavigationContextObject {
   basename: string;

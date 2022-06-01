@@ -53,7 +53,7 @@ import {
   Routes,
   useRenderDataRouter,
 } from "./lib/components";
-import type { Navigator } from "./lib/context";
+import type { Navigator, NavigateOptions } from "./lib/context";
 import {
   DataRouterContext,
   DataRouterStateContext,
@@ -61,7 +61,7 @@ import {
   NavigationContext,
   RouteContext,
 } from "./lib/context";
-import type { NavigateFunction, NavigateOptions } from "./lib/hooks";
+import type { NavigateFunction } from "./lib/hooks";
 import {
   useHref,
   useInRouterContext,
