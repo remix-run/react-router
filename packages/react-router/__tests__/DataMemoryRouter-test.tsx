@@ -1177,7 +1177,7 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
 
-    it("renders 404 errors using error boundary", async () => {
+    it("renders 404 errors using path='/' error boundary", async () => {
       let { container } = render(
         <DataMemoryRouter
           fallbackElement={<span />}
@@ -1190,6 +1190,11 @@ describe("<DataMemoryRouter>", () => {
             },
           }}
         >
+          <Route
+            path="/thing"
+            element={<h1>Thing 1</h1>}
+            errorElement={<p>Not I!</p>}
+          />
           <Route
             path="/"
             element={
@@ -1220,6 +1225,116 @@ describe("<DataMemoryRouter>", () => {
             Error:
             404
             Not Found
+          </p>
+        </div>"
+      `);
+    });
+
+    it("renders 404 errors using index error boundary", async () => {
+      let { container } = render(
+        <DataMemoryRouter
+          fallbackElement={<span />}
+          initialEntries={["/foo"]}
+          hydrationData={{
+            loaderData: {
+              "0": {
+                message: "hydrated from foo",
+              },
+            },
+          }}
+        >
+          <Route
+            path="/thing"
+            element={<h1>Thing 1</h1>}
+            errorElement={<p>Not I!</p>}
+          />
+          <Route
+            index
+            element={
+              <div>
+                <h1>Hello</h1>
+                <Outlet />
+              </div>
+            }
+            errorElement={<Boundary />}
+          />
+        </DataMemoryRouter>
+      );
+
+      function Boundary() {
+        let error = useRouteError();
+        return (
+          <p>
+            Error:
+            {error.status}
+            {error.statusText}
+          </p>
+        );
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Error:
+            404
+            Not Found
+          </p>
+        </div>"
+      `);
+    });
+
+    it("renders 404 errors using fallback boundary if no root layout route exists", async () => {
+      let { container } = render(
+        <DataMemoryRouter
+          fallbackElement={<span />}
+          initialEntries={["/foo"]}
+          hydrationData={{
+            loaderData: {
+              "0": {
+                message: "hydrated from foo",
+              },
+            },
+          }}
+        >
+          <Route
+            path="/thing1"
+            element={<h1>Thing 1</h1>}
+            errorElement={<p>Not I!</p>}
+          />
+          <Route
+            path="/thing2"
+            element={<h1>Thing 2</h1>}
+            errorElement={<p>Not I!</p>}
+          />
+        </DataMemoryRouter>
+      );
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h2>
+            Unhandled Thrown Error!
+          </h2>
+          <h3
+            style=\\"font-style: italic;\\"
+          >
+            404 Not Found
+          </h3>
+          <p>
+            💿 Hey developer 👋
+          </p>
+          <p>
+            You can provide a way better UX than this when your app throws errors by providing your own 
+            <code
+              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+            >
+              errorElement
+            </code>
+             props on 
+            <code
+              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+            >
+              &lt;Route&gt;
+            </code>
           </p>
         </div>"
       `);

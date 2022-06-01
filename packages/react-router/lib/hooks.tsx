@@ -355,12 +355,7 @@ export function useRoutes(
       ? pathname
       : pathname.slice(parentPathnameBase.length) || "/";
 
-  // Prefer data router matches when they exist, but only at the top of the tree in case we're
-  // inside a descendant route tree within a data router
-  let matches =
-    dataRouterStateContext && parentMatches.length === 0
-      ? dataRouterStateContext.matches
-      : matchRoutes(routes, { pathname: remainingPathname });
+  let matches = matchRoutes(routes, { pathname: remainingPathname });
 
   if (__DEV__) {
     warning(
@@ -389,7 +384,7 @@ export function useRoutes(
         })
       ),
     parentMatches,
-    dataRouterStateContext
+    dataRouterStateContext || undefined
   );
 }
 
@@ -496,9 +491,17 @@ export class RenderErrorBoundary extends React.Component<
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState?: DataRouter["state"] | null
+  dataRouterState?: DataRouter["state"]
 ): React.ReactElement | null {
-  if (matches == null) return null;
+  if (matches == null) {
+    if (dataRouterState?.errors) {
+      // Don't bail if we have data router errors so we can render them in the
+      // boundary.  USe the pre-matched (or shimmed) matches
+      matches = dataRouterState.matches;
+    } else {
+      return null;
+    }
+  }
 
   let renderedMatches = matches;
 
@@ -626,7 +629,7 @@ export function useLoaderData() {
   let thisRoute = route.matches[route.matches.length - 1];
   invariant(
     thisRoute.route.id,
-    `${useLoaderData} can only be used on routes that contain a unique "id"`
+    `useLoaderData can only be used on routes that contain a unique "id"`
   );
 
   return state.loaderData?.[thisRoute.route.id];
@@ -644,10 +647,10 @@ export function useRouteLoaderData(routeId: string): any {
  * Returns the action data for the nearest ancestor Route action
  */
 export function useActionData() {
-  let state = useDataRouterState(DataRouterHook.UseRouteError);
+  let state = useDataRouterState(DataRouterHook.UseActionData);
 
   let route = React.useContext(RouteContext);
-  invariant(route, `useRouteError must be used inside a RouteContext`);
+  invariant(route, `useActionData must be used inside a RouteContext`);
 
   return Object.values(state?.actionData || {})[0];
 }

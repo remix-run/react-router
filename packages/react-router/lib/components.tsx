@@ -479,8 +479,7 @@ export function createRoutesFromChildren(
  * Renders the result of `matchRoutes()` into a React element.
  */
 export function renderMatches(
-  matches: RouteMatch[] | null,
-  dataRouterState: DataRouter["state"] | null
+  matches: RouteMatch[] | null
 ): React.ReactElement | null {
-  return _renderMatches(matches, undefined, dataRouterState);
+  return _renderMatches(matches);
 }

@@ -441,10 +441,9 @@ export function createRouter(init: RouterInit): Router {
   let initialErrors: RouteData | null = null;
 
   if (initialMatches == null) {
-    initialMatches = getNotFoundMatches(dataRoutes);
-    initialErrors = {
-      [dataRoutes[0].id]: new ErrorResponse(404, "Not Found", null),
-    };
+    let { matches, route, error } = getNotFoundMatches(dataRoutes);
+    initialMatches = matches;
+    initialErrors = { [route.id]: error };
   }
 
   // If we received hydration data without errors - detect if any matched
@@ -723,10 +722,15 @@ export function createRouter(init: RouterInit): Router {
 
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
+      let {
+        matches: notFoundMatches,
+        route,
+        error,
+      } = getNotFoundMatches(dataRoutes);
       completeNavigation(historyAction, location, {
-        matches: getNotFoundMatches(dataRoutes),
+        matches: notFoundMatches,
         errors: {
-          [dataRoutes[0].id]: new ErrorResponse(404, "Not Found", null),
+          [route.id]: error,
         },
       });
       return;
@@ -735,7 +739,7 @@ export function createRouter(init: RouterInit): Router {
     if (opts?.pendingError) {
       let boundaryMatch = findNearestBoundary(matches);
       completeNavigation(historyAction, location, {
-        matches: getNotFoundMatches(dataRoutes),
+        matches,
         errors: {
           [boundaryMatch.route.id]: opts?.pendingError,
         },
@@ -1945,15 +1949,30 @@ function findNearestBoundary(
   );
 }
 
-function getNotFoundMatches(routes: DataRouteObject[]): DataRouteMatch[] {
-  return [
-    {
-      params: {},
-      pathname: "",
-      pathnameBase: "",
-      route: routes[0],
-    },
-  ];
+function getNotFoundMatches(routes: DataRouteObject[]): {
+  matches: DataRouteMatch[];
+  route: DataRouteObject;
+  error: ErrorResponse;
+} {
+  // Prefer a root layout route if present, otherwise shim in a route object
+  let route = routes.find(
+    (r) => r.index || r.path === "" || r.path === "/"
+  ) || {
+    id: "__shim-404-route__",
+  };
+
+  return {
+    matches: [
+      {
+        params: {},
+        pathname: "",
+        pathnameBase: "",
+        route,
+      },
+    ],
+    route,
+    error: new ErrorResponse(404, "Not Found", null),
+  };
 }
 
 // Find any returned redirect errors, starting from the lowest match
