@@ -1,4 +1,5 @@
 {
+  "name": "@remix-run/react-router",
   "private": true,
   "scripts": {
     "build": "rollup -c && tsc -b",

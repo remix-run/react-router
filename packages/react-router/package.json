@@ -13,11 +13,14 @@
   "module": "./index.js",
   "types": "./index.d.ts",
   "unpkg": "./umd/react-router.production.min.js",
-  "peerDependencies": {
-    "react": ">=16.8"
-  },
   "dependencies": {
     "history": "^5.2.0"
+  },
+  "devDependencies": {
+    "react": "^17.0.2"
+  },
+  "peerDependencies": {
+    "react": ">=16.8"
   },
   "sideEffects": false,
   "keywords": [

@@ -13,15 +13,16 @@
   "types": "./index.d.ts",
   "dependencies": {
     "@ungap/url-search-params": "^0.1.4",
-    "react-router": "6.3.0",
-    "history": "^5.2.0"
+    "history": "^5.2.0",
+    "react-router": "6.3.0"
+  },
+  "devDependencies": {
+    "react": "^17.0.2",
+    "react-native": "^0.61.4"
   },
   "peerDependencies": {
     "react": ">=16.8",
     "react-native": ">=0.44"
-  },
-  "devDependencies": {
-    "react-native": "^0.61.4"
   },
   "sideEffects": false,
   "keywords": [
