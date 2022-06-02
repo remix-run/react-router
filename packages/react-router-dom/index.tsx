@@ -403,7 +403,7 @@ export interface NavLinkProps
     | ((props: {
         isActive: boolean;
         isPending: boolean;
-      }) => React.CSSProperties);
+      }) => React.CSSProperties | undefined);
 }
 
 /**
