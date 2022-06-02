@@ -6,11 +6,13 @@
     "lint": "eslint --cache .",
     "format": "prettier --ignore-path .eslintignore --write .",
     "format:check": "prettier --ignore-path .eslintignore --check .",
-    "publish": "node ./scripts/publish.js",
     "size": "filesize",
     "test": "jest",
-    "version": "node ./scripts/version.js",
-    "watch": "rollup -c -w"
+    "watch": "rollup -c -w",
+    "changeset": "changeset",
+    "release": "changeset publish",
+    "version-bump": "changeset version",
+    "postinstall": "manypkg fix"
   },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
@@ -20,7 +22,10 @@
     "@babel/preset-modules": "^0.1.4",
     "@babel/preset-react": "^7.14.5",
     "@babel/preset-typescript": "^7.15.0",
+    "@changesets/changelog-github": "0.4.4",
     "@changesets/cli": "^2.22.0",
+    "@manypkg/cli": "0.19.1",
+    "@manypkg/get-packages": "^1.1.3",
     "@rollup/plugin-replace": "^2.2.1",
     "@types/jest": "26.x",
     "@types/jsonfile": "^6.0.1",
