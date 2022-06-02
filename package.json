@@ -72,6 +72,7 @@
     "packages": [
       "packages/react-router",
       "packages/react-router-dom",
+      "packages/react-router-dom-v5-compat",
       "packages/react-router-native"
     ],
     "nohoist": [
