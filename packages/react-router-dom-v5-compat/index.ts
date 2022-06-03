@@ -69,7 +69,7 @@ export type {
   Pathname,
   Search,
   RoutesProps,
-} from "./react-router-dom";
+} from "../react-router-dom";
 export {
   BrowserRouter,
   HashRouter,
@@ -108,7 +108,7 @@ export {
   useResolvedPath,
   useRoutes,
   useSearchParams,
-} from "./react-router-dom";
+} from "../react-router-dom";
 
 export type { StaticRouterProps } from "./lib/components";
 export { CompatRouter, CompatRoute, StaticRouter } from "./lib/components";
