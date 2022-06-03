@@ -153,7 +153,7 @@ export function useNavigate(): NavigateFunction {
   );
 
   let activeRef = React.useRef(false);
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     activeRef.current = true;
   });
 
@@ -164,8 +164,6 @@ export function useNavigate(): NavigateFunction {
         `You should call navigate() in a React.useEffect(), not when ` +
           `your component is first rendered.`
       );
-
-      if (!activeRef.current) return;
 
       if (typeof to === "number") {
         navigator.go(to);
