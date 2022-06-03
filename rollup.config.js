@@ -1,5 +1,4 @@
-import babel from "rollup-plugin-babel";
-// import compiler from "@ampproject/rollup-plugin-closure-compiler";
+import babel from "@rollup/plugin-babel";
 import copy from "rollup-plugin-copy";
 import extensions from "rollup-plugin-extensions";
 import prettier from "rollup-plugin-prettier";
@@ -43,6 +42,7 @@ function router() {
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -76,6 +76,7 @@ function router() {
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: ["@babel/preset-modules", "@babel/preset-typescript"],
           plugins: ["babel-plugin-dev-expression"],
@@ -98,6 +99,7 @@ function router() {
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             [
@@ -136,6 +138,7 @@ function router() {
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -162,6 +165,7 @@ function router() {
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -215,6 +219,7 @@ function reactRouter() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -250,6 +255,7 @@ function reactRouter() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             "@babel/preset-modules",
@@ -277,6 +283,7 @@ function reactRouter() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             [
@@ -328,6 +335,7 @@ function reactRouter() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -361,6 +369,7 @@ function reactRouter() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -421,6 +430,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -458,6 +468,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             "@babel/preset-modules",
@@ -485,6 +496,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             [
@@ -537,6 +549,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -571,6 +584,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -618,6 +632,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true, targets: { node: true } }],
@@ -647,6 +662,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             [
@@ -704,6 +720,7 @@ function reactRouterDomV5Compat() {
         }),
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -753,6 +770,7 @@ function reactRouterDomV5Compat() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -794,6 +812,7 @@ function reactRouterDomV5Compat() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -854,8 +873,8 @@ function reactRouterNative() {
       ],
       plugins: [
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
-          runtimeHelpers: true,
           presets: [
             [
               "module:metro-react-native-babel-preset",
