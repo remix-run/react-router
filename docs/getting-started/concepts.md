@@ -133,7 +133,7 @@ history.listen(({ location, action }) => {
 });
 ```
 
-Apps don't need to set up their own history objects--that's job of `<Router>`. It sets up one of these objects, subscribe to changes in the [history stack](#history-stack), and finally updates its state when the [URL](#url) changes. This causes the app to re-render and the correct UI to display. The only thing it needs to put on state is a `location`, everything else works from that single object.
+Apps don't need to set up their own history objects - that's job of `<Router>`. It sets up one of these objects, subscribe to changes in the [history stack](#history-stack), and finally updates its state when the [URL](#url) changes. This causes the app to re-render and the correct UI to display. The only thing it needs to put on state is a `location`, everything else works from that single object.
 
 ### Locations
 
@@ -226,7 +226,7 @@ window.history.state; // "look ma!"
 
 React Router takes advantage of this browser feature, abstracts it a bit, and surfaces the values on the `location` instead of `history`.
 
-You can think about `location.state` just like `location.hash` or `location.search` except instead of putting the values in the [URL](#url) it's hidden--like a super secret piece of the URL only the programmer knows about.
+You can think about `location.state` just like `location.hash` or `location.search` except instead of putting the values in the [URL](#url) it's hidden - like a super secret piece of the URL only the programmer knows about.
 
 A couple of great use-cases for location state are:
 
@@ -774,7 +774,7 @@ Aside from links and forms, very few interactions should change the URL because 
 
 ## Data Access
 
-Finally, an application is going to want to ask React Router for a few pieces of information in order to build out the full UI. For this, React Router has a pile of hooks
+Finally, an application is going to want to ask React Router for a few pieces of information in order to build out the full UI. For this, React Router has a pile of hooks:
 
 ```js
 let location = useLocation();
