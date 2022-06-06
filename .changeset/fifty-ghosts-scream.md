@@ -4,4 +4,4 @@
 "@remix-run/router": patch
 ---
 
-Make fallbackElement optional and change type to ReactNode (#8896)
+Make `fallbackElement` optional and change type to `ReactNode` (#8896)

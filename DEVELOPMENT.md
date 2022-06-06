@@ -14,7 +14,7 @@ Changesets will do most of the heavy lifting for our releases. When changes are 
 ### Starting a new pre-release
 
 - Ensure you are on the new `release-*` branch
-- Enter Changesets pre-release mode using the `pre` tag: `yarn changeset pre enter pre`
+- Enter Changesets pre-release mode using the `pre` tag: `yarn changeset pre enter next`
 - Bump version numbers and generate changelogs: `yarn changeset version`
 - Review the updated `CHANGELOG` files and make any adjustments necessary
 - Commit version and log updates changes: `git add . && git commit -m "react-router vX.X.X-pre.X"`

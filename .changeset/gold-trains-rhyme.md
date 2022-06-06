@@ -3,4 +3,4 @@
 "@remix-run/router": patch
 ---
 
-properly trigger error boundaries on 404 routes
+Properly trigger error boundaries on 404 routes
