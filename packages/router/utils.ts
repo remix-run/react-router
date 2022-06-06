@@ -658,7 +658,7 @@ export function resolveTo(
   routePathnames: string[],
   locationPathname: string
 ): Path {
-  let to = typeof toArg === "string" ? parsePath(toArg) : toArg;
+  let to = typeof toArg === "string" ? parsePath(toArg) : { ...toArg };
   let toPathname = toArg === "" || to.pathname === "" ? "/" : to.pathname;
 
   // If a pathname is explicitly provided in `to`, it should be relative to the
