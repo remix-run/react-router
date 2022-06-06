@@ -18,5 +18,8 @@
   "main": "./dist/main.js",
   "unpkg": "./dist/umd/router.production.min.js",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=14"
+  }
 }

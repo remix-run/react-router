@@ -27,5 +27,8 @@
   },
   "peerDependencies": {
     "react": ">=16.8"
+  },
+  "engines": {
+    "node": ">=14"
   }
 }

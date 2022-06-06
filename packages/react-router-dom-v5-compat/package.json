@@ -30,5 +30,8 @@
     "react": ">=16.8",
     "react-dom": ">=16.8",
     "react-router-dom": "4 || 5"
+  },
+  "engines": {
+    "node": ">=14"
   }
 }
