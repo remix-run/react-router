@@ -115,6 +115,7 @@ export interface RouteProps {
   children?: React.ReactNode;
   element?: React.ReactNode | null;
   index?: boolean;
+  exact?: boolean;
   path?: string;
 }
 
@@ -123,6 +124,7 @@ export interface PathRouteProps {
   children?: React.ReactNode;
   element?: React.ReactNode | null;
   index?: false;
+  exact?: boolean;
   path: string;
 }
 
