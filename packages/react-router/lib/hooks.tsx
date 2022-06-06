@@ -1,26 +1,38 @@
 import * as React from "react";
-import type { Location, Path, To } from "history";
-import { Action as NavigationType, parsePath } from "history";
-
-import { LocationContext, NavigationContext, RouteContext } from "./context";
-import type {
+import {
+  isRouteErrorResponse,
+  Location,
   ParamParseKey,
   Params,
+  Path,
   PathMatch,
   PathPattern,
   RouteMatch,
   RouteObject,
-} from "./router";
+  Router as DataRouter,
+  To,
+} from "@remix-run/router";
 import {
+  Action as NavigationType,
   getToPathname,
   invariant,
   joinPaths,
   matchPath,
   matchRoutes,
+  parsePath,
   resolveTo,
   warning,
-  warningOnce,
-} from "./router";
+} from "@remix-run/router";
+
+import {
+  DataRouterContext,
+  DataRouterStateContext,
+  LocationContext,
+  NavigationContext,
+  NavigateOptions,
+  RouteContext,
+  RouteErrorContext,
+} from "./context";
 
 /**
  * Returns the full href for the given "to" value. This is useful for building
@@ -125,11 +137,6 @@ export interface NavigateFunction {
   (delta: number): void;
 }
 
-export interface NavigateOptions {
-  replace?: boolean;
-  state?: any;
-}
-
 /**
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
@@ -184,7 +191,8 @@ export function useNavigate(): NavigateFunction {
 
       (!!options.replace ? navigator.replace : navigator.push)(
         path,
-        options.state
+        options.state,
+        options
       );
     },
     [basename, navigator, routePathnamesJson, locationPathname]
@@ -274,6 +282,7 @@ export function useRoutes(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
+  let dataRouterStateContext = React.useContext(DataRouterStateContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
   let parentParams = routeMatch ? routeMatch.params : {};
@@ -342,6 +351,7 @@ export function useRoutes(
     parentPathnameBase === "/"
       ? pathname
       : pathname.slice(parentPathnameBase.length) || "/";
+
   let matches = matchRoutes(routes, { pathname: remainingPathname });
 
   if (__DEV__) {
@@ -370,27 +380,310 @@ export function useRoutes(
               : joinPaths([parentPathnameBase, match.pathnameBase]),
         })
       ),
-    parentMatches
+    parentMatches,
+    dataRouterStateContext || undefined
   );
+}
+
+function DefaultErrorElement() {
+  let error = useRouteError();
+  let message = isRouteErrorResponse(error)
+    ? `${error.status} ${error.statusText}`
+    : error?.message || JSON.stringify(error);
+  let lightgrey = "rgba(200,200,200, 0.5)";
+  let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
+  let codeStyles = { padding: "2px 4px", backgroundColor: lightgrey };
+  return (
+    <>
+      <h2>Unhandled Thrown Error!</h2>
+      <h3 style={{ fontStyle: "italic" }}>{message}</h3>
+      {error?.stack ? <pre style={preStyles}>{error?.stack}</pre> : null}
+      <p>💿 Hey developer 👋</p>
+      <p>
+        You can provide a way better UX than this when your app throws errors by
+        providing your own&nbsp;
+        <code style={codeStyles}>errorElement</code> props on&nbsp;
+        <code style={codeStyles}>&lt;Route&gt;</code>
+      </p>
+    </>
+  );
+}
+
+type RenderErrorBoundaryProps = React.PropsWithChildren<{
+  location: Location;
+  error: any;
+  component: React.ReactNode;
+}>;
+
+type RenderErrorBoundaryState = {
+  location: Location;
+  error: any;
+};
+
+export class RenderErrorBoundary extends React.Component<
+  RenderErrorBoundaryProps,
+  RenderErrorBoundaryState
+> {
+  constructor(props: RenderErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      location: props.location,
+      error: props.error,
+    };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { error: error };
+  }
+
+  static getDerivedStateFromProps(
+    props: RenderErrorBoundaryProps,
+    state: RenderErrorBoundaryState
+  ) {
+    // When we get into an error state, the user will likely click "back" to the
+    // previous page that didn't have an error. Because this wraps the entire
+    // application, that will have no effect--the error page continues to display.
+    // This gives us a mechanism to recover from the error when the location changes.
+    //
+    // Whether we're in an error state or not, we update the location in state
+    // so that when we are in an error state, it gets reset when a new location
+    // comes in and the user recovers from the error.
+    if (state.location !== props.location) {
+      return {
+        error: props.error,
+        location: props.location,
+      };
+    }
+
+    // If we're not changing locations, preserve the location but still surface
+    // any new errors that may come through. We retain the existing error, we do
+    // this because the error provided from the app state may be cleared without
+    // the location changing.
+    return {
+      error: props.error || state.error,
+      location: state.location,
+    };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error(
+      "React Router caught the following error during render",
+      error,
+      errorInfo
+    );
+  }
+
+  render() {
+    return this.state.error ? (
+      <RouteErrorContext.Provider
+        value={this.state.error}
+        children={this.props.component}
+      />
+    ) : (
+      this.props.children
+    );
+  }
 }
 
 export function _renderMatches(
   matches: RouteMatch[] | null,
-  parentMatches: RouteMatch[] = []
+  parentMatches: RouteMatch[] = [],
+  dataRouterState?: DataRouter["state"]
 ): React.ReactElement | null {
-  if (matches == null) return null;
+  if (matches == null) {
+    if (dataRouterState?.errors) {
+      // Don't bail if we have data router errors so we can render them in the
+      // boundary.  USe the pre-matched (or shimmed) matches
+      matches = dataRouterState.matches;
+    } else {
+      return null;
+    }
+  }
 
-  return matches.reduceRight((outlet, match, index) => {
-    return (
+  let renderedMatches = matches;
+
+  // If we have data errors, trim matches to the highest error boundary
+  let errors = dataRouterState?.errors;
+  if (errors != null) {
+    let errorIndex = renderedMatches.findIndex(
+      (m) => m.route.id && errors?.[m.route.id]
+    );
+    invariant(
+      errorIndex >= 0,
+      `Could not find a matching route for the current errors: ${errors}`
+    );
+    renderedMatches = renderedMatches.slice(
+      0,
+      Math.min(renderedMatches.length, errorIndex + 1)
+    );
+  }
+
+  return renderedMatches.reduceRight((outlet, match, index) => {
+    let error = match.route.id ? errors?.[match.route.id] : null;
+    // Only data routers handle errors
+    let errorElement = dataRouterState
+      ? match.route.errorElement || <DefaultErrorElement />
+      : null;
+    let getChildren = () => (
       <RouteContext.Provider
         children={
-          match.route.element !== undefined ? match.route.element : outlet
+          error
+            ? errorElement
+            : match.route.element !== undefined
+            ? match.route.element
+            : outlet
         }
         value={{
           outlet,
-          matches: parentMatches.concat(matches.slice(0, index + 1)),
+          matches: parentMatches.concat(renderedMatches.slice(0, index + 1)),
         }}
       />
     );
+
+    // Only wrap in an error boundary within data router usages when we have an
+    // errorElement on this route.  Otherwise let it bubble up to an ancestor
+    // errorElement
+    return dataRouterState && (match.route.errorElement || index === 0) ? (
+      <RenderErrorBoundary
+        location={dataRouterState.location}
+        component={errorElement}
+        error={error}
+        children={getChildren()}
+      />
+    ) : (
+      getChildren()
+    );
   }, null as React.ReactElement | null);
+}
+
+enum DataRouterHook {
+  UseLoaderData = "useLoaderData",
+  UseActionData = "useActionData",
+  UseRouteError = "useRouteError",
+  UseNavigation = "useNavigation",
+  UseRouteLoaderData = "useRouteLoaderData",
+  UseMatches = "useMatches",
+  UseRevalidator = "useRevalidator",
+}
+
+function useDataRouterState(hookName: DataRouterHook) {
+  let state = React.useContext(DataRouterStateContext);
+  invariant(state, `${hookName} must be used within a DataRouter`);
+  return state;
+}
+
+/**
+ * Returns the current navigation, defaulting to an "idle" navigation when
+ * no navigation is in progress
+ */
+export function useNavigation() {
+  let state = useDataRouterState(DataRouterHook.UseNavigation);
+  return state.navigation;
+}
+
+/**
+ * Returns a revalidate function for manually triggering revalidation, as well
+ * as the current state of any manual revalidations
+ */
+export function useRevalidator() {
+  let router = React.useContext(DataRouterContext);
+  invariant(router, `useRevalidator must be used within a DataRouter`);
+  let state = useDataRouterState(DataRouterHook.UseRevalidator);
+  return { revalidate: router.revalidate, state: state.revalidation };
+}
+
+/**
+ * Returns the active route matches, useful for accessing loaderData for
+ * parent/child routes or the route "handle" property
+ */
+export function useMatches() {
+  let { matches, loaderData } = useDataRouterState(DataRouterHook.UseMatches);
+  return React.useMemo(
+    () =>
+      matches.map((match) => {
+        let { pathname, params } = match;
+        return {
+          id: match.route.id,
+          pathname,
+          params,
+          data: loaderData[match.route.id],
+          handle: match.route.handle,
+        };
+      }),
+    [matches, loaderData]
+  );
+}
+
+/**
+ * Returns the loader data for the nearest ancestor Route loader
+ */
+export function useLoaderData() {
+  let state = useDataRouterState(DataRouterHook.UseLoaderData);
+
+  let route = React.useContext(RouteContext);
+  invariant(route, `useLoaderData must be used inside a RouteContext`);
+
+  let thisRoute = route.matches[route.matches.length - 1];
+  invariant(
+    thisRoute.route.id,
+    `useLoaderData can only be used on routes that contain a unique "id"`
+  );
+
+  return state.loaderData?.[thisRoute.route.id];
+}
+
+/**
+ * Returns the loaderData for the given routeId
+ */
+export function useRouteLoaderData(routeId: string): any {
+  let state = useDataRouterState(DataRouterHook.UseRouteLoaderData);
+  return state.loaderData?.[routeId];
+}
+
+/**
+ * Returns the action data for the nearest ancestor Route action
+ */
+export function useActionData() {
+  let state = useDataRouterState(DataRouterHook.UseActionData);
+
+  let route = React.useContext(RouteContext);
+  invariant(route, `useActionData must be used inside a RouteContext`);
+
+  return Object.values(state?.actionData || {})[0];
+}
+
+/**
+ * Returns the nearest ancestor Route error, which could be a loader/action
+ * error or a render error.  This is intended to be called from your
+ * errorElement to display a proper error message.
+ */
+export function useRouteError() {
+  let error = React.useContext(RouteErrorContext);
+  let state = useDataRouterState(DataRouterHook.UseRouteError);
+  let route = React.useContext(RouteContext);
+  let thisRoute = route.matches[route.matches.length - 1];
+
+  // If this was a render error, we put it in a RouteError context inside
+  // of RenderErrorBoundary
+  if (error) {
+    return error;
+  }
+
+  invariant(route, `useRouteError must be used inside a RouteContext`);
+  invariant(
+    thisRoute.route.id,
+    `useRouteError can only be used on routes that contain a unique "id"`
+  );
+
+  // Otherwise look for errors from our data router state
+  return state.errors?.[thisRoute.route.id];
+}
+
+const alreadyWarned: Record<string, boolean> = {};
+
+function warningOnce(key: string, cond: boolean, message: string) {
+  if (!cond && !alreadyWarned[key]) {
+    alreadyWarned[key] = true;
+    warning(false, message);
+  }
 }

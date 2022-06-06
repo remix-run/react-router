@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom-v5-compat",
-  "version": "6.3.0",
+  "version": "6.4.0-pre.2",
   "author": "Remix Software <hello@remix.run>",
   "description": "Migration path to React Router v6 from v4/5",
   "repository": {
@@ -15,7 +15,7 @@
   "unpkg": "./umd/react-router.production.min.js",
   "dependencies": {
     "history": "^5.3.0",
-    "react-router": "6.3.0"
+    "react-router": "6.4.0-pre.2"
   },
   "peerDependencies": {
     "react": ">=16.8",

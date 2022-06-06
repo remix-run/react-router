@@ -5,6 +5,8 @@ order: 2
 
 # Quick Start Overview
 
+<docs-warning>TODO: This doc needs updates for the data APIs</docs-warning>
+
 If you're familiar with the JavaScript ecosystem, React, and React Router, this serves as a quick overview of React Router v6 with lots of code and minimal explanations.
 
 - For a complete introduction to React Router, do the [Tutorial][tutorial]
@@ -172,7 +174,7 @@ When the URL is `"/invoices/sent"` the component tree will be:
 </App>
 ```
 
-When the URL is `"/invoices/123"`, the component tree will:
+When the URL is `"/invoices/123"`, the component tree will be:
 
 ```tsx
 <App>

@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "6.3.0",
+  "version": "6.4.0-pre.2",
   "author": "Remix Software <hello@remix.run>",
   "description": "Declarative routing for React web applications",
   "repository": {
@@ -14,8 +14,7 @@
   "types": "./index.d.ts",
   "unpkg": "./umd/react-router-dom.production.min.js",
   "dependencies": {
-    "react-router": "6.3.0",
-    "history": "^5.2.0"
+    "react-router": "6.4.0-pre.2"
   },
   "peerDependencies": {
     "react": ">=16.8",
