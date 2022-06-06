@@ -1,0 +1,25 @@
+{
+  "name": "data-router",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "localforage": "^1.10.0",
+    "react": "18.1.0",
+    "react-dom": "18.1.0",
+    "react-router": "6.4.0-pre.2",
+    "react-router-dom": "6.4.0-pre.2"
+  },
+  "devDependencies": {
+    "@rollup/plugin-replace": "4.0.0",
+    "@types/node": "17.0.32",
+    "@types/react": "18.0.9",
+    "@types/react-dom": "18.0.3",
+    "@vitejs/plugin-react": "1.3.2",
+    "typescript": "4.6.4",
+    "vite": "2.9.9"
+  }
+}

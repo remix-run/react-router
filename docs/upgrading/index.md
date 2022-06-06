@@ -1,4 +1,4 @@
 ---
 title: Upgrading
-order: 6
+order: 1
 ---

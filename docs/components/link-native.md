@@ -1,5 +1,5 @@
 ---
-title: Link (React Native)
+title: Link (RN)
 ---
 
 # `<Link>` (React Native)

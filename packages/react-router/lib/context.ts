@@ -1,8 +1,31 @@
 import * as React from "react";
-import type { History, Location } from "history";
-import { Action as NavigationType } from "history";
+import type {
+  History,
+  Location,
+  RouteMatch,
+  Router,
+  To,
+} from "@remix-run/router";
+import { Action as NavigationType } from "@remix-run/router";
 
-import type { RouteMatch } from "./router";
+// Contexts for data routers
+export const DataRouterContext = React.createContext<Router | null>(null);
+if (__DEV__) {
+  DataRouterContext.displayName = "DataRouter";
+}
+
+export const DataRouterStateContext = React.createContext<
+  Router["state"] | null
+>(null);
+if (__DEV__) {
+  DataRouterStateContext.displayName = "DataRouterState";
+}
+
+export interface NavigateOptions {
+  replace?: boolean;
+  state?: any;
+  resetScroll?: boolean;
+}
 
 /**
  * A Navigator is a "location changer"; it's how you get to different locations.
@@ -13,7 +36,12 @@ import type { RouteMatch } from "./router";
  * to avoid "tearing" that may occur in a suspense-enabled app if the action
  * and/or location were to be read directly from the history instance.
  */
-export type Navigator = Pick<History, "go" | "push" | "replace" | "createHref">;
+export interface Navigator {
+  createHref: History["createHref"];
+  go: History["go"];
+  push(to: To, state?: any, opts?: NavigateOptions): void;
+  replace(to: To, state?: any, opts?: NavigateOptions): void;
+}
 
 interface NavigationContextObject {
   basename: string;
@@ -54,4 +82,15 @@ export const RouteContext = React.createContext<RouteContextObject>({
 
 if (__DEV__) {
   RouteContext.displayName = "Route";
+}
+
+interface RouteContextObject {
+  outlet: React.ReactElement | null;
+  matches: RouteMatch[];
+}
+
+export const RouteErrorContext = React.createContext<any>(null);
+
+if (__DEV__) {
+  RouteErrorContext.displayName = "RouteError";
 }

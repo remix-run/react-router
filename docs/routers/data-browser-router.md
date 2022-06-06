@@ -1,16 +1,15 @@
 ---
 title: DataBrowserRouter
 new: true
-hidden: true
 ---
 
 # `DataBrowserRouter`
 
-This is the recommended router component for all React Router DOM applications.
+This is the recommended router for all React Router DOM applications.
 
 `DataBrowserRouter` enables the route data APIs like [loaders][loader], [actions][action], [fetchers][fetcher] and more for browser environments.
 
-```tsx
+```tsx lines=[3,7,11]
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { DataBrowserRouter } from "react-router-dom";
@@ -41,38 +40,79 @@ export interface DataBrowserRouterProps {
 }
 ```
 
-## Differences from `BrowserRouter`
+## `children`
 
-`BrowserRouter` only keeps your UI in sync with the URL, but does nothing for data with APIs like [loader][loader], [Form][form], and [action][action].
+The children should always be [`Route`][route] components.
 
-`DataBrowserRouter` keeps your UI in sync with the URL **and also your data**. When the user clicks a link, it will initiate data loading for the next set of matches, revalidate when forms are submitted, etc.
+```tsx lines=[2-8]
+<DataBrowserRouter initialEntries={["/events/123"]}>
+  <Route path="/" element={<Root />} loader={rootLoader}>
+    <Route
+      path="events/:id"
+      element={<Event />}
+      loader={eventLoader}
+    />
+  </Route>
+</DataBrowserRouter>
+```
 
-`DataBrowserRouter` also functions as the `Routes` component (it needs to know your routes in order to fetch and manage data). You shouldn't use `<Routes>` with `<DataBrowserRouter>`, instead put your `<Route>` components directly inside of `<DataBrowserRouter>`.
+Unlike [`BrowserRouter`][browser-router], you do not use [`Routes`][routes].
 
 <docs-error>Do not do this</docs-error>
 
-```jsx bad lines=[2,4]
-<DataBrowserRouter>
+```tsx bad lines=[2,10]
+<DataBrowserRouter initialEntries={["/events/123"]}>
   <Routes>
-    <Route element={<Root />} />
+    <Route path="/" element={<Root />} loader={rootLoader}>
+      <Route
+        path="events/:id"
+        element={<Event />}
+        loader={eventLoader}
+      />
+    </Route>
   </Routes>
 </DataBrowserRouter>
 ```
 
-<docs-info>Do this</docs-info>
+## `hydrationData`
 
-```jsx
-<DataBrowserRouter>
-  <Route element={<Root />} />
-</DataBrowserRouter>
+When server side rendering your React Router app, it's likely the server fetched data and included it into the HTML. In order for the client side hydration to work, the routes need to be able to render with the same data.
+
+Typically, SSR implementations will provide that data on `window`. The `hydrationData` prop enables `DataBrowserRouter` to render with the same data as the server without needing to fetch it again client side.
+
+```tsx
+// hypothetical implementation where the server puts the hydration data on
+// `window.routeData`
+<DataBrowserRouter
+  hydrationData={{
+    // data for the loaders keyed by route ids
+    loaderData: {
+      "/": window._remix.routeData.root,
+      "/event/:id": window.routeData.event,
+    },
+
+    // data for an action, same shape as loaderData or null
+    actionData: null,
+
+    // if the server failed to load the data or render you can put the errors
+    // keyed by route ID here to trigger the route error boundaries
+    errors: null,
+  }}
+/>
 ```
 
-## Bundle Sizes
+## `fallbackElement`
 
-If you are not using the data APIs in your app, it's recommended you use [`BrowserRouter`][browser-router] instead so that the extra code used to manage the internal state of the data APIs will be tree-shaken out of your bundles.
+If you are not server rendering your app, `DataBrowserRouter` will initiate all matching route loaders when it mounts. During this time, you can provide a `fallbackElement` to give the user some indication that the app is working.
 
-[loader]: ../components/route#loader
-[action]: ../components/route#action
+```tsx
+<DataBrowserRouter fallbackElement={<SpinnerOfDoom />} />
+```
+
+[loader]: ../route/loader
+[action]: ../route/action
 [fetcher]: ../hooks/use-fetcher
 [browser-router]: ./browser-router
 [form]: ../components/form
+[route]: ../components/route
+[routes]: ../components/routes

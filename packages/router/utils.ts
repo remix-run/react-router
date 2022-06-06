@@ -1,33 +1,91 @@
-import type { Location, Path, To } from "history";
-import { parsePath } from "history";
+import type { Location, Path, To } from "./history";
+import { parsePath } from "./history";
+import { DataResult, DataRouteMatch } from "./router";
 
-export function invariant(cond: any, message: string): asserts cond {
-  if (!cond) throw new Error(message);
+export type FormMethod = "get" | "post" | "put" | "patch" | "delete";
+export type FormEncType = "application/x-www-form-urlencoded";
+
+/**
+ * @private
+ * Internal interface to pass around for action submissions, not intended for
+ * external consumption
+ */
+export interface Submission {
+  formMethod: Exclude<FormMethod, "get">;
+  formAction: string;
+  formEncType: FormEncType;
+  formData: FormData;
 }
 
-export function warning(cond: any, message: string): void {
-  if (!cond) {
-    // eslint-disable-next-line no-console
-    if (typeof console !== "undefined") console.warn(message);
-
-    try {
-      // Welcome to debugging React Router!
-      //
-      // This error is thrown as a convenience so you can more easily
-      // find the source for a warning that appears in the console by
-      // enabling "pause on exceptions" in your JavaScript debugger.
-      throw new Error(message);
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
-  }
+/**
+ * Arguments passed to route loader/action functions
+ */
+export interface DataFunctionArgs {
+  request: Request;
+  params: Params;
+  signal: AbortSignal;
 }
 
-const alreadyWarned: Record<string, boolean> = {};
-export function warningOnce(key: string, cond: boolean, message: string) {
-  if (!cond && !alreadyWarned[key]) {
-    alreadyWarned[key] = true;
-    warning(false, message);
-  }
+/**
+ * Route loader function signature
+ */
+export interface LoaderFunction {
+  (args: DataFunctionArgs): Promise<Response> | Response | Promise<any> | any;
+}
+
+/**
+ * Route action function signature
+ */
+export interface ActionFunction {
+  (args: DataFunctionArgs): Promise<Response> | Response | Promise<any> | any;
+}
+
+/**
+ * Route shouldRevalidate function signature.  This runs after any submission
+ * (navigation or fetcher), so we flatten the navigation/fetcher submission
+ * onto the arguments.  It shouldn't matter whether it came from a navigation
+ * or a fetcher, what really matters is the URLs and the formData since loaders
+ * have to re-run based on the data models that were potentially mutated.
+ */
+export interface ShouldRevalidateFunction {
+  (args: {
+    currentUrl: URL;
+    currentParams: DataRouteMatch["params"];
+    nextUrl: URL;
+    nextParams: DataRouteMatch["params"];
+    formMethod?: Submission["formMethod"];
+    formAction?: Submission["formAction"];
+    formEncType?: Submission["formEncType"];
+    formData?: Submission["formData"];
+    actionResult?: DataResult;
+    defaultShouldRevalidate: boolean;
+  }): boolean;
+}
+
+/**
+ * A route object represents a logical route, with (optionally) its child
+ * routes organized in a tree-like structure.
+ */
+export interface RouteObject {
+  caseSensitive?: boolean;
+  children?: RouteObject[];
+  element?: React.ReactNode;
+  index?: boolean;
+  path?: string;
+  id?: string;
+  loader?: LoaderFunction;
+  action?: ActionFunction;
+  errorElement?: React.ReactNode;
+  shouldRevalidate?: ShouldRevalidateFunction;
+  handle?: any;
+}
+
+/**
+ * A data route object, which is just a RouteObject with a required unique ID
+ */
+export interface DataRouteObject extends RouteObject {
+  children?: DataRouteObject[];
+  id: string;
 }
 
 type ParamParseFailed = { failed: true };
@@ -85,37 +143,12 @@ export type Params<Key extends string = string> = {
 };
 
 /**
- * A route object represents a logical route, with (optionally) its child
- * routes organized in a tree-like structure.
- */
-export interface RouteObject {
-  caseSensitive?: boolean;
-  children?: RouteObject[];
-  element?: React.ReactNode;
-  index?: boolean;
-  path?: string;
-}
-
-/**
- * Returns a path with params interpolated.
- *
- * @see https://reactrouter.com/docs/en/v6/utils/generate-path
- */
-export function generatePath(path: string, params: Params = {}): string {
-  return path
-    .replace(/:(\w+)/g, (_, key) => {
-      invariant(params[key] != null, `Missing ":${key}" param`);
-      return params[key]!;
-    })
-    .replace(/\/*\*$/, (_) =>
-      params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
-    );
-}
-
-/**
  * A RouteMatch contains info about how a route matched a URL.
  */
-export interface RouteMatch<ParamKey extends string = string> {
+export interface RouteMatch<
+  ParamKey extends string = string,
+  RouteObjectType extends RouteObject = RouteObject
+> {
   /**
    * The names and values of dynamic parameters in the URL.
    */
@@ -131,7 +164,7 @@ export interface RouteMatch<ParamKey extends string = string> {
   /**
    * The route object that was used to match.
    */
-  route: RouteObject;
+  route: RouteObjectType;
 }
 
 /**
@@ -139,11 +172,11 @@ export interface RouteMatch<ParamKey extends string = string> {
  *
  * @see https://reactrouter.com/docs/en/v6/utils/match-routes
  */
-export function matchRoutes(
-  routes: RouteObject[],
+export function matchRoutes<RouteObjectType extends RouteObject = RouteObject>(
+  routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
   basename = "/"
-): RouteMatch[] | null {
+): RouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
@@ -158,33 +191,33 @@ export function matchRoutes(
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    matches = matchRouteBranch(branches[i], pathname);
+    matches = matchRouteBranch<string, RouteObjectType>(branches[i], pathname);
   }
 
   return matches;
 }
 
-interface RouteMeta {
+interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
-  route: RouteObject;
+  route: RouteObjectType;
 }
 
-interface RouteBranch {
+interface RouteBranch<RouteObjectType extends RouteObject = RouteObject> {
   path: string;
   score: number;
-  routesMeta: RouteMeta[];
+  routesMeta: RouteMeta<RouteObjectType>[];
 }
 
-function flattenRoutes(
-  routes: RouteObject[],
-  branches: RouteBranch[] = [],
-  parentsMeta: RouteMeta[] = [],
+function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
+  routes: RouteObjectType[],
+  branches: RouteBranch<RouteObjectType>[] = [],
+  parentsMeta: RouteMeta<RouteObjectType>[] = [],
   parentPath = ""
-): RouteBranch[] {
+): RouteBranch<RouteObjectType>[] {
   routes.forEach((route, index) => {
-    let meta: RouteMeta = {
+    let meta: RouteMeta<RouteObjectType> = {
       relativePath: route.path || "",
       caseSensitive: route.caseSensitive === true,
       childrenIndex: index,
@@ -289,15 +322,18 @@ function compareIndexes(a: number[], b: number[]): number {
       0;
 }
 
-function matchRouteBranch<ParamKey extends string = string>(
-  branch: RouteBranch,
+function matchRouteBranch<
+  ParamKey extends string = string,
+  RouteObjectType extends RouteObject = RouteObject
+>(
+  branch: RouteBranch<RouteObjectType>,
   pathname: string
-): RouteMatch<ParamKey>[] | null {
+): RouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
   let matchedParams = {};
   let matchedPathname = "/";
-  let matches: RouteMatch[] = [];
+  let matches: RouteMatch<ParamKey, RouteObjectType>[] = [];
   for (let i = 0; i < routesMeta.length; ++i) {
     let meta = routesMeta[i];
     let end = i === routesMeta.length - 1;
@@ -317,7 +353,8 @@ function matchRouteBranch<ParamKey extends string = string>(
     let route = meta.route;
 
     matches.push({
-      params: matchedParams,
+      // TODO: Can this as be avoided?
+      params: matchedParams as Params<ParamKey>,
       pathname: joinPaths([matchedPathname, match.pathname]),
       pathnameBase: normalizePathname(
         joinPaths([matchedPathname, match.pathnameBase])
@@ -331,6 +368,22 @@ function matchRouteBranch<ParamKey extends string = string>(
   }
 
   return matches;
+}
+
+/**
+ * Returns a path with params interpolated.
+ *
+ * @see https://reactrouter.com/docs/en/v6/utils/generate-path
+ */
+export function generatePath(path: string, params: Params = {}): string {
+  return path
+    .replace(/:(\w+)/g, (_, key) => {
+      invariant(params[key] != null, `Missing ":${key}" param`);
+      return params[key]!;
+    })
+    .replace(/\/*\*$/, (_) =>
+      params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
+    );
 }
 
 /**
@@ -501,6 +554,62 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
 }
 
 /**
+ * @private
+ */
+export function stripBasename(
+  pathname: string,
+  basename: string
+): string | null {
+  if (basename === "/") return pathname;
+
+  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
+    return null;
+  }
+
+  let nextChar = pathname.charAt(basename.length);
+  if (nextChar && nextChar !== "/") {
+    // pathname does not start with basename/
+    return null;
+  }
+
+  return pathname.slice(basename.length) || "/";
+}
+
+/**
+ * @private
+ */
+export function invariant(value: boolean, message?: string): asserts value;
+export function invariant<T>(
+  value: T | null | undefined,
+  message?: string
+): asserts value is T;
+export function invariant(value: any, message?: string) {
+  if (value === false || value === null || typeof value === "undefined") {
+    throw new Error(message);
+  }
+}
+
+/**
+ * @private
+ */
+export function warning(cond: any, message: string): void {
+  if (!cond) {
+    // eslint-disable-next-line no-console
+    if (typeof console !== "undefined") console.warn(message);
+
+    try {
+      // Welcome to debugging React Router!
+      //
+      // This error is thrown as a convenience so you can more easily
+      // find the source for a warning that appears in the console by
+      // enabling "pause on exceptions" in your JavaScript debugger.
+      throw new Error(message);
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
+  }
+}
+
+/**
  * Returns a resolved path object relative to the given pathname.
  *
  * @see https://reactrouter.com/docs/en/v6/utils/resolve-path
@@ -541,6 +650,9 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
   return segments.length > 1 ? segments.join("/") : "/";
 }
 
+/**
+ * @private
+ */
 export function resolveTo(
   toArg: To,
   routePathnames: string[],
@@ -596,6 +708,9 @@ export function resolveTo(
   return path;
 }
 
+/**
+ * @private
+ */
 export function getToPathname(to: To): string | undefined {
   // Empty strings should be treated the same as / paths
   return to === "" || (to as Path).pathname === ""
@@ -605,37 +720,103 @@ export function getToPathname(to: To): string | undefined {
     : to.pathname;
 }
 
-export function stripBasename(
-  pathname: string,
-  basename: string
-): string | null {
-  if (basename === "/") return pathname;
-
-  if (!pathname.toLowerCase().startsWith(basename.toLowerCase())) {
-    return null;
-  }
-
-  let nextChar = pathname.charAt(basename.length);
-  if (nextChar && nextChar !== "/") {
-    // pathname does not start with basename/
-    return null;
-  }
-
-  return pathname.slice(basename.length) || "/";
-}
-
+/**
+ * @private
+ */
 export const joinPaths = (paths: string[]): string =>
   paths.join("/").replace(/\/\/+/g, "/");
 
+/**
+ * @private
+ */
 export const normalizePathname = (pathname: string): string =>
   pathname.replace(/\/+$/, "").replace(/^\/*/, "/");
 
-const normalizeSearch = (search: string): string =>
+/**
+ * @private
+ */
+export const normalizeSearch = (search: string): string =>
   !search || search === "?"
     ? ""
     : search.startsWith("?")
     ? search
     : "?" + search;
 
-const normalizeHash = (hash: string): string =>
+/**
+ * @private
+ */
+export const normalizeHash = (hash: string): string =>
   !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
+
+export type JsonFunction = <Data>(
+  data: Data,
+  init?: number | ResponseInit
+) => Response;
+
+/**
+ * This is a shortcut for creating `application/json` responses. Converts `data`
+ * to JSON and sets the `Content-Type` header.
+ */
+export const json: JsonFunction = (data, init = {}) => {
+  let responseInit = typeof init === "number" ? { status: init } : init;
+
+  let headers = new Headers(responseInit.headers);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json; charset=utf-8");
+  }
+
+  return new Response(JSON.stringify(data), {
+    ...responseInit,
+    headers,
+  });
+};
+
+export type RedirectFunction = (
+  url: string,
+  init?: number | ResponseInit
+) => Response;
+
+/**
+ * A redirect response. Sets the status code and the `Location` header.
+ * Defaults to "302 Found".
+ */
+export const redirect: RedirectFunction = (url, init = 302) => {
+  let responseInit = init;
+  if (typeof responseInit === "number") {
+    responseInit = { status: responseInit };
+  } else if (typeof responseInit.status === "undefined") {
+    responseInit.status = 302;
+  }
+
+  let headers = new Headers(responseInit.headers);
+  headers.set("Location", url);
+
+  return new Response(null, {
+    ...responseInit,
+    headers,
+  });
+};
+
+/**
+ * @private
+ * Utility class we use to hold auto-unwrapped 4xx/5xx Response bodies
+ */
+export class ErrorResponse {
+  status: number;
+  statusText: string;
+  data: any;
+
+  constructor(status: number, statusText: string | undefined, data: any) {
+    this.status = status;
+    this.statusText = statusText || "";
+    this.data = data;
+  }
+}
+
+/**
+ * Check if the given error is an ErrorResponse generated from a 4xx/5xx
+ * Response throw from an action/loader
+ */
+export function isRouteErrorResponse(e: any): e is ErrorResponse {
+  return e instanceof ErrorResponse;
+}

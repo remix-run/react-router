@@ -1,6 +1,21 @@
+/**
+ * @jest-environment ./__tests__/custom-environment.js
+ */
+
+import { render, fireEvent, waitFor, screen } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import { JSDOM } from "jsdom";
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route, NavLink, Outlet } from "react-router-dom";
+import {
+  MemoryRouter,
+  Routes,
+  Route,
+  NavLink,
+  Outlet,
+  DataBrowserRouter,
+} from "react-router-dom";
+import { _resetModuleScope } from "react-router/lib/components";
 
 describe("NavLink", () => {
   describe("when it does not match", () => {
@@ -310,6 +325,250 @@ describe("NavLink", () => {
   });
 });
 
+describe("NavLink using a data router", () => {
+  afterEach(() => {
+    _resetModuleScope();
+  });
+
+  it("applies the default 'active'/'pending' classNames to the underlying <a>", async () => {
+    let deferred = defer();
+    render(
+      <DataBrowserRouter
+        window={getWindow("/foo")}
+        hydrationData={{}}
+        fallbackElement={<span />}
+      >
+        <Route path="/" element={<Layout />}>
+          <Route path="foo" element={<p>Foo page</p>} />
+          <Route
+            path="bar"
+            loader={() => deferred.promise}
+            element={<p>Bar page</p>}
+          />
+        </Route>
+      </DataBrowserRouter>
+    );
+
+    function Layout() {
+      return (
+        <>
+          <NavLink to="/foo">Link to Foo</NavLink>
+          <NavLink to="/bar">Link to Bar</NavLink>
+          <Outlet />
+        </>
+      );
+    }
+
+    expect(screen.getByText("Link to Bar").className).toBe("");
+
+    fireEvent.click(screen.getByText("Link to Bar"));
+    expect(screen.getByText("Link to Bar").className).toBe("pending");
+
+    deferred.resolve();
+    await waitFor(() => screen.getByText("Bar page"));
+    expect(screen.getByText("Link to Bar").className).toBe("active");
+  });
+
+  it("applies its className correctly when provided as a function", async () => {
+    let deferred = defer();
+    render(
+      <DataBrowserRouter
+        window={getWindow("/foo")}
+        hydrationData={{}}
+        fallbackElement={<span />}
+      >
+        <Route path="/" element={<Layout />}>
+          <Route path="foo" element={<p>Foo page</p>} />
+          <Route
+            path="bar"
+            loader={() => deferred.promise}
+            element={<p>Bar page</p>}
+          />
+        </Route>
+      </DataBrowserRouter>
+    );
+
+    function Layout() {
+      return (
+        <>
+          <NavLink to="/foo">Link to Foo</NavLink>
+          <NavLink
+            to="/bar"
+            className={({ isActive, isPending }) =>
+              isPending
+                ? "some-pending-classname"
+                : isActive
+                ? "some-active-classname"
+                : undefined
+            }
+          >
+            Link to Bar
+          </NavLink>
+
+          <Outlet />
+        </>
+      );
+    }
+
+    expect(screen.getByText("Link to Bar").className).toBe("");
+
+    fireEvent.click(screen.getByText("Link to Bar"));
+    expect(screen.getByText("Link to Bar").className).toBe(
+      "some-pending-classname"
+    );
+
+    deferred.resolve();
+    await waitFor(() => screen.getByText("Bar page"));
+    expect(screen.getByText("Link to Bar").className).toBe(
+      "some-active-classname"
+    );
+  });
+
+  it("applies its style correctly when provided as a function", async () => {
+    let deferred = defer();
+    render(
+      <DataBrowserRouter
+        window={getWindow("/foo")}
+        hydrationData={{}}
+        fallbackElement={<span />}
+      >
+        <Route path="/" element={<Layout />}>
+          <Route path="foo" element={<p>Foo page</p>} />
+          <Route
+            path="bar"
+            loader={() => deferred.promise}
+            element={<p>Bar page</p>}
+          />
+        </Route>
+      </DataBrowserRouter>
+    );
+
+    function Layout() {
+      return (
+        <>
+          <NavLink to="/foo">Link to Foo</NavLink>
+          <NavLink
+            to="/bar"
+            style={({ isActive, isPending }) =>
+              isPending
+                ? { textTransform: "lowercase" }
+                : isActive
+                ? { textTransform: "uppercase" }
+                : undefined
+            }
+          >
+            Link to Bar
+          </NavLink>
+
+          <Outlet />
+        </>
+      );
+    }
+
+    expect(screen.getByText("Link to Bar").style.textTransform).toBe("");
+
+    fireEvent.click(screen.getByText("Link to Bar"));
+    expect(screen.getByText("Link to Bar").style.textTransform).toBe(
+      "lowercase"
+    );
+
+    deferred.resolve();
+    await waitFor(() => screen.getByText("Bar page"));
+    expect(screen.getByText("Link to Bar").style.textTransform).toBe(
+      "uppercase"
+    );
+  });
+
+  it("applies its children correctly when provided as a function", async () => {
+    let deferred = defer();
+    render(
+      <DataBrowserRouter
+        window={getWindow("/foo")}
+        hydrationData={{}}
+        fallbackElement={<span />}
+      >
+        <Route path="/" element={<Layout />}>
+          <Route path="foo" element={<p>Foo page</p>} />
+          <Route
+            path="bar"
+            loader={() => deferred.promise}
+            element={<p>Bar page</p>}
+          />
+        </Route>
+      </DataBrowserRouter>
+    );
+
+    function Layout() {
+      return (
+        <>
+          <NavLink to="/foo">Link to Foo</NavLink>
+          <NavLink to="/bar">
+            {({ isActive, isPending }) =>
+              isPending
+                ? "Link to Bar (loading...)"
+                : isActive
+                ? "Link to Bar (current)"
+                : "Link to Bar (idle)"
+            }
+          </NavLink>
+
+          <Outlet />
+        </>
+      );
+    }
+
+    expect(screen.getByText("Link to Bar (idle)")).toBeDefined();
+
+    fireEvent.click(screen.getByText("Link to Bar (idle)"));
+    expect(screen.getByText("Link to Bar (loading...)")).toBeDefined();
+
+    deferred.resolve();
+    await waitFor(() => screen.getByText("Bar page"));
+    expect(screen.getByText("Link to Bar (current)")).toBeDefined();
+  });
+
+  it("does not apply during transitions to non-matching locations", async () => {
+    let deferred = defer();
+    render(
+      <DataBrowserRouter
+        window={getWindow("/foo")}
+        hydrationData={{}}
+        fallbackElement={<span />}
+      >
+        <Route path="/" element={<Layout />}>
+          <Route path="foo" element={<p>Foo page</p>} />
+          <Route path="bar" element={<p>Bar page</p>} />
+          <Route
+            path="baz"
+            loader={() => deferred.promise}
+            element={<p>Baz page</p>}
+          />
+        </Route>
+      </DataBrowserRouter>
+    );
+
+    function Layout() {
+      return (
+        <>
+          <NavLink to="/foo">Link to Foo</NavLink>
+          <NavLink to="/bar">Link to Bar</NavLink>
+          <NavLink to="/baz">Link to Baz</NavLink>
+          <Outlet />
+        </>
+      );
+    }
+
+    expect(screen.getByText("Link to Bar").className).toBe("");
+
+    fireEvent.click(screen.getByText("Link to Baz"));
+    expect(screen.getByText("Link to Bar").className).toBe("");
+
+    deferred.resolve();
+    await waitFor(() => screen.getByText("Baz page"));
+    expect(screen.getByText("Link to Bar").className).toBe("");
+  });
+});
+
 describe("NavLink under a Routes with a basename", () => {
   describe("when it does not match", () => {
     it("does not apply the default 'active' className to the underlying <a>", () => {
@@ -352,3 +611,36 @@ describe("NavLink under a Routes with a basename", () => {
     });
   });
 });
+
+function defer() {
+  let resolve: (val?: any) => Promise<void>;
+  let reject: (error?: Error) => Promise<void>;
+  let promise = new Promise((res, rej) => {
+    resolve = async (val: any) => {
+      res(val);
+      try {
+        await promise;
+      } catch (e) {}
+    };
+    reject = async (error?: Error) => {
+      rej(error);
+      try {
+        await promise;
+      } catch (e) {}
+    };
+  });
+  return {
+    promise,
+    //@ts-ignore
+    resolve,
+    //@ts-ignore
+    reject,
+  };
+}
+
+function getWindow(initialUrl: string): Window {
+  // Need to use our own custom DOM in order to get a working history
+  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "https://remix.run/" });
+  dom.window.history.replaceState(null, "", initialUrl);
+  return dom.window as unknown as Window;
+}

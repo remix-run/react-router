@@ -1,12 +1,34 @@
 import * as React from "react";
-import type { InitialEntry, Location, MemoryHistory, To } from "history";
+import type {
+  HydrationState,
+  InitialEntry,
+  Location,
+  MemoryHistory,
+  RouteMatch,
+  RouteObject,
+  Router as DataRouter,
+  RouterState,
+  To,
+} from "@remix-run/router";
 import {
   Action as NavigationType,
   createMemoryHistory,
+  createMemoryRouter,
+  invariant,
+  normalizePathname,
   parsePath,
-} from "history";
+  stripBasename,
+  warning,
+} from "@remix-run/router";
+import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
-import { LocationContext, NavigationContext, Navigator } from "./context";
+import {
+  LocationContext,
+  NavigationContext,
+  Navigator,
+  DataRouterContext,
+  DataRouterStateContext,
+} from "./context";
 import {
   useInRouterContext,
   useNavigate,
@@ -14,8 +36,113 @@ import {
   useRoutes,
   _renderMatches,
 } from "./hooks";
-import type { RouteMatch, RouteObject } from "./router";
-import { invariant, normalizePathname, stripBasename, warning } from "./router";
+
+// Module-scoped singleton to hold the router.  Extracted from the React lifecycle
+// to avoid issues w.r.t. dual initialization fetches in concurrent rendering.
+// Data router apps are expected to have a static route tree and are not intended
+// to be unmounted/remounted at runtime.
+let routerSingleton: DataRouter;
+
+/**
+ * Unit-testing-only function to reset the router between tests
+ * @private
+ */
+export function _resetModuleScope() {
+  // @ts-expect-error
+  routerSingleton = null;
+}
+
+/**
+ * @private
+ */
+export function useRenderDataRouter({
+  children,
+  fallbackElement,
+  routes,
+  createRouter,
+}: {
+  children?: React.ReactNode;
+  fallbackElement: React.ReactElement;
+  routes?: RouteObject[];
+  createRouter: (routes: RouteObject[]) => DataRouter;
+}): React.ReactElement {
+  if (!routerSingleton) {
+    routerSingleton = createRouter(
+      routes || createRoutesFromChildren(children)
+    ).initialize();
+  }
+  let router = routerSingleton;
+
+  // Sync router state to our component state to force re-renders
+  let state: RouterState = useSyncExternalStoreShim(
+    router.subscribe,
+    () => router.state
+  );
+
+  let navigator = React.useMemo((): Navigator => {
+    return {
+      createHref: router.createHref,
+      go: (n) => router.navigate(n),
+      push: (to, state, opts) =>
+        router.navigate(to, { state, resetScroll: opts?.resetScroll }),
+      replace: (to, state, opts) =>
+        router.navigate(to, {
+          replace: true,
+          state,
+          resetScroll: opts?.resetScroll,
+        }),
+    };
+  }, [router]);
+
+  if (!state.initialized) {
+    return fallbackElement || null;
+  }
+
+  return (
+    <DataRouterContext.Provider value={router}>
+      <DataRouterStateContext.Provider value={state}>
+        <Router
+          location={state.location}
+          navigationType={state.historyAction}
+          navigator={navigator}
+        >
+          <DataRoutes routes={routes} children={children} />
+        </Router>
+      </DataRouterStateContext.Provider>
+    </DataRouterContext.Provider>
+  );
+}
+
+export interface DataMemoryRouterProps {
+  children?: React.ReactNode;
+  initialEntries?: InitialEntry[];
+  initialIndex?: number;
+  hydrationData?: HydrationState;
+  fallbackElement: React.ReactElement;
+  routes?: RouteObject[];
+}
+
+export function DataMemoryRouter({
+  children,
+  initialEntries,
+  initialIndex,
+  hydrationData,
+  fallbackElement,
+  routes,
+}: DataMemoryRouterProps): React.ReactElement {
+  return useRenderDataRouter({
+    children,
+    fallbackElement,
+    routes,
+    createRouter: (routes) =>
+      createMemoryRouter({
+        initialEntries,
+        initialIndex,
+        routes,
+        hydrationData,
+      }),
+  });
+}
 
 export interface MemoryRouterProps {
   basename?: string;
@@ -37,7 +164,11 @@ export function MemoryRouter({
 }: MemoryRouterProps): React.ReactElement {
   let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
-    historyRef.current = createMemoryHistory({ initialEntries, initialIndex });
+    historyRef.current = createMemoryHistory({
+      initialEntries,
+      initialIndex,
+      v5Compat: true,
+    });
   }
 
   let history = historyRef.current;
@@ -110,7 +241,16 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
 }
 
-export interface RouteProps {
+interface DataRouteProps {
+  id?: RouteObject["id"];
+  loader?: RouteObject["loader"];
+  action?: RouteObject["action"];
+  errorElement?: RouteObject["errorElement"];
+  shouldRevalidate?: RouteObject["shouldRevalidate"];
+  handle?: RouteObject["handle"];
+}
+
+export interface RouteProps extends DataRouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactNode | null;
@@ -118,7 +258,7 @@ export interface RouteProps {
   path?: string;
 }
 
-export interface PathRouteProps {
+export interface PathRouteProps extends DataRouteProps {
   caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactNode | null;
@@ -126,12 +266,12 @@ export interface PathRouteProps {
   path: string;
 }
 
-export interface LayoutRouteProps {
+export interface LayoutRouteProps extends DataRouteProps {
   children?: React.ReactNode;
   element?: React.ReactNode | null;
 }
 
-export interface IndexRouteProps {
+export interface IndexRouteProps extends DataRouteProps {
   element?: React.ReactNode | null;
   index: true;
 }
@@ -256,6 +396,24 @@ export function Routes({
   return useRoutes(createRoutesFromChildren(children), location);
 }
 
+interface DataRoutesProps extends RoutesProps {
+  routes?: RouteObject[];
+}
+
+/**
+ * @private
+ * Used as an extension to <Routes> and accepts a manual `routes` array to be
+ * instead of using JSX children.  Extracted to it's own component to avoid
+ * conditional usage of `useRoutes` if we have to render a `fallbackElement`
+ */
+function DataRoutes({
+  children,
+  location,
+  routes,
+}: DataRoutesProps): React.ReactElement | null {
+  return useRoutes(routes || createRoutesFromChildren(children), location);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // UTILS
 ///////////////////////////////////////////////////////////////////////////////
@@ -268,11 +426,12 @@ export function Routes({
  * @see https://reactrouter.com/docs/en/v6/utils/create-routes-from-children
  */
 export function createRoutesFromChildren(
-  children: React.ReactNode
+  children: React.ReactNode,
+  parentPath: number[] = []
 ): RouteObject[] {
   let routes: RouteObject[] = [];
 
-  React.Children.forEach(children, (element) => {
+  React.Children.forEach(children, (element, index) => {
     if (!React.isValidElement(element)) {
       // Ignore non-elements. This allows people to more easily inline
       // conditionals in their route config.
@@ -283,7 +442,7 @@ export function createRoutesFromChildren(
       // Transparently support React.Fragment and its children.
       routes.push.apply(
         routes,
-        createRoutesFromChildren(element.props.children)
+        createRoutesFromChildren(element.props.children, parentPath)
       );
       return;
     }
@@ -295,15 +454,25 @@ export function createRoutesFromChildren(
       }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
     );
 
+    let treePath = [...parentPath, index];
     let route: RouteObject = {
+      id: element.props.id || treePath.join("-"),
       caseSensitive: element.props.caseSensitive,
       element: element.props.element,
       index: element.props.index,
       path: element.props.path,
+      loader: element.props.loader,
+      action: element.props.action,
+      errorElement: element.props.errorElement,
+      shouldRevalidate: element.props.shouldRevalidate,
+      handle: element.props.handle,
     };
 
     if (element.props.children) {
-      route.children = createRoutesFromChildren(element.props.children);
+      route.children = createRoutesFromChildren(
+        element.props.children,
+        treePath
+      );
     }
 
     routes.push(route);
