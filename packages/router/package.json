@@ -1,6 +1,8 @@
 {
   "name": "@remix-run/router",
-  "access": "public",
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "0.2.0-pre.0",
   "author": "Remix Software <hello@remix.run>",
   "description": "Nested/Data-driven/Framework-agnostic Routing",
