@@ -1184,8 +1184,8 @@ export function createRouter(init: RouterInit): Router {
       submission,
       nextLocation,
       isRevalidationRequired,
-      null,
-      null,
+      { [match.route.id]: actionResult.data },
+      null, // No need to send through errors since we short circuit above
       fetchLoadMatches
     );
 
