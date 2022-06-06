@@ -50,7 +50,8 @@ export interface DataMemoryRouterProps {
   initialEntries?: InitialEntry[];
   initialIndex?: number;
   hydrationData?: HydrationState;
-  fallbackElement: React.ReactElement;
+  fallbackElement?: React.ReactNode;
+  routes?: RouteObject[];
 }
 ```
 

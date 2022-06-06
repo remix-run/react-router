@@ -333,11 +333,7 @@ describe("NavLink using a data router", () => {
   it("applies the default 'active'/'pending' classNames to the underlying <a>", async () => {
     let deferred = defer();
     render(
-      <DataBrowserRouter
-        window={getWindow("/foo")}
-        hydrationData={{}}
-        fallbackElement={<span />}
-      >
+      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -372,11 +368,7 @@ describe("NavLink using a data router", () => {
   it("applies its className correctly when provided as a function", async () => {
     let deferred = defer();
     render(
-      <DataBrowserRouter
-        window={getWindow("/foo")}
-        hydrationData={{}}
-        fallbackElement={<span />}
-      >
+      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -427,11 +419,7 @@ describe("NavLink using a data router", () => {
   it("applies its style correctly when provided as a function", async () => {
     let deferred = defer();
     render(
-      <DataBrowserRouter
-        window={getWindow("/foo")}
-        hydrationData={{}}
-        fallbackElement={<span />}
-      >
+      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -482,11 +470,7 @@ describe("NavLink using a data router", () => {
   it("applies its children correctly when provided as a function", async () => {
     let deferred = defer();
     render(
-      <DataBrowserRouter
-        window={getWindow("/foo")}
-        hydrationData={{}}
-        fallbackElement={<span />}
-      >
+      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -530,11 +514,7 @@ describe("NavLink using a data router", () => {
   it("does not apply during transitions to non-matching locations", async () => {
     let deferred = defer();
     render(
-      <DataBrowserRouter
-        window={getWindow("/foo")}
-        hydrationData={{}}
-        fallbackElement={<span />}
-      >
+      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route path="bar" element={<p>Bar page</p>} />
