@@ -13,7 +13,7 @@
       "react-router-native"
     ]
   ],
-  "access": "restricted",
+  "access": "public",
   "baseBranch": "dev",
   "updateInternalDependencies": "patch",
   "ignore": []
