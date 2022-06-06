@@ -1,16 +1,33 @@
 {
   "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/react-router",
+      "packages/react-router-dom",
+      "packages/react-router-native",
+      "packages/router"
+    ],
+    "nohoist": [
+      "**/react-native",
+      "**/react-native/**"
+    ]
+  },
   "scripts": {
     "build": "rollup -c && tsc -b",
     "clean": "git clean -fdX .",
-    "lint": "eslint --cache .",
     "format": "prettier --ignore-path .eslintignore --write .",
     "format:check": "prettier --ignore-path .eslintignore --check .",
+    "lint": "eslint --cache .",
     "publish": "node ./scripts/publish.js",
     "size": "filesize",
     "test": "jest",
     "version": "node ./scripts/version.js",
     "watch": "rollup -c -w"
+  },
+  "jest": {
+    "projects": [
+      "<rootDir>/packages/*"
+    ]
   },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
@@ -63,23 +80,6 @@
     "semver": "^7.3.5",
     "ts-jest": "^26.5.6",
     "typescript": "^4.3.5"
-  },
-  "workspaces": {
-    "packages": [
-      "packages/react-router",
-      "packages/react-router-dom",
-      "packages/react-router-native",
-      "packages/router"
-    ],
-    "nohoist": [
-      "**/react-native",
-      "**/react-native/**"
-    ]
-  },
-  "jest": {
-    "projects": [
-      "<rootDir>/packages/*"
-    ]
   },
   "filesize": {
     "build/node_modules/@remix-run/router/router.production.min.js": {
