@@ -62,7 +62,7 @@ export function useRenderDataRouter({
   createRouter,
 }: {
   children?: React.ReactNode;
-  fallbackElement: React.ReactElement;
+  fallbackElement?: React.ReactNode;
   routes?: RouteObject[];
   createRouter: (routes: RouteObject[]) => DataRouter;
 }): React.ReactElement {
@@ -95,7 +95,7 @@ export function useRenderDataRouter({
   }, [router]);
 
   if (!state.initialized) {
-    return fallbackElement || null;
+    return <>{fallbackElement}</>;
   }
 
   return (
@@ -118,7 +118,7 @@ export interface DataMemoryRouterProps {
   initialEntries?: InitialEntry[];
   initialIndex?: number;
   hydrationData?: HydrationState;
-  fallbackElement: React.ReactElement;
+  fallbackElement?: React.ReactNode;
   routes?: RouteObject[];
 }
 

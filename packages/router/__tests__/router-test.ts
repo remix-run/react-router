@@ -1540,6 +1540,65 @@ describe("a router", () => {
 
       router.dispose();
     });
+
+    it("applies to fetcher submissions and sends fetcher actionResult through", async () => {
+      let shouldRevalidate = jest.fn((args) => true);
+
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "",
+            id: "root",
+            element: {},
+            children: [
+              {
+                path: "/",
+                id: "index",
+                loader: () => "INDEX",
+                shouldRevalidate,
+              },
+              {
+                path: "/fetch",
+                id: "fetch",
+                action: () => "FETCH",
+              },
+            ],
+          },
+        ],
+      });
+      router.initialize();
+      await tick();
+
+      let key = "key";
+      router.fetch(key, "/fetch", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await tick();
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: "FETCH",
+      });
+
+      expect(shouldRevalidate.mock.calls[0][0]).toMatchInlineSnapshot(`
+        Object {
+          "actionResult": "FETCH",
+          "currentParams": Object {},
+          "currentUrl": "http://localhost/",
+          "defaultShouldRevalidate": true,
+          "formAction": "/fetch",
+          "formData": FormData {},
+          "formEncType": "application/x-www-form-urlencoded",
+          "formMethod": "post",
+          "nextParams": Object {},
+          "nextUrl": "http://localhost/",
+        }
+      `);
+
+      router.dispose();
+    });
   });
 
   describe("no route match", () => {

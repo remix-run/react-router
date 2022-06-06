@@ -12,37 +12,49 @@ packages re-export everything from `@remix-run/router` and `react-router`.
 A Router instance can be created using `createRouter`:
 
 ```js
+// Create and initialize a router.  "initialize" contains all side effects
+// including history listeners and kicking off the initial data fetch
 let router = createRouter({
   // Routes array using react-router RouteObject's
   routes,
   // History instance
   history,
-  // Callback function executed on every state change
-  onChange: (state) => { ... },
   // Optional hydration data for SSR apps
   hydrationData?: HydrationState;
-}
+}).initialize()
 ```
 
-Internally, the Router represents the state in an object of the following format, which is available through `router.state` or via the `onChange` callback function:
+Internally, the Router represents the state in an object of the following format, which is available through `router.state`. You can also register a subscriber of the signature `(state: RouterState) => void` to execute when the state updates via `router.subscribe()`;
 
 ```ts
 interface RouterState {
   // The `history` action of the most recently completed navigation
-  action: Action;
+  historyAction: Action;
   // The current location of the router.  During a navigation this reflects
   // the "old" location and is updated upon completion of the navigation
   location: Location;
   // The current set of route matches
-  matches: RouteMatch[];
+  matches: DataRouteMatch[];
+  // False during the initial data load, true once we have our initial data
+  initialized: boolean;
   // The state of the current navigation
   navigation: Navigation;
+  // The state of an in-progress router.revalidate() calls
+  revalidation: RevalidationState;
+  // Scroll position to restore to for the active Location, false if we
+  // should not restore,m or null if we don't have a saved position
+  // Note: must be enabled via router.enableScrollRestoration()
+  restoreScrollPosition: number | false | null;
+  // Proxied `resetScroll` value passed to router.navigate() (default true)
+  resetScrollPosition: boolean;
   // Data from the loaders for the current matches
   loaderData: RouteData;
   // Data from the action for the current matches
   actionData: RouteData | null;
   // Errors thrown from loaders/actions for the current matches
   errors: RouteData | null;
+  // Map of all active fetchers
+  fetchers: Map<string, Fetcher>;
 }
 ```
 
@@ -52,104 +64,40 @@ All navigations are done through the `router.navigate` API which is overloaded t
 
 ```js
 // Link navigation (pushes onto the history stack by default)
-router.navigate('/page');
+router.navigate("/page");
 
 // Link navigation (replacing the history stack)
-router.navigate('/page', { replace: true });
+router.navigate("/page", { replace: true });
 
 // Pop navigation (moving backward/forward in the history stack)
 router.navigate(-1);
 
-// Form navigation
-router.navigate('/page', {
-  formMethod: 'GET',
-  formData: new FormData(...),
+// Form submission navigation
+let formData = new FormData();
+formData.append(key, value);
+router.navigate("/page", {
+  formMethod: "post",
+  formData,
 });
 ```
 
-## Navigation Flows
+### Fetchers
 
-Each navigation (link click or form submission) in the Router is reflected via an internal `state.navigation` that indicates the state of the navigation. This concept of a `navigation` is a complex and heavily async bit of logic that is foundational to the Router's ability to manage data loading, submission, error handling, redirects, interruptions, and so on. Due to the user-driven nature of interruptions we don't quite believe it can be modeled as a finite state machine, however we have modeled some of the happy path flows below for clarity.
+Fetchers are a mechanism to call loaders/actions without triggering a navigation, and are done through the `router.fetch()` API. All fetch calls require a unique key to identify the fetcher.
 
-_Note: This does not depict error or interruption flows._
+```js
+// Execute the loader for /page
+router.fetch("key", "/page");
 
-```mermaid
-graph LR
-  %% Link click
-  idle -->|link clicked| loading/normalLoad
-  subgraph "&lt;Link&gt; click"
-  loading/normalLoad -->|loader redirected| loading/normalRedirect
-  loading/normalRedirect --> loading/normalRedirect
-  end
-  loading/normalLoad -->|loaders completed| idle
-  loading/normalRedirect -->|loaders completed| idle
-
-  %% Form method=get
-  idle -->|form method=get| submitting/loaderSubmission
-  subgraph "&lt;Form method=get&gt;"
-  submitting/loaderSubmission -->|loader redirected| R1[loading/submissionRedirect]
-  R1[loading/submissionRedirect] --> R1[loading/submissionRedirect]
-  end
-  submitting/loaderSubmission -->|loaders completed| idle
-  R1[loading/submissionRedirect] -->|loaders completed| idle
-
-  %% Form method=post
-  idle -->|form method=post| submitting/actionSubmission
-  subgraph "&lt;Form method=post&gt;"
-  submitting/actionSubmission -->|action returned| loading/actionReload
-  submitting/actionSubmission -->|action redirected| R2[loading/submissionRedirect]
-  loading/actionReload -->|loader redirected| R2[loading/submissionRedirect]
-  R2[loading/submissionRedirect] --> R2[loading/submissionRedirect]
-  end
-  loading/actionReload -->|loaders completed| idle
-  R2[loading/submissionRedirect] -->|loaders completed| idle
-
-  idle -->|fetcher action redirect| R3[loading/submissionRedirect]
-  subgraph "Fetcher action redirect"
-  R3[loading/submissionRedirect] --> R3[loading/submissionRedirect]
-  end
-  R3[loading/submissionRedirect] -->|loaders completed| idle
+// Submit to the action for /page
+let formData = new FormData();
+formData.append(key, value);
+router.fetch("key", "/page", {
+  formMethod: "post",
+  formData,
+});
 ```
 
-## Fetcher Flows
+## Revalidation
 
-Fetcher submissions and loads in the Router can each have their own internal states, indicated on `fetcher.state` and `fetcher.type`. As with navigations, these states are a complex and heavily async bit of logic that is foundational to the Router's ability to manage data loading, submission, error handling, redirects, interruptions, and so on. Due to the user-driven nature of interruptions we don't quite believe it can be modeled as a finite state machine, however we have modeled some of the happy path flows below for clarity.
-
-_Note: This does not depict error or interruption flows, nor the ability to re-use fetchers once they've reached `idle/done`._
-
-```mermaid
-graph LR
-  idle/init -->|"load"| loading/normalLoad
-  subgraph "Normal Fetch"
-  loading/normalLoad -.->|loader redirected| T1{{navigation}}
-  end
-  loading/normalLoad -->|loader completed| idle/done
-  T1{{navigation}} -.-> idle/done
-
-  idle/init -->|"submit (get)"| submitting/loaderSubmission
-  subgraph "Loader Submission"
-  submitting/loaderSubmission -.->|"loader redirected"| T2{{navigation}}
-  end
-  submitting/loaderSubmission -->|loader completed| idle/done
-  T2{{navigation}} -.-> idle/done
-
-  idle/init -->|"submit (post)"| submitting/actionSubmission
-  subgraph "Action Submission"
-  submitting/actionSubmission -->|action completed| loading/actionReload
-  submitting/actionSubmission -->|action redirected| loading/submissionRedirect
-  loading/submissionRedirect -.-> T3{{navigation}}
-  loading/actionReload -.-> |loaders redirected| T3{{navigation}}
-  end
-  T3{{navigation}} -.-> idle/done
-  loading/actionReload --> |loaders completed| idle/done
-
-  idle/done -->|"revalidate"| loading/revalidate
-  subgraph "Fetcher Revalidation"
-  loading/revalidate -.->|loader redirected| T4{{navigation}}
-  end
-  loading/revalidate -->|loader completed| idle/done
-  T4{{navigation}} -.-> idle/done
-
-  classDef navigation fill:lightgreen;
-  class T1,T2,T3,T4 navigation;
-```
+By default, active loaders will revalidate after any navigation or fetcher mutation. If you need to kick off a revalidation for other use-cases, you can use `router.revalidate()` to re-execute all active loaders.
