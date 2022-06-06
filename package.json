@@ -32,7 +32,6 @@
     "@types/react-native": "*",
     "@types/react-test-renderer": "16.x",
     "@types/semver": "^7.3.8",
-    "@types/use-sync-external-store": "0.0.3",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
     "babel-eslint": "^10.1.0",
