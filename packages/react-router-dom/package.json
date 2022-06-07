@@ -1,18 +1,27 @@
 {
   "name": "react-router-dom",
   "version": "6.4.0-pre.3",
-  "author": "Remix Software <hello@remix.run>",
   "description": "Declarative routing for React web applications",
+  "keywords": [
+    "react",
+    "router",
+    "route",
+    "routing",
+    "history",
+    "link"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/remix-run/react-router.git",
+    "url": "https://github.com/remix-run/react-router",
     "directory": "packages/react-router-dom"
   },
   "license": "MIT",
+  "author": "Remix Software <hello@remix.run>",
+  "sideEffects": false,
   "main": "./main.js",
+  "unpkg": "./umd/react-router-dom.production.min.js",
   "module": "./index.js",
   "types": "./index.d.ts",
-  "unpkg": "./umd/react-router-dom.production.min.js",
   "dependencies": {
     "react-router": "6.4.0-pre.3"
   },
@@ -23,14 +32,5 @@
   "peerDependencies": {
     "react": ">=16.8",
     "react-dom": ">=16.8"
-  },
-  "sideEffects": false,
-  "keywords": [
-    "react",
-    "router",
-    "route",
-    "routing",
-    "history",
-    "link"
-  ]
+  }
 }

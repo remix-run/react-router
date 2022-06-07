@@ -1,21 +1,43 @@
 {
   "name": "@remix-run/react-router",
   "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/react-router",
+      "packages/react-router-dom",
+      "packages/react-router-dom-v5-compat",
+      "packages/react-router-native",
+      "packages/router"
+    ],
+    "nohoist": [
+      "**/react-native",
+      "**/react-native/**"
+    ]
+  },
   "scripts": {
     "build": "rollup -c && tsc -b",
+    "changeset": "changeset",
     "clean": "git clean -fdX .",
-    "lint": "eslint --cache .",
     "format": "prettier --ignore-path .eslintignore --write .",
     "format:check": "prettier --ignore-path .eslintignore --check .",
-    "size": "filesize",
-    "test": "jest",
-    "watch": "rollup -c -w",
-    "changeset": "changeset",
+    "postinstall": "patch-package",
+    "lint": "eslint --cache .",
     "prerelease": "yarn build",
     "release": "changeset publish",
+    "size": "filesize",
+    "test": "jest",
     "version": "changeset version",
     "version:experimental": "node scripts ./scripts/version experimental",
-    "postinstall": "patch-package"
+    "watch": "rollup -c -w"
+  },
+  "jest": {
+    "projects": [
+      "<rootDir>/packages/*"
+    ]
+  },
+  "resolutions": {
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0"
   },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
@@ -72,28 +94,6 @@
     "ts-jest": "^26.5.6",
     "type-fest": "^2.13.0",
     "typescript": "^4.3.5"
-  },
-  "resolutions": {
-    "@types/react": "^17.0.0",
-    "@types/react-dom": "^17.0.0"
-  },
-  "workspaces": {
-    "packages": [
-      "packages/react-router",
-      "packages/react-router-dom",
-      "packages/react-router-dom-v5-compat",
-      "packages/react-router-native",
-      "packages/router"
-    ],
-    "nohoist": [
-      "**/react-native",
-      "**/react-native/**"
-    ]
-  },
-  "jest": {
-    "projects": [
-      "<rootDir>/packages/*"
-    ]
   },
   "filesize": {
     "build/node_modules/@remix-run/router/router.production.min.js": {
