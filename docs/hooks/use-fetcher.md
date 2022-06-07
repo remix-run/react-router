@@ -103,7 +103,7 @@ Although a URL might match multiple nested routes, a `fetcher.load()` call will 
 
 If you find yourself calling this function inside of click handlers, you can probably simplify your code by using `<fetcher.Form>` instead.
 
-<docs-info>Any `fetcher.load` calls that are active on the page will be re-executed as part of revalidation (either after a navigation submission, another fetcher submission, or a `useRevalidate()` call)</docs-info>
+<docs-info>Any `fetcher.load` calls that are active on the page will be re-executed as part of revalidation (either after a navigation submission, another fetcher submission, or a `useRevalidator()` call)</docs-info>
 
 ## `fetcher.submit()`
 
