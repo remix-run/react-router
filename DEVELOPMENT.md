@@ -15,10 +15,9 @@ Changesets will do most of the heavy lifting for our releases. When changes are 
 
 - Ensure you are on the new `release-*` branch
 - Enter Changesets pre-release mode using the `pre` tag: `yarn changeset pre enter next`
-- Bump version numbers and generate changelogs: `yarn changeset version`
-- Review the updated `CHANGELOG` files and make any adjustments necessary
-- Commit version and log updates changes: `git add . && git commit -m "react-router vX.X.X-pre.X"`
-- Push the `release-*` branch to GitHub and let the Changesets action create and publish the release to npm
+- Commit the changesets and push the the `release-*` branch to GitHub; wait for the release workflow to finish and the Changesets action to open its PR that will increment all versions
+- Review the updated `CHANGELOG` files and make any adjustments necessary, then merge the PR
+- Once the PR is merged, the release workflow will publish the updated packages to npm
 
 ### Iterating a pre-release
 
@@ -27,18 +26,16 @@ You may need to make changes to a pre-release prior to publishing a final stable
 - Make whatever changes you need
 - Create a new changeset: `yarn changeset`
   - **IMPORTANT:** This is required even if you ultimately don't want to include these changes in the logs. Remember, changelogs can be edited prior to publishing, but the Changeset version script needs to see new changesets in order to create a new version.
-- Bump version numbers and generate changelogs: `yarn changeset version`
-- Review the updated `CHANGELOG` files and make any adjustments necessary
-- Commit version and log updates changes: `git add . && git commit -m "react-router vX.X.X-pre.X"`
-- Push the `release-*` branch to GitHub and let the Changesets action do its thing
+- Commit the changesets and push the the `release-*` branch to GitHub; wait for the release workflow to finish and the Changesets action to open its PR that will increment all versions
+- Review the updated `CHANGELOG` files and make any adjustments necessary, then merge the PR
+- Once the PR is merged, the release workflow will publish the updated packages to npm
 
 ### Publishing the stable release
 
 - Exit Changesets pre-release mode: `yarn changeset pre exit`
-- Bump version numbers and generate changelogs: `yarn changeset version`
-- Review the updated `CHANGELOG` files and make any adjustments necessary
-- Commit version and log updates changes: `git add . && git commit -m "react-router vX.X.X"`
-- Push the `release-*` branch to GitHub and let the Changesets action do its thing
+- Commit the unpublished changesets and push the the `release-*` branch to GitHub; wait for the release workflow to finish and the Changesets action to open its PR that will increment all versions to stable
+- Review the updated `CHANGELOG` files and make any adjustments necessary, then merge the PR
+- Once the PR is merged, the release workflow will publish the updated packages to npm
 
 ### Experimental releases
 

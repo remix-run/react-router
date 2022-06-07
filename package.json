@@ -11,6 +11,7 @@
     "test": "jest",
     "watch": "rollup -c -w",
     "changeset": "changeset",
+    "prerelease": "yarn build",
     "release": "changeset publish",
     "version": "changeset version",
     "version:experimental": "node scripts ./scripts/version experimental",
