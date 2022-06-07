@@ -220,5 +220,5 @@ Tells you the method of the form being submitted: get, post, put, patch, or dele
 fetcher.formMethod; // "post"
 ```
 
-[link]: ../components/link.md
-[form]: ../components/form.md
+[link]: ../components/link
+[form]: ../components/form
