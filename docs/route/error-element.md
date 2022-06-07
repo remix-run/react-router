@@ -96,7 +96,7 @@ function loader() {
 function ErrorBoundary() {
   const error = useRouteError();
 
-  if (isRouteErrorResponse(error)) {
+  if (isRouteErrorResponse(error) && error.status === 401) {
     // the response json is automatically parsed to
     // `error.data`, you also have access to the status
     return (
@@ -111,7 +111,9 @@ function ErrorBoundary() {
     );
   }
 
-  return <div>There was a problem</div>;
+  // rethrow to let the parent error boundary handle it
+  // when it's not a special case for this route
+  throw error;
 }
 ```
 
