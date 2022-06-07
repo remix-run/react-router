@@ -832,21 +832,23 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
   let route = React.useContext(UNSAFE_RouteContext);
   invariant(route, `useFetcher must be used inside a RouteContext`);
 
-  let thisRoute = route.matches[route.matches.length - 1];
+  let routeId = route.matches[route.matches.length - 1]?.route.id;
   invariant(
-    thisRoute.route.id,
+    routeId != null,
     `useFetcher can only be used on routes that contain a unique "id"`
   );
 
   let [fetcherKey] = React.useState(() => String(++fetcherId));
-  let [Form] = React.useState(() =>
-    createFetcherForm(fetcherKey, thisRoute.route.id)
-  );
-  let [load] = React.useState(() => (href: string) => {
-    invariant(router, `No router available for fetcher.load()`);
-    router.fetch(fetcherKey, thisRoute.route.id, href);
+  let [Form] = React.useState(() => {
+    invariant(routeId, `No routeId available for fetcher.Form()`);
+    return createFetcherForm(fetcherKey, routeId);
   });
-  let submit = useSubmitImpl(fetcherKey, thisRoute.route.id);
+  let [load] = React.useState(() => (href: string) => {
+    invariant(router, "No router available for fetcher.load()");
+    invariant(routeId, "No routeId available for fetcher.load()");
+    router.fetch(fetcherKey, routeId, href);
+  });
+  let submit = useSubmitImpl(fetcherKey, routeId);
 
   let fetcher = router.getFetcher<TData>(fetcherKey);
 
@@ -866,7 +868,7 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
     // fetcher is no longer around.
     return () => {
       if (!router) {
-        console.warn("No fetcher available to clean up from useFetcher()");
+        console.warn(`No fetcher available to clean up from useFetcher()`);
         return;
       }
       router.deleteFetcher(fetcherKey);
