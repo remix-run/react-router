@@ -25,6 +25,177 @@ function getVersion(sourceDir) {
   return require(`./${sourceDir}/package.json`).version;
 }
 
+function router() {
+  const SOURCE_DIR = "packages/router";
+  const OUTPUT_DIR = "build/node_modules/@remix-run/router";
+  const version = getVersion(SOURCE_DIR);
+
+  // JS modules for bundlers
+  const modules = [
+    {
+      input: `${SOURCE_DIR}/index.ts`,
+      output: {
+        file: `${OUTPUT_DIR}/index.js`,
+        format: "esm",
+        sourcemap: !PRETTY,
+        banner: createBanner("@remix-run/router", version),
+      },
+      plugins: [
+        extensions({ extensions: [".ts"] }),
+        babel({
+          exclude: /node_modules/,
+          presets: [
+            ["@babel/preset-env", { loose: true }],
+            "@babel/preset-typescript",
+          ],
+          plugins: ["babel-plugin-dev-expression"],
+          extensions: [".ts"],
+        }),
+        copy({
+          targets: [
+            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
+            { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
+            { src: "LICENSE.md", dest: OUTPUT_DIR },
+          ],
+          verbose: true,
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
+  ];
+
+  // JS modules for <script type=module>
+  const webModules = [
+    {
+      input: `${SOURCE_DIR}/index.ts`,
+      output: {
+        file: `${OUTPUT_DIR}/router.development.js`,
+        format: "esm",
+        sourcemap: !PRETTY,
+        banner: createBanner("@remix-run/router", version),
+      },
+      plugins: [
+        extensions({ extensions: [".ts"] }),
+        babel({
+          exclude: /node_modules/,
+          presets: ["@babel/preset-modules", "@babel/preset-typescript"],
+          plugins: ["babel-plugin-dev-expression"],
+          extensions: [".ts"],
+        }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("development") },
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
+    {
+      input: `${SOURCE_DIR}/index.ts`,
+      output: {
+        file: `${OUTPUT_DIR}/router.production.min.js`,
+        format: "esm",
+        sourcemap: !PRETTY,
+        banner: createBanner("@remix-run/router", version),
+      },
+      plugins: [
+        extensions({ extensions: [".ts"] }),
+        babel({
+          exclude: /node_modules/,
+          presets: [
+            [
+              "@babel/preset-modules",
+              {
+                // Don't spoof `.name` for Arrow Functions, which breaks when minified anyway.
+                loose: true,
+              },
+            ],
+            "@babel/preset-typescript",
+          ],
+          plugins: ["babel-plugin-dev-expression"],
+          extensions: [".ts"],
+        }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("production") },
+        }),
+        // compiler(),
+        terser({ ecma: 8, safari10: true }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
+  ];
+
+  // UMD modules for <script> tags and CommonJS (node)
+  const globals = [
+    {
+      input: `${SOURCE_DIR}/index.ts`,
+      output: {
+        file: `${OUTPUT_DIR}/umd/router.development.js`,
+        format: "umd",
+        sourcemap: !PRETTY,
+        banner: createBanner("@remix-run/router", version),
+        name: "Router",
+      },
+      plugins: [
+        extensions({ extensions: [".ts"] }),
+        babel({
+          exclude: /node_modules/,
+          presets: [
+            ["@babel/preset-env", { loose: true }],
+            "@babel/preset-typescript",
+          ],
+          plugins: ["babel-plugin-dev-expression"],
+          extensions: [".ts"],
+        }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("development") },
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
+    {
+      input: `${SOURCE_DIR}/index.ts`,
+      output: {
+        file: `${OUTPUT_DIR}/umd/router.production.min.js`,
+        format: "umd",
+        sourcemap: !PRETTY,
+        banner: createBanner("@remix-run/router", version),
+        name: "Router",
+      },
+      plugins: [
+        extensions({ extensions: [".ts"] }),
+        babel({
+          exclude: /node_modules/,
+          presets: [
+            ["@babel/preset-env", { loose: true }],
+            "@babel/preset-typescript",
+          ],
+          plugins: ["babel-plugin-dev-expression"],
+          extensions: [".ts"],
+        }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("production") },
+        }),
+        // compiler(),
+        terser(),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
+  ];
+
+  // Node entry points
+  const node = [
+    {
+      input: `${SOURCE_DIR}/node-main.js`,
+      output: {
+        file: `${OUTPUT_DIR}/main.js`,
+        format: "cjs",
+        banner: createBanner("@remix-run/router", version),
+      },
+      plugins: [].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
+  ];
+
+  return [...modules, ...webModules, ...globals, ...node];
+}
+
 function reactRouter() {
   const SOURCE_DIR = "packages/react-router";
   const OUTPUT_DIR = "build/node_modules/react-router";
@@ -40,7 +211,7 @@ function reactRouter() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["history", "react"],
+      external: ["history", "@remix-run/router", "react"],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -75,7 +246,7 @@ function reactRouter() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["history", "react"],
+      external: ["history", "@remix-run/router", "react"],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -102,7 +273,7 @@ function reactRouter() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["history", "react"],
+      external: ["history", "@remix-run/router", "react"],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -146,10 +317,14 @@ function reactRouter() {
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
-        globals: { history: "HistoryLibrary", react: "React" },
+        globals: {
+          history: "HistoryLibrary",
+          "@remix-run/router": "Router",
+          react: "React",
+        },
         name: "ReactRouter",
       },
-      external: ["history", "react"],
+      external: ["history", "@remix-run/router", "react"],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -175,10 +350,14 @@ function reactRouter() {
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
-        globals: { history: "HistoryLibrary", react: "React" },
+        globals: {
+          history: "HistoryLibrary",
+          "@remix-run/router": "Router",
+          react: "React",
+        },
         name: "ReactRouter",
       },
-      external: ["history", "react"],
+      external: ["history", "@remix-run/router", "react"],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -232,8 +411,15 @@ function reactRouterDom() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["history", "react", "react-dom", "react-router"],
+      external: [
+        "history",
+        "react",
+        "react-dom",
+        "react-router",
+        "@remix-run/router",
+      ],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -268,8 +454,9 @@ function reactRouterDom() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["history", "react", "react-router"],
+      external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -294,8 +481,9 @@ function reactRouterDom() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["history", "react", "react-router"],
+      external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -339,13 +527,15 @@ function reactRouterDom() {
         banner: createBanner("React Router DOM", version),
         globals: {
           history: "HistoryLibrary",
+          "@remix-run/router": "Router",
           react: "React",
           "react-router": "ReactRouter",
         },
         name: "ReactRouterDOM",
       },
-      external: ["history", "react", "react-router"],
+      external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -371,13 +561,15 @@ function reactRouterDom() {
         banner: createBanner("React Router DOM", version),
         globals: {
           history: "HistoryLibrary",
+          "@remix-run/router": "Router",
           react: "React",
           "react-router": "ReactRouter",
         },
         name: "ReactRouterDOM",
       },
-      external: ["history", "react", "react-router"],
+      external: ["history", "react", "react-router", "@remix-run/router"],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -421,8 +613,10 @@ function reactRouterDom() {
         "react",
         "react-dom/server",
         "react-router-dom",
+        "@remix-run/router",
       ],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -448,8 +642,10 @@ function reactRouterDom() {
         "react",
         "react-dom/server",
         "react-router-dom",
+        "@remix-run/router",
       ],
       plugins: [
+        extensions({ extensions: [".ts", ".tsx"] }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -478,7 +674,7 @@ function reactRouterDom() {
 function reactRouterDomV5Compat() {
   let SOURCE_DIR = "packages/react-router-dom-v5-compat";
   let OUTPUT_DIR = "build/node_modules/react-router-dom-v5-compat";
-  let ROUTER_DOM_SOURCE = "packages/react-router-dom/index.tsx";
+  let ROUTER_DOM_SOURCE = "packages/react-router-dom/(index|dom).ts*";
   let ROUTER_DOM_COPY_DEST = `${SOURCE_DIR}/react-router-dom`;
 
   let version = getVersion(SOURCE_DIR);
@@ -495,6 +691,7 @@ function reactRouterDomV5Compat() {
       },
       external: [
         "history",
+        "@remix-run/router",
         "react",
         "react-dom",
         "react-router",
@@ -539,13 +736,20 @@ function reactRouterDomV5Compat() {
         banner: createBanner("React Router DOM v5 Compat", version),
         globals: {
           history: "HistoryLibrary",
+          "@remix-run/router": "Router",
           react: "React",
           "react-router": "ReactRouter",
           "react-router-dom": "ReactRouterDOM",
         },
         name: "ReactRouterDOMv5Compat",
       },
-      external: ["history", "react", "react-router", "react-router-dom"],
+      external: [
+        "history",
+        "@remix-run/router",
+        "react",
+        "react-router",
+        "react-router-dom",
+      ],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -573,13 +777,20 @@ function reactRouterDomV5Compat() {
         banner: createBanner("React Router DOM v5 Compat", version),
         globals: {
           history: "HistoryLibrary",
+          "@remix-run/router": "Router",
           react: "React",
           "react-router": "ReactRouter",
           "react-router-dom": "ReactRouterDOM",
         },
         name: "ReactRouterDOMv5Compat",
       },
-      external: ["history", "react", "react-router", "react-router-dom"],
+      external: [
+        "history",
+        "@remix-run/router",
+        "react",
+        "react-router",
+        "react-router-dom",
+      ],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -639,6 +850,7 @@ function reactRouterNative() {
         "react",
         "react-native",
         "react-router",
+        "@remix-run/router",
       ],
       plugins: [
         babel({
@@ -674,6 +886,7 @@ function reactRouterNative() {
 
 export default function rollup(options) {
   let builds = [
+    ...router(options),
     ...reactRouter(options),
     ...reactRouterDom(options),
     ...reactRouterDomV5Compat(options),

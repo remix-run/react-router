@@ -1,3 +1,4 @@
+// FIXME: @remix-run/router isn't being automatically versioned
 const path = require("path");
 const { execSync } = require("child_process");
 const fsp = require("fs/promises");
@@ -175,6 +176,11 @@ async function run() {
     execSync(`git commit --all --message="Version ${version}"`);
     execSync(`git tag -a -m "Version ${version}" v${version}`);
     console.log(chalk.green(`  Committed and tagged version ${version}`));
+    console.log(
+      chalk.red(
+        `  🚨 @remix-run/router isn't handled by this script, do it manually!`
+      )
+    );
   } catch (error) {
     console.log();
     console.error(chalk.red(`  ${error.message}`));

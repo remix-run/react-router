@@ -1,11 +1,11 @@
 ---
 title: Main Concepts
-order: 4
+order: 5
 ---
 
 # Main Concepts
 
-<docs-warning>This document is a deep dive into the core concepts behind routing as implemented in React Router. It's pretty long, so if you're looking for a more practical guide check out our [quick start tutorial](tutorial.md).</docs-warning>
+<docs-warning>This document is a deep dive into the core concepts behind routing as implemented in React Router. It's pretty long, so if you're looking for a more practical guide check out our [quick start tutorial][tutorial].</docs-warning>
 
 You might be wondering what exactly React Router does. How can it help you build your app? What exactly is a **router**, anyway?
 
@@ -171,7 +171,7 @@ The last two, `{ state, key }`, are React Router specific.
 
 **Location Pathname**
 
-This is the part of [URL](#url) after the origin, so for `https://example.com/teams/hotspurs` the pathname is `/teams/hostspurs`. This is the only part of the location that routes match against.
+This is the part of [URL](#url) after the origin, so for `https://example.com/teams/hotspurs` the pathname is `/teams/hotspurs`. This is the only part of the location that routes match against.
 
 **Location Search**
 
@@ -211,7 +211,7 @@ Hashes in URLs indicate a scroll position _on the current page_. Before the `win
 
 You may have wondered why the `window.history.pushState()` API is called "push state". State? Aren't we just changing the [URL](#url)? Shouldn't it be `history.push`? Well, we weren't in the room when the API was designed, so we're not sure why "state" was the focus, but it is a cool feature of browsers nonetheless.
 
-Browsers let us persist information about a transition by passing a value to `pushState`. When the user clicks back, the value on `history.state` changes to whatever was "pushed" before.
+Browsers let us persist information about a navigation by passing a value to `pushState`. When the user clicks back, the value on `history.state` changes to whatever was "pushed" before.
 
 ```js
 window.history.pushState("look ma!", undefined, "/contact");
@@ -509,7 +509,10 @@ React Router will create an array of [matches](#match) from these routes and the
 The final concept is rendering. Consider that the entry to your app looks like this:
 
 ```jsx
-ReactDOM.render(
+const root = ReactDOM.createRoot(
+  document.getElementById("root")
+);
+root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />}>
@@ -526,8 +529,7 @@ ReactDOM.render(
       </Route>
       <Route path="contact-us" element={<Contact />} />
     </Routes>
-  </BrowserRouter>,
-  document.getElementById("root")
+  </BrowserRouter>
 );
 ```
 
@@ -787,7 +789,10 @@ Let's put it all together from the top!
 1. You render your app:
 
    ```jsx
-   ReactDOM.render(
+   const root = ReactDOM.createRoot(
+     document.getElementById("root")
+   );
+   root.render(
      <BrowserRouter>
        <Routes>
          <Route path="/" element={<App />}>
@@ -804,14 +809,13 @@ Let's put it all together from the top!
          </Route>
          <Route path="contact-us" element={<Contact />} />
        </Routes>
-     </BrowserRouter>,
-     document.getElementById("root")
+     </BrowserRouter>
    );
    ```
 
 2. `<BrowserRouter>` creates a [history](#history), puts the initial [location](#location) in to state, and subscribes to the [URL](#url).
 
-3. `<Routes>` recurses it's [child routes](#child-route) to build a [route config](#route-config), matches those routes against the [location](#location), creates some route [matches](#match), and renders the first match's route element.
+3. `<Routes>` recurses its [child routes](#child-route) to build a [route config](#route-config), matches those routes against the [location](#location), creates some route [matches](#match), and renders the first match's route element.
 
 4. You render an [`<Outlet/>`](#outlet) in each [parent route](#parent-route).
 
@@ -826,3 +830,5 @@ Let's put it all together from the top!
 9. `<BrowserRouter>` rerenders, start over at (2)!
 
 That's it! We hope this guide has helped you gain a deeper understanding of the main concepts in React Router.
+
+[tutorial]: ./tutorial
