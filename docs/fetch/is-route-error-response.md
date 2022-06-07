@@ -4,7 +4,7 @@ title: isRouteErrorResponse
 
 # `isRouteErrorResponse`
 
-This returns `true` if a [route error][routeerror] is a _route error response_. A Route error response has the following shape:
+This returns `true` if a [route error][routeerror] is a _route error response_.
 
 ```jsx
 import { isRouteErrorResponse } from "react-router-dom";
