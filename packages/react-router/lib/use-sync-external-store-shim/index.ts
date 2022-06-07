@@ -27,5 +27,7 @@ const isServerEnvironment = !canUseDOM;
 const shim = isServerEnvironment ? server : client;
 
 export const useSyncExternalStore =
-  // @ts-expect-error
-  React.useSyncExternalStore !== undefined ? React.useSyncExternalStore : shim;
+  "useSyncExternalStore" in React
+    ? // @ts-expect-error
+      ((module) => module.useSyncExternalStore)(React)
+    : shim;
