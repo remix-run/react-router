@@ -78,11 +78,17 @@ export interface Router {
   /**
    * Trigger a fetcher load/submission
    *
-   * @param key Fetcher key
-   * @param href href to fetch
-   * @param opts Fetcher options, (method, submission, etc.)
+   * @param key     Fetcher key
+   * @param routeId Route that owns the fetcher
+   * @param href    href to fetch
+   * @param opts    Fetcher options, (method, submission, etc.)
    */
-  fetch(key: string, href: string, opts?: RouterNavigateOptions): void;
+  fetch(
+    key: string,
+    routeId: string,
+    href: string,
+    opts?: RouterNavigateOptions
+  ): void;
 
   /**
    * Trigger a revalidation of all current route loaders and fetcher loads
@@ -1053,7 +1059,12 @@ export function createRouter(init: RouterInit): Router {
   }
 
   // Trigger a fetcher load/submit for the given fetcher key
-  function fetch(key: string, href: string, opts?: RouterNavigateOptions) {
+  function fetch(
+    key: string,
+    routeId: string,
+    href: string,
+    opts?: RouterNavigateOptions
+  ) {
     if (typeof AbortController === "undefined") {
       throw new Error(
         "router.fetch() was called during the server render, but it shouldn't be. " +
@@ -1076,7 +1087,7 @@ export function createRouter(init: RouterInit): Router {
     let { path, submission } = normalizeNavigateOptions(parsePath(href), opts);
 
     if (submission) {
-      handleFetcherAction(key, href, match, submission);
+      handleFetcherAction(key, routeId, href, match, submission);
       return;
     }
 
@@ -1088,13 +1099,14 @@ export function createRouter(init: RouterInit): Router {
       formData: undefined,
       data: state.fetchers.get(key)?.data || undefined,
     };
-    handleFetcherLoader(key, createPath(path), match, loadingFetcher);
+    handleFetcherLoader(key, routeId, createPath(path), match, loadingFetcher);
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
   // errors, and revalidation
   async function handleFetcherAction(
     key: string,
+    routeId: string,
     href: string,
     match: DataRouteMatch,
     submission: Submission
@@ -1147,7 +1159,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Process any non-redirect errors thrown
     if (isErrorResult(actionResult)) {
-      let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
+      let boundaryMatch = findNearestBoundary(state.matches, routeId);
       state.fetchers.delete(key);
       updateState({
         fetchers: new Map(state.fetchers),
@@ -1293,6 +1305,7 @@ export function createRouter(init: RouterInit): Router {
   // Call the matched loader for fetcher.load(), handling redirects, errors, etc.
   async function handleFetcherLoader(
     key: string,
+    routeId: string,
     href: string,
     match: DataRouteMatch,
     loadingFetcher: Fetcher
@@ -1326,7 +1339,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Process any non-redirect errors thrown
     if (isErrorResult(result)) {
-      let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
+      let boundaryMatch = findNearestBoundary(state.matches, routeId);
       state.fetchers.delete(key);
       // TODO: In remix, this would reset to IDLE_NAVIGATION if it was a catch -
       // do we need to behave any differently with our non-redirect errors?
