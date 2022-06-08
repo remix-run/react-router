@@ -14,8 +14,8 @@ import {
   NavLink,
   Outlet,
   DataBrowserRouter,
-} from "react-router-dom";
-import { _resetModuleScope } from "react-router/lib/components";
+  UNSAFE_resetModuleScope,
+} from "../index";
 
 describe("NavLink", () => {
   describe("when it does not match", () => {
@@ -327,7 +327,7 @@ describe("NavLink", () => {
 
 describe("NavLink using a data router", () => {
   afterEach(() => {
-    _resetModuleScope();
+    UNSAFE_resetModuleScope();
   });
 
   it("applies the default 'active'/'pending' classNames to the underlying <a>", async () => {

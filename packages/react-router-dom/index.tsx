@@ -153,6 +153,7 @@ export {
   UNSAFE_RouteContext,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
+  UNSAFE_resetModuleScope,
   useRenderDataRouter,
 } from "react-router";
 //#endregion

@@ -1,11 +1,6 @@
 import * as React from "react";
 import { View, Text, TextInput } from "react-native";
-import {
-  NativeRouter,
-  Routes,
-  Route,
-  useSearchParams,
-} from "react-router-native";
+import { NativeRouter, Routes, Route, useSearchParams } from "../index";
 import * as TestRenderer from "react-test-renderer";
 
 describe("useSearchParams", () => {

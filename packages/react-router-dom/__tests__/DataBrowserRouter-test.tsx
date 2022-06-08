@@ -16,21 +16,21 @@ import "@testing-library/jest-dom";
 import {
   DataBrowserRouter,
   DataHashRouter,
+  Form,
+  Link,
   Route,
   Outlet,
   useLoaderData,
   useActionData,
   useRouteError,
+  useNavigate,
   useNavigation,
-  Form,
-  Link,
   useSubmit,
   useFetcher,
   useFetchers,
+  UNSAFE_resetModuleScope,
+  UNSAFE_DataRouterStateContext,
 } from "../index";
-import { _resetModuleScope } from "react-router/lib/components";
-import { useNavigate } from "react-router/lib/hooks";
-import { UNSAFE_DataRouterStateContext } from "react-router";
 
 testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
   getWindowImpl(url, false)
@@ -52,7 +52,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
     afterEach(() => {
       consoleWarn.mockRestore();
       consoleError.mockRestore();
-      _resetModuleScope();
+      UNSAFE_resetModuleScope();
     });
 
     it("renders the first route that matches the URL", () => {

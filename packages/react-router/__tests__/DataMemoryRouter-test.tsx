@@ -14,7 +14,9 @@ import { createMemoryRouter } from "@remix-run/router";
 import type { DataMemoryRouterProps } from "../index";
 import {
   DataMemoryRouter,
+  MemoryRouter,
   Route,
+  Routes,
   Outlet,
   useActionData,
   useLoaderData,
@@ -25,10 +27,8 @@ import {
   useRenderDataRouter,
   useRevalidator,
   UNSAFE_DataRouterContext,
-  MemoryRouter,
-  Routes,
+  UNSAFE_resetModuleScope,
 } from "../index";
-import { _resetModuleScope } from "../lib/components";
 
 describe("<DataMemoryRouter>", () => {
   let consoleWarn: jest.SpyInstance;
@@ -41,7 +41,7 @@ describe("<DataMemoryRouter>", () => {
   afterEach(() => {
     consoleWarn.mockRestore();
     consoleError.mockRestore();
-    _resetModuleScope();
+    UNSAFE_resetModuleScope();
   });
 
   it("renders the first route that matches the URL", () => {

@@ -1,12 +1,7 @@
 import * as React from "react";
 import { Text, TouchableHighlight, View } from "react-native";
-import type { LinkProps } from "react-router-native";
-import {
-  NativeRouter,
-  Route,
-  Routes,
-  useLinkPressHandler,
-} from "react-router-native";
+import type { LinkProps } from "../index";
+import { NativeRouter, Route, Routes, useLinkPressHandler } from "../index";
 import * as TestRenderer from "react-test-renderer";
 
 import { press } from "./utils";
