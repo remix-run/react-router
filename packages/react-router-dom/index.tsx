@@ -3,6 +3,7 @@
  * you'll need to update the rollup config for react-router-dom-v5-compat.
  */
 import * as React from "react";
+import type { NavigateOptions, To } from "react-router";
 import {
   Router,
   createPath,
@@ -16,16 +17,15 @@ import {
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
 } from "react-router";
-import type { To } from "react-router";
 import type {
   BrowserHistory,
   Fetcher,
   FormEncType,
   FormMethod,
+  GetScrollRestorationKeyFunction,
   HashHistory,
   History,
   HydrationState,
-  GetScrollRestorationKeyFunction,
   RouteObject,
 } from "@remix-run/router";
 import {
@@ -654,13 +654,6 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   );
 }
 
-type SetURLSearchParams = (
-  nextInit?:
-    | URLSearchParamsInit
-    | ((prev: URLSearchParams) => URLSearchParamsInit),
-  navigateOpts?: { replace?: boolean; state?: any }
-) => void;
-
 /**
  * A convenient wrapper for reading and writing search parameters via the
  * URLSearchParams interface.
@@ -705,6 +698,13 @@ export function useSearchParams(
 
   return [searchParams, setSearchParams];
 }
+
+type SetURLSearchParams = (
+  nextInit?:
+    | URLSearchParamsInit
+    | ((prev: URLSearchParams) => URLSearchParamsInit),
+  navigateOpts?: NavigateOptions
+) => void;
 
 /**
  * Submits a HTML `<form>` to the server without reloading the page.
