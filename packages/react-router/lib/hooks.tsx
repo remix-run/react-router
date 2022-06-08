@@ -158,8 +158,15 @@ export function useNavigate(): NavigateFunction {
   let routePathnamesJson = JSON.stringify(
     matches.map((match) => match.pathnameBase)
   );
-  let isPathlessRoute = !!matches[matches.length - 1]?.route.index;
 
+  // figure out how many levels of "pathless" routes we have from the current
+  // leaf match, so we can properly handle relative .. links
+  let pathlessDepth = Math.max(
+    [...matches]
+      .reverse()
+      .findIndex((m) => !m.route.index && m.route.path?.length),
+    0
+  );
   let activeRef = React.useRef(false);
   React.useEffect(() => {
     activeRef.current = true;
@@ -184,7 +191,7 @@ export function useNavigate(): NavigateFunction {
         to,
         JSON.parse(routePathnamesJson),
         locationPathname,
-        isPathlessRoute
+        pathlessDepth
       );
 
       if (basename !== "/") {
@@ -197,7 +204,7 @@ export function useNavigate(): NavigateFunction {
         options
       );
     },
-    [routePathnamesJson, locationPathname, isPathlessRoute, basename, navigator]
+    [routePathnamesJson, locationPathname, pathlessDepth, basename, navigator]
   );
 
   return navigate;
