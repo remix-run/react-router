@@ -1,12 +1,17 @@
-import babel from "rollup-plugin-babel";
+import * as path from "path";
+import { default as babel } from "@rollup/plugin-babel";
 // import compiler from "@ampproject/rollup-plugin-closure-compiler";
 import copy from "rollup-plugin-copy";
 import extensions from "rollup-plugin-extensions";
 import prettier from "rollup-plugin-prettier";
 import replace from "@rollup/plugin-replace";
+import typescript from "@rollup/plugin-typescript";
+// import nodeResolve from "@rollup/plugin-node-resolve";
 import { terser } from "rollup-plugin-terser";
+// import typescript from "rollup-plugin-typescript2";
 
 const PRETTY = !!process.env.PRETTY;
+const PACKAGE_DIR = path.join(__dirname, "packages");
 
 function createBanner(libraryName, version) {
   return `/**
@@ -25,13 +30,18 @@ function getVersion(sourceDir) {
   return require(`./${sourceDir}/package.json`).version;
 }
 
+/**
+ * @returns {RollupOptions[]}
+ */
 function router() {
-  const SOURCE_DIR = "packages/router";
-  const OUTPUT_DIR = "build/node_modules/@remix-run/router";
-  const version = getVersion(SOURCE_DIR);
+  let PACKAGE_NAME = "router";
+  let SOURCE_DIR = `packages/${PACKAGE_NAME}`;
+  let OUTPUT_DIR = `${SOURCE_DIR}/dist`;
+  let version = getVersion(SOURCE_DIR);
 
   // JS modules for bundlers
-  const modules = [
+  /** @type {RollupOptions[]} */
+  let modules = [
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
@@ -43,6 +53,7 @@ function router() {
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -51,12 +62,14 @@ function router() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts"],
         }),
+        typescript({
+          tsconfig: path.join(PACKAGE_DIR, PACKAGE_NAME, "tsconfig.json"),
+          outDir: path.join(PACKAGE_DIR, PACKAGE_NAME),
+          exclude: ["__tests__"],
+          noEmitOnError: true,
+        }),
         copy({
-          targets: [
-            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
-            { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
-            { src: "LICENSE.md", dest: OUTPUT_DIR },
-          ],
+          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
           verbose: true,
         }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
@@ -64,11 +77,12 @@ function router() {
   ];
 
   // JS modules for <script type=module>
-  const webModules = [
+  /** @type {RollupOptions[]} */
+  let webModules = [
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/router.development.js`,
+        file: `${OUTPUT_DIR}/${PACKAGE_NAME}.development.js`,
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("@remix-run/router", version),
@@ -76,6 +90,7 @@ function router() {
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: ["@babel/preset-modules", "@babel/preset-typescript"],
           plugins: ["babel-plugin-dev-expression"],
@@ -90,7 +105,7 @@ function router() {
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/router.production.min.js`,
+        file: `${OUTPUT_DIR}/${PACKAGE_NAME}.production.min.js`,
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("@remix-run/router", version),
@@ -98,6 +113,7 @@ function router() {
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             [
@@ -123,11 +139,12 @@ function router() {
   ];
 
   // UMD modules for <script> tags and CommonJS (node)
-  const globals = [
+  /** @type {RollupOptions[]} */
+  let globals = [
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/umd/router.development.js`,
+        file: `${OUTPUT_DIR}/umd/${PACKAGE_NAME}.development.js`,
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("@remix-run/router", version),
@@ -136,6 +153,7 @@ function router() {
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -153,7 +171,7 @@ function router() {
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/umd/router.production.min.js`,
+        file: `${OUTPUT_DIR}/umd/${PACKAGE_NAME}.production.min.js`,
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("@remix-run/router", version),
@@ -162,6 +180,7 @@ function router() {
       plugins: [
         extensions({ extensions: [".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -181,7 +200,8 @@ function router() {
   ];
 
   // Node entry points
-  const node = [
+  /** @type {RollupOptions[]} */
+  let node = [
     {
       input: `${SOURCE_DIR}/node-main.js`,
       output: {
@@ -196,13 +216,19 @@ function router() {
   return [...modules, ...webModules, ...globals, ...node];
 }
 
+/**
+ * @returns {RollupOptions[]}
+ */
 function reactRouter() {
-  const SOURCE_DIR = "packages/react-router";
-  const OUTPUT_DIR = "build/node_modules/react-router";
-  const version = getVersion(SOURCE_DIR);
+  let PACKAGE_NAME = "react-router";
+  let SOURCE_DIR = `packages/${PACKAGE_NAME}`;
+  let OUTPUT_DIR = `${SOURCE_DIR}/dist`;
+
+  let version = getVersion(SOURCE_DIR);
 
   // JS modules for bundlers
-  const modules = [
+  /** @type {RollupOptions[]} */
+  let modules = [
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
@@ -215,6 +241,7 @@ function reactRouter() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -224,12 +251,14 @@ function reactRouter() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        typescript({
+          tsconfig: path.join(PACKAGE_DIR, PACKAGE_NAME, "tsconfig.json"),
+          outDir: path.join(PACKAGE_DIR, PACKAGE_NAME),
+          exclude: ["__tests__"],
+          noEmitOnError: true,
+        }),
         copy({
-          targets: [
-            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
-            { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
-            { src: "LICENSE.md", dest: OUTPUT_DIR },
-          ],
+          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
           verbose: true,
         }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
@@ -237,11 +266,12 @@ function reactRouter() {
   ];
 
   // JS modules for <script type=module>
-  const webModules = [
+  /** @type {RollupOptions[]} */
+  let webModules = [
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/react-router.development.js`,
+        file: `${OUTPUT_DIR}/${PACKAGE_NAME}.development.js`,
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
@@ -250,6 +280,7 @@ function reactRouter() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             "@babel/preset-modules",
@@ -268,7 +299,7 @@ function reactRouter() {
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/react-router.production.min.js`,
+        file: `${OUTPUT_DIR}/${PACKAGE_NAME}.production.min.js`,
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
@@ -277,6 +308,7 @@ function reactRouter() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             [
@@ -309,11 +341,12 @@ function reactRouter() {
   ];
 
   // UMD modules for <script> tags and CommonJS (node)
-  const globals = [
+  /** @type {RollupOptions[]} */
+  let globals = [
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/umd/react-router.development.js`,
+        file: `${OUTPUT_DIR}/umd/${PACKAGE_NAME}.development.js`,
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
@@ -328,6 +361,7 @@ function reactRouter() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -346,7 +380,7 @@ function reactRouter() {
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/umd/react-router.production.min.js`,
+        file: `${OUTPUT_DIR}/umd/${PACKAGE_NAME}.production.min.js`,
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
@@ -361,6 +395,7 @@ function reactRouter() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -381,7 +416,8 @@ function reactRouter() {
   ];
 
   // Node entry points
-  const node = [
+  /** @type {RollupOptions[]} */
+  let node = [
     {
       input: `${SOURCE_DIR}/node-main.js`,
       output: {
@@ -396,13 +432,17 @@ function reactRouter() {
   return [...modules, ...webModules, ...globals, ...node];
 }
 
+/**
+ * @returns {RollupOptions[]}
+ */
 function reactRouterDom() {
-  const SOURCE_DIR = "packages/react-router-dom";
-  const OUTPUT_DIR = "build/node_modules/react-router-dom";
-  const version = getVersion(SOURCE_DIR);
+  let PACKAGE_NAME = "react-router-dom";
+  let SOURCE_DIR = `packages/${PACKAGE_NAME}`;
+  let OUTPUT_DIR = `${SOURCE_DIR}/dist`;
+  let version = getVersion(SOURCE_DIR);
 
   // JS modules for bundlers
-  const modules = [
+  let modules = [
     {
       input: `${SOURCE_DIR}/index.tsx`,
       output: {
@@ -421,6 +461,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -430,12 +471,14 @@ function reactRouterDom() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        typescript({
+          tsconfig: path.join(PACKAGE_DIR, PACKAGE_NAME, "tsconfig.json"),
+          outDir: path.join(PACKAGE_DIR, PACKAGE_NAME),
+          exclude: ["__tests__"],
+          noEmitOnError: true,
+        }),
         copy({
-          targets: [
-            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
-            { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
-            { src: "LICENSE.md", dest: OUTPUT_DIR },
-          ],
+          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
           verbose: true,
         }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
@@ -445,11 +488,11 @@ function reactRouterDom() {
   // JS modules for <script type=module>
   // Note: These are experimental. You may not even get them to work
   // unless you are using a React build with JS modules like es-react.
-  const webModules = [
+  let webModules = [
     {
       input: `${SOURCE_DIR}/index.tsx`,
       output: {
-        file: `${OUTPUT_DIR}/react-router-dom.development.js`,
+        file: `${OUTPUT_DIR}/${PACKAGE_NAME}.development.js`,
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
@@ -458,6 +501,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             "@babel/preset-modules",
@@ -476,7 +520,7 @@ function reactRouterDom() {
     {
       input: `${SOURCE_DIR}/index.tsx`,
       output: {
-        file: `${OUTPUT_DIR}/react-router-dom.production.min.js`,
+        file: `${OUTPUT_DIR}/${PACKAGE_NAME}.production.min.js`,
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
@@ -485,6 +529,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             [
@@ -517,11 +562,11 @@ function reactRouterDom() {
   ];
 
   // UMD modules for <script> tags and CommonJS (node)
-  const globals = [
+  let globals = [
     {
       input: `${SOURCE_DIR}/index.tsx`,
       output: {
-        file: `${OUTPUT_DIR}/umd/react-router-dom.development.js`,
+        file: `${OUTPUT_DIR}/umd/${PACKAGE_NAME}.development.js`,
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
@@ -537,6 +582,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -555,7 +601,7 @@ function reactRouterDom() {
     {
       input: `${SOURCE_DIR}/index.tsx`,
       output: {
-        file: `${OUTPUT_DIR}/umd/react-router-dom.production.min.js`,
+        file: `${OUTPUT_DIR}/umd/${PACKAGE_NAME}.production.min.js`,
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
@@ -571,6 +617,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -591,7 +638,7 @@ function reactRouterDom() {
   ];
 
   // Node entry points
-  const node = [
+  let node = [
     {
       input: `${SOURCE_DIR}/node-main.js`,
       output: {
@@ -603,10 +650,18 @@ function reactRouterDom() {
     },
     {
       input: `${SOURCE_DIR}/server.tsx`,
-      output: {
-        file: `${OUTPUT_DIR}/server.js`,
-        format: "cjs",
-      },
+      output: [
+        {
+          // the server file needs to go in the package root directory
+          // TODO: Change this in v7
+          file: `${SOURCE_DIR}/server.js`,
+          format: "cjs",
+        },
+        {
+          file: `${OUTPUT_DIR}/server.js`,
+          format: "cjs",
+        },
+      ],
       external: [
         "url",
         "history",
@@ -618,6 +673,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true, targets: { node: true } }],
@@ -632,10 +688,18 @@ function reactRouterDom() {
     },
     {
       input: `${SOURCE_DIR}/server.tsx`,
-      output: {
-        file: `${OUTPUT_DIR}/server.mjs`,
-        format: "esm",
-      },
+      output: [
+        {
+          // the server file needs to go in the package root directory
+          // TODO: Change this in v7
+          file: `${SOURCE_DIR}/server.mjs`,
+          format: "esm",
+        },
+        {
+          file: `${OUTPUT_DIR}/server.mjs`,
+          format: "esm",
+        },
+      ],
       external: [
         "url",
         "history",
@@ -647,6 +711,7 @@ function reactRouterDom() {
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             [
@@ -662,6 +727,12 @@ function reactRouterDom() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        typescript({
+          tsconfig: path.join(PACKAGE_DIR, PACKAGE_NAME, "tsconfig.json"),
+          outDir: path.join(PACKAGE_DIR, PACKAGE_NAME),
+          include: ["server.tsx"],
+          noEmitOnError: true,
+        }),
         // compiler()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
@@ -670,10 +741,13 @@ function reactRouterDom() {
   return [...modules, ...webModules, ...globals, ...node];
 }
 
-/** @type import("rollup").InputOptions[] */
+/**
+ * @returns {RollupOptions[]}
+ */
 function reactRouterDomV5Compat() {
-  let SOURCE_DIR = "packages/react-router-dom-v5-compat";
-  let OUTPUT_DIR = "build/node_modules/react-router-dom-v5-compat";
+  let PACKAGE_NAME = "react-router-dom-v5-compat";
+  let SOURCE_DIR = `packages/${PACKAGE_NAME}`;
+  let OUTPUT_DIR = `${SOURCE_DIR}/dist`;
   let ROUTER_DOM_SOURCE = "packages/react-router-dom/(index|dom).ts*";
   let ROUTER_DOM_COPY_DEST = `${SOURCE_DIR}/react-router-dom`;
 
@@ -704,6 +778,7 @@ function reactRouterDomV5Compat() {
         }),
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -713,12 +788,14 @@ function reactRouterDomV5Compat() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        typescript({
+          tsconfig: path.join(PACKAGE_DIR, PACKAGE_NAME, "tsconfig.json"),
+          outDir: path.join(PACKAGE_DIR, PACKAGE_NAME),
+          exclude: ["__tests__"],
+          noEmitOnError: true,
+        }),
         copy({
-          targets: [
-            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
-            { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
-            { src: "LICENSE.md", dest: OUTPUT_DIR },
-          ],
+          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
           verbose: true,
         }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
@@ -730,7 +807,7 @@ function reactRouterDomV5Compat() {
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/umd/react-router-dom-v5-compat.development.js`,
+        file: `${OUTPUT_DIR}/umd/${PACKAGE_NAME}.development.js`,
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM v5 Compat", version),
@@ -753,6 +830,7 @@ function reactRouterDomV5Compat() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -771,7 +849,7 @@ function reactRouterDomV5Compat() {
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/umd/react-router-dom-v5-compat.production.min.js`,
+        file: `${OUTPUT_DIR}/umd/${PACKAGE_NAME}.production.min.js`,
         format: "umd",
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM v5 Compat", version),
@@ -794,6 +872,7 @@ function reactRouterDomV5Compat() {
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
           presets: [
             ["@babel/preset-env", { loose: true }],
@@ -828,12 +907,17 @@ function reactRouterDomV5Compat() {
   return [...modules, ...globals, ...node];
 }
 
+/**
+ * @returns {RollupOptions[]}
+ */
 function reactRouterNative() {
-  const SOURCE_DIR = "packages/react-router-native";
-  const OUTPUT_DIR = "build/node_modules/react-router-native";
-  const version = getVersion(SOURCE_DIR);
+  let PACKAGE_NAME = "react-router-native";
+  let SOURCE_DIR = `packages/${PACKAGE_NAME}`;
+  let OUTPUT_DIR = `${SOURCE_DIR}/dist`;
 
-  const modules = [
+  let version = getVersion(SOURCE_DIR);
+
+  let modules = [
     {
       input: `${SOURCE_DIR}/index.tsx`,
       output: {
@@ -854,8 +938,8 @@ function reactRouterNative() {
       ],
       plugins: [
         babel({
+          babelHelpers: "bundled",
           exclude: /node_modules/,
-          runtimeHelpers: true,
           presets: [
             [
               "module:metro-react-native-babel-preset",
@@ -869,12 +953,14 @@ function reactRouterNative() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        typescript({
+          tsconfig: path.join(PACKAGE_DIR, PACKAGE_NAME, "tsconfig.json"),
+          outDir: path.join(PACKAGE_DIR, PACKAGE_NAME),
+          exclude: ["__tests__"],
+          noEmitOnError: true,
+        }),
         copy({
-          targets: [
-            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
-            { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
-            { src: "LICENSE.md", dest: OUTPUT_DIR },
-          ],
+          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
           verbose: true,
         }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
@@ -884,7 +970,11 @@ function reactRouterNative() {
   return modules;
 }
 
-export default function rollup(options) {
+/**
+ * @param {RollupInputOptions[]} options
+ * @return {Promise<RollupOptions[]>}
+ */
+export default async function rollup(options) {
   let builds = [
     ...router(options),
     ...reactRouter(options),
@@ -892,6 +982,12 @@ export default function rollup(options) {
     ...reactRouterDomV5Compat(options),
     ...reactRouterNative(options),
   ];
-
   return builds;
 }
+
+/**
+ * @typedef {import('rollup').InputOptions} RollupInputOptions
+ * @typedef {import('rollup').OutputOptions} RollupOutputOptions
+ * @typedef {import('rollup').RollupOptions} RollupOptions
+ * @typedef {import('rollup').Plugin} RollupPlugin
+ */
