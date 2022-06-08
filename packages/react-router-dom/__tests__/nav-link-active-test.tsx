@@ -7,6 +7,7 @@ import "@testing-library/jest-dom";
 import { JSDOM } from "jsdom";
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
+import { UNSAFE_resetModuleScope } from "react-router";
 import {
   MemoryRouter,
   Routes,
@@ -15,7 +16,6 @@ import {
   Outlet,
   DataBrowserRouter,
 } from "react-router-dom";
-import { _resetModuleScope } from "react-router/lib/components";
 
 describe("NavLink", () => {
   describe("when it does not match", () => {
@@ -327,7 +327,7 @@ describe("NavLink", () => {
 
 describe("NavLink using a data router", () => {
   afterEach(() => {
-    _resetModuleScope();
+    UNSAFE_resetModuleScope();
   });
 
   it("applies the default 'active'/'pending' classNames to the underlying <a>", async () => {
