@@ -58,6 +58,7 @@ export type {
   Navigator,
   OutletProps,
   Params,
+  ParamParseKey,
   PathMatch,
   RouteMatch,
   RouteObject,

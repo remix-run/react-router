@@ -77,6 +77,7 @@ export type {
   Navigator,
   OutletProps,
   Params,
+  ParamParseKey,
   Path,
   PathMatch,
   Pathname,
