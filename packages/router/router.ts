@@ -1,12 +1,11 @@
-import { createPath } from "./history";
-import type { History, Location, Path, To } from "./history";
+import { createPath, History, Location, Path, To } from "./history";
 import { Action as HistoryAction, createLocation, parsePath } from "./history";
 
-import { invariant } from "./utils";
-import type {
+import {
   DataRouteObject,
   FormEncType,
   FormMethod,
+  invariant,
   RouteMatch,
   RouteObject,
   Submission,
