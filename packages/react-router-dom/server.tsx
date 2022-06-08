@@ -7,8 +7,6 @@ import {
   invariant,
 } from "@remix-run/router";
 import {
-  Location,
-  To,
   createPath,
   parsePath,
   Router,
@@ -17,6 +15,7 @@ import {
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
 } from "react-router-dom";
+import type { Location, To } from "react-router-dom";
 
 export interface StaticRouterProps {
   basename?: string;

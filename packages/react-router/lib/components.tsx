@@ -22,12 +22,12 @@ import {
 } from "@remix-run/router";
 import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
+import type { Navigator } from "./context";
 import {
-  LocationContext,
-  NavigationContext,
-  Navigator,
   DataRouterContext,
   DataRouterStateContext,
+  NavigationContext,
+  LocationContext,
 } from "./context";
 import {
   useInRouterContext,
@@ -48,7 +48,7 @@ let routerSingleton: DataRouter;
  * @private
  */
 export function _resetModuleScope() {
-  // @ts-expect-error
+  // @ts-ignore
   routerSingleton = null;
 }
 
