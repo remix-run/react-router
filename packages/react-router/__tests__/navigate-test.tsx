@@ -1,7 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Navigate, Routes, Route } from "react-router";
-import { Outlet } from "../lib/components";
+import { MemoryRouter, Navigate, Outlet, Routes, Route } from "react-router";
 
 describe("<Navigate>", () => {
   describe("with an absolute href", () => {
@@ -47,7 +46,7 @@ describe("<Navigate>", () => {
       `);
     });
 
-    it("handles upward navigatino from an index routes", () => {
+    it("handles upward navigation from an index routes", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         renderer = TestRenderer.create(
