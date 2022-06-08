@@ -222,4 +222,65 @@ describe("Link push and replace", () => {
       `);
     });
   });
+
+  describe("to the same page with replace={false}, when it is clicked", () => {
+    it("performs a push", () => {
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to="." replace={false}>
+              Home
+            </Link>
+            <ShowNavigationType />
+          </div>
+        );
+      }
+
+      function About() {
+        return <h1>About</h1>;
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+              <Route path="about" element={<About />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+
+      TestRenderer.act(() => {
+        anchor.props.onClick(
+          new MouseEvent("click", {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+          })
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          <h1>
+            Home
+          </h1>
+          <a
+            href="/home"
+            onClick={[Function]}
+          >
+            Home
+          </a>
+          <p>
+            PUSH
+          </p>
+        </div>
+      `);
+    });
+  });
 });

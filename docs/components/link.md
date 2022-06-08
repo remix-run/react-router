@@ -63,3 +63,42 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 > differently when the current URL ends with `/` vs when it does not.
 
 [link-native]: ./link-native
+
+## `resetScroll`
+
+If you are using [`<ScrollRestoration>`][scrollrestoration], this lets you prevent the scroll position from being reset to the top of the window when the link is clicked.
+
+```tsx
+<Link to="?tab=one" resetScroll={false} />
+```
+
+This does not prevent the scroll position from being restored when the user comes back to the location with the back/forward buttons, it just prevents the reset when the user clicks the link.
+
+An example when you might want this behavior is a list of tabs that manipulate the url search params that aren't at the top of the page. You wouldn't want the scroll position to jump up to the top because it might scroll the toggled content out of the viewport!
+
+```
+      ┌─────────────────────────┐
+      │                         ├──┐
+      │                         │  │
+      │                         │  │ scrolled
+      │                         │  │ out of view
+      │                         │  │
+      │                         │ ◄┘
+    ┌─┴─────────────────────────┴─┐
+    │                             ├─┐
+    │                             │ │ viewport
+    │   ┌─────────────────────┐   │ │
+    │   │  tab   tab   tab    │   │ │
+    │   ├─────────────────────┤   │ │
+    │   │                     │   │ │
+    │   │                     │   │ │
+    │   │ content             │   │ │
+    │   │                     │   │ │
+    │   │                     │   │ │
+    │   └─────────────────────┘   │ │
+    │                             │◄┘
+    └─────────────────────────────┘
+
+```
+
+[scrollrestoration]: ./scroll-restoration

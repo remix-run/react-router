@@ -1,7 +1,36 @@
-import type { Hash, Location, Path, Pathname, Search, To } from "history";
-import { Action as NavigationType, parsePath, createPath } from "history";
+import type {
+  ActionFunction,
+  DataRouteMatch,
+  Fetcher,
+  JsonFunction,
+  LoaderFunction,
+  Location,
+  Navigation,
+  Params,
+  Path,
+  PathMatch,
+  PathPattern,
+  RedirectFunction,
+  RouteMatch,
+  RouteObject,
+  ShouldRevalidateFunction,
+  To,
+} from "@remix-run/router";
+import {
+  Action as NavigationType,
+  createPath,
+  generatePath,
+  isRouteErrorResponse,
+  json,
+  matchPath,
+  matchRoutes,
+  parsePath,
+  redirect,
+  resolvePath,
+} from "@remix-run/router";
 
 import type {
+  DataMemoryRouterProps,
   MemoryRouterProps,
   NavigateProps,
   OutletProps,
@@ -16,19 +45,23 @@ import {
   createRoutesFromChildren,
   renderMatches,
   MemoryRouter,
+  DataMemoryRouter,
   Navigate,
   Outlet,
   Route,
   Router,
   Routes,
+  useRenderDataRouter,
 } from "./lib/components";
-import type { Navigator } from "./lib/context";
+import type { Navigator, NavigateOptions } from "./lib/context";
 import {
+  DataRouterContext,
+  DataRouterStateContext,
   LocationContext,
   NavigationContext,
   RouteContext,
 } from "./lib/context";
-import type { NavigateFunction, NavigateOptions } from "./lib/hooks";
+import type { NavigateFunction } from "./lib/hooks";
 import {
   useHref,
   useInRouterContext,
@@ -41,48 +74,57 @@ import {
   useParams,
   useResolvedPath,
   useRoutes,
+  useActionData,
+  useLoaderData,
+  useMatches,
+  useRouteLoaderData,
+  useRouteError,
+  useNavigation,
+  useRevalidator,
 } from "./lib/hooks";
-import type {
-  Params,
-  PathMatch,
-  PathPattern,
-  RouteMatch,
-  RouteObject,
-} from "./lib/router";
-import {
-  generatePath,
-  matchPath,
-  matchRoutes,
-  resolvePath,
-} from "./lib/router";
+
+// FIXME: Do we need to still export these to be non-breaking?
+type Hash = string;
+type Pathname = string;
+type Search = string;
 
 // Expose react-router public API
 export type {
+  ActionFunction,
+  DataMemoryRouterProps,
+  DataRouteMatch,
+  Fetcher,
   Hash,
   IndexRouteProps,
+  JsonFunction,
   LayoutRouteProps,
+  LoaderFunction,
   Location,
   MemoryRouterProps,
   NavigateFunction,
   NavigateOptions,
   NavigateProps,
+  Navigation,
+  Navigator,
   OutletProps,
+  Params,
+  Path,
   PathMatch,
+  Pathname,
   PathPattern,
   PathRouteProps,
+  RedirectFunction,
   RouteMatch,
   RouteObject,
   RouteProps,
   RouterProps,
   RoutesProps,
-  Navigator,
-  Params,
-  Path,
-  Pathname,
   Search,
+  ShouldRevalidateFunction,
   To,
 };
 export {
+  DataMemoryRouter,
   MemoryRouter,
   Navigate,
   NavigationType,
@@ -92,22 +134,32 @@ export {
   Routes,
   createPath,
   createRoutesFromChildren,
+  isRouteErrorResponse,
   generatePath,
+  json,
   matchPath,
   matchRoutes,
   parsePath,
+  redirect,
   renderMatches,
   resolvePath,
+  useActionData,
   useHref,
   useInRouterContext,
+  useLoaderData,
   useLocation,
   useMatch,
+  useMatches,
   useNavigate,
+  useNavigation,
   useNavigationType,
   useOutlet,
   useOutletContext,
   useParams,
   useResolvedPath,
+  useRevalidator,
+  useRouteError,
+  useRouteLoaderData,
   useRoutes,
 };
 
@@ -129,4 +181,7 @@ export {
   NavigationContext as UNSAFE_NavigationContext,
   LocationContext as UNSAFE_LocationContext,
   RouteContext as UNSAFE_RouteContext,
+  DataRouterContext as UNSAFE_DataRouterContext,
+  DataRouterStateContext as UNSAFE_DataRouterStateContext,
+  useRenderDataRouter,
 };
