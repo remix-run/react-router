@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- adc6b20f: Fix broken require for CJS builds
+- Fix broken require for CJS builds
 
 ## 6.4.0-pre.4
 
