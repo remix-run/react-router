@@ -748,8 +748,6 @@ function reactRouterDomV5Compat() {
   let PACKAGE_NAME = "react-router-dom-v5-compat";
   let SOURCE_DIR = `packages/${PACKAGE_NAME}`;
   let OUTPUT_DIR = `${SOURCE_DIR}/dist`;
-  let ROUTER_DOM_SOURCE = "packages/react-router-dom/(index|dom).ts*";
-  let ROUTER_DOM_COPY_DEST = `${SOURCE_DIR}/react-router-dom`;
 
   let version = getVersion(SOURCE_DIR);
 
@@ -772,10 +770,6 @@ function reactRouterDomV5Compat() {
         "react-router-dom",
       ],
       plugins: [
-        copy({
-          targets: [{ src: ROUTER_DOM_SOURCE, dest: ROUTER_DOM_COPY_DEST }],
-          hook: "buildStart",
-        }),
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
@@ -972,15 +966,15 @@ function reactRouterNative() {
 
 /**
  * @param {RollupInputOptions[]} options
- * @return {Promise<RollupOptions[]>}
+ * @return {RollupOptions[]}
  */
-export default async function rollup(options) {
+export default function rollup(options) {
   let builds = [
     ...router(options),
     ...reactRouter(options),
     ...reactRouterDom(options),
-    ...reactRouterDomV5Compat(options),
     ...reactRouterNative(options),
+    ...reactRouterDomV5Compat(options),
   ];
   return builds;
 }
