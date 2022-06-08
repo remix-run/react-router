@@ -155,8 +155,18 @@ export function useNavigate(): NavigateFunction {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
+  // Ignore pathless matches (i.e., share the same pathname as their ancestor)
+  let pathContributingMatches = matches.filter(
+    (match, index) =>
+      index === 0 || match.pathnameBase !== matches[index - 1].pathnameBase
+  );
+
+  if (matches.length > 0 && matches[matches.length - 1].route.index) {
+    pathContributingMatches.pop();
+  }
+
   let routePathnamesJson = JSON.stringify(
-    matches.map((match) => match.pathnameBase)
+    pathContributingMatches.map((match) => match.pathnameBase)
   );
 
   let activeRef = React.useRef(false);
