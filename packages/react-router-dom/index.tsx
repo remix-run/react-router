@@ -3,6 +3,7 @@
  * you'll need to update the rollup config for react-router-dom-v5-compat.
  */
 import * as React from "react";
+import type { NavigateOptions, To } from "react-router";
 import {
   Router,
   createPath,
@@ -16,16 +17,15 @@ import {
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
 } from "react-router";
-import type { To } from "react-router";
 import type {
   BrowserHistory,
   Fetcher,
   FormEncType,
   FormMethod,
+  GetScrollRestorationKeyFunction,
   HashHistory,
   History,
   HydrationState,
-  GetScrollRestorationKeyFunction,
   RouteObject,
 } from "@remix-run/router";
 import {
@@ -344,7 +344,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     {
       onClick,
       reloadDocument,
-      replace = false,
+      replace,
       state,
       target,
       to,
@@ -404,7 +404,7 @@ export interface NavLinkProps
     | ((props: {
         isActive: boolean;
         isPending: boolean;
-      }) => React.CSSProperties);
+      }) => React.CSSProperties | undefined);
 }
 
 /**
@@ -642,9 +642,11 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         event.preventDefault();
 
         // If the URL hasn't changed, a regular <a> will do a replace instead of
-        // a push, so do the same here.
+        // a push, so do the same here unless the replace prop is explcitly set
         let replace =
-          !!replaceProp || createPath(location) === createPath(path);
+          replaceProp !== undefined
+            ? replaceProp
+            : createPath(location) === createPath(path);
 
         navigate(to, { replace, state, resetScroll });
       }
@@ -657,7 +659,9 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
  * A convenient wrapper for reading and writing search parameters via the
  * URLSearchParams interface.
  */
-export function useSearchParams(defaultInit?: URLSearchParamsInit) {
+export function useSearchParams(
+  defaultInit?: URLSearchParamsInit
+): [URLSearchParams, SetURLSearchParams] {
   warning(
     typeof URLSearchParams !== "undefined",
     `You cannot use the \`useSearchParams\` hook in a browser that does not ` +
@@ -683,18 +687,25 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   );
 
   let navigate = useNavigate();
-  let setSearchParams = React.useCallback(
-    (
-      nextInit: URLSearchParamsInit,
-      navigateOptions?: { replace?: boolean; state?: any }
-    ) => {
-      navigate("?" + createSearchParams(nextInit), navigateOptions);
+  let setSearchParams = React.useCallback<SetURLSearchParams>(
+    (nextInit, navigateOptions) => {
+      const newSearchParams = createSearchParams(
+        typeof nextInit === "function" ? nextInit(searchParams) : nextInit
+      );
+      navigate("?" + newSearchParams, navigateOptions);
     },
-    [navigate]
+    [navigate, searchParams]
   );
 
-  return [searchParams, setSearchParams] as const;
+  return [searchParams, setSearchParams];
 }
+
+type SetURLSearchParams = (
+  nextInit?:
+    | URLSearchParamsInit
+    | ((prev: URLSearchParams) => URLSearchParamsInit),
+  navigateOpts?: NavigateOptions
+) => void;
 
 /**
  * Submits a HTML `<form>` to the server without reloading the page.

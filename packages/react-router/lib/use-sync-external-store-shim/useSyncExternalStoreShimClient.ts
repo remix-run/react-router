@@ -48,8 +48,7 @@ export function useSyncExternalStore<T>(
 ): T {
   if (__DEV__) {
     if (!didWarnOld18Alpha) {
-      // @ts-expect-error
-      if (React.startTransition !== undefined) {
+      if ("startTransition" in React) {
         didWarnOld18Alpha = true;
         console.error(
           "You are using an outdated, pre-release alpha of React 18 that " +

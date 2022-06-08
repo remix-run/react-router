@@ -1,18 +1,27 @@
 {
   "name": "react-router-dom-v5-compat",
   "version": "6.4.0-pre.2",
-  "author": "Remix Software <hello@remix.run>",
   "description": "Migration path to React Router v6 from v4/5",
+  "keywords": [
+    "react",
+    "router",
+    "route",
+    "routing",
+    "history",
+    "link"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/remix-run/react-router.git",
+    "url": "https://github.com/remix-run/react-router",
     "directory": "packages/react-router-dom-v5-compat"
   },
   "license": "MIT",
+  "author": "Remix Software <hello@remix.run>",
+  "sideEffects": false,
   "main": "./main.js",
+  "unpkg": "./umd/react-router.production.min.js",
   "module": "./index.js",
   "types": "./index.d.ts",
-  "unpkg": "./umd/react-router.production.min.js",
   "dependencies": {
     "history": "^5.3.0",
     "react-router": "6.4.0-pre.2"
@@ -21,14 +30,5 @@
     "react": ">=16.8",
     "react-dom": ">=16.8",
     "react-router-dom": "4 || 5"
-  },
-  "sideEffects": false,
-  "keywords": [
-    "react",
-    "router",
-    "route",
-    "routing",
-    "history",
-    "link"
-  ]
+  }
 }
