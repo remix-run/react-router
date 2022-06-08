@@ -6,9 +6,7 @@ import extensions from "rollup-plugin-extensions";
 import prettier from "rollup-plugin-prettier";
 import replace from "@rollup/plugin-replace";
 import typescript from "@rollup/plugin-typescript";
-// import nodeResolve from "@rollup/plugin-node-resolve";
 import { terser } from "rollup-plugin-terser";
-// import typescript from "rollup-plugin-typescript2";
 
 const PRETTY = !!process.env.PRETTY;
 const PACKAGE_DIR = path.join(__dirname, "packages");
@@ -34,9 +32,9 @@ function getVersion(sourceDir) {
  * @returns {RollupOptions[]}
  */
 function router() {
-  let PACKAGE_NAME = "router";
-  let SOURCE_DIR = `packages/${PACKAGE_NAME}`;
-  let OUTPUT_DIR = `${SOURCE_DIR}/dist`;
+  const PACKAGE_NAME = "router";
+  const SOURCE_DIR = `packages/${PACKAGE_NAME}`;
+  const OUTPUT_DIR = `${SOURCE_DIR}/dist`;
   let version = getVersion(SOURCE_DIR);
 
   // JS modules for bundlers
@@ -220,9 +218,9 @@ function router() {
  * @returns {RollupOptions[]}
  */
 function reactRouter() {
-  let PACKAGE_NAME = "react-router";
-  let SOURCE_DIR = `packages/${PACKAGE_NAME}`;
-  let OUTPUT_DIR = `${SOURCE_DIR}/dist`;
+  const PACKAGE_NAME = "react-router";
+  const SOURCE_DIR = `packages/${PACKAGE_NAME}`;
+  const OUTPUT_DIR = `${SOURCE_DIR}/dist`;
 
   let version = getVersion(SOURCE_DIR);
 
@@ -436,9 +434,9 @@ function reactRouter() {
  * @returns {RollupOptions[]}
  */
 function reactRouterDom() {
-  let PACKAGE_NAME = "react-router-dom";
-  let SOURCE_DIR = `packages/${PACKAGE_NAME}`;
-  let OUTPUT_DIR = `${SOURCE_DIR}/dist`;
+  const PACKAGE_NAME = "react-router-dom";
+  const SOURCE_DIR = `packages/${PACKAGE_NAME}`;
+  const OUTPUT_DIR = `${SOURCE_DIR}/dist`;
   let version = getVersion(SOURCE_DIR);
 
   // JS modules for bundlers
@@ -745,9 +743,9 @@ function reactRouterDom() {
  * @returns {RollupOptions[]}
  */
 function reactRouterDomV5Compat() {
-  let PACKAGE_NAME = "react-router-dom-v5-compat";
-  let SOURCE_DIR = `packages/${PACKAGE_NAME}`;
-  let OUTPUT_DIR = `${SOURCE_DIR}/dist`;
+  const PACKAGE_NAME = "react-router-dom-v5-compat";
+  const SOURCE_DIR = `packages/${PACKAGE_NAME}`;
+  const OUTPUT_DIR = `${SOURCE_DIR}/dist`;
 
   let version = getVersion(SOURCE_DIR);
 
@@ -905,9 +903,9 @@ function reactRouterDomV5Compat() {
  * @returns {RollupOptions[]}
  */
 function reactRouterNative() {
-  let PACKAGE_NAME = "react-router-native";
-  let SOURCE_DIR = `packages/${PACKAGE_NAME}`;
-  let OUTPUT_DIR = `${SOURCE_DIR}/dist`;
+  const PACKAGE_NAME = "react-router-native";
+  const SOURCE_DIR = `packages/${PACKAGE_NAME}`;
+  const OUTPUT_DIR = `${SOURCE_DIR}/dist`;
 
   let version = getVersion(SOURCE_DIR);
 
