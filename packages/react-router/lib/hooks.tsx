@@ -158,6 +158,7 @@ export function useNavigate(): NavigateFunction {
   let routePathnamesJson = JSON.stringify(
     matches.map((match) => match.pathnameBase)
   );
+  let isPathlessRoute = !!matches[matches.length - 1]?.route.index;
 
   let activeRef = React.useRef(false);
   React.useEffect(() => {
@@ -182,7 +183,8 @@ export function useNavigate(): NavigateFunction {
       let path = resolveTo(
         to,
         JSON.parse(routePathnamesJson),
-        locationPathname
+        locationPathname,
+        isPathlessRoute
       );
 
       if (basename !== "/") {
@@ -195,7 +197,7 @@ export function useNavigate(): NavigateFunction {
         options
       );
     },
-    [basename, navigator, routePathnamesJson, locationPathname]
+    [routePathnamesJson, locationPathname, isPathlessRoute, basename, navigator]
   );
 
   return navigate;
