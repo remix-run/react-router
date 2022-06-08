@@ -205,7 +205,7 @@ export function useNavigate(): NavigateFunction {
         options
       );
     },
-    [routePathnamesJson, locationPathname, basename, navigator]
+    [basename, navigator, routePathnamesJson, locationPathname]
   );
 
   return navigate;
