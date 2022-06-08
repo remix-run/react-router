@@ -102,22 +102,22 @@
     "typescript": "^4.7.3"
   },
   "filesize": {
-    "build/node_modules/@remix-run/router/router.production.min.js": {
+    "build/node_modules/@remix-run/router/dist/router.production.min.js": {
       "none": "21 kB"
     },
-    "build/node_modules/@remix-run/router/umd/router.production.min.js": {
+    "build/node_modules/@remix-run/router/dist/umd/router.production.min.js": {
       "none": "23 kB"
     },
-    "build/node_modules/react-router/react-router.production.min.js": {
+    "build/node_modules/react-router/dist/react-router.production.min.js": {
       "none": "10 kB"
     },
-    "build/node_modules/react-router/umd/react-router.production.min.js": {
+    "build/node_modules/react-router/dist/umd/react-router.production.min.js": {
       "none": "12 kB"
     },
-    "build/node_modules/react-router-dom/react-router-dom.production.min.js": {
+    "build/node_modules/react-router-dom/dist/react-router-dom.production.min.js": {
       "none": "10 kB"
     },
-    "build/node_modules/react-router-dom/umd/react-router-dom.production.min.js": {
+    "build/node_modules/react-router-dom/dist/umd/react-router-dom.production.min.js": {
       "none": "14 kB"
     }
   }
