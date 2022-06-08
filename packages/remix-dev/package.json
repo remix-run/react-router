@@ -16,9 +16,10 @@
     "remix": "cli.js"
   },
   "dependencies": {
-    "@babel/core": "7.17.8",
-    "@babel/plugin-syntax-jsx": "7.16.7",
-    "@babel/preset-typescript": "7.16.7",
+    "@babel/core": "^7.18.2",
+    "@babel/plugin-syntax-jsx": "^7.17.12",
+    "@babel/preset-env": "^7.18.2",
+    "@babel/preset-typescript": "^7.17.12",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@npmcli/package-json": "^2.0.0",
     "@remix-run/server-runtime": "1.5.1",
