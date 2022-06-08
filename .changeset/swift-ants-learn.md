@@ -6,4 +6,4 @@
 "@remix-run/router": patch
 ---
 
-Fix missing dist files
+Fix missing `dist` files

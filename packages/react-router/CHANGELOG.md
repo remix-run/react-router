@@ -1,5 +1,11 @@
 # react-router
 
+## 6.4.0-pre.4
+
+### Patch Changes
+
+- 031d5d1f: Fix missing dist files
+
 ## 6.4.0-pre.3
 
 ### Patch Changes
