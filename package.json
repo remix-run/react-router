@@ -15,7 +15,9 @@
     ]
   },
   "scripts": {
-    "build": "rollup -c && node scripts/copy-to-root.mjs",
+    "prebuild": "cpy 'packages/react-router-dom/*.ts*' packages/react-router-dom-v5-compat/react-router-dom",
+    "build": "rollup -c",
+    "postbuild": "node scripts/copy-to-root.mjs",
     "changeset": "changeset",
     "clean": "git clean -fdX .",
     "format": "prettier --ignore-path .eslintignore --write .",
@@ -70,6 +72,7 @@
     "babel-plugin-dev-expression": "^0.2.2",
     "chalk": "^4.1.1",
     "cheerio": "^1.0.0-rc.10",
+    "cpy-cli": "^4.1.0",
     "eslint": "^7.30.0",
     "eslint-config-react-app": "^6.0.0",
     "eslint-plugin-flowtype": "^5.8.0",
