@@ -18,10 +18,10 @@
   "license": "MIT",
   "author": "Remix Software <hello@remix.run>",
   "sideEffects": false,
-  "main": "./main.js",
-  "unpkg": "./umd/react-router.production.min.js",
-  "module": "./index.js",
-  "types": "./index.d.ts",
+  "main": "./dist/main.js",
+  "unpkg": "./dist/umd/react-router.production.min.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "dependencies": {
     "history": "^5.3.0",
     "react-router": "6.4.0-pre.3"
@@ -30,5 +30,11 @@
     "react": ">=16.8",
     "react-dom": ">=16.8",
     "react-router-dom": "6.4.0-pre.3"
-  }
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md"
+  ]
 }

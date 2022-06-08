@@ -1,5 +1,6 @@
 {
-  "files": ["index.tsx", "server.tsx"],
+  "exclude": ["dist/**/*"],
+  "files": ["index.tsx", "dom.ts", "server.tsx"],
   "compilerOptions": {
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "target": "ES2020",
@@ -13,8 +14,6 @@
     "emitDeclarationOnly": true,
 
     "skipLibCheck": true,
-
-    "outDir": "../../build/node_modules/react-router-dom",
     "rootDir": "."
   }
 }
