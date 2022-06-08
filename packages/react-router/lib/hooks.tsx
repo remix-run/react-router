@@ -155,18 +155,20 @@ export function useNavigate(): NavigateFunction {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  let routePathnamesJson = JSON.stringify(
-    matches.map((match) => match.pathnameBase)
+  // Ignore pathless matches (i.e., share the same pathname as their ancestor)
+  let pathContributingMatches = matches.filter(
+    (match, index) =>
+      index === 0 || match.pathnameBase !== matches[index - 1].pathnameBase
   );
 
-  // figure out how many levels of "pathless" routes we have from the current
-  // leaf match, so we can properly handle relative .. links
-  let pathlessDepth = Math.max(
-    [...matches]
-      .reverse()
-      .findIndex((m) => !m.route.index && m.route.path?.length),
-    0
+  if (matches.length > 0 && matches[matches.length - 1].route.index) {
+    pathContributingMatches.pop();
+  }
+
+  let routePathnamesJson = JSON.stringify(
+    pathContributingMatches.map((match) => match.pathnameBase)
   );
+
   let activeRef = React.useRef(false);
   React.useEffect(() => {
     activeRef.current = true;
@@ -190,8 +192,7 @@ export function useNavigate(): NavigateFunction {
       let path = resolveTo(
         to,
         JSON.parse(routePathnamesJson),
-        locationPathname,
-        pathlessDepth
+        locationPathname
       );
 
       if (basename !== "/") {
@@ -204,7 +205,7 @@ export function useNavigate(): NavigateFunction {
         options
       );
     },
-    [routePathnamesJson, locationPathname, pathlessDepth, basename, navigator]
+    [routePathnamesJson, locationPathname, basename, navigator]
   );
 
   return navigate;
