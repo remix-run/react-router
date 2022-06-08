@@ -26,19 +26,22 @@ type URLSearchParamsInit =
   | URLSearchParams;
 
 type SetURLSearchParams = (
-  nextInit?: URLSearchParamsInit,
+  nextInit?:
+    | URLSearchParamsInit
+    | ((prev: URLSearchParams) => URLSearchParamsInit),
   navigateOpts?: : NavigateOptions
 ) => void;
 
 interface NavigateOptions {
   replace?: boolean;
   state?: any;
+  resetScroll?: boolean;
 }
 ```
 
 </details>
 
-The `useSearchParams` hook is used to read and modify the query string in the URL for the current location. Like React's own [`useState` hook](https://reactjs.org/docs/hooks-reference.html#usestate), `useSearchParams` returns an array of two values: the current location's [search params](https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams) and a function that may be used to update them.
+The `useSearchParams` hook is used to read and modify the query string in the URL for the current location. Like React's own [`useState` hook][usestate], `useSearchParams` returns an array of two values: the current location's [search params][searchparams] and a function that may be used to update them. Just as React's [`useState` hook][usestate], `setSearchParams` also supports [functional updates][functional-updates]. Therefore, you may provide a function that takes a `searchParams` and returns an updated version.
 
 ```tsx
 import * as React from "react";
@@ -65,4 +68,7 @@ function App() {
 }
 ```
 
+[functional-updates]: https://reactjs.org/docs/hooks-reference.html#functional-updates
+[searchparams]: https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams
 [usesearchparams]: ./use-search-params.md
+[usestate]: https://reactjs.org/docs/hooks-reference.html#usestate
