@@ -1,5 +1,15 @@
 # react-router
 
+## 6.4.0-pre.4
+
+### Patch Changes
+
+- 742e3d9b: Fix missing build files
+- 031d5d1f: Fix missing dist files
+- Updated dependencies [742e3d9b]
+- Updated dependencies [031d5d1f]
+  - @remix-run/router@0.2.0-pre.1
+
 ## 6.4.0-pre.3
 
 ### Patch Changes

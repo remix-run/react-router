@@ -1,5 +1,12 @@
 # @remix-run/router
 
+## 0.2.0-pre.1
+
+### Patch Changes
+
+- 742e3d9b: Fix missing build files
+- 031d5d1f: Fix missing dist files
+
 ## 0.2.0-pre.0
 
 ### Minor Changes
