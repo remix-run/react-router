@@ -1,7 +1,7 @@
 npm-debug.log
 
-/build/
 /docs/api/
+/packages/**/dist/
 /website/build/
 node_modules/
 

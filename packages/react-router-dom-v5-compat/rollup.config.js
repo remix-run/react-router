@@ -6,25 +6,20 @@ const prettier = require("rollup-plugin-prettier");
 const replace = require("@rollup/plugin-replace");
 const { terser } = require("rollup-plugin-terser");
 const {
-  buildDir,
   createBanner,
-  getVersion,
+  getBuildDirectories,
   PRETTY,
 } = require("../../rollup.utils");
+const { name, version } = require("./package.json");
 
 module.exports = function rollup() {
-  const SOURCE_DIR = path.relative(process.cwd(), __dirname) || ".";
-  const OUTPUT_DIR = path.join(
-    buildDir,
-    "node_modules/react-router-dom-v5-compat"
-  );
+  const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(name);
   const ROUTER_DOM_FOLDER = path.relative(
     process.cwd(),
     path.join(__dirname, "../react-router-dom")
   );
   const ROUTER_DOM_SOURCE = path.join(ROUTER_DOM_FOLDER, "(index|dom).ts*");
   const ROUTER_DOM_COPY_DEST = `${SOURCE_DIR}/react-router-dom`;
-  const version = getVersion(SOURCE_DIR);
 
   // JS modules for bundlers
   let modules = [
@@ -63,9 +58,9 @@ module.exports = function rollup() {
         }),
         copy({
           targets: [
-            { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
-            { src: `${SOURCE_DIR}/README.md`, dest: OUTPUT_DIR },
-            { src: "LICENSE.md", dest: OUTPUT_DIR },
+            { src: path.join(SOURCE_DIR, "package.json"), dest: OUTPUT_DIR },
+            { src: path.join(SOURCE_DIR, "README.md"), dest: OUTPUT_DIR },
+            { src: path.join(ROOT_DIR, "LICENSE.md"), dest: OUTPUT_DIR },
           ],
           verbose: true,
         }),

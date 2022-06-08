@@ -15,7 +15,7 @@
 
     "skipLibCheck": true,
 
-    "outDir": "../../build/node_modules/react-router-native",
+    "outDir": "dist",
     "rootDir": "."
   }
 }

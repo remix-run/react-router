@@ -14,7 +14,7 @@
 
     "skipLibCheck": true,
 
-    "outDir": "../../build/node_modules/react-router-dom-v5-compat",
+    "outDir": "dist",
     "rootDirs": ["."]
   }
 }
