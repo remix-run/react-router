@@ -9,6 +9,7 @@
     "@remix-run/router": "0.2.0-pre.0"
   },
   "changesets": [
+    "eighty-forks-search",
     "fifty-ghosts-scream",
     "forty-phones-repair",
     "gold-trains-rhyme",
