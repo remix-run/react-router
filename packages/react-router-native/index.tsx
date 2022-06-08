@@ -41,6 +41,7 @@ export type {
   Navigator,
   OutletProps,
   Params,
+  ParamParseKey,
   Path,
   PathMatch,
   Pathname,
@@ -286,19 +287,24 @@ export function useSearchParams(
   }, [location.search]);
 
   let navigate = useNavigate();
-  let setSearchParams: SetURLSearchParams = React.useCallback(
+  let setSearchParams = React.useCallback<SetURLSearchParams>(
     (nextInit, navigateOpts) => {
-      navigate("?" + createSearchParams(nextInit), navigateOpts);
+      const newSearchParams = createSearchParams(
+        typeof nextInit === "function" ? nextInit(searchParams) : nextInit
+      );
+      navigate("?" + newSearchParams, navigateOpts);
     },
-    [navigate]
+    [navigate, searchParams]
   );
 
   return [searchParams, setSearchParams];
 }
 
 type SetURLSearchParams = (
-  nextInit?: URLSearchParamsInit | undefined,
-  navigateOpts?: NavigateOptions | undefined
+  nextInit?:
+    | URLSearchParamsInit
+    | ((prev: URLSearchParams) => URLSearchParamsInit),
+  navigateOpts?: NavigateOptions
 ) => void;
 
 export type ParamKeyValuePair = [string, string];
