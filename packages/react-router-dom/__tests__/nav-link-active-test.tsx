@@ -14,7 +14,7 @@ import {
   NavLink,
   Outlet,
   DataBrowserRouter,
-} from "../index";
+} from "react-router-dom";
 
 // Private API
 import { _resetModuleScope } from "../../react-router/lib/components";
