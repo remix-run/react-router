@@ -53,7 +53,6 @@ import {
   Router,
   Routes,
   useRenderDataRouter,
-  _resetModuleScope,
 } from "./lib/components";
 import type { Navigator, NavigateOptions } from "./lib/context";
 import {
@@ -186,6 +185,5 @@ export {
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  _resetModuleScope as UNSAFE_resetModuleScope,
   useRenderDataRouter,
 };

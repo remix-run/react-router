@@ -4,8 +4,8 @@
 
 import { JSDOM } from "jsdom";
 
-import type { HashHistory } from "../history";
-import { createHashHistory } from "../history";
+import type { HashHistory } from "@remix-run/router";
+import { createHashHistory } from "@remix-run/router";
 
 describe("a hash history on a page with a <base> tag", () => {
   let history: HashHistory;

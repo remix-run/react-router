@@ -28,9 +28,11 @@ import {
   useSubmit,
   useFetcher,
   useFetchers,
-  UNSAFE_resetModuleScope,
   UNSAFE_DataRouterStateContext,
-} from "../index";
+} from "react-router-dom";
+
+// Private API
+import { _resetModuleScope } from "../../react-router/lib/components";
 
 testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
   getWindowImpl(url, false)
@@ -40,7 +42,11 @@ testDomRouter("<DataHashRouter>", DataHashRouter, (url) =>
   getWindowImpl(url, true)
 );
 
-function testDomRouter(name, TestDataRouter, getWindow) {
+function testDomRouter(
+  name: string,
+  TestDataRouter: typeof DataBrowserRouter,
+  getWindow: (initialUrl: string, isHash?: boolean) => Window
+) {
   describe(name, () => {
     let consoleWarn: jest.SpyInstance;
     let consoleError: jest.SpyInstance;
@@ -52,7 +58,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
     afterEach(() => {
       consoleWarn.mockRestore();
       consoleError.mockRestore();
-      UNSAFE_resetModuleScope();
+      _resetModuleScope();
     });
 
     it("renders the first route that matches the URL", () => {

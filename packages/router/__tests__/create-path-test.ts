@@ -1,4 +1,4 @@
-import { createPath } from "../history";
+import { createPath } from "@remix-run/router";
 
 describe("createPath", () => {
   describe("given only a pathname", () => {

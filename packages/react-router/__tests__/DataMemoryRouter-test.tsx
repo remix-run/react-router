@@ -11,7 +11,7 @@ import "@testing-library/jest-dom";
 import type { FormMethod, Router } from "@remix-run/router";
 import { createMemoryRouter } from "@remix-run/router";
 
-import type { DataMemoryRouterProps } from "../index";
+import type { DataMemoryRouterProps } from "react-router";
 import {
   DataMemoryRouter,
   MemoryRouter,
@@ -27,8 +27,10 @@ import {
   useRenderDataRouter,
   useRevalidator,
   UNSAFE_DataRouterContext,
-  UNSAFE_resetModuleScope,
-} from "../index";
+} from "react-router";
+
+// Private API
+import { _resetModuleScope } from "../lib/components";
 
 describe("<DataMemoryRouter>", () => {
   let consoleWarn: jest.SpyInstance;
@@ -41,7 +43,7 @@ describe("<DataMemoryRouter>", () => {
   afterEach(() => {
     consoleWarn.mockRestore();
     consoleError.mockRestore();
-    UNSAFE_resetModuleScope();
+    _resetModuleScope();
   });
 
   it("renders the first route that matches the URL", () => {
