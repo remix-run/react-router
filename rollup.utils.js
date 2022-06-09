@@ -15,15 +15,15 @@ const PRETTY = !!process.env.PRETTY;
  * @param {string} [folderName] folder name (i.e., router). Defaults to package name
  */
 function getBuildDirectories(packageName, folderName) {
-  let ROOT_DIR = ".";
+  let ROOT_DIR = __dirname;
   let SOURCE_DIR = folderName
-    ? path.join("packages", folderName)
-    : path.join("packages", ...packageName.split("/"));
+    ? path.join(__dirname, "packages", folderName)
+    : path.join(__dirname, "packages", ...packageName.split("/"));
 
   // Update if we're not running from root
   if (process.cwd() !== __dirname) {
-    ROOT_DIR = path.join("..", "..");
-    SOURCE_DIR = ".";
+    ROOT_DIR = path.dirname(path.dirname(process.cwd()));
+    SOURCE_DIR = process.cwd();
   }
 
   let OUTPUT_DIR = path.join(SOURCE_DIR, "dist");

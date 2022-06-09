@@ -1,5 +1,6 @@
 {
   "include": ["index.ts"],
+  "exclude": ["dist/**/*"],
   "compilerOptions": {
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "target": "ES2020",
@@ -13,7 +14,7 @@
 
     "skipLibCheck": true,
 
-    "outDir": "dist",
+    "outDir": ".",
     "rootDir": "."
   }
 }

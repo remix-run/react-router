@@ -2,6 +2,7 @@ const path = require("path");
 const babel = require("@rollup/plugin-babel").default;
 const copy = require("rollup-plugin-copy");
 const prettier = require("rollup-plugin-prettier");
+const typescript = require("@rollup/plugin-typescript");
 const {
   createBanner,
   getBuildDirectories,
@@ -47,6 +48,11 @@ module.exports = function rollup() {
           ],
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
+        }),
+        typescript({
+          tsconfig: path.join(__dirname, "tsconfig.json"),
+          exclude: ["__tests__"],
+          noEmitOnError: true,
         }),
         copy({
           targets: [

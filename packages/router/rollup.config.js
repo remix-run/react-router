@@ -5,6 +5,7 @@ const extensions = require("rollup-plugin-extensions");
 const prettier = require("rollup-plugin-prettier");
 const replace = require("@rollup/plugin-replace");
 const { terser } = require("rollup-plugin-terser");
+const typescript = require("@rollup/plugin-typescript");
 const {
   createBanner,
   getBuildDirectories,
@@ -40,6 +41,11 @@ module.exports = function rollup() {
           ],
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts"],
+        }),
+        typescript({
+          tsconfig: path.join(__dirname, "tsconfig.json"),
+          exclude: ["__tests__"],
+          noEmitOnError: true,
         }),
         copy({
           targets: [

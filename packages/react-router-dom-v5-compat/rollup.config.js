@@ -5,6 +5,7 @@ const extensions = require("rollup-plugin-extensions");
 const prettier = require("rollup-plugin-prettier");
 const replace = require("@rollup/plugin-replace");
 const { terser } = require("rollup-plugin-terser");
+const typescript = require("@rollup/plugin-typescript");
 const {
   createBanner,
   getBuildDirectories,
@@ -18,7 +19,6 @@ module.exports = function rollup() {
     process.cwd(),
     path.join(__dirname, "../react-router-dom")
   );
-  const ROUTER_DOM_SOURCE = path.join(ROUTER_DOM_FOLDER, "(index|dom).ts*");
   const ROUTER_DOM_COPY_DEST = `${SOURCE_DIR}/react-router-dom`;
 
   // JS modules for bundlers
@@ -41,7 +41,16 @@ module.exports = function rollup() {
       ],
       plugins: [
         copy({
-          targets: [{ src: ROUTER_DOM_SOURCE, dest: ROUTER_DOM_COPY_DEST }],
+          targets: [
+            {
+              src: path.join(ROUTER_DOM_FOLDER, "index.tsx"),
+              dest: ROUTER_DOM_COPY_DEST,
+            },
+            {
+              src: path.join(ROUTER_DOM_FOLDER, "dom.ts"),
+              dest: ROUTER_DOM_COPY_DEST,
+            },
+          ],
           hook: "buildStart",
         }),
         extensions({ extensions: [".tsx", ".ts"] }),
@@ -55,6 +64,11 @@ module.exports = function rollup() {
           ],
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
+        }),
+        typescript({
+          tsconfig: path.join(__dirname, "tsconfig.json"),
+          exclude: ["__tests__"],
+          noEmitOnError: true,
         }),
         copy({
           targets: [
