@@ -15,11 +15,13 @@ const { name, version } = require("./package.json");
 
 module.exports = function rollup() {
   const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(name);
-  const ROUTER_DOM_FOLDER = path.relative(
-    process.cwd(),
-    path.join(__dirname, "../react-router-dom")
+  const ROUTER_DOM_SOURCE = path.join(
+    ROOT_DIR,
+    "packages",
+    "react-router-dom",
+    "(index|dom).ts*"
   );
-  const ROUTER_DOM_COPY_DEST = `${SOURCE_DIR}/react-router-dom`;
+  const ROUTER_DOM_COPY_DEST = path.join(SOURCE_DIR, "react-router-dom");
 
   // JS modules for bundlers
   let modules = [
@@ -41,17 +43,10 @@ module.exports = function rollup() {
       ],
       plugins: [
         copy({
-          targets: [
-            {
-              src: path.join(ROUTER_DOM_FOLDER, "index.tsx"),
-              dest: ROUTER_DOM_COPY_DEST,
-            },
-            {
-              src: path.join(ROUTER_DOM_FOLDER, "dom.ts"),
-              dest: ROUTER_DOM_COPY_DEST,
-            },
-          ],
-          hook: "buildStart",
+          targets: [{ src: ROUTER_DOM_SOURCE, dest: ROUTER_DOM_COPY_DEST }],
+          // buildStart is not soon enough to run before the typescript plugin :/
+          hook: "options",
+          verbose: true,
         }),
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
