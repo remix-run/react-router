@@ -1,21 +1,11 @@
 ---
-title: Elements
+title: Markdown Elements
 hidden: true
 ---
 
-# Markdown Test Page
+# Markdown Elements
 
 This is for testing all the different kinds of markdown that can exist. Whenever I find a styling edge case that exists, I add it to this document. It’s my form of visual regression for all the different kinds of elements that need to be styled across different contexts.
-
-## Code, Links, and Lists
-
-A relative `<Link to>` value (that does not begin with `/`) resolves relative to the parent route, which means that it builds upon the URL path that was matched by the route that rendered that `<Link>`. It may contain `..` to link to routes further up the hierarchy. In these cases, `..` works exactly like the command-line `cd` function; each `..` removes one segment of the parent path.
-
-This is a list of links, some of which are code:
-
-- This is my first list item
-- [This is my second list item that’s a link][$link]
-- This is my third item that has `<code>` and [`<LinkedCode>` mixed with text][$link]
 
 ## Headings
 
@@ -35,12 +25,13 @@ For headings, do we ever go deeper than a heading 4? Do we really need styles fo
 
 Callouts can be used with the `<docs-*>` elements. They are specifically for calling special attention to pieces of information outside the normal flow of the document.
 
-@TODO There are four variations on these in code, but we probably really only need the first three:
+There are three supported variations of these elements:
 
-1. `<docs-info>`
-2. `<docs-warning>`
-3. `<docs-error>`
-4. `<docs-success>`
+1. `<docs-info>` - For general callouts to bits of information.
+2. `<docs-warning>` - For warning the read about something they should know.
+3. `<docs-error>` - For telling the user they shouldn’t be doing something.
+
+Examples:
 
 <docs-info>`<Link to>` with a `..` behaves differently from a normal `<a href>` when the current URL ends with `/`. `<Link to>` ignores the trailing slash, and removes one URL segment for each `..`. But an `<a href>` value handles `..` differently when the current URL ends with `/` vs when it does not.</docs-info>
 
@@ -67,6 +58,12 @@ This is a `<blockquote>` with multiple lines in it:
 > 1. List item
 > 2. Another list item
 > 3. Yet another list item
+
+This is a list of links, some of which are code:
+
+- This is my first list item
+- [This is my second list item that’s a link][$link]
+- This is my third item that has `<code>` and [`<LinkedCode>` mixed with text][$link]
 
 ## Code
 
@@ -138,4 +135,4 @@ Lines that overflow:
 
 ---
 
-[all-links]: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+[$link]: https://www.youtube.com/watch?v=dQw4w9WgXcQ
