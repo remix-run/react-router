@@ -29,6 +29,7 @@
     "size": "filesize",
     "test": "jest",
     "version": "changeset version",
+    "postversion": "node scripts/postversion.mjs",
     "version:experimental": "node scripts ./scripts/version experimental",
     "watch": "rollup -c -w"
   },
