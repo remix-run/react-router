@@ -75,7 +75,11 @@ Normal code:
 ```tsx
 <DataBrowserRouter initialEntries={["/events/123"]}>
   <Route path="/" element={<Root />} loader={rootLoader}>
-    <Route path="events/:id" element={<Event />} loader={eventLoader} />
+    <Route
+      path="events/:id"
+      element={<Event />}
+      loader={eventLoader}
+    />
   </Route>
 </DataBrowserRouter>
 ```
@@ -85,7 +89,11 @@ With multiple highlighted lines:
 ```tsx lines=[1-2,5]
 <DataBrowserRouter initialEntries={["/events/123"]}>
   <Route path="/" element={<Root />} loader={rootLoader}>
-    <Route path="events/:id" element={<Event />} loader={eventLoader} />
+    <Route
+      path="events/:id"
+      element={<Event />}
+      loader={eventLoader}
+    />
   </Route>
 </DataBrowserRouter>
 ```
@@ -95,7 +103,11 @@ With a filename:
 ```tsx filename=src/main.jsx
 <DataBrowserRouter initialEntries={["/events/123"]}>
   <Route path="/" element={<Root />} loader={rootLoader}>
-    <Route path="events/:id" element={<Event />} loader={eventLoader} />
+    <Route
+      path="events/:id"
+      element={<Event />}
+      loader={eventLoader}
+    />
   </Route>
 </DataBrowserRouter>
 ```
@@ -106,7 +118,11 @@ Bad code with highlighted lines:
 <DataBrowserRouter initialEntries={["/events/123"]}>
   <Routes>
     <Route path="/" element={<Root />} loader={rootLoader}>
-      <Route path="events/:id" element={<Event />} loader={eventLoader} />
+      <Route
+        path="events/:id"
+        element={<Event />}
+        loader={eventLoader}
+      />
     </Route>
   </Routes>
 </DataBrowserRouter>
