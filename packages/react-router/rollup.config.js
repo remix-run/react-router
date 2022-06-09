@@ -42,7 +42,7 @@ module.exports = function rollup() {
         }),
         copy({
           targets: [
-            { src: path.join(ROOT_DIR, "LICENSE.md"), dest: OUTPUT_DIR },
+            { src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR },
           ],
           verbose: true,
         }),

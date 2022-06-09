@@ -53,7 +53,7 @@ module.exports = function rollup() {
         }),
         copy({
           targets: [
-            { src: path.join(ROOT_DIR, "LICENSE.md"), dest: OUTPUT_DIR },
+            { src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR },
           ],
           verbose: true,
         }),
@@ -226,10 +226,18 @@ module.exports = function rollup() {
     },
     {
       input: `${SOURCE_DIR}/server.tsx`,
-      output: {
-        file: `${OUTPUT_DIR}/server.js`,
-        format: "cjs",
-      },
+      output: [
+        {
+          // the server file needs to go in the package root directory
+          // TODO: Change this in v7
+          file: `${SOURCE_DIR}/server.js`,
+          format: "cjs",
+        },
+        {
+          file: `${OUTPUT_DIR}/server.js`,
+          format: "cjs",
+        },
+      ],
       external: [
         "url",
         "history",
@@ -251,15 +259,29 @@ module.exports = function rollup() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        typescript({
+          tsconfig: path.join(__dirname, "tsconfig.json"),
+          include: ["server.tsx"],
+          exclude: ["__tests__"],
+          noEmitOnError: true,
+        }),
         // compiler()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
       input: `${SOURCE_DIR}/server.tsx`,
-      output: {
-        file: `${OUTPUT_DIR}/server.mjs`,
-        format: "esm",
-      },
+      output: [
+        {
+          // the server file needs to go in the package root directory
+          // TODO: Change this in v7
+          file: `${SOURCE_DIR}/server.mjs`,
+          format: "esm",
+        },
+        {
+          file: `${OUTPUT_DIR}/server.mjs`,
+          format: "esm",
+        },
+      ],
       external: [
         "url",
         "history",
