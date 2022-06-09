@@ -21,16 +21,18 @@ import {
   useLoaderData,
   useActionData,
   useRouteError,
+  useNavigate,
   useNavigation,
   Form,
   Link,
   useSubmit,
   useFetcher,
   useFetchers,
-} from "../index";
-import { _resetModuleScope } from "react-router/lib/components";
-import { useNavigate } from "react-router/lib/hooks";
-import { UNSAFE_DataRouterStateContext } from "react-router";
+  UNSAFE_DataRouterStateContext,
+} from "react-router-dom";
+
+// Private API
+import { _resetModuleScope } from "../../react-router/lib/components";
 
 testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
   getWindowImpl(url, false)

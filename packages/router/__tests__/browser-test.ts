@@ -4,8 +4,8 @@
 
 import { JSDOM } from "jsdom";
 
-import type { BrowserHistory } from "../history";
-import { createBrowserHistory } from "../history";
+import type { BrowserHistory } from "@remix-run/router";
+import { createBrowserHistory } from "@remix-run/router";
 
 import InitialLocationDefaultKey from "./TestSequences/InitialLocationDefaultKey";
 import Listen from "./TestSequences/Listen";
