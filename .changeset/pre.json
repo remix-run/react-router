@@ -8,5 +8,13 @@
     "react-router-native": "6.4.0-pre.3",
     "@remix-run/router": "0.2.0-pre.0"
   },
-  "changesets": []
+  "changesets": [
+    "eighty-forks-search",
+    "fifty-ghosts-scream",
+    "forty-phones-repair",
+    "gold-trains-rhyme",
+    "nine-stingrays-arrive",
+    "slimy-pugs-sip",
+    "weak-seas-kiss"
+  ]
 }
