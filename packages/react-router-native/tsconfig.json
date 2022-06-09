@@ -1,6 +1,6 @@
 {
-  "exclude": ["dist/**/*"],
   "files": ["index.tsx"],
+  "exclude": ["dist/**/*"],
   "compilerOptions": {
     "lib": ["ES2020", "DOM.Iterable"],
     "target": "ES2020",
