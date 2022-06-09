@@ -1,5 +1,13 @@
 # react-router-dom
 
+## 6.4.0-pre.5
+
+### Patch Changes
+
+- Fix broken require for CJS builds
+- Updated dependencies
+  - react-router@6.4.0-pre.5
+
 ## 6.4.0-pre.4
 
 ### Patch Changes
