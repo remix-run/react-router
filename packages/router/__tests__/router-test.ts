@@ -9,7 +9,6 @@ import type {
   Router,
   RouterNavigateOptions,
 } from "@remix-run/router";
-
 import {
   createMemoryHistory,
   createRouter,
