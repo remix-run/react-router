@@ -1,5 +1,7 @@
 # react-router
 
+## 6.4.0-pre.6
+
 ## 6.4.0-pre.5
 
 ### Patch Changes
