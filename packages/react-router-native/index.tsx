@@ -9,31 +9,9 @@ import {
 import {
   MemoryRouter,
   MemoryRouterProps,
-  Navigate,
   NavigateOptions,
-  Outlet,
-  Route,
-  Router,
-  Routes,
-  createRoutesFromChildren,
-  generatePath,
-  matchRoutes,
-  matchPath,
-  createPath,
-  parsePath,
-  resolvePath,
-  renderMatches,
-  useHref,
-  useInRouterContext,
   useLocation,
-  useMatch,
   useNavigate,
-  useNavigationType,
-  useOutlet,
-  useParams,
-  useResolvedPath,
-  useRoutes,
-  useOutletContext,
 } from "react-router";
 import type { To } from "react-router";
 
@@ -44,58 +22,79 @@ import URLSearchParams from "@ungap/url-search-params";
 ////////////////////////////////////////////////////////////////////////////////
 
 // Note: Keep in sync with react-router exports!
-export {
-  MemoryRouter,
-  Navigate,
-  Outlet,
-  Route,
-  Router,
-  Routes,
-  createRoutesFromChildren,
-  generatePath,
-  matchRoutes,
-  matchPath,
-  createPath,
-  parsePath,
-  resolvePath,
-  renderMatches,
-  useHref,
-  useInRouterContext,
-  useLocation,
-  useMatch,
-  useNavigate,
-  useNavigationType,
-  useOutlet,
-  useParams,
-  useResolvedPath,
-  useRoutes,
-  useOutletContext,
-};
-
-export { NavigationType } from "react-router";
 export type {
+  ActionFunction,
+  DataMemoryRouterProps,
+  DataRouteMatch,
+  Fetcher,
   Hash,
   IndexRouteProps,
+  JsonFunction,
   LayoutRouteProps,
+  LoaderFunction,
   Location,
   MemoryRouterProps,
   NavigateFunction,
   NavigateOptions,
   NavigateProps,
+  Navigation,
   Navigator,
   OutletProps,
   Params,
+  ParamParseKey,
   Path,
   PathMatch,
+  Pathname,
+  PathPattern,
   PathRouteProps,
+  RedirectFunction,
   RouteMatch,
   RouteObject,
   RouteProps,
   RouterProps,
   RoutesProps,
-  Pathname,
   Search,
+  ShouldRevalidateFunction,
   To,
+} from "react-router";
+export {
+  DataMemoryRouter,
+  MemoryRouter,
+  Navigate,
+  NavigationType,
+  Outlet,
+  Route,
+  Router,
+  Routes,
+  createPath,
+  createRoutesFromChildren,
+  isRouteErrorResponse,
+  generatePath,
+  json,
+  matchPath,
+  matchRoutes,
+  parsePath,
+  redirect,
+  renderMatches,
+  resolvePath,
+  useActionData,
+  useHref,
+  useInRouterContext,
+  useLoaderData,
+  useLocation,
+  useMatch,
+  useMatches,
+  useNavigate,
+  useNavigation,
+  useNavigationType,
+  useOutlet,
+  useOutletContext,
+  useParams,
+  useResolvedPath,
+  useRevalidator,
+  useRouteError,
+  useRouteLoaderData,
+  useRoutes,
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -116,6 +115,9 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
+  useRenderDataRouter,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -285,19 +287,24 @@ export function useSearchParams(
   }, [location.search]);
 
   let navigate = useNavigate();
-  let setSearchParams: SetURLSearchParams = React.useCallback(
+  let setSearchParams = React.useCallback<SetURLSearchParams>(
     (nextInit, navigateOpts) => {
-      navigate("?" + createSearchParams(nextInit), navigateOpts);
+      const newSearchParams = createSearchParams(
+        typeof nextInit === "function" ? nextInit(searchParams) : nextInit
+      );
+      navigate("?" + newSearchParams, navigateOpts);
     },
-    [navigate]
+    [navigate, searchParams]
   );
 
   return [searchParams, setSearchParams];
 }
 
 type SetURLSearchParams = (
-  nextInit?: URLSearchParamsInit | undefined,
-  navigateOpts?: NavigateOptions | undefined
+  nextInit?:
+    | URLSearchParamsInit
+    | ((prev: URLSearchParams) => URLSearchParamsInit),
+  navigateOpts?: NavigateOptions
 ) => void;
 
 export type ParamKeyValuePair = [string, string];

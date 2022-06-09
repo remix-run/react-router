@@ -37,8 +37,6 @@ function withRouter(Component) {
 
 ## Why does `<Route>` have an `element` prop instead of `render` or `component`?
 
-We mentioned this [in the migration guide from v5 to v6](./upgrading/v5.md#advantages-of-route-element), but it's worth repeating here.
-
 In React Router v6 we switched from using v5's `<Route component>` and `<Route render>` APIs to `<Route element>`. Why is that?
 
 For starters, we see React itself taking the lead here with the `<Suspense fallback={<Spinner />}>` API. The `fallback` prop takes a React **element**, not a **component**. This lets you easily pass whatever props you want to your `<Spinner>` from the component that renders it.
@@ -116,7 +114,7 @@ function DeepComponent() {
 // Aaaaaaaaand we're done here.
 ```
 
-Another important reason for using the `element` prop in v6 is that `<Route children>` is reserved for nesting routes. You can read more about this in [the guide about getting started](quick-start#nested-routes) with v6.
+Another important reason for using the `element` prop in v6 is that `<Route children>` is reserved for nesting routes. You can read more about this in [the guide about getting started][nested-routes] with v6.
 
 ## How do I add a No Match (404) Route in react-router v6?
 
@@ -395,7 +393,7 @@ In fact, the v5 version has all sorts of problems if your routes aren't ordered 
 
 **Remix Users**
 
-If you're using [Remix](https://remix.run), you can send proper 40x responses to the browser by moving this work into your loader. This also decreases the size of the browser bundles sent to the user because loaders only run on the server.
+If you're using [Remix][remix], you can send proper 40x responses to the browser by moving this work into your loader. This also decreases the size of the browser bundles sent to the user because loaders only run on the server.
 
 ```tsx filename=remix-useLoaderData.js
 import { useLoaderData } from "remix";
@@ -421,4 +419,8 @@ function User() {
 }
 ```
 
-Instead of rending your component, remix will render the nearest [catch boundary](https://docs.remix.run/v0.20/api/app/#catchboundary) instead.
+Instead of rending your component, remix will render the nearest [catch boundary][remix-catchboundary] instead.
+
+[remix]: https://remix.run
+[remix-catchboundary]: https://remix.run/docs/en/v1/api/conventions#catchboundary
+[nested-routes]: ./overview#nested-routes

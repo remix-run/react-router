@@ -1,0 +1,26 @@
+name: 🥺 No Response
+
+on:
+  issue_comment:
+    types: [created]
+  schedule:
+    # Schedule for five minutes after the hour, every hour
+    - cron: "5 * * * *"
+
+jobs:
+  noResponse:
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🥺 Handle Ghosting
+        uses: lee-dohm/no-response@v0.5.0
+        with:
+          closeComment: >
+            This issue has been automatically closed because we haven't received a
+            response from the original author 🙈. This automation helps keep the issue
+            tracker clean from issues that are unactionable. Please reach out if you
+            have more information for us! 🙂
+          daysUntilClose: 10
+          responseRequiredLabel: needs-response
+          token: ${{ github.token }}
