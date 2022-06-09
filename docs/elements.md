@@ -39,6 +39,14 @@ Examples:
 
 <docs-error>Do not do this</docs-error>
 
+<docs-info>The markup for this is kind of ugly, because (currently) these all have to be inside the `<docs-*>` element without any line breaks _but_ it is possible there could be an image inside these. <img src="https://picsum.photos/480/270" width="480" height="270" /></docs-info>
+
+Note: maybe the semantics for these aren't quite right. There might be other nouns that make sense in the case of docs, like:
+
+- `<docs-info>` could become `<docs-tip>`
+- `<docs-warning>` could become `<docs-important>`
+- `<docs-error>` could become `<docs-warning>` or `<docs-danger>`
+
 ## Normal Prose
 
 @TODO Blockquotes, lists, etc.
