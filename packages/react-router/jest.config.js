@@ -8,7 +8,7 @@ module.exports = {
   },
   setupFiles: ["./__tests__/setup.ts"],
   moduleNameMapper: {
-    "@remix-run/router$": "<rootDir>/../router/index.ts",
-    "react-router$": "<rootDir>/index.ts",
+    "^@remix-run/router$": "<rootDir>/../router/index.ts",
+    "^react-router$": "<rootDir>/index.ts",
   },
 };
