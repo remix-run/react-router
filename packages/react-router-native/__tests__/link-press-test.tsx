@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Text, TouchableHighlight, View } from "react-native";
-import { Link, NativeRouter, Routes, Route } from "../index";
+import { Link, NativeRouter, Routes, Route } from "react-router-native";
 import * as TestRenderer from "react-test-renderer";
 
 import { press } from "./utils";

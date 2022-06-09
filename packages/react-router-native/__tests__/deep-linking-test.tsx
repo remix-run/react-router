@@ -2,7 +2,12 @@ import * as React from "react";
 import { mocked } from "ts-jest/utils";
 import { Linking as _Linking, Text, View } from "react-native";
 import * as TestRenderer from "react-test-renderer";
-import { NativeRouter, Routes, Route, useDeepLinking } from "../index";
+import {
+  NativeRouter,
+  Routes,
+  Route,
+  useDeepLinking,
+} from "react-router-native";
 import { MockEvent, mockPromiseThatResolvesImmediatelyWith } from "./utils";
 
 // Ensures TypeScript understands that Linking is a mock

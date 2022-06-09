@@ -1,5 +1,5 @@
 import * as ReactRouter from "react-router";
-import * as ReactRouterNative from "../index";
+import * as ReactRouterNative from "react-router-native";
 
 describe("react-router-native", () => {
   for (let key in ReactRouter) {
