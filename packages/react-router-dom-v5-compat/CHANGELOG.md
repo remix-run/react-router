@@ -1,5 +1,13 @@
 # react-router-dom-v5-compat
 
+## 6.4.0-pre.6
+
+### Patch Changes
+
+- 44bce3c6: Fix `react-router-dom` peer dependency version
+  - react-router@6.4.0-pre.6
+  - react-router-dom@6.4.0-pre.6
+
 ## 6.4.0-pre.5
 
 ### Patch Changes
