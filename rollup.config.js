@@ -1,6 +1,5 @@
 import * as path from "path";
 import { default as babel } from "@rollup/plugin-babel";
-// import compiler from "@ampproject/rollup-plugin-closure-compiler";
 import copy from "rollup-plugin-copy";
 import extensions from "rollup-plugin-extensions";
 import prettier from "rollup-plugin-prettier";
@@ -130,7 +129,6 @@ function router() {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
-        // compiler(),
         terser({ ecma: 8, safari10: true }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
@@ -191,7 +189,6 @@ function router() {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
-        // compiler(),
         terser(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
@@ -332,7 +329,6 @@ function reactRouter() {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
-        // compiler(),
         terser({ ecma: 8, safari10: true }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
@@ -407,7 +403,6 @@ function reactRouter() {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
-        // compiler(),
         terser(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
@@ -553,7 +548,6 @@ function reactRouterDom() {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
-        // compiler(),
         terser({ ecma: 8, safari10: true }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
@@ -629,7 +623,6 @@ function reactRouterDom() {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
-        // compiler(),
         terser(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
@@ -681,7 +674,6 @@ function reactRouterDom() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
-        // compiler()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
@@ -731,7 +723,6 @@ function reactRouterDom() {
           include: ["server.tsx"],
           noEmitOnError: true,
         }),
-        // compiler()
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
   ];
