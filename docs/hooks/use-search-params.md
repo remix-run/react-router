@@ -4,10 +4,7 @@ title: useSearchParams
 
 # `useSearchParams`
 
-> **Note:**
->
-> This is the web version of `useSearchParams`. For the React Native version,
-> [go here][usesearchparams-native].
+<docs-info>This is the web version of `useSearchParams`. For the React Native version, [go here][usesearchparams-native].</docs-info>
 
 <details>
   <summary>Type declaration</summary>
@@ -67,12 +64,7 @@ function App() {
 }
 ```
 
-> **Note:**
->
-> The `setSearchParams` function works like [`navigate`][usenavigate], but
-> only for the [search portion](https://developer.mozilla.org/en-US/docs/Web/API/Location/search)
-> of the URL. Also note that the second arg to `setSearchParams` is
-> the same type as the second arg to `navigate`.
+<docs-info>The `setSearchParams` function works like [`navigate`][usenavigate], but only for the [search portion](https://developer.mozilla.org/en-US/docs/Web/API/Location/search) of the URL. Also note that the second arg to `setSearchParams` is the same type as the second arg to `navigate`.</docs-info>
 
 [functional-updates]: https://reactjs.org/docs/hooks-reference.html#functional-updates
 [searchparams]: https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams
