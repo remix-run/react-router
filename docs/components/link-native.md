@@ -4,10 +4,7 @@ title: Link (RN)
 
 # `<Link>` (React Native)
 
-> **Note:**
->
-> This is the React Native version of `<Link>`. For the web version,
-> [go here][link].
+<docs-info>This is the React Native version of `<Link>`. For the web version, [go here][link].</docs-info>
 
 <details>
   <summary>Type declaration</summary>

@@ -4,10 +4,7 @@ title: Link
 
 # `<Link>`
 
-> **Note:**
->
-> This is the web version of `<Link>`. For the React Native version,
-> [go here][link-native].
+<docs-info>ZZZ This is the web version of `<Link>`. For the React Native version, [go here][link-native].</docs-info>
 
 <details>
   <summary>Type declaration</summary>
@@ -55,12 +52,7 @@ function UsersIndexPage({ users }) {
 
 A relative `<Link to>` value (that does not begin with `/`) resolves relative to the parent route, which means that it builds upon the URL path that was matched by the route that rendered that `<Link>`. It may contain `..` to link to routes further up the hierarchy. In these cases, `..` works exactly like the command-line `cd` function; each `..` removes one segment of the parent path.
 
-> **Note:**
->
-> `<Link to>` with a `..` behaves differently from a normal `<a href>` when the
-> current URL ends with `/`. `<Link to>` ignores the trailing slash, and removes
-> one URL segment for each `..`. But an `<a href>` value handles `..`
-> differently when the current URL ends with `/` vs when it does not.
+<docs-info>`<Link to>` with a `..` behaves differently from a normal `<a href>` when the current URL ends with `/`. `<Link to>` ignores the trailing slash, and removes one URL segment for each `..`. But an `<a href>` value handles `..` differently when the current URL ends with `/` vs when it does not.</docs-info>
 
 [link-native]: ./link-native
 
