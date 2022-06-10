@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- 26302209: Respect the `<Link replace>` prop if it is defined (#8779)
+- Respect the `<Link replace>` prop if it is defined (#8779)
 - Updated dependencies
   - `react-router@6.4.0-pre.7`
 
