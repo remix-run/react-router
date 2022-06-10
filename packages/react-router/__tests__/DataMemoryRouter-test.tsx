@@ -520,7 +520,7 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
-  it("provides useMatches and useRouteLoaderData", async () => {
+  it("provides useMatches", async () => {
     let spy = jest.fn();
 
     render(
@@ -542,127 +542,157 @@ describe("<DataMemoryRouter>", () => {
     );
 
     function Layout() {
-      spy({
-        component: "Layout",
-        useMatches: useMatches(),
-        useRouteLoaderData: useRouteLoaderData("0"),
-      });
+      spy("Layout", useMatches());
       return (
-        <div>
+        <>
           <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
           <Outlet />
-        </div>
+        </>
       );
     }
 
     function Foo() {
-      spy({
-        component: "Foo",
-        useMatches: useMatches(),
-        useRouteLoaderData: useRouteLoaderData("0-0"),
-      });
+      spy("Foo", useMatches());
       return <h1>Foo</h1>;
     }
+
     function Bar() {
-      spy({
-        component: "Bar",
-        useMatches: useMatches(),
-        useRouteLoaderData: useRouteLoaderData("0-1"),
-      });
+      spy("Bar", useMatches());
       return <h1>Bar</h1>;
     }
 
-    expect(spy.mock.calls[0]).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "component": "Layout",
-          "useMatches": Array [
-            Object {
-              "data": undefined,
-              "handle": undefined,
-              "id": "0",
-              "params": Object {},
-              "pathname": "/",
-            },
-          ],
-          "useRouteLoaderData": undefined,
-        },
-      ]
-    `);
-    expect(spy.mock.calls.length).toBe(1);
+    expect(spy).toHaveBeenCalledWith("Layout", [
+      {
+        data: undefined,
+        handle: undefined,
+        id: "0",
+        params: {},
+        pathname: "/",
+      },
+    ]);
+
+    spy.mockClear();
     fireEvent.click(screen.getByText("Link to Bar"));
-    expect(spy.mock.calls[1]).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "component": "Layout",
-          "useMatches": Array [
-            Object {
-              "data": undefined,
-              "handle": undefined,
-              "id": "0",
-              "params": Object {},
-              "pathname": "/",
-            },
-          ],
-          "useRouteLoaderData": undefined,
-        },
-      ]
-    `);
-    expect(spy.mock.calls.length).toBe(2);
+    expect(spy).toHaveBeenCalledWith("Layout", [
+      {
+        data: undefined,
+        handle: undefined,
+        id: "0",
+        params: {},
+        pathname: "/",
+      },
+    ]);
+
+    spy.mockClear();
     await waitFor(() => screen.getByText("Bar"));
-    expect(spy.mock.calls[2]).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "component": "Layout",
-          "useMatches": Array [
-            Object {
-              "data": undefined,
-              "handle": undefined,
-              "id": "0",
-              "params": Object {},
-              "pathname": "/",
-            },
-            Object {
-              "data": "BAR LOADER",
-              "handle": Object {
-                "key": "value",
-              },
-              "id": "0-1",
-              "params": Object {},
-              "pathname": "/bar",
-            },
-          ],
-          "useRouteLoaderData": undefined,
+    expect(spy).toHaveBeenCalledWith("Layout", [
+      {
+        data: undefined,
+        handle: undefined,
+        id: "0",
+        params: {},
+        pathname: "/",
+      },
+      {
+        data: "BAR LOADER",
+        handle: {
+          key: "value",
         },
-      ]
+        id: "0-1",
+        params: {},
+        pathname: "/bar",
+      },
+    ]);
+  });
+
+  it("provides useRouteLoaderData", async () => {
+    let spy = jest.fn();
+
+    let { container } = render(
+      <DataMemoryRouter
+        initialEntries={["/foo"]}
+        hydrationData={{
+          loaderData: {
+            layout: null,
+            foo: "FOO",
+          },
+        }}
+      >
+        <Route id="layout" path="/" element={<Layout />}>
+          <Route
+            id="foo"
+            path="foo"
+            loader={async () => "FOO2"}
+            element={<h2>Foo</h2>}
+          />
+          <Route id="bar" path="bar" element={<Outlet />}>
+            <Route
+              id="child"
+              path="child"
+              loader={async () => "CHILD"}
+              element={<h2>Child</h2>}
+            />
+          </Route>
+        </Route>
+      </DataMemoryRouter>
+    );
+
+    function Layout() {
+      spy({
+        layout: useRouteLoaderData("layout"),
+        foo: useRouteLoaderData("foo"),
+        bar: useRouteLoaderData("bar"),
+        child: useRouteLoaderData("child"),
+      });
+      return (
+        <>
+          <MemoryNavigate to="/bar/child">Link to Child</MemoryNavigate>
+          <Outlet />
+        </>
+      );
+    }
+
+    expect(spy).toHaveBeenCalledWith({
+      layout: null,
+      foo: "FOO",
+      bar: undefined,
+      child: undefined,
+    });
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <a
+          href=\\"/bar/child\\"
+        >
+          Link to Child
+        </a>
+        <h2>
+          Foo
+        </h2>
+      </div>"
     `);
-    expect(spy.mock.calls[3]).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "component": "Bar",
-          "useMatches": Array [
-            Object {
-              "data": undefined,
-              "handle": undefined,
-              "id": "0",
-              "params": Object {},
-              "pathname": "/",
-            },
-            Object {
-              "data": "BAR LOADER",
-              "handle": Object {
-                "key": "value",
-              },
-              "id": "0-1",
-              "params": Object {},
-              "pathname": "/bar",
-            },
-          ],
-          "useRouteLoaderData": "BAR LOADER",
-        },
-      ]
+
+    spy.mockClear();
+    fireEvent.click(screen.getByText("Link to Child"));
+    await new Promise((r) => setImmediate(r));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <a
+          href=\\"/bar/child\\"
+        >
+          Link to Child
+        </a>
+        <h2>
+          Child
+        </h2>
+      </div>"
     `);
-    expect(spy.mock.calls.length).toBe(4);
+    expect(spy).toHaveBeenCalledWith({
+      layout: null,
+      foo: undefined,
+      bar: undefined,
+      child: "CHILD",
+    });
   });
 
   it("reloads data using useRevalidate", async () => {

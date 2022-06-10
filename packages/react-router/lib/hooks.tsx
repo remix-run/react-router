@@ -637,15 +637,15 @@ export function useLoaderData() {
     `useLoaderData can only be used on routes that contain a unique "id"`
   );
 
-  return state.loaderData?.[thisRoute.route.id];
+  return state.loaderData[thisRoute.route.id];
 }
 
 /**
  * Returns the loaderData for the given routeId
  */
-export function useRouteLoaderData(routeId: string): any {
+export function useRouteLoaderData(routeId: string): any | undefined {
   let state = useDataRouterState(DataRouterHook.UseRouteLoaderData);
-  return state.loaderData?.[routeId];
+  return state.loaderData[routeId];
 }
 
 /**
