@@ -18,8 +18,8 @@
   "license": "MIT",
   "author": "Remix Software <hello@remix.run>",
   "sideEffects": false,
-  "main": "./index.js",
-  "types": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "dependencies": {
     "@ungap/url-search-params": "^0.1.4",
     "react-router": "6.4.0-pre.2"

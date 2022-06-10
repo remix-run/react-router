@@ -1,5 +1,6 @@
 {
-  "include": ["**/*.ts"],
+  "include": ["index.ts"],
+  "exclude": ["dist/**/*"],
   "compilerOptions": {
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "target": "ES2020",
@@ -13,7 +14,7 @@
 
     "skipLibCheck": true,
 
-    "outDir": "../../build/node_modules/@remix-run/router",
+    "outDir": ".",
     "rootDir": "."
   }
 }

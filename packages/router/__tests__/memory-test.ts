@@ -1,5 +1,5 @@
-import type { MemoryHistory } from "../history";
-import { createMemoryHistory } from "../history";
+import type { MemoryHistory } from "@remix-run/router";
+import { createMemoryHistory } from "@remix-run/router";
 
 import Listen from "./TestSequences/Listen";
 import InitialLocationHasKey from "./TestSequences/InitialLocationHasKey";

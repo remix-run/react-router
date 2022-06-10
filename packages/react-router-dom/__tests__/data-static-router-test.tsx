@@ -1,9 +1,13 @@
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
-import { Route, useLocation } from "react-router-dom";
+import {
+  Outlet,
+  Route,
+  useLoaderData,
+  useLocation,
+  useMatches,
+} from "react-router-dom";
 import { DataStaticRouter } from "react-router-dom/server";
-import { Outlet } from "react-router/lib/components";
-import { useLoaderData, useMatches } from "react-router/lib/hooks";
 
 beforeEach(() => {
   jest.spyOn(console, "warn").mockImplementation(() => {});

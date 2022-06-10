@@ -15,7 +15,9 @@ import {
   Outlet,
   DataBrowserRouter,
 } from "react-router-dom";
-import { _resetModuleScope } from "react-router/lib/components";
+
+// Private API
+import { _resetModuleScope } from "../../react-router/lib/components";
 
 describe("NavLink", () => {
   describe("when it does not match", () => {

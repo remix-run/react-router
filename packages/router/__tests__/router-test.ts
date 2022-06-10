@@ -1,25 +1,27 @@
-import { createMemoryHistory, InitialEntry, parsePath } from "../history";
 import type {
-  HydrationState,
-  LoaderFunction,
-  RouterNavigateOptions,
-} from "../index";
-import type { Router } from "../router";
-import {
-  createRouter,
-  Fetcher,
-  IDLE_FETCHER,
-  IDLE_NAVIGATION,
-} from "../router";
-import {
   ActionFunction,
   DataRouteObject,
-  ErrorResponse,
+  Fetcher,
+  HydrationState,
+  InitialEntry,
+  LoaderFunction,
+  RouteMatch,
+  Router,
+  RouterNavigateOptions,
+} from "@remix-run/router";
+import {
+  createMemoryHistory,
+  createRouter,
+  IDLE_FETCHER,
+  IDLE_NAVIGATION,
   json,
   matchRoutes,
   redirect,
-  RouteMatch,
-} from "../utils";
+  parsePath,
+} from "@remix-run/router";
+
+// Private API
+import { ErrorResponse } from "../utils";
 
 jest.setTimeout(1000000);
 

@@ -11,7 +11,7 @@ import "@testing-library/jest-dom";
 import type { FormMethod, Router } from "@remix-run/router";
 import { createMemoryRouter } from "@remix-run/router";
 
-import type { DataMemoryRouterProps } from "../index";
+import type { DataMemoryRouterProps } from "react-router";
 import {
   DataMemoryRouter,
   Route,
@@ -27,7 +27,9 @@ import {
   UNSAFE_DataRouterContext,
   MemoryRouter,
   Routes,
-} from "../index";
+} from "react-router";
+
+// Private API
 import { _resetModuleScope } from "../lib/components";
 
 describe("<DataMemoryRouter>", () => {

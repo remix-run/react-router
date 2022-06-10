@@ -1,6 +1,5 @@
 npm-debug.log
 
-/build/
 /docs/api/
 /website/build/
 node_modules/
@@ -13,6 +12,11 @@ node_modules/
 /packages/*/cjs/
 /packages/*/esm/
 /packages/*/umd/
+
+# v6 build files
+/build/
+/packages/*/dist/
+/packages/*/LICENSE.md
 
 # compat module copies
 /packages/react-router-dom-v5-compat/react-router-dom
