@@ -1,12 +1,5 @@
-const path = require("path");
 const fs = require("fs");
-const babel = require("@rollup/plugin-babel").default;
-const copy = require("rollup-plugin-copy");
-const extensions = require("rollup-plugin-extensions");
-const prettier = require("rollup-plugin-prettier");
-const replace = require("@rollup/plugin-replace");
-const typescript = require("@rollup/plugin-typescript");
-const { terser } = require("rollup-plugin-terser");
+const path = require("path");
 
 module.exports = function rollup(options) {
   return fs
@@ -23,10 +16,3 @@ module.exports = function rollup(options) {
     })
     .filter((p) => p);
 };
-
-/**
- * @typedef {import('rollup').InputOptions} RollupInputOptions
- * @typedef {import('rollup').OutputOptions} RollupOutputOptions
- * @typedef {import('rollup').RollupOptions} RollupOptions
- * @typedef {import('rollup').Plugin} RollupPlugin
- */
