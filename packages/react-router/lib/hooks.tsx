@@ -2,6 +2,7 @@ import * as React from "react";
 import {
   isRouteErrorResponse,
   Location,
+  normalizePathname,
   ParamParseKey,
   Params,
   Path,
@@ -54,11 +55,24 @@ export function useHref(to: To): string {
   let joinedPathname = pathname;
   if (basename !== "/") {
     let toPathname = getToPathname(to);
-    let endsWithSlash = toPathname != null && toPathname.endsWith("/");
-    joinedPathname =
-      pathname === "/"
-        ? basename + (endsWithSlash ? "/" : "")
-        : joinPaths([basename, pathname]);
+
+    // Only append a trailing slash to the raw basename if the basename doesn't
+    // already have one and this wasn't specifically a route to "".  This
+    // allows folks to control the trailing slash behavior when using a basename
+    let appendSlash =
+      !basename.endsWith("/") &&
+      to !== "" &&
+      (to as Path)?.pathname !== "" &&
+      toPathname != null &&
+      toPathname.endsWith("/");
+
+    if (pathname !== "/") {
+      joinedPathname = joinPaths([basename, pathname]);
+    } else if (appendSlash) {
+      joinedPathname = basename + "/";
+    } else {
+      joinedPathname = basename;
+    }
   }
 
   return navigator.createHref({ pathname: joinedPathname, search, hash });
@@ -194,9 +208,11 @@ export function useNavigate(): NavigateFunction {
       );
 
       if (basename !== "/") {
-        // joinPaths will always add trailing slash to the basename
-        // If pathname is the default ('/'), basename value should decide about trailing slash
-        path.pathname = path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
+        // If this was a blank path, just use the basename directly
+        let isBlankPath = to === "" || (to as Path).pathname === "";
+        path.pathname = isBlankPath
+          ? basename
+          : joinPaths([basename, path.pathname]);
       }
 
       (!!options.replace ? navigator.replace : navigator.push)(
