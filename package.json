@@ -69,6 +69,7 @@
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
     "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.6.3",
     "babel-plugin-dev-expression": "^0.2.2",
     "chalk": "^4.1.1",
     "cheerio": "^1.0.0-rc.10",
