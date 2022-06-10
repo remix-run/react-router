@@ -16,7 +16,6 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "postbuild": "node scripts/copy-to-root.mjs",
     "clean": "git clean -fdX .",
     "format": "prettier --ignore-path .eslintignore --write .",
     "format:check": "prettier --ignore-path .eslintignore --check .",
