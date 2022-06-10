@@ -15,7 +15,6 @@
     ]
   },
   "scripts": {
-    "prebuild": "cpy 'packages/react-router-dom/*.ts*' packages/react-router-dom-v5-compat/react-router-dom",
     "build": "rollup -c",
     "postbuild": "node scripts/copy-to-root.mjs",
     "clean": "git clean -fdX .",
