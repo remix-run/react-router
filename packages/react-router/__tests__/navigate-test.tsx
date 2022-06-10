@@ -192,5 +192,30 @@ describe("<Navigate>", () => {
         </h1>
       `);
     });
+
+    it("handles relative navigation from nested index route", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/layout/thing"]}>
+            <Routes>
+              <Route path="layout">
+                <Route path=":param">
+                  {/* redirect /layout/:param/ index routes to /layout/:param/dest */}
+                  <Route index element={<Navigate to="dest" />} />
+                  <Route path="dest" element={<h1>Destination</h1>} />
+                </Route>
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <h1>
+          Destination
+        </h1>
+      `);
+    });
   });
 });
