@@ -401,4 +401,4 @@ Good luck!
 [loader]: ../route/loader
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
-[demo]: https://stackblitz.com/github/remix-run/react-router/tree/remixing/examples/notes?file=src%2Fmain.jsx
+[demo]: https://stackblitz.com/github/remix-run/react-router/tree/dev/examples/notes?file=src%2Fmain.jsx
