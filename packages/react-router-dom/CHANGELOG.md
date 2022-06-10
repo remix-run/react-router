@@ -1,5 +1,13 @@
 # react-router-dom
 
+## 6.4.0-pre.7
+
+### Patch Changes
+
+- 26302209: Respect the `<Link replace>` prop if it is defined (#8779)
+- Updated dependencies
+  - `react-router@6.4.0-pre.7`
+
 ## 6.4.0-pre.6
 
 ### Patch Changes

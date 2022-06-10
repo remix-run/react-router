@@ -1,5 +1,11 @@
 # @remix-run/router
 
+## 0.2.0-pre.2
+
+### Patch Changes
+
+- Capture fetcher errors at contextual route error boundaries (#8945)
+
 ## 0.2.0-pre.1
 
 ### Patch Changes
