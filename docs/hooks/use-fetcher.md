@@ -5,7 +5,7 @@ new: true
 
 # `useFetcher`
 
-In HTML/HTTP, data mutations and loads are modeled with navigation: `<a href>` and `<form action>`. Both cause a navigation in the browser. The React Router equivalents are `<Link>` and `<Form>`.
+In HTML/HTTP, data mutations and loads are modeled with navigation: `<a href>` and `<form action>`. Both cause a navigation in the browser. The React Router equivalents are [`<Link>`][link] and [`<Form>`][form].
 
 But sometimes you want to call a loader outside of navigation, or call an action (and get the data on the page to revalidate) without changing the URL. Or you need to have multiple mutations in-flight at the same time.
 
@@ -61,8 +61,8 @@ Fetchers have a lot of built-in behavior:
 You can know the state of the fetcher with `fetcher.state`. It will be one of:
 
 - **idle** - nothing is being fetched.
-- **submitting** - A form has been submitted. If the method is GET, then the route loader is being called. If POST, PUT, PATCH, or DELETE, then the route action is being called.
-- **loading** - The data on the page is being revalidated after an action submission
+- **submitting** - A route action is being called due to a fetcher submission using POST, PUT, PATCH, or DELETE
+- **loading** - The fetcher is calling a loader (from a `fetcher.load`) or the route data on the page is being revalidated after a fetcher submission
 
 ## `fetcher.Form`
 
@@ -102,6 +102,8 @@ function SomeComponent() {
 Although a URL might match multiple nested routes, a `fetcher.load()` call will only call the loader on the leaf match (or parent of [index routes][indexsearchparam]).
 
 If you find yourself calling this function inside of click handlers, you can probably simplify your code by using `<fetcher.Form>` instead.
+
+<docs-info>Any `fetcher.load` calls that are active on the page will be re-executed as part of revalidation (either after a navigation submission, another fetcher submission, or a `useRevalidator()` call)</docs-info>
 
 ## `fetcher.submit()`
 
@@ -217,3 +219,6 @@ Tells you the method of the form being submitted: get, post, put, patch, or dele
 // when the form is submitting
 fetcher.formMethod; // "post"
 ```
+
+[link]: ../components/link
+[form]: ../components/form
