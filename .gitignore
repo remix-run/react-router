@@ -13,7 +13,7 @@ node_modules/
 /packages/*/esm/
 /packages/*/umd/
 
-# v6+ build files
+# v6 build files
 /build/
 /packages/*/dist/
 /packages/*/LICENSE.md

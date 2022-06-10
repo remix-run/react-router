@@ -40,11 +40,13 @@ export * from "./router";
 
 export type {
   ActionFunction,
+  ActionFunctionArgs,
   DataRouteObject,
   FormEncType,
   FormMethod,
   JsonFunction,
   LoaderFunction,
+  LoaderFunctionArgs,
   ParamParseKey,
   Params,
   PathMatch,

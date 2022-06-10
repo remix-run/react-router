@@ -18,26 +18,38 @@ export interface Submission {
 }
 
 /**
- * Arguments passed to route loader/action functions
+ * @private
+ * Arguments passed to route loader/action functions.  Same for now but we keep
+ * this as a private implementation detail in case they diverge in the future.
  */
-export interface DataFunctionArgs {
+interface DataFunctionArgs {
   request: Request;
   params: Params;
   signal: AbortSignal;
 }
 
 /**
+ * Arguments passed to loader functions
+ */
+export interface LoaderFunctionArgs extends DataFunctionArgs {}
+
+/**
+ * Arguments passed to action functions
+ */
+export interface ActionFunctionArgs extends DataFunctionArgs {}
+
+/**
  * Route loader function signature
  */
 export interface LoaderFunction {
-  (args: DataFunctionArgs): Promise<Response> | Response | Promise<any> | any;
+  (args: LoaderFunctionArgs): Promise<Response> | Response | Promise<any> | any;
 }
 
 /**
  * Route action function signature
  */
 export interface ActionFunction {
-  (args: DataFunctionArgs): Promise<Response> | Response | Promise<any> | any;
+  (args: ActionFunctionArgs): Promise<Response> | Response | Promise<any> | any;
 }
 
 /**

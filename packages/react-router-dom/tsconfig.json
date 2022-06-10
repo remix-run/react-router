@@ -1,5 +1,5 @@
 {
-  "files": ["index.tsx", "dom.ts", "server.tsx"],
+  "files": ["index.tsx", "server.tsx"],
   "exclude": ["dist/**/*"],
   "compilerOptions": {
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
@@ -14,6 +14,8 @@
     "emitDeclarationOnly": true,
 
     "skipLibCheck": true,
+
+    "outDir": ".",
     "rootDir": "."
   }
 }

@@ -18,7 +18,6 @@
     "prebuild": "cpy 'packages/react-router-dom/*.ts*' packages/react-router-dom-v5-compat/react-router-dom",
     "build": "rollup -c",
     "postbuild": "node scripts/copy-to-root.mjs",
-    "changeset": "changeset",
     "clean": "git clean -fdX .",
     "format": "prettier --ignore-path .eslintignore --write .",
     "format:check": "prettier --ignore-path .eslintignore --check .",
@@ -28,6 +27,7 @@
     "release": "changeset publish",
     "size": "filesize",
     "test": "jest",
+    "changeset": "changeset",
     "version": "changeset version",
     "postversion": "node scripts/postversion.mjs",
     "version:experimental": "node scripts ./scripts/version experimental",
@@ -102,23 +102,23 @@
     "typescript": "^4.7.3"
   },
   "filesize": {
-    "build/node_modules/@remix-run/router/dist/router.production.min.js": {
+    "packages/router/dist/router.production.min.js": {
       "none": "21 kB"
     },
-    "build/node_modules/@remix-run/router/dist/umd/router.production.min.js": {
+    "packages/router/dist//umd/router.production.min.js": {
       "none": "23 kB"
     },
-    "build/node_modules/react-router/dist/react-router.production.min.js": {
+    "packages/react-router/dist/react-router.production.min.js": {
       "none": "10 kB"
     },
-    "build/node_modules/react-router/dist/umd/react-router.production.min.js": {
+    "packages/react-router/dist/umd/react-router.production.min.js": {
       "none": "12 kB"
     },
-    "build/node_modules/react-router-dom/dist/react-router-dom.production.min.js": {
+    "packages/react-router-dom/dist/react-router-dom.production.min.js": {
       "none": "10 kB"
     },
-    "build/node_modules/react-router-dom/dist/umd/react-router-dom.production.min.js": {
-      "none": "14 kB"
+    "packages/react-router-dom/dist/umd/react-router-dom.production.min.js": {
+      "none": "14.5 kB"
     }
   }
 }

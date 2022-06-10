@@ -155,15 +155,13 @@ export function useNavigate(): NavigateFunction {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  // Ignore pathless matches (i.e., share the same pathname as their ancestor)
+  // Ignore index + pathless matches
   let pathContributingMatches = matches.filter(
     (match, index) =>
-      index === 0 || match.pathnameBase !== matches[index - 1].pathnameBase
+      index === 0 ||
+      (!match.route.index &&
+        match.pathnameBase !== matches[index - 1].pathnameBase)
   );
-
-  if (matches.length > 0 && matches[matches.length - 1].route.index) {
-    pathContributingMatches.pop();
-  }
 
   let routePathnamesJson = JSON.stringify(
     pathContributingMatches.map((match) => match.pathnameBase)
@@ -639,15 +637,15 @@ export function useLoaderData() {
     `useLoaderData can only be used on routes that contain a unique "id"`
   );
 
-  return state.loaderData?.[thisRoute.route.id];
+  return state.loaderData[thisRoute.route.id];
 }
 
 /**
  * Returns the loaderData for the given routeId
  */
-export function useRouteLoaderData(routeId: string): any {
+export function useRouteLoaderData(routeId: string): any | undefined {
   let state = useDataRouterState(DataRouterHook.UseRouteLoaderData);
-  return state.loaderData?.[routeId];
+  return state.loaderData[routeId];
 }
 
 /**

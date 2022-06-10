@@ -4,10 +4,7 @@ title: useSearchParams (RN)
 
 # `useSearchParams` (React Native)
 
-> **Note:**
->
-> This is the React Native version of `useSearchParams`. For the web version,
-> [go here][usesearchparams].
+<docs-info>This is the React Native version of `useSearchParams`. For the web version, [go here][usesearchparams].</docs-info>
 
 <details>
   <summary>Type declaration</summary>
