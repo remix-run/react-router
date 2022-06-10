@@ -542,6 +542,7 @@ type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
 
 interface FormImplProps extends FormProps {
   fetcherKey?: string;
+  routeId?: string;
 }
 
 const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
@@ -552,11 +553,12 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       action = ".",
       onSubmit,
       fetcherKey,
+      routeId,
       ...props
     },
     forwardedRef
   ) => {
-    let submit = useSubmitImpl(fetcherKey);
+    let submit = useSubmitImpl(fetcherKey, routeId);
     let formMethod: FormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
     let formAction = useFormAction(action);
@@ -745,7 +747,7 @@ export function useSubmit(): SubmitFunction {
   return useSubmitImpl();
 }
 
-function useSubmitImpl(fetcherKey?: string): SubmitFunction {
+function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
   let router = React.useContext(UNSAFE_DataRouterContext);
   let defaultAction = useFormAction();
 
@@ -780,12 +782,13 @@ function useSubmitImpl(fetcherKey?: string): SubmitFunction {
         formEncType: encType as FormEncType,
       };
       if (fetcherKey) {
-        router.fetch(fetcherKey, href, opts);
+        invariant(routeId != null, "No routeId available for useFetcher()");
+        router.fetch(fetcherKey, routeId, href, opts);
       } else {
         router.navigate(href, opts);
       }
     },
-    [defaultAction, router, fetcherKey]
+    [defaultAction, router, fetcherKey, routeId]
   );
 }
 
@@ -803,10 +806,17 @@ export function useFormAction(action = "."): string {
   return pathname + search;
 }
 
-function createFetcherForm(fetcherKey: string) {
+function createFetcherForm(fetcherKey: string, routeId: string) {
   let FetcherForm = React.forwardRef<HTMLFormElement, FormProps>(
     (props, ref) => {
-      return <FormImpl {...props} ref={ref} fetcherKey={fetcherKey} />;
+      return (
+        <FormImpl
+          {...props}
+          ref={ref}
+          fetcherKey={fetcherKey}
+          routeId={routeId}
+        />
+      );
     }
   );
   if (__DEV__) {
@@ -831,13 +841,26 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
   let router = React.useContext(UNSAFE_DataRouterContext);
   invariant(router, `useFetcher must be used within a DataRouter`);
 
+  let route = React.useContext(UNSAFE_RouteContext);
+  invariant(route, `useFetcher must be used inside a RouteContext`);
+
+  let routeId = route.matches[route.matches.length - 1]?.route.id;
+  invariant(
+    routeId != null,
+    `useFetcher can only be used on routes that contain a unique "id"`
+  );
+
   let [fetcherKey] = React.useState(() => String(++fetcherId));
-  let [Form] = React.useState(() => createFetcherForm(fetcherKey));
-  let [load] = React.useState(() => (href: string) => {
-    invariant(router, `No router available for fetcher.load()`);
-    router.fetch(fetcherKey, href);
+  let [Form] = React.useState(() => {
+    invariant(routeId, `No routeId available for fetcher.Form()`);
+    return createFetcherForm(fetcherKey, routeId);
   });
-  let submit = useSubmitImpl(fetcherKey);
+  let [load] = React.useState(() => (href: string) => {
+    invariant(router, "No router available for fetcher.load()");
+    invariant(routeId, "No routeId available for fetcher.load()");
+    router.fetch(fetcherKey, routeId, href);
+  });
+  let submit = useSubmitImpl(fetcherKey, routeId);
 
   let fetcher = router.getFetcher<TData>(fetcherKey);
 
@@ -857,7 +880,7 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
     // fetcher is no longer around.
     return () => {
       if (!router) {
-        console.warn("No fetcher available to clean up from useFetcher()");
+        console.warn(`No fetcher available to clean up from useFetcher()`);
         return;
       }
       router.deleteFetcher(fetcherKey);

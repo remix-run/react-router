@@ -580,7 +580,7 @@ function setup({
     }
 
     let helpers = getFetcherHelpers(key, href, navigationId, opts);
-    currentRouter.fetch(key, href, opts);
+    currentRouter.fetch(key, enhancedRoutes[0].id, href, opts);
     return helpers;
   }
 
@@ -1497,7 +1497,7 @@ describe("a router", () => {
       await tick();
 
       let key = "key";
-      router.fetch(key, "/fetch");
+      router.fetch(key, "root", "/fetch");
       await tick();
       expect(router.state.fetchers.get(key)).toMatchObject({
         state: "idle",
@@ -1574,7 +1574,7 @@ describe("a router", () => {
       await tick();
 
       let key = "key";
-      router.fetch(key, "/fetch", {
+      router.fetch(key, "root", "/fetch", {
         formMethod: "post",
         formData: createFormData({ key: "value" }),
       });
@@ -4950,7 +4950,7 @@ describe("a router", () => {
         });
 
         let key = "key";
-        router.fetch(key, "/");
+        router.fetch(key, "root", "/");
         expect(router.state.fetchers.get(key)).toEqual({
           state: "loading",
           formMethod: undefined,
@@ -6174,7 +6174,7 @@ describe("a router", () => {
         expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
 
         // Fetch from a different route
-        router.fetch(key, "/fetch");
+        router.fetch(key, "root", "/fetch");
         await tick();
         expect(router.getFetcher(key)).toMatchObject({
           state: "idle",
