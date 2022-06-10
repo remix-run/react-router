@@ -73,6 +73,8 @@ This is a list of links, some of which are code:
 - [This is my second list item that’s a link][$link]
 - This is my third item that has `<code>` and [`<LinkedCode>` mixed with text][$link]
 
+And don't forget about proper styling for `<a>` tags that don’t have an `href`: <a>like this link right here</a>.
+
 ## Code
 
 Normal code:
