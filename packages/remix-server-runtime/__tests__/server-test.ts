@@ -880,7 +880,8 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(400);
       expect(testAction.mock.calls.length).toBe(1);
-      expect(rootLoader.mock.calls.length).toBe(1);
+      // Should not call root loader since it is the boundary route
+      expect(rootLoader.mock.calls.length).toBe(0);
       expect(testLoader.mock.calls.length).toBe(0);
       expect(build.entry.module.default.mock.calls.length).toBe(1);
 
@@ -890,9 +891,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.catch).toBeTruthy();
       expect(entryContext.appState.catch!.status).toBe(400);
       expect(entryContext.appState.catchBoundaryRouteId).toBe("root");
-      expect(entryContext.routeData).toEqual({
-        root: "root",
-      });
+      expect(entryContext.routeData).toEqual({});
     });
 
     test("thrown action responses bubble up for index routes", async () => {
@@ -926,7 +925,8 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(400);
       expect(indexAction.mock.calls.length).toBe(1);
-      expect(rootLoader.mock.calls.length).toBe(1);
+      // Should not call root loader since it is the boundary route
+      expect(rootLoader.mock.calls.length).toBe(0);
       expect(indexLoader.mock.calls.length).toBe(0);
       expect(build.entry.module.default.mock.calls.length).toBe(1);
 
@@ -936,9 +936,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.catch).toBeTruthy();
       expect(entryContext.appState.catch!.status).toBe(400);
       expect(entryContext.appState.catchBoundaryRouteId).toBe("root");
-      expect(entryContext.routeData).toEqual({
-        root: "root",
-      });
+      expect(entryContext.routeData).toEqual({});
     });
 
     test("thrown action responses catch deep", async () => {
@@ -1263,7 +1261,8 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(500);
       expect(testAction.mock.calls.length).toBe(1);
-      expect(rootLoader.mock.calls.length).toBe(1);
+      // Should not call root loader since it is the boundary route
+      expect(rootLoader.mock.calls.length).toBe(0);
       expect(testLoader.mock.calls.length).toBe(0);
       expect(build.entry.module.default.mock.calls.length).toBe(1);
 
@@ -1273,9 +1272,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.error).toBeTruthy();
       expect(entryContext.appState.error.message).toBe("test");
       expect(entryContext.appState.loaderBoundaryRouteId).toBe("root");
-      expect(entryContext.routeData).toEqual({
-        root: "root",
-      });
+      expect(entryContext.routeData).toEqual({});
     });
 
     test("action errors bubble up for index routes", async () => {
@@ -1309,7 +1306,8 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(500);
       expect(indexAction.mock.calls.length).toBe(1);
-      expect(rootLoader.mock.calls.length).toBe(1);
+      // Should not call root loader since it is the boundary route
+      expect(rootLoader.mock.calls.length).toBe(0);
       expect(indexLoader.mock.calls.length).toBe(0);
       expect(build.entry.module.default.mock.calls.length).toBe(1);
 
@@ -1319,9 +1317,7 @@ describe("shared server runtime", () => {
       expect(entryContext.appState.error).toBeTruthy();
       expect(entryContext.appState.error.message).toBe("index");
       expect(entryContext.appState.loaderBoundaryRouteId).toBe("root");
-      expect(entryContext.routeData).toEqual({
-        root: "root",
-      });
+      expect(entryContext.routeData).toEqual({});
     });
 
     test("action errors catch deep", async () => {

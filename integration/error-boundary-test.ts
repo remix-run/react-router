@@ -171,6 +171,52 @@ test.describe("ErrorBoundary", () => {
             return <div>${OWN_BOUNDARY_TEXT}</div>
           }
         `,
+
+        "app/routes/action.jsx": js`
+          import { Outlet, useLoaderData } from "@remix-run/react";
+
+          export function loader() {
+            return "PARENT";
+          }
+
+          export default function () {
+            return (
+              <div>
+                <p id="parent-data">{useLoaderData()}</p>
+                <Outlet />
+              </div>
+            )
+          }
+        `,
+
+        "app/routes/action/child-error.jsx": js`
+          import { Form, useLoaderData } from "@remix-run/react";
+
+          export function loader() {
+            return "CHILD";
+          }
+
+          export function action() {
+            throw new Error("Broken!");
+          }
+
+          export default function () {
+            return (
+              <>
+                <p id="child-data">{useLoaderData()}</p>
+                <Form method="post" reloadDocument={true}>
+                  <button type="submit" name="key" value="value">
+                    Submit
+                  </button>
+                </Form>
+              </>
+            )
+          }
+
+          export function ErrorBoundary({ error }) {
+            return <p id="child-error">{error.message}</p>;
+          }
+        `,
       },
     });
 
@@ -291,6 +337,20 @@ test.describe("ErrorBoundary", () => {
     await app.goto("/");
     await app.clickLink(HAS_BOUNDARY_RENDER);
     expect(await app.getHtml("main")).toMatch(OWN_BOUNDARY_TEXT);
+  });
+
+  test("uses correct error boundary on server action errors in nested routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto(`/action/child-error`);
+    expect(await app.getHtml("#parent-data")).toMatch("PARENT");
+    expect(await app.getHtml("#child-data")).toMatch("CHILD");
+    await page.click("button[type=submit]");
+    await page.waitForSelector("#child-error");
+    // Preserves parent loader data
+    expect(await app.getHtml("#parent-data")).toMatch("PARENT");
+    expect(await app.getHtml("#child-error")).toMatch("Broken!");
   });
 
   test.describe("if no error boundary exists in the app", () => {

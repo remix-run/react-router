@@ -182,6 +182,53 @@ test.describe("CatchBoundary", () => {
             return <div/>
           }
         `,
+
+        "app/routes/action.jsx": js`
+          import { Outlet, useLoaderData } from "@remix-run/react";
+
+          export function loader() {
+            return "PARENT";
+          }
+
+          export default function () {
+            return (
+              <div>
+                <p id="parent-data">{useLoaderData()}</p>
+                <Outlet />
+              </div>
+            )
+          }
+        `,
+
+        "app/routes/action/child-catch.jsx": js`
+          import { Form, useCatch, useLoaderData } from "@remix-run/react";
+
+          export function loader() {
+            return "CHILD";
+          }
+
+          export function action() {
+            throw new Response("Caught!", { status: 400 });
+          }
+
+          export default function () {
+            return (
+              <>
+                <p id="child-data">{useLoaderData()}</p>
+                <Form method="post" reloadDocument={true}>
+                  <button type="submit" name="key" value="value">
+                    Submit
+                  </button>
+                </Form>
+              </>
+            )
+          }
+
+          export function CatchBoundary() {
+            let caught = useCatch()
+            return <p id="child-catch">{caught.status} {caught.data}</p>;
+          }
+        `,
       },
     });
 
@@ -337,5 +384,20 @@ test.describe("CatchBoundary", () => {
     await app.goto("/fetcher-no-boundary");
     await app.clickSubmitButton(NO_BOUNDARY_NO_LOADER_OR_ACTION);
     expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
+  });
+
+  test("uses correct catch boundary on server action errors", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto(`/action/child-catch`);
+    expect(await app.getHtml("#parent-data")).toMatch("PARENT");
+    expect(await app.getHtml("#child-data")).toMatch("CHILD");
+    await page.click("button[type=submit]");
+    await page.waitForSelector("#child-catch");
+    // Preserves parent loader data
+    expect(await app.getHtml("#parent-data")).toMatch("PARENT");
+    expect(await app.getHtml("#child-catch")).toMatch("400");
+    expect(await app.getHtml("#child-catch")).toMatch("Caught!");
   });
 });
