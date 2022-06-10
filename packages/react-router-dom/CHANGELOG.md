@@ -12,7 +12,8 @@
 
 ### Patch Changes
 
-- react-router@6.4.0-pre.6
+- Updated dependencies
+  - `react-router@6.4.0-pre.6`
 
 ## 6.4.0-pre.5
 
@@ -20,7 +21,7 @@
 
 - Fix broken require for CJS builds
 - Updated dependencies
-  - react-router@6.4.0-pre.5
+  - `react-router@6.4.0-pre.5`
 
 ## 6.4.0-pre.4
 
