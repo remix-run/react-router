@@ -10,7 +10,7 @@ import {
 import { joinPaths } from "../lib/router";
 
 describe("useNavigate", () => {
-  it("transitions to the new location", () => {
+  it("navigates to the new location", () => {
     function Home() {
       let navigate = useNavigate();
 

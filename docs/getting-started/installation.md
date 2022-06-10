@@ -50,19 +50,23 @@ Follow the instructions in the [React documentation to set up a new project with
 
 Once your project is set up and React Router is installed as a dependency, open the `src/index.js` in your text editor. Import `BrowserRouter` from `react-router-dom` near the top of your file and wrap your app in a `<BrowserRouter>`:
 
-```js [3, 9-11]
+```js [3, 13-15]
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App";
-import * as serviceWorker from "./serviceWorker";
+import reportWebVitals from "./reportWebVitals";
 
-ReactDOM.render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>,
+const root = ReactDOM.createRoot(
   document.getElementById("root")
+);
+root.render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
 );
 ```
 
@@ -151,15 +155,19 @@ Go to the `index.js` file in your project and import the necessary functions fro
 ```js
 // index.js
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.js";
 
-ReactDOM.render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>,
+const root = ReactDOM.createRoot(
   document.getElementById("root")
+);
+root.render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
 );
 ```
 

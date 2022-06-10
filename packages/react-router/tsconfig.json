@@ -1,7 +1,8 @@
 {
   "files": ["index.ts"],
+  "exclude": ["dist/**/*"],
   "compilerOptions": {
-    "lib": ["ES2020"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "target": "ES2020",
     "module": "ES2020",
     "moduleResolution": "node",
@@ -14,7 +15,7 @@
 
     "skipLibCheck": true,
 
-    "outDir": "../../build/node_modules/react-router",
+    "outDir": ".",
     "rootDir": "."
   }
 }
