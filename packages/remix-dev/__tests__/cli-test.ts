@@ -110,6 +110,7 @@ describe("remix CLI", () => {
             --sourcemap         Generate source maps for production
           \`dev\` Options:
             --debug             Attach Node.js inspector
+            --port, -p          Choose the port from which to run your app
           \`routes\` Options:
             --json              Print the routes as JSON
           \`migrate\` Options:

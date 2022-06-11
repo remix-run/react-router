@@ -40,6 +40,7 @@ ${colors.heading("Options")}:
   --sourcemap         Generate source maps for production
 \`dev\` Options:
   --debug             Attach Node.js inspector
+  --port, -p          Choose the port from which to run your app
 \`routes\` Options:
   --json              Print the routes as JSON
 \`migrate\` Options:
@@ -124,10 +125,13 @@ const npxInterop = {
   pnpm: "pnpm exec",
 };
 
-async function dev(projectDir: string, flags: { debug?: boolean }) {
+async function dev(
+  projectDir: string,
+  flags: { debug?: boolean; port?: number }
+) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
   if (flags.debug) inspector.open();
-  await commands.dev(projectDir, process.env.NODE_ENV);
+  await commands.dev(projectDir, process.env.NODE_ENV, flags.port);
 }
 
 /**
@@ -155,6 +159,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       install: { type: "boolean" },
       json: { type: "boolean" },
       migration: { type: "string", alias: "m" },
+      port: { type: "number", alias: "p" },
       remixVersion: { type: "string" },
       sourcemap: { type: "boolean" },
       template: { type: "string" },
