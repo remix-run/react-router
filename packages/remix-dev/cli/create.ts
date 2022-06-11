@@ -191,8 +191,14 @@ export async function createApp({
   appPkg = sortPackageJSON(appPkg);
   await fse.writeJSON(pkgJsonPath, appPkg, { spaces: 2 });
 
-  if (!useTypeScript) {
+  if (
+    !useTypeScript &&
+    fse.existsSync(path.join(projectDir, "tsconfig.json"))
+  ) {
+    let spinner = ora("Converting template to JavaScript…").start();
     await convertTemplateToJavaScript(projectDir);
+    spinner.stop();
+    spinner.clear();
   }
 
   if (installDeps) {
