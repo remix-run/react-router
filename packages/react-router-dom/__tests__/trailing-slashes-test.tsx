@@ -10,6 +10,8 @@ import {
   Navigate,
   Link,
   Outlet,
+  useSearchParams,
+  useLocation,
 } from "react-router-dom";
 
 describe("trailing slashes", () => {
@@ -48,15 +50,15 @@ describe("trailing slashes", () => {
         });
 
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
-        NodeList [
-          <a
-            href="/app"
-          />,
-          <a
-            href="/app/"
-          />,
-        ]
-      `);
+          NodeList [
+            <a
+              href="/app"
+            />,
+            <a
+              href="/app/"
+            />,
+          ]
+        `);
       });
 
       test('lets root links control trailing slashes (path="")', () => {
@@ -81,15 +83,15 @@ describe("trailing slashes", () => {
         });
 
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
-        NodeList [
-          <a
-            href="/app"
-          />,
-          <a
-            href="/app/"
-          />,
-        ]
-      `);
+          NodeList [
+            <a
+              href="/app"
+            />,
+            <a
+              href="/app/"
+            />,
+          ]
+        `);
       });
 
       test("lets nested link control trailing slashes", () => {
@@ -140,39 +142,39 @@ describe("trailing slashes", () => {
         });
 
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
-        NodeList [
-          <a
-            href="/app"
-          />,
-          <a
-            href="/app/"
-          />,
-          <a
-            href="/app"
-          />,
-          <a
-            href="/app/"
-          />,
-          <a
-            href="/app/parent"
-          />,
-          <a
-            href="/app/parent/"
-          />,
-          <a
-            href="/app"
-          />,
-          <a
-            href="/app/"
-          />,
-          <a
-            href="/app/parent/child"
-          />,
-          <a
-            href="/app/parent/child/"
-          />,
-        ]
-      `);
+          NodeList [
+            <a
+              href="/app"
+            />,
+            <a
+              href="/app/"
+            />,
+            <a
+              href="/app"
+            />,
+            <a
+              href="/app/"
+            />,
+            <a
+              href="/app/parent"
+            />,
+            <a
+              href="/app/parent/"
+            />,
+            <a
+              href="/app"
+            />,
+            <a
+              href="/app/"
+            />,
+            <a
+              href="/app/parent/child"
+            />,
+            <a
+              href="/app/parent/child/"
+            />,
+          ]
+        `);
       });
     });
 
@@ -199,15 +201,15 @@ describe("trailing slashes", () => {
         });
 
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
-        NodeList [
-          <a
-            href="/app/"
-          />,
-          <a
-            href="/app/"
-          />,
-        ]
-      `);
+          NodeList [
+            <a
+              href="/app/"
+            />,
+            <a
+              href="/app/"
+            />,
+          ]
+        `);
       });
 
       test('always contains trailing slashes on root links (path="" route)', () => {
@@ -232,15 +234,15 @@ describe("trailing slashes", () => {
         });
 
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
-        NodeList [
-          <a
-            href="/app/"
-          />,
-          <a
-            href="/app/"
-          />,
-        ]
-      `);
+          NodeList [
+            <a
+              href="/app/"
+            />,
+            <a
+              href="/app/"
+            />,
+          ]
+        `);
       });
 
       test("always contains root trailing slashes in nested routes", () => {
@@ -291,126 +293,155 @@ describe("trailing slashes", () => {
         });
 
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
-        NodeList [
-          <a
-            href="/app/"
-          />,
-          <a
-            href="/app/"
-          />,
-          <a
-            href="/app/"
-          />,
-          <a
-            href="/app/"
-          />,
-          <a
-            href="/app/parent"
-          />,
-          <a
-            href="/app/parent/"
-          />,
-          <a
-            href="/app/"
-          />,
-          <a
-            href="/app/"
-          />,
-          <a
-            href="/app/parent/child"
-          />,
-          <a
-            href="/app/parent/child/"
-          />,
-        ]
-      `);
+          NodeList [
+            <a
+              href="/app/"
+            />,
+            <a
+              href="/app/"
+            />,
+            <a
+              href="/app/"
+            />,
+            <a
+              href="/app/"
+            />,
+            <a
+              href="/app/parent"
+            />,
+            <a
+              href="/app/parent/"
+            />,
+            <a
+              href="/app/"
+            />,
+            <a
+              href="/app/"
+            />,
+            <a
+              href="/app/parent/child"
+            />,
+            <a
+              href="/app/parent/child/"
+            />,
+          ]
+        `);
       });
     });
+  });
 
-    describe("in a <Navigate> element", () => {
-      it("should not include trailing slash", () => {
-        let window = getWindowImpl("/foo/bar");
-        spyOn(window.history, "pushState").and.callThrough();
+  describe("in a <Navigate> element", () => {
+    it("should not include trailing slash on empty string path", () => {
+      let window = getWindowImpl("/foo/bar");
+      spyOn(window.history, "pushState").and.callThrough();
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+      expect(window.location.href).toBe("https://remix.run/foo/bar");
 
-        act(() => {
-          ReactDOM.render(
-            <BrowserRouter basename="/foo" window={window}>
-              <Routes>
-                <Route index element={<h1>👋</h1>} />
-                <Route path="bar" element={<Navigate to="" />} />
-              </Routes>
-            </BrowserRouter>,
-            node
-          );
-        });
-
-        expect(window.location.href).toBe("https://remix.run/foo");
+      act(() => {
+        ReactDOM.render(
+          <BrowserRouter basename="/foo" window={window}>
+            <Routes>
+              <Route index element={<h1>👋</h1>} />
+              <Route path="bar" element={<Navigate to="" />} />
+            </Routes>
+          </BrowserRouter>,
+          node
+        );
       });
 
-      it("should include trailing slash from the Navigate", () => {
-        let window = getWindowImpl("/foo/bar");
-        spyOn(window.history, "pushState").and.callThrough();
+      expect(window.location.href).toBe("https://remix.run/foo");
+    });
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+    it("should not include trailing slash via useSearchParams", () => {
+      let window = getWindowImpl("/foo");
+      spyOn(window.history, "pushState").and.callThrough();
 
-        act(() => {
-          ReactDOM.render(
-            <BrowserRouter basename="/foo" window={window}>
-              <Routes>
-                <Route index element={<h1>👋</h1>} />
-                <Route path="bar" element={<Navigate to="/" />} />
-              </Routes>
-            </BrowserRouter>,
-            node
-          );
-        });
+      expect(window.location.href).toBe("https://remix.run/foo");
 
-        expect(window.location.href).toBe("https://remix.run/foo/");
+      function SetSearchParams() {
+        let [, setSearchParams] = useSearchParams();
+        React.useEffect(
+          () => setSearchParams({ key: "value" }),
+          [setSearchParams]
+        );
+        return <h1>👋</h1>;
+      }
+
+      act(() => {
+        ReactDOM.render(
+          <BrowserRouter basename="/foo" window={window}>
+            <Routes>
+              <Route index element={<SetSearchParams />} />
+            </Routes>
+          </BrowserRouter>,
+          node
+        );
       });
 
-      it("should include trailing slash from the basename", () => {
-        let window = getWindowImpl("/foo/bar");
-        spyOn(window.history, "pushState").and.callThrough();
+      expect(window.location.href).toBe("https://remix.run/foo?key=value");
+    });
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+    it("should include trailing slash from the Navigate", () => {
+      let window = getWindowImpl("/foo/bar");
+      spyOn(window.history, "pushState").and.callThrough();
 
-        act(() => {
-          ReactDOM.render(
-            <BrowserRouter basename="/foo/" window={window}>
-              <Routes>
-                <Route index element={<h1>👋</h1>} />
-                <Route path="bar" element={<Navigate to="" />} />
-              </Routes>
-            </BrowserRouter>,
-            node
-          );
-        });
+      expect(window.location.href).toBe("https://remix.run/foo/bar");
 
-        expect(window.location.href).toBe("https://remix.run/foo/");
+      act(() => {
+        ReactDOM.render(
+          <BrowserRouter basename="/foo" window={window}>
+            <Routes>
+              <Route index element={<h1>👋</h1>} />
+              <Route path="bar" element={<Navigate to="/" />} />
+            </Routes>
+          </BrowserRouter>,
+          node
+        );
       });
 
-      it("should include trailing slash from both", () => {
-        let window = getWindowImpl("/foo/bar");
-        spyOn(window.history, "pushState").and.callThrough();
+      expect(window.location.href).toBe("https://remix.run/foo/");
+    });
 
-        expect(window.location.href).toBe("https://remix.run/foo/bar");
+    it("should include trailing slash from the basename", () => {
+      let window = getWindowImpl("/foo/bar");
+      spyOn(window.history, "pushState").and.callThrough();
 
-        act(() => {
-          ReactDOM.render(
-            <BrowserRouter basename="/foo/" window={window}>
-              <Routes>
-                <Route index element={<h1>👋</h1>} />
-                <Route path="bar" element={<Navigate to="/" />} />
-              </Routes>
-            </BrowserRouter>,
-            node
-          );
-        });
+      expect(window.location.href).toBe("https://remix.run/foo/bar");
 
-        expect(window.location.href).toBe("https://remix.run/foo/");
+      act(() => {
+        ReactDOM.render(
+          <BrowserRouter basename="/foo/" window={window}>
+            <Routes>
+              <Route index element={<h1>👋</h1>} />
+              <Route path="bar" element={<Navigate to="" />} />
+            </Routes>
+          </BrowserRouter>,
+          node
+        );
       });
+
+      expect(window.location.href).toBe("https://remix.run/foo/");
+    });
+
+    it("should include trailing slash from both", () => {
+      let window = getWindowImpl("/foo/bar");
+      spyOn(window.history, "pushState").and.callThrough();
+
+      expect(window.location.href).toBe("https://remix.run/foo/bar");
+
+      act(() => {
+        ReactDOM.render(
+          <BrowserRouter basename="/foo/" window={window}>
+            <Routes>
+              <Route index element={<h1>👋</h1>} />
+              <Route path="bar" element={<Navigate to="/" />} />
+            </Routes>
+          </BrowserRouter>,
+          node
+        );
+      });
+
+      expect(window.location.href).toBe("https://remix.run/foo/");
     });
   });
 });

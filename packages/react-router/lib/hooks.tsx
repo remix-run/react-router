@@ -208,8 +208,10 @@ export function useNavigate(): NavigateFunction {
       );
 
       if (basename !== "/") {
-        // If this was a blank path, just use the basename directly
-        let isBlankPath = to === "" || (to as Path).pathname === "";
+        // If this was a blank path, just use the basename directly, this gives
+        // the user control over trailing slash behavior
+        let toPath = typeof to === "string" ? parsePath(to) : to;
+        let isBlankPath = toPath.pathname == null || toPath.pathname === "";
         path.pathname = isBlankPath
           ? basename
           : joinPaths([basename, path.pathname]);
