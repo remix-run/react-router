@@ -60,6 +60,7 @@ export { createSearchParams };
 // Note: Keep in sync with react-router exports!
 export type {
   ActionFunction,
+  ActionFunctionArgs,
   DataMemoryRouterProps,
   DataRouteMatch,
   Fetcher,
@@ -68,6 +69,7 @@ export type {
   JsonFunction,
   LayoutRouteProps,
   LoaderFunction,
+  LoaderFunctionArgs,
   Location,
   MemoryRouterProps,
   NavigateFunction,
