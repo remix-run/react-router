@@ -1,9 +1,11 @@
 import type {
   ActionFunction,
+  ActionFunctionArgs,
   DataRouteMatch,
   Fetcher,
   JsonFunction,
   LoaderFunction,
+  LoaderFunctionArgs,
   Location,
   Navigation,
   Params,
@@ -92,6 +94,7 @@ type Search = string;
 // Expose react-router public API
 export type {
   ActionFunction,
+  ActionFunctionArgs,
   DataMemoryRouterProps,
   DataRouteMatch,
   Fetcher,
@@ -100,6 +103,7 @@ export type {
   JsonFunction,
   LayoutRouteProps,
   LoaderFunction,
+  LoaderFunctionArgs,
   Location,
   MemoryRouterProps,
   NavigateFunction,
