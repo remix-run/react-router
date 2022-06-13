@@ -1601,6 +1601,120 @@ describe("a router", () => {
 
       router.dispose();
     });
+
+    it("preserves non-revalidated loaderData on navigations", async () => {
+      let count = 0;
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "",
+            id: "root",
+            loader: () => `ROOT ${++count}`,
+            element: {},
+            children: [
+              {
+                path: "/",
+                id: "index",
+                loader: (args) => "SHOULD NOT GET CALLED",
+                shouldRevalidate: () => false,
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT 0",
+            index: "INDEX",
+          },
+        },
+      });
+      router.initialize();
+      await tick();
+
+      // Navigating to the same link would normally cause all loaders to re-run
+      router.navigate("/");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: "ROOT 1",
+        index: "INDEX",
+      });
+
+      router.navigate("/");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: "ROOT 2",
+        index: "INDEX",
+      });
+
+      router.dispose();
+    });
+
+    it("preserves non-revalidated loaderData on fetches", async () => {
+      let count = 0;
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "",
+            id: "root",
+            element: {},
+            children: [
+              {
+                path: "/",
+                id: "index",
+                loader: () => "SHOULD NOT GET CALLED",
+                shouldRevalidate: () => false,
+              },
+              {
+                path: "/fetch",
+                id: "fetch",
+                action: () => `FETCH ${++count}`,
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX",
+          },
+        },
+      });
+      router.initialize();
+      await tick();
+
+      let key = "key";
+
+      router.fetch(key, "root", "/fetch", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await tick();
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: "FETCH 1",
+      });
+      expect(router.state.loaderData).toMatchObject({
+        index: "INDEX",
+      });
+
+      router.fetch(key, "root", "/fetch", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await tick();
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: "FETCH 2",
+      });
+      expect(router.state.loaderData).toMatchObject({
+        index: "INDEX",
+      });
+
+      router.dispose();
+    });
   });
 
   describe("no route match", () => {

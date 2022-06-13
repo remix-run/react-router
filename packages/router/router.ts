@@ -1898,6 +1898,14 @@ function processLoaderData(
     }
   });
 
+  // Preserve any existing loaderData for loaders that did not need to reload
+  matches.forEach((match) => {
+    let { id } = match.route;
+    if (!matchesToLoad.some((m) => id) && state.loaderData[id] !== undefined) {
+      loaderData[id] = state.loaderData[id];
+    }
+  });
+
   // If we didn't consume the pending action error (i.e., all loaders
   // resolved), then consume it here
   if (pendingActionError) {
