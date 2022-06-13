@@ -1958,11 +1958,10 @@ describe("a router", () => {
 
       await B.loaders.root.resolve("ROOT*");
       let C = await B.loaders.bar.redirectReturn("/baz");
-      expect(B.loaders.root.stub.mock.calls.length).toBe(1);
+      expect(C.loaders.root.stub.mock.calls.length).toBe(1);
 
       await C.loaders.root.resolve("ROOT**");
       await C.loaders.baz.resolve("BAZ");
-      expect(C.loaders.root.stub.mock.calls.length).toBe(1);
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.loaderData).toEqual({
         baz: "BAZ",
