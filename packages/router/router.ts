@@ -214,11 +214,7 @@ export interface RouterInit {
   routes: RouteObject[];
   history: History;
   hydrationData?: HydrationState;
-  // Function to be passed to put this router into SSR mode, where we allow a
-  // singular navigation and we call this method either on navigation completion
-  // (potentially with errors) or upon encountering a redirect in which case we
-  // do not complete the navigation
-  ssrCallback?: (router: Router, redirect?: RedirectResult) => void;
+  isSSR?: boolean;
 }
 
 /**
@@ -439,7 +435,7 @@ export function createRouter(init: RouterInit): Router {
     "You must provide a non-empty routes array to use Data Routers"
   );
   invariant(
-    !(init.ssrCallback && init.hydrationData),
+    !(init.isSSR && init.hydrationData),
     "You cannot provide hydrationData to a data router during SSR"
   );
 
@@ -541,7 +537,7 @@ export function createRouter(init: RouterInit): Router {
   // Implemented as a Fluent API for ease of:
   //   let router = createRouter(init).initialize();
   function initialize() {
-    invariant(!init.ssrCallback, "Cannot call router.initialize() during SSR");
+    invariant(!init.isSSR, "Cannot call router.initialize() during SSR");
 
     // If history informs us of a POP navigation, start the navigation but do not update
     // state.  We'll update our own state once the navigation completes
@@ -635,8 +631,7 @@ export function createRouter(init: RouterInit): Router {
     });
 
     // No need to update history or internal state in SSR mode,
-    if (init.ssrCallback) {
-      init.ssrCallback(router);
+    if (init.isSSR) {
       return;
     }
 
@@ -664,13 +659,13 @@ export function createRouter(init: RouterInit): Router {
     opts?: RouterNavigateOptions
   ): Promise<void> {
     invariant(
-      !init.ssrCallback ||
+      !init.isSSR ||
         (!state.initialized && state.navigation === IDLE_NAVIGATION),
       "Can only call router.navigate() one time during SSR"
     );
 
     if (typeof path === "number") {
-      invariant(!init.ssrCallback, "Cannot perform POP navigations during SSR");
+      invariant(!init.isSSR, "Cannot perform POP navigations during SSR");
       init.history.go(path);
       return;
     }
@@ -1094,7 +1089,7 @@ export function createRouter(init: RouterInit): Router {
     href: string,
     opts?: RouterNavigateOptions
   ) {
-    invariant(!init.ssrCallback, "Cannot call router.fetch() during SSR");
+    invariant(!init.isSSR, "Cannot call router.fetch() during SSR");
 
     if (typeof AbortController === "undefined") {
       throw new Error(
@@ -1404,9 +1399,8 @@ export function createRouter(init: RouterInit): Router {
   ) {
     // Do not follow redirects in SSR, just propagate them outwards and stop
     // processing this navigation
-    if (init.ssrCallback) {
-      init.ssrCallback(router, redirect);
-      return;
+    if (init.isSSR) {
+      throw redirect;
     }
 
     if (redirect.revalidate) {
@@ -1889,9 +1883,13 @@ function createRequest(
 
   return new Request(url, {
     method: formMethod.toUpperCase(),
-    headers: {
-      "Content-Type": formEncType,
-    },
+    ...(formEncType === "application/x-www-form-urlencoded"
+      ? {
+          headers: {
+            "Content-Type": formEncType,
+          },
+        }
+      : {}),
     body,
   });
 }

@@ -50,7 +50,7 @@ async function createServer() {
       }
 
       try {
-        let { hydrationData, html: appHtml, status } = await render(url);
+        let { hydrationData, html: appHtml } = await render(url);
         let scriptHtml = `
           <script>
             window.__hydrationData = JSON.parse(${JSON.stringify(
