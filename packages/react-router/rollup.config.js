@@ -217,7 +217,7 @@ module.exports = function rollup() {
   ];
 
   return [...modules, ...webModules, ...globals, ...node];
-}
+};
 
 /**
  * @typedef {import('rollup').InputOptions} RollupInputOptions
