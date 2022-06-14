@@ -1848,9 +1848,15 @@ function createRequest(
 
   return new Request(url, {
     method: formMethod.toUpperCase(),
-    headers: {
-      "Content-Type": formEncType,
-    },
+    // Only set the content-type if the body is not FormData
+    // This allows for the browser to set the proper Content-Type including charset and boundary
+    // See https://stackoverflow.com/questions/39280438/fetch-missing-boundary-in-multipart-form-data-post
+    headers:
+      body instanceof FormData
+        ? undefined
+        : {
+            "Content-Type": formEncType,
+          },
     body,
   });
 }
