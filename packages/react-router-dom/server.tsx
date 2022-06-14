@@ -1,21 +1,19 @@
 import * as React from "react";
-import type { RouterInit } from "@remix-run/router";
-import {
-  Action,
-  createMemoryHistory,
-  createRouter,
-  invariant,
+import type {
+  DataRouteObject,
+  Router as DataRouter,
+  RouterState,
 } from "@remix-run/router";
+import { Action, invariant } from "@remix-run/router";
 import {
   Location,
   To,
   createPath,
   parsePath,
   Router,
-  createRoutesFromChildren,
-  Routes,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  useRoutes,
 } from "react-router-dom";
 
 export interface StaticRouterProps {
@@ -60,49 +58,45 @@ export function StaticRouter({
 }
 
 export interface DataStaticRouterProps {
-  data: RouterInit["hydrationData"];
-  location: Partial<Location> | string;
-  children?: React.ReactNode;
+  router: DataRouter;
 }
 
 /**
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function DataStaticRouter({
-  data,
-  location = "/",
-  children,
-}: DataStaticRouterProps) {
-  // Create a router but do not call initialize() so it has no side effects
-  // and performs no data fetching
-  let staticRouter = createRouter({
-    history: createMemoryHistory({ initialEntries: [location] }),
-    routes: createRoutesFromChildren(children),
-    hydrationData: data,
-  });
-
+export function DataStaticRouter({ router }: DataStaticRouterProps) {
   invariant(
-    staticRouter.state.initialized,
-    "You must provide a complete `data` prop for <DataStaticRouter>"
+    router.state.initialized,
+    "You must provide an initialized router to <DataStaticRouter>"
   );
 
-  let staticNavigator = getStatelessNavigator();
-
   return (
-    <DataRouterContext.Provider value={staticRouter}>
-      <DataRouterStateContext.Provider value={staticRouter.state}>
+    <DataRouterContext.Provider value={router}>
+      <DataRouterStateContext.Provider value={router.state}>
         <Router
-          location={staticRouter.state.location}
-          navigationType={staticRouter.state.historyAction}
-          navigator={staticNavigator}
+          location={router.state.location}
+          navigationType={router.state.historyAction}
+          navigator={getStatelessNavigator()}
           static={true}
         >
-          <Routes children={children} />
+          <DataRoutes routes={router.routes} location={router.state.location} />
         </Router>
       </DataRouterStateContext.Provider>
     </DataRouterContext.Provider>
   );
+}
+
+interface DataRoutesProps {
+  routes: DataRouteObject[];
+  location: RouterState["location"];
+}
+
+function DataRoutes({
+  routes,
+  location,
+}: DataRoutesProps): React.ReactElement | null {
+  return useRoutes(routes, location);
 }
 
 function getStatelessNavigator() {
