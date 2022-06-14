@@ -2334,7 +2334,7 @@ function testDomRouter(name, TestDataRouter, getWindow) {
       });
     });
 
-    it.only("can access formData in action", async () => {
+    it("can access formData in action", async () => {
       function TestComponent() {
         const [value, setValue] = React.useState<string | null>(null);
 
