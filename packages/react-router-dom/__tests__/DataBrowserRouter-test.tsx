@@ -2345,9 +2345,9 @@ function testDomRouter(name, TestDataRouter, getWindow) {
               <Route
                 path="/"
                 action={async ({ request }) => {
-                  console.log(request);
-                  const fd = await request.formData();
-                  setValue(fd.get("foo") as string);
+                  request.formData().then((fd) => {
+                    setValue(fd.get("foo") as string);
+                  });
                 }}
                 element={
                   <Form method="post" encType="multipart/form-data">
