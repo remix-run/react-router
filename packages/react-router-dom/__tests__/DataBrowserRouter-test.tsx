@@ -2333,6 +2333,39 @@ function testDomRouter(name, TestDataRouter, getWindow) {
         `);
       });
     });
+
+    it.only("can access formData in action", async () => {
+      function TestComponent() {
+        const [value, setValue] = React.useState<string | null>(null);
+
+        return (
+          <>
+            <span>{value}</span>
+            <TestDataRouter>
+              <Route
+                path="/"
+                action={async ({ request }) => {
+                  console.log(request);
+                  const fd = await request.formData();
+                  setValue(fd.get("foo") as string);
+                }}
+                element={
+                  <Form method="post" encType="multipart/form-data">
+                    <input name="foo" value="foo-value" />
+                    <button type="submit">Submit</button>
+                  </Form>
+                }
+              />
+            </TestDataRouter>
+          </>
+        );
+      }
+
+      render(<TestComponent />);
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("foo-value"));
+    });
   });
 }
 
