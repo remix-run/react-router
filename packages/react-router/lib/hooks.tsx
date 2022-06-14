@@ -137,6 +137,17 @@ export interface NavigateFunction {
   (delta: number): void;
 }
 
+function getRoutePathnamesJson(matches: RouteMatch[]) {
+  // Ignore index + pathless matches
+  const pathContributingMatches = matches.filter(
+    (match, index) =>
+      index === 0 ||
+      (!match.route.index &&
+        match.pathnameBase !== matches[index - 1].pathnameBase)
+  )
+  return JSON.stringify(pathContributingMatches.map((match) => match.pathnameBase));
+}
+
 /**
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
@@ -155,17 +166,7 @@ export function useNavigate(): NavigateFunction {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  // Ignore index + pathless matches
-  let pathContributingMatches = matches.filter(
-    (match, index) =>
-      index === 0 ||
-      (!match.route.index &&
-        match.pathnameBase !== matches[index - 1].pathnameBase)
-  );
-
-  let routePathnamesJson = JSON.stringify(
-    pathContributingMatches.map((match) => match.pathnameBase)
-  );
+  let routePathnamesJson = getRoutePathnamesJson(matches)
 
   let activeRef = React.useRef(false);
   React.useEffect(() => {
@@ -261,9 +262,7 @@ export function useResolvedPath(to: To): Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  let routePathnamesJson = JSON.stringify(
-    matches.map((match) => match.pathnameBase)
-  );
+  let routePathnamesJson = getRoutePathnamesJson(matches);
 
   return React.useMemo(
     () => resolveTo(to, JSON.parse(routePathnamesJson), locationPathname),
