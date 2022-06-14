@@ -106,7 +106,7 @@ export function useRenderDataRouter({
           navigationType={state.historyAction}
           navigator={navigator}
         >
-          <DataRoutes routes={routes} children={children} />
+          <DataRoutes routes={router.routes} children={children} />
         </Router>
       </DataRouterStateContext.Provider>
     </DataRouterContext.Provider>
