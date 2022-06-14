@@ -7,19 +7,19 @@
     "build:client": "vite build --outDir dist/client --ssrManifest",
     "build:server": "vite build --ssr src/entry.server.tsx --outDir dist/server",
     "start": "cross-env NODE_ENV=production node server.js",
-    "debug": "node --inspect-brk server.js"
+    "debug": "node --inspect-brk server.js",
+    "setup": "npm ci; cd ../..;  LOCAL_BUILD_DIRECTORY=examples/ssr-data-router yarn build; cp packages/react-router-dom/server* examples/ssr-data-router/node_modules/react-router-dom/; cd examples/ssr-data-router"
   },
   "dependencies": {
     "@remix-run/node": "^1.5.1",
-    "@remix-run/router": "^0.1.0",
+    "@remix-run/router": "^0.2.0-pre.2",
     "compression": "1.7.4",
     "cross-env": "^7.0.3",
     "express": "^4.17.1",
     "history": "^5.2.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-router": "6.4.0-pre.2",
-    "react-router-dom": "6.4.0-pre.2"
+    "react-router-dom": "^6.4.0-pre.7"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "^3.0.0",
