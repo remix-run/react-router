@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/dev",
-  "version": "1.5.1",
+  "version": "1.6.0-pre.0",
   "description": "Dev tools and CLI for Remix",
   "homepage": "https://remix.run",
   "bugs": {
@@ -22,7 +22,7 @@
     "@babel/preset-typescript": "^7.17.12",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@npmcli/package-json": "^2.0.0",
-    "@remix-run/server-runtime": "1.5.1",
+    "@remix-run/server-runtime": "1.6.0-pre.0",
     "cacache": "^15.0.5",
     "chalk": "^4.1.2",
     "chokidar": "^3.5.1",
