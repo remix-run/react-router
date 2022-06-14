@@ -119,9 +119,23 @@ With a filename:
 </DataBrowserRouter>
 ```
 
-Bad code with highlighted lines:
+Bad code:
 
-```tsx bad lines=[2-5]
+```tsx bad
+<DataBrowserRouter initialEntries={["/events/123"]}>
+  <Route path="/" element={<Root />} loader={rootLoader}>
+    <Route
+      path="events/:id"
+      element={<Event />}
+      loader={eventLoader}
+    />
+  </Route>
+</DataBrowserRouter>
+```
+
+Bad code with highlighted lines and a filename:
+
+```tsx filename=src/main.jsx bad lines=[2-5]
 <DataBrowserRouter initialEntries={["/events/123"]}>
   <Routes>
     <Route path="/" element={<Root />} loader={rootLoader}>
