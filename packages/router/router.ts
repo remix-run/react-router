@@ -1846,11 +1846,9 @@ function createRequest(
     }
   }
 
+  // Content-Type is inferred (https://fetch.spec.whatwg.org/#dom-request)
   return new Request(url, {
     method: formMethod.toUpperCase(),
-    headers: {
-      "Content-Type": formEncType,
-    },
     body,
   });
 }
