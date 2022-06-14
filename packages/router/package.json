@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/router",
-  "version": "0.1.0",
+  "version": "0.2.0-pre.2",
   "description": "Nested/Data-driven/Framework-agnostic Routing",
   "keywords": [
     "remix",
@@ -18,5 +18,14 @@
   "main": "./dist/main.js",
   "unpkg": "./dist/umd/router.production.min.js",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

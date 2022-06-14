@@ -16,6 +16,8 @@ import "@testing-library/jest-dom";
 import {
   DataBrowserRouter,
   DataHashRouter,
+  Form,
+  Link,
   Route,
   Outlet,
   useLoaderData,
@@ -23,8 +25,6 @@ import {
   useRouteError,
   useNavigate,
   useNavigation,
-  Form,
-  Link,
   useSubmit,
   useFetcher,
   useFetchers,
@@ -42,7 +42,11 @@ testDomRouter("<DataHashRouter>", DataHashRouter, (url) =>
   getWindowImpl(url, true)
 );
 
-function testDomRouter(name, TestDataRouter, getWindow) {
+function testDomRouter(
+  name: string,
+  TestDataRouter: typeof DataBrowserRouter,
+  getWindow: (initialUrl: string, isHash?: boolean) => Window
+) {
   describe(name, () => {
     let consoleWarn: jest.SpyInstance;
     let consoleError: jest.SpyInstance;

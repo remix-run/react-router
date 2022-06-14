@@ -179,3 +179,10 @@ module.exports = function rollup() {
 
   return [...modules, ...globals, ...node];
 };
+
+/**
+ * @typedef {import('rollup').InputOptions} RollupInputOptions
+ * @typedef {import('rollup').OutputOptions} RollupOutputOptions
+ * @typedef {import('rollup').RollupOptions} RollupOptions
+ * @typedef {import('rollup').Plugin} RollupPlugin
+ */

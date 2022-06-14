@@ -1,0 +1,47 @@
+name: 🧪 Release (experimental)
+on:
+  release:
+    types: [published]
+    tags:
+      - "v0.0.0-experimental*"
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+env:
+  CI: true
+
+jobs:
+  release:
+    name: 🧑‍🔬 Experimental Release
+    if: |
+      github.repository == 'remix-run/react-router' &&
+      contains(github.ref, 'experimental')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: ⎔ Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: yarn
+
+      - name: 📥 Install deps
+        # even though this is called "npm-install" it does use yarn to install
+        # because we have a yarn.lock and caches efficiently.
+        uses: bahmutov/npm-install@v1
+
+      - name: 🏗 Build
+        run: yarn build
+
+      - name: 🔐 Setup npm auth
+        run: |
+          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+
+      - name: 🚀 Publish
+        run: npm run publish

@@ -1,0 +1,26 @@
+{
+  "mode": "pre",
+  "tag": "pre",
+  "initialVersions": {
+    "react-router": "6.4.0-pre.3",
+    "react-router-dom": "6.4.0-pre.3",
+    "react-router-dom-v5-compat": "6.4.0-pre.3",
+    "react-router-native": "6.4.0-pre.3",
+    "@remix-run/router": "0.2.0-pre.0"
+  },
+  "changesets": [
+    "afraid-parents-laugh",
+    "eighty-forks-search",
+    "fifty-ghosts-scream",
+    "forty-phones-repair",
+    "gold-knives-drum",
+    "gold-trains-rhyme",
+    "lovely-tomatoes-smoke",
+    "nine-stingrays-arrive",
+    "slimy-pugs-sip",
+    "stupid-dryers-shout",
+    "thirty-monkeys-cheer",
+    "tough-zoos-cry",
+    "weak-seas-kiss"
+  ]
+}

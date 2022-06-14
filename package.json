@@ -1,9 +1,11 @@
 {
+  "name": "@remix-run/react-router",
   "private": true,
   "workspaces": {
     "packages": [
       "packages/react-router",
       "packages/react-router-dom",
+      "packages/react-router-dom-v5-compat",
       "packages/react-router-native",
       "packages/router"
     ],
@@ -17,11 +19,16 @@
     "clean": "git clean -fdX .",
     "format": "prettier --ignore-path .eslintignore --write .",
     "format:check": "prettier --ignore-path .eslintignore --check .",
+    "postinstall": "patch-package",
     "lint": "eslint --cache .",
-    "publish": "node ./scripts/publish.js",
+    "prerelease": "yarn build",
+    "release": "changeset publish",
     "size": "filesize",
     "test": "jest",
-    "version": "node ./scripts/version.js",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "postversion": "node scripts/postversion.mjs",
+    "version:experimental": "node scripts ./scripts/version experimental",
     "watch": "rollup -c -w"
   },
   "jest": {
@@ -29,13 +36,19 @@
       "<rootDir>/packages/*"
     ]
   },
+  "resolutions": {
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0"
+  },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
-    "@babel/core": "^7.7.4",
-    "@babel/preset-env": "^7.15.8",
-    "@babel/preset-modules": "^0.1.4",
-    "@babel/preset-react": "^7.14.5",
-    "@babel/preset-typescript": "^7.15.0",
+    "@babel/core": "^7.18.2",
+    "@babel/preset-env": "^7.18.2",
+    "@babel/preset-modules": "^0.1.5",
+    "@babel/preset-react": "^7.17.12",
+    "@babel/preset-typescript": "^7.17.12",
+    "@changesets/changelog-github": "0.4.4",
+    "@changesets/cli": "^2.22.0",
     "@remix-run/web-fetch": "4.1.3",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-replace": "^4.0.0",
@@ -47,12 +60,13 @@
     "@types/jsonfile": "^6.0.1",
     "@types/react": "^17.0.19",
     "@types/react-dom": "^17.0.9",
-    "@types/react-native": "*",
+    "@types/react-native": "^0.61.0",
     "@types/react-test-renderer": "16.x",
     "@types/semver": "^7.3.8",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
     "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.6.3",
     "babel-plugin-dev-expression": "^0.2.2",
     "chalk": "^4.1.1",
     "cheerio": "^1.0.0-rc.10",
@@ -63,10 +77,12 @@
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-react": "^7.24.0",
     "eslint-plugin-react-hooks": "next",
-    "history": "^5.2.0",
+    "fs-extra": "^10.1.0",
+    "history": "^5.3.0",
     "jest": "^26.6.3",
     "jsonfile": "^6.1.0",
     "metro-react-native-babel-preset": "^0.57.0",
+    "patch-package": "^6.4.7",
     "prettier": "^2.5.1",
     "prompt-confirm": "^2.0.4",
     "react": "^17.0.2",
@@ -79,7 +95,8 @@
     "rollup-plugin-terser": "^7.0.2",
     "semver": "^7.3.5",
     "ts-jest": "^26.5.6",
-    "typescript": "^4.3.5"
+    "type-fest": "^2.13.0",
+    "typescript": "^4.7.3"
   },
   "filesize": {
     "packages/router/dist/router.production.min.js": {

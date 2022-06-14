@@ -501,7 +501,7 @@ export function _renderMatches(
   if (matches == null) {
     if (dataRouterState?.errors) {
       // Don't bail if we have data router errors so we can render them in the
-      // boundary.  USe the pre-matched (or shimmed) matches
+      // boundary.  Use the pre-matched (or shimmed) matches
       matches = dataRouterState.matches;
     } else {
       return null;
