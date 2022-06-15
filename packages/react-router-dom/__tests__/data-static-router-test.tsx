@@ -1,3 +1,4 @@
+import { createMemoryRouter } from "@remix-run/router";
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import {
@@ -14,9 +15,7 @@ beforeEach(() => {
 });
 
 describe("A <DataStaticRouter>", () => {
-  it("renders with provided hydration data", () => {
-    let loaderSpy = jest.fn();
-
+  it("renders an initialized router", async () => {
     let hooksData1: {
       location: ReturnType<typeof useLocation>;
       loaderData: ReturnType<typeof useLoaderData>;
@@ -43,36 +42,41 @@ describe("A <DataStaticRouter>", () => {
         loaderData: useLoaderData(),
         matches: useMatches(),
       };
-      return null;
+      return <h1>👋</h1>;
     }
 
-    ReactDOMServer.renderToStaticMarkup(
-      <DataStaticRouter
-        location="/the/path?the=query#the-hash"
-        data={{
-          loaderData: {
-            "0": { key1: "value1" },
-            "0-0": { key2: "value2" },
-          },
-        }}
-      >
-        <Route
-          path="the"
-          element={<HooksChecker1 />}
-          loader={loaderSpy}
-          handle="1"
-        >
-          <Route
-            path="path"
-            element={<HooksChecker2 />}
-            loader={loaderSpy}
-            handle="2"
-          />
-        </Route>
-      </DataStaticRouter>
-    );
+    let router = createMemoryRouter({
+      isSSR: true,
+      routes: [
+        {
+          path: "the",
+          loader: () => ({
+            key1: "value1",
+          }),
+          element: <HooksChecker1 />,
+          handle: "1",
+          children: [
+            {
+              path: "path",
+              loader: () => ({
+                key2: "value2",
+              }),
+              element: <HooksChecker2 />,
+              handle: "2",
+            },
+          ],
+        },
+      ],
+    });
 
-    expect(loaderSpy).not.toHaveBeenCalled();
+    await router.navigate("/the/path?the=query#the-hash", { replace: true });
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <DataStaticRouter router={router} />
+      </React.StrictMode>
+    );
+    expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
 
     expect(hooksData1.location).toEqual({
       pathname: "/the/path",
@@ -137,62 +141,29 @@ describe("A <DataStaticRouter>", () => {
     ]);
   });
 
-  it("defaults to the root location", () => {
-    let loaderSpy = jest.fn();
+  it("errors if the router is not initialized", async () => {
+    let router = createMemoryRouter({
+      isSSR: true,
+      routes: [
+        {
+          index: true,
+          loader: () => ({
+            key1: "value1",
+          }),
+          element: <h1>👋</h1>,
+          handle: "1",
+        },
+      ],
+    });
 
-    let markup = ReactDOMServer.renderToStaticMarkup(
-      // @ts-expect-error
-      <DataStaticRouter
-        data={{
-          loaderData: {
-            "0": { key1: "value1" },
-            "0-0": { key2: "value2" },
-          },
-        }}
-      >
-        <Route index element={<h1>index</h1>} loader={loaderSpy} />
-        <Route path="the" element={<Outlet />} loader={loaderSpy}>
-          <Route path="path" element={<h1>👶</h1>} loader={loaderSpy} />
-        </Route>
-      </DataStaticRouter>
+    expect(() =>
+      ReactDOMServer.renderToStaticMarkup(
+        <React.StrictMode>
+          <DataStaticRouter router={router} />
+        </React.StrictMode>
+      )
+    ).toThrowErrorMatchingInlineSnapshot(
+      `"You must provide an initialized router to <DataStaticRouter>"`
     );
-    expect(markup).toBe("<h1>index</h1>");
-  });
-
-  it("throws an error if no data is provided", () => {
-    let loaderSpy = jest.fn();
-
-    expect(() =>
-      ReactDOMServer.renderToStaticMarkup(
-        // @ts-expect-error
-        <DataStaticRouter location="/the/path?the=query#the-hash">
-          <Route path="the" element={<Outlet />} loader={loaderSpy}>
-            <Route path="path" element={<h1>👶</h1>} loader={loaderSpy} />
-          </Route>
-        </DataStaticRouter>
-      )
-    ).toThrow("You must provide a complete `data` prop for <DataStaticRouter>");
-  });
-
-  it("throws an error if partial data is provided", () => {
-    let loaderSpy = jest.fn();
-
-    expect(() =>
-      ReactDOMServer.renderToStaticMarkup(
-        <DataStaticRouter
-          location="/the/path?the=query#the-hash"
-          data={{
-            loaderData: {
-              "0": { key1: "value1" },
-              // Missing for child route which contains a loader
-            },
-          }}
-        >
-          <Route path="the" element={<Outlet />} loader={loaderSpy}>
-            <Route path="path" element={<h1>👶</h1>} loader={loaderSpy} />
-          </Route>
-        </DataStaticRouter>
-      )
-    ).toThrow("You must provide a complete `data` prop for <DataStaticRouter>");
   });
 });

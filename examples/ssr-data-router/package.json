@@ -8,7 +8,7 @@
     "build:server": "vite build --ssr src/entry.server.tsx --outDir dist/server",
     "start": "cross-env NODE_ENV=production node server.js",
     "debug": "node --inspect-brk server.js",
-    "setup": "npm ci; cd ../..;  LOCAL_BUILD_DIRECTORY=examples/ssr-data-router yarn build; cp packages/react-router-dom/server* examples/ssr-data-router/node_modules/react-router-dom/; cd examples/ssr-data-router"
+    "setup": "cd ../..;  LOCAL_BUILD_DIRECTORY=examples/ssr-data-router yarn build; cp packages/react-router-dom/server* examples/ssr-data-router/node_modules/react-router-dom/; cd examples/ssr-data-router"
   },
   "dependencies": {
     "@remix-run/node": "^1.5.1",
