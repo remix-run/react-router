@@ -9,7 +9,9 @@ This is for testing all the different kinds of markdown that can exist. Whenever
 
 ## Headings
 
-For headings, do we ever go deeper than a heading 4? Do we really need styles for that?
+Headings at sizes 4, 5, and 6 are all treated equally. If we start writing prose that needs those headings, we should re-evaluate our lives.
+
+# Heading 1
 
 ## Heading 2
 
@@ -20,6 +22,14 @@ For headings, do we ever go deeper than a heading 4? Do we really need styles fo
 ##### Heading 5
 
 ###### Heading 6
+
+## Tables
+
+| Syntax      | Description |
+| ----------- | ----------- |
+| Row 1       | Column 2    |
+| Row 2       | Column 2    |
+| Row 3       | Column 2    |
 
 ## Callouts
 
@@ -47,11 +57,9 @@ Note: maybe the semantics for these aren't quite right. There might be other nou
 - `<docs-warning>` could become `<docs-important>`
 - `<docs-error>` could become `<docs-warning>` or `<docs-danger>`
 
-## Normal Prose
+## Blockquotes
 
-@TODO Blockquotes, lists, etc.
-
-This is a `<blockquote>` with multiple lines in it:
+This is a `<blockquote>` with multiple lines and styles in it:
 
 > This is my quote.
 >
@@ -67,6 +75,8 @@ This is a `<blockquote>` with multiple lines in it:
 > 2. Another list item
 > 3. Yet another list item
 
+## Lists
+
 This is a list of links, some of which are code:
 
 - This is my first list item
@@ -74,6 +84,18 @@ This is a list of links, some of which are code:
 - This is my third item that has `<code>` and [`<LinkedCode>` mixed with text][$link]
 
 And don't forget about proper styling for `<a>` tags that don’t have an `href`: <a>like this link right here</a>.
+
+And then there’s the `<dl>` lists:
+
+<dl>
+  <dt>React</dt>
+  <dd>Respond or behave in a particular way in response to something</dd>
+  <dt>Router</dt>
+  <dd>A device that forwards data packets to the appropriate parts of a computer network.</dd>
+  <dt>Library</dt>
+  <dd>A building or room containing collections of books, periodicals, and sometimes films and recorded music for people to read, borrow, or refer to.</dd>
+  <dd>A collection of programs and software packages made generally available, often loaded and stored on disk for immediate use.</dd>
+</dl>
 
 ## Code
 
