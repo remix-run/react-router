@@ -80,22 +80,25 @@ export function DataStaticRouter({ router }: DataStaticRouterProps) {
           navigator={getStatelessNavigator()}
           static={true}
         >
-          <DataRoutes routes={router.routes} location={router.state.location} />
+          <DataStaticRoutes
+            routes={router.routes}
+            location={router.state.location}
+          />
         </Router>
       </DataRouterStateContext.Provider>
     </DataRouterContext.Provider>
   );
 }
 
-interface DataRoutesProps {
+interface DataStaticRoutesProps {
   routes: DataRouteObject[];
   location: RouterState["location"];
 }
 
-function DataRoutes({
+function DataStaticRoutes({
   routes,
   location,
-}: DataRoutesProps): React.ReactElement | null {
+}: DataStaticRoutesProps): React.ReactElement | null {
   return useRoutes(routes, location);
 }
 
