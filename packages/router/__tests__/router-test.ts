@@ -22,7 +22,7 @@ import {
 } from "@remix-run/router";
 
 // Private API
-import { ErrorResponse, isRouteErrorResponse } from "../utils";
+import { ErrorResponse } from "../utils";
 
 jest.setTimeout(1000000);
 
