@@ -1,6 +1,65 @@
+import { SupportOptionRange } from "prettier";
 import type { Location, Path, To } from "./history";
 import { parsePath } from "./history";
-import { DataResult, DataRouteMatch } from "./router";
+
+/**
+ * Map of routeId -> data returned from a loader/action/error
+ */
+export interface RouteData {
+  [routeId: string]: any;
+}
+
+export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
+
+export enum ResultType {
+  data = "data",
+  deferred = "deferred",
+  redirect = "redirect",
+  error = "error",
+}
+
+/**
+ * Successful result from a loader or action
+ */
+export interface SuccessResult {
+  type: ResultType.data;
+  data: any;
+}
+
+/**
+ * Successful deferred() result from a loader or action
+ */
+export interface DeferredResult {
+  type: ResultType.deferred;
+  deferredCollection: DeferredCollection;
+}
+
+/**
+ * Redirect result from a loader or action
+ */
+export interface RedirectResult {
+  type: ResultType.redirect;
+  status: number;
+  location: string;
+  revalidate: boolean;
+}
+
+/**
+ * Unsuccessful result from a loader or action
+ */
+export interface ErrorResult {
+  type: ResultType.error;
+  error: any;
+}
+
+/**
+ * Result from a loader or action - potentially successful or unsuccessful
+ */
+export type DataResult =
+  | SuccessResult
+  | DeferredResult
+  | RedirectResult
+  | ErrorResult;
 
 export type FormMethod = "get" | "post" | "put" | "patch" | "delete";
 export type FormEncType = "application/x-www-form-urlencoded";
@@ -765,6 +824,10 @@ export type JsonFunction = <Data>(
   init?: number | ResponseInit
 ) => Response;
 
+function isObject(thing: any) {
+  return typeof thing === "object" && !Array.isArray(thing) && thing != null;
+}
+
 /**
  * This is a shortcut for creating `application/json` responses. Converts `data`
  * to JSON and sets the `Content-Type` header.
@@ -782,6 +845,71 @@ export const json: JsonFunction = (data, init = {}) => {
     headers,
   });
 };
+
+export class DeferredData {
+  status: "pending" | "resolved" | "rejected" = "pending";
+  promise: Promise<void>;
+  data: null | any = null;
+  cancelled: boolean = false;
+
+  constructor(promise: Promise<any>, onSettle: () => void) {
+    this.promise = promise.then(
+      (data) => {
+        if (this.cancelled) {
+          return;
+        }
+        this.status = "resolved";
+        this.data = data;
+        onSettle();
+      },
+      (error) => {
+        if (this.cancelled) {
+          return;
+        }
+        this.status = "rejected";
+        this.data = error;
+        onSettle();
+      }
+    );
+  }
+
+  cancel() {
+    this.cancelled = true;
+  }
+}
+
+export class DeferredCollection {
+  deferreds: Map<String, DeferredData> = new Map<string, DeferredData>();
+  data: RouteData = {};
+  private subscriber?: (key: string) => void = undefined;
+
+  constructor(data: Record<string, any>) {
+    Object.entries(data).forEach(([key, value]) => {
+      if (value instanceof Promise) {
+        let dfd = new DeferredData(value, () => {
+          this.subscriber?.(key);
+          this.deferreds.delete(key);
+        });
+        this.deferreds.set(key, dfd);
+        this.data[key] = dfd.promise;
+      } else {
+        this.data[key] = value;
+      }
+    });
+  }
+
+  subscribe(fn: (key: string) => void) {
+    this.subscriber = fn;
+  }
+
+  cancel() {
+    this.deferreds.forEach((d) => d.cancel());
+  }
+}
+
+export function deferred(data: Record<string, any>) {
+  return new DeferredCollection(data);
+}
 
 export type RedirectFunction = (
   url: string,

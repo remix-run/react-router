@@ -2,28 +2,25 @@ import { createPath, History, Location, Path, To } from "./history";
 import { Action as HistoryAction, createLocation, parsePath } from "./history";
 
 import {
+  DataResult,
+  DataRouteMatch,
   DataRouteObject,
+  deferred,
+  DeferredCollection,
+  DeferredResult,
+  ErrorResult,
   FormEncType,
   FormMethod,
-  invariant,
-  RouteMatch,
+  RedirectResult,
+  RouteData,
   RouteObject,
   Submission,
 } from "./utils";
-import { ErrorResponse, matchRoutes } from "./utils";
+import { ErrorResponse, ResultType, invariant, matchRoutes } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
 ////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Map of routeId -> data returned from a loader/action/error
- */
-export interface RouteData {
-  [routeId: string]: any;
-}
-
-export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
 /**
  * A Router instance manages all navigation and data loading/mutations
@@ -327,43 +324,6 @@ type FetcherStates<TData = any> = {
 export type Fetcher<TData = any> =
   FetcherStates<TData>[keyof FetcherStates<TData>];
 
-enum ResultType {
-  data = "data",
-  redirect = "redirect",
-  error = "error",
-}
-
-/**
- * Successful result from a loader or action
- */
-export interface SuccessResult {
-  type: ResultType.data;
-  data: any;
-}
-
-/**
- * Redirect result from a loader or action
- */
-export interface RedirectResult {
-  type: ResultType.redirect;
-  status: number;
-  location: string;
-  revalidate: boolean;
-}
-
-/**
- * Unsuccessful result from a loader or action
- */
-export interface ErrorResult {
-  type: ResultType.error;
-  error: any;
-}
-
-/**
- * Result from a loader or action - potentially successful or unsuccessful
- */
-export type DataResult = SuccessResult | RedirectResult | ErrorResult;
-
 interface ShortCircuitable {
   /**
    * startNavigation does not need to complete the navigation because we
@@ -522,6 +482,11 @@ export function createRouter(init: RouterInit): Router {
   let fetchRedirectIds = new Set<string>();
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, [string, DataRouteMatch]>();
+  // Store any DeferredCollection instances for active route matches.  When a
+  // route loader returns deferred() we stick one in here.  Then, when a nested
+  // promise resolves we update loaderData.  If a new navigation starts we
+  // cancel active deferred for eliminated routes.
+  let activeDeferreds = new Map<string, DeferredCollection>();
 
   // Initialize the router, all side effects should be kicked off from here.
   // Implemented as a Fluent API for ease of:
@@ -774,6 +739,13 @@ export function createRouter(init: RouterInit): Router {
       });
       return;
     }
+
+    // heyo starting a new nav - kill off any pending deferreds
+    activeDeferreds.forEach((dfd, routeId) => {
+      if (matches?.some((m) => m.route.id !== routeId)) {
+        dfd.cancel();
+      }
+    });
 
     // Call action if we received an action submission
     let pendingActionData: RouteData | null = null;
@@ -1039,8 +1011,24 @@ export function createRouter(init: RouterInit): Router {
       navigationResults,
       pendingActionError,
       revalidatingFetchers,
-      fetcherResults
+      fetcherResults,
+      activeDeferreds
     );
+
+    activeDeferreds.forEach((deferredCollection, routeId) => {
+      deferredCollection.subscribe((loaderDataKey) => {
+        updateState({
+          loaderData: {
+            ...state.loaderData,
+            [routeId]: {
+              ...state.loaderData[routeId],
+              [loaderDataKey]:
+                deferredCollection.deferreds.get(loaderDataKey)?.data,
+            },
+          },
+        });
+      });
+    });
 
     markFetchRedirectsDone();
     let didAbortFetchLoads = abortStaleFetchLoads(pendingNavigationLoadId);
@@ -1260,7 +1248,8 @@ export function createRouter(init: RouterInit): Router {
       loaderResults,
       null,
       revalidatingFetchers,
-      fetcherResults
+      fetcherResults,
+      activeDeferreds
     );
 
     let doneFetcher: FetcherStates["Idle"] = {
@@ -1760,7 +1749,7 @@ async function callLoaderOrAction(
   signal: AbortSignal,
   submission?: Submission
 ): Promise<DataResult> {
-  let resultType = ResultType.data;
+  let resultType;
   let result;
 
   try {
@@ -1808,14 +1797,18 @@ async function callLoaderOrAction(
       };
     }
 
-    return { type: resultType, data };
+    return { type: ResultType.data, data };
   }
 
   if (resultType === ResultType.error) {
     return { type: resultType, error: result };
   }
 
-  return { type: resultType, data: result };
+  if (result instanceof DeferredCollection) {
+    return { type: ResultType.deferred, deferredCollection: result };
+  }
+
+  return { type: ResultType.data, data: result };
 }
 
 function createRequest(
@@ -1862,7 +1855,8 @@ function processLoaderData(
   results: DataResult[],
   pendingActionError: RouteData | null,
   revalidatingFetchers: [string, string, DataRouteMatch][],
-  fetcherResults: DataResult[]
+  fetcherResults: DataResult[],
+  activeDeferreds: Map<string, DeferredCollection>
 ): {
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"];
@@ -1893,6 +1887,9 @@ function processLoaderData(
       errors = Object.assign(errors || {}, {
         [boundaryMatch.route.id]: error,
       });
+    } else if (isDeferredResult(result)) {
+      activeDeferreds.set(id, result.deferredCollection);
+      loaderData[id] = result.deferredCollection.data;
     } else {
       loaderData[id] = result.data;
     }
@@ -2021,6 +2018,10 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   return (
     a.pathname === b.pathname && a.search === b.search && a.hash !== b.hash
   );
+}
+
+function isDeferredResult(result: DataResult): result is DeferredResult {
+  return result.type === ResultType.deferred;
 }
 
 function isErrorResult(result: DataResult): result is ErrorResult {

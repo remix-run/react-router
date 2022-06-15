@@ -21,7 +21,7 @@ import {
 } from "@remix-run/router";
 
 // Private API
-import { ErrorResponse } from "../utils";
+import { deferred, ErrorResponse } from "../utils";
 
 jest.setTimeout(1000000);
 
@@ -6296,6 +6296,124 @@ describe("a router", () => {
           state: "idle",
           data: "TASKS ACTION",
         });
+      });
+    });
+  });
+
+  describe("deferred", () => {
+    it("should support returning deferred responses", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/lazy");
+      let lazyDefer1 = defer();
+      let lazyDefer2 = defer();
+      await A.loaders.lazy.resolve(
+        deferred({
+          critical1: "1",
+          critical2: "2",
+          lazy1: lazyDefer1.promise,
+          lazy2: lazyDefer2.promise,
+        })
+      );
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical1: "1",
+          critical2: "2",
+          lazy1: expect.any(Promise),
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      await lazyDefer1.resolve("a");
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical1: "1",
+          critical2: "2",
+          lazy1: "a",
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      await lazyDefer2.resolve("b");
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical1: "1",
+          critical2: "2",
+          lazy1: "a",
+          lazy2: "b",
+        },
+      });
+    });
+
+    it("should cancel outstanding deferreds on a new navigation", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/lazy");
+      let lazyDefer1 = defer();
+      let lazyDefer2 = defer();
+      await A.loaders.lazy.resolve(
+        deferred({
+          critical1: "1",
+          critical2: "2",
+          lazy1: lazyDefer1.promise,
+          lazy2: lazyDefer2.promise,
+        })
+      );
+
+      let B = await t.navigate("/");
+      // During navigation - deferreds remain as promises
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical1: "1",
+          critical2: "2",
+          lazy1: expect.any(Promise),
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      // But they are frozen - no re-paints on resolve/reject!
+      await lazyDefer1.resolve("a");
+      await lazyDefer2.reject(new Error("b"));
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical1: "1",
+          critical2: "2",
+          lazy1: expect.any(Promise),
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      await B.loaders.index.resolve("INDEX*");
+      expect(t.router.state.loaderData).toEqual({
+        index: "INDEX*",
       });
     });
   });
