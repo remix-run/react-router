@@ -25,11 +25,11 @@ Headings at sizes 4, 5, and 6 are all treated equally. If we start writing prose
 
 ## Tables
 
-| Syntax      | Description |
-| ----------- | ----------- |
-| Row 1       | Column 2    |
-| Row 2       | Column 2    |
-| Row 3       | Column 2    |
+| Syntax | Description |
+| ------ | ----------- |
+| Row 1  | Column 2    |
+| Row 2  | Column 2    |
+| Row 3  | Column 2    |
 
 ## Callouts
 
