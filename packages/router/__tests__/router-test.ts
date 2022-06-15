@@ -7,6 +7,7 @@ import type {
   LoaderFunction,
   RouteMatch,
   Router,
+  RouterInit,
   RouterNavigateOptions,
 } from "@remix-run/router";
 import {
@@ -21,7 +22,7 @@ import {
 } from "@remix-run/router";
 
 // Private API
-import { ErrorResponse } from "../utils";
+import { ErrorResponse, isRouteErrorResponse } from "../utils";
 
 jest.setTimeout(1000000);
 
@@ -6297,6 +6298,144 @@ describe("a router", () => {
           data: "TASKS ACTION",
         });
       });
+    });
+  });
+
+  describe("ssr", () => {
+    function setupSsrRouter(init?: Partial<RouterInit>) {
+      let history = createMemoryHistory();
+      jest.spyOn(history, "push");
+      jest.spyOn(history, "replace");
+      let router = createRouter({
+        history,
+        isSSR: true,
+        routes: [
+          {
+            id: "index",
+            path: "/",
+            loader: () => "INDEX LOADER",
+          },
+          {
+            id: "a",
+            path: "/a",
+            loader: () => "A LOADER",
+            action: () => "A ACTION",
+          },
+          {
+            id: "redirect",
+            path: "/redirect",
+            loader: () => redirect("/a"),
+          },
+        ],
+        ...init,
+      });
+      return { history, router };
+    }
+
+    it("should error if you provide hydrationData", () => {
+      expect(() =>
+        setupSsrRouter({
+          hydrationData: { loaderData: { a: "A" } },
+        })
+      ).toThrowErrorMatchingInlineSnapshot(
+        `"You cannot provide hydrationData to a data router during SSR"`
+      );
+    });
+
+    it("should not let you do browser-only operations", () => {
+      let { router } = setupSsrRouter();
+      expect(() => router.initialize()).toThrowErrorMatchingInlineSnapshot(
+        `"Cannot call router.initialize() during SSR"`
+      );
+      expect(() =>
+        router.subscribe(() => {})
+      ).toThrowErrorMatchingInlineSnapshot(
+        `"Cannot call router.subscribe() during SSR"`
+      );
+      expect(() => router.revalidate()).toThrowErrorMatchingInlineSnapshot(
+        `"Cannot call router.revalidate() during SSR"`
+      );
+      expect(() =>
+        router.fetch("x", "x", "/x")
+      ).toThrowErrorMatchingInlineSnapshot(
+        `"Cannot call router.fetch() during SSR"`
+      );
+
+      expect(() =>
+        router.navigate(-1)
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"Cannot perform POP navigations during SSR"`
+      );
+    });
+
+    it("should allow a single navigation and should not update history", async () => {
+      let { history, router } = setupSsrRouter();
+      await router.navigate("/a");
+      expect(router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: expect.objectContaining({ pathname: "/a" }),
+        initialized: true,
+        actionData: null,
+        loaderData: {
+          a: "A LOADER",
+        },
+        errors: null,
+        navigation: expect.objectContaining({
+          state: "idle",
+        }),
+      });
+      expect(history.push).not.toHaveBeenCalled();
+    });
+
+    it("should allow a single submission navigation and should not update history", async () => {
+      let { history, router } = setupSsrRouter();
+      await router.navigate("/a", {
+        replace: true,
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      expect(router.state).toMatchObject({
+        historyAction: "REPLACE",
+        location: expect.objectContaining({ pathname: "/a" }),
+        initialized: true,
+        actionData: {
+          a: "A ACTION",
+        },
+        loaderData: {
+          a: "A LOADER",
+        },
+        errors: null,
+        navigation: expect.objectContaining({
+          state: "idle",
+        }),
+      });
+      expect(history.replace).not.toHaveBeenCalled();
+    });
+
+    it("should error on additional navigations", async () => {
+      let { router } = setupSsrRouter();
+      await router.navigate("/a");
+
+      expect.assertions(1);
+      try {
+        await router.navigate("/a?nope");
+      } catch (e) {
+        expect(e).toMatchInlineSnapshot(
+          `[Error: Can only call router.navigate() one time during SSR]`
+        );
+      }
+    });
+
+    it("should throw encountered redirect Responses", async () => {
+      let { router } = setupSsrRouter();
+      expect.assertions(3);
+      try {
+        await router.navigate("/redirect");
+      } catch (e) {
+        expect(e instanceof Response).toBe(true);
+        expect((e as Response).status).toBe(302);
+        expect((e as Response).headers.get("Location")).toBe("/a");
+      }
     });
   });
 });

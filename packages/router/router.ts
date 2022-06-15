@@ -568,6 +568,8 @@ export function createRouter(init: RouterInit): Router {
 
   // Subscribe to state updates for the router
   function subscribe(fn: RouterSubscriber) {
+    invariant(!init.isSSR, "Cannot call router.subscribe() during SSR");
+
     if (subscriber) {
       throw new Error("A router only accepts one active subscriber");
     }
@@ -699,6 +701,8 @@ export function createRouter(init: RouterInit): Router {
   // is interrupted by a navigation, allow this to "succeed" by calling all
   // loaders during the next loader round
   function revalidate() {
+    invariant(!init.isSSR, "Cannot call router.revalidate() during SSR");
+
     // Toggle isRevalidationRequired so the next data load will call all loaders,
     // and mark us in a revalidating state
     isRevalidationRequired = true;
@@ -804,12 +808,7 @@ export function createRouter(init: RouterInit): Router {
     let pendingActionError: RouteData | null = null;
 
     if (opts?.submission) {
-      let actionOutput = await handleAction(
-        historyAction,
-        location,
-        opts.submission,
-        matches
-      );
+      let actionOutput = await handleAction(location, opts.submission, matches);
 
       if (actionOutput.shortCircuited) {
         return;
@@ -850,7 +849,6 @@ export function createRouter(init: RouterInit): Router {
   // Call the action matched by the leaf route for this navigation and handle
   // redirects/errors
   async function handleAction(
-    historyAction: HistoryAction,
     location: Location,
     submission: Submission,
     matches: DataRouteMatch[]
@@ -904,7 +902,8 @@ export function createRouter(init: RouterInit): Router {
         actionMatch,
         location,
         actionAbortController.signal,
-        submission
+        submission,
+        init.isSSR
       );
 
       if (actionAbortController.signal.aborted) {
@@ -1028,7 +1027,13 @@ export function createRouter(init: RouterInit): Router {
     // accordingly
     let results = await Promise.all([
       ...matchesToLoad.map((m) =>
-        callLoaderOrAction(m, location, abortController.signal)
+        callLoaderOrAction(
+          m,
+          location,
+          abortController.signal,
+          undefined,
+          init.isSSR
+        )
       ),
       ...revalidatingFetchers.map(([, href, match]) =>
         callLoaderOrAction(match, href, abortController.signal)
@@ -1793,7 +1798,8 @@ async function callLoaderOrAction(
   match: DataRouteMatch,
   location: string | Location,
   signal: AbortSignal,
-  submission?: Submission
+  submission?: Submission,
+  isSSR?: boolean
 ): Promise<DataResult> {
   let resultType = ResultType.data;
   let result;
@@ -1821,6 +1827,9 @@ async function callLoaderOrAction(
     let status = result.status;
     let location = result.headers.get("Location");
     if (status >= 300 && status <= 399 && location != null) {
+      if (isSSR) {
+        throw result;
+      }
       return {
         type: ResultType.redirect,
         status,
