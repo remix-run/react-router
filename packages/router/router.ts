@@ -1430,12 +1430,6 @@ export function createRouter(init: RouterInit): Router {
     navigation: Navigation,
     isPush = false
   ) {
-    // Do not follow redirects in SSR, just propagate them outwards and stop
-    // processing this navigation
-    if (init.isSSR) {
-      throw redirect;
-    }
-
     if (redirect.revalidate) {
       isRevalidationRequired = true;
     }
@@ -1856,7 +1850,10 @@ async function callLoaderOrAction(
     // Process redirects
     let status = result.status;
     let location = result.headers.get("Location");
+
     if (status >= 300 && status <= 399 && location != null) {
+      // Don't process redirects in the router during SSR.  Instead, throw the
+      // Response and let the server handle it with an HTTP redirect
       if (isSSR) {
         throw result;
       }
