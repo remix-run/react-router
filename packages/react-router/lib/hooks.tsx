@@ -137,15 +137,34 @@ export interface NavigateFunction {
   (delta: number): void;
 }
 
-function getRoutePathnamesJson(matches: RouteMatch[]) {
-  // Ignore index + pathless matches
-  const pathContributingMatches = matches.filter(
+/**
+ * When processing relative navigation we want to ignore ancestor routes that
+ * do not contribute to the path, such that index/pathless layout routes don't
+ * interfere.
+ *
+ * For example, when moving a route element into an index route and/or a
+ * pathless layout route, relative link behavior contained within should stay
+ * the same.  Both of the following examples should link back to the root:
+ *
+ *   <Route path="/">
+ *     <Route path="accounts" element={<Link to=".."}>
+ *   </Route>
+ *
+ *   <Route path="/">
+ *     <Route path="accounts">
+ *       <Route element={<AccountsLayout />}>       // <-- Does not contribute
+ *         <Route index element={<Link to=".."} />  // <-- Does not contribute
+ *       </Route
+ *     </Route>
+ *   </Route>
+ */
+function getPathContributingMatches(matches: RouteMatch[]) {
+  return matches.filter(
     (match, index) =>
       index === 0 ||
       (!match.route.index &&
         match.pathnameBase !== matches[index - 1].pathnameBase)
-  )
-  return JSON.stringify(pathContributingMatches.map((match) => match.pathnameBase));
+  );
 }
 
 /**
@@ -166,7 +185,9 @@ export function useNavigate(): NavigateFunction {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  let routePathnamesJson = getRoutePathnamesJson(matches)
+  let routePathnamesJson = JSON.stringify(
+    getPathContributingMatches(matches).map((match) => match.pathnameBase)
+  );
 
   let activeRef = React.useRef(false);
   React.useEffect(() => {
@@ -262,7 +283,9 @@ export function useResolvedPath(to: To): Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  let routePathnamesJson = getRoutePathnamesJson(matches);
+  let routePathnamesJson = JSON.stringify(
+    getPathContributingMatches(matches).map((match) => match.pathnameBase)
+  );
 
   return React.useMemo(
     () => resolveTo(to, JSON.parse(routePathnamesJson), locationPathname),

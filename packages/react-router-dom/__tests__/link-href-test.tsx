@@ -58,7 +58,7 @@ describe("<Link> href", () => {
           <MemoryRouter initialEntries={["/inbox/messages"]}>
             <Routes>
               <Route path="inbox">
-                <Route path="messages" element={<Link to="../../about" />} />
+                <Route path="messages" element={<Link to="../../../about" />} />
               </Route>
             </Routes>
           </MemoryRouter>
@@ -132,7 +132,7 @@ describe("<Link> href", () => {
               <Route path="inbox">
                 <Route
                   path="messages/:id"
-                  element={<Link to="../../about" />}
+                  element={<Link to="../../../about" />}
                 />
               </Route>
             </Routes>
@@ -193,7 +193,7 @@ describe("<Link> href", () => {
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/inbox");
+      expect(renderer.root.findByType("a").props.href).toEqual("/");
     });
 
     test('<Link to=".."> with more .. segments than parent routes resolves to the root URL', () => {
@@ -278,7 +278,7 @@ describe("<Link> href", () => {
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/inbox");
+      expect(renderer.root.findByType("a").props.href).toEqual("/");
     });
 
     test('<Link to=".."> with more .. segments than parent routes resolves to the root URL', () => {
