@@ -1889,13 +1889,9 @@ function createRequest(
 
   return new Request(url, {
     method: formMethod.toUpperCase(),
-    ...(formEncType === "application/x-www-form-urlencoded"
-      ? {
-          headers: {
-            "Content-Type": formEncType,
-          },
-        }
-      : {}),
+    headers: {
+      "Content-Type": formEncType,
+    },
     body,
   });
 }
