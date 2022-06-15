@@ -1747,6 +1747,57 @@ describe("a router", () => {
         },
       ]);
     });
+
+    it("clears prior loader/action data", async () => {
+      let t = initializeTmTest();
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT",
+        index: "INDEX",
+      });
+
+      let A = await t.navigate("/foo", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await A.actions.foo.resolve("ACTION");
+      await A.loaders.root.resolve("ROOT*");
+      await A.loaders.foo.resolve("LOADER");
+      expect(t.router.state.actionData).toEqual({
+        foo: "ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+        foo: "LOADER",
+      });
+
+      t.navigate("/not-found");
+      expect(t.router.state.actionData).toBe(null);
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+      });
+      expect(t.router.state.errors).toEqual({
+        root: {
+          status: 404,
+          statusText: "Not Found",
+          data: null,
+        },
+      });
+      expect(t.router.state.matches).toMatchObject([
+        {
+          params: {},
+          pathname: "",
+          route: {
+            errorElement: true,
+            children: expect.any(Array),
+            element: {},
+            id: "root",
+            loader: expect.any(Function),
+            module: "",
+            path: "",
+          },
+        },
+      ]);
+    });
   });
 
   describe("errors on navigation", () => {
