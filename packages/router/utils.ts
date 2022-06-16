@@ -31,7 +31,7 @@ export interface SuccessResult {
  */
 export interface DeferredResult {
   type: ResultType.deferred;
-  deferredCollection: DeferredCollection;
+  deferredData: DeferredData;
 }
 
 /**
@@ -842,7 +842,7 @@ export const json: JsonFunction = (data, init = {}) => {
   });
 };
 
-export class DeferredCollection {
+export class DeferredData {
   private pendingKeys: Set<string> = new Set<string>();
   private cancelled: boolean = false;
   private subscriber?: (key: string, data: any) => void = undefined;
@@ -908,7 +908,7 @@ export function isDeferredError(e: any): e is DeferredError {
 }
 
 export function deferred(data: Record<string, any>) {
-  return new DeferredCollection(data);
+  return new DeferredData(data);
 }
 
 export type RedirectFunction = (

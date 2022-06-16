@@ -6,7 +6,7 @@ import {
   DataRouteMatch,
   DataRouteObject,
   deferred,
-  DeferredCollection,
+  DeferredData,
   DeferredResult,
   ErrorResult,
   FormEncType,
@@ -482,11 +482,11 @@ export function createRouter(init: RouterInit): Router {
   let fetchRedirectIds = new Set<string>();
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, [string, DataRouteMatch]>();
-  // Store any DeferredCollection instances for active route matches.  When a
+  // Store DeferredData instances for active route matches.  When a
   // route loader returns deferred() we stick one in here.  Then, when a nested
   // promise resolves we update loaderData.  If a new navigation starts we
-  // cancel active deferred for eliminated routes.
-  let activeDeferreds = new Map<string, DeferredCollection>();
+  // cancel active deferreds for eliminated routes.
+  let activeDeferreds = new Map<string, DeferredData>();
 
   // Initialize the router, all side effects should be kicked off from here.
   // Implemented as a Fluent API for ease of:
@@ -1022,9 +1022,9 @@ export function createRouter(init: RouterInit): Router {
       activeDeferreds
     );
 
-    // Wire up subscribers for deferreds
-    activeDeferreds.forEach((deferredCollection, routeId) => {
-      deferredCollection.subscribe((loaderDataKey, data) => {
+    // Wire up subscribers to update loaderData as promises settle
+    activeDeferreds.forEach((deferredData, routeId) => {
+      deferredData.subscribe((loaderDataKey, data) => {
         updateState({
           loaderData: {
             ...state.loaderData,
@@ -1034,9 +1034,8 @@ export function createRouter(init: RouterInit): Router {
             },
           },
         });
-        // If this DeferredCollection is complete with this update, we can
-        // remove it
-        if (deferredCollection.done) {
+        // Remove this instance if all promises have settled
+        if (deferredData.done) {
           activeDeferreds.delete(routeId);
         }
       });
@@ -1826,8 +1825,8 @@ async function callLoaderOrAction(
     return { type: resultType, error: result };
   }
 
-  if (result instanceof DeferredCollection) {
-    return { type: ResultType.deferred, deferredCollection: result };
+  if (result instanceof DeferredData) {
+    return { type: ResultType.deferred, deferredData: result };
   }
 
   return { type: ResultType.data, data: result };
@@ -1878,7 +1877,7 @@ function processLoaderData(
   pendingActionError: RouteData | null,
   revalidatingFetchers: [string, string, DataRouteMatch][],
   fetcherResults: DataResult[],
-  activeDeferreds: Map<string, DeferredCollection>
+  activeDeferreds: Map<string, DeferredData>
 ): {
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"];
@@ -1910,8 +1909,8 @@ function processLoaderData(
         [boundaryMatch.route.id]: error,
       });
     } else if (isDeferredResult(result)) {
-      activeDeferreds.set(id, result.deferredCollection);
-      loaderData[id] = result.deferredCollection.data;
+      activeDeferreds.set(id, result.deferredData);
+      loaderData[id] = result.deferredData.data;
     } else {
       loaderData[id] = result.data;
     }
