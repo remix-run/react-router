@@ -842,56 +842,41 @@ export const json: JsonFunction = (data, init = {}) => {
   });
 };
 
-export class DeferredData {
-  private cancelled: boolean = false;
-  promise: Promise<void>;
-
-  constructor(promise: Promise<any>, onSettle: (data: any) => void) {
-    this.promise = promise.then(
-      (data) => {
-        if (this.cancelled) {
-          return;
-        }
-        onSettle(data);
-      },
-      (error) => {
-        if (this.cancelled) {
-          return;
-        }
-        onSettle(new DeferredError(error));
-      }
-    );
-  }
-
-  cancel() {
-    this.cancelled = true;
-  }
-}
-
 export class DeferredCollection {
-  deferreds: Map<String, DeferredData> = new Map<string, DeferredData>();
-  data: RouteData = {};
+  private pendingKeys: Set<string> = new Set<string>();
+  private cancelled: boolean = false;
   private subscriber?: (key: string, data: any) => void = undefined;
+  data: RouteData = {};
 
   constructor(data: Record<string, any>) {
     Object.entries(data).forEach(([key, value]) => {
       if (value instanceof Promise) {
-        let dfd = new DeferredData(value, (data: any) => {
-          if (this.subscriber) {
-            // Async resolution, we have a subscriber to updatestate
-            this.subscriber?.(key, data);
-          } else {
-            // Immediate resolution, can put the data directly in loaderData
-            this.data[key] = data;
-          }
-          this.deferreds.delete(key);
-        });
-        this.deferreds.set(key, dfd);
-        this.data[key] = dfd.promise;
+        value.then(
+          (data) => this.onSettle(key, null, data),
+          (error) => this.onSettle(key, error)
+        );
+        this.pendingKeys.add(key);
+        this.data[key] = value;
       } else {
         this.data[key] = value;
       }
     });
+  }
+
+  private onSettle(key: string, error: any, data?: any) {
+    if (this.cancelled) {
+      return;
+    }
+    this.pendingKeys.delete(key);
+    let value = error ? new DeferredError(error) : data;
+    if (!this.subscriber) {
+      // If we don't have a subscriber yet, then this promise resolved
+      // immediately so we can stick it directly in loaderData
+      this.data[key] = value;
+    } else {
+      // Once we have a subscriber, we call it to updateState
+      this.subscriber?.(key, value);
+    }
   }
 
   subscribe(fn: (key: string, data: any) => void) {
@@ -899,7 +884,12 @@ export class DeferredCollection {
   }
 
   cancel() {
-    this.deferreds.forEach((d) => d.cancel());
+    this.cancelled = true;
+    this.pendingKeys.forEach((v, k) => this.pendingKeys.delete(k));
+  }
+
+  get done() {
+    return this.pendingKeys.size === 0;
   }
 }
 

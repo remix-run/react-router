@@ -6429,6 +6429,91 @@ describe("a router", () => {
       });
     });
 
+    it("should not cancel outstanding deferreds on reused routes", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            children: [
+              {
+                id: "a",
+                path: "a",
+                loader: true,
+              },
+              {
+                id: "b",
+                path: "b",
+                loader: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { root: "ROOT" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/parent/a");
+      let parentDfd = defer();
+      await A.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT",
+          lazy: parentDfd.promise,
+        })
+      );
+      let aDfd = defer();
+      await A.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: aDfd.promise,
+        })
+      );
+
+      // NAvigate such that we reuse the parent route
+      let B = await t.navigate("/parent/b");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      // This should reflect in loaderData
+      await parentDfd.resolve("LAZY PARENT");
+      // This should not
+      await aDfd.resolve("LAZY A");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: "LAZY PARENT",
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise), // No re-paint!
+        },
+      });
+
+      // Complete the navigation
+      await B.loaders.b.resolve("B DATA");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: "LAZY PARENT",
+        },
+        b: "B DATA",
+      });
+    });
+
     it("should handle promise rejections", async () => {
       let t = setup({
         routes: [

@@ -740,10 +740,12 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // heyo starting a new nav - kill off any pending deferreds
+    // Cancel/remove any pending deferreds for routes we're getting rid of
     activeDeferreds.forEach((dfd, routeId) => {
-      if (matches?.some((m) => m.route.id !== routeId)) {
+      let isRouteReused = matches?.some((m) => m.route.id === routeId);
+      if (!isRouteReused) {
         dfd.cancel();
+        activeDeferreds.delete(routeId);
       }
     });
 
@@ -1020,6 +1022,7 @@ export function createRouter(init: RouterInit): Router {
       activeDeferreds
     );
 
+    // Wire up subscribers for deferreds
     activeDeferreds.forEach((deferredCollection, routeId) => {
       deferredCollection.subscribe((loaderDataKey, data) => {
         updateState({
@@ -1031,6 +1034,11 @@ export function createRouter(init: RouterInit): Router {
             },
           },
         });
+        // If this DeferredCollection is complete with this update, we can
+        // remove it
+        if (deferredCollection.done) {
+          activeDeferreds.delete(routeId);
+        }
       });
     });
 
