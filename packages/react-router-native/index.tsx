@@ -61,6 +61,7 @@ export type {
 } from "react-router";
 export {
   DataMemoryRouter,
+  Deferred,
   MemoryRouter,
   Navigate,
   NavigationType,
@@ -70,6 +71,8 @@ export {
   Routes,
   createPath,
   createRoutesFromChildren,
+  deferred,
+  isDeferredError,
   isRouteErrorResponse,
   generatePath,
   json,
@@ -80,6 +83,7 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
+  useDeferred,
   useHref,
   useInRouterContext,
   useLoaderData,

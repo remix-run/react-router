@@ -32,6 +32,7 @@ import {
   NavigateOptions,
   RouteContext,
   RouteErrorContext,
+  DeferredContext,
 } from "./context";
 
 /**
@@ -685,6 +686,15 @@ export function useRouteError() {
 
   // Otherwise look for errors from our data router state
   return state.errors?.[thisRoute.route.id];
+}
+
+/**
+ * Returns the data from the nearest ancestor <Deferred /> value. `data` may be
+ * a `DeferredError` if no `errorBoundary` was specified, so usage should be
+ * guarded with `isDeferredError` in those scenarios.
+ */
+export function useDeferred() {
+  return React.useContext(DeferredContext);
 }
 
 const alreadyWarned: Record<string, boolean> = {};

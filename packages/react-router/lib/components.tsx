@@ -15,6 +15,7 @@ import {
   createMemoryHistory,
   createMemoryRouter,
   invariant,
+  isDeferredError,
   normalizePathname,
   parsePath,
   stripBasename,
@@ -28,8 +29,10 @@ import {
   Navigator,
   DataRouterContext,
   DataRouterStateContext,
+  DeferredContext,
 } from "./context";
 import {
+  useDeferred,
   useInRouterContext,
   useNavigate,
   useOutlet,
@@ -412,6 +415,79 @@ function DataRoutes({
   routes,
 }: DataRoutesProps): React.ReactElement | null {
   return useRoutes(routes || createRoutesFromChildren(children), location);
+}
+
+export interface DeferredResolveRenderFunction {
+  (args: { data: any }): JSX.Element;
+}
+
+export interface DeferredProps extends Omit<React.SuspenseProps, "children"> {
+  children: React.ReactNode | DeferredResolveRenderFunction;
+  data: any;
+  errorBoundary?: React.ReactNode;
+}
+
+/**
+ * Component to use for rendering lazily loaded data from returning deferred()
+ * in a loader function
+ */
+export function Deferred({
+  children,
+  data,
+  fallback,
+  errorBoundary,
+}: DeferredProps) {
+  return (
+    <DeferredContext.Provider value={data}>
+      <React.Suspense fallback={fallback}>
+        <DeferredWrapper children={children} errorBoundary={errorBoundary} />
+      </React.Suspense>
+    </DeferredContext.Provider>
+  );
+}
+
+interface DeferredWrapperProps {
+  children: React.ReactNode;
+  errorBoundary?: React.ReactNode;
+}
+
+/**
+ * @private
+ * Internal wrapper to handle re-throwing the promise to trigger the Suspense
+ * fallback, or rendering the children/errorBoundary once the promise resolves
+ * or rejects
+ */
+function DeferredWrapper({ children, errorBoundary }: DeferredWrapperProps) {
+  let data = React.useContext(DeferredContext);
+  if (data instanceof Promise) {
+    throw data;
+  }
+
+  if (isDeferredError(data) && errorBoundary) {
+    return <>{errorBoundary}</>;
+  }
+
+  return (
+    <>
+      {typeof children === "function" ? (
+        <ResolveDeferred children={children as DeferredResolveRenderFunction} />
+      ) : (
+        children
+      )}
+    </>
+  );
+}
+
+export interface ResolveDeferredProps {
+  children: DeferredResolveRenderFunction;
+}
+
+/**
+ * @private
+ */
+export function ResolveDeferred({ children }: ResolveDeferredProps) {
+  let data = useDeferred();
+  return children({ data });
 }
 
 ///////////////////////////////////////////////////////////////////////////////

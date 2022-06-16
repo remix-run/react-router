@@ -1,11 +1,18 @@
 import React from "react";
-import type { ActionFunction, LoaderFunction } from "react-router-dom";
+import {
+  ActionFunction,
+  isDeferredError,
+  LoaderFunction,
+} from "react-router-dom";
 import {
   DataBrowserRouter,
+  Deferred,
   Form,
   Link,
   Route,
   Outlet,
+  deferred,
+  useDeferred,
   useFetcher,
   useFetchers,
   useLoaderData,
@@ -17,7 +24,7 @@ import {
 import type { Todos } from "./todos";
 import { addTodo, deleteTodo, getTodos } from "./todos";
 
-let sleep = () => new Promise((r) => setTimeout(r, 500));
+let sleep = (n: number = 500) => new Promise((r) => setTimeout(r, n));
 
 function Fallback() {
   return <p>Performing initial data "load"</p>;
@@ -37,6 +44,8 @@ function Layout() {
         &nbsp;|&nbsp;
         <Link to="/todos">Todos</Link>
         &nbsp;|&nbsp;
+        <Link to="/deferred">Deferred</Link>
+        &nbsp;|&nbsp;
         <Link to="/404">404 Link</Link>
       </nav>
       <div style={{ position: "fixed", top: 0, right: 0 }}>
@@ -46,6 +55,10 @@ function Layout() {
       <p>
         Click on over to <Link to="/todos">/todos</Link> and check out these
         data loading APIs!{" "}
+      </p>
+      <p>
+        Or, checkout <Link to="/deferred">/deferred</Link> to see how to
+        separate critical and lazily loaded data in your loaders.
       </p>
       <p>
         We've introduced some fake async-aspects of routing here, so Keep an eye
@@ -192,6 +205,9 @@ function TodoItem({ id, todo }: TodoItemProps) {
 const todoLoader: LoaderFunction = async ({ params }) => {
   await sleep();
   let todos = getTodos();
+  if (!params.id) {
+    throw new Error("Expected params.id");
+  }
   let todo = todos[params.id];
   if (!todo) {
     throw new Error(`Uh oh, I couldn't find a todo with id "${params.id}"`);
@@ -211,11 +227,88 @@ function Todo() {
   );
 }
 
+const deferredLoader: LoaderFunction = async ({ request }) => {
+  return deferred({
+    critical1: await new Promise((r) =>
+      setTimeout(() => r("Critical Data 1"), 250)
+    ),
+    critical2: await new Promise((r) =>
+      setTimeout(() => r("Critical Data 2"), 500)
+    ),
+    lazyResolved: Promise.resolve("Lazy Data immediately resolved"),
+    lazy1: new Promise((r) => setTimeout(() => r("Lazy Data 1"), 1000)),
+    lazy2: new Promise((r) => setTimeout(() => r("Lazy Data 2"), 1500)),
+    lazy3: new Promise((r) => setTimeout(() => r("Lazy Data 3"), 2000)),
+    lazyError1: new Promise((_, r) => setTimeout(() => r("Kaboom!"), 2500)),
+    lazyError2: new Promise((_, r) => setTimeout(() => r("Kaboom!"), 3000)),
+  });
+};
+
+function DeferredPage() {
+  let data = useLoaderData();
+  return (
+    <div>
+      <p>{data.critical1}</p>
+      <p>{data.critical2}</p>
+      <Deferred data={data.lazyResolved} fallback={<p>should not see me!</p>}>
+        <RenderDeferredData />
+      </Deferred>
+      <Deferred data={data.lazy1} fallback={<p>loading 1...</p>}>
+        <RenderDeferredData />
+      </Deferred>
+      <Deferred data={data.lazy2} fallback={<p>loading 2...</p>}>
+        <RenderDeferredData />
+      </Deferred>
+      <Deferred data={data.lazy3} fallback={<p>loading 3...</p>}>
+        {({ data }: { data: any }) => <p>{data}</p>}
+      </Deferred>
+      <Deferred data={data.lazyError1} fallback={<p>loading (error 1)...</p>}>
+        <RenderDeferredData />
+      </Deferred>
+      <Deferred
+        data={data.lazyError2}
+        fallback={<p>loading (error 2)...</p>}
+        errorBoundary={<RenderDeferredError />}
+      >
+        <RenderDeferredData />
+      </Deferred>
+    </div>
+  );
+}
+
+function RenderDeferredData() {
+  let data = useDeferred();
+
+  if (isDeferredError(data)) {
+    return (
+      <p style={{ color: "red" }}>
+        Error! {data.message} {data.stack}
+      </p>
+    );
+  }
+
+  return <p>{data}</p>;
+}
+
+function RenderDeferredError() {
+  let error = useDeferred() as Error;
+  return (
+    <p style={{ color: "red" }}>
+      Error! {error.message} {error.stack}
+    </p>
+  );
+}
+
 function App() {
   return (
     <DataBrowserRouter fallbackElement={<Fallback />}>
       <Route path="/" element={<Layout />}>
         <Route index loader={homeLoader} element={<Home />} />
+        <Route
+          path="deferred"
+          loader={deferredLoader}
+          element={<DeferredPage />}
+        />
         <Route
           path="todos"
           action={todosAction}

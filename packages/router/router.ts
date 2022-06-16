@@ -885,6 +885,11 @@ export function createRouter(init: RouterInit): Router {
       };
     }
 
+    if (isDeferredResult(result)) {
+      // TODO: Do we plan to support this?
+      invariant(false, "deferred() is not supported in actions");
+    }
+
     return {
       pendingActionData: { [actionMatch.route.id]: result.data },
     };
@@ -1016,14 +1021,13 @@ export function createRouter(init: RouterInit): Router {
     );
 
     activeDeferreds.forEach((deferredCollection, routeId) => {
-      deferredCollection.subscribe((loaderDataKey) => {
+      deferredCollection.subscribe((loaderDataKey, data) => {
         updateState({
           loaderData: {
             ...state.loaderData,
             [routeId]: {
               ...state.loaderData[routeId],
-              [loaderDataKey]:
-                deferredCollection.deferreds.get(loaderDataKey)?.data,
+              [loaderDataKey]: data,
             },
           },
         });
@@ -1156,6 +1160,11 @@ export function createRouter(init: RouterInit): Router {
         },
       });
       return;
+    }
+
+    if (isDeferredResult(actionResult)) {
+      // TODO: Do we plan to support this?
+      invariant(false, "deferred() is not supported in actions");
     }
 
     // Start the data load for current matches, or the next location if we're
@@ -1340,6 +1349,11 @@ export function createRouter(init: RouterInit): Router {
         },
       });
       return;
+    }
+
+    if (isDeferredResult(result)) {
+      // TODO: implement
+      invariant(false, "deferred() is not supported in fetchers");
     }
 
     // Put the fetcher back into an idle state
@@ -1919,6 +1933,8 @@ function processLoaderData(
       // Should never get here, redirects should get processed above, but we
       // keep this to type narrow to a success result in the else
       invariant(false, "Unhandled fetcher revalidation redirect");
+    } else if (isDeferredResult(result)) {
+      invariant(false, "deferred() is not supported in fetchers");
     } else {
       let doneFetcher: FetcherStates["Idle"] = {
         state: "idle",

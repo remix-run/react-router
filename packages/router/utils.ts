@@ -824,10 +824,6 @@ export type JsonFunction = <Data>(
   init?: number | ResponseInit
 ) => Response;
 
-function isObject(thing: any) {
-  return typeof thing === "object" && !Array.isArray(thing) && thing != null;
-}
-
 /**
  * This is a shortcut for creating `application/json` responses. Converts `data`
  * to JSON and sets the `Content-Type` header.
@@ -847,28 +843,22 @@ export const json: JsonFunction = (data, init = {}) => {
 };
 
 export class DeferredData {
-  status: "pending" | "resolved" | "rejected" = "pending";
+  private cancelled: boolean = false;
   promise: Promise<void>;
-  data: null | any = null;
-  cancelled: boolean = false;
 
-  constructor(promise: Promise<any>, onSettle: () => void) {
+  constructor(promise: Promise<any>, onSettle: (data: any) => void) {
     this.promise = promise.then(
       (data) => {
         if (this.cancelled) {
           return;
         }
-        this.status = "resolved";
-        this.data = data;
-        onSettle();
+        onSettle(data);
       },
       (error) => {
         if (this.cancelled) {
           return;
         }
-        this.status = "rejected";
-        this.data = error;
-        onSettle();
+        onSettle(new DeferredError(error));
       }
     );
   }
@@ -881,13 +871,19 @@ export class DeferredData {
 export class DeferredCollection {
   deferreds: Map<String, DeferredData> = new Map<string, DeferredData>();
   data: RouteData = {};
-  private subscriber?: (key: string) => void = undefined;
+  private subscriber?: (key: string, data: any) => void = undefined;
 
   constructor(data: Record<string, any>) {
     Object.entries(data).forEach(([key, value]) => {
       if (value instanceof Promise) {
-        let dfd = new DeferredData(value, () => {
-          this.subscriber?.(key);
+        let dfd = new DeferredData(value, (data: any) => {
+          if (this.subscriber) {
+            // Async resolution, we have a subscriber to updatestate
+            this.subscriber?.(key, data);
+          } else {
+            // Immediate resolution, can put the data directly in loaderData
+            this.data[key] = data;
+          }
           this.deferreds.delete(key);
         });
         this.deferreds.set(key, dfd);
@@ -898,13 +894,27 @@ export class DeferredCollection {
     });
   }
 
-  subscribe(fn: (key: string) => void) {
+  subscribe(fn: (key: string, data: any) => void) {
     this.subscriber = fn;
   }
 
   cancel() {
     this.deferreds.forEach((d) => d.cancel());
   }
+}
+
+/**
+ * @private
+ * Utility class we use to hold deferred promise rejection values
+ */
+export class DeferredError extends Error {}
+
+/**
+ * Check if the given error is a DeferredError generated from a deferred()
+ * promise rejection
+ */
+export function isDeferredError(e: any): e is DeferredError {
+  return e instanceof DeferredError;
 }
 
 export function deferred(data: Record<string, any>) {

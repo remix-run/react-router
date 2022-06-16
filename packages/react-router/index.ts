@@ -22,7 +22,9 @@ import type {
 import {
   Action as NavigationType,
   createPath,
+  deferred,
   generatePath,
+  isDeferredError,
   isRouteErrorResponse,
   json,
   matchPath,
@@ -47,8 +49,9 @@ import type {
 import {
   createRoutesFromChildren,
   renderMatches,
-  MemoryRouter,
   DataMemoryRouter,
+  Deferred,
+  MemoryRouter,
   Navigate,
   Outlet,
   Route,
@@ -78,6 +81,7 @@ import {
   useResolvedPath,
   useRoutes,
   useActionData,
+  useDeferred,
   useLoaderData,
   useMatches,
   useRouteLoaderData,
@@ -131,6 +135,7 @@ export type {
 };
 export {
   DataMemoryRouter,
+  Deferred,
   MemoryRouter,
   Navigate,
   NavigationType,
@@ -140,6 +145,8 @@ export {
   Routes,
   createPath,
   createRoutesFromChildren,
+  deferred,
+  isDeferredError,
   isRouteErrorResponse,
   generatePath,
   json,
@@ -150,6 +157,7 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
+  useDeferred,
   useHref,
   useInRouterContext,
   useLoaderData,
