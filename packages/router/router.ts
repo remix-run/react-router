@@ -5,7 +5,6 @@ import {
   DataResult,
   DataRouteMatch,
   DataRouteObject,
-  deferred,
   DeferredData,
   DeferredResult,
   ErrorResult,
