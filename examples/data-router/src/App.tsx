@@ -3,6 +3,7 @@ import {
   ActionFunction,
   isDeferredError,
   LoaderFunction,
+  useRevalidator,
 } from "react-router-dom";
 import {
   DataBrowserRouter,
@@ -33,6 +34,7 @@ function Fallback() {
 // Layout
 function Layout() {
   let navigation = useNavigation();
+  let { revalidate } = useRevalidator();
   let fetchers = useFetchers();
   let fetcherInProgress = fetchers.some((f) =>
     ["loading", "submitting"].includes(f.state)
@@ -46,7 +48,11 @@ function Layout() {
         &nbsp;|&nbsp;
         <Link to="/deferred">Deferred</Link>
         &nbsp;|&nbsp;
+        <Link to="/deferred/child">Deferred Child</Link>
+        &nbsp;|&nbsp;
         <Link to="/404">404 Link</Link>
+        &nbsp;&nbsp;
+        <button onClick={() => revalidate()}>Revalidate</button>
       </nav>
       <div style={{ position: "fixed", top: 0, right: 0 }}>
         {navigation.state !== "idle" && <p>Navigation in progress...</p>}
@@ -272,6 +278,28 @@ function DeferredPage() {
       >
         <RenderDeferredData />
       </Deferred>
+      <Outlet />
+    </div>
+  );
+}
+
+const deferredChildLoader: LoaderFunction = async ({ request }) => {
+  return deferred({
+    critical: await new Promise((r) =>
+      setTimeout(() => r("Critical Child Data"), 500)
+    ),
+    lazy: new Promise((r) => setTimeout(() => r("Lazy Child Data"), 1000)),
+  });
+};
+
+function DeferredChild() {
+  let data = useLoaderData();
+  return (
+    <div>
+      <p>{data.critical}</p>
+      <Deferred data={data.lazy} fallback={<p>loading child...</p>}>
+        <RenderDeferredData />
+      </Deferred>
     </div>
   );
 }
@@ -308,7 +336,13 @@ function App() {
           path="deferred"
           loader={deferredLoader}
           element={<DeferredPage />}
-        />
+        >
+          <Route
+            path="child"
+            loader={deferredChildLoader}
+            element={<DeferredChild />}
+          />
+        </Route>
         <Route
           path="todos"
           action={todosAction}

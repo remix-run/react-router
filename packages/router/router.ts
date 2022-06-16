@@ -646,10 +646,7 @@ export function createRouter(init: RouterInit): Router {
 
     // If we're currently submitting an action, we don't need to start a new
     // navigation, we'll just let the follow up loader execution call all loaders
-    if (
-      state.navigation.state === "submitting" &&
-      state.navigation.formMethod !== "get"
-    ) {
+    if (state.navigation.state === "submitting") {
       return;
     }
 
@@ -738,15 +735,6 @@ export function createRouter(init: RouterInit): Router {
       });
       return;
     }
-
-    // Cancel/remove any pending deferreds for routes we're getting rid of
-    activeDeferreds.forEach((dfd, routeId) => {
-      let isRouteReused = matches?.some((m) => m.route.id === routeId);
-      if (!isRouteReused) {
-        dfd.cancel();
-        activeDeferreds.delete(routeId);
-      }
-    });
 
     // Call action if we received an action submission
     let pendingActionData: RouteData | null = null;
@@ -932,6 +920,9 @@ export function createRouter(init: RouterInit): Router {
       pendingActionError,
       fetchLoadMatches
     );
+
+    // Cancel pending deferreds that are being removed or reloaded
+    cancelActiveDeferreds(matches, matchesToLoad);
 
     // Short circuit if we have no loaders to run
     if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
@@ -1204,6 +1195,9 @@ export function createRouter(init: RouterInit): Router {
       fetchLoadMatches
     );
 
+    // Cancel pending deferreds that are being removed or reloaded
+    cancelActiveDeferreds(matches, matchesToLoad);
+
     // Put all revalidating fetchers into the loading state, except for the
     // current fetcher which we want to keep in it's current loading state which
     // contains it's action submission info + action data
@@ -1450,6 +1444,22 @@ export function createRouter(init: RouterInit): Router {
     }
     markFetchersDone(yeetedKeys);
     return yeetedKeys.length > 0;
+  }
+
+  function cancelActiveDeferreds(
+    matches: DataRouteMatch[],
+    matchesToLoad: DataRouteMatch[]
+  ) {
+    activeDeferreds.forEach((dfd, routeId) => {
+      // Can cancel if this route is no longer matched
+      let isRouteMatched = matches?.some((m) => m.route.id === routeId);
+      // Or if this route is about to be reloaded
+      let isRouteLoading = matchesToLoad?.some((m) => m.route.id === routeId);
+      if (!isRouteMatched || isRouteLoading) {
+        dfd.cancel();
+        activeDeferreds.delete(routeId);
+      }
+    });
   }
 
   // Opt in to capturing and reporting scroll positions during navigations,

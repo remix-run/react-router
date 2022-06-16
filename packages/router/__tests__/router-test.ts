@@ -6475,7 +6475,7 @@ describe("a router", () => {
         })
       );
 
-      // NAvigate such that we reuse the parent route
+      // Navigate such that we reuse the parent route
       let B = await t.navigate("/parent/b");
       expect(t.router.state.loaderData).toEqual({
         parent: {
@@ -6549,5 +6549,129 @@ describe("a router", () => {
       });
       expect(isDeferredError(t.router.state.loaderData.lazy.lazy)).toBe(true);
     });
+
+    it("should cancel all outstanding deferreds on router.revalidate()", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            children: [
+              {
+                id: "index",
+                index: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { root: "ROOT" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/parent");
+      let parentDfd = defer();
+      await A.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT",
+          lazy: parentDfd.promise,
+        })
+      );
+      let indexDfd = defer();
+      await A.loaders.index.resolve(
+        deferred({
+          critical: "CRITICAL INDEX",
+          lazy: indexDfd.promise,
+        })
+      );
+
+      // Trigger a revalidation which should cancel outstanding deferreds
+      let R = await t.revalidate();
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        index: {
+          critical: "CRITICAL INDEX",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      // Neither should reflect in loaderData
+      await parentDfd.resolve("Nope!");
+      await indexDfd.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        index: {
+          critical: "CRITICAL INDEX",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      // Complete the revalidation
+      let parentDfd2 = defer();
+      await R.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT 2",
+          lazy: parentDfd2.promise,
+        })
+      );
+      let indexDfd2 = defer();
+      await R.loaders.index.resolve(
+        deferred({
+          critical: "CRITICAL INDEX 2",
+          lazy: indexDfd2.promise,
+        })
+      );
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT 2",
+          lazy: expect.any(Promise),
+        },
+        index: {
+          critical: "CRITICAL INDEX 2",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await indexDfd2.resolve("LAZY INDEX 2");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT 2",
+          lazy: expect.any(Promise),
+        },
+        index: {
+          critical: "CRITICAL INDEX 2",
+          lazy: "LAZY INDEX 2",
+        },
+      });
+
+      await parentDfd2.resolve("LAZY PARENT 2");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT 2",
+          lazy: "LAZY PARENT 2",
+        },
+        index: {
+          critical: "CRITICAL INDEX 2",
+          lazy: "LAZY INDEX 2",
+        },
+      });
+    });
+
+    it.todo("supports deferreds on fetcher loads");
+    it.todo("cancels pending deferreds on fetcher reloads");
+    it.todo("cancels pending deferreds on action submissions");
+    it.todo("cancels pending deferreds on fetcher action submissions");
   });
 });
