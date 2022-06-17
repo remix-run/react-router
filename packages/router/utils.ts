@@ -849,15 +849,14 @@ export class DeferredData {
 
   constructor(data: Record<string, any>) {
     Object.entries(data).forEach(([key, value]) => {
+      // Store all data in our internal copy and track promise keys
+      this.data[key] = value;
       if (value instanceof Promise) {
+        this.pendingKeys.add(key);
         value.then(
           (data) => this.onSettle(key, null, data),
           (error) => this.onSettle(key, error)
         );
-        this.pendingKeys.add(key);
-        this.data[key] = value;
-      } else {
-        this.data[key] = value;
       }
     });
   }
@@ -868,14 +867,8 @@ export class DeferredData {
     }
     this.pendingKeys.delete(key);
     let value = error ? new DeferredError(error) : data;
-    if (!this.subscriber) {
-      // If we don't have a subscriber yet, then this promise resolved
-      // immediately so we can stick it directly in loaderData
-      this.data[key] = value;
-    } else {
-      // Once we have a subscriber, we call it to updateState
-      this.subscriber?.(key, value);
-    }
+    this.data[key] = value;
+    this.subscriber?.(key, value);
   }
 
   subscribe(fn: (key: string, data: any) => void) {

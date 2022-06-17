@@ -467,6 +467,12 @@ export function createRouter(init: RouterInit): Router {
   //  - useRevalidate()
   //  - X-Remix-Revalidate (from redirect)
   let isRevalidationRequired = false;
+  // Use this internal array to capture routes that require revalidation due
+  // to a cancelled deferred on action submission
+  let cancelledDeferredRoutes: string[] = [];
+  // Use this internal array to capture fetcher loads that were cancelled by an
+  // action navigation and require revalidation
+  let cancelledFetcherLoads: string[] = [];
   // AbortControllers for any in-flight fetchers
   let fetchControllers = new Map();
   // Track loads based on the order in which they started
@@ -597,6 +603,8 @@ export function createRouter(init: RouterInit): Router {
     pendingResetScroll = true;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
+    cancelledDeferredRoutes = [];
+    cancelledFetcherLoads = [];
   }
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
@@ -708,6 +716,8 @@ export function createRouter(init: RouterInit): Router {
         route,
         error,
       } = getNotFoundMatches(dataRoutes);
+      // Cancel all pending deferred on 404s since we don't keep any routes
+      cancelActiveDeferreds();
       completeNavigation(historyAction, location, {
         matches: notFoundMatches,
         errors: {
@@ -719,6 +729,8 @@ export function createRouter(init: RouterInit): Router {
 
     if (opts?.pendingError) {
       let boundaryMatch = findNearestBoundary(matches);
+      // Cancel pending deferreds for non-reused/below-boundary routes
+      cancelActiveDeferredsViaMatches(matches, [], boundaryMatch.route.id);
       completeNavigation(historyAction, location, {
         matches,
         errors: {
@@ -793,6 +805,18 @@ export function createRouter(init: RouterInit): Router {
     matches: DataRouteMatch[]
   ): Promise<HandleActionResult> {
     isRevalidationRequired = true;
+
+    // Cancel all pending deferred on submissions and mark cancelled routes
+    // for revalidation
+    cancelledDeferredRoutes.push(...cancelActiveDeferreds());
+
+    // Abort any in-flight fetcher loads
+    fetchLoadMatches.forEach(([href, match], key) => {
+      if (fetchControllers.has(key)) {
+        cancelledFetcherLoads.push(key);
+        abortFetcher(key);
+      }
+    });
 
     if (
       matches[matches.length - 1].route.index &&
@@ -875,7 +899,6 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isDeferredResult(result)) {
-      // TODO: Do we plan to support this?
       invariant(false, "deferred() is not supported in actions");
     }
 
@@ -916,13 +939,12 @@ export function createRouter(init: RouterInit): Router {
       submission,
       location,
       isRevalidationRequired,
+      cancelledDeferredRoutes,
+      cancelledFetcherLoads,
       pendingActionData,
       pendingActionError,
       fetchLoadMatches
     );
-
-    // Cancel pending deferreds that are being removed or reloaded
-    cancelActiveDeferreds(matches, matchesToLoad);
 
     // Short circuit if we have no loaders to run
     if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
@@ -934,6 +956,11 @@ export function createRouter(init: RouterInit): Router {
       });
       return { shortCircuited: true };
     }
+
+    // Cancel pending deferreds that are not being reused.  Note that if this
+    // is an acton reload we would have already cancelled all pending deferreds
+    // so this would be a no-op
+    cancelActiveDeferredsViaMatches(matches, matchesToLoad);
 
     // If this is an uninterrupted revalidation, remain in our current idle state.
     // Otherwise, switch to our loading state and load data, preserving any
@@ -1103,6 +1130,18 @@ export function createRouter(init: RouterInit): Router {
     isRevalidationRequired = true;
     fetchLoadMatches.delete(key);
 
+    // Cancel all pending deferred on submissions and mark cancelled routes
+    // for revalidation
+    cancelledDeferredRoutes.push(...cancelActiveDeferreds());
+
+    // Abort any in-flight fetcher loads
+    fetchLoadMatches.forEach(([href, match], key) => {
+      if (fetchControllers.has(key)) {
+        cancelledFetcherLoads.push(key);
+        abortFetcher(key);
+      }
+    });
+
     // Put this fetcher into it's submitting state
     let fetcher: FetcherStates["Submitting"] = {
       state: "submitting",
@@ -1160,7 +1199,6 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isDeferredResult(actionResult)) {
-      // TODO: Do we plan to support this?
       invariant(false, "deferred() is not supported in actions");
     }
 
@@ -1190,13 +1228,12 @@ export function createRouter(init: RouterInit): Router {
       submission,
       nextLocation,
       isRevalidationRequired,
+      cancelledDeferredRoutes,
+      cancelledFetcherLoads,
       { [match.route.id]: actionResult.data },
       null, // No need to send through errors since we short circuit above
       fetchLoadMatches
     );
-
-    // Cancel pending deferreds that are being removed or reloaded
-    cancelActiveDeferreds(matches, matchesToLoad);
 
     // Put all revalidating fetchers into the loading state, except for the
     // current fetcher which we want to keep in it's current loading state which
@@ -1325,6 +1362,21 @@ export function createRouter(init: RouterInit): Router {
       abortController.signal
     );
 
+    // Deferred isn't supported or fetcher loads, await everything and treat it
+    // as a normal load
+    if (isDeferredResult(result)) {
+      if (!result.deferredData.done) {
+        await new Promise((resolve) => {
+          (result as DeferredResult).deferredData.subscribe(() => {
+            if ((result as DeferredResult).deferredData.done) {
+              resolve(true);
+            }
+          });
+        });
+      }
+      result = { type: ResultType.data, data: result.deferredData.data };
+    }
+
     if (abortController.signal.aborted) return;
     fetchControllers.delete(key);
 
@@ -1349,11 +1401,6 @@ export function createRouter(init: RouterInit): Router {
         },
       });
       return;
-    }
-
-    if (isDeferredResult(result)) {
-      // TODO: implement
-      invariant(false, "deferred() is not supported in fetchers");
     }
 
     // Put the fetcher back into an idle state
@@ -1447,18 +1494,34 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function cancelActiveDeferreds(
-    matches: DataRouteMatch[],
-    matchesToLoad: DataRouteMatch[]
-  ) {
+    predicate?: (routeId: string) => boolean
+  ): string[] {
+    let cancelledRouteIds: string[] = [];
     activeDeferreds.forEach((dfd, routeId) => {
+      if (!predicate || predicate(routeId)) {
+        dfd.cancel();
+        activeDeferreds.delete(routeId);
+        cancelledRouteIds.push(routeId);
+      }
+    });
+    return cancelledRouteIds;
+  }
+
+  // Cancel active deferreds that are not reused, being reloaded, or below the
+  // boundary id
+  function cancelActiveDeferredsViaMatches(
+    matches: DataRouteMatch[],
+    matchesToLoad: DataRouteMatch[],
+    boundaryId?: string
+  ): string[] {
+    let foundBoundaryId = false;
+    return cancelActiveDeferreds((routeId) => {
+      foundBoundaryId = foundBoundaryId || routeId === boundaryId;
       // Can cancel if this route is no longer matched
       let isRouteMatched = matches?.some((m) => m.route.id === routeId);
       // Or if this route is about to be reloaded
       let isRouteLoading = matchesToLoad?.some((m) => m.route.id === routeId);
-      if (!isRouteMatched || isRouteLoading) {
-        dfd.cancel();
-        activeDeferreds.delete(routeId);
-      }
+      return !isRouteMatched || isRouteLoading || foundBoundaryId;
     });
   }
 
@@ -1644,9 +1707,11 @@ function getMatchesToLoad(
   submission: Submission | undefined,
   location: Location,
   isRevalidationRequired: boolean,
+  cancelledDeferredRoutes: string[],
+  cancelledFetcherLoads: string[],
   pendingActionData: RouteData | null,
   pendingActionError: RouteData | null,
-  revalidatingFetcherMatches: Map<string, [string, DataRouteMatch]>
+  fetchLoadMatches: Map<string, [string, DataRouteMatch]>
 ): [DataRouteMatch[], [string, string, DataRouteMatch][]] {
   // Determine which routes to run loaders for, filter out all routes below
   // any caught action error as they aren't going to render so we don't
@@ -1670,6 +1735,8 @@ function getMatchesToLoad(
     }
     return (
       isNewLoader(state.loaderData, state.matches[index], match) ||
+      // If this route had a pending deferred cancelled it must be revalidated
+      cancelledDeferredRoutes.some((id) => id === match.route.id) ||
       shouldRevalidateLoader(
         state.location,
         state.matches[index],
@@ -1684,9 +1751,11 @@ function getMatchesToLoad(
 
   // If revalidation is required, pick fetchers that qualify
   let revalidatingFetchers: [string, string, DataRouteMatch][] = [];
-  if (isRevalidationRequired) {
-    for (let entry of revalidatingFetcherMatches.entries()) {
-      let [key, [href, match]] = entry;
+  fetchLoadMatches.forEach(([href, match], key) => {
+    // This fetcher was cancelled from a prior action submission - force reload
+    if (cancelledFetcherLoads.includes(key)) {
+      revalidatingFetchers.push([key, href, match]);
+    } else if (isRevalidationRequired) {
       let shouldRevalidate = shouldRevalidateLoader(
         href,
         match,
@@ -1700,7 +1769,7 @@ function getMatchesToLoad(
         revalidatingFetchers.push([key, href, match]);
       }
     }
-  }
+  });
 
   return [navigationMatches, revalidatingFetchers];
 }
@@ -1717,7 +1786,7 @@ function isNewLoader(
     match.route.id !== currentMatch.route.id;
 
   // Handle the case that we don't have data for a re-used route, potentially
-  // from a prior error
+  // from a prior error or from a cancelled pending deferred
   let isMissingData = currentLoaderData[match.route.id] === undefined;
 
   // Always load if this is a net-new route or we don't yet have data
