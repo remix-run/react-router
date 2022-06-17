@@ -92,7 +92,6 @@ type NavigationHelpers = {
   navigationId: number;
   loaders: Record<string, Helpers>;
   actions: Record<string, Helpers>;
-  shimLoaderHelper: (routeId: string) => void;
 };
 
 type FetcherHelpers = NavigationHelpers & {
@@ -404,24 +403,10 @@ function setup({
         )
     );
 
-    function shimLoaderHelper(routeId: string) {
-      invariant(!loaderHelpers[routeId], "Can't overwrite existing helpers");
-      loaderHelpers[routeId] = getRouteHelpers(
-        routeId,
-        navigationId,
-        (routeId, helpers) =>
-          activeHelpers.set(
-            `navigation:${navigationId}:loader:${routeId}`,
-            helpers
-          )
-      );
-    }
-
     return {
       navigationId,
       loaders: loaderHelpers,
       actions: actionHelpers,
-      shimLoaderHelper,
     };
   }
 
@@ -476,16 +461,6 @@ function setup({
         activeHelpers.set(`fetch:${navigationId}:action:${routeId}`, helpers)
     );
 
-    function shimLoaderHelper(routeId: string) {
-      invariant(!loaderHelpers[routeId], "Can't overwrite existing helpers");
-      loaderHelpers[routeId] = getRouteHelpers(
-        routeId,
-        navigationId,
-        (routeId, helpers) =>
-          activeHelpers.set(`fetch:${navigationId}:loader:${routeId}`, helpers)
-      );
-    }
-
     return {
       key,
       navigationId,
@@ -495,7 +470,6 @@ function setup({
       },
       loaders: loaderHelpers,
       actions: actionHelpers,
-      shimLoaderHelper,
     };
   }
 
@@ -591,23 +565,51 @@ function setup({
 
   // Simulate a revalidation, returning a series of helpers to manually
   // control/assert loader/actions
-  async function revalidate(): Promise<NavigationHelpers> {
+  async function revalidate(
+    type: "navigation" | "fetch" = "navigation",
+    shimRouteId?: string
+  ): Promise<NavigationHelpers> {
     invariant(currentRouter, "No currentRouter available");
-    // if a revalidation interrupts an action submission, we don't actually
-    // start a new new navigation so don't increment here
-    let navigationId =
-      currentRouter.state.navigation.state === "submitting" &&
-      currentRouter.state.navigation.formMethod !== "get"
-        ? guid
-        : ++guid;
-    activeLoaderType = "navigation";
-    activeLoaderNavigationId = navigationId;
+    let navigationId;
+    if (type === "fetch") {
+      // This is a special case for when we want to test revalidation against
+      // fetchers, so that our A.loaders.routeId will trigger the fetcher loader,
+      // not the route loader
+      navigationId = ++guid;
+      activeLoaderType = "fetch";
+      activeLoaderFetchId = navigationId;
+    } else {
+      // if a revalidation interrupts an action submission, we don't actually
+      // start a new new navigation so don't increment here
+      navigationId =
+        currentRouter.state.navigation.state === "submitting" &&
+        currentRouter.state.navigation.formMethod !== "get"
+          ? guid
+          : ++guid;
+      activeLoaderType = "navigation";
+      activeLoaderNavigationId = navigationId;
+    }
     let href = currentRouter.createHref(
       currentRouter.state.navigation.location || currentRouter.state.location
     );
     let helpers = getNavigationHelpers(href, navigationId);
+    if (shimRouteId) {
+      shimHelper(helpers.loaders, type, "loader", shimRouteId);
+    }
     currentRouter.revalidate();
     return helpers;
+  }
+
+  function shimHelper(
+    navHelpers: Record<string, Helpers>,
+    type: "navigation" | "fetch",
+    type2: "loader" | "action",
+    routeId: string
+  ) {
+    invariant(!navHelpers[routeId], "Can't overwrite existing helpers");
+    navHelpers[routeId] = getRouteHelpers(routeId, guid, (routeId, helpers) =>
+      activeHelpers.set(`${type}:${guid}:${type2}:${routeId}`, helpers)
+    );
   }
 
   return {
@@ -616,6 +618,7 @@ function setup({
     navigate,
     fetch,
     revalidate,
+    shimHelper,
   };
 }
 
@@ -5162,7 +5165,7 @@ describe("a router", () => {
 
     describe("fetcher error states (4xx Response)", () => {
       it("loader fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo");
         await A.loaders.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
@@ -5172,7 +5175,7 @@ describe("a router", () => {
       });
 
       it("loader submission fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo?key=value", {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
@@ -5185,7 +5188,7 @@ describe("a router", () => {
       });
 
       it("action fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -5200,7 +5203,7 @@ describe("a router", () => {
 
     describe("fetcher error states (Error)", () => {
       it("loader fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo");
         await A.loaders.foo.reject(new Error("Kaboom!"));
         expect(A.fetcher).toBe(IDLE_FETCHER);
@@ -5210,7 +5213,7 @@ describe("a router", () => {
       });
 
       it("loader submission fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo?key=value", {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
@@ -5223,7 +5226,7 @@ describe("a router", () => {
       });
 
       it("action fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -5238,7 +5241,7 @@ describe("a router", () => {
 
     describe("fetcher redirects", () => {
       it("loader fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo");
         let fetcher = A.fetcher;
         await A.loaders.foo.redirect("/bar");
@@ -5248,7 +5251,7 @@ describe("a router", () => {
       });
 
       it("loader submission fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo?key=value", {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
@@ -5261,10 +5264,7 @@ describe("a router", () => {
       });
 
       it("action fetch", async () => {
-        let t = initializeTmTest({
-          url: "/foo",
-          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
-        });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -5691,7 +5691,7 @@ describe("a router", () => {
           // This fetcher's helpers take the current locations loaders (root/index).
           // Since we know we're about to interrupt with /foo let's shim in a
           // loader helper for foo ahead of time
-          A.shimLoaderHelper("foo");
+          t.shimHelper(A.loaders, "fetch", "loader", "foo");
 
           let B = await t.navigate("/foo");
           await A.actions.foo.resolve("A action");
@@ -5841,7 +5841,7 @@ describe("a router", () => {
             formMethod: "post",
             formData: createFormData({ key: "value" }),
           });
-          A.shimLoaderHelper("bar");
+          t.shimHelper(A.loaders, "fetch", "loader", "bar");
           let B = await t.navigate("/bar", {
             formMethod: "post",
             formData: createFormData({ key: "value" }),
@@ -5869,7 +5869,7 @@ describe("a router", () => {
             formMethod: "post",
             formData: createFormData({ key: "value" }),
           });
-          A.shimLoaderHelper("bar");
+          t.shimHelper(A.loaders, "fetch", "loader", "bar");
           let B = await t.navigate("/bar", {
             formMethod: "post",
             formData: createFormData({ key: "value" }),
@@ -6003,7 +6003,7 @@ describe("a router", () => {
           formData: createFormData({}),
         });
         // Add a helper for the fetcher that will be revalidating
-        C.shimLoaderHelper("tasksId");
+        t.shimHelper(C.loaders, "navigation", "loader", "tasksId");
 
         // Resolve the action
         await C.actions.tasks.resolve("TASKS ACTION");
@@ -6106,7 +6106,7 @@ describe("a router", () => {
           formMethod: "post",
           formData: createFormData({}),
         });
-        C.shimLoaderHelper("tasksId");
+        t.shimHelper(C.loaders, "navigation", "loader", "tasksId");
 
         // Reject the action
         await C.actions.tasks.reject(new Error("Kaboom!"));
@@ -6242,7 +6242,7 @@ describe("a router", () => {
           formMethod: "post",
           formData: createFormData({}),
         });
-        B.shimLoaderHelper("tasksId");
+        t.shimHelper(B.loaders, "navigation", "loader", "tasksId");
         await B.actions.tasks.resolve("TASKS ACTION");
         await B.loaders.root.resolve("ROOT*");
         await B.loaders.tasks.resolve("TASKS*");
@@ -6282,7 +6282,7 @@ describe("a router", () => {
           formMethod: "post",
           formData: createFormData({}),
         });
-        C.shimLoaderHelper("tasksId");
+        t.shimHelper(C.loaders, "fetch", "loader", "tasksId");
 
         await C.actions.tasks.resolve("TASKS ACTION");
         await C.loaders.root.resolve("ROOT*");
@@ -6377,9 +6377,9 @@ describe("a router", () => {
           formData: createFormData({}),
         });
         // Add a helper for the fetcher that will be revalidating
-        D.shimLoaderHelper("fetchA");
-        D.shimLoaderHelper("fetchB");
-        D.shimLoaderHelper("fetchC");
+        t.shimHelper(D.loaders, "navigation", "loader", "fetchA");
+        t.shimHelper(D.loaders, "navigation", "loader", "fetchB");
+        t.shimHelper(D.loaders, "navigation", "loader", "fetchC");
 
         // Fetcher load aborted and still in a loading state
         expect(t.router.state.navigation.state).toBe("submitting");
@@ -6591,7 +6591,6 @@ describe("a router", () => {
       );
 
       // Navigate such that we reuse the parent route
-      debugger;
       let B = await t.navigate("/parent/b");
       expect(t.router.state.loaderData).toEqual({
         parent: {
@@ -7098,7 +7097,7 @@ describe("a router", () => {
 
       // deferred in a fetcher awaits all data in the loading state
       let dfd = defer();
-      let loaderPromise = A.loaders.fetch.resolve(
+      await A.loaders.fetch.resolve(
         deferred({
           critical: "1",
           lazy: dfd.promise,
@@ -7110,12 +7109,40 @@ describe("a router", () => {
       });
 
       await dfd.resolve("2");
-      await loaderPromise;
+      await tick();
       expect(t.router.state.fetchers.get(key)).toMatchObject({
         state: "idle",
         data: {
           critical: "1",
           lazy: "2",
+        },
+      });
+
+      // Trigger a revalidation for the same fetcher
+      let B = await t.revalidate("fetch", "fetch");
+      expect(t.router.state.revalidation).toBe("loading");
+      let dfd2 = defer();
+      await B.loaders.fetch.resolve(
+        deferred({
+          critical: "3",
+          lazy: dfd2.promise,
+        })
+      );
+      expect(t.router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: {
+          critical: "1",
+          lazy: "2",
+        },
+      });
+
+      await dfd2.resolve("4");
+      await tick();
+      expect(t.router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: {
+          critical: "3",
+          lazy: "4",
         },
       });
     });

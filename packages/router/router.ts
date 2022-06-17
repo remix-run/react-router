@@ -14,6 +14,7 @@ import {
   RouteData,
   RouteObject,
   Submission,
+  SuccessResult,
 } from "./utils";
 import { ErrorResponse, ResultType, invariant, matchRoutes } from "./utils";
 
@@ -1028,7 +1029,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Process and commit output from loaders
-    let { loaderData, errors } = processLoaderData(
+    let { loaderData, errors } = await processLoaderData(
       state,
       matches,
       matchesToLoad,
@@ -1287,7 +1288,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Process and commit output from loaders
-    let { loaderData, errors } = processLoaderData(
+    let { loaderData, errors } = await processLoaderData(
       state,
       state.matches,
       matchesToLoad,
@@ -1365,16 +1366,7 @@ export function createRouter(init: RouterInit): Router {
     // Deferred isn't supported or fetcher loads, await everything and treat it
     // as a normal load
     if (isDeferredResult(result)) {
-      if (!result.deferredData.done) {
-        await new Promise((resolve) => {
-          (result as DeferredResult).deferredData.subscribe(() => {
-            if ((result as DeferredResult).deferredData.done) {
-              resolve(true);
-            }
-          });
-        });
-      }
-      result = { type: ResultType.data, data: result.deferredData.data };
+      result = await resolveDeferredData(result);
     }
 
     if (abortController.signal.aborted) return;
@@ -1947,7 +1939,7 @@ function createRequest(
   });
 }
 
-function processLoaderData(
+async function processLoaderData(
   state: RouterState,
   matches: DataRouteMatch[],
   matchesToLoad: DataRouteMatch[],
@@ -2001,7 +1993,8 @@ function processLoaderData(
   }
 
   // Process results from our revalidating fetchers
-  revalidatingFetchers.forEach(([key, href, match], index) => {
+  for (let index = 0; index < revalidatingFetchers.length; index++) {
+    let [key, href, match] = revalidatingFetchers[index];
     let result = fetcherResults[index];
 
     // Process fetcher non-redirect errors
@@ -2018,9 +2011,11 @@ function processLoaderData(
       // Should never get here, redirects should get processed above, but we
       // keep this to type narrow to a success result in the else
       invariant(false, "Unhandled fetcher revalidation redirect");
-    } else if (isDeferredResult(result)) {
-      invariant(false, "deferred() is not supported in fetchers");
     } else {
+      if (isDeferredResult(result)) {
+        result = await resolveDeferredData(result);
+      }
+
       let doneFetcher: FetcherStates["Idle"] = {
         state: "idle",
         data: result.data,
@@ -2031,7 +2026,7 @@ function processLoaderData(
       };
       state.fetchers.set(key, doneFetcher);
     }
-  });
+  }
 
   return { loaderData, errors };
 }
@@ -2131,6 +2126,21 @@ function isErrorResult(result: DataResult): result is ErrorResult {
 
 function isRedirectResult(result?: DataResult): result is RedirectResult {
   return result?.type === ResultType.redirect;
+}
+
+async function resolveDeferredData(
+  result: DeferredResult
+): Promise<SuccessResult> {
+  if (!result.deferredData.done) {
+    await new Promise((resolve) => {
+      (result as DeferredResult).deferredData.subscribe(() => {
+        if ((result as DeferredResult).deferredData.done) {
+          resolve(true);
+        }
+      });
+    });
+  }
+  return { type: ResultType.data, data: result.deferredData.data };
 }
 
 function hasNakedIndexQuery(search: string): boolean {

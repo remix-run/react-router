@@ -50,6 +50,8 @@ function Layout() {
         &nbsp;|&nbsp;
         <Link to="/deferred/child">Deferred Child</Link>
         &nbsp;|&nbsp;
+        <Link to="/long-load">Long Load</Link>
+        &nbsp;|&nbsp;
         <Link to="/404">404 Link</Link>
         &nbsp;&nbsp;
         <button onClick={() => revalidate()}>Revalidate</button>
@@ -343,6 +345,11 @@ function App() {
             element={<DeferredChild />}
           />
         </Route>
+        <Route
+          path="long-load"
+          loader={() => sleep(3000)}
+          element={<h1>👋</h1>}
+        />
         <Route
           path="todos"
           action={todosAction}
