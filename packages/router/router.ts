@@ -1948,10 +1948,10 @@ async function processLoaderData(
   revalidatingFetchers: [string, string, DataRouteMatch][],
   fetcherResults: DataResult[],
   activeDeferreds: Map<string, DeferredData>
-): {
+): Promise<{
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"];
-} {
+}> {
   // Fill in loaderData/errors from our loaders
   let loaderData: RouterState["loaderData"] = {};
   let errors: RouterState["errors"] = null;
@@ -1994,7 +1994,7 @@ async function processLoaderData(
 
   // Process results from our revalidating fetchers
   for (let index = 0; index < revalidatingFetchers.length; index++) {
-    let [key, href, match] = revalidatingFetchers[index];
+    let [key, , match] = revalidatingFetchers[index];
     let result = fetcherResults[index];
 
     // Process fetcher non-redirect errors
