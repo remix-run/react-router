@@ -20,6 +20,7 @@ import {
   redirect,
   parsePath,
 } from "@remix-run/router";
+import { createStaticRouter } from "../router";
 
 // Private API
 import { ErrorResponse } from "../utils";
@@ -825,7 +826,7 @@ describe("a router", () => {
           hydrationData: {},
         })
       ).toThrowErrorMatchingInlineSnapshot(
-        `"You must provide a non-empty routes array to use Data Routers"`
+        `"You must provide a non-empty routes array to createRouter"`
       );
     });
 
@@ -6302,140 +6303,152 @@ describe("a router", () => {
   });
 
   describe("ssr", () => {
-    function setupSsrRouter(init?: Partial<RouterInit>) {
-      let history = createMemoryHistory();
-      jest.spyOn(history, "push");
-      jest.spyOn(history, "replace");
-      let router = createRouter({
-        history,
-        isSSR: true,
-        routes: [
+    const SSR_ROUTES = [
+      {
+        id: "index",
+        path: "/",
+        loader: () => "INDEX LOADER",
+      },
+      {
+        id: "parent",
+        path: "/parent",
+        loader: () => "PARENT LOADER",
+        action: () => "PARENT ACTION",
+        children: [
           {
-            id: "index",
-            path: "/",
-            loader: () => "INDEX LOADER",
-          },
-          {
-            id: "a",
-            path: "/a",
-            loader: () => "A LOADER",
-            action: () => "A ACTION",
-          },
-          {
-            id: "redirect",
-            path: "/redirect",
-            loader: () => redirect("/a"),
+            id: "child",
+            path: "child",
+            loader: () => "CHILD LOADER",
+            action: () => "CHILD ACTION",
           },
         ],
-        ...init,
-      });
-      return { history, router };
-    }
+      },
+      {
+        id: "redirect",
+        path: "/redirect",
+        loader: () => redirect("/"),
+      },
+    ];
 
-    it("should error if you provide hydrationData", () => {
-      expect(() =>
-        setupSsrRouter({
-          hydrationData: { loaderData: { a: "A" } },
-        })
-      ).toThrowErrorMatchingInlineSnapshot(
-        `"You cannot provide hydrationData to a data router during SSR"`
-      );
-    });
-
-    it("should not let you do browser-only operations", () => {
-      let { router } = setupSsrRouter();
-      expect(() => router.initialize()).toThrowErrorMatchingInlineSnapshot(
-        `"Cannot call router.initialize() during SSR"`
-      );
-      expect(() =>
-        router.subscribe(() => {})
-      ).toThrowErrorMatchingInlineSnapshot(
-        `"Cannot call router.subscribe() during SSR"`
-      );
-      expect(() => router.revalidate()).toThrowErrorMatchingInlineSnapshot(
-        `"Cannot call router.revalidate() during SSR"`
-      );
-      expect(() =>
-        router.fetch("x", "x", "/x")
-      ).toThrowErrorMatchingInlineSnapshot(
-        `"Cannot call router.fetch() during SSR"`
-      );
-
-      expect(() =>
-        router.navigate(-1)
-      ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"Cannot perform POP navigations during SSR"`
-      );
-    });
-
-    it("should allow a single navigation and should not update history", async () => {
-      let { history, router } = setupSsrRouter();
-      await router.navigate("/a");
+    it("should support document load navigations", async () => {
+      let router = createStaticRouter({ routes: SSR_ROUTES });
+      await router.load("/parent/child");
       expect(router.state).toMatchObject({
-        historyAction: "PUSH",
-        location: expect.objectContaining({ pathname: "/a" }),
-        initialized: true,
         actionData: null,
         loaderData: {
-          a: "A LOADER",
+          parent: "PARENT LOADER",
+          child: "CHILD LOADER",
         },
         errors: null,
-        navigation: expect.objectContaining({
-          state: "idle",
-        }),
+        matches: [
+          {
+            pathname: "/parent",
+          },
+          {
+            pathname: "/parent/child",
+          },
+        ],
       });
-      expect(history.push).not.toHaveBeenCalled();
     });
 
-    it("should allow a single submission navigation and should not update history", async () => {
-      let { history, router } = setupSsrRouter();
-      await router.navigate("/a", {
-        replace: true,
+    it("should support document submit navigations", async () => {
+      let router = createStaticRouter({ routes: SSR_ROUTES });
+      await router.submit("/parent/child", {
         formMethod: "post",
         formData: createFormData({ key: "value" }),
       });
       expect(router.state).toMatchObject({
-        historyAction: "REPLACE",
-        location: expect.objectContaining({ pathname: "/a" }),
-        initialized: true,
         actionData: {
-          a: "A ACTION",
+          child: "CHILD ACTION",
         },
         loaderData: {
-          a: "A LOADER",
+          parent: "PARENT LOADER",
+          child: "CHILD LOADER",
         },
         errors: null,
-        navigation: expect.objectContaining({
-          state: "idle",
-        }),
+        matches: [
+          {
+            pathname: "/parent",
+          },
+          {
+            pathname: "/parent/child",
+          },
+        ],
       });
-      expect(history.replace).not.toHaveBeenCalled();
     });
 
-    it("should error on additional navigations", async () => {
-      let { router } = setupSsrRouter();
-      await router.navigate("/a");
-
-      expect.assertions(1);
-      try {
-        await router.navigate("/a?nope");
-      } catch (e) {
-        expect(e).toMatchInlineSnapshot(
-          `[Error: Can only call router.navigate() one time during SSR]`
-        );
-      }
-    });
-
-    it("should throw encountered redirect Responses", async () => {
-      let { router } = setupSsrRouter();
+    it("should handle redirect Responses", async () => {
+      let router = createStaticRouter({ routes: SSR_ROUTES });
       expect.assertions(3);
       try {
-        await router.navigate("/redirect");
-      } catch (e) {
-        expect(e instanceof Response).toBe(true);
-        expect((e as Response).status).toBe(302);
-        expect((e as Response).headers.get("Location")).toBe("/a");
+        await router.load("/redirect");
+      } catch (err) {
+        expect(err instanceof Response).toBe(true);
+        expect((err as Response).status).toBe(302);
+        expect((err as Response).headers.get("Location")).toBe("/");
       }
+    });
+
+    it("should handle 404 navigations", async () => {
+      let router = createStaticRouter({ routes: SSR_ROUTES });
+      await router.load("/not/found");
+      expect(router.state).toMatchObject({
+        errors: {
+          index: {
+            data: null,
+            status: 404,
+            statusText: "Not Found",
+          },
+        },
+        matches: [
+          {
+            route: {
+              id: "index",
+            },
+          },
+        ],
+        navigation: {
+          state: "idle",
+        },
+      });
+    });
+
+    it("should support singular route load navigations", async () => {
+      let router = createStaticRouter({ routes: SSR_ROUTES });
+      await router.load("/parent/child", { isLeaf: true });
+      expect(router.state).toMatchObject({
+        actionData: null,
+        loaderData: {
+          child: "CHILD LOADER",
+        },
+        errors: null,
+        matches: [
+          {
+            pathname: "/parent/child",
+          },
+        ],
+      });
+    });
+
+    it("should support singular route submit navigations", async () => {
+      let router = createStaticRouter({ routes: SSR_ROUTES });
+      await router.submit("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+        isLeaf: true,
+      });
+      expect(router.state).toMatchObject({
+        actionData: {
+          child: "CHILD ACTION",
+        },
+        loaderData: {},
+        errors: null,
+        matches: [
+          {
+            pathname: "/parent/child",
+          },
+        ],
+      });
     });
   });
 });

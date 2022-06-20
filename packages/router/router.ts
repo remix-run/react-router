@@ -218,6 +218,22 @@ export interface RouterInit {
 }
 
 /**
+ * A StaticRouter instance manages a singular SSR navigation/fetch event
+ */
+export interface StaticRouter extends Router {
+  load(url: string | URL, opts?: StaticLoadOptions): Promise<void>;
+
+  submit(url: string | URL, opts: StaticSubmissionOptions): Promise<void>;
+}
+
+/**
+ * Initialization options for createStaticRouter
+ */
+export interface StaticRouterInit {
+  routes: RouteObject[];
+}
+
+/**
  * Subscriber function signature for changes to router state
  */
 export interface RouterSubscriber {
@@ -265,6 +281,20 @@ type SubmissionNavigateOptions = {
 export type RouterNavigateOptions =
   | LinkNavigateOptions
   | SubmissionNavigateOptions;
+
+export type StaticLoadOptions = {
+  isLeaf?: boolean;
+};
+
+/**
+ * Options for a static router submit() call
+ */
+export type StaticSubmissionOptions = {
+  formMethod?: FormMethod;
+  formEncType?: FormEncType;
+  formData: FormData;
+  isLeaf?: boolean;
+};
 
 /**
  * Potential states for state.navigation
@@ -432,7 +462,7 @@ export const IDLE_FETCHER: FetcherStates["Idle"] = {
 export function createRouter(init: RouterInit): Router {
   invariant(
     init.routes.length > 0,
-    "You must provide a non-empty routes array to use Data Routers"
+    "You must provide a non-empty routes array to createRouter"
   );
   invariant(
     !(init.isSSR && init.hydrationData),
@@ -460,6 +490,8 @@ export function createRouter(init: RouterInit): Router {
   let initialErrors: RouteData | null = null;
 
   if (initialMatches == null) {
+    // If we do not match a user-provided-route, fall back to the root
+    // to allow the errorElement to take over
     let { matches, route, error } = getNotFoundMatches(dataRoutes);
     initialMatches = matches;
     initialErrors = { [route.id]: error };
@@ -486,8 +518,6 @@ export function createRouter(init: RouterInit): Router {
   let state: RouterState = {
     historyAction: init.history.action,
     location: init.history.location,
-    // If we do not match a user-provided-route, fall back to the root
-    // to allow the errorElement to take over
     matches: initialMatches,
     initialized: init.hydrationData != null && !foundMissingHydrationData,
     navigation: IDLE_NAVIGATION,
@@ -1552,6 +1582,323 @@ export function createRouter(init: RouterInit): Router {
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
+//#region createStaticRouter
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Create a router and listen to history POP navigations
+ */
+export function createStaticRouter(init: StaticRouterInit): StaticRouter {
+  invariant(
+    init.routes.length > 0,
+    "You must provide a non-empty routes array to createStaticRouter"
+  );
+
+  let dataRoutes = convertRoutesToDataRoutes(init.routes);
+
+  // AbortController for the active navigation
+  let pendingController: AbortController | null;
+
+  let state: RouterState = {
+    historyAction: HistoryAction.Pop,
+    location: createLocation("/", "/"),
+    matches: [],
+    initialized: false,
+    navigation: IDLE_NAVIGATION,
+    restoreScrollPosition: null,
+    resetScrollPosition: true,
+    revalidation: "idle",
+    loaderData: {},
+    actionData: null,
+    errors: null,
+    fetchers: new Map(),
+  };
+
+  // Update our state and notify the calling context of the change
+  function updateState(
+    location: Location,
+    newState: Partial<RouterState>
+  ): void {
+    state = {
+      ...state,
+      ...newState,
+      location,
+      initialized: true,
+    };
+  }
+
+  // Clean up a router and it's side effects
+  function dispose() {
+    pendingController?.abort();
+  }
+
+  // Trigger a navigation event, which can either be a numerical POP or a PUSH
+  // replace with an optional submission
+  async function load(
+    url: string | URL,
+    opts?: StaticLoadOptions
+  ): Promise<void> {
+    pendingController?.abort();
+
+    if (typeof url === "string") {
+      url = createURL(url);
+    }
+    let location = createLocation(url.pathname, url);
+    let matches = matchRoutes(dataRoutes, location);
+
+    // Short circuit with a 404 if we match nothing
+    if (!matches) {
+      let {
+        matches: notFoundMatches,
+        route,
+        error,
+      } = getNotFoundMatches(dataRoutes);
+      updateState(location, {
+        matches: notFoundMatches,
+        errors: {
+          [route.id]: error,
+        },
+      });
+      return;
+    }
+
+    if (opts?.isLeaf) {
+      matches = matches.slice(-1);
+    }
+
+    return loadRouteData(location, matches, null, null, null);
+  }
+
+  async function submit(
+    url: string | URL,
+    opts?: StaticSubmissionOptions
+  ): Promise<void> {
+    if (typeof url === "string") {
+      url = createURL(url);
+    }
+    let location = createLocation(url.pathname, url);
+    let { submission } = normalizeNavigateOptions(location, opts);
+    let matches = matchRoutes(dataRoutes, location);
+
+    // Short circuit with a 404 if we match nothing
+    if (!matches) {
+      let {
+        matches: notFoundMatches,
+        route,
+        error,
+      } = getNotFoundMatches(dataRoutes);
+      updateState(location, {
+        matches: notFoundMatches,
+        errors: {
+          [route.id]: error,
+        },
+      });
+      return;
+    }
+
+    if (
+      matches[matches.length - 1].route.index &&
+      !hasNakedIndexQuery(location.search)
+    ) {
+      // Note: OK to mutate this in-place since it's a scoped var inside
+      // handleAction and mutation will not impact the startNavigation matches
+      // variable that we use for revalidation
+      matches = matches.slice(0, -1);
+    }
+
+    // Call our action and get the result
+    let result: DataResult;
+    let actionMatch = matches.slice(-1)[0];
+    if (!actionMatch.route.action) {
+      if (__DEV__) {
+        console.warn(
+          "You're trying to submit to a route that does not have an action.  To " +
+            "fix this, please add an `action` function to the route for " +
+            `[${createHref(location)}]`
+        );
+      }
+      result = {
+        type: ResultType.error,
+        error: new ErrorResponse(
+          405,
+          "Method Not Allowed",
+          `No action found for [${createHref(location)}]`
+        ),
+      };
+    } else {
+      // Create a controller for this data load
+      let actionAbortController = new AbortController();
+      pendingController = actionAbortController;
+
+      result = await callLoaderOrAction(
+        actionMatch,
+        location,
+        actionAbortController.signal,
+        submission,
+        true
+      );
+
+      if (actionAbortController.signal.aborted) {
+        // TODO: What behavior do we want here?
+        throw new Error("aborted router.submit()");
+      }
+
+      pendingController = null;
+    }
+
+    if (isRedirectResult(result)) {
+      // TODO: clean this up?
+      invariant(
+        false,
+        "Should not get here, redirects are thrown in static routers"
+      );
+    }
+
+    if (opts?.isLeaf) {
+      let actionData: RouteData | null = null;
+      let errors: RouteData | null = null;
+      if (isErrorResult(result)) {
+        let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+        errors = {
+          [boundaryMatch.route.id]: result.error,
+        };
+      } else {
+        actionData = { [actionMatch.route.id]: result.data };
+      }
+
+      updateState(location, {
+        matches: [actionMatch],
+        loaderData: {},
+        actionData,
+        errors,
+      });
+      return;
+    }
+
+    if (isErrorResult(result)) {
+      // Store off the pending error - we use it to determine which loaders
+      // to call and will commit it when we complete the navigation
+      let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+      return await loadRouteData(location, matches, submission || null, null, {
+        [boundaryMatch.route.id]: result.error,
+      });
+    }
+
+    return await loadRouteData(
+      location,
+      matches,
+      submission || null,
+      { [actionMatch.route.id]: result.data },
+      null
+    );
+  }
+
+  async function loadRouteData(
+    location: Location,
+    matches: DataRouteMatch[],
+    submission: Submission | null,
+    pendingActionData: RouteData | null,
+    pendingActionError: RouteData | null
+  ): Promise<void> {
+    let [matchesToLoad] = getMatchesToLoad(
+      state,
+      matches,
+      submission || undefined,
+      location,
+      false,
+      pendingActionData,
+      pendingActionError
+    );
+
+    // Short circuit if we have no loaders to run
+    if (matchesToLoad.length === 0) {
+      updateState(location, {
+        matches,
+        loaderData: {},
+        actionData: null,
+        errors: null,
+      });
+      return;
+    }
+
+    // Start the data load
+    let abortController = new AbortController();
+    pendingController = abortController;
+    let results = await Promise.all([
+      ...matchesToLoad.map((m) =>
+        callLoaderOrAction(m, location, abortController.signal, undefined, true)
+      ),
+    ]);
+    if (abortController.signal.aborted) {
+      // TODO: What behavior do we want here?
+      throw new Error("aborted router.load()");
+    }
+
+    pendingController = null;
+
+    // Process and commit output from loaders
+    let { loaderData, errors } = processLoaderData(
+      state,
+      matches,
+      matchesToLoad,
+      results,
+      pendingActionError
+    );
+
+    updateState(location, {
+      matches,
+      loaderData,
+      actionData: pendingActionData,
+      errors,
+    });
+  }
+
+  return {
+    get state() {
+      return state;
+    },
+    get routes() {
+      return dataRoutes;
+    },
+    initialize() {
+      throw new Error("Cannot call router.initialize on a static router");
+    },
+    subscribe() {
+      throw new Error("Cannot call router.subscribe on a static router");
+    },
+    navigate() {
+      throw new Error("Cannot call router.navigate on a static router");
+    },
+    revalidate() {
+      throw new Error("Cannot call router.revalidate on a static router");
+    },
+    fetch() {
+      throw new Error("Cannot call router.fetch on a static router");
+    },
+    enableScrollRestoration() {
+      throw new Error(
+        "Cannot call router.enableScrollRestoration on a static router"
+      );
+    },
+    getFetcher() {
+      throw new Error("Cannot call router.getFetcher on a static router");
+    },
+    deleteFetcher() {
+      throw new Error("Cannot call router.deleteFetcher on a static router");
+    },
+    createHref() {
+      throw new Error("Cannot call router.createHref on a static router");
+    },
+    _internalFetchControllers: new Map(),
+    load,
+    submit,
+    dispose,
+  };
+}
+
+//#endregion
+
+////////////////////////////////////////////////////////////////////////////////
 //#region Helpers
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1661,7 +2008,7 @@ function getMatchesToLoad(
   isRevalidationRequired: boolean,
   pendingActionData: RouteData | null,
   pendingActionError: RouteData | null,
-  revalidatingFetcherMatches: Map<string, [string, DataRouteMatch]>
+  revalidatingFetcherMatches?: Map<string, [string, DataRouteMatch]>
 ): [DataRouteMatch[], [string, string, DataRouteMatch][]] {
   // Determine which routes to run loaders for, filter out all routes below
   // any caught action error as they aren't going to render so we don't
@@ -1699,7 +2046,7 @@ function getMatchesToLoad(
 
   // If revalidation is required, pick fetchers that qualify
   let revalidatingFetchers: [string, string, DataRouteMatch][] = [];
-  if (isRevalidationRequired) {
+  if (isRevalidationRequired && revalidatingFetcherMatches) {
     for (let entry of revalidatingFetcherMatches.entries()) {
       let [key, [href, match]] = entry;
       let shouldRevalidate = shouldRevalidateLoader(
@@ -1902,8 +2249,8 @@ function processLoaderData(
   matchesToLoad: DataRouteMatch[],
   results: DataResult[],
   pendingActionError: RouteData | null,
-  revalidatingFetchers: [string, string, DataRouteMatch][],
-  fetcherResults: DataResult[]
+  revalidatingFetchers?: [string, string, DataRouteMatch][],
+  fetcherResults?: DataResult[]
 ): {
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"];
@@ -1946,7 +2293,11 @@ function processLoaderData(
   }
 
   // Process results from our revalidating fetchers
-  revalidatingFetchers.forEach(([key, href, match], index) => {
+  revalidatingFetchers?.forEach(([key, href, match], index) => {
+    invariant(
+      fetcherResults !== undefined && fetcherResults[index] !== undefined,
+      "Did not find corresponding fetcher result"
+    );
     let result = fetcherResults[index];
 
     // Process fetcher non-redirect errors
