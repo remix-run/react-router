@@ -1,0 +1,24 @@
+{
+  "name": "indie-stack-template",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc -b && tsc -b cypress"
+  },
+  "dependencies": {
+    "@remix-run/node": "*",
+    "@remix-run/react": "*",
+    "@remix-run/serve": "*",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "*",
+    "@types/node": "^17.0.35",
+    "@types/react": "^17.0.45",
+    "@types/react-dom": "^17.0.17",
+    "typescript": "^4.6.4"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
