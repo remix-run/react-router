@@ -18,7 +18,6 @@ import { createMatchPath } from "../utils/tsconfig";
  */
 export function serverBareModulesPlugin(
   remixConfig: RemixConfig,
-  dependencies: Record<string, string>,
   onWarning?: (warning: string, key: string) => void
 ): Plugin {
   let isDenoRuntime = remixConfig.serverBuildTarget === "deno";
@@ -69,16 +68,19 @@ export function serverBareModulesPlugin(
         if (
           onWarning &&
           !isNodeBuiltIn(packageName) &&
-          !/\bnode_modules\b/.test(importer) &&
-          !dependencies[packageName]
+          !/\bnode_modules\b/.test(importer)
         ) {
-          onWarning(
-            `The path "${path}" is imported in ` +
-              `${relative(process.cwd(), importer)} but ` +
-              `${packageName} is not listed in your package.json dependencies. ` +
-              `Did you forget to install it?`,
-            packageName
-          );
+          try {
+            require.resolve(packageName);
+          } catch (error) {
+            onWarning(
+              `The path "${path}" is imported in ` +
+                `${relative(process.cwd(), importer)} but ` +
+                `${packageName} is not listed in your package.json dependencies. ` +
+                `Did you forget to install it?`,
+              packageName
+            );
+          }
         }
 
         switch (remixConfig.serverBuildTarget) {
