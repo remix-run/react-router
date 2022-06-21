@@ -1144,29 +1144,55 @@ describe("a router", () => {
     it("reloads all routes if X-Remix-Revalidate was set in a loader redirect header", async () => {
       let t = initializeTmTest();
 
-      let A = await t.navigate("/bar");
+      let A = await t.navigate("/foo");
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.navigation.location?.pathname).toBe("/foo");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+      });
+
+      let B = await A.loaders.foo.redirectReturn("/bar", undefined, {
+        "X-Remix-Revalidate": "yes",
+      });
       expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location?.pathname).toBe("/bar");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
       });
 
-      let B = await A.loaders.bar.redirectReturn("/baz", undefined, {
+      await B.loaders.root.resolve("ROOT*");
+      await B.loaders.bar.resolve("BAR");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.location.pathname).toBe("/bar");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT*",
+        bar: "BAR",
+      });
+    });
+
+    it("reloads all routes if X-Remix-Revalidate was set in a loader redirect header (chained redirects)", async () => {
+      let t = initializeTmTest();
+
+      let A = await t.navigate("/foo");
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0); // Reused on navigation
+
+      let B = await A.loaders.foo.redirectReturn("/bar", undefined, {
         "X-Remix-Revalidate": "yes",
       });
-      expect(t.router.state.navigation.state).toBe("loading");
-      expect(t.router.state.navigation.location?.pathname).toBe("/baz");
-      expect(t.router.state.loaderData).toMatchObject({
-        root: "ROOT",
-      });
-
       await B.loaders.root.resolve("ROOT*");
-      await B.loaders.baz.resolve("B");
+      expect(B.loaders.root.stub.mock.calls.length).toBe(1);
+
+      // No cookie on second redirect
+      let C = await B.loaders.bar.redirectReturn("/baz");
+      expect(C.loaders.root.stub.mock.calls.length).toBe(1);
+      await C.loaders.root.resolve("ROOT**");
+      await C.loaders.baz.resolve("BAZ");
+
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.location.pathname).toBe("/baz");
       expect(t.router.state.loaderData).toMatchObject({
-        root: "ROOT*",
-        baz: "B",
+        root: "ROOT**",
+        baz: "BAZ",
       });
     });
   });
@@ -2081,6 +2107,30 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         bar: "B LOADER",
         root: "ROOT LOADER",
+      });
+    });
+
+    it("reloads all routes after action redirect (chained redirects)", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+
+      let B = await A.actions.foo.redirectReturn("/bar");
+      expect(B.loaders.root.stub.mock.calls.length).toBe(1);
+
+      await B.loaders.root.resolve("ROOT*");
+      let C = await B.loaders.bar.redirectReturn("/baz");
+      expect(C.loaders.root.stub.mock.calls.length).toBe(1);
+
+      await C.loaders.root.resolve("ROOT**");
+      await C.loaders.baz.resolve("BAZ");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.loaderData).toEqual({
+        baz: "BAZ",
+        root: "ROOT**",
       });
     });
 
