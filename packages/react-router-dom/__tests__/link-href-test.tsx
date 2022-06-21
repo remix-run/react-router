@@ -179,7 +179,7 @@ describe("<Link> href", () => {
       expect(renderer.root.findByType("a").props.href).toEqual("/inbox");
     });
 
-    test('<Link to=".."> resolves relative to the parent route', () => {
+    test('<Link to=".."> resolves relative to the parent route (ignoring the index route)', () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         renderer = TestRenderer.create(
@@ -193,7 +193,7 @@ describe("<Link> href", () => {
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/inbox");
+      expect(renderer.root.findByType("a").props.href).toEqual("/");
     });
 
     test('<Link to=".."> with more .. segments than parent routes resolves to the root URL', () => {
@@ -262,7 +262,7 @@ describe("<Link> href", () => {
       expect(renderer.root.findByType("a").props.href).toEqual("/inbox");
     });
 
-    test('<Link to=".."> resolves relative to the parent route', () => {
+    test('<Link to=".."> resolves relative to the parent route (ignoring the pathless route)', () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         renderer = TestRenderer.create(
@@ -278,7 +278,7 @@ describe("<Link> href", () => {
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/inbox");
+      expect(renderer.root.findByType("a").props.href).toEqual("/");
     });
 
     test('<Link to=".."> with more .. segments than parent routes resolves to the root URL', () => {

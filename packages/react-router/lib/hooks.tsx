@@ -138,6 +138,36 @@ export interface NavigateFunction {
 }
 
 /**
+ * When processing relative navigation we want to ignore ancestor routes that
+ * do not contribute to the path, such that index/pathless layout routes don't
+ * interfere.
+ *
+ * For example, when moving a route element into an index route and/or a
+ * pathless layout route, relative link behavior contained within should stay
+ * the same.  Both of the following examples should link back to the root:
+ *
+ *   <Route path="/">
+ *     <Route path="accounts" element={<Link to=".."}>
+ *   </Route>
+ *
+ *   <Route path="/">
+ *     <Route path="accounts">
+ *       <Route element={<AccountsLayout />}>       // <-- Does not contribute
+ *         <Route index element={<Link to=".."} />  // <-- Does not contribute
+ *       </Route
+ *     </Route>
+ *   </Route>
+ */
+function getPathContributingMatches(matches: RouteMatch[]) {
+  return matches.filter(
+    (match, index) =>
+      index === 0 ||
+      (!match.route.index &&
+        match.pathnameBase !== matches[index - 1].pathnameBase)
+  );
+}
+
+/**
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
  *
@@ -155,16 +185,8 @@ export function useNavigate(): NavigateFunction {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  // Ignore index + pathless matches
-  let pathContributingMatches = matches.filter(
-    (match, index) =>
-      index === 0 ||
-      (!match.route.index &&
-        match.pathnameBase !== matches[index - 1].pathnameBase)
-  );
-
   let routePathnamesJson = JSON.stringify(
-    pathContributingMatches.map((match) => match.pathnameBase)
+    getPathContributingMatches(matches).map((match) => match.pathnameBase)
   );
 
   let activeRef = React.useRef(false);
@@ -262,7 +284,7 @@ export function useResolvedPath(to: To): Path {
   let { pathname: locationPathname } = useLocation();
 
   let routePathnamesJson = JSON.stringify(
-    matches.map((match) => match.pathnameBase)
+    getPathContributingMatches(matches).map((match) => match.pathnameBase)
   );
 
   return React.useMemo(
