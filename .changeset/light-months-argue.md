@@ -31,8 +31,7 @@ function DeferredPage() {
         errorBoundary={<RenderDeferredError />}>
         <RenderDeferredData />
       </Deferred>
-      <Outlet />
-    </div>
+    </>
   );
 }
 
@@ -46,5 +45,24 @@ function RenderDeferredData() {
 function RenderDeferredError() {
   let data = useDeferred();
   return (<p>Error! {data.message} {data.stack}</p>;
+}
+```
+
+If you want to skip the separate components, you can use the Render Props
+pattern and handle the rendering inline:
+
+```jsx
+function DeferredPage() {
+  let data = useLoaderData();
+  return (
+    <>
+      <p>Critical Data: {data.critical}</p>
+      <Deferred data={data.lazy} fallback={<p>Loading...</p>}>
+        {({ data }) =>
+          isDeferredError(data) ? <p>Error! {data.message}</p> : <p>{data}</p>
+        }
+      </Deferred>
+    </>
+  );
 }
 ```
