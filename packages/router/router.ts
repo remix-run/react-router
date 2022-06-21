@@ -597,19 +597,29 @@ export function createRouter(init: RouterInit): Router {
       state.navigation.formMethod != null &&
       state.navigation.state === "loading";
 
+    // Always preserve any existing loaderData from re-used routes
+    let newLoaderData = newState.loaderData
+      ? {
+          loaderData: mergeLoaderData(
+            state.loaderData,
+            newState.loaderData,
+            newState.matches || []
+          ),
+        }
+      : {};
+
     updateState({
       // Clear existing actionData on any completed navigation beyond the original
       // action, unless we're currently finishing the loading/actionReload state.
       // Do this prior to spreading in newState in case we got back to back actions
       ...(isActionReload ? {} : { actionData: null }),
       ...newState,
+      ...newLoaderData,
       historyAction,
       location,
       initialized: true,
       navigation: IDLE_NAVIGATION,
       revalidation: "idle",
-      // Always preserve any existing loaderData from re-used routes
-      loaderData: mergeLoaderData(state, newState),
       // Don't restore on submission navigations
       restoreScrollPosition: state.navigation.formData
         ? false
@@ -749,6 +759,7 @@ export function createRouter(init: RouterInit): Router {
       } = getNotFoundMatches(dataRoutes);
       completeNavigation(historyAction, location, {
         matches: notFoundMatches,
+        loaderData: {},
         errors: {
           [route.id]: error,
         },
@@ -1292,10 +1303,12 @@ export function createRouter(init: RouterInit): Router {
         fetchers: new Map(state.fetchers),
       });
     } else {
-      // otherwise just update with the fetcher data
+      // otherwise just update with the fetcher data, preserving any existing
+      // loaderData for loaders that did not need to reload.  We have to
+      // manually merge here since we aren't going through completeNavigation
       updateState({
         errors,
-        loaderData,
+        loaderData: mergeLoaderData(state.loaderData, loaderData, matches),
         ...(didAbortFetchLoads ? { fetchers: new Map(state.fetchers) } : {}),
       });
       isRevalidationRequired = false;
@@ -1937,26 +1950,18 @@ function processLoaderData(
 }
 
 function mergeLoaderData(
-  state: RouterState,
-  newState: Partial<RouterState>
+  loaderData: RouteData,
+  newLoaderData: RouteData,
+  matches: DataRouteMatch[]
 ): RouteData {
-  // Identify active routes that have current loaderData and didn't receive new
-  // loaderData
-  let reusedRoutesWithData = (newState.matches || state.matches).filter(
-    (match) =>
-      state.loaderData[match.route.id] !== undefined &&
-      newState.loaderData?.[match.route.id] === undefined
-  );
-  return {
-    ...newState.loaderData,
-    ...reusedRoutesWithData.reduce(
-      (acc, match) =>
-        Object.assign(acc, {
-          [match.route.id]: state.loaderData[match.route.id],
-        }),
-      {}
-    ),
-  };
+  let mergedLoaderData = { ...newLoaderData };
+  matches.forEach((match) => {
+    let id = match.route.id;
+    if (newLoaderData[id] === undefined && loaderData[id] !== undefined) {
+      mergedLoaderData[id] = loaderData[id];
+    }
+  });
+  return mergedLoaderData;
 }
 
 // Find the nearest error boundary, looking upwards from the leaf route (or the
