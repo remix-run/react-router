@@ -68,7 +68,7 @@ describe("useNavigate", () => {
       }
 
       function ShowLocationState() {
-        return <p>location.state: {JSON.stringify(useLocation().state)}</p>;
+        return <p>location.state:{JSON.stringify(useLocation().state)}</p>;
       }
 
       let renderer: TestRenderer.ReactTestRenderer;
@@ -91,7 +91,7 @@ describe("useNavigate", () => {
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <p>
-          location.state: 
+          location.state:
           {"from":"home"}
         </p>
       `);
