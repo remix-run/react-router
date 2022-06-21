@@ -23,6 +23,7 @@
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@npmcli/package-json": "^2.0.0",
     "@remix-run/server-runtime": "1.6.0",
+    "@yarnpkg/esbuild-plugin-pnp": "^2.0.0",
     "cacache": "^15.0.5",
     "chalk": "^4.1.2",
     "chokidar": "^3.5.1",
@@ -74,5 +75,13 @@
   },
   "engines": {
     "node": ">=14"
+  },
+  "peerDependencies": {
+    "@remix-run/serve": "1.5.1"
+  },
+  "peerDependenciesMeta": {
+    "@remix-run/serve": {
+      "optional": true
+    }
   }
 }
