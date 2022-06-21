@@ -651,6 +651,9 @@ export function createRouter(init: RouterInit): Router {
     // Toggle isRevalidationRequired so the next data load will call all loaders,
     // and mark us in a revalidating state
     isRevalidationRequired = true;
+    // Cancel all pending deferred on revalidations and mark cancelled routes
+    // for revalidation
+    cancelledDeferredRoutes.push(...cancelActiveDeferreds());
     updateState({ revalidation: "loading" });
 
     // If we're currently submitting an action, we don't need to start a new

@@ -6515,6 +6515,7 @@ describe("a router", () => {
         })
       );
 
+      // Interrupt pending deferred's from /lazy navigation
       let B = await t.navigate("/");
       // During navigation - deferreds remain as promises
       expect(t.router.state.loaderData).toEqual({
@@ -6666,6 +6667,7 @@ describe("a router", () => {
     });
 
     it("should cancel all outstanding deferreds on router.revalidate()", async () => {
+      let shouldRevalidateSpy = jest.fn(() => false);
       let t = setup({
         routes: [
           {
@@ -6677,6 +6679,7 @@ describe("a router", () => {
             id: "parent",
             path: "parent",
             loader: true,
+            shouldRevalidate: shouldRevalidateSpy,
             children: [
               {
                 id: "index",
@@ -6782,6 +6785,8 @@ describe("a router", () => {
           lazy: "LAZY INDEX 2",
         },
       });
+
+      expect(shouldRevalidateSpy).not.toHaveBeenCalled();
     });
 
     it("cancels pending deferreds on 404 navigations", async () => {
@@ -6983,6 +6988,7 @@ describe("a router", () => {
     });
 
     it("cancels pending deferreds on action submissions", async () => {
+      let shouldRevalidateSpy = jest.fn(() => false);
       let t = setup({
         routes: [
           {
@@ -6994,7 +7000,7 @@ describe("a router", () => {
             id: "parent",
             path: "parent",
             loader: true,
-            shouldRevalidate: () => false,
+            shouldRevalidate: shouldRevalidateSpy,
             children: [
               {
                 id: "a",
@@ -7074,6 +7080,8 @@ describe("a router", () => {
           lazy: "Yep!",
         },
       });
+
+      expect(shouldRevalidateSpy).not.toHaveBeenCalled();
     });
 
     it("does not support deferred data on fetcher loads", async () => {
