@@ -3868,7 +3868,7 @@ describe("a router", () => {
       expect(request.url).toBe("http://localhost/tasks");
       expect(request.method).toBe("POST");
       expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded"
+        "application/x-www-form-urlencoded;charset=UTF-8"
       );
       expect((await request.formData()).get("query")).toBe("params");
     });
@@ -3901,9 +3901,43 @@ describe("a router", () => {
       expect(request.url).toBe("http://localhost/tasks?foo=bar");
       expect(request.method).toBe("POST");
       expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded"
+        "application/x-www-form-urlencoded;charset=UTF-8"
       );
       expect((await request.formData()).get("query")).toBe("params");
+    });
+
+    it("handles multipart/form-data submissions", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            action: true,
+          },
+        ],
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+          },
+        },
+      });
+
+      let fd = new FormData();
+      fd.append("key", "value");
+      fd.append("file", new Blob(["1", "2", "3"]), "file.txt");
+
+      let A = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "multipart/form-data",
+        formData: fd,
+      });
+
+      expect(
+        A.actions.root.stub.mock.calls[0][0].request.headers.get("Content-Type")
+      ).toMatch(
+        /^multipart\/form-data; boundary=NodeFetchFormDataBoundary[a-z0-9]+/
+      );
     });
   });
 

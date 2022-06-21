@@ -3,7 +3,9 @@ import { parsePath } from "./history";
 import { DataResult, DataRouteMatch } from "./router";
 
 export type FormMethod = "get" | "post" | "put" | "patch" | "delete";
-export type FormEncType = "application/x-www-form-urlencoded";
+export type FormEncType =
+  | "application/x-www-form-urlencoded"
+  | "multipart/form-data";
 
 /**
  * @private
