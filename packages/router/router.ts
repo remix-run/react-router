@@ -221,9 +221,10 @@ export interface RouterInit {
  * A StaticRouter instance manages a singular SSR navigation/fetch event
  */
 export interface StaticRouter extends Router {
-  load(url: string | URL, opts?: StaticLoadOptions): Promise<void>;
-
+  load(url: string | URL): Promise<void>;
+  loadRoute(url: string | URL): Promise<void>;
   submit(url: string | URL, opts: StaticSubmissionOptions): Promise<void>;
+  submitRoute(url: string | URL, opts: StaticSubmissionOptions): Promise<void>;
 }
 
 /**
@@ -232,6 +233,15 @@ export interface StaticRouter extends Router {
 export interface StaticRouterInit {
   routes: RouteObject[];
 }
+
+/**
+ * Options for a static router submit() call
+ */
+export type StaticSubmissionOptions = {
+  formMethod?: FormMethod;
+  formEncType?: FormEncType;
+  formData: FormData;
+};
 
 /**
  * Subscriber function signature for changes to router state
@@ -281,20 +291,6 @@ type SubmissionNavigateOptions = {
 export type RouterNavigateOptions =
   | LinkNavigateOptions
   | SubmissionNavigateOptions;
-
-export type StaticLoadOptions = {
-  isLeaf?: boolean;
-};
-
-/**
- * Options for a static router submit() call
- */
-export type StaticSubmissionOptions = {
-  formMethod?: FormMethod;
-  formEncType?: FormEncType;
-  formData: FormData;
-  isLeaf?: boolean;
-};
 
 /**
  * Potential states for state.navigation
@@ -905,16 +901,6 @@ export function createRouter(init: RouterInit): Router {
   ): Promise<HandleActionResult> {
     isRevalidationRequired = true;
 
-    if (
-      matches[matches.length - 1].route.index &&
-      !hasNakedIndexQuery(location.search)
-    ) {
-      // Note: OK to mutate this in-place since it's a scoped var inside
-      // handleAction and mutation will not impact the startNavigation matches
-      // variable that we use for revalidation
-      matches = matches.slice(0, -1);
-    }
-
     // Put us in a submitting state
     let navigation: NavigationStates["Submitting"] = {
       state: "submitting",
@@ -926,7 +912,7 @@ export function createRouter(init: RouterInit): Router {
     // Call our action and get the result
     let result: DataResult;
 
-    let actionMatch = matches.slice(-1)[0];
+    let actionMatch = getTargetMatch(matches, location);
     if (!actionMatch.route.action) {
       if (__DEV__) {
         console.warn(
@@ -1164,12 +1150,7 @@ export function createRouter(init: RouterInit): Router {
 
     if (fetchControllers.has(key)) abortFetcher(key);
 
-    let match =
-      matches[matches.length - 1].route.index &&
-      !hasNakedIndexQuery(parsePath(href).search || "")
-        ? matches.slice(-2)[0]
-        : matches.slice(-1)[0];
-
+    let match = getTargetMatch(matches, parsePath(href));
     let { path, submission } = normalizeNavigateOptions(parsePath(href), opts);
 
     if (submission) {
@@ -1662,18 +1643,26 @@ export function createStaticRouter(init: StaticRouterInit): StaticRouter {
     pendingController?.abort();
   }
 
+  function load(url: string | URL): Promise<void> {
+    return loadImpl(url, false);
+  }
+
+  function loadRoute(url: string | URL): Promise<void> {
+    return loadImpl(url, true);
+  }
+
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
   // replace with an optional submission
-  async function load(
+  async function loadImpl(
     url: string | URL,
-    opts?: StaticLoadOptions
+    isSingleRouteLoad: boolean
   ): Promise<void> {
     pendingController?.abort();
 
-    if (typeof url === "string") {
-      url = createURL(url);
+    if (url instanceof URL) {
+      url = createPath(url);
     }
-    let location = createLocation(url.pathname, url);
+    let location = createLocation(parsePath(url).pathname || "", url);
     let matches = matchRoutes(dataRoutes, location);
 
     // Short circuit with a 404 if we match nothing
@@ -1692,23 +1681,38 @@ export function createStaticRouter(init: StaticRouterInit): StaticRouter {
       return;
     }
 
-    if (opts?.isLeaf) {
-      matches = matches.slice(-1);
+    // Trim matches if we only intend to load a single route here
+    if (isSingleRouteLoad) {
+      matches = [getTargetMatch(matches, location)];
     }
 
     return loadRouteData(location, matches, null, null, null);
   }
 
-  async function submit(
+  function submit(
     url: string | URL,
     opts?: StaticSubmissionOptions
   ): Promise<void> {
-    if (typeof url === "string") {
-      url = createURL(url);
+    return submitImpl(url, false, opts);
+  }
+  function submitRoute(
+    url: string | URL,
+    opts?: StaticSubmissionOptions
+  ): Promise<void> {
+    return submitImpl(url, true, opts);
+  }
+
+  async function submitImpl(
+    url: string | URL,
+    isSingleRouteLoad: boolean,
+    opts?: StaticSubmissionOptions
+  ): Promise<void> {
+    if (url instanceof URL) {
+      url = createPath(url);
     }
-    let location = createLocation(url.pathname, url);
-    let { submission } = normalizeNavigateOptions(location, opts);
+    let location = createLocation(parsePath(url).pathname || "", url);
     let matches = matchRoutes(dataRoutes, location);
+    let { submission } = normalizeNavigateOptions(location, opts);
 
     // Short circuit with a 404 if we match nothing
     if (!matches) {
@@ -1726,19 +1730,9 @@ export function createStaticRouter(init: StaticRouterInit): StaticRouter {
       return;
     }
 
-    if (
-      matches[matches.length - 1].route.index &&
-      !hasNakedIndexQuery(location.search)
-    ) {
-      // Note: OK to mutate this in-place since it's a scoped var inside
-      // handleAction and mutation will not impact the startNavigation matches
-      // variable that we use for revalidation
-      matches = matches.slice(0, -1);
-    }
-
     // Call our action and get the result
     let result: DataResult;
-    let actionMatch = matches.slice(-1)[0];
+    let actionMatch = getTargetMatch(matches, location);
     if (!actionMatch.route.action) {
       if (__DEV__) {
         console.warn(
@@ -1784,7 +1778,7 @@ export function createStaticRouter(init: StaticRouterInit): StaticRouter {
       );
     }
 
-    if (opts?.isLeaf) {
+    if (isSingleRouteLoad) {
       let actionData: RouteData | null = null;
       let errors: RouteData | null = null;
       if (isErrorResult(result)) {
@@ -1921,7 +1915,9 @@ export function createStaticRouter(init: StaticRouterInit): StaticRouter {
     },
     _internalFetchControllers: new Map(),
     load,
+    loadRoute,
     submit,
+    submitRoute,
     dispose,
   };
 }
@@ -2445,6 +2441,19 @@ function isRedirectResult(result?: DataResult): result is RedirectResult {
 
 function hasNakedIndexQuery(search: string): boolean {
   return new URLSearchParams(search).getAll("index").some((v) => v === "");
+}
+
+function getTargetMatch(
+  matches: DataRouteMatch[],
+  location: Location | Partial<Path>
+) {
+  if (
+    matches[matches.length - 1].route.index &&
+    !hasNakedIndexQuery(location.search || "")
+  ) {
+    return matches.slice(-2)[0];
+  }
+  return matches.slice(-1)[0];
 }
 
 function createURL(location: Location | string): URL {
