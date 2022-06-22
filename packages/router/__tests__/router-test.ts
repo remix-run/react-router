@@ -3117,6 +3117,12 @@ describe("a router", () => {
       let t = setup({
         routes: TASK_ROUTES,
         initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT DATA",
+            index: "INDEX DATA",
+          },
+        },
       });
 
       let formData = new FormData();
@@ -3138,6 +3144,60 @@ describe("a router", () => {
       });
       expect(t.router.state.errors).toEqual({
         tasks: new ErrorResponse(
+          400,
+          "Bad Request",
+          "Cannot submit binary form data using GET"
+        ),
+      });
+    });
+
+    it("runs loaders above the boundary for 400 errors if binary data is attempted to be submitted using formMethod=GET", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                loader: true,
+                errorElement: true,
+              },
+            ],
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let formData = new FormData();
+      formData.append(
+        "blob",
+        new Blob(["<h1>Some html file contents</h1>"], {
+          type: "text/html",
+        })
+      );
+
+      let A = await t.navigate("/parent/child", {
+        formMethod: "get",
+        formData: formData,
+      });
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.errors).toEqual(null);
+
+      await A.loaders.parent.resolve("PARENT");
+      expect(A.loaders.child.stub).not.toHaveBeenCalled();
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.loaderData).toEqual({
+        parent: "PARENT",
+      });
+      expect(t.router.state.errors).toEqual({
+        child: new ErrorResponse(
           400,
           "Bad Request",
           "Cannot submit binary form data using GET"
@@ -7074,7 +7134,7 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({});
     });
 
-    it("cancels non-reused pending deferreds on errored GET submissions", async () => {
+    it("cancels pending deferreds on errored GET submissions (w/ reused routes)", async () => {
       let t = setup({
         routes: [
           {
@@ -7086,23 +7146,16 @@ describe("a router", () => {
             id: "parent",
             path: "parent",
             loader: true,
+            errorElement: true,
             children: [
               {
-                id: "child",
-                path: "child",
+                id: "a",
+                path: "a",
                 loader: true,
-                errorElement: true,
-                children: [
-                  {
-                    id: "a",
-                    path: "a",
-                    loader: true,
-                  },
-                  {
-                    id: "b",
-                    path: "b",
-                  },
-                ],
+              },
+              {
+                id: "b",
+                path: "b",
               },
             ],
           },
@@ -7112,19 +7165,12 @@ describe("a router", () => {
       });
 
       // Navigate to parent and kick off a deferred
-      let A = await t.navigate("/parent/child/a");
+      let A = await t.navigate("/parent/a");
       let parentDfd = defer();
       await A.loaders.parent.resolve(
         deferred({
           critical: "CRITICAL PARENT",
           lazy: parentDfd.promise,
-        })
-      );
-      let childDfd = defer();
-      await A.loaders.child.resolve(
-        deferred({
-          critical: "CRITICAL CHILD",
-          lazy: childDfd.promise,
         })
       );
       let aDfd = defer();
@@ -7139,22 +7185,18 @@ describe("a router", () => {
           critical: "CRITICAL PARENT",
           lazy: expect.any(Promise),
         },
-        child: {
-          critical: "CRITICAL CHILD",
-          lazy: expect.any(Promise),
-        },
         a: {
           critical: "CRITICAL A",
           lazy: expect.any(Promise),
         },
       });
 
-      // Perform an invalid navigation to /parent/child/b which will be handled
-      // using child's errorElement.  Parent's deferred should be left alone
-      // while child/a should be cancelled since they will no longer be rendered
+      // Perform an invalid navigation to /parent/b which will be handled
+      // using parent's errorElement.  Parent's deferred should be left alone
+      // while A's should be cancelled since they will no longer be rendered
       let formData = new FormData();
       formData.append("file", new Blob(["1", "2"]), "file.txt");
-      await t.navigate("/parent/child/b", {
+      await t.navigate("/parent/b", {
         formMethod: "get",
         formData,
       });
@@ -7164,13 +7206,9 @@ describe("a router", () => {
           critical: "CRITICAL PARENT",
           lazy: expect.any(Promise),
         },
-        child: {
-          critical: "CRITICAL CHILD",
-          lazy: expect.any(Promise),
-        },
       });
       expect(t.router.state.errors).toEqual({
-        child: new ErrorResponse(
+        parent: new ErrorResponse(
           400,
           "Bad Request",
           "Cannot submit binary form data using GET"
@@ -7178,18 +7216,117 @@ describe("a router", () => {
       });
 
       await parentDfd.resolve("Yep!");
-      await childDfd.resolve("Nope!");
       await aDfd.resolve("Nope!");
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
           lazy: "Yep!",
         },
-        child: {
-          critical: "CRITICAL CHILD",
+      });
+    });
+
+    it("cancels pending deferreds on errored GET submissions (w/o reused routes)", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "a",
+            path: "a",
+            loader: true,
+            children: [
+              {
+                id: "aChild",
+                path: "child",
+                loader: true,
+              },
+            ],
+          },
+          {
+            id: "b",
+            path: "b",
+            loader: true,
+            children: [
+              {
+                id: "bChild",
+                path: "child",
+                loader: true,
+                errorElement: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      // Navigate to parent and kick off a deferred
+      let A = await t.navigate("/a/child");
+      let aDfd = defer();
+      await A.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: aDfd.promise,
+        })
+      );
+      let aChildDfd = defer();
+      await A.loaders.aChild.resolve(
+        deferred({
+          critical: "CRITICAL A CHILD",
+          lazy: aChildDfd.promise,
+        })
+      );
+      expect(t.router.state.loaderData).toEqual({
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+        aChild: {
+          critical: "CRITICAL A CHILD",
           lazy: expect.any(Promise),
         },
       });
+
+      // Perform an invalid navigation to /b/child which should cancel all
+      // pending deferred's since nothing is reused.  It should not call bChild's
+      // loader since it's below the boundary but should call b's loader.
+      let formData = new FormData();
+      formData.append("file", new Blob(["1", "2"]), "file.txt");
+      debugger;
+      let B = await t.navigate("/b/child", {
+        formMethod: "get",
+        formData,
+      });
+
+      // Both should be cancelled
+      await aDfd.resolve("Nope!");
+      await aChildDfd.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+        aChild: {
+          critical: "CRITICAL A CHILD",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await B.loaders.b.resolve("B LOADER");
+      expect(t.router.state.loaderData).toEqual({
+        b: "B LOADER",
+      });
+      expect(t.router.state.errors).toEqual({
+        bChild: new ErrorResponse(
+          400,
+          "Bad Request",
+          "Cannot submit binary form data using GET"
+        ),
+      });
+      expect(B.loaders.bChild.stub).not.toHaveBeenCalled();
     });
 
     it("does not cancel pending deferreds on hash change only navigations", async () => {

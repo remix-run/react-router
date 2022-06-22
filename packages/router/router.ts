@@ -742,19 +742,6 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    if (opts?.pendingError) {
-      let boundaryMatch = findNearestBoundary(matches);
-      // Cancel pending deferreds for non-reused/below-boundary routes
-      cancelActiveDeferredsViaMatches(matches, [], boundaryMatch.route.id);
-      completeNavigation(historyAction, location, {
-        matches,
-        errors: {
-          [boundaryMatch.route.id]: opts?.pendingError,
-        },
-      });
-      return;
-    }
-
     // Short circuit if it's only a hash change
     if (isHashChangeOnly(state.location, location)) {
       completeNavigation(historyAction, location, {
@@ -765,9 +752,17 @@ export function createRouter(init: RouterInit): Router {
 
     // Call action if we received an action submission
     let pendingActionData: RouteData | null = null;
-    let pendingActionError: RouteData | null = null;
+    let pendingError: RouteData | null = null;
 
-    if (opts?.submission) {
+    if (opts?.pendingError) {
+      // If we have a pendingError, it means the user attempted a GET submission
+      // with binary FormData so assign here and skip to handleLoaders.  That
+      // way we handle calling loaders above the boundary etc.  It's not really
+      // different from an actionError in that sense.
+      pendingError = {
+        [findNearestBoundary(matches).route.id]: opts.pendingError,
+      };
+    } else if (opts?.submission) {
       let actionOutput = await handleAction(
         historyAction,
         location,
@@ -780,7 +775,7 @@ export function createRouter(init: RouterInit): Router {
       }
 
       pendingActionData = actionOutput.pendingActionData || null;
-      pendingActionError = actionOutput.pendingActionError || null;
+      pendingError = actionOutput.pendingActionError || null;
       let navigation: NavigationStates["Loading"] = {
         state: "loading",
         location,
@@ -797,7 +792,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       loadingNavigation,
       pendingActionData,
-      pendingActionError
+      pendingError
     );
 
     if (shortCircuited) {
@@ -931,7 +926,7 @@ export function createRouter(init: RouterInit): Router {
     matches: DataRouteMatch[],
     overrideNavigation: Navigation | undefined,
     pendingActionData: RouteData | null,
-    pendingActionError: RouteData | null
+    pendingError: RouteData | null
   ): Promise<HandleLoadersResult> {
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation = overrideNavigation;
@@ -957,25 +952,26 @@ export function createRouter(init: RouterInit): Router {
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
       pendingActionData,
-      pendingActionError,
+      pendingError,
       fetchLoadMatches
     );
-
-    // Short circuit if we have no loaders to run
-    if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
-      completeNavigation(historyAction, location, {
-        matches,
-        // Commit pending action error if we're short circuiting
-        errors: pendingActionError || null,
-        actionData: pendingActionData || null,
-      });
-      return { shortCircuited: true };
-    }
 
     // Cancel pending deferreds that are not being reused.  Note that if this
     // is an acton reload we would have already cancelled all pending deferreds
     // so this would be a no-op
     cancelActiveDeferredsViaMatches(matches, matchesToLoad);
+
+    // Short circuit if we have no loaders to run
+    if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
+      completeNavigation(historyAction, location, {
+        matches,
+        loaderData: mergeLoaderData(state.loaderData, {}, matches),
+        // Commit pending error if we're short circuiting
+        errors: pendingError || null,
+        actionData: pendingActionData || null,
+      });
+      return { shortCircuited: true };
+    }
 
     // If this is an uninterrupted revalidation, remain in our current idle state.
     // Otherwise, switch to our loading state and load data, preserving any
@@ -1048,7 +1044,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       matchesToLoad,
       navigationResults,
-      pendingActionError,
+      pendingError,
       revalidatingFetchers,
       fetcherResults,
       activeDeferreds
@@ -1718,20 +1714,18 @@ function getMatchesToLoad(
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
   pendingActionData: RouteData | null,
-  pendingActionError: RouteData | null,
+  pendingError: RouteData | null,
   fetchLoadMatches: Map<string, [string, DataRouteMatch]>
 ): [DataRouteMatch[], [string, string, DataRouteMatch][]] {
   // Determine which routes to run loaders for, filter out all routes below
   // any caught action error as they aren't going to render so we don't
   // need to load them
-  let deepestRenderableMatchIndex = pendingActionError
-    ? matches.findIndex(
-        (m) => m.route.id === Object.keys(pendingActionError)[0]
-      )
+  let deepestRenderableMatchIndex = pendingError
+    ? matches.findIndex((m) => m.route.id === Object.keys(pendingError)[0])
     : matches.length;
 
-  let actionResult = pendingActionError
-    ? Object.values(pendingActionError)[0]
+  let actionResult = pendingError
+    ? Object.values(pendingError)[0]
     : pendingActionData
     ? Object.values(pendingActionData)[0]
     : null;
@@ -1958,7 +1952,7 @@ async function processLoaderData(
   matches: DataRouteMatch[],
   matchesToLoad: DataRouteMatch[],
   results: DataResult[],
-  pendingActionError: RouteData | null,
+  pendingError: RouteData | null,
   revalidatingFetchers: [string, string, DataRouteMatch][],
   fetcherResults: DataResult[],
   activeDeferreds: Map<string, DeferredData>
@@ -1985,9 +1979,9 @@ async function processLoaderData(
       // If we have a pending action error, we report it at the highest-route
       // that throws a loader error, and then clear it out to indicate that
       // it was consumed
-      if (pendingActionError) {
-        error = Object.values(pendingActionError)[0];
-        pendingActionError = null;
+      if (pendingError) {
+        error = Object.values(pendingError)[0];
+        pendingError = null;
       }
       errors = Object.assign(errors || {}, {
         [boundaryMatch.route.id]: error,
@@ -2002,8 +1996,8 @@ async function processLoaderData(
 
   // If we didn't consume the pending action error (i.e., all loaders
   // resolved), then consume it here
-  if (pendingActionError) {
-    errors = pendingActionError;
+  if (pendingError) {
+    errors = pendingError;
   }
 
   // Process results from our revalidating fetchers
