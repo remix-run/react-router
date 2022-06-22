@@ -1,5 +1,15 @@
 # react-router
 
+## 6.4.0-pre.8
+
+### Patch Changes
+
+- fix: Make path resolution trailing slash agnostic (#8861)
+- fix: Additional logic fixed for relative navigation from index/pathless layout routes (#8985)
+- fix: export ActionFunctionArgs/LoaderFunctionArgs up through router packages (#8975)
+- Updated dependencies
+  - @remix-run/router@0.2.0-pre.3
+
 ## 6.4.0-pre.7
 
 ### Minor Changes

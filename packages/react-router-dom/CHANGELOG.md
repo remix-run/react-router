@@ -1,5 +1,14 @@
 # react-router-dom
 
+## 6.4.0-pre.8
+
+### Patch Changes
+
+- fix: Make path resolution trailing slash agnostic (#8861)
+- fix: export ActionFunctionArgs/LoaderFunctionArgs up through router packages (#8975)
+- Updated dependencies
+  - react-router@6.4.0-pre.8
+
 ## 6.4.0-pre.7
 
 ### Patch Changes
