@@ -276,7 +276,7 @@ function DeferredPage() {
       <Deferred
         data={data.lazyError2}
         fallback={<p>loading (error 2)...</p>}
-        errorBoundary={<RenderDeferredError />}
+        errorElement={<RenderDeferredError />}
       >
         <RenderDeferredData />
       </Deferred>
@@ -312,7 +312,9 @@ function RenderDeferredData() {
   if (isDeferredError(data)) {
     return (
       <p style={{ color: "red" }}>
-        Error! {data.message} {data.stack}
+        Error (RenderDeferredData)!
+        <br/>
+        {data.message} {data.stack}
       </p>
     );
   }
@@ -324,7 +326,9 @@ function RenderDeferredError() {
   let error = useDeferred() as Error;
   return (
     <p style={{ color: "red" }}>
-      Error! {error.message} {error.stack}
+      Error (errorElement)!
+      <br/>
+      {error.message} {error.stack}
     </p>
   );
 }

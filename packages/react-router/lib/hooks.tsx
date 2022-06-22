@@ -732,7 +732,7 @@ export function useRouteError() {
 
 /**
  * Returns the data from the nearest ancestor <Deferred /> value. `data` may be
- * a `DeferredError` if no `errorBoundary` was specified, so usage should be
+ * a `DeferredError` if no `errorElement` was specified, so usage should be
  * guarded with `isDeferredError` in those scenarios.
  */
 export function useDeferred() {

@@ -426,7 +426,7 @@ export interface DeferredResolveRenderFunction {
 export interface DeferredProps extends Omit<React.SuspenseProps, "children"> {
   children: React.ReactNode | DeferredResolveRenderFunction;
   data: any;
-  errorBoundary?: React.ReactNode;
+  errorElement?: React.ReactNode;
 }
 
 /**
@@ -437,12 +437,12 @@ export function Deferred({
   children,
   data,
   fallback,
-  errorBoundary,
+  errorElement,
 }: DeferredProps) {
   return (
     <DeferredContext.Provider value={data}>
       <React.Suspense fallback={fallback}>
-        <DeferredWrapper children={children} errorBoundary={errorBoundary} />
+        <DeferredWrapper children={children} errorElement={errorElement} />
       </React.Suspense>
     </DeferredContext.Provider>
   );
@@ -450,23 +450,23 @@ export function Deferred({
 
 interface DeferredWrapperProps {
   children: React.ReactNode;
-  errorBoundary?: React.ReactNode;
+  errorElement?: React.ReactNode;
 }
 
 /**
  * @private
  * Internal wrapper to handle re-throwing the promise to trigger the Suspense
- * fallback, or rendering the children/errorBoundary once the promise resolves
+ * fallback, or rendering the children/errorElement once the promise resolves
  * or rejects
  */
-function DeferredWrapper({ children, errorBoundary }: DeferredWrapperProps) {
+function DeferredWrapper({ children, errorElement }: DeferredWrapperProps) {
   let data = React.useContext(DeferredContext);
   if (data instanceof Promise) {
     throw data;
   }
 
-  if (isDeferredError(data) && errorBoundary) {
-    return <>{errorBoundary}</>;
+  if (isDeferredError(data) && errorElement) {
+    return <>{errorElement}</>;
   }
 
   return (
