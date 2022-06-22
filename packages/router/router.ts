@@ -1876,20 +1876,18 @@ function normalizeNavigateOptions(
   }
 
   // Flatten submission onto URLSearchParams for GET submissions
-  let searchParams = new URLSearchParams(path.search);
-  for (let [name, value] of opts.formData) {
-    if (typeof value === "string") {
-      searchParams.append(name, value);
-    } else {
-      return {
-        path,
-        error: new ErrorResponse(
-          400,
-          "Bad Request",
-          "Cannot submit binary form data using GET"
-        ),
-      };
-    }
+  let searchParams;
+  try {
+    searchParams = convertFormDataToSearchParams(opts.formData, path.search);
+  } catch (e) {
+    return {
+      path,
+      error: new ErrorResponse(
+        400,
+        "Bad Request",
+        "Cannot submit binary form data using GET"
+      ),
+    };
   }
 
   return {
@@ -2136,16 +2134,7 @@ function createRequest(
   // If we're submitting application/x-www-form-urlencoded, then body should
   // be of type URLSearchParams
   if (formEncType === "application/x-www-form-urlencoded") {
-    body = new URLSearchParams();
-
-    for (let [key, value] of formData.entries()) {
-      invariant(
-        typeof value === "string",
-        'File inputs are not supported with encType "application/x-www-form-urlencoded", ' +
-          'please use "multipart/form-data" instead.'
-      );
-      body.append(key, value);
-    }
+    body = convertFormDataToSearchParams(formData);
   }
 
   // Content-Type is inferred (https://fetch.spec.whatwg.org/#dom-request)
@@ -2153,6 +2142,24 @@ function createRequest(
     method: formMethod.toUpperCase(),
     body,
   });
+}
+
+function convertFormDataToSearchParams(
+  formData: FormData,
+  initialSearchParams?: string
+): URLSearchParams {
+  let searchParams = new URLSearchParams(initialSearchParams);
+
+  for (let [key, value] of formData.entries()) {
+    invariant(
+      typeof value === "string",
+      'File inputs are not supported with encType "application/x-www-form-urlencoded", ' +
+        'please use "multipart/form-data" instead.'
+    );
+    searchParams.append(key, value);
+  }
+
+  return searchParams;
 }
 
 function processLoaderData(
