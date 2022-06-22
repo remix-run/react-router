@@ -1,5 +1,15 @@
 # @remix-run/router
 
+## 0.2.0-pre.3
+
+### Patch Changes
+
+- 0bb4410b: fix: properly handle `<Form encType="multipart/form-data">` submissions (#8984)
+- 9fa39a6d: fix: Make path resolution trailing slash agnostic (#8861)
+- 7a057e19: fix: don't default to a `REPLACE` navigation on form submissions if the action redirected. The redirect takes care of avoiding the back-button-resubmit scenario, so by using a `PUSH` we allow the back button to go back to the pre-submission form page (#8979)
+- 9fa39a6d: fix: export ActionFunctionArgs/LoaderFunctionArgs up through router packages (#8975)
+- 5ba67d83: fix: preserve loader data for loaders that opted out of revalidation (#8973)
+
 ## 0.2.0-pre.2
 
 ### Patch Changes
