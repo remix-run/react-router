@@ -1861,6 +1861,7 @@ describe("a router", () => {
 
       // Navigate to /bar
       let B = await t.navigate("/bar");
+      let getBarKey = t.router.state.navigation.location?.key;
       await B.loaders.bar.resolve("BAR");
       expect(t.router.state.location.pathname).toEqual("/bar");
 
@@ -1869,6 +1870,7 @@ describe("a router", () => {
         formMethod: "post",
         formData: createFormData({ key: "value" }),
       });
+      let postBarKey = t.router.state.navigation.location?.key;
       let D = await C.actions.bar.redirect("/baz");
       await D.loaders.root.resolve("ROOT");
       await D.loaders.baz.resolve("BAZ");
@@ -1878,6 +1880,8 @@ describe("a router", () => {
       let E = await t.navigate(-1);
       await E.loaders.bar.resolve("BAR");
       expect(t.router.state.location.pathname).toEqual("/bar");
+      expect(t.router.state.location.key).toBe(getBarKey);
+      expect(t.router.state.location.key).not.toBe(postBarKey);
     });
 
     it("navigates correctly using POP navigations across <Form replace> redirects", async () => {
