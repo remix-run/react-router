@@ -654,6 +654,18 @@ Here's a part of our route config we haven't matched yet: `/privacy`. Let's look
 </Routes>
 ```
 
+A layout component should render an [outlet](#outlets) component for child route components to be mounted:
+```jsx
+function PageLayout() {
+  return (
+    <div>
+      <h1>Privacy and Terms<h1/>
+      <Outlet />
+    </div>
+  );
+}
+```
+
 And the resulting element tree rendered will be:
 
 ```jsx
@@ -664,7 +676,7 @@ And the resulting element tree rendered will be:
 </App>
 ```
 
-The `PageLayout` route is admittedly weird. We call it a [layout route](#layout-route) because it doesn't participate in the matching at all (though its children do). It only exists to make wrapping multiple child routes in the same layout simpler. If we didn't allow this then you'd have to handle layouts in two different ways: sometimes your routes do it for you, sometimes you do it manually with lots of layout component repetition throughout your app:
+The `PageLayout` route is admittedly weird. We call it a [layout route](#layout-route) because it doesn't participate in the matching at all (though its children do). It only exists to reduce the repetition of layout components for multiple child routes. If we didn't allow this then you'd have to handle layouts in two different ways: sometimes your routes do it for you, sometimes you do it manually with lots of layout component repetition throughout your app:
 
 <docs-error>You can do it like this, but we recommend using a layout route</docs-error>
 
@@ -682,17 +694,19 @@ The `PageLayout` route is admittedly weird. We call it a [layout route](#layout-
   <Route
     path="/privacy"
     element={
-      <PageLayout>
+      <div>
+        <h1>Privacy and Terms<h1/>
         <Privacy />
-      </PageLayout>
+      </div>
     }
   />
   <Route
     path="/tos"
     element={
-      <PageLayout>
+      <div>
+        <h1>Privacy and Terms<h1/>
         <Tos />
-      </PageLayout>
+      </div>
     }
   />
   <Route path="contact-us" element={<Contact />} />
