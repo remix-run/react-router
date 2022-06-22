@@ -55,7 +55,7 @@ ${colors.heading("Values")}:
   - ${colors.arg("remixPlatform")}     \`node\` or \`cloudflare\`
   - ${colors.arg(
     "migration"
-  )}         One of the choices from https://github.com/remix-run/remix/tree/main/packages/remix-dev/cli/migrate/migration-options
+  )}         One of the choices from https://github.com/remix-run/remix/blob/main/packages/remix-dev/cli/migrate/migrations/index.ts
 
 ${colors.heading("Creating a new project")}:
 

@@ -123,7 +123,7 @@ describe("remix CLI", () => {
             - projectDir        The Remix project directory
             - template          The project template to use
             - remixPlatform     \`node\` or \`cloudflare\`
-            - migration         One of the choices from https://github.com/remix-run/remix/tree/main/packages/remix-dev/cli/migrate/migration-options
+            - migration         One of the choices from https://github.com/remix-run/remix/blob/main/packages/remix-dev/cli/migrate/migrations/index.ts
 
           Creating a new project:
 
