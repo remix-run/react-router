@@ -214,17 +214,22 @@ export interface RouterInit {
   routes: RouteObject[];
   history: History;
   hydrationData?: HydrationState;
-  isSSR?: boolean;
 }
+
+/**
+ * State returned from a server-side query() call
+ */
+export type StaticRouterState = Pick<
+  RouterState,
+  "matches" | "loaderData" | "actionData" | "errors"
+>;
 
 /**
  * A StaticRouter instance manages a singular SSR navigation/fetch event
  */
-export interface StaticRouter extends Router {
-  load(url: string | URL): Promise<void>;
-  loadRoute(url: string | URL): Promise<void>;
-  submit(url: string | URL, opts: StaticSubmissionOptions): Promise<void>;
-  submitRoute(url: string | URL, opts: StaticSubmissionOptions): Promise<void>;
+export interface StaticRouter {
+  query(req: Request): Promise<StaticRouterState | Response>;
+  queryRoute(req: Request, routeId: string): Promise<any>;
 }
 
 /**
@@ -233,15 +238,6 @@ export interface StaticRouter extends Router {
 export interface StaticRouterInit {
   routes: RouteObject[];
 }
-
-/**
- * Options for a static router submit() call
- */
-export type StaticSubmissionOptions = {
-  formMethod?: FormMethod;
-  formEncType?: FormEncType;
-  formData: FormData;
-};
 
 /**
  * Subscriber function signature for changes to router state
@@ -460,10 +456,6 @@ export function createRouter(init: RouterInit): Router {
     init.routes.length > 0,
     "You must provide a non-empty routes array to createRouter"
   );
-  invariant(
-    !(init.isSSR && init.hydrationData),
-    "You cannot provide hydrationData to a data router during SSR"
-  );
 
   let dataRoutes = convertRoutesToDataRoutes(init.routes);
   // Cleanup function for history
@@ -563,8 +555,6 @@ export function createRouter(init: RouterInit): Router {
   // Implemented as a Fluent API for ease of:
   //   let router = createRouter(init).initialize();
   function initialize() {
-    invariant(!init.isSSR, "Cannot call router.initialize() during SSR");
-
     // If history informs us of a POP navigation, start the navigation but do not update
     // state.  We'll update our own state once the navigation completes
     unlistenHistory = init.history.listen(
@@ -594,8 +584,6 @@ export function createRouter(init: RouterInit): Router {
 
   // Subscribe to state updates for the router
   function subscribe(fn: RouterSubscriber) {
-    invariant(!init.isSSR, "Cannot call router.subscribe() during SSR");
-
     if (subscriber) {
       throw new Error("A router only accepts one active subscriber");
     }
@@ -668,11 +656,6 @@ export function createRouter(init: RouterInit): Router {
       resetScrollPosition: pendingResetScroll,
     });
 
-    // No need to update history or internal state in SSR mode,
-    if (init.isSSR) {
-      return;
-    }
-
     if (isUninterruptedRevalidation) {
       // If this was an uninterrupted revalidation then do not touch history
     } else if (historyAction === HistoryAction.Pop) {
@@ -696,14 +679,7 @@ export function createRouter(init: RouterInit): Router {
     path: number | To,
     opts?: RouterNavigateOptions
   ): Promise<void> {
-    invariant(
-      !init.isSSR ||
-        (!state.initialized && state.navigation === IDLE_NAVIGATION),
-      "Can only call router.navigate() one time during SSR"
-    );
-
     if (typeof path === "number") {
-      invariant(!init.isSSR, "Cannot perform POP navigations during SSR");
       init.history.go(path);
       return;
     }
@@ -739,8 +715,6 @@ export function createRouter(init: RouterInit): Router {
   // is interrupted by a navigation, allow this to "succeed" by calling all
   // loaders during the next loader round
   function revalidate() {
-    invariant(!init.isSSR, "Cannot call router.revalidate() during SSR");
-
     // Toggle isRevalidationRequired so the next data load will call all loaders,
     // and mark us in a revalidating state
     isRevalidationRequired = true;
@@ -844,11 +818,13 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Call action if we received an action submission
+    let request = createRequest(location, opts?.submission);
     let pendingActionData: RouteData | null = null;
     let pendingActionError: RouteData | null = null;
 
     if (opts?.submission) {
       let actionOutput = await handleAction(
+        request,
         location,
         opts.submission,
         matches,
@@ -872,6 +848,7 @@ export function createRouter(init: RouterInit): Router {
     // Call loaders
     let { shortCircuited, loaderData, errors } = await handleLoaders(
       historyAction,
+      request,
       location,
       opts?.submission,
       matches,
@@ -894,6 +871,7 @@ export function createRouter(init: RouterInit): Router {
   // Call the action matched by the leaf route for this navigation and handle
   // redirects/errors
   async function handleAction(
+    request: Request,
     location: Location,
     submission: Submission,
     matches: DataRouteMatch[],
@@ -935,11 +913,10 @@ export function createRouter(init: RouterInit): Router {
       pendingNavigationController = actionAbortController;
 
       result = await callLoaderOrAction(
+        request,
         actionMatch,
-        location,
         actionAbortController.signal,
-        submission,
-        init.isSSR
+        submission
       );
 
       if (actionAbortController.signal.aborted) {
@@ -986,6 +963,7 @@ export function createRouter(init: RouterInit): Router {
   // errors, etc.
   async function handleLoaders(
     historyAction: HistoryAction,
+    request: Request,
     location: Location,
     submission: Submission | undefined,
     matches: DataRouteMatch[],
@@ -1068,16 +1046,10 @@ export function createRouter(init: RouterInit): Router {
     // accordingly
     let results = await Promise.all([
       ...matchesToLoad.map((m) =>
-        callLoaderOrAction(
-          m,
-          location,
-          abortController.signal,
-          undefined,
-          init.isSSR
-        )
+        callLoaderOrAction(request, m, abortController.signal)
       ),
       ...revalidatingFetchers.map(([, href, match]) =>
-        callLoaderOrAction(match, href, abortController.signal)
+        callLoaderOrAction(createRequest(href), match, abortController.signal)
       ),
     ]);
     let navigationResults = results.slice(0, matchesToLoad.length);
@@ -1135,8 +1107,6 @@ export function createRouter(init: RouterInit): Router {
     href: string,
     opts?: RouterNavigateOptions
   ) {
-    invariant(!init.isSSR, "Cannot call router.fetch() during SSR");
-
     if (typeof AbortController === "undefined") {
       throw new Error(
         "router.fetch() was called during the server render, but it shouldn't be. " +
@@ -1194,9 +1164,10 @@ export function createRouter(init: RouterInit): Router {
     let abortController = new AbortController();
     fetchControllers.set(key, abortController);
 
+    let fetchRequest = createRequest(href, submission);
     let actionResult = await callLoaderOrAction(
+      fetchRequest,
       match,
-      href,
       abortController.signal,
       submission
     );
@@ -1240,6 +1211,7 @@ export function createRouter(init: RouterInit): Router {
     // Start the data load for current matches, or the next location if we're
     // in the middle of a navigation
     let nextLocation = state.navigation.location || state.location;
+    let revalidationRequest = createRequest(nextLocation);
     let matches =
       state.navigation.state !== "idle"
         ? matchRoutes(dataRoutes, state.navigation.location)
@@ -1293,10 +1265,10 @@ export function createRouter(init: RouterInit): Router {
     // accordingly
     let results = await Promise.all([
       ...matchesToLoad.map((m) =>
-        callLoaderOrAction(m, nextLocation, abortController.signal)
+        callLoaderOrAction(revalidationRequest, m, abortController.signal)
       ),
       ...revalidatingFetchers.map(([, href, match]) =>
-        callLoaderOrAction(match, href, abortController.signal)
+        callLoaderOrAction(createRequest(href), match, abortController.signal)
       ),
     ]);
     let loaderResults = results.slice(0, matchesToLoad.length);
@@ -1390,9 +1362,10 @@ export function createRouter(init: RouterInit): Router {
     // Call the loader for this fetcher route match
     let abortController = new AbortController();
     fetchControllers.set(key, abortController);
+    let request = createRequest(href);
     let result: DataResult = await callLoaderOrAction(
+      request,
       match,
-      href,
       abortController.signal
     );
 
@@ -1596,10 +1569,7 @@ export function createRouter(init: RouterInit): Router {
 //#region createStaticRouter
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Create a router and listen to history POP navigations
- */
-export function createStaticRouter(init: StaticRouterInit): StaticRouter {
+export function createStaticHandler(init: StaticRouterInit): StaticRouter {
   invariant(
     init.routes.length > 0,
     "You must provide a non-empty routes array to createStaticRouter"
@@ -1607,318 +1577,235 @@ export function createStaticRouter(init: StaticRouterInit): StaticRouter {
 
   let dataRoutes = convertRoutesToDataRoutes(init.routes);
 
-  // AbortController for the active navigation
-  let pendingController: AbortController | null;
-
-  let state: RouterState = {
-    historyAction: HistoryAction.Pop,
-    location: createLocation("/", "/"),
-    matches: [],
-    initialized: false,
-    navigation: IDLE_NAVIGATION,
-    restoreScrollPosition: null,
-    resetScrollPosition: true,
-    revalidation: "idle",
-    loaderData: {},
-    actionData: null,
-    errors: null,
-    fetchers: new Map(),
-  };
-
-  // Update our state and notify the calling context of the change
-  function updateState(
-    location: Location,
-    newState: Partial<RouterState>
-  ): void {
-    state = {
-      ...state,
-      ...newState,
-      location,
-      initialized: true,
-    };
-  }
-
-  // Clean up a router and it's side effects
-  function dispose() {
-    pendingController?.abort();
-  }
-
-  function load(url: string | URL): Promise<void> {
-    return loadImpl(url, false);
-  }
-
-  function loadRoute(url: string | URL): Promise<void> {
-    return loadImpl(url, true);
+  async function query(req: Request): Promise<StaticRouterState | Response> {
+    try {
+      // TODO: Support HEAD?
+      if (req.method === "GET") {
+        //return await loadImpl(req, false);
+      } else {
+        //return await submitImpl(req, false);
+      }
+    } catch (e) {
+      if (e instanceof Response) {
+        return e;
+      }
+      throw e;
+    }
+    throw new Error("uh ohhhhh not done yet");
   }
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
   // replace with an optional submission
-  async function loadImpl(
-    url: string | URL,
-    isSingleRouteLoad: boolean
-  ): Promise<void> {
-    pendingController?.abort();
+  // async function loadImpl(
+  //   req: Request,
+  //   isSingleRouteLoad: boolean
+  // ): Promise<StaticRouterState | Response> {
+  //   let location = createLocation(parsePath(req.url).pathname || "", req.url);
+  //   let matches = matchRoutes(dataRoutes, location);
 
-    if (url instanceof URL) {
-      url = createPath(url);
-    }
-    let location = createLocation(parsePath(url).pathname || "", url);
-    let matches = matchRoutes(dataRoutes, location);
+  //   // Short circuit with a 404 if we match nothing
+  //   if (!matches) {
+  //     let {
+  //       matches: notFoundMatches,
+  //       route,
+  //       error,
+  //     } = getNotFoundMatches(dataRoutes);
+  //     return {
+  //       matches: notFoundMatches,
+  //       loaderData: {},
+  //       actionData: null,
+  //       errors: {
+  //         [route.id]: error,
+  //       },
+  //     };
+  //   }
 
-    // Short circuit with a 404 if we match nothing
-    if (!matches) {
-      let {
-        matches: notFoundMatches,
-        route,
-        error,
-      } = getNotFoundMatches(dataRoutes);
-      updateState(location, {
-        matches: notFoundMatches,
-        errors: {
-          [route.id]: error,
-        },
-      });
-      return;
-    }
+  //   // Trim matches if we only intend to load a single route here
+  //   if (isSingleRouteLoad) {
+  //     matches = [getTargetMatch(matches, location)];
+  //   }
 
-    // Trim matches if we only intend to load a single route here
-    if (isSingleRouteLoad) {
-      matches = [getTargetMatch(matches, location)];
-    }
+  //   return loadRouteData(location, matches, null, null, null);
+  // }
 
-    return loadRouteData(location, matches, null, null, null);
-  }
+  // async function submitImpl(
+  //   req: Request,
+  //   isSingleRouteLoad: boolean
+  // ): Promise<StaticRouterState | Response> {
+  //   if (url instanceof URL) {
+  //     url = createPath(url);
+  //   }
+  //   let location = createLocation(parsePath(url).pathname || "", url);
+  //   let matches = matchRoutes(dataRoutes, location);
+  //   let { submission } = normalizeNavigateOptions(location, opts);
 
-  function submit(
-    url: string | URL,
-    opts?: StaticSubmissionOptions
-  ): Promise<void> {
-    return submitImpl(url, false, opts);
-  }
-  function submitRoute(
-    url: string | URL,
-    opts?: StaticSubmissionOptions
-  ): Promise<void> {
-    return submitImpl(url, true, opts);
-  }
+  //   // Short circuit with a 404 if we match nothing
+  //   if (!matches) {
+  //     let {
+  //       matches: notFoundMatches,
+  //       route,
+  //       error,
+  //     } = getNotFoundMatches(dataRoutes);
+  //     updateState(location, {
+  //       matches: notFoundMatches,
+  //       errors: {
+  //         [route.id]: error,
+  //       },
+  //     });
+  //     return;
+  //   }
 
-  async function submitImpl(
-    url: string | URL,
-    isSingleRouteLoad: boolean,
-    opts?: StaticSubmissionOptions
-  ): Promise<void> {
-    if (url instanceof URL) {
-      url = createPath(url);
-    }
-    let location = createLocation(parsePath(url).pathname || "", url);
-    let matches = matchRoutes(dataRoutes, location);
-    let { submission } = normalizeNavigateOptions(location, opts);
+  //   // Call our action and get the result
+  //   let result: DataResult;
+  //   let actionMatch = getTargetMatch(matches, location);
+  //   if (!actionMatch.route.action) {
+  //     if (__DEV__) {
+  //       console.warn(
+  //         "You're trying to submit to a route that does not have an action.  To " +
+  //           "fix this, please add an `action` function to the route for " +
+  //           `[${createHref(location)}]`
+  //       );
+  //     }
+  //     result = {
+  //       type: ResultType.error,
+  //       error: new ErrorResponse(
+  //         405,
+  //         "Method Not Allowed",
+  //         `No action found for [${createHref(location)}]`
+  //       ),
+  //     };
+  //   } else {
+  //     // Create a controller for this data load
+  //     let actionAbortController = new AbortController();
+  //     pendingController = actionAbortController;
 
-    // Short circuit with a 404 if we match nothing
-    if (!matches) {
-      let {
-        matches: notFoundMatches,
-        route,
-        error,
-      } = getNotFoundMatches(dataRoutes);
-      updateState(location, {
-        matches: notFoundMatches,
-        errors: {
-          [route.id]: error,
-        },
-      });
-      return;
-    }
+  //     result = await callLoaderOrAction(
+  //       actionMatch,
+  //       location,
+  //       actionAbortController.signal,
+  //       submission,
+  //       false
+  //     );
 
-    // Call our action and get the result
-    let result: DataResult;
-    let actionMatch = getTargetMatch(matches, location);
-    if (!actionMatch.route.action) {
-      if (__DEV__) {
-        console.warn(
-          "You're trying to submit to a route that does not have an action.  To " +
-            "fix this, please add an `action` function to the route for " +
-            `[${createHref(location)}]`
-        );
-      }
-      result = {
-        type: ResultType.error,
-        error: new ErrorResponse(
-          405,
-          "Method Not Allowed",
-          `No action found for [${createHref(location)}]`
-        ),
-      };
-    } else {
-      // Create a controller for this data load
-      let actionAbortController = new AbortController();
-      pendingController = actionAbortController;
+  //     if (actionAbortController.signal.aborted) {
+  //       // TODO: What behavior do we want here?
+  //       throw new Error("aborted router.submit()");
+  //     }
 
-      result = await callLoaderOrAction(
-        actionMatch,
-        location,
-        actionAbortController.signal,
-        submission,
-        true
-      );
+  //     pendingController = null;
+  //   }
 
-      if (actionAbortController.signal.aborted) {
-        // TODO: What behavior do we want here?
-        throw new Error("aborted router.submit()");
-      }
+  //   if (isRedirectResult(result)) {
+  //     // TODO: clean this up?
+  //     invariant(
+  //       false,
+  //       "Should not get here, redirects are thrown in static routers"
+  //     );
+  //   }
 
-      pendingController = null;
-    }
+  //   if (isSingleRouteLoad) {
+  //     let actionData: RouteData | null = null;
+  //     let errors: RouteData | null = null;
+  //     if (isErrorResult(result)) {
+  //       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+  //       errors = {
+  //         [boundaryMatch.route.id]: result.error,
+  //       };
+  //     } else {
+  //       actionData = { [actionMatch.route.id]: result.data };
+  //     }
 
-    if (isRedirectResult(result)) {
-      // TODO: clean this up?
-      invariant(
-        false,
-        "Should not get here, redirects are thrown in static routers"
-      );
-    }
+  //     updateState(location, {
+  //       matches: [actionMatch],
+  //       loaderData: {},
+  //       actionData,
+  //       errors,
+  //     });
+  //     return;
+  //   }
 
-    if (isSingleRouteLoad) {
-      let actionData: RouteData | null = null;
-      let errors: RouteData | null = null;
-      if (isErrorResult(result)) {
-        let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-        errors = {
-          [boundaryMatch.route.id]: result.error,
-        };
-      } else {
-        actionData = { [actionMatch.route.id]: result.data };
-      }
+  //   if (isErrorResult(result)) {
+  //     // Store off the pending error - we use it to determine which loaders
+  //     // to call and will commit it when we complete the navigation
+  //     let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+  //     return await loadRouteData(location, matches, submission || null, null, {
+  //       [boundaryMatch.route.id]: result.error,
+  //     });
+  //   }
 
-      updateState(location, {
-        matches: [actionMatch],
-        loaderData: {},
-        actionData,
-        errors,
-      });
-      return;
-    }
+  //   return await loadRouteData(
+  //     location,
+  //     matches,
+  //     submission || null,
+  //     { [actionMatch.route.id]: result.data },
+  //     null
+  //   );
+  // }
 
-    if (isErrorResult(result)) {
-      // Store off the pending error - we use it to determine which loaders
-      // to call and will commit it when we complete the navigation
-      let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-      return await loadRouteData(location, matches, submission || null, null, {
-        [boundaryMatch.route.id]: result.error,
-      });
-    }
+  // async function loadRouteData(
+  //   req: Request,
+  //   location: Location,
+  //   matches: DataRouteMatch[],
+  //   submission: Submission | null,
+  //   pendingActionData: RouteData | null,
+  //   pendingActionError: RouteData | null
+  // ): Promise<StaticRouterState | Response> {
+  //   let [matchesToLoad] = getMatchesToLoad(
+  //     state,
+  //     matches,
+  //     submission || undefined,
+  //     location,
+  //     false,
+  //     pendingActionData,
+  //     pendingActionError
+  //   );
 
-    return await loadRouteData(
-      location,
-      matches,
-      submission || null,
-      { [actionMatch.route.id]: result.data },
-      null
-    );
-  }
+  //   // Short circuit if we have no loaders to run
+  //   if (matchesToLoad.length === 0) {
+  //     updateState(location, {
+  //       matches,
+  //       loaderData: {},
+  //       actionData: null,
+  //       errors: null,
+  //     });
+  //     return;
+  //   }
 
-  async function loadRouteData(
-    location: Location,
-    matches: DataRouteMatch[],
-    submission: Submission | null,
-    pendingActionData: RouteData | null,
-    pendingActionError: RouteData | null
-  ): Promise<void> {
-    let [matchesToLoad] = getMatchesToLoad(
-      state,
-      matches,
-      submission || undefined,
-      location,
-      false,
-      pendingActionData,
-      pendingActionError
-    );
+  //   // Start the data load
+  //   let results = await Promise.all([
+  //     ...matchesToLoad.map((m) =>
+  //       callLoaderOrAction(m, location, abortController.signal, undefined, false)
+  //     ),
+  //   ]);
+  //   if (abortController.signal.aborted) {
+  //     // TODO: What behavior do we want here?
+  //     throw new Error("aborted router.load()");
+  //   }
 
-    // Short circuit if we have no loaders to run
-    if (matchesToLoad.length === 0) {
-      updateState(location, {
-        matches,
-        loaderData: {},
-        actionData: null,
-        errors: null,
-      });
-      return;
-    }
+  //   pendingController = null;
 
-    // Start the data load
-    let abortController = new AbortController();
-    pendingController = abortController;
-    let results = await Promise.all([
-      ...matchesToLoad.map((m) =>
-        callLoaderOrAction(m, location, abortController.signal, undefined, true)
-      ),
-    ]);
-    if (abortController.signal.aborted) {
-      // TODO: What behavior do we want here?
-      throw new Error("aborted router.load()");
-    }
+  //   // Process and commit output from loaders
+  //   let { loaderData, errors } = processLoaderData(
+  //     state,
+  //     matches,
+  //     matchesToLoad,
+  //     results,
+  //     pendingActionError
+  //   );
 
-    pendingController = null;
-
-    // Process and commit output from loaders
-    let { loaderData, errors } = processLoaderData(
-      state,
-      matches,
-      matchesToLoad,
-      results,
-      pendingActionError
-    );
-
-    updateState(location, {
-      matches,
-      loaderData,
-      actionData: pendingActionData,
-      errors,
-    });
-  }
+  //   updateState(location, {
+  //     matches,
+  //     loaderData,
+  //     actionData: pendingActionData,
+  //     errors,
+  //   });
+  // }
 
   return {
-    get state() {
-      return state;
+    query,
+    queryRoute() {
+      throw new Error("Not imple,mented!");
     },
-    get routes() {
-      return dataRoutes;
-    },
-    initialize() {
-      throw new Error("Cannot call router.initialize on a static router");
-    },
-    subscribe() {
-      throw new Error("Cannot call router.subscribe on a static router");
-    },
-    navigate() {
-      throw new Error("Cannot call router.navigate on a static router");
-    },
-    revalidate() {
-      throw new Error("Cannot call router.revalidate on a static router");
-    },
-    fetch() {
-      throw new Error("Cannot call router.fetch on a static router");
-    },
-    enableScrollRestoration() {
-      throw new Error(
-        "Cannot call router.enableScrollRestoration on a static router"
-      );
-    },
-    getFetcher() {
-      throw new Error("Cannot call router.getFetcher on a static router");
-    },
-    deleteFetcher() {
-      throw new Error("Cannot call router.deleteFetcher on a static router");
-    },
-    createHref() {
-      throw new Error("Cannot call router.createHref on a static router");
-    },
-    _internalFetchControllers: new Map(),
-    load,
-    loadRoute,
-    submit,
-    submitRoute,
-    dispose,
   };
 }
 
@@ -2027,7 +1914,7 @@ function getLoaderRedirect(
 }
 
 function getMatchesToLoad(
-  state: RouterState,
+  state: Pick<RouterState, "location" | "matches" | "loaderData">,
   matches: DataRouteMatch[],
   submission: Submission | undefined,
   location: Location,
@@ -2162,11 +2049,11 @@ function shouldRevalidateLoader(
 }
 
 async function callLoaderOrAction(
+  request: Request,
   match: DataRouteMatch,
-  location: string | Location,
   signal: AbortSignal,
   submission?: Submission,
-  isSSR?: boolean
+  processRedirects: boolean = true
 ): Promise<DataResult> {
   let resultType = ResultType.data;
   let result;
@@ -2181,7 +2068,7 @@ async function callLoaderOrAction(
 
     result = await handler({
       params: match.params,
-      request: createRequest(location, submission),
+      request,
       signal,
     });
   } catch (e) {
@@ -2197,15 +2084,16 @@ async function callLoaderOrAction(
     if (status >= 300 && status <= 399 && location != null) {
       // Don't process redirects in the router during SSR.  Instead, throw the
       // Response and let the server handle it with an HTTP redirect
-      if (isSSR) {
+      if (processRedirects) {
+        return {
+          type: ResultType.redirect,
+          status,
+          location,
+          revalidate: result.headers.get("X-Remix-Revalidate") !== null,
+        };
+      } else {
         throw result;
       }
-      return {
-        type: ResultType.redirect,
-        status,
-        location,
-        revalidate: result.headers.get("X-Remix-Revalidate") !== null,
-      };
     }
 
     let data: any;

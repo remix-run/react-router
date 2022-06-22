@@ -6668,7 +6668,7 @@ describe("a router", () => {
     });
   });
 
-  describe("ssr", () => {
+  xdescribe("ssr", () => {
     const SSR_ROUTES = [
       {
         id: "index",
