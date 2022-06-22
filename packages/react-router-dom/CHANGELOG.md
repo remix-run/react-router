@@ -4,11 +4,9 @@
 
 ### Patch Changes
 
-- 9fa39a6d: fix: Make path resolution trailing slash agnostic (#8861)
-- 9fa39a6d: fix: export ActionFunctionArgs/LoaderFunctionArgs up through router packages (#8975)
-- Updated dependencies [9fa39a6d]
-- Updated dependencies [e6b68116]
-- Updated dependencies [9fa39a6d]
+- fix: Make path resolution trailing slash agnostic (#8861)
+- fix: export ActionFunctionArgs/LoaderFunctionArgs up through router packages (#8975)
+- Updated dependencies
   - react-router@6.4.0-pre.8
 
 ## 6.4.0-pre.7

@@ -4,14 +4,10 @@
 
 ### Patch Changes
 
-- 9fa39a6d: fix: Make path resolution trailing slash agnostic (#8861)
-- e6b68116: fix: Additional logic fixed for relative navigation from index/pathless layout routes (#8985)
-- 9fa39a6d: fix: export ActionFunctionArgs/LoaderFunctionArgs up through router packages (#8975)
-- Updated dependencies [0bb4410b]
-- Updated dependencies [9fa39a6d]
-- Updated dependencies [7a057e19]
-- Updated dependencies [9fa39a6d]
-- Updated dependencies [5ba67d83]
+- fix: Make path resolution trailing slash agnostic (#8861)
+- fix: Additional logic fixed for relative navigation from index/pathless layout routes (#8985)
+- fix: export ActionFunctionArgs/LoaderFunctionArgs up through router packages (#8975)
+- Updated dependencies
   - @remix-run/router@0.2.0-pre.3
 
 ## 6.4.0-pre.7
