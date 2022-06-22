@@ -126,10 +126,10 @@ describe("trailing slashes", () => {
                       index
                       element={
                         <>
-                          <Link to="../../.." />
-                          <Link to="../../../" />
-                          <Link to="../../child" />
-                          <Link to="../../child/" />
+                          <Link to="../.." />
+                          <Link to="../../" />
+                          <Link to="../../parent/child" />
+                          <Link to="../../parent/child/" />
                         </>
                       }
                     />
@@ -277,10 +277,10 @@ describe("trailing slashes", () => {
                       index
                       element={
                         <>
-                          <Link to="../../.." />
-                          <Link to="../../../" />
-                          <Link to="../../child" />
-                          <Link to="../../child/" />
+                          <Link to="../.." />
+                          <Link to="../../" />
+                          <Link to="../../parent/child" />
+                          <Link to="../../parent/child/" />
                         </>
                       }
                     />
