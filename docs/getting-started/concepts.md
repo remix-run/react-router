@@ -669,11 +669,9 @@ function PageLayout() {
 And the resulting element tree rendered will be:
 
 ```jsx
-<App>
-  <PageLayout>
-    <Privacy />
-  </PageLayout>
-</App>
+<PageLayout>
+ <Privacy />
+</PageLayout>
 ```
 
 The `PageLayout` route is admittedly weird. We call it a [layout route](#layout-route) because it doesn't participate in the matching at all (though its children do). It only exists to reduce the repetition of layout components for multiple child routes. If we didn't allow this then you'd have to handle layouts in two different ways: sometimes your routes do it for you, sometimes you do it manually with lots of layout component repetition throughout your app:
