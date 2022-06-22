@@ -13,7 +13,7 @@ import {
   Route,
   Outlet,
   deferred,
-  useDeferred,
+  useDeferredData,
   useFetcher,
   useFetchers,
   useLoaderData,
@@ -247,8 +247,7 @@ const deferredLoader: LoaderFunction = async ({ request }) => {
     lazy1: new Promise((r) => setTimeout(() => r("Lazy Data 1"), 1000)),
     lazy2: new Promise((r) => setTimeout(() => r("Lazy Data 2"), 1500)),
     lazy3: new Promise((r) => setTimeout(() => r("Lazy Data 3"), 2000)),
-    lazyError1: new Promise((_, r) => setTimeout(() => r("Kaboom!"), 2500)),
-    lazyError2: new Promise((_, r) => setTimeout(() => r("Kaboom!"), 3000)),
+    lazyError: new Promise((_, r) => setTimeout(() => r("Kaboom!"), 2500)),
   });
 };
 
@@ -268,14 +267,11 @@ function DeferredPage() {
         <RenderDeferredData />
       </Deferred>
       <Deferred data={data.lazy3} fallback={<p>loading 3...</p>}>
-        {({ data }: { data: any }) => <p>{data}</p>}
-      </Deferred>
-      <Deferred data={data.lazyError1} fallback={<p>loading (error 1)...</p>}>
-        <RenderDeferredData />
+        {(data: any) => <p>{data}</p>}
       </Deferred>
       <Deferred
-        data={data.lazyError2}
-        fallback={<p>loading (error 2)...</p>}
+        data={data.lazyError}
+        fallback={<p>loading (error)...</p>}
         errorElement={<RenderDeferredError />}
       >
         <RenderDeferredData />
@@ -307,27 +303,16 @@ function DeferredChild() {
 }
 
 function RenderDeferredData() {
-  let data = useDeferred();
-
-  if (isDeferredError(data)) {
-    return (
-      <p style={{ color: "red" }}>
-        Error (RenderDeferredData)!
-        <br/>
-        {data.message} {data.stack}
-      </p>
-    );
-  }
-
+  let data = useDeferredData();
   return <p>{data}</p>;
 }
 
 function RenderDeferredError() {
-  let error = useDeferred() as Error;
+  let error = useRouteError();
   return (
     <p style={{ color: "red" }}>
       Error (errorElement)!
-      <br/>
+      <br />
       {error.message} {error.stack}
     </p>
   );
