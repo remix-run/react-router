@@ -33,3 +33,11 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
           node scripts/publish.js
+
+  comment:
+    needs: [release]
+    name: 📝 Comment on related issues and pull requests
+    if: github.repository == 'remix-run/react-router'
+    uses: remix-run/react-router/.github/workflows/release-comments.yml@main
+    with:
+      ref: ${{ github.ref }}
