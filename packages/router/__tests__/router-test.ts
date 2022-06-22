@@ -1152,29 +1152,55 @@ describe("a router", () => {
     it("reloads all routes if X-Remix-Revalidate was set in a loader redirect header", async () => {
       let t = initializeTmTest();
 
-      let A = await t.navigate("/bar");
+      let A = await t.navigate("/foo");
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.navigation.location?.pathname).toBe("/foo");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+      });
+
+      let B = await A.loaders.foo.redirectReturn("/bar", undefined, {
+        "X-Remix-Revalidate": "yes",
+      });
       expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location?.pathname).toBe("/bar");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
       });
 
-      let B = await A.loaders.bar.redirectReturn("/baz", undefined, {
+      await B.loaders.root.resolve("ROOT*");
+      await B.loaders.bar.resolve("BAR");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.location.pathname).toBe("/bar");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT*",
+        bar: "BAR",
+      });
+    });
+
+    it("reloads all routes if X-Remix-Revalidate was set in a loader redirect header (chained redirects)", async () => {
+      let t = initializeTmTest();
+
+      let A = await t.navigate("/foo");
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0); // Reused on navigation
+
+      let B = await A.loaders.foo.redirectReturn("/bar", undefined, {
         "X-Remix-Revalidate": "yes",
       });
-      expect(t.router.state.navigation.state).toBe("loading");
-      expect(t.router.state.navigation.location?.pathname).toBe("/baz");
-      expect(t.router.state.loaderData).toMatchObject({
-        root: "ROOT",
-      });
-
       await B.loaders.root.resolve("ROOT*");
-      await B.loaders.baz.resolve("B");
+      expect(B.loaders.root.stub.mock.calls.length).toBe(1);
+
+      // No cookie on second redirect
+      let C = await B.loaders.bar.redirectReturn("/baz");
+      expect(C.loaders.root.stub.mock.calls.length).toBe(1);
+      await C.loaders.root.resolve("ROOT**");
+      await C.loaders.baz.resolve("BAZ");
+
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.location.pathname).toBe("/baz");
       expect(t.router.state.loaderData).toMatchObject({
-        root: "ROOT*",
-        baz: "B",
+        root: "ROOT**",
+        baz: "BAZ",
       });
     });
   });
@@ -1609,6 +1635,120 @@ describe("a router", () => {
 
       router.dispose();
     });
+
+    it("preserves non-revalidated loaderData on navigations", async () => {
+      let count = 0;
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "",
+            id: "root",
+            loader: () => `ROOT ${++count}`,
+            element: {},
+            children: [
+              {
+                path: "/",
+                id: "index",
+                loader: (args) => "SHOULD NOT GET CALLED",
+                shouldRevalidate: () => false,
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT 0",
+            index: "INDEX",
+          },
+        },
+      });
+      router.initialize();
+      await tick();
+
+      // Navigating to the same link would normally cause all loaders to re-run
+      router.navigate("/");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: "ROOT 1",
+        index: "INDEX",
+      });
+
+      router.navigate("/");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: "ROOT 2",
+        index: "INDEX",
+      });
+
+      router.dispose();
+    });
+
+    it("preserves non-revalidated loaderData on fetches", async () => {
+      let count = 0;
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "",
+            id: "root",
+            element: {},
+            children: [
+              {
+                path: "/",
+                id: "index",
+                loader: () => "SHOULD NOT GET CALLED",
+                shouldRevalidate: () => false,
+              },
+              {
+                path: "/fetch",
+                id: "fetch",
+                action: () => `FETCH ${++count}`,
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX",
+          },
+        },
+      });
+      router.initialize();
+      await tick();
+
+      let key = "key";
+
+      router.fetch(key, "root", "/fetch", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await tick();
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: "FETCH 1",
+      });
+      expect(router.state.loaderData).toMatchObject({
+        index: "INDEX",
+      });
+
+      router.fetch(key, "root", "/fetch", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await tick();
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: "FETCH 2",
+      });
+      expect(router.state.loaderData).toMatchObject({
+        index: "INDEX",
+      });
+
+      router.dispose();
+    });
   });
 
   describe("no route match", () => {
@@ -1617,6 +1757,57 @@ describe("a router", () => {
       t.navigate("/not-found");
       expect(t.router.state.loaderData).toEqual({
         root: "ROOT",
+      });
+      expect(t.router.state.errors).toEqual({
+        root: {
+          status: 404,
+          statusText: "Not Found",
+          data: null,
+        },
+      });
+      expect(t.router.state.matches).toMatchObject([
+        {
+          params: {},
+          pathname: "",
+          route: {
+            errorElement: true,
+            children: expect.any(Array),
+            element: {},
+            id: "root",
+            loader: expect.any(Function),
+            module: "",
+            path: "",
+          },
+        },
+      ]);
+    });
+
+    it("clears prior loader/action data", async () => {
+      let t = initializeTmTest();
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT",
+        index: "INDEX",
+      });
+
+      let A = await t.navigate("/foo", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await A.actions.foo.resolve("ACTION");
+      await A.loaders.root.resolve("ROOT*");
+      await A.loaders.foo.resolve("LOADER");
+      expect(t.router.state.actionData).toEqual({
+        foo: "ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+        foo: "LOADER",
+      });
+
+      t.navigate("/not-found");
+      expect(t.router.state.actionData).toBe(null);
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
       });
       expect(t.router.state.errors).toEqual({
         root: {
@@ -1924,6 +2115,30 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         bar: "B LOADER",
         root: "ROOT LOADER",
+      });
+    });
+
+    it("reloads all routes after action redirect (chained redirects)", async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+
+      let B = await A.actions.foo.redirectReturn("/bar");
+      expect(B.loaders.root.stub.mock.calls.length).toBe(1);
+
+      await B.loaders.root.resolve("ROOT*");
+      let C = await B.loaders.bar.redirectReturn("/baz");
+      expect(C.loaders.root.stub.mock.calls.length).toBe(1);
+
+      await C.loaders.root.resolve("ROOT**");
+      await C.loaders.baz.resolve("BAZ");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.loaderData).toEqual({
+        baz: "BAZ",
+        root: "ROOT**",
       });
     });
 
@@ -3876,7 +4091,7 @@ describe("a router", () => {
       expect(request.url).toBe("http://localhost/tasks");
       expect(request.method).toBe("POST");
       expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded"
+        "application/x-www-form-urlencoded;charset=UTF-8"
       );
       expect((await request.formData()).get("query")).toBe("params");
     });
@@ -3909,9 +4124,43 @@ describe("a router", () => {
       expect(request.url).toBe("http://localhost/tasks?foo=bar");
       expect(request.method).toBe("POST");
       expect(request.headers.get("Content-Type")).toBe(
-        "application/x-www-form-urlencoded"
+        "application/x-www-form-urlencoded;charset=UTF-8"
       );
       expect((await request.formData()).get("query")).toBe("params");
+    });
+
+    it("handles multipart/form-data submissions", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            action: true,
+          },
+        ],
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+          },
+        },
+      });
+
+      let fd = new FormData();
+      fd.append("key", "value");
+      fd.append("file", new Blob(["1", "2", "3"]), "file.txt");
+
+      let A = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "multipart/form-data",
+        formData: fd,
+      });
+
+      expect(
+        A.actions.root.stub.mock.calls[0][0].request.headers.get("Content-Type")
+      ).toMatch(
+        /^multipart\/form-data; boundary=NodeFetchFormDataBoundary[a-z0-9]+/
+      );
     });
   });
 
