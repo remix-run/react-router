@@ -323,7 +323,9 @@ export function Router({
       ` You should never have more than one in your app.`
   );
 
-  let basename = normalizePathname(basenameProp);
+  // Preserve trailing slashes on basename, so we can let the user control
+  // the enforcement of trailing slashes throughout the app
+  let basename = basenameProp.replace(/^\/*/, "/");
   let navigationContext = React.useMemo(
     () => ({ basename, navigator, static: staticProp }),
     [basename, navigator, staticProp]

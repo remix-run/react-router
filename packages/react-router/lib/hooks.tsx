@@ -2,6 +2,7 @@ import * as React from "react";
 import {
   isRouteErrorResponse,
   Location,
+  normalizePathname,
   ParamParseKey,
   Params,
   Path,
@@ -54,11 +55,24 @@ export function useHref(to: To): string {
   let joinedPathname = pathname;
   if (basename !== "/") {
     let toPathname = getToPathname(to);
-    let endsWithSlash = toPathname != null && toPathname.endsWith("/");
-    joinedPathname =
-      pathname === "/"
-        ? basename + (endsWithSlash ? "/" : "")
-        : joinPaths([basename, pathname]);
+
+    // Only append a trailing slash to the raw basename if the basename doesn't
+    // already have one and this wasn't specifically a route to "".  This
+    // allows folks to control the trailing slash behavior when using a basename
+    let appendSlash =
+      !basename.endsWith("/") &&
+      to !== "" &&
+      (to as Path)?.pathname !== "" &&
+      toPathname != null &&
+      toPathname.endsWith("/");
+
+    if (pathname !== "/") {
+      joinedPathname = joinPaths([basename, pathname]);
+    } else if (appendSlash) {
+      joinedPathname = basename + "/";
+    } else {
+      joinedPathname = basename;
+    }
   }
 
   return navigator.createHref({ pathname: joinedPathname, search, hash });
@@ -138,6 +152,36 @@ export interface NavigateFunction {
 }
 
 /**
+ * When processing relative navigation we want to ignore ancestor routes that
+ * do not contribute to the path, such that index/pathless layout routes don't
+ * interfere.
+ *
+ * For example, when moving a route element into an index route and/or a
+ * pathless layout route, relative link behavior contained within should stay
+ * the same.  Both of the following examples should link back to the root:
+ *
+ *   <Route path="/">
+ *     <Route path="accounts" element={<Link to=".."}>
+ *   </Route>
+ *
+ *   <Route path="/">
+ *     <Route path="accounts">
+ *       <Route element={<AccountsLayout />}>       // <-- Does not contribute
+ *         <Route index element={<Link to=".."} />  // <-- Does not contribute
+ *       </Route
+ *     </Route>
+ *   </Route>
+ */
+function getPathContributingMatches(matches: RouteMatch[]) {
+  return matches.filter(
+    (match, index) =>
+      index === 0 ||
+      (!match.route.index &&
+        match.pathnameBase !== matches[index - 1].pathnameBase)
+  );
+}
+
+/**
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
  *
@@ -155,16 +199,8 @@ export function useNavigate(): NavigateFunction {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  // Ignore index + pathless matches
-  let pathContributingMatches = matches.filter(
-    (match, index) =>
-      index === 0 ||
-      (!match.route.index &&
-        match.pathnameBase !== matches[index - 1].pathnameBase)
-  );
-
   let routePathnamesJson = JSON.stringify(
-    pathContributingMatches.map((match) => match.pathnameBase)
+    getPathContributingMatches(matches).map((match) => match.pathnameBase)
   );
 
   let activeRef = React.useRef(false);
@@ -194,7 +230,13 @@ export function useNavigate(): NavigateFunction {
       );
 
       if (basename !== "/") {
-        path.pathname = joinPaths([basename, path.pathname]);
+        // If this was a blank path, just use the basename directly, this gives
+        // the user control over trailing slash behavior
+        let toPath = typeof to === "string" ? parsePath(to) : to;
+        let isBlankPath = toPath.pathname == null || toPath.pathname === "";
+        path.pathname = isBlankPath
+          ? basename
+          : joinPaths([basename, path.pathname]);
       }
 
       (!!options.replace ? navigator.replace : navigator.push)(
@@ -262,7 +304,7 @@ export function useResolvedPath(to: To): Path {
   let { pathname: locationPathname } = useLocation();
 
   let routePathnamesJson = JSON.stringify(
-    matches.map((match) => match.pathnameBase)
+    getPathContributingMatches(matches).map((match) => match.pathnameBase)
   );
 
   return React.useMemo(
