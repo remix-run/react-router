@@ -666,9 +666,10 @@ export function createRouter(init: RouterInit): Router {
     );
 
     let location = createLocation(state.location, normalizedPath, opts?.state);
-    let historyAction = opts?.replace
-      ? HistoryAction.Replace
-      : HistoryAction.Push;
+    let historyAction =
+      opts?.replace === true || submission != null
+        ? HistoryAction.Replace
+        : HistoryAction.Push;
     let resetScroll =
       opts && "resetScroll" in opts ? opts.resetScroll : undefined;
 
@@ -678,6 +679,7 @@ export function createRouter(init: RouterInit): Router {
       // render at the right errorElement after we match routes
       pendingError: error,
       resetScroll,
+      replace: opts?.replace,
     });
   }
 
@@ -731,6 +733,7 @@ export function createRouter(init: RouterInit): Router {
       pendingError?: ErrorResponse;
       startUninterruptedRevalidation?: boolean;
       resetScroll?: boolean;
+      replace?: boolean;
     }
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one
@@ -795,7 +798,8 @@ export function createRouter(init: RouterInit): Router {
         historyAction,
         location,
         opts.submission,
-        matches
+        matches,
+        { replace: opts.replace }
       );
 
       if (actionOutput.shortCircuited) {
@@ -840,7 +844,8 @@ export function createRouter(init: RouterInit): Router {
     historyAction: HistoryAction,
     location: Location,
     submission: Submission,
-    matches: DataRouteMatch[]
+    matches: DataRouteMatch[],
+    opts?: { replace?: boolean }
   ): Promise<HandleActionResult> {
     isRevalidationRequired = true;
 
@@ -911,7 +916,12 @@ export function createRouter(init: RouterInit): Router {
         location: createLocation(state.location, result.location),
         ...submission,
       };
-      await startRedirectNavigation(result, redirectNavigation);
+      // By default we use a push redirect here since the user redirecting from
+      // the action already handles avoiding us backing into the POST navigation
+      // However, if they specifically used <Form replace={true}> we should
+      // respect that
+      let isPush = opts?.replace !== true;
+      await startRedirectNavigation(result, redirectNavigation, isPush);
       return { shortCircuited: true };
     }
 
@@ -1382,7 +1392,8 @@ export function createRouter(init: RouterInit): Router {
   // Utility function to handle redirects returned from an action or loader
   async function startRedirectNavigation(
     redirect: RedirectResult,
-    navigation: Navigation
+    navigation: Navigation,
+    isPush = false
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
@@ -1391,9 +1402,11 @@ export function createRouter(init: RouterInit): Router {
       navigation.location,
       "Expected a location on the redirect navigation"
     );
-    await startNavigation(HistoryAction.Replace, navigation.location, {
-      overrideNavigation: navigation,
-    });
+    await startNavigation(
+      isPush ? HistoryAction.Push : HistoryAction.Replace,
+      navigation.location,
+      { overrideNavigation: navigation }
+    );
   }
 
   function deleteFetcher(key: string): void {

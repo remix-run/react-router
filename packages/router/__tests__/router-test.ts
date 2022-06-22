@@ -1955,7 +1955,7 @@ describe("a router", () => {
     });
   });
 
-  describe("POP navigations after action redirect", () => {
+  describe("POP navigations", () => {
     it("does a normal load when backing into an action redirect", async () => {
       let t = initializeTmTest();
       let A = await t.navigate("/foo", {
@@ -1979,13 +1979,130 @@ describe("a router", () => {
         baz: "C LOADER",
       });
 
-      let D = await t.navigate(-2);
+      let D = await t.navigate(-1);
       await D.loaders.bar.resolve("D LOADER");
       expect(D.loaders.root.stub.mock.calls.length).toBe(0);
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT DATA",
         bar: "D LOADER",
       });
+    });
+
+    it("navigates correctly using POP navigations", async () => {
+      let t = initializeTmTest();
+
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state.location.pathname).toEqual("/foo");
+
+      let B = await t.navigate("/bar");
+      await B.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+
+      let C = await t.navigate(-1);
+      await C.loaders.foo.resolve("FOO*");
+      expect(t.router.state.location.pathname).toEqual("/foo");
+
+      let D = await t.navigate("/baz", { replace: true });
+      await D.loaders.baz.resolve("BAZ");
+      expect(t.router.state.location.pathname).toEqual("/baz");
+
+      // POP to /
+      let E = await t.navigate(-1);
+      await E.loaders.index.resolve("INDEX*");
+      expect(t.router.state.location.pathname).toEqual("/");
+    });
+
+    it("navigates correctly using POP navigations across actions", async () => {
+      let t = initializeTmTest();
+
+      // Navigate to /foo
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state.location.pathname).toEqual("/foo");
+
+      // Navigate to /bar
+      let B = await t.navigate("/bar");
+      await B.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+
+      // Post to /bar (should replace)
+      let C = await t.navigate("/bar", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await C.actions.bar.resolve("BAR ACTION");
+      await C.loaders.root.resolve("ROOT");
+      await C.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+
+      // POP to /foo
+      let D = await t.navigate(-1);
+      await D.loaders.foo.resolve("FOO");
+      expect(t.router.state.location.pathname).toEqual("/foo");
+    });
+
+    it("navigates correctly using POP navigations across action redirects", async () => {
+      let t = initializeTmTest();
+
+      // Navigate to /foo
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state.location.pathname).toEqual("/foo");
+
+      // Navigate to /bar
+      let B = await t.navigate("/bar");
+      let getBarKey = t.router.state.navigation.location?.key;
+      await B.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+
+      // Post to /bar, redirect to /baz
+      let C = await t.navigate("/bar", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      let postBarKey = t.router.state.navigation.location?.key;
+      let D = await C.actions.bar.redirect("/baz");
+      await D.loaders.root.resolve("ROOT");
+      await D.loaders.baz.resolve("BAZ");
+      expect(t.router.state.location.pathname).toEqual("/baz");
+
+      // POP to /bar
+      let E = await t.navigate(-1);
+      await E.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+      expect(t.router.state.location.key).toBe(getBarKey);
+      expect(t.router.state.location.key).not.toBe(postBarKey);
+    });
+
+    it("navigates correctly using POP navigations across <Form replace> redirects", async () => {
+      let t = initializeTmTest();
+
+      // Navigate to /foo
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state.location.pathname).toEqual("/foo");
+
+      // Navigate to /bar
+      let B = await t.navigate("/bar");
+      await B.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+
+      // Post to /bar, redirect to /baz
+      let C = await t.navigate("/bar", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+        replace: true,
+      });
+      let D = await C.actions.bar.redirect("/baz");
+      await D.loaders.root.resolve("ROOT");
+      await D.loaders.baz.resolve("BAZ");
+      expect(t.router.state.location.pathname).toEqual("/baz");
+
+      // POP to /foo
+      let E = await t.navigate(-1);
+      await E.loaders.foo.resolve("FOO");
+      expect(t.router.state.location.pathname).toEqual("/foo");
     });
   });
 
@@ -4602,7 +4719,7 @@ describe("a router", () => {
       await N.loaders.root.resolve("ROOT_DATA*");
       await N.loaders.tasks.resolve("TASKS_DATA");
       expect(t.router.state).toMatchObject({
-        historyAction: "PUSH",
+        historyAction: "REPLACE",
         location: { pathname: "/tasks" },
         navigation: IDLE_NAVIGATION,
         revalidation: "idle",
@@ -4614,7 +4731,7 @@ describe("a router", () => {
           tasks: "TASKS_ACTION",
         },
       });
-      expect(t.history.push).toHaveBeenCalledWith(
+      expect(t.history.replace).toHaveBeenCalledWith(
         t.router.state.location,
         t.router.state.location.state
       );
@@ -4814,7 +4931,7 @@ describe("a router", () => {
       await R.loaders.root.resolve("ROOT_DATA*");
       await R.loaders.tasks.resolve("TASKS_DATA*");
       expect(t.router.state).toMatchObject({
-        historyAction: "PUSH",
+        historyAction: "REPLACE",
         location: { pathname: "/tasks" },
         navigation: IDLE_NAVIGATION,
         revalidation: "idle",
@@ -4823,7 +4940,7 @@ describe("a router", () => {
           tasks: "TASKS_DATA*",
         },
       });
-      expect(t.history.push).toHaveBeenCalledWith(
+      expect(t.history.replace).toHaveBeenCalledWith(
         t.router.state.location,
         t.router.state.location.state
       );
@@ -4901,7 +5018,7 @@ describe("a router", () => {
       await R.loaders.root.resolve("ROOT_DATA*");
       await R.loaders.tasks.resolve("TASKS_DATA*");
       expect(t.router.state).toMatchObject({
-        historyAction: "PUSH",
+        historyAction: "REPLACE",
         location: { pathname: "/tasks" },
         navigation: IDLE_NAVIGATION,
         revalidation: "idle",
@@ -4913,7 +5030,7 @@ describe("a router", () => {
           tasks: "TASKS_ACTION",
         },
       });
-      expect(t.history.push).toHaveBeenCalledWith(
+      expect(t.history.replace).toHaveBeenCalledWith(
         t.router.state.location,
         t.router.state.location.state
       );

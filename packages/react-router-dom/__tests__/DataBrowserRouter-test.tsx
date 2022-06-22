@@ -772,14 +772,13 @@ function testDomRouter(
       let { container } = render(
         <TestDataRouter window={getWindow("/")} hydrationData={{}}>
           <Route element={<Layout />}>
-            <Route index loader={() => "index"} element={<h1>index</h1>} />
-            <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
+            <Route index loader={() => "index"} element={<h1>Index Page</h1>} />
             <Route
-              path="2"
-              action={() => "action"}
-              loader={() => "2"}
-              element={<h1>Page 2</h1>}
+              path="form"
+              action={() => "action data"}
+              element={<FormPage />}
             />
+            <Route path="result" element={<h1>Result Page</h1>} />
           </Route>
         </TestDataRouter>
       );
@@ -788,11 +787,7 @@ function testDomRouter(
         let navigate = useNavigate();
         return (
           <>
-            <Link to="1">Go to 1</Link>
-            <Form action="2" method="post">
-              <input name="test" defaultValue="value" />
-              <button type="submit">Submit Form</button>
-            </Form>
+            <Link to="form">Go to Form</Link>
             <button onClick={() => navigate(-1)}>Go back</button>
             <div className="output">
               <Outlet />
@@ -801,55 +796,100 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector(".output")))
-        .toMatchInlineSnapshot(`
-        "<div
-          class=\\"output\\"
-        >
-          <h1>
-            index
-          </h1>
-        </div>"
-      `);
+      function FormPage() {
+        let data = useActionData();
+        return (
+          <Form method="post">
+            <p>Form Page</p>
+            <p>{data}</p>
+            <input name="test" defaultValue="value" />
+            <button type="submit">Submit</button>
+          </Form>
+        );
+      }
 
-      fireEvent.click(screen.getByText("Go to 1"));
-      await waitFor(() => screen.getByText("Page 1"));
-      expect(getHtml(container.querySelector(".output")))
-        .toMatchInlineSnapshot(`
-        "<div
-          class=\\"output\\"
-        >
-          <h1>
-            Page 1
-          </h1>
-        </div>"
-      `);
+      let html = () => getHtml(container.querySelector(".output"));
 
-      fireEvent.click(screen.getByText("Submit Form"));
-      await waitFor(() => screen.getByText("Page 2"));
-      expect(getHtml(container.querySelector(".output")))
-        .toMatchInlineSnapshot(`
-        "<div
-          class=\\"output\\"
-        >
-          <h1>
-            Page 2
-          </h1>
-        </div>"
-      `);
+      // Start on index page
+      expect(html()).toMatch("Index Page");
 
+      // Navigate to form page
+      fireEvent.click(screen.getByText("Go to Form"));
+      await waitFor(() => screen.getByText("Form Page"));
+      expect(html()).not.toMatch("action result");
+
+      // Submit without redirect does a replace
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("action data"));
+      expect(html()).toMatch("Form Page");
+      expect(html()).toMatch("action data");
+
+      // Back navigate to index page
       fireEvent.click(screen.getByText("Go back"));
-      await waitFor(() => screen.getByText("index"));
-      expect(getHtml(container.querySelector(".output")))
-        .toMatchInlineSnapshot(`
-        "<div
-          class=\\"output\\"
-        >
-          <h1>
-            index
-          </h1>
-        </div>"
-      `);
+      await waitFor(() => screen.getByText("Index Page"));
+    });
+
+    it('Uses a PUSH navigation on <Form method="post"> if it redirects', async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route element={<Layout />}>
+            <Route index loader={() => "index"} element={<h1>Index Page</h1>} />
+            <Route
+              path="form"
+              action={() =>
+                new Response(null, {
+                  status: 302,
+                  headers: { Location: "/result" },
+                })
+              }
+              element={<FormPage />}
+            />
+            <Route path="result" element={<h1>Result Page</h1>} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Layout() {
+        let navigate = useNavigate();
+        return (
+          <>
+            <Link to="form">Go to Form</Link>
+            <button onClick={() => navigate(-1)}>Go back</button>
+            <div className="output">
+              <Outlet />
+            </div>
+          </>
+        );
+      }
+
+      function FormPage() {
+        let data = useActionData();
+        return (
+          <Form method="post">
+            <p>Form Page</p>
+            <p>{data}</p>
+            <input name="test" defaultValue="value" />
+            <button type="submit">Submit</button>
+          </Form>
+        );
+      }
+
+      let html = () => getHtml(container.querySelector(".output"));
+
+      // Start on index page
+      expect(html()).toMatch("Index Page");
+
+      // Navigate to form page
+      fireEvent.click(screen.getByText("Go to Form"));
+      await waitFor(() => screen.getByText("Form Page"));
+
+      // Submit with redirect
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("Result Page"));
+
+      // Back navigate to form page
+      fireEvent.click(screen.getByText("Go back"));
+      await waitFor(() => screen.getByText("Form Page"));
     });
 
     it('defaults useSubmit({ method: "get" }) to be a PUSH navigation', async () => {

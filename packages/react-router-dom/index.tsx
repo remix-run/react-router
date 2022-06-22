@@ -775,10 +775,7 @@ function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
 
       let href = url.pathname + url.search;
       let opts = {
-        // If replace is not specified, we'll default to false for GET and
-        // true otherwise
-        replace:
-          options.replace != null ? options.replace === true : method !== "get",
+        replace: options.replace,
         formData,
         formMethod: method as FormMethod,
         formEncType: encType as FormEncType,
