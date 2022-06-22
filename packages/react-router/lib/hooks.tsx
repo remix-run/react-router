@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  isDeferredError,
   isRouteErrorResponse,
   Location,
   normalizePathname,
@@ -713,6 +714,12 @@ export function useRouteError() {
   let state = useDataRouterState(DataRouterHook.UseRouteError);
   let route = React.useContext(RouteContext);
   let thisRoute = route.matches[route.matches.length - 1];
+  let deferredValue = React.useContext(DeferredContext);
+
+  // Return deferred errors if we're inside a Deferred errorElement
+  if (deferredValue && isDeferredError(deferredValue)) {
+    return deferredValue;
+  }
 
   // If this was a render error, we put it in a RouteError context inside
   // of RenderErrorBoundary
@@ -731,12 +738,14 @@ export function useRouteError() {
 }
 
 /**
- * Returns the data from the nearest ancestor <Deferred /> value. `data` may be
- * a `DeferredError` if no `errorElement` was specified, so usage should be
- * guarded with `isDeferredError` in those scenarios.
+ * Returns the happy-path data from the nearest ancestor <Deferred /> value
  */
-export function useDeferred() {
-  return React.useContext(DeferredContext);
+export function useDeferredData() {
+  let value = React.useContext(DeferredContext);
+  if (isDeferredError(value)) {
+    return null;
+  }
+  return value;
 }
 
 const alreadyWarned: Record<string, boolean> = {};

@@ -119,7 +119,7 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
-  useDeferred,
+  useDeferredData,
   useHref,
   useInRouterContext,
   useLoaderData,

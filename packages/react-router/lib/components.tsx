@@ -16,7 +16,6 @@ import {
   createMemoryRouter,
   invariant,
   isDeferredError,
-  normalizePathname,
   parsePath,
   stripBasename,
   warning,
@@ -32,7 +31,7 @@ import {
   DeferredContext,
 } from "./context";
 import {
-  useDeferred,
+  useDeferredData,
   useInRouterContext,
   useNavigate,
   useOutlet,
@@ -462,11 +461,17 @@ interface DeferredWrapperProps {
 function DeferredWrapper({ children, errorElement }: DeferredWrapperProps) {
   let data = React.useContext(DeferredContext);
   if (data instanceof Promise) {
+    // throw to the suspense boundary
     throw data;
   }
 
-  if (isDeferredError(data) && errorElement) {
-    return <>{errorElement}</>;
+  if (isDeferredError(data)) {
+    if (errorElement) {
+      return <>{errorElement}</>;
+    } else {
+      // Throw to the nearest route-level error boundary
+      throw data;
+    }
   }
 
   return (
@@ -488,8 +493,7 @@ export interface ResolveDeferredProps {
  * @private
  */
 export function ResolveDeferred({ children }: ResolveDeferredProps) {
-  let data = useDeferred();
-  return children({ data });
+  return children(useDeferredData());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
