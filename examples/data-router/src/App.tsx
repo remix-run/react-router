@@ -257,16 +257,16 @@ function DeferredPage() {
     <div>
       <p>{data.critical1}</p>
       <p>{data.critical2}</p>
-      <Deferred data={data.lazyResolved} fallback={<p>should not see me!</p>}>
+      <Deferred value={data.lazyResolved} fallback={<p>should not see me!</p>}>
         <RenderDeferredData />
       </Deferred>
-      <Deferred data={data.lazy1} fallback={<p>loading 1...</p>}>
+      <Deferred value={data.lazy1} fallback={<p>loading 1...</p>}>
         <RenderDeferredData />
       </Deferred>
-      <Deferred data={data.lazy2} fallback={<p>loading 2...</p>}>
+      <Deferred value={data.lazy2} fallback={<p>loading 2...</p>}>
         <RenderDeferredData />
       </Deferred>
-      <Deferred data={data.lazy3} fallback={<p>loading 3...</p>}>
+      <Deferred value={data.lazy3} fallback={<p>loading 3...</p>}>
         {(data: any) => <p>{data}</p>}
       </Deferred>
       <Deferred
@@ -295,7 +295,7 @@ function DeferredChild() {
   return (
     <div>
       <p>{data.critical}</p>
-      <Deferred data={data.lazy} fallback={<p>loading child...</p>}>
+      <Deferred value={data.lazy} fallback={<p>loading child...</p>}>
         <RenderDeferredData />
       </Deferred>
     </div>

@@ -57,7 +57,7 @@ function DeferredPage() {
   return (
     <>
       <p>Critical Data: {data.critical}</p>
-      <Deferred data={data.lazy} fallback={<p>Loading...</p>}>
+      <Deferred value={data.lazy} fallback={<p>Loading...</p>}>
         {({ data }) =>
           isDeferredError(data) ? <p>Error! {data.message}</p> : <p>{data}</p>
         }

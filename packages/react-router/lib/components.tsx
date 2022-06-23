@@ -424,7 +424,7 @@ export interface DeferredResolveRenderFunction {
 
 export interface DeferredProps extends Omit<React.SuspenseProps, "children"> {
   children: React.ReactNode | DeferredResolveRenderFunction;
-  data: any;
+  value: any;
   errorElement?: React.ReactNode;
 }
 
@@ -434,12 +434,12 @@ export interface DeferredProps extends Omit<React.SuspenseProps, "children"> {
  */
 export function Deferred({
   children,
-  data,
+  value,
   fallback,
   errorElement,
 }: DeferredProps) {
   return (
-    <DeferredContext.Provider value={data}>
+    <DeferredContext.Provider value={value}>
       <React.Suspense fallback={fallback}>
         <DeferredWrapper children={children} errorElement={errorElement} />
       </React.Suspense>
@@ -459,18 +459,18 @@ interface DeferredWrapperProps {
  * or rejects
  */
 function DeferredWrapper({ children, errorElement }: DeferredWrapperProps) {
-  let data = React.useContext(DeferredContext);
-  if (data instanceof Promise) {
+  let value = React.useContext(DeferredContext);
+  if (value instanceof Promise) {
     // throw to the suspense boundary
-    throw data;
+    throw value;
   }
 
-  if (isDeferredError(data)) {
+  if (isDeferredError(value)) {
     if (errorElement) {
       return <>{errorElement}</>;
     } else {
       // Throw to the nearest route-level error boundary
-      throw data;
+      throw value;
     }
   }
 

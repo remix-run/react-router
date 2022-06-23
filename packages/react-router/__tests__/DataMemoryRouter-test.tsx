@@ -1717,6 +1717,7 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
+      // @ts-expect-error
       router.navigate("/child");
       await waitFor(() => screen.getByText("Kaboom!"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -1732,6 +1733,7 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
+      // @ts-expect-error
       router.navigate(-1);
       await waitFor(() => {
         expect(queryByText(container, "Kaboom!")).not.toBeInTheDocument();
@@ -1813,6 +1815,7 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
+      // @ts-expect-error
       router.navigate("/child");
       await waitFor(() => screen.getByText("Kaboom!"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -1852,6 +1855,7 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
+      // @ts-expect-error
       router.navigate(-1);
       await waitFor(() => {
         expect(queryByText(container, "Kaboom!")).not.toBeInTheDocument();
@@ -1903,7 +1907,7 @@ describe("<DataMemoryRouter>", () => {
         return (
           <>
             <p>{data.critical}</p>
-            <Deferred data={data.lazy} fallback={<p>Loading...</p>}>
+            <Deferred value={data.lazy} fallback={<p>Loading...</p>}>
               <LazyData />
             </Deferred>
           </>
@@ -2020,7 +2024,7 @@ describe("<DataMemoryRouter>", () => {
         return (
           <>
             <p>{data.critical}</p>
-            <Deferred data={data.lazy} fallback={<p>Loading...</p>}>
+            <Deferred value={data.lazy} fallback={<p>Loading...</p>}>
               {(data) => <p>{data}</p>}
             </Deferred>
           </>
@@ -2134,7 +2138,7 @@ describe("<DataMemoryRouter>", () => {
           <>
             <p>{data.critical}</p>
             <Deferred
-              data={data.lazy}
+              value={data.lazy}
               fallback={<p>Loading...</p>}
               errorElement={<LazyError />}
             >
@@ -2149,7 +2153,7 @@ describe("<DataMemoryRouter>", () => {
       }
       function LazyError() {
         let data = useRouteError();
-        return <p>Error:{data.message}</p>;
+        return <p>Handled Error:{data.message}</p>;
       }
 
       fireEvent.click(screen.getByText("Link to Bar"));
@@ -2200,7 +2204,7 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      barValueDfd.reject("Kaboom!");
+      barValueDfd.reject(new Error("Kaboom!"));
       await waitFor(() => screen.getByText(/Kaboom!/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
@@ -2217,8 +2221,8 @@ describe("<DataMemoryRouter>", () => {
               CRITICAL
             </p>
             <p>
-              Error:
-              Kaboom!
+              Handled Error:
+              Error: Kaboom!
             </p>
           </div>
         </div>"
@@ -2260,7 +2264,7 @@ describe("<DataMemoryRouter>", () => {
         return (
           <>
             <p>{data.critical}</p>
-            <Deferred data={data.lazy} fallback={<p>Loading...</p>}>
+            <Deferred value={data.lazy} fallback={<p>Loading...</p>}>
               <LazyData />
             </Deferred>
           </>
@@ -2323,7 +2327,7 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      barValueDfd.reject("Kaboom!");
+      barValueDfd.reject(new Error("Kaboom!"));
       await waitFor(() => screen.getByText(/Kaboom!/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
@@ -2338,7 +2342,7 @@ describe("<DataMemoryRouter>", () => {
             </p>
             <p>
               Route Error:
-              Kaboom!
+              Error: Kaboom!
             </p>
           </div>
         </div>"
@@ -2374,15 +2378,8 @@ function defer() {
 }
 
 function getHtml(container: HTMLElement) {
-  return prettyDOM(container, null, {
+  return prettyDOM(container, undefined, {
     highlight: false,
-    theme: {
-      comment: null,
-      content: null,
-      prop: null,
-      tag: null,
-      value: null,
-    },
   });
 }
 
@@ -2402,7 +2399,11 @@ function MemoryNavigate({
   let onClickHandler = React.useCallback(
     async (event: React.MouseEvent) => {
       event.preventDefault();
-      router.navigate(to, { formMethod, formData });
+      if (formMethod && formData) {
+        router!.navigate(to, { formMethod, formData });
+      } else {
+        router!.navigate(to);
+      }
     },
     [router, to, formMethod, formData]
   );
