@@ -6,6 +6,7 @@ import {
   FormEncType,
   FormMethod,
   invariant,
+  isRouteErrorResponse,
   RouteMatch,
   RouteObject,
   Submission,
@@ -1593,11 +1594,29 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
     return queryImpl(request);
   }
 
-  function queryRoute(
+  async function queryRoute(
     request: Request,
     routeId: string
   ): Promise<StaticRouterState | Response> {
-    return queryImpl(request, routeId);
+    let state = await queryImpl(request, routeId);
+    if (state instanceof Response) {
+      return state;
+    }
+
+    // Pick off the right state value to return
+    let routeData = [state.errors, state.actionData, state.loaderData].find(
+      (v) => v
+    );
+    let value = Object.values(routeData || {})[0];
+
+    if (isRouteErrorResponse(value)) {
+      return new Response(value.data, {
+        status: value.status,
+        statusText: value.statusText,
+      });
+    }
+
+    return value;
   }
 
   async function queryImpl(
@@ -1624,7 +1643,7 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
       }
 
       if (request.method === "GET") {
-        return await loadRouteData(request, matches);
+        return await loadRouteData(request, matches, routeId != null);
       } else {
         return await submit(
           request,
@@ -1671,12 +1690,12 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
         request,
         actionMatch,
         request.signal,
-        false
+        true,
+        isRouteRequest
       );
 
       if (request.signal.aborted) {
-        // TODO: Is this the right behavior?
-        throw new Error("aborted query()");
+        throw new Error("query() aborted");
       }
     }
 
@@ -1712,12 +1731,12 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-      return await loadRouteData(request, matches, undefined, {
+      return await loadRouteData(request, matches, isRouteRequest, undefined, {
         [boundaryMatch.route.id]: result.error,
       });
     }
 
-    return await loadRouteData(request, matches, {
+    return await loadRouteData(request, matches, isRouteRequest, {
       [actionMatch.route.id]: result.data,
     });
   }
@@ -1725,6 +1744,7 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
   async function loadRouteData(
     request: Request,
     matches: DataRouteMatch[],
+    isRouteRequest: boolean,
     pendingActionData?: RouteData,
     pendingActionError?: RouteData
   ): Promise<StaticRouterState | Response> {
@@ -1738,19 +1758,25 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
       return {
         matches,
         loaderData: {},
-        actionData: null,
-        errors: null,
+        actionData: pendingActionData || null,
+        errors: pendingActionError || null,
       };
     }
 
     let results = await Promise.all([
       ...matchesToLoad.map((m) =>
-        callLoaderOrAction("loader", request, m, request.signal, false)
+        callLoaderOrAction(
+          "loader",
+          request,
+          m,
+          request.signal,
+          true,
+          isRouteRequest
+        )
       ),
     ]);
     if (request.signal.aborted) {
-      // TODO: Is this the right behavior?
-      throw new Error("aborted query()");
+      throw new Error("query() aborted");
     }
 
     // Process and commit output from loaders
@@ -2069,7 +2095,8 @@ async function callLoaderOrAction(
   request: Request,
   match: DataRouteMatch,
   signal: AbortSignal,
-  processRedirects: boolean = true
+  skipRedirects: boolean = false,
+  isRouteRequest: boolean = false
 ): Promise<DataResult> {
   let resultType = ResultType.data;
   let result;
@@ -2096,19 +2123,25 @@ async function callLoaderOrAction(
     let status = result.status;
     let location = result.headers.get("Location");
 
+    // For SSR single-route requests, we want to hand Responses back directly
+    // without uwrapping
+    if (isRouteRequest) {
+      throw result;
+    }
+
     if (status >= 300 && status <= 399 && location != null) {
-      // Don't process redirects in the router during SSR.  Instead, throw the
-      // Response and let the server handle it with an HTTP redirect
-      if (processRedirects) {
-        return {
-          type: ResultType.redirect,
-          status,
-          location,
-          revalidate: result.headers.get("X-Remix-Revalidate") !== null,
-        };
-      } else {
+      // Don't process redirects in the router during SSR document requests.
+      // Instead, throw the Response and let the server handle it with an HTTP
+      // redirect
+      if (skipRedirects) {
         throw result;
       }
+      return {
+        type: ResultType.redirect,
+        status,
+        location,
+        revalidate: result.headers.get("X-Remix-Revalidate") !== null,
+      };
     }
 
     let data: any;
