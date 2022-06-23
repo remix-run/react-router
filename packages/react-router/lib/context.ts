@@ -4,15 +4,12 @@ import type {
   Location,
   RouteMatch,
   Router,
-  StaticRouter,
   To,
 } from "@remix-run/router";
 import { Action as NavigationType } from "@remix-run/router";
 
 // Contexts for data routers
-export const DataRouterContext = React.createContext<
-  Router | StaticRouter | null
->(null);
+export const DataRouterContext = React.createContext<Router | null>(null);
 if (__DEV__) {
   DataRouterContext.displayName = "DataRouter";
 }

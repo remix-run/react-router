@@ -15,7 +15,6 @@ import {
   createMemoryHistory,
   createMemoryRouter,
   invariant,
-  normalizePathname,
   parsePath,
   stripBasename,
   warning,

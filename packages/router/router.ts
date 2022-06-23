@@ -220,23 +220,24 @@ export interface RouterInit {
 /**
  * State returned from a server-side query() call
  */
-export type StaticRouterState = Pick<
+export type StaticHandlerState = Pick<
   RouterState,
-  "matches" | "loaderData" | "actionData" | "errors"
+  "location" | "matches" | "loaderData" | "actionData" | "errors"
 >;
 
 /**
  * A StaticRouter instance manages a singular SSR navigation/fetch event
  */
-export interface StaticRouter {
-  query(request: Request): Promise<StaticRouterState | Response>;
+export interface StaticHandler {
+  dataRoutes: DataRouteObject[];
+  query(request: Request): Promise<StaticHandlerState | Response>;
   queryRoute(request: Request, routeId: string): Promise<any>;
 }
 
 /**
  * Initialization options for createStaticRouter
  */
-export interface StaticRouterInit {
+export interface StaticHandlerInit {
   routes: RouteObject[];
 }
 
@@ -673,12 +674,6 @@ export function createRouter(init: RouterInit): Router {
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
   }
-
-  // TODO:
-  //  - evaluate remaining usages of location/href in navigate/fetch.  Where
-  //    else could we leverage Request/URL?
-  //  - Use request.signal and remove signal param to data functions
-  //  - currentUrl/nextRequest to shouldRevalidate instead of URL+submission info?
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
   // replace with an optional submission
@@ -1582,7 +1577,7 @@ export function createRouter(init: RouterInit): Router {
 //#region createStaticRouter
 ////////////////////////////////////////////////////////////////////////////////
 
-export function createStaticHandler(init: StaticRouterInit): StaticRouter {
+export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
   invariant(
     init.routes.length > 0,
     "You must provide a non-empty routes array to createStaticRouter"
@@ -1590,21 +1585,27 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
 
   let dataRoutes = convertRoutesToDataRoutes(init.routes);
 
-  function query(request: Request): Promise<StaticRouterState | Response> {
-    return queryImpl(request);
+  async function query(
+    request: Request
+  ): Promise<StaticHandlerState | Response> {
+    let { location, result } = await queryImpl(request);
+    if (result instanceof Response) {
+      return result;
+    }
+    // When returning StaticRouterState, we patch back in the location here
+    // since we need it for React Context.  But this helps keep our submit and
+    // loadRouteData operating on a Request instead of a Location
+    return { location, ...result };
   }
 
-  async function queryRoute(
-    request: Request,
-    routeId: string
-  ): Promise<StaticRouterState | Response> {
-    let state = await queryImpl(request, routeId);
-    if (state instanceof Response) {
-      return state;
+  async function queryRoute(request: Request, routeId: string): Promise<any> {
+    let { result } = await queryImpl(request, routeId);
+    if (result instanceof Response) {
+      return result;
     }
 
     // Pick off the right state value to return
-    let routeData = [state.errors, state.actionData, state.loaderData].find(
+    let routeData = [result.errors, result.actionData, result.loaderData].find(
       (v) => v
     );
     let value = Object.values(routeData || {})[0];
@@ -1622,39 +1623,42 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
   async function queryImpl(
     request: Request,
     routeId?: string
-  ): Promise<StaticRouterState | Response> {
+  ): Promise<{
+    location: Location;
+    result: Omit<StaticHandlerState, "location"> | Response;
+  }> {
+    invariant(
+      request.method !== "HEAD",
+      "query() does not support HEAD requests"
+    );
+    invariant(
+      request.signal,
+      "query() requests must contain an AbortController signal"
+    );
+
+    let { location, matches, shortCircuitState } = matchRequest(
+      request,
+      routeId
+    );
+
     try {
-      invariant(
-        request.method !== "HEAD",
-        "query() does not support HEAD requests"
-      );
-      invariant(
-        request.signal,
-        "query() requests must contain an AbortController signal"
-      );
-
-      let { location, matches, shortCircuitState } = matchRequest(
-        request,
-        routeId
-      );
-
       if (shortCircuitState) {
-        return shortCircuitState;
+        return { location, result: shortCircuitState };
       }
 
-      if (request.method === "GET") {
-        return await loadRouteData(request, matches, routeId != null);
-      } else {
-        return await submit(
-          request,
-          matches,
-          getTargetMatch(matches, location),
-          routeId != null
-        );
-      }
+      let result =
+        request.method === "GET"
+          ? await loadRouteData(request, matches, routeId != null)
+          : await submit(
+              request,
+              matches,
+              getTargetMatch(matches, location),
+              routeId != null
+            );
+      return { location, result };
     } catch (e) {
       if (e instanceof Response) {
-        return e;
+        return { location, result: e };
       }
       throw e;
     }
@@ -1665,7 +1669,7 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
     matches: DataRouteMatch[],
     actionMatch: DataRouteMatch,
     isRouteRequest: boolean
-  ): Promise<StaticRouterState | Response> {
+  ): Promise<Omit<StaticHandlerState, "location"> | Response> {
     let result: DataResult;
     if (!actionMatch.route.action) {
       let href = createHref(new URL(request.url));
@@ -1700,11 +1704,16 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
     }
 
     if (isRedirectResult(result)) {
-      // TODO: clean this up?
-      invariant(
-        false,
-        "Should not get here, redirects are thrown in static routers"
-      );
+      // Uhhhh - this should never happen, we should always throw these from
+      // calLoadOrAction, but the type narrowing here keeps TS happy and we
+      // can get back on the "throw all redirect responses" train here should
+      // this ever happen :/
+      throw new Response(null, {
+        status: result.status,
+        headers: {
+          Location: result.location,
+        },
+      });
     }
 
     if (isRouteRequest) {
@@ -1747,7 +1756,7 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
     isRouteRequest: boolean,
     pendingActionData?: RouteData,
     pendingActionError?: RouteData
-  ): Promise<StaticRouterState | Response> {
+  ): Promise<Omit<StaticHandlerState, "location"> | Response> {
     let matchesToLoad = getLoaderMatchesUntilBoundary(
       matches,
       Object.keys(pendingActionError || {})[0]
@@ -1802,7 +1811,7 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
     location: Location;
     matches: DataRouteMatch[];
     routeMatch?: DataRouteMatch;
-    shortCircuitState?: StaticRouterState;
+    shortCircuitState?: Omit<StaticHandlerState, "location">;
   } {
     let url = new URL(req.url);
     let location = createLocation("", createPath(url));
@@ -1836,6 +1845,7 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
   }
 
   return {
+    dataRoutes,
     query,
     queryRoute,
   };
@@ -2124,7 +2134,7 @@ async function callLoaderOrAction(
     let location = result.headers.get("Location");
 
     // For SSR single-route requests, we want to hand Responses back directly
-    // without uwrapping
+    // without unwrapping
     if (isRouteRequest) {
       throw result;
     }

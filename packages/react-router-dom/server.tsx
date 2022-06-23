@@ -1,10 +1,12 @@
 import * as React from "react";
 import type {
   DataRouteObject,
+  RevalidationState,
   Router as DataRouter,
   RouterState,
+  StaticHandlerState,
 } from "@remix-run/router";
-import { Action, invariant } from "@remix-run/router";
+import { IDLE_NAVIGATION, Action, invariant } from "@remix-run/router";
 import {
   Location,
   To,
@@ -58,19 +60,21 @@ export function StaticRouter({
 }
 
 export interface DataStaticRouterProps {
-  router: DataRouter;
+  dataRoutes: DataRouteObject[];
+  state: StaticHandlerState;
 }
 
 /**
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function DataStaticRouter({ router }: DataStaticRouterProps) {
+export function DataStaticRouter({ dataRoutes, state }: DataStaticRouterProps) {
   invariant(
-    router.state.initialized,
-    "You must provide an initialized router to <DataStaticRouter>"
+    dataRoutes && state,
+    "You must provide `routes` and `state` to <DataStaticRouter>"
   );
 
+  let router = getStatelessRouter(dataRoutes, state);
   return (
     <DataRouterContext.Provider value={router}>
       <DataRouterStateContext.Provider value={router.state}>
@@ -81,7 +85,7 @@ export function DataStaticRouter({ router }: DataStaticRouterProps) {
           static={true}
         >
           <DataStaticRoutes
-            routes={router.routes}
+            dataRoutes={router.routes}
             location={router.state.location}
           />
         </Router>
@@ -91,15 +95,15 @@ export function DataStaticRouter({ router }: DataStaticRouterProps) {
 }
 
 interface DataStaticRoutesProps {
-  routes: DataRouteObject[];
+  dataRoutes: DataRouteObject[];
   location: RouterState["location"];
 }
 
 function DataStaticRoutes({
-  routes,
+  dataRoutes,
   location,
 }: DataStaticRoutesProps): React.ReactElement | null {
-  return useRoutes(routes, location);
+  return useRoutes(dataRoutes, location);
 }
 
 function getStatelessNavigator() {
@@ -141,5 +145,63 @@ function getStatelessNavigator() {
           `environment.`
       );
     },
+  };
+}
+
+function getStatelessRouter(
+  dataRoutes: DataRouteObject[],
+  state: StaticHandlerState
+): DataRouter {
+  let msg = (method: string) =>
+    `You cannot use router.${method}() on the server because it is a stateless environment`;
+
+  return {
+    get state() {
+      return {
+        historyAction: Action.Pop,
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        restoreScrollPosition: null,
+        resetScrollPosition: true,
+        revalidation: "idle" as RevalidationState,
+        fetchers: new Map(),
+        // state provides location, matches, loaderData, actionData, and errors
+        ...state,
+      };
+    },
+    get routes() {
+      return dataRoutes;
+    },
+    initialize() {
+      throw msg("initialize");
+    },
+    subscribe() {
+      throw msg("subscribe");
+    },
+    enableScrollRestoration() {
+      throw msg("enableScrollRestoration");
+    },
+    navigate() {
+      throw msg("navigate");
+    },
+    fetch() {
+      throw msg("fetch");
+    },
+    revalidate() {
+      throw msg("revalidate");
+    },
+    createHref() {
+      throw msg("createHref");
+    },
+    getFetcher() {
+      throw msg("getFetcher");
+    },
+    deleteFetcher() {
+      throw msg("deleteFetcher");
+    },
+    dispose() {
+      throw msg("dispose");
+    },
+    _internalFetchControllers: new Map(),
   };
 }

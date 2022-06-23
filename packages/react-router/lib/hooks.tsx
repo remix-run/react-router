@@ -2,7 +2,6 @@ import * as React from "react";
 import {
   isRouteErrorResponse,
   Location,
-  normalizePathname,
   ParamParseKey,
   Params,
   Path,

@@ -7,7 +7,6 @@ import type {
   LoaderFunction,
   RouteMatch,
   Router,
-  RouterInit,
   RouterNavigateOptions,
 } from "@remix-run/router";
 import {
@@ -6747,6 +6746,7 @@ describe("a router", () => {
             child: "CHILD LOADER",
           },
           errors: null,
+          location: { pathname: "/parent/child" },
           matches: [{ route: { id: "parent" } }, { route: { id: "child" } }],
         });
       });
@@ -6777,6 +6777,7 @@ describe("a router", () => {
             child: "CHILD LOADER",
           },
           errors: null,
+          location: { pathname: "/parent/child" },
           matches: [{ route: { id: "parent" } }, { route: { id: "child" } }],
         });
       });
