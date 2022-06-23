@@ -189,7 +189,9 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       // as possible, but inquirer will allow users to retry input rather than
       // stop the process.
       if (flags.template) {
-        await validateTemplate(flags.template);
+        await validateTemplate(flags.template, {
+          githubToken: process.env.GITHUB_TOKEN,
+        });
       }
       if (projectPath) {
         await validateNewProjectPath(projectPath);

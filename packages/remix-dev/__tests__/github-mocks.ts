@@ -86,9 +86,60 @@ let githubHandlers: Array<RequestHandler> = [
     return res(ctx.status(200));
   }),
   rest.head(
+    `https://api.github.com/repos/error-username/:status`,
+    async (req, res, ctx) => {
+      return res(ctx.status(Number(req.params.status)));
+    }
+  ),
+  rest.head(
+    `https://api.github.com/repos/private-org/private-repo`,
+    async (req, res, ctx) => {
+      let status =
+        req.headers.get("Authorization") === "token valid-token" ? 200 : 404;
+      return res(ctx.status(status));
+    }
+  ),
+  rest.head(
+    `https://api.github.com/repos/:owner/:repo`,
+    async (req, res, ctx) => {
+      return res(ctx.status(200));
+    }
+  ),
+  rest.head(
     `https://github.com/:owner/:repo/tree/:branch/:path*`,
     async (req, res, ctx) => {
       return res(ctx.status(200));
+    }
+  ),
+  rest.get(
+    `https://api.github.com/repos/:owner/:repo/git/trees/:branch`,
+    async (req, res, ctx) => {
+      let { owner, repo } = req.params;
+
+      return res(
+        ctx.status(200),
+        ctx.json({
+          sha: "7d906ff5bbb79401a4a8ec1e1799845ed502c0a1",
+          url: `https://api.github.com/repos/${owner}/${repo}/trees/7d906ff5bbb79401a4a8ec1e1799845ed502c0a1`,
+          tree: [
+            {
+              path: "package.json",
+              mode: "040000",
+              type: "blob",
+              sha: "a405cd8355516db9c96e1467fb14b74c97ac0a65",
+              size: 138,
+              url: `https://api.github.com/repos/${owner}/${repo}/git/blobs/a405cd8355516db9c96e1467fb14b74c97ac0a65`,
+            },
+            {
+              path: "stack",
+              mode: "040000",
+              type: "tree",
+              sha: "3f350a670e8fefd58535a9e1878539dc19afb4b5",
+              url: `https://api.github.com/repos/${owner}/${repo}/trees/3f350a670e8fefd58535a9e1878539dc19afb4b5`,
+            },
+          ],
+        })
+      );
     }
   ),
   rest.get(
@@ -231,8 +282,62 @@ let githubHandlers: Array<RequestHandler> = [
     }
   ),
   rest.get(
+    `https://codeload.github.com/private-org/private-repo/tar.gz/:branch`,
+    (req, res, ctx) => {
+      if (req.headers.get("Authorization") !== "token valid-token") {
+        return res(ctx.status(404));
+      }
+      req.params.owner = "private-org";
+      req.params.repo = "private-repo";
+      return sendTarball(req, res, ctx);
+    }
+  ),
+  rest.get(
     `https://codeload.github.com/:owner/:repo/tar.gz/:branch`,
     sendTarball
+  ),
+  rest.get(
+    `https://api.github.com/repos/private-org/private-repo/tarball`,
+    (req, res, ctx) => {
+      if (req.headers.get("Authorization") !== "token valid-token") {
+        return res(ctx.status(404));
+      }
+      req.params.owner = "private-org";
+      req.params.repo = "private-repo";
+
+      return sendTarball(req, res, ctx);
+    }
+  ),
+  rest.get(
+    `https://api.github.com/repos/private-org/private-repo/releases/tags/:tag`,
+    (req, res, ctx) => {
+      if (req.headers.get("Authorization") !== "token valid-token") {
+        return res(ctx.status(404));
+      }
+      let { tag } = req.params;
+      return res(
+        ctx.status(200),
+        ctx.json({
+          assets: [
+            {
+              browser_download_url: `https://github.com/private-org/private-repo/releases/download/${tag}/stack.tar.gz`,
+              id: "working-asset-id",
+            },
+          ],
+        })
+      );
+    }
+  ),
+  rest.get(
+    `https://api.github.com/repos/private-org/private-repo/releases/assets/working-asset-id`,
+    (req, res, ctx) => {
+      if (req.headers.get("Authorization") !== "token valid-token") {
+        return res(ctx.status(404));
+      }
+      req.params.owner = "private-org";
+      req.params.repo = "private-repo";
+      return sendTarball(req, res, ctx);
+    }
   ),
   rest.get(`https://api.github.com/repos/:owner/:repo/tarball`, sendTarball),
   rest.get(`https://api.github.com/repos/:repo*`, async (req, res, ctx) => {

@@ -188,6 +188,45 @@ describe("the create command", () => {
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
+  it("fails for private GitHub username/repo combo without a token", async () => {
+    let projectDir = await getProjectDir("repo");
+    await expect(() =>
+      run([
+        "create",
+        projectDir,
+        "--template",
+        "private-org/private-repo",
+        "--no-install",
+        "--typescript",
+      ])
+    ).rejects.toMatchInlineSnapshot(
+      `[Error: 🚨 The template could not be verified. Please double check that the template is a valid GitHub repository and try again.]`
+    );
+  });
+
+  it("succeeds for private GitHub username/repo combo with a valid token", async () => {
+    let originalGithubToken = process.env.GITHUB_TOKEN;
+    process.env.GITHUB_TOKEN = "valid-token";
+    let projectDir = await getProjectDir("repo");
+    await run([
+      "create",
+      projectDir,
+      "--template",
+      "private-org/private-repo",
+      "--no-install",
+      "--typescript",
+    ]);
+    expect(output.trim()).toBe(
+      getOptOutOfInstallMessage() +
+        "\n\n" +
+        getSuccessMessage(path.join("<TEMP_DIR>", "repo"))
+    );
+    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+
+    process.env.GITHUB_TOKEN = originalGithubToken;
+  });
+
   it("works for remote tarballs", async () => {
     let projectDir = await getProjectDir("remote-tarball");
     await run([
@@ -205,6 +244,46 @@ describe("the create command", () => {
     );
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+  });
+
+  it("fails for private github release tarballs", async () => {
+    let projectDir = await getProjectDir("private-release-tarball");
+    await expect(() =>
+      run([
+        "create",
+        projectDir,
+        "--template",
+        "https://github.com/private-org/private-repo/releases/download/v0.0.1/stack.tar.gz",
+        "--no-install",
+        "--typescript",
+      ])
+    ).rejects.toMatchInlineSnapshot(
+      `[Error: 🚨 The template file could not be verified. Please double check the URL and try again.]`
+    );
+  });
+
+  it("succeeds for private github release tarballs when including token", async () => {
+    let originalGithubToken = process.env.GITHUB_TOKEN;
+    process.env.GITHUB_TOKEN = "valid-token";
+    let projectDir = await getProjectDir("private-release-tarball-with-token");
+    await run([
+      "create",
+      projectDir,
+      "--template",
+      "https://example.com/remix-stack.tar.gz",
+      "--no-install",
+      "--typescript",
+    ]);
+    expect(output.trim()).toBe(
+      getOptOutOfInstallMessage() +
+        "\n\n" +
+        getSuccessMessage(
+          path.join("<TEMP_DIR>", "private-release-tarball-with-token")
+        )
+    );
+    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    process.env.GITHUB_TOKEN = originalGithubToken;
   });
 
   it("works for different branches", async () => {
@@ -543,16 +622,21 @@ describe("the create command", () => {
   describe("errors", () => {
     it("identifies when a github repo is not accessible (403)", async () => {
       let projectDir = await getProjectDir("repo");
-      await expect(() =>
-        run([
-          "create",
-          projectDir,
-          "--template",
-          "error-username/403",
-          "--no-install",
-          "--typescript",
-        ])
-      ).rejects.toMatchInlineSnapshot(
+      await expect(async () => {
+        try {
+          let res = await run([
+            "create",
+            projectDir,
+            "--template",
+            "error-username/403",
+            "--no-install",
+            "--typescript",
+          ]);
+          return res;
+        } catch (err) {
+          throw err;
+        }
+      }).rejects.toMatchInlineSnapshot(
         `[Error: 🚨 The template could not be verified because you do not have access to the repository. Please double check the access rights of this repo and try again.]`
       );
     });
