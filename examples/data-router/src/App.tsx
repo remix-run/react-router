@@ -1,10 +1,8 @@
 import React from "react";
 import {
-  ActionFunction,
-  LoaderFunction,
-  useRevalidator,
-} from "react-router-dom";
-import {
+  type ActionFunction,
+  type Deferrable,
+  type LoaderFunction,
   DataBrowserRouter,
   Deferred,
   Form,
@@ -18,6 +16,7 @@ import {
   useLoaderData,
   useNavigation,
   useParams,
+  useRevalidator,
   useRouteError,
 } from "react-router-dom";
 
@@ -234,6 +233,16 @@ function Todo() {
   );
 }
 
+interface DeferredRouteLoaderData {
+  critical1: string;
+  critical2: string;
+  lazyResolved: Deferrable<string>;
+  lazy1: Deferrable<string>;
+  lazy2: Deferrable<string>;
+  lazy3: Deferrable<string>;
+  lazyError: Deferrable<string>;
+}
+
 const deferredLoader: LoaderFunction = async ({ request }) => {
   return deferred({
     critical1: await new Promise((r) =>
@@ -251,7 +260,7 @@ const deferredLoader: LoaderFunction = async ({ request }) => {
 };
 
 function DeferredPage() {
-  let data = useLoaderData();
+  let data = useLoaderData() as DeferredRouteLoaderData;
   return (
     <div>
       <p>{data.critical1}</p>
@@ -265,7 +274,7 @@ function DeferredPage() {
       <Deferred value={data.lazy2} fallback={<p>loading 2...</p>}>
         <RenderDeferredData />
       </Deferred>
-      <Deferred<string> value={data.lazy3} fallback={<p>loading 3...</p>}>
+      <Deferred value={data.lazy3} fallback={<p>loading 3...</p>}>
         {(data) => <p>{data}</p>}
       </Deferred>
       <Deferred

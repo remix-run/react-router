@@ -63,6 +63,8 @@ export type {
   ActionFunctionArgs,
   DataMemoryRouterProps,
   DataRouteMatch,
+  Deferrable,
+  DeferredProps,
   Fetcher,
   Hash,
   IndexRouteProps,

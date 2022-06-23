@@ -741,7 +741,7 @@ export type Deferrable<T> = never | T | Promise<T>;
 export type ResolvedDeferrable<T> = T extends null | undefined
   ? T
   : T extends Deferrable<infer T2>
-  ? T2 extends PromiseLike<infer T3>
+  ? T2 extends Promise<infer T3>
     ? T3
     : T2
   : T;

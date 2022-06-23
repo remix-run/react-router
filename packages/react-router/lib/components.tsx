@@ -426,7 +426,7 @@ export interface DeferredResolveRenderFunction<Data> {
 export interface DeferredProps<Data>
   extends Omit<React.SuspenseProps, "children"> {
   children: React.ReactNode | DeferredResolveRenderFunction<Data>;
-  value: any;
+  value: Data;
   errorElement?: React.ReactNode;
 }
 
