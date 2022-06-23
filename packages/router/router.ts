@@ -228,8 +228,8 @@ export type StaticRouterState = Pick<
  * A StaticRouter instance manages a singular SSR navigation/fetch event
  */
 export interface StaticRouter {
-  query(req: Request): Promise<StaticRouterState | Response>;
-  queryRoute(req: Request, routeId: string): Promise<any>;
+  query(request: Request): Promise<StaticRouterState | Response>;
+  queryRoute(request: Request, routeId: string): Promise<any>;
 }
 
 /**
@@ -672,6 +672,12 @@ export function createRouter(init: RouterInit): Router {
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
   }
+
+  // TODO:
+  //  - evaluate remaining usages of location/href in navigate/fetch.  Where
+  //    else could we leverage Request/URL?
+  //  - Use request.signal and remove signal param to data functions
+  //  - currentUrl/nextRequest to shouldRevalidate instead of URL+submission info?
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
   // replace with an optional submission
@@ -1583,13 +1589,49 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
 
   let dataRoutes = convertRoutesToDataRoutes(init.routes);
 
-  async function query(req: Request): Promise<StaticRouterState | Response> {
+  function query(request: Request): Promise<StaticRouterState | Response> {
+    return queryImpl(request);
+  }
+
+  function queryRoute(
+    request: Request,
+    routeId: string
+  ): Promise<StaticRouterState | Response> {
+    return queryImpl(request, routeId);
+  }
+
+  async function queryImpl(
+    request: Request,
+    routeId?: string
+  ): Promise<StaticRouterState | Response> {
     try {
-      // TODO: Support HEAD?
-      if (req.method === "GET") {
-        //return await loadImpl(req, false);
+      invariant(
+        request.method !== "HEAD",
+        "query() does not support HEAD requests"
+      );
+      invariant(
+        request.signal,
+        "query() requests must contain an AbortController signal"
+      );
+
+      let { location, matches, shortCircuitState } = matchRequest(
+        request,
+        routeId
+      );
+
+      if (shortCircuitState) {
+        return shortCircuitState;
+      }
+
+      if (request.method === "GET") {
+        return await loadRouteData(request, matches);
       } else {
-        //return await submitImpl(req, false);
+        return await submit(
+          request,
+          matches,
+          getTargetMatch(matches, location),
+          routeId != null
+        );
       }
     } catch (e) {
       if (e instanceof Response) {
@@ -1597,221 +1639,179 @@ export function createStaticHandler(init: StaticRouterInit): StaticRouter {
       }
       throw e;
     }
-    throw new Error("uh ohhhhh not done yet");
   }
 
-  // Trigger a navigation event, which can either be a numerical POP or a PUSH
-  // replace with an optional submission
-  // async function loadImpl(
-  //   req: Request,
-  //   isSingleRouteLoad: boolean
-  // ): Promise<StaticRouterState | Response> {
-  //   let location = createLocation(parsePath(req.url).pathname || "", req.url);
-  //   let matches = matchRoutes(dataRoutes, location);
+  async function submit(
+    request: Request,
+    matches: DataRouteMatch[],
+    actionMatch: DataRouteMatch,
+    isRouteRequest: boolean
+  ): Promise<StaticRouterState | Response> {
+    let result: DataResult;
+    if (!actionMatch.route.action) {
+      let href = createHref(new URL(request.url));
+      if (__DEV__) {
+        console.warn(
+          "You're trying to submit to a route that does not have an action.  To " +
+            "fix this, please add an `action` function to the route for " +
+            `[${href}]`
+        );
+      }
+      result = {
+        type: ResultType.error,
+        error: new ErrorResponse(
+          405,
+          "Method Not Allowed",
+          `No action found for [${href}]`
+        ),
+      };
+    } else {
+      result = await callLoaderOrAction(
+        "action",
+        request,
+        actionMatch,
+        request.signal,
+        false
+      );
 
-  //   // Short circuit with a 404 if we match nothing
-  //   if (!matches) {
-  //     let {
-  //       matches: notFoundMatches,
-  //       route,
-  //       error,
-  //     } = getNotFoundMatches(dataRoutes);
-  //     return {
-  //       matches: notFoundMatches,
-  //       loaderData: {},
-  //       actionData: null,
-  //       errors: {
-  //         [route.id]: error,
-  //       },
-  //     };
-  //   }
+      if (request.signal.aborted) {
+        // TODO: Is this the right behavior?
+        throw new Error("aborted query()");
+      }
+    }
 
-  //   // Trim matches if we only intend to load a single route here
-  //   if (isSingleRouteLoad) {
-  //     matches = [getTargetMatch(matches, location)];
-  //   }
+    if (isRedirectResult(result)) {
+      // TODO: clean this up?
+      invariant(
+        false,
+        "Should not get here, redirects are thrown in static routers"
+      );
+    }
 
-  //   return loadRouteData(location, matches, null, null, null);
-  // }
+    if (isRouteRequest) {
+      let actionData: RouteData | null = null;
+      let errors: RouteData | null = null;
+      if (isErrorResult(result)) {
+        let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+        errors = {
+          [boundaryMatch.route.id]: result.error,
+        };
+      } else {
+        actionData = { [actionMatch.route.id]: result.data };
+      }
 
-  // async function submitImpl(
-  //   req: Request,
-  //   isSingleRouteLoad: boolean
-  // ): Promise<StaticRouterState | Response> {
-  //   if (url instanceof URL) {
-  //     url = createPath(url);
-  //   }
-  //   let location = createLocation(parsePath(url).pathname || "", url);
-  //   let matches = matchRoutes(dataRoutes, location);
-  //   let { submission } = normalizeNavigateOptions(location, opts);
+      return {
+        matches: [actionMatch],
+        loaderData: {},
+        actionData,
+        errors,
+      };
+    }
 
-  //   // Short circuit with a 404 if we match nothing
-  //   if (!matches) {
-  //     let {
-  //       matches: notFoundMatches,
-  //       route,
-  //       error,
-  //     } = getNotFoundMatches(dataRoutes);
-  //     updateState(location, {
-  //       matches: notFoundMatches,
-  //       errors: {
-  //         [route.id]: error,
-  //       },
-  //     });
-  //     return;
-  //   }
+    if (isErrorResult(result)) {
+      // Store off the pending error - we use it to determine which loaders
+      // to call and will commit it when we complete the navigation
+      let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+      return await loadRouteData(request, matches, undefined, {
+        [boundaryMatch.route.id]: result.error,
+      });
+    }
 
-  //   // Call our action and get the result
-  //   let result: DataResult;
-  //   let actionMatch = getTargetMatch(matches, location);
-  //   if (!actionMatch.route.action) {
-  //     if (__DEV__) {
-  //       console.warn(
-  //         "You're trying to submit to a route that does not have an action.  To " +
-  //           "fix this, please add an `action` function to the route for " +
-  //           `[${createHref(location)}]`
-  //       );
-  //     }
-  //     result = {
-  //       type: ResultType.error,
-  //       error: new ErrorResponse(
-  //         405,
-  //         "Method Not Allowed",
-  //         `No action found for [${createHref(location)}]`
-  //       ),
-  //     };
-  //   } else {
-  //     // Create a controller for this data load
-  //     let actionAbortController = new AbortController();
-  //     pendingController = actionAbortController;
+    return await loadRouteData(request, matches, {
+      [actionMatch.route.id]: result.data,
+    });
+  }
 
-  //     result = await callLoaderOrAction(
-  //       actionMatch,
-  //       location,
-  //       actionAbortController.signal,
-  //       submission,
-  //       false
-  //     );
+  async function loadRouteData(
+    request: Request,
+    matches: DataRouteMatch[],
+    pendingActionData?: RouteData,
+    pendingActionError?: RouteData
+  ): Promise<StaticRouterState | Response> {
+    let matchesToLoad = getLoaderMatchesUntilBoundary(
+      matches,
+      Object.keys(pendingActionError || {})[0]
+    ).filter((m) => m.route.loader);
 
-  //     if (actionAbortController.signal.aborted) {
-  //       // TODO: What behavior do we want here?
-  //       throw new Error("aborted router.submit()");
-  //     }
+    // Short circuit if we have no loaders to run
+    if (matchesToLoad.length === 0) {
+      return {
+        matches,
+        loaderData: {},
+        actionData: null,
+        errors: null,
+      };
+    }
 
-  //     pendingController = null;
-  //   }
+    let results = await Promise.all([
+      ...matchesToLoad.map((m) =>
+        callLoaderOrAction("loader", request, m, request.signal, false)
+      ),
+    ]);
+    if (request.signal.aborted) {
+      // TODO: Is this the right behavior?
+      throw new Error("aborted query()");
+    }
 
-  //   if (isRedirectResult(result)) {
-  //     // TODO: clean this up?
-  //     invariant(
-  //       false,
-  //       "Should not get here, redirects are thrown in static routers"
-  //     );
-  //   }
+    // Process and commit output from loaders
+    let { loaderData, errors } = processRouteLoaderData(
+      matches,
+      matchesToLoad,
+      results,
+      pendingActionError
+    );
 
-  //   if (isSingleRouteLoad) {
-  //     let actionData: RouteData | null = null;
-  //     let errors: RouteData | null = null;
-  //     if (isErrorResult(result)) {
-  //       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-  //       errors = {
-  //         [boundaryMatch.route.id]: result.error,
-  //       };
-  //     } else {
-  //       actionData = { [actionMatch.route.id]: result.data };
-  //     }
+    return {
+      matches,
+      loaderData,
+      actionData: pendingActionData || null,
+      errors,
+    };
+  }
 
-  //     updateState(location, {
-  //       matches: [actionMatch],
-  //       loaderData: {},
-  //       actionData,
-  //       errors,
-  //     });
-  //     return;
-  //   }
+  function matchRequest(
+    req: Request,
+    routeId?: string
+  ): {
+    location: Location;
+    matches: DataRouteMatch[];
+    routeMatch?: DataRouteMatch;
+    shortCircuitState?: StaticRouterState;
+  } {
+    let url = new URL(req.url);
+    let location = createLocation("", createPath(url));
+    let matches = matchRoutes(dataRoutes, location);
+    if (matches && routeId) {
+      matches = matches.filter((m) => m.route.id === routeId);
+    }
 
-  //   if (isErrorResult(result)) {
-  //     // Store off the pending error - we use it to determine which loaders
-  //     // to call and will commit it when we complete the navigation
-  //     let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-  //     return await loadRouteData(location, matches, submission || null, null, {
-  //       [boundaryMatch.route.id]: result.error,
-  //     });
-  //   }
+    // Short circuit with a 404 if we match nothing
+    if (!matches) {
+      let {
+        matches: notFoundMatches,
+        route,
+        error,
+      } = getNotFoundMatches(dataRoutes);
+      return {
+        location,
+        matches: notFoundMatches,
+        shortCircuitState: {
+          matches: notFoundMatches,
+          loaderData: {},
+          actionData: null,
+          errors: {
+            [route.id]: error,
+          },
+        },
+      };
+    }
 
-  //   return await loadRouteData(
-  //     location,
-  //     matches,
-  //     submission || null,
-  //     { [actionMatch.route.id]: result.data },
-  //     null
-  //   );
-  // }
-
-  // async function loadRouteData(
-  //   req: Request,
-  //   location: Location,
-  //   matches: DataRouteMatch[],
-  //   submission: Submission | null,
-  //   pendingActionData: RouteData | null,
-  //   pendingActionError: RouteData | null
-  // ): Promise<StaticRouterState | Response> {
-  //   let [matchesToLoad] = getMatchesToLoad(
-  //     state,
-  //     matches,
-  //     submission || undefined,
-  //     location,
-  //     false,
-  //     pendingActionData,
-  //     pendingActionError
-  //   );
-
-  //   // Short circuit if we have no loaders to run
-  //   if (matchesToLoad.length === 0) {
-  //     updateState(location, {
-  //       matches,
-  //       loaderData: {},
-  //       actionData: null,
-  //       errors: null,
-  //     });
-  //     return;
-  //   }
-
-  //   // Start the data load
-  //   let results = await Promise.all([
-  //     ...matchesToLoad.map((m) =>
-  //       callLoaderOrAction(m, location, abortController.signal, undefined, false)
-  //     ),
-  //   ]);
-  //   if (abortController.signal.aborted) {
-  //     // TODO: What behavior do we want here?
-  //     throw new Error("aborted router.load()");
-  //   }
-
-  //   pendingController = null;
-
-  //   // Process and commit output from loaders
-  //   let { loaderData, errors } = processLoaderData(
-  //     state,
-  //     matches,
-  //     matchesToLoad,
-  //     results,
-  //     pendingActionError
-  //   );
-
-  //   updateState(location, {
-  //     matches,
-  //     loaderData,
-  //     actionData: pendingActionData,
-  //     errors,
-  //   });
-  // }
+    return { location, matches };
+  }
 
   return {
     query,
-    queryRoute() {
-      throw new Error("Not imple,mented!");
-    },
+    queryRoute,
   };
 }
 

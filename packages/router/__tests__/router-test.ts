@@ -20,7 +20,7 @@ import {
   redirect,
   parsePath,
 } from "@remix-run/router";
-import { createStaticRouter } from "../router";
+import { createStaticHandler } from "../router";
 
 // Private API
 import { ErrorResponse } from "../utils";
@@ -6668,7 +6668,7 @@ describe("a router", () => {
     });
   });
 
-  xdescribe("ssr", () => {
+  describe("ssr", () => {
     const SSR_ROUTES = [
       {
         id: "index",
@@ -6702,11 +6702,18 @@ describe("a router", () => {
       },
     ];
 
+    function createRequest(path: string, opts?: RequestInit) {
+      return new Request(`http://localhost${path}`, {
+        signal: new AbortController().signal,
+        ...opts,
+      });
+    }
+
     describe("document requests", () => {
       it("should support document load navigations", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        await router.load("/parent/child");
-        expect(router.state).toMatchObject({
+        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let state = await query(createRequest("/parent/child"));
+        expect(state).toMatchObject({
           actionData: null,
           loaderData: {
             parent: "PARENT LOADER",
@@ -6725,12 +6732,14 @@ describe("a router", () => {
       });
 
       it("should support document submit navigations", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        await router.submit("/parent/child", {
-          formMethod: "post",
-          formData: createFormData({ key: "value" }),
-        });
-        expect(router.state).toMatchObject({
+        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let state = await query(
+          createRequest("/parent/child", {
+            method: "post",
+            body: createFormData({ key: "value" }),
+          })
+        );
+        expect(state).toMatchObject({
           actionData: {
             child: "CHILD ACTION",
           },
@@ -6750,29 +6759,67 @@ describe("a router", () => {
         });
       });
 
+      it("should support document submit navigations to layout routes", async () => {
+        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let state = await query(
+          createRequest("/parent", {
+            method: "post",
+            body: createFormData({ key: "value" }),
+          })
+        );
+        expect(state).toMatchObject({
+          actionData: {
+            parent: "PARENT ACTION",
+          },
+          loaderData: {
+            parent: "PARENT LOADER",
+            parentIndex: "PARENT INDEX LOADER",
+          },
+          errors: null,
+          matches: [
+            { route: { id: "parent" } },
+            { route: { id: "parentIndex" } },
+          ],
+        });
+      });
+
+      it("should support document submit navigations to index routes", async () => {
+        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let state = await query(
+          createRequest("/parent?index", {
+            method: "post",
+            body: createFormData({ key: "value" }),
+          })
+        );
+        expect(state).toMatchObject({
+          actionData: {
+            parentIndex: "PARENT INDEX ACTION",
+          },
+          loaderData: {
+            parent: "PARENT LOADER",
+            parentIndex: "PARENT INDEX LOADER",
+          },
+          errors: null,
+          matches: [
+            { route: { id: "parent" } },
+            { route: { id: "parentIndex" } },
+          ],
+        });
+      });
+
       it("should handle redirect Responses", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        expect.assertions(3);
-        try {
-          await router.load("/redirect");
-        } catch (err) {
-          expect(err instanceof Response).toBe(true);
-          expect((err as Response).status).toBe(302);
-          expect((err as Response).headers.get("Location")).toBe("/");
-        }
+        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let redirect = await query(createRequest("/redirect"));
+        expect(redirect instanceof Response).toBe(true);
+        expect((redirect as Response).status).toBe(302);
+        expect((redirect as Response).headers.get("Location")).toBe("/");
       });
 
       it("should handle 404 navigations", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        await router.load("/not/found");
-        expect(router.state).toMatchObject({
-          errors: {
-            index: {
-              data: null,
-              status: 404,
-              statusText: "Not Found",
-            },
-          },
+        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let state = await query(createRequest("/not/found"));
+
+        expect(state).toMatchObject({
           matches: [
             {
               route: {
@@ -6780,97 +6827,137 @@ describe("a router", () => {
               },
             },
           ],
-          navigation: {
-            state: "idle",
+          loaderData: {},
+          actionData: null,
+          errors: {
+            index: {
+              data: null,
+              status: 404,
+              statusText: "Not Found",
+            },
           },
         });
       });
+
+      it.todo("should handle load error responses");
+      it.todo("should handle submit error responses");
+      it.todo("should handle aborted requests");
+      it.todo("should not support HEAD requests");
+      it.todo("should require a signal on the request");
+      it.todo("should handle not found action submissions with a 405 error");
     });
 
     describe("singular route requests", () => {
       it("should support singular route load navigations", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        await router.loadRoute("/parent/child");
-        expect(router.state).toMatchObject({
-          loaderData: { child: "CHILD LOADER" },
-          matches: [{ route: { id: "child" } }],
-        });
-      });
+        let { queryRoute } = createStaticHandler({ routes: SSR_ROUTES });
+        let state;
 
-      it("should support singular route load navigations for layout routes", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        await router.loadRoute("/parent");
-        expect(router.state).toMatchObject({
+        // Layout route
+        state = await queryRoute(createRequest("/parent"), "parent");
+        expect(state).toMatchObject({
           loaderData: { parent: "PARENT LOADER" },
+          actionData: null,
+          errors: null,
           matches: [{ route: { id: "parent" } }],
         });
-      });
 
-      it("should support singular route load navigations for index routes", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        await router.loadRoute("/parent?index");
-        expect(router.state).toMatchObject({
+        // Index route
+        state = await queryRoute(createRequest("/parent"), "parentIndex");
+        expect(state).toMatchObject({
           loaderData: { parentIndex: "PARENT INDEX LOADER" },
+          actionData: null,
+          errors: null,
           matches: [{ route: { id: "parentIndex" } }],
         });
-      });
 
-      it("should support singular route load navigations for index routes via URL", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        await router.loadRoute(new URL("http://localhost/parent?index"));
-        expect(router.state).toMatchObject({
-          loaderData: { parentIndex: "PARENT INDEX LOADER" },
-          matches: [{ route: { id: "parentIndex" } }],
+        // Parent in nested route
+        state = await queryRoute(createRequest("/parent/child"), "parent");
+        expect(state).toMatchObject({
+          loaderData: { parent: "PARENT LOADER" },
+          actionData: null,
+          errors: null,
+          matches: [{ route: { id: "parent" } }],
+        });
+
+        // Child in nested route
+        state = await queryRoute(createRequest("/parent/child"), "child");
+        expect(state).toMatchObject({
+          loaderData: { child: "CHILD LOADER" },
+          actionData: null,
+          errors: null,
+          matches: [{ route: { id: "child" } }],
         });
       });
 
       it("should support singular route submit navigations", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        await router.submitRoute("/parent/child", {
-          formMethod: "post",
-          formData: createFormData({ key: "value" }),
+        let { queryRoute } = createStaticHandler({ routes: SSR_ROUTES });
+        let state;
+
+        // Layout route
+        state = await queryRoute(
+          createRequest("/parent", {
+            method: "post",
+            body: createFormData({ key: "value" }),
+          }),
+          "parent"
+        );
+        expect(state).toMatchObject({
+          loaderData: {},
+          actionData: { parent: "PARENT ACTION" },
+          errors: null,
+          matches: [{ route: { id: "parent" } }],
         });
-        expect(router.state).toMatchObject({
+
+        // Index route
+        state = await queryRoute(
+          createRequest("/parent", {
+            method: "post",
+            body: createFormData({ key: "value" }),
+          }),
+          "parentIndex"
+        );
+        expect(state).toMatchObject({
+          loaderData: {},
+          actionData: { parentIndex: "PARENT INDEX ACTION" },
+          errors: null,
+          matches: [{ route: { id: "parentIndex" } }],
+        });
+
+        // Parent in nested route
+        state = await queryRoute(
+          createRequest("/parent/child", {
+            method: "post",
+            body: createFormData({ key: "value" }),
+          }),
+          "parent"
+        );
+        expect(state).toMatchObject({
+          loaderData: {},
+          actionData: { parent: "PARENT ACTION" },
+          errors: null,
+          matches: [{ route: { id: "parent" } }],
+        });
+
+        // Child in nested route
+        state = await queryRoute(
+          createRequest("/parent/child", {
+            method: "post",
+            body: createFormData({ key: "value" }),
+          }),
+          "child"
+        );
+        expect(state).toMatchObject({
+          loaderData: {},
           actionData: { child: "CHILD ACTION" },
+          errors: null,
           matches: [{ route: { id: "child" } }],
         });
       });
 
-      it("should support singular route submit navigations for layout routes", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        await router.submitRoute("/parent", {
-          formMethod: "post",
-          formData: createFormData({ key: "value" }),
-        });
-        expect(router.state).toMatchObject({
-          actionData: { parent: "PARENT ACTION" },
-          matches: [{ route: { id: "parent" } }],
-        });
-      });
-
-      it("should support singular route submit navigations for index routes", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        await router.submitRoute("/parent?index", {
-          formMethod: "post",
-          formData: createFormData({ key: "value" }),
-        });
-        expect(router.state).toMatchObject({
-          actionData: { parentIndex: "PARENT INDEX ACTION" },
-          matches: [{ route: { id: "parentIndex" } }],
-        });
-      });
-
-      it("should support singular route submit navigations for index routes via URL", async () => {
-        let router = createStaticRouter({ routes: SSR_ROUTES });
-        await router.submitRoute(new URL("http://localhost/parent?index"), {
-          formMethod: "post",
-          formData: createFormData({ key: "value" }),
-        });
-        expect(router.state).toMatchObject({
-          actionData: { parentIndex: "PARENT INDEX ACTION" },
-          matches: [{ route: { id: "parentIndex" } }],
-        });
-      });
+      it.todo("should handle load error responses");
+      it.todo("should handle submit error responses");
+      it.todo("should handle aborted requests");
+      it.todo("should handle not found action submissions with a 405 error");
     });
   });
 });
