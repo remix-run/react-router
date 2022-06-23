@@ -11,6 +11,8 @@
     "directory": "packages/remix-node"
   },
   "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "sideEffects": false,
   "dependencies": {
     "@remix-run/server-runtime": "1.6.1",
@@ -29,5 +31,11 @@
   },
   "engines": {
     "node": ">=14"
-  }
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md"
+  ]
 }

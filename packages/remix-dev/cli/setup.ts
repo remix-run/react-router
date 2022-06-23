@@ -50,10 +50,21 @@ export async function setupRemix(platform: SetupPlatform): Promise<void> {
   let platformExportsDir = path.resolve(
     platformPkgJsonFile,
     "..",
+    "dist",
     "magicExports"
   );
-  let serverExportsDir = path.resolve(serverPkgJsonFile, "..", "magicExports");
-  let clientExportsDir = path.resolve(clientPkgJsonFile, "..", "magicExports");
+  let serverExportsDir = path.resolve(
+    serverPkgJsonFile,
+    "..",
+    "dist",
+    "magicExports"
+  );
+  let clientExportsDir = path.resolve(
+    clientPkgJsonFile,
+    "..",
+    "dist",
+    "magicExports"
+  );
 
   let magicTypes = await combineFilesInDirs(
     [platformExportsDir, serverExportsDir, clientExportsDir],
@@ -74,9 +85,9 @@ export async function setupRemix(platform: SetupPlatform): Promise<void> {
     ".js"
   );
 
-  await fse.writeFile(path.join(remixPkgDir, "index.d.ts"), magicTypes);
-  await fse.writeFile(path.join(remixPkgDir, "index.js"), magicCJS);
-  await fse.writeFile(path.join(remixPkgDir, "esm/index.js"), magicESM);
+  await fse.writeFile(path.join(remixPkgDir, "dist", "index.d.ts"), magicTypes);
+  await fse.writeFile(path.join(remixPkgDir, "dist", "index.js"), magicCJS);
+  await fse.writeFile(path.join(remixPkgDir, "dist", "esm/index.js"), magicESM);
 }
 
 async function combineFilesInDirs(

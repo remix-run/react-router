@@ -313,7 +313,7 @@ test.describe("compiler", () => {
       "useTransition",
     ];
     let magicRemix = await fs.readFile(
-      path.resolve(fixture.projectDir, "node_modules/remix/index.js"),
+      path.resolve(fixture.projectDir, "node_modules/remix/dist/index.js"),
       "utf8"
     );
     for (let name of magicExportsForNode) {

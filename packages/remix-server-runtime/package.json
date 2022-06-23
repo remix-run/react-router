@@ -12,8 +12,9 @@
   },
   "license": "MIT",
   "sideEffects": false,
-  "main": "./index.js",
-  "module": "./esm/index.js",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "module": "dist/esm/index.js",
   "dependencies": {
     "@types/cookie": "^0.4.0",
     "@web3-storage/multipart-parser": "^1.0.0",
@@ -34,5 +35,11 @@
   },
   "engines": {
     "node": ">=14"
-  }
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md"
+  ]
 }

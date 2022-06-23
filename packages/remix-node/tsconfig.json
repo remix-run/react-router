@@ -1,5 +1,5 @@
 {
-  "exclude": ["__tests__"],
+  "exclude": ["dist", "__tests__"],
   "compilerOptions": {
     "lib": ["ES2019", "DOM.Iterable"],
     "target": "ES2019",
@@ -7,12 +7,10 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "strict": true,
-
     "declaration": true,
     "emitDeclarationOnly": true,
-
-    "outDir": "../../build/node_modules/@remix-run/node",
     "rootDir": ".",
+    "outDir": "../../build/node_modules/@remix-run/node/dist",
 
     // Avoid naming conflicts between lib.dom.d.ts and globals.ts
     "skipLibCheck": true
