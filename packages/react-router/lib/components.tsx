@@ -30,6 +30,7 @@ import {
   DataRouterStateContext,
   DeferredContext,
 } from "./context";
+import type { ResolvedDeferrable } from "./hooks";
 import {
   useDeferredData,
   useInRouterContext,
@@ -418,12 +419,13 @@ function DataRoutes({
   return useRoutes(routes || createRoutesFromChildren(children), location);
 }
 
-export interface DeferredResolveRenderFunction {
-  (args: { data: any }): JSX.Element;
+export interface DeferredResolveRenderFunction<Data> {
+  (data: ResolvedDeferrable<Data>): JSX.Element;
 }
 
-export interface DeferredProps extends Omit<React.SuspenseProps, "children"> {
-  children: React.ReactNode | DeferredResolveRenderFunction;
+export interface DeferredProps<Data>
+  extends Omit<React.SuspenseProps, "children"> {
+  children: React.ReactNode | DeferredResolveRenderFunction<Data>;
   value: any;
   errorElement?: React.ReactNode;
 }
@@ -432,16 +434,24 @@ export interface DeferredProps extends Omit<React.SuspenseProps, "children"> {
  * Component to use for rendering lazily loaded data from returning deferred()
  * in a loader function
  */
-export function Deferred({
+export function Deferred<Data = any>({
   children,
   value,
   fallback,
   errorElement,
-}: DeferredProps) {
+}: DeferredProps<Data>) {
   return (
     <DeferredContext.Provider value={value}>
       <React.Suspense fallback={fallback}>
-        <DeferredWrapper children={children} errorElement={errorElement} />
+        <DeferredWrapper errorElement={errorElement}>
+          {typeof children === "function" ? (
+            <ResolveDeferred
+              children={children as DeferredResolveRenderFunction<Data>}
+            />
+          ) : (
+            children
+          )}
+        </DeferredWrapper>
       </React.Suspense>
     </DeferredContext.Provider>
   );
@@ -474,26 +484,20 @@ function DeferredWrapper({ children, errorElement }: DeferredWrapperProps) {
     }
   }
 
-  return (
-    <>
-      {typeof children === "function" ? (
-        <ResolveDeferred children={children as DeferredResolveRenderFunction} />
-      ) : (
-        children
-      )}
-    </>
-  );
+  return <>{children}</>;
 }
 
-export interface ResolveDeferredProps {
-  children: DeferredResolveRenderFunction;
+export interface ResolveDeferredProps<Data> {
+  children: DeferredResolveRenderFunction<Data>;
 }
 
 /**
  * @private
  */
-export function ResolveDeferred({ children }: ResolveDeferredProps) {
-  return children(useDeferredData());
+export function ResolveDeferred<Data>({
+  children,
+}: ResolveDeferredProps<Data>) {
+  return children(useDeferredData<Data>());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -1914,7 +1914,7 @@ describe("<DataMemoryRouter>", () => {
         );
       }
       function LazyData() {
-        let data = useDeferredData();
+        let data = useDeferredData<string>();
         return <p>{data}</p>;
       }
 
@@ -2024,7 +2024,7 @@ describe("<DataMemoryRouter>", () => {
         return (
           <>
             <p>{data.critical}</p>
-            <Deferred value={data.lazy} fallback={<p>Loading...</p>}>
+            <Deferred<string> value={data.lazy} fallback={<p>Loading...</p>}>
               {(data) => <p>{data}</p>}
             </Deferred>
           </>
@@ -2148,7 +2148,7 @@ describe("<DataMemoryRouter>", () => {
         );
       }
       function LazyData() {
-        let data = useDeferredData();
+        let data = useDeferredData<string>();
         return <p>{data}</p>;
       }
       function LazyError() {
@@ -2271,7 +2271,7 @@ describe("<DataMemoryRouter>", () => {
         );
       }
       function LazyData() {
-        let data = useDeferredData();
+        let data = useDeferredData<string>();
         return <p>{data}</p>;
       }
       function RouteError() {

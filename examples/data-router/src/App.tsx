@@ -1,7 +1,6 @@
 import React from "react";
 import {
   ActionFunction,
-  isDeferredError,
   LoaderFunction,
   useRevalidator,
 } from "react-router-dom";
@@ -266,11 +265,11 @@ function DeferredPage() {
       <Deferred value={data.lazy2} fallback={<p>loading 2...</p>}>
         <RenderDeferredData />
       </Deferred>
-      <Deferred value={data.lazy3} fallback={<p>loading 3...</p>}>
-        {(data: any) => <p>{data}</p>}
+      <Deferred<string> value={data.lazy3} fallback={<p>loading 3...</p>}>
+        {(data) => <p>{data}</p>}
       </Deferred>
       <Deferred
-        data={data.lazyError}
+        value={data.lazyError}
         fallback={<p>loading (error)...</p>}
         errorElement={<RenderDeferredError />}
       >
@@ -303,7 +302,7 @@ function DeferredChild() {
 }
 
 function RenderDeferredData() {
-  let data = useDeferredData();
+  let data = useDeferredData<string>();
   return <p>{data}</p>;
 }
 
