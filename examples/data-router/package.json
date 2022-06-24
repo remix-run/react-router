@@ -9,8 +9,7 @@
   "dependencies": {
     "react": "18.1.0",
     "react-dom": "18.1.0",
-    "react-router": "6.4.0-pre.2",
-    "react-router-dom": "6.4.0-pre.2"
+    "react-router-dom": "^6.4.0-pre.8"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "4.0.0",
