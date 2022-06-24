@@ -18,6 +18,8 @@ import {
   useParams,
   useRevalidator,
   useRouteError,
+  json,
+  useActionData,
 } from "react-router-dom";
 
 import type { Todos } from "./todos";
@@ -243,24 +245,27 @@ interface DeferredRouteLoaderData {
   lazyError: Deferrable<string>;
 }
 
+const rand = () => Math.round(Math.random() * 100);
+const resolve = (d: string, ms: number) =>
+  new Promise((r) => setTimeout(() => r(`${d} - ${rand()}`), ms));
+const reject = (d: string, ms: number) =>
+  new Promise((_, r) => setTimeout(() => r(`${d} - ${rand()}`), ms));
+
 const deferredLoader: LoaderFunction = async ({ request }) => {
   return deferred({
-    critical1: await new Promise((r) =>
-      setTimeout(() => r("Critical Data 1"), 250)
-    ),
-    critical2: await new Promise((r) =>
-      setTimeout(() => r("Critical Data 2"), 500)
-    ),
-    lazyResolved: Promise.resolve("Lazy Data immediately resolved"),
-    lazy1: new Promise((r) => setTimeout(() => r("Lazy Data 1"), 1000)),
-    lazy2: new Promise((r) => setTimeout(() => r("Lazy Data 2"), 1500)),
-    lazy3: new Promise((r) => setTimeout(() => r("Lazy Data 3"), 2000)),
-    lazyError: new Promise((_, r) => setTimeout(() => r("Kaboom!"), 2500)),
+    critical1: await resolve("Critical 1", 250),
+    critical2: await resolve("Critical 2", 500),
+    lazyResolved: Promise.resolve("Lazy Data immediately resolved - " + rand()),
+    lazy1: resolve("Lazy 1", 1000),
+    lazy2: resolve("Lazy 2", 1500),
+    lazy3: resolve("Lazy 3", 2000),
+    lazyError: reject("Kaboom!", 2500),
   });
 };
 
 function DeferredPage() {
   let data = useLoaderData() as DeferredRouteLoaderData;
+
   return (
     <div>
       <p>{data.critical1}</p>
@@ -291,21 +296,30 @@ function DeferredPage() {
 
 const deferredChildLoader: LoaderFunction = async ({ request }) => {
   return deferred({
-    critical: await new Promise((r) =>
-      setTimeout(() => r("Critical Child Data"), 500)
-    ),
-    lazy: new Promise((r) => setTimeout(() => r("Lazy Child Data"), 1000)),
+    critical: await resolve("Critical Child Data", 500),
+    lazy: resolve("Lazy Child Data", 1000),
   });
+};
+
+const deferredChildAction: ActionFunction = async ({ request }) => {
+  return json({ ok: true });
 };
 
 function DeferredChild() {
   let data = useLoaderData();
+  let actionData = useActionData();
   return (
     <div>
       <p>{data.critical}</p>
       <Deferred value={data.lazy} fallback={<p>loading child...</p>}>
         <RenderDeferredData />
       </Deferred>
+      <Form method="post">
+        <button type="submit" name="key" value="value">
+          Submit
+        </button>
+      </Form>
+      {actionData ? <p>Action data:{JSON.stringify(actionData)}</p> : null}
     </div>
   );
 }
@@ -339,6 +353,7 @@ function App() {
           <Route
             path="child"
             loader={deferredChildLoader}
+            action={deferredChildAction}
             element={<DeferredChild />}
           />
         </Route>

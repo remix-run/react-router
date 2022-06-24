@@ -1975,6 +1975,26 @@ async function processLoaderData(
   let loaderData: RouterState["loaderData"] = {};
   let errors: RouterState["errors"] = null;
 
+  // If this is a revalidation then we want to wait for all deferreds to
+  // resolve so that we don't cause loading states to re-trigger or a popcorn
+  // UI of revalidated deferreds resolving _after_ the navigation spinners
+  // were removed.  Walk through all results, and if we find a deferreds in
+  // this state, await them all in parallel it and transform them to
+  // SuccessResult's.  Still need to mark them "active" so they get properly
+  // cancelled if another navigation starts
+  let revalidatingDeferredPromises = results.map((result, index) => {
+    let id = matchesToLoad[index].route.id;
+    if (isDeferredResult(result) && state.loaderData[id] !== undefined) {
+      activeDeferreds.set(id, result.deferredData);
+      return resolveDeferredData(result).then((successResult) => {
+        activeDeferreds.delete(id);
+        results[index] = successResult;
+      });
+    }
+    return null;
+  });
+  await Promise.all(revalidatingDeferredPromises);
+
   // Process loader results into state.loaderData/state.errors
   results.forEach((result, index) => {
     let id = matchesToLoad[index].route.id;

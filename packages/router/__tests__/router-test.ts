@@ -7086,30 +7086,43 @@ describe("a router", () => {
           lazy: indexDfd2.promise,
         })
       );
+
+      // Revalidations await all deferreds, so we're still in a loading
+      // state with the prior loaderData here
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.revalidation).toBe("loading");
       expect(t.router.state.loaderData).toEqual({
         parent: {
-          critical: "CRITICAL PARENT 2",
+          critical: "CRITICAL PARENT",
           lazy: expect.any(Promise),
         },
         index: {
-          critical: "CRITICAL INDEX 2",
+          critical: "CRITICAL INDEX",
           lazy: expect.any(Promise),
         },
       });
 
       await indexDfd2.resolve("LAZY INDEX 2");
+      await tick();
+      // Not done yet!
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.revalidation).toBe("loading");
       expect(t.router.state.loaderData).toEqual({
         parent: {
-          critical: "CRITICAL PARENT 2",
+          critical: "CRITICAL PARENT",
           lazy: expect.any(Promise),
         },
         index: {
-          critical: "CRITICAL INDEX 2",
-          lazy: "LAZY INDEX 2",
+          critical: "CRITICAL INDEX",
+          lazy: expect.any(Promise),
         },
       });
 
       await parentDfd2.resolve("LAZY PARENT 2");
+      await tick();
+      // Done now that all deferreds have resolved
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.revalidation).toBe("idle");
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT 2",
@@ -7118,6 +7131,90 @@ describe("a router", () => {
         index: {
           critical: "CRITICAL INDEX 2",
           lazy: "LAZY INDEX 2",
+        },
+      });
+
+      expect(shouldRevalidateSpy).not.toHaveBeenCalled();
+    });
+
+    it("cancels correctly on revalidations chains", async () => {
+      let shouldRevalidateSpy = jest.fn(() => false);
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+          },
+          {
+            id: "foo",
+            path: "foo",
+            loader: true,
+            shouldRevalidate: shouldRevalidateSpy,
+          },
+        ],
+      });
+
+      let A = await t.navigate("/foo");
+      let dfda = defer();
+      await A.loaders.foo.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: dfda.promise,
+        })
+      );
+      await tick();
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      let B = await t.revalidate();
+      let dfdb = defer();
+      // This B data will _never_ make it through - since we will await all of
+      // it and we'll revalidate before it resolves
+      await B.loaders.foo.resolve(
+        deferred({
+          critical: "CRITICAL B",
+          lazy: dfdb.promise,
+        })
+      );
+      // The initial revalidation cancelled the navigation deferred
+      await dfda.resolve("Nope!");
+      await tick();
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      let C = await t.revalidate();
+      let dfdc = defer();
+      await C.loaders.foo.resolve(
+        deferred({
+          critical: "CRITICAL C",
+          lazy: dfdc.promise,
+        })
+      );
+      // The second revalidation should have cancelled the first revalidation
+      // deferred
+      await dfdb.resolve("Nope!");
+      await tick();
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await dfdc.resolve("Yep!");
+      await tick();
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL C",
+          lazy: "Yep!",
         },
       });
 
@@ -7190,7 +7287,7 @@ describe("a router", () => {
         initialEntries: ["/"],
       });
 
-      // Navigate to parent and kick off a deferred
+      // Navigate to /parent/a and kick off a deferred's for both
       let A = await t.navigate("/parent/a");
       let parentDfd = defer();
       await A.loaders.parent.resolve(
@@ -7289,7 +7386,7 @@ describe("a router", () => {
         initialEntries: ["/"],
       });
 
-      // Navigate to parent and kick off a deferred
+      // Navigate to /parent/a and kick off deferred's for both
       let A = await t.navigate("/a/child");
       let aDfd = defer();
       await A.loaders.a.resolve(
@@ -7321,7 +7418,6 @@ describe("a router", () => {
       // loader since it's below the boundary but should call b's loader.
       let formData = new FormData();
       formData.append("file", new Blob(["1", "2"]), "file.txt");
-      debugger;
       let B = await t.navigate("/b/child", {
         formMethod: "get",
         formData,
@@ -7478,19 +7574,173 @@ describe("a router", () => {
       expect(t.router.state.actionData).toEqual({
         b: "ACTION",
       });
+      // Since we still have outstanding deferreds on the revalidation, we're
+      // still in the loading state and showing the old data
       expect(t.router.state.loaderData).toEqual({
         parent: {
-          critical: "CRITICAL PARENT 2",
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
           lazy: expect.any(Promise),
         },
       });
 
       await parentDfd2.resolve("Yep!");
+      await tick();
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT 2",
           lazy: "Yep!",
         },
+      });
+
+      expect(shouldRevalidateSpy).not.toHaveBeenCalled();
+    });
+
+    it("does not put resolved deferred's back into a loading state during revalidation", async () => {
+      let shouldRevalidateSpy = jest.fn(() => false);
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            shouldRevalidate: shouldRevalidateSpy,
+            children: [
+              {
+                id: "a",
+                path: "a",
+                loader: true,
+              },
+              {
+                id: "b",
+                path: "b",
+                action: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      // Route to /parent/a and return and resolve deferred's for both
+      let A = await t.navigate("/parent/a");
+      let parentDfd1 = defer();
+      let parentDfd2 = defer();
+      await A.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT",
+          lazy1: parentDfd1.promise,
+          lazy2: parentDfd2.promise,
+        })
+      );
+      let aDfd1 = defer();
+      let aDfd2 = defer();
+      await A.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy1: aDfd1.promise,
+          lazy2: aDfd2.promise,
+        })
+      );
+
+      // Resolve one of the deferred for each prior to the action submission
+      await parentDfd1.resolve("LAZY PARENT 1");
+      await aDfd1.resolve("LAZY A 1");
+
+      // Action submission causes all to be cancelled, even reused ones, and
+      // ignores shouldRevalidate since the cancelled active deferred means we
+      // are missing data
+      let B = await t.navigate("/parent/b", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await parentDfd2.resolve("Nope!");
+      await aDfd2.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy1: "LAZY PARENT 1",
+          lazy2: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy1: "LAZY A 1",
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      await B.actions.b.resolve("ACTION");
+      let parentDfd1Revalidation = defer();
+      let parentDfd2Revalidation = defer();
+      await B.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT*",
+          lazy1: parentDfd1Revalidation.promise,
+          lazy2: parentDfd2Revalidation.promise,
+        })
+      );
+      await B.loaders.b.resolve("B");
+
+      // At this point, we resolved the action
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.actionData).toEqual({
+        b: "ACTION",
+      });
+
+      // ...and the loaders - however the parent loader returned a deferred
+      // so we stay in the "loading" state until everything resolves
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy1: "LAZY PARENT 1",
+          lazy2: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy1: "LAZY A 1",
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      // Resolve the first deferred - should not complete the navigation yet
+      await parentDfd1Revalidation.resolve("LAZY PARENT 1*");
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy1: "LAZY PARENT 1",
+          lazy2: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy1: "LAZY A 1",
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      await parentDfd2Revalidation.resolve("LAZY PARENT 2*");
+      await tick();
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual({
+        b: "ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT*",
+          lazy1: "LAZY PARENT 1*",
+          lazy2: "LAZY PARENT 2*",
+        },
+        b: "B",
       });
 
       expect(shouldRevalidateSpy).not.toHaveBeenCalled();
@@ -7718,19 +7968,22 @@ describe("a router", () => {
         })
       );
 
+      // Still showing old data while we wait on revalidation deferreds to
+      // complete
       expect(t.router.state.loaderData).toEqual({
         parent: {
-          critical: "CRITICAL PARENT 2",
+          critical: "CRITICAL PARENT",
           lazy: expect.any(Promise),
         },
         a: {
-          critical: "CRITICAL A 2",
+          critical: "CRITICAL A",
           lazy: expect.any(Promise),
         },
       });
 
       await parentDfd2.resolve("Yep!");
       await aDfd2.resolve("Yep!");
+      await tick();
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT 2",
