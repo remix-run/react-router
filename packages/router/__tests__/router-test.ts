@@ -19,7 +19,7 @@ import {
   redirect,
   parsePath,
 } from "@remix-run/router";
-import { createStaticHandler } from "../router";
+import { createStaticHandler, StaticHandlerState } from "../router";
 
 // Private API
 import {
@@ -8528,6 +8528,20 @@ describe("a router", () => {
             action: () => json({ type: "action" }),
           },
           {
+            id: "deferred",
+            path: "deferred",
+            loader: () =>
+              deferred({
+                critical: "loader",
+                lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
+              }),
+            action: () =>
+              deferred({
+                critical: "action",
+                lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
+              }),
+          },
+          {
             id: "error",
             path: "error",
             loader: () => Promise.reject("ERROR LOADER ERROR"),
@@ -8592,6 +8606,30 @@ describe("a router", () => {
           errors: null,
           matches: [{ route: { id: "parent" } }, { route: { id: "json" } }],
         });
+      });
+
+      it("should not touch deferred data on load navigations", async () => {
+        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let state = await query(createRequest("/parent/deferred"));
+        expect(state).toMatchObject({
+          actionData: null,
+          loaderData: {
+            parent: "PARENT LOADER",
+            deferred: {
+              critical: "loader",
+              lazy: expect.any(Promise),
+            },
+          },
+          errors: null,
+          location: { pathname: "/parent/deferred" },
+          matches: [{ route: { id: "parent" } }, { route: { id: "deferred" } }],
+        });
+
+        await new Promise((r) => setTimeout(r, 10));
+        expect(
+          (state as StaticHandlerState).loaderData.deferred.lazy instanceof
+            Promise
+        ).toBe(true);
       });
 
       it("should support document submit navigations", async () => {
