@@ -1,21 +1,21 @@
 import * as React from "react";
-import type { RouterInit } from "@remix-run/router";
-import {
-  Action,
-  createMemoryHistory,
-  createRouter,
-  invariant,
+import type {
+  DataRouteObject,
+  RevalidationState,
+  Router as DataRouter,
+  RouterState,
+  StaticHandlerState,
 } from "@remix-run/router";
+import { IDLE_NAVIGATION, Action, invariant } from "@remix-run/router";
 import {
   Location,
   To,
   createPath,
   parsePath,
   Router,
-  createRoutesFromChildren,
-  Routes,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  useRoutes,
 } from "react-router-dom";
 
 export interface StaticRouterProps {
@@ -60,49 +60,50 @@ export function StaticRouter({
 }
 
 export interface DataStaticRouterProps {
-  data: RouterInit["hydrationData"];
-  location: Partial<Location> | string;
-  children?: React.ReactNode;
+  dataRoutes: DataRouteObject[];
+  state: StaticHandlerState;
 }
 
 /**
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function DataStaticRouter({
-  data,
-  location = "/",
-  children,
-}: DataStaticRouterProps) {
-  // Create a router but do not call initialize() so it has no side effects
-  // and performs no data fetching
-  let staticRouter = createRouter({
-    history: createMemoryHistory({ initialEntries: [location] }),
-    routes: createRoutesFromChildren(children),
-    hydrationData: data,
-  });
-
+export function DataStaticRouter({ dataRoutes, state }: DataStaticRouterProps) {
   invariant(
-    staticRouter.state.initialized,
-    "You must provide a complete `data` prop for <DataStaticRouter>"
+    dataRoutes && state,
+    "You must provide `routes` and `state` to <DataStaticRouter>"
   );
 
-  let staticNavigator = getStatelessNavigator();
-
+  let router = getStatelessRouter(dataRoutes, state);
   return (
-    <DataRouterContext.Provider value={staticRouter}>
-      <DataRouterStateContext.Provider value={staticRouter.state}>
+    <DataRouterContext.Provider value={router}>
+      <DataRouterStateContext.Provider value={router.state}>
         <Router
-          location={staticRouter.state.location}
-          navigationType={staticRouter.state.historyAction}
-          navigator={staticNavigator}
+          location={router.state.location}
+          navigationType={router.state.historyAction}
+          navigator={getStatelessNavigator()}
           static={true}
         >
-          <Routes children={children} />
+          <DataStaticRoutes
+            dataRoutes={router.routes}
+            location={router.state.location}
+          />
         </Router>
       </DataRouterStateContext.Provider>
     </DataRouterContext.Provider>
   );
+}
+
+interface DataStaticRoutesProps {
+  dataRoutes: DataRouteObject[];
+  location: RouterState["location"];
+}
+
+function DataStaticRoutes({
+  dataRoutes,
+  location,
+}: DataStaticRoutesProps): React.ReactElement | null {
+  return useRoutes(dataRoutes, location);
 }
 
 function getStatelessNavigator() {
@@ -144,5 +145,63 @@ function getStatelessNavigator() {
           `environment.`
       );
     },
+  };
+}
+
+function getStatelessRouter(
+  dataRoutes: DataRouteObject[],
+  state: StaticHandlerState
+): DataRouter {
+  let msg = (method: string) =>
+    `You cannot use router.${method}() on the server because it is a stateless environment`;
+
+  return {
+    get state() {
+      return {
+        historyAction: Action.Pop,
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        restoreScrollPosition: null,
+        resetScrollPosition: true,
+        revalidation: "idle" as RevalidationState,
+        fetchers: new Map(),
+        // state provides location, matches, loaderData, actionData, and errors
+        ...state,
+      };
+    },
+    get routes() {
+      return dataRoutes;
+    },
+    initialize() {
+      throw msg("initialize");
+    },
+    subscribe() {
+      throw msg("subscribe");
+    },
+    enableScrollRestoration() {
+      throw msg("enableScrollRestoration");
+    },
+    navigate() {
+      throw msg("navigate");
+    },
+    fetch() {
+      throw msg("fetch");
+    },
+    revalidate() {
+      throw msg("revalidate");
+    },
+    createHref() {
+      throw msg("createHref");
+    },
+    getFetcher() {
+      throw msg("getFetcher");
+    },
+    deleteFetcher() {
+      throw msg("deleteFetcher");
+    },
+    dispose() {
+      throw msg("dispose");
+    },
+    _internalFetchControllers: new Map(),
   };
 }
