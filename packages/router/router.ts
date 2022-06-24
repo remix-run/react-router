@@ -1424,6 +1424,8 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    invariant(!isDeferredResult(result), "Unhandled fetcher deferred data");
+
     // Put the fetcher back into an idle state
     let doneFetcher: FetcherStates["Idle"] = {
       state: "idle",
