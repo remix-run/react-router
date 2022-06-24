@@ -22,6 +22,8 @@ import {
   warningOnce,
 } from "./router";
 
+const emptyObj = {};
+
 /**
  * Returns the full href for the given "to" value. This is useful for building
  * custom links that are also accessible and preserve right-click behavior.
@@ -233,7 +235,7 @@ export function useParams<
 > {
   let { matches } = React.useContext(RouteContext);
   let routeMatch = matches[matches.length - 1];
-  return routeMatch ? (routeMatch.params as any) : {};
+  return routeMatch ? (routeMatch.params as any) : emptyObj;
 }
 
 /**
