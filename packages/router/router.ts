@@ -1014,19 +1014,13 @@ export function createRouter(init: RouterInit): Router {
       fetchControllers.set(key, abortController)
     );
 
-    // Call all navigation loaders and revalidating fetcher loaders in parallel,
-    // then slice off the results into separate arrays so we can handle them
-    // accordingly
-    let results = await Promise.all([
-      ...matchesToLoad.map((m) =>
-        callLoaderOrAction(m, location, abortController.signal)
-      ),
-      ...revalidatingFetchers.map(([, href, match]) =>
-        callLoaderOrAction(match, href, abortController.signal)
-      ),
-    ]);
-    let navigationResults = results.slice(0, matchesToLoad.length);
-    let fetcherResults = results.slice(matchesToLoad.length);
+    let { results, loaderResults, fetcherResults } =
+      await callLoadersAndResolveData(
+        matchesToLoad,
+        revalidatingFetchers,
+        location,
+        abortController.signal
+      );
 
     if (abortController.signal.aborted) {
       return { shortCircuited: true };
@@ -1047,11 +1041,11 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Process and commit output from loaders
-    let { loaderData, errors } = await processLoaderData(
+    let { loaderData, errors } = processLoaderData(
       state,
       matches,
       matchesToLoad,
-      navigationResults,
+      loaderResults,
       pendingError,
       revalidatingFetchers,
       fetcherResults,
@@ -1060,7 +1054,12 @@ export function createRouter(init: RouterInit): Router {
 
     // Wire up subscribers to update loaderData as promises settle
     activeDeferreds.forEach((deferredData, routeId) => {
-      deferredData.subscribe((loaderDataKey, data) => {
+      deferredData.subscribe((aborted, loaderDataKey, data) => {
+        if (aborted) {
+          return;
+        }
+        // This will always be defined here, but TS doesn't know that
+        invariant(loaderDataKey, "Missing loaderDataKey in subscribe");
         updateState({
           loaderData: {
             ...state.loaderData,
@@ -1280,19 +1279,13 @@ export function createRouter(init: RouterInit): Router {
 
     updateState({ fetchers: new Map(state.fetchers) });
 
-    // Call all navigation loaders and revalidating fetcher loaders in parallel,
-    // then slice off the results into separate arrays so we can handle them
-    // accordingly
-    let results = await Promise.all([
-      ...matchesToLoad.map((m) =>
-        callLoaderOrAction(m, nextLocation, abortController.signal)
-      ),
-      ...revalidatingFetchers.map(([, href, match]) =>
-        callLoaderOrAction(match, href, abortController.signal)
-      ),
-    ]);
-    let loaderResults = results.slice(0, matchesToLoad.length);
-    let fetcherResults = results.slice(matchesToLoad.length);
+    let { results, loaderResults, fetcherResults } =
+      await callLoadersAndResolveData(
+        matchesToLoad,
+        revalidatingFetchers,
+        nextLocation,
+        abortController.signal
+      );
 
     if (abortController.signal.aborted) {
       return;
@@ -1304,15 +1297,15 @@ export function createRouter(init: RouterInit): Router {
       fetchControllers.delete(staleKey)
     );
 
-    let loaderRedirect = findRedirect(loaderResults);
-    if (loaderRedirect) {
-      let redirectNavigation = getLoaderRedirect(state, loaderRedirect);
-      await startRedirectNavigation(loaderRedirect, redirectNavigation);
+    let redirect = findRedirect(results);
+    if (redirect) {
+      let redirectNavigation = getLoaderRedirect(state, redirect);
+      await startRedirectNavigation(redirect, redirectNavigation);
       return;
     }
 
     // Process and commit output from loaders
-    let { loaderData, errors } = await processLoaderData(
+    let { loaderData, errors } = processLoaderData(
       state,
       state.matches,
       matchesToLoad,
@@ -1390,9 +1383,12 @@ export function createRouter(init: RouterInit): Router {
     );
 
     // Deferred isn't supported or fetcher loads, await everything and treat it
-    // as a normal load
+    // as a normal load.  resolveDeferredData will return undefined if this
+    // fetcher gets aborted, so we just leave result untouched and short circuit
+    // below if that happens
     if (isDeferredResult(result)) {
-      result = await resolveDeferredData(result);
+      result =
+        (await resolveDeferredData(result, abortController.signal)) || result;
     }
 
     // We can delete this so long as we weren't aborted by ou our own fetcher
@@ -1459,6 +1455,41 @@ export function createRouter(init: RouterInit): Router {
       navigation.location,
       { overrideNavigation: navigation }
     );
+  }
+
+  async function callLoadersAndResolveData(
+    matchesToLoad: DataRouteMatch[],
+    fetchersToLoad: [string, string, DataRouteMatch][],
+    location: Location,
+    signal: AbortSignal
+  ) {
+    // Call all navigation loaders and revalidating fetcher loaders in parallel,
+    // then slice off the results into separate arrays so we can handle them
+    // accordingly
+    let results = await Promise.all([
+      ...matchesToLoad.map((m) => callLoaderOrAction(m, location, signal)),
+      ...fetchersToLoad.map(([, href, match]) =>
+        callLoaderOrAction(match, href, signal)
+      ),
+    ]);
+    let loaderResults = results.slice(0, matchesToLoad.length);
+    let fetcherResults = results.slice(matchesToLoad.length);
+
+    await resolveDeferredResults(
+      matchesToLoad,
+      loaderResults,
+      signal,
+      state.loaderData,
+      activeDeferreds
+    );
+
+    await resolveDeferredResults(
+      fetchersToLoad.map(([, , match]) => match),
+      fetcherResults,
+      signal
+    );
+
+    return { results, loaderResults, fetcherResults };
   }
 
   function deleteFetcher(key: string): void {
@@ -1971,7 +2002,7 @@ function createRequest(
   });
 }
 
-async function processLoaderData(
+function processLoaderData(
   state: RouterState,
   matches: DataRouteMatch[],
   matchesToLoad: DataRouteMatch[],
@@ -1980,33 +2011,13 @@ async function processLoaderData(
   revalidatingFetchers: [string, string, DataRouteMatch][],
   fetcherResults: DataResult[],
   activeDeferreds: Map<string, DeferredData>
-): Promise<{
+): {
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"];
-}> {
+} {
   // Fill in loaderData/errors from our loaders
   let loaderData: RouterState["loaderData"] = {};
   let errors: RouterState["errors"] = null;
-
-  // If this is a revalidation then we want to wait for all deferreds to
-  // resolve so that we don't cause loading states to re-trigger or a popcorn
-  // UI of revalidated deferreds resolving _after_ the navigation spinners
-  // were removed.  Walk through all results, and if we find a deferreds in
-  // this state, await them all in parallel it and transform them to
-  // SuccessResult's.  Still need to mark them "active" so they get properly
-  // cancelled if another navigation starts
-  let revalidatingDeferredPromises = results.map((result, index) => {
-    let id = matchesToLoad[index].route.id;
-    if (isDeferredResult(result) && state.loaderData[id] !== undefined) {
-      activeDeferreds.set(id, result.deferredData);
-      return resolveDeferredData(result).then((successResult) => {
-        activeDeferreds.delete(id);
-        results[index] = successResult;
-      });
-    }
-    return null;
-  });
-  await Promise.all(revalidatingDeferredPromises);
 
   // Process loader results into state.loaderData/state.errors
   results.forEach((result, index) => {
@@ -2062,12 +2073,12 @@ async function processLoaderData(
     } else if (isRedirectResult(result)) {
       // Should never get here, redirects should get processed above, but we
       // keep this to type narrow to a success result in the else
-      invariant(false, "Unhandled fetcher revalidation redirect");
+      throw new Error("Unhandled fetcher revalidation redirect");
+    } else if (isDeferredResult(result)) {
+      // Should never get here, deferred data should be awaited for fetchers
+      // in resolveDeferredResults
+      throw new Error("Unhandled fetcher deferred data");
     } else {
-      if (isDeferredResult(result)) {
-        result = await resolveDeferredData(result);
-      }
-
       let doneFetcher: FetcherStates["Idle"] = {
         state: "idle",
         data: result.data,
@@ -2172,17 +2183,50 @@ function isRedirectResult(result?: DataResult): result is RedirectResult {
   return result?.type === ResultType.redirect;
 }
 
+async function resolveDeferredResults(
+  matchesToLoad: DataRouteMatch[],
+  results: DataResult[],
+  signal: AbortSignal,
+  currentLoaderData?: RouteData,
+  activeDeferreds?: Map<string, DeferredData>
+) {
+  for (let index = 0; index < results.length; index++) {
+    let result = results[index];
+    let id = matchesToLoad[index].route.id;
+    // Not passing currentLoaderData means SSR and we always want to await there
+    if (
+      isDeferredResult(result) &&
+      (!currentLoaderData || currentLoaderData[id] !== undefined)
+    ) {
+      activeDeferreds?.set(id, result.deferredData);
+      await resolveDeferredData(result, signal).then((successResult) => {
+        activeDeferreds?.delete(id);
+        if (successResult) {
+          results[index] = successResult;
+        }
+      });
+    }
+  }
+}
+
 async function resolveDeferredData(
-  result: DeferredResult
-): Promise<SuccessResult> {
+  result: DeferredResult,
+  signal: AbortSignal
+): Promise<SuccessResult | undefined> {
   if (!result.deferredData.done) {
-    await new Promise((resolve) => {
-      (result as DeferredResult).deferredData.subscribe(() => {
-        if ((result as DeferredResult).deferredData.done) {
-          resolve(true);
+    let onAbort = () => result.deferredData.cancel();
+    signal.addEventListener("abort", onAbort);
+    let wasAborted = await new Promise((resolve) => {
+      (result as DeferredResult).deferredData.subscribe((aborted) => {
+        signal.removeEventListener("abort", onAbort);
+        if (aborted || (result as DeferredResult).deferredData.done) {
+          resolve(aborted);
         }
       });
     });
+    if (wasAborted) {
+      return;
+    }
   }
   return { type: ResultType.data, data: result.deferredData.data };
 }

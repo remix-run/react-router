@@ -7338,6 +7338,89 @@ describe("a router", () => {
       expect(shouldRevalidateSpy).not.toHaveBeenCalled();
     });
 
+    it("cancels correctly on revalidations interrupted by navigations", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+          },
+          {
+            id: "foo",
+            path: "foo",
+            loader: true,
+          },
+          {
+            id: "bar",
+            path: "bar",
+            loader: true,
+          },
+        ],
+      });
+
+      let A = await t.navigate("/foo");
+      let dfda = defer();
+      await A.loaders.foo.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: dfda.promise,
+        })
+      );
+      await dfda.resolve("LAZY A");
+      await tick();
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL A",
+          lazy: "LAZY A",
+        },
+      });
+
+      let B = await t.revalidate();
+      let dfdb = defer();
+      await B.loaders.foo.resolve(
+        deferred({
+          critical: "CRITICAL B",
+          lazy: dfdb.promise,
+        })
+      );
+      await tick();
+      // B not reflected because its got existing loaderData
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL A",
+          lazy: "LAZY A",
+        },
+      });
+
+      let C = await t.navigate("/bar");
+      let dfdc = defer();
+      await C.loaders.bar.resolve(
+        deferred({
+          critical: "CRITICAL C",
+          lazy: dfdc.promise,
+        })
+      );
+      // The second revalidation should have cancelled the first revalidation
+      // deferred
+      await dfdb.resolve("Nope!");
+      await tick();
+      expect(t.router.state.loaderData).toEqual({
+        bar: {
+          critical: "CRITICAL C",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await dfdc.resolve("Yep!");
+      await tick();
+      expect(t.router.state.loaderData).toEqual({
+        bar: {
+          critical: "CRITICAL C",
+          lazy: "Yep!",
+        },
+      });
+    });
+
     it("cancels pending deferreds on 404 navigations", async () => {
       let t = setup({
         routes: [

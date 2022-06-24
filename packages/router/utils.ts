@@ -851,7 +851,8 @@ export const json: JsonFunction = (data, init = {}) => {
 export class DeferredData {
   private pendingKeys: Set<string> = new Set<string>();
   private cancelled: boolean = false;
-  private subscriber?: (key: string, data: any) => void = undefined;
+  private subscriber?: (aborted: boolean, key?: string, data?: any) => void =
+    undefined;
   data: RouteData = {};
 
   constructor(data: Record<string, any>) {
@@ -875,16 +876,17 @@ export class DeferredData {
     this.pendingKeys.delete(key);
     let value = error ? new DeferredError(error) : data;
     this.data[key] = value;
-    this.subscriber?.(key, value);
+    this.subscriber?.(false, key, value);
   }
 
-  subscribe(fn: (key: string, data: any) => void) {
+  subscribe(fn: (aborted: boolean, key?: string, data?: any) => void) {
     this.subscriber = fn;
   }
 
   cancel() {
     this.cancelled = true;
     this.pendingKeys.forEach((v, k) => this.pendingKeys.delete(k));
+    this.subscriber?.(true);
   }
 
   get done() {
