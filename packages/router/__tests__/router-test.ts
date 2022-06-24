@@ -745,6 +745,9 @@ beforeEach(() => {
 // Detect any failures inside the router navigate code
 afterEach(() => {
   // Cleanup any routers created using setup()
+  if (currentRouter) {
+    expect(currentRouter._internalFetchControllers.size).toBe(0);
+  }
   currentRouter?.dispose();
   currentRouter = null;
 
@@ -5284,6 +5287,8 @@ describe("a router", () => {
           formData: undefined,
           data: "DATA",
         });
+
+        expect(router._internalFetchControllers.size).toBe(0);
       });
 
       it("loader fetch", async () => {
@@ -5412,10 +5417,16 @@ describe("a router", () => {
         });
         expect(B.fetcher.state).toBe("submitting");
         expect(B.fetcher.data).toBe("A ACTION");
+
+        await B.actions.foo.resolve("B ACTION");
+        await B.loaders.root.resolve("ROOT DATA*");
+        await B.loaders.foo.resolve("A DATA*");
+        expect(B.fetcher.state).toBe("idle");
+        expect(B.fetcher.data).toBe("B ACTION");
       });
     });
 
-    describe("fetchers", () => {
+    describe("fetcher removal", () => {
       it("gives an idle fetcher before submission", async () => {
         let t = initializeTmTest();
         let fetcher = t.router.getFetcher("randomKey");
@@ -5627,9 +5638,10 @@ describe("a router", () => {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
         });
-        t.fetch("/foo", key);
+        let C = await t.fetch("/foo", key);
         expect(A.loaders.foo.signal.aborted).toBe(true);
         expect(B.loaders.foo.signal.aborted).toBe(true);
+        await C.loaders.foo.resolve(null);
       });
 
       it("aborts resubmissions action call", async () => {
@@ -5643,12 +5655,15 @@ describe("a router", () => {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
         });
-        t.fetch("/foo", key, {
+        let C = await t.fetch("/foo", key, {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
         });
         expect(A.actions.foo.signal.aborted).toBe(true);
         expect(B.actions.foo.signal.aborted).toBe(true);
+        await C.actions.foo.resolve(null);
+        await C.loaders.root.resolve(null);
+        await C.loaders.index.resolve(null);
       });
 
       it("aborts resubmissions loader call", async () => {
@@ -5659,11 +5674,14 @@ describe("a router", () => {
           formData: createFormData({ key: "value" }),
         });
         await A.actions.foo.resolve("A ACTION");
-        t.fetch("/foo", key, {
+        let C = await t.fetch("/foo", key, {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
         });
         expect(A.loaders.foo.signal.aborted).toBe(true);
+        await C.actions.foo.resolve(null);
+        await C.loaders.root.resolve(null);
+        await C.loaders.foo.resolve(null);
       });
 
       describe(`
@@ -5822,7 +5840,9 @@ describe("a router", () => {
           expect(t.router.state.errors).toEqual({
             root: new ErrorResponse(400, undefined, ""),
           });
-          expect(t.router.state.actionData).toEqual(null);
+
+          await B.loaders.root.resolve(null);
+          await B.loaders.foo.resolve(null);
         });
       });
 
@@ -6206,6 +6226,8 @@ describe("a router", () => {
             formMethod: "post",
             formData: createFormData({ key: "value" }),
           });
+          t.shimHelper(A.loaders, "fetch", "loader", "bar");
+
           // Interrupting the submission should cause the next load to call all loaders
           let B = await t.navigate("/bar");
           await A.actions.foo.resolve("A ACTION");
@@ -6218,6 +6240,18 @@ describe("a router", () => {
             loaderData: {
               root: "ROOT*",
               bar: "BAR",
+            },
+          });
+
+          await A.loaders.root.resolve("ROOT**");
+          await A.loaders.bar.resolve("BAR*");
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/bar" },
+            actionData: null,
+            loaderData: {
+              root: "ROOT**",
+              bar: "BAR*",
             },
           });
         });
@@ -6301,12 +6335,6 @@ describe("a router", () => {
         expect(A.fetcher.state).toBe("idle");
         expect(A.fetcher.data).toBe("TASKS 1");
 
-        let key2 = "key2";
-        let B = await t.fetch("/tasks/2", key2);
-        await B.loaders.tasksId.resolve("TASKS 2");
-        expect(B.fetcher.state).toBe("idle");
-        expect(B.fetcher.data).toBe("TASKS 2");
-
         let C = await t.navigate("/tasks", {
           formMethod: "post",
           formData: createFormData({}),
@@ -6317,8 +6345,7 @@ describe("a router", () => {
         // Resolve the action
         await C.actions.tasks.resolve("TASKS ACTION");
 
-        // Only the revalidating fetcher should go back into a loading state
-        expect(t.router.state.fetchers.get(key1)?.state).toBe("loading");
+        // Fetcher should go back into a loading state
         expect(t.router.state.fetchers.get(key1)?.state).toBe("loading");
 
         // Resolve navigation loaders + fetcher loader
@@ -6326,10 +6353,6 @@ describe("a router", () => {
         await C.loaders.tasks.resolve("TASKS LOADER");
         await C.loaders.tasksId.resolve("TASKS ID*");
         expect(t.router.state.fetchers.get(key1)).toMatchObject({
-          state: "idle",
-          data: "TASKS ID*",
-        });
-        expect(t.router.state.fetchers.get(key2)).toMatchObject({
           state: "idle",
           data: "TASKS ID*",
         });
@@ -6522,6 +6545,9 @@ describe("a router", () => {
             "nextUrl": "http://localhost/fetch",
           }
         `);
+
+        expect(router._internalFetchControllers.size).toBe(0);
+        router.dispose();
       });
 
       it("handles fetcher revalidation errors", async () => {

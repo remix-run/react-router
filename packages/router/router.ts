@@ -475,7 +475,7 @@ export function createRouter(init: RouterInit): Router {
   // action navigation and require revalidation
   let cancelledFetcherLoads: string[] = [];
   // AbortControllers for any in-flight fetchers
-  let fetchControllers = new Map();
+  let fetchControllers = new Map<string, AbortController>();
   // Track loads based on the order in which they started
   let incrementingLoadId = 0;
   // Track the outstanding pending navigation data load to be compared against
@@ -520,9 +520,7 @@ export function createRouter(init: RouterInit): Router {
     }
     subscriber = null;
     pendingNavigationController?.abort();
-    for (let [, controller] of fetchControllers) {
-      controller.abort();
-    }
+    state.fetchers.forEach((_, key) => deleteFetcher(key));
   }
 
   // Subscribe to state updates for the router
@@ -1028,7 +1026,7 @@ export function createRouter(init: RouterInit): Router {
     // we short circuited because pendingNavigationController will have already
     // been assigned to a new controller for the next navigation
     pendingNavigationController = null;
-    revalidatingFetchers.forEach((key) => fetchControllers.delete(key));
+    revalidatingFetchers.forEach(([key]) => fetchControllers.delete(key));
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
@@ -1174,10 +1172,16 @@ export function createRouter(init: RouterInit): Router {
     );
 
     if (abortController.signal.aborted) {
+      // We can delete this so long as we weren't aborted by ou our own fetcher
+      // re-submit which would have put _new_ controller is in fetchControllers
+      if (fetchControllers.get(key) === abortController) {
+        fetchControllers.delete(key);
+      }
       return;
     }
 
     if (isRedirectResult(actionResult)) {
+      fetchControllers.delete(key);
       fetchRedirectIds.add(key);
       let loadingFetcher: FetcherStates["Loading"] = {
         state: "loading",
@@ -1199,7 +1203,7 @@ export function createRouter(init: RouterInit): Router {
     // Process any non-redirect errors thrown
     if (isErrorResult(actionResult)) {
       let boundaryMatch = findNearestBoundary(state.matches, routeId);
-      state.fetchers.delete(key);
+      deleteFetcher(key);
       updateState({
         fetchers: new Map(state.fetchers),
         errors: {
@@ -1286,7 +1290,7 @@ export function createRouter(init: RouterInit): Router {
 
     fetchReloadIds.delete(key);
     fetchControllers.delete(key);
-    revalidatingFetchers.forEach((staleKey) =>
+    revalidatingFetchers.forEach(([staleKey]) =>
       fetchControllers.delete(staleKey)
     );
 
@@ -1381,8 +1385,15 @@ export function createRouter(init: RouterInit): Router {
       result = await resolveDeferredData(result);
     }
 
-    if (abortController.signal.aborted) return;
-    fetchControllers.delete(key);
+    // We can delete this so long as we weren't aborted by ou our own fetcher
+    // re-load which would have put _new_ controller is in fetchControllers
+    if (fetchControllers.get(key) === abortController) {
+      fetchControllers.delete(key);
+    }
+
+    if (abortController.signal.aborted) {
+      return;
+    }
 
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
