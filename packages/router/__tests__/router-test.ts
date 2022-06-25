@@ -207,7 +207,7 @@ function setup({
           let helpers = activeHelpers.get(helperKey);
           invariant(helpers, `No helpers found for: ${helperKey}`);
           helpers.stub(args);
-          helpers._signal = args.signal;
+          helpers._signal = args.request.signal;
           return helpers.dfd.promise;
         };
       }
@@ -222,7 +222,7 @@ function setup({
           let helpers = activeHelpers.get(helperKey);
           invariant(helpers, `No helpers found for: ${helperKey}`);
           helpers.stub(args);
-          helpers._signal = args.signal;
+          helpers._signal = args.request.signal;
           return helpers.dfd.promise.then(
             (result) => {
               // After a successful non-redirect action, ensure we call the right
@@ -3978,22 +3978,25 @@ describe("a router", () => {
       let nav = await t.navigate("/tasks");
       expect(nav.loaders.tasks.stub).toHaveBeenCalledWith({
         params: {},
-        request: new Request("http://localhost/tasks"),
-        signal: expect.any(AbortSignal),
+        request: new Request("http://localhost/tasks", {
+          signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
+        }),
       });
 
       let nav2 = await t.navigate("/tasks/1");
       expect(nav2.loaders.tasksId.stub).toHaveBeenCalledWith({
         params: { id: "1" },
-        request: new Request("http://localhost/tasks/1"),
-        signal: expect.any(AbortSignal),
+        request: new Request("http://localhost/tasks/1", {
+          signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
+        }),
       });
 
       let nav3 = await t.navigate("/tasks?foo=bar#hash");
       expect(nav3.loaders.tasks.stub).toHaveBeenCalledWith({
         params: {},
-        request: new Request("http://localhost/tasks?foo=bar"),
-        signal: expect.any(AbortSignal),
+        request: new Request("http://localhost/tasks?foo=bar", {
+          signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
+        }),
       });
     });
 
@@ -4386,7 +4389,6 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        signal: expect.any(AbortSignal),
       });
 
       // Assert request internals, cannot do a deep comparison above since some
@@ -4420,7 +4422,6 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        signal: expect.any(AbortSignal),
       });
       // Assert request internals, cannot do a deep comparison above since some
       // internals aren't the same on separate creations
@@ -5718,8 +5719,9 @@ describe("a router", () => {
         });
         expect(A.loaders.root.stub).toHaveBeenCalledWith({
           params: {},
-          request: new Request("http://localhost/foo"),
-          signal: expect.any(AbortSignal),
+          request: new Request("http://localhost/foo", {
+            signal: A.loaders.root.stub.mock.calls[0][0].request.signal,
+          }),
         });
       });
     });
