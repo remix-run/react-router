@@ -377,7 +377,6 @@ export async function run(argv: string[] = process.argv.slice(2)) {
         if (installDeps) {
           console.log("💿 Running remix.init script");
           await commands.init(projectDir);
-          await fse.remove(initScriptDir);
         } else {
           console.log();
           console.log(

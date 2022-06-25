@@ -476,8 +476,7 @@ describe("the create command", () => {
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "test.txt"))).toBeTruthy();
-    // if you run `remix init` keep around the remix.init directory for future use
-    expect(fse.existsSync(path.join(projectDir, "remix.init"))).toBeTruthy();
+    expect(fse.existsSync(path.join(projectDir, "remix.init"))).toBeFalsy();
   });
 
   it("throws an error when invalid remix.init script when automatically ran", async () => {

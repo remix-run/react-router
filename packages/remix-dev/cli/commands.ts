@@ -59,31 +59,34 @@ export async function create({
 export async function init(projectDir: string) {
   let initScriptDir = path.join(projectDir, "remix.init");
   let initScript = path.resolve(initScriptDir, "index.js");
+
+  if (!(await fse.pathExists(initScript))) {
+    return;
+  }
+
   let initPackageJson = path.resolve(initScriptDir, "package.json");
-
   let isTypeScript = fse.existsSync(path.join(projectDir, "tsconfig.json"));
+  let packageManager = getPreferredPackageManager();
 
-  if (await fse.pathExists(initScript)) {
-    let packageManager = getPreferredPackageManager();
+  if (await fse.pathExists(initPackageJson)) {
+    execSync(`${packageManager} install`, {
+      cwd: initScriptDir,
+      stdio: "ignore",
+    });
+  }
 
-    if (await fse.pathExists(initPackageJson)) {
-      execSync(`${packageManager} install`, {
-        cwd: initScriptDir,
-        stdio: "ignore",
-      });
+  let initFn = require(initScript);
+  try {
+    await initFn({ isTypeScript, packageManager, rootDirectory: projectDir });
+
+    await fse.remove(initScriptDir);
+  } catch (error) {
+    if (error instanceof Error) {
+      error.message = `${colors.error("🚨 Oops, remix.init failed")}\n\n${
+        error.message
+      }`;
     }
-
-    let initFn = require(initScript);
-    try {
-      await initFn({ isTypeScript, packageManager, rootDirectory: projectDir });
-    } catch (error) {
-      if (error instanceof Error) {
-        error.message = `${colors.error("🚨 Oops, remix.init failed")}\n\n${
-          error.message
-        }`;
-      }
-      throw error;
-    }
+    throw error;
   }
 }
 
