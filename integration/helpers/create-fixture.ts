@@ -4,7 +4,6 @@ import type { Writable } from "stream";
 import express from "express";
 import getPort from "get-port";
 import stripIndent from "strip-indent";
-import chalk from "chalk";
 import { sync as spawnSync } from "cross-spawn";
 import type { JsonObject } from "type-fest";
 
@@ -35,15 +34,6 @@ export function json(value: JsonObject) {
 export async function createFixture(init: FixtureInit) {
   let projectDir = await createFixtureProject(init);
   let buildPath = path.resolve(projectDir, "build");
-  if (!fse.existsSync(buildPath)) {
-    throw new Error(
-      chalk.red(
-        `Expected build directory to exist at ${chalk.dim(
-          buildPath
-        )}. The build probably failed. Did you maybe have a syntax error in your test code strings?`
-      )
-    );
-  }
   let app: ServerBuild = await import(buildPath);
   let handler = createRequestHandler(app, "production");
 
@@ -170,6 +160,12 @@ export async function createFixtureProject(init: FixtureInit): Promise<string> {
     // console.log("  " + setupSpawn.stdout.toString("utf-8"));
     // console.log("  STDERR:");
     // console.log("  " + setupSpawn.stderr.toString("utf-8"));
+    if (setupSpawn.error || setupSpawn.status) {
+      console.error(setupSpawn.stderr.toString("utf-8"));
+      throw (
+        setupSpawn.error || new Error(`Setup failed, check the output above`)
+      );
+    }
   }
   await writeTestFiles(init, projectDir);
   build(projectDir, init.buildStdio, init.sourcemap);
@@ -191,7 +187,11 @@ function build(projectDir: string, buildStdio?: Writable, sourcemap?: boolean) {
   // console.log("  STDOUT:");
   // console.log("  " + buildSpawn.stdout.toString("utf-8"));
   // console.log("  STDERR:");
-  // console.log(" " + buildSpawn.stderr.toString("utf-8"));
+  // console.log("  " + buildSpawn.stderr.toString("utf-8"));
+  if (buildSpawn.error || buildSpawn.status) {
+    console.error(buildSpawn.stderr.toString("utf-8"));
+    throw buildSpawn.error || new Error(`Build failed, check the output above`);
+  }
 
   if (buildStdio) {
     buildStdio.write(buildSpawn.stdout.toString("utf-8"));
