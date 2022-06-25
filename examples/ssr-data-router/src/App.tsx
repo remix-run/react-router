@@ -87,10 +87,11 @@ function Layout() {
 }
 
 const sleep = () => new Promise((r) => setTimeout(r, 500));
+const rand = () => Math.round(Math.random() * 100);
 
 async function homeLoader() {
   await sleep();
-  return { data: `Home loader ran at ${new Date().toISOString()}` };
+  return { data: `Home loader - random value ${rand()}` };
 }
 
 function Home() {
@@ -113,7 +114,7 @@ function About() {
 
 async function dashboardLoader() {
   await sleep();
-  return { data: `Dashboard loader ran at ${new Date().toISOString()}` };
+  return { data: `Dashboard loader - random value ${rand()}` };
 }
 
 function Dashboard() {
