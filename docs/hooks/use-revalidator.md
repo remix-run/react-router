@@ -43,7 +43,7 @@ function useLivePageData() {
   let interval = useInterval(5000);
 
   useEffect(() => {
-    if (revalidate.state === "idle") {
+    if (revalidator.state === "idle") {
       revalidator.revalidate();
     }
   }, [interval]);
