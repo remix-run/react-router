@@ -99,11 +99,8 @@
     "typescript": "^4.7.3"
   },
   "filesize": {
-    "packages/router/dist/router.production.min.js": {
-      "none": "21 kB"
-    },
-    "packages/router/dist//umd/router.production.min.js": {
-      "none": "23 kB"
+    "packages/router/dist/router.js": {
+      "none": "77 kB"
     },
     "packages/react-router/dist/react-router.production.min.js": {
       "none": "10 kB"
