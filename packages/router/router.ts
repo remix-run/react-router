@@ -872,13 +872,11 @@ export function createRouter(init: RouterInit): Router {
 
     let actionMatch = matches.slice(-1)[0];
     if (!actionMatch.route.action) {
-      if (__DEV__) {
-        console.warn(
-          "You're trying to submit to a route that does not have an action.  To " +
-            "fix this, please add an `action` function to the route for " +
-            `[${createHref(location)}]`
-        );
-      }
+      console.warn(
+        "You're trying to submit to a route that does not have an action.  To " +
+          "fix this, please add an `action` function to the route for " +
+          `[${createHref(location)}]`
+      );
       result = {
         type: ResultType.error,
         error: new ErrorResponse(
