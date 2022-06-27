@@ -20,9 +20,8 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist/",
-    "CHANGELOG.md",
-    "LICENSE.md",
-    "README.md"
+    "*.ts",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public"
