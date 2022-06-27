@@ -106,7 +106,7 @@ export function invariant<T>(
 ): asserts value is T;
 export function invariant(value: any, message?: string) {
   if (value === false || value === null || typeof value === "undefined") {
-    console.warn("Test invaeriant failed:", message);
+    console.warn("Test invariant failed:", message);
     throw new Error(message);
   }
 }
@@ -427,12 +427,26 @@ function setup({
     opts?: RouterNavigateOptions
   ): FetcherHelpers {
     let matches = matchRoutes(enhancedRoutes, href);
-    invariant(matches, `No matches found for fetcher href:${href}`);
     invariant(currentRouter, "No currentRouter available");
     let search = parsePath(href).search || "";
     let hasNakedIndexQuery = new URLSearchParams(search)
       .getAll("index")
       .some((v) => v === "");
+
+    // Let fetcher 404s go right through
+    if (!matches) {
+      return {
+        key,
+        navigationId,
+        get fetcher() {
+          invariant(currentRouter, "No currentRouter available");
+          return currentRouter.getFetcher(key);
+        },
+        loaders: {},
+        actions: {},
+        shimLoaderHelper,
+      };
+    }
 
     let match =
       matches[matches.length - 1].route.index && !hasNakedIndexQuery
@@ -562,12 +576,28 @@ function setup({
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
+    key: string,
+    routeId: string,
+    opts: RouterNavigateOptions
+  ): Promise<FetcherHelpers>;
+  async function fetch(
+    href: string,
     keyOrOpts?: string | RouterNavigateOptions,
+    routeIdOrOpts?: string | RouterNavigateOptions,
     opts?: RouterNavigateOptions
   ): Promise<FetcherHelpers> {
     let navigationId = ++guid;
     let key = typeof keyOrOpts === "string" ? keyOrOpts : String(navigationId);
-    opts = typeof keyOrOpts === "object" ? keyOrOpts : opts;
+    let routeId =
+      typeof routeIdOrOpts === "string"
+        ? routeIdOrOpts
+        : String(enhancedRoutes[0].id);
+    opts =
+      typeof keyOrOpts === "object"
+        ? keyOrOpts
+        : typeof routeIdOrOpts === "object"
+        ? routeIdOrOpts
+        : opts;
     invariant(currentRouter, "No currentRouter available");
 
     // @ts-expect-error
@@ -580,7 +610,7 @@ function setup({
     }
 
     let helpers = getFetcherHelpers(key, href, navigationId, opts);
-    currentRouter.fetch(key, enhancedRoutes[0].id, href, opts);
+    currentRouter.fetch(key, routeId, href, opts);
     return helpers;
   }
 
@@ -5555,6 +5585,93 @@ describe("a router", () => {
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
           root: new ErrorResponse(400, undefined, ""),
+        });
+      });
+
+      it("handles fetcher errors at contextual route boundaries", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              errorElement: true,
+              children: [
+                {
+                  id: "wit",
+                  path: "wit",
+                  loader: true,
+                  errorElement: true,
+                },
+                {
+                  id: "witout",
+                  path: "witout",
+                  loader: true,
+                },
+                {
+                  id: "error",
+                  path: "error",
+                  loader: true,
+                },
+              ],
+            },
+          ],
+        });
+
+        // If the routeId is not an active match, errors bubble to the root
+        let A = await t.fetch("/error", "key1", "wit");
+        await A.loaders.error.reject(new Error("Kaboom!"));
+        expect(t.router.getFetcher("key1")).toBe(IDLE_FETCHER);
+        expect(t.router.state.errors).toEqual({
+          root: new Error("Kaboom!"),
+        });
+
+        await t.fetch("/not-found", "key2", "wit");
+        expect(t.router.getFetcher("key2")).toBe(IDLE_FETCHER);
+        expect(t.router.state.errors).toEqual({
+          root: new ErrorResponse(404, "Not Found", null),
+        });
+
+        // Navigate to /wit and trigger errors, handled at the wit boundary
+        let B = await t.navigate("/wit");
+        await B.loaders.wit.resolve("WIT");
+
+        let C = await t.fetch("/error", "key3", "wit");
+        await C.loaders.error.reject(new Error("Kaboom!"));
+        expect(t.router.getFetcher("key3")).toBe(IDLE_FETCHER);
+        expect(t.router.state.errors).toEqual({
+          wit: new Error("Kaboom!"),
+        });
+
+        await t.fetch("/not-found", "key4", "wit", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        expect(t.router.getFetcher("key4")).toBe(IDLE_FETCHER);
+        expect(t.router.state.errors).toEqual({
+          wit: new ErrorResponse(404, "Not Found", null),
+        });
+
+        await t.fetch("/not-found", "key5", "wit");
+        expect(t.router.getFetcher("key5")).toBe(IDLE_FETCHER);
+        expect(t.router.state.errors).toEqual({
+          wit: new ErrorResponse(404, "Not Found", null),
+        });
+
+        // Navigate to /witout and fetch a 404, handled at the root boundary
+        let D = await t.navigate("/witout");
+        await D.loaders.witout.resolve("WITOUT");
+
+        let E = await t.fetch("/error", "key6", "witout");
+        await E.loaders.error.reject(new Error("Kaboom!"));
+        expect(t.router.getFetcher("key6")).toBe(IDLE_FETCHER);
+        expect(t.router.state.errors).toEqual({
+          root: new Error("Kaboom!"),
+        });
+
+        await t.fetch("/not-found", "key7", "witout");
+        expect(t.router.getFetcher("key7")).toBe(IDLE_FETCHER);
+        expect(t.router.state.errors).toEqual({
+          root: new ErrorResponse(404, "Not Found", null),
         });
       });
     });

@@ -1092,10 +1092,20 @@ export function createRouter(init: RouterInit): Router {
       );
     }
 
-    let matches = matchRoutes(dataRoutes, href);
-    invariant(matches, `No matches found for fetch url: ${href}`);
-
     if (fetchControllers.has(key)) abortFetcher(key);
+
+    let matches = matchRoutes(dataRoutes, href);
+    if (!matches) {
+      let boundaryMatch = findNearestBoundary(state.matches, routeId);
+      state.fetchers.set(key, IDLE_FETCHER);
+      updateState({
+        errors: {
+          [boundaryMatch.route.id]: new ErrorResponse(404, "Not Found", null),
+        },
+        fetchers: new Map(state.fetchers),
+      });
+      return;
+    }
 
     let match =
       matches[matches.length - 1].route.index &&

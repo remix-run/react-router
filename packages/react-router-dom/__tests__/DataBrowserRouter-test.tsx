@@ -1852,6 +1852,54 @@ function testDomRouter(
         `);
       });
 
+      it("handles fetcher 404 errors at the correct spot in the route hierarchy", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/child")}
+            hydrationData={{ loaderData: { "0": null } }}
+          >
+            <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
+              <Route
+                path="child"
+                element={<Comp />}
+                errorElement={<ErrorElement />}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <button onClick={() => fetcher.load("/not-found")}>load</button>
+          );
+        }
+
+        function ErrorElement() {
+          let { status, statusText } = useRouteError();
+          return <p>contextual error:{`${status} ${statusText}`}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        fireEvent.click(screen.getByText("load"));
+        await waitFor(() => screen.getByText(/Not Found/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              contextual error:
+              404 Not Found
+            </p>
+          </div>"
+        `);
+      });
+
       it("handles fetcher.load errors at the correct spot in the route hierarchy", async () => {
         let { container } = render(
           <TestDataRouter
