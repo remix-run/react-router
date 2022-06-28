@@ -5763,6 +5763,36 @@ describe("a router", () => {
         });
       });
 
+      it("action fetch without action handler", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              errorElement: true,
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                },
+              ],
+            },
+          ],
+        });
+        let A = await t.fetch("/", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        expect(A.fetcher).toBe(IDLE_FETCHER);
+        expect(t.router.state.errors).toEqual({
+          root: new ErrorResponse(
+            405,
+            "Method Not Allowed",
+            "No action found for [/]"
+          ),
+        });
+      });
+
       it("handles fetcher errors at contextual route boundaries", async () => {
         let t = setup({
           routes: [
