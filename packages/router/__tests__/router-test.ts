@@ -28,8 +28,6 @@ import {
   isDeferredError,
 } from "../utils";
 
-jest.setTimeout(1000000);
-
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
 ///////////////////////////////////////////////////////////////////////////////
@@ -434,7 +432,6 @@ function setup({
         },
         loaders: {},
         actions: {},
-        shimLoaderHelper,
       };
     }
 
@@ -542,22 +539,20 @@ function setup({
 
   // Simulate a fetcher call, returning a series of helpers to manually
   // control/assert loader/actions
-  async function fetch(href: string): Promise<FetcherHelpers>;
-  async function fetch(href: string, key: string): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
-    opts: RouterNavigateOptions
+    opts?: RouterNavigateOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
-    opts: RouterNavigateOptions
+    opts?: RouterNavigateOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
     routeId: string,
-    opts: RouterNavigateOptions
+    opts?: RouterNavigateOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
