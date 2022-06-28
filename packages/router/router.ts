@@ -750,19 +750,17 @@ export function createRouter(init: RouterInit): Router {
       replace?: boolean;
     }
   ): Promise<void> {
-    // Abort any in-progress navigations and start a new one
+    // Abort any in-progress navigations and start a new one. Unset any ongoing
+    // uninterrupted revalidations unless told otherwise, since we want this
+    // new navigation to update history normally
     pendingNavigationController?.abort();
     pendingNavigationController = null;
     pendingAction = historyAction;
-
-    // Unset any ongoing uninterrupted revalidations (unless told otherwise),
-    // since we want this new navigation to update history normally
     isUninterruptedRevalidation = opts?.startUninterruptedRevalidation === true;
 
-    // Save the current scroll position every time we start a new navigation
+    // Save the current scroll position every time we start a new navigation,
+    // and track whether we should reset scroll on completion
     saveScrollPosition(state.location, state.matches);
-
-    // Track whether we should reset scroll on completion
     pendingResetScroll = opts?.resetScroll !== false;
 
     let loadingNavigation = opts?.overrideNavigation;
@@ -795,7 +793,13 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // Call action if we received an action submission
+    // Create a controller/Request for this navigation
+    pendingNavigationController = new AbortController();
+    let request = createRequest(
+      location,
+      pendingNavigationController.signal,
+      opts?.submission
+    );
     let pendingActionData: RouteData | undefined;
     let pendingError: RouteData | undefined;
 
@@ -808,7 +812,9 @@ export function createRouter(init: RouterInit): Router {
         [findNearestBoundary(matches).route.id]: opts.pendingError,
       };
     } else if (opts?.submission) {
+      // Call action if we received an action submission
       let actionOutput = await handleAction(
+        request,
         location,
         opts.submission,
         matches,
@@ -832,11 +838,12 @@ export function createRouter(init: RouterInit): Router {
 
     // Call loaders
     let { shortCircuited, loaderData, errors } = await handleLoaders(
+      request,
       historyAction,
       location,
-      opts?.submission,
       matches,
       loadingNavigation,
+      opts?.submission,
       pendingActionData,
       pendingError
     );
@@ -844,6 +851,11 @@ export function createRouter(init: RouterInit): Router {
     if (shortCircuited) {
       return;
     }
+
+    // Clean up now that the action/loaders have completed.  Don't clean up if
+    // we short circuited because pendingNavigationController will have already
+    // been assigned to a new controller for the next navigation
+    pendingNavigationController = null;
 
     completeNavigation(historyAction, location, {
       matches,
@@ -855,19 +867,19 @@ export function createRouter(init: RouterInit): Router {
   // Call the action matched by the leaf route for this navigation and handle
   // redirects/errors
   async function handleAction(
+    request: Request,
     location: Location,
     submission: Submission,
     matches: DataRouteMatch[],
     opts?: { replace?: boolean }
   ): Promise<HandleActionResult> {
+    // Every action triggers a revalidation
     isRevalidationRequired = true;
 
-    // Cancel all pending deferred on submissions and mark cancelled routes
-    // for revalidation
+    // Cancel pending deferreds, mark cancelled routes for revalidation, and
+    // abort in-flight fetcher loads
     cancelledDeferredRoutes.push(...cancelActiveDeferreds());
-
-    // Abort any in-flight fetcher loads
-    fetchLoadMatches.forEach(([href, match], key) => {
+    fetchLoadMatches.forEach((_, key) => {
       if (fetchControllers.has(key)) {
         cancelledFetcherLoads.push(key);
         abortFetcher(key);
@@ -884,44 +896,18 @@ export function createRouter(init: RouterInit): Router {
 
     // Call our action and get the result
     let result: DataResult;
-
     let actionMatch = getTargetMatch(matches, location);
-    if (!actionMatch.route.action) {
-      console.warn(
-        "You're trying to submit to a route that does not have an action.  To " +
-          "fix this, please add an `action` function to the route for " +
-          `[${createHref(location)}]`
-      );
-      result = {
-        type: ResultType.error,
-        error: new ErrorResponse(
-          405,
-          "Method Not Allowed",
-          `No action found for [${createHref(location)}]`
-        ),
-      };
-    } else {
-      // Create a controller for this data load
-      pendingNavigationController = new AbortController();
-      let request = createRequest(
-        location,
-        pendingNavigationController.signal,
-        submission
-      );
 
+    if (!actionMatch.route.action) {
+      result = getMethodNotAllowedResult(location);
+    } else {
       result = await callLoaderOrAction("action", request, actionMatch);
 
       if (request.signal.aborted) {
         return { shortCircuited: true };
       }
-
-      // Clean up now that the loaders have completed.  We do do not clean up if
-      // we short circuited because pendingNavigationController will have already
-      // been assigned to a new controller for the next navigation
-      pendingNavigationController = null;
     }
 
-    // If the action threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
       let redirectNavigation: NavigationStates["Loading"] = {
         state: "loading",
@@ -958,17 +944,17 @@ export function createRouter(init: RouterInit): Router {
   // Call all applicable loaders for the given matches, handling redirects,
   // errors, etc.
   async function handleLoaders(
+    request: Request,
     historyAction: HistoryAction,
     location: Location,
-    submission: Submission | undefined,
     matches: DataRouteMatch[],
-    overrideNavigation: Navigation | undefined,
+    overrideNavigation?: Navigation,
+    submission?: Submission,
     pendingActionData?: RouteData,
     pendingError?: RouteData
   ): Promise<HandleLoadersResult> {
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation = overrideNavigation;
-
     if (!loadingNavigation) {
       let navigation: NavigationStates["Loading"] = {
         state: "loading",
@@ -1011,10 +997,10 @@ export function createRouter(init: RouterInit): Router {
       return { shortCircuited: true };
     }
 
-    // If this is an uninterrupted revalidation, remain in our current idle state.
-    // Otherwise, switch to our loading state and load data, preserving any
-    // new action data or existing action data (in the case of a revalidation
-    // interrupting an actionReload)
+    // If this is an uninterrupted revalidation, we remain in our current idle
+    // state.  If not, we need to switch to our loading state and load data,
+    // preserving any new action data or existing action data (in the case of
+    // a revalidation interrupting an actionReload)
     if (!isUninterruptedRevalidation) {
       revalidatingFetchers.forEach(([key]) => {
         let revalidatingFetcher: FetcherStates["Loading"] = {
@@ -1036,13 +1022,6 @@ export function createRouter(init: RouterInit): Router {
       });
     }
 
-    // Start the data load
-    pendingNavigationController = new AbortController();
-    let request = createRequest(
-      location,
-      pendingNavigationController.signal,
-      submission
-    );
     pendingNavigationLoadId = ++incrementingLoadId;
     revalidatingFetchers.forEach(([key]) =>
       fetchControllers.set(key, pendingNavigationController!)
@@ -1059,10 +1038,9 @@ export function createRouter(init: RouterInit): Router {
       return { shortCircuited: true };
     }
 
-    // Clean up now that the loaders have completed.  We do do not clean up if
-    // we short circuited because pendingNavigationController will have already
-    // been assigned to a new controller for the next navigation
-    pendingNavigationController = null;
+    // Clean up _after_ loaders have completed.  Don't clean up if we short
+    // circuited because fetchControllers would have been aborted and
+    // reassigned to new controllers for the next navigation
     revalidatingFetchers.forEach(([key]) => fetchControllers.delete(key));
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
@@ -1489,6 +1467,9 @@ export function createRouter(init: RouterInit): Router {
       navigation.location,
       "Expected a location on the redirect navigation"
     );
+    // There's no need to abort on redirects, since we don't detect the
+    // redirect until the action/loaders have settled
+    pendingNavigationController = null;
     await startNavigation(
       isPush ? HistoryAction.Push : HistoryAction.Replace,
       navigation.location,
@@ -1802,19 +1783,7 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
     let result: DataResult;
     if (!actionMatch.route.action) {
       let href = createHref(new URL(request.url));
-      console.warn(
-        "You're trying to submit to a route that does not have an action.  To " +
-          "fix this, please add an `action` function to the route for " +
-          `[${href}]`
-      );
-      result = {
-        type: ResultType.error,
-        error: new ErrorResponse(
-          405,
-          "Method Not Allowed",
-          `No action found for [${href}]`
-        ),
-      };
+      result = getMethodNotAllowedResult(href);
     } else {
       result = await callLoaderOrAction(
         "action",
@@ -2526,6 +2495,23 @@ function getNotFoundMatches(routes: DataRouteObject[]): {
     ],
     route,
     error: new ErrorResponse(404, "Not Found", null),
+  };
+}
+
+function getMethodNotAllowedResult(path: Location | string): ErrorResult {
+  let href = typeof path === "string" ? path : createHref(path);
+  console.warn(
+    "You're trying to submit to a route that does not have an action.  To " +
+      "fix this, please add an `action` function to the route for " +
+      `[${href}]`
+  );
+  return {
+    type: ResultType.error,
+    error: new ErrorResponse(
+      405,
+      "Method Not Allowed",
+      `No action found for [${href}]`
+    ),
   };
 }
 
