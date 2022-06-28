@@ -76,7 +76,7 @@
     "type-fest": "^2.12.2"
   },
   "peerDependencies": {
-    "@remix-run/serve": "1.5.1"
+    "@remix-run/serve": "^1.5.1"
   },
   "peerDependenciesMeta": {
     "@remix-run/serve": {
