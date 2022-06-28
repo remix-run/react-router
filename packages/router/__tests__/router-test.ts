@@ -119,15 +119,12 @@ function defer() {
   let promise = new Promise((res, rej) => {
     resolve = async (val: any) => {
       res(val);
-      try {
-        await promise;
-      } catch (e) {}
+      await tick();
+      await promise;
     };
     reject = async (error?: Error) => {
       rej(error);
-      try {
-        await promise;
-      } catch (e) {}
+      await promise.catch(() => tick());
     };
   });
   return {
@@ -343,12 +340,10 @@ function setup({
       // Public APIs only needed for test execution
       async resolve(value) {
         await internalHelpers.dfd.resolve(value);
-        await tick();
       },
       async reject(value) {
         try {
           await internalHelpers.dfd.reject(value);
-          await tick();
         } catch (e) {}
       },
       async redirect(href, status = 301, headers = {}, shims = []) {
@@ -3416,7 +3411,6 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await parentDfd.resolve("PARENT DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3429,7 +3423,6 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await childDfd.resolve("CHILD DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3489,7 +3482,6 @@ describe("a router", () => {
 
       await parentDfd.resolve("PARENT DATA 2");
       await childDfd.resolve("CHILD DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3596,7 +3588,6 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await parentDfd.resolve("PARENT DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3610,7 +3601,6 @@ describe("a router", () => {
 
       router.navigate("/child2");
       await childDfd.resolve("CHILD DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3623,7 +3613,6 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await child2Dfd.resolve("CHILD2 DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "PUSH",
         location: expect.objectContaining({ pathname: "/child2" }),
@@ -7332,7 +7321,6 @@ describe("a router", () => {
       });
 
       await indexDfd2.resolve("LAZY INDEX 2");
-      await tick();
       // Not done yet!
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.revalidation).toBe("loading");
@@ -7348,7 +7336,6 @@ describe("a router", () => {
       });
 
       await parentDfd2.resolve("LAZY PARENT 2");
-      await tick();
       // Done now that all deferreds have resolved
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.revalidation).toBe("idle");
@@ -7391,7 +7378,6 @@ describe("a router", () => {
           lazy: dfda.promise,
         })
       );
-      await tick();
       expect(t.router.state.loaderData).toEqual({
         foo: {
           critical: "CRITICAL A",
@@ -7411,7 +7397,6 @@ describe("a router", () => {
       );
       // The initial revalidation cancelled the navigation deferred
       await dfda.resolve("Nope!");
-      await tick();
       expect(t.router.state.loaderData).toEqual({
         foo: {
           critical: "CRITICAL A",
@@ -7430,7 +7415,6 @@ describe("a router", () => {
       // The second revalidation should have cancelled the first revalidation
       // deferred
       await dfdb.resolve("Nope!");
-      await tick();
       expect(t.router.state.loaderData).toEqual({
         foo: {
           critical: "CRITICAL A",
@@ -7439,7 +7423,6 @@ describe("a router", () => {
       });
 
       await dfdc.resolve("Yep!");
-      await tick();
       expect(t.router.state.loaderData).toEqual({
         foo: {
           critical: "CRITICAL C",
@@ -7479,7 +7462,6 @@ describe("a router", () => {
         })
       );
       await dfda.resolve("LAZY A");
-      await tick();
       expect(t.router.state.loaderData).toEqual({
         foo: {
           critical: "CRITICAL A",
@@ -7495,7 +7477,6 @@ describe("a router", () => {
           lazy: dfdb.promise,
         })
       );
-      await tick();
       // B not reflected because its got existing loaderData
       expect(t.router.state.loaderData).toEqual({
         foo: {
@@ -7515,7 +7496,6 @@ describe("a router", () => {
       // The second revalidation should have cancelled the first revalidation
       // deferred
       await dfdb.resolve("Nope!");
-      await tick();
       expect(t.router.state.loaderData).toEqual({
         bar: {
           critical: "CRITICAL C",
@@ -7524,7 +7504,6 @@ describe("a router", () => {
       });
 
       await dfdc.resolve("Yep!");
-      await tick();
       expect(t.router.state.loaderData).toEqual({
         bar: {
           critical: "CRITICAL C",
@@ -7900,7 +7879,6 @@ describe("a router", () => {
       });
 
       await parentDfd2.resolve("Yep!");
-      await tick();
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT 2",
@@ -8041,7 +8019,6 @@ describe("a router", () => {
       });
 
       await parentDfd2Revalidation.resolve("LAZY PARENT 2*");
-      await tick();
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.actionData).toEqual({
         b: "ACTION",
@@ -8091,7 +8068,6 @@ describe("a router", () => {
       });
 
       await dfd.resolve("2");
-      await tick();
       expect(t.router.state.fetchers.get(key)).toMatchObject({
         state: "idle",
         data: {
@@ -8119,7 +8095,6 @@ describe("a router", () => {
       });
 
       await dfd2.resolve("4");
-      await tick();
       expect(t.router.state.fetchers.get(key)).toMatchObject({
         state: "idle",
         data: {
@@ -8295,7 +8270,6 @@ describe("a router", () => {
 
       await parentDfd2.resolve("Yep!");
       await aDfd2.resolve("Yep!");
-      await tick();
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT 2",
