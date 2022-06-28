@@ -353,8 +353,9 @@ async function createBrowserBuild(
     mdxPlugin(config),
     browserRouteModulesPlugin(config, /\?browser$/),
     emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/),
-    NodeModulesPolyfillPlugin(),
+    // Must be placed before NodeModulesPolyfillPlugin, so yarn can resolve polyfills correctly
     yarnPnpPlugin(),
+    NodeModulesPolyfillPlugin(),
   ];
 
   return esbuild.build({
