@@ -8840,12 +8840,15 @@ describe("a router", () => {
           ],
         });
         let request = createRequest("/", { signal: controller.signal });
-        let statePromise = query(request);
-        controller.abort();
-        expect(statePromise).rejects.toMatchInlineSnapshot(
-          `[Error: query() aborted]`
-        );
-        dfd.resolve("Nope!");
+        expect.assertions(1);
+        try {
+          let statePromise = query(request);
+          controller.abort();
+          dfd.resolve("Nope!");
+          await statePromise;
+        } catch (e) {
+          expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
+        }
       });
 
       it("should handle aborted submit requests", async () => {
@@ -8863,30 +8866,41 @@ describe("a router", () => {
         let request = createSubmitRequest("/", {
           signal: controller.signal,
         });
-        let statePromise = query(request);
-        controller.abort();
-        expect(statePromise).rejects.toMatchInlineSnapshot(
-          `[Error: query() aborted]`
-        );
-        dfd.resolve("Nope!");
+        expect.assertions(1);
+        try {
+          let statePromise = query(request);
+          controller.abort();
+          dfd.resolve("Nope!");
+          await statePromise;
+        } catch (e) {
+          expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
+        }
       });
 
-      it("should not support HEAD requests", () => {
+      it("should not support HEAD requests", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
         let request = createRequest("/", { method: "head" });
-        let statePromise = query(request);
-        expect(statePromise).rejects.toMatchInlineSnapshot(
-          `[Error: query() does not support HEAD requests]`
-        );
+        expect.assertions(1);
+        try {
+          await query(request);
+        } catch (e) {
+          expect(e).toMatchInlineSnapshot(
+            `[Error: query() does not support HEAD requests]`
+          );
+        }
       });
 
-      it("should require a signal on the request", () => {
+      it("should require a signal on the request", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
         let request = createRequest("/", { signal: undefined });
-        let statePromise = query(request);
-        expect(statePromise).rejects.toMatchInlineSnapshot(
-          `[Error: query() requests must contain an AbortController signal]`
-        );
+        expect.assertions(1);
+        try {
+          await query(request);
+        } catch (e) {
+          expect(e).toMatchInlineSnapshot(
+            `[Error: query() requests must contain an AbortController signal]`
+          );
+        }
       });
 
       it("should handle not found action submissions with a 405 error", async () => {
@@ -9008,6 +9022,32 @@ describe("a router", () => {
         expect(data).toBe("ERROR ACTION ERROR");
       });
 
+      it("should handle aborted load requests", async () => {
+        let dfd = defer();
+        let controller = new AbortController();
+        let { queryRoute } = createStaticHandler({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              loader: () => dfd.promise,
+            },
+          ],
+        });
+        let request = createRequest("/", {
+          signal: controller.signal,
+        });
+        expect.assertions(1);
+        try {
+          let statePromise = queryRoute(request, "root");
+          controller.abort();
+          dfd.resolve("Nope!");
+          await statePromise;
+        } catch (e) {
+          expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
+        }
+      });
+
       it("should handle aborted submit requests", async () => {
         let dfd = defer();
         let controller = new AbortController();
@@ -9023,30 +9063,41 @@ describe("a router", () => {
         let request = createSubmitRequest("/", {
           signal: controller.signal,
         });
-        let statePromise = queryRoute(request, "root");
-        controller.abort();
-        expect(statePromise).rejects.toMatchInlineSnapshot(
-          `[Error: query() aborted]`
-        );
-        dfd.resolve("Nope!");
+        expect.assertions(1);
+        try {
+          let statePromise = queryRoute(request, "root");
+          controller.abort();
+          dfd.resolve("Nope!");
+          await statePromise;
+        } catch (e) {
+          expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
+        }
       });
 
-      it("should not support HEAD requests", () => {
+      it("should not support HEAD requests", async () => {
         let { queryRoute } = createStaticHandler({ routes: SSR_ROUTES });
         let request = createRequest("/", { method: "head" });
-        let statePromise = queryRoute(request, "index");
-        expect(statePromise).rejects.toMatchInlineSnapshot(
-          `[Error: query() does not support HEAD requests]`
-        );
+        expect.assertions(1);
+        try {
+          await queryRoute(request, "index");
+        } catch (e) {
+          expect(e).toMatchInlineSnapshot(
+            `[Error: query() does not support HEAD requests]`
+          );
+        }
       });
 
-      it("should require a signal on the request", () => {
+      it("should require a signal on the request", async () => {
         let { queryRoute } = createStaticHandler({ routes: SSR_ROUTES });
         let request = createRequest("/", { signal: undefined });
-        let statePromise = queryRoute(request, "index");
-        expect(statePromise).rejects.toMatchInlineSnapshot(
-          `[Error: query() requests must contain an AbortController signal]`
-        );
+        expect.assertions(1);
+        try {
+          await queryRoute(request, "index");
+        } catch (e) {
+          expect(e).toMatchInlineSnapshot(
+            `[Error: query() requests must contain an AbortController signal]`
+          );
+        }
       });
 
       it("should handle not found action submissions with a 405 Response", async () => {
