@@ -235,7 +235,7 @@ export type StaticHandlerState = Pick<
 >;
 
 /**
- * A StaticRouter instance manages a singular SSR navigation/fetch event
+ * A StaticHandler instance manages a singular SSR navigation/fetch event
  */
 export interface StaticHandler {
   dataRoutes: DataRouteObject[];
@@ -244,7 +244,7 @@ export interface StaticHandler {
 }
 
 /**
- * Initialization options for createStaticRouter
+ * Initialization options for createStaticHandler
  */
 export interface StaticHandlerInit {
   routes: RouteObject[];
@@ -1687,13 +1687,13 @@ export function createRouter(init: RouterInit): Router {
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
-//#region createStaticRouter
+//#region createStaticHandler
 ////////////////////////////////////////////////////////////////////////////////
 
 export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
   invariant(
     init.routes.length > 0,
-    "You must provide a non-empty routes array to createStaticRouter"
+    "You must provide a non-empty routes array to createStaticHandler"
   );
 
   let dataRoutes = convertRoutesToDataRoutes(init.routes);
@@ -1705,7 +1705,7 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
     if (result instanceof Response) {
       return result;
     }
-    // When returning StaticRouterState, we patch back in the location here
+    // When returning StaticHandlerState, we patch back in the location here
     // since we need it for React Context.  But this helps keep our submit and
     // loadRouteData operating on a Request instead of a Location
     return { location, ...result };
