@@ -16,7 +16,13 @@ import {
   Submission,
   SuccessResult,
 } from "./utils";
-import { ErrorResponse, ResultType, invariant, matchRoutes } from "./utils";
+import {
+  ErrorResponse,
+  ResultType,
+  invariant,
+  isRouteErrorResponse,
+  matchRoutes,
+} from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
@@ -30,6 +36,11 @@ export interface Router {
    * Return the current state of the router
    */
   get state(): RouterState;
+
+  /**
+   * Return the routes for this router instance
+   */
+  get routes(): DataRouteObject[];
 
   /**
    * Initialize the router, including adding history listeners and kicking off
@@ -213,6 +224,30 @@ export interface RouterInit {
   routes: RouteObject[];
   history: History;
   hydrationData?: HydrationState;
+}
+
+/**
+ * State returned from a server-side query() call
+ */
+export type StaticHandlerState = Pick<
+  RouterState,
+  "location" | "matches" | "loaderData" | "actionData" | "errors"
+>;
+
+/**
+ * A StaticRouter instance manages a singular SSR navigation/fetch event
+ */
+export interface StaticHandler {
+  dataRoutes: DataRouteObject[];
+  query(request: Request): Promise<StaticHandlerState | Response>;
+  queryRoute(request: Request, routeId: string): Promise<any>;
+}
+
+/**
+ * Initialization options for createStaticRouter
+ */
+export interface StaticHandlerInit {
+  routes: RouteObject[];
 }
 
 /**
@@ -1654,6 +1689,9 @@ export function createRouter(init: RouterInit): Router {
     get state() {
       return state;
     },
+    get routes() {
+      return dataRoutes;
+    },
     initialize,
     subscribe,
     enableScrollRestoration,
@@ -1670,6 +1708,288 @@ export function createRouter(init: RouterInit): Router {
 
   return router;
 }
+//#endregion
+
+////////////////////////////////////////////////////////////////////////////////
+//#region createStaticRouter
+////////////////////////////////////////////////////////////////////////////////
+
+export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
+  invariant(
+    init.routes.length > 0,
+    "You must provide a non-empty routes array to createStaticRouter"
+  );
+
+  let dataRoutes = convertRoutesToDataRoutes(init.routes);
+
+  async function query(
+    request: Request
+  ): Promise<StaticHandlerState | Response> {
+    let { location, result } = await queryImpl(request);
+    if (result instanceof Response) {
+      return result;
+    }
+    // When returning StaticRouterState, we patch back in the location here
+    // since we need it for React Context.  But this helps keep our submit and
+    // loadRouteData operating on a Request instead of a Location
+    return { location, ...result };
+  }
+
+  async function queryRoute(request: Request, routeId: string): Promise<any> {
+    let { result } = await queryImpl(request, routeId);
+    if (result instanceof Response) {
+      return result;
+    }
+
+    // Pick off the right state value to return
+    let routeData = [result.errors, result.actionData, result.loaderData].find(
+      (v) => v
+    );
+    let value = Object.values(routeData || {})[0];
+
+    if (isRouteErrorResponse(value)) {
+      return new Response(value.data, {
+        status: value.status,
+        statusText: value.statusText,
+      });
+    }
+
+    return value;
+  }
+
+  async function queryImpl(
+    request: Request,
+    routeId?: string
+  ): Promise<{
+    location: Location;
+    result: Omit<StaticHandlerState, "location"> | Response;
+  }> {
+    invariant(
+      request.method !== "HEAD",
+      "query() does not support HEAD requests"
+    );
+    invariant(
+      request.signal,
+      "query() requests must contain an AbortController signal"
+    );
+
+    let { location, matches, shortCircuitState } = matchRequest(
+      request,
+      routeId
+    );
+
+    try {
+      if (shortCircuitState) {
+        return { location, result: shortCircuitState };
+      }
+
+      let result =
+        request.method === "GET"
+          ? await loadRouteData(request, matches, routeId != null)
+          : await submit(
+              request,
+              matches,
+              getTargetMatch(matches, location),
+              routeId != null
+            );
+      return { location, result };
+    } catch (e) {
+      if (e instanceof Response) {
+        return { location, result: e };
+      }
+      throw e;
+    }
+  }
+
+  async function submit(
+    request: Request,
+    matches: DataRouteMatch[],
+    actionMatch: DataRouteMatch,
+    isRouteRequest: boolean
+  ): Promise<Omit<StaticHandlerState, "location"> | Response> {
+    let result: DataResult;
+    if (!actionMatch.route.action) {
+      let href = createHref(new URL(request.url));
+      console.warn(
+        "You're trying to submit to a route that does not have an action.  To " +
+          "fix this, please add an `action` function to the route for " +
+          `[${href}]`
+      );
+      result = {
+        type: ResultType.error,
+        error: new ErrorResponse(
+          405,
+          "Method Not Allowed",
+          `No action found for [${href}]`
+        ),
+      };
+    } else {
+      result = await callLoaderOrAction(
+        "action",
+        request,
+        actionMatch,
+        request.signal,
+        true,
+        isRouteRequest
+      );
+
+      if (request.signal.aborted) {
+        throw new Error("query() aborted");
+      }
+    }
+
+    if (isRedirectResult(result)) {
+      // Uhhhh - this should never happen, we should always throw these from
+      // calLoadOrAction, but the type narrowing here keeps TS happy and we
+      // can get back on the "throw all redirect responses" train here should
+      // this ever happen :/
+      throw new Response(null, {
+        status: result.status,
+        headers: {
+          Location: result.location,
+        },
+      });
+    }
+
+    if (isDeferredResult(result)) {
+      throw new Error("deferred() is not supported in actions");
+    }
+
+    if (isRouteRequest) {
+      let actionData: RouteData | null = null;
+      let errors: RouteData | null = null;
+      if (isErrorResult(result)) {
+        let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+        errors = {
+          [boundaryMatch.route.id]: result.error,
+        };
+      } else {
+        actionData = { [actionMatch.route.id]: result.data };
+      }
+
+      return {
+        matches: [actionMatch],
+        loaderData: {},
+        actionData,
+        errors,
+      };
+    }
+
+    if (isErrorResult(result)) {
+      // Store off the pending error - we use it to determine which loaders
+      // to call and will commit it when we complete the navigation
+      let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+      return await loadRouteData(request, matches, isRouteRequest, undefined, {
+        [boundaryMatch.route.id]: result.error,
+      });
+    }
+
+    return await loadRouteData(request, matches, isRouteRequest, {
+      [actionMatch.route.id]: result.data,
+    });
+  }
+
+  async function loadRouteData(
+    request: Request,
+    matches: DataRouteMatch[],
+    isRouteRequest: boolean,
+    pendingActionData?: RouteData,
+    pendingActionError?: RouteData
+  ): Promise<Omit<StaticHandlerState, "location"> | Response> {
+    let matchesToLoad = getLoaderMatchesUntilBoundary(
+      matches,
+      Object.keys(pendingActionError || {})[0]
+    ).filter((m) => m.route.loader);
+
+    // Short circuit if we have no loaders to run
+    if (matchesToLoad.length === 0) {
+      return {
+        matches,
+        loaderData: {},
+        actionData: pendingActionData || null,
+        errors: pendingActionError || null,
+      };
+    }
+
+    let results = await Promise.all([
+      ...matchesToLoad.map((m) =>
+        callLoaderOrAction(
+          "loader",
+          request,
+          m,
+          request.signal,
+          true,
+          isRouteRequest
+        )
+      ),
+    ]);
+    if (request.signal.aborted) {
+      throw new Error("query() aborted");
+    }
+
+    // Process and commit output from loaders
+    let { loaderData, errors } = processRouteLoaderData(
+      matches,
+      matchesToLoad,
+      results,
+      pendingActionError
+    );
+
+    return {
+      matches,
+      loaderData,
+      actionData: pendingActionData || null,
+      errors,
+    };
+  }
+
+  function matchRequest(
+    req: Request,
+    routeId?: string
+  ): {
+    location: Location;
+    matches: DataRouteMatch[];
+    routeMatch?: DataRouteMatch;
+    shortCircuitState?: Omit<StaticHandlerState, "location">;
+  } {
+    let url = new URL(req.url);
+    let location = createLocation("", createPath(url));
+    let matches = matchRoutes(dataRoutes, location);
+    if (matches && routeId) {
+      matches = matches.filter((m) => m.route.id === routeId);
+    }
+
+    // Short circuit with a 404 if we match nothing
+    if (!matches) {
+      let {
+        matches: notFoundMatches,
+        route,
+        error,
+      } = getNotFoundMatches(dataRoutes);
+      return {
+        location,
+        matches: notFoundMatches,
+        shortCircuitState: {
+          matches: notFoundMatches,
+          loaderData: {},
+          actionData: null,
+          errors: {
+            [route.id]: error,
+          },
+        },
+      };
+    }
+
+    return { location, matches };
+  }
+
+  return {
+    dataRoutes,
+    query,
+    queryRoute,
+  };
+}
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1929,7 +2249,9 @@ async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
   match: DataRouteMatch,
-  signal: AbortSignal
+  signal: AbortSignal,
+  skipRedirects: boolean = false,
+  isRouteRequest: boolean = false
 ): Promise<DataResult> {
   let resultType;
   let result;
@@ -1955,7 +2277,20 @@ async function callLoaderOrAction(
     // Process redirects
     let status = result.status;
     let location = result.headers.get("Location");
+
+    // For SSR single-route requests, we want to hand Responses back directly
+    // without unwrapping
+    if (isRouteRequest) {
+      throw result;
+    }
+
     if (status >= 300 && status <= 399 && location != null) {
+      // Don't process redirects in the router during SSR document requests.
+      // Instead, throw the Response and let the server handle it with an HTTP
+      // redirect
+      if (skipRedirects) {
+        throw result;
+      }
       return {
         type: ResultType.redirect,
         status,
