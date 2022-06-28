@@ -854,13 +854,11 @@ export function createRouter(init: RouterInit): Router {
 
     let actionMatch = matches.slice(-1)[0];
     if (!actionMatch.route.action) {
-      if (__DEV__) {
-        console.warn(
-          "You're trying to submit to a route that does not have an action.  To " +
-            "fix this, please add an `action` function to the route for " +
-            `[${createHref(location)}]`
-        );
-      }
+      console.warn(
+        "You're trying to submit to a route that does not have an action.  To " +
+          "fix this, please add an `action` function to the route for " +
+          `[${createHref(location)}]`
+      );
       result = {
         type: ResultType.error,
         error: new ErrorResponse(
@@ -1107,10 +1105,20 @@ export function createRouter(init: RouterInit): Router {
       );
     }
 
-    let matches = matchRoutes(dataRoutes, href);
-    invariant(matches, `No matches found for fetch url: ${href}`);
-
     if (fetchControllers.has(key)) abortFetcher(key);
+
+    let matches = matchRoutes(dataRoutes, href);
+    if (!matches) {
+      let boundaryMatch = findNearestBoundary(state.matches, routeId);
+      state.fetchers.set(key, IDLE_FETCHER);
+      updateState({
+        errors: {
+          [boundaryMatch.route.id]: new ErrorResponse(404, "Not Found", null),
+        },
+        fetchers: new Map(state.fetchers),
+      });
+      return;
+    }
 
     let match =
       matches[matches.length - 1].route.index &&

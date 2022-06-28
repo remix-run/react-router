@@ -426,10 +426,6 @@ export function createHashHistory(
 //#region UTILS
 ////////////////////////////////////////////////////////////////////////////////
 
-const readOnly: <T>(obj: T) => Readonly<T> = __DEV__
-  ? (obj) => Object.freeze(obj)
-  : (obj) => obj;
-
 function warning(cond: any, message: string) {
   if (!cond) {
     // eslint-disable-next-line no-console
@@ -469,8 +465,8 @@ export function createLocation(
   to: To,
   state: any = null,
   key?: string
-): Location {
-  return readOnly<Location>({
+): Readonly<Location> {
+  let location: Readonly<Location> = {
     pathname: typeof current === "string" ? current : current.pathname,
     search: "",
     hash: "",
@@ -481,7 +477,8 @@ export function createLocation(
     // But that's a pretty big refactor to the current test suite so going to
     // keep as is for the time being and just let any incoming keys take precedence
     key: (to as Location)?.key || key || createKey(),
-  });
+  };
+  return location;
 }
 
 /**

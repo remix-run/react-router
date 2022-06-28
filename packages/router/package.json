@@ -15,15 +15,13 @@
   "license": "MIT",
   "author": "Remix Software <hello@remix.run>",
   "sideEffects": false,
-  "main": "./dist/main.js",
-  "unpkg": "./dist/umd/router.production.min.js",
-  "module": "./dist/index.js",
+  "main": "./dist/router.cjs.js",
+  "module": "./dist/router.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/",
-    "CHANGELOG.md",
-    "LICENSE.md",
-    "README.md"
+    "*.ts",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public"
