@@ -291,7 +291,7 @@ export async function dev(
             process.env.HOST ||
             Object.values(os.networkInterfaces())
               .flat()
-              .find((ip) => ip?.family === "IPv4" && !ip.internal)?.address;
+              .find((ip) => String(ip?.family).includes("4") && !ip?.internal)?.address;
 
           if (!address) {
             console.log(`Remix App Server started at http://localhost:${port}`);
