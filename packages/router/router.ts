@@ -120,6 +120,12 @@ export interface Router {
    * @private
    */
   _internalFetchControllers: Map<string, AbortController>;
+
+  /**
+   * Internal pending DeferredData instances accessed by unit tests
+   * @private
+   */
+  _internalActiveDeferreds: Map<string, DeferredData>;
 }
 
 /**
@@ -1054,6 +1060,7 @@ export function createRouter(init: RouterInit): Router {
     activeDeferreds.forEach((deferredData, routeId) => {
       deferredData.subscribe((aborted, loaderDataKey, data) => {
         if (aborted) {
+          activeDeferreds.delete(routeId);
           return;
         }
         // This will always be defined here, but TS doesn't know that
@@ -1568,8 +1575,10 @@ export function createRouter(init: RouterInit): Router {
     let cancelledRouteIds: string[] = [];
     activeDeferreds.forEach((dfd, routeId) => {
       if (!predicate || predicate(routeId)) {
+        // Cancel the deferred - but do not remove from activeDeferreds here -
+        // we rely on the subscribers to do that so our tests can assert proper
+        // cleanup via _internalActiveDeferreds
         dfd.cancel();
-        activeDeferreds.delete(routeId);
         cancelledRouteIds.push(routeId);
       }
     });
@@ -1662,6 +1671,7 @@ export function createRouter(init: RouterInit): Router {
     deleteFetcher,
     dispose,
     _internalFetchControllers: fetchControllers,
+    _internalActiveDeferreds: activeDeferreds,
   };
 
   return router;

@@ -767,6 +767,7 @@ afterEach(() => {
   // Cleanup any routers created using setup()
   if (currentRouter) {
     expect(currentRouter._internalFetchControllers.size).toBe(0);
+    expect(currentRouter._internalActiveDeferreds.size).toBe(0);
   }
   currentRouter?.dispose();
   currentRouter = null;
@@ -7981,14 +7982,13 @@ describe("a router", () => {
       );
       await B.loaders.b.resolve("B");
 
-      // At this point, we resolved the action
+      // At this point, we resolved the action and the loaders - however the
+      // parent loader returned a deferred so we stay in the "loading" state
+      // until everything resolves
       expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.actionData).toEqual({
         b: "ACTION",
       });
-
-      // ...and the loaders - however the parent loader returned a deferred
-      // so we stay in the "loading" state until everything resolves
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
@@ -8033,6 +8033,106 @@ describe("a router", () => {
       });
 
       expect(shouldRevalidateSpy).not.toHaveBeenCalled();
+    });
+
+    it("cancels awaited reused deferreds on subsequent navigations", async () => {
+      jest.setTimeout(100000);
+      let shouldRevalidateSpy = jest.fn(() => false);
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            shouldRevalidate: shouldRevalidateSpy,
+            children: [
+              {
+                id: "a",
+                path: "a",
+                loader: true,
+              },
+              {
+                id: "b",
+                path: "b",
+                action: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      // Route to /parent/a and return and resolve deferred's for both
+      let A = await t.navigate("/parent/a");
+      let parentDfd = defer(); // Never resolves in this test
+      await A.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT",
+          lazy: parentDfd.promise,
+        })
+      );
+      let aDfd = defer();
+      await A.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: aDfd.promise,
+        })
+      );
+
+      // Action submission to cancel deferreds
+      let B = await t.navigate("/parent/b", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await B.actions.b.resolve("ACTION");
+      let parentDfd2 = defer(); // Never resolves in this test
+      await B.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT*",
+          lazy: parentDfd2.promise,
+        })
+      );
+      await B.loaders.b.resolve("B");
+
+      // Still in loading state due to revalidation deferred
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      // Navigate elsewhere - should cancel/abort revalidation deferreds
+      let C = await t.navigate("/");
+      await C.loaders.index.resolve("INDEX*");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual(null);
+      expect(t.router.state.loaderData).toEqual({
+        index: "INDEX*",
+      });
     });
 
     it("does not support deferred data on fetcher loads", async () => {
