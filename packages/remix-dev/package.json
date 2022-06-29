@@ -89,6 +89,8 @@
   "files": [
     "dist/",
     "compiler/shims/",
+    "server-build.js",
+    "server-build.d.ts",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"
