@@ -203,5 +203,6 @@ function getStatelessRouter(
       throw msg("dispose");
     },
     _internalFetchControllers: new Map(),
+    _internalActiveDeferreds: new Map(),
   };
 }
