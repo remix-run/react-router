@@ -164,6 +164,7 @@ export {
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface DataBrowserRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   hydrationData?: HydrationState;
   fallbackElement?: React.ReactNode;
@@ -172,6 +173,7 @@ export interface DataBrowserRouterProps {
 }
 
 export function DataBrowserRouter({
+  basename,
   children,
   fallbackElement,
   hydrationData,
@@ -179,11 +181,13 @@ export function DataBrowserRouter({
   window,
 }: DataBrowserRouterProps): React.ReactElement {
   return useRenderDataRouter({
+    basename,
     children,
     fallbackElement,
     routes,
     createRouter: (routes) =>
       createBrowserRouter({
+        basename,
         routes,
         hydrationData,
         window,
@@ -192,6 +196,7 @@ export function DataBrowserRouter({
 }
 
 export interface DataHashRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   hydrationData?: HydrationState;
   fallbackElement?: React.ReactNode;
@@ -200,6 +205,7 @@ export interface DataHashRouterProps {
 }
 
 export function DataHashRouter({
+  basename,
   children,
   hydrationData,
   fallbackElement,
@@ -207,11 +213,13 @@ export function DataHashRouter({
   window,
 }: DataBrowserRouterProps): React.ReactElement {
   return useRenderDataRouter({
+    basename,
     children,
     fallbackElement,
     routes,
     createRouter: (routes) =>
       createHashRouter({
+        basename,
         routes,
         hydrationData,
         window,

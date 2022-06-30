@@ -86,18 +86,35 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
-  it("renders the first route that matches the URL when wrapped in a 'basename' route", () => {
-    // In data routers there is no basename and you should instead use a root route
+  it("renders the first route that matches the URL when wrapped in a root route", () => {
     let { container } = render(
       <DataMemoryRouter
         initialEntries={["/my/base/path/thing"]}
         hydrationData={{}}
       >
         <Route path="/my/base/path">
-          <Route element={<Outlet />}>
-            <Route path="thing" element={<h1>Heyooo</h1>} />
-          </Route>
+          <Route path="thing" element={<h1>Heyooo</h1>} />
         </Route>
+      </DataMemoryRouter>
+    );
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Heyooo
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("supports a basename prop", () => {
+    let { container } = render(
+      <DataMemoryRouter
+        basename="/my/base/path"
+        initialEntries={["/my/base/path/thing"]}
+        hydrationData={{}}
+      >
+        <Route path="thing" element={<h1>Heyooo</h1>} />
       </DataMemoryRouter>
     );
 
