@@ -13,7 +13,7 @@ declare function resolvePath(
   fromPathname?: string
 ): Path;
 
-type To = Partial<Location> | string;
+type To = string | Partial<Path>;
 
 interface Path {
   pathname: string;

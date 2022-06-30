@@ -26,7 +26,7 @@ interface LinkProps
   reloadDocument?: boolean;
 }
 
-type To = Partial<Location> | string;
+type To = string | Partial<Path>;
 ```
 
 </details>
