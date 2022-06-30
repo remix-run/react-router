@@ -2,7 +2,6 @@ import { createPath, History, Location, Path, To } from "./history";
 import { Action as HistoryAction, createLocation, parsePath } from "./history";
 
 import {
-  AbortedError,
   DataResult,
   DataRouteMatch,
   DataRouteObject,
