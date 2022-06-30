@@ -221,7 +221,7 @@ export async function watch(
   if (config.serverEntryPoint) {
     toWatch.push(config.serverEntryPoint);
   }
-  
+
   config.watchPaths?.forEach((watchPath) => {
     toWatch.push(watchPath);
   });
