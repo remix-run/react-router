@@ -2,6 +2,7 @@ import { createPath, History, Location, Path, To } from "./history";
 import { Action as HistoryAction, createLocation, parsePath } from "./history";
 
 import {
+  AbortedError,
   DataResult,
   DataRouteMatch,
   DataRouteObject,
@@ -2222,6 +2223,12 @@ async function callLoaderOrAction(
   let resultType;
   let result;
 
+  // Setup a promise we can race against so that abort signals short circuit
+  let reject: () => void;
+  let abortPromise = new Promise((_, r) => (reject = r));
+  let onReject = () => reject();
+  request.signal.addEventListener("abort", onReject);
+
   try {
     let handler = match.route[type];
     invariant<Function>(
@@ -2229,13 +2236,15 @@ async function callLoaderOrAction(
       `Could not find the ${type} to run on the "${match.route.id}" route`
     );
 
-    result = await handler({
-      params: match.params,
-      request,
-    });
+    result = await Promise.race([
+      handler({ request, params: match.params }),
+      abortPromise,
+    ]);
   } catch (e) {
     resultType = ResultType.error;
     result = e;
+  } finally {
+    request.signal.removeEventListener("abort", onReject);
   }
 
   if (result instanceof Response) {
