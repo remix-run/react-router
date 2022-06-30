@@ -658,7 +658,7 @@ And the resulting element tree rendered will be:
 
 ```jsx
 <PageLayout>
- <Privacy />
+  <Privacy />
 </PageLayout>
 ```
 
