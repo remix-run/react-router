@@ -8,10 +8,13 @@ import type {
   RouteMatch,
   Router,
   RouterNavigateOptions,
+  StaticHandlerState,
 } from "@remix-run/router";
 import {
   createMemoryHistory,
   createRouter,
+  createStaticHandler,
+  deferred,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
   json,
@@ -19,15 +22,9 @@ import {
   redirect,
   parsePath,
 } from "@remix-run/router";
-import { createStaticHandler, StaticHandlerState } from "../router";
 
 // Private API
-import {
-  deferred,
-  DeferredError,
-  ErrorResponse,
-  isDeferredError,
-} from "../utils";
+import { DeferredError, ErrorResponse, isDeferredError } from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
