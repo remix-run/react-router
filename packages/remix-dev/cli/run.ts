@@ -1,7 +1,7 @@
 import * as path from "path";
 import os from "os";
+import arg from "arg";
 import inspector from "inspector";
-import meow from "meow";
 import inquirer from "inquirer";
 import semver from "semver";
 import fse from "fs-extra";
@@ -16,94 +16,94 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
   "M"
 )} ${colors.logoPink("I")} ${colors.logoRed("X")}
 
-${colors.heading("Usage")}:
-  $ remix create <${colors.arg("projectDir")}> --template <${colors.arg(
+  ${colors.heading("Usage")}:
+    $ remix create <${colors.arg("projectDir")}> --template <${colors.arg(
   "template"
 )}>
-  $ remix init [${colors.arg("projectDir")}]
-  $ remix build [${colors.arg("projectDir")}]
-  $ remix dev [${colors.arg("projectDir")}]
-  $ remix routes [${colors.arg("projectDir")}]
-  $ remix setup [${colors.arg("remixPlatform")}]
-  $ remix migrate [-m ${colors.arg("migration")}] [${colors.arg("projectDir")}]
+    $ remix init [${colors.arg("projectDir")}]
+    $ remix build [${colors.arg("projectDir")}]
+    $ remix dev [${colors.arg("projectDir")}]
+    $ remix routes [${colors.arg("projectDir")}]
+    $ remix setup [${colors.arg("remixPlatform")}]
+    $ remix migrate [-m ${colors.arg("migration")}] [${colors.arg("projectDir")}]
 
-${colors.heading("Options")}:
-  --help, -h          Print this help message and exit
-  --version, -v       Print the CLI version and exit
-  --no-color          Disable ANSI colors in console output
-\`create\` Options:
-  --template          The template to use
-  --no-install        Skip installing dependencies after creation
-  --no-typescript     Convert the template to JavaScript
-  --remix-version     The version of Remix to use
-\`build\` Options:
-  --sourcemap         Generate source maps for production
-\`dev\` Options:
-  --debug             Attach Node.js inspector
-  --port, -p          Choose the port from which to run your app
-\`routes\` Options:
-  --json              Print the routes as JSON
-\`migrate\` Options:
-  --debug             Show debugging logs
-  --dry               Dry run (no changes are made to files)
-  --force             Bypass Git safety checks and forcibly run migration
-  --migration, -m     Name of the migration to run
+  ${colors.heading("Options")}:
+    --help, -h          Print this help message and exit
+    --version, -v       Print the CLI version and exit
+    --no-color          Disable ANSI colors in console output
+  \`create\` Options:
+    --template          The template to use
+    --no-install        Skip installing dependencies after creation
+    --no-typescript     Convert the template to JavaScript
+    --remix-version     The version of Remix to use
+  \`build\` Options:
+    --sourcemap         Generate source maps for production
+  \`dev\` Options:
+    --debug             Attach Node.js inspector
+    --port, -p          Choose the port from which to run your app
+  \`routes\` Options:
+    --json              Print the routes as JSON
+  \`migrate\` Options:
+    --debug             Show debugging logs
+    --dry               Dry run (no changes are made to files)
+    --force             Bypass Git safety checks and forcibly run migration
+    --migration, -m     Name of the migration to run
 
-${colors.heading("Values")}:
-  - ${colors.arg("projectDir")}        The Remix project directory
-  - ${colors.arg("template")}          The project template to use
-  - ${colors.arg("remixPlatform")}     \`node\` or \`cloudflare\`
-  - ${colors.arg(
-    "migration"
-  )}         One of the choices from https://github.com/remix-run/remix/blob/main/packages/remix-dev/cli/migrate/migrations/index.ts
+  ${colors.heading("Values")}:
+    - ${colors.arg("projectDir")}        The Remix project directory
+    - ${colors.arg("template")}          The project template to use
+    - ${colors.arg("remixPlatform")}     \`node\` or \`cloudflare\`
+    - ${colors.arg(
+      "migration"
+    )}         One of the choices from https://github.com/remix-run/remix/blob/main/packages/remix-dev/cli/migrate/migrations/index.ts
 
-${colors.heading("Creating a new project")}:
+  ${colors.heading("Creating a new project")}:
 
-  Remix projects are created from templates. A template can be:
+    Remix projects are created from templates. A template can be:
 
-  - a file path to a directory of files
-  - a file path to a tarball
-  - the name of a :username/:repo on GitHub
-  - the URL of a tarball
+    - a file path to a directory of files
+    - a file path to a tarball
+    - the name of a :username/:repo on GitHub
+    - the URL of a tarball
 
-  $ remix create my-app --template /path/to/remix-template
-  $ remix create my-app --template /path/to/remix-template.tar.gz
-  $ remix create my-app --template remix-run/grunge-stack
-  $ remix create my-app --template :username/:repo
-  $ remix create my-app --template https://github.com/:username/:repo
-  $ remix create my-app --template https://github.com/:username/:repo/tree/:branch
-  $ remix create my-app --template https://github.com/:username/:repo/archive/refs/tags/:tag.tar.gz
-  $ remix create my-app --template https://example.com/remix-template.tar.gz
+    $ remix create my-app --template /path/to/remix-template
+    $ remix create my-app --template /path/to/remix-template.tar.gz
+    $ remix create my-app --template remix-run/grunge-stack
+    $ remix create my-app --template :username/:repo
+    $ remix create my-app --template https://github.com/:username/:repo
+    $ remix create my-app --template https://github.com/:username/:repo/tree/:branch
+    $ remix create my-app --template https://github.com/:username/:repo/archive/refs/tags/:tag.tar.gz
+    $ remix create my-app --template https://example.com/remix-template.tar.gz
 
-  To create a new project from a template in a private GitHub repo,
-  pass the \`token\` flag with a personal access token with access to that repo.
+    To create a new project from a template in a private GitHub repo,
+    pass the \`token\` flag with a personal access token with access to that repo.
 
-${colors.heading("Initialize a project:")}:
+  ${colors.heading("Initialize a project:")}:
 
-  Remix project templates may contain a \`remix.init\` directory
-  with a script that initializes the project. This script automatically
-  runs during \`remix create\`, but if you ever need to run it manually
-  (e.g. to test it out) you can:
+    Remix project templates may contain a \`remix.init\` directory
+    with a script that initializes the project. This script automatically
+    runs during \`remix create\`, but if you ever need to run it manually
+    (e.g. to test it out) you can:
 
-  $ remix init
+    $ remix init
 
-${colors.heading("Build your project")}:
+  ${colors.heading("Build your project")}:
 
-  $ remix build
-  $ remix build --sourcemap
-  $ remix build my-app
+    $ remix build
+    $ remix build --sourcemap
+    $ remix build my-app
 
-${colors.heading("Run your project locally in development")}:
+  ${colors.heading("Run your project locally in development")}:
 
-  $ remix dev
-  $ remix dev my-app
-  $ remix dev --debug
+    $ remix dev
+    $ remix dev my-app
+    $ remix dev --debug
 
-${colors.heading("Show all routes in your app")}:
+  ${colors.heading("Show all routes in your app")}:
 
-  $ remix routes
-  $ remix routes my-app
-  $ remix routes --json
+    $ remix routes
+    $ remix routes my-app
+    $ remix routes --json
 `;
 
 const templateChoices = [
@@ -146,30 +146,60 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     );
   }
 
-  let { flags, input, showHelp, showVersion } = meow(helpText, {
-    argv,
-    booleanDefault: undefined,
-    description: false,
-    flags: {
-      debug: { type: "boolean" },
-      dry: { type: "boolean" },
-      force: { type: "boolean" },
-      help: { type: "boolean", alias: "h" },
-      install: { type: "boolean" },
-      json: { type: "boolean" },
-      migration: { type: "string", alias: "m" },
-      port: { type: "number", alias: "p" },
-      remixVersion: { type: "string" },
-      sourcemap: { type: "boolean" },
-      template: { type: "string" },
-      typescript: { type: "boolean" },
-      version: { type: "boolean", alias: "v" },
-      token: { type: "string" },
+  let args = arg(
+    {
+      "--debug": Boolean,
+      "--dry": Boolean,
+      "--force": Boolean,
+      "--help": Boolean,
+      "-h": "--help",
+      "--install": Boolean,
+      "--no-install": Boolean,
+      "--json": Boolean,
+      "--migration": String,
+      "-m": "--migration",
+      "--remix-version": String,
+      "--sourcemap": Boolean,
+      "--template": String,
+      "--token": String,
+      "--typescript": Boolean,
+      "--no-typescript": Boolean,
+      "--version": Boolean,
+      "-v": "--version",
     },
-  });
+    {
+      argv,
+    }
+  );
 
-  if (flags.help) showHelp();
-  if (flags.version) showVersion();
+  let input = args._;
+
+  let flags: any = Object.entries(args).reduce((acc, [key, value]) => {
+    key = key.replace(/^--/, "");
+    acc[key] = value;
+    return acc;
+  }, {} as any);
+
+  if (flags.help) {
+    console.log(helpText);
+    return;
+  }
+  if (flags.version) {
+    let version = require("../package.json").version;
+    console.log(version);
+    return;
+  }
+
+  if (args["--no-install"]) {
+    flags.install = false;
+  }
+  if (args["--no-typescript"]) {
+    flags.typescript = false;
+  }
+  if (flags.template === "typescript" || flags.template === "ts") {
+    flags.template = "remix-ts";
+  }
+  flags.remixVersion = args["--remix-version"];
 
   let command = input[0];
 
@@ -240,14 +270,14 @@ export async function run(argv: string[] = process.argv.slice(2)) {
             })
             .catch((error) => {
               if (error.isTtyError) {
-                showHelp();
+                console.log(helpText);
                 return;
               }
               throw error;
             });
 
       if (!projectDir) {
-        showHelp();
+        console.log(helpText);
         return;
       }
 
