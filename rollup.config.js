@@ -5,6 +5,8 @@ import extensions from "rollup-plugin-extensions";
 import prettier from "rollup-plugin-prettier";
 import replace from "@rollup/plugin-replace";
 import { terser } from "rollup-plugin-terser";
+import commonjs from 'rollup-plugin-commonjs';
+
 
 const PRETTY = !!process.env.PRETTY;
 
@@ -53,6 +55,7 @@ function reactRouter() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         copy({
           targets: [
             { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
@@ -81,13 +84,15 @@ function reactRouter() {
         babel({
           exclude: /node_modules/,
           presets: [
-            "@babel/preset-modules",
+            ["@babel/preset-env", { loose: true }],
+            // "@babel/preset-modules",
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") },
@@ -108,25 +113,15 @@ function reactRouter() {
         babel({
           exclude: /node_modules/,
           presets: [
-            [
-              "@babel/preset-modules",
-              {
-                // Don't spoof `.name` for Arrow Functions, which breaks when minified anyway.
-                loose: true,
-              },
-            ],
-            [
-              "@babel/preset-react",
-              {
-                // Compile JSX Spread to Object.assign(), which is reliable in ESM browsers.
-                useBuiltIns: true,
-              },
-            ],
+            ["@babel/preset-env", { loose: true }],
+            // "@babel/preset-modules",
+            "@babel/preset-react",
             "@babel/preset-typescript",
           ],
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
@@ -162,6 +157,7 @@ function reactRouter() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") },
@@ -191,6 +187,7 @@ function reactRouter() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
@@ -214,7 +211,7 @@ function reactRouter() {
     },
   ];
 
-  return [...modules, ...webModules, ...globals, ...node];
+  return [...modules, ...webModules,...globals, ...node];
 }
 
 function reactRouterDom() {
@@ -244,6 +241,7 @@ function reactRouterDom() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         copy({
           targets: [
             { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
@@ -280,6 +278,7 @@ function reactRouterDom() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") },
@@ -318,6 +317,7 @@ function reactRouterDom() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
@@ -356,6 +356,7 @@ function reactRouterDom() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") },
@@ -388,6 +389,7 @@ function reactRouterDom() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
@@ -516,6 +518,7 @@ function reactRouterDomV5Compat() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         copy({
           targets: [
             { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
@@ -558,6 +561,7 @@ function reactRouterDomV5Compat() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") },
@@ -592,6 +596,7 @@ function reactRouterDomV5Compat() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
@@ -657,6 +662,7 @@ function reactRouterNative() {
           plugins: ["babel-plugin-dev-expression"],
           extensions: [".ts", ".tsx"],
         }),
+        commonjs( ),
         copy({
           targets: [
             { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },

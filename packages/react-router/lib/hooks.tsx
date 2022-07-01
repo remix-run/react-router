@@ -342,7 +342,7 @@ export function useRoutes(
     parentPathnameBase === "/"
       ? pathname
       : pathname.slice(parentPathnameBase.length) || "/";
-  let matches = matchRoutes(routes, { pathname: remainingPathname });
+  let matches = matchRoutes(routes, { pathname: remainingPathname,originPathname:locationFromContext.pathname });
 
   if (__DEV__) {
     warning(

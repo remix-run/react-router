@@ -140,11 +140,16 @@ export interface RouteMatch<ParamKey extends string = string> {
  */
 export function matchRoutes(
   routes: RouteObject[],
-  locationArg: Partial<Location> | string,
+  locationArg: (Partial<Location> & {originPathname?:string}) | string,
   basename = "/"
 ): RouteMatch[] | null {
-  let location =
-    typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
+  let location,originPathname;
+  if(typeof locationArg === "string"){
+    location=parsePath(locationArg)
+  }else{
+    location=locationArg;
+    originPathname=location?.originPathname;
+  }
 
   let pathname = stripBasename(location.pathname || "/", basename);
 
@@ -157,7 +162,7 @@ export function matchRoutes(
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    matches = matchRouteBranch(branches[i], pathname);
+    matches = matchRouteBranch(branches[i], pathname,originPathname);
   }
 
   return matches;
@@ -290,7 +295,8 @@ function compareIndexes(a: number[], b: number[]): number {
 
 function matchRouteBranch<ParamKey extends string = string>(
   branch: RouteBranch,
-  pathname: string
+  pathname: string,
+  originPathname?:string
 ): RouteMatch<ParamKey>[] | null {
   let { routesMeta } = branch;
 
@@ -306,7 +312,8 @@ function matchRouteBranch<ParamKey extends string = string>(
         : pathname.slice(matchedPathname.length) || "/";
     let match = matchPath(
       { path: meta.relativePath, caseSensitive: meta.caseSensitive, end },
-      remainingPathname
+      remainingPathname,
+      originPathname
     );
 
     if (!match) return null;
@@ -390,7 +397,8 @@ export function matchPath<
   Path extends string
 >(
   pattern: PathPattern<Path> | Path,
-  pathname: string
+  pathname: string,
+  originPathname?:string
 ): PathMatch<ParamKey> | null {
   if (typeof pattern === "string") {
     pattern = { path: pattern, caseSensitive: false, end: true };
@@ -403,6 +411,12 @@ export function matchPath<
   );
 
   let match = pathname.match(matcher);
+
+  if(pattern.path.startsWith('/') && originPathname)
+  {
+    match=originPathname.match(matcher);
+  }
+
   if (!match) return null;
 
   let matchedPathname = match[0];

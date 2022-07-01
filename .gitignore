@@ -18,3 +18,4 @@ node_modules/
 /packages/react-router-dom-v5-compat/react-router-dom
 
 .eslintcache
+package-lock.json
