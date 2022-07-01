@@ -25,7 +25,9 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     $ remix dev [${colors.arg("projectDir")}]
     $ remix routes [${colors.arg("projectDir")}]
     $ remix setup [${colors.arg("remixPlatform")}]
-    $ remix migrate [-m ${colors.arg("migration")}] [${colors.arg("projectDir")}]
+    $ remix migrate [-m ${colors.arg("migration")}] [${colors.arg(
+  "projectDir"
+)}]
 
   ${colors.heading("Options")}:
     --help, -h          Print this help message and exit
