@@ -28,7 +28,7 @@ export const run = async <TransformOptions extends Options = Options>({
     babel: true, // without this, `jscodeshift` will not be able to parse TS transforms
     dry,
     extensions: "tsx,ts,jsx,js",
-    failOnError: true,
+    failOnError: false,
     ignorePattern: ["**/node_modules/**", "**/.cache/**", "**/build/**"],
     parser: "tsx",
     print,

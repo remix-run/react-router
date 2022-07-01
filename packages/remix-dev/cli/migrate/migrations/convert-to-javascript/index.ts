@@ -7,6 +7,7 @@ import type { MigrationFunction } from "../../types";
 import { cleanupPackageJson } from "./cleanupPackageJson";
 import { convertTSConfigs } from "./convertTSConfigs";
 import { convertTSFilesToJS } from "./convertTSFilesToJS";
+import { CliError } from "../../../error";
 
 const TRANSFORM_PATH = join(__dirname, "transform");
 
@@ -38,7 +39,7 @@ export const convertToJavaScript: MigrationFunction = async ({
     if (!flags.debug) {
       console.log("👉 Try again with the `--debug` flag to see what failed.");
     }
-    process.exit(1);
+    throw new CliError();
   }
 
   // 4. Convert all .ts files to .js

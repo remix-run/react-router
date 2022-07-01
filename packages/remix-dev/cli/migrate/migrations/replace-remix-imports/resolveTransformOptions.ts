@@ -2,6 +2,7 @@ import type { PackageJson } from "@npmcli/package-json";
 import inquirer from "inquirer";
 
 import * as colors from "../../../../colors";
+import { CliError } from "../../../error";
 import { depsToEntries, isRemixPackage } from "./dependency";
 import { because, detected } from "./messages";
 import { remixSetup, remixSetupRuntime } from "./remixSetup";
@@ -109,7 +110,7 @@ const resolveAdapter = (packageJson: PackageJson): Adapter | undefined => {
       adapters.map((adapter) => `   - @remix-run/${adapter}`).join("\n")
     );
     console.log("👉 Uninstall unused adapters and try again.");
-    process.exit(1);
+    throw new CliError();
   }
 
   if (adapters.length === 1) {

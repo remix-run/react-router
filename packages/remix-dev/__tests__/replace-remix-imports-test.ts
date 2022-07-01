@@ -38,6 +38,7 @@ const TEMP_DIR = path.join(
   `remix-tests-${Math.random().toString(32).slice(2)}`
 );
 
+jest.setTimeout(30_000);
 beforeEach(async () => {
   output = "";
   console.log = mockLog;
