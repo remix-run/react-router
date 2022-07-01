@@ -1,6 +1,64 @@
 import type { Location, Path, To } from "./history";
 import { parsePath } from "./history";
-import { DataResult, DataRouteMatch } from "./router";
+
+/**
+ * Map of routeId -> data returned from a loader/action/error
+ */
+export interface RouteData {
+  [routeId: string]: any;
+}
+
+export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
+
+export enum ResultType {
+  data = "data",
+  deferred = "deferred",
+  redirect = "redirect",
+  error = "error",
+}
+
+/**
+ * Successful result from a loader or action
+ */
+export interface SuccessResult {
+  type: ResultType.data;
+  data: any;
+}
+
+/**
+ * Successful deferred() result from a loader or action
+ */
+export interface DeferredResult {
+  type: ResultType.deferred;
+  deferredData: DeferredData;
+}
+
+/**
+ * Redirect result from a loader or action
+ */
+export interface RedirectResult {
+  type: ResultType.redirect;
+  status: number;
+  location: string;
+  revalidate: boolean;
+}
+
+/**
+ * Unsuccessful result from a loader or action
+ */
+export interface ErrorResult {
+  type: ResultType.error;
+  error: any;
+}
+
+/**
+ * Result from a loader or action - potentially successful or unsuccessful
+ */
+export type DataResult =
+  | SuccessResult
+  | DeferredResult
+  | RedirectResult
+  | ErrorResult;
 
 export type FormMethod = "get" | "post" | "put" | "patch" | "delete";
 export type FormEncType =
@@ -789,6 +847,70 @@ export const json: JsonFunction = (data, init = {}) => {
     headers,
   });
 };
+
+export class DeferredData {
+  private pendingKeys: Set<string> = new Set<string>();
+  private cancelled: boolean = false;
+  private subscriber?: (aborted: boolean, key?: string, data?: any) => void =
+    undefined;
+  data: RouteData = {};
+
+  constructor(data: Record<string, any>) {
+    Object.entries(data).forEach(([key, value]) => {
+      // Store all data in our internal copy and track promise keys
+      this.data[key] = value;
+      if (value instanceof Promise) {
+        this.pendingKeys.add(key);
+        value.then(
+          (data) => this.onSettle(key, null, data),
+          (error) => this.onSettle(key, error)
+        );
+      }
+    });
+  }
+
+  private onSettle(key: string, error: any, data?: any) {
+    if (this.cancelled) {
+      return;
+    }
+    this.pendingKeys.delete(key);
+    let value = error ? new DeferredError(error) : data;
+    this.data[key] = value;
+    this.subscriber?.(false, key, value);
+  }
+
+  subscribe(fn: (aborted: boolean, key?: string, data?: any) => void) {
+    this.subscriber = fn;
+  }
+
+  cancel() {
+    this.cancelled = true;
+    this.pendingKeys.forEach((v, k) => this.pendingKeys.delete(k));
+    this.subscriber?.(true);
+  }
+
+  get done() {
+    return this.pendingKeys.size === 0;
+  }
+}
+
+/**
+ * @private
+ * Utility class we use to hold deferred promise rejection values
+ */
+export class DeferredError extends Error {}
+
+/**
+ * Check if the given error is a DeferredError generated from a deferred()
+ * promise rejection
+ */
+export function isDeferredError(e: any): e is DeferredError {
+  return e instanceof DeferredError;
+}
+
+export function deferred(data: Record<string, any>) {
+  return new DeferredData(data);
+}
 
 export type RedirectFunction = (
   url: string,

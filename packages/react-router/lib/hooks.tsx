@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  isDeferredError,
   isRouteErrorResponse,
   Location,
   normalizePathname,
@@ -33,6 +34,7 @@ import {
   NavigateOptions,
   RouteContext,
   RouteErrorContext,
+  DeferredContext,
 } from "./context";
 
 /**
@@ -712,6 +714,12 @@ export function useRouteError() {
   let state = useDataRouterState(DataRouterHook.UseRouteError);
   let route = React.useContext(RouteContext);
   let thisRoute = route.matches[route.matches.length - 1];
+  let deferredValue = React.useContext(DeferredContext);
+
+  // Return deferred errors if we're inside a Deferred errorElement
+  if (deferredValue && isDeferredError(deferredValue)) {
+    return deferredValue;
+  }
 
   // If this was a render error, we put it in a RouteError context inside
   // of RenderErrorBoundary
@@ -727,6 +735,23 @@ export function useRouteError() {
 
   // Otherwise look for errors from our data router state
   return state.errors?.[thisRoute.route.id];
+}
+
+export type Deferrable<T> = never | T | Promise<T>;
+export type ResolvedDeferrable<T> = T extends null | undefined
+  ? T
+  : T extends Deferrable<infer T2>
+  ? T2 extends Promise<infer T3>
+    ? T3
+    : T2
+  : T;
+
+/**
+ * Returns the happy-path data from the nearest ancestor <Deferred /> value
+ */
+export function useDeferredData<Data>() {
+  let value = React.useContext(DeferredContext);
+  return value as ResolvedDeferrable<Data>;
 }
 
 const alreadyWarned: Record<string, boolean> = {};

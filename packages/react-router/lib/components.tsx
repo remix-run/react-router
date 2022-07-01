@@ -15,7 +15,7 @@ import {
   createMemoryHistory,
   createMemoryRouter,
   invariant,
-  normalizePathname,
+  isDeferredError,
   parsePath,
   stripBasename,
   warning,
@@ -28,8 +28,11 @@ import {
   Navigator,
   DataRouterContext,
   DataRouterStateContext,
+  DeferredContext,
 } from "./context";
+import type { ResolvedDeferrable } from "./hooks";
 import {
+  useDeferredData,
   useInRouterContext,
   useNavigate,
   useOutlet,
@@ -421,6 +424,87 @@ function DataRoutes({
   routes,
 }: DataRoutesProps): React.ReactElement | null {
   return useRoutes(routes || createRoutesFromChildren(children), location);
+}
+
+export interface DeferredResolveRenderFunction<Data> {
+  (data: ResolvedDeferrable<Data>): JSX.Element;
+}
+
+export interface DeferredProps<Data>
+  extends Omit<React.SuspenseProps, "children"> {
+  children: React.ReactNode | DeferredResolveRenderFunction<Data>;
+  value: Data;
+  errorElement?: React.ReactNode;
+}
+
+/**
+ * Component to use for rendering lazily loaded data from returning deferred()
+ * in a loader function
+ */
+export function Deferred<Data = any>({
+  children,
+  value,
+  fallback,
+  errorElement,
+}: DeferredProps<Data>) {
+  return (
+    <DeferredContext.Provider value={value}>
+      <React.Suspense fallback={fallback}>
+        <DeferredWrapper errorElement={errorElement}>
+          {typeof children === "function" ? (
+            <ResolveDeferred
+              children={children as DeferredResolveRenderFunction<Data>}
+            />
+          ) : (
+            children
+          )}
+        </DeferredWrapper>
+      </React.Suspense>
+    </DeferredContext.Provider>
+  );
+}
+
+interface DeferredWrapperProps {
+  children: React.ReactNode;
+  errorElement?: React.ReactNode;
+}
+
+/**
+ * @private
+ * Internal wrapper to handle re-throwing the promise to trigger the Suspense
+ * fallback, or rendering the children/errorElement once the promise resolves
+ * or rejects
+ */
+function DeferredWrapper({ children, errorElement }: DeferredWrapperProps) {
+  let value = React.useContext(DeferredContext);
+  if (value instanceof Promise) {
+    // throw to the suspense boundary
+    throw value;
+  }
+
+  if (isDeferredError(value)) {
+    if (errorElement) {
+      return <>{errorElement}</>;
+    } else {
+      // Throw to the nearest route-level error boundary
+      throw value;
+    }
+  }
+
+  return <>{children}</>;
+}
+
+export interface ResolveDeferredProps<Data> {
+  children: DeferredResolveRenderFunction<Data>;
+}
+
+/**
+ * @private
+ */
+export function ResolveDeferred<Data>({
+  children,
+}: ResolveDeferredProps<Data>) {
+  return children(useDeferredData<Data>());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

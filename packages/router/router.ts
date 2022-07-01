@@ -2,28 +2,25 @@ import { createPath, History, Location, Path, To } from "./history";
 import { Action as HistoryAction, createLocation, parsePath } from "./history";
 
 import {
+  DataResult,
+  DataRouteMatch,
   DataRouteObject,
+  DeferredData,
+  DeferredResult,
+  ErrorResult,
   FormEncType,
   FormMethod,
-  invariant,
-  RouteMatch,
+  RedirectResult,
+  RouteData,
   RouteObject,
   Submission,
+  SuccessResult,
 } from "./utils";
-import { ErrorResponse, matchRoutes } from "./utils";
+import { ErrorResponse, ResultType, invariant, matchRoutes } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Types and Constants
 ////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Map of routeId -> data returned from a loader/action/error
- */
-export interface RouteData {
-  [routeId: string]: any;
-}
-
-export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
 /**
  * A Router instance manages all navigation and data loading/mutations
@@ -123,6 +120,12 @@ export interface Router {
    * @private
    */
   _internalFetchControllers: Map<string, AbortController>;
+
+  /**
+   * Internal pending DeferredData instances accessed by unit tests
+   * @private
+   */
+  _internalActiveDeferreds: Map<string, DeferredData>;
 }
 
 /**
@@ -328,43 +331,6 @@ type FetcherStates<TData = any> = {
 export type Fetcher<TData = any> =
   FetcherStates<TData>[keyof FetcherStates<TData>];
 
-enum ResultType {
-  data = "data",
-  redirect = "redirect",
-  error = "error",
-}
-
-/**
- * Successful result from a loader or action
- */
-export interface SuccessResult {
-  type: ResultType.data;
-  data: any;
-}
-
-/**
- * Redirect result from a loader or action
- */
-export interface RedirectResult {
-  type: ResultType.redirect;
-  status: number;
-  location: string;
-  revalidate: boolean;
-}
-
-/**
- * Unsuccessful result from a loader or action
- */
-export interface ErrorResult {
-  type: ResultType.error;
-  error: any;
-}
-
-/**
- * Result from a loader or action - potentially successful or unsuccessful
- */
-export type DataResult = SuccessResult | RedirectResult | ErrorResult;
-
 interface ShortCircuitable {
   /**
    * startNavigation does not need to complete the navigation because we
@@ -517,8 +483,14 @@ export function createRouter(init: RouterInit): Router {
   //  - useRevalidate()
   //  - X-Remix-Revalidate (from redirect)
   let isRevalidationRequired = false;
+  // Use this internal array to capture routes that require revalidation due
+  // to a cancelled deferred on action submission
+  let cancelledDeferredRoutes: string[] = [];
+  // Use this internal array to capture fetcher loads that were cancelled by an
+  // action navigation and require revalidation
+  let cancelledFetcherLoads: string[] = [];
   // AbortControllers for any in-flight fetchers
-  let fetchControllers = new Map();
+  let fetchControllers = new Map<string, AbortController>();
   // Track loads based on the order in which they started
   let incrementingLoadId = 0;
   // Track the outstanding pending navigation data load to be compared against
@@ -531,6 +503,11 @@ export function createRouter(init: RouterInit): Router {
   let fetchRedirectIds = new Set<string>();
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, [string, DataRouteMatch]>();
+  // Store DeferredData instances for active route matches.  When a
+  // route loader returns deferred() we stick one in here.  Then, when a nested
+  // promise resolves we update loaderData.  If a new navigation starts we
+  // cancel active deferreds for eliminated routes.
+  let activeDeferreds = new Map<string, DeferredData>();
 
   // Initialize the router, all side effects should be kicked off from here.
   // Implemented as a Fluent API for ease of:
@@ -558,9 +535,7 @@ export function createRouter(init: RouterInit): Router {
     }
     subscriber = null;
     pendingNavigationController?.abort();
-    for (let [, controller] of fetchControllers) {
-      controller.abort();
-    }
+    state.fetchers.forEach((_, key) => deleteFetcher(key));
   }
 
   // Subscribe to state updates for the router
@@ -652,6 +627,8 @@ export function createRouter(init: RouterInit): Router {
     pendingResetScroll = true;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
+    cancelledDeferredRoutes = [];
+    cancelledFetcherLoads = [];
   }
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
@@ -699,14 +676,14 @@ export function createRouter(init: RouterInit): Router {
     // Toggle isRevalidationRequired so the next data load will call all loaders,
     // and mark us in a revalidating state
     isRevalidationRequired = true;
+    // Cancel all pending deferred on revalidations and mark cancelled routes
+    // for revalidation
+    cancelledDeferredRoutes.push(...cancelActiveDeferreds());
     updateState({ revalidation: "loading" });
 
     // If we're currently submitting an action, we don't need to start a new
     // navigation, we'll just let the follow up loader execution call all loaders
-    if (
-      state.navigation.state === "submitting" &&
-      state.navigation.formMethod !== "get"
-    ) {
+    if (state.navigation.state === "submitting") {
       return;
     }
 
@@ -769,22 +746,13 @@ export function createRouter(init: RouterInit): Router {
         route,
         error,
       } = getNotFoundMatches(dataRoutes);
+      // Cancel all pending deferred on 404s since we don't keep any routes
+      cancelActiveDeferreds();
       completeNavigation(historyAction, location, {
         matches: notFoundMatches,
         loaderData: {},
         errors: {
           [route.id]: error,
-        },
-      });
-      return;
-    }
-
-    if (opts?.pendingError) {
-      let boundaryMatch = findNearestBoundary(matches);
-      completeNavigation(historyAction, location, {
-        matches,
-        errors: {
-          [boundaryMatch.route.id]: opts?.pendingError,
         },
       });
       return;
@@ -800,9 +768,17 @@ export function createRouter(init: RouterInit): Router {
 
     // Call action if we received an action submission
     let pendingActionData: RouteData | null = null;
-    let pendingActionError: RouteData | null = null;
+    let pendingError: RouteData | null = null;
 
-    if (opts?.submission) {
+    if (opts?.pendingError) {
+      // If we have a pendingError, it means the user attempted a GET submission
+      // with binary FormData so assign here and skip to handleLoaders.  That
+      // way we handle calling loaders above the boundary etc.  It's not really
+      // different from an actionError in that sense.
+      pendingError = {
+        [findNearestBoundary(matches).route.id]: opts.pendingError,
+      };
+    } else if (opts?.submission) {
       let actionOutput = await handleAction(
         historyAction,
         location,
@@ -816,7 +792,7 @@ export function createRouter(init: RouterInit): Router {
       }
 
       pendingActionData = actionOutput.pendingActionData || null;
-      pendingActionError = actionOutput.pendingActionError || null;
+      pendingError = actionOutput.pendingActionError || null;
       let navigation: NavigationStates["Loading"] = {
         state: "loading",
         location,
@@ -833,7 +809,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       loadingNavigation,
       pendingActionData,
-      pendingActionError
+      pendingError
     );
 
     if (shortCircuited) {
@@ -857,6 +833,18 @@ export function createRouter(init: RouterInit): Router {
     opts?: { replace?: boolean }
   ): Promise<HandleActionResult> {
     isRevalidationRequired = true;
+
+    // Cancel all pending deferred on submissions and mark cancelled routes
+    // for revalidation
+    cancelledDeferredRoutes.push(...cancelActiveDeferreds());
+
+    // Abort any in-flight fetcher loads
+    fetchLoadMatches.forEach(([href, match], key) => {
+      if (fetchControllers.has(key)) {
+        cancelledFetcherLoads.push(key);
+        abortFetcher(key);
+      }
+    });
 
     if (
       matches[matches.length - 1].route.index &&
@@ -941,6 +929,10 @@ export function createRouter(init: RouterInit): Router {
       };
     }
 
+    if (isDeferredResult(result)) {
+      invariant(false, "deferred() is not supported in actions");
+    }
+
     return {
       pendingActionData: { [actionMatch.route.id]: result.data },
     };
@@ -955,7 +947,7 @@ export function createRouter(init: RouterInit): Router {
     matches: DataRouteMatch[],
     overrideNavigation: Navigation | undefined,
     pendingActionData: RouteData | null,
-    pendingActionError: RouteData | null
+    pendingError: RouteData | null
   ): Promise<HandleLoadersResult> {
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation = overrideNavigation;
@@ -978,17 +970,25 @@ export function createRouter(init: RouterInit): Router {
       submission,
       location,
       isRevalidationRequired,
+      cancelledDeferredRoutes,
+      cancelledFetcherLoads,
       pendingActionData,
-      pendingActionError,
+      pendingError,
       fetchLoadMatches
     );
+
+    // Cancel pending deferreds that are not being reused.  Note that if this
+    // is an acton reload we would have already cancelled all pending deferreds
+    // so this would be a no-op
+    cancelActiveDeferredsViaMatches(matches, matchesToLoad);
 
     // Short circuit if we have no loaders to run
     if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
       completeNavigation(historyAction, location, {
         matches,
-        // Commit pending action error if we're short circuiting
-        errors: pendingActionError || null,
+        loaderData: mergeLoaderData(state.loaderData, {}, matches),
+        // Commit pending error if we're short circuiting
+        errors: pendingError || null,
         actionData: pendingActionData || null,
       });
       return { shortCircuited: true };
@@ -1027,19 +1027,13 @@ export function createRouter(init: RouterInit): Router {
       fetchControllers.set(key, abortController)
     );
 
-    // Call all navigation loaders and revalidating fetcher loaders in parallel,
-    // then slice off the results into separate arrays so we can handle them
-    // accordingly
-    let results = await Promise.all([
-      ...matchesToLoad.map((m) =>
-        callLoaderOrAction(m, location, abortController.signal)
-      ),
-      ...revalidatingFetchers.map(([, href, match]) =>
-        callLoaderOrAction(match, href, abortController.signal)
-      ),
-    ]);
-    let navigationResults = results.slice(0, matchesToLoad.length);
-    let fetcherResults = results.slice(matchesToLoad.length);
+    let { results, loaderResults, fetcherResults } =
+      await callLoadersAndResolveData(
+        matchesToLoad,
+        revalidatingFetchers,
+        location,
+        abortController.signal
+      );
 
     if (abortController.signal.aborted) {
       return { shortCircuited: true };
@@ -1049,7 +1043,7 @@ export function createRouter(init: RouterInit): Router {
     // we short circuited because pendingNavigationController will have already
     // been assigned to a new controller for the next navigation
     pendingNavigationController = null;
-    revalidatingFetchers.forEach((key) => fetchControllers.delete(key));
+    revalidatingFetchers.forEach(([key]) => fetchControllers.delete(key));
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
@@ -1064,11 +1058,37 @@ export function createRouter(init: RouterInit): Router {
       state,
       matches,
       matchesToLoad,
-      navigationResults,
-      pendingActionError,
+      loaderResults,
+      pendingError,
       revalidatingFetchers,
-      fetcherResults
+      fetcherResults,
+      activeDeferreds
     );
+
+    // Wire up subscribers to update loaderData as promises settle
+    activeDeferreds.forEach((deferredData, routeId) => {
+      deferredData.subscribe((aborted, loaderDataKey, data) => {
+        if (aborted) {
+          activeDeferreds.delete(routeId);
+          return;
+        }
+        // This will always be defined here, but TS doesn't know that
+        invariant(loaderDataKey, "Missing loaderDataKey in subscribe");
+        updateState({
+          loaderData: {
+            ...state.loaderData,
+            [routeId]: {
+              ...state.loaderData[routeId],
+              [loaderDataKey]: data,
+            },
+          },
+        });
+        // Remove this instance if all promises have settled
+        if (deferredData.done) {
+          activeDeferreds.delete(routeId);
+        }
+      });
+    });
 
     markFetchRedirectsDone();
     let didAbortFetchLoads = abortStaleFetchLoads(pendingNavigationLoadId);
@@ -1152,6 +1172,18 @@ export function createRouter(init: RouterInit): Router {
     isRevalidationRequired = true;
     fetchLoadMatches.delete(key);
 
+    // Cancel all pending deferred on submissions and mark cancelled routes
+    // for revalidation
+    cancelledDeferredRoutes.push(...cancelActiveDeferreds());
+
+    // Abort any in-flight fetcher loads
+    fetchLoadMatches.forEach(([href, match], key) => {
+      if (fetchControllers.has(key)) {
+        cancelledFetcherLoads.push(key);
+        abortFetcher(key);
+      }
+    });
+
     // Put this fetcher into it's submitting state
     let fetcher: FetcherStates["Submitting"] = {
       state: "submitting",
@@ -1173,10 +1205,16 @@ export function createRouter(init: RouterInit): Router {
     );
 
     if (abortController.signal.aborted) {
+      // We can delete this so long as we weren't aborted by ou our own fetcher
+      // re-submit which would have put _new_ controller is in fetchControllers
+      if (fetchControllers.get(key) === abortController) {
+        fetchControllers.delete(key);
+      }
       return;
     }
 
     if (isRedirectResult(actionResult)) {
+      fetchControllers.delete(key);
       fetchRedirectIds.add(key);
       let loadingFetcher: FetcherStates["Loading"] = {
         state: "loading",
@@ -1198,7 +1236,7 @@ export function createRouter(init: RouterInit): Router {
     // Process any non-redirect errors thrown
     if (isErrorResult(actionResult)) {
       let boundaryMatch = findNearestBoundary(state.matches, routeId);
-      state.fetchers.delete(key);
+      deleteFetcher(key);
       updateState({
         fetchers: new Map(state.fetchers),
         errors: {
@@ -1206,6 +1244,10 @@ export function createRouter(init: RouterInit): Router {
         },
       });
       return;
+    }
+
+    if (isDeferredResult(actionResult)) {
+      invariant(false, "deferred() is not supported in actions");
     }
 
     // Start the data load for current matches, or the next location if we're
@@ -1234,6 +1276,8 @@ export function createRouter(init: RouterInit): Router {
       submission,
       nextLocation,
       isRevalidationRequired,
+      cancelledDeferredRoutes,
+      cancelledFetcherLoads,
       { [match.route.id]: actionResult.data },
       null, // No need to send through errors since we short circuit above
       fetchLoadMatches
@@ -1259,19 +1303,13 @@ export function createRouter(init: RouterInit): Router {
 
     updateState({ fetchers: new Map(state.fetchers) });
 
-    // Call all navigation loaders and revalidating fetcher loaders in parallel,
-    // then slice off the results into separate arrays so we can handle them
-    // accordingly
-    let results = await Promise.all([
-      ...matchesToLoad.map((m) =>
-        callLoaderOrAction(m, nextLocation, abortController.signal)
-      ),
-      ...revalidatingFetchers.map(([, href, match]) =>
-        callLoaderOrAction(match, href, abortController.signal)
-      ),
-    ]);
-    let loaderResults = results.slice(0, matchesToLoad.length);
-    let fetcherResults = results.slice(matchesToLoad.length);
+    let { results, loaderResults, fetcherResults } =
+      await callLoadersAndResolveData(
+        matchesToLoad,
+        revalidatingFetchers,
+        nextLocation,
+        abortController.signal
+      );
 
     if (abortController.signal.aborted) {
       return;
@@ -1279,14 +1317,14 @@ export function createRouter(init: RouterInit): Router {
 
     fetchReloadIds.delete(key);
     fetchControllers.delete(key);
-    revalidatingFetchers.forEach((staleKey) =>
+    revalidatingFetchers.forEach(([staleKey]) =>
       fetchControllers.delete(staleKey)
     );
 
-    let loaderRedirect = findRedirect(loaderResults);
-    if (loaderRedirect) {
-      let redirectNavigation = getLoaderRedirect(state, loaderRedirect);
-      await startRedirectNavigation(loaderRedirect, redirectNavigation);
+    let redirect = findRedirect(results);
+    if (redirect) {
+      let redirectNavigation = getLoaderRedirect(state, redirect);
+      await startRedirectNavigation(redirect, redirectNavigation);
       return;
     }
 
@@ -1298,7 +1336,8 @@ export function createRouter(init: RouterInit): Router {
       loaderResults,
       null,
       revalidatingFetchers,
-      fetcherResults
+      fetcherResults,
+      activeDeferreds
     );
 
     let doneFetcher: FetcherStates["Idle"] = {
@@ -1367,8 +1406,24 @@ export function createRouter(init: RouterInit): Router {
       abortController.signal
     );
 
-    if (abortController.signal.aborted) return;
-    fetchControllers.delete(key);
+    // Deferred isn't supported or fetcher loads, await everything and treat it
+    // as a normal load.  resolveDeferredData will return undefined if this
+    // fetcher gets aborted, so we just leave result untouched and short circuit
+    // below if that happens
+    if (isDeferredResult(result)) {
+      result =
+        (await resolveDeferredData(result, abortController.signal)) || result;
+    }
+
+    // We can delete this so long as we weren't aborted by ou our own fetcher
+    // re-load which would have put _new_ controller is in fetchControllers
+    if (fetchControllers.get(key) === abortController) {
+      fetchControllers.delete(key);
+    }
+
+    if (abortController.signal.aborted) {
+      return;
+    }
 
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
@@ -1392,6 +1447,8 @@ export function createRouter(init: RouterInit): Router {
       });
       return;
     }
+
+    invariant(!isDeferredResult(result), "Unhandled fetcher deferred data");
 
     // Put the fetcher back into an idle state
     let doneFetcher: FetcherStates["Idle"] = {
@@ -1424,6 +1481,41 @@ export function createRouter(init: RouterInit): Router {
       navigation.location,
       { overrideNavigation: navigation }
     );
+  }
+
+  async function callLoadersAndResolveData(
+    matchesToLoad: DataRouteMatch[],
+    fetchersToLoad: [string, string, DataRouteMatch][],
+    location: Location,
+    signal: AbortSignal
+  ) {
+    // Call all navigation loaders and revalidating fetcher loaders in parallel,
+    // then slice off the results into separate arrays so we can handle them
+    // accordingly
+    let results = await Promise.all([
+      ...matchesToLoad.map((m) => callLoaderOrAction(m, location, signal)),
+      ...fetchersToLoad.map(([, href, match]) =>
+        callLoaderOrAction(match, href, signal)
+      ),
+    ]);
+    let loaderResults = results.slice(0, matchesToLoad.length);
+    let fetcherResults = results.slice(matchesToLoad.length);
+
+    await resolveDeferredResults(
+      matchesToLoad,
+      loaderResults,
+      signal,
+      state.loaderData,
+      activeDeferreds
+    );
+
+    await resolveDeferredResults(
+      fetchersToLoad.map(([, , match]) => match),
+      fetcherResults,
+      signal
+    );
+
+    return { results, loaderResults, fetcherResults };
   }
 
   function deleteFetcher(key: string): void {
@@ -1484,6 +1576,40 @@ export function createRouter(init: RouterInit): Router {
     }
     markFetchersDone(yeetedKeys);
     return yeetedKeys.length > 0;
+  }
+
+  function cancelActiveDeferreds(
+    predicate?: (routeId: string) => boolean
+  ): string[] {
+    let cancelledRouteIds: string[] = [];
+    activeDeferreds.forEach((dfd, routeId) => {
+      if (!predicate || predicate(routeId)) {
+        // Cancel the deferred - but do not remove from activeDeferreds here -
+        // we rely on the subscribers to do that so our tests can assert proper
+        // cleanup via _internalActiveDeferreds
+        dfd.cancel();
+        cancelledRouteIds.push(routeId);
+      }
+    });
+    return cancelledRouteIds;
+  }
+
+  // Cancel active deferreds that are not reused, being reloaded, or below the
+  // boundary id
+  function cancelActiveDeferredsViaMatches(
+    matches: DataRouteMatch[],
+    matchesToLoad: DataRouteMatch[],
+    boundaryId?: string
+  ): string[] {
+    let foundBoundaryId = false;
+    return cancelActiveDeferreds((routeId) => {
+      foundBoundaryId = foundBoundaryId || routeId === boundaryId;
+      // Can cancel if this route is no longer matched
+      let isRouteMatched = matches?.some((m) => m.route.id === routeId);
+      // Or if this route is about to be reloaded
+      let isRouteLoading = matchesToLoad?.some((m) => m.route.id === routeId);
+      return !isRouteMatched || isRouteLoading || foundBoundaryId;
+    });
   }
 
   // Opt in to capturing and reporting scroll positions during navigations,
@@ -1554,6 +1680,7 @@ export function createRouter(init: RouterInit): Router {
     deleteFetcher,
     dispose,
     _internalFetchControllers: fetchControllers,
+    _internalActiveDeferreds: activeDeferreds,
   };
 
   return router;
@@ -1668,21 +1795,21 @@ function getMatchesToLoad(
   submission: Submission | undefined,
   location: Location,
   isRevalidationRequired: boolean,
+  cancelledDeferredRoutes: string[],
+  cancelledFetcherLoads: string[],
   pendingActionData: RouteData | null,
-  pendingActionError: RouteData | null,
-  revalidatingFetcherMatches: Map<string, [string, DataRouteMatch]>
+  pendingError: RouteData | null,
+  fetchLoadMatches: Map<string, [string, DataRouteMatch]>
 ): [DataRouteMatch[], [string, string, DataRouteMatch][]] {
   // Determine which routes to run loaders for, filter out all routes below
   // any caught action error as they aren't going to render so we don't
   // need to load them
-  let deepestRenderableMatchIndex = pendingActionError
-    ? matches.findIndex(
-        (m) => m.route.id === Object.keys(pendingActionError)[0]
-      )
+  let deepestRenderableMatchIndex = pendingError
+    ? matches.findIndex((m) => m.route.id === Object.keys(pendingError)[0])
     : matches.length;
 
-  let actionResult = pendingActionError
-    ? Object.values(pendingActionError)[0]
+  let actionResult = pendingError
+    ? Object.values(pendingError)[0]
     : pendingActionData
     ? Object.values(pendingActionData)[0]
     : null;
@@ -1694,6 +1821,8 @@ function getMatchesToLoad(
     }
     return (
       isNewLoader(state.loaderData, state.matches[index], match) ||
+      // If this route had a pending deferred cancelled it must be revalidated
+      cancelledDeferredRoutes.some((id) => id === match.route.id) ||
       shouldRevalidateLoader(
         state.location,
         state.matches[index],
@@ -1708,9 +1837,11 @@ function getMatchesToLoad(
 
   // If revalidation is required, pick fetchers that qualify
   let revalidatingFetchers: [string, string, DataRouteMatch][] = [];
-  if (isRevalidationRequired) {
-    for (let entry of revalidatingFetcherMatches.entries()) {
-      let [key, [href, match]] = entry;
+  fetchLoadMatches.forEach(([href, match], key) => {
+    // This fetcher was cancelled from a prior action submission - force reload
+    if (cancelledFetcherLoads.includes(key)) {
+      revalidatingFetchers.push([key, href, match]);
+    } else if (isRevalidationRequired) {
       let shouldRevalidate = shouldRevalidateLoader(
         href,
         match,
@@ -1724,7 +1855,7 @@ function getMatchesToLoad(
         revalidatingFetchers.push([key, href, match]);
       }
     }
-  }
+  });
 
   return [navigationMatches, revalidatingFetchers];
 }
@@ -1741,7 +1872,7 @@ function isNewLoader(
     match.route.id !== currentMatch.route.id;
 
   // Handle the case that we don't have data for a re-used route, potentially
-  // from a prior error
+  // from a prior error or from a cancelled pending deferred
   let isMissingData = currentLoaderData[match.route.id] === undefined;
 
   // Always load if this is a net-new route or we don't yet have data
@@ -1803,7 +1934,7 @@ async function callLoaderOrAction(
   signal: AbortSignal,
   submission?: Submission
 ): Promise<DataResult> {
-  let resultType = ResultType.data;
+  let resultType;
   let result;
 
   try {
@@ -1851,14 +1982,18 @@ async function callLoaderOrAction(
       };
     }
 
-    return { type: resultType, data };
+    return { type: ResultType.data, data };
   }
 
   if (resultType === ResultType.error) {
     return { type: resultType, error: result };
   }
 
-  return { type: resultType, data: result };
+  if (result instanceof DeferredData) {
+    return { type: ResultType.deferred, deferredData: result };
+  }
+
+  return { type: ResultType.data, data: result };
 }
 
 function createRequest(
@@ -1901,9 +2036,10 @@ function processLoaderData(
   matches: DataRouteMatch[],
   matchesToLoad: DataRouteMatch[],
   results: DataResult[],
-  pendingActionError: RouteData | null,
+  pendingError: RouteData | null,
   revalidatingFetchers: [string, string, DataRouteMatch][],
-  fetcherResults: DataResult[]
+  fetcherResults: DataResult[],
+  activeDeferreds: Map<string, DeferredData>
 ): {
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"];
@@ -1927,13 +2063,16 @@ function processLoaderData(
       // If we have a pending action error, we report it at the highest-route
       // that throws a loader error, and then clear it out to indicate that
       // it was consumed
-      if (pendingActionError) {
-        error = Object.values(pendingActionError)[0];
-        pendingActionError = null;
+      if (pendingError) {
+        error = Object.values(pendingError)[0];
+        pendingError = null;
       }
       errors = Object.assign(errors || {}, {
         [boundaryMatch.route.id]: error,
       });
+    } else if (isDeferredResult(result)) {
+      activeDeferreds.set(id, result.deferredData);
+      loaderData[id] = result.deferredData.data;
     } else {
       loaderData[id] = result.data;
     }
@@ -1941,12 +2080,13 @@ function processLoaderData(
 
   // If we didn't consume the pending action error (i.e., all loaders
   // resolved), then consume it here
-  if (pendingActionError) {
-    errors = pendingActionError;
+  if (pendingError) {
+    errors = pendingError;
   }
 
   // Process results from our revalidating fetchers
-  revalidatingFetchers.forEach(([key, href, match], index) => {
+  for (let index = 0; index < revalidatingFetchers.length; index++) {
+    let [key, , match] = revalidatingFetchers[index];
     let result = fetcherResults[index];
 
     // Process fetcher non-redirect errors
@@ -1962,7 +2102,11 @@ function processLoaderData(
     } else if (isRedirectResult(result)) {
       // Should never get here, redirects should get processed above, but we
       // keep this to type narrow to a success result in the else
-      invariant(false, "Unhandled fetcher revalidation redirect");
+      throw new Error("Unhandled fetcher revalidation redirect");
+    } else if (isDeferredResult(result)) {
+      // Should never get here, deferred data should be awaited for fetchers
+      // in resolveDeferredResults
+      throw new Error("Unhandled fetcher deferred data");
     } else {
       let doneFetcher: FetcherStates["Idle"] = {
         state: "idle",
@@ -1974,7 +2118,7 @@ function processLoaderData(
       };
       state.fetchers.set(key, doneFetcher);
     }
-  });
+  }
 
   return { loaderData, errors };
 }
@@ -2056,12 +2200,64 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   );
 }
 
+function isDeferredResult(result: DataResult): result is DeferredResult {
+  return result.type === ResultType.deferred;
+}
+
 function isErrorResult(result: DataResult): result is ErrorResult {
   return result.type === ResultType.error;
 }
 
 function isRedirectResult(result?: DataResult): result is RedirectResult {
   return result?.type === ResultType.redirect;
+}
+
+async function resolveDeferredResults(
+  matchesToLoad: DataRouteMatch[],
+  results: DataResult[],
+  signal: AbortSignal,
+  currentLoaderData?: RouteData,
+  activeDeferreds?: Map<string, DeferredData>
+) {
+  for (let index = 0; index < results.length; index++) {
+    let result = results[index];
+    let id = matchesToLoad[index].route.id;
+    // Not passing currentLoaderData means SSR and we always want to await there
+    if (
+      isDeferredResult(result) &&
+      (!currentLoaderData || currentLoaderData[id] !== undefined)
+    ) {
+      activeDeferreds?.set(id, result.deferredData);
+      await resolveDeferredData(result, signal).then((successResult) => {
+        activeDeferreds?.delete(id);
+        if (successResult) {
+          results[index] = successResult;
+        }
+      });
+    }
+  }
+}
+
+async function resolveDeferredData(
+  result: DeferredResult,
+  signal: AbortSignal
+): Promise<SuccessResult | undefined> {
+  if (!result.deferredData.done) {
+    let onAbort = () => result.deferredData.cancel();
+    signal.addEventListener("abort", onAbort);
+    let wasAborted = await new Promise((resolve) => {
+      (result as DeferredResult).deferredData.subscribe((aborted) => {
+        signal.removeEventListener("abort", onAbort);
+        if (aborted || (result as DeferredResult).deferredData.done) {
+          resolve(aborted);
+        }
+      });
+    });
+    if (wasAborted) {
+      return;
+    }
+  }
+  return { type: ResultType.data, data: result.deferredData.data };
 }
 
 function hasNakedIndexQuery(search: string): boolean {

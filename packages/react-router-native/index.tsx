@@ -27,6 +27,8 @@ export type {
   ActionFunctionArgs,
   DataMemoryRouterProps,
   DataRouteMatch,
+  Deferrable,
+  DeferredProps,
   Fetcher,
   Hash,
   IndexRouteProps,
@@ -61,6 +63,7 @@ export type {
 } from "react-router";
 export {
   DataMemoryRouter,
+  Deferred,
   MemoryRouter,
   Navigate,
   NavigationType,
@@ -70,6 +73,8 @@ export {
   Routes,
   createPath,
   createRoutesFromChildren,
+  deferred,
+  isDeferredError,
   isRouteErrorResponse,
   generatePath,
   json,
@@ -80,6 +85,7 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
+  useDeferredData,
   useHref,
   useInRouterContext,
   useLoaderData,

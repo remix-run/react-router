@@ -1,23 +1,31 @@
 import React from "react";
-import type { ActionFunction, LoaderFunction } from "react-router-dom";
 import {
+  type ActionFunction,
+  type Deferrable,
+  type LoaderFunction,
   DataBrowserRouter,
+  Deferred,
   Form,
   Link,
   Route,
   Outlet,
+  deferred,
+  useDeferredData,
   useFetcher,
   useFetchers,
   useLoaderData,
   useNavigation,
   useParams,
+  useRevalidator,
   useRouteError,
+  json,
+  useActionData,
 } from "react-router-dom";
 
 import type { Todos } from "./todos";
 import { addTodo, deleteTodo, getTodos } from "./todos";
 
-let sleep = () => new Promise((r) => setTimeout(r, 500));
+let sleep = (n: number = 500) => new Promise((r) => setTimeout(r, n));
 
 function Fallback() {
   return <p>Performing initial data "load"</p>;
@@ -26,6 +34,7 @@ function Fallback() {
 // Layout
 function Layout() {
   let navigation = useNavigation();
+  let { revalidate } = useRevalidator();
   let fetchers = useFetchers();
   let fetcherInProgress = fetchers.some((f) =>
     ["loading", "submitting"].includes(f.state)
@@ -37,7 +46,15 @@ function Layout() {
         &nbsp;|&nbsp;
         <Link to="/todos">Todos</Link>
         &nbsp;|&nbsp;
+        <Link to="/deferred">Deferred</Link>
+        &nbsp;|&nbsp;
+        <Link to="/deferred/child">Deferred Child</Link>
+        &nbsp;|&nbsp;
+        <Link to="/long-load">Long Load</Link>
+        &nbsp;|&nbsp;
         <Link to="/404">404 Link</Link>
+        &nbsp;&nbsp;
+        <button onClick={() => revalidate()}>Revalidate</button>
       </nav>
       <div style={{ position: "fixed", top: 0, right: 0 }}>
         {navigation.state !== "idle" && <p>Navigation in progress...</p>}
@@ -46,6 +63,10 @@ function Layout() {
       <p>
         Click on over to <Link to="/todos">/todos</Link> and check out these
         data loading APIs!{" "}
+      </p>
+      <p>
+        Or, checkout <Link to="/deferred">/deferred</Link> to see how to
+        separate critical and lazily loaded data in your loaders.
       </p>
       <p>
         We've introduced some fake async-aspects of routing here, so Keep an eye
@@ -192,6 +213,9 @@ function TodoItem({ id, todo }: TodoItemProps) {
 const todoLoader: LoaderFunction = async ({ params }) => {
   await sleep();
   let todos = getTodos();
+  if (!params.id) {
+    throw new Error("Expected params.id");
+  }
   let todo = todos[params.id];
   if (!todo) {
     throw new Error(`Uh oh, I couldn't find a todo with id "${params.id}"`);
@@ -211,11 +235,133 @@ function Todo() {
   );
 }
 
+interface DeferredRouteLoaderData {
+  critical1: string;
+  critical2: string;
+  lazyResolved: Deferrable<string>;
+  lazy1: Deferrable<string>;
+  lazy2: Deferrable<string>;
+  lazy3: Deferrable<string>;
+  lazyError: Deferrable<string>;
+}
+
+const rand = () => Math.round(Math.random() * 100);
+const resolve = (d: string, ms: number) =>
+  new Promise((r) => setTimeout(() => r(`${d} - ${rand()}`), ms));
+const reject = (d: string, ms: number) =>
+  new Promise((_, r) => setTimeout(() => r(`${d} - ${rand()}`), ms));
+
+const deferredLoader: LoaderFunction = async ({ request }) => {
+  return deferred({
+    critical1: await resolve("Critical 1", 250),
+    critical2: await resolve("Critical 2", 500),
+    lazyResolved: Promise.resolve("Lazy Data immediately resolved - " + rand()),
+    lazy1: resolve("Lazy 1", 1000),
+    lazy2: resolve("Lazy 2", 1500),
+    lazy3: resolve("Lazy 3", 2000),
+    lazyError: reject("Kaboom!", 2500),
+  });
+};
+
+function DeferredPage() {
+  let data = useLoaderData() as DeferredRouteLoaderData;
+
+  return (
+    <div>
+      <p>{data.critical1}</p>
+      <p>{data.critical2}</p>
+      <Deferred value={data.lazyResolved} fallback={<p>should not see me!</p>}>
+        <RenderDeferredData />
+      </Deferred>
+      <Deferred value={data.lazy1} fallback={<p>loading 1...</p>}>
+        <RenderDeferredData />
+      </Deferred>
+      <Deferred value={data.lazy2} fallback={<p>loading 2...</p>}>
+        <RenderDeferredData />
+      </Deferred>
+      <Deferred value={data.lazy3} fallback={<p>loading 3...</p>}>
+        {(data) => <p>{data}</p>}
+      </Deferred>
+      <Deferred
+        value={data.lazyError}
+        fallback={<p>loading (error)...</p>}
+        errorElement={<RenderDeferredError />}
+      >
+        <RenderDeferredData />
+      </Deferred>
+      <Outlet />
+    </div>
+  );
+}
+
+const deferredChildLoader: LoaderFunction = async ({ request }) => {
+  return deferred({
+    critical: await resolve("Critical Child Data", 500),
+    lazy: resolve("Lazy Child Data", 1000),
+  });
+};
+
+const deferredChildAction: ActionFunction = async ({ request }) => {
+  return json({ ok: true });
+};
+
+function DeferredChild() {
+  let data = useLoaderData();
+  let actionData = useActionData();
+  return (
+    <div>
+      <p>{data.critical}</p>
+      <Deferred value={data.lazy} fallback={<p>loading child...</p>}>
+        <RenderDeferredData />
+      </Deferred>
+      <Form method="post">
+        <button type="submit" name="key" value="value">
+          Submit
+        </button>
+      </Form>
+      {actionData ? <p>Action data:{JSON.stringify(actionData)}</p> : null}
+    </div>
+  );
+}
+
+function RenderDeferredData() {
+  let data = useDeferredData<string>();
+  return <p>{data}</p>;
+}
+
+function RenderDeferredError() {
+  let error = useRouteError();
+  return (
+    <p style={{ color: "red" }}>
+      Error (errorElement)!
+      <br />
+      {error.message} {error.stack}
+    </p>
+  );
+}
+
 function App() {
   return (
     <DataBrowserRouter fallbackElement={<Fallback />}>
       <Route path="/" element={<Layout />}>
         <Route index loader={homeLoader} element={<Home />} />
+        <Route
+          path="deferred"
+          loader={deferredLoader}
+          element={<DeferredPage />}
+        >
+          <Route
+            path="child"
+            loader={deferredChildLoader}
+            action={deferredChildAction}
+            element={<DeferredChild />}
+          />
+        </Route>
+        <Route
+          path="long-load"
+          loader={() => sleep(3000)}
+          element={<h1>👋</h1>}
+        />
         <Route
           path="todos"
           action={todosAction}

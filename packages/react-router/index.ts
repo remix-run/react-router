@@ -22,7 +22,9 @@ import type {
 import {
   Action as NavigationType,
   createPath,
+  deferred,
   generatePath,
+  isDeferredError,
   isRouteErrorResponse,
   json,
   matchPath,
@@ -34,6 +36,7 @@ import {
 
 import type {
   DataMemoryRouterProps,
+  DeferredProps,
   MemoryRouterProps,
   NavigateProps,
   OutletProps,
@@ -47,8 +50,9 @@ import type {
 import {
   createRoutesFromChildren,
   renderMatches,
-  MemoryRouter,
   DataMemoryRouter,
+  Deferred,
+  MemoryRouter,
   Navigate,
   Outlet,
   Route,
@@ -64,7 +68,7 @@ import {
   NavigationContext,
   RouteContext,
 } from "./lib/context";
-import type { NavigateFunction } from "./lib/hooks";
+import type { Deferrable, NavigateFunction } from "./lib/hooks";
 import {
   useHref,
   useInRouterContext,
@@ -78,6 +82,7 @@ import {
   useResolvedPath,
   useRoutes,
   useActionData,
+  useDeferredData,
   useLoaderData,
   useMatches,
   useRouteLoaderData,
@@ -97,6 +102,8 @@ export type {
   ActionFunctionArgs,
   DataMemoryRouterProps,
   DataRouteMatch,
+  Deferrable,
+  DeferredProps,
   Fetcher,
   Hash,
   IndexRouteProps,
@@ -131,6 +138,7 @@ export type {
 };
 export {
   DataMemoryRouter,
+  Deferred,
   MemoryRouter,
   Navigate,
   NavigationType,
@@ -140,6 +148,8 @@ export {
   Routes,
   createPath,
   createRoutesFromChildren,
+  deferred,
+  isDeferredError,
   isRouteErrorResponse,
   generatePath,
   json,
@@ -150,6 +160,7 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
+  useDeferredData,
   useHref,
   useInRouterContext,
   useLoaderData,

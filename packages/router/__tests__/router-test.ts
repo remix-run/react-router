@@ -21,9 +21,12 @@ import {
 } from "@remix-run/router";
 
 // Private API
-import { ErrorResponse } from "../utils";
-
-jest.setTimeout(1000000);
+import {
+  deferred,
+  DeferredError,
+  ErrorResponse,
+  isDeferredError,
+} from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
@@ -87,7 +90,6 @@ type NavigationHelpers = {
   navigationId: number;
   loaders: Record<string, Helpers>;
   actions: Record<string, Helpers>;
-  shimLoaderHelper: (routeId: string) => void;
 };
 
 type FetcherHelpers = NavigationHelpers & {
@@ -117,15 +119,12 @@ function defer() {
   let promise = new Promise((res, rej) => {
     resolve = async (val: any) => {
       res(val);
-      try {
-        await promise;
-      } catch (e) {}
+      await tick();
+      await promise;
     };
     reject = async (error?: Error) => {
       rej(error);
-      try {
-        await promise;
-      } catch (e) {}
+      await promise.catch(() => tick());
     };
   });
   return {
@@ -344,12 +343,10 @@ function setup({
       // Public APIs only needed for test execution
       async resolve(value) {
         await internalHelpers.dfd.resolve(value);
-        await tick();
       },
       async reject(value) {
         try {
           await internalHelpers.dfd.reject(value);
-          await tick();
         } catch (e) {}
       },
       async redirect(href, status = 301, headers = {}, shims = []) {
@@ -402,24 +399,10 @@ function setup({
         )
     );
 
-    function shimLoaderHelper(routeId: string) {
-      invariant(!loaderHelpers[routeId], "Can't overwrite existing helpers");
-      loaderHelpers[routeId] = getRouteHelpers(
-        routeId,
-        navigationId,
-        (routeId, helpers) =>
-          activeHelpers.set(
-            `navigation:${navigationId}:loader:${routeId}`,
-            helpers
-          )
-      );
-    }
-
     return {
       navigationId,
       loaders: loaderHelpers,
       actions: actionHelpers,
-      shimLoaderHelper,
     };
   }
 
@@ -447,7 +430,6 @@ function setup({
         },
         loaders: {},
         actions: {},
-        shimLoaderHelper,
       };
     }
 
@@ -488,16 +470,6 @@ function setup({
         activeHelpers.set(`fetch:${navigationId}:action:${routeId}`, helpers)
     );
 
-    function shimLoaderHelper(routeId: string) {
-      invariant(!loaderHelpers[routeId], "Can't overwrite existing helpers");
-      loaderHelpers[routeId] = getRouteHelpers(
-        routeId,
-        navigationId,
-        (routeId, helpers) =>
-          activeHelpers.set(`fetch:${navigationId}:loader:${routeId}`, helpers)
-      );
-    }
-
     return {
       key,
       navigationId,
@@ -507,7 +479,6 @@ function setup({
       },
       loaders: loaderHelpers,
       actions: actionHelpers,
-      shimLoaderHelper,
     };
   }
 
@@ -566,22 +537,20 @@ function setup({
 
   // Simulate a fetcher call, returning a series of helpers to manually
   // control/assert loader/actions
-  async function fetch(href: string): Promise<FetcherHelpers>;
-  async function fetch(href: string, key: string): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
-    opts: RouterNavigateOptions
+    opts?: RouterNavigateOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
-    opts: RouterNavigateOptions
+    opts?: RouterNavigateOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
     routeId: string,
-    opts: RouterNavigateOptions
+    opts?: RouterNavigateOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
@@ -619,23 +588,51 @@ function setup({
 
   // Simulate a revalidation, returning a series of helpers to manually
   // control/assert loader/actions
-  async function revalidate(): Promise<NavigationHelpers> {
+  async function revalidate(
+    type: "navigation" | "fetch" = "navigation",
+    shimRouteId?: string
+  ): Promise<NavigationHelpers> {
     invariant(currentRouter, "No currentRouter available");
-    // if a revalidation interrupts an action submission, we don't actually
-    // start a new new navigation so don't increment here
-    let navigationId =
-      currentRouter.state.navigation.state === "submitting" &&
-      currentRouter.state.navigation.formMethod !== "get"
-        ? guid
-        : ++guid;
-    activeLoaderType = "navigation";
-    activeLoaderNavigationId = navigationId;
+    let navigationId;
+    if (type === "fetch") {
+      // This is a special case for when we want to test revalidation against
+      // fetchers, so that our A.loaders.routeId will trigger the fetcher loader,
+      // not the route loader
+      navigationId = ++guid;
+      activeLoaderType = "fetch";
+      activeLoaderFetchId = navigationId;
+    } else {
+      // if a revalidation interrupts an action submission, we don't actually
+      // start a new new navigation so don't increment here
+      navigationId =
+        currentRouter.state.navigation.state === "submitting" &&
+        currentRouter.state.navigation.formMethod !== "get"
+          ? guid
+          : ++guid;
+      activeLoaderType = "navigation";
+      activeLoaderNavigationId = navigationId;
+    }
     let href = currentRouter.createHref(
       currentRouter.state.navigation.location || currentRouter.state.location
     );
     let helpers = getNavigationHelpers(href, navigationId);
+    if (shimRouteId) {
+      shimHelper(helpers.loaders, type, "loader", shimRouteId);
+    }
     currentRouter.revalidate();
     return helpers;
+  }
+
+  function shimHelper(
+    navHelpers: Record<string, Helpers>,
+    type: "navigation" | "fetch",
+    type2: "loader" | "action",
+    routeId: string
+  ) {
+    invariant(!navHelpers[routeId], "Can't overwrite existing helpers");
+    navHelpers[routeId] = getRouteHelpers(routeId, guid, (routeId, helpers) =>
+      activeHelpers.set(`${type}:${guid}:${type2}:${routeId}`, helpers)
+    );
   }
 
   return {
@@ -644,6 +641,7 @@ function setup({
     navigate,
     fetch,
     revalidate,
+    shimHelper,
   };
 }
 
@@ -770,6 +768,10 @@ beforeEach(() => {
 // Detect any failures inside the router navigate code
 afterEach(() => {
   // Cleanup any routers created using setup()
+  if (currentRouter) {
+    expect(currentRouter._internalFetchControllers.size).toBe(0);
+    expect(currentRouter._internalActiveDeferreds.size).toBe(0);
+  }
   currentRouter?.dispose();
   currentRouter = null;
 
@@ -3341,6 +3343,12 @@ describe("a router", () => {
       let t = setup({
         routes: TASK_ROUTES,
         initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT DATA",
+            index: "INDEX DATA",
+          },
+        },
       });
 
       let formData = new FormData();
@@ -3362,6 +3370,60 @@ describe("a router", () => {
       });
       expect(t.router.state.errors).toEqual({
         tasks: new ErrorResponse(
+          400,
+          "Bad Request",
+          "Cannot submit binary form data using GET"
+        ),
+      });
+    });
+
+    it("runs loaders above the boundary for 400 errors if binary data is attempted to be submitted using formMethod=GET", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                loader: true,
+                errorElement: true,
+              },
+            ],
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let formData = new FormData();
+      formData.append(
+        "blob",
+        new Blob(["<h1>Some html file contents</h1>"], {
+          type: "text/html",
+        })
+      );
+
+      let A = await t.navigate("/parent/child", {
+        formMethod: "get",
+        formData: formData,
+      });
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.errors).toEqual(null);
+
+      await A.loaders.parent.resolve("PARENT");
+      expect(A.loaders.child.stub).not.toHaveBeenCalled();
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.loaderData).toEqual({
+        parent: "PARENT",
+      });
+      expect(t.router.state.errors).toEqual({
+        child: new ErrorResponse(
           400,
           "Bad Request",
           "Cannot submit binary form data using GET"
@@ -3458,7 +3520,6 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await parentDfd.resolve("PARENT DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3471,7 +3532,6 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await childDfd.resolve("CHILD DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3531,7 +3591,6 @@ describe("a router", () => {
 
       await parentDfd.resolve("PARENT DATA 2");
       await childDfd.resolve("CHILD DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3638,7 +3697,6 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await parentDfd.resolve("PARENT DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3652,7 +3710,6 @@ describe("a router", () => {
 
       router.navigate("/child2");
       await childDfd.resolve("CHILD DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
@@ -3665,7 +3722,6 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({});
 
       await child2Dfd.resolve("CHILD2 DATA");
-      await tick();
       expect(router.state).toMatchObject({
         historyAction: "PUSH",
         location: expect.objectContaining({ pathname: "/child2" }),
@@ -5471,6 +5527,8 @@ describe("a router", () => {
           formData: undefined,
           data: "DATA",
         });
+
+        expect(router._internalFetchControllers.size).toBe(0);
       });
 
       it("loader fetch", async () => {
@@ -5599,10 +5657,16 @@ describe("a router", () => {
         });
         expect(B.fetcher.state).toBe("submitting");
         expect(B.fetcher.data).toBe("A ACTION");
+
+        await B.actions.foo.resolve("B ACTION");
+        await B.loaders.root.resolve("ROOT DATA*");
+        await B.loaders.foo.resolve("A DATA*");
+        expect(B.fetcher.state).toBe("idle");
+        expect(B.fetcher.data).toBe("B ACTION");
       });
     });
 
-    describe("fetchers", () => {
+    describe("fetcher removal", () => {
       it("gives an idle fetcher before submission", async () => {
         let t = initializeTmTest();
         let fetcher = t.router.getFetcher("randomKey");
@@ -5661,7 +5725,7 @@ describe("a router", () => {
 
     describe("fetcher error states (4xx Response)", () => {
       it("loader fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo");
         await A.loaders.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
@@ -5671,7 +5735,7 @@ describe("a router", () => {
       });
 
       it("loader submission fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo?key=value", {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
@@ -5684,7 +5748,7 @@ describe("a router", () => {
       });
 
       it("action fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -5786,7 +5850,7 @@ describe("a router", () => {
 
     describe("fetcher error states (Error)", () => {
       it("loader fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo");
         await A.loaders.foo.reject(new Error("Kaboom!"));
         expect(A.fetcher).toBe(IDLE_FETCHER);
@@ -5796,7 +5860,7 @@ describe("a router", () => {
       });
 
       it("loader submission fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo?key=value", {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
@@ -5809,7 +5873,7 @@ describe("a router", () => {
       });
 
       it("action fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -5824,7 +5888,7 @@ describe("a router", () => {
 
     describe("fetcher redirects", () => {
       it("loader fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo");
         let fetcher = A.fetcher;
         await A.loaders.foo.redirect("/bar");
@@ -5834,7 +5898,7 @@ describe("a router", () => {
       });
 
       it("loader submission fetch", async () => {
-        let t = initializeTmTest({ url: "/foo" });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo?key=value", {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
@@ -5847,10 +5911,7 @@ describe("a router", () => {
       });
 
       it("action fetch", async () => {
-        let t = initializeTmTest({
-          url: "/foo",
-          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
-        });
+        let t = initializeTmTest();
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -5904,9 +5965,10 @@ describe("a router", () => {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
         });
-        t.fetch("/foo", key);
+        let C = await t.fetch("/foo", key);
         expect(A.loaders.foo.signal.aborted).toBe(true);
         expect(B.loaders.foo.signal.aborted).toBe(true);
+        await C.loaders.foo.resolve(null);
       });
 
       it("aborts resubmissions action call", async () => {
@@ -5920,12 +5982,15 @@ describe("a router", () => {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
         });
-        t.fetch("/foo", key, {
+        let C = await t.fetch("/foo", key, {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
         });
         expect(A.actions.foo.signal.aborted).toBe(true);
         expect(B.actions.foo.signal.aborted).toBe(true);
+        await C.actions.foo.resolve(null);
+        await C.loaders.root.resolve(null);
+        await C.loaders.index.resolve(null);
       });
 
       it("aborts resubmissions loader call", async () => {
@@ -5936,11 +6001,14 @@ describe("a router", () => {
           formData: createFormData({ key: "value" }),
         });
         await A.actions.foo.resolve("A ACTION");
-        t.fetch("/foo", key, {
+        let C = await t.fetch("/foo", key, {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
         });
         expect(A.loaders.foo.signal.aborted).toBe(true);
+        await C.actions.foo.resolve(null);
+        await C.loaders.root.resolve(null);
+        await C.loaders.foo.resolve(null);
       });
 
       describe(`
@@ -6099,7 +6167,9 @@ describe("a router", () => {
           expect(t.router.state.errors).toEqual({
             root: new ErrorResponse(400, undefined, ""),
           });
-          expect(t.router.state.actionData).toEqual(null);
+
+          await B.loaders.root.resolve(null);
+          await B.loaders.foo.resolve(null);
         });
       });
 
@@ -6277,7 +6347,7 @@ describe("a router", () => {
           // This fetcher's helpers take the current locations loaders (root/index).
           // Since we know we're about to interrupt with /foo let's shim in a
           // loader helper for foo ahead of time
-          A.shimLoaderHelper("foo");
+          t.shimHelper(A.loaders, "fetch", "loader", "foo");
 
           let B = await t.navigate("/foo");
           await A.actions.foo.resolve("A action");
@@ -6427,7 +6497,7 @@ describe("a router", () => {
             formMethod: "post",
             formData: createFormData({ key: "value" }),
           });
-          A.shimLoaderHelper("bar");
+          t.shimHelper(A.loaders, "fetch", "loader", "bar");
           let B = await t.navigate("/bar", {
             formMethod: "post",
             formData: createFormData({ key: "value" }),
@@ -6455,7 +6525,7 @@ describe("a router", () => {
             formMethod: "post",
             formData: createFormData({ key: "value" }),
           });
-          A.shimLoaderHelper("bar");
+          t.shimHelper(A.loaders, "fetch", "loader", "bar");
           let B = await t.navigate("/bar", {
             formMethod: "post",
             formData: createFormData({ key: "value" }),
@@ -6483,6 +6553,8 @@ describe("a router", () => {
             formMethod: "post",
             formData: createFormData({ key: "value" }),
           });
+          t.shimHelper(A.loaders, "fetch", "loader", "bar");
+
           // Interrupting the submission should cause the next load to call all loaders
           let B = await t.navigate("/bar");
           await A.actions.foo.resolve("A ACTION");
@@ -6495,6 +6567,18 @@ describe("a router", () => {
             loaderData: {
               root: "ROOT*",
               bar: "BAR",
+            },
+          });
+
+          await A.loaders.root.resolve("ROOT**");
+          await A.loaders.bar.resolve("BAR*");
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/bar" },
+            actionData: null,
+            loaderData: {
+              root: "ROOT**",
+              bar: "BAR*",
             },
           });
         });
@@ -6578,24 +6662,17 @@ describe("a router", () => {
         expect(A.fetcher.state).toBe("idle");
         expect(A.fetcher.data).toBe("TASKS 1");
 
-        let key2 = "key2";
-        let B = await t.fetch("/tasks/2", key2);
-        await B.loaders.tasksId.resolve("TASKS 2");
-        expect(B.fetcher.state).toBe("idle");
-        expect(B.fetcher.data).toBe("TASKS 2");
-
         let C = await t.navigate("/tasks", {
           formMethod: "post",
           formData: createFormData({}),
         });
         // Add a helper for the fetcher that will be revalidating
-        C.shimLoaderHelper("tasksId");
+        t.shimHelper(C.loaders, "navigation", "loader", "tasksId");
 
         // Resolve the action
         await C.actions.tasks.resolve("TASKS ACTION");
 
-        // Only the revalidating fetcher should go back into a loading state
-        expect(t.router.state.fetchers.get(key1)?.state).toBe("loading");
+        // Fetcher should go back into a loading state
         expect(t.router.state.fetchers.get(key1)?.state).toBe("loading");
 
         // Resolve navigation loaders + fetcher loader
@@ -6603,10 +6680,6 @@ describe("a router", () => {
         await C.loaders.tasks.resolve("TASKS LOADER");
         await C.loaders.tasksId.resolve("TASKS ID*");
         expect(t.router.state.fetchers.get(key1)).toMatchObject({
-          state: "idle",
-          data: "TASKS ID*",
-        });
-        expect(t.router.state.fetchers.get(key2)).toMatchObject({
           state: "idle",
           data: "TASKS ID*",
         });
@@ -6692,7 +6765,7 @@ describe("a router", () => {
           formMethod: "post",
           formData: createFormData({}),
         });
-        C.shimLoaderHelper("tasksId");
+        t.shimHelper(C.loaders, "navigation", "loader", "tasksId");
 
         // Reject the action
         await C.actions.tasks.reject(new Error("Kaboom!"));
@@ -6799,6 +6872,9 @@ describe("a router", () => {
             "nextUrl": "http://localhost/fetch",
           }
         `);
+
+        expect(router._internalFetchControllers.size).toBe(0);
+        router.dispose();
       });
 
       it("handles fetcher revalidation errors", async () => {
@@ -6828,7 +6904,7 @@ describe("a router", () => {
           formMethod: "post",
           formData: createFormData({}),
         });
-        B.shimLoaderHelper("tasksId");
+        t.shimHelper(B.loaders, "navigation", "loader", "tasksId");
         await B.actions.tasks.resolve("TASKS ACTION");
         await B.loaders.root.resolve("ROOT*");
         await B.loaders.tasks.resolve("TASKS*");
@@ -6868,7 +6944,7 @@ describe("a router", () => {
           formMethod: "post",
           formData: createFormData({}),
         });
-        C.shimLoaderHelper("tasksId");
+        t.shimHelper(C.loaders, "fetch", "loader", "tasksId");
 
         await C.actions.tasks.resolve("TASKS ACTION");
         await C.loaders.root.resolve("ROOT*");
@@ -6887,6 +6963,1534 @@ describe("a router", () => {
           state: "idle",
           data: "TASKS ACTION",
         });
+      });
+
+      it("cancels in-flight fetcher.loads on action submission and forces reload", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "index",
+              index: true,
+            },
+            {
+              id: "action",
+              path: "action",
+              action: true,
+            },
+            // fetch A will resolve before the action and will be able to opt-out
+            {
+              id: "fetchA",
+              path: "fetch-a",
+              loader: true,
+              shouldRevalidate: () => false,
+            },
+            // fetch B will resolve before the action but then issue a second
+            // load that gets cancelled.  It will not be able to opt out because
+            // of the cancellation
+            {
+              id: "fetchB",
+              path: "fetch-b",
+              loader: true,
+              shouldRevalidate: () => false,
+            },
+            // fetch C will not before the action, and will not be able to opt
+            // out because it has no data
+            {
+              id: "fetchC",
+              path: "fetch-c",
+              loader: true,
+              shouldRevalidate: () => false,
+            },
+          ],
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { index: "INDEX" } },
+        });
+        expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+
+        let keyA = "a";
+        let A = await t.fetch("/fetch-a", keyA);
+        await A.loaders.fetchA.resolve("A");
+        expect(t.router.state.fetchers.get(keyA)).toMatchObject({
+          state: "idle",
+          data: "A",
+        });
+
+        let keyB = "b";
+        let B = await t.fetch("/fetch-b", keyB);
+        await B.loaders.fetchB.resolve("B");
+        expect(t.router.state.fetchers.get(keyB)).toMatchObject({
+          state: "idle",
+          data: "B",
+        });
+
+        // Fetch again for B
+        let B2 = await t.fetch("/fetch-b", keyB);
+        expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
+
+        // Start another fetcher which will not resolve prior to the action
+        let keyC = "c";
+        let C = await t.fetch("/fetch-c", keyC);
+        expect(t.router.state.fetchers.get(keyC)?.state).toBe("loading");
+
+        // Navigation should cancel fetcher and since it has no data
+        // shouldRevalidate should be ignored on subsequent fetch
+        let D = await t.navigate("/action", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        // Add a helper for the fetcher that will be revalidating
+        t.shimHelper(D.loaders, "navigation", "loader", "fetchA");
+        t.shimHelper(D.loaders, "navigation", "loader", "fetchB");
+        t.shimHelper(D.loaders, "navigation", "loader", "fetchC");
+
+        // Fetcher load aborted and still in a loading state
+        expect(t.router.state.navigation.state).toBe("submitting");
+        expect(A.loaders.fetchA.signal.aborted).toBe(false);
+        expect(B.loaders.fetchB.signal.aborted).toBe(false);
+        expect(B2.loaders.fetchB.signal.aborted).toBe(true);
+        expect(C.loaders.fetchC.signal.aborted).toBe(true);
+        expect(t.router.state.fetchers.get(keyA)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
+        expect(t.router.state.fetchers.get(keyC)?.state).toBe("loading");
+        await B.loaders.fetchB.resolve("B"); // ignored due to abort
+        await C.loaders.fetchC.resolve("C"); // ignored due to abort
+
+        // Resolve the action
+        await D.actions.action.resolve("ACTION");
+        expect(t.router.state.navigation.state).toBe("loading");
+        expect(t.router.state.fetchers.get(keyA)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
+        expect(t.router.state.fetchers.get(keyC)?.state).toBe("loading");
+
+        // Resolve fetcher loader
+        await D.loaders.fetchB.resolve("B2");
+        await D.loaders.fetchC.resolve("C");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.fetchers.get(keyA)).toMatchObject({
+          state: "idle",
+          data: "A",
+        });
+        expect(t.router.state.fetchers.get(keyB)).toMatchObject({
+          state: "idle",
+          data: "B2",
+        });
+        expect(t.router.state.fetchers.get(keyC)).toMatchObject({
+          state: "idle",
+          data: "C",
+        });
+      });
+    });
+  });
+
+  describe("deferred", () => {
+    it("should support returning deferred responses", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/lazy");
+
+      let dfd1 = defer();
+      let dfd2 = defer();
+      let dfd3 = defer();
+      dfd1.resolve("Immediate data");
+      await A.loaders.lazy.resolve(
+        deferred({
+          critical1: "1",
+          critical2: "2",
+          lazy1: dfd1.promise,
+          lazy2: dfd2.promise,
+          lazy3: dfd3.promise,
+        })
+      );
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical1: "1",
+          critical2: "2",
+          lazy1: "Immediate data",
+          lazy2: expect.any(Promise),
+          lazy3: expect.any(Promise),
+        },
+      });
+
+      await dfd2.resolve("2");
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical1: "1",
+          critical2: "2",
+          lazy1: "Immediate data",
+          lazy2: "2",
+          lazy3: expect.any(Promise),
+        },
+      });
+
+      await dfd3.resolve("3");
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical1: "1",
+          critical2: "2",
+          lazy1: "Immediate data",
+          lazy2: "2",
+          lazy3: "3",
+        },
+      });
+    });
+
+    it("should cancel outstanding deferreds on a new navigation", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/lazy");
+      let dfd1 = defer();
+      let dfd2 = defer();
+      await A.loaders.lazy.resolve(
+        deferred({
+          critical1: "1",
+          critical2: "2",
+          lazy1: dfd1.promise,
+          lazy2: dfd2.promise,
+        })
+      );
+
+      // Interrupt pending deferred's from /lazy navigation
+      let B = await t.navigate("/");
+      // During navigation - deferreds remain as promises
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical1: "1",
+          critical2: "2",
+          lazy1: expect.any(Promise),
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      // But they are frozen - no re-paints on resolve/reject!
+      await dfd1.resolve("a");
+      await dfd2.reject(new Error("b"));
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical1: "1",
+          critical2: "2",
+          lazy1: expect.any(Promise),
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      await B.loaders.index.resolve("INDEX*");
+      expect(t.router.state.loaderData).toEqual({
+        index: "INDEX*",
+      });
+    });
+
+    it("should not cancel outstanding deferreds on reused routes", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            children: [
+              {
+                id: "a",
+                path: "a",
+                loader: true,
+              },
+              {
+                id: "b",
+                path: "b",
+                loader: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { root: "ROOT" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/parent/a");
+      let parentDfd = defer();
+      await A.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT",
+          lazy: parentDfd.promise,
+        })
+      );
+      let aDfd = defer();
+      await A.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: aDfd.promise,
+        })
+      );
+
+      // Navigate such that we reuse the parent route
+      let B = await t.navigate("/parent/b");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      // This should reflect in loaderData
+      await parentDfd.resolve("LAZY PARENT");
+      // This should not
+      await aDfd.resolve("LAZY A");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: "LAZY PARENT",
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise), // No re-paint!
+        },
+      });
+
+      // Complete the navigation
+      await B.loaders.b.resolve("B DATA");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: "LAZY PARENT",
+        },
+        b: "B DATA",
+      });
+    });
+
+    it("should handle promise rejections", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/lazy");
+
+      let dfd = defer();
+      await A.loaders.lazy.resolve(
+        deferred({
+          critical: "1",
+          lazy: dfd.promise,
+        })
+      );
+
+      await dfd.reject(new Error("Kaboom!"));
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical: "1",
+          lazy: expect.any(DeferredError),
+        },
+      });
+      expect(isDeferredError(t.router.state.loaderData.lazy.lazy)).toBe(true);
+    });
+
+    it("should cancel all outstanding deferreds on router.revalidate()", async () => {
+      let shouldRevalidateSpy = jest.fn(() => false);
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            shouldRevalidate: shouldRevalidateSpy,
+            children: [
+              {
+                id: "index",
+                index: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { root: "ROOT" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/parent");
+      let parentDfd = defer();
+      await A.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT",
+          lazy: parentDfd.promise,
+        })
+      );
+      let indexDfd = defer();
+      await A.loaders.index.resolve(
+        deferred({
+          critical: "CRITICAL INDEX",
+          lazy: indexDfd.promise,
+        })
+      );
+
+      // Trigger a revalidation which should cancel outstanding deferreds
+      let R = await t.revalidate();
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        index: {
+          critical: "CRITICAL INDEX",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      // Neither should reflect in loaderData
+      await parentDfd.resolve("Nope!");
+      await indexDfd.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        index: {
+          critical: "CRITICAL INDEX",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      // Complete the revalidation
+      let parentDfd2 = defer();
+      await R.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT 2",
+          lazy: parentDfd2.promise,
+        })
+      );
+      let indexDfd2 = defer();
+      await R.loaders.index.resolve(
+        deferred({
+          critical: "CRITICAL INDEX 2",
+          lazy: indexDfd2.promise,
+        })
+      );
+
+      // Revalidations await all deferreds, so we're still in a loading
+      // state with the prior loaderData here
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.revalidation).toBe("loading");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        index: {
+          critical: "CRITICAL INDEX",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await indexDfd2.resolve("LAZY INDEX 2");
+      // Not done yet!
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.revalidation).toBe("loading");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        index: {
+          critical: "CRITICAL INDEX",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await parentDfd2.resolve("LAZY PARENT 2");
+      // Done now that all deferreds have resolved
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.revalidation).toBe("idle");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT 2",
+          lazy: "LAZY PARENT 2",
+        },
+        index: {
+          critical: "CRITICAL INDEX 2",
+          lazy: "LAZY INDEX 2",
+        },
+      });
+
+      expect(shouldRevalidateSpy).not.toHaveBeenCalled();
+    });
+
+    it("cancels correctly on revalidations chains", async () => {
+      let shouldRevalidateSpy = jest.fn(() => false);
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+          },
+          {
+            id: "foo",
+            path: "foo",
+            loader: true,
+            shouldRevalidate: shouldRevalidateSpy,
+          },
+        ],
+      });
+
+      let A = await t.navigate("/foo");
+      let dfda = defer();
+      await A.loaders.foo.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: dfda.promise,
+        })
+      );
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      let B = await t.revalidate();
+      let dfdb = defer();
+      // This B data will _never_ make it through - since we will await all of
+      // it and we'll revalidate before it resolves
+      await B.loaders.foo.resolve(
+        deferred({
+          critical: "CRITICAL B",
+          lazy: dfdb.promise,
+        })
+      );
+      // The initial revalidation cancelled the navigation deferred
+      await dfda.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      let C = await t.revalidate();
+      let dfdc = defer();
+      await C.loaders.foo.resolve(
+        deferred({
+          critical: "CRITICAL C",
+          lazy: dfdc.promise,
+        })
+      );
+      // The second revalidation should have cancelled the first revalidation
+      // deferred
+      await dfdb.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await dfdc.resolve("Yep!");
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL C",
+          lazy: "Yep!",
+        },
+      });
+
+      expect(shouldRevalidateSpy).not.toHaveBeenCalled();
+    });
+
+    it("cancels correctly on revalidations interrupted by navigations", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+          },
+          {
+            id: "foo",
+            path: "foo",
+            loader: true,
+          },
+          {
+            id: "bar",
+            path: "bar",
+            loader: true,
+          },
+        ],
+      });
+
+      let A = await t.navigate("/foo");
+      let dfda = defer();
+      await A.loaders.foo.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: dfda.promise,
+        })
+      );
+      await dfda.resolve("LAZY A");
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL A",
+          lazy: "LAZY A",
+        },
+      });
+
+      let B = await t.revalidate();
+      let dfdb = defer();
+      await B.loaders.foo.resolve(
+        deferred({
+          critical: "CRITICAL B",
+          lazy: dfdb.promise,
+        })
+      );
+      // B not reflected because its got existing loaderData
+      expect(t.router.state.loaderData).toEqual({
+        foo: {
+          critical: "CRITICAL A",
+          lazy: "LAZY A",
+        },
+      });
+
+      let C = await t.navigate("/bar");
+      let dfdc = defer();
+      await C.loaders.bar.resolve(
+        deferred({
+          critical: "CRITICAL C",
+          lazy: dfdc.promise,
+        })
+      );
+      // The second revalidation should have cancelled the first revalidation
+      // deferred
+      await dfdb.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        bar: {
+          critical: "CRITICAL C",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await dfdc.resolve("Yep!");
+      expect(t.router.state.loaderData).toEqual({
+        bar: {
+          critical: "CRITICAL C",
+          lazy: "Yep!",
+        },
+      });
+    });
+
+    it("cancels pending deferreds on 404 navigations", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/lazy");
+      let dfd = defer();
+      await A.loaders.lazy.resolve(
+        deferred({
+          critical: "CRITICAL",
+          lazy: dfd.promise,
+        })
+      );
+
+      await t.navigate("/not-found");
+      // Navigation completes immediately and deferreds are cancelled
+      expect(t.router.state.loaderData).toEqual({});
+
+      // Resolution doesn't do anything
+      await dfd.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({});
+    });
+
+    it("cancels pending deferreds on errored GET submissions (w/ reused routes)", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            errorElement: true,
+            children: [
+              {
+                id: "a",
+                path: "a",
+                loader: true,
+              },
+              {
+                id: "b",
+                path: "b",
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      // Navigate to /parent/a and kick off a deferred's for both
+      let A = await t.navigate("/parent/a");
+      let parentDfd = defer();
+      await A.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT",
+          lazy: parentDfd.promise,
+        })
+      );
+      let aDfd = defer();
+      await A.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: aDfd.promise,
+        })
+      );
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      // Perform an invalid navigation to /parent/b which will be handled
+      // using parent's errorElement.  Parent's deferred should be left alone
+      // while A's should be cancelled since they will no longer be rendered
+      let formData = new FormData();
+      formData.append("file", new Blob(["1", "2"]), "file.txt");
+      await t.navigate("/parent/b", {
+        formMethod: "get",
+        formData,
+      });
+      // Navigation completes immediately with an error at the boundary
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+      });
+      expect(t.router.state.errors).toEqual({
+        parent: new ErrorResponse(
+          400,
+          "Bad Request",
+          "Cannot submit binary form data using GET"
+        ),
+      });
+
+      await parentDfd.resolve("Yep!");
+      await aDfd.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: "Yep!",
+        },
+      });
+    });
+
+    it("cancels pending deferreds on errored GET submissions (w/o reused routes)", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "a",
+            path: "a",
+            loader: true,
+            children: [
+              {
+                id: "aChild",
+                path: "child",
+                loader: true,
+              },
+            ],
+          },
+          {
+            id: "b",
+            path: "b",
+            loader: true,
+            children: [
+              {
+                id: "bChild",
+                path: "child",
+                loader: true,
+                errorElement: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      // Navigate to /parent/a and kick off deferred's for both
+      let A = await t.navigate("/a/child");
+      let aDfd = defer();
+      await A.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: aDfd.promise,
+        })
+      );
+      let aChildDfd = defer();
+      await A.loaders.aChild.resolve(
+        deferred({
+          critical: "CRITICAL A CHILD",
+          lazy: aChildDfd.promise,
+        })
+      );
+      expect(t.router.state.loaderData).toEqual({
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+        aChild: {
+          critical: "CRITICAL A CHILD",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      // Perform an invalid navigation to /b/child which should cancel all
+      // pending deferred's since nothing is reused.  It should not call bChild's
+      // loader since it's below the boundary but should call b's loader.
+      let formData = new FormData();
+      formData.append("file", new Blob(["1", "2"]), "file.txt");
+      let B = await t.navigate("/b/child", {
+        formMethod: "get",
+        formData,
+      });
+
+      // Both should be cancelled
+      await aDfd.resolve("Nope!");
+      await aChildDfd.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+        aChild: {
+          critical: "CRITICAL A CHILD",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await B.loaders.b.resolve("B LOADER");
+      expect(t.router.state.loaderData).toEqual({
+        b: "B LOADER",
+      });
+      expect(t.router.state.errors).toEqual({
+        bChild: new ErrorResponse(
+          400,
+          "Bad Request",
+          "Cannot submit binary form data using GET"
+        ),
+      });
+      expect(B.loaders.bChild.stub).not.toHaveBeenCalled();
+    });
+
+    it("does not cancel pending deferreds on hash change only navigations", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/lazy");
+      let dfd = defer();
+      await A.loaders.lazy.resolve(
+        deferred({
+          critical: "CRITICAL",
+          lazy: dfd.promise,
+        })
+      );
+
+      await t.navigate("/lazy#hash");
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical: "CRITICAL",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await dfd.resolve("Yep!");
+      expect(t.router.state.loaderData).toEqual({
+        lazy: {
+          critical: "CRITICAL",
+          lazy: "Yep!",
+        },
+      });
+    });
+
+    it("cancels pending deferreds on action submissions", async () => {
+      let shouldRevalidateSpy = jest.fn(() => false);
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            shouldRevalidate: shouldRevalidateSpy,
+            children: [
+              {
+                id: "a",
+                path: "a",
+                loader: true,
+              },
+              {
+                id: "b",
+                path: "b",
+                action: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/parent/a");
+      let parentDfd = defer();
+      await A.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT",
+          lazy: parentDfd.promise,
+        })
+      );
+      let aDfd = defer();
+      await A.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: aDfd.promise,
+        })
+      );
+
+      // Action submission causes all to be cancelled, even reused ones, and
+      // ignores shouldRevalidate since the cancelled active deferred means we
+      // are missing data
+      let B = await t.navigate("/parent/b", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await parentDfd.resolve("Nope!");
+      await aDfd.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await B.actions.b.resolve("ACTION");
+      let parentDfd2 = defer();
+      await B.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT 2",
+          lazy: parentDfd2.promise,
+        })
+      );
+      expect(t.router.state.actionData).toEqual({
+        b: "ACTION",
+      });
+      // Since we still have outstanding deferreds on the revalidation, we're
+      // still in the loading state and showing the old data
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await parentDfd2.resolve("Yep!");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT 2",
+          lazy: "Yep!",
+        },
+      });
+
+      expect(shouldRevalidateSpy).not.toHaveBeenCalled();
+    });
+
+    it("does not put resolved deferred's back into a loading state during revalidation", async () => {
+      let shouldRevalidateSpy = jest.fn(() => false);
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            shouldRevalidate: shouldRevalidateSpy,
+            children: [
+              {
+                id: "a",
+                path: "a",
+                loader: true,
+              },
+              {
+                id: "b",
+                path: "b",
+                action: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      // Route to /parent/a and return and resolve deferred's for both
+      let A = await t.navigate("/parent/a");
+      let parentDfd1 = defer();
+      let parentDfd2 = defer();
+      await A.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT",
+          lazy1: parentDfd1.promise,
+          lazy2: parentDfd2.promise,
+        })
+      );
+      let aDfd1 = defer();
+      let aDfd2 = defer();
+      await A.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy1: aDfd1.promise,
+          lazy2: aDfd2.promise,
+        })
+      );
+
+      // Resolve one of the deferred for each prior to the action submission
+      await parentDfd1.resolve("LAZY PARENT 1");
+      await aDfd1.resolve("LAZY A 1");
+
+      // Action submission causes all to be cancelled, even reused ones, and
+      // ignores shouldRevalidate since the cancelled active deferred means we
+      // are missing data
+      let B = await t.navigate("/parent/b", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await parentDfd2.resolve("Nope!");
+      await aDfd2.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy1: "LAZY PARENT 1",
+          lazy2: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy1: "LAZY A 1",
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      await B.actions.b.resolve("ACTION");
+      let parentDfd1Revalidation = defer();
+      let parentDfd2Revalidation = defer();
+      await B.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT*",
+          lazy1: parentDfd1Revalidation.promise,
+          lazy2: parentDfd2Revalidation.promise,
+        })
+      );
+      await B.loaders.b.resolve("B");
+
+      // At this point, we resolved the action and the loaders - however the
+      // parent loader returned a deferred so we stay in the "loading" state
+      // until everything resolves
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.actionData).toEqual({
+        b: "ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy1: "LAZY PARENT 1",
+          lazy2: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy1: "LAZY A 1",
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      // Resolve the first deferred - should not complete the navigation yet
+      await parentDfd1Revalidation.resolve("LAZY PARENT 1*");
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy1: "LAZY PARENT 1",
+          lazy2: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy1: "LAZY A 1",
+          lazy2: expect.any(Promise),
+        },
+      });
+
+      await parentDfd2Revalidation.resolve("LAZY PARENT 2*");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual({
+        b: "ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT*",
+          lazy1: "LAZY PARENT 1*",
+          lazy2: "LAZY PARENT 2*",
+        },
+        b: "B",
+      });
+
+      expect(shouldRevalidateSpy).not.toHaveBeenCalled();
+    });
+
+    it("cancels awaited reused deferreds on subsequent navigations", async () => {
+      jest.setTimeout(100000);
+      let shouldRevalidateSpy = jest.fn(() => false);
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            shouldRevalidate: shouldRevalidateSpy,
+            children: [
+              {
+                id: "a",
+                path: "a",
+                loader: true,
+              },
+              {
+                id: "b",
+                path: "b",
+                action: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      // Route to /parent/a and return and resolve deferred's for both
+      let A = await t.navigate("/parent/a");
+      let parentDfd = defer(); // Never resolves in this test
+      await A.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT",
+          lazy: parentDfd.promise,
+        })
+      );
+      let aDfd = defer();
+      await A.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: aDfd.promise,
+        })
+      );
+
+      // Action submission to cancel deferreds
+      let B = await t.navigate("/parent/b", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await B.actions.b.resolve("ACTION");
+      let parentDfd2 = defer(); // Never resolves in this test
+      await B.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT*",
+          lazy: parentDfd2.promise,
+        })
+      );
+      await B.loaders.b.resolve("B");
+
+      // Still in loading state due to revalidation deferred
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      // Navigate elsewhere - should cancel/abort revalidation deferreds
+      let C = await t.navigate("/");
+      await C.loaders.index.resolve("INDEX*");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual(null);
+      expect(t.router.state.loaderData).toEqual({
+        index: "INDEX*",
+      });
+    });
+
+    it("does not support deferred data on fetcher loads", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "fetch",
+            path: "fetch",
+            loader: true,
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let key = "key";
+      let A = await t.fetch("/fetch", key);
+
+      // deferred in a fetcher awaits all data in the loading state
+      let dfd = defer();
+      await A.loaders.fetch.resolve(
+        deferred({
+          critical: "1",
+          lazy: dfd.promise,
+        })
+      );
+      expect(t.router.state.fetchers.get(key)).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      await dfd.resolve("2");
+      expect(t.router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: {
+          critical: "1",
+          lazy: "2",
+        },
+      });
+
+      // Trigger a revalidation for the same fetcher
+      let B = await t.revalidate("fetch", "fetch");
+      expect(t.router.state.revalidation).toBe("loading");
+      let dfd2 = defer();
+      await B.loaders.fetch.resolve(
+        deferred({
+          critical: "3",
+          lazy: dfd2.promise,
+        })
+      );
+      expect(t.router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: {
+          critical: "1",
+          lazy: "2",
+        },
+      });
+
+      await dfd2.resolve("4");
+      expect(t.router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: {
+          critical: "3",
+          lazy: "4",
+        },
+      });
+    });
+
+    it("cancels pending deferreds on fetcher reloads", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "fetch",
+            path: "fetch",
+            loader: true,
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let key = "key";
+      let A = await t.fetch("/fetch", key);
+
+      // deferred in a fetcher awaits all data in the loading state
+      let dfd1 = defer();
+      let loaderPromise1 = A.loaders.fetch.resolve(
+        deferred({
+          critical: "1",
+          lazy: dfd1.promise,
+        })
+      );
+      expect(t.router.state.fetchers.get(key)).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      // Fetch again
+      let B = await t.fetch("/fetch", key);
+
+      let dfd2 = defer();
+      let loaderPromise2 = B.loaders.fetch.resolve(
+        deferred({
+          critical: "3",
+          lazy: dfd2.promise,
+        })
+      );
+      expect(t.router.state.fetchers.get(key)).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      // Resolving the second finishes us up
+      await dfd1.resolve("2");
+      await dfd2.resolve("4");
+      await loaderPromise1;
+      await loaderPromise2;
+      expect(t.router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: {
+          critical: "3",
+          lazy: "4",
+        },
+      });
+    });
+
+    it("cancels pending deferreds on fetcher action submissions", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "parent",
+            path: "parent",
+            loader: true,
+            shouldRevalidate: () => false,
+            children: [
+              {
+                id: "a",
+                path: "a",
+                loader: true,
+              },
+              {
+                id: "b",
+                path: "b",
+                action: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/parent/a");
+      let parentDfd = defer();
+      await A.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT",
+          lazy: parentDfd.promise,
+        })
+      );
+      let aDfd = defer();
+      await A.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A",
+          lazy: aDfd.promise,
+        })
+      );
+
+      // Fetcher action submission causes all to be cancelled and
+      // ignores shouldRevalidate since the cancelled active deferred means we
+      // are missing data
+      let key = "key";
+      let B = await t.fetch("/parent/b", key, {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await parentDfd.resolve("Nope!");
+      await aDfd.resolve("Nope!");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await B.actions.b.resolve("ACTION");
+      expect(t.router.state.fetchers.get(key)).toMatchObject({
+        state: "loading",
+        data: "ACTION",
+      });
+
+      await B.actions.b.resolve("ACTION");
+      let parentDfd2 = defer();
+      await B.loaders.parent.resolve(
+        deferred({
+          critical: "CRITICAL PARENT 2",
+          lazy: parentDfd2.promise,
+        })
+      );
+      let aDfd2 = defer();
+      await B.loaders.a.resolve(
+        deferred({
+          critical: "CRITICAL A 2",
+          lazy: aDfd2.promise,
+        })
+      );
+
+      // Still showing old data while we wait on revalidation deferreds to
+      // complete
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT",
+          lazy: expect.any(Promise),
+        },
+        a: {
+          critical: "CRITICAL A",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await parentDfd2.resolve("Yep!");
+      await aDfd2.resolve("Yep!");
+      expect(t.router.state.loaderData).toEqual({
+        parent: {
+          critical: "CRITICAL PARENT 2",
+          lazy: "Yep!",
+        },
+        a: {
+          critical: "CRITICAL A 2",
+          lazy: "Yep!",
+        },
+      });
+      expect(t.router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: "ACTION",
       });
     });
   });

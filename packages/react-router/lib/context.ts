@@ -21,6 +21,11 @@ if (__DEV__) {
   DataRouterStateContext.displayName = "DataRouterState";
 }
 
+export const DeferredContext = React.createContext<any | null>(null);
+if (__DEV__) {
+  DeferredContext.displayName = "Deferred";
+}
+
 export interface NavigateOptions {
   replace?: boolean;
   state?: any;

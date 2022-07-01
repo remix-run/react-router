@@ -41,6 +41,7 @@ export * from "./router";
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  DataRouteMatch,
   DataRouteObject,
   FormEncType,
   FormMethod,
@@ -59,9 +60,11 @@ export type {
 } from "./utils";
 
 export {
+  deferred,
   generatePath,
   getToPathname,
   invariant,
+  isDeferredError,
   isRouteErrorResponse,
   joinPaths,
   json,
