@@ -56,7 +56,6 @@ let data = await queryRoute(fetchRequest);
 // If we received a Fetch Response back, return it directly
 if (data instanceof Response) {
   return data;
-  throw state;
 }
 
 // Otherwise, construct a Response from the raw data (assuming json here)
