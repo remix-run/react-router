@@ -3,7 +3,6 @@ import {
   isDeferredError,
   isRouteErrorResponse,
   Location,
-  normalizePathname,
   ParamParseKey,
   Params,
   Path,

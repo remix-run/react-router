@@ -11,7 +11,6 @@ import {
   Link,
   Outlet,
   useSearchParams,
-  useLocation,
 } from "react-router-dom";
 
 describe("trailing slashes", () => {
