@@ -206,6 +206,7 @@ export type HydrationState = Partial<
  * Initialization options for createRouter
  */
 export interface RouterInit {
+  basename?: string;
   routes: RouteObject[];
   history: History;
   hydrationData?: HydrationState;
@@ -446,7 +447,11 @@ export function createRouter(init: RouterInit): Router {
   // send along the restoreScrollPosition
   let initialScrollRestored = false;
 
-  let initialMatches = matchRoutes(dataRoutes, init.history.location);
+  let initialMatches = matchRoutes(
+    dataRoutes,
+    init.history.location,
+    init.basename
+  );
   let initialErrors: RouteData | null = null;
 
   if (initialMatches == null) {
@@ -472,6 +477,10 @@ export function createRouter(init: RouterInit): Router {
     );
   }
 
+  let initialized =
+    !initialMatches.some((m) => m.route.loader) ||
+    (init.hydrationData != null && !foundMissingHydrationData);
+
   let router: Router;
   let state: RouterState = {
     historyAction: init.history.action,
@@ -479,7 +488,7 @@ export function createRouter(init: RouterInit): Router {
     // If we do not match a user-provided-route, fall back to the root
     // to allow the errorElement to take over
     matches: initialMatches,
-    initialized: init.hydrationData != null && !foundMissingHydrationData,
+    initialized,
     navigation: IDLE_NAVIGATION,
     restoreScrollPosition: null,
     resetScrollPosition: true,
@@ -751,7 +760,7 @@ export function createRouter(init: RouterInit): Router {
     pendingResetScroll = opts?.resetScroll !== false;
 
     let loadingNavigation = opts?.overrideNavigation;
-    let matches = matchRoutes(dataRoutes, location);
+    let matches = matchRoutes(dataRoutes, location, init.basename);
 
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
@@ -1094,7 +1103,7 @@ export function createRouter(init: RouterInit): Router {
 
     if (fetchControllers.has(key)) abortFetcher(key);
 
-    let matches = matchRoutes(dataRoutes, href);
+    let matches = matchRoutes(dataRoutes, href, init.basename);
     if (!matches) {
       let boundaryMatch = findNearestBoundary(state.matches, routeId);
       state.fetchers.set(key, IDLE_FETCHER);
@@ -1204,7 +1213,7 @@ export function createRouter(init: RouterInit): Router {
     let nextLocation = state.navigation.location || state.location;
     let matches =
       state.navigation.state !== "idle"
-        ? matchRoutes(dataRoutes, state.navigation.location)
+        ? matchRoutes(dataRoutes, state.navigation.location, init.basename)
         : state.matches;
 
     invariant(matches, "Didn't find any matches after fetcher action");

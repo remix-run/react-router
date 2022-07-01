@@ -77,8 +77,7 @@ function testDomRouter(
        `);
     });
 
-    it("renders the first route that matches the URL when wrapped in a 'basename' Route", () => {
-      // In data routers there is no basename and you should instead use a root route
+    it("renders the first route that matches the URL when wrapped in a root Route", () => {
       let { container } = render(
         <TestDataRouter
           window={getWindow("/my/base/path/thing")}
@@ -99,6 +98,26 @@ function testDomRouter(
            </h1>
          </div>"
        `);
+    });
+
+    it("supports a basename prop", () => {
+      let { container } = render(
+        <TestDataRouter
+          basename="/my/base/path"
+          window={getWindow("/my/base/path/thing")}
+          hydrationData={{}}
+        >
+          <Route path="thing" element={<h1>Heyooo</h1>} />
+        </TestDataRouter>
+      );
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h1>
+            Heyooo
+          </h1>
+        </div>"
+      `);
     });
 
     it("renders with hydration data", async () => {
@@ -268,6 +287,51 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Link to Foo"));
       await waitFor(() => screen.getByText("Foo Heading"));
+    });
+
+    it("handles link navigations when using a basename", async () => {
+      let testWindow = getWindow("/base/name/foo");
+      render(
+        <TestDataRouter
+          basename="/base/name"
+          window={testWindow}
+          hydrationData={{}}
+        >
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<h1>Foo Heading</h1>} />
+            <Route path="bar" element={<h1>Bar Heading</h1>} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Layout() {
+        return (
+          <div>
+            <Link to="/foo">Link to Foo</Link>
+            <Link to="/bar">Link to Bar</Link>
+            <Outlet />
+          </div>
+        );
+      }
+
+      function assertPathname(pathname) {
+        if (name === "<DataHashRouter>") {
+          expect(testWindow.location.hash).toEqual("#" + pathname);
+        } else {
+          expect(testWindow.location.pathname).toEqual(pathname);
+        }
+      }
+
+      assertPathname("/base/name/foo");
+
+      expect(screen.getByText("Foo Heading")).toBeDefined();
+      fireEvent.click(screen.getByText("Link to Bar"));
+      await waitFor(() => screen.getByText("Bar Heading"));
+      assertPathname("/base/name/bar");
+
+      fireEvent.click(screen.getByText("Link to Foo"));
+      await waitFor(() => screen.getByText("Foo Heading"));
+      assertPathname("/base/name/foo");
     });
 
     it("executes route loaders on navigation", async () => {

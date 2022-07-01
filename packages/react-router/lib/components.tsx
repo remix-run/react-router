@@ -56,11 +56,13 @@ export function _resetModuleScope() {
  * @private
  */
 export function useRenderDataRouter({
+  basename,
   children,
   fallbackElement,
   routes,
   createRouter,
 }: {
+  basename?: string;
   children?: React.ReactNode;
   fallbackElement?: React.ReactNode;
   routes?: RouteObject[];
@@ -102,6 +104,7 @@ export function useRenderDataRouter({
     <DataRouterContext.Provider value={router}>
       <DataRouterStateContext.Provider value={state}>
         <Router
+          basename={basename}
           location={state.location}
           navigationType={state.historyAction}
           navigator={navigator}
@@ -114,6 +117,7 @@ export function useRenderDataRouter({
 }
 
 export interface DataMemoryRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
@@ -123,6 +127,7 @@ export interface DataMemoryRouterProps {
 }
 
 export function DataMemoryRouter({
+  basename,
   children,
   initialEntries,
   initialIndex,
@@ -131,11 +136,13 @@ export function DataMemoryRouter({
   routes,
 }: DataMemoryRouterProps): React.ReactElement {
   return useRenderDataRouter({
+    basename,
     children,
     fallbackElement,
     routes,
     createRouter: (routes) =>
       createMemoryRouter({
+        basename,
         initialEntries,
         initialIndex,
         routes,

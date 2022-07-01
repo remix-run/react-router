@@ -156,6 +156,7 @@ let gcDfds = new Set<Deferred>();
 
 type SetupOpts = {
   routes: TestRouteObject[];
+  basename?: string;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
   hydrationData?: HydrationState;
@@ -163,6 +164,7 @@ type SetupOpts = {
 
 function setup({
   routes,
+  basename,
   initialEntries,
   initialIndex,
   hydrationData,
@@ -263,6 +265,7 @@ function setup({
   jest.spyOn(history, "push");
   jest.spyOn(history, "replace");
   currentRouter = createRouter({
+    basename,
     history,
     routes: enhancedRoutes,
     hydrationData,
@@ -935,6 +938,39 @@ describe("a router", () => {
       ).toThrowErrorMatchingInlineSnapshot(
         `"Found a route id collision on id \\"child\\".  Route id's must be globally unique within Data Router usages"`
       );
+    });
+
+    it("supports a basename prop for route matching", async () => {
+      let history = createMemoryHistory({
+        initialEntries: ["/base/name/path"],
+      });
+      debugger;
+      let router = createRouter({
+        basename: "/base/name",
+        routes: [{ path: "path" }],
+        history,
+      });
+      expect(router.state).toMatchObject({
+        location: {
+          hash: "",
+          key: expect.any(String),
+          pathname: "/base/name/path",
+          search: "",
+          state: null,
+        },
+        matches: [
+          {
+            params: {},
+            pathname: "/path",
+            pathnameBase: "/path",
+            route: {
+              id: "0",
+              path: "path",
+            },
+          },
+        ],
+        initialized: true,
+      });
     });
   });
 
@@ -3177,6 +3213,55 @@ describe("a router", () => {
       });
     });
 
+    it("navigates through a history stack without data loading (with a basename)", async () => {
+      let t = setup({
+        basename: "/base/name",
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "tasks",
+            path: "tasks",
+          },
+          {
+            id: "tasksId",
+            path: "tasks/:id",
+          },
+        ],
+        initialEntries: ["/base/name"],
+      });
+
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/base/name",
+        },
+        matches: [{ route: { id: "index" } }],
+      });
+      expect(t.history.action).toEqual("POP");
+      expect(t.history.location.pathname).toEqual("/base/name");
+
+      await t.navigate("/base/name/tasks");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/base/name/tasks",
+        },
+        matches: [{ route: { id: "tasks" } }],
+      });
+      expect(t.history.action).toEqual("PUSH");
+      expect(t.history.location.pathname).toEqual("/base/name/tasks");
+
+      await t.navigate("/base/name/tasks/1");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/base/name/tasks/1",
+        },
+        matches: [{ route: { id: "tasksId" } }],
+      });
+      expect(t.history.location.pathname).toEqual("/base/name/tasks/1");
+    });
+
     it("handles 404 routes", () => {
       let t = setup({
         routes: TASK_ROUTES,
@@ -3286,6 +3371,29 @@ describe("a router", () => {
   });
 
   describe("data loading (new)", () => {
+    it("marks as initialized immediately when no loaders are present", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      expect(console.warn).not.toHaveBeenCalled();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: {
+          pathname: "/",
+        },
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {},
+      });
+    });
+
     it("hydrates initial data", async () => {
       let t = setup({
         routes: TASK_ROUTES,
