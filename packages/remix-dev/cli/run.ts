@@ -43,6 +43,8 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
   \`dev\` Options:
     --debug             Attach Node.js inspector
     --port, -p          Choose the port from which to run your app
+  \`init\` Options:
+    --no-delete         Skip deleting the \`remix.init\` script
   \`routes\` Options:
     --json              Print the routes as JSON
   \`migrate\` Options:
@@ -151,6 +153,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
   let args = arg(
     {
       "--debug": Boolean,
+      "--no-delete": Boolean,
       "--dry": Boolean,
       "--force": Boolean,
       "--help": Boolean,
@@ -192,6 +195,9 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     return;
   }
 
+  if (args["--no-delete"]) {
+    flags.delete = false;
+  }
   if (args["--no-install"]) {
     flags.install = false;
   }
@@ -408,7 +414,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       if (hasInitScript) {
         if (installDeps) {
           console.log("💿 Running remix.init script");
-          await commands.init(projectDir);
+          await commands.init(projectDir, { deleteScript: true });
         } else {
           console.log();
           console.log(
@@ -442,7 +448,9 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       break;
     }
     case "init":
-      await commands.init(input[1] || process.env.REMIX_ROOT || process.cwd());
+      await commands.init(input[1] || process.env.REMIX_ROOT || process.cwd(), {
+        deleteScript: flags.delete,
+      });
       break;
     case "routes":
       await commands.routes(input[1], flags.json ? "json" : "jsx");

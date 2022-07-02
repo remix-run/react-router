@@ -111,6 +111,8 @@ describe("remix CLI", () => {
           \`dev\` Options:
             --debug             Attach Node.js inspector
             --port, -p          Choose the port from which to run your app
+          \`init\` Options:
+            --no-delete         Skip deleting the \`remix.init\` script
           \`routes\` Options:
             --json              Print the routes as JSON
           \`migrate\` Options:
