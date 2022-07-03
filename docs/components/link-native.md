@@ -37,7 +37,9 @@ function Home() {
   return (
     <View>
       <Text>Welcome!</Text>
-      <Link to="/profile">Visit your profile</Link>
+      <Link to="/profile">
+        <Text>Visit your profile</Text>
+      </Link>
     </View>
   );
 }
