@@ -52,7 +52,7 @@ Whenever the location changes, `<Routes>` looks through all its `children` `<Rou
 > **Note:**
 >
 > If you'd prefer to define your routes as regular JavaScript objects instead
-> of using JSX, [try `useRoutes` instead][use-routes].
+> of using JSX, [try `useRoutes` instead](use-routes).
 
 The default `<Route element>` is an [`<Outlet>`][outlet]. This means the route will still render its children even without an explicit `element` prop, so you can nest route paths without nesting UI around the child route elements.
 
