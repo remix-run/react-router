@@ -1,15 +1,19 @@
 name: test
+
 on:
   push:
     branches:
-      - "**"
+      - main
+      - dev
     tags-ignore:
       - v*
     paths-ignore:
       - "docs/**"
       - "**/README.md"
   pull_request:
-    types: [opened, synchronize]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
 
 jobs:
   test:
