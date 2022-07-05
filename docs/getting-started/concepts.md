@@ -701,6 +701,12 @@ The `PageLayout` route is admittedly weird. We call it a [layout route](#layout-
 
 So, yeah, the semantics of a layout "route" is a bit silly since it has nothing to do with the URL matching, but it's just too convenient to disallow.
 
+> **Note:**
+>
+> `PageLayout` component should render `props.children` instead of the
+> `Outlet` component in the above example.
+
+
 ## Navigating
 
 When the [URL](#url) changes we call that a "navigation". There are two ways to navigate in React Router:
