@@ -47,7 +47,7 @@ import { useNavigate } from "react-router-dom";
 function ComponentA() {
   let navigate = useNavigate();
 
-  function toComponentB () {
+  function toComponentB() {
     navigate('/componentB', { state: { name: 'name' } });
   }
 
