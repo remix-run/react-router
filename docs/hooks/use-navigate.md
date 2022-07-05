@@ -48,7 +48,7 @@ function ComponentA() {
   let navigate = useNavigate();
 
   function toComponentB () {
-    navigate('/componentB',{ state: { name:'name' }});
+    navigate('/componentB', { state: { name: 'name' } });
   }
 
   return <a onClick={toComponentB}>Component B</a>;
