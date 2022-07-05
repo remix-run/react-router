@@ -4,7 +4,7 @@ import type {
   RevalidationState,
   Router as DataRouter,
   RouterState,
-  StaticHandlerState,
+  StaticHandlerContext,
 } from "@remix-run/router";
 import { IDLE_NAVIGATION, Action, invariant } from "@remix-run/router";
 import {
@@ -61,20 +61,23 @@ export function StaticRouter({
 
 export interface DataStaticRouterProps {
   dataRoutes: DataRouteObject[];
-  state: StaticHandlerState;
+  context: StaticHandlerContext;
 }
 
 /**
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function DataStaticRouter({ dataRoutes, state }: DataStaticRouterProps) {
+export function DataStaticRouter({
+  dataRoutes,
+  context,
+}: DataStaticRouterProps) {
   invariant(
-    dataRoutes && state,
-    "You must provide `routes` and `state` to <DataStaticRouter>"
+    dataRoutes && context,
+    "You must provide `routes` and `context` to <DataStaticRouter>"
   );
 
-  let router = getStatelessRouter(dataRoutes, state);
+  let router = getStatelessRouter(dataRoutes, context);
   return (
     <DataRouterContext.Provider value={router}>
       <DataRouterStateContext.Provider value={router.state}>
@@ -150,7 +153,7 @@ function getStatelessNavigator() {
 
 function getStatelessRouter(
   dataRoutes: DataRouteObject[],
-  state: StaticHandlerState
+  context: StaticHandlerContext
 ): DataRouter {
   let msg = (method: string) =>
     `You cannot use router.${method}() on the server because it is a stateless environment`;
@@ -159,14 +162,17 @@ function getStatelessRouter(
     get state() {
       return {
         historyAction: Action.Pop,
+        location: context.location,
+        matches: context.matches,
+        loaderData: context.loaderData,
+        actionData: context.actionData,
+        errors: context.errors,
         initialized: true,
         navigation: IDLE_NAVIGATION,
         restoreScrollPosition: null,
         resetScrollPosition: true,
         revalidation: "idle" as RevalidationState,
         fetchers: new Map(),
-        // state provides location, matches, loaderData, actionData, and errors
-        ...state,
       };
     },
     get routes() {

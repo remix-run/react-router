@@ -8,23 +8,23 @@ import { routes } from "./App";
 export async function render(request: express.Request) {
   let { dataRoutes, query } = createStaticHandler({ routes });
   let remixRequest = createFetchRequest(request);
-  let state = await query(remixRequest);
+  let context = await query(remixRequest);
 
-  if (state instanceof Response) {
-    throw state;
+  if (context instanceof Response) {
+    throw context;
   }
 
   let html = ReactDOMServer.renderToString(
     <React.StrictMode>
-      <DataStaticRouter dataRoutes={dataRoutes} state={state} />
+      <DataStaticRouter dataRoutes={dataRoutes} context={context} />
     </React.StrictMode>
   );
 
   return {
     hydrationData: {
-      loaderData: state.loaderData,
-      actionData: state.loaderData,
-      errors: state.errors,
+      loaderData: context.loaderData,
+      actionData: context.loaderData,
+      errors: context.errors,
     },
     html,
   };

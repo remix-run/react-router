@@ -8,7 +8,7 @@ import type {
   RouteMatch,
   Router,
   RouterNavigateOptions,
-  StaticHandlerState,
+  StaticHandlerContext,
 } from "@remix-run/router";
 import {
   createMemoryHistory,
@@ -8662,8 +8662,8 @@ describe("a router", () => {
     describe("document requests", () => {
       it("should support document load navigations", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
-        let state = await query(createRequest("/parent/child"));
-        expect(state).toMatchObject({
+        let context = await query(createRequest("/parent/child"));
+        expect(context).toMatchObject({
           actionData: null,
           loaderData: {
             parent: "PARENT LOADER",
@@ -8677,8 +8677,8 @@ describe("a router", () => {
 
       it("should support document load navigations returning responses", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
-        let state = await query(createRequest("/parent/json"));
-        expect(state).toMatchObject({
+        let context = await query(createRequest("/parent/json"));
+        expect(context).toMatchObject({
           actionData: null,
           loaderData: {
             parent: "PARENT LOADER",
@@ -8691,8 +8691,8 @@ describe("a router", () => {
 
       it("should not touch deferred data on load navigations", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
-        let state = await query(createRequest("/parent/deferred"));
-        expect(state).toMatchObject({
+        let context = await query(createRequest("/parent/deferred"));
+        expect(context).toMatchObject({
           actionData: null,
           loaderData: {
             parent: "PARENT LOADER",
@@ -8708,15 +8708,15 @@ describe("a router", () => {
 
         await new Promise((r) => setTimeout(r, 10));
         expect(
-          (state as StaticHandlerState).loaderData.deferred.lazy instanceof
+          (context as StaticHandlerContext).loaderData.deferred.lazy instanceof
             Promise
         ).toBe(true);
       });
 
       it("should support document submit navigations", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
-        let state = await query(createSubmitRequest("/parent/child"));
-        expect(state).toMatchObject({
+        let context = await query(createSubmitRequest("/parent/child"));
+        expect(context).toMatchObject({
           actionData: {
             child: "CHILD ACTION",
           },
@@ -8732,8 +8732,8 @@ describe("a router", () => {
 
       it("should support document load navigations returning responses", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
-        let state = await query(createSubmitRequest("/parent/json"));
-        expect(state).toMatchObject({
+        let context = await query(createSubmitRequest("/parent/json"));
+        expect(context).toMatchObject({
           actionData: {
             json: { type: "action" },
           },
@@ -8748,8 +8748,8 @@ describe("a router", () => {
 
       it("should support document submit navigations to layout routes", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
-        let state = await query(createSubmitRequest("/parent"));
-        expect(state).toMatchObject({
+        let context = await query(createSubmitRequest("/parent"));
+        expect(context).toMatchObject({
           actionData: {
             parent: "PARENT ACTION",
           },
@@ -8767,8 +8767,8 @@ describe("a router", () => {
 
       it("should support document submit navigations to index routes", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
-        let state = await query(createSubmitRequest("/parent?index"));
-        expect(state).toMatchObject({
+        let context = await query(createSubmitRequest("/parent?index"));
+        expect(context).toMatchObject({
           actionData: {
             parentIndex: "PARENT INDEX ACTION",
           },
@@ -8794,9 +8794,9 @@ describe("a router", () => {
 
       it("should handle 404 navigations", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
-        let state = await query(createRequest("/not/found"));
+        let context = await query(createRequest("/not/found"));
 
-        expect(state).toMatchObject({
+        expect(context).toMatchObject({
           loaderData: {},
           actionData: null,
           errors: {
@@ -8812,11 +8812,11 @@ describe("a router", () => {
 
       it("should handle load error responses", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
-        let state;
+        let context;
 
         // Error handled by child
-        state = await query(createRequest("/parent/error-boundary"));
-        expect(state).toMatchObject({
+        context = await query(createRequest("/parent/error-boundary"));
+        expect(context).toMatchObject({
           actionData: null,
           loaderData: {
             parent: "PARENT LOADER",
@@ -8831,8 +8831,8 @@ describe("a router", () => {
         });
 
         // Error propagates to parent
-        state = await query(createRequest("/parent/error"));
-        expect(state).toMatchObject({
+        context = await query(createRequest("/parent/error"));
+        expect(context).toMatchObject({
           actionData: null,
           loaderData: {
             parent: "PARENT LOADER",
@@ -8846,11 +8846,11 @@ describe("a router", () => {
 
       it("should handle submit error responses", async () => {
         let { query } = createStaticHandler({ routes: SSR_ROUTES });
-        let state;
+        let context;
 
         // Error handled by child
-        state = await query(createSubmitRequest("/parent/error-boundary"));
-        expect(state).toMatchObject({
+        context = await query(createSubmitRequest("/parent/error-boundary"));
+        expect(context).toMatchObject({
           actionData: null,
           loaderData: {
             parent: "PARENT LOADER",
@@ -8865,8 +8865,8 @@ describe("a router", () => {
         });
 
         // Error propagates to parent
-        state = await query(createSubmitRequest("/parent/error"));
-        expect(state).toMatchObject({
+        context = await query(createSubmitRequest("/parent/error"));
+        expect(context).toMatchObject({
           actionData: null,
           loaderData: {},
           errors: {
@@ -8891,10 +8891,10 @@ describe("a router", () => {
         let request = createRequest("/", { signal: controller.signal });
         expect.assertions(1);
         try {
-          let statePromise = query(request);
+          let contextPromise = query(request);
           controller.abort();
           // This should resolve even though we never resolved the loader
-          await statePromise;
+          await contextPromise;
         } catch (e) {
           expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
         }
@@ -8917,10 +8917,10 @@ describe("a router", () => {
         });
         expect.assertions(1);
         try {
-          let statePromise = query(request);
+          let contextPromise = query(request);
           controller.abort();
           // This should resolve even though we never resolved the loader
-          await statePromise;
+          await contextPromise;
         } catch (e) {
           expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
         }
@@ -8934,7 +8934,7 @@ describe("a router", () => {
           await query(request);
         } catch (e) {
           expect(e).toMatchInlineSnapshot(
-            `[Error: query() does not support HEAD requests]`
+            `[Error: query()/queryRoute() do not support HEAD requests]`
           );
         }
       });
@@ -8947,7 +8947,7 @@ describe("a router", () => {
           await query(request);
         } catch (e) {
           expect(e).toMatchInlineSnapshot(
-            `[Error: query() requests must contain an AbortController signal]`
+            `[Error: query()/queryRoute() requests must contain an AbortController signal]`
           );
         }
       });
@@ -8962,8 +8962,8 @@ describe("a router", () => {
           ],
         });
         let request = createSubmitRequest("/");
-        let state = await query(request);
-        expect(state).toMatchObject({
+        let context = await query(request);
+        expect(context).toMatchObject({
           actionData: null,
           loaderData: {},
           errors: {
@@ -9033,9 +9033,9 @@ describe("a router", () => {
           ],
         });
         let request = createRequest("/");
-        let state = await queryRoute(request, "root");
-        expect(state instanceof Response).toBe(true);
-        expect(await state.json()).toEqual({ key: "value" });
+        let data = await queryRoute(request, "root");
+        expect(data instanceof Response).toBe(true);
+        expect(await data.json()).toEqual({ key: "value" });
       });
 
       it("should not unwrap responses returned from actions", async () => {
@@ -9050,9 +9050,9 @@ describe("a router", () => {
           ],
         });
         let request = createSubmitRequest("/");
-        let state = await queryRoute(request, "root");
-        expect(state instanceof Response).toBe(true);
-        expect(await state.json()).toEqual({ key: "value" });
+        let data = await queryRoute(request, "root");
+        expect(data instanceof Response).toBe(true);
+        expect(await data.json()).toEqual({ key: "value" });
       });
 
       it("should handle load error responses", async () => {
@@ -9131,7 +9131,7 @@ describe("a router", () => {
           await queryRoute(request, "index");
         } catch (e) {
           expect(e).toMatchInlineSnapshot(
-            `[Error: query() does not support HEAD requests]`
+            `[Error: query()/queryRoute() do not support HEAD requests]`
           );
         }
       });
@@ -9144,7 +9144,7 @@ describe("a router", () => {
           await queryRoute(request, "index");
         } catch (e) {
           expect(e).toMatchInlineSnapshot(
-            `[Error: query() requests must contain an AbortController signal]`
+            `[Error: query()/queryRoute() requests must contain an AbortController signal]`
           );
         }
       });

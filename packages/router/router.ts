@@ -229,7 +229,7 @@ export interface RouterInit {
 /**
  * State returned from a server-side query() call
  */
-export type StaticHandlerState = Pick<
+export type StaticHandlerContext = Pick<
   RouterState,
   "location" | "matches" | "loaderData" | "actionData" | "errors"
 >;
@@ -239,7 +239,7 @@ export type StaticHandlerState = Pick<
  */
 export interface StaticHandler {
   dataRoutes: DataRouteObject[];
-  query(request: Request): Promise<StaticHandlerState | Response>;
+  query(request: Request): Promise<StaticHandlerContext | Response>;
   queryRoute(request: Request, routeId: string): Promise<any>;
 }
 
@@ -1700,12 +1700,12 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
 
   async function query(
     request: Request
-  ): Promise<StaticHandlerState | Response> {
+  ): Promise<StaticHandlerContext | Response> {
     let { location, result } = await queryImpl(request);
     if (result instanceof Response) {
       return result;
     }
-    // When returning StaticHandlerState, we patch back in the location here
+    // When returning StaticHandlerContext, we patch back in the location here
     // since we need it for React Context.  But this helps keep our submit and
     // loadRouteData operating on a Request instead of a Location
     return { location, ...result };
@@ -1738,15 +1738,15 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
     routeId?: string
   ): Promise<{
     location: Location;
-    result: Omit<StaticHandlerState, "location"> | Response;
+    result: Omit<StaticHandlerContext, "location"> | Response;
   }> {
     invariant(
       request.method !== "HEAD",
-      "query() does not support HEAD requests"
+      "query()/queryRoute() do not support HEAD requests"
     );
     invariant(
       request.signal,
-      "query() requests must contain an AbortController signal"
+      "query()/queryRoute() requests must contain an AbortController signal"
     );
 
     let { location, matches, shortCircuitState } = matchRequest(
@@ -1782,7 +1782,7 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
     matches: DataRouteMatch[],
     actionMatch: DataRouteMatch,
     isRouteRequest: boolean
-  ): Promise<Omit<StaticHandlerState, "location"> | Response> {
+  ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
     let result: DataResult;
     if (!actionMatch.route.action) {
       let href = createHref(new URL(request.url));
@@ -1859,7 +1859,7 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
     isRouteRequest: boolean,
     pendingActionData?: RouteData,
     pendingActionError?: RouteData
-  ): Promise<Omit<StaticHandlerState, "location"> | Response> {
+  ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
     let matchesToLoad = getLoaderMatchesUntilBoundary(
       matches,
       Object.keys(pendingActionError || {})[0]
@@ -1917,7 +1917,7 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
     location: Location;
     matches: DataRouteMatch[];
     routeMatch?: DataRouteMatch;
-    shortCircuitState?: Omit<StaticHandlerState, "location">;
+    shortCircuitState?: Omit<StaticHandlerContext, "location">;
   } {
     let url = new URL(req.url);
     let location = createLocation("", createPath(url));

@@ -1,4 +1,4 @@
-import { createStaticHandler, StaticHandlerState } from "@remix-run/router";
+import { createStaticHandler, StaticHandlerContext } from "@remix-run/router";
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import {
@@ -67,7 +67,7 @@ describe("A <DataStaticRouter>", () => {
       ],
     });
 
-    let state = await query(
+    let context = await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
         signal: new AbortController().signal,
       })
@@ -77,7 +77,7 @@ describe("A <DataStaticRouter>", () => {
       <React.StrictMode>
         <DataStaticRouter
           dataRoutes={dataRoutes}
-          state={state as StaticHandlerState}
+          context={context as StaticHandlerContext}
         />
       </React.StrictMode>
     );
@@ -162,7 +162,7 @@ describe("A <DataStaticRouter>", () => {
       ],
     });
 
-    let state = await query(
+    let context = await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
         signal: new AbortController().signal,
       })
@@ -172,11 +172,11 @@ describe("A <DataStaticRouter>", () => {
       ReactDOMServer.renderToStaticMarkup(
         <React.StrictMode>
           {/* @ts-expect-error */}
-          <DataStaticRouter state={state as StaticHandlerState} />
+          <DataStaticRouter context={context as StaticHandlerContext} />
         </React.StrictMode>
       )
     ).toThrowErrorMatchingInlineSnapshot(
-      `"You must provide \`routes\` and \`state\` to <DataStaticRouter>"`
+      `"You must provide \`routes\` and \`context\` to <DataStaticRouter>"`
     );
 
     expect(() =>
@@ -187,7 +187,7 @@ describe("A <DataStaticRouter>", () => {
         </React.StrictMode>
       )
     ).toThrowErrorMatchingInlineSnapshot(
-      `"You must provide \`routes\` and \`state\` to <DataStaticRouter>"`
+      `"You must provide \`routes\` and \`context\` to <DataStaticRouter>"`
     );
   });
 });
