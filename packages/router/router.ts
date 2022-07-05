@@ -980,10 +980,14 @@ export function createRouter(init: RouterInit): Router {
       fetchLoadMatches
     );
 
-    // Cancel pending deferreds that are not being reused.  Note that if this
-    // is an acton reload we would have already cancelled all pending deferreds
-    // so this would be a no-op
-    cancelActiveDeferredsViaMatches(matches, matchesToLoad);
+    // Cancel pending deferreds for no-longer-matched routes or routes we're
+    // about to reload.  Note that if this is an action reload we would have
+    // already cancelled all pending deferreds so this would be a no-op
+    cancelActiveDeferreds(
+      (routeId) =>
+        !matches?.some((m) => m.route.id === routeId) ||
+        matchesToLoad?.some((m) => m.route.id === routeId)
+    );
 
     // Short circuit if we have no loaders to run
     if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
@@ -1588,24 +1592,6 @@ export function createRouter(init: RouterInit): Router {
       }
     });
     return cancelledRouteIds;
-  }
-
-  // Cancel active deferreds that are not reused, being reloaded, or below the
-  // boundary id
-  function cancelActiveDeferredsViaMatches(
-    matches: DataRouteMatch[],
-    matchesToLoad: DataRouteMatch[],
-    boundaryId?: string
-  ): string[] {
-    let foundBoundaryId = false;
-    return cancelActiveDeferreds((routeId) => {
-      foundBoundaryId = foundBoundaryId || routeId === boundaryId;
-      // Can cancel if this route is no longer matched
-      let isRouteMatched = matches?.some((m) => m.route.id === routeId);
-      // Or if this route is about to be reloaded
-      let isRouteLoading = matchesToLoad?.some((m) => m.route.id === routeId);
-      return !isRouteMatched || isRouteLoading || foundBoundaryId;
-    });
   }
 
   // Opt in to capturing and reporting scroll positions during navigations,
