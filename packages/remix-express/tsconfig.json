@@ -10,6 +10,7 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "rootDir": ".",
-    "outDir": "../../build/node_modules/@remix-run/express/dist"
+    "outDir": "../../build/node_modules/@remix-run/express/dist",
+    "composite": true
   }
 }

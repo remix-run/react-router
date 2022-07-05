@@ -22,10 +22,15 @@ export class PlaywrightFixture {
    * @param waitForHydration Will wait for the network to be idle, so
    * everything should be loaded and ready to go
    */
-  async goto(href: string, waitForHydration?: true) {
-    return this.page.goto(this.app.serverUrl + href, {
+  async goto(href: string, waitForHydration?: true): Promise<Response> {
+    let response = await this.page.goto(this.app.serverUrl + href, {
       waitUntil: waitForHydration ? "networkidle" : undefined,
     });
+    if (response == null)
+      throw new Error(
+        "Unexpected null response, possible about:blank request or same-URL redirect"
+      );
+    return response;
   }
 
   /**
@@ -42,7 +47,7 @@ export class PlaywrightFixture {
       throw new Error(`Could not find link for ${selector}`);
     }
     if (options.wait) {
-      await doAndWait(this.page, () => el.click());
+      await doAndWait(this.page, () => el!.click());
     } else {
       await el.click();
     }
@@ -94,7 +99,7 @@ export class PlaywrightFixture {
       }
     }
     if (options.wait) {
-      await doAndWait(this.page, () => el.click());
+      await doAndWait(this.page, () => el!.click());
     } else {
       await el.click();
     }
@@ -108,7 +113,7 @@ export class PlaywrightFixture {
     if (!el) {
       throw new Error(`Can't find element for: ${selector}`);
     }
-    await doAndWait(this.page, () => el.click());
+    await doAndWait(this.page, () => el!.click());
   }
 
   /**
@@ -167,7 +172,7 @@ export class PlaywrightFixture {
    *
    * @param selector CSS Selector for the element's HTML you want
    */
-  async getElement(selector?: string) {
+  async getElement(selector: string) {
     return getElement(await getHtml(this.page), selector);
   }
 
@@ -260,7 +265,7 @@ async function doAndWait(
   page.on("requestfinished", onRequestDone);
   page.on("requestfailed", onRequestDone);
 
-  let timeoutId: NodeJS.Timer;
+  let timeoutId: NodeJS.Timer | undefined;
   if (DEBUG) {
     timeoutId = setInterval(() => {
       console.log(`${requestCounter} requests pending:`);
@@ -283,7 +288,7 @@ async function doAndWait(
   page.removeListener("requestfinished", onRequestDone);
   page.removeListener("requestfailed", onRequestDone);
 
-  if (DEBUG) {
+  if (DEBUG && timeoutId) {
     clearTimeout(timeoutId);
   }
 

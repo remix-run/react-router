@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
-import type { RemixLinkProps } from "../build/node_modules/@remix-run/react/components";
+import type { RemixLinkProps } from "../build/node_modules/@remix-run/react/dist/components";
 import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
 // Generate the test app using the given prefetch mode

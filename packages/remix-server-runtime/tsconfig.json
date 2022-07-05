@@ -11,6 +11,7 @@
     "emitDeclarationOnly": true,
     "rootDir": ".",
     "outDir": "../../build/node_modules/@remix-run/server-runtime/dist",
+    "composite": true,
 
     // Avoid naming conflicts between lib.dom.d.ts and globals.ts
     "skipLibCheck": true
