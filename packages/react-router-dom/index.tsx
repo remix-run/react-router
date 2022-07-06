@@ -3,15 +3,16 @@
  * you'll need to update the rollup config for react-router-dom-v5-compat.
  */
 import * as React from "react";
-import type { NavigateOptions, To } from "react-router";
+import { createRoutesFromChildren, NavigateOptions, To } from "react-router";
 import {
+  DataRouter,
   Router,
+  DataRouterProvider,
   createPath,
   useHref,
   useLocation,
   useMatch,
   useNavigate,
-  useRenderDataRouter,
   useResolvedPath,
   UNSAFE_RouteContext,
   UNSAFE_DataRouterContext,
@@ -27,6 +28,7 @@ import type {
   History,
   HydrationState,
   RouteObject,
+  Router as RemixRouter,
 } from "@remix-run/router";
 import {
   createBrowserHistory,
@@ -155,14 +157,30 @@ export {
 
 /** @internal */
 export {
+  DataRouter,
+  DataRouterProvider,
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
-  useRenderDataRouter,
 } from "react-router";
 //#endregion
+
+// Module-scoped singleton to hold the router.  Extracted from the React lifecycle
+// to avoid issues w.r.t. dual initialization fetches in concurrent rendering.
+// Data router apps are expected to have a static route tree and are not intended
+// to be unmounted/remounted at runtime.
+let routerSingleton: RemixRouter;
+
+/**
+ * Unit-testing-only function to reset the router between tests
+ * @private
+ */
+export function _resetModuleScope() {
+  // @ts-expect-error
+  routerSingleton = null;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Components
@@ -185,19 +203,25 @@ export function DataBrowserRouter({
   routes,
   window,
 }: DataBrowserRouterProps): React.ReactElement {
-  return useRenderDataRouter({
-    basename,
-    children,
-    fallbackElement,
-    routes,
-    createRouter: (routes) =>
-      createBrowserRouter({
-        basename,
-        routes,
-        hydrationData,
-        window,
-      }),
-  });
+  if (!routerSingleton) {
+    routerSingleton = createBrowserRouter({
+      basename,
+      hydrationData,
+      window,
+      routes: routes || createRoutesFromChildren(children),
+    }).initialize();
+  }
+  let router = routerSingleton;
+
+  return (
+    <DataRouterProvider
+      router={router}
+      basename={basename}
+      fallbackElement={fallbackElement}
+    >
+      <DataRouter />
+    </DataRouterProvider>
+  );
 }
 
 export interface DataHashRouterProps {
@@ -217,19 +241,25 @@ export function DataHashRouter({
   routes,
   window,
 }: DataBrowserRouterProps): React.ReactElement {
-  return useRenderDataRouter({
-    basename,
-    children,
-    fallbackElement,
-    routes,
-    createRouter: (routes) =>
-      createHashRouter({
-        basename,
-        routes,
-        hydrationData,
-        window,
-      }),
-  });
+  if (!routerSingleton) {
+    routerSingleton = createHashRouter({
+      basename,
+      hydrationData,
+      window,
+      routes: routes || createRoutesFromChildren(children),
+    }).initialize();
+  }
+  let router = routerSingleton;
+
+  return (
+    <DataRouterProvider
+      router={router}
+      basename={basename}
+      fallbackElement={fallbackElement}
+    >
+      <DataRouter />
+    </DataRouterProvider>
+  );
 }
 
 export interface BrowserRouterProps {
@@ -769,16 +799,16 @@ export function useSubmit(): SubmitFunction {
 }
 
 function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
-  let router = React.useContext(UNSAFE_DataRouterContext);
+  let dataRouterContext = React.useContext(UNSAFE_DataRouterContext);
+  invariant(
+    dataRouterContext,
+    "useSubmitImpl must be used within a Data Router"
+  );
+  let { router } = dataRouterContext;
   let defaultAction = useFormAction();
 
   return React.useCallback(
     (target, options = {}) => {
-      invariant(
-        router != null,
-        "useSubmit() must be used within a <DataRouter>"
-      );
-
       if (typeof document === "undefined") {
         throw new Error(
           "You are calling submit during the server render. " +
@@ -856,8 +886,9 @@ type FetcherWithComponents<TData> = Fetcher<TData> & {
  * for any interaction that stays on the same page.
  */
 export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
-  let router = React.useContext(UNSAFE_DataRouterContext);
-  invariant(router, `useFetcher must be used within a DataRouter`);
+  let dataRouterContext = React.useContext(UNSAFE_DataRouterContext);
+  invariant(dataRouterContext, `useFetcher must be used within a Data Router`);
+  let { router } = dataRouterContext;
 
   let route = React.useContext(UNSAFE_RouteContext);
   invariant(route, `useFetcher must be used inside a RouteContext`);
@@ -914,7 +945,7 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
  */
 export function useFetchers(): Fetcher[] {
   let state = React.useContext(UNSAFE_DataRouterStateContext);
-  invariant(state, `useFetchers must be used within a DataRouter`);
+  invariant(state, `useFetchers must be used within a DataRouterStateContext`);
   return [...state.fetchers.values()];
 }
 
@@ -932,12 +963,17 @@ function useScrollRestoration({
   storageKey?: string;
 } = {}) {
   let location = useLocation();
-  let router = React.useContext(UNSAFE_DataRouterContext);
+  let dataRouterContext = React.useContext(UNSAFE_DataRouterContext);
+  invariant(
+    dataRouterContext,
+    "useScrollRestoration must be used within a DataRouterContext"
+  );
+  let { router } = dataRouterContext;
   let state = React.useContext(UNSAFE_DataRouterStateContext);
 
   invariant(
     router != null && state != null,
-    "useScrollRestoration must be used within a DataRouter"
+    "useScrollRestoration must be used within a DataRouterStateContext"
   );
   let { restoreScrollPosition, resetScrollPosition } = state;
 

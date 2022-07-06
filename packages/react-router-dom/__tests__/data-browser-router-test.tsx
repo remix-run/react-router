@@ -32,7 +32,7 @@ import {
 } from "react-router-dom";
 
 // Private API
-import { _resetModuleScope } from "../../react-router/lib/components";
+import { _resetModuleScope } from "../index";
 
 testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
   getWindowImpl(url, false)

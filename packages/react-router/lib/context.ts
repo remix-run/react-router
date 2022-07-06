@@ -8,8 +8,13 @@ import type {
 } from "@remix-run/router";
 import { Action as NavigationType } from "@remix-run/router";
 
+export interface DataRouterContextObject extends NavigationContextObject {
+  router: Router;
+}
+
 // Contexts for data routers
-export const DataRouterContext = React.createContext<Router | null>(null);
+export const DataRouterContext =
+  React.createContext<DataRouterContextObject | null>(null);
 if (__DEV__) {
   DataRouterContext.displayName = "DataRouter";
 }

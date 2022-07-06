@@ -10,7 +10,7 @@ import {
   PathPattern,
   RouteMatch,
   RouteObject,
-  Router as DataRouter,
+  Router as RemixRouter,
   To,
 } from "@remix-run/router";
 import {
@@ -530,7 +530,7 @@ export class RenderErrorBoundary extends React.Component<
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState?: DataRouter["state"]
+  dataRouterState?: RemixRouter["state"]
 ): React.ReactElement | null {
   if (matches == null) {
     if (dataRouterState?.errors) {
@@ -610,7 +610,7 @@ enum DataRouterHook {
 
 function useDataRouterState(hookName: DataRouterHook) {
   let state = React.useContext(DataRouterStateContext);
-  invariant(state, `${hookName} must be used within a DataRouter`);
+  invariant(state, `${hookName} must be used within a DataRouterStateContext`);
   return state;
 }
 
@@ -628,10 +628,16 @@ export function useNavigation() {
  * as the current state of any manual revalidations
  */
 export function useRevalidator() {
-  let router = React.useContext(DataRouterContext);
-  invariant(router, `useRevalidator must be used within a DataRouter`);
+  let dataRouterContext = React.useContext(DataRouterContext);
+  invariant(
+    dataRouterContext,
+    `useRevalidator must be used within a DataRouterContext`
+  );
   let state = useDataRouterState(DataRouterHook.UseRevalidator);
-  return { revalidate: router.revalidate, state: state.revalidation };
+  return {
+    revalidate: dataRouterContext.router.revalidate,
+    state: state.revalidation,
+  };
 }
 
 /**

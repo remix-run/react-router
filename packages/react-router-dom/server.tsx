@@ -2,20 +2,18 @@ import * as React from "react";
 import type {
   DataRouteObject,
   RevalidationState,
-  Router as DataRouter,
-  RouterState,
+  Router as RemixRouter,
   StaticHandlerContext,
 } from "@remix-run/router";
 import { IDLE_NAVIGATION, Action, invariant } from "@remix-run/router";
+import type { Location, To } from "react-router-dom";
 import {
-  Location,
-  To,
   createPath,
   parsePath,
+  DataRouter,
   Router,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
-  useRoutes,
 } from "react-router-dom";
 
 export interface StaticRouterProps {
@@ -60,8 +58,9 @@ export function StaticRouter({
 }
 
 export interface DataStaticRouterProps {
-  dataRoutes: DataRouteObject[];
+  children?: React.ReactNode;
   context: StaticHandlerContext;
+  dataRoutes: DataRouteObject[];
 }
 
 /**
@@ -69,44 +68,28 @@ export interface DataStaticRouterProps {
  * on the server where there is no stateful UI.
  */
 export function DataStaticRouter({
-  dataRoutes,
+  children,
   context,
+  dataRoutes,
 }: DataStaticRouterProps) {
   invariant(
     dataRoutes && context,
     "You must provide `routes` and `context` to <DataStaticRouter>"
   );
 
-  let router = getStatelessRouter(dataRoutes, context);
+  let dataRouterContext = {
+    router: getStatelessRemixRouter(dataRoutes, context),
+    navigator: getStatelessNavigator(),
+    static: true,
+    basename: "/",
+  };
   return (
-    <DataRouterContext.Provider value={router}>
-      <DataRouterStateContext.Provider value={router.state}>
-        <Router
-          location={router.state.location}
-          navigationType={router.state.historyAction}
-          navigator={getStatelessNavigator()}
-          static={true}
-        >
-          <DataStaticRoutes
-            dataRoutes={router.routes}
-            location={router.state.location}
-          />
-        </Router>
+    <DataRouterContext.Provider value={dataRouterContext}>
+      <DataRouterStateContext.Provider value={dataRouterContext.router.state}>
+        {children ? <>{children}</> : <DataRouter />}
       </DataRouterStateContext.Provider>
     </DataRouterContext.Provider>
   );
-}
-
-interface DataStaticRoutesProps {
-  dataRoutes: DataRouteObject[];
-  location: RouterState["location"];
-}
-
-function DataStaticRoutes({
-  dataRoutes,
-  location,
-}: DataStaticRoutesProps): React.ReactElement | null {
-  return useRoutes(dataRoutes, location);
 }
 
 function getStatelessNavigator() {
@@ -151,10 +134,10 @@ function getStatelessNavigator() {
   };
 }
 
-function getStatelessRouter(
+function getStatelessRemixRouter(
   dataRoutes: DataRouteObject[],
   context: StaticHandlerContext
-): DataRouter {
+): RemixRouter {
   let msg = (method: string) =>
     `You cannot use router.${method}() on the server because it is a stateless environment`;
 

@@ -51,6 +51,7 @@ import {
   createRoutesFromChildren,
   renderMatches,
   DataMemoryRouter,
+  DataRouter,
   Deferred,
   MemoryRouter,
   Navigate,
@@ -58,7 +59,7 @@ import {
   Route,
   Router,
   Routes,
-  useRenderDataRouter,
+  DataRouterProvider,
 } from "./lib/components";
 import type { Navigator, NavigateOptions } from "./lib/context";
 import {
@@ -194,10 +195,11 @@ export {
 
 /** @internal */
 export {
+  DataRouter,
+  DataRouterProvider,
   NavigationContext as UNSAFE_NavigationContext,
   LocationContext as UNSAFE_LocationContext,
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  useRenderDataRouter,
 };
