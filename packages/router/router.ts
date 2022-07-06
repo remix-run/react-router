@@ -240,7 +240,7 @@ export type StaticHandlerContext = Pick<
 export interface StaticHandler {
   dataRoutes: DataRouteObject[];
   query(request: Request): Promise<StaticHandlerContext | Response>;
-  queryRoute(request: Request, routeId: string): Promise<any>;
+  queryRoute(request: Request, routeId?: string): Promise<any>;
 }
 
 /**

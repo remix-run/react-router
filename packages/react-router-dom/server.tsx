@@ -5,7 +5,12 @@ import type {
   Router as RemixRouter,
   StaticHandlerContext,
 } from "@remix-run/router";
-import { IDLE_NAVIGATION, Action, invariant } from "@remix-run/router";
+import {
+  IDLE_FETCHER,
+  IDLE_NAVIGATION,
+  Action,
+  invariant,
+} from "@remix-run/router";
 import type { Location, To } from "react-router-dom";
 import {
   createPath,
@@ -183,7 +188,7 @@ function getStatelessRemixRouter(
       throw msg("createHref");
     },
     getFetcher() {
-      throw msg("getFetcher");
+      return IDLE_FETCHER;
     },
     deleteFetcher() {
       throw msg("deleteFetcher");

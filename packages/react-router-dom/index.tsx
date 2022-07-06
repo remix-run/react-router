@@ -56,7 +56,13 @@ import {
 //#region Re-exports
 ////////////////////////////////////////////////////////////////////////////////
 
-export type { ParamKeyValuePair, URLSearchParamsInit };
+export type {
+  FormEncType,
+  FormMethod,
+  ParamKeyValuePair,
+  SubmitOptions,
+  URLSearchParamsInit,
+};
 export { createSearchParams };
 
 // Note: Keep in sync with react-router exports!
@@ -875,7 +881,7 @@ function createFetcherForm(fetcherKey: string, routeId: string) {
 
 let fetcherId = 0;
 
-type FetcherWithComponents<TData> = Fetcher<TData> & {
+export type FetcherWithComponents<TData> = Fetcher<TData> & {
   Form: ReturnType<typeof createFetcherForm>;
   submit: ReturnType<typeof useSubmitImpl>;
   load: (href: string) => void;

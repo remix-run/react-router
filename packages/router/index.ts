@@ -60,6 +60,9 @@ export type {
 } from "./utils";
 
 export {
+  // TODO: Do we want to expose this?  Need to for now so remix can deserialize
+  // catch responses in the browser
+  ErrorResponse,
   deferred,
   generatePath,
   getToPathname,
