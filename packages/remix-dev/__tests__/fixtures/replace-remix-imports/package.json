@@ -3,7 +3,7 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "run-s build:*",
+    "build": "run-s \"build:*\"",
     "build:css": "npm run generate:css -- --minify",
     "build:remix": "remix build",
     "generate:css": "tailwindcss -o ./app/styles/tailwind.css",
