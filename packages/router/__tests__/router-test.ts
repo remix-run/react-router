@@ -3691,11 +3691,12 @@ describe("a router", () => {
       router.dispose();
     });
 
-    it("kicks off initial data load if partial hydration data is provided", async () => {
-      let parentDfd = defer();
-      let parentSpy = jest.fn(() => parentDfd.promise);
-      let childDfd = defer();
-      let childSpy = jest.fn(() => childDfd.promise);
+    // This is needed because we can't detect valid "I have a loader" routes
+    // in Remix since all routes have a loader to fetch JS bundles but may not
+    // actually provide any loaderData
+    it("treats partial hydration data as initialized", async () => {
+      let parentSpy = jest.fn();
+      let childSpy = jest.fn();
       let router = createRouter({
         history: createMemoryHistory({ initialEntries: ["/child"] }),
         routes: [
@@ -3718,33 +3719,16 @@ describe("a router", () => {
       });
       router.initialize();
 
-      expect(console.warn).toHaveBeenCalledWith(
-        "The provided hydration data did not find loaderData for all matched " +
-          "routes with loaders.  Performing a full initial data load"
-      );
-      expect(parentSpy.mock.calls.length).toBe(1);
-      expect(childSpy.mock.calls.length).toBe(1);
-      expect(router.state).toMatchObject({
-        historyAction: "POP",
-        location: expect.objectContaining({ pathname: "/child" }),
-        initialized: false,
-        navigation: {
-          state: "loading",
-        },
-      });
-      expect(router.state.loaderData).toEqual({});
-
-      await parentDfd.resolve("PARENT DATA 2");
-      await childDfd.resolve("CHILD DATA");
+      expect(parentSpy.mock.calls.length).toBe(0);
+      expect(childSpy.mock.calls.length).toBe(0);
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
         initialized: true,
         navigation: IDLE_NAVIGATION,
-        loaderData: {
-          "0": "PARENT DATA 2",
-          "0-0": "CHILD DATA",
-        },
+      });
+      expect(router.state.loaderData).toEqual({
+        "0": "PARENT DATA",
       });
 
       router.dispose();

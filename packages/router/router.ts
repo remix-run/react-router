@@ -463,26 +463,8 @@ export function createRouter(init: RouterInit): Router {
     initialErrors = { [route.id]: error };
   }
 
-  // If we received hydration data without errors - detect if any matched
-  // routes with loaders did not get provided loaderData, and if so launch an
-  // initial data re-load to fetch everything
-  let foundMissingHydrationData =
-    init.hydrationData?.errors == null &&
-    init.hydrationData?.loaderData != null &&
-    initialMatches
-      .filter((m) => m.route.loader)
-      .some((m) => init.hydrationData?.loaderData?.[m.route.id] === undefined);
-
-  if (foundMissingHydrationData) {
-    console.warn(
-      `The provided hydration data did not find loaderData for all matched ` +
-        `routes with loaders.  Performing a full initial data load`
-    );
-  }
-
   let initialized =
-    !initialMatches.some((m) => m.route.loader) ||
-    (init.hydrationData != null && !foundMissingHydrationData);
+    !initialMatches.some((m) => m.route.loader) || init.hydrationData != null;
 
   let router: Router;
   let state: RouterState = {
@@ -494,9 +476,7 @@ export function createRouter(init: RouterInit): Router {
     restoreScrollPosition: null,
     resetScrollPosition: true,
     revalidation: "idle",
-    loaderData: foundMissingHydrationData
-      ? {}
-      : init.hydrationData?.loaderData || {},
+    loaderData: init.hydrationData?.loaderData || {},
     actionData: init.hydrationData?.actionData || null,
     errors: init.hydrationData?.errors || initialErrors,
     fetchers: new Map(),
