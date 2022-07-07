@@ -1,17 +1,4 @@
-type SerializablePrimitives =
-  | string
-  | number
-  | boolean
-  | null
-  | { toJSON(): unknown }
-  | undefined
-  | Function
-  | symbol;
-type Serializable =
-  | SerializablePrimitives
-  | { [key: string | number | symbol]: Serializable }
-  | Serializable[];
-export type JsonFunction = <Data extends Serializable>(
+export type JsonFunction = <Data extends unknown>(
   data: Data,
   init?: number | ResponseInit
 ) => TypedResponse<Data>;
