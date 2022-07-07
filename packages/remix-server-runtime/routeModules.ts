@@ -19,6 +19,9 @@ export interface DataFunctionArgs {
   params: Params;
 }
 
+export type LoaderArgs = DataFunctionArgs;
+export type ActionArgs = DataFunctionArgs;
+
 /**
  * A function that handles data mutations for a route.
  */
