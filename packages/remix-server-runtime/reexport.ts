@@ -32,14 +32,12 @@ export type {
 } from "./links";
 
 export type {
-  ActionArgs,
   ActionFunction,
   DataFunctionArgs,
   ErrorBoundaryComponent,
   HeadersFunction,
   HtmlMetaDescriptor,
   LinksFunction,
-  LoaderArgs,
   LoaderFunction,
   MetaDescriptor,
   MetaFunction,

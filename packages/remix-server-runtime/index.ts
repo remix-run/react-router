@@ -28,12 +28,10 @@ export type {
   IsSessionFunction,
   JsonFunction,
   RedirectFunction,
-  TypedResponse,
 } from "./interface";
 
 // Remix server runtime packages should re-export these types
 export type {
-  ActionArgs,
   ActionFunction,
   AppData,
   AppLoadContext,
@@ -52,7 +50,6 @@ export type {
   HtmlMetaDescriptor,
   LinkDescriptor,
   LinksFunction,
-  LoaderArgs,
   LoaderFunction,
   MetaDescriptor,
   MetaFunction,
