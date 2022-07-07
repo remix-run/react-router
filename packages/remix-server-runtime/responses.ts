@@ -1,7 +1,26 @@
-export type JsonFunction = <Data>(
+type SerializablePrimitives =
+  | string
+  | number
+  | boolean
+  | null
+  | { toJSON(): unknown }
+  | undefined
+  | Function
+  | symbol;
+type Serializable =
+  | SerializablePrimitives
+  | { [key: string | number | symbol]: Serializable }
+  | Serializable[];
+export type JsonFunction = <Data extends Serializable>(
   data: Data,
   init?: number | ResponseInit
-) => Response;
+) => TypedResponse<Data>;
+
+// must be a type since this is a subtype of response
+// interfaces must conform to the types they extend
+export type TypedResponse<T extends unknown = unknown> = Response & {
+  json(): Promise<T>;
+};
 
 /**
  * This is a shortcut for creating `application/json` responses. Converts `data`
@@ -26,7 +45,7 @@ export const json: JsonFunction = (data, init = {}) => {
 export type RedirectFunction = (
   url: string,
   init?: number | ResponseInit
-) => Response;
+) => TypedResponse<never>;
 
 /**
  * A redirect response. Sets the status code and the `Location` header.
@@ -48,7 +67,7 @@ export const redirect: RedirectFunction = (url, init = 302) => {
   return new Response(null, {
     ...responseInit,
     headers,
-  });
+  }) as TypedResponse<never>;
 };
 
 export function isResponse(value: any): value is Response {
