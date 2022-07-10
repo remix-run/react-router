@@ -163,6 +163,8 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--json": Boolean,
       "--migration": String,
       "-m": "--migration",
+      "--port": Number,
+      "-p": "--port",
       "--remix-version": String,
       "--sourcemap": Boolean,
       "--template": String,
