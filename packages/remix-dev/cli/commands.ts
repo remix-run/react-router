@@ -287,7 +287,14 @@ export async function dev(
     purgeAppRequireCache(config.serverBuildPath);
     next();
   });
-  app.use(createApp(config.serverBuildPath, mode));
+  app.use(
+    createApp(
+      config.serverBuildPath,
+      mode,
+      config.publicPath,
+      config.assetsBuildDirectory
+    )
+  );
 
   let server: Server | null = null;
 

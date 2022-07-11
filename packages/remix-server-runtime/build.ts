@@ -11,6 +11,8 @@ export interface ServerBuild {
   };
   routes: ServerRouteManifest;
   assets: AssetsManifest;
+  publicPath: string;
+  assetsBuildDirectory: string;
 }
 
 export interface HandleDocumentRequestFunction {

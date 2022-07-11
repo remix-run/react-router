@@ -4,10 +4,8 @@ import os from "os";
 
 import { createApp } from "./index";
 
-let port = Number.parseInt(process.env.PORT || "3000", 10);
-if (Number.isNaN(port)) {
-  port = 3000;
-}
+let port = process.env.PORT ? Number(process.env.PORT) : 3000;
+if (Number.isNaN(port)) port = 3000;
 
 let buildPathArg = process.argv[2];
 
@@ -35,7 +33,14 @@ let onListen = () => {
   }
 };
 
-let app = createApp(buildPath);
+let build = require(buildPath);
+
+let app = createApp(
+  buildPath,
+  process.env.NODE_ENV,
+  build.publicPath,
+  build.assetsBuildDirectory
+);
 let server = process.env.HOST
   ? app.listen(port, process.env.HOST, onListen)
   : app.listen(port, onListen);

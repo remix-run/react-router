@@ -20,6 +20,7 @@ describe("readConfig", () => {
         devServerPort: expect.any(Number),
         serverBuildPath: expect.any(String),
         assetsBuildDirectory: expect.any(String),
+        relativeAssetsBuildDirectory: expect.any(String),
       },
       `
       Object {
@@ -32,6 +33,7 @@ describe("readConfig", () => {
         "entryServerFile": "entry.server.tsx",
         "mdx": undefined,
         "publicPath": "/build/",
+        "relativeAssetsBuildDirectory": Any<String>,
         "rootDirectory": Any<String>,
         "routes": Object {
           "root": Object {
