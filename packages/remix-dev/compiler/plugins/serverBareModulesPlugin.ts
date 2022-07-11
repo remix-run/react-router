@@ -71,14 +71,14 @@ export function serverBareModulesPlugin(
           !/\bnode_modules\b/.test(importer)
         ) {
           try {
-            require.resolve(packageName);
+            require.resolve(path);
           } catch (error) {
             onWarning(
               `The path "${path}" is imported in ` +
                 `${relative(process.cwd(), importer)} but ` +
-                `${packageName} is not listed in your package.json dependencies. ` +
+                `"${path}" was not found in your node_modules. ` +
                 `Did you forget to install it?`,
-              packageName
+              path
             );
           }
         }

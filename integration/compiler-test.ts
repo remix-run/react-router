@@ -1,12 +1,14 @@
 import path from "path";
 import fs from "fs/promises";
 import { test, expect } from "@playwright/test";
+import { PassThrough } from "stream";
 
 import {
   createFixture,
   createAppFixture,
   js,
   json,
+  createFixtureProject,
 } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
 import { PlaywrightFixture } from "./helpers/playwright-fixture";
@@ -134,6 +136,14 @@ test.describe("compiler", () => {
           module: "./esm/index.js",
           sideEffects: false,
         }),
+        "node_modules/@org/package/sub-package/index.js": js`
+          module.exports.submodule = require("./submodule.js");
+        `,
+        "node_modules/@org/package/sub-package/submodule.js": js`
+          module.exports = function submodule() {
+            return "package-with-submodule";
+          }
+        `,
         "node_modules/@org/package/sub-package/esm/package.json": json({
           type: "module",
           sideEffects: false,
@@ -143,14 +153,6 @@ test.describe("compiler", () => {
         `,
         "node_modules/@org/package/sub-package/esm/submodule.js": js`
           export default function submodule() {
-            return "package-with-submodule";
-          }
-        `,
-        "node_modules/@org/package/sub-package/index.js": js`
-          module.exports.submodule = require("./submodule.js");
-        `,
-        "node_modules/@org/package/sub-package/submodule.js": js`
-          module.exports = function submodule() {
             return "package-with-submodule";
           }
         `,
@@ -319,5 +321,57 @@ test.describe("compiler", () => {
     for (let name of magicExportsForNode) {
       expect(magicRemix).toContain(name);
     }
+  });
+
+  test.describe("serverBareModulesPlugin", () => {
+    test("warns when a module isn't installed", async () => {
+      let buildOutput: string;
+      let buildStdio = new PassThrough();
+
+      await expect(() =>
+        createFixtureProject({
+          buildStdio,
+          files: {
+            "app/routes/index.jsx": js`
+            import { json } from "@remix-run/node";
+            import { useLoaderData } from "@remix-run/react";
+            import notInstalledMain from "some-not-installed-module";
+            import { notInstalledSub } from "some-not-installed-module/sub";
+
+            export function loader() {
+              return json({ main: notInstalledMain(), sub: notInstalledSub() });
+            }
+
+            export default function Index() {
+                let data = useLoaderData();
+                return null;
+              }
+              `,
+          },
+        })
+      ).rejects.toThrowError("Build failed, check the output above");
+
+      let chunks: Buffer[] = [];
+      buildOutput = await new Promise<string>((resolve, reject) => {
+        buildStdio.on("error", (error) => {
+          reject(error);
+        });
+        buildStdio.on("data", (chunk) => {
+          chunks.push(Buffer.from(chunk));
+        });
+        buildStdio.on("end", () => {
+          resolve(Buffer.concat(chunks).toString("utf8"));
+        });
+      });
+
+      let importer = path.join("app", "routes", "index.jsx");
+
+      expect(buildOutput).toContain(
+        `The path "some-not-installed-module" is imported in ${importer} but "some-not-installed-module" was not found in your node_modules. Did you forget to install it?`
+      );
+      expect(buildOutput).toContain(
+        `The path "some-not-installed-module/sub" is imported in ${importer} but "some-not-installed-module/sub" was not found in your node_modules. Did you forget to install it?`
+      );
+    });
   });
 });

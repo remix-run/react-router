@@ -147,7 +147,6 @@ export async function createFixtureProject(init: FixtureInit): Promise<string> {
     { overwrite: true }
   );
   if (init.setup) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let setupSpawn = spawnSync(
       "node",
       ["node_modules/@remix-run/dev/dist/cli.js", "setup", init.setup],
@@ -178,9 +177,7 @@ function build(projectDir: string, buildStdio?: Writable, sourcemap?: boolean) {
   if (sourcemap) {
     buildArgs.push("--sourcemap");
   }
-  let buildSpawn = spawnSync("node", buildArgs, {
-    cwd: projectDir,
-  });
+  let buildSpawn = spawnSync("node", buildArgs, { cwd: projectDir });
 
   // These logs are helpful for debugging. Remove comments if needed.
   // console.log("spawning @remix-run/dev/cli.js `build`:\n");
@@ -188,15 +185,16 @@ function build(projectDir: string, buildStdio?: Writable, sourcemap?: boolean) {
   // console.log("  " + buildSpawn.stdout.toString("utf-8"));
   // console.log("  STDERR:");
   // console.log("  " + buildSpawn.stderr.toString("utf-8"));
-  if (buildSpawn.error || buildSpawn.status) {
-    console.error(buildSpawn.stderr.toString("utf-8"));
-    throw buildSpawn.error || new Error(`Build failed, check the output above`);
-  }
 
   if (buildStdio) {
     buildStdio.write(buildSpawn.stdout.toString("utf-8"));
     buildStdio.write(buildSpawn.stderr.toString("utf-8"));
     buildStdio.end();
+  }
+
+  if (buildSpawn.error || buildSpawn.status) {
+    console.error(buildSpawn.stderr.toString("utf-8"));
+    throw buildSpawn.error || new Error(`Build failed, check the output above`);
   }
 }
 
