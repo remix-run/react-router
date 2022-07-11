@@ -772,12 +772,15 @@ export function resolveTo(
 
   let path = resolvePath(to, from);
 
-  // Ensure the pathname has a trailing slash if the original to value had one.
+  // Ensure the pathname has a trailing slash if the original to value had one,
+  // or if this was a "." navigation and the current location has one
+  let hasExplicitTrailingSlash =
+    toPathname && toPathname !== "/" && toPathname.endsWith("/");
+  let hasCurrentTrailingSlash =
+    toPathname === "." && locationPathname.endsWith("/");
   if (
-    toPathname &&
-    toPathname !== "/" &&
-    toPathname.endsWith("/") &&
-    !path.pathname.endsWith("/")
+    !path.pathname.endsWith("/") &&
+    (hasExplicitTrailingSlash || hasCurrentTrailingSlash)
   ) {
     path.pathname += "/";
   }

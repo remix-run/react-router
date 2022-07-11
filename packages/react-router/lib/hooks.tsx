@@ -232,13 +232,22 @@ export function useNavigate(): NavigateFunction {
       );
 
       if (basename !== "/") {
-        // If this was a blank path, just use the basename directly, this gives
-        // the user control over trailing slash behavior
+        let isRootNavigation = path.pathname === "/";
+        path.pathname = joinPaths([basename, path.pathname]);
+
+        // If we're navigating to the root, then we should let the basename
+        // dictate the trailing slash unless the incoming `to` argument was an
+        // explicit root navigation
         let toPath = typeof to === "string" ? parsePath(to) : to;
-        let isBlankPath = toPath.pathname == null || toPath.pathname === "";
-        path.pathname = isBlankPath
-          ? basename
-          : joinPaths([basename, path.pathname]);
+        let hasExplicitSlash = toPath.pathname === "/";
+        if (
+          isRootNavigation &&
+          path.pathname.endsWith("/") &&
+          !basename.endsWith("/") &&
+          !hasExplicitSlash
+        ) {
+          path.pathname = path.pathname.replace(/\/$/, "");
+        }
       }
 
       (!!options.replace ? navigator.replace : navigator.push)(
