@@ -8,7 +8,6 @@ import {
   BrowserRouter,
   Routes,
   Route,
-  Navigate,
   Link,
   Outlet,
   useSearchParams,
@@ -518,7 +517,7 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo/bar");
       });
 
-      fit("should preserve trailing slash", () => {
+      it("should preserve trailing slash", () => {
         let window = getWindowImpl("/foo/bar/");
         spyOn(window.history, "pushState").and.callThrough();
 
