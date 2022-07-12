@@ -334,7 +334,7 @@ describe("trailing slashes", () => {
     describe("with a basename that does not contain a trailing slash", () => {
       test("never includes trailing slashes on root links (/)", () => {
         let window = getWindowImpl("/foo/bar");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
         act(() => {
@@ -353,7 +353,7 @@ describe("trailing slashes", () => {
 
       test("never includes trailing slashes on root links (../)", () => {
         let window = getWindowImpl("/foo/bar");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
         act(() => {
@@ -372,7 +372,7 @@ describe("trailing slashes", () => {
 
       test("allows non-root links to leave off trailing slashes", () => {
         let window = getWindowImpl("/foo");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
 
         expect(window.location.href).toBe("https://remix.run/foo");
 
@@ -393,7 +393,7 @@ describe("trailing slashes", () => {
 
       test("allows non-root links to include trailing slashes", () => {
         let window = getWindowImpl("/foo");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
 
         expect(window.location.href).toBe("https://remix.run/foo");
 
@@ -416,7 +416,7 @@ describe("trailing slashes", () => {
     describe("with a basename that contains a trailing slash", () => {
       test("always includes trailing slashes on root links (/)", () => {
         let window = getWindowImpl("/foo/bar");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
         act(() => {
@@ -435,7 +435,7 @@ describe("trailing slashes", () => {
 
       test("always includes trailing slashes on root links (../)", () => {
         let window = getWindowImpl("/foo/bar");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
         act(() => {
@@ -454,7 +454,7 @@ describe("trailing slashes", () => {
 
       test("allows non-root links to leave off trailing slashes", () => {
         let window = getWindowImpl("/foo/");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
 
         expect(window.location.href).toBe("https://remix.run/foo/");
 
@@ -475,7 +475,7 @@ describe("trailing slashes", () => {
 
       test("allows non-root links to include trailing slashes", () => {
         let window = getWindowImpl("/foo/");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
 
         expect(window.location.href).toBe("https://remix.run/foo/");
 
@@ -498,7 +498,7 @@ describe("trailing slashes", () => {
     describe("empty string paths", () => {
       it("should not add trailing slashes", () => {
         let window = getWindowImpl("/foo/bar");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
 
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
@@ -519,7 +519,7 @@ describe("trailing slashes", () => {
 
       it("should preserve trailing slash", () => {
         let window = getWindowImpl("/foo/bar/");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
 
         expect(window.location.href).toBe("https://remix.run/foo/bar/");
 
@@ -542,7 +542,7 @@ describe("trailing slashes", () => {
     describe("current location '.' paths", () => {
       it("should not add trailing slash", () => {
         let window = getWindowImpl("/foo/bar");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
 
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
@@ -570,7 +570,7 @@ describe("trailing slashes", () => {
 
       it("should preserve trailing slash", () => {
         let window = getWindowImpl("/foo/bar/");
-        spyOn(window.history, "pushState").and.callThrough();
+        jest.spyOn(window.history, "pushState");
 
         expect(window.location.href).toBe("https://remix.run/foo/bar/");
 
@@ -601,7 +601,7 @@ describe("trailing slashes", () => {
   describe("when using setSearchParams", () => {
     it("should not include trailing slash via useSearchParams", () => {
       let window = getWindowImpl("/foo");
-      spyOn(window.history, "pushState").and.callThrough();
+      jest.spyOn(window.history, "pushState");
 
       expect(window.location.href).toBe("https://remix.run/foo");
 
@@ -630,7 +630,7 @@ describe("trailing slashes", () => {
 
     it("should include trailing slash via useSearchParams when basename has one", () => {
       let window = getWindowImpl("/foo/");
-      spyOn(window.history, "pushState").and.callThrough();
+      jest.spyOn(window.history, "pushState");
 
       expect(window.location.href).toBe("https://remix.run/foo/");
 

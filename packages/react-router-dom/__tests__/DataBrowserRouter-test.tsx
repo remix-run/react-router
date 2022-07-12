@@ -47,7 +47,7 @@ function testDomRouter(
   TestDataRouter: typeof DataBrowserRouter,
   getWindow: (initialUrl: string, isHash?: boolean) => Window
 ) {
-  describe(name, () => {
+  describe(`Router: ${name}`, () => {
     let consoleWarn: jest.SpyInstance;
     let consoleError: jest.SpyInstance;
     beforeEach(() => {
@@ -316,8 +316,10 @@ function testDomRouter(
 
       function assertPathname(pathname) {
         if (name === "<DataHashRouter>") {
+          // eslint-disable-next-line jest/no-conditional-expect
           expect(testWindow.location.hash).toEqual("#" + pathname);
         } else {
+          // eslint-disable-next-line jest/no-conditional-expect
           expect(testWindow.location.pathname).toEqual(pathname);
         }
       }
