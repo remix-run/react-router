@@ -946,7 +946,6 @@ describe("a router", () => {
       let history = createMemoryHistory({
         initialEntries: ["/base/name/path"],
       });
-      debugger;
       let router = createRouter({
         basename: "/base/name",
         routes: [{ path: "path" }],

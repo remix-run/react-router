@@ -3,7 +3,6 @@ import {
   isDeferredError,
   isRouteErrorResponse,
   Location,
-  normalizePathname,
   ParamParseKey,
   Params,
   Path,
@@ -16,7 +15,6 @@ import {
 } from "@remix-run/router";
 import {
   Action as NavigationType,
-  getToPathname,
   invariant,
   joinPaths,
   matchPath,
@@ -55,26 +53,14 @@ export function useHref(to: To): string {
   let { hash, pathname, search } = useResolvedPath(to);
 
   let joinedPathname = pathname;
+
+  // If we're operating within a basename, prepend it to the pathname prior
+  // to creating the href.  If this is a root navigation, then just use the raw
+  // basename which allows the basename to have full control over the presence
+  // of a trailing slash on root links
   if (basename !== "/") {
-    let toPathname = getToPathname(to);
-
-    // Only append a trailing slash to the raw basename if the basename doesn't
-    // already have one and this wasn't specifically a route to "".  This
-    // allows folks to control the trailing slash behavior when using a basename
-    let appendSlash =
-      !basename.endsWith("/") &&
-      to !== "" &&
-      (to as Path)?.pathname !== "" &&
-      toPathname != null &&
-      toPathname.endsWith("/");
-
-    if (pathname !== "/") {
-      joinedPathname = joinPaths([basename, pathname]);
-    } else if (appendSlash) {
-      joinedPathname = basename + "/";
-    } else {
-      joinedPathname = basename;
-    }
+    joinedPathname =
+      pathname === "/" ? basename : joinPaths([basename, pathname]);
   }
 
   return navigator.createHref({ pathname: joinedPathname, search, hash });
@@ -231,23 +217,15 @@ export function useNavigate(): NavigateFunction {
         locationPathname
       );
 
+      // If we're operating within a basename, prepend it to the pathname prior
+      // to handing off to history.  If this is a root navigation, then we
+      // navigate to the raw basename which allows the basename to have full
+      // control over the presence of a trailing slash on root links
       if (basename !== "/") {
-        let isRootNavigation = path.pathname === "/";
-        path.pathname = joinPaths([basename, path.pathname]);
-
-        // If we're navigating to the root, then we should let the basename
-        // dictate the trailing slash unless the incoming `to` argument was an
-        // explicit root navigation
-        let toPath = typeof to === "string" ? parsePath(to) : to;
-        let hasExplicitSlash = toPath.pathname === "/";
-        if (
-          isRootNavigation &&
-          path.pathname.endsWith("/") &&
-          !basename.endsWith("/") &&
-          !hasExplicitSlash
-        ) {
-          path.pathname = path.pathname.replace(/\/$/, "");
-        }
+        path.pathname =
+          path.pathname === "/"
+            ? basename
+            : joinPaths([basename, path.pathname]);
       }
 
       (!!options.replace ? navigator.replace : navigator.push)(
