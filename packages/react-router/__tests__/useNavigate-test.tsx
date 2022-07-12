@@ -50,6 +50,120 @@ describe("useNavigate", () => {
     `);
   });
 
+  it("navigates to the new location when no pathname is provided", () => {
+    function Home() {
+      let location = useLocation();
+      let navigate = useNavigate();
+
+      return (
+        <>
+          <p>{location.pathname + location.search}</p>
+          <button onClick={() => navigate("?key=value")}>click me</button>
+        </>
+      );
+    }
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route path="home" element={<Home />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      Array [
+        <p>
+          /home
+        </p>,
+        <button
+          onClick={[Function]}
+        >
+          click me
+        </button>,
+      ]
+    `);
+
+    let button = renderer.root.findByType("button");
+
+    TestRenderer.act(() => {
+      button.props.onClick();
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      Array [
+        <p>
+          /home?key=value
+        </p>,
+        <button
+          onClick={[Function]}
+        >
+          click me
+        </button>,
+      ]
+    `);
+  });
+
+  it("navigates to the new location when no pathname is provided (with a basename)", () => {
+    function Home() {
+      let location = useLocation();
+      let navigate = useNavigate();
+
+      return (
+        <>
+          <p>{location.pathname + location.search}</p>
+          <button onClick={() => navigate("?key=value")}>click me</button>
+        </>
+      );
+    }
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter basename="/basename" initialEntries={["/basename/home"]}>
+          <Routes>
+            <Route path="home" element={<Home />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      Array [
+        <p>
+          /home
+        </p>,
+        <button
+          onClick={[Function]}
+        >
+          click me
+        </button>,
+      ]
+    `);
+
+    let button = renderer.root.findByType("button");
+
+    TestRenderer.act(() => {
+      button.props.onClick();
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      Array [
+        <p>
+          /home?key=value
+        </p>,
+        <button
+          onClick={[Function]}
+        >
+          click me
+        </button>,
+      ]
+    `);
+  });
+
   describe("with state", () => {
     it("adds the state to location.state", () => {
       function Home() {

@@ -736,7 +736,8 @@ export function resolveTo(
   locationPathname: string
 ): Path {
   let to = typeof toArg === "string" ? parsePath(toArg) : { ...toArg };
-  let toPathname = toArg === "" || to.pathname === "" ? "/" : to.pathname;
+  let isEmptyPath = toArg === "" || to.pathname === "";
+  let toPathname = isEmptyPath ? "/" : to.pathname;
 
   // If a pathname is explicitly provided in `to`, it should be relative to the
   // route context. This is explained in `Note on `<Link to>` values` in our
@@ -772,12 +773,15 @@ export function resolveTo(
 
   let path = resolvePath(to, from);
 
-  // Ensure the pathname has a trailing slash if the original to value had one.
+  // Ensure the pathname has a trailing slash if the original "to" had one
+  let hasExplicitTrailingSlash =
+    toPathname && toPathname !== "/" && toPathname.endsWith("/");
+  // Or if this was a link to the current path which has a trailing slash
+  let hasCurrentTrailingSlash =
+    (isEmptyPath || toPathname === ".") && locationPathname.endsWith("/");
   if (
-    toPathname &&
-    toPathname !== "/" &&
-    toPathname.endsWith("/") &&
-    !path.pathname.endsWith("/")
+    !path.pathname.endsWith("/") &&
+    (hasExplicitTrailingSlash || hasCurrentTrailingSlash)
   ) {
     path.pathname += "/";
   }
