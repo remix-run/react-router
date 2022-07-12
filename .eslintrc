@@ -2,5 +2,12 @@
   "extends": ["react-app"],
   "rules": {
     "import/first": 0
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/__tests__/**"],
+      "plugins": ["jest"],
+      "extends": ["plugin:jest/recommended"]
+    }
+  ]
 }
