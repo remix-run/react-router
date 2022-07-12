@@ -395,23 +395,41 @@ Let's define a route that will match these kinds of URLs and enable us to get th
 
 Create a new `<Route>` _inside_ of the "invoices" route like this:
 
-```js lines=[4-6] filename=src/main.jsx
-<Routes>
-  <Route path="/" element={<App />}>
-    <Route path="expenses" element={<Expenses />} />
-    <Route path="invoices" element={<Invoices />}>
-      <Route path=":invoiceId" element={<Invoice />} />
-    </Route>
-    <Route
-      path="*"
-      element={
-        <main style={{ padding: "1rem" }}>
-          <p>There's nothing here!</p>
-        </main>
-      }
-    />
-  </Route>
-</Routes>
+```js lines=[10,20-22] filename=src/main.jsx
+import ReactDOM from "react-dom/client";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+} from "react-router-dom";
+import App from "./App";
+import Expenses from "./routes/expenses";
+import Invoices from "./routes/invoices";
+import Invoice from "./routes/invoices";
+
+const root = ReactDOM.createRoot(
+  document.getElementById("root")
+);
+root.render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />}>
+        <Route path="expenses" element={<Expenses />} />
+        <Route path="invoices" element={<Invoices />}>
+          <Route path=":invoiceId" element={<Invoice />} />
+        </Route>
+        <Route
+          path="*"
+          element={
+            <main style={{ padding: "1rem" }}>
+              <p>There's nothing here!</p>
+            </main>
+          }
+        />
+      </Route>
+    </Routes>
+  </BrowserRouter>
+);
 ```
 
 A couple things to note:
