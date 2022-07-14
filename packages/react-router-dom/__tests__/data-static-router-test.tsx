@@ -1,4 +1,7 @@
-import { createStaticHandler, StaticHandlerContext } from "@remix-run/router";
+import {
+  unstable_createStaticHandler,
+  StaticHandlerContext,
+} from "@remix-run/router";
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import {
@@ -44,7 +47,7 @@ describe("A <DataStaticRouter>", () => {
       return <h1>👋</h1>;
     }
 
-    let { dataRoutes, query } = createStaticHandler([
+    let { dataRoutes, query } = unstable_createStaticHandler([
       {
         path: "the",
         loader: () => ({
@@ -151,7 +154,7 @@ describe("A <DataStaticRouter>", () => {
   });
 
   it("errors if required props are not passed", async () => {
-    let { dataRoutes, query } = createStaticHandler([
+    let { dataRoutes, query } = unstable_createStaticHandler([
       {
         path: "the",
         element: <h1>👋</h1>,

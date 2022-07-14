@@ -9,34 +9,7 @@ import {
   createMemoryHistory,
 } from "./history";
 import type { Router, RouterInit } from "./router";
-import { createRouter, createStaticHandler } from "./router";
-
-function createMemoryRouter({
-  initialEntries,
-  initialIndex,
-  ...routerInit
-}: MemoryHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createMemoryHistory({ initialEntries, initialIndex });
-  return createRouter({ history, ...routerInit });
-}
-
-function createBrowserRouter({
-  window,
-  ...routerInit
-}: BrowserHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createBrowserHistory({ window });
-  return createRouter({ history, ...routerInit });
-}
-
-function createHashRouter({
-  window,
-  ...routerInit
-}: HashHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createHashHistory({ window });
-  return createRouter({ history, ...routerInit });
-}
-
-export * from "./router";
+import { createRouter } from "./router";
 
 export type {
   ActionFunction,
@@ -101,9 +74,29 @@ export {
   parsePath,
 } from "./history";
 
-export {
-  createBrowserRouter,
-  createHashRouter,
-  createMemoryRouter,
-  createStaticHandler,
-};
+export * from "./router";
+
+export function createMemoryRouter({
+  initialEntries,
+  initialIndex,
+  ...routerInit
+}: MemoryHistoryOptions & Omit<RouterInit, "history">): Router {
+  let history = createMemoryHistory({ initialEntries, initialIndex });
+  return createRouter({ history, ...routerInit });
+}
+
+export function createBrowserRouter({
+  window,
+  ...routerInit
+}: BrowserHistoryOptions & Omit<RouterInit, "history">): Router {
+  let history = createBrowserHistory({ window });
+  return createRouter({ history, ...routerInit });
+}
+
+export function createHashRouter({
+  window,
+  ...routerInit
+}: HashHistoryOptions & Omit<RouterInit, "history">): Router {
+  let history = createHashHistory({ window });
+  return createRouter({ history, ...routerInit });
+}

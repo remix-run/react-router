@@ -10,11 +10,11 @@ import type {
   Router,
   RouterNavigateOptions,
   StaticHandlerContext,
-} from "@remix-run/router";
+} from "../index";
 import {
   createMemoryHistory,
   createRouter,
-  createStaticHandler,
+  unstable_createStaticHandler,
   deferred,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
@@ -22,7 +22,7 @@ import {
   matchRoutes,
   redirect,
   parsePath,
-} from "@remix-run/router";
+} from "../index";
 
 // Private API
 import { DeferredError, ErrorResponse, isDeferredError } from "../utils";
@@ -8863,7 +8863,7 @@ describe("a router", () => {
 
     describe("document requests", () => {
       it("should support document load navigations", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/child"));
         expect(context).toMatchObject({
           actionData: null,
@@ -8878,7 +8878,7 @@ describe("a router", () => {
       });
 
       it("should support document load navigations returning responses", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/json"));
         expect(context).toMatchObject({
           actionData: null,
@@ -8892,7 +8892,7 @@ describe("a router", () => {
       });
 
       it("should not touch deferred data on load navigations", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/deferred"));
         expect(context).toMatchObject({
           actionData: null,
@@ -8916,7 +8916,7 @@ describe("a router", () => {
       });
 
       it("should support document submit navigations", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let context = await query(createSubmitRequest("/parent/child"));
         expect(context).toMatchObject({
           actionData: {
@@ -8933,7 +8933,7 @@ describe("a router", () => {
       });
 
       it("should support document load navigations returning responses", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let context = await query(createSubmitRequest("/parent/json"));
         expect(context).toMatchObject({
           actionData: {
@@ -8949,7 +8949,7 @@ describe("a router", () => {
       });
 
       it("should support document submit navigations to layout routes", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let context = await query(createSubmitRequest("/parent"));
         expect(context).toMatchObject({
           actionData: {
@@ -8968,7 +8968,7 @@ describe("a router", () => {
       });
 
       it("should support document submit navigations to index routes", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let context = await query(createSubmitRequest("/parent?index"));
         expect(context).toMatchObject({
           actionData: {
@@ -8987,7 +8987,7 @@ describe("a router", () => {
       });
 
       it("should handle redirect Responses", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let redirect = await query(createRequest("/redirect"));
         expect(redirect instanceof Response).toBe(true);
         expect((redirect as Response).status).toBe(302);
@@ -8995,7 +8995,7 @@ describe("a router", () => {
       });
 
       it("should handle 404 navigations", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/not/found"));
 
         expect(context).toMatchObject({
@@ -9013,7 +9013,7 @@ describe("a router", () => {
       });
 
       it("should handle load error responses", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let context;
 
         // Error handled by child
@@ -9047,7 +9047,7 @@ describe("a router", () => {
       });
 
       it("should handle submit error responses", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let context;
 
         // Error handled by child
@@ -9081,7 +9081,7 @@ describe("a router", () => {
       it("should handle aborted load requests", async () => {
         let dfd = defer();
         let controller = new AbortController();
-        let { query } = createStaticHandler([
+        let { query } = unstable_createStaticHandler([
           {
             id: "root",
             path: "/",
@@ -9103,7 +9103,7 @@ describe("a router", () => {
       it("should handle aborted submit requests", async () => {
         let dfd = defer();
         let controller = new AbortController();
-        let { query } = createStaticHandler([
+        let { query } = unstable_createStaticHandler([
           {
             id: "root",
             path: "/",
@@ -9125,7 +9125,7 @@ describe("a router", () => {
       });
 
       it("should not support HEAD requests", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { method: "head" });
         expect.assertions(1);
         try {
@@ -9138,7 +9138,7 @@ describe("a router", () => {
       });
 
       it("should require a signal on the request", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
+        let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
         expect.assertions(1);
         try {
@@ -9151,7 +9151,7 @@ describe("a router", () => {
       });
 
       it("should handle not found action submissions with a 405 error", async () => {
-        let { query } = createStaticHandler([
+        let { query } = unstable_createStaticHandler([
           {
             id: "root",
             path: "/",
@@ -9176,7 +9176,7 @@ describe("a router", () => {
 
     describe("singular route requests", () => {
       it("should support singular route load navigations", async () => {
-        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let { queryRoute } = unstable_createStaticHandler(SSR_ROUTES);
         let data;
 
         // Layout route
@@ -9197,7 +9197,7 @@ describe("a router", () => {
       });
 
       it("should support singular route submit navigations", async () => {
-        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let { queryRoute } = unstable_createStaticHandler(SSR_ROUTES);
         let data;
 
         // Layout route
@@ -9219,7 +9219,7 @@ describe("a router", () => {
 
       it("should not unwrap responses returned from loaders", async () => {
         let response = json({ key: "value" });
-        let { queryRoute } = createStaticHandler([
+        let { queryRoute } = unstable_createStaticHandler([
           {
             id: "root",
             path: "/",
@@ -9234,7 +9234,7 @@ describe("a router", () => {
 
       it("should not unwrap responses returned from actions", async () => {
         let response = json({ key: "value" });
-        let { queryRoute } = createStaticHandler([
+        let { queryRoute } = unstable_createStaticHandler([
           {
             id: "root",
             path: "/",
@@ -9248,7 +9248,7 @@ describe("a router", () => {
       });
 
       it("should handle load error responses", async () => {
-        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let { queryRoute } = unstable_createStaticHandler(SSR_ROUTES);
         let data;
 
         data = await queryRoute(createRequest("/parent/error"), "error");
@@ -9256,7 +9256,7 @@ describe("a router", () => {
       });
 
       it("should handle submit error responses", async () => {
-        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let { queryRoute } = unstable_createStaticHandler(SSR_ROUTES);
         let data;
 
         data = await queryRoute(createSubmitRequest("/parent/error"), "error");
@@ -9266,7 +9266,7 @@ describe("a router", () => {
       it("should handle aborted load requests", async () => {
         let dfd = defer();
         let controller = new AbortController();
-        let { queryRoute } = createStaticHandler([
+        let { queryRoute } = unstable_createStaticHandler([
           {
             id: "root",
             path: "/",
@@ -9290,7 +9290,7 @@ describe("a router", () => {
       it("should handle aborted submit requests", async () => {
         let dfd = defer();
         let controller = new AbortController();
-        let { queryRoute } = createStaticHandler([
+        let { queryRoute } = unstable_createStaticHandler([
           {
             id: "root",
             path: "/",
@@ -9312,7 +9312,7 @@ describe("a router", () => {
       });
 
       it("should not support HEAD requests", async () => {
-        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let { queryRoute } = unstable_createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { method: "head" });
         expect.assertions(1);
         try {
@@ -9325,7 +9325,7 @@ describe("a router", () => {
       });
 
       it("should require a signal on the request", async () => {
-        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let { queryRoute } = unstable_createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
         expect.assertions(1);
         try {
@@ -9338,7 +9338,7 @@ describe("a router", () => {
       });
 
       it("should handle not found action submissions with a 405 Response", async () => {
-        let { queryRoute } = createStaticHandler([
+        let { queryRoute } = unstable_createStaticHandler([
           {
             id: "root",
             path: "/",

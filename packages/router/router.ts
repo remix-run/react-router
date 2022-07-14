@@ -1644,7 +1644,9 @@ export function createRouter(init: RouterInit): Router {
 //#region createStaticHandler
 ////////////////////////////////////////////////////////////////////////////////
 
-export function createStaticHandler(routes: RouteObject[]): StaticHandler {
+export function unstable_createStaticHandler(
+  routes: RouteObject[]
+): StaticHandler {
   invariant(
     routes.length > 0,
     "You must provide a non-empty routes array to createStaticHandler"
