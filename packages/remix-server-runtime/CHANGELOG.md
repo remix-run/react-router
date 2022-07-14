@@ -1,6 +1,6 @@
-# @remix-run/server-runtime
+# `@remix-run/server-runtime`
 
-## 1.6.5-pre.1
+## 1.6.5
 
 ### Patch Changes
 
@@ -19,6 +19,4 @@
   }
   ```
 
-  See the discussion in #1254 for more context.
-
-## 1.6.5-pre.0
+  See the discussion in [#1254](https://github.com/remix-run/remix/pull/1254) for more context.
