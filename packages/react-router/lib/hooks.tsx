@@ -428,7 +428,10 @@ function DefaultErrorElement() {
   let error = useRouteError();
   let message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
-    : error?.message || JSON.stringify(error);
+    : error instanceof Error
+    ? error.message
+    : JSON.stringify(error);
+  let stack = error instanceof Error ? error.stack : null;
   let lightgrey = "rgba(200,200,200, 0.5)";
   let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
   let codeStyles = { padding: "2px 4px", backgroundColor: lightgrey };
@@ -436,7 +439,7 @@ function DefaultErrorElement() {
     <>
       <h2>Unhandled Thrown Error!</h2>
       <h3 style={{ fontStyle: "italic" }}>{message}</h3>
-      {error?.stack ? <pre style={preStyles}>{error?.stack}</pre> : null}
+      {stack ? <pre style={preStyles}>{stack}</pre> : null}
       <p>💿 Hey developer 👋</p>
       <p>
         You can provide a way better UX than this when your app throws errors by
@@ -696,7 +699,7 @@ export function useActionData() {
  * error or a render error.  This is intended to be called from your
  * errorElement to display a proper error message.
  */
-export function useRouteError() {
+export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
   let state = useDataRouterState(DataRouterHook.UseRouteError);
   let route = React.useContext(RouteContext);
