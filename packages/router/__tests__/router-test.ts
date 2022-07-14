@@ -1,3 +1,4 @@
+/* eslint-disable jest/valid-title */
 import type {
   ActionFunction,
   DataRouteObject,
@@ -99,12 +100,12 @@ async function tick() {
   await new Promise((r) => setImmediate(r));
 }
 
-export function invariant(value: boolean, message?: string): asserts value;
-export function invariant<T>(
+function invariant(value: boolean, message?: string): asserts value;
+function invariant<T>(
   value: T | null | undefined,
   message?: string
 ): asserts value is T;
-export function invariant(value: any, message?: string) {
+function invariant(value: any, message?: string) {
   if (value === false || value === null || typeof value === "undefined") {
     console.warn("Test invariant failed:", message);
     throw new Error(message);
@@ -767,7 +768,9 @@ beforeEach(() => {
 afterEach(() => {
   // Cleanup any routers created using setup()
   if (currentRouter) {
+    // eslint-disable-next-line jest/no-standalone-expect
     expect(currentRouter._internalFetchControllers.size).toBe(0);
+    // eslint-disable-next-line jest/no-standalone-expect
     expect(currentRouter._internalActiveDeferreds.size).toBe(0);
   }
   currentRouter?.dispose();
@@ -944,7 +947,6 @@ describe("a router", () => {
       let history = createMemoryHistory({
         initialEntries: ["/base/name/path"],
       });
-      debugger;
       let router = createRouter({
         basename: "/base/name",
         routes: [{ path: "path" }],
@@ -1008,6 +1010,10 @@ describe("a router", () => {
           },
         })
       );
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: { key: "value" },
+      });
     });
 
     it("unwraps non-redirect json Responses (json helper)", async () => {
@@ -3071,12 +3077,7 @@ describe("a router", () => {
           },
         });
       });
-    });
 
-    describe(`
-      A) POST /foo |--|--X
-      B) GET  /bar       |-----O
-    `, () => {
       it("forces all loaders to revalidate on interrupted submissionRedirect", async () => {
         let t = initializeTmTest();
         let A = await t.navigate("/foo", {
@@ -6697,12 +6698,7 @@ describe("a router", () => {
           expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
           expect(t.router.state.fetchers.get(key)?.data).toBe("A ACTION");
         });
-      });
 
-      describe(`
-        A) fetch POST /foo |--|--X
-        B) nav   GET  /bar       |-----O
-      `, () => {
         it("forces all loaders to revalidate on interrupted fetcher submissionRedirect", async () => {
           let key = "key";
           let t = initializeTmTest();

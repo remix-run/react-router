@@ -2,6 +2,8 @@
  * @jest-environment ./__tests__/custom-environment.js
  */
 
+/* eslint-disable jest/expect-expect */
+
 import { JSDOM } from "jsdom";
 
 import type { BrowserHistory } from "@remix-run/router";

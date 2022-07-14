@@ -210,7 +210,7 @@ describe("useHref under a basename", () => {
 
         expect(renderer.toJSON()).toMatchInlineSnapshot(`
           <p>
-            /app/
+            /app
           </p>
         `);
       });
