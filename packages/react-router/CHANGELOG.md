@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- d5b25602: Feat: adds `deferred` support to data routers
+- Feat: adds `deferred` support to data routers (#9002)
 
   Returning a `deferred` from a `loader` allows you to separate _critical_ loader data that you want to wait for prior to rendering the destination page from _non-critical_ data that you are OK to show a spinner for until it loads.
 
@@ -59,20 +59,16 @@
       <>
         <p>Critical Data: {data.critical}</p>
         <Deferred value={data.lazy} fallback={<p>Loading...</p>}>
-          {data => <p>{data}</p>}
+          {(data) => <p>{data}</p>}
         </Deferred>
       </>
     );
   }
   ```
 
-- d68d03ed: feat: add basename support for data routers
-- 3e7e502c: fix: Fix trailing slash behavior on pathless routing when using a basename (#9045)
-- Updated dependencies [8ed30d37]
-- Updated dependencies [d5b25602]
-- Updated dependencies [d68d03ed]
-- Updated dependencies [b7fadce8]
-- Updated dependencies [3e7e502c]
+- feat: add basename support for data routers (#9026)
+- fix: Fix trailing slash behavior on pathless routing when using a basename (#9045)
+- Updated dependencies
   - @remix-run/router@0.2.0-pre.4
 
 ## 6.4.0-pre.8
