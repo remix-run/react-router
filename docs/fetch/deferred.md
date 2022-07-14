@@ -2,6 +2,8 @@
 title: deferred
 ---
 
+# `deferred`
+
 <details>
   <summary>Type declaration</summary>
 

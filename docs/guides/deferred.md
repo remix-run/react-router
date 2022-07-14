@@ -3,7 +3,7 @@ title: Deferred
 description: When, why, and how to defer non-critical data loading with React 18 and React Router's deferred API.
 ---
 
-# Deferred
+# Deferred Guide
 
 ## The problem
 
@@ -64,16 +64,18 @@ Let's take a dive into how to accomplish this.
 
 Start by adding `<Deferred />` for your slow data requests where you'd rather render a fallback UI. Let's do that for our example above:
 
-```jsx
-import { json, useLoaderData } from "react-router-dom";
+```jsx lines=[1,5,10,20-33]
+import { deferred, useLoaderData } from "react-router-dom";
 import { getPackageLocation } from "./api/packages";
 
 async function loader({ params }) {
-  const packageLocation = await getPackageLocation(
+  const packageLocationPromise = getPackageLocation(
     params.packageId
   );
 
-  return json({ packageLocation });
+  return deferred({
+    packageLocation: packageLocationPromise,
+  });
 }
 
 export default function PackageRoute() {
@@ -106,7 +108,7 @@ export default function PackageRoute() {
 
 If you're not jazzed about bringing back render props, you can use a hook, but you'll have to break things out into another component:
 
-```jsx
+```jsx lines=[21]
 export default function PackageRoute() {
   const data = useLoaderData();
 
