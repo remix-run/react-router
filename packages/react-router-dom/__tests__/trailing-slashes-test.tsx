@@ -546,19 +546,12 @@ describe("trailing slashes", () => {
 
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
-        function SafeNavigate({ to }: { to: To }) {
-          let navigate = useNavigate();
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate(to), [to]);
-          return null;
-        }
-
         act(() => {
           ReactDOM.render(
             <BrowserRouter basename="/foo/" window={window}>
               <Routes>
                 <Route index element={<h1>👋</h1>} />
-                <Route path="bar" element={<SafeNavigate to="." />} />
+                <Route path="bar" element={<SingleNavigate to="." />} />
               </Routes>
             </BrowserRouter>,
             node
@@ -574,19 +567,12 @@ describe("trailing slashes", () => {
 
         expect(window.location.href).toBe("https://remix.run/foo/bar/");
 
-        function SafeNavigate({ to }: { to: To }) {
-          let navigate = useNavigate();
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate(to), [to]);
-          return null;
-        }
-
         act(() => {
           ReactDOM.render(
             <BrowserRouter basename="/foo/" window={window}>
               <Routes>
                 <Route index element={<h1>👋</h1>} />
-                <Route path="bar" element={<SafeNavigate to="." />} />
+                <Route path="bar" element={<SingleNavigate to="." />} />
               </Routes>
             </BrowserRouter>,
             node

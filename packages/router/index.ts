@@ -9,7 +9,7 @@ import {
   createMemoryHistory,
 } from "./history";
 import type { Router, RouterInit } from "./router";
-import { createRouter } from "./router";
+import { createRouter, createStaticHandler } from "./router";
 
 function createMemoryRouter({
   initialEntries,
@@ -98,4 +98,9 @@ export {
   parsePath,
 } from "./history";
 
-export { createBrowserRouter, createHashRouter, createMemoryRouter };
+export {
+  createBrowserRouter,
+  createHashRouter,
+  createMemoryRouter,
+  createStaticHandler,
+};
