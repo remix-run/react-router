@@ -59,7 +59,7 @@ export async function createAssetsManifest(
   let routesByFile: Map<string, Route> = Object.keys(config.routes).reduce(
     (map, key) => {
       let route = config.routes[key];
-      map.set(path.resolve(config.appDirectory, route.file), route);
+      map.set(route.file, route);
       return map;
     },
     new Map()
@@ -72,19 +72,19 @@ export async function createAssetsManifest(
     let output = metafile.outputs[key];
     if (!output.entryPoint) continue;
 
-    let entryPointFile = path.resolve(
-      output.entryPoint.replace(
-        /(^browser-route-module:|^pnp:|\?browser$)/g,
-        ""
-      )
-    );
-    if (entryPointFile === entryClientFile) {
+    // When using yarn-pnp, esbuild-plugin-pnp resolves files under the pnp namespace, even entry.client.tsx
+    let entryPointFile = output.entryPoint.replace(/^pnp:/, "");
+    if (path.resolve(entryPointFile) === entryClientFile) {
       entry = {
         module: resolveUrl(key),
         imports: resolveImports(output.imports),
       };
       // Only parse routes otherwise dynamic imports can fall into here and fail the build
-    } else if (output.entryPoint.startsWith("browser-route-module:")) {
+    } else if (entryPointFile.startsWith("browser-route-module:")) {
+      entryPointFile = entryPointFile.replace(
+        /(^browser-route-module:|\?browser$)/g,
+        ""
+      );
       let route = routesByFile.get(entryPointFile);
       invariant(route, `Cannot get route for entry point ${output.entryPoint}`);
       let sourceExports = await getRouteModuleExportsCached(config, route.id);

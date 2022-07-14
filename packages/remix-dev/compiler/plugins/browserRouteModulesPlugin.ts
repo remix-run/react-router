@@ -1,4 +1,3 @@
-import * as path from "path";
 import type esbuild from "esbuild";
 
 import type { RemixConfig } from "../../config";
@@ -31,7 +30,7 @@ export function browserRouteModulesPlugin(
       let routesByFile: Map<string, Route> = Object.keys(config.routes).reduce(
         (map, key) => {
           let route = config.routes[key];
-          map.set(path.resolve(config.appDirectory, route.file), route);
+          map.set(route.file, route);
           return map;
         },
         new Map()
@@ -71,12 +70,12 @@ export function browserRouteModulesPlugin(
           let contents = "module.exports = {};";
           if (theExports.length !== 0) {
             let spec = `{ ${theExports.join(", ")} }`;
-            contents = `export ${spec} from ${JSON.stringify(file)};`;
+            contents = `export ${spec} from ${JSON.stringify(`./${file}`)};`;
           }
 
           return {
             contents,
-            resolveDir: path.dirname(file),
+            resolveDir: config.appDirectory,
             loader: "js",
           };
         }

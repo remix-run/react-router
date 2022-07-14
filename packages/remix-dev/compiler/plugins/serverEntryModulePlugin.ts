@@ -1,4 +1,3 @@
-import * as path from "path";
 import type { Plugin } from "esbuild";
 
 import type { RemixConfig } from "../../config";
@@ -31,14 +30,12 @@ export function serverEntryModulePlugin(config: RemixConfig): Plugin {
           resolveDir: config.appDirectory,
           loader: "js",
           contents: `
-import * as entryServer from ${JSON.stringify(
-            path.resolve(config.appDirectory, config.entryServerFile)
-          )};
+import * as entryServer from ${JSON.stringify(`./${config.entryServerFile}`)};
 ${Object.keys(config.routes)
   .map((key, index) => {
     let route = config.routes[key];
     return `import * as route${index} from ${JSON.stringify(
-      path.resolve(config.appDirectory, route.file)
+      `./${route.file}`
     )};`;
   })
   .join("\n")}

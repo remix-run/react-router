@@ -348,8 +348,7 @@ async function createBrowserBuild(
     // All route entry points are virtual modules that will be loaded by the
     // browserEntryPointsPlugin. This allows us to tree-shake server-only code
     // that we don't want to run in the browser (i.e. action & loader).
-    entryPoints[id] =
-      path.resolve(config.appDirectory, config.routes[id].file) + "?browser";
+    entryPoints[id] = config.routes[id].file + "?browser";
   }
 
   let plugins = [

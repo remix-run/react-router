@@ -16,7 +16,7 @@ const TMP_DIR = path.join(process.cwd(), ".tmp", "integration");
 interface FixtureInit {
   buildStdio?: Writable;
   sourcemap?: boolean;
-  files: { [filename: string]: string };
+  files?: { [filename: string]: string };
   template?: "cf-template" | "deno-template" | "node-template";
   setup?: "node" | "cloudflare";
 }
@@ -133,7 +133,9 @@ export async function createAppFixture(fixture: Fixture) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-export async function createFixtureProject(init: FixtureInit): Promise<string> {
+export async function createFixtureProject(
+  init: FixtureInit = {}
+): Promise<string> {
   let template = init.template ?? "node-template";
   let integrationTemplateDir = path.join(__dirname, template);
   let projectName = `remix-${template}-${Math.random().toString(32).slice(2)}`;
@@ -200,10 +202,10 @@ function build(projectDir: string, buildStdio?: Writable, sourcemap?: boolean) {
 
 async function writeTestFiles(init: FixtureInit, dir: string) {
   await Promise.all(
-    Object.keys(init.files).map(async (filename) => {
+    Object.keys(init.files ?? {}).map(async (filename) => {
       let filePath = path.join(dir, filename);
       await fse.ensureDir(path.dirname(filePath));
-      await fse.writeFile(filePath, stripIndent(init.files[filename]));
+      await fse.writeFile(filePath, stripIndent(init.files![filename]));
     })
   );
 }
