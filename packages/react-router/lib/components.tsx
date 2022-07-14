@@ -434,10 +434,10 @@ export interface DeferredResolveRenderFunction<Data> {
   (data: ResolvedDeferrable<Data>): JSX.Element;
 }
 
-export interface DeferredProps<Data>
-  extends Omit<React.SuspenseProps, "children"> {
+export interface DeferredProps<Data> {
   children: React.ReactNode | DeferredResolveRenderFunction<Data>;
   value: Data;
+  fallbackElement: React.SuspenseProps["fallback"];
   errorElement?: React.ReactNode;
 }
 
@@ -448,12 +448,12 @@ export interface DeferredProps<Data>
 export function Deferred<Data = any>({
   children,
   value,
-  fallback,
+  fallbackElement,
   errorElement,
 }: DeferredProps<Data>) {
   return (
     <DeferredContext.Provider value={value}>
-      <React.Suspense fallback={fallback}>
+      <React.Suspense fallback={fallbackElement}>
         <DeferredWrapper errorElement={errorElement}>
           {typeof children === "function" ? (
             <ResolveDeferred
