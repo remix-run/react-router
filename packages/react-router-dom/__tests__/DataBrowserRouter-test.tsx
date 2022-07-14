@@ -1117,6 +1117,132 @@ function testDomRouter(
       `);
     });
 
+    it("handles action for <Form method='get'> correctly", async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/?a=1#hash")} hydrationData={{}}>
+          <Route path="/" element={<Home />} />
+        </TestDataRouter>
+      );
+
+      function Home() {
+        return (
+          <Form method="get">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe(
+        "/?a=1#hash"
+      );
+    });
+
+    it("handles action for <Form method='get' action='.'> correctly", async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/?a=1")} hydrationData={{}}>
+          <Route path="/" element={<Home />} />
+        </TestDataRouter>
+      );
+
+      function Home() {
+        return (
+          <Form method="get" action=".">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe("/");
+    });
+
+    it("handles action for <Form method='post'> correctly", async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/?a=1#hash")} hydrationData={{}}>
+          <Route path="/" element={<Home />} />
+        </TestDataRouter>
+      );
+
+      function Home() {
+        return (
+          <Form method="post">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe(
+        "/?a=1#hash"
+      );
+    });
+
+    it("handles action for <Form method='post' action='.'> correctly", async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/?a=1")} hydrationData={{}}>
+          <Route path="/" element={<Home />} />
+        </TestDataRouter>
+      );
+
+      function Home() {
+        return (
+          <Form method="post" action=".">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe("/");
+    });
+
+    it("handles ?index param for action <Form>", async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route path="/">
+            <Route index element={<Home />} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Home() {
+        return (
+          <Form method="post">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe(
+        "/?index"
+      );
+    });
+
+    it("handles ?index param for action <Form action='.'>", async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route path="/">
+            <Route index element={<Home />} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Home() {
+        return (
+          <Form method="post" action=".">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe(
+        "/?index"
+      );
+    });
+
     describe("useFetcher(s)", () => {
       it("handles fetcher.load and fetcher.submit", async () => {
         let count = 0;

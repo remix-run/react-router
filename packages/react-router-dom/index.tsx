@@ -566,7 +566,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
     {
       replace,
       method = defaultMethod,
-      action = ".",
+      action,
       onSubmit,
       fetcherKey,
       routeId,
@@ -805,18 +805,21 @@ function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
   );
 }
 
-export function useFormAction(action = "."): string {
+export function useFormAction(action?: string): string {
   let routeContext = React.useContext(UNSAFE_RouteContext);
   invariant(routeContext, "useFormAction must be used inside a RouteContext");
 
+  let location = useLocation();
   let [match] = routeContext.matches.slice(-1);
-  let { pathname, search } = useResolvedPath(action);
+  let path = useResolvedPath(action || location);
 
-  if (action === "." && match.route.index) {
-    search = search ? search.replace(/^\?/, "?index&") : "?index";
+  if ((!action || action === ".") && match.route.index) {
+    path.search = path.search
+      ? path.search.replace(/^\?/, "?index&")
+      : "?index";
   }
 
-  return pathname + search;
+  return createPath(path);
 }
 
 function createFetcherForm(fetcherKey: string, routeId: string) {
