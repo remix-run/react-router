@@ -1,5 +1,13 @@
 # react-router-dom
 
+## 6.4.0-pre.9
+
+### Patch Changes
+
+- feat: add basename support for data routers (#9026)
+- Updated dependencies
+  - react-router@6.4.0-pre.9
+
 ## 6.4.0-pre.8
 
 ### Patch Changes

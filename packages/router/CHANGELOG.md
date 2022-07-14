@@ -1,5 +1,15 @@
 # @remix-run/router
 
+## 0.2.0-pre.4
+
+### Patch Changes
+
+- fix: Handle fetcher 404s as normal boundary errors (#9015)
+- feat: adds `deferred` support to data routers (#9002)
+- feat: add basename support for data routers (#9026)
+- ci: simplify dist/ directory for CJS/ESM only (#9017)
+- fix: Fix trailing slash behavior on pathless routing when using a basename (#9045)
+
 ## 0.2.0-pre.3
 
 ### Patch Changes
