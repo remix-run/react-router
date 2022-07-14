@@ -15,7 +15,7 @@
   function loader() {
     return deferred({
       critical: await getCriticalData(),
-      lazy1: getLazyData(),
+      lazy: getLazyData(),
     });
   };
 

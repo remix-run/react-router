@@ -14,7 +14,7 @@ Returning a `deferred` from a `loader` allows you to separate _critical_ loader 
 function loader() {
   return deferred({
     critical: await getCriticalData(),
-    lazy1: getLazyData(),
+    lazy: getLazyData(),
   });
 };
 
