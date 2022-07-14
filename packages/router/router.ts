@@ -244,13 +244,6 @@ export interface StaticHandler {
 }
 
 /**
- * Initialization options for createStaticHandler
- */
-export interface StaticHandlerInit {
-  routes: RouteObject[];
-}
-
-/**
  * Subscriber function signature for changes to router state
  */
 export interface RouterSubscriber {
@@ -1651,13 +1644,13 @@ export function createRouter(init: RouterInit): Router {
 //#region createStaticHandler
 ////////////////////////////////////////////////////////////////////////////////
 
-export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
+export function createStaticHandler(routes: RouteObject[]): StaticHandler {
   invariant(
-    init.routes.length > 0,
+    routes.length > 0,
     "You must provide a non-empty routes array to createStaticHandler"
   );
 
-  let dataRoutes = convertRoutesToDataRoutes(init.routes);
+  let dataRoutes = convertRoutesToDataRoutes(routes);
 
   async function query(
     request: Request

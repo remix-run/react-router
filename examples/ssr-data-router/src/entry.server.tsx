@@ -6,7 +6,7 @@ import { DataStaticRouter } from "react-router-dom/server";
 import { routes } from "./App";
 
 export async function render(request: express.Request) {
-  let { dataRoutes, query } = createStaticHandler({ routes });
+  let { dataRoutes, query } = createStaticHandler(routes);
   let remixRequest = createFetchRequest(request);
   let context = await query(remixRequest);
 

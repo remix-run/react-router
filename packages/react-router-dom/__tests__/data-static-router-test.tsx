@@ -44,28 +44,26 @@ describe("A <DataStaticRouter>", () => {
       return <h1>👋</h1>;
     }
 
-    let { dataRoutes, query } = createStaticHandler({
-      routes: [
-        {
-          path: "the",
-          loader: () => ({
-            key1: "value1",
-          }),
-          element: <HooksChecker1 />,
-          handle: "1",
-          children: [
-            {
-              path: "path",
-              loader: () => ({
-                key2: "value2",
-              }),
-              element: <HooksChecker2 />,
-              handle: "2",
-            },
-          ],
-        },
-      ],
-    });
+    let { dataRoutes, query } = createStaticHandler([
+      {
+        path: "the",
+        loader: () => ({
+          key1: "value1",
+        }),
+        element: <HooksChecker1 />,
+        handle: "1",
+        children: [
+          {
+            path: "path",
+            loader: () => ({
+              key2: "value2",
+            }),
+            element: <HooksChecker2 />,
+            handle: "2",
+          },
+        ],
+      },
+    ]);
 
     let context = await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
@@ -153,14 +151,12 @@ describe("A <DataStaticRouter>", () => {
   });
 
   it("errors if required props are not passed", async () => {
-    let { dataRoutes, query } = createStaticHandler({
-      routes: [
-        {
-          path: "the",
-          element: <h1>👋</h1>,
-        },
-      ],
-    });
+    let { dataRoutes, query } = createStaticHandler([
+      {
+        path: "the",
+        element: <h1>👋</h1>,
+      },
+    ]);
 
     let context = await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
