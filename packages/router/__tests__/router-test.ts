@@ -1813,6 +1813,69 @@ describe("a router", () => {
 
       router.dispose();
     });
+
+    it("treats any non-false return value as truthy", async () => {
+      let count = 0;
+      let returnValue = true;
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "",
+            id: "root",
+            loader: () => count++,
+            shouldRevalidate: () => returnValue,
+            element: {},
+          },
+        ],
+      });
+      router.initialize();
+
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      router.revalidate();
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 1,
+      });
+
+      returnValue = false;
+      router.revalidate();
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 1,
+      });
+
+      // @ts-expect-error
+      returnValue = undefined;
+      router.revalidate();
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 2,
+      });
+
+      // @ts-expect-error
+      returnValue = null;
+      router.revalidate();
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 3,
+      });
+
+      // @ts-expect-error
+      returnValue = "";
+      router.revalidate();
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 4,
+      });
+
+      router.dispose();
+    });
   });
 
   describe("no route match", () => {
