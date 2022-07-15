@@ -182,7 +182,7 @@ When the URL is `"/invoices/123"`, the component tree will be:
 </App>
 ```
 
-Notice the inner component that changed with the URL (`<SentInvoices>` and `<Invoice>`). The parent route (`<Invoices>`) is responsible for making sure the matching child route is rendered with [`<Outlet>`](../api.md#outlet). Here's the full example:
+Notice the inner component that changed with the URL (`<SentInvoices>` and `<Invoice>`). The parent route (`<Invoices>`) is responsible for making sure the matching child route is rendered with [`<Outlet>`](../components/outlet.md). Here's the full example:
 
 ```tsx [18]
 import { Routes, Route, Outlet } from "react-router-dom";
@@ -400,7 +400,7 @@ function App() {
 
 ## Multiple Sets of Routes
 
-Although you should only ever have a single `<Router>` in an app, you may have as many [`<Routes>`](../api.md#routes) as you need, wherever you need them. Each `<Routes>` element operates independently of the others and picks a child route to render.
+Although you should only ever have a single `<Router>` in an app, you may have as many [`<Routes>`](../components/routes.md) as you need, wherever you need them. Each `<Routes>` element operates independently of the others and picks a child route to render.
 
 ```tsx
 function App() {
