@@ -54,18 +54,8 @@ async function createServer() {
       }
 
       try {
-        let { hydrationData, html: appHtml } = await render(req);
-        let scriptHtml = `
-          <script>
-            window.__hydrationData = JSON.parse(${JSON.stringify(
-              JSON.stringify(hydrationData)
-            )});
-          </script>
-          `;
-
-        let html = template
-          .replace("<!--app-html-->", appHtml)
-          .replace("<!--app-scripts-->", scriptHtml);
+        let appHtml = await render(req);
+        let html = template.replace("<!--app-html-->", appHtml);
         res.setHeader("Content-Type", "text/html");
         return res.status(200).end(html);
       } catch (e) {

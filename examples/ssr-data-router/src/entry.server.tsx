@@ -14,20 +14,15 @@ export async function render(request: express.Request) {
     throw context;
   }
 
-  let html = ReactDOMServer.renderToString(
+  return ReactDOMServer.renderToString(
     <React.StrictMode>
-      <DataStaticRouter dataRoutes={dataRoutes} context={context} />
+      <DataStaticRouter
+        dataRoutes={dataRoutes}
+        context={context}
+        nonce="the-nonce"
+      />
     </React.StrictMode>
   );
-
-  return {
-    hydrationData: {
-      loaderData: context.loaderData,
-      actionData: context.loaderData,
-      errors: context.errors,
-    },
-    html,
-  };
 }
 
 export function createFetchHeaders(

@@ -82,7 +82,7 @@ describe("A <DataStaticRouter>", () => {
         />
       </React.StrictMode>
     );
-    expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
+    expect(html).toMatch("<h1>👋</h1>");
 
     // @ts-expect-error
     expect(hooksData1.location).toEqual({
@@ -151,6 +151,141 @@ describe("A <DataStaticRouter>", () => {
         pathname: "/the/path",
       },
     ]);
+  });
+
+  it("renders hydration data by default", async () => {
+    let { dataRoutes, query } = unstable_createStaticHandler([
+      {
+        path: "the",
+        loader: () => ({
+          key1: "value1",
+        }),
+        element: <Outlet />,
+        children: [
+          {
+            path: "path",
+            loader: () => ({
+              key2: "value2",
+            }),
+            element: <h1>👋</h1>,
+          },
+        ],
+      },
+    ]);
+
+    let context = await query(
+      new Request("http:/localhost/the/path", {
+        signal: new AbortController().signal,
+      })
+    );
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <DataStaticRouter
+          dataRoutes={dataRoutes}
+          context={context as StaticHandlerContext}
+        />
+      </React.StrictMode>
+    );
+    expect(html).toMatch("<h1>👋</h1>");
+
+    let expectedJsonString = JSON.stringify(
+      JSON.stringify({
+        loaderData: {
+          "0": { key1: "value1" },
+          "0-0": { key2: "value2" },
+        },
+        actionData: null,
+        errors: null,
+      })
+    );
+    expect(html).toMatch(
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+    );
+  });
+
+  it("supports a nonce prop", async () => {
+    let { dataRoutes, query } = unstable_createStaticHandler([
+      {
+        path: "the",
+        element: <Outlet />,
+        children: [
+          {
+            path: "path",
+            element: <h1>👋</h1>,
+          },
+        ],
+      },
+    ]);
+
+    let context = await query(
+      new Request("http:/localhost/the/path", {
+        signal: new AbortController().signal,
+      })
+    );
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <DataStaticRouter
+          dataRoutes={dataRoutes}
+          context={context as StaticHandlerContext}
+          nonce="nonce-string"
+        />
+      </React.StrictMode>
+    );
+    expect(html).toMatch("<h1>👋</h1>");
+
+    let expectedJsonString = JSON.stringify(
+      JSON.stringify({
+        loaderData: {},
+        actionData: null,
+        errors: null,
+      })
+    );
+    expect(html).toMatch(
+      `<script nonce="nonce-string">window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+    );
+  });
+
+  it("allows disabling of automatic hydration", async () => {
+    let { dataRoutes, query } = unstable_createStaticHandler([
+      {
+        path: "the",
+        loader: () => ({
+          key1: "value1",
+        }),
+        element: <Outlet />,
+        children: [
+          {
+            path: "path",
+            loader: () => ({
+              key2: "value2",
+            }),
+            element: <h1>👋</h1>,
+          },
+        ],
+      },
+    ]);
+
+    let context = await query(
+      new Request("http:/localhost/the/path", {
+        signal: new AbortController().signal,
+      })
+    );
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <DataStaticRouter
+          dataRoutes={dataRoutes}
+          context={context as StaticHandlerContext}
+          hydrate={false}
+        />
+      </React.StrictMode>
+    );
+    expect(html).toMatch("<h1>👋</h1>");
+    expect(html).not.toMatch("<script>");
+    expect(html).not.toMatch("window");
+    expect(html).not.toMatch("__staticRouterHydrationData");
   });
 
   it("errors if required props are not passed", async () => {

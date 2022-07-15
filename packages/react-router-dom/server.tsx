@@ -66,6 +66,8 @@ export interface DataStaticRouterProps {
   children?: React.ReactNode;
   context: StaticHandlerContext;
   dataRoutes: DataRouteObject[];
+  hydrate?: boolean;
+  nonce?: string;
 }
 
 /**
@@ -76,6 +78,8 @@ export function DataStaticRouter({
   children,
   context,
   dataRoutes,
+  hydrate = true,
+  nonce,
 }: DataStaticRouterProps) {
   invariant(
     dataRoutes && context,
@@ -88,12 +92,34 @@ export function DataStaticRouter({
     static: true,
     basename: "/",
   };
+
+  let hydrateScript = "";
+
+  if (hydrate !== false) {
+    let data = {
+      loaderData: context.loaderData,
+      actionData: context.actionData,
+      errors: context.errors,
+    };
+    let json = JSON.stringify(JSON.stringify(data));
+    hydrateScript = `window.__staticRouterHydrationData = JSON.parse(${json});`;
+  }
+
   return (
-    <DataRouterContext.Provider value={dataRouterContext}>
-      <DataRouterStateContext.Provider value={dataRouterContext.router.state}>
-        {children ? <>{children}</> : <DataRouter />}
-      </DataRouterStateContext.Provider>
-    </DataRouterContext.Provider>
+    <>
+      <DataRouterContext.Provider value={dataRouterContext}>
+        <DataRouterStateContext.Provider value={dataRouterContext.router.state}>
+          {children ? <>{children}</> : <DataRouter />}
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>
+      {hydrateScript ? (
+        <script
+          suppressHydrationWarning
+          nonce={nonce}
+          dangerouslySetInnerHTML={{ __html: hydrateScript }}
+        />
+      ) : null}
+    </>
   );
 }
 

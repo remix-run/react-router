@@ -212,7 +212,10 @@ export function DataBrowserRouter({
   if (!routerSingleton) {
     routerSingleton = createBrowserRouter({
       basename,
-      hydrationData,
+      hydrationData:
+        // TODO Fix this
+        // @ts-expect-error
+        hydrationData || document.defaultView.__staticRouterHydrationData,
       window,
       routes: routes || createRoutesFromChildren(children),
     }).initialize();
