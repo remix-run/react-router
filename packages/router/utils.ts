@@ -23,6 +23,8 @@ export enum ResultType {
 export interface SuccessResult {
   type: ResultType.data;
   data: any;
+  statusCode?: number;
+  headers?: Headers;
 }
 
 /**

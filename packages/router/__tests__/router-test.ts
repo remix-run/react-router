@@ -8932,7 +8932,7 @@ describe("a router", () => {
         });
       });
 
-      it("should support document load navigations returning responses", async () => {
+      it("should support document submit navigations returning responses", async () => {
         let { query } = unstable_createStaticHandler(SSR_ROUTES);
         let context = await query(createSubmitRequest("/parent/json"));
         expect(context).toMatchObject({
@@ -9170,6 +9170,238 @@ describe("a router", () => {
             },
           },
           matches: [{ route: { id: "root" } }],
+        });
+      });
+
+      describe("statusCode", () => {
+        it("should expose a 200 status code by default", async () => {
+          let { query } = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+            },
+          ]);
+          let context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(200);
+        });
+
+        it("should expose a 500 status code on loader errors", async () => {
+          let { query } = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Error("💥");
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(500);
+        });
+
+        it("should expose a 500 status code on action errors", async () => {
+          let { query } = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => json({ data: "CHILD" }, { status: 202 }),
+                  action: () => {
+                    throw new Error("💥");
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = await query(createSubmitRequest("/?index"));
+          expect(context.statusCode).toBe(500);
+        });
+
+        it("should expose a 4xx status code on thrown loader responses", async () => {
+          let { query } = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Response(null, { status: 400 });
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(400);
+        });
+
+        it("should expose a 4xx status code on thrown action responses", async () => {
+          let { query } = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => json({ data: "CHILD" }, { status: 202 }),
+                  action: () => {
+                    throw new Response(null, { status: 400 });
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = await query(createSubmitRequest("/?index"));
+          expect(context.statusCode).toBe(400);
+        });
+
+        it("should expose the action status on submissions", async () => {
+          let { query } = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => json({ data: "ROOT" }, { status: 202 }),
+                  action: () => json({ data: "ROOT" }, { status: 203 }),
+                },
+              ],
+            },
+          ]);
+          let context = await query(createSubmitRequest("/?index"));
+          expect(context.statusCode).toBe(203);
+        });
+
+        it("should expose the deepest 2xx status", async () => {
+          let { query } = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => json({ data: "ROOT" }, { status: 202 }),
+                },
+              ],
+            },
+          ]);
+          let context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(202);
+        });
+
+        it("should expose the shallowest 4xx/5xx status", async () => {
+          let context: StaticHandlerContext;
+          let query: StaticHandler["query"];
+
+          query = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => {
+                throw new Response(null, { status: 400 });
+              },
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Response(null, { status: 401 });
+                  },
+                },
+              ],
+            },
+          ]).query;
+          context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(400);
+
+          query = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => {
+                throw new Response(null, { status: 400 });
+              },
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Response(null, { status: 500 });
+                  },
+                },
+              ],
+            },
+          ]).query;
+          context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(400);
+
+          query = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => {
+                throw new Response(null, { status: 400 });
+              },
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Error("💥");
+                  },
+                },
+              ],
+            },
+          ]).query;
+          context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(400);
+        });
+      });
+
+      describe("headers", () => {
+        it("should expose headers from loader responses", async () => {
+          let { query } = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => new Response(null, { headers: { one: "1" } }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => new Response(null, { headers: { two: "2" } }),
+                },
+              ],
+            },
+          ]);
+          let context = await query(createRequest("/"));
+          expect(Array.from(context.headers.root.entries())).toEqual([
+            ["one", "1"],
+          ]);
+          expect(Array.from(context.headers.child.entries())).toEqual([
+            ["two", "2"],
+          ]);
         });
       });
     });
