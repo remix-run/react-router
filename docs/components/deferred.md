@@ -9,6 +9,26 @@ new: true
   <summary>Type declaration</summary>
 
 ```tsx
+export type Deferrable<T> = never | T | Promise<T>;
+export type ResolvedDeferrable<T> = T extends null | undefined
+  ? T
+  : T extends Deferrable<infer T2>
+  ? T2 extends Promise<infer T3>
+    ? T3
+    : T2
+  : T;
+
+export interface DeferredResolveRenderFunction<Data> {
+  (data: ResolvedDeferrable<Data>): JSX.Element;
+}
+
+export interface DeferredProps<Data> {
+  children: React.ReactNode | DeferredResolveRenderFunction<Data>;
+  value: Data;
+  fallbackElement: React.SuspenseProps["fallback"];
+  errorElement?: React.ReactNode;
+}
+
 export declare function Deferred<Data = any>({
   children,
   value,
