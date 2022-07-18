@@ -724,21 +724,12 @@ export function useRouteError() {
   return state.errors?.[thisRoute.route.id];
 }
 
-export type Deferrable<T> = never | T | Promise<T>;
-export type ResolvedDeferrable<T> = T extends null | undefined
-  ? T
-  : T extends Deferrable<infer T2>
-  ? T2 extends Promise<infer T3>
-    ? T3
-    : T2
-  : T;
-
 /**
  * Returns the happy-path data from the nearest ancestor <Deferred /> value
  */
 export function useDeferredData<Data>() {
   let value = React.useContext(DeferredContext);
-  return value as ResolvedDeferrable<Data>;
+  return value as Awaited<Data>;
 }
 
 const alreadyWarned: Record<string, boolean> = {};

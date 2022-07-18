@@ -1,7 +1,6 @@
 import React from "react";
 import {
   type ActionFunction,
-  type Deferrable,
   type LoaderFunction,
   DataBrowserRouter,
   Deferred,
@@ -238,11 +237,11 @@ function Todo() {
 interface DeferredRouteLoaderData {
   critical1: string;
   critical2: string;
-  lazyResolved: Deferrable<string>;
-  lazy1: Deferrable<string>;
-  lazy2: Deferrable<string>;
-  lazy3: Deferrable<string>;
-  lazyError: Deferrable<string>;
+  lazyResolved: Promise<string>;
+  lazy1: Promise<string>;
+  lazy2: Promise<string>;
+  lazy3: Promise<string>;
+  lazyError: Promise<string>;
 }
 
 const rand = () => Math.round(Math.random() * 100);

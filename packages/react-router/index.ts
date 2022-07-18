@@ -68,7 +68,7 @@ import {
   NavigationContext,
   RouteContext,
 } from "./lib/context";
-import type { Deferrable, NavigateFunction } from "./lib/hooks";
+import type { NavigateFunction } from "./lib/hooks";
 import {
   useHref,
   useInRouterContext,
@@ -102,7 +102,6 @@ export type {
   ActionFunctionArgs,
   DataMemoryRouterProps,
   DataRouteMatch,
-  Deferrable,
   DeferredProps,
   Fetcher,
   Hash,

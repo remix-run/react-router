@@ -30,7 +30,6 @@ import {
   DataRouterStateContext,
   DeferredContext,
 } from "./context";
-import type { ResolvedDeferrable } from "./hooks";
 import {
   useDeferredData,
   useInRouterContext,
@@ -431,7 +430,7 @@ function DataRoutes({
 }
 
 export interface DeferredResolveRenderFunction<Data> {
-  (data: ResolvedDeferrable<Data>): JSX.Element;
+  (data: Awaited<Data>): JSX.Element;
 }
 
 export interface DeferredProps<Data>
