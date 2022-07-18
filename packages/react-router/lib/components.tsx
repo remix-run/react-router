@@ -451,9 +451,9 @@ export function Deferred({
   errorElement,
 }: DeferredProps) {
   return (
-    <DeferredContext.Provider value={value}>
+    <DeferredErrorBoundary value={value} errorElement={errorElement}>
       <React.Suspense fallback={fallback}>
-        <DeferredWrapper errorElement={errorElement}>
+        <DeferredWrapper>
           {typeof children === "function" ? (
             <ResolveDeferred
               children={children as DeferredResolveRenderFunction}
@@ -463,8 +463,56 @@ export function Deferred({
           )}
         </DeferredWrapper>
       </React.Suspense>
-    </DeferredContext.Provider>
+    </DeferredErrorBoundary>
   );
+}
+
+type DeferredErrorBoundaryProps = React.PropsWithChildren<{
+  value: any;
+  errorElement?: React.ReactNode;
+}>;
+
+type DeferredErrorBoundaryState = {
+  error: any;
+};
+
+class DeferredErrorBoundary extends React.Component<
+  DeferredErrorBoundaryProps,
+  DeferredErrorBoundaryState
+> {
+  constructor(props: DeferredErrorBoundaryProps) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error(
+      "<Deferred> caught the following error during render",
+      error,
+      errorInfo
+    );
+  }
+
+  render() {
+    let { children, errorElement, value } = this.props;
+    // Handle render errors from this.state, or data errors from context
+    let error = this.state.error || (isDeferredError(value) ? value : null);
+
+    if (error) {
+      if (errorElement) {
+        return (
+          <DeferredContext.Provider value={error} children={errorElement} />
+        );
+      }
+      // Throw to ancestor route-level error boundary
+      throw error;
+    }
+    return <DeferredContext.Provider value={value} children={children} />;
+  }
 }
 
 interface DeferredWrapperProps {
@@ -478,20 +526,11 @@ interface DeferredWrapperProps {
  * fallback, or rendering the children/errorElement once the promise resolves
  * or rejects
  */
-function DeferredWrapper({ children, errorElement }: DeferredWrapperProps) {
+function DeferredWrapper({ children }: DeferredWrapperProps) {
   let value = React.useContext(DeferredContext);
   if (value instanceof Promise) {
     // throw to the suspense boundary
     throw value;
-  }
-
-  if (isDeferredError(value)) {
-    if (errorElement) {
-      return <>{errorElement}</>;
-    } else {
-      // Throw to the nearest route-level error boundary
-      throw value;
-    }
   }
 
   return <>{children}</>;

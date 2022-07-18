@@ -704,7 +704,7 @@ export function useRouteError() {
   let deferredValue = React.useContext(DeferredContext);
 
   // Return deferred errors if we're inside a Deferred errorElement
-  if (deferredValue && isDeferredError(deferredValue)) {
+  if (deferredValue && deferredValue instanceof Error) {
     return deferredValue;
   }
 
