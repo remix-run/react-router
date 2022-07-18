@@ -429,14 +429,14 @@ function DataRoutes({
   return useRoutes(routes || createRoutesFromChildren(children), location);
 }
 
-export interface DeferredResolveRenderFunction<Data> {
-  (data: Awaited<Data>): JSX.Element;
+export interface DeferredResolveRenderFunction {
+  (data: Awaited<any>): JSX.Element;
 }
 
-export interface DeferredProps<Data>
-  extends Omit<React.SuspenseProps, "children"> {
-  children: React.ReactNode | DeferredResolveRenderFunction<Data>;
-  value: Data;
+export interface DeferredProps {
+  children: React.ReactNode | DeferredResolveRenderFunction;
+  value: any;
+  fallback: React.SuspenseProps["fallback"];
   errorElement?: React.ReactNode;
 }
 
@@ -444,19 +444,19 @@ export interface DeferredProps<Data>
  * Component to use for rendering lazily loaded data from returning deferred()
  * in a loader function
  */
-export function Deferred<Data = any>({
+export function Deferred({
   children,
   value,
   fallback,
   errorElement,
-}: DeferredProps<Data>) {
+}: DeferredProps) {
   return (
     <DeferredContext.Provider value={value}>
       <React.Suspense fallback={fallback}>
         <DeferredWrapper errorElement={errorElement}>
           {typeof children === "function" ? (
             <ResolveDeferred
-              children={children as DeferredResolveRenderFunction<Data>}
+              children={children as DeferredResolveRenderFunction}
             />
           ) : (
             children
@@ -497,17 +497,16 @@ function DeferredWrapper({ children, errorElement }: DeferredWrapperProps) {
   return <>{children}</>;
 }
 
-export interface ResolveDeferredProps<Data> {
-  children: DeferredResolveRenderFunction<Data>;
+interface ResolveDeferredProps {
+  children: DeferredResolveRenderFunction;
 }
 
 /**
  * @private
+ * Indirection to leverage useDeferredData for a render-prop API on <Deferred>
  */
-export function ResolveDeferred<Data>({
-  children,
-}: ResolveDeferredProps<Data>) {
-  return children(useDeferredData<Data>());
+function ResolveDeferred({ children }: ResolveDeferredProps) {
+  return children(useDeferredData());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
