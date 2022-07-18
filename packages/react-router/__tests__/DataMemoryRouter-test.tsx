@@ -1893,7 +1893,8 @@ describe("<DataMemoryRouter>", () => {
     function setupDeferredTest(
       hasRouteErrorElement = false,
       hasDeferredErrorElement = false,
-      triggerRenderError = false
+      triggerRenderError = false,
+      triggerFallbackError = false
     ) {
       let barDefer = defer();
       let { container } = render(
@@ -1931,7 +1932,7 @@ describe("<DataMemoryRouter>", () => {
             <p>{data.critical}</p>
             <Deferred
               value={data.lazy}
-              fallback={<p>Loading...</p>}
+              fallback={<LazyFallback />}
               errorElement={hasDeferredErrorElement ? <LazyError /> : null}
             >
               <LazyData />
@@ -1943,6 +1944,14 @@ describe("<DataMemoryRouter>", () => {
       function RouteError() {
         let error = useRouteError();
         return <p>Route Error:{error.message}</p>;
+      }
+
+      function LazyFallback() {
+        return triggerFallbackError ? (
+          <p>{oops.i.did.it}</p>
+        ) : (
+          <p>Loading...</p>
+        );
       }
 
       function LazyData() {
@@ -2389,6 +2398,78 @@ describe("<DataMemoryRouter>", () => {
 
       barValueDfd.resolve("LAZY");
       await waitFor(() => !screen.getByText(/Loading.../));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href=\\"/bar\\"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <p>
+              Route Error:
+              oops is not defined
+            </p>
+          </div>
+        </div>"
+      `);
+    });
+
+    it("does not handle fallback render errors in the Deferred errorElement", async () => {
+      let { barDefer, container } = setupDeferredTest(true, true, true, true);
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href=\\"/bar\\"
+            >
+              Link to Bar
+            </a>
+            <p>
+              loading
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>
+        </div>"
+      `);
+
+      let barValueDfd = defer();
+      barDefer.resolve(
+        deferred({
+          critical: "CRITICAL",
+          lazy: barValueDfd.promise,
+        })
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href=\\"/bar\\"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <p>
+              Route Error:
+              oops is not defined
+            </p>
+          </div>
+        </div>"
+      `);
+
+      // Resolving doesn't do anything
+      barValueDfd.resolve("LAZY");
+      await new Promise((r) => setTimeout(r, 1));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <div>
