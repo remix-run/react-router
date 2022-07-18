@@ -852,37 +852,55 @@ export const json: JsonFunction = (data, init = {}) => {
 };
 
 export class DeferredData {
-  private pendingKeys: Set<string> = new Set<string>();
+  private pendingKeys: Set<string | number> = new Set<string | number>();
   private cancelled: boolean = false;
-  private subscriber?: (aborted: boolean, key?: string, data?: any) => void =
-    undefined;
-  data: RouteData = {};
+  private subscriber?: (aborted: boolean) => void = undefined;
+  data: RouteData | Array<any>;
 
   constructor(data: Record<string, any>) {
-    Object.entries(data).forEach(([key, value]) => {
-      // Store all data in our internal copy and track promise keys
-      this.data[key] = value;
-      if (value instanceof Promise) {
-        this.pendingKeys.add(key);
-        value.then(
-          (data) => this.onSettle(key, null, data),
-          (error) => this.onSettle(key, error)
-        );
-      }
-    });
+    // Store all data in our internal copy and track promise keys
+    if (Array.isArray(data)) {
+      this.data = [...data];
+      data.forEach((value, index) => this.trackPromise(index, value));
+    } else {
+      this.data = { ...data };
+      Object.entries(data).forEach(([key, value]) =>
+        this.trackPromise(key, value)
+      );
+    }
   }
 
-  private onSettle(key: string, error: any, data?: any) {
+  private trackPromise(key: string | number, value: any) {
+    if (value instanceof Promise) {
+      this.pendingKeys.add(key);
+      value.then(
+        (data) => this.onSettle(key, null, data),
+        (error) => this.onSettle(key, error)
+      );
+    }
+  }
+
+  private onSettle(key: string | number, error: any, data?: any) {
     if (this.cancelled) {
       return;
     }
     this.pendingKeys.delete(key);
     let value = error ? new DeferredError(error) : data;
-    this.data[key] = value;
-    this.subscriber?.(false, key, value);
+    if (Array.isArray(this.data)) {
+      invariant(typeof key === "number", "expected key to be a number");
+      let data = [...this.data];
+      data[key] = value;
+      this.data = data;
+    } else {
+      this.data = {
+        ...this.data,
+        [key]: value,
+      };
+    }
+    this.subscriber?.(false);
   }
 
-  subscribe(fn: (aborted: boolean, key?: string, data?: any) => void) {
+  subscribe(fn: (aborted: boolean) => void) {
     this.subscriber = fn;
   }
 
