@@ -61,6 +61,10 @@ headers:
   Cache-Control: no-cache
 ---
 
+export const links = () => [
+  { rel: "stylesheet", href: "app.css" }
+]
+
 export const handle = {
   someData: "abc"
 }
@@ -101,7 +105,9 @@ export function ComponentUsingData() {
     expect(await app.getHtml()).toMatch("This is some basic markdown!");
   });
 
-  test("supports meta, headers, handle, and loader", async ({ page }) => {
+  test("supports links, meta, headers, handle, and loader", async ({
+    page,
+  }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/blog/post");
     expect(await app.getHtml('meta[name="description"]')).toMatch(
@@ -110,5 +116,6 @@ export function ComponentUsingData() {
     expect(await app.getHtml("title")).toMatch("My First Post");
     expect(await app.getHtml("#loader")).toMatch(/Mambo Number:.+5/s);
     expect(await app.getHtml("#handle")).toMatch("abc");
+    expect(await app.getHtml('link[rel="stylesheet"]')).toMatch("app.css");
   });
 });
