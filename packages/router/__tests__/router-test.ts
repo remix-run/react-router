@@ -9396,11 +9396,39 @@ describe("a router", () => {
             },
           ]);
           let context = await query(createRequest("/"));
-          expect(Array.from(context.headers.root.entries())).toEqual([
+          expect(Array.from(context.loaderHeaders.root.entries())).toEqual([
             ["one", "1"],
           ]);
-          expect(Array.from(context.headers.child.entries())).toEqual([
+          expect(Array.from(context.loaderHeaders.child.entries())).toEqual([
             ["two", "2"],
+          ]);
+        });
+
+        it("should expose headers from action responses", async () => {
+          let { query } = unstable_createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => new Response(null, { headers: { two: "2" } }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  action: () => new Response(null, { headers: { one: "1" } }),
+                  loader: () => new Response(null, { headers: { three: "3" } }),
+                },
+              ],
+            },
+          ]);
+          let context = await query(createSubmitRequest("/?index"));
+          expect(Array.from(context.actionHeaders.child.entries())).toEqual([
+            ["one", "1"],
+          ]);
+          expect(Array.from(context.loaderHeaders.root.entries())).toEqual([
+            ["two", "2"],
+          ]);
+          expect(Array.from(context.loaderHeaders.child.entries())).toEqual([
+            ["three", "3"],
           ]);
         });
       });

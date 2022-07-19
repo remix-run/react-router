@@ -236,7 +236,8 @@ export interface StaticHandlerContext {
   actionData: RouterState["actionData"];
   errors: RouterState["errors"];
   statusCode: number;
-  headers: Record<string, Headers>;
+  loaderHeaders: Record<string, Headers>;
+  actionHeaders: Record<string, Headers>;
 }
 
 /**
@@ -1720,16 +1721,25 @@ export function unstable_createStaticHandler(
         return { location, result: shortCircuitState };
       }
 
-      let result =
-        request.method === "GET"
-          ? await loadRouteData(request, matches, routeId != null)
-          : await submit(
-              request,
-              matches,
-              getTargetMatch(matches, location),
-              routeId != null
-            );
-      return { location, result };
+      if (request.method !== "GET") {
+        let result = await submit(
+          request,
+          matches,
+          getTargetMatch(matches, location),
+          routeId != null
+        );
+        return { location, result };
+      }
+
+      let result = await loadRouteData(request, matches, routeId != null);
+      return {
+        location,
+        result: {
+          ...result,
+          actionData: null,
+          actionHeaders: {},
+        },
+      };
     } catch (e) {
       if (e instanceof Response) {
         return { location, result: e };
@@ -1793,7 +1803,8 @@ export function unstable_createStaticHandler(
           // Note: This is unused in queryRoute as we will return the raw error,
           // or construct a response from the ErrorResponse
           statusCode: 500,
-          headers: {},
+          loaderHeaders: {},
+          actionHeaders: {},
         };
       }
 
@@ -1805,7 +1816,10 @@ export function unstable_createStaticHandler(
         // Note: This is unused in queryRoute as we will return the raw
         // Response or value
         statusCode: 200,
-        headers: {},
+        loaderHeaders: {},
+        actionHeaders: {
+          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+        },
       };
     }
 
@@ -1813,15 +1827,9 @@ export function unstable_createStaticHandler(
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-      let context = await loadRouteData(
-        request,
-        matches,
-        isRouteRequest,
-        undefined,
-        {
-          [boundaryMatch.route.id]: result.error,
-        }
-      );
+      let context = await loadRouteData(request, matches, isRouteRequest, {
+        [boundaryMatch.route.id]: result.error,
+      });
 
       // action status codes take precedence over loader status codes
       return {
@@ -1829,17 +1837,23 @@ export function unstable_createStaticHandler(
         statusCode: isRouteErrorResponse(result.error)
           ? result.error.status
           : 500,
+        actionData: null,
+        actionHeaders: {},
       };
     }
 
-    let context = await loadRouteData(request, matches, isRouteRequest, {
-      [actionMatch.route.id]: result.data,
-    });
+    let context = await loadRouteData(request, matches, isRouteRequest);
 
-    // action status codes take precedence over loader status codes
     return {
       ...context,
+      // action status codes take precedence over loader status codes
       ...(result.statusCode ? { statusCode: result.statusCode } : {}),
+      actionData: {
+        [actionMatch.route.id]: result.data,
+      },
+      actionHeaders: {
+        ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+      },
     };
   }
 
@@ -1847,9 +1861,11 @@ export function unstable_createStaticHandler(
     request: Request,
     matches: DataRouteMatch[],
     isRouteRequest: boolean,
-    pendingActionData?: RouteData,
     pendingActionError?: RouteData
-  ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
+  ): Promise<
+    | Omit<StaticHandlerContext, "location" | "actionData" | "actionHeaders">
+    | Response
+  > {
     let matchesToLoad = getLoaderMatchesUntilBoundary(
       matches,
       Object.keys(pendingActionError || {})[0]
@@ -1860,10 +1876,9 @@ export function unstable_createStaticHandler(
       return {
         matches,
         loaderData: {},
-        actionData: pendingActionData || null,
         errors: pendingActionError || null,
         statusCode: 200,
-        headers: {},
+        loaderHeaders: {},
       };
     }
 
@@ -1897,7 +1912,6 @@ export function unstable_createStaticHandler(
     return {
       ...context,
       matches,
-      actionData: pendingActionData || null,
     };
   }
 
@@ -1935,7 +1949,8 @@ export function unstable_createStaticHandler(
             [route.id]: error,
           },
           statusCode: 404,
-          headers: {},
+          loaderHeaders: {},
+          actionHeaders: {},
         },
       };
     }
@@ -2350,14 +2365,14 @@ function processRouteLoaderData(
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"] | null;
   statusCode: number;
-  headers: Record<string, Headers>;
+  loaderHeaders: Record<string, Headers>;
 } {
   // Fill in loaderData/errors from our loaders
   let loaderData: RouterState["loaderData"] = {};
   let errors: RouterState["errors"] | null = null;
   let statusCode: number | undefined;
   let foundError = false;
-  let headers: Record<string, Headers> = {};
+  let loaderHeaders: Record<string, Headers> = {};
 
   // Process loader results into state.loaderData/state.errors
   results.forEach((result, index) => {
@@ -2400,7 +2415,7 @@ function processRouteLoaderData(
         statusCode = result.statusCode;
       }
       if (result.headers) {
-        headers[id] = result.headers;
+        loaderHeaders[id] = result.headers;
       }
     }
   });
@@ -2415,7 +2430,7 @@ function processRouteLoaderData(
     loaderData,
     errors,
     statusCode: statusCode || 200,
-    headers,
+    loaderHeaders,
   };
 }
 
