@@ -269,25 +269,35 @@ function DeferredPage() {
     <div>
       <p>{data.critical1}</p>
       <p>{data.critical2}</p>
-      <Deferred value={data.lazyResolved} fallback={<p>should not see me!</p>}>
-        <RenderDeferredData />
-      </Deferred>
-      <Deferred value={data.lazy1} fallback={<p>loading 1...</p>}>
-        <RenderDeferredData />
-      </Deferred>
-      <Deferred value={data.lazy2} fallback={<p>loading 2...</p>}>
-        <RenderDeferredData />
-      </Deferred>
-      <Deferred value={data.lazy3} fallback={<p>loading 3...</p>}>
-        {(data) => <p>{data}</p>}
-      </Deferred>
-      <Deferred
-        value={data.lazyError}
-        fallback={<p>loading (error)...</p>}
-        errorElement={<RenderDeferredError />}
-      >
-        <RenderDeferredData />
-      </Deferred>
+
+      <React.Suspense fallback={<p>should not see me!</p>}>
+        <Deferred value={data.lazyResolved}>
+          <RenderDeferredData />
+        </Deferred>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading 1...</p>}>
+        <Deferred value={data.lazy1}>
+          <RenderDeferredData />
+        </Deferred>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading 2...</p>}>
+        <Deferred value={data.lazy2}>
+          <RenderDeferredData />
+        </Deferred>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading 3...</p>}>
+        <Deferred value={data.lazy3}>{(data) => <p>{data}</p>}</Deferred>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading (error)...</p>}>
+        <Deferred value={data.lazyError} errorElement={<RenderDeferredError />}>
+          <RenderDeferredData />
+        </Deferred>
+      </React.Suspense>
+
       <Outlet />
     </div>
   );
@@ -310,9 +320,11 @@ function DeferredChild() {
   return (
     <div>
       <p>{data.critical}</p>
-      <Deferred value={data.lazy} fallback={<p>loading child...</p>}>
-        <RenderDeferredData />
-      </Deferred>
+      <React.Suspense fallback={<p>loading child...</p>}>
+        <Deferred value={data.lazy}>
+          <RenderDeferredData />
+        </Deferred>
+      </React.Suspense>
       <Form method="post">
         <button type="submit" name="key" value="value">
           Submit

@@ -1930,13 +1930,14 @@ describe("<DataMemoryRouter>", () => {
         return (
           <>
             <p>{data.critical}</p>
-            <Deferred
-              value={data.lazy}
-              fallback={<LazyFallback />}
-              errorElement={hasDeferredErrorElement ? <LazyError /> : null}
-            >
-              <LazyData />
-            </Deferred>
+            <React.Suspense fallback={<LazyFallback />}>
+              <Deferred
+                value={data.lazy}
+                errorElement={hasDeferredErrorElement ? <LazyError /> : null}
+              >
+                <LazyData />
+              </Deferred>
+            </React.Suspense>
           </>
         );
       }

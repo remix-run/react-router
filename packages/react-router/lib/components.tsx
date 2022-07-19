@@ -436,7 +436,6 @@ export interface DeferredResolveRenderFunction {
 export interface DeferredProps {
   children: React.ReactNode | DeferredResolveRenderFunction;
   value: any;
-  fallback: React.SuspenseProps["fallback"];
   errorElement?: React.ReactNode;
 }
 
@@ -444,24 +443,11 @@ export interface DeferredProps {
  * Component to use for rendering lazily loaded data from returning deferred()
  * in a loader function
  */
-export function Deferred({
-  children,
-  value,
-  fallback,
-  errorElement,
-}: DeferredProps) {
+export function Deferred({ children, value, errorElement }: DeferredProps) {
   return (
-    <React.Suspense fallback={fallback}>
-      <DeferredErrorBoundary value={value} errorElement={errorElement}>
-        {typeof children === "function" ? (
-          <ResolveDeferred
-            children={children as DeferredResolveRenderFunction}
-          />
-        ) : (
-          children
-        )}
-      </DeferredErrorBoundary>
-    </React.Suspense>
+    <DeferredErrorBoundary value={value} errorElement={errorElement}>
+      <ResolveDeferred>{children}</ResolveDeferred>
+    </DeferredErrorBoundary>
   );
 }
 
@@ -497,17 +483,18 @@ class DeferredErrorBoundary extends React.Component<
 
   render() {
     let { children, errorElement, value } = this.props;
+
     // Handle render errors from this.state, or data errors from context
     let error = this.state.error || (isDeferredError(value) ? value : null);
 
     if (error) {
       if (errorElement) {
-        // We have a Deferred errorElement, so provide our error and render it
+        // We have our own errorElement, provide our error and render it
         return (
           <DeferredContext.Provider value={error} children={errorElement} />
         );
       }
-      // Throw to ancestor route-level error boundary
+      // Throw to the nearest ancestor route-level error boundary
       throw error;
     }
 
@@ -516,6 +503,7 @@ class DeferredErrorBoundary extends React.Component<
       throw value;
     }
 
+    // We've resolved successfully, provide the value and render the children
     return <DeferredContext.Provider value={value} children={children} />;
   }
 }
@@ -527,9 +515,13 @@ class DeferredErrorBoundary extends React.Component<
 function ResolveDeferred({
   children,
 }: {
-  children: DeferredResolveRenderFunction;
+  children: React.ReactNode | DeferredResolveRenderFunction;
 }) {
-  return children(useDeferredData());
+  let data = useDeferredData();
+  if (typeof children === "function") {
+    return children(data);
+  }
+  return <>{children}</>;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
