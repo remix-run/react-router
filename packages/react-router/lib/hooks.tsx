@@ -648,8 +648,8 @@ export function useMatches() {
           id: match.route.id,
           pathname,
           params,
-          data: loaderData[match.route.id],
-          handle: match.route.handle,
+          data: loaderData[match.route.id] as unknown,
+          handle: match.route.handle as unknown,
         };
       }),
     [matches, loaderData]
@@ -659,7 +659,7 @@ export function useMatches() {
 /**
  * Returns the loader data for the nearest ancestor Route loader
  */
-export function useLoaderData() {
+export function useLoaderData(): unknown {
   let state = useDataRouterState(DataRouterHook.UseLoaderData);
 
   let route = React.useContext(RouteContext);
@@ -677,7 +677,7 @@ export function useLoaderData() {
 /**
  * Returns the loaderData for the given routeId
  */
-export function useRouteLoaderData(routeId: string): any | undefined {
+export function useRouteLoaderData(routeId: string): unknown {
   let state = useDataRouterState(DataRouterHook.UseRouteLoaderData);
   return state.loaderData[routeId];
 }
@@ -685,7 +685,7 @@ export function useRouteLoaderData(routeId: string): any | undefined {
 /**
  * Returns the action data for the nearest ancestor Route action
  */
-export function useActionData() {
+export function useActionData(): unknown {
   let state = useDataRouterState(DataRouterHook.UseActionData);
 
   let route = React.useContext(RouteContext);
