@@ -855,11 +855,14 @@ export class DeferredData {
   private pendingKeys: Set<string | number> = new Set<string | number>();
   private cancelled: boolean = false;
   private subscriber?: (aborted: boolean) => void = undefined;
-  data: RouteData | Array<any>;
+  data: RouteData | Array<any> | any;
 
-  constructor(data: Record<string, any>) {
+  constructor(data: Record<string, any> | Promise<any>) {
     // Store all data in our internal copy and track promise keys
-    if (Array.isArray(data)) {
+    if (data instanceof Promise) {
+      this.data = data;
+      this.trackPromise("__single__", data);
+    } else if (Array.isArray(data)) {
       this.data = [...data];
       data.forEach((value, index) => this.trackPromise(index, value));
     } else {
@@ -886,7 +889,9 @@ export class DeferredData {
     }
     this.pendingKeys.delete(key);
     let value = error ? new DeferredError(error) : data;
-    if (Array.isArray(this.data)) {
+    if (this.data instanceof Promise) {
+      this.data = value;
+    } else if (Array.isArray(this.data)) {
       invariant(typeof key === "number", "expected key to be a number");
       let data = [...this.data];
       data[key] = value;
@@ -929,7 +934,7 @@ export function isDeferredError(e: any): e is DeferredError {
   return e instanceof DeferredError;
 }
 
-export function deferred(data: Record<string, any>) {
+export function deferred(data: Record<string, any> | Promise<any>) {
   return new DeferredData(data);
 }
 

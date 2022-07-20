@@ -7418,6 +7418,36 @@ describe("a router", () => {
       });
     });
 
+    it("should support returning deferred responses (single Promise)", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/lazy");
+
+      let dfd = defer();
+      await A.loaders.lazy.resolve(deferred(dfd.promise));
+      expect(t.router.state.loaderData).toEqual({
+        lazy: expect.any(Promise),
+      });
+
+      await dfd.resolve("LAZY");
+      expect(t.router.state.loaderData).toEqual({
+        lazy: "LAZY",
+      });
+    });
+
     it("should cancel outstanding deferreds on a new navigation", async () => {
       let t = setup({
         routes: [
