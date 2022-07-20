@@ -34,4 +34,4 @@ interface PathPattern {
 
 The [`useMatch` hook][usematch] uses this function internally to match a route path relative to the current location.
 
-[usematch]: ../hooks/use-match
+[usematch]: ../hooks/use-match.md

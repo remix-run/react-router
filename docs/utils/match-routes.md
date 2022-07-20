@@ -27,6 +27,6 @@ interface RouteMatch<ParamKey extends string = string> {
 
 This is the heart of React Router's matching algorithm. It is used internally by [`useRoutes`][useroutes] and the [`<Routes>` component][routes] to determine which routes match the current location. It can also be useful in some situations where you want to manually match a set of routes.
 
-[location]: ./location
-[useroutes]: ../hooks/use-routes
-[routes]: ../components/routes
+[location]: ./location.md
+[useroutes]: ../hooks/use-routes.md
+[routes]: ../components/routes.md

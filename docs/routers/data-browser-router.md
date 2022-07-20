@@ -71,8 +71,8 @@ export interface DataBrowserRouterProps {
 
 If you are not using the data APIs in your app, it's recommended you use [`BrowserRouter`][browser-router] instead so that the extra code used to manage the internal state of the data APIs will be tree-shaken out of your bundles.
 
-[loader]: ../components/route#loader
-[action]: ../components/route#action
-[fetcher]: ../hooks/use-fetcher
-[browser-router]: ./browser-router
-[form]: ../components/form
+[loader]: ../components/route.md#loader
+[action]: ../components/route.md#action
+[fetcher]: ../hooks/use-fetcher.md
+[browser-router]: ./browser-router.md
+[form]: ../components/form.md

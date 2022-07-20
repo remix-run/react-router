@@ -19,4 +19,4 @@ Returns match data about a route at the given path relative to the current locat
 
 See [`matchPath`][matchpath] for more information.
 
-[matchpath]: ../utils/match-path
+[matchpath]: ../utils/match-path.md

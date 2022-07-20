@@ -44,5 +44,5 @@ function App() {
 }
 ```
 
-[routes]: ../components/routes
-[route]: ../components/route
+[routes]: ../components/routes.md
+[route]: ../components/route.md

@@ -64,6 +64,6 @@ For example, in the following config the parent route renders an `<Outlet>` by d
 </Route>
 ```
 
-[location]: ../utils/location
-[outlet]: ./outlet
-[use-routes]: ../hooks/use-routes
+[location]: ../utils/location.md
+[outlet]: ./outlet.md
+[use-routes]: ../hooks/use-routes.md

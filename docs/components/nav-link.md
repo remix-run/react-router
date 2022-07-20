@@ -134,4 +134,4 @@ If the `end` prop is used, it will ensure this component isn't matched as "activ
 </NavLink>
 ```
 
-[link]: ./link
+[link]: ./link.md

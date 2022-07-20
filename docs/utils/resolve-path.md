@@ -28,4 +28,4 @@ interface Path {
 
 The [`useResolvedPath` hook][useresolvedpath] uses `resolvePath` internally to resolve the pathname. If `to` contains a pathname, it is resolved against the current route pathname. Otherwise, it is resolved against the current URL (`location.pathname`).
 
-[useresolvedpath]: ../hooks/use-resolved-path
+[useresolvedpath]: ../hooks/use-resolved-path.md

@@ -25,5 +25,5 @@ interface RouteObject {
 
 `createRoutesFromChildren` is a helper that creates route objects from `<Route>` elements. It is used internally in a [`<Routes>` element][routes] to generate a route config from its [`<Route>`][route] children.
 
-[routes]: ../components/routes
-[route]: ../components/route
+[routes]: ../components/routes.md
+[route]: ../components/route.md

@@ -62,4 +62,4 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 > one URL segment for each `..`. But an `<a href>` value handles `..`
 > differently when the current URL ends with `/` vs when it does not.
 
-[link-native]: ./link-native
+[link-native]: ./link-native.md
