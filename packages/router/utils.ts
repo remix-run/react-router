@@ -851,13 +851,18 @@ export const json: JsonFunction = (data, init = {}) => {
   });
 };
 
+type DeferredInput =
+  | Record<string, unknown>
+  | Array<unknown>
+  | Promise<unknown>;
+
 export class DeferredData {
   private pendingKeys: Set<string | number> = new Set<string | number>();
   private cancelled: boolean = false;
   private subscriber?: (aborted: boolean) => void = undefined;
-  data: RouteData | Array<any> | any;
+  data: DeferredInput | unknown;
 
-  constructor(data: Record<string, any> | Promise<any>) {
+  constructor(data: DeferredInput) {
     // Store all data in our internal copy and track promise keys
     if (data instanceof Promise) {
       this.data = data;
@@ -865,30 +870,37 @@ export class DeferredData {
     } else if (Array.isArray(data)) {
       this.data = [...data];
       data.forEach((value, index) => this.trackPromise(index, value));
-    } else {
+    } else if (typeof data === "object") {
       this.data = { ...data };
       Object.entries(data).forEach(([key, value]) =>
         this.trackPromise(key, value)
       );
+    } else {
+      invariant(false, "Incorrect data type passed to deferred()");
     }
   }
 
-  private trackPromise(key: string | number, value: any) {
+  private trackPromise(
+    key: string | number,
+    value: Promise<unknown> | unknown
+  ) {
     if (value instanceof Promise) {
       this.pendingKeys.add(key);
       value.then(
-        (data) => this.onSettle(key, null, data),
-        (error) => this.onSettle(key, error)
+        (data) => this.onSettle(key, null, data as unknown),
+        (error) => this.onSettle(key, error as unknown)
       );
     }
   }
 
-  private onSettle(key: string | number, error: any, data?: any) {
+  private onSettle(key: string | number, error: unknown, data?: unknown) {
     if (this.cancelled) {
       return;
     }
     this.pendingKeys.delete(key);
-    let value = error ? new DeferredError(error) : data;
+
+    let value = error ? new DeferredError(error as string) : data;
+
     if (this.data instanceof Promise) {
       this.data = value;
     } else if (Array.isArray(this.data)) {
@@ -896,12 +908,15 @@ export class DeferredData {
       let data = [...this.data];
       data[key] = value;
       this.data = data;
-    } else {
+    } else if (typeof this.data === "object") {
       this.data = {
         ...this.data,
         [key]: value,
       };
+    } else {
+      invariant(false, "Incorrect data type on DeferredData");
     }
+
     this.subscriber?.(false);
   }
 
@@ -934,7 +949,7 @@ export function isDeferredError(e: any): e is DeferredError {
   return e instanceof DeferredError;
 }
 
-export function deferred(data: Record<string, any> | Promise<any>) {
+export function deferred(data: DeferredInput) {
   return new DeferredData(data);
 }
 

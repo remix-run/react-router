@@ -730,7 +730,7 @@ export function useRouteError(): unknown {
 /**
  * Returns the happy-path data from the nearest ancestor <Deferred /> value
  */
-export function useDeferredData() {
+export function useDeferredData(): unknown {
   let value = React.useContext(DeferredContext);
   return value;
 }
