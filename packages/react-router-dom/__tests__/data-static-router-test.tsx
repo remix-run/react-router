@@ -47,7 +47,7 @@ describe("A <DataStaticRouter>", () => {
       return <h1>👋</h1>;
     }
 
-    let { dataRoutes, query } = unstable_createStaticHandler([
+    let routes = [
       {
         path: "the",
         loader: () => ({
@@ -66,7 +66,8 @@ describe("A <DataStaticRouter>", () => {
           },
         ],
       },
-    ]);
+    ];
+    let { query } = unstable_createStaticHandler(routes);
 
     let context = await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
@@ -77,7 +78,7 @@ describe("A <DataStaticRouter>", () => {
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
         <DataStaticRouter
-          dataRoutes={dataRoutes}
+          routes={routes}
           context={context as StaticHandlerContext}
         />
       </React.StrictMode>
@@ -154,8 +155,10 @@ describe("A <DataStaticRouter>", () => {
   });
 
   it("renders hydration data by default", async () => {
-    let { dataRoutes, query } = unstable_createStaticHandler([
+    let routes = [
       {
+        // provide unique id here but not below, to ensure we add where needed
+        id: "the",
         path: "the",
         loader: () => ({
           key1: "value1",
@@ -171,7 +174,8 @@ describe("A <DataStaticRouter>", () => {
           },
         ],
       },
-    ]);
+    ];
+    let { query } = unstable_createStaticHandler(routes);
 
     let context = await query(
       new Request("http:/localhost/the/path", {
@@ -182,7 +186,7 @@ describe("A <DataStaticRouter>", () => {
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
         <DataStaticRouter
-          dataRoutes={dataRoutes}
+          routes={routes}
           context={context as StaticHandlerContext}
         />
       </React.StrictMode>
@@ -192,7 +196,7 @@ describe("A <DataStaticRouter>", () => {
     let expectedJsonString = JSON.stringify(
       JSON.stringify({
         loaderData: {
-          "0": { key1: "value1" },
+          the: { key1: "value1" },
           "0-0": { key2: "value2" },
         },
         actionData: null,
@@ -205,7 +209,7 @@ describe("A <DataStaticRouter>", () => {
   });
 
   it("supports a nonce prop", async () => {
-    let { dataRoutes, query } = unstable_createStaticHandler([
+    let routes = [
       {
         path: "the",
         element: <Outlet />,
@@ -216,7 +220,8 @@ describe("A <DataStaticRouter>", () => {
           },
         ],
       },
-    ]);
+    ];
+    let { query } = unstable_createStaticHandler(routes);
 
     let context = await query(
       new Request("http:/localhost/the/path", {
@@ -227,7 +232,7 @@ describe("A <DataStaticRouter>", () => {
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
         <DataStaticRouter
-          dataRoutes={dataRoutes}
+          routes={routes}
           context={context as StaticHandlerContext}
           nonce="nonce-string"
         />
@@ -248,7 +253,7 @@ describe("A <DataStaticRouter>", () => {
   });
 
   it("allows disabling of automatic hydration", async () => {
-    let { dataRoutes, query } = unstable_createStaticHandler([
+    let routes = [
       {
         path: "the",
         loader: () => ({
@@ -265,7 +270,8 @@ describe("A <DataStaticRouter>", () => {
           },
         ],
       },
-    ]);
+    ];
+    let { query } = unstable_createStaticHandler(routes);
 
     let context = await query(
       new Request("http:/localhost/the/path", {
@@ -276,7 +282,7 @@ describe("A <DataStaticRouter>", () => {
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
         <DataStaticRouter
-          dataRoutes={dataRoutes}
+          routes={routes}
           context={context as StaticHandlerContext}
           hydrate={false}
         />
@@ -289,12 +295,13 @@ describe("A <DataStaticRouter>", () => {
   });
 
   it("errors if required props are not passed", async () => {
-    let { dataRoutes, query } = unstable_createStaticHandler([
+    let routes = [
       {
         path: "the",
         element: <h1>👋</h1>,
       },
-    ]);
+    ];
+    let { query } = unstable_createStaticHandler(routes);
 
     let context = await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
@@ -317,7 +324,7 @@ describe("A <DataStaticRouter>", () => {
       ReactDOMServer.renderToStaticMarkup(
         <React.StrictMode>
           {/* @ts-expect-error */}
-          <DataStaticRouter dataRoutes={dataRoutes} />
+          <DataStaticRouter routes={routes} />
         </React.StrictMode>
       )
     ).toThrowErrorMatchingInlineSnapshot(

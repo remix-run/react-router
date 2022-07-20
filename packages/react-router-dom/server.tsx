@@ -1,7 +1,7 @@
 import * as React from "react";
 import type {
-  DataRouteObject,
   RevalidationState,
+  RouteObject,
   Router as RemixRouter,
   StaticHandlerContext,
 } from "@remix-run/router";
@@ -10,6 +10,7 @@ import {
   IDLE_NAVIGATION,
   Action,
   invariant,
+  UNSAFE_convertRoutesToDataRoutes,
 } from "@remix-run/router";
 import type { Location, To } from "react-router-dom";
 import {
@@ -65,7 +66,7 @@ export function StaticRouter({
 export interface DataStaticRouterProps {
   children?: React.ReactNode;
   context: StaticHandlerContext;
-  dataRoutes: DataRouteObject[];
+  routes: RouteObject[];
   hydrate?: boolean;
   nonce?: string;
 }
@@ -77,17 +78,17 @@ export interface DataStaticRouterProps {
 export function DataStaticRouter({
   children,
   context,
-  dataRoutes,
+  routes,
   hydrate = true,
   nonce,
 }: DataStaticRouterProps) {
   invariant(
-    dataRoutes && context,
+    routes && context,
     "You must provide `routes` and `context` to <DataStaticRouter>"
   );
 
   let dataRouterContext = {
-    router: getStatelessRemixRouter(dataRoutes, context),
+    router: getStatelessRemixRouter(routes, context),
     navigator: getStatelessNavigator(),
     static: true,
     basename: "/",
@@ -109,7 +110,7 @@ export function DataStaticRouter({
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={dataRouterContext.router.state}>
-          {children ? <>{children}</> : <DataRouter />}
+          {children ?? <DataRouter />}
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {hydrateScript ? (
@@ -166,9 +167,10 @@ function getStatelessNavigator() {
 }
 
 function getStatelessRemixRouter(
-  dataRoutes: DataRouteObject[],
+  routes: RouteObject[],
   context: StaticHandlerContext
 ): RemixRouter {
+  let dataRoutes = UNSAFE_convertRoutesToDataRoutes(routes);
   let msg = (method: string) =>
     `You cannot use router.${method}() on the server because it is a stateless environment`;
 

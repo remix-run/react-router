@@ -1,11 +1,10 @@
 import { createPath, History, Location, Path, To } from "./history";
 import { Action as HistoryAction, createLocation, parsePath } from "./history";
 
-import {
+import type {
   DataResult,
   DataRouteMatch,
   DataRouteObject,
-  DeferredData,
   DeferredResult,
   ErrorResult,
   FormEncType,
@@ -17,8 +16,10 @@ import {
   SuccessResult,
 } from "./utils";
 import {
+  DeferredData,
   ErrorResponse,
   ResultType,
+  convertRoutesToDataRoutes,
   invariant,
   isRouteErrorResponse,
   matchRoutes,
@@ -1970,33 +1971,6 @@ export function unstable_createStaticHandler(
 ////////////////////////////////////////////////////////////////////////////////
 //#region Helpers
 ////////////////////////////////////////////////////////////////////////////////
-
-// Walk the route tree generating unique IDs where necessary so we are working
-// solely with DataRouteObject's within the Router
-function convertRoutesToDataRoutes(
-  routes: RouteObject[],
-  parentPath: number[] = [],
-  allIds: Set<string> = new Set<string>()
-): DataRouteObject[] {
-  return routes.map((route, index) => {
-    let treePath = [...parentPath, index];
-    let id = typeof route.id === "string" ? route.id : treePath.join("-");
-    invariant(
-      !allIds.has(id),
-      `Found a route id collision on id "${id}".  Route ` +
-        "id's must be globally unique within Data Router usages"
-    );
-    allIds.add(id);
-    let dataRoute: DataRouteObject = {
-      ...route,
-      id,
-      children: route.children
-        ? convertRoutesToDataRoutes(route.children, treePath, allIds)
-        : undefined,
-    };
-    return dataRoute;
-  });
-}
 
 // Normalize navigation options by converting formMethod=GET formData objects to
 // URLSearchParams so they behave identically to links with query params

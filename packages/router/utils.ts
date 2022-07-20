@@ -240,6 +240,33 @@ export interface RouteMatch<
   route: RouteObjectType;
 }
 
+// Walk the route tree generating unique IDs where necessary so we are working
+// solely with DataRouteObject's within the Router
+export function convertRoutesToDataRoutes(
+  routes: RouteObject[],
+  parentPath: number[] = [],
+  allIds: Set<string> = new Set<string>()
+): DataRouteObject[] {
+  return routes.map((route, index) => {
+    let treePath = [...parentPath, index];
+    let id = typeof route.id === "string" ? route.id : treePath.join("-");
+    invariant(
+      !allIds.has(id),
+      `Found a route id collision on id "${id}".  Route ` +
+        "id's must be globally unique within Data Router usages"
+    );
+    allIds.add(id);
+    let dataRoute: DataRouteObject = {
+      ...route,
+      id,
+      children: route.children
+        ? convertRoutesToDataRoutes(route.children, treePath, allIds)
+        : undefined,
+    };
+    return dataRoute;
+  });
+}
+
 /**
  * Matches the given routes to a location and returns the match data.
  *

@@ -10,6 +10,7 @@ import {
 } from "./history";
 import type { Router, RouterInit } from "./router";
 import { createRouter } from "./router";
+import { convertRoutesToDataRoutes } from "./utils";
 
 export type {
   ActionFunction,
@@ -100,3 +101,13 @@ export function createHashRouter({
   let history = createHashHistory({ window });
   return createRouter({ history, ...routerInit });
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// DANGER! PLEASE READ ME!
+// We consider these exports an implementation detail and do not guarantee
+// against any breaking changes, regardless of the semver release. Use with
+// extreme caution and only if you understand the consequences. Godspeed.
+///////////////////////////////////////////////////////////////////////////////
+
+/** @internal */
+export { convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes };
