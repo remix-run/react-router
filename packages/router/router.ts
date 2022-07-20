@@ -2179,7 +2179,7 @@ function shouldRevalidateLoader(
     isRevalidationRequired;
 
   if (match.route.shouldRevalidate) {
-    return match.route.shouldRevalidate({
+    let routeChoice = match.route.shouldRevalidate({
       currentUrl,
       currentParams,
       nextUrl,
@@ -2188,6 +2188,9 @@ function shouldRevalidateLoader(
       actionResult,
       defaultShouldRevalidate,
     });
+    if (typeof routeChoice === "boolean") {
+      return routeChoice;
+    }
   }
 
   return defaultShouldRevalidate;

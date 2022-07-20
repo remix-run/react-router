@@ -379,7 +379,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
     ) {
       if (onClick) onClick(event);
-      if (!event.defaultPrevented && !reloadDocument) {
+      if (!event.defaultPrevented) {
         internalOnClick(event);
       }
     }
@@ -389,7 +389,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       <a
         {...rest}
         href={href}
-        onClick={handleClick}
+        onClick={reloadDocument ? onClick : handleClick}
         ref={ref}
         target={target}
       />
@@ -518,6 +518,11 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   action?: string;
 
   /**
+   * Forces a full document navigation instead of a fetch.
+   */
+  reloadDocument?: boolean;
+
+  /**
    * Replaces the current entry in the browser history stack when the form
    * navigates. Use this if you don't want the user to be able to click "back"
    * to the page with the form on it.
@@ -563,6 +568,7 @@ interface FormImplProps extends FormProps {
 const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
   (
     {
+      reloadDocument,
       replace,
       method = defaultMethod,
       action = ".",
@@ -593,7 +599,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         ref={forwardedRef}
         method={formMethod}
         action={formAction}
-        onSubmit={submitHandler}
+        onSubmit={reloadDocument ? onSubmit : submitHandler}
         {...props}
       />
     );

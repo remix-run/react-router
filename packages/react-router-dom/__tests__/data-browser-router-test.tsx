@@ -769,6 +769,39 @@ function testDomRouter(
       `);
     });
 
+    it("supports <Form reloadDocument={true}>", async () => {
+      let actionSpy = jest.fn();
+      render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route path="/" action={actionSpy} element={<Home />} />
+        </TestDataRouter>
+      );
+
+      let handlerCalled;
+      let defaultPrevented;
+
+      function Home() {
+        return (
+          <Form
+            method="post"
+            reloadDocument={true}
+            onSubmit={(e) => {
+              handlerCalled = true;
+              defaultPrevented = e.defaultPrevented;
+            }}
+          >
+            <input name="test" value="value" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      expect(handlerCalled).toBe(true);
+      expect(defaultPrevented).toBe(false);
+      expect(actionSpy).not.toHaveBeenCalled();
+    });
+
     it('defaults <Form method="get"> to be a PUSH navigation', async () => {
       let { container } = render(
         <TestDataRouter window={getWindow("/")} hydrationData={{}}>

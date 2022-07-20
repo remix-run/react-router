@@ -1813,6 +1813,152 @@ describe("a router", () => {
 
       router.dispose();
     });
+
+    it("requires an explicit false return value to override default true behavior", async () => {
+      let count = 0;
+      let returnValue = true;
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "",
+            id: "root",
+            loader: () => ++count,
+            shouldRevalidate: () => returnValue,
+            element: {},
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            root: 0,
+          },
+        },
+      });
+      router.initialize();
+
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      router.revalidate();
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 1,
+      });
+
+      // @ts-expect-error
+      returnValue = undefined;
+      router.revalidate();
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 2,
+      });
+
+      // @ts-expect-error
+      returnValue = null;
+      router.revalidate();
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 3,
+      });
+
+      // @ts-expect-error
+      returnValue = "";
+      router.revalidate();
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 4,
+      });
+
+      returnValue = false;
+      router.revalidate();
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 4, // No revalidation
+      });
+
+      router.dispose();
+    });
+
+    it("requires an explicit true return value to override default false behavior", async () => {
+      let count = 0;
+      let returnValue = false;
+      let history = createMemoryHistory({ initialEntries: ["/a"] });
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "/",
+            id: "root",
+            loader: () => ++count,
+            shouldRevalidate: () => returnValue,
+            element: {},
+            children: [
+              {
+                path: "a",
+                id: "a",
+              },
+              {
+                path: "b",
+                id: "b",
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            root: 0,
+          },
+        },
+      });
+      router.initialize();
+
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      router.navigate("/b");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      // @ts-expect-error
+      returnValue = undefined;
+      router.navigate("/a");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      // @ts-expect-error
+      returnValue = null;
+      router.navigate("/b");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      // @ts-expect-error
+      returnValue = "truthy";
+      router.navigate("/a");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      returnValue = true;
+      router.navigate("/b");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 1,
+      });
+
+      router.dispose();
+    });
   });
 
   describe("no route match", () => {
