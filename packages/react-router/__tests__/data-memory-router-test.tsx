@@ -1914,11 +1914,11 @@ describe("<DataMemoryRouter>", () => {
       function Layout() {
         let navigation = useNavigation();
         return (
-          <div>
+          <>
             <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
             <p>{navigation.state}</p>
             <Outlet />
-          </div>
+          </>
         );
       }
 
@@ -1977,19 +1977,17 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              loading
-            </p>
-            <h1>
-              Foo
-            </h1>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
         </div>"
       `);
 
@@ -2003,22 +2001,20 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              CRITICAL
-            </p>
-            <p>
-              Loading...
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
         </div>"
       `);
 
@@ -2026,22 +2022,20 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("LAZY"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              CRITICAL
-            </p>
-            <p>
-              LAZY
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            LAZY
+          </p>
         </div>"
       `);
     });
@@ -2052,19 +2046,17 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              loading
-            </p>
-            <h1>
-              Foo
-            </h1>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
         </div>"
       `);
 
@@ -2078,22 +2070,20 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              CRITICAL
-            </p>
-            <p>
-              Loading...
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
         </div>"
       `);
 
@@ -2101,22 +2091,20 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("LAZY"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              CRITICAL
-            </p>
-            <p>
-              LAZY
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            LAZY
+          </p>
         </div>"
       `);
     });
@@ -2127,19 +2115,17 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              loading
-            </p>
-            <h1>
-              Foo
-            </h1>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
         </div>"
       `);
 
@@ -2153,22 +2139,20 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              CRITICAL
-            </p>
-            <p>
-              Loading...
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
         </div>"
       `);
 
@@ -2176,23 +2160,21 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText(/Kaboom!/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              CRITICAL
-            </p>
-            <p>
-              Handled Error:
-              Error: Kaboom!
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Handled Error:
+            Error: Kaboom!
+          </p>
         </div>"
       `);
     });
@@ -2203,19 +2185,17 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              loading
-            </p>
-            <h1>
-              Foo
-            </h1>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
         </div>"
       `);
 
@@ -2229,22 +2209,20 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              CRITICAL
-            </p>
-            <p>
-              Loading...
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
         </div>"
       `);
 
@@ -2252,20 +2230,18 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText(/Kaboom!/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              Route Error:
-              Error: Kaboom!
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            Route Error:
+            Error: Kaboom!
+          </p>
         </div>"
       `);
     });
@@ -2276,19 +2252,17 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              loading
-            </p>
-            <h1>
-              Foo
-            </h1>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
         </div>"
       `);
 
@@ -2302,22 +2276,20 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              CRITICAL
-            </p>
-            <p>
-              Loading...
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
         </div>"
       `);
 
@@ -2325,23 +2297,21 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => !screen.getByText(/Loading.../));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              CRITICAL
-            </p>
-            <p>
-              Handled Error:
-              oops is not defined
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Handled Error:
+            oops is not defined
+          </p>
         </div>"
       `);
     });
@@ -2352,19 +2322,17 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              loading
-            </p>
-            <h1>
-              Foo
-            </h1>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
         </div>"
       `);
 
@@ -2378,22 +2346,20 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              CRITICAL
-            </p>
-            <p>
-              Loading...
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
         </div>"
       `);
 
@@ -2401,20 +2367,18 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => !screen.getByText(/Loading.../));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              Route Error:
-              oops is not defined
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            Route Error:
+            oops is not defined
+          </p>
         </div>"
       `);
     });
@@ -2425,19 +2389,17 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              loading
-            </p>
-            <h1>
-              Foo
-            </h1>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
         </div>"
       `);
 
@@ -2451,20 +2413,18 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              Route Error:
-              oops is not defined
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            Route Error:
+            oops is not defined
+          </p>
         </div>"
       `);
 
@@ -2473,20 +2433,165 @@ describe("<DataMemoryRouter>", () => {
       await new Promise((r) => setTimeout(r, 1));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
-            <p>
-              idle
-            </p>
-            <p>
-              Route Error:
-              oops is not defined
-            </p>
-          </div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <p>
+            Route Error:
+            oops is not defined
+          </p>
+        </div>"
+      `);
+    });
+
+    it("supports deferred arrays", async () => {
+      let barDefer = defer();
+      let { container } = render(
+        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<Foo />} />
+            <Route
+              path="bar"
+              loader={() => barDefer.promise}
+              element={<Bar />}
+            />
+          </Route>
+        </DataMemoryRouter>
+      );
+
+      function Layout() {
+        return (
+          <>
+            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <Outlet />
+          </>
+        );
+      }
+
+      function Foo() {
+        return <h1>Foo</h1>;
+      }
+      function Bar() {
+        let [critical, lazy] = useLoaderData() as Array<any>;
+        return (
+          <>
+            <p>{critical}</p>
+            <React.Suspense fallback={<p>Loading...</p>}>
+              <Deferred value={lazy}>{(data) => <p>{data}</p>}</Deferred>
+            </React.Suspense>
+          </>
+        );
+      }
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      let barValueDfd = defer();
+      barDefer.resolve(deferred(["CRITICAL", barValueDfd.promise]));
+      await waitFor(() => screen.getByText("CRITICAL"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      barValueDfd.resolve("LAZY");
+      await waitFor(() => screen.getByText("LAZY"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            LAZY
+          </p>
+        </div>"
+      `);
+    });
+
+    it("supports deferred single promise values", async () => {
+      let barDefer = defer();
+      let { container } = render(
+        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<Foo />} />
+            <Route
+              path="bar"
+              loader={() => barDefer.promise}
+              element={<Bar />}
+            />
+          </Route>
+        </DataMemoryRouter>
+      );
+
+      function Layout() {
+        return (
+          <>
+            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <Outlet />
+          </>
+        );
+      }
+
+      function Foo() {
+        return <h1>Foo</h1>;
+      }
+      function Bar() {
+        let lazy = useLoaderData();
+        return (
+          <React.Suspense fallback={<p>Loading...</p>}>
+            <Deferred value={lazy}>{(data) => <p>{data}</p>}</Deferred>
+          </React.Suspense>
+        );
+      }
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      let barValueDfd = defer();
+      barDefer.resolve(deferred(barValueDfd.promise));
+      await waitFor(() => screen.getByText("Loading..."));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      barValueDfd.resolve("LAZY");
+      await waitFor(() => screen.getByText("LAZY"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            LAZY
+          </p>
         </div>"
       `);
     });
