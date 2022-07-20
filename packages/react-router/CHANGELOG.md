@@ -26,12 +26,11 @@
     return (
       <>
         <p>Critical Data: {data.critical}</p>
-        <Deferred
-          value={data.lazy}
-          fallbackElement={<p>Loading...</p>}
-          errorElement={<RenderDeferredError />}>
-          <RenderDeferredData />
-        </Deferred>
+        <Suspense fallback={<p>Loading...</p>}>
+          <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
+            <RenderDeferredData />
+          </Deferred>
+        </Suspense>
       </>
     );
   }
@@ -58,9 +57,11 @@
     return (
       <>
         <p>Critical Data: {data.critical}</p>
-        <Deferred value={data.lazy} fallbackElement={<p>Loading...</p>}>
-          {(data) => <p>{data}</p>}
-        </Deferred>
+        <Suspense fallback={<p>Loading...</p>}>
+          <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
+            {(data) => <p>{data}</p>}
+          </Deferred>
+        </Suspense>
       </>
     );
   }
