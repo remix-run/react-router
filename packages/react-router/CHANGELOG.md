@@ -28,7 +28,7 @@
         <p>Critical Data: {data.critical}</p>
         <Deferred
           value={data.lazy}
-          fallback={<p>Loading...</p>}
+          fallbackElement={<p>Loading...</p>}
           errorElement={<RenderDeferredError />}>
           <RenderDeferredData />
         </Deferred>
@@ -58,7 +58,7 @@
     return (
       <>
         <p>Critical Data: {data.critical}</p>
-        <Deferred value={data.lazy} fallback={<p>Loading...</p>}>
+        <Deferred value={data.lazy} fallbackElement={<p>Loading...</p>}>
           {(data) => <p>{data}</p>}
         </Deferred>
       </>

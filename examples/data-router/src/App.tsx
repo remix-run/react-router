@@ -270,21 +270,24 @@ function DeferredPage() {
     <div>
       <p>{data.critical1}</p>
       <p>{data.critical2}</p>
-      <Deferred value={data.lazyResolved} fallback={<p>should not see me!</p>}>
+      <Deferred
+        value={data.lazyResolved}
+        fallbackElement={<p>should not see me!</p>}
+      >
         <RenderDeferredData />
       </Deferred>
-      <Deferred value={data.lazy1} fallback={<p>loading 1...</p>}>
+      <Deferred value={data.lazy1} fallbackElement={<p>loading 1...</p>}>
         <RenderDeferredData />
       </Deferred>
-      <Deferred value={data.lazy2} fallback={<p>loading 2...</p>}>
+      <Deferred value={data.lazy2} fallbackElement={<p>loading 2...</p>}>
         <RenderDeferredData />
       </Deferred>
-      <Deferred value={data.lazy3} fallback={<p>loading 3...</p>}>
+      <Deferred value={data.lazy3} fallbackElement={<p>loading 3...</p>}>
         {(data) => <p>{data}</p>}
       </Deferred>
       <Deferred
         value={data.lazyError}
-        fallback={<p>loading (error)...</p>}
+        fallbackElement={<p>loading (error)...</p>}
         errorElement={<RenderDeferredError />}
       >
         <RenderDeferredData />
@@ -311,7 +314,7 @@ function DeferredChild() {
   return (
     <div>
       <p>{data.critical}</p>
-      <Deferred value={data.lazy} fallback={<p>loading child...</p>}>
+      <Deferred value={data.lazy} fallbackElement={<p>loading child...</p>}>
         <RenderDeferredData />
       </Deferred>
       <Form method="post">

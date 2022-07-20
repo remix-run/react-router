@@ -1924,7 +1924,7 @@ describe("<DataMemoryRouter>", () => {
         return (
           <>
             <p>{data.critical}</p>
-            <Deferred value={data.lazy} fallback={<p>Loading...</p>}>
+            <Deferred value={data.lazy} fallbackElement={<p>Loading...</p>}>
               <LazyData />
             </Deferred>
           </>
@@ -2041,7 +2041,10 @@ describe("<DataMemoryRouter>", () => {
         return (
           <>
             <p>{data.critical}</p>
-            <Deferred<string> value={data.lazy} fallback={<p>Loading...</p>}>
+            <Deferred<string>
+              value={data.lazy}
+              fallbackElement={<p>Loading...</p>}
+            >
               {(data) => <p>{data}</p>}
             </Deferred>
           </>
@@ -2156,7 +2159,7 @@ describe("<DataMemoryRouter>", () => {
             <p>{data.critical}</p>
             <Deferred
               value={data.lazy}
-              fallback={<p>Loading...</p>}
+              fallbackElement={<p>Loading...</p>}
               errorElement={<LazyError />}
             >
               <LazyData />
@@ -2281,7 +2284,7 @@ describe("<DataMemoryRouter>", () => {
         return (
           <>
             <p>{data.critical}</p>
-            <Deferred value={data.lazy} fallback={<p>Loading...</p>}>
+            <Deferred value={data.lazy} fallbackElement={<p>Loading...</p>}>
               <LazyData />
             </Deferred>
           </>

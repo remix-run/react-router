@@ -428,7 +428,10 @@ function DefaultErrorElement() {
   let error = useRouteError();
   let message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
-    : error?.message || JSON.stringify(error);
+    : error instanceof Error
+    ? error.message
+    : JSON.stringify(error);
+  let stack = error instanceof Error ? error.stack : null;
   let lightgrey = "rgba(200,200,200, 0.5)";
   let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
   let codeStyles = { padding: "2px 4px", backgroundColor: lightgrey };
@@ -436,7 +439,7 @@ function DefaultErrorElement() {
     <>
       <h2>Unhandled Thrown Error!</h2>
       <h3 style={{ fontStyle: "italic" }}>{message}</h3>
-      {error?.stack ? <pre style={preStyles}>{error?.stack}</pre> : null}
+      {stack ? <pre style={preStyles}>{stack}</pre> : null}
       <p>💿 Hey developer 👋</p>
       <p>
         You can provide a way better UX than this when your app throws errors by
@@ -645,8 +648,8 @@ export function useMatches() {
           id: match.route.id,
           pathname,
           params,
-          data: loaderData[match.route.id],
-          handle: match.route.handle,
+          data: loaderData[match.route.id] as unknown,
+          handle: match.route.handle as unknown,
         };
       }),
     [matches, loaderData]
@@ -656,7 +659,7 @@ export function useMatches() {
 /**
  * Returns the loader data for the nearest ancestor Route loader
  */
-export function useLoaderData() {
+export function useLoaderData(): unknown {
   let state = useDataRouterState(DataRouterHook.UseLoaderData);
 
   let route = React.useContext(RouteContext);
@@ -674,7 +677,7 @@ export function useLoaderData() {
 /**
  * Returns the loaderData for the given routeId
  */
-export function useRouteLoaderData(routeId: string): any | undefined {
+export function useRouteLoaderData(routeId: string): unknown {
   let state = useDataRouterState(DataRouterHook.UseRouteLoaderData);
   return state.loaderData[routeId];
 }
@@ -682,7 +685,7 @@ export function useRouteLoaderData(routeId: string): any | undefined {
 /**
  * Returns the action data for the nearest ancestor Route action
  */
-export function useActionData() {
+export function useActionData(): unknown {
   let state = useDataRouterState(DataRouterHook.UseActionData);
 
   let route = React.useContext(RouteContext);
@@ -696,7 +699,7 @@ export function useActionData() {
  * error or a render error.  This is intended to be called from your
  * errorElement to display a proper error message.
  */
-export function useRouteError() {
+export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
   let state = useDataRouterState(DataRouterHook.UseRouteError);
   let route = React.useContext(RouteContext);
