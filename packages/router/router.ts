@@ -2193,7 +2193,9 @@ function shouldRevalidateLoader(
       actionResult,
       defaultShouldRevalidate,
     });
-    return routeChoice !== false;
+    if (typeof routeChoice === "boolean") {
+      return routeChoice;
+    }
   }
 
   return defaultShouldRevalidate;

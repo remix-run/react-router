@@ -1814,7 +1814,7 @@ describe("a router", () => {
       router.dispose();
     });
 
-    it("treats any non-false return value as truthy", async () => {
+    it("requires an explicit false return value to override default true behavior", async () => {
       let count = 0;
       let returnValue = true;
       let history = createMemoryHistory();
@@ -1824,11 +1824,16 @@ describe("a router", () => {
           {
             path: "",
             id: "root",
-            loader: () => count++,
+            loader: () => ++count,
             shouldRevalidate: () => returnValue,
             element: {},
           },
         ],
+        hydrationData: {
+          loaderData: {
+            root: 0,
+          },
+        },
       });
       router.initialize();
 
@@ -1837,13 +1842,6 @@ describe("a router", () => {
         root: 0,
       });
 
-      router.revalidate();
-      await tick();
-      expect(router.state.loaderData).toEqual({
-        root: 1,
-      });
-
-      returnValue = false;
       router.revalidate();
       await tick();
       expect(router.state.loaderData).toEqual({
@@ -1872,6 +1870,91 @@ describe("a router", () => {
       await tick();
       expect(router.state.loaderData).toEqual({
         root: 4,
+      });
+
+      returnValue = false;
+      router.revalidate();
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 4, // No revalidation
+      });
+
+      router.dispose();
+    });
+
+    it("requires an explicit true return value to override default false behavior", async () => {
+      let count = 0;
+      let returnValue = false;
+      let history = createMemoryHistory({ initialEntries: ["/a"] });
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "/",
+            id: "root",
+            loader: () => ++count,
+            shouldRevalidate: () => returnValue,
+            element: {},
+            children: [
+              {
+                path: "a",
+                id: "a",
+              },
+              {
+                path: "b",
+                id: "b",
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            root: 0,
+          },
+        },
+      });
+      router.initialize();
+
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      router.navigate("/b");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      // @ts-expect-error
+      returnValue = undefined;
+      router.navigate("/a");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      // @ts-expect-error
+      returnValue = null;
+      router.navigate("/b");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      // @ts-expect-error
+      returnValue = "truthy";
+      router.navigate("/a");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      returnValue = true;
+      router.navigate("/b");
+      await tick();
+      expect(router.state.loaderData).toEqual({
+        root: 1,
       });
 
       router.dispose();
