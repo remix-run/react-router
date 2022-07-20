@@ -1,7 +1,6 @@
 import React from "react";
 import {
   type ActionFunction,
-  type Deferrable,
   type LoaderFunction,
   DataBrowserRouter,
   Deferred,
@@ -238,11 +237,11 @@ function Todo() {
 interface DeferredRouteLoaderData {
   critical1: string;
   critical2: string;
-  lazyResolved: Deferrable<string>;
-  lazy1: Deferrable<string>;
-  lazy2: Deferrable<string>;
-  lazy3: Deferrable<string>;
-  lazyError: Deferrable<string>;
+  lazyResolved: Promise<string>;
+  lazy1: Promise<string>;
+  lazy2: Promise<string>;
+  lazy3: Promise<string>;
+  lazyError: Promise<string>;
 }
 
 const rand = () => Math.round(Math.random() * 100);
@@ -270,28 +269,35 @@ function DeferredPage() {
     <div>
       <p>{data.critical1}</p>
       <p>{data.critical2}</p>
-      <Deferred
-        value={data.lazyResolved}
-        fallbackElement={<p>should not see me!</p>}
-      >
-        <RenderDeferredData />
-      </Deferred>
-      <Deferred value={data.lazy1} fallbackElement={<p>loading 1...</p>}>
-        <RenderDeferredData />
-      </Deferred>
-      <Deferred value={data.lazy2} fallbackElement={<p>loading 2...</p>}>
-        <RenderDeferredData />
-      </Deferred>
-      <Deferred value={data.lazy3} fallbackElement={<p>loading 3...</p>}>
-        {(data) => <p>{data}</p>}
-      </Deferred>
-      <Deferred
-        value={data.lazyError}
-        fallbackElement={<p>loading (error)...</p>}
-        errorElement={<RenderDeferredError />}
-      >
-        <RenderDeferredData />
-      </Deferred>
+
+      <React.Suspense fallback={<p>should not see me!</p>}>
+        <Deferred value={data.lazyResolved}>
+          <RenderDeferredData />
+        </Deferred>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading 1...</p>}>
+        <Deferred value={data.lazy1}>
+          <RenderDeferredData />
+        </Deferred>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading 2...</p>}>
+        <Deferred value={data.lazy2}>
+          <RenderDeferredData />
+        </Deferred>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading 3...</p>}>
+        <Deferred value={data.lazy3}>{(data) => <p>{data}</p>}</Deferred>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading (error)...</p>}>
+        <Deferred value={data.lazyError} errorElement={<RenderDeferredError />}>
+          <RenderDeferredData />
+        </Deferred>
+      </React.Suspense>
+
       <Outlet />
     </div>
   );
@@ -314,9 +320,11 @@ function DeferredChild() {
   return (
     <div>
       <p>{data.critical}</p>
-      <Deferred value={data.lazy} fallbackElement={<p>loading child...</p>}>
-        <RenderDeferredData />
-      </Deferred>
+      <React.Suspense fallback={<p>loading child...</p>}>
+        <Deferred value={data.lazy}>
+          <RenderDeferredData />
+        </Deferred>
+      </React.Suspense>
       <Form method="post">
         <button type="submit" name="key" value="value">
           Submit

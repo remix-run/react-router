@@ -7308,7 +7308,7 @@ describe("a router", () => {
   });
 
   describe("deferred", () => {
-    it("should support returning deferred responses", async () => {
+    it("should support returning deferred responses (object)", async () => {
       let t = setup({
         routes: [
           {
@@ -7369,6 +7369,82 @@ describe("a router", () => {
           lazy2: "2",
           lazy3: "3",
         },
+      });
+    });
+
+    it("should support returning deferred responses (array)", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/lazy");
+
+      let dfd1 = defer();
+      let dfd2 = defer();
+      let dfd3 = defer();
+      dfd1.resolve("Immediate data");
+      await A.loaders.lazy.resolve(
+        deferred(["1", "2", dfd1.promise, dfd2.promise, dfd3.promise])
+      );
+      expect(t.router.state.loaderData).toEqual({
+        lazy: [
+          "1",
+          "2",
+          "Immediate data",
+          expect.any(Promise),
+          expect.any(Promise),
+        ],
+      });
+
+      await dfd2.resolve("2");
+      expect(t.router.state.loaderData).toEqual({
+        lazy: ["1", "2", "Immediate data", "2", expect.any(Promise)],
+      });
+
+      await dfd3.resolve("3");
+      expect(t.router.state.loaderData).toEqual({
+        lazy: ["1", "2", "Immediate data", "2", "3"],
+      });
+    });
+
+    it("should support returning deferred responses (single Promise)", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/lazy");
+
+      let dfd = defer();
+      await A.loaders.lazy.resolve(deferred(dfd.promise));
+      expect(t.router.state.loaderData).toEqual({
+        lazy: expect.any(Promise),
+      });
+
+      await dfd.resolve("LAZY");
+      expect(t.router.state.loaderData).toEqual({
+        lazy: "LAZY",
       });
     });
 

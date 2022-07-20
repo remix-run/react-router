@@ -707,7 +707,7 @@ export function useRouteError(): unknown {
   let deferredValue = React.useContext(DeferredContext);
 
   // Return deferred errors if we're inside a Deferred errorElement
-  if (deferredValue && isDeferredError(deferredValue)) {
+  if (deferredValue && deferredValue instanceof Error) {
     return deferredValue;
   }
 
@@ -727,21 +727,12 @@ export function useRouteError(): unknown {
   return state.errors?.[thisRoute.route.id];
 }
 
-export type Deferrable<T> = never | T | Promise<T>;
-export type ResolvedDeferrable<T> = T extends null | undefined
-  ? T
-  : T extends Deferrable<infer T2>
-  ? T2 extends Promise<infer T3>
-    ? T3
-    : T2
-  : T;
-
 /**
  * Returns the happy-path data from the nearest ancestor <Deferred /> value
  */
-export function useDeferredData<Data>() {
+export function useDeferredData(): unknown {
   let value = React.useContext(DeferredContext);
-  return value as ResolvedDeferrable<Data>;
+  return value;
 }
 
 const alreadyWarned: Record<string, boolean> = {};

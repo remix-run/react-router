@@ -101,7 +101,7 @@
   },
   "filesize": {
     "packages/router/dist/router.js": {
-      "none": "95 kB"
+      "none": "96 kB"
     },
     "packages/react-router/dist/react-router.production.min.js": {
       "none": "11 kB"

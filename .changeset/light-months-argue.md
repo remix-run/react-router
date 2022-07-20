@@ -19,18 +19,17 @@ function loader() {
 };
 
 // In your route element, grab the values from useLoaderData and render them
-// with <Deferred>
+// with <Deferred> inside a <Suspense> boundary
 function DeferredPage() {
   let data = useLoaderData();
   return (
     <>
       <p>Critical Data: {data.critical}</p>
-      <Deferred
-        value={data.lazy}
-        fallbackElement={<p>Loading...</p>}
-        errorElement={<RenderDeferredError />}>
-        <RenderDeferredData />
-      </Deferred>
+      <Suspense fallback={<p>Loading...</p>}>
+        <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
+          <RenderDeferredData />
+        </Deferred>
+      </Suspense>
     </>
   );
 }
@@ -57,9 +56,11 @@ function DeferredPage() {
   return (
     <>
       <p>Critical Data: {data.critical}</p>
-      <Deferred value={data.lazy} fallbackElement={<p>Loading...</p>}>
-        {(data) => <p>{data}</p>}
-      </Deferred>
+      <Suspense fallback={<p>Loading...</p>}>
+        <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
+          {(data) => <p>{data}</p>}
+        </Deferred>
+      </Suspense>
     </>
   );
 }

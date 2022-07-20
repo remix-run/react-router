@@ -1069,20 +1069,15 @@ export function createRouter(init: RouterInit): Router {
 
     // Wire up subscribers to update loaderData as promises settle
     activeDeferreds.forEach((deferredData, routeId) => {
-      deferredData.subscribe((aborted, loaderDataKey, data) => {
+      deferredData.subscribe((aborted) => {
         if (aborted) {
           activeDeferreds.delete(routeId);
           return;
         }
-        // This will always be defined here, but TS doesn't know that
-        invariant(loaderDataKey, "Missing loaderDataKey in subscribe");
         updateState({
           loaderData: {
             ...state.loaderData,
-            [routeId]: {
-              ...state.loaderData[routeId],
-              [loaderDataKey]: data,
-            },
+            [routeId]: deferredData.data,
           },
         });
         // Remove this instance if all promises have settled
