@@ -28,7 +28,7 @@ import {
   useSubmit,
   useFetcher,
   useFetchers,
-  UNSAFE_DataRouterStateContext,
+  UNSAFE_DataRouterStateContext as DataRouterStateContext,
 } from "react-router-dom";
 
 // Private API
@@ -440,7 +440,7 @@ function testDomRouter(
       );
 
       function Layout() {
-        let state = React.useContext(UNSAFE_DataRouterStateContext);
+        let state = React.useContext(DataRouterStateContext);
         return (
           <div>
             <Link to="/foo" resetScroll={false}>

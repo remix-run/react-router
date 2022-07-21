@@ -69,18 +69,15 @@ describe("A <DataStaticRouter>", () => {
     ];
     let { query } = unstable_createStaticHandler(routes);
 
-    let context = await query(
+    let context = (await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
         signal: new AbortController().signal,
       })
-    );
+    )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
-        <DataStaticRouter
-          routes={routes}
-          context={context as StaticHandlerContext}
-        />
+        <DataStaticRouter routes={routes} context={context} />
       </React.StrictMode>
     );
     expect(html).toMatch("<h1>👋</h1>");
@@ -177,18 +174,15 @@ describe("A <DataStaticRouter>", () => {
     ];
     let { query } = unstable_createStaticHandler(routes);
 
-    let context = await query(
+    let context = (await query(
       new Request("http:/localhost/the/path", {
         signal: new AbortController().signal,
       })
-    );
+    )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
-        <DataStaticRouter
-          routes={routes}
-          context={context as StaticHandlerContext}
-        />
+        <DataStaticRouter routes={routes} context={context} />
       </React.StrictMode>
     );
     expect(html).toMatch("<h1>👋</h1>");
@@ -223,17 +217,17 @@ describe("A <DataStaticRouter>", () => {
     ];
     let { query } = unstable_createStaticHandler(routes);
 
-    let context = await query(
+    let context = (await query(
       new Request("http:/localhost/the/path", {
         signal: new AbortController().signal,
       })
-    );
+    )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
         <DataStaticRouter
           routes={routes}
-          context={context as StaticHandlerContext}
+          context={context}
           nonce="nonce-string"
         />
       </React.StrictMode>
@@ -273,19 +267,15 @@ describe("A <DataStaticRouter>", () => {
     ];
     let { query } = unstable_createStaticHandler(routes);
 
-    let context = await query(
+    let context = (await query(
       new Request("http:/localhost/the/path", {
         signal: new AbortController().signal,
       })
-    );
+    )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
-        <DataStaticRouter
-          routes={routes}
-          context={context as StaticHandlerContext}
-          hydrate={false}
-        />
+        <DataStaticRouter routes={routes} context={context} hydrate={false} />
       </React.StrictMode>
     );
     expect(html).toMatch("<h1>👋</h1>");
@@ -303,17 +293,17 @@ describe("A <DataStaticRouter>", () => {
     ];
     let { query } = unstable_createStaticHandler(routes);
 
-    let context = await query(
+    let context = (await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
         signal: new AbortController().signal,
       })
-    );
+    )) as StaticHandlerContext;
 
     expect(() =>
       ReactDOMServer.renderToStaticMarkup(
         <React.StrictMode>
           {/* @ts-expect-error */}
-          <DataStaticRouter context={context as StaticHandlerContext} />
+          <DataStaticRouter context={context} />
         </React.StrictMode>
       )
     ).toThrowErrorMatchingInlineSnapshot(
@@ -330,5 +320,68 @@ describe("A <DataStaticRouter>", () => {
     ).toThrowErrorMatchingInlineSnapshot(
       `"You must provide \`routes\` and \`context\` to <DataStaticRouter>"`
     );
+  });
+
+  describe("boundary tracking", () => {
+    it("tracks the deepest boundary during render", async () => {
+      let routes = [
+        {
+          path: "/",
+          element: <Outlet />,
+          errorElement: <p>Error</p>,
+          children: [
+            {
+              index: true,
+              element: <h1>👋</h1>,
+              errorElement: <p>Error</p>,
+            },
+          ],
+        },
+      ];
+
+      let context = (await unstable_createStaticHandler(routes).query(
+        new Request("http:/localhost/", {
+          signal: new AbortController().signal,
+        })
+      )) as StaticHandlerContext;
+
+      let html = ReactDOMServer.renderToStaticMarkup(
+        <React.StrictMode>
+          <DataStaticRouter routes={routes} context={context} hydrate={false} />
+        </React.StrictMode>
+      );
+      expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
+      expect(context._deepestRenderedBoundaryId).toBe("0-0");
+    });
+
+    it("tracks only boundaries that expose an errorElement", async () => {
+      let routes = [
+        {
+          path: "/",
+          element: <Outlet />,
+          errorElement: <p>Error</p>,
+          children: [
+            {
+              index: true,
+              element: <h1>👋</h1>,
+            },
+          ],
+        },
+      ];
+
+      let context = (await unstable_createStaticHandler(routes).query(
+        new Request("http:/localhost/", {
+          signal: new AbortController().signal,
+        })
+      )) as StaticHandlerContext;
+
+      let html = ReactDOMServer.renderToStaticMarkup(
+        <React.StrictMode>
+          <DataStaticRouter routes={routes} context={context} hydrate={false} />
+        </React.StrictMode>
+      );
+      expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
+      expect(context._deepestRenderedBoundaryId).toBe("0");
+    });
   });
 });

@@ -10,16 +10,17 @@ import {
   IDLE_NAVIGATION,
   Action,
   invariant,
-  UNSAFE_convertRoutesToDataRoutes,
+  UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
 import type { Location, To } from "react-router-dom";
 import {
   createPath,
   parsePath,
-  DataRouter,
   Router,
+  UNSAFE_DataRouter as DataRouter,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  UNSAFE_DataStaticRouterContext as DataStaticRouterContext,
 } from "react-router-dom";
 
 export interface StaticRouterProps {
@@ -64,7 +65,6 @@ export function StaticRouter({
 }
 
 export interface DataStaticRouterProps {
-  children?: React.ReactNode;
   context: StaticHandlerContext;
   routes: RouteObject[];
   hydrate?: boolean;
@@ -76,7 +76,6 @@ export interface DataStaticRouterProps {
  * on the server where there is no stateful UI.
  */
 export function DataStaticRouter({
-  children,
   context,
   routes,
   hydrate = true,
@@ -108,11 +107,15 @@ export function DataStaticRouter({
 
   return (
     <>
-      <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={dataRouterContext.router.state}>
-          {children ?? <DataRouter />}
-        </DataRouterStateContext.Provider>
-      </DataRouterContext.Provider>
+      <DataStaticRouterContext.Provider value={context}>
+        <DataRouterContext.Provider value={dataRouterContext}>
+          <DataRouterStateContext.Provider
+            value={dataRouterContext.router.state}
+          >
+            <DataRouter />
+          </DataRouterStateContext.Provider>
+        </DataRouterContext.Provider>
+      </DataStaticRouterContext.Provider>
       {hydrateScript ? (
         <script
           suppressHydrationWarning
@@ -170,7 +173,7 @@ function getStatelessRemixRouter(
   routes: RouteObject[],
   context: StaticHandlerContext
 ): RemixRouter {
-  let dataRoutes = UNSAFE_convertRoutesToDataRoutes(routes);
+  let dataRoutes = convertRoutesToDataRoutes(routes);
   let msg = (method: string) =>
     `You cannot use router.${method}() on the server because it is a stateless environment`;
 

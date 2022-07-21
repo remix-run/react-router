@@ -119,13 +119,14 @@ export {
 
 /** @internal */
 export {
-  DataRouter,
-  DataRouterProvider,
+  UNSAFE_DataRouter,
+  UNSAFE_DataRouterProvider,
+  UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
+  UNSAFE_DataStaticRouterContext,
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
-  UNSAFE_DataRouterContext,
-  UNSAFE_DataRouterStateContext,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////

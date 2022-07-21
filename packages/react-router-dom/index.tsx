@@ -5,18 +5,18 @@
 import * as React from "react";
 import { createRoutesFromChildren, NavigateOptions, To } from "react-router";
 import {
-  DataRouter,
   Router,
-  DataRouterProvider,
   createPath,
   useHref,
   useLocation,
   useMatch,
   useNavigate,
   useResolvedPath,
-  UNSAFE_RouteContext,
-  UNSAFE_DataRouterContext,
-  UNSAFE_DataRouterStateContext,
+  UNSAFE_DataRouter as DataRouter,
+  UNSAFE_DataRouterProvider as DataRouterProvider,
+  UNSAFE_DataRouterContext as DataRouterContext,
+  UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  UNSAFE_RouteContext as RouteContext,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -163,13 +163,14 @@ export {
 
 /** @internal */
 export {
-  DataRouter,
-  DataRouterProvider,
+  UNSAFE_DataRouter,
+  UNSAFE_DataRouterProvider,
+  UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
+  UNSAFE_DataStaticRouterContext,
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
-  UNSAFE_DataRouterContext,
-  UNSAFE_DataRouterStateContext,
 } from "react-router";
 //#endregion
 
@@ -481,7 +482,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let path = useResolvedPath(to);
     let match = useMatch({ path: path.pathname, end, caseSensitive });
 
-    let routerState = React.useContext(UNSAFE_DataRouterStateContext);
+    let routerState = React.useContext(DataRouterStateContext);
     let nextLocation = routerState?.navigation.location;
     let nextPath = useResolvedPath(nextLocation || "");
     let nextMatch = React.useMemo(
@@ -808,7 +809,7 @@ export function useSubmit(): SubmitFunction {
 }
 
 function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
-  let dataRouterContext = React.useContext(UNSAFE_DataRouterContext);
+  let dataRouterContext = React.useContext(DataRouterContext);
   invariant(
     dataRouterContext,
     "useSubmitImpl must be used within a Data Router"
@@ -850,7 +851,7 @@ function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
 }
 
 export function useFormAction(action = "."): string {
-  let routeContext = React.useContext(UNSAFE_RouteContext);
+  let routeContext = React.useContext(RouteContext);
   invariant(routeContext, "useFormAction must be used inside a RouteContext");
 
   let [match] = routeContext.matches.slice(-1);
@@ -895,11 +896,11 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  * for any interaction that stays on the same page.
  */
 export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
-  let dataRouterContext = React.useContext(UNSAFE_DataRouterContext);
+  let dataRouterContext = React.useContext(DataRouterContext);
   invariant(dataRouterContext, `useFetcher must be used within a Data Router`);
   let { router } = dataRouterContext;
 
-  let route = React.useContext(UNSAFE_RouteContext);
+  let route = React.useContext(RouteContext);
   invariant(route, `useFetcher must be used inside a RouteContext`);
 
   let routeId = route.matches[route.matches.length - 1]?.route.id;
@@ -953,7 +954,7 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
  * routes that need to provide pending/optimistic UI regarding the fetch.
  */
 export function useFetchers(): Fetcher[] {
-  let state = React.useContext(UNSAFE_DataRouterStateContext);
+  let state = React.useContext(DataRouterStateContext);
   invariant(state, `useFetchers must be used within a DataRouterStateContext`);
   return [...state.fetchers.values()];
 }
@@ -972,13 +973,13 @@ function useScrollRestoration({
   storageKey?: string;
 } = {}) {
   let location = useLocation();
-  let dataRouterContext = React.useContext(UNSAFE_DataRouterContext);
+  let dataRouterContext = React.useContext(DataRouterContext);
   invariant(
     dataRouterContext,
     "useScrollRestoration must be used within a DataRouterContext"
   );
   let { router } = dataRouterContext;
-  let state = React.useContext(UNSAFE_DataRouterStateContext);
+  let state = React.useContext(DataRouterStateContext);
 
   invariant(
     router != null && state != null,

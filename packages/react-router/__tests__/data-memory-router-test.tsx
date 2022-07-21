@@ -13,8 +13,8 @@ import { createMemoryRouter } from "@remix-run/router";
 
 import {
   DataMemoryRouterProps,
-  DataRouter,
-  DataRouterProvider,
+  UNSAFE_DataRouter as DataRouter,
+  UNSAFE_DataRouterProvider as DataRouterProvider,
 } from "react-router";
 import {
   DataMemoryRouter,
@@ -30,9 +30,9 @@ import {
   useRouteError,
   useNavigation,
   useRevalidator,
-  UNSAFE_DataRouterContext,
   MemoryRouter,
   Routes,
+  UNSAFE_DataRouterContext as DataRouterContext,
 } from "react-router";
 
 // Private API
@@ -2640,7 +2640,7 @@ function MemoryNavigate({
   formData?: FormData;
   children: React.ReactNode;
 }) {
-  let dataRouterContext = React.useContext(UNSAFE_DataRouterContext);
+  let dataRouterContext = React.useContext(DataRouterContext);
 
   let onClickHandler = React.useCallback(
     async (event: React.MouseEvent) => {

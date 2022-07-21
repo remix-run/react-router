@@ -239,6 +239,7 @@ export interface StaticHandlerContext {
   statusCode: number;
   loaderHeaders: Record<string, Headers>;
   actionHeaders: Record<string, Headers>;
+  _deepestRenderedBoundaryId?: string | null;
 }
 
 /**

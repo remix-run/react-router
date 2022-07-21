@@ -97,7 +97,6 @@ export function DataRouterProvider({
   let dataRouterContext: DataRouterContextObject = {
     router,
     navigator,
-    // TODO: Does this have any use?
     static: false,
     basename: basename || "/",
   };
