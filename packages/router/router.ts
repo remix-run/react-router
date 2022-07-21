@@ -1973,6 +1973,25 @@ export function unstable_createStaticHandler(
 //#region Helpers
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Given an existing StaticHandlerContext and an error thrown at render time,
+ * provide an updated StaticHandlerContext suitable for a second SSR render
+ */
+export function getStaticContextFromError(
+  routes: DataRouteObject[],
+  context: StaticHandlerContext,
+  error: any
+) {
+  let newContext: StaticHandlerContext = {
+    ...context,
+    statusCode: 500,
+    errors: {
+      [context._deepestRenderedBoundaryId || routes[0].id]: error,
+    },
+  };
+  return newContext;
+}
+
 // Normalize navigation options by converting formMethod=GET formData objects to
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
