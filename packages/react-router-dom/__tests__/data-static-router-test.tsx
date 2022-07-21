@@ -1,5 +1,5 @@
 import {
-  unstable_createStaticHandler,
+  unstable_createStaticHandler as createStaticHandler,
   StaticHandlerContext,
 } from "@remix-run/router";
 import * as React from "react";
@@ -10,7 +10,7 @@ import {
   useLocation,
   useMatches,
 } from "react-router-dom";
-import { DataStaticRouter } from "react-router-dom/server";
+import { unstable_DataStaticRouter as DataStaticRouter } from "react-router-dom/server";
 
 beforeEach(() => {
   jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -67,7 +67,7 @@ describe("A <DataStaticRouter>", () => {
         ],
       },
     ];
-    let { query } = unstable_createStaticHandler(routes);
+    let { query } = createStaticHandler(routes);
 
     let context = (await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
@@ -172,7 +172,7 @@ describe("A <DataStaticRouter>", () => {
         ],
       },
     ];
-    let { query } = unstable_createStaticHandler(routes);
+    let { query } = createStaticHandler(routes);
 
     let context = (await query(
       new Request("http:/localhost/the/path", {
@@ -215,7 +215,7 @@ describe("A <DataStaticRouter>", () => {
         ],
       },
     ];
-    let { query } = unstable_createStaticHandler(routes);
+    let { query } = createStaticHandler(routes);
 
     let context = (await query(
       new Request("http:/localhost/the/path", {
@@ -265,7 +265,7 @@ describe("A <DataStaticRouter>", () => {
         ],
       },
     ];
-    let { query } = unstable_createStaticHandler(routes);
+    let { query } = createStaticHandler(routes);
 
     let context = (await query(
       new Request("http:/localhost/the/path", {
@@ -291,7 +291,7 @@ describe("A <DataStaticRouter>", () => {
         element: <h1>👋</h1>,
       },
     ];
-    let { query } = unstable_createStaticHandler(routes);
+    let { query } = createStaticHandler(routes);
 
     let context = (await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
@@ -339,7 +339,7 @@ describe("A <DataStaticRouter>", () => {
         },
       ];
 
-      let context = (await unstable_createStaticHandler(routes).query(
+      let context = (await createStaticHandler(routes).query(
         new Request("http:/localhost/", {
           signal: new AbortController().signal,
         })
@@ -369,7 +369,7 @@ describe("A <DataStaticRouter>", () => {
         },
       ];
 
-      let context = (await unstable_createStaticHandler(routes).query(
+      let context = (await createStaticHandler(routes).query(
         new Request("http:/localhost/", {
           signal: new AbortController().signal,
         })

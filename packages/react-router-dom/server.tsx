@@ -75,7 +75,7 @@ export interface DataStaticRouterProps {
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function DataStaticRouter({
+export function unstable_DataStaticRouter({
   context,
   routes,
   hydrate = true,

@@ -1657,7 +1657,7 @@ export function unstable_createStaticHandler(
 ): StaticHandler {
   invariant(
     routes.length > 0,
-    "You must provide a non-empty routes array to createStaticHandler"
+    "You must provide a non-empty routes array to unstable_createStaticHandler"
   );
 
   let dataRoutes = convertRoutesToDataRoutes(routes);
