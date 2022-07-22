@@ -131,7 +131,7 @@ export function DataRouter() {
       navigationType={router.state.historyAction}
       navigator={navigator}
     >
-      <Routes routes={router.routes} />
+      <Routes />
     </Router>
   );
 }
@@ -416,7 +416,6 @@ export function Router({
 export interface RoutesProps {
   children?: React.ReactNode;
   location?: Partial<Location> | string;
-  routes?: RouteObject[];
 }
 
 /**
@@ -428,9 +427,16 @@ export interface RoutesProps {
 export function Routes({
   children,
   location,
-  routes,
 }: RoutesProps): React.ReactElement | null {
-  return useRoutes(routes || createRoutesFromChildren(children), location);
+  let dataRouterContext = React.useContext(DataRouterContext);
+  // When in a DataRouterContext _without_ children, we use the router routes
+  // directly.  If we have children, then we're in a descendant tree and we
+  // need to use child routes.
+  let routes =
+    dataRouterContext && !children
+      ? dataRouterContext.router.routes
+      : createRoutesFromChildren(children);
+  return useRoutes(routes, location);
 }
 
 export interface DeferredResolveRenderFunction {
