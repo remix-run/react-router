@@ -101,6 +101,10 @@ export function unstable_DataStaticRouter({
       actionData: context.actionData,
       errors: context.errors,
     };
+    // Use JSON.parse here instead of embedding a raw JS object here to speed
+    // up parsing on the client.  Dual-stringify is needed to ensure all quotes
+    // are properly escaped in the resulting string.  See:
+    //   https://v8.dev/blog/cost-of-javascript-2019#json
     let json = JSON.stringify(JSON.stringify(data));
     hydrateScript = `window.__staticRouterHydrationData = JSON.parse(${json});`;
   }

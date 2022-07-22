@@ -93,7 +93,7 @@ import {
   useRevalidator,
 } from "./lib/hooks";
 
-// FIXME: Do we need to still export these to be non-breaking?
+// Exported for backwards compatibility, but not being used internally anymore
 type Hash = string;
 type Pathname = string;
 type Search = string;
