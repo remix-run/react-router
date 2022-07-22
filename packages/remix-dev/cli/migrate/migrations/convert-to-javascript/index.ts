@@ -10,16 +10,16 @@ import { convertTSFilesToJS } from "./convertTSFilesToJS";
 
 const TRANSFORM_PATH = join(__dirname, "transform");
 
-export const convertToJavaScript: MigrationFunction = async ({
-  flags,
+export const convertToJavaScript: MigrationFunction = async (
   projectDir,
-}) => {
+  flags = {}
+) => {
   let config = await readConfig(projectDir);
 
   // 1. Rename all tsconfig.json files to jsconfig.json
   convertTSConfigs(config.rootDirectory);
 
-  // 2. Remove @types/* & TypeScript dependencies + typecheck script from package.json
+  // 2. Remove @types/* & TypeScript dependencies + `typecheck` script from `package.json`
   await cleanupPackageJson(config.rootDirectory);
 
   // 3. Run codemod
@@ -35,15 +35,19 @@ export const convertToJavaScript: MigrationFunction = async ({
   });
   if (!codemodOk) {
     console.error("❌ I couldn't update your imports to JS.");
-    if (!flags.debug) {
+
+    if (flags.interactive && !flags.debug) {
       console.log("👉 Try again with the `--debug` flag to see what failed.");
     }
+
     process.exit(1);
   }
 
   // 4. Convert all .ts files to .js
   convertTSFilesToJS(config.rootDirectory);
-  console.log("✅ Your JavaScript looks good!");
+  if (flags.interactive) {
+    console.log("✅ Your JavaScript looks good!");
 
-  console.log("\n🚚 I've successfully migrated your project! 🎉");
+    console.log("\n🚚 I've successfully migrated your project! 🎉");
+  }
 };

@@ -35,11 +35,14 @@ const getRemixVersionSpec = (remixDeps: Dependency[]): string => {
     console.error("❌ I couldn't find versions for your Remix packages.");
     process.exit(1);
   }
+
   if (semver.lt(candidateMin, "1.3.3")) {
     console.log("⬆️  I'm upgrading your Remix dependencies");
     console.log(because("this migration requires v1.3.3 or newer."));
+
     return "^1.3.3";
   }
+
   console.log(
     detected(
       `\`${colors.blue(
@@ -52,7 +55,9 @@ const getRemixVersionSpec = (remixDeps: Dependency[]): string => {
 };
 
 const shouldKeepPostinstall = (original?: string): boolean => {
-  if (original === undefined) return false;
+  if (original === undefined) {
+    return false;
+  }
 
   if (onlyRemixSetup.test(original) || onlyRemixSetupRuntime.test(original)) {
     console.log(
@@ -75,10 +80,10 @@ const shouldKeepPostinstall = (original?: string): boolean => {
   return true;
 };
 
-export const replaceRemixImports: MigrationFunction = async ({
-  flags,
+export const replaceRemixImports: MigrationFunction = async (
   projectDir,
-}) => {
+  flags = {}
+) => {
   let pkg = await NpmCliPackageJson.load(projectDir);
 
   // 0. resolve runtime and adapter

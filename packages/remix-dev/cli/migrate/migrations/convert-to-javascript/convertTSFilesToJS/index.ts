@@ -6,8 +6,8 @@ import { convertTSFileToJS } from "./convertTSFileToJS";
 
 export const convertTSFilesToJS = (projectDir: string) => {
   let entries = glob.sync("**/*.+(ts|tsx)", {
-    cwd: projectDir,
     absolute: true,
+    cwd: projectDir,
     ignore: ["**/node_modules/**"],
   });
 

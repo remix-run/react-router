@@ -1,5 +1,6 @@
+import { spawnSync } from "child_process";
 import { tmpdir } from "os";
-import { join } from "path";
+import { join, resolve } from "path";
 import glob from "fast-glob";
 import {
   copySync,
@@ -60,6 +61,40 @@ afterEach(() => {
   removeSync(TEMP_DIR);
 });
 
+const checkMigrationRanSuccessfully = async (projectDir: string) => {
+  let config = await readConfig(projectDir);
+
+  let jsConfigJson: TsConfigJson = readJSONSync(
+    join(projectDir, "jsconfig.json")
+  );
+  expect(jsConfigJson.include).not.toContain("remix.env.d.ts");
+  expect(jsConfigJson.include).not.toContain("**/*.ts");
+  expect(jsConfigJson.include).toContain("**/*.js");
+  expect(jsConfigJson.include).not.toContain("**/*.tsx");
+  expect(jsConfigJson.include).toContain("**/*.jsx");
+
+  let packageJson: PackageJson = readJSONSync(join(projectDir, "package.json"));
+  expect(packageJson.devDependencies).not.toContain("@types/react");
+  expect(packageJson.devDependencies).not.toContain("@types/react-dom");
+  expect(packageJson.devDependencies).not.toContain("typescript");
+  expect(packageJson.scripts).not.toContain("typecheck");
+
+  let TSFiles = glob.sync("**/*.@(ts|tsx)", {
+    cwd: config.rootDirectory,
+    ignore: [`./${config.appDirectory}/**/*`],
+  });
+  expect(TSFiles).toHaveLength(0);
+  let JSFiles = glob.sync("**/*.@(js|jsx)", {
+    absolute: true,
+    cwd: config.rootDirectory,
+    ignore: [`./${config.appDirectory}/**/*`],
+  });
+  let result = shell.grep("-l", 'from "', JSFiles);
+  expect(result.stdout.trim()).toBe("");
+  expect(result.stderr).toBeNull();
+  expect(result.code).toBe(0);
+};
+
 const makeApp = () => {
   let projectDir = join(TEMP_DIR, "convert-to-javascript");
 
@@ -68,56 +103,50 @@ const makeApp = () => {
   return projectDir;
 };
 
-const runConvertToJavaScriptMigration = (projectDir: string) =>
-  run([
-    "migrate",
-    "--migration",
-    "convert-to-javascript",
-    projectDir,
-    "--force",
-  ]);
+const getRunArgs = (projectDir: string) => [
+  "migrate",
+  "--migration",
+  "convert-to-javascript",
+  projectDir,
+  "--force",
+];
+const runConvertToJavaScriptMigrationProgrammatically = (projectDir: string) =>
+  run([...getRunArgs(projectDir), "--no-interactive"]);
+const runConvertToJavaScriptMigrationViaCLI = (projectDir: string) =>
+  spawnSync(
+    "node",
+    [
+      "--require",
+      require.resolve("esbuild-register"),
+      "--require",
+      join(__dirname, "..", "msw.ts"),
+      resolve(__dirname, "..", "..", "cli.ts"),
+      ...getRunArgs(projectDir),
+      "--interactive",
+    ],
+    { cwd: projectDir }
+  ).stdout?.toString("utf-8");
 
 describe("`convert-to-javascript` migration", () => {
-  it("runs successfully", async () => {
+  it("runs successfully when ran via CLI", async () => {
     let projectDir = makeApp();
-    let config = await readConfig(projectDir);
 
-    await runConvertToJavaScriptMigration(projectDir);
+    let output = runConvertToJavaScriptMigrationViaCLI(projectDir);
 
-    let jsConfigJson: TsConfigJson = readJSONSync(
-      join(projectDir, "jsconfig.json")
-    );
-    expect(jsConfigJson.include).not.toContain("remix.env.d.ts");
-    expect(jsConfigJson.include).not.toContain("**/*.ts");
-    expect(jsConfigJson.include).toContain("**/*.js");
-    expect(jsConfigJson.include).not.toContain("**/*.tsx");
-    expect(jsConfigJson.include).toContain("**/*.jsx");
-
-    let packageJson: PackageJson = readJSONSync(
-      join(projectDir, "package.json")
-    );
-    expect(packageJson.devDependencies).not.toContain("@types/react");
-    expect(packageJson.devDependencies).not.toContain("@types/react-dom");
-    expect(packageJson.devDependencies).not.toContain("typescript");
-    expect(packageJson.scripts).not.toContain("typecheck");
+    await checkMigrationRanSuccessfully(projectDir);
 
     expect(output).toContain("✅ Your JavaScript looks good!");
-
-    let TSFiles = glob.sync("**/*.@(ts|tsx)", {
-      cwd: config.rootDirectory,
-      ignore: [`./${config.appDirectory}/**/*`],
-    });
-    expect(TSFiles).toHaveLength(0);
-    let JSFiles = glob.sync("**/*.@(js|jsx)", {
-      absolute: true,
-      cwd: config.rootDirectory,
-      ignore: [`./${config.appDirectory}/**/*`],
-    });
-    let result = shell.grep("-l", 'from "', JSFiles);
-    expect(result.stdout.trim()).toBe("");
-    expect(result.stderr).toBeNull();
-    expect(result.code).toBe(0);
-
     expect(output).toContain("successfully migrated");
+  });
+
+  it("runs successfully when ran programmatically", async () => {
+    let projectDir = makeApp();
+
+    await runConvertToJavaScriptMigrationProgrammatically(projectDir);
+
+    await checkMigrationRanSuccessfully(projectDir);
+
+    expect(output).not.toContain("✅ Your JavaScript looks good!");
+    expect(output).not.toContain("successfully migrated");
   });
 });

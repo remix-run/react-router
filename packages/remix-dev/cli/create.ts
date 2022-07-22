@@ -1,21 +1,21 @@
-import stream from "stream";
-import { promisify } from "util";
+import { execSync } from "child_process";
 import path from "path";
+import stream from "stream";
+import { fileURLToPath } from "url";
+import { promisify } from "util";
 import fse from "fs-extra";
+import gunzip from "gunzip-maybe";
 import fetch from "node-fetch";
 import ora from "ora";
-import gunzip from "gunzip-maybe";
-import tar from "tar-fs";
 import * as semver from "semver";
-import { fileURLToPath } from "url";
-import { execSync } from "child_process";
 import sortPackageJSON from "sort-package-json";
+import tar from "tar-fs";
 
 import * as colors from "../colors";
-import packageJson from "../package.json";
-import { convertTemplateToJavaScript } from "./convert-to-javascript";
-import { getPreferredPackageManager } from "./getPreferredPackageManager";
 import invariant from "../invariant";
+import packageJson from "../package.json";
+import { getPreferredPackageManager } from "./getPreferredPackageManager";
+import { convertToJavaScript } from "./migrate/migrations/convert-to-javascript";
 
 const remixDevPackageVersion = packageJson.version;
 
@@ -196,8 +196,8 @@ export async function createApp({
     !useTypeScript &&
     fse.existsSync(path.join(projectDir, "tsconfig.json"))
   ) {
-    let spinner = ora("Converting template to JavaScript…").start();
-    await convertTemplateToJavaScript(projectDir);
+    let spinner = ora("Migrating template to JavaScript…").start();
+    await convertToJavaScript(projectDir, { interactive: false });
     spinner.stop();
     spinner.clear();
   }

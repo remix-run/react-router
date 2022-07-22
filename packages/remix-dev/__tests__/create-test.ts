@@ -1,10 +1,10 @@
 import { execSync } from "child_process";
-import fse from "fs-extra";
-import os from "os";
-import path from "path";
+import * as os from "os";
+import * as path from "path";
 import { pathToFileURL } from "url";
-import stripAnsi from "strip-ansi";
+import * as fse from "fs-extra";
 import inquirer from "inquirer";
+import stripAnsi from "strip-ansi";
 
 import { run } from "../cli/run";
 import { server } from "./msw";
@@ -336,7 +336,7 @@ describe("the create command", () => {
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
-  it("converts a template to javascript", async () => {
+  it("converts a template to JavaScript", async () => {
     let projectDir = await getProjectDir("template-to-js");
     await run([
       "create",
@@ -351,16 +351,10 @@ describe("the create command", () => {
         "\n\n" +
         getSuccessMessage(path.join("<TEMP_DIR>", "template-to-js"))
     );
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.jsx"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
+    expect(fse.existsSync(path.join(projectDir, "app/root.jsx"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "tsconfig.json"))).toBeFalsy();
     expect(fse.existsSync(path.join(projectDir, "jsconfig.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/utils.js"))).toBeTruthy();
-    let pkgJSON = JSON.parse(
-      fse.readFileSync(path.join(projectDir, "package.json"), "utf-8")
-    );
-    expect(Object.keys(pkgJSON.devDependencies)).not.toContain("typescript");
   });
 
   it("works for a file path to a directory on disk", async () => {

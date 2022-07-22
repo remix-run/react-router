@@ -1,8 +1,8 @@
 import childProcess from "child_process";
-import fse from "fs-extra";
 import os from "os";
 import path from "path";
 import util from "util";
+import fse from "fs-extra";
 import semver from "semver";
 
 let DOWN = "\x1B\x5B\x42";
@@ -235,23 +235,16 @@ describe("remix CLI", () => {
         { question: /install/i, type: ["n", ENTER] },
       ]);
 
-      expect(
-        fse.existsSync(path.join(projectDir, "package.json"))
-      ).toBeTruthy();
+      expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
       expect(
         fse.existsSync(path.join(projectDir, "app/root.jsx"))
       ).toBeTruthy();
-      expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
       expect(
         fse.existsSync(path.join(projectDir, "tsconfig.json"))
       ).toBeFalsy();
       expect(
         fse.existsSync(path.join(projectDir, "jsconfig.json"))
       ).toBeTruthy();
-      let pkgJSON = JSON.parse(
-        fse.readFileSync(path.join(projectDir, "package.json"), "utf-8")
-      );
-      expect(Object.keys(pkgJSON.devDependencies)).not.toContain("typescript");
     });
   });
 });
