@@ -2,7 +2,7 @@ import type * as express from "express";
 import { unstable_createStaticHandler } from "@remix-run/router";
 import * as React from "react";
 import ReactDOMServer from "react-dom/server";
-import { unstable_ as DataStaticRouter } from "react-router-dom/server";
+import { unstable_DataStaticRouter as DataStaticRouter } from "react-router-dom/server";
 import { routes } from "./App";
 
 export async function render(request: express.Request) {
