@@ -97,6 +97,48 @@ describe("A <Link> click", () => {
 
       expect(event.defaultPrevented).toBe(false);
     });
+
+    it("calls provided listener", () => {
+      let handlerCalled;
+      let defaultPrevented;
+
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link
+              reloadDocument
+              to="../about"
+              onClick={(e) => {
+                handlerCalled = true;
+                defaultPrevented = e.defaultPrevented;
+              }}
+            >
+              About
+            </Link>
+          </div>
+        );
+      }
+
+      act(() => {
+        ReactDOM.render(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+              <Route path="about" element={<h1>About</h1>} />
+            </Routes>
+          </MemoryRouter>,
+          node
+        );
+      });
+
+      act(() => {
+        click(node.querySelector("a"));
+      });
+
+      expect(handlerCalled).toBe(true);
+      expect(defaultPrevented).toBe(false);
+    });
   });
 
   describe("when preventDefault is used on the click handler", () => {

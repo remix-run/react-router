@@ -23,6 +23,8 @@ export enum ResultType {
 export interface SuccessResult {
   type: ResultType.data;
   data: any;
+  statusCode?: number;
+  headers?: Headers;
 }
 
 /**
@@ -236,6 +238,33 @@ export interface RouteMatch<
    * The route object that was used to match.
    */
   route: RouteObjectType;
+}
+
+// Walk the route tree generating unique IDs where necessary so we are working
+// solely with DataRouteObject's within the Router
+export function convertRoutesToDataRoutes(
+  routes: RouteObject[],
+  parentPath: number[] = [],
+  allIds: Set<string> = new Set<string>()
+): DataRouteObject[] {
+  return routes.map((route, index) => {
+    let treePath = [...parentPath, index];
+    let id = typeof route.id === "string" ? route.id : treePath.join("-");
+    invariant(
+      !allIds.has(id),
+      `Found a route id collision on id "${id}".  Route ` +
+        "id's must be globally unique within Data Router usages"
+    );
+    allIds.add(id);
+    let dataRoute: DataRouteObject = {
+      ...route,
+      id,
+      children: route.children
+        ? convertRoutesToDataRoutes(route.children, treePath, allIds)
+        : undefined,
+    };
+    return dataRoute;
+  });
 }
 
 /**
@@ -851,38 +880,76 @@ export const json: JsonFunction = (data, init = {}) => {
   });
 };
 
-export class DeferredData {
-  private pendingKeys: Set<string> = new Set<string>();
-  private cancelled: boolean = false;
-  private subscriber?: (aborted: boolean, key?: string, data?: any) => void =
-    undefined;
-  data: RouteData = {};
+type DeferredInput =
+  | Record<string, unknown>
+  | Array<unknown>
+  | Promise<unknown>;
 
-  constructor(data: Record<string, any>) {
-    Object.entries(data).forEach(([key, value]) => {
-      // Store all data in our internal copy and track promise keys
-      this.data[key] = value;
-      if (value instanceof Promise) {
-        this.pendingKeys.add(key);
-        value.then(
-          (data) => this.onSettle(key, null, data),
-          (error) => this.onSettle(key, error)
-        );
-      }
-    });
+export class DeferredData {
+  private pendingKeys: Set<string | number> = new Set<string | number>();
+  private cancelled: boolean = false;
+  private subscriber?: (aborted: boolean) => void = undefined;
+  data: DeferredInput | unknown;
+
+  constructor(data: DeferredInput) {
+    // Store all data in our internal copy and track promise keys
+    if (data instanceof Promise) {
+      this.data = data;
+      this.trackPromise("__single__", data);
+    } else if (Array.isArray(data)) {
+      this.data = [...data];
+      data.forEach((value, index) => this.trackPromise(index, value));
+    } else if (typeof data === "object") {
+      this.data = { ...data };
+      Object.entries(data).forEach(([key, value]) =>
+        this.trackPromise(key, value)
+      );
+    } else {
+      invariant(false, "Incorrect data type passed to deferred()");
+    }
   }
 
-  private onSettle(key: string, error: any, data?: any) {
+  private trackPromise(
+    key: string | number,
+    value: Promise<unknown> | unknown
+  ) {
+    if (value instanceof Promise) {
+      this.pendingKeys.add(key);
+      value.then(
+        (data) => this.onSettle(key, null, data as unknown),
+        (error) => this.onSettle(key, error as unknown)
+      );
+    }
+  }
+
+  private onSettle(key: string | number, error: unknown, data?: unknown) {
     if (this.cancelled) {
       return;
     }
     this.pendingKeys.delete(key);
-    let value = error ? new DeferredError(error) : data;
-    this.data[key] = value;
-    this.subscriber?.(false, key, value);
+
+    let value = error ? new DeferredError(error as string) : data;
+
+    if (this.data instanceof Promise) {
+      this.data = value;
+    } else if (Array.isArray(this.data)) {
+      invariant(typeof key === "number", "expected key to be a number");
+      let data = [...this.data];
+      data[key] = value;
+      this.data = data;
+    } else if (typeof this.data === "object") {
+      this.data = {
+        ...this.data,
+        [key]: value,
+      };
+    } else {
+      invariant(false, "Incorrect data type on DeferredData");
+    }
+
+    this.subscriber?.(false);
   }
 
-  subscribe(fn: (aborted: boolean, key?: string, data?: any) => void) {
+  subscribe(fn: (aborted: boolean) => void) {
     this.subscriber = fn;
   }
 
@@ -911,7 +978,7 @@ export function isDeferredError(e: any): e is DeferredError {
   return e instanceof DeferredError;
 }
 
-export function deferred(data: Record<string, any>) {
+export function deferred(data: DeferredInput) {
   return new DeferredData(data);
 }
 

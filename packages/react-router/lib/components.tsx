@@ -6,7 +6,7 @@ import type {
   MemoryHistory,
   RouteMatch,
   RouteObject,
-  Router as DataRouter,
+  Router as RemixRouter,
   RouterState,
   To,
 } from "@remix-run/router";
@@ -22,15 +22,14 @@ import {
 } from "@remix-run/router";
 import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
+import type { Navigator, DataRouterContextObject } from "./context";
 import {
   LocationContext,
   NavigationContext,
-  Navigator,
   DataRouterContext,
   DataRouterStateContext,
   DeferredContext,
 } from "./context";
-import type { ResolvedDeferrable } from "./hooks";
 import {
   useDeferredData,
   useInRouterContext,
@@ -44,7 +43,7 @@ import {
 // to avoid issues w.r.t. dual initialization fetches in concurrent rendering.
 // Data router apps are expected to have a static route tree and are not intended
 // to be unmounted/remounted at runtime.
-let routerSingleton: DataRouter;
+let routerSingleton: RemixRouter;
 
 /**
  * Unit-testing-only function to reset the router between tests
@@ -56,28 +55,20 @@ export function _resetModuleScope() {
 }
 
 /**
- * @private
+ * A higher-order component that, given a Remix Router instance. setups the
+ * Context's required for data routing
  */
-export function useRenderDataRouter({
+export function DataRouterProvider({
   basename,
   children,
   fallbackElement,
-  routes,
-  createRouter,
+  router,
 }: {
   basename?: string;
   children?: React.ReactNode;
   fallbackElement?: React.ReactNode;
-  routes?: RouteObject[];
-  createRouter: (routes: RouteObject[]) => DataRouter;
+  router: RemixRouter;
 }): React.ReactElement {
-  if (!routerSingleton) {
-    routerSingleton = createRouter(
-      routes || createRoutesFromChildren(children)
-    ).initialize();
-  }
-  let router = routerSingleton;
-
   // Sync router state to our component state to force re-renders
   let state: RouterState = useSyncExternalStoreShim(
     router.subscribe,
@@ -103,23 +94,45 @@ export function useRenderDataRouter({
     };
   }, [router]);
 
+  let dataRouterContext: DataRouterContextObject = {
+    router,
+    navigator,
+    static: false,
+    basename: basename || "/",
+  };
+
   if (!state.initialized) {
     return <>{fallbackElement}</>;
   }
 
   return (
-    <DataRouterContext.Provider value={router}>
-      <DataRouterStateContext.Provider value={state}>
-        <Router
-          basename={basename}
-          location={state.location}
-          navigationType={state.historyAction}
-          navigator={navigator}
-        >
-          <DataRoutes routes={router.routes} children={children} />
-        </Router>
-      </DataRouterStateContext.Provider>
+    <DataRouterContext.Provider value={dataRouterContext}>
+      <DataRouterStateContext.Provider value={state} children={children} />
     </DataRouterContext.Provider>
+  );
+}
+
+/**
+ * A data-aware wrapper for `<Router>` that leverages the Context's provided by
+ * `<DataRouterProvider>`
+ */
+export function DataRouter() {
+  let dataRouterContext = React.useContext(DataRouterContext);
+  invariant(
+    dataRouterContext,
+    "<DataRouter> may only be rendered within a DataRouterContext"
+  );
+  let { router, navigator, basename } = dataRouterContext;
+
+  return (
+    <Router
+      basename={basename}
+      location={router.state.location}
+      navigationType={router.state.historyAction}
+      navigator={navigator}
+    >
+      <Routes />
+    </Router>
   );
 }
 
@@ -142,20 +155,26 @@ export function DataMemoryRouter({
   fallbackElement,
   routes,
 }: DataMemoryRouterProps): React.ReactElement {
-  return useRenderDataRouter({
-    basename,
-    children,
-    fallbackElement,
-    routes,
-    createRouter: (routes) =>
-      createMemoryRouter({
-        basename,
-        initialEntries,
-        initialIndex,
-        routes,
-        hydrationData,
-      }),
-  });
+  if (!routerSingleton) {
+    routerSingleton = createMemoryRouter({
+      basename,
+      hydrationData,
+      initialEntries,
+      initialIndex,
+      routes: routes || createRoutesFromChildren(children),
+    }).initialize();
+  }
+  let router = routerSingleton;
+
+  return (
+    <DataRouterProvider
+      router={router}
+      basename={basename}
+      fallbackElement={fallbackElement}
+    >
+      <DataRouter />
+    </DataRouterProvider>
+  );
 }
 
 export interface MemoryRouterProps {
@@ -409,35 +428,24 @@ export function Routes({
   children,
   location,
 }: RoutesProps): React.ReactElement | null {
-  return useRoutes(createRoutesFromChildren(children), location);
+  let dataRouterContext = React.useContext(DataRouterContext);
+  // When in a DataRouterContext _without_ children, we use the router routes
+  // directly.  If we have children, then we're in a descendant tree and we
+  // need to use child routes.
+  let routes =
+    dataRouterContext && !children
+      ? dataRouterContext.router.routes
+      : createRoutesFromChildren(children);
+  return useRoutes(routes, location);
 }
 
-interface DataRoutesProps extends RoutesProps {
-  routes?: RouteObject[];
+export interface DeferredResolveRenderFunction {
+  (data: Awaited<any>): JSX.Element;
 }
 
-/**
- * @private
- * Used as an extension to <Routes> and accepts a manual `routes` array to be
- * instead of using JSX children.  Extracted to it's own component to avoid
- * conditional usage of `useRoutes` if we have to render a `fallbackElement`
- */
-function DataRoutes({
-  children,
-  location,
-  routes,
-}: DataRoutesProps): React.ReactElement | null {
-  return useRoutes(routes || createRoutesFromChildren(children), location);
-}
-
-export interface DeferredResolveRenderFunction<Data> {
-  (data: ResolvedDeferrable<Data>): JSX.Element;
-}
-
-export interface DeferredProps<Data>
-  extends Omit<React.SuspenseProps, "children"> {
-  children: React.ReactNode | DeferredResolveRenderFunction<Data>;
-  value: Data;
+export interface DeferredProps {
+  children: React.ReactNode | DeferredResolveRenderFunction;
+  value: any;
   errorElement?: React.ReactNode;
 }
 
@@ -445,70 +453,85 @@ export interface DeferredProps<Data>
  * Component to use for rendering lazily loaded data from returning deferred()
  * in a loader function
  */
-export function Deferred<Data = any>({
-  children,
-  value,
-  fallback,
-  errorElement,
-}: DeferredProps<Data>) {
+export function Deferred({ children, value, errorElement }: DeferredProps) {
   return (
-    <DeferredContext.Provider value={value}>
-      <React.Suspense fallback={fallback}>
-        <DeferredWrapper errorElement={errorElement}>
-          {typeof children === "function" ? (
-            <ResolveDeferred
-              children={children as DeferredResolveRenderFunction<Data>}
-            />
-          ) : (
-            children
-          )}
-        </DeferredWrapper>
-      </React.Suspense>
-    </DeferredContext.Provider>
+    <DeferredErrorBoundary value={value} errorElement={errorElement}>
+      <ResolveDeferred>{children}</ResolveDeferred>
+    </DeferredErrorBoundary>
   );
 }
 
-interface DeferredWrapperProps {
-  children: React.ReactNode;
+type DeferredErrorBoundaryProps = React.PropsWithChildren<{
+  value: any;
   errorElement?: React.ReactNode;
-}
+}>;
 
-/**
- * @private
- * Internal wrapper to handle re-throwing the promise to trigger the Suspense
- * fallback, or rendering the children/errorElement once the promise resolves
- * or rejects
- */
-function DeferredWrapper({ children, errorElement }: DeferredWrapperProps) {
-  let value = React.useContext(DeferredContext);
-  if (value instanceof Promise) {
-    // throw to the suspense boundary
-    throw value;
+type DeferredErrorBoundaryState = {
+  error: any;
+};
+
+class DeferredErrorBoundary extends React.Component<
+  DeferredErrorBoundaryProps,
+  DeferredErrorBoundaryState
+> {
+  constructor(props: DeferredErrorBoundaryProps) {
+    super(props);
+    this.state = { error: null };
   }
 
-  if (isDeferredError(value)) {
-    if (errorElement) {
-      return <>{errorElement}</>;
-    } else {
-      // Throw to the nearest route-level error boundary
+  static getDerivedStateFromError(error: any) {
+    return { error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error(
+      "<Deferred> caught the following error during render",
+      error,
+      errorInfo
+    );
+  }
+
+  render() {
+    let { children, errorElement, value } = this.props;
+
+    // Handle render errors from this.state, or data errors from context
+    let error = this.state.error || (isDeferredError(value) ? value : null);
+
+    if (error) {
+      if (errorElement) {
+        // We have our own errorElement, provide our error and render it
+        return (
+          <DeferredContext.Provider value={error} children={errorElement} />
+        );
+      }
+      // Throw to the nearest ancestor route-level error boundary
+      throw error;
+    }
+
+    if (value instanceof Promise) {
+      // Throw to the suspense boundary
       throw value;
     }
+
+    // We've resolved successfully, provide the value and render the children
+    return <DeferredContext.Provider value={value} children={children} />;
   }
-
-  return <>{children}</>;
-}
-
-export interface ResolveDeferredProps<Data> {
-  children: DeferredResolveRenderFunction<Data>;
 }
 
 /**
  * @private
+ * Indirection to leverage useDeferredData for a render-prop API on <Deferred>
  */
-export function ResolveDeferred<Data>({
+function ResolveDeferred({
   children,
-}: ResolveDeferredProps<Data>) {
-  return children(useDeferredData<Data>());
+}: {
+  children: React.ReactNode | DeferredResolveRenderFunction;
+}) {
+  let data = useDeferredData();
+  if (typeof children === "function") {
+    return children(data);
+  }
+  return <>{children}</>;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

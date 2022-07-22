@@ -28,11 +28,11 @@ import {
   useSubmit,
   useFetcher,
   useFetchers,
-  UNSAFE_DataRouterStateContext,
+  UNSAFE_DataRouterStateContext as DataRouterStateContext,
 } from "react-router-dom";
 
 // Private API
-import { _resetModuleScope } from "../../react-router/lib/components";
+import { _resetModuleScope } from "../index";
 
 testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
   getWindowImpl(url, false)
@@ -56,6 +56,7 @@ function testDomRouter(
     });
 
     afterEach(() => {
+      window.__staticRouterHydrationData = undefined;
       consoleWarn.mockRestore();
       consoleError.mockRestore();
       _resetModuleScope();
@@ -134,6 +135,54 @@ function testDomRouter(
             },
           }}
         >
+          <Route path="/" element={<Comp />}>
+            <Route path="child" element={<Comp />} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Comp() {
+        let data = useLoaderData();
+        let actionData = useActionData();
+        let navigation = useNavigation();
+        return (
+          <div>
+            {data}
+            {actionData}
+            {navigation.state}
+            <Outlet />
+          </div>
+        );
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            parent data
+            child action
+            idle
+            <div>
+              child data
+              child action
+              idle
+            </div>
+          </div>
+        </div>"
+      `);
+    });
+
+    it("handles automatic hydration from the window", async () => {
+      window.__staticRouterHydrationData = {
+        loaderData: {
+          "0": "parent data",
+          "0-0": "child data",
+        },
+        actionData: {
+          "0-0": "child action",
+        },
+      };
+      let { container } = render(
+        <TestDataRouter window={getWindow("/child")}>
           <Route path="/" element={<Comp />}>
             <Route path="child" element={<Comp />} />
           </Route>
@@ -440,7 +489,7 @@ function testDomRouter(
       );
 
       function Layout() {
-        let state = React.useContext(UNSAFE_DataRouterStateContext);
+        let state = React.useContext(DataRouterStateContext);
         return (
           <div>
             <Link to="/foo" resetScroll={false}>
@@ -767,6 +816,39 @@ function testDomRouter(
           </p>
         </div>"
       `);
+    });
+
+    it("supports <Form reloadDocument={true}>", async () => {
+      let actionSpy = jest.fn();
+      render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route path="/" action={actionSpy} element={<Home />} />
+        </TestDataRouter>
+      );
+
+      let handlerCalled;
+      let defaultPrevented;
+
+      function Home() {
+        return (
+          <Form
+            method="post"
+            reloadDocument={true}
+            onSubmit={(e) => {
+              handlerCalled = true;
+              defaultPrevented = e.defaultPrevented;
+            }}
+          >
+            <input name="test" value="value" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      expect(handlerCalled).toBe(true);
+      expect(defaultPrevented).toBe(false);
+      expect(actionSpy).not.toHaveBeenCalled();
     });
 
     it('defaults <Form method="get"> to be a PUSH navigation', async () => {

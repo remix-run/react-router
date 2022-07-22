@@ -17,7 +17,7 @@ import {
 } from "react-router-dom";
 
 // Private API
-import { _resetModuleScope } from "../../react-router/lib/components";
+import { _resetModuleScope } from "../index";
 
 describe("NavLink", () => {
   describe("when it does not match", () => {

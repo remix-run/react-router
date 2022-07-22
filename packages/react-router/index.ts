@@ -51,6 +51,8 @@ import {
   createRoutesFromChildren,
   renderMatches,
   DataMemoryRouter,
+  DataRouter,
+  DataRouterProvider,
   Deferred,
   MemoryRouter,
   Navigate,
@@ -58,17 +60,17 @@ import {
   Route,
   Router,
   Routes,
-  useRenderDataRouter,
 } from "./lib/components";
 import type { Navigator, NavigateOptions } from "./lib/context";
 import {
   DataRouterContext,
   DataRouterStateContext,
+  DataStaticRouterContext,
   LocationContext,
   NavigationContext,
   RouteContext,
 } from "./lib/context";
-import type { Deferrable, NavigateFunction } from "./lib/hooks";
+import type { NavigateFunction } from "./lib/hooks";
 import {
   useHref,
   useInRouterContext,
@@ -91,7 +93,7 @@ import {
   useRevalidator,
 } from "./lib/hooks";
 
-// FIXME: Do we need to still export these to be non-breaking?
+// Exported for backwards compatibility, but not being used internally anymore
 type Hash = string;
 type Pathname = string;
 type Search = string;
@@ -102,7 +104,6 @@ export type {
   ActionFunctionArgs,
   DataMemoryRouterProps,
   DataRouteMatch,
-  Deferrable,
   DeferredProps,
   Fetcher,
   Hash,
@@ -195,10 +196,12 @@ export {
 
 /** @internal */
 export {
+  DataRouter as UNSAFE_DataRouter,
+  DataRouterProvider as UNSAFE_DataRouterProvider,
   NavigationContext as UNSAFE_NavigationContext,
   LocationContext as UNSAFE_LocationContext,
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  useRenderDataRouter,
+  DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
 };
