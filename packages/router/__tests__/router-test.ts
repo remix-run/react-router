@@ -9,6 +9,7 @@ import type {
   RouteMatch,
   Router,
   RouterNavigateOptions,
+  StaticHandler,
   StaticHandlerContext,
 } from "../index";
 import {
@@ -9089,15 +9090,16 @@ describe("a router", () => {
           },
         ]);
         let request = createRequest("/", { signal: controller.signal });
-        expect.assertions(1);
+        let e;
         try {
           let contextPromise = query(request);
           controller.abort();
           // This should resolve even though we never resolved the loader
           await contextPromise;
-        } catch (e) {
-          expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
+        } catch (_e) {
+          e = _e;
         }
+        expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
       });
 
       it("should handle aborted submit requests", async () => {
@@ -9113,41 +9115,44 @@ describe("a router", () => {
         let request = createSubmitRequest("/", {
           signal: controller.signal,
         });
-        expect.assertions(1);
+        let e;
         try {
           let contextPromise = query(request);
           controller.abort();
           // This should resolve even though we never resolved the loader
           await contextPromise;
-        } catch (e) {
-          expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
+        } catch (_e) {
+          e = _e;
         }
+        expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
       });
 
       it("should not support HEAD requests", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { method: "head" });
-        expect.assertions(1);
+        let e;
         try {
           await query(request);
-        } catch (e) {
-          expect(e).toMatchInlineSnapshot(
-            `[Error: query()/queryRoute() do not support HEAD requests]`
-          );
+        } catch (_e) {
+          e = _e;
         }
+        expect(e).toMatchInlineSnapshot(
+          `[Error: query()/queryRoute() do not support HEAD requests]`
+        );
       });
 
       it("should require a signal on the request", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
-        expect.assertions(1);
+        let e;
         try {
           await query(request);
-        } catch (e) {
-          expect(e).toMatchInlineSnapshot(
-            `[Error: query()/queryRoute() requests must contain an AbortController signal]`
-          );
+        } catch (_e) {
+          e = _e;
         }
+        expect(e).toMatchInlineSnapshot(
+          `[Error: query()/queryRoute() requests must contain an AbortController signal]`
+        );
       });
 
       it("should handle not found action submissions with a 405 error", async () => {
@@ -9181,7 +9186,9 @@ describe("a router", () => {
               path: "/",
             },
           ]);
-          let context = await query(createRequest("/"));
+          let context = (await query(
+            createRequest("/")
+          )) as StaticHandlerContext;
           expect(context.statusCode).toBe(200);
         });
 
@@ -9202,7 +9209,9 @@ describe("a router", () => {
               ],
             },
           ]);
-          let context = await query(createRequest("/"));
+          let context = (await query(
+            createRequest("/")
+          )) as StaticHandlerContext;
           expect(context.statusCode).toBe(500);
         });
 
@@ -9224,7 +9233,9 @@ describe("a router", () => {
               ],
             },
           ]);
-          let context = await query(createSubmitRequest("/?index"));
+          let context = (await query(
+            createSubmitRequest("/?index")
+          )) as StaticHandlerContext;
           expect(context.statusCode).toBe(500);
         });
 
@@ -9245,7 +9256,9 @@ describe("a router", () => {
               ],
             },
           ]);
-          let context = await query(createRequest("/"));
+          let context = (await query(
+            createRequest("/")
+          )) as StaticHandlerContext;
           expect(context.statusCode).toBe(400);
         });
 
@@ -9267,7 +9280,9 @@ describe("a router", () => {
               ],
             },
           ]);
-          let context = await query(createSubmitRequest("/?index"));
+          let context = (await query(
+            createSubmitRequest("/?index")
+          )) as StaticHandlerContext;
           expect(context.statusCode).toBe(400);
         });
 
@@ -9287,7 +9302,9 @@ describe("a router", () => {
               ],
             },
           ]);
-          let context = await query(createSubmitRequest("/?index"));
+          let context = (await query(
+            createSubmitRequest("/?index")
+          )) as StaticHandlerContext;
           expect(context.statusCode).toBe(203);
         });
 
@@ -9306,12 +9323,14 @@ describe("a router", () => {
               ],
             },
           ]);
-          let context = await query(createRequest("/"));
+          let context = (await query(
+            createRequest("/")
+          )) as StaticHandlerContext;
           expect(context.statusCode).toBe(202);
         });
 
         it("should expose the shallowest 4xx/5xx status", async () => {
-          let context: StaticHandlerContext;
+          let context;
           let query: StaticHandler["query"];
 
           query = createStaticHandler([
@@ -9332,7 +9351,7 @@ describe("a router", () => {
               ],
             },
           ]).query;
-          context = await query(createRequest("/"));
+          context = (await query(createRequest("/"))) as StaticHandlerContext;
           expect(context.statusCode).toBe(400);
 
           query = createStaticHandler([
@@ -9353,7 +9372,7 @@ describe("a router", () => {
               ],
             },
           ]).query;
-          context = await query(createRequest("/"));
+          context = (await query(createRequest("/"))) as StaticHandlerContext;
           expect(context.statusCode).toBe(400);
 
           query = createStaticHandler([
@@ -9374,7 +9393,7 @@ describe("a router", () => {
               ],
             },
           ]).query;
-          context = await query(createRequest("/"));
+          context = (await query(createRequest("/"))) as StaticHandlerContext;
           expect(context.statusCode).toBe(400);
         });
       });
@@ -9395,7 +9414,9 @@ describe("a router", () => {
               ],
             },
           ]);
-          let context = await query(createRequest("/"));
+          let context = (await query(
+            createRequest("/")
+          )) as StaticHandlerContext;
           expect(Array.from(context.loaderHeaders.root.entries())).toEqual([
             ["one", "1"],
           ]);
@@ -9420,7 +9441,9 @@ describe("a router", () => {
               ],
             },
           ]);
-          let context = await query(createSubmitRequest("/?index"));
+          let context = (await query(
+            createSubmitRequest("/?index")
+          )) as StaticHandlerContext;
           expect(Array.from(context.actionHeaders.child.entries())).toEqual([
             ["one", "1"],
           ]);
@@ -9536,15 +9559,16 @@ describe("a router", () => {
         let request = createRequest("/", {
           signal: controller.signal,
         });
-        expect.assertions(1);
+        let e;
         try {
           let statePromise = queryRoute(request, "root");
           controller.abort();
           // This should resolve even though we never resolved the loader
           await statePromise;
-        } catch (e) {
-          expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
+        } catch (_e) {
+          e = _e;
         }
+        expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
       });
 
       it("should handle aborted submit requests", async () => {
@@ -9560,41 +9584,44 @@ describe("a router", () => {
         let request = createSubmitRequest("/", {
           signal: controller.signal,
         });
-        expect.assertions(1);
+        let e;
         try {
           let statePromise = queryRoute(request, "root");
           controller.abort();
           // This should resolve even though we never resolved the loader
           await statePromise;
-        } catch (e) {
-          expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
+        } catch (_e) {
+          e = _e;
         }
+        expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
       });
 
       it("should not support HEAD requests", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { method: "head" });
-        expect.assertions(1);
+        let e;
         try {
           await queryRoute(request, "index");
-        } catch (e) {
-          expect(e).toMatchInlineSnapshot(
-            `[Error: query()/queryRoute() do not support HEAD requests]`
-          );
+        } catch (_e) {
+          e = _e;
         }
+        expect(e).toMatchInlineSnapshot(
+          `[Error: query()/queryRoute() do not support HEAD requests]`
+        );
       });
 
       it("should require a signal on the request", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
-        expect.assertions(1);
+        let e;
         try {
           await queryRoute(request, "index");
-        } catch (e) {
-          expect(e).toMatchInlineSnapshot(
-            `[Error: query()/queryRoute() requests must contain an AbortController signal]`
-          );
+        } catch (_e) {
+          e = _e;
         }
+        expect(e).toMatchInlineSnapshot(
+          `[Error: query()/queryRoute() requests must contain an AbortController signal]`
+        );
       });
 
       it("should handle not found action submissions with a 405 Response", async () => {

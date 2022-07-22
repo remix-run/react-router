@@ -1,6 +1,5 @@
 import * as React from "react";
 import {
-  isDeferredError,
   isRouteErrorResponse,
   Location,
   ParamParseKey,
