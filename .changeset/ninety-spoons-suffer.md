@@ -15,7 +15,7 @@ feat: Add `createStaticRouter` for `@remix-run/router` SSR usage
 
 ```jsx
 // Create a static handler
-let { dataRoutes, query } = createStaticHandler({ routes });
+let { dataRoutes, query } = unstable_createStaticHandler(routes);
 
 // Perform a full-document query for the incoming Fetch Request.  This will
 // execute the appropriate action/loaders and return either the state or a
@@ -46,7 +46,7 @@ let hydrationData = {
 
 ```jsx
 // Create a static route handler
-let { queryRoute } = createStaticHandler({ routes });
+let { queryRoute } = unstable_createStaticHandler(routes);
 
 // Perform a single-route query for the incoming Fetch Request.  This will
 // execute the appropriate singular action/loader and return either the raw

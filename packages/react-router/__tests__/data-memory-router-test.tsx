@@ -11,7 +11,11 @@ import "@testing-library/jest-dom";
 import type { FormMethod, Router } from "@remix-run/router";
 import { createMemoryRouter } from "@remix-run/router";
 
-import type { DataMemoryRouterProps } from "react-router";
+import {
+  DataMemoryRouterProps,
+  UNSAFE_DataRouter as DataRouter,
+  UNSAFE_DataRouterProvider as DataRouterProvider,
+} from "react-router";
 import {
   DataMemoryRouter,
   Deferred,
@@ -25,15 +29,14 @@ import {
   useRouteLoaderData,
   useRouteError,
   useNavigation,
-  useRenderDataRouter,
   useRevalidator,
-  UNSAFE_DataRouterContext,
   MemoryRouter,
   Routes,
+  UNSAFE_DataRouterContext as DataRouterContext,
 } from "react-router";
 
 // Private API
-import { _resetModuleScope } from "../lib/components";
+import { createRoutesFromChildren, _resetModuleScope } from "../lib/components";
 
 describe("<DataMemoryRouter>", () => {
   let consoleWarn: jest.SpyInstance;
@@ -1669,21 +1672,19 @@ describe("<DataMemoryRouter>", () => {
         initialEntries,
         initialIndex,
         hydrationData,
-        fallbackElement,
       }: DataMemoryRouterProps): React.ReactElement {
-        return useRenderDataRouter({
-          children,
-          fallbackElement,
-          createRouter: (routes) => {
-            router = createMemoryRouter({
-              initialEntries,
-              initialIndex,
-              routes,
-              hydrationData,
-            });
-            return router;
-          },
-        });
+        router = createMemoryRouter({
+          initialEntries,
+          initialIndex,
+          routes: createRoutesFromChildren(children),
+          hydrationData,
+        }).initialize();
+
+        return (
+          <DataRouterProvider router={router}>
+            <DataRouter />
+          </DataRouterProvider>
+        );
       }
 
       let { container } = render(
@@ -1779,21 +1780,19 @@ describe("<DataMemoryRouter>", () => {
         hydrationData,
         fallbackElement,
       }: DataMemoryRouterProps): React.ReactElement {
-        return useRenderDataRouter({
-          children,
-          fallbackElement,
-          createRouter: (routes) => {
-            router = createMemoryRouter({
-              initialEntries,
-              initialIndex,
-              routes,
-              hydrationData,
-            });
-            return router;
-          },
-        });
-      }
+        router = createMemoryRouter({
+          initialEntries,
+          initialIndex,
+          routes: createRoutesFromChildren(children),
+          hydrationData,
+        }).initialize();
 
+        return (
+          <DataRouterProvider router={router} fallbackElement={fallbackElement}>
+            <DataRouter />
+          </DataRouterProvider>
+        );
+      }
       let { container } = render(
         <div>
           <LocalDataMemoryRouter
@@ -2641,18 +2640,18 @@ function MemoryNavigate({
   formData?: FormData;
   children: React.ReactNode;
 }) {
-  let router = React.useContext(UNSAFE_DataRouterContext);
+  let dataRouterContext = React.useContext(DataRouterContext);
 
   let onClickHandler = React.useCallback(
     async (event: React.MouseEvent) => {
       event.preventDefault();
       if (formMethod && formData) {
-        router!.navigate(to, { formMethod, formData });
+        dataRouterContext?.router.navigate(to, { formMethod, formData });
       } else {
-        router!.navigate(to);
+        dataRouterContext?.router.navigate(to);
       }
     },
-    [router, to, formMethod, formData]
+    [dataRouterContext, to, formMethod, formData]
   );
 
   return formData ? (

@@ -28,11 +28,11 @@ import {
   useSubmit,
   useFetcher,
   useFetchers,
-  UNSAFE_DataRouterStateContext,
+  UNSAFE_DataRouterStateContext as DataRouterStateContext,
 } from "react-router-dom";
 
 // Private API
-import { _resetModuleScope } from "../../react-router/lib/components";
+import { _resetModuleScope } from "../index";
 
 testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
   getWindowImpl(url, false)
@@ -56,6 +56,7 @@ function testDomRouter(
     });
 
     afterEach(() => {
+      window.__staticRouterHydrationData = undefined;
       consoleWarn.mockRestore();
       consoleError.mockRestore();
       _resetModuleScope();
@@ -134,6 +135,54 @@ function testDomRouter(
             },
           }}
         >
+          <Route path="/" element={<Comp />}>
+            <Route path="child" element={<Comp />} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Comp() {
+        let data = useLoaderData();
+        let actionData = useActionData();
+        let navigation = useNavigation();
+        return (
+          <div>
+            {data}
+            {actionData}
+            {navigation.state}
+            <Outlet />
+          </div>
+        );
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            parent data
+            child action
+            idle
+            <div>
+              child data
+              child action
+              idle
+            </div>
+          </div>
+        </div>"
+      `);
+    });
+
+    it("handles automatic hydration from the window", async () => {
+      window.__staticRouterHydrationData = {
+        loaderData: {
+          "0": "parent data",
+          "0-0": "child data",
+        },
+        actionData: {
+          "0-0": "child action",
+        },
+      };
+      let { container } = render(
+        <TestDataRouter window={getWindow("/child")}>
           <Route path="/" element={<Comp />}>
             <Route path="child" element={<Comp />} />
           </Route>
@@ -440,7 +489,7 @@ function testDomRouter(
       );
 
       function Layout() {
-        let state = React.useContext(UNSAFE_DataRouterStateContext);
+        let state = React.useContext(DataRouterStateContext);
         return (
           <div>
             <Link to="/foo" resetScroll={false}>

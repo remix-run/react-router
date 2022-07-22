@@ -3,7 +3,7 @@ title: useRouteLoaderData
 new: true
 ---
 
-# `useRouterLoaderData`
+# `useRouteLoaderData`
 
 This hook makes the data at any currently rendered route available anywhere in the tree. This is useful for components deep in the tree needing data from routes much farther up, as well as parent routes needing the data of child routes deeper in the tree.
 

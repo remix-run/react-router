@@ -10,11 +10,11 @@ import type {
   Router,
   RouterNavigateOptions,
   StaticHandlerContext,
-} from "@remix-run/router";
+} from "../index";
 import {
   createMemoryHistory,
   createRouter,
-  createStaticHandler,
+  unstable_createStaticHandler as createStaticHandler,
   deferred,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
@@ -22,7 +22,7 @@ import {
   matchRoutes,
   redirect,
   parsePath,
-} from "@remix-run/router";
+} from "../index";
 
 // Private API
 import { DeferredError, ErrorResponse, isDeferredError } from "../utils";
@@ -3691,11 +3691,12 @@ describe("a router", () => {
       router.dispose();
     });
 
-    it("kicks off initial data load if partial hydration data is provided", async () => {
-      let parentDfd = defer();
-      let parentSpy = jest.fn(() => parentDfd.promise);
-      let childDfd = defer();
-      let childSpy = jest.fn(() => childDfd.promise);
+    // This is needed because we can't detect valid "I have a loader" routes
+    // in Remix since all routes have a loader to fetch JS bundles but may not
+    // actually provide any loaderData
+    it("treats partial hydration data as initialized", async () => {
+      let parentSpy = jest.fn();
+      let childSpy = jest.fn();
       let router = createRouter({
         history: createMemoryHistory({ initialEntries: ["/child"] }),
         routes: [
@@ -3718,33 +3719,16 @@ describe("a router", () => {
       });
       router.initialize();
 
-      expect(console.warn).toHaveBeenCalledWith(
-        "The provided hydration data did not find loaderData for all matched " +
-          "routes with loaders.  Performing a full initial data load"
-      );
-      expect(parentSpy.mock.calls.length).toBe(1);
-      expect(childSpy.mock.calls.length).toBe(1);
-      expect(router.state).toMatchObject({
-        historyAction: "POP",
-        location: expect.objectContaining({ pathname: "/child" }),
-        initialized: false,
-        navigation: {
-          state: "loading",
-        },
-      });
-      expect(router.state.loaderData).toEqual({});
-
-      await parentDfd.resolve("PARENT DATA 2");
-      await childDfd.resolve("CHILD DATA");
+      expect(parentSpy.mock.calls.length).toBe(0);
+      expect(childSpy.mock.calls.length).toBe(0);
       expect(router.state).toMatchObject({
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
         initialized: true,
         navigation: IDLE_NAVIGATION,
-        loaderData: {
-          "0": "PARENT DATA 2",
-          "0-0": "CHILD DATA",
-        },
+      });
+      expect(router.state.loaderData).toEqual({
+        "0": "PARENT DATA",
       });
 
       router.dispose();
@@ -8879,7 +8863,7 @@ describe("a router", () => {
 
     describe("document requests", () => {
       it("should support document load navigations", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/child"));
         expect(context).toMatchObject({
           actionData: null,
@@ -8894,7 +8878,7 @@ describe("a router", () => {
       });
 
       it("should support document load navigations returning responses", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/json"));
         expect(context).toMatchObject({
           actionData: null,
@@ -8908,7 +8892,7 @@ describe("a router", () => {
       });
 
       it("should not touch deferred data on load navigations", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/deferred"));
         expect(context).toMatchObject({
           actionData: null,
@@ -8932,7 +8916,7 @@ describe("a router", () => {
       });
 
       it("should support document submit navigations", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createSubmitRequest("/parent/child"));
         expect(context).toMatchObject({
           actionData: {
@@ -8948,8 +8932,8 @@ describe("a router", () => {
         });
       });
 
-      it("should support document load navigations returning responses", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+      it("should support document submit navigations returning responses", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createSubmitRequest("/parent/json"));
         expect(context).toMatchObject({
           actionData: {
@@ -8965,7 +8949,7 @@ describe("a router", () => {
       });
 
       it("should support document submit navigations to layout routes", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createSubmitRequest("/parent"));
         expect(context).toMatchObject({
           actionData: {
@@ -8984,7 +8968,7 @@ describe("a router", () => {
       });
 
       it("should support document submit navigations to index routes", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createSubmitRequest("/parent?index"));
         expect(context).toMatchObject({
           actionData: {
@@ -9003,7 +8987,7 @@ describe("a router", () => {
       });
 
       it("should handle redirect Responses", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let redirect = await query(createRequest("/redirect"));
         expect(redirect instanceof Response).toBe(true);
         expect((redirect as Response).status).toBe(302);
@@ -9011,7 +8995,7 @@ describe("a router", () => {
       });
 
       it("should handle 404 navigations", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/not/found"));
 
         expect(context).toMatchObject({
@@ -9029,7 +9013,7 @@ describe("a router", () => {
       });
 
       it("should handle load error responses", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let context;
 
         // Error handled by child
@@ -9063,7 +9047,7 @@ describe("a router", () => {
       });
 
       it("should handle submit error responses", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let context;
 
         // Error handled by child
@@ -9097,15 +9081,13 @@ describe("a router", () => {
       it("should handle aborted load requests", async () => {
         let dfd = defer();
         let controller = new AbortController();
-        let { query } = createStaticHandler({
-          routes: [
-            {
-              id: "root",
-              path: "/",
-              loader: () => dfd.promise,
-            },
-          ],
-        });
+        let { query } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            loader: () => dfd.promise,
+          },
+        ]);
         let request = createRequest("/", { signal: controller.signal });
         expect.assertions(1);
         try {
@@ -9121,15 +9103,13 @@ describe("a router", () => {
       it("should handle aborted submit requests", async () => {
         let dfd = defer();
         let controller = new AbortController();
-        let { query } = createStaticHandler({
-          routes: [
-            {
-              id: "root",
-              path: "/",
-              action: () => dfd.promise,
-            },
-          ],
-        });
+        let { query } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            action: () => dfd.promise,
+          },
+        ]);
         let request = createSubmitRequest("/", {
           signal: controller.signal,
         });
@@ -9145,7 +9125,7 @@ describe("a router", () => {
       });
 
       it("should not support HEAD requests", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { method: "head" });
         expect.assertions(1);
         try {
@@ -9158,7 +9138,7 @@ describe("a router", () => {
       });
 
       it("should require a signal on the request", async () => {
-        let { query } = createStaticHandler({ routes: SSR_ROUTES });
+        let { query } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
         expect.assertions(1);
         try {
@@ -9171,14 +9151,12 @@ describe("a router", () => {
       });
 
       it("should handle not found action submissions with a 405 error", async () => {
-        let { query } = createStaticHandler({
-          routes: [
-            {
-              id: "root",
-              path: "/",
-            },
-          ],
-        });
+        let { query } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+          },
+        ]);
         let request = createSubmitRequest("/");
         let context = await query(request);
         expect(context).toMatchObject({
@@ -9194,11 +9172,271 @@ describe("a router", () => {
           matches: [{ route: { id: "root" } }],
         });
       });
+
+      describe("statusCode", () => {
+        it("should expose a 200 status code by default", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+            },
+          ]);
+          let context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(200);
+        });
+
+        it("should expose a 500 status code on loader errors", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Error("💥");
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(500);
+        });
+
+        it("should expose a 500 status code on action errors", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => json({ data: "CHILD" }, { status: 202 }),
+                  action: () => {
+                    throw new Error("💥");
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = await query(createSubmitRequest("/?index"));
+          expect(context.statusCode).toBe(500);
+        });
+
+        it("should expose a 4xx status code on thrown loader responses", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Response(null, { status: 400 });
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(400);
+        });
+
+        it("should expose a 4xx status code on thrown action responses", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => json({ data: "CHILD" }, { status: 202 }),
+                  action: () => {
+                    throw new Response(null, { status: 400 });
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = await query(createSubmitRequest("/?index"));
+          expect(context.statusCode).toBe(400);
+        });
+
+        it("should expose the action status on submissions", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => json({ data: "ROOT" }, { status: 202 }),
+                  action: () => json({ data: "ROOT" }, { status: 203 }),
+                },
+              ],
+            },
+          ]);
+          let context = await query(createSubmitRequest("/?index"));
+          expect(context.statusCode).toBe(203);
+        });
+
+        it("should expose the deepest 2xx status", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => json({ data: "ROOT" }, { status: 201 }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => json({ data: "ROOT" }, { status: 202 }),
+                },
+              ],
+            },
+          ]);
+          let context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(202);
+        });
+
+        it("should expose the shallowest 4xx/5xx status", async () => {
+          let context: StaticHandlerContext;
+          let query: StaticHandler["query"];
+
+          query = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => {
+                throw new Response(null, { status: 400 });
+              },
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Response(null, { status: 401 });
+                  },
+                },
+              ],
+            },
+          ]).query;
+          context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(400);
+
+          query = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => {
+                throw new Response(null, { status: 400 });
+              },
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Response(null, { status: 500 });
+                  },
+                },
+              ],
+            },
+          ]).query;
+          context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(400);
+
+          query = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => {
+                throw new Response(null, { status: 400 });
+              },
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Error("💥");
+                  },
+                },
+              ],
+            },
+          ]).query;
+          context = await query(createRequest("/"));
+          expect(context.statusCode).toBe(400);
+        });
+      });
+
+      describe("headers", () => {
+        it("should expose headers from loader responses", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => new Response(null, { headers: { one: "1" } }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => new Response(null, { headers: { two: "2" } }),
+                },
+              ],
+            },
+          ]);
+          let context = await query(createRequest("/"));
+          expect(Array.from(context.loaderHeaders.root.entries())).toEqual([
+            ["one", "1"],
+          ]);
+          expect(Array.from(context.loaderHeaders.child.entries())).toEqual([
+            ["two", "2"],
+          ]);
+        });
+
+        it("should expose headers from action responses", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => new Response(null, { headers: { two: "2" } }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  action: () => new Response(null, { headers: { one: "1" } }),
+                  loader: () => new Response(null, { headers: { three: "3" } }),
+                },
+              ],
+            },
+          ]);
+          let context = await query(createSubmitRequest("/?index"));
+          expect(Array.from(context.actionHeaders.child.entries())).toEqual([
+            ["one", "1"],
+          ]);
+          expect(Array.from(context.loaderHeaders.root.entries())).toEqual([
+            ["two", "2"],
+          ]);
+          expect(Array.from(context.loaderHeaders.child.entries())).toEqual([
+            ["three", "3"],
+          ]);
+        });
+      });
     });
 
     describe("singular route requests", () => {
       it("should support singular route load navigations", async () => {
-        let { queryRoute } = createStaticHandler({ routes: SSR_ROUTES });
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data;
 
         // Layout route
@@ -9219,7 +9457,7 @@ describe("a router", () => {
       });
 
       it("should support singular route submit navigations", async () => {
-        let { queryRoute } = createStaticHandler({ routes: SSR_ROUTES });
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data;
 
         // Layout route
@@ -9241,15 +9479,13 @@ describe("a router", () => {
 
       it("should not unwrap responses returned from loaders", async () => {
         let response = json({ key: "value" });
-        let { queryRoute } = createStaticHandler({
-          routes: [
-            {
-              id: "root",
-              path: "/",
-              loader: () => Promise.resolve(response),
-            },
-          ],
-        });
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            loader: () => Promise.resolve(response),
+          },
+        ]);
         let request = createRequest("/");
         let data = await queryRoute(request, "root");
         expect(data instanceof Response).toBe(true);
@@ -9258,15 +9494,13 @@ describe("a router", () => {
 
       it("should not unwrap responses returned from actions", async () => {
         let response = json({ key: "value" });
-        let { queryRoute } = createStaticHandler({
-          routes: [
-            {
-              id: "root",
-              path: "/",
-              action: () => Promise.resolve(response),
-            },
-          ],
-        });
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            action: () => Promise.resolve(response),
+          },
+        ]);
         let request = createSubmitRequest("/");
         let data = await queryRoute(request, "root");
         expect(data instanceof Response).toBe(true);
@@ -9274,7 +9508,7 @@ describe("a router", () => {
       });
 
       it("should handle load error responses", async () => {
-        let { queryRoute } = createStaticHandler({ routes: SSR_ROUTES });
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data;
 
         data = await queryRoute(createRequest("/parent/error"), "error");
@@ -9282,7 +9516,7 @@ describe("a router", () => {
       });
 
       it("should handle submit error responses", async () => {
-        let { queryRoute } = createStaticHandler({ routes: SSR_ROUTES });
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data;
 
         data = await queryRoute(createSubmitRequest("/parent/error"), "error");
@@ -9292,15 +9526,13 @@ describe("a router", () => {
       it("should handle aborted load requests", async () => {
         let dfd = defer();
         let controller = new AbortController();
-        let { queryRoute } = createStaticHandler({
-          routes: [
-            {
-              id: "root",
-              path: "/",
-              loader: () => dfd.promise,
-            },
-          ],
-        });
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            loader: () => dfd.promise,
+          },
+        ]);
         let request = createRequest("/", {
           signal: controller.signal,
         });
@@ -9318,15 +9550,13 @@ describe("a router", () => {
       it("should handle aborted submit requests", async () => {
         let dfd = defer();
         let controller = new AbortController();
-        let { queryRoute } = createStaticHandler({
-          routes: [
-            {
-              id: "root",
-              path: "/",
-              action: () => dfd.promise,
-            },
-          ],
-        });
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            action: () => dfd.promise,
+          },
+        ]);
         let request = createSubmitRequest("/", {
           signal: controller.signal,
         });
@@ -9342,7 +9572,7 @@ describe("a router", () => {
       });
 
       it("should not support HEAD requests", async () => {
-        let { queryRoute } = createStaticHandler({ routes: SSR_ROUTES });
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { method: "head" });
         expect.assertions(1);
         try {
@@ -9355,7 +9585,7 @@ describe("a router", () => {
       });
 
       it("should require a signal on the request", async () => {
-        let { queryRoute } = createStaticHandler({ routes: SSR_ROUTES });
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
         expect.assertions(1);
         try {
@@ -9368,14 +9598,12 @@ describe("a router", () => {
       });
 
       it("should handle not found action submissions with a 405 Response", async () => {
-        let { queryRoute } = createStaticHandler({
-          routes: [
-            {
-              id: "root",
-              path: "/",
-            },
-          ],
-        });
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+          },
+        ]);
         let request = createSubmitRequest("/");
         let data = await queryRoute(request, "root");
         expect(data instanceof Response).toBe(true);

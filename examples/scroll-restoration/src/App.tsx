@@ -112,7 +112,7 @@ function Layout() {
         </div>
       </div>
       {/*
-        Including this component inside a DataRouter component tree is what
+        Including this component inside a data router component tree is what
         enables restoration
       */}
       <ScrollRestoration getKey={getKey} />

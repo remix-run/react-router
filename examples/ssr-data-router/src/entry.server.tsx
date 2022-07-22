@@ -1,12 +1,12 @@
 import type * as express from "express";
-import { createStaticHandler } from "@remix-run/router";
+import { unstable_createStaticHandler } from "@remix-run/router";
 import * as React from "react";
 import ReactDOMServer from "react-dom/server";
-import { DataStaticRouter } from "react-router-dom/server";
+import { unstable_ as DataStaticRouter } from "react-router-dom/server";
 import { routes } from "./App";
 
 export async function render(request: express.Request) {
-  let { dataRoutes, query } = createStaticHandler({ routes });
+  let { query } = unstable_createStaticHandler(routes);
   let remixRequest = createFetchRequest(request);
   let context = await query(remixRequest);
 
@@ -14,20 +14,11 @@ export async function render(request: express.Request) {
     throw context;
   }
 
-  let html = ReactDOMServer.renderToString(
+  return ReactDOMServer.renderToString(
     <React.StrictMode>
-      <DataStaticRouter dataRoutes={dataRoutes} context={context} />
+      <DataStaticRouter routes={routes} context={context} nonce="the-nonce" />
     </React.StrictMode>
   );
-
-  return {
-    hydrationData: {
-      loaderData: context.loaderData,
-      actionData: context.loaderData,
-      errors: context.errors,
-    },
-    html,
-  };
 }
 
 export function createFetchHeaders(

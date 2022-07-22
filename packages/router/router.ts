@@ -1,11 +1,10 @@
 import { createPath, History, Location, Path, To } from "./history";
 import { Action as HistoryAction, createLocation, parsePath } from "./history";
 
-import {
+import type {
   DataResult,
   DataRouteMatch,
   DataRouteObject,
-  DeferredData,
   DeferredResult,
   ErrorResult,
   FormEncType,
@@ -17,8 +16,10 @@ import {
   SuccessResult,
 } from "./utils";
 import {
+  DeferredData,
   ErrorResponse,
   ResultType,
+  convertRoutesToDataRoutes,
   invariant,
   isRouteErrorResponse,
   matchRoutes,
@@ -229,10 +230,17 @@ export interface RouterInit {
 /**
  * State returned from a server-side query() call
  */
-export type StaticHandlerContext = Pick<
-  RouterState,
-  "location" | "matches" | "loaderData" | "actionData" | "errors"
->;
+export interface StaticHandlerContext {
+  location: RouterState["location"];
+  matches: RouterState["matches"];
+  loaderData: RouterState["loaderData"];
+  actionData: RouterState["actionData"];
+  errors: RouterState["errors"];
+  statusCode: number;
+  loaderHeaders: Record<string, Headers>;
+  actionHeaders: Record<string, Headers>;
+  _deepestRenderedBoundaryId?: string | null;
+}
 
 /**
  * A StaticHandler instance manages a singular SSR navigation/fetch event
@@ -240,14 +248,7 @@ export type StaticHandlerContext = Pick<
 export interface StaticHandler {
   dataRoutes: DataRouteObject[];
   query(request: Request): Promise<StaticHandlerContext | Response>;
-  queryRoute(request: Request, routeId: string): Promise<any>;
-}
-
-/**
- * Initialization options for createStaticHandler
- */
-export interface StaticHandlerInit {
-  routes: RouteObject[];
+  queryRoute(request: Request, routeId?: string): Promise<any>;
 }
 
 /**
@@ -463,26 +464,8 @@ export function createRouter(init: RouterInit): Router {
     initialErrors = { [route.id]: error };
   }
 
-  // If we received hydration data without errors - detect if any matched
-  // routes with loaders did not get provided loaderData, and if so launch an
-  // initial data re-load to fetch everything
-  let foundMissingHydrationData =
-    init.hydrationData?.errors == null &&
-    init.hydrationData?.loaderData != null &&
-    initialMatches
-      .filter((m) => m.route.loader)
-      .some((m) => init.hydrationData?.loaderData?.[m.route.id] === undefined);
-
-  if (foundMissingHydrationData) {
-    console.warn(
-      `The provided hydration data did not find loaderData for all matched ` +
-        `routes with loaders.  Performing a full initial data load`
-    );
-  }
-
   let initialized =
-    !initialMatches.some((m) => m.route.loader) ||
-    (init.hydrationData != null && !foundMissingHydrationData);
+    !initialMatches.some((m) => m.route.loader) || init.hydrationData != null;
 
   let router: Router;
   let state: RouterState = {
@@ -494,9 +477,7 @@ export function createRouter(init: RouterInit): Router {
     restoreScrollPosition: null,
     resetScrollPosition: true,
     revalidation: "idle",
-    loaderData: foundMissingHydrationData
-      ? {}
-      : init.hydrationData?.loaderData || {},
+    loaderData: init.hydrationData?.loaderData || {},
     actionData: init.hydrationData?.actionData || null,
     errors: init.hydrationData?.errors || initialErrors,
     fetchers: new Map(),
@@ -1671,13 +1652,15 @@ export function createRouter(init: RouterInit): Router {
 //#region createStaticHandler
 ////////////////////////////////////////////////////////////////////////////////
 
-export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
+export function unstable_createStaticHandler(
+  routes: RouteObject[]
+): StaticHandler {
   invariant(
-    init.routes.length > 0,
-    "You must provide a non-empty routes array to createStaticHandler"
+    routes.length > 0,
+    "You must provide a non-empty routes array to unstable_createStaticHandler"
   );
 
-  let dataRoutes = convertRoutesToDataRoutes(init.routes);
+  let dataRoutes = convertRoutesToDataRoutes(routes);
 
   async function query(
     request: Request
@@ -1740,16 +1723,25 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
         return { location, result: shortCircuitState };
       }
 
-      let result =
-        request.method === "GET"
-          ? await loadRouteData(request, matches, routeId != null)
-          : await submit(
-              request,
-              matches,
-              getTargetMatch(matches, location),
-              routeId != null
-            );
-      return { location, result };
+      if (request.method !== "GET") {
+        let result = await submit(
+          request,
+          matches,
+          getTargetMatch(matches, location),
+          routeId != null
+        );
+        return { location, result };
+      }
+
+      let result = await loadRouteData(request, matches, routeId != null);
+      return {
+        location,
+        result: {
+          ...result,
+          actionData: null,
+          actionHeaders: {},
+        },
+      };
     } catch (e) {
       if (e instanceof Response) {
         return { location, result: e };
@@ -1801,22 +1793,35 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
     }
 
     if (isRouteRequest) {
-      let actionData: RouteData | null = null;
-      let errors: RouteData | null = null;
       if (isErrorResult(result)) {
         let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-        errors = {
-          [boundaryMatch.route.id]: result.error,
+        return {
+          matches: [actionMatch],
+          loaderData: {},
+          actionData: null,
+          errors: {
+            [boundaryMatch.route.id]: result.error,
+          },
+          // Note: This is unused in queryRoute as we will return the raw error,
+          // or construct a response from the ErrorResponse
+          statusCode: 500,
+          loaderHeaders: {},
+          actionHeaders: {},
         };
-      } else {
-        actionData = { [actionMatch.route.id]: result.data };
       }
 
       return {
         matches: [actionMatch],
         loaderData: {},
-        actionData,
-        errors,
+        actionData: { [actionMatch.route.id]: result.data },
+        errors: null,
+        // Note: This is unused in queryRoute as we will return the raw
+        // Response or value
+        statusCode: 200,
+        loaderHeaders: {},
+        actionHeaders: {
+          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+        },
       };
     }
 
@@ -1824,23 +1829,45 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-      return await loadRouteData(request, matches, isRouteRequest, undefined, {
+      let context = await loadRouteData(request, matches, isRouteRequest, {
         [boundaryMatch.route.id]: result.error,
       });
+
+      // action status codes take precedence over loader status codes
+      return {
+        ...context,
+        statusCode: isRouteErrorResponse(result.error)
+          ? result.error.status
+          : 500,
+        actionData: null,
+        actionHeaders: {},
+      };
     }
 
-    return await loadRouteData(request, matches, isRouteRequest, {
-      [actionMatch.route.id]: result.data,
-    });
+    let context = await loadRouteData(request, matches, isRouteRequest);
+
+    return {
+      ...context,
+      // action status codes take precedence over loader status codes
+      ...(result.statusCode ? { statusCode: result.statusCode } : {}),
+      actionData: {
+        [actionMatch.route.id]: result.data,
+      },
+      actionHeaders: {
+        ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+      },
+    };
   }
 
   async function loadRouteData(
     request: Request,
     matches: DataRouteMatch[],
     isRouteRequest: boolean,
-    pendingActionData?: RouteData,
     pendingActionError?: RouteData
-  ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
+  ): Promise<
+    | Omit<StaticHandlerContext, "location" | "actionData" | "actionHeaders">
+    | Response
+  > {
     let matchesToLoad = getLoaderMatchesUntilBoundary(
       matches,
       Object.keys(pendingActionError || {})[0]
@@ -1851,8 +1878,9 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
       return {
         matches,
         loaderData: {},
-        actionData: pendingActionData || null,
         errors: pendingActionError || null,
+        statusCode: 200,
+        loaderHeaders: {},
       };
     }
 
@@ -1876,7 +1904,7 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
     });
 
     // Process and commit output from loaders
-    let { loaderData, errors } = processRouteLoaderData(
+    let context = processRouteLoaderData(
       matches,
       matchesToLoad,
       results,
@@ -1884,10 +1912,8 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
     );
 
     return {
+      ...context,
       matches,
-      loaderData,
-      actionData: pendingActionData || null,
-      errors,
     };
   }
 
@@ -1901,7 +1927,7 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
     shortCircuitState?: Omit<StaticHandlerContext, "location">;
   } {
     let url = new URL(req.url);
-    let location = createLocation("", createPath(url));
+    let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location);
     if (matches && routeId) {
       matches = matches.filter((m) => m.route.id === routeId);
@@ -1924,6 +1950,9 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
           errors: {
             [route.id]: error,
           },
+          statusCode: 404,
+          loaderHeaders: {},
+          actionHeaders: {},
         },
       };
     }
@@ -1944,31 +1973,23 @@ export function createStaticHandler(init: StaticHandlerInit): StaticHandler {
 //#region Helpers
 ////////////////////////////////////////////////////////////////////////////////
 
-// Walk the route tree generating unique IDs where necessary so we are working
-// solely with DataRouteObject's within the Router
-function convertRoutesToDataRoutes(
-  routes: RouteObject[],
-  parentPath: number[] = [],
-  allIds: Set<string> = new Set<string>()
-): DataRouteObject[] {
-  return routes.map((route, index) => {
-    let treePath = [...parentPath, index];
-    let id = typeof route.id === "string" ? route.id : treePath.join("-");
-    invariant(
-      !allIds.has(id),
-      `Found a route id collision on id "${id}".  Route ` +
-        "id's must be globally unique within Data Router usages"
-    );
-    allIds.add(id);
-    let dataRoute: DataRouteObject = {
-      ...route,
-      id,
-      children: route.children
-        ? convertRoutesToDataRoutes(route.children, treePath, allIds)
-        : undefined,
-    };
-    return dataRoute;
-  });
+/**
+ * Given an existing StaticHandlerContext and an error thrown at render time,
+ * provide an updated StaticHandlerContext suitable for a second SSR render
+ */
+export function getStaticContextFromError(
+  routes: DataRouteObject[],
+  context: StaticHandlerContext,
+  error: any
+) {
+  let newContext: StaticHandlerContext = {
+    ...context,
+    statusCode: 500,
+    errors: {
+      [context._deepestRenderedBoundaryId || routes[0].id]: error,
+    },
+  };
+  return newContext;
 }
 
 // Normalize navigation options by converting formMethod=GET formData objects to
@@ -2270,7 +2291,12 @@ async function callLoaderOrAction(
       };
     }
 
-    return { type: ResultType.data, data };
+    return {
+      type: ResultType.data,
+      data,
+      statusCode: result.status,
+      headers: result.headers,
+    };
   }
 
   if (resultType === ResultType.error) {
@@ -2332,10 +2358,15 @@ function processRouteLoaderData(
 ): {
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"] | null;
+  statusCode: number;
+  loaderHeaders: Record<string, Headers>;
 } {
   // Fill in loaderData/errors from our loaders
   let loaderData: RouterState["loaderData"] = {};
   let errors: RouterState["errors"] | null = null;
+  let statusCode: number | undefined;
+  let foundError = false;
+  let loaderHeaders: Record<string, Headers> = {};
 
   // Process loader results into state.loaderData/state.errors
   results.forEach((result, index) => {
@@ -2359,11 +2390,27 @@ function processRouteLoaderData(
       errors = Object.assign(errors || {}, {
         [boundaryMatch.route.id]: error,
       });
+      // Once we find our first (highest) error, we set the status code and
+      // prevent deeper status codes from overriding
+      if (!foundError) {
+        foundError = true;
+        statusCode = isRouteErrorResponse(result.error)
+          ? result.error.status
+          : 500;
+      }
     } else if (isDeferredResult(result)) {
       activeDeferreds?.set(id, result.deferredData);
       loaderData[id] = result.deferredData.data;
     } else {
       loaderData[id] = result.data;
+      // Error status codes always override success status codes, but if all
+      // loaders are successful we take the deepest status code.
+      if (result.statusCode !== 200 && !foundError) {
+        statusCode = result.statusCode;
+      }
+      if (result.headers) {
+        loaderHeaders[id] = result.headers;
+      }
     }
   });
 
@@ -2373,7 +2420,12 @@ function processRouteLoaderData(
     errors = pendingError;
   }
 
-  return { loaderData, errors };
+  return {
+    loaderData,
+    errors,
+    statusCode: statusCode || 200,
+    loaderHeaders,
+  };
 }
 
 function processLoaderData(

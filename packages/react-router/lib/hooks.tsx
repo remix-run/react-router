@@ -10,7 +10,7 @@ import {
   PathPattern,
   RouteMatch,
   RouteObject,
-  Router as DataRouter,
+  Router as RemixRouter,
   To,
 } from "@remix-run/router";
 import {
@@ -33,6 +33,8 @@ import {
   RouteContext,
   RouteErrorContext,
   DeferredContext,
+  RouteContextObject,
+  DataStaticRouterContext,
 } from "./context";
 
 /**
@@ -527,10 +529,32 @@ export class RenderErrorBoundary extends React.Component<
   }
 }
 
+interface RenderedRouteProps {
+  routeContext: RouteContextObject;
+  match: RouteMatch<string, RouteObject>;
+  children: React.ReactNode | null;
+}
+
+function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
+  let dataStaticRouterContext = React.useContext(DataStaticRouterContext);
+
+  // Track how deep we got in our render pass to emulate SSR componentDidCatch
+  // in a DataStaticRouter
+  if (dataStaticRouterContext && match.route.errorElement) {
+    dataStaticRouterContext._deepestRenderedBoundaryId = match.route.id;
+  }
+
+  return (
+    <RouteContext.Provider value={routeContext}>
+      {children}
+    </RouteContext.Provider>
+  );
+}
+
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState?: DataRouter["state"]
+  dataRouterState?: RemixRouter["state"]
 ): React.ReactElement | null {
   if (matches == null) {
     if (dataRouterState?.errors) {
@@ -567,21 +591,20 @@ export function _renderMatches(
       ? match.route.errorElement || <DefaultErrorElement />
       : null;
     let getChildren = () => (
-      <RouteContext.Provider
-        children={
-          error
-            ? errorElement
-            : match.route.element !== undefined
-            ? match.route.element
-            : outlet
-        }
-        value={{
+      <RenderedRoute
+        match={match}
+        routeContext={{
           outlet,
           matches: parentMatches.concat(renderedMatches.slice(0, index + 1)),
         }}
-      />
+      >
+        {error
+          ? errorElement
+          : match.route.element !== undefined
+          ? match.route.element
+          : outlet}
+      </RenderedRoute>
     );
-
     // Only wrap in an error boundary within data router usages when we have an
     // errorElement on this route.  Otherwise let it bubble up to an ancestor
     // errorElement
@@ -610,7 +633,7 @@ enum DataRouterHook {
 
 function useDataRouterState(hookName: DataRouterHook) {
   let state = React.useContext(DataRouterStateContext);
-  invariant(state, `${hookName} must be used within a DataRouter`);
+  invariant(state, `${hookName} must be used within a DataRouterStateContext`);
   return state;
 }
 
@@ -628,10 +651,16 @@ export function useNavigation() {
  * as the current state of any manual revalidations
  */
 export function useRevalidator() {
-  let router = React.useContext(DataRouterContext);
-  invariant(router, `useRevalidator must be used within a DataRouter`);
+  let dataRouterContext = React.useContext(DataRouterContext);
+  invariant(
+    dataRouterContext,
+    `useRevalidator must be used within a DataRouterContext`
+  );
   let state = useDataRouterState(DataRouterHook.UseRevalidator);
-  return { revalidate: router.revalidate, state: state.revalidation };
+  return {
+    revalidate: dataRouterContext.router.revalidate,
+    state: state.revalidation,
+  };
 }
 
 /**

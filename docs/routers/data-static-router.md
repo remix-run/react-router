@@ -1,9 +1,9 @@
 ---
-title: DataStaticRouter
+title: unstable_DataStaticRouter
 new: true
 ---
 
-# `DataStaticRouter`
+# `unstable_DataStaticRouter`
 
 <docs-info>TODO: This doc is a stub</docs-info>
 
