@@ -456,7 +456,9 @@ describe("the create command", () => {
       "--install",
       "--typescript",
     ]);
-    expect(output).toContain(`Running init script on ${projectDir.replace(TEMP_DIR, "<TEMP_DIR>")}`);
+    expect(output).toContain(
+      `Running init script on ${projectDir.replace(TEMP_DIR, "<TEMP_DIR>")}`
+    );
     expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
     expect(fse.existsSync(path.join(projectDir, "remix.init"))).toBeFalsy();

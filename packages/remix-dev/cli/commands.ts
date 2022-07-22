@@ -74,7 +74,7 @@ export async function init(
       format: "cjs",
       platform: "node",
       outfile: initScript,
-    })
+    });
   }
   if (!(await fse.pathExists(initScript))) {
     return;
@@ -84,7 +84,6 @@ export async function init(
   let isTypeScript = fse.existsSync(path.join(projectDir, "tsconfig.json"));
   let packageManager = getPreferredPackageManager();
 
-
   if (await fse.pathExists(initPackageJson)) {
     execSync(`${packageManager} install`, {
       cwd: initScriptDir,
@@ -93,7 +92,7 @@ export async function init(
   }
 
   let initFn = require(initScript);
-  if (typeof initFn !== 'function' && initFn.default) {
+  if (typeof initFn !== "function" && initFn.default) {
     initFn = initFn.default;
   }
   try {
