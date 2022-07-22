@@ -174,6 +174,10 @@ export {
 } from "react-router";
 //#endregion
 
+declare global {
+  var __staticRouterHydrationData: HydrationState | undefined;
+}
+
 // Module-scoped singleton to hold the router.  Extracted from the React lifecycle
 // to avoid issues w.r.t. dual initialization fetches in concurrent rendering.
 // Data router apps are expected to have a static route tree and are not intended
@@ -208,16 +212,13 @@ export function DataBrowserRouter({
   fallbackElement,
   hydrationData,
   routes,
-  window,
+  window: windowProp,
 }: DataBrowserRouterProps): React.ReactElement {
   if (!routerSingleton) {
     routerSingleton = createBrowserRouter({
       basename,
-      hydrationData:
-        // TODO Fix this
-        // @ts-expect-error
-        hydrationData || document.defaultView.__staticRouterHydrationData,
-      window,
+      hydrationData: hydrationData || window.__staticRouterHydrationData,
+      window: windowProp,
       routes: routes || createRoutesFromChildren(children),
     }).initialize();
   }
@@ -249,13 +250,13 @@ export function DataHashRouter({
   hydrationData,
   fallbackElement,
   routes,
-  window,
+  window: windowProp,
 }: DataBrowserRouterProps): React.ReactElement {
   if (!routerSingleton) {
     routerSingleton = createHashRouter({
       basename,
-      hydrationData,
-      window,
+      hydrationData: hydrationData || window.__staticRouterHydrationData,
+      window: windowProp,
       routes: routes || createRoutesFromChildren(children),
     }).initialize();
   }
