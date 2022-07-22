@@ -1,5 +1,22 @@
 # react-router
 
+## 6.4.0-pre.10
+
+### Patch Changes
+
+- feat: Deferred API Updates (#9070)
+
+  - Removes `<Suspense>` from inside `<Deferred>`, requires users to render their own suspense boundaries
+  - Updates `Deferred` to use a true error boundary to catch render errors as well as data errors
+  - Support array and single promise usages
+    - `return deferred([ await critical(), lazy() ])`
+    - `return deferred(lazy())`
+  - Remove `Deferrable`/`ResolvedDeferrable` in favor of raw `Promise`'s and `Awaited`
+  - Remove generics from `useDeferredData` until `useLoaderData` generic is decided in 6.5
+
+- Updated dependencies
+  - @remix-run/router@0.2.0-pre.5
+
 ## 6.4.0-pre.9
 
 ### Patch Changes
