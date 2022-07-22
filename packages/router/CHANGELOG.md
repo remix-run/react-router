@@ -4,17 +4,15 @@
 
 ### Patch Changes
 
-- 92aa5bb0: Deferred API Updates
+- feat: Deferred API Updates (#9070)
 
-  - Removes `<Suspense>` from inside `<Deferred>`, requires users to render their own suspense boundaries
-  - Updates `Deferred` to use a true error boundary to catch render errors as well as data errors
   - Support array and single promise usages
     - `return deferred([ await critical(), lazy() ])`
     - `return deferred(lazy())`
   - Remove `Deferrable`/`ResolvedDeferrable` in favor of raw `Promise`'s and `Awaited`
   - Remove generics from `useDeferredData` until `useLoaderData` generic is decided in 6.5
 
-- 9e2f92ac: feat: Add `createStaticRouter` for `@remix-run/router` SSR usage
+- feat: Add `createStaticRouter` for `@remix-run/router` SSR usage (#9013)
 
   **Notable changes:**
 
@@ -25,7 +23,7 @@
 
   ```jsx
   // Create a static handler
-  let { dataRoutes, query } = unstable_createStaticHandler(routes);
+  let { query } = unstable_createStaticHandler(routes);
 
   // Perform a full-document query for the incoming Fetch Request.  This will
   // execute the appropriate action/loaders and return either the state or a
@@ -40,16 +38,9 @@
   // Otherwise, render our application providing the data routes and state
   let html = ReactDOMServer.renderToString(
     <React.StrictMode>
-      <DataStaticRouter dataRoutes={dataRoutes} state={state} />
+      <DataStaticRouter routes={routes} state={state} />
     </React.StrictMode>
   );
-
-  // Grab the hydrationData to send to the client for <DataBrowserRouter>
-  let hydrationData = {
-    loaderData: state.loaderData,
-    actionData: state.actionData,
-    errors: state.errors
-  };
   ```
 
   **Example usage (Data Requests):**
@@ -71,12 +62,12 @@
   // Otherwise, construct a Response from the raw data (assuming json here)
   return new Response(JSON.stringify(data), {
     headers: {
-      "Content-Type": "application/json; charset=utf-8"
-    }
+      "Content-Type": "application/json; charset=utf-8",
+    },
   });
   ```
 
-- f3182f4a: SSR Updates for React Router
+- feat: SSR Updates for React Router (#9058)
 
   _Note: The Data-Router SSR aspects of `@remix-run/router` and `react-router-dom` are being released as **unstable** in this release (`unstable_createStaticHandler` and `unstable_DataStaticRouter`), and we plan to finalize them in a subsequent minor release once the kinks can be worked out with the Remix integration. To that end, they are available for use, but are subject to breaking changes in the next minor release._
 
