@@ -1,5 +1,14 @@
 # react-router-native
 
+## 6.4.0-pre.10
+
+### Patch Changes
+
+- Updated dependencies [92aa5bb0]
+- Updated dependencies [9e2f92ac]
+- Updated dependencies [f3182f4a]
+  - react-router@6.4.0-pre.10
+
 ## 6.4.0-pre.9
 
 ### Patch Changes
