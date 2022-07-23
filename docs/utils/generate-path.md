@@ -26,7 +26,7 @@ title: generatePath
 declare function generatePath<Path extends string>(
   path: Path,
   params?: {
-    [key in PathParams<Path> | (string & {})]: string
+    [key in PathParams<Path>]: string
   }
 ): string;
 ```
