@@ -465,15 +465,19 @@ function matchRouteBranch<
  * @see https://reactrouter.com/docs/en/v6/utils/generate-path
  */
 export function generatePath<Path extends string>(path: Path, params: {
-  [key in PathParams<Path> | (string & {})]: string
+  [key in PathParams<Path>]: string
 } = {} as any): string {
   return path
-    .replace(/:(\w+)/g, (_, key) => {
+    .replace(/:(\w+)/g, (_, key: PathParams<Path>) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
     })
     .replace(/\/*\*$/, (_) =>
-      params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
+      {
+        const star = "*" as PathParams<Path>
+        
+        return params[star] == null ? "" : params[star].replace(/^\/*/, "/")
+      }
     );
 }
 
