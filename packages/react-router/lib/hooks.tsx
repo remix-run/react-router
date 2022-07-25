@@ -408,7 +408,7 @@ export function useRoutes(
     );
   }
 
-  return _renderMatches(
+  let renderedMatches = _renderMatches(
     matches &&
       matches.map((match) =>
         Object.assign({}, match, {
@@ -423,6 +423,30 @@ export function useRoutes(
     parentMatches,
     dataRouterStateContext || undefined
   );
+
+  // When a user passes in a `locationArg` prop, the associated routes need to
+  // be wrapped in a `LocationContext.Provider` in order for `useLocation` to
+  // use the `locationArg` location instead of the global location.
+  if (locationArg) {
+    return (
+      <LocationContext.Provider
+        value={{
+          location: {
+            state: undefined,
+            key: "default",
+            pathname: "/",
+            search: "",
+            hash: "",
+            ...location,
+          },
+          navigationType: NavigationType.Pop,
+        }}
+      >
+        {renderedMatches}
+      </LocationContext.Provider>
+    );
+  }
+  return renderedMatches;
 }
 
 function DefaultErrorElement() {
