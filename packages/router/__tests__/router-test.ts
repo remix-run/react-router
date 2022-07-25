@@ -8842,6 +8842,84 @@ describe("a router", () => {
         data: "ACTION",
       });
     });
+
+    it("differentiates between navigation and fetcher deferreds on cancellations", async () => {
+      let dfds: Array<ReturnType<typeof defer>> = [];
+      let signals: Array<AbortSignal> = [];
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: ({ request }) => {
+              let dfd = defer();
+              dfds.push(dfd);
+              signals.push(request.signal);
+              return deferred(dfd.promise);
+            },
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            root: -1,
+          },
+        },
+      });
+
+      // navigate to root, kicking off a reload of the root loader
+      let key = "key";
+      router.navigate("/");
+      router.fetch(key, "root", "/");
+      await tick();
+      expect(router.state.navigation.state).toBe("loading");
+      expect(router.state.loaderData).toEqual({
+        root: -1,
+      });
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      // Interrupt with a revalidation
+      router.revalidate();
+
+      // Original deferreds should do nothing on resolution
+      dfds[0].resolve(0);
+      dfds[1].resolve(1);
+      await tick();
+      expect(router.state.navigation.state).toBe("loading");
+      expect(router.state.loaderData).toEqual({
+        root: -1,
+      });
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      // New deferreds should complete the revalidation
+      dfds[2].resolve(2);
+      dfds[3].resolve(3);
+      await tick();
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.loaderData).toEqual({
+        root: expect.deferredPromise(2),
+      });
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: 3,
+      });
+
+      // Assert that both the route loader and fetcher loader were aborted
+      expect(signals[0].aborted).toBe(true); // initial route
+      expect(signals[1].aborted).toBe(true); // initial fetcher
+      expect(signals[2].aborted).toBe(false); // revalidating route
+      expect(signals[3].aborted).toBe(false); // revalidating fetcher
+
+      expect(router._internalActiveDeferreds.size).toBe(0);
+      expect(router._internalFetchControllers.size).toBe(0);
+      router.dispose();
+    });
   });
 
   describe("ssr", () => {

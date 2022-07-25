@@ -400,6 +400,16 @@ interface HandleLoadersResult extends ShortCircuitable {
   errors?: RouterState["errors"];
 }
 
+/**
+ * Tuple of [key, href, DataRouterMatch] for a revalidating fetcher.load()
+ */
+type RevalidatingFetcher = [string, string, DataRouteMatch];
+
+/**
+ * Tuple of [href, DataRouteMatch] for an active fetcher.load()
+ */
+type FetchLoadMatch = [string, DataRouteMatch];
+
 export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
   state: "idle",
   location: undefined,
@@ -518,7 +528,7 @@ export function createRouter(init: RouterInit): Router {
   // Fetchers that triggered redirect navigations from their actions
   let fetchRedirectIds = new Set<string>();
   // Most recent href/match for fetcher.load calls for fetchers
-  let fetchLoadMatches = new Map<string, [string, DataRouteMatch]>();
+  let fetchLoadMatches = new Map<string, FetchLoadMatch>();
   // Store DeferredData instances for active route matches.  When a
   // route loader returns deferred() we stick one in here.  Then, when a nested
   // promise resolves we update loaderData.  If a new navigation starts we
@@ -682,12 +692,7 @@ export function createRouter(init: RouterInit): Router {
   // is interrupted by a navigation, allow this to "succeed" by calling all
   // loaders during the next loader round
   function revalidate() {
-    // Toggle isRevalidationRequired so the next data load will call all loaders,
-    // and mark us in a revalidating state
-    isRevalidationRequired = true;
-    // Cancel all pending deferred on revalidations and mark cancelled routes
-    // for revalidation
-    cancelledDeferredRoutes.push(...cancelActiveDeferreds());
+    interruptActiveLoads();
     updateState({ revalidation: "loading" });
 
     // If we're currently submitting an action, we don't need to start a new
@@ -854,18 +859,7 @@ export function createRouter(init: RouterInit): Router {
     matches: DataRouteMatch[],
     opts?: { replace?: boolean }
   ): Promise<HandleActionResult> {
-    // Every action triggers a revalidation
-    isRevalidationRequired = true;
-
-    // Cancel pending deferreds, mark cancelled routes for revalidation, and
-    // abort in-flight fetcher loads
-    cancelledDeferredRoutes.push(...cancelActiveDeferreds());
-    fetchLoadMatches.forEach((_, key) => {
-      if (fetchControllers.has(key)) {
-        cancelledFetcherLoads.push(key);
-        abortFetcher(key);
-      }
-    });
+    interruptActiveLoads();
 
     // Put us in a submitting state
     let navigation: NavigationStates["Submitting"] = {
@@ -1051,18 +1045,16 @@ export function createRouter(init: RouterInit): Router {
     // Wire up subscribers to update loaderData as promises settle
     activeDeferreds.forEach((deferredData, routeId) => {
       deferredData.subscribe((aborted) => {
-        if (aborted) {
-          activeDeferreds.delete(routeId);
-          return;
+        if (!aborted) {
+          updateState({
+            loaderData: {
+              ...state.loaderData,
+              [routeId]: deferredData.data,
+            },
+          });
         }
-        updateState({
-          loaderData: {
-            ...state.loaderData,
-            [routeId]: deferredData.data,
-          },
-        });
-        // Remove this instance if all promises have settled
-        if (deferredData.done) {
+        // Remove this instance if we were aborted or if promises have settled
+        if (aborted || deferredData.done) {
           activeDeferreds.delete(routeId);
         }
       });
@@ -1130,20 +1122,8 @@ export function createRouter(init: RouterInit): Router {
     match: DataRouteMatch,
     submission: Submission
   ) {
-    isRevalidationRequired = true;
+    interruptActiveLoads();
     fetchLoadMatches.delete(key);
-
-    // Cancel all pending deferred on submissions and mark cancelled routes
-    // for revalidation
-    cancelledDeferredRoutes.push(...cancelActiveDeferreds());
-
-    // Abort any in-flight fetcher loads
-    fetchLoadMatches.forEach(([href, match], key) => {
-      if (fetchControllers.has(key)) {
-        cancelledFetcherLoads.push(key);
-        abortFetcher(key);
-      }
-    });
 
     if (!match.route.action) {
       let { error } = getMethodNotAllowedResult(path);
@@ -1452,7 +1432,7 @@ export function createRouter(init: RouterInit): Router {
 
   async function callLoadersAndResolveData(
     matchesToLoad: DataRouteMatch[],
-    fetchersToLoad: [string, string, DataRouteMatch][],
+    fetchersToLoad: RevalidatingFetcher[],
     request: Request
   ) {
     // Call all navigation loaders and revalidating fetcher loaders in parallel,
@@ -1467,23 +1447,40 @@ export function createRouter(init: RouterInit): Router {
     let loaderResults = results.slice(0, matchesToLoad.length);
     let fetcherResults = results.slice(matchesToLoad.length);
 
-    await resolveDeferredResults(
-      matchesToLoad,
-      loaderResults,
-      request.signal,
-      false,
-      state.loaderData,
-      activeDeferreds
-    );
-
-    await resolveDeferredResults(
-      fetchersToLoad.map(([, , match]) => match),
-      fetcherResults,
-      request.signal,
-      true
-    );
+    await Promise.all([
+      resolveDeferredResults(
+        matchesToLoad,
+        loaderResults,
+        request.signal,
+        false,
+        state.loaderData
+      ),
+      resolveDeferredResults(
+        fetchersToLoad.map(([, , match]) => match),
+        fetcherResults,
+        request.signal,
+        true
+      ),
+    ]);
 
     return { results, loaderResults, fetcherResults };
+  }
+
+  function interruptActiveLoads() {
+    // Every interruption triggers a revalidation
+    isRevalidationRequired = true;
+
+    // Cancel pending route-level deferreds and mark cancelled routes for
+    // revalidation
+    cancelledDeferredRoutes.push(...cancelActiveDeferreds());
+
+    // Abort in-flight fetcher loads
+    fetchLoadMatches.forEach((_, key) => {
+      if (fetchControllers.has(key)) {
+        cancelledFetcherLoads.push(key);
+        abortFetcher(key);
+      }
+    });
   }
 
   function setFetcherError(key: string, routeId: string, error: any) {
@@ -1568,6 +1565,7 @@ export function createRouter(init: RouterInit): Router {
         // cleanup via _internalActiveDeferreds
         dfd.cancel();
         cancelledRouteIds.push(routeId);
+        activeDeferreds.delete(routeId);
       }
     });
     return cancelledRouteIds;
@@ -2096,8 +2094,8 @@ function getMatchesToLoad(
   cancelledFetcherLoads: string[],
   pendingActionData?: RouteData,
   pendingError?: RouteData,
-  fetchLoadMatches?: Map<string, [string, DataRouteMatch]>
-): [DataRouteMatch[], [string, string, DataRouteMatch][]] {
+  fetchLoadMatches?: Map<string, FetchLoadMatch>
+): [DataRouteMatch[], RevalidatingFetcher[]] {
   let actionResult = pendingError
     ? Object.values(pendingError)[0]
     : pendingActionData
@@ -2125,7 +2123,7 @@ function getMatchesToLoad(
   );
 
   // Pick fetcher.loads that need to be revalidated
-  let revalidatingFetchers: [string, string, DataRouteMatch][] = [];
+  let revalidatingFetchers: RevalidatingFetcher[] = [];
   fetchLoadMatches?.forEach(([href, match], key) => {
     // This fetcher was cancelled from a prior action submission - force reload
     if (cancelledFetcherLoads.includes(key)) {
@@ -2437,7 +2435,7 @@ function processLoaderData(
   matchesToLoad: DataRouteMatch[],
   results: DataResult[],
   pendingError: RouteData | undefined,
-  revalidatingFetchers: [string, string, DataRouteMatch][],
+  revalidatingFetchers: RevalidatingFetcher[],
   fetcherResults: DataResult[],
   activeDeferreds: Map<string, DeferredData>
 ): {
@@ -2606,27 +2604,23 @@ async function resolveDeferredResults(
   results: DataResult[],
   signal: AbortSignal,
   isFetcher: boolean,
-  currentLoaderData?: RouteData,
-  activeDeferreds?: Map<string, DeferredData>
+  currentLoaderData?: RouteData
 ) {
   for (let index = 0; index < results.length; index++) {
     let result = results[index];
     let id = matchesToLoad[index].route.id;
-    // Not passing currentLoaderData means SSR or fetcher and we always want
-    // to await there
     if (
       isDeferredResult(result) &&
-      (!currentLoaderData || currentLoaderData[id] !== undefined)
+      (isFetcher || currentLoaderData?.[id] !== undefined)
     ) {
-      activeDeferreds?.set(id, result.deferredData);
-      await resolveDeferredData(result, signal, isFetcher).then(
-        (successResult) => {
-          activeDeferreds?.delete(id);
-          if (successResult) {
-            results[index] = successResult;
-          }
+      // Note: we do not have to touch activeDeferreds here since we race them
+      // against the signal in resolveDeferredData and they'll get aborted
+      // there if needed
+      await resolveDeferredData(result, signal, isFetcher).then((result) => {
+        if (result) {
+          results[index] = result || results[index];
         }
-      );
+      });
     }
   }
 }
