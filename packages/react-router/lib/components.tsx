@@ -493,33 +493,30 @@ class AwaitErrorBoundary extends React.Component<
 
   render() {
     let { children, errorElement, value } = this.props;
-    debugger;
 
+    let errorPromise: DeferredPromise | null = null;
+
+    // Grab any render/data errors
     if (this.state.error) {
-      let promise: DeferredPromise = Promise.reject();
-      // Avoid unhandled promise rejection issues
-      promise.catch(() => {});
       let renderError = this.state.error;
-      Object.defineProperty(promise, "_tracked", { get: () => true });
-      Object.defineProperty(promise, "_error", { get: () => renderError });
-
-      if (errorElement) {
-        // We have our own errorElement, provide our error and render it
-        return (
-          <AwaitContext.Provider value={promise} children={errorElement} />
-        );
-      }
-      // Throw to the nearest ancestor route-level error boundary
-      throw renderError;
+      // No-op on catch to avoid unhandled promise rejection issues
+      errorPromise = Promise.reject().catch(() => {});
+      Object.defineProperty(errorPromise, "_tracked", { get: () => true });
+      Object.defineProperty(errorPromise, "_error", { get: () => renderError });
+    } else if (value._error) {
+      errorPromise = value;
     }
 
-    if (value._error) {
+    if (errorPromise) {
       if (errorElement) {
-        // We have our own errorElement, provide our error and render it
-        return <AwaitContext.Provider value={value} children={errorElement} />;
+        // We have our own errorElement, provide our error to be accessed by
+        // useRouteError and render the errorElement
+        return (
+          <AwaitContext.Provider value={errorPromise} children={errorElement} />
+        );
       }
-      // Throw to the nearest ancestor route-level error boundary
-      throw value._error;
+      // Throw our error to the nearest ancestor route-level error boundary
+      throw errorPromise._error;
     }
 
     if (value._data) {
