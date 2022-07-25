@@ -520,6 +520,9 @@ async function writeServerBuildResult(
       let contents = Buffer.from(file.contents).toString("utf-8");
       contents = contents.replace(/"route:/gm, '"');
       await fse.writeFile(file.path, contents);
+    } else {
+      await fse.ensureDir(path.dirname(file.path));
+      await fse.writeFile(file.path, file.contents);
     }
   }
 }

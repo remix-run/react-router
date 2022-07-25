@@ -16,7 +16,7 @@ const TMP_DIR = path.join(process.cwd(), ".tmp", "integration");
 interface FixtureInit {
   buildStdio?: Writable;
   sourcemap?: boolean;
-  files?: { [filename: string]: string };
+  files?: { [filename: string]: string | Buffer };
   template?: "cf-template" | "deno-template" | "node-template";
   setup?: "node" | "cloudflare";
 }
@@ -205,7 +205,12 @@ async function writeTestFiles(init: FixtureInit, dir: string) {
     Object.keys(init.files ?? {}).map(async (filename) => {
       let filePath = path.join(dir, filename);
       await fse.ensureDir(path.dirname(filePath));
-      await fse.writeFile(filePath, stripIndent(init.files![filename]));
+      let file = init.files![filename];
+      if (typeof file === "string") {
+        await fse.writeFile(filePath, stripIndent(file));
+      } else {
+        await fse.writeFile(filePath, file);
+      }
     })
   );
 }

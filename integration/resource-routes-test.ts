@@ -1,3 +1,5 @@
+import path from "node:path";
+import fse from "fs-extra";
 import { test, expect } from "@playwright/test";
 
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
@@ -6,6 +8,8 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
 test.describe("loader in an app", () => {
   let appFixture: AppFixture;
+
+  let image = fse.readFileSync(path.join(__dirname, "./assets/image.png"));
 
   test.beforeAll(async () => {
     appFixture = await createAppFixture(
@@ -47,6 +51,20 @@ test.describe("loader in an app", () => {
             import { json } from "@remix-run/node";
             export let loader = () => json({hello: "world"});
           `,
+          "app/assets/image.png": image,
+          "app/routes/image[.]png.jsx": js`
+            import fs from "node:fs";
+            import path from "node:path";
+            import image from "~/assets/image.png";
+
+            export let loader = () => {
+              return new Response(fs.readFileSync(path.join(__dirname, "..", image)), {
+                headers: {
+                  "Content-Type": "image/png",
+                },
+              });
+            };
+          `,
         },
       })
     );
@@ -84,6 +102,12 @@ test.describe("loader in an app", () => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/data.json");
       expect(await page.content()).toContain('{"hello":"world"}');
+    });
+
+    test("should include imported asset in build", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      let res = await app.goto("/image.png");
+      expect(res.status()).toBe(200);
     });
   }
 });
