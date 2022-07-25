@@ -527,9 +527,11 @@ class AwaitErrorBoundary extends React.Component<
       return <AwaitContext.Provider value={value} children={children} />;
     }
 
+    // If this a raw promise provided by the user that did not come from a
+    // deferred(), track it as a DeferredPromise
     if (!value._tracked) {
       Object.defineProperty(value, "_tracked", { get: () => true });
-      throw value.then(
+      value.then(
         (data: any) =>
           Object.defineProperty(value, "_data", { get: () => data }),
         (error: any) =>

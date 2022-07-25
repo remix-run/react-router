@@ -49,6 +49,8 @@ function Layout() {
         &nbsp;|&nbsp;
         <Link to="/deferred/child">Deferred Child</Link>
         &nbsp;|&nbsp;
+        <Link to="/await">Await</Link>
+        &nbsp;|&nbsp;
         <Link to="/long-load">Long Load</Link>
         &nbsp;|&nbsp;
         <Link to="/404">404 Link</Link>
@@ -271,38 +273,12 @@ const deferredLoader: LoaderFunction = async ({ request }) => {
   });
 };
 
-let rawPromiseResolver: ((value: unknown) => void) | null;
-let rawPromise: Promise<unknown> | null = new Promise(
-  (r) => (rawPromiseResolver = r)
-);
-
 function DeferredPage() {
   let data = useLoaderData() as DeferredRouteLoaderData;
-  React.useEffect(() => {
-    if (!rawPromise) {
-      rawPromise = new Promise((r) => (rawPromiseResolver = r));
-    }
-    let id = setTimeout(
-      () => rawPromiseResolver?.("Resolved raw promise!"),
-      1000
-    );
-    return () => {
-      rawPromise = null;
-      rawPromiseResolver = null;
-      clearTimeout(id);
-    };
-  }, []);
-
   return (
     <div>
       <p>{data.critical1}</p>
       <p>{data.critical2}</p>
-
-      <React.Suspense fallback={<p>Awaiting raw promise </p>}>
-        <Await value={rawPromise}>
-          <RenderAwaitedData />
-        </Await>
-      </React.Suspense>
 
       <React.Suspense fallback={<p>should not see me!</p>}>
         <Await value={data.lazyResolved}>
@@ -374,6 +350,23 @@ function DeferredChild() {
   );
 }
 
+let rawPromiseResolver: ((value: unknown) => void) | null;
+let rawPromise: Promise<unknown> | null = new Promise(
+  (r) => (rawPromiseResolver = r)
+);
+
+function AwaitPage() {
+  React.useEffect(() => {
+    setTimeout(() => rawPromiseResolver?.("Resolved raw promise!"), 1000);
+  }, []);
+
+  return (
+    <React.Suspense fallback={<p>Awaiting raw promise </p>}>
+      <Await value={rawPromise}>{(data: string) => <p>{data}</p>}</Await>
+    </React.Suspense>
+  );
+}
+
 function RenderAwaitedData() {
   let data = useAwaitedData() as string;
   return <p>{data}</p>;
@@ -408,6 +401,7 @@ function App() {
             element={<DeferredChild />}
           />
         </Route>
+        <Route id="await" path="await" element={<AwaitPage />} />
         <Route
           path="long-load"
           loader={() => sleep(3000)}
