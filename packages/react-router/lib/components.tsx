@@ -1,5 +1,6 @@
 import * as React from "react";
 import type {
+  DeferredPromise,
   HydrationState,
   InitialEntry,
   Location,
@@ -15,7 +16,6 @@ import {
   createMemoryHistory,
   createMemoryRouter,
   invariant,
-  isDeferredError,
   parsePath,
   stripBasename,
   warning,
@@ -445,7 +445,7 @@ export interface DeferredResolveRenderFunction {
 
 export interface DeferredProps {
   children: React.ReactNode | DeferredResolveRenderFunction;
-  value: any;
+  value: DeferredPromise;
   errorElement?: React.ReactNode;
 }
 
@@ -462,7 +462,7 @@ export function Deferred({ children, value, errorElement }: DeferredProps) {
 }
 
 type DeferredErrorBoundaryProps = React.PropsWithChildren<{
-  value: any;
+  value: DeferredPromise;
   errorElement?: React.ReactNode;
 }>;
 
@@ -494,27 +494,52 @@ class DeferredErrorBoundary extends React.Component<
   render() {
     let { children, errorElement, value } = this.props;
 
-    // Handle render errors from this.state, or data errors from context
-    let error = this.state.error || (isDeferredError(value) ? value : null);
+    if (this.state.error) {
+      let promise: DeferredPromise = Promise.reject();
+      // Avoid unhandled promise rejection issues
+      promise.catch(() => {});
+      let renderError = this.state.error;
+      Object.defineProperty(promise, "_tracked", { get: () => true });
+      Object.defineProperty(promise, "_error", { get: () => renderError });
 
-    if (error) {
       if (errorElement) {
         // We have our own errorElement, provide our error and render it
         return (
-          <DeferredContext.Provider value={error} children={errorElement} />
+          <DeferredContext.Provider value={promise} children={errorElement} />
         );
       }
       // Throw to the nearest ancestor route-level error boundary
-      throw error;
+      throw renderError;
     }
 
-    if (value instanceof Promise) {
-      // Throw to the suspense boundary
-      throw value;
+    if (value._error) {
+      if (errorElement) {
+        // We have our own errorElement, provide our error and render it
+        return (
+          <DeferredContext.Provider value={value} children={errorElement} />
+        );
+      }
+      // Throw to the nearest ancestor route-level error boundary
+      throw value._error;
     }
 
-    // We've resolved successfully, provide the value and render the children
-    return <DeferredContext.Provider value={value} children={children} />;
+    if (value._data) {
+      // We've resolved successfully, provide the value and render the children
+      return <DeferredContext.Provider value={value} children={children} />;
+    }
+
+    if (!value._tracked) {
+      Object.defineProperty(value, "_tracked", { get: () => true });
+      throw value.then(
+        (data: any) =>
+          Object.defineProperty(value, "_data", { get: () => data }),
+        (error: any) =>
+          Object.defineProperty(value, "_error", { get: () => error })
+      );
+    }
+
+    // Throw to the suspense boundary
+    throw value;
   }
 }
 

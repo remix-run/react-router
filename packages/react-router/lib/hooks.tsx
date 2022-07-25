@@ -735,8 +735,8 @@ export function useRouteError(): unknown {
   let deferredValue = React.useContext(DeferredContext);
 
   // Return deferred errors if we're inside a Deferred errorElement
-  if (deferredValue && deferredValue instanceof Error) {
-    return deferredValue;
+  if (deferredValue && deferredValue._error !== undefined) {
+    return deferredValue._error;
   }
 
   // If this was a render error, we put it in a RouteError context inside
@@ -760,7 +760,7 @@ export function useRouteError(): unknown {
  */
 export function useDeferredData(): unknown {
   let value = React.useContext(DeferredContext);
-  return value;
+  return value?._data;
 }
 
 const alreadyWarned: Record<string, boolean> = {};

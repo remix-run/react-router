@@ -880,6 +880,12 @@ export const json: JsonFunction = (data, init = {}) => {
   });
 };
 
+export interface DeferredPromise extends Promise<any> {
+  _tracked?: boolean;
+  _data?: any;
+  _error?: any;
+}
+
 type DeferredInput =
   | Record<string, unknown>
   | Array<unknown>
@@ -892,17 +898,17 @@ export class DeferredData {
   data: DeferredInput | unknown;
 
   constructor(data: DeferredInput) {
-    // Store all data in our internal copy and track promise keys
     if (data instanceof Promise) {
-      this.data = data;
-      this.trackPromise("__single__", data);
+      this.data = this.trackPromise("__single__", data);
     } else if (Array.isArray(data)) {
-      this.data = [...data];
-      data.forEach((value, index) => this.trackPromise(index, value));
+      this.data = data.map((value, index) => this.trackPromise(index, value));
     } else if (typeof data === "object") {
-      this.data = { ...data };
-      Object.entries(data).forEach(([key, value]) =>
-        this.trackPromise(key, value)
+      this.data = Object.entries(data).reduce(
+        (acc, [key, value]) =>
+          Object.assign(acc, {
+            [key]: this.trackPromise(key, value),
+          }),
+        {}
       );
     } else {
       invariant(false, "Incorrect data type passed to deferred()");
@@ -912,38 +918,38 @@ export class DeferredData {
   private trackPromise(
     key: string | number,
     value: Promise<unknown> | unknown
-  ) {
-    if (value instanceof Promise) {
-      this.pendingKeys.add(key);
-      value.then(
-        (data) => this.onSettle(key, null, data as unknown),
-        (error) => this.onSettle(key, error as unknown)
-      );
+  ): DeferredPromise | unknown {
+    if (!(value instanceof Promise)) {
+      return value;
     }
+
+    this.pendingKeys.add(key);
+
+    // We store a little wrapper promise that will be extended with
+    // _data/_error props upon resolve/reject
+    let deferredPromise: DeferredPromise = value.then(
+      (data) => this.onSettle(deferredPromise, key, null, data as unknown),
+      (error) => this.onSettle(deferredPromise, key, error as unknown)
+    );
+    Object.defineProperty(deferredPromise, "_tracked", { get: () => true });
+    return deferredPromise;
   }
 
-  private onSettle(key: string | number, error: unknown, data?: unknown) {
+  private onSettle(
+    deferredPromise: DeferredPromise,
+    key: string | number,
+    error: unknown,
+    data?: unknown
+  ): void {
     if (this.cancelled) {
       return;
     }
     this.pendingKeys.delete(key);
 
-    let value = error ? new DeferredError(error as string) : data;
-
-    if (this.data instanceof Promise) {
-      this.data = value;
-    } else if (Array.isArray(this.data)) {
-      invariant(typeof key === "number", "expected key to be a number");
-      let data = [...this.data];
-      data[key] = value;
-      this.data = data;
-    } else if (typeof this.data === "object") {
-      this.data = {
-        ...this.data,
-        [key]: value,
-      };
+    if (error) {
+      Object.defineProperty(deferredPromise, "_error", { get: () => error });
     } else {
-      invariant(false, "Incorrect data type on DeferredData");
+      Object.defineProperty(deferredPromise, "_data", { get: () => data });
     }
 
     this.subscriber?.(false);
@@ -959,23 +965,70 @@ export class DeferredData {
     this.subscriber?.(true);
   }
 
+  async resolveData(signal: AbortSignal) {
+    let aborted = false;
+    if (!this.done) {
+      let onAbort = () => this.cancel();
+      signal.addEventListener("abort", onAbort);
+      aborted = await new Promise((resolve) => {
+        this.subscribe((aborted) => {
+          signal.removeEventListener("abort", onAbort);
+          if (aborted || this.done) {
+            resolve(aborted);
+          }
+        });
+      });
+    }
+    return aborted;
+  }
+
   get done() {
     return this.pendingKeys.size === 0;
   }
+
+  get unwrappedData() {
+    invariant(
+      this.data !== null && this.done,
+      "Can only unwrap data on initialized and settled deferreds"
+    );
+
+    if (this.data instanceof Promise) {
+      return unwrapDeferredPromise(this.data);
+    }
+
+    if (Array.isArray(this.data)) {
+      return this.data.map((value) => unwrapDeferredPromise(value));
+    }
+
+    if (typeof this.data === "object") {
+      return Object.entries(this.data).reduce(
+        (acc, [key, value]) =>
+          Object.assign(acc, {
+            [key]: unwrapDeferredPromise(value),
+          }),
+        {}
+      );
+    }
+
+    throw new Error("Invalid DeferredData type");
+  }
 }
 
-/**
- * @private
- * Utility class we use to hold deferred promise rejection values
- */
-export class DeferredError extends Error {}
+function isDeferredPromise(value: any): value is DeferredPromise {
+  return (
+    value instanceof Promise && (value as DeferredPromise)._tracked === true
+  );
+}
 
-/**
- * Check if the given error is a DeferredError generated from a deferred()
- * promise rejection
- */
-export function isDeferredError(e: any): e is DeferredError {
-  return e instanceof DeferredError;
+function unwrapDeferredPromise(value: any) {
+  if (!isDeferredPromise(value)) {
+    return value;
+  }
+
+  if (value._error) {
+    throw value._error;
+  }
+  return value._data;
 }
 
 export function deferred(data: DeferredInput) {

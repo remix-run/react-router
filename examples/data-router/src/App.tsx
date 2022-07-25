@@ -247,8 +247,17 @@ interface DeferredRouteLoaderData {
 const rand = () => Math.round(Math.random() * 100);
 const resolve = (d: string, ms: number) =>
   new Promise((r) => setTimeout(() => r(`${d} - ${rand()}`), ms));
-const reject = (d: string, ms: number) =>
-  new Promise((_, r) => setTimeout(() => r(`${d} - ${rand()}`), ms));
+const reject = (d: Error | string, ms: number) =>
+  new Promise((_, r) =>
+    setTimeout(() => {
+      if (d instanceof Error) {
+        d.message += ` - ${rand()}`;
+      } else {
+        d += ` - ${rand()}`;
+      }
+      r(d);
+    }, ms)
+  );
 
 const deferredLoader: LoaderFunction = async ({ request }) => {
   return deferred({
@@ -258,7 +267,7 @@ const deferredLoader: LoaderFunction = async ({ request }) => {
     lazy1: resolve("Lazy 1", 1000),
     lazy2: resolve("Lazy 2", 1500),
     lazy3: resolve("Lazy 3", 2000),
-    lazyError: reject("Kaboom!", 2500),
+    lazyError: reject(new Error("Kaboom!"), 2500),
   });
 };
 
@@ -357,6 +366,7 @@ function App() {
       <Route path="/" element={<Layout />}>
         <Route index loader={homeLoader} element={<Home />} />
         <Route
+          id="deferred"
           path="deferred"
           loader={deferredLoader}
           element={<DeferredPage />}

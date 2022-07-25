@@ -1889,12 +1889,12 @@ describe("<DataMemoryRouter>", () => {
   });
 
   describe("deferred", () => {
-    function setupDeferredTest(
+    function setupDeferredTest({
       hasRouteErrorElement = false,
       hasDeferredErrorElement = false,
       triggerRenderError = false,
-      triggerFallbackError = false
-    ) {
+      triggerFallbackError = false,
+    } = {}) {
       let barDefer = defer();
       let { container } = render(
         <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
@@ -2109,7 +2109,10 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("sends data errors to the provided errorElement", async () => {
-      let { barDefer, container } = setupDeferredTest(true, true, false);
+      let { barDefer, container } = setupDeferredTest({
+        hasRouteErrorElement: true,
+        hasDeferredErrorElement: true,
+      });
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -2172,14 +2175,16 @@ describe("<DataMemoryRouter>", () => {
           </p>
           <p>
             Handled Error:
-            Error: Kaboom!
+            Kaboom!
           </p>
         </div>"
       `);
     });
 
-    it("sends unhandled data errors to the nearest route error boundary", async () => {
-      let { barDefer, container } = setupDeferredTest(true, false, false);
+    it("sends unhandled data errors to the nearest route error boundaary", async () => {
+      let { barDefer, container } = setupDeferredTest({
+        hasRouteErrorElement: true,
+      });
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -2239,14 +2244,18 @@ describe("<DataMemoryRouter>", () => {
           </p>
           <p>
             Route Error:
-            Error: Kaboom!
+            Kaboom!
           </p>
         </div>"
       `);
     });
 
     it("sends render errors to the provided errorElement", async () => {
-      let { barDefer, container } = setupDeferredTest(true, true, true);
+      let { barDefer, container } = setupDeferredTest({
+        hasRouteErrorElement: true,
+        hasDeferredErrorElement: true,
+        triggerRenderError: true,
+      });
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -2316,7 +2325,11 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("sends unhandled render errors to the nearest route error boundary", async () => {
-      let { barDefer, container } = setupDeferredTest(true, false, true);
+      let { barDefer, container } = setupDeferredTest({
+        hasRouteErrorElement: true,
+        hasDeferredErrorElement: false,
+        triggerRenderError: true,
+      });
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -2383,7 +2396,12 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("does not handle fallback render errors in the Deferred errorElement", async () => {
-      let { barDefer, container } = setupDeferredTest(true, true, true, true);
+      let { barDefer, container } = setupDeferredTest({
+        hasRouteErrorElement: true,
+        hasDeferredErrorElement: true,
+        triggerRenderError: true,
+        triggerFallbackError: true,
+      });
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`

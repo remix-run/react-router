@@ -1,5 +1,6 @@
 import * as React from "react";
 import type {
+  DeferredPromise,
   History,
   Location,
   RouteMatch,
@@ -33,7 +34,9 @@ if (__DEV__) {
   DataRouterStateContext.displayName = "DataRouterState";
 }
 
-export const DeferredContext = React.createContext<any | null>(null);
+export const DeferredContext = React.createContext<DeferredPromise | null>(
+  null
+);
 if (__DEV__) {
   DeferredContext.displayName = "Deferred";
 }

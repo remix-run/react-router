@@ -1375,7 +1375,8 @@ export function createRouter(init: RouterInit): Router {
     // below if that happens
     if (isDeferredResult(result)) {
       result =
-        (await resolveDeferredData(result, fetchRequest.signal)) || result;
+        (await resolveDeferredData(result, fetchRequest.signal, true)) ||
+        result;
     }
 
     // We can delete this so long as we weren't aborted by ou our own fetcher
@@ -1470,6 +1471,7 @@ export function createRouter(init: RouterInit): Router {
       matchesToLoad,
       loaderResults,
       request.signal,
+      false,
       state.loaderData,
       activeDeferreds
     );
@@ -1477,7 +1479,8 @@ export function createRouter(init: RouterInit): Router {
     await resolveDeferredResults(
       fetchersToLoad.map(([, , match]) => match),
       fetcherResults,
-      request.signal
+      request.signal,
+      true
     );
 
     return { results, loaderResults, fetcherResults };
@@ -2602,48 +2605,47 @@ async function resolveDeferredResults(
   matchesToLoad: DataRouteMatch[],
   results: DataResult[],
   signal: AbortSignal,
+  isFetcher: boolean,
   currentLoaderData?: RouteData,
   activeDeferreds?: Map<string, DeferredData>
 ) {
   for (let index = 0; index < results.length; index++) {
     let result = results[index];
     let id = matchesToLoad[index].route.id;
-    // Not passing currentLoaderData means SSR and we always want to await there
+    // Not passing currentLoaderData means SSR or fetcher and we always want
+    // to await there
     if (
       isDeferredResult(result) &&
       (!currentLoaderData || currentLoaderData[id] !== undefined)
     ) {
       activeDeferreds?.set(id, result.deferredData);
-      await resolveDeferredData(result, signal).then((successResult) => {
-        activeDeferreds?.delete(id);
-        if (successResult) {
-          results[index] = successResult;
+      await resolveDeferredData(result, signal, isFetcher).then(
+        (successResult) => {
+          activeDeferreds?.delete(id);
+          if (successResult) {
+            results[index] = successResult;
+          }
         }
-      });
+      );
     }
   }
 }
 
 async function resolveDeferredData(
   result: DeferredResult,
-  signal: AbortSignal
+  signal: AbortSignal,
+  unwrap = false
 ): Promise<SuccessResult | undefined> {
-  if (!result.deferredData.done) {
-    let onAbort = () => result.deferredData.cancel();
-    signal.addEventListener("abort", onAbort);
-    let wasAborted = await new Promise((resolve) => {
-      (result as DeferredResult).deferredData.subscribe((aborted) => {
-        signal.removeEventListener("abort", onAbort);
-        if (aborted || (result as DeferredResult).deferredData.done) {
-          resolve(aborted);
-        }
-      });
-    });
-    if (wasAborted) {
-      return;
-    }
+  let aborted = await result.deferredData.resolveData(signal);
+  if (aborted) {
+    return;
   }
-  return { type: ResultType.data, data: result.deferredData.data };
+
+  let data = unwrap
+    ? result.deferredData.unwrappedData
+    : result.deferredData.data;
+
+  return { type: ResultType.data, data };
 }
 
 function hasNakedIndexQuery(search: string): boolean {
