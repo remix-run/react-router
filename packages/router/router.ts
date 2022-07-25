@@ -2629,17 +2629,31 @@ async function resolveDeferredData(
   result: DeferredResult,
   signal: AbortSignal,
   unwrap = false
-): Promise<SuccessResult | undefined> {
+): Promise<SuccessResult | ErrorResult | undefined> {
   let aborted = await result.deferredData.resolveData(signal);
   if (aborted) {
     return;
   }
 
-  let data = unwrap
-    ? result.deferredData.unwrappedData
-    : result.deferredData.data;
+  if (unwrap) {
+    try {
+      return {
+        type: ResultType.data,
+        data: result.deferredData.unwrappedData,
+      };
+    } catch (e) {
+      // Handle any DeferredPromise._error values encountered while unwrapping
+      return {
+        type: ResultType.error,
+        error: e,
+      };
+    }
+  }
 
-  return { type: ResultType.data, data };
+  return {
+    type: ResultType.data,
+    data: result.deferredData.data,
+  };
 }
 
 function hasNakedIndexQuery(search: string): boolean {

@@ -29,6 +29,7 @@ import {
   useFetcher,
   useFetchers,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  deferred,
 } from "react-router-dom";
 
 // Private API
@@ -1384,6 +1385,74 @@ function testDomRouter(
           </div>"
         `);
 
+        await waitFor(() => screen.getByText("Kaboom!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom!
+            </p>
+          </div>"
+        `);
+      });
+
+      it("handles fetcher.load errors (deferred)", async () => {
+        let dfd = defer();
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/")}
+            hydrationData={{ loaderData: { "0": null } }}
+          >
+            <Route
+              path="/"
+              element={<Comp />}
+              errorElement={<ErrorElement />}
+              loader={() => deferred(dfd.promise)}
+            />
+          </TestDataRouter>
+        );
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p>
+                {fetcher.state}
+                {fetcher.data ? JSON.stringify(fetcher.data) : null}
+              </p>
+              <button onClick={() => fetcher.load("/")}>load</button>
+            </>
+          );
+        }
+
+        function ErrorElement() {
+          let error = useRouteError();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              idle
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        fireEvent.click(screen.getByText("load"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              loading
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        dfd.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("Kaboom!"));
         expect(getHtml(container)).toMatchInlineSnapshot(`
           "<div>

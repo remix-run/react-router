@@ -8661,6 +8661,39 @@ describe("a router", () => {
       });
     });
 
+    it("triggers error boundaries if fetcher deferred data rejects", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+          },
+          {
+            id: "fetch",
+            path: "fetch",
+            loader: true,
+          },
+        ],
+        initialEntries: ["/"],
+      });
+
+      let key = "key";
+      let A = await t.fetch("/fetch", key);
+
+      let dfd = defer();
+      await A.loaders.fetch.resolve(
+        deferred({
+          critical: "1",
+          lazy: dfd.promise,
+        })
+      );
+      await dfd.reject(new Error("Kaboom!")).catch(() => {});
+      expect(t.router.state.errors).toMatchObject({
+        index: new Error("Kaboom!"),
+      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+    });
+
     it("cancels pending deferreds on fetcher reloads", async () => {
       let t = setup({
         routes: [
