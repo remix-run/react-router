@@ -18,7 +18,7 @@ import {
 } from "react-router";
 import {
   DataMemoryRouter,
-  Deferred,
+  Await,
   Route,
   Outlet,
   deferred,
@@ -1930,12 +1930,12 @@ describe("<DataMemoryRouter>", () => {
           <>
             <p>{data.critical}</p>
             <React.Suspense fallback={<LazyFallback />}>
-              <Deferred
+              <Await
                 value={data.lazy}
                 errorElement={hasDeferredErrorElement ? <LazyError /> : null}
               >
                 <LazyData />
-              </Deferred>
+              </Await>
             </React.Suspense>
           </>
         );
@@ -2499,7 +2499,7 @@ describe("<DataMemoryRouter>", () => {
           <>
             <p>{critical}</p>
             <React.Suspense fallback={<p>Loading...</p>}>
-              <Deferred value={lazy}>{(data) => <p>{data}</p>}</Deferred>
+              <Await value={lazy}>{(data) => <p>{data}</p>}</Await>
             </React.Suspense>
           </>
         );
@@ -2575,7 +2575,7 @@ describe("<DataMemoryRouter>", () => {
         let lazy = useLoaderData();
         return (
           <React.Suspense fallback={<p>Loading...</p>}>
-            <Deferred value={lazy}>{(data) => <p>{data}</p>}</Deferred>
+            <Await value={lazy}>{(data) => <p>{data}</p>}</Await>
           </React.Suspense>
         );
       }

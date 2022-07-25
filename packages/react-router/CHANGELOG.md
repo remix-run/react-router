@@ -6,8 +6,8 @@
 
 - feat: Deferred API Updates (#9070)
 
-  - Removes `<Suspense>` from inside `<Deferred>`, requires users to render their own suspense boundaries
-  - Updates `Deferred` to use a true error boundary to catch render errors as well as data errors
+  - Removes `<Suspense>` from inside `<Await>`, requires users to render their own suspense boundaries
+  - Updates `Await` to use a true error boundary to catch render errors as well as data errors
   - Support array and single promise usages
     - `return deferred([ await critical(), lazy() ])`
     - `return deferred(lazy())`
@@ -37,29 +37,29 @@
   };
 
   // In your route element, grab the values from useLoaderData and render them
-  // with <Deferred>
-  function DeferredPage() {
+  // with <Await>
+  function Page() {
     let data = useLoaderData();
     return (
       <>
         <p>Critical Data: {data.critical}</p>
-        <Suspense fallback={<p>Loading...</p>}>
-          <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
-            <RenderDeferredData />
-          </Deferred>
-        </Suspense>
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <Await value={data.lazy} errorElement={<RenderError />}>
+            <RenderData />
+          </Await>
+        </React.Suspense>
       </>
     );
   }
 
   // Use separate components to render the data once it resolves, and access it
   // via the useDeferredData hook
-  function RenderDeferredData() {
     let data = useDeferredData();
+  function RenderData() {
     return <p>Lazy: {data}</p>;
   }
 
-  function RenderDeferredError() {
+  function RenderError() {
     let data = useRouteError();
     return <p>Error! {data.message} {data.stack}</p>;
   }
@@ -69,16 +69,16 @@
   pattern and handle the rendering of the deferred data inline:
 
   ```jsx
-  function DeferredPage() {
+  function Page() {
     let data = useLoaderData();
     return (
       <>
         <p>Critical Data: {data.critical}</p>
-        <Suspense fallback={<p>Loading...</p>}>
-          <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <Await value={data.lazy} errorElement={<RenderError />}>
             {(data) => <p>{data}</p>}
-          </Deferred>
-        </Suspense>
+          </Await>
+        </React.Suspense>
       </>
     );
   }

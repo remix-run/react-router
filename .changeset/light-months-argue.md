@@ -19,29 +19,29 @@ function loader() {
 };
 
 // In your route element, grab the values from useLoaderData and render them
-// with <Deferred> inside a <Suspense> boundary
-function DeferredPage() {
+// with <Await> inside a <React.Suspense> boundary
+function Page() {
   let data = useLoaderData();
   return (
     <>
       <p>Critical Data: {data.critical}</p>
-      <Suspense fallback={<p>Loading...</p>}>
-        <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
-          <RenderDeferredData />
-        </Deferred>
-      </Suspense>
+      <React.Suspense fallback={<p>Loading...</p>}>
+        <Await value={data.lazy} errorElement={<RenderError />}>
+          <RenderData />
+        </Await>
+      </React.Suspense>
     </>
   );
 }
 
 // Use separate components to render the data once it resolves, and access it
 // via the useDeferredData hook
-function RenderDeferredData() {
+function RenderData() {
   let data = useDeferredData();
   return <p>Lazy: {data}</p>;
 }
 
-function RenderDeferredError() {
+function RenderError() {
   let data = useRouteError();
   return <p>Error! {data.message} {data.stack}</p>;
 }
@@ -51,16 +51,16 @@ If you want to skip the separate components, you can use the Render Props
 pattern and handle the rendering of the deferred data inline:
 
 ```jsx
-function DeferredPage() {
+function Page() {
   let data = useLoaderData();
   return (
     <>
       <p>Critical Data: {data.critical}</p>
-      <Suspense fallback={<p>Loading...</p>}>
-        <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
+      <React.Suspense fallback={<p>Loading...</p>}>
+        <Await value={data.lazy} errorElement={<RenderError />}>
           {(data) => <p>{data}</p>}
-        </Deferred>
-      </Suspense>
+        </Await>
+      </React.Suspense>
     </>
   );
 }

@@ -2,8 +2,8 @@ import React from "react";
 import {
   type ActionFunction,
   type LoaderFunction,
+  Await,
   DataBrowserRouter,
-  Deferred,
   Form,
   Link,
   Route,
@@ -85,7 +85,7 @@ const homeLoader: LoaderFunction = async () => {
 };
 
 function Home() {
-  let data = useLoaderData();
+  let data = useLoaderData() as { date: string };
   return (
     <>
       <h2>Home</h2>
@@ -176,7 +176,7 @@ function TodosList() {
 }
 
 function TodosBoundary() {
-  let error = useRouteError();
+  let error = useRouteError() as Error;
   return (
     <>
       <h2>Error 💥</h2>
@@ -271,40 +271,65 @@ const deferredLoader: LoaderFunction = async ({ request }) => {
   });
 };
 
+let rawPromiseResolver: ((value: unknown) => void) | null;
+let rawPromise: Promise<unknown> | null = new Promise(
+  (r) => (rawPromiseResolver = r)
+);
+
 function DeferredPage() {
   let data = useLoaderData() as DeferredRouteLoaderData;
+  React.useEffect(() => {
+    if (!rawPromise) {
+      rawPromise = new Promise((r) => (rawPromiseResolver = r));
+    }
+    let id = setTimeout(
+      () => rawPromiseResolver?.("Resolved raw promise!"),
+      1000
+    );
+    return () => {
+      rawPromise = null;
+      rawPromiseResolver = null;
+      clearTimeout(id);
+    };
+  }, []);
 
   return (
     <div>
       <p>{data.critical1}</p>
       <p>{data.critical2}</p>
 
+      <React.Suspense fallback={<p>Awaiting raw promise </p>}>
+        <Await value={rawPromise}>
+          <RenderAwaitedData />
+        </Await>
+      </React.Suspense>
+
       <React.Suspense fallback={<p>should not see me!</p>}>
-        <Deferred value={data.lazyResolved}>
-          <RenderDeferredData />
-        </Deferred>
+        <Await value={data.lazyResolved}>
+          <RenderAwaitedData />
+        </Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading 1...</p>}>
-        <Deferred value={data.lazy1}>
-          <RenderDeferredData />
-        </Deferred>
+        <Await value={data.lazy1}>
+          <RenderAwaitedData />
+        </Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading 2...</p>}>
-        <Deferred value={data.lazy2}>
-          <RenderDeferredData />
-        </Deferred>
+        <Await value={data.lazy2}>
+          <RenderAwaitedData />
+        </Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading 3...</p>}>
-        <Deferred value={data.lazy3}>{(data) => <p>{data}</p>}</Deferred>
+        <Await value={data.lazy3}>{(data: string) => <p>{data}</p>}</Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading (error)...</p>}>
-        <Deferred value={data.lazyError} errorElement={<RenderDeferredError />}>
-          <RenderDeferredData />
-        </Deferred>
+        <Await value={data.lazyError} errorElement={<RenderAwaitedError />}>
+          <RenderAwaitedData />
+        </Await>
       </React.Suspense>
 
       <Outlet />
@@ -312,27 +337,32 @@ function DeferredPage() {
   );
 }
 
-const deferredChildLoader: LoaderFunction = async ({ request }) => {
+interface DeferredChildLoaderData {
+  critical: string;
+  lazy: Promise<string>;
+}
+
+const deferredChildLoader: LoaderFunction = async () => {
   return deferred({
     critical: await resolve("Critical Child Data", 500),
     lazy: resolve("Lazy Child Data", 1000),
   });
 };
 
-const deferredChildAction: ActionFunction = async ({ request }) => {
+const deferredChildAction: ActionFunction = async () => {
   return json({ ok: true });
 };
 
 function DeferredChild() {
-  let data = useLoaderData();
+  let data = useLoaderData() as DeferredChildLoaderData;
   let actionData = useActionData();
   return (
     <div>
       <p>{data.critical}</p>
       <React.Suspense fallback={<p>loading child...</p>}>
-        <Deferred value={data.lazy}>
-          <RenderDeferredData />
-        </Deferred>
+        <Await value={data.lazy}>
+          <RenderAwaitedData />
+        </Await>
       </React.Suspense>
       <Form method="post">
         <button type="submit" name="key" value="value">
@@ -344,13 +374,13 @@ function DeferredChild() {
   );
 }
 
-function RenderDeferredData() {
-  let data = useDeferredData<string>();
+function RenderAwaitedData() {
+  let data = useDeferredData() as string;
   return <p>{data}</p>;
 }
 
-function RenderDeferredError() {
-  let error = useRouteError();
+function RenderAwaitedError() {
+  let error = useRouteError() as Error;
   return (
     <p style={{ color: "red" }}>
       Error (errorElement)!

@@ -31,7 +31,7 @@ import {
   NavigateOptions,
   RouteContext,
   RouteErrorContext,
-  DeferredContext,
+  AwaitContext,
   RouteContextObject,
   DataStaticRouterContext,
 } from "./context";
@@ -732,11 +732,11 @@ export function useRouteError(): unknown {
   let state = useDataRouterState(DataRouterHook.UseRouteError);
   let route = React.useContext(RouteContext);
   let thisRoute = route.matches[route.matches.length - 1];
-  let deferredValue = React.useContext(DeferredContext);
+  let awaitValue = React.useContext(AwaitContext);
 
-  // Return deferred errors if we're inside a Deferred errorElement
-  if (deferredValue && deferredValue._error !== undefined) {
-    return deferredValue._error;
+  // Return awaited errors if we're inside an Await errorElement
+  if (awaitValue && awaitValue._error !== undefined) {
+    return awaitValue._error;
   }
 
   // If this was a render error, we put it in a RouteError context inside
@@ -756,10 +756,10 @@ export function useRouteError(): unknown {
 }
 
 /**
- * Returns the happy-path data from the nearest ancestor <Deferred /> value
+ * Returns the happy-path data from the nearest ancestor <Await /> value
  */
 export function useDeferredData(): unknown {
-  let value = React.useContext(DeferredContext);
+  let value = React.useContext(AwaitContext);
   return value?._data;
 }
 

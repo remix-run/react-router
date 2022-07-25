@@ -34,11 +34,9 @@ if (__DEV__) {
   DataRouterStateContext.displayName = "DataRouterState";
 }
 
-export const DeferredContext = React.createContext<DeferredPromise | null>(
-  null
-);
+export const AwaitContext = React.createContext<DeferredPromise | null>(null);
 if (__DEV__) {
-  DeferredContext.displayName = "Deferred";
+  AwaitContext.displayName = "Await";
 }
 
 export interface NavigateOptions {

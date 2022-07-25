@@ -28,7 +28,7 @@ import {
   NavigationContext,
   DataRouterContext,
   DataRouterStateContext,
-  DeferredContext,
+  AwaitContext,
 } from "./context";
 import {
   useDeferredData,
@@ -439,12 +439,12 @@ export function Routes({
   return useRoutes(routes, location);
 }
 
-export interface DeferredResolveRenderFunction {
+export interface AwaitResolveRenderFunction {
   (data: Awaited<any>): JSX.Element;
 }
 
-export interface DeferredProps {
-  children: React.ReactNode | DeferredResolveRenderFunction;
+export interface AwaitProps {
+  children: React.ReactNode | AwaitResolveRenderFunction;
   value: DeferredPromise;
   errorElement?: React.ReactNode;
 }
@@ -453,28 +453,28 @@ export interface DeferredProps {
  * Component to use for rendering lazily loaded data from returning deferred()
  * in a loader function
  */
-export function Deferred({ children, value, errorElement }: DeferredProps) {
+export function Await({ children, value, errorElement }: AwaitProps) {
   return (
-    <DeferredErrorBoundary value={value} errorElement={errorElement}>
-      <ResolveDeferred>{children}</ResolveDeferred>
-    </DeferredErrorBoundary>
+    <AwaitErrorBoundary value={value} errorElement={errorElement}>
+      <ResolveAwait>{children}</ResolveAwait>
+    </AwaitErrorBoundary>
   );
 }
 
-type DeferredErrorBoundaryProps = React.PropsWithChildren<{
+type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   value: DeferredPromise;
   errorElement?: React.ReactNode;
 }>;
 
-type DeferredErrorBoundaryState = {
+type AwaitErrorBoundaryState = {
   error: any;
 };
 
-class DeferredErrorBoundary extends React.Component<
-  DeferredErrorBoundaryProps,
-  DeferredErrorBoundaryState
+class AwaitErrorBoundary extends React.Component<
+  AwaitErrorBoundaryProps,
+  AwaitErrorBoundaryState
 > {
-  constructor(props: DeferredErrorBoundaryProps) {
+  constructor(props: AwaitErrorBoundaryProps) {
     super(props);
     this.state = { error: null };
   }
@@ -485,7 +485,7 @@ class DeferredErrorBoundary extends React.Component<
 
   componentDidCatch(error: any, errorInfo: any) {
     console.error(
-      "<Deferred> caught the following error during render",
+      "<Await> caught the following error during render",
       error,
       errorInfo
     );
@@ -493,6 +493,7 @@ class DeferredErrorBoundary extends React.Component<
 
   render() {
     let { children, errorElement, value } = this.props;
+    debugger;
 
     if (this.state.error) {
       let promise: DeferredPromise = Promise.reject();
@@ -505,7 +506,7 @@ class DeferredErrorBoundary extends React.Component<
       if (errorElement) {
         // We have our own errorElement, provide our error and render it
         return (
-          <DeferredContext.Provider value={promise} children={errorElement} />
+          <AwaitContext.Provider value={promise} children={errorElement} />
         );
       }
       // Throw to the nearest ancestor route-level error boundary
@@ -515,9 +516,7 @@ class DeferredErrorBoundary extends React.Component<
     if (value._error) {
       if (errorElement) {
         // We have our own errorElement, provide our error and render it
-        return (
-          <DeferredContext.Provider value={value} children={errorElement} />
-        );
+        return <AwaitContext.Provider value={value} children={errorElement} />;
       }
       // Throw to the nearest ancestor route-level error boundary
       throw value._error;
@@ -525,7 +524,7 @@ class DeferredErrorBoundary extends React.Component<
 
     if (value._data) {
       // We've resolved successfully, provide the value and render the children
-      return <DeferredContext.Provider value={value} children={children} />;
+      return <AwaitContext.Provider value={value} children={children} />;
     }
 
     if (!value._tracked) {
@@ -545,12 +544,12 @@ class DeferredErrorBoundary extends React.Component<
 
 /**
  * @private
- * Indirection to leverage useDeferredData for a render-prop API on <Deferred>
+ * Indirection to leverage useDeferredData for a render-prop API on <Await>
  */
-function ResolveDeferred({
+function ResolveAwait({
   children,
 }: {
-  children: React.ReactNode | DeferredResolveRenderFunction;
+  children: React.ReactNode | AwaitResolveRenderFunction;
 }) {
   let data = useDeferredData();
   if (typeof children === "function") {

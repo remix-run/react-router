@@ -25,9 +25,9 @@ import URLSearchParams from "@ungap/url-search-params";
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  AwaitProps,
   DataMemoryRouterProps,
   DataRouteMatch,
-  DeferredProps,
   Fetcher,
   Hash,
   IndexRouteProps,
@@ -61,8 +61,8 @@ export type {
   To,
 } from "react-router";
 export {
+  Await,
   DataMemoryRouter,
-  Deferred,
   MemoryRouter,
   Navigate,
   NavigationType,

@@ -69,9 +69,9 @@ export { createSearchParams };
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  AwaitProps,
   DataMemoryRouterProps,
   DataRouteMatch,
-  DeferredProps,
   Fetcher,
   Hash,
   IndexRouteProps,
@@ -105,8 +105,8 @@ export type {
   To,
 } from "react-router";
 export {
+  Await,
   DataMemoryRouter,
-  Deferred,
   MemoryRouter,
   Navigate,
   NavigationType,

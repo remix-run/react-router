@@ -35,7 +35,7 @@ import {
 
 import type {
   DataMemoryRouterProps,
-  DeferredProps,
+  AwaitProps,
   MemoryRouterProps,
   NavigateProps,
   OutletProps,
@@ -52,7 +52,7 @@ import {
   DataMemoryRouter,
   DataRouter,
   DataRouterProvider,
-  Deferred,
+  Await,
   MemoryRouter,
   Navigate,
   Outlet,
@@ -103,7 +103,7 @@ export type {
   ActionFunctionArgs,
   DataMemoryRouterProps,
   DataRouteMatch,
-  DeferredProps,
+  AwaitProps,
   Fetcher,
   Hash,
   IndexRouteProps,
@@ -138,7 +138,7 @@ export type {
 };
 export {
   DataMemoryRouter,
-  Deferred,
+  Await,
   MemoryRouter,
   Navigate,
   NavigationType,
