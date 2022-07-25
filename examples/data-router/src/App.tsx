@@ -9,7 +9,7 @@ import {
   Route,
   Outlet,
   deferred,
-  useDeferredData,
+  useAwaitedData,
   useFetcher,
   useFetchers,
   useLoaderData,
@@ -375,7 +375,7 @@ function DeferredChild() {
 }
 
 function RenderAwaitedData() {
-  let data = useDeferredData() as string;
+  let data = useAwaitedData() as string;
   return <p>{data}</p>;
 }
 

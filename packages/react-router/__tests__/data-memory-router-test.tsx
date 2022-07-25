@@ -23,7 +23,7 @@ import {
   Outlet,
   deferred,
   useActionData,
-  useDeferredData,
+  useAwaitedData,
   useLoaderData,
   useMatches,
   useRouteLoaderData,
@@ -1955,7 +1955,7 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function LazyData() {
-        let data = useDeferredData();
+        let data = useAwaitedData();
         return triggerRenderError ? (
           <p>{oops.i.did.it.again}</p>
         ) : (

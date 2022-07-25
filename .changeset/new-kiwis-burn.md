@@ -11,4 +11,4 @@ Deferred API Updates
   - `return deferred([ await critical(), lazy() ])`
   - `return deferred(lazy())`
 - Remove `Deferrable`/`ResolvedDeferrable` in favor of raw `Promise`'s and `Awaited`
-- Remove generics from `useDeferredData` until `useLoaderData` generic is decided in 6.5
+- Remove generics from `useAwaitedData` until `useLoaderData` generic is decided in 6.5

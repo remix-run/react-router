@@ -83,7 +83,7 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
-  useDeferredData,
+  useAwaitedData,
   useHref,
   useInRouterContext,
   useLoaderData,

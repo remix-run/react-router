@@ -758,7 +758,7 @@ export function useRouteError(): unknown {
 /**
  * Returns the happy-path data from the nearest ancestor <Await /> value
  */
-export function useDeferredData(): unknown {
+export function useAwaitedData(): unknown {
   let value = React.useContext(AwaitContext);
   return value?._data;
 }
