@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import * as ReactDOM from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import {
   BrowserRouter,
@@ -39,14 +39,13 @@ describe("navigate with params", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Start />} />
               <Route path="blog/:slug" element={<Blog />} />
             </Routes>
-          </BrowserRouter>,
-          node
+          </BrowserRouter>
         );
       });
 
@@ -73,14 +72,13 @@ describe("navigate with params", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Start />} />
               <Route path="blog/:slug" element={<Blog />} />
             </Routes>
-          </BrowserRouter>,
-          node
+          </BrowserRouter>
         );
       });
 
