@@ -1931,7 +1931,7 @@ describe("<DataMemoryRouter>", () => {
             <p>{data.critical}</p>
             <React.Suspense fallback={<LazyFallback />}>
               <Await
-                value={data.lazy}
+                promise={data.lazy}
                 errorElement={hasDeferredErrorElement ? <LazyError /> : null}
               >
                 <LazyData />
@@ -2499,7 +2499,7 @@ describe("<DataMemoryRouter>", () => {
           <>
             <p>{critical}</p>
             <React.Suspense fallback={<p>Loading...</p>}>
-              <Await value={lazy}>{(data) => <p>{data}</p>}</Await>
+              <Await promise={lazy}>{(data) => <p>{data}</p>}</Await>
             </React.Suspense>
           </>
         );
@@ -2575,7 +2575,7 @@ describe("<DataMemoryRouter>", () => {
         let lazy = useLoaderData();
         return (
           <React.Suspense fallback={<p>Loading...</p>}>
-            <Await value={lazy}>{(data) => <p>{data}</p>}</Await>
+            <Await promise={lazy}>{(data) => <p>{data}</p>}</Await>
           </React.Suspense>
         );
       }

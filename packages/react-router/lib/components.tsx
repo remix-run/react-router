@@ -445,25 +445,25 @@ export interface AwaitResolveRenderFunction {
 
 export interface AwaitProps {
   children: React.ReactNode | AwaitResolveRenderFunction;
-  value: DeferredPromise;
   errorElement?: React.ReactNode;
+  promise: DeferredPromise;
 }
 
 /**
  * Component to use for rendering lazily loaded data from returning deferred()
  * in a loader function
  */
-export function Await({ children, value, errorElement }: AwaitProps) {
+export function Await({ children, errorElement, promise }: AwaitProps) {
   return (
-    <AwaitErrorBoundary value={value} errorElement={errorElement}>
+    <AwaitErrorBoundary promise={promise} errorElement={errorElement}>
       <ResolveAwait>{children}</ResolveAwait>
     </AwaitErrorBoundary>
   );
 }
 
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
-  value: DeferredPromise;
   errorElement?: React.ReactNode;
+  promise: DeferredPromise;
 }>;
 
 type AwaitErrorBoundaryState = {
@@ -492,7 +492,7 @@ class AwaitErrorBoundary extends React.Component<
   }
 
   render() {
-    let { children, errorElement, value } = this.props;
+    let { children, errorElement, promise } = this.props;
 
     let errorPromise: DeferredPromise | null = null;
 
@@ -503,8 +503,8 @@ class AwaitErrorBoundary extends React.Component<
       errorPromise = Promise.reject().catch(() => {});
       Object.defineProperty(errorPromise, "_tracked", { get: () => true });
       Object.defineProperty(errorPromise, "_error", { get: () => renderError });
-    } else if (value._error) {
-      errorPromise = value;
+    } else if (promise._error) {
+      errorPromise = promise;
     }
 
     if (errorPromise) {
@@ -519,25 +519,25 @@ class AwaitErrorBoundary extends React.Component<
       throw errorPromise._error;
     }
 
-    if (value._data) {
+    if (promise._data) {
       // We've resolved successfully, provide the value and render the children
-      return <AwaitContext.Provider value={value} children={children} />;
+      return <AwaitContext.Provider value={promise} children={children} />;
     }
 
     // If this a raw promise provided by the user that did not come from a
     // deferred(), track it as a DeferredPromise
-    if (!value._tracked) {
-      Object.defineProperty(value, "_tracked", { get: () => true });
-      value.then(
+    if (!promise._tracked) {
+      Object.defineProperty(promise, "_tracked", { get: () => true });
+      promise.then(
         (data: any) =>
-          Object.defineProperty(value, "_data", { get: () => data }),
+          Object.defineProperty(promise, "_data", { get: () => data }),
         (error: any) =>
-          Object.defineProperty(value, "_error", { get: () => error })
+          Object.defineProperty(promise, "_error", { get: () => error })
       );
     }
 
     // Throw to the suspense boundary
-    throw value;
+    throw promise;
   }
 }
 

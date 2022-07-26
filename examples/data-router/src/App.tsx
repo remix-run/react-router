@@ -281,29 +281,29 @@ function DeferredPage() {
       <p>{data.critical2}</p>
 
       <React.Suspense fallback={<p>should not see me!</p>}>
-        <Await value={data.lazyResolved}>
+        <Await promise={data.lazyResolved}>
           <RenderAwaitedData />
         </Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading 1...</p>}>
-        <Await value={data.lazy1}>
+        <Await promise={data.lazy1}>
           <RenderAwaitedData />
         </Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading 2...</p>}>
-        <Await value={data.lazy2}>
+        <Await promise={data.lazy2}>
           <RenderAwaitedData />
         </Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading 3...</p>}>
-        <Await value={data.lazy3}>{(data: string) => <p>{data}</p>}</Await>
+        <Await promise={data.lazy3}>{(data: string) => <p>{data}</p>}</Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading (error)...</p>}>
-        <Await value={data.lazyError} errorElement={<RenderAwaitedError />}>
+        <Await promise={data.lazyError} errorElement={<RenderAwaitedError />}>
           <RenderAwaitedData />
         </Await>
       </React.Suspense>
@@ -336,7 +336,7 @@ function DeferredChild() {
     <div>
       <p>{data.critical}</p>
       <React.Suspense fallback={<p>loading child...</p>}>
-        <Await value={data.lazy}>
+        <Await promise={data.lazy}>
           <RenderAwaitedData />
         </Await>
       </React.Suspense>
@@ -362,7 +362,7 @@ function AwaitPage() {
 
   return (
     <React.Suspense fallback={<p>Awaiting raw promise </p>}>
-      <Await value={rawPromise}>{(data: string) => <p>{data}</p>}</Await>
+      <Await promise={rawPromise}>{(data: string) => <p>{data}</p>}</Await>
     </React.Suspense>
   );
 }

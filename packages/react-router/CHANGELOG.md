@@ -44,7 +44,7 @@
       <>
         <p>Critical Data: {data.critical}</p>
         <React.Suspense fallback={<p>Loading...</p>}>
-          <Await value={data.lazy} errorElement={<RenderError />}>
+          <Await promise={data.lazy} errorElement={<RenderError />}>
             <RenderData />
           </Await>
         </React.Suspense>
@@ -75,7 +75,7 @@
       <>
         <p>Critical Data: {data.critical}</p>
         <React.Suspense fallback={<p>Loading...</p>}>
-          <Await value={data.lazy} errorElement={<RenderError />}>
+          <Await promise={data.lazy} errorElement={<RenderError />}>
             {(data) => <p>{data}</p>}
           </Await>
         </React.Suspense>
