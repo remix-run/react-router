@@ -4,8 +4,8 @@
 
 import { JSDOM } from "jsdom";
 import * as React from "react";
-import { act } from "react-test-renderer";
 import {
+  act,
   render,
   fireEvent,
   waitFor,
