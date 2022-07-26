@@ -2612,6 +2612,124 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
     });
+
+    it("does not proxy settled values through loaderData promises", async () => {
+      let defer1 = defer();
+      let defer2 = defer();
+      let { container } = render(
+        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<Foo />} />
+            <Route
+              path="bar"
+              loader={() =>
+                deferred({ lazy1: defer1.promise, lazy2: defer2.promise })
+              }
+              element={<Bar />}
+            />
+          </Route>
+        </DataMemoryRouter>
+      );
+
+      function Layout() {
+        return (
+          <>
+            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <Outlet />
+          </>
+        );
+      }
+
+      function Foo() {
+        return <h1>Foo</h1>;
+      }
+
+      let listened = false;
+      let settled1;
+      let settled2;
+
+      function Bar() {
+        let { lazy1, lazy2 } = useLoaderData();
+        let [, setState] = React.useState({});
+
+        if (!listened) {
+          listened = true;
+          lazy1.then((v) => (settled1 = v));
+          lazy2.catch((e) => (settled2 = e));
+          setState({});
+        }
+
+        return (
+          <>
+            <React.Suspense fallback={<p>Loading 1...</p>}>
+              <Await promise={lazy1}>{(data) => <p>{data}</p>}</Await>
+            </React.Suspense>
+            <React.Suspense fallback={<p>Loading 2...</p>}>
+              <Await promise={lazy2} errorElement={<ErrorElement />}>
+                {(data) => <p>{data}</p>}
+              </Await>
+            </React.Suspense>
+            <p>{settled1 || "No resolved value"}</p>
+            <p>{settled2 || "No rejected value"}</p>
+          </>
+        );
+      }
+
+      function ErrorElement() {
+        let error = useRouteError() as string;
+        return <p>Error:{error}</p>;
+      }
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      await waitFor(() => screen.getByText("Loading 1..."));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            Loading 1...
+          </p>
+          <p>
+            Loading 2...
+          </p>
+          <p>
+            No resolved value
+          </p>
+          <p>
+            No rejected value
+          </p>
+        </div>"
+      `);
+
+      defer1.resolve("RESOLVED");
+      defer2.reject("REJECTED");
+      await waitFor(() => screen.getByText("RESOLVED"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            href=\\"/bar\\"
+          >
+            Link to Bar
+          </a>
+          <p>
+            RESOLVED
+          </p>
+          <p>
+            Error:
+            REJECTED
+          </p>
+          <p>
+            No resolved value
+          </p>
+          <p>
+            No rejected value
+          </p>
+        </div>"
+      `);
+    });
   });
 });
 
