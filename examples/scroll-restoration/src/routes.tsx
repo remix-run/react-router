@@ -1,17 +1,18 @@
 import React from "react";
-import type { DataRouteMatch, Location } from "react-router-dom";
+
 import {
-  DataBrowserRouter,
+  type DataRouteMatch,
+  type Location,
   Link,
   Outlet,
-  Route,
   ScrollRestoration,
   useLoaderData,
   useLocation,
   useNavigation,
 } from "react-router-dom";
 
-function Layout() {
+
+export function Layout() {
   let navigation = useNavigation();
 
   // You can provide a custom implementation of what "key" should be used to
@@ -120,15 +121,19 @@ function Layout() {
   );
 }
 
-async function getArrayLoader() {
+interface ArrayLoaderData {
+  arr: Array<number>;
+}
+
+export async function getArrayLoader(): Promise<ArrayLoaderData> {
   await new Promise((r) => setTimeout(r, 1000));
   return {
     arr: new Array(100).fill(null).map((_, i) => i),
   };
 }
 
-function LongPage() {
-  let data = useLoaderData();
+export function LongPage() {
+  let data = useLoaderData() as ArrayLoaderData;
   let location = useLocation();
   return (
     <>
@@ -147,31 +152,3 @@ function LongPage() {
     </>
   );
 }
-
-function App() {
-  return (
-    <DataBrowserRouter fallbackElement={<p>Loading...</p>}>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<h2>Home</h2>} />
-        <Route
-          path="restore-by-key"
-          loader={getArrayLoader}
-          element={<LongPage />}
-        />
-        <Route
-          path="restore-by-pathname"
-          loader={getArrayLoader}
-          element={<LongPage />}
-          handle={{ scrollMode: "pathname" }}
-        />
-        <Route
-          path="link-to-hash"
-          loader={getArrayLoader}
-          element={<LongPage />}
-        />
-      </Route>
-    </DataBrowserRouter>
-  );
-}
-
-export default App;

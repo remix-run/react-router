@@ -1,5 +1,8 @@
 import { fetch, Request, Response } from "@remix-run/web-fetch";
 
+// https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html#configuring-your-testing-environment
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
 if (!globalThis.fetch) {
   // Built-in lib.dom.d.ts expects `fetch(Request | string, ...)` but the web
   // fetch API allows a URL so @remix-run/web-fetch defines

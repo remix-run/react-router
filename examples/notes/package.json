@@ -8,16 +8,15 @@
   },
   "dependencies": {
     "localforage": "^1.10.0",
-    "react": "18.1.0",
-    "react-dom": "18.1.0",
-    "react-router": "6.4.0-pre.2",
-    "react-router-dom": "6.4.0-pre.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.4.0-pre.10"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "4.0.0",
     "@types/node": "17.0.32",
-    "@types/react": "18.0.9",
-    "@types/react-dom": "18.0.3",
+    "@types/react": "^18.0.15",
+    "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "1.3.2",
     "typescript": "4.6.4",
     "vite": "2.9.9"
