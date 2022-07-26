@@ -11,7 +11,6 @@ import {
   useNavigation,
 } from "react-router-dom";
 
-
 export function Layout() {
   let navigation = useNavigation();
 

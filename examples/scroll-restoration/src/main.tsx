@@ -1,10 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-import {
-  DataBrowserRouter,
-  Route,
-} from "react-router-dom";
+import { DataBrowserRouter, Route } from "react-router-dom";
 
 import "./index.css";
 import { Layout, getArrayLoader, LongPage } from "./routes";
