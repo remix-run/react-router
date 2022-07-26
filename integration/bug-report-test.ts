@@ -78,7 +78,7 @@ test.beforeAll(async () => {
   appFixture = await createAppFixture(fixture);
 });
 
-test.afterAll(async () => appFixture.close());
+test.afterAll(() => appFixture.close());
 
 ////////////////////////////////////////////////////////////////////////////////
 // 💿 Almost done, now write your failing test case(s) down here Make sure to
