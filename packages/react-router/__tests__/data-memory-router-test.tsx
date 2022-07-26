@@ -2645,18 +2645,16 @@ describe("<DataMemoryRouter>", () => {
       }
 
       let listened = false;
-      let settled1;
-      let settled2;
 
       function Bar() {
         let { lazy1, lazy2 } = useLoaderData();
-        let [, setState] = React.useState({});
+        let [settled1, setSettled1] = React.useState(null);
+        let [settled2, setSettled2] = React.useState(null);
 
         if (!listened) {
           listened = true;
-          lazy1.then((v) => (settled1 = v));
-          lazy2.catch((e) => (settled2 = e));
-          setState({});
+          lazy1.then((v) => setSettled1(v));
+          lazy1.catch((e) => setSettled2(e));
         }
 
         return (
@@ -2726,6 +2724,86 @@ describe("<DataMemoryRouter>", () => {
           </p>
           <p>
             No rejected value
+          </p>
+        </div>"
+      `);
+    });
+
+    it("can render raw resolved promises with <Await>", async () => {
+      let fooDefer = defer();
+
+      let { container } = render(
+        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+          <Route path="foo" element={<Foo />} />
+        </DataMemoryRouter>
+      );
+
+      function Foo() {
+        return (
+          <React.Suspense fallback={<p>Loading...</p>}>
+            <Await promise={fooDefer.promise}>{(data) => <p>{data}</p>}</Await>
+          </React.Suspense>
+        );
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      fooDefer.resolve("RESOLVED");
+      await waitFor(() => screen.getByText("RESOLVED"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            RESOLVED
+          </p>
+        </div>"
+      `);
+    });
+
+    it("can render raw rejected promises with <Await>", async () => {
+      let fooDefer = defer();
+
+      let { container } = render(
+        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+          <Route path="foo" element={<Foo />} />
+        </DataMemoryRouter>
+      );
+
+      function Foo() {
+        return (
+          <React.Suspense fallback={<p>Loading...</p>}>
+            <Await promise={fooDefer.promise} errorElement={<ErrorElement />}>
+              {(data) => <p>{data}</p>}
+            </Await>
+          </React.Suspense>
+        );
+      }
+
+      function ErrorElement() {
+        let error = useRouteError() as string;
+        return <p>Error:{error}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      await fooDefer.reject("REJECTED");
+      await waitFor(() => screen.getByText("Error:REJECTED"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Error:
+            REJECTED
           </p>
         </div>"
       `);

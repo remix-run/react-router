@@ -524,11 +524,11 @@ class AwaitErrorBoundary extends React.Component<
       return <AwaitContext.Provider value={promise} children={children} />;
     }
 
-    // If this a raw promise provided by the user that did not come from a
-    // deferred(), track it as a DeferredPromise
+    // This is a raw untracked promise - track it and throw the tracked promise
+    // to the suspense boundary
     if (!promise._tracked) {
       Object.defineProperty(promise, "_tracked", { get: () => true });
-      promise.then(
+      throw promise.then(
         (data: any) =>
           Object.defineProperty(promise, "_data", { get: () => data }),
         (error: any) =>
@@ -536,7 +536,7 @@ class AwaitErrorBoundary extends React.Component<
       );
     }
 
-    // Throw to the suspense boundary
+    // Throw already-tracked promises to the suspense boundary
     throw promise;
   }
 }
