@@ -102,6 +102,7 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
+  createNestableMemoryRouter,
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////
