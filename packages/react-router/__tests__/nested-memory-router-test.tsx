@@ -2,16 +2,19 @@ import * as React from "react";
 import { render, prettyDOM } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
-import { Route } from "react-router";
+import {
+  Route,
+  Routes,
+  createNestableMemoryRouter,
+  useNavigate,
+  Navigate,
+} from "react-router";
 
 // Private API
-import {
-  createNestableMemoryRouter,
-  _resetModuleScope,
-} from "../lib/components";
+import { MemoryRouter, _resetModuleScope } from "../lib/components";
 
 // eslint-disable-next-line jest/no-focused-tests
-describe.only("<MemoryRouter>", () => {
+describe.only("<NestableMemoryRouter>", () => {
   let consoleWarn: jest.SpyInstance;
   let consoleError: jest.SpyInstance;
   beforeEach(() => {
@@ -26,14 +29,13 @@ describe.only("<MemoryRouter>", () => {
   });
 
   it("renders the first route that matches the URL", () => {
-    const { NestableMemoryRouter, NestableRoutes } =
-      createNestableMemoryRouter();
+    const { NestableMemoryRouter } = createNestableMemoryRouter();
 
     let { container } = render(
       <NestableMemoryRouter initialEntries={["/"]}>
-        <NestableRoutes>
+        <Routes>
           <Route path="/" element={<h1>Home</h1>} />
-        </NestableRoutes>
+        </Routes>
       </NestableMemoryRouter>
     );
 
@@ -41,6 +43,70 @@ describe.only("<MemoryRouter>", () => {
       "<div>
         <h1>
           Home
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("can navigate with a NestableNavigate", () => {
+    const { NestableMemoryRouter } = createNestableMemoryRouter();
+
+    function NestedMemoryRouter() {
+      return (
+        <NestableMemoryRouter initialEntries={["/"]}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/about" />} />
+          </Routes>
+        </NestableMemoryRouter>
+      );
+    }
+
+    let { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route path="/" element={<NestedMemoryRouter />} />
+          <Route path="about" element={<h1>About</h1>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          About
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("can navigate MemoryRouter from NestableMemoryRouter", () => {
+    const { NestableMemoryRouter, NestableNavigate } =
+      createNestableMemoryRouter();
+
+    function NestedMemoryRouter() {
+      return (
+        <NestableMemoryRouter initialEntries={["/"]}>
+          <Routes>
+            <Route path="/" element={<NestableNavigate to="/about" />} />
+            <Route path="about" element={<h1>Nested About</h1>} />
+          </Routes>
+        </NestableMemoryRouter>
+      );
+    }
+
+    let { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route path="/" element={<NestedMemoryRouter />} />
+          <Route path="about" element={<h1>About</h1>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Nested About
         </h1>
       </div>"
     `);

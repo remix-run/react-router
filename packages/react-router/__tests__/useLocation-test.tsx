@@ -31,10 +31,10 @@ describe("useLocation", () => {
   });
 
   it("returns the current location object of NestedMemoryRouter", () => {
-    const { NestableMemoryRouter } = createNestableMemoryRouter();
+    const { NestableMemoryRouter, hooks } = createNestableMemoryRouter();
 
     function ShowNestedPath() {
-      let { pathname, search, hash } = useLocation();
+      let { pathname, search, hash } = hooks.useLocation();
       return <pre>{JSON.stringify({ pathname, search, hash })}</pre>;
     }
 

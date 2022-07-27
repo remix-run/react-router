@@ -6,6 +6,7 @@ import {
   Route,
   useOutlet,
   useOutletContext,
+  createNestableMemoryRouter,
 } from "react-router";
 
 describe("useOutlet", () => {
@@ -29,6 +30,37 @@ describe("useOutlet", () => {
       expect(renderer.toJSON()).toBeNull();
     });
 
+    it("returns null on NestableMemoryRouter", () => {
+      const { NestableMemoryRouter, hooks } = createNestableMemoryRouter();
+
+      function Home() {
+        return hooks.useOutlet();
+      }
+
+      function NestedMemoryRouter() {
+        return (
+          <NestableMemoryRouter initialEntries={["/"]}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+            </Routes>
+          </NestableMemoryRouter>
+        );
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="/home" element={<NestedMemoryRouter />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toBeNull();
+    });
+
     it("renders the fallback", () => {
       function Home() {
         let outlet = useOutlet();
@@ -41,6 +73,42 @@ describe("useOutlet", () => {
           <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="/home" element={<Home />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          no outlet
+        </div>
+      `);
+    });
+
+    it("renders the fallback - NestableMemoryRouter", () => {
+      const { NestableMemoryRouter, hooks } = createNestableMemoryRouter();
+
+      function Home() {
+        let outlet = hooks.useOutlet();
+        return <div>{outlet ? "outlet" : "no outlet"}</div>;
+      }
+
+      function NestedMemoryRouter() {
+        return (
+          <NestableMemoryRouter initialEntries={["/"]}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+            </Routes>
+          </NestableMemoryRouter>
+        );
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="/home" element={<NestedMemoryRouter />} />
             </Routes>
           </MemoryRouter>
         );

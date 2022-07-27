@@ -46,7 +46,6 @@ import type {
   IndexRouteProps,
   RouterProps,
   RoutesProps,
-  createNestableMemoryRouter,
 } from "./lib/components";
 import {
   createRoutesFromChildren,
@@ -61,6 +60,7 @@ import {
   Route,
   Router,
   Routes,
+  createNestableMemoryRouter,
 } from "./lib/components";
 import type { Navigator, NavigateOptions } from "./lib/context";
 import {

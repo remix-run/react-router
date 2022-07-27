@@ -1,6 +1,13 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Navigate, Outlet, Routes, Route } from "react-router";
+import {
+  MemoryRouter,
+  Navigate,
+  Outlet,
+  Routes,
+  Route,
+  createNestableMemoryRouter,
+} from "react-router";
 
 describe("<Navigate>", () => {
   describe("with an absolute href", () => {
@@ -20,6 +27,42 @@ describe("<Navigate>", () => {
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           About
+        </h1>
+      `);
+    });
+
+    it("navigates to the correct URL with NestableMemoryRouter", () => {
+      const { NestableMemoryRouter } = createNestableMemoryRouter();
+
+      function NestedMemoryRouter() {
+        return (
+          <NestableMemoryRouter initialEntries={["/nestedhome"]}>
+            <Routes>
+              <Route
+                path="nestedhome"
+                element={<Navigate to="/nestedabout" />}
+              />
+              <Route path="nestedabout" element={<h1>Nested About</h1>} />
+            </Routes>
+          </NestableMemoryRouter>
+        );
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="home" element={<Navigate to="/about" />} />
+              <Route path="about" element={<NestedMemoryRouter />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <h1>
+          Nested About
         </h1>
       `);
     });

@@ -42,9 +42,11 @@ import {
 } from "./context";
 import {
   createHrefHook,
+  createLocationHook,
   createMatchHook,
   createNavigateHook,
   createNavigationTypeHook,
+  createOutletHook,
   createParamsHook,
   createResolvedPathHook,
   createRoutesHook,
@@ -210,10 +212,18 @@ export function createNestableMemoryRouter() {
     RouteContext
   );
 
+  const NestableNavigate = createScopedNavigate(
+    LocationContext,
+    NavigationContext,
+    RouteContext
+  );
+
   return {
     NestableMemoryRouter,
+    NestableNavigate,
     hooks: {
       useHref: createHrefHook(LocationContext, NavigationContext),
+      useLocation: createLocationHook(LocationContext),
       useNavigationType: createNavigationTypeHook(LocationContext),
       useMatch: createMatchHook(LocationContext),
       useNavigate: createNavigateHook(LocationContext, NavigationContext),
@@ -224,6 +234,7 @@ export function createNestableMemoryRouter() {
         RouteContext,
         DataRouterStateContext
       ),
+      useOutlet: createOutletHook(RouteContext),
     },
   };
 }
@@ -295,6 +306,41 @@ export interface NavigateProps {
   state?: any;
 }
 
+function createScopedNavigate(
+  LocationContext: typeof DefaultLocationContext = DefaultLocationContext,
+  NavigationContext: typeof DefaultNavigationContext = DefaultNavigationContext,
+  RouteContext: typeof DefaultRouteContext = DefaultRouteContext
+) {
+  const useScopedNavigate = createNavigateHook(
+    LocationContext,
+    NavigationContext,
+    RouteContext
+  );
+
+  return function Navigate({ to, replace, state }: NavigateProps): null {
+    invariant(
+      useInRouterContext(),
+      // TODO: This error is probably because they somehow have 2 versions of
+      // the router loaded. We can help them understand how to avoid that.
+      `<Navigate> may be used only in the context of a <Router> component.`
+    );
+
+    warning(
+      !React.useContext(DefaultNavigationContext).static,
+      `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
+        `This is a no-op, but you should modify your code so the <Navigate> is ` +
+        `only ever rendered in response to some user interaction or state change.`
+    );
+
+    let navigate = useScopedNavigate();
+    React.useEffect(() => {
+      navigate(to, { replace, state });
+    });
+
+    return null;
+  };
+}
+
 /**
  * Changes the current location.
  *
@@ -304,29 +350,7 @@ export interface NavigateProps {
  *
  * @see https://reactrouter.com/docs/en/v6/components/navigate
  */
-export function Navigate({ to, replace, state }: NavigateProps): null {
-  invariant(
-    useInRouterContext(),
-    // TODO: This error is probably because they somehow have 2 versions of
-    // the router loaded. We can help them understand how to avoid that.
-    `<Navigate> may be used only in the context of a <Router> component.`
-  );
-
-  warning(
-    !React.useContext(DefaultNavigationContext).static,
-    `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
-      `This is a no-op, but you should modify your code so the <Navigate> is ` +
-      `only ever rendered in response to some user interaction or state change.`
-  );
-
-  const { useNavigate } = React.useContext(RouterContext);
-  let navigate = useNavigate();
-  React.useEffect(() => {
-    navigate(to, { replace, state });
-  });
-
-  return null;
-}
+export const Navigate = createScopedNavigate();
 
 export interface OutletProps {
   context?: unknown;
@@ -428,7 +452,7 @@ export function Router({
   RouteContext = DefaultRouteContext,
 }: RouterProps): React.ReactElement | null {
   invariant(
-    !useInRouterContext(),
+    LocationContext !== React.useContext(RouterContext)?.LocationContext,
     `You cannot render a <Router> inside another <Router>.` +
       ` You should never have more than one in your app.`
   );

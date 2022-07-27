@@ -43,7 +43,7 @@ export function createHrefHook(
 ) {
   return function useHref(to: To): string {
     invariant(
-      useInRouterContext(),
+      useInRouterContext(LocationContext),
       // TODO: This error is probably because they somehow have 2 versions of the
       // router loaded. We can help them understand how to avoid that.
       `useHref() may be used only in the context of a <Router> component.`
@@ -80,9 +80,24 @@ export const useHref = createHrefHook();
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-in-router-context
  */
-export function useInRouterContext(): boolean {
-  const { LocationContext } = React.useContext(RouterContext);
+export function useInRouterContext(
+  LocationContext: typeof DefaultLocationContext = DefaultLocationContext
+): boolean {
   return React.useContext(LocationContext) != null;
+}
+
+export function createLocationHook(
+  LocationContext: typeof DefaultLocationContext = DefaultLocationContext
+) {
+  return function useLocation(): Location {
+    invariant(
+      useInRouterContext(LocationContext),
+      // TODO: This error is probably because they somehow have 2 versions of the
+      // router loaded. We can help them understand how to avoid that.
+      `useLocation() may be used only in the context of a <Router> component.`
+    );
+    return React.useContext(LocationContext).location;
+  };
 }
 
 /**
@@ -95,16 +110,7 @@ export function useInRouterContext(): boolean {
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-location
  */
-export function useLocation(): Location {
-  invariant(
-    useInRouterContext(),
-    // TODO: This error is probably because they somehow have 2 versions of the
-    // router loaded. We can help them understand how to avoid that.
-    `useLocation() may be used only in the context of a <Router> component.`
-  );
-  const { LocationContext } = React.useContext(RouterContext);
-  return React.useContext(LocationContext).location;
-}
+export const useLocation = createLocationHook();
 
 export function createNavigationTypeHook(
   LocationContext: typeof DefaultLocationContext = DefaultLocationContext
@@ -125,18 +131,20 @@ export const useNavigationType = createNavigationTypeHook();
 export function createMatchHook(
   LocationContext: typeof DefaultLocationContext = DefaultLocationContext
 ) {
+  const useScopedLocation = createLocationHook(LocationContext);
+
   return function useMatch<
     ParamKey extends ParamParseKey<Path>,
     Path extends string
   >(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null {
     invariant(
-      useInRouterContext(),
+      useInRouterContext(LocationContext),
       // TODO: This error is probably because they somehow have 2 versions of the
       // router loaded. We can help them understand how to avoid that.
       `useMatch() may be used only in the context of a <Router> component.`
     );
 
-    let { pathname } = useLocation();
+    let { pathname } = useScopedLocation();
     return React.useMemo(
       () => matchPath<ParamKey, Path>(pattern, pathname),
       [pathname, pattern]
@@ -196,9 +204,11 @@ export function createNavigateHook(
   NavigationContext: typeof DefaultNavigationContext = DefaultNavigationContext,
   RouteContext: typeof DefaultRouteContext = DefaultRouteContext
 ) {
+  const useScopedLocation = createLocationHook(LocationContext);
+
   return function useNavigate(): NavigateFunction {
     invariant(
-      useInRouterContext(),
+      useInRouterContext(LocationContext),
       // TODO: This error is probably because they somehow have 2 versions of the
       // router loaded. We can help them understand how to avoid that.
       `useNavigate() may be used only in the context of a <Router> component.`
@@ -206,7 +216,7 @@ export function createNavigateHook(
 
     let { basename, navigator } = React.useContext(NavigationContext);
     let { matches } = React.useContext(RouteContext);
-    let { pathname: locationPathname } = useLocation();
+    let { pathname: locationPathname } = useScopedLocation();
 
     let routePathnamesJson = JSON.stringify(
       getPathContributingMatches(matches).map((match) => match.pathnameBase)
@@ -281,22 +291,29 @@ export function useOutletContext<Context = unknown>(): Context {
   return React.useContext(OutletContext) as Context;
 }
 
+export function createOutletHook(
+  RouteContext: typeof DefaultRouteContext = DefaultRouteContext
+) {
+  return function useOutlet(context?: unknown): React.ReactElement | null {
+    let outlet = React.useContext(RouteContext).outlet;
+    if (outlet) {
+      return (
+        <OutletContext.Provider value={context}>
+          {outlet}
+        </OutletContext.Provider>
+      );
+    }
+    return outlet;
+  };
+}
+
 /**
  * Returns the element for the child route at this level of the route
  * hierarchy. Used internally by <Outlet> to render child routes.
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-outlet
  */
-export function useOutlet(context?: unknown): React.ReactElement | null {
-  const { RouteContext } = React.useContext(RouterContext);
-  let outlet = React.useContext(RouteContext).outlet;
-  if (outlet) {
-    return (
-      <OutletContext.Provider value={context}>{outlet}</OutletContext.Provider>
-    );
-  }
-  return outlet;
-}
+export const useOutlet = createOutletHook();
 
 export function createParamsHook(
   RouteContext: typeof DefaultRouteContext = DefaultRouteContext
@@ -322,11 +339,13 @@ export const useParams = createParamsHook();
 
 export function createResolvedPathHook(
   LocationContext: typeof DefaultLocationContext = DefaultLocationContext,
-  routeContext: typeof DefaultRouteContext = DefaultRouteContext
+  RouteContext: typeof DefaultRouteContext = DefaultRouteContext
 ) {
+  const useScopedLocation = createLocationHook(LocationContext);
+
   return function useResolvedPath(to: To): Path {
-    let { matches } = React.useContext(routeContext);
-    let { pathname: locationPathname } = useLocation();
+    let { matches } = React.useContext(RouteContext);
+    let { pathname: locationPathname } = useScopedLocation();
 
     let routePathnamesJson = JSON.stringify(
       getPathContributingMatches(matches).map((match) => match.pathnameBase)
@@ -351,12 +370,14 @@ export function createRoutesHook(
   RouteContext: typeof DefaultRouteContext = DefaultRouteContext,
   DataRouterStateContext: typeof DefaultDataRouterStateContext = DefaultDataRouterStateContext
 ) {
+  const useScopedLocation = createLocationHook(LocationContext);
+
   return function useRoutes(
     routes: RouteObject[],
     locationArg?: Partial<Location> | string
   ): React.ReactElement | null {
     invariant(
-      useInRouterContext(),
+      useInRouterContext(LocationContext),
       // TODO: This error is probably because they somehow have 2 versions of the
       // router loaded. We can help them understand how to avoid that.
       `useRoutes() may be used only in the context of a <Router> component.`
@@ -405,7 +426,7 @@ export function createRoutesHook(
       );
     }
 
-    let locationFromContext = useLocation();
+    let locationFromContext = useScopedLocation();
 
     let location;
     if (locationArg) {
@@ -461,7 +482,8 @@ export function createRoutesHook(
           })
         ),
       parentMatches,
-      dataRouterStateContextValue || undefined
+      dataRouterStateContextValue || undefined,
+      RouteContext
     );
   };
 }
