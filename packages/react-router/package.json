@@ -26,7 +26,7 @@
     "@remix-run/router": "0.2.0-pre.5"
   },
   "devDependencies": {
-    "react": "^17.0.2"
+    "react": "^18.2.0"
   },
   "peerDependencies": {
     "react": ">=16.8"

@@ -37,8 +37,8 @@
     ]
   },
   "resolutions": {
-    "@types/react": "^17.0.0",
-    "@types/react-dom": "^17.0.0"
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0"
   },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
@@ -54,14 +54,14 @@
     "@rollup/plugin-replace": "^4.0.0",
     "@rollup/plugin-typescript": "^8.3.2",
     "@testing-library/jest-dom": "5.16.3",
-    "@testing-library/react": "12.1.4",
+    "@testing-library/react": "^13.3.0",
     "@types/jest": "26.x",
     "@types/jsdom": "16.2.14",
     "@types/jsonfile": "^6.0.1",
-    "@types/react": "^17.0.19",
-    "@types/react-dom": "^17.0.9",
+    "@types/react": "^18.0.15",
+    "@types/react-dom": "^18.0.6",
     "@types/react-native": "^0.61.0",
-    "@types/react-test-renderer": "16.x",
+    "@types/react-test-renderer": "^18.0.0",
     "@types/semver": "^7.3.8",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
@@ -86,9 +86,9 @@
     "patch-package": "^6.4.7",
     "prettier": "^2.5.1",
     "prompt-confirm": "^2.0.4",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-test-renderer": "^17.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-test-renderer": "^18.2.0",
     "rollup": "^2.75.5",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-extensions": "^0.1.0",

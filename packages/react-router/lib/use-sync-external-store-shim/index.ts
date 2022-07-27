@@ -28,6 +28,5 @@ const shim = isServerEnvironment ? server : client;
 
 export const useSyncExternalStore =
   "useSyncExternalStore" in React
-    ? // @ts-expect-error
-      ((module) => module.useSyncExternalStore)(React)
+    ? ((module) => module.useSyncExternalStore)(React)
     : shim;

@@ -5,6 +5,7 @@
 import { JSDOM } from "jsdom";
 import * as React from "react";
 import {
+  act,
   render,
   fireEvent,
   waitFor,
@@ -2044,8 +2045,10 @@ function testDomRouter(
           </p>"
         `);
 
-        fireEvent.click(screen.getByText("load fetcher"));
-        await waitFor(() => screen.getByText(/idle/));
+        await act(async () => {
+          fireEvent.click(screen.getByText("load fetcher"));
+          await waitFor(() => screen.getByText(/idle/));
+        });
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
@@ -2056,8 +2059,10 @@ function testDomRouter(
           </p>"
         `);
 
-        fireEvent.click(screen.getByText("submit"));
-        await waitFor(() => screen.getByText(/idle/));
+        await act(async () => {
+          fireEvent.click(screen.getByText("submit"));
+          await waitFor(() => screen.getByText(/idle/));
+        });
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p

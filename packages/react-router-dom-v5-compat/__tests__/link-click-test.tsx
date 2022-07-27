@@ -3,7 +3,7 @@
  * the same as v6 proper.
  */
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import * as ReactDOM from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { MemoryRouter, Routes, Route, Link } from "../index";
 
@@ -41,14 +41,13 @@ describe("A <Link> click", () => {
     }
 
     act(() => {
-      ReactDOM.render(
+      ReactDOM.createRoot(node).render(
         <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
             <Route path="about" element={<h1>About</h1>} />
           </Routes>
-        </MemoryRouter>,
-        node
+        </MemoryRouter>
       );
     });
 
@@ -80,14 +79,13 @@ describe("A <Link> click", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>,
-          node
+          </MemoryRouter>
         );
       });
 
@@ -121,14 +119,13 @@ describe("A <Link> click", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>,
-          node
+          </MemoryRouter>
         );
       });
 
@@ -157,14 +154,13 @@ describe("A <Link> click", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>,
-          node
+          </MemoryRouter>
         );
       });
 
@@ -197,14 +193,13 @@ describe("A <Link> click", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>,
-          node
+          </MemoryRouter>
         );
       });
 
@@ -233,14 +228,13 @@ describe("A <Link> click", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>,
-          node
+          </MemoryRouter>
         );
       });
 

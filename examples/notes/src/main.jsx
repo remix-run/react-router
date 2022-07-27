@@ -1,6 +1,6 @@
 import "./index.css";
 import React from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom/client";
 import { DataBrowserRouter, Route } from "react-router-dom";
 
 import Root, { loader as rootLoader } from "./routes/root";
@@ -10,7 +10,7 @@ import Note, {
   action as noteAction,
 } from "./routes/note";
 
-createRoot(document.getElementById("root")).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <DataBrowserRouter>
       <Route path="/" element={<Root />} loader={rootLoader}>
