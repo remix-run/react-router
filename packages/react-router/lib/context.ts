@@ -8,6 +8,7 @@ import type {
   To,
 } from "@remix-run/router";
 import { Action as NavigationType } from "@remix-run/router";
+import { useNavigate, useRoutes } from "./hooks";
 
 // Contexts for data routers
 export const DataStaticRouterContext =
@@ -26,9 +27,18 @@ if (__DEV__) {
   DataRouterContext.displayName = "DataRouter";
 }
 
+export function createDataRouterContext() {
+  return React.createContext<DataRouterContextObject | null>(null);
+}
+
 export const DataRouterStateContext = React.createContext<
   Router["state"] | null
 >(null);
+
+export function createDataRouterStateContext() {
+  return React.createContext<Router["state"] | null>(null);
+}
+
 if (__DEV__) {
   DataRouterStateContext.displayName = "DataRouterState";
 }
@@ -70,6 +80,10 @@ export const NavigationContext = React.createContext<NavigationContextObject>(
   null!
 );
 
+export function createNavigationContext() {
+  return React.createContext<NavigationContextObject>(null!);
+}
+
 if (__DEV__) {
   NavigationContext.displayName = "Navigation";
 }
@@ -82,6 +96,10 @@ interface LocationContextObject {
 export const LocationContext = React.createContext<LocationContextObject>(
   null!
 );
+
+export function createLocationContext() {
+  return React.createContext<LocationContextObject>(null!);
+}
 
 if (__DEV__) {
   LocationContext.displayName = "Location";
@@ -101,8 +119,27 @@ if (__DEV__) {
   RouteContext.displayName = "Route";
 }
 
+export function createRouteContext() {
+  return React.createContext<RouteContextObject>({
+    outlet: null,
+    matches: [],
+  });
+}
+
 export const RouteErrorContext = React.createContext<any>(null);
 
 if (__DEV__) {
   RouteErrorContext.displayName = "RouteError";
 }
+
+export interface RouterContextObject {
+  LocationContext: typeof LocationContext;
+  NavigationContext: typeof NavigationContext;
+  DataRouterStateContext: typeof DataRouterStateContext;
+  DataRouterContext: typeof DataRouterContext;
+  RouteContext: typeof RouteContext;
+  useRoutes: typeof useRoutes;
+  useNavigate: typeof useNavigate;
+}
+
+export const RouterContext = React.createContext<RouterContextObject>(null!);

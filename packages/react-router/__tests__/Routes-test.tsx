@@ -17,6 +17,7 @@ describe("<Routes>", () => {
 
   it("renders null and issues a warning when no routes match the URL", () => {
     let renderer: TestRenderer.ReactTestRenderer;
+
     TestRenderer.act(() => {
       renderer = TestRenderer.create(
         <MemoryRouter>

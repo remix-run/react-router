@@ -24,17 +24,48 @@ import {
 } from "@remix-run/router";
 
 import {
-  DataRouterContext,
-  DataRouterStateContext,
-  LocationContext,
-  NavigationContext,
+  DataRouterContext as DefaultDataRouterContext,
+  DataRouterStateContext as DefaultDataRouterStateContext,
+  LocationContext as DefaultLocationContext,
+  NavigationContext as DefaultNavigationContext,
   NavigateOptions,
-  RouteContext,
+  RouteContext as DefaultRouteContext,
   RouteErrorContext,
   DeferredContext,
   RouteContextObject,
   DataStaticRouterContext,
+  RouterContext,
 } from "./context";
+
+export function createHrefHook(
+  LocationContext: typeof DefaultLocationContext = DefaultLocationContext,
+  NavigationContext: typeof DefaultNavigationContext = DefaultNavigationContext
+) {
+  return function useHref(to: To): string {
+    invariant(
+      useInRouterContext(),
+      // TODO: This error is probably because they somehow have 2 versions of the
+      // router loaded. We can help them understand how to avoid that.
+      `useHref() may be used only in the context of a <Router> component.`
+    );
+
+    let { basename, navigator } = React.useContext(NavigationContext);
+    let { hash, pathname, search } = useResolvedPath(to);
+
+    let joinedPathname = pathname;
+
+    // If we're operating within a basename, prepend it to the pathname prior
+    // to creating the href.  If this is a root navigation, then just use the raw
+    // basename which allows the basename to have full control over the presence
+    // of a trailing slash on root links
+    if (basename !== "/") {
+      joinedPathname =
+        pathname === "/" ? basename : joinPaths([basename, pathname]);
+    }
+
+    return navigator.createHref({ pathname: joinedPathname, search, hash });
+  };
+}
 
 /**
  * Returns the full href for the given "to" value. This is useful for building
@@ -42,30 +73,7 @@ import {
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-href
  */
-export function useHref(to: To): string {
-  invariant(
-    useInRouterContext(),
-    // TODO: This error is probably because they somehow have 2 versions of the
-    // router loaded. We can help them understand how to avoid that.
-    `useHref() may be used only in the context of a <Router> component.`
-  );
-
-  let { basename, navigator } = React.useContext(NavigationContext);
-  let { hash, pathname, search } = useResolvedPath(to);
-
-  let joinedPathname = pathname;
-
-  // If we're operating within a basename, prepend it to the pathname prior
-  // to creating the href.  If this is a root navigation, then just use the raw
-  // basename which allows the basename to have full control over the presence
-  // of a trailing slash on root links
-  if (basename !== "/") {
-    joinedPathname =
-      pathname === "/" ? basename : joinPaths([basename, pathname]);
-  }
-
-  return navigator.createHref({ pathname: joinedPathname, search, hash });
-}
+export const useHref = createHrefHook();
 
 /**
  * Returns true if this component is a descendant of a <Router>.
@@ -73,6 +81,7 @@ export function useHref(to: To): string {
  * @see https://reactrouter.com/docs/en/v6/hooks/use-in-router-context
  */
 export function useInRouterContext(): boolean {
+  const { LocationContext } = React.useContext(RouterContext);
   return React.useContext(LocationContext) != null;
 }
 
@@ -93,8 +102,16 @@ export function useLocation(): Location {
     // router loaded. We can help them understand how to avoid that.
     `useLocation() may be used only in the context of a <Router> component.`
   );
-
+  const { LocationContext } = React.useContext(RouterContext);
   return React.useContext(LocationContext).location;
+}
+
+export function createNavigationTypeHook(
+  LocationContext: typeof DefaultLocationContext = DefaultLocationContext
+) {
+  return function useNavigationType(): NavigationType {
+    return React.useContext(LocationContext).navigationType;
+  };
 }
 
 /**
@@ -103,8 +120,28 @@ export function useLocation(): Location {
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-navigation-type
  */
-export function useNavigationType(): NavigationType {
-  return React.useContext(LocationContext).navigationType;
+export const useNavigationType = createNavigationTypeHook();
+
+export function createMatchHook(
+  LocationContext: typeof DefaultLocationContext = DefaultLocationContext
+) {
+  return function useMatch<
+    ParamKey extends ParamParseKey<Path>,
+    Path extends string
+  >(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null {
+    invariant(
+      useInRouterContext(),
+      // TODO: This error is probably because they somehow have 2 versions of the
+      // router loaded. We can help them understand how to avoid that.
+      `useMatch() may be used only in the context of a <Router> component.`
+    );
+
+    let { pathname } = useLocation();
+    return React.useMemo(
+      () => matchPath<ParamKey, Path>(pattern, pathname),
+      [pathname, pattern]
+    );
+  };
 }
 
 /**
@@ -114,23 +151,7 @@ export function useNavigationType(): NavigationType {
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-match
  */
-export function useMatch<
-  ParamKey extends ParamParseKey<Path>,
-  Path extends string
->(pattern: PathPattern<Path> | Path): PathMatch<ParamKey> | null {
-  invariant(
-    useInRouterContext(),
-    // TODO: This error is probably because they somehow have 2 versions of the
-    // router loaded. We can help them understand how to avoid that.
-    `useMatch() may be used only in the context of a <Router> component.`
-  );
-
-  let { pathname } = useLocation();
-  return React.useMemo(
-    () => matchPath<ParamKey, Path>(pattern, pathname),
-    [pathname, pattern]
-  );
-}
+export const useMatch = createMatchHook();
 
 /**
  * The interface for the navigate() function returned from useNavigate().
@@ -170,76 +191,84 @@ function getPathContributingMatches(matches: RouteMatch[]) {
   );
 }
 
+export function createNavigateHook(
+  LocationContext: typeof DefaultLocationContext = DefaultLocationContext,
+  NavigationContext: typeof DefaultNavigationContext = DefaultNavigationContext,
+  RouteContext: typeof DefaultRouteContext = DefaultRouteContext
+) {
+  return function useNavigate(): NavigateFunction {
+    invariant(
+      useInRouterContext(),
+      // TODO: This error is probably because they somehow have 2 versions of the
+      // router loaded. We can help them understand how to avoid that.
+      `useNavigate() may be used only in the context of a <Router> component.`
+    );
+
+    let { basename, navigator } = React.useContext(NavigationContext);
+    let { matches } = React.useContext(RouteContext);
+    let { pathname: locationPathname } = useLocation();
+
+    let routePathnamesJson = JSON.stringify(
+      getPathContributingMatches(matches).map((match) => match.pathnameBase)
+    );
+
+    let activeRef = React.useRef(false);
+    React.useEffect(() => {
+      activeRef.current = true;
+    });
+
+    let navigate: NavigateFunction = React.useCallback(
+      (to: To | number, options: NavigateOptions = {}) => {
+        warning(
+          activeRef.current,
+          `You should call navigate() in a React.useEffect(), not when ` +
+            `your component is first rendered.`
+        );
+
+        if (!activeRef.current) return;
+
+        if (typeof to === "number") {
+          navigator.go(to);
+          return;
+        }
+
+        let path = resolveTo(
+          to,
+          JSON.parse(routePathnamesJson),
+          locationPathname
+        );
+
+        // If we're operating within a basename, prepend it to the pathname prior
+        // to handing off to history.  If this is a root navigation, then we
+        // navigate to the raw basename which allows the basename to have full
+        // control over the presence of a trailing slash on root links
+        if (basename !== "/") {
+          path.pathname =
+            path.pathname === "/"
+              ? basename
+              : joinPaths([basename, path.pathname]);
+        }
+
+        (!!options.replace ? navigator.replace : navigator.push)(
+          path,
+          options.state,
+          options
+        );
+      },
+      [basename, navigator, routePathnamesJson, locationPathname]
+    );
+
+    return navigate;
+  };
+}
+
 /**
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-navigate
  */
-export function useNavigate(): NavigateFunction {
-  invariant(
-    useInRouterContext(),
-    // TODO: This error is probably because they somehow have 2 versions of the
-    // router loaded. We can help them understand how to avoid that.
-    `useNavigate() may be used only in the context of a <Router> component.`
-  );
-
-  let { basename, navigator } = React.useContext(NavigationContext);
-  let { matches } = React.useContext(RouteContext);
-  let { pathname: locationPathname } = useLocation();
-
-  let routePathnamesJson = JSON.stringify(
-    getPathContributingMatches(matches).map((match) => match.pathnameBase)
-  );
-
-  let activeRef = React.useRef(false);
-  React.useEffect(() => {
-    activeRef.current = true;
-  });
-
-  let navigate: NavigateFunction = React.useCallback(
-    (to: To | number, options: NavigateOptions = {}) => {
-      warning(
-        activeRef.current,
-        `You should call navigate() in a React.useEffect(), not when ` +
-          `your component is first rendered.`
-      );
-
-      if (!activeRef.current) return;
-
-      if (typeof to === "number") {
-        navigator.go(to);
-        return;
-      }
-
-      let path = resolveTo(
-        to,
-        JSON.parse(routePathnamesJson),
-        locationPathname
-      );
-
-      // If we're operating within a basename, prepend it to the pathname prior
-      // to handing off to history.  If this is a root navigation, then we
-      // navigate to the raw basename which allows the basename to have full
-      // control over the presence of a trailing slash on root links
-      if (basename !== "/") {
-        path.pathname =
-          path.pathname === "/"
-            ? basename
-            : joinPaths([basename, path.pathname]);
-      }
-
-      (!!options.replace ? navigator.replace : navigator.push)(
-        path,
-        options.state,
-        options
-      );
-    },
-    [basename, navigator, routePathnamesJson, locationPathname]
-  );
-
-  return navigate;
-}
+export const useNavigate = createNavigateHook();
 
 const OutletContext = React.createContext<unknown>(null);
 
@@ -259,6 +288,7 @@ export function useOutletContext<Context = unknown>(): Context {
  * @see https://reactrouter.com/docs/en/v6/hooks/use-outlet
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
+  const { RouteContext } = React.useContext(RouterContext);
   let outlet = React.useContext(RouteContext).outlet;
   if (outlet) {
     return (
@@ -268,20 +298,45 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
   return outlet;
 }
 
+export function createParamsHook(
+  RouteContext: typeof DefaultRouteContext = DefaultRouteContext
+) {
+  return function useParams<
+    ParamsOrKey extends string | Record<string, string | undefined> = string
+  >(): Readonly<
+    [ParamsOrKey] extends [string] ? Params<ParamsOrKey> : Partial<ParamsOrKey>
+  > {
+    let { matches } = React.useContext(RouteContext);
+    let routeMatch = matches[matches.length - 1];
+    return routeMatch ? (routeMatch.params as any) : {};
+  };
+}
+
 /**
  * Returns an object of key/value pairs of the dynamic params from the current
  * URL that were matched by the route path.
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-params
  */
-export function useParams<
-  ParamsOrKey extends string | Record<string, string | undefined> = string
->(): Readonly<
-  [ParamsOrKey] extends [string] ? Params<ParamsOrKey> : Partial<ParamsOrKey>
-> {
-  let { matches } = React.useContext(RouteContext);
-  let routeMatch = matches[matches.length - 1];
-  return routeMatch ? (routeMatch.params as any) : {};
+export const useParams = createParamsHook();
+
+export function createResolvedPathHook(
+  LocationContext: typeof DefaultLocationContext = DefaultLocationContext,
+  routeContext: typeof DefaultRouteContext = DefaultRouteContext
+) {
+  return function useResolvedPath(to: To): Path {
+    let { matches } = React.useContext(routeContext);
+    let { pathname: locationPathname } = useLocation();
+
+    let routePathnamesJson = JSON.stringify(
+      getPathContributingMatches(matches).map((match) => match.pathnameBase)
+    );
+
+    return React.useMemo(
+      () => resolveTo(to, JSON.parse(routePathnamesJson), locationPathname),
+      [to, routePathnamesJson, locationPathname]
+    );
+  };
 }
 
 /**
@@ -289,18 +344,126 @@ export function useParams<
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-resolved-path
  */
-export function useResolvedPath(to: To): Path {
-  let { matches } = React.useContext(RouteContext);
-  let { pathname: locationPathname } = useLocation();
+export const useResolvedPath = createResolvedPathHook();
 
-  let routePathnamesJson = JSON.stringify(
-    getPathContributingMatches(matches).map((match) => match.pathnameBase)
-  );
+export function createRoutesHook(
+  LocationContext: typeof DefaultLocationContext = DefaultLocationContext,
+  RouteContext: typeof DefaultRouteContext = DefaultRouteContext,
+  DataRouterStateContext: typeof DefaultDataRouterStateContext = DefaultDataRouterStateContext
+) {
+  return function useRoutes(
+    routes: RouteObject[],
+    locationArg?: Partial<Location> | string
+  ): React.ReactElement | null {
+    invariant(
+      useInRouterContext(),
+      // TODO: This error is probably because they somehow have 2 versions of the
+      // router loaded. We can help them understand how to avoid that.
+      `useRoutes() may be used only in the context of a <Router> component.`
+    );
 
-  return React.useMemo(
-    () => resolveTo(to, JSON.parse(routePathnamesJson), locationPathname),
-    [to, routePathnamesJson, locationPathname]
-  );
+    let dataRouterStateContextValue = React.useContext(DataRouterStateContext);
+    let { matches: parentMatches } = React.useContext(RouteContext);
+    let routeMatch = parentMatches[parentMatches.length - 1];
+    let parentParams = routeMatch ? routeMatch.params : {};
+    let parentPathname = routeMatch ? routeMatch.pathname : "/";
+    let parentPathnameBase = routeMatch ? routeMatch.pathnameBase : "/";
+    let parentRoute = routeMatch && routeMatch.route;
+
+    if (__DEV__) {
+      // You won't get a warning about 2 different <Routes> under a <Route>
+      // without a trailing *, but this is a best-effort warning anyway since we
+      // cannot even give the warning unless they land at the parent route.
+      //
+      // Example:
+      //
+      // <Routes>
+      //   {/* This route path MUST end with /* because otherwise
+      //       it will never match /blog/post/123 */}
+      //   <Route path="blog" element={<Blog />} />
+      //   <Route path="blog/feed" element={<BlogFeed />} />
+      // </Routes>
+      //
+      // function Blog() {
+      //   return (
+      //     <Routes>
+      //       <Route path="post/:id" element={<Post />} />
+      //     </Routes>
+      //   );
+      // }
+      let parentPath = (parentRoute && parentRoute.path) || "";
+      warningOnce(
+        parentPathname,
+        !parentRoute || parentPath.endsWith("*"),
+        `You rendered descendant <Routes> (or called \`useRoutes()\`) at ` +
+          `"${parentPathname}" (under <Route path="${parentPath}">) but the ` +
+          `parent route path has no trailing "*". This means if you navigate ` +
+          `deeper, the parent won't match anymore and therefore the child ` +
+          `routes will never render.\n\n` +
+          `Please change the parent <Route path="${parentPath}"> to <Route ` +
+          `path="${parentPath === "/" ? "*" : `${parentPath}/*`}">.`
+      );
+    }
+
+    let locationFromContext = useLocation();
+
+    let location;
+    if (locationArg) {
+      let parsedLocationArg =
+        typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
+
+      invariant(
+        parentPathnameBase === "/" ||
+          parsedLocationArg.pathname?.startsWith(parentPathnameBase),
+        `When overriding the location using \`<Routes location>\` or \`useRoutes(routes, location)\`, ` +
+          `the location pathname must begin with the portion of the URL pathname that was ` +
+          `matched by all parent routes. The current pathname base is "${parentPathnameBase}" ` +
+          `but pathname "${parsedLocationArg.pathname}" was given in the \`location\` prop.`
+      );
+
+      location = parsedLocationArg;
+    } else {
+      location = locationFromContext;
+    }
+
+    let pathname = location.pathname || "/";
+    let remainingPathname =
+      parentPathnameBase === "/"
+        ? pathname
+        : pathname.slice(parentPathnameBase.length) || "/";
+
+    let matches = matchRoutes(routes, { pathname: remainingPathname });
+
+    if (__DEV__) {
+      warning(
+        parentRoute || matches != null,
+        `No routes matched location "${location.pathname}${location.search}${location.hash}" `
+      );
+
+      warning(
+        matches == null ||
+          matches[matches.length - 1].route.element !== undefined,
+        `Matched leaf route at location "${location.pathname}${location.search}${location.hash}" does not have an element. ` +
+          `This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.`
+      );
+    }
+
+    return _renderMatches(
+      matches &&
+        matches.map((match) =>
+          Object.assign({}, match, {
+            params: Object.assign({}, parentParams, match.params),
+            pathname: joinPaths([parentPathnameBase, match.pathname]),
+            pathnameBase:
+              match.pathnameBase === "/"
+                ? parentPathnameBase
+                : joinPaths([parentPathnameBase, match.pathnameBase]),
+          })
+        ),
+      parentMatches,
+      dataRouterStateContextValue || undefined
+    );
+  };
 }
 
 /**
@@ -311,119 +474,7 @@ export function useResolvedPath(to: To): Path {
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-routes
  */
-export function useRoutes(
-  routes: RouteObject[],
-  locationArg?: Partial<Location> | string
-): React.ReactElement | null {
-  invariant(
-    useInRouterContext(),
-    // TODO: This error is probably because they somehow have 2 versions of the
-    // router loaded. We can help them understand how to avoid that.
-    `useRoutes() may be used only in the context of a <Router> component.`
-  );
-
-  let dataRouterStateContext = React.useContext(DataRouterStateContext);
-  let { matches: parentMatches } = React.useContext(RouteContext);
-  let routeMatch = parentMatches[parentMatches.length - 1];
-  let parentParams = routeMatch ? routeMatch.params : {};
-  let parentPathname = routeMatch ? routeMatch.pathname : "/";
-  let parentPathnameBase = routeMatch ? routeMatch.pathnameBase : "/";
-  let parentRoute = routeMatch && routeMatch.route;
-
-  if (__DEV__) {
-    // You won't get a warning about 2 different <Routes> under a <Route>
-    // without a trailing *, but this is a best-effort warning anyway since we
-    // cannot even give the warning unless they land at the parent route.
-    //
-    // Example:
-    //
-    // <Routes>
-    //   {/* This route path MUST end with /* because otherwise
-    //       it will never match /blog/post/123 */}
-    //   <Route path="blog" element={<Blog />} />
-    //   <Route path="blog/feed" element={<BlogFeed />} />
-    // </Routes>
-    //
-    // function Blog() {
-    //   return (
-    //     <Routes>
-    //       <Route path="post/:id" element={<Post />} />
-    //     </Routes>
-    //   );
-    // }
-    let parentPath = (parentRoute && parentRoute.path) || "";
-    warningOnce(
-      parentPathname,
-      !parentRoute || parentPath.endsWith("*"),
-      `You rendered descendant <Routes> (or called \`useRoutes()\`) at ` +
-        `"${parentPathname}" (under <Route path="${parentPath}">) but the ` +
-        `parent route path has no trailing "*". This means if you navigate ` +
-        `deeper, the parent won't match anymore and therefore the child ` +
-        `routes will never render.\n\n` +
-        `Please change the parent <Route path="${parentPath}"> to <Route ` +
-        `path="${parentPath === "/" ? "*" : `${parentPath}/*`}">.`
-    );
-  }
-
-  let locationFromContext = useLocation();
-
-  let location;
-  if (locationArg) {
-    let parsedLocationArg =
-      typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
-
-    invariant(
-      parentPathnameBase === "/" ||
-        parsedLocationArg.pathname?.startsWith(parentPathnameBase),
-      `When overriding the location using \`<Routes location>\` or \`useRoutes(routes, location)\`, ` +
-        `the location pathname must begin with the portion of the URL pathname that was ` +
-        `matched by all parent routes. The current pathname base is "${parentPathnameBase}" ` +
-        `but pathname "${parsedLocationArg.pathname}" was given in the \`location\` prop.`
-    );
-
-    location = parsedLocationArg;
-  } else {
-    location = locationFromContext;
-  }
-
-  let pathname = location.pathname || "/";
-  let remainingPathname =
-    parentPathnameBase === "/"
-      ? pathname
-      : pathname.slice(parentPathnameBase.length) || "/";
-
-  let matches = matchRoutes(routes, { pathname: remainingPathname });
-
-  if (__DEV__) {
-    warning(
-      parentRoute || matches != null,
-      `No routes matched location "${location.pathname}${location.search}${location.hash}" `
-    );
-
-    warning(
-      matches == null ||
-        matches[matches.length - 1].route.element !== undefined,
-      `Matched leaf route at location "${location.pathname}${location.search}${location.hash}" does not have an element. ` +
-        `This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.`
-    );
-  }
-
-  return _renderMatches(
-    matches &&
-      matches.map((match) =>
-        Object.assign({}, match, {
-          params: Object.assign({}, parentParams, match.params),
-          pathname: joinPaths([parentPathnameBase, match.pathname]),
-          pathnameBase:
-            match.pathnameBase === "/"
-              ? parentPathnameBase
-              : joinPaths([parentPathnameBase, match.pathnameBase]),
-        })
-      ),
-    parentMatches,
-    dataRouterStateContext || undefined
-  );
-}
+export const useRoutes = createRoutesHook();
 
 function DefaultErrorElement() {
   let error = useRouteError();
@@ -532,9 +583,15 @@ interface RenderedRouteProps {
   routeContext: RouteContextObject;
   match: RouteMatch<string, RouteObject>;
   children: React.ReactNode | null;
+  RouteContext?: typeof DefaultRouteContext;
 }
 
-function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
+function RenderedRoute({
+  routeContext,
+  match,
+  children,
+  RouteContext = DefaultRouteContext,
+}: RenderedRouteProps) {
   let dataStaticRouterContext = React.useContext(DataStaticRouterContext);
 
   // Track how deep we got in our render pass to emulate SSR componentDidCatch
@@ -553,7 +610,8 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState?: RemixRouter["state"]
+  dataRouterState?: RemixRouter["state"],
+  RouteContext = DefaultRouteContext
 ): React.ReactElement | null {
   if (matches == null) {
     if (dataRouterState?.errors) {
@@ -596,6 +654,7 @@ export function _renderMatches(
           outlet,
           matches: parentMatches.concat(renderedMatches.slice(0, index + 1)),
         }}
+        RouteContext={RouteContext}
       >
         {error
           ? errorElement
@@ -631,7 +690,7 @@ enum DataRouterHook {
 }
 
 function useDataRouterState(hookName: DataRouterHook) {
-  let state = React.useContext(DataRouterStateContext);
+  let state = React.useContext(DefaultDataRouterStateContext);
   invariant(state, `${hookName} must be used within a DataRouterStateContext`);
   return state;
 }
@@ -650,7 +709,7 @@ export function useNavigation() {
  * as the current state of any manual revalidations
  */
 export function useRevalidator() {
-  let dataRouterContext = React.useContext(DataRouterContext);
+  let dataRouterContext = React.useContext(DefaultDataRouterContext);
   invariant(
     dataRouterContext,
     `useRevalidator must be used within a DataRouterContext`
@@ -690,7 +749,7 @@ export function useMatches() {
 export function useLoaderData(): unknown {
   let state = useDataRouterState(DataRouterHook.UseLoaderData);
 
-  let route = React.useContext(RouteContext);
+  let route = React.useContext(DefaultRouteContext);
   invariant(route, `useLoaderData must be used inside a RouteContext`);
 
   let thisRoute = route.matches[route.matches.length - 1];
@@ -716,7 +775,7 @@ export function useRouteLoaderData(routeId: string): unknown {
 export function useActionData(): unknown {
   let state = useDataRouterState(DataRouterHook.UseActionData);
 
-  let route = React.useContext(RouteContext);
+  let route = React.useContext(DefaultRouteContext);
   invariant(route, `useActionData must be used inside a RouteContext`);
 
   return Object.values(state?.actionData || {})[0];
@@ -730,7 +789,7 @@ export function useActionData(): unknown {
 export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
   let state = useDataRouterState(DataRouterHook.UseRouteError);
-  let route = React.useContext(RouteContext);
+  let route = React.useContext(DefaultRouteContext);
   let thisRoute = route.matches[route.matches.length - 1];
   let deferredValue = React.useContext(DeferredContext);
 

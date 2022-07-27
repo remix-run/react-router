@@ -22,20 +22,35 @@ import {
 } from "@remix-run/router";
 import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
-import type { Navigator, DataRouterContextObject } from "./context";
 import {
-  LocationContext,
-  NavigationContext,
-  DataRouterContext,
-  DataRouterStateContext,
+  Navigator,
+  DataRouterContextObject,
+  createLocationContext,
+  createNavigationContext,
+  createDataRouterContext,
+  createRouteContext,
+  createDataRouterStateContext,
+  RouterContext,
+} from "./context";
+import {
+  LocationContext as DefaultLocationContext,
+  NavigationContext as DefaultNavigationContext,
+  DataRouterContext as DefaultDataRouterContext,
+  RouteContext as DefaultRouteContext,
+  DataRouterStateContext as DefaultDataRouterStateContext,
   DeferredContext,
 } from "./context";
 import {
+  createHrefHook,
+  createMatchHook,
+  createNavigateHook,
+  createNavigationTypeHook,
+  createParamsHook,
+  createResolvedPathHook,
+  createRoutesHook,
   useDeferredData,
   useInRouterContext,
-  useNavigate,
   useOutlet,
-  useRoutes,
   _renderMatches,
 } from "./hooks";
 
@@ -106,9 +121,12 @@ export function DataRouterProvider({
   }
 
   return (
-    <DataRouterContext.Provider value={dataRouterContext}>
-      <DataRouterStateContext.Provider value={state} children={children} />
-    </DataRouterContext.Provider>
+    <DefaultDataRouterContext.Provider value={dataRouterContext}>
+      <DefaultDataRouterStateContext.Provider
+        value={state}
+        children={children}
+      />
+    </DefaultDataRouterContext.Provider>
   );
 }
 
@@ -117,7 +135,7 @@ export function DataRouterProvider({
  * `<DataRouterProvider>`
  */
 export function DataRouter() {
-  let dataRouterContext = React.useContext(DataRouterContext);
+  let dataRouterContext = React.useContext(DefaultDataRouterContext);
   invariant(
     dataRouterContext,
     "<DataRouter> may only be rendered within a DataRouterContext"
@@ -177,6 +195,39 @@ export function DataMemoryRouter({
   );
 }
 
+export function createNestableMemoryRouter() {
+  const LocationContext = createLocationContext();
+  const NavigationContext = createNavigationContext();
+  const RouteContext = createRouteContext();
+  const DataRouterStateContext = createDataRouterStateContext();
+  const DataRouterContext = createDataRouterContext();
+
+  const NestableMemoryRouter = createScopedMemoryRouter(
+    LocationContext,
+    NavigationContext,
+    DataRouterStateContext,
+    DataRouterContext,
+    RouteContext
+  );
+
+  return {
+    NestableMemoryRouter,
+    hooks: {
+      useHref: createHrefHook(LocationContext, NavigationContext),
+      useNavigationType: createNavigationTypeHook(LocationContext),
+      useMatch: createMatchHook(LocationContext),
+      useNavigate: createNavigateHook(LocationContext, NavigationContext),
+      useParams: createParamsHook(RouteContext),
+      useResolvedPath: createResolvedPathHook(LocationContext, RouteContext),
+      useRoutes: createRoutesHook(
+        LocationContext,
+        RouteContext,
+        DataRouterStateContext
+      ),
+    },
+  };
+}
+
 export interface MemoryRouterProps {
   basename?: string;
   children?: React.ReactNode;
@@ -184,44 +235,59 @@ export interface MemoryRouterProps {
   initialIndex?: number;
 }
 
+function createScopedMemoryRouter(
+  LocationContext = DefaultLocationContext,
+  NavigationContext = DefaultNavigationContext,
+  DataRouterStateContext = DefaultDataRouterStateContext,
+  DataRouterContext = DefaultDataRouterContext,
+  RouteContext = DefaultRouteContext
+) {
+  return function MemoryRouter({
+    basename,
+    children,
+    initialEntries,
+    initialIndex,
+  }: MemoryRouterProps): React.ReactElement {
+    let historyRef = React.useRef<MemoryHistory>();
+    if (historyRef.current == null) {
+      historyRef.current = createMemoryHistory({
+        initialEntries,
+        initialIndex,
+        v5Compat: true,
+      });
+    }
+
+    let history = historyRef.current;
+    let [state, setState] = React.useState({
+      action: history.action,
+      location: history.location,
+    });
+
+    React.useLayoutEffect(() => history.listen(setState), [history]);
+
+    return (
+      <Router
+        basename={basename}
+        children={children}
+        location={state.location}
+        navigationType={state.action}
+        navigator={history}
+        LocationContext={LocationContext}
+        NavigationContext={NavigationContext}
+        DataRouterStateContext={DataRouterStateContext}
+        DataRouterContext={DataRouterContext}
+        RouteContext={RouteContext}
+      />
+    );
+  };
+}
+
 /**
  * A <Router> that stores all entries in memory.
  *
  * @see https://reactrouter.com/docs/en/v6/routers/memory-router
  */
-export function MemoryRouter({
-  basename,
-  children,
-  initialEntries,
-  initialIndex,
-}: MemoryRouterProps): React.ReactElement {
-  let historyRef = React.useRef<MemoryHistory>();
-  if (historyRef.current == null) {
-    historyRef.current = createMemoryHistory({
-      initialEntries,
-      initialIndex,
-      v5Compat: true,
-    });
-  }
-
-  let history = historyRef.current;
-  let [state, setState] = React.useState({
-    action: history.action,
-    location: history.location,
-  });
-
-  React.useLayoutEffect(() => history.listen(setState), [history]);
-
-  return (
-    <Router
-      basename={basename}
-      children={children}
-      location={state.location}
-      navigationType={state.action}
-      navigator={history}
-    />
-  );
-}
+export const MemoryRouter = createScopedMemoryRouter();
 
 export interface NavigateProps {
   to: To;
@@ -247,12 +313,13 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
   );
 
   warning(
-    !React.useContext(NavigationContext).static,
+    !React.useContext(DefaultNavigationContext).static,
     `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
       `This is a no-op, but you should modify your code so the <Navigate> is ` +
       `only ever rendered in response to some user interaction or state change.`
   );
 
+  const { useNavigate } = React.useContext(RouterContext);
   let navigate = useNavigate();
   React.useEffect(() => {
     navigate(to, { replace, state });
@@ -331,6 +398,11 @@ export interface RouterProps {
   navigationType?: NavigationType;
   navigator: Navigator;
   static?: boolean;
+  NavigationContext?: typeof DefaultNavigationContext;
+  LocationContext?: typeof DefaultLocationContext;
+  DataRouterStateContext?: typeof DefaultDataRouterStateContext;
+  DataRouterContext?: typeof DefaultDataRouterContext;
+  RouteContext?: typeof DefaultRouteContext;
 }
 
 /**
@@ -349,11 +421,43 @@ export function Router({
   navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false,
+  NavigationContext = DefaultNavigationContext,
+  LocationContext = DefaultLocationContext,
+  DataRouterStateContext = DefaultDataRouterStateContext,
+  DataRouterContext = DefaultDataRouterContext,
+  RouteContext = DefaultRouteContext,
 }: RouterProps): React.ReactElement | null {
   invariant(
     !useInRouterContext(),
     `You cannot render a <Router> inside another <Router>.` +
       ` You should never have more than one in your app.`
+  );
+
+  const routerContext = React.useMemo(
+    () => ({
+      LocationContext,
+      NavigationContext,
+      DataRouterStateContext,
+      DataRouterContext,
+      RouteContext,
+      useRoutes: createRoutesHook(
+        LocationContext,
+        RouteContext,
+        DataRouterStateContext
+      ),
+      useNavigate: createNavigateHook(
+        LocationContext,
+        NavigationContext,
+        RouteContext
+      ),
+    }),
+    [
+      LocationContext,
+      NavigationContext,
+      DataRouterStateContext,
+      DataRouterContext,
+      RouteContext,
+    ]
   );
 
   // Preserve trailing slashes on basename, so we can let the user control
@@ -404,12 +508,14 @@ export function Router({
   }
 
   return (
-    <NavigationContext.Provider value={navigationContext}>
-      <LocationContext.Provider
-        children={children}
-        value={{ location, navigationType }}
-      />
-    </NavigationContext.Provider>
+    <RouterContext.Provider value={routerContext}>
+      <NavigationContext.Provider value={navigationContext}>
+        <LocationContext.Provider
+          children={children}
+          value={{ location, navigationType }}
+        />
+      </NavigationContext.Provider>
+    </RouterContext.Provider>
   );
 }
 
@@ -428,6 +534,8 @@ export function Routes({
   children,
   location,
 }: RoutesProps): React.ReactElement | null {
+  const { DataRouterContext, useRoutes } = React.useContext(RouterContext);
+
   let dataRouterContext = React.useContext(DataRouterContext);
   // When in a DataRouterContext _without_ children, we use the router routes
   // directly.  If we have children, then we're in a descendant tree and we
