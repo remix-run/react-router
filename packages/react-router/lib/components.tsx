@@ -494,6 +494,17 @@ class AwaitErrorBoundary extends React.Component<
   render() {
     let { children, errorElement, promise } = this.props;
 
+    if (!(promise instanceof Promise)) {
+      // Didn't get a promise, so handle the value as already-resolved
+      // No-op on catch to avoid unhandled promise rejection issues
+      let resolvedPromise = Promise.resolve().catch(() => {});
+      Object.defineProperty(resolvedPromise, "_tracked", { get: () => true });
+      Object.defineProperty(resolvedPromise, "_data", { get: () => promise });
+      return (
+        <AwaitContext.Provider value={resolvedPromise} children={children} />
+      );
+    }
+
     let errorPromise: DeferredPromise | null = null;
 
     // Grab any render/data errors

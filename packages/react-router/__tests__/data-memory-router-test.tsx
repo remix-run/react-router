@@ -1890,8 +1890,9 @@ describe("<DataMemoryRouter>", () => {
 
   describe("deferred", () => {
     function setupDeferredTest({
+      useRenderProp = false,
       hasRouteErrorElement = false,
-      hasDeferredErrorElement = false,
+      hasAwaitErrorElement = false,
       triggerRenderError = false,
       triggerFallbackError = false,
     } = {}) {
@@ -1932,9 +1933,9 @@ describe("<DataMemoryRouter>", () => {
             <React.Suspense fallback={<LazyFallback />}>
               <Await
                 promise={data.lazy}
-                errorElement={hasDeferredErrorElement ? <LazyError /> : null}
+                errorElement={hasAwaitErrorElement ? <LazyError /> : null}
               >
-                <LazyData />
+                {useRenderProp ? (value) => <p>{value}</p> : <LazyData />}
               </Await>
             </React.Suspense>
           </>
@@ -1965,7 +1966,7 @@ describe("<DataMemoryRouter>", () => {
 
       function LazyError() {
         let data = useRouteError();
-        return <p>Handled Error:{data.message}</p>;
+        return <p>Await Error:{data.message}</p>;
       }
 
       return { container, barDefer };
@@ -2040,7 +2041,7 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("allows loaders to returned deferred data (render prop)", async () => {
-      let { barDefer, container } = setupDeferredTest();
+      let { barDefer, container } = setupDeferredTest({ useRenderProp: true });
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -2111,7 +2112,7 @@ describe("<DataMemoryRouter>", () => {
     it("sends data errors to the provided errorElement", async () => {
       let { barDefer, container } = setupDeferredTest({
         hasRouteErrorElement: true,
-        hasDeferredErrorElement: true,
+        hasAwaitErrorElement: true,
       });
 
       fireEvent.click(screen.getByText("Link to Bar"));
@@ -2174,16 +2175,17 @@ describe("<DataMemoryRouter>", () => {
             CRITICAL
           </p>
           <p>
-            Handled Error:
+            Await Error:
             Kaboom!
           </p>
         </div>"
       `);
     });
 
-    it("sends unhandled data errors to the nearest route error boundaary", async () => {
+    it("sends unhandled data errors to the nearest route error boundary", async () => {
       let { barDefer, container } = setupDeferredTest({
         hasRouteErrorElement: true,
+        hasAwaitErrorElement: false,
       });
 
       fireEvent.click(screen.getByText("Link to Bar"));
@@ -2253,7 +2255,7 @@ describe("<DataMemoryRouter>", () => {
     it("sends render errors to the provided errorElement", async () => {
       let { barDefer, container } = setupDeferredTest({
         hasRouteErrorElement: true,
-        hasDeferredErrorElement: true,
+        hasAwaitErrorElement: true,
         triggerRenderError: true,
       });
 
@@ -2317,7 +2319,7 @@ describe("<DataMemoryRouter>", () => {
             CRITICAL
           </p>
           <p>
-            Handled Error:
+            Await Error:
             oops is not defined
           </p>
         </div>"
@@ -2327,7 +2329,7 @@ describe("<DataMemoryRouter>", () => {
     it("sends unhandled render errors to the nearest route error boundary", async () => {
       let { barDefer, container } = setupDeferredTest({
         hasRouteErrorElement: true,
-        hasDeferredErrorElement: false,
+        hasAwaitErrorElement: false,
         triggerRenderError: true,
       });
 
@@ -2398,7 +2400,7 @@ describe("<DataMemoryRouter>", () => {
     it("does not handle fallback render errors in the Deferred errorElement", async () => {
       let { barDefer, container } = setupDeferredTest({
         hasRouteErrorElement: true,
-        hasDeferredErrorElement: true,
+        hasAwaitErrorElement: true,
         triggerRenderError: true,
         triggerFallbackError: true,
       });
@@ -2466,285 +2468,14 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
 
-    it("supports deferred arrays", async () => {
-      let barDefer = defer();
-      let { container } = render(
-        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
-          <Route path="/" element={<Layout />}>
-            <Route path="foo" element={<Foo />} />
-            <Route
-              path="bar"
-              loader={() => barDefer.promise}
-              element={<Bar />}
-            />
-          </Route>
-        </DataMemoryRouter>
-      );
-
-      function Layout() {
-        return (
-          <>
-            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
-            <Outlet />
-          </>
-        );
-      }
-
-      function Foo() {
-        return <h1>Foo</h1>;
-      }
-      function Bar() {
-        let [critical, lazy] = useLoaderData() as Array<any>;
-        return (
-          <>
-            <p>{critical}</p>
-            <React.Suspense fallback={<p>Loading...</p>}>
-              <Await promise={lazy}>{(data) => <p>{data}</p>}</Await>
-            </React.Suspense>
-          </>
-        );
-      }
-
-      fireEvent.click(screen.getByText("Link to Bar"));
-      let barValueDfd = defer();
-      barDefer.resolve(deferred(["CRITICAL", barValueDfd.promise]));
-      await waitFor(() => screen.getByText("CRITICAL"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
-          <p>
-            CRITICAL
-          </p>
-          <p>
-            Loading...
-          </p>
-        </div>"
-      `);
-
-      barValueDfd.resolve("LAZY");
-      await waitFor(() => screen.getByText("LAZY"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
-          <p>
-            CRITICAL
-          </p>
-          <p>
-            LAZY
-          </p>
-        </div>"
-      `);
-    });
-
-    it("supports deferred single promise values", async () => {
-      let barDefer = defer();
-      let { container } = render(
-        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
-          <Route path="/" element={<Layout />}>
-            <Route path="foo" element={<Foo />} />
-            <Route
-              path="bar"
-              loader={() => barDefer.promise}
-              element={<Bar />}
-            />
-          </Route>
-        </DataMemoryRouter>
-      );
-
-      function Layout() {
-        return (
-          <>
-            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
-            <Outlet />
-          </>
-        );
-      }
-
-      function Foo() {
-        return <h1>Foo</h1>;
-      }
-      function Bar() {
-        let lazy = useLoaderData();
-        return (
-          <React.Suspense fallback={<p>Loading...</p>}>
-            <Await promise={lazy}>{(data) => <p>{data}</p>}</Await>
-          </React.Suspense>
-        );
-      }
-
-      fireEvent.click(screen.getByText("Link to Bar"));
-      let barValueDfd = defer();
-      barDefer.resolve(deferred(barValueDfd.promise));
-      await waitFor(() => screen.getByText("Loading..."));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
-          <p>
-            Loading...
-          </p>
-        </div>"
-      `);
-
-      barValueDfd.resolve("LAZY");
-      await waitFor(() => screen.getByText("LAZY"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
-          <p>
-            LAZY
-          </p>
-        </div>"
-      `);
-    });
-
-    it("does not proxy settled values through loaderData promises", async () => {
-      let defer1 = defer();
-      let defer2 = defer();
-      let { container } = render(
-        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
-          <Route path="/" element={<Layout />}>
-            <Route path="foo" element={<Foo />} />
-            <Route
-              path="bar"
-              loader={() =>
-                deferred({ lazy1: defer1.promise, lazy2: defer2.promise })
-              }
-              element={<Bar />}
-            />
-          </Route>
-        </DataMemoryRouter>
-      );
-
-      function Layout() {
-        return (
-          <>
-            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
-            <Outlet />
-          </>
-        );
-      }
-
-      function Foo() {
-        return <h1>Foo</h1>;
-      }
-
-      let listened = false;
-
-      function Bar() {
-        let { lazy1, lazy2 } = useLoaderData();
-        let [settled1, setSettled1] = React.useState(null);
-        let [settled2, setSettled2] = React.useState(null);
-
-        if (!listened) {
-          listened = true;
-          lazy1.then((v) => setSettled1(v));
-          lazy1.catch((e) => setSettled2(e));
-        }
-
-        return (
-          <>
-            <React.Suspense fallback={<p>Loading 1...</p>}>
-              <Await promise={lazy1}>{(data) => <p>{data}</p>}</Await>
-            </React.Suspense>
-            <React.Suspense fallback={<p>Loading 2...</p>}>
-              <Await promise={lazy2} errorElement={<ErrorElement />}>
-                {(data) => <p>{data}</p>}
-              </Await>
-            </React.Suspense>
-            <p>{settled1 || "No resolved value"}</p>
-            <p>{settled2 || "No rejected value"}</p>
-          </>
-        );
-      }
-
-      function ErrorElement() {
-        let error = useRouteError() as string;
-        return <p>Error:{error}</p>;
-      }
-
-      fireEvent.click(screen.getByText("Link to Bar"));
-      await waitFor(() => screen.getByText("Loading 1..."));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
-          <p>
-            Loading 1...
-          </p>
-          <p>
-            Loading 2...
-          </p>
-          <p>
-            No resolved value
-          </p>
-          <p>
-            No rejected value
-          </p>
-        </div>"
-      `);
-
-      defer1.resolve("RESOLVED");
-      defer2.reject("REJECTED");
-      await waitFor(() => screen.getByText("RESOLVED"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
-          <p>
-            RESOLVED
-          </p>
-          <p>
-            Error:
-            REJECTED
-          </p>
-          <p>
-            No resolved value
-          </p>
-          <p>
-            No rejected value
-          </p>
-        </div>"
-      `);
-    });
-
     it("can render raw resolved promises with <Await>", async () => {
-      let fooDefer = defer();
+      let dfd = defer();
 
       let { container } = render(
-        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
-          <Route path="foo" element={<Foo />} />
-        </DataMemoryRouter>
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <Await promise={dfd.promise}>{(data) => <p>{data}</p>}</Await>
+        </React.Suspense>
       );
-
-      function Foo() {
-        return (
-          <React.Suspense fallback={<p>Loading...</p>}>
-            <Await promise={fooDefer.promise}>{(data) => <p>{data}</p>}</Await>
-          </React.Suspense>
-        );
-      }
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
@@ -2754,7 +2485,7 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      fooDefer.resolve("RESOLVED");
+      dfd.resolve("RESOLVED");
       await waitFor(() => screen.getByText("RESOLVED"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
@@ -2766,23 +2497,15 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("can render raw rejected promises with <Await>", async () => {
-      let fooDefer = defer();
+      let dfd = defer();
 
       let { container } = render(
-        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
-          <Route path="foo" element={<Foo />} />
-        </DataMemoryRouter>
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <Await promise={dfd.promise} errorElement={<ErrorElement />}>
+            {(data) => <p>{data}</p>}
+          </Await>
+        </React.Suspense>
       );
-
-      function Foo() {
-        return (
-          <React.Suspense fallback={<p>Loading...</p>}>
-            <Await promise={fooDefer.promise} errorElement={<ErrorElement />}>
-              {(data) => <p>{data}</p>}
-            </Await>
-          </React.Suspense>
-        );
-      }
 
       function ErrorElement() {
         let error = useRouteError() as string;
@@ -2797,13 +2520,27 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      await fooDefer.reject("REJECTED");
+      await dfd.reject("REJECTED");
       await waitFor(() => screen.getByText("Error:REJECTED"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <p>
             Error:
             REJECTED
+          </p>
+        </div>"
+      `);
+    });
+
+    it("can render raw values with <Await>", async () => {
+      let { container } = render(
+        <Await promise={"VALUE"}>{(data) => <p>{data}</p>}</Await>
+      );
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            VALUE
           </p>
         </div>"
       `);
