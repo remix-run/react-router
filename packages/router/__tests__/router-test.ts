@@ -752,7 +752,7 @@ const TM_ROUTES = [
   {
     path: "",
     id: "root",
-    element: {},
+    element: true,
     module: "",
     errorElement: true,
     loader: true,
@@ -763,7 +763,7 @@ const TM_ROUTES = [
         hasLoader: true,
         loader: true,
         action: true,
-        element: {},
+        element: true,
         module: "",
       },
       {
@@ -771,7 +771,7 @@ const TM_ROUTES = [
         id: "foo",
         loader: true,
         action: true,
-        element: {},
+        element: true,
         module: "",
       },
       {
@@ -779,7 +779,7 @@ const TM_ROUTES = [
         id: "foobar",
         loader: true,
         action: true,
-        element: {},
+        element: true,
         module: "",
       },
       {
@@ -787,7 +787,7 @@ const TM_ROUTES = [
         id: "bar",
         loader: true,
         action: true,
-        element: {},
+        element: true,
         module: "",
       },
       {
@@ -795,7 +795,7 @@ const TM_ROUTES = [
         id: "baz",
         loader: true,
         action: true,
-        element: {},
+        element: true,
         module: "",
       },
       {
@@ -803,7 +803,7 @@ const TM_ROUTES = [
         id: "param",
         loader: true,
         action: true,
-        element: {},
+        element: true,
         module: "",
       },
     ],
@@ -843,10 +843,10 @@ describe("a router", () => {
       let router = createRouter({
         routes: [
           {
-            element: {},
+            element: true,
             id: "root",
             path: "/",
-            errorElement: {},
+            errorElement: true,
             loader: () => Promise.resolve(),
           },
         ],
@@ -881,8 +881,8 @@ describe("a router", () => {
             pathname: "/",
             pathnameBase: "/",
             route: {
-              element: {},
-              errorElement: {},
+              element: true,
+              errorElement: true,
               id: "root",
               loader: expect.any(Function),
               path: "/",
@@ -1433,7 +1433,7 @@ describe("a router", () => {
             id: "root",
             loader: async (...args) => rootLoader(...args),
             shouldRevalidate: (args) => shouldRevalidate(args) === true,
-            element: {},
+            element: true,
             children: [
               {
                 path: "/",
@@ -1621,7 +1621,7 @@ describe("a router", () => {
           {
             path: "",
             id: "root",
-            element: {},
+            element: true,
             children: [
               {
                 path: "/",
@@ -1701,7 +1701,7 @@ describe("a router", () => {
           {
             path: "",
             id: "root",
-            element: {},
+            element: true,
             children: [
               {
                 path: "/",
@@ -1760,7 +1760,7 @@ describe("a router", () => {
             path: "",
             id: "root",
             loader: () => `ROOT ${++count}`,
-            element: {},
+            element: true,
             children: [
               {
                 path: "/",
@@ -1808,7 +1808,7 @@ describe("a router", () => {
           {
             path: "",
             id: "root",
-            element: {},
+            element: true,
             children: [
               {
                 path: "/",
@@ -1876,7 +1876,7 @@ describe("a router", () => {
             id: "root",
             loader: () => ++count,
             shouldRevalidate: () => returnValue,
-            element: {},
+            element: true,
           },
         ],
         hydrationData: {
@@ -1944,7 +1944,7 @@ describe("a router", () => {
             id: "root",
             loader: () => ++count,
             shouldRevalidate: () => returnValue,
-            element: {},
+            element: true,
             children: [
               {
                 path: "a",
@@ -2032,7 +2032,7 @@ describe("a router", () => {
           route: {
             errorElement: true,
             children: expect.any(Array),
-            element: {},
+            element: true,
             id: "root",
             loader: expect.any(Function),
             module: "",
@@ -2083,7 +2083,7 @@ describe("a router", () => {
           route: {
             errorElement: true,
             children: expect.any(Array),
-            element: {},
+            element: true,
             id: "root",
             loader: expect.any(Function),
             module: "",
@@ -7341,7 +7341,7 @@ describe("a router", () => {
     });
   });
 
-  describe("defer()", () => {
+  describe("deferred data", () => {
     it("should support returning deferred responses (naked object)", async () => {
       let t = setup({
         routes: [
@@ -7426,10 +7426,10 @@ describe("a router", () => {
       let dfd1 = createDeferred();
       let dfd2 = createDeferred();
       await A.loaders.lazy.resolve({
-          critical1: "1",
-          critical2: "2",
-          lazy1: dfd1.promise,
-          lazy2: dfd2.promise,
+        critical1: "1",
+        critical2: "2",
+        lazy1: dfd1.promise,
+        lazy2: dfd2.promise,
       });
 
       // Interrupt pending deferred's from /lazy navigation
@@ -7495,13 +7495,13 @@ describe("a router", () => {
       let A = await t.navigate("/parent/a");
       let parentDfd = createDeferred();
       await A.loaders.parent.resolve({
-          critical: "CRITICAL PARENT",
-          lazy: parentDfd.promise,
+        critical: "CRITICAL PARENT",
+        lazy: parentDfd.promise,
       });
       let aDfd = createDeferred();
       await A.loaders.a.resolve({
-          critical: "CRITICAL A",
-          lazy: aDfd.promise,
+        critical: "CRITICAL A",
+        lazy: aDfd.promise,
       });
 
       // Navigate such that we reuse the parent route
@@ -7563,8 +7563,8 @@ describe("a router", () => {
 
       let dfd = createDeferred();
       await A.loaders.lazy.resolve({
-          critical: "1",
-          lazy: dfd.promise,
+        critical: "1",
+        lazy: dfd.promise,
       });
 
       await dfd.reject(new Error("Kaboom!"));
@@ -7606,13 +7606,13 @@ describe("a router", () => {
       let A = await t.navigate("/parent");
       let parentDfd = createDeferred();
       await A.loaders.parent.resolve({
-          critical: "CRITICAL PARENT",
-          lazy: parentDfd.promise,
+        critical: "CRITICAL PARENT",
+        lazy: parentDfd.promise,
       });
       let indexDfd = createDeferred();
       await A.loaders.index.resolve({
-          critical: "CRITICAL INDEX",
-          lazy: indexDfd.promise,
+        critical: "CRITICAL INDEX",
+        lazy: indexDfd.promise,
       });
 
       // Trigger a revalidation which should cancel outstanding deferreds
@@ -7645,13 +7645,13 @@ describe("a router", () => {
       // Complete the revalidation
       let parentDfd2 = createDeferred();
       await R.loaders.parent.resolve({
-          critical: "CRITICAL PARENT 2",
-          lazy: parentDfd2.promise,
+        critical: "CRITICAL PARENT 2",
+        lazy: parentDfd2.promise,
       });
       let indexDfd2 = createDeferred();
       await R.loaders.index.resolve({
-          critical: "CRITICAL INDEX 2",
-          lazy: indexDfd2.promise,
+        critical: "CRITICAL INDEX 2",
+        lazy: indexDfd2.promise,
       });
 
       // Revalidations await all deferreds, so we're still in a loading
@@ -7722,8 +7722,8 @@ describe("a router", () => {
       let A = await t.navigate("/foo");
       let dfda = createDeferred();
       await A.loaders.foo.resolve({
-          critical: "CRITICAL A",
-          lazy: dfda.promise,
+        critical: "CRITICAL A",
+        lazy: dfda.promise,
       });
       expect(t.router.state.loaderData).toEqual({
         foo: {
@@ -7737,8 +7737,8 @@ describe("a router", () => {
       // This B data will _never_ make it through - since we will await all of
       // it and we'll revalidate before it resolves
       await B.loaders.foo.resolve({
-          critical: "CRITICAL B",
-          lazy: dfdb.promise,
+        critical: "CRITICAL B",
+        lazy: dfdb.promise,
       });
       // The initial revalidation cancelled the navigation deferred
       await dfda.resolve("Nope!");
@@ -7752,8 +7752,8 @@ describe("a router", () => {
       let C = await t.revalidate();
       let dfdc = createDeferred();
       await C.loaders.foo.resolve({
-          critical: "CRITICAL C",
-          lazy: dfdc.promise,
+        critical: "CRITICAL C",
+        lazy: dfdc.promise,
       });
       // The second revalidation should have cancelled the first revalidation
       // deferred
@@ -7800,8 +7800,8 @@ describe("a router", () => {
       let A = await t.navigate("/foo");
       let dfda = createDeferred();
       await A.loaders.foo.resolve({
-          critical: "CRITICAL A",
-          lazy: dfda.promise,
+        critical: "CRITICAL A",
+        lazy: dfda.promise,
       });
       await dfda.resolve("LAZY A");
       expect(t.router.state.loaderData).toEqual({
@@ -7814,8 +7814,8 @@ describe("a router", () => {
       let B = await t.revalidate();
       let dfdb = createDeferred();
       await B.loaders.foo.resolve({
-          critical: "CRITICAL B",
-          lazy: dfdb.promise,
+        critical: "CRITICAL B",
+        lazy: dfdb.promise,
       });
       // B not reflected because its got existing loaderData
       expect(t.router.state.loaderData).toEqual({
@@ -7828,8 +7828,8 @@ describe("a router", () => {
       let C = await t.navigate("/bar");
       let dfdc = createDeferred();
       await C.loaders.bar.resolve({
-          critical: "CRITICAL C",
-          lazy: dfdc.promise,
+        critical: "CRITICAL C",
+        lazy: dfdc.promise,
       });
       // The second revalidation should have cancelled the first revalidation
       // deferred
@@ -7871,8 +7871,8 @@ describe("a router", () => {
       let A = await t.navigate("/lazy");
       let dfd = createDeferred();
       await A.loaders.lazy.resolve({
-          critical: "CRITICAL",
-          lazy: dfd.promise,
+        critical: "CRITICAL",
+        lazy: dfd.promise,
       });
 
       await t.navigate("/not-found");
@@ -7918,13 +7918,13 @@ describe("a router", () => {
       let A = await t.navigate("/parent/a");
       let parentDfd = createDeferred();
       await A.loaders.parent.resolve({
-          critical: "CRITICAL PARENT",
-          lazy: parentDfd.promise,
+        critical: "CRITICAL PARENT",
+        lazy: parentDfd.promise,
       });
       let aDfd = createDeferred();
       await A.loaders.a.resolve({
-          critical: "CRITICAL A",
-          lazy: aDfd.promise,
+        critical: "CRITICAL A",
+        lazy: aDfd.promise,
       });
       expect(t.router.state.loaderData).toEqual({
         parent: {
@@ -8013,13 +8013,13 @@ describe("a router", () => {
       let A = await t.navigate("/a/child");
       let aDfd = createDeferred();
       await A.loaders.a.resolve({
-          critical: "CRITICAL A",
-          lazy: aDfd.promise,
+        critical: "CRITICAL A",
+        lazy: aDfd.promise,
       });
       let aChildDfd = createDeferred();
       await A.loaders.aChild.resolve({
-          critical: "CRITICAL A CHILD",
-          lazy: aChildDfd.promise,
+        critical: "CRITICAL A CHILD",
+        lazy: aChildDfd.promise,
       });
       expect(t.router.state.loaderData).toEqual({
         a: {
@@ -8091,8 +8091,8 @@ describe("a router", () => {
       let A = await t.navigate("/lazy");
       let dfd = createDeferred();
       await A.loaders.lazy.resolve({
-          critical: "CRITICAL",
-          lazy: dfd.promise,
+        critical: "CRITICAL",
+        lazy: dfd.promise,
       });
 
       await t.navigate("/lazy#hash");
@@ -8147,13 +8147,13 @@ describe("a router", () => {
       let A = await t.navigate("/parent/a");
       let parentDfd = createDeferred();
       await A.loaders.parent.resolve({
-          critical: "CRITICAL PARENT",
-          lazy: parentDfd.promise,
+        critical: "CRITICAL PARENT",
+        lazy: parentDfd.promise,
       });
       let aDfd = createDeferred();
       await A.loaders.a.resolve({
-          critical: "CRITICAL A",
-          lazy: aDfd.promise,
+        critical: "CRITICAL A",
+        lazy: aDfd.promise,
       });
 
       // Action submission causes all to be cancelled, even reused ones, and
@@ -8179,8 +8179,8 @@ describe("a router", () => {
       await B.actions.b.resolve("ACTION");
       let parentDfd2 = createDeferred();
       await B.loaders.parent.resolve({
-          critical: "CRITICAL PARENT 2",
-          lazy: parentDfd2.promise,
+        critical: "CRITICAL PARENT 2",
+        lazy: parentDfd2.promise,
       });
       expect(t.router.state.actionData).toEqual({
         b: "ACTION",
@@ -8247,16 +8247,16 @@ describe("a router", () => {
       let parentDfd1 = createDeferred();
       let parentDfd2 = createDeferred();
       await A.loaders.parent.resolve({
-          critical: "CRITICAL PARENT",
-          lazy1: parentDfd1.promise,
-          lazy2: parentDfd2.promise,
+        critical: "CRITICAL PARENT",
+        lazy1: parentDfd1.promise,
+        lazy2: parentDfd2.promise,
       });
       let aDfd1 = createDeferred();
       let aDfd2 = createDeferred();
       await A.loaders.a.resolve({
-          critical: "CRITICAL A",
-          lazy1: aDfd1.promise,
-          lazy2: aDfd2.promise,
+        critical: "CRITICAL A",
+        lazy1: aDfd1.promise,
+        lazy2: aDfd2.promise,
       });
 
       // Resolve one of the deferred for each prior to the action submission
@@ -8289,9 +8289,9 @@ describe("a router", () => {
       let parentDfd1Revalidation = createDeferred();
       let parentDfd2Revalidation = createDeferred();
       await B.loaders.parent.resolve({
-          critical: "CRITICAL PARENT*",
-          lazy1: parentDfd1Revalidation.promise,
-          lazy2: parentDfd2Revalidation.promise,
+        critical: "CRITICAL PARENT*",
+        lazy1: parentDfd1Revalidation.promise,
+        lazy2: parentDfd2Revalidation.promise,
       });
       await B.loaders.b.resolve("B");
 
@@ -8385,13 +8385,13 @@ describe("a router", () => {
       let A = await t.navigate("/parent/a");
       let parentDfd = createDeferred(); // Never resolves in this test
       await A.loaders.parent.resolve({
-          critical: "CRITICAL PARENT",
-          lazy: parentDfd.promise,
+        critical: "CRITICAL PARENT",
+        lazy: parentDfd.promise,
       });
       let aDfd = createDeferred();
       await A.loaders.a.resolve({
-          critical: "CRITICAL A",
-          lazy: aDfd.promise,
+        critical: "CRITICAL A",
+        lazy: aDfd.promise,
       });
 
       // Action submission to cancel deferreds
@@ -8413,8 +8413,8 @@ describe("a router", () => {
       await B.actions.b.resolve("ACTION");
       let parentDfd2 = createDeferred(); // Never resolves in this test
       await B.loaders.parent.resolve({
-          critical: "CRITICAL PARENT*",
-          lazy: parentDfd2.promise,
+        critical: "CRITICAL PARENT*",
+        lazy: parentDfd2.promise,
       });
       await B.loaders.b.resolve("B");
 
@@ -8463,8 +8463,8 @@ describe("a router", () => {
       // deferred in a fetcher awaits all data in the loading state
       let dfd = createDeferred();
       await A.loaders.fetch.resolve({
-          critical: "1",
-          lazy: dfd.promise,
+        critical: "1",
+        lazy: dfd.promise,
       });
       expect(t.router.state.fetchers.get(key)).toMatchObject({
         state: "loading",
@@ -8485,8 +8485,8 @@ describe("a router", () => {
       expect(t.router.state.revalidation).toBe("loading");
       let dfd2 = createDeferred();
       await B.loaders.fetch.resolve({
-          critical: "3",
-          lazy: dfd2.promise,
+        critical: "3",
+        lazy: dfd2.promise,
       });
       expect(t.router.state.fetchers.get(key)).toMatchObject({
         state: "idle",
@@ -8527,8 +8527,8 @@ describe("a router", () => {
 
       let dfd = createDeferred();
       await A.loaders.fetch.resolve({
-          critical: "1",
-          lazy: dfd.promise,
+        critical: "1",
+        lazy: dfd.promise,
       });
       await dfd.reject(new Error("Kaboom!")).catch(() => {});
       expect(t.router.state.errors).toMatchObject({
@@ -8559,8 +8559,8 @@ describe("a router", () => {
       // deferred in a fetcher awaits all data in the loading state
       let dfd1 = createDeferred();
       let loaderPromise1 = A.loaders.fetch.resolve({
-          critical: "1",
-          lazy: dfd1.promise,
+        critical: "1",
+        lazy: dfd1.promise,
       });
       expect(t.router.state.fetchers.get(key)).toMatchObject({
         state: "loading",
@@ -8572,8 +8572,8 @@ describe("a router", () => {
 
       let dfd2 = createDeferred();
       let loaderPromise2 = B.loaders.fetch.resolve({
-          critical: "3",
-          lazy: dfd2.promise,
+        critical: "3",
+        lazy: dfd2.promise,
       });
       expect(t.router.state.fetchers.get(key)).toMatchObject({
         state: "loading",
@@ -8628,13 +8628,13 @@ describe("a router", () => {
       let A = await t.navigate("/parent/a");
       let parentDfd = createDeferred();
       await A.loaders.parent.resolve({
-          critical: "CRITICAL PARENT",
-          lazy: parentDfd.promise,
+        critical: "CRITICAL PARENT",
+        lazy: parentDfd.promise,
       });
       let aDfd = createDeferred();
       await A.loaders.a.resolve({
-          critical: "CRITICAL A",
-          lazy: aDfd.promise,
+        critical: "CRITICAL A",
+        lazy: aDfd.promise,
       });
 
       // Fetcher action submission causes all to be cancelled and
@@ -8667,13 +8667,13 @@ describe("a router", () => {
       await B.actions.b.resolve("ACTION");
       let parentDfd2 = createDeferred();
       await B.loaders.parent.resolve({
-          critical: "CRITICAL PARENT 2",
-          lazy: parentDfd2.promise,
+        critical: "CRITICAL PARENT 2",
+        lazy: parentDfd2.promise,
       });
       let aDfd2 = createDeferred();
       await B.loaders.a.resolve({
-          critical: "CRITICAL A 2",
-          lazy: aDfd2.promise,
+        critical: "CRITICAL A 2",
+        lazy: aDfd2.promise,
       });
 
       // Still showing old data while we wait on revalidation deferreds to
@@ -8708,7 +8708,7 @@ describe("a router", () => {
     });
 
     it("differentiates between navigation and fetcher deferreds on cancellations", async () => {
-      let dfds: Array<ReturnType<typeof defer>> = [];
+      let dfds: Array<ReturnType<typeof createDeferred>> = [];
       let signals: Array<AbortSignal> = [];
       let router = createRouter({
         history: createMemoryHistory({ initialEntries: ["/"] }),
@@ -8821,13 +8821,13 @@ describe("a router", () => {
             id: "deferred",
             path: "deferred",
             loader: () => ({
-                critical: "loader",
-                lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
-              }),
+              critical: "loader",
+              lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
+            }),
             action: () => ({
-                critical: "action",
-                lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
-              }),
+              critical: "action",
+              lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
+            }),
           },
           {
             id: "error",
