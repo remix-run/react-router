@@ -446,16 +446,16 @@ export interface AwaitResolveRenderFunction {
 export interface AwaitProps {
   children: React.ReactNode | AwaitResolveRenderFunction;
   errorElement?: React.ReactNode;
-  promise: TrackedPromise;
+  resolve: TrackedPromise | any;
 }
 
 /**
  * Component to use for rendering lazily loaded data from returning defer()
  * in a loader function
  */
-export function Await({ children, errorElement, promise }: AwaitProps) {
+export function Await({ children, errorElement, resolve }: AwaitProps) {
   return (
-    <AwaitErrorBoundary promise={promise} errorElement={errorElement}>
+    <AwaitErrorBoundary resolve={resolve} errorElement={errorElement}>
       <ResolveAwait>{children}</ResolveAwait>
     </AwaitErrorBoundary>
   );
@@ -463,12 +463,18 @@ export function Await({ children, errorElement, promise }: AwaitProps) {
 
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
-  promise: TrackedPromise;
+  resolve: TrackedPromise | any;
 }>;
 
 type AwaitErrorBoundaryState = {
   error: any;
 };
+
+enum AwaitRenderStatus {
+  pending,
+  success,
+  error,
+}
 
 class AwaitErrorBoundary extends React.Component<
   AwaitErrorBoundaryProps,
@@ -492,62 +498,61 @@ class AwaitErrorBoundary extends React.Component<
   }
 
   render() {
-    let { children, errorElement, promise } = this.props;
+    let { children, errorElement, resolve } = this.props;
 
-    if (!(promise instanceof Promise)) {
-      // Didn't get a promise, so handle the value as already-resolved
-      // No-op on catch to avoid unhandled promise rejection issues
-      let resolvedPromise = Promise.resolve().catch(() => {});
-      Object.defineProperty(resolvedPromise, "_tracked", { get: () => true });
-      Object.defineProperty(resolvedPromise, "_data", { get: () => promise });
-      return (
-        <AwaitContext.Provider value={resolvedPromise} children={children} />
+    let promise: TrackedPromise | null = null;
+    let status: AwaitRenderStatus = AwaitRenderStatus.pending;
+
+    if (!(resolve instanceof Promise)) {
+      // Didn't get a promise - provide as a resolved promise
+      status = AwaitRenderStatus.success;
+      promise = Promise.resolve();
+      Object.defineProperty(promise, "_tracked", { get: () => true });
+      Object.defineProperty(promise, "_data", { get: () => resolve });
+    } else if (this.state.error) {
+      // Caught a render error, provide it as a rejected promise
+      status = AwaitRenderStatus.error;
+      let renderError = this.state.error;
+      promise = Promise.reject().catch(() => {}); // Avoid unhandled rejection warnings
+      Object.defineProperty(promise, "_tracked", { get: () => true });
+      Object.defineProperty(promise, "_error", { get: () => renderError });
+    } else if ((resolve as TrackedPromise)._tracked) {
+      // Already tracked promise - check contents
+      promise = resolve;
+      status =
+        promise._error !== undefined
+          ? AwaitRenderStatus.error
+          : promise._data !== undefined
+          ? AwaitRenderStatus.success
+          : AwaitRenderStatus.pending;
+    } else {
+      // Raw (untracked) promise - track it
+      status = AwaitRenderStatus.pending;
+      Object.defineProperty(resolve, "_tracked", { get: () => true });
+      promise = resolve.then(
+        (data: any) =>
+          Object.defineProperty(resolve, "_data", { get: () => data }),
+        (error: any) =>
+          Object.defineProperty(resolve, "_error", { get: () => error })
       );
     }
 
-    let errorPromise: TrackedPromise | null = null;
-
-    // Grab any render/data errors
-    if (this.state.error) {
-      let renderError = this.state.error;
-      // No-op on catch to avoid unhandled promise rejection issues
-      errorPromise = Promise.reject().catch(() => {});
-      Object.defineProperty(errorPromise, "_tracked", { get: () => true });
-      Object.defineProperty(errorPromise, "_error", { get: () => renderError });
-    } else if (promise._error) {
-      errorPromise = promise;
+    if (status === AwaitRenderStatus.error && !errorElement) {
+      // No errorElement, throw to the nearest route-level error boundary
+      throw promise._error;
     }
 
-    if (errorPromise) {
-      if (errorElement) {
-        // We have our own errorElement, provide our error to be accessed by
-        // useRouteError and render the errorElement
-        return (
-          <AwaitContext.Provider value={errorPromise} children={errorElement} />
-        );
-      }
-      // Throw our error to the nearest ancestor route-level error boundary
-      throw errorPromise._error;
+    if (status === AwaitRenderStatus.error) {
+      // Render via our errorElement
+      return <AwaitContext.Provider value={promise} children={errorElement} />;
     }
 
-    if (promise._data) {
-      // We've resolved successfully, provide the value and render the children
+    if (status === AwaitRenderStatus.success) {
+      // Render children with resolved value
       return <AwaitContext.Provider value={promise} children={children} />;
     }
 
-    // This is a raw untracked promise - track it and throw the tracked promise
-    // to the suspense boundary
-    if (!promise._tracked) {
-      Object.defineProperty(promise, "_tracked", { get: () => true });
-      throw promise.then(
-        (data: any) =>
-          Object.defineProperty(promise, "_data", { get: () => data }),
-        (error: any) =>
-          Object.defineProperty(promise, "_error", { get: () => error })
-      );
-    }
-
-    // Throw already-tracked promises to the suspense boundary
+    // Throw to the suspense boundary
     throw promise;
   }
 }

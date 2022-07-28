@@ -1933,7 +1933,7 @@ describe("<DataMemoryRouter>", () => {
             <p>{data.critical}</p>
             <React.Suspense fallback={<LazyFallback />}>
               <Await
-                promise={data.lazy}
+                resolve={data.lazy}
                 errorElement={hasAwaitErrorElement ? <LazyError /> : null}
               >
                 {useRenderProp ? (value) => <p>{value}</p> : <LazyData />}
@@ -2474,7 +2474,7 @@ describe("<DataMemoryRouter>", () => {
 
       let { container } = render(
         <React.Suspense fallback={<p>Loading...</p>}>
-          <Await promise={dfd.promise}>{(data) => <p>{data}</p>}</Await>
+          <Await resolve={dfd.promise}>{(data) => <p>{data}</p>}</Await>
         </React.Suspense>
       );
 
@@ -2502,7 +2502,7 @@ describe("<DataMemoryRouter>", () => {
 
       let { container } = render(
         <React.Suspense fallback={<p>Loading...</p>}>
-          <Await promise={dfd.promise} errorElement={<ErrorElement />}>
+          <Await resolve={dfd.promise} errorElement={<ErrorElement />}>
             {(data) => <p>{data}</p>}
           </Await>
         </React.Suspense>
@@ -2535,7 +2535,7 @@ describe("<DataMemoryRouter>", () => {
 
     it("can render raw values with <Await>", async () => {
       let { container } = render(
-        <Await promise={"VALUE"}>{(data) => <p>{data}</p>}</Await>
+        <Await resolve={"VALUE"}>{(data) => <p>{data}</p>}</Await>
       );
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
