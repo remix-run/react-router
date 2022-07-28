@@ -22,7 +22,6 @@ import type {
 import {
   Action as NavigationType,
   createPath,
-  defer,
   generatePath,
   isRouteErrorResponse,
   json,
@@ -149,7 +148,6 @@ export {
   Routes,
   createPath,
   createRoutesFromChildren,
-  defer,
   isRouteErrorResponse,
   generatePath,
   json,

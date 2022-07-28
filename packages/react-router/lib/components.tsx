@@ -450,8 +450,7 @@ export interface AwaitProps {
 }
 
 /**
- * Component to use for rendering lazily loaded data from returning defer()
- * in a loader function
+ * Component to use for rendering Promises (usually on loaderData)
  */
 export function Await({ children, errorElement, resolve }: AwaitProps) {
   return (

@@ -116,7 +116,6 @@ export {
   Routes,
   createPath,
   createRoutesFromChildren,
-  defer,
   isRouteErrorResponse,
   generatePath,
   json,

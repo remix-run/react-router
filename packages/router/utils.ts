@@ -28,7 +28,7 @@ export interface SuccessResult {
 }
 
 /**
- * Successful defer() result from a loader or action
+ * Successful DeferredData result from a loader or action
  */
 export interface DeferredResult {
   type: ResultType.deferred;
@@ -895,7 +895,7 @@ export class DeferredData {
   constructor(data: Record<string, unknown>) {
     invariant(
       data && typeof data === "object" && !Array.isArray(data),
-      "defer() only accepts plain objects"
+      "DeferredData only accepts plain objects"
     );
     this.data = Object.entries(data).reduce(
       (acc, [key, value]) =>
@@ -1008,10 +1008,6 @@ function unwrapTrackedPromise(value: any) {
     throw value._error;
   }
   return value._data;
-}
-
-export function defer(data: Record<string, unknown>) {
-  return new DeferredData(data);
 }
 
 export type RedirectFunction = (

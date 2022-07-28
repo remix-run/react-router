@@ -269,7 +269,7 @@ const reject = (d: Error | string, ms: number) =>
   );
 
 export async function deferredLoader() {
-  return defer({
+  return {
     critical1: await resolve("Critical 1", 250),
     critical2: await resolve("Critical 2", 500),
     lazyResolved: Promise.resolve("Lazy Data immediately resolved - " + rand()),
@@ -277,7 +277,7 @@ export async function deferredLoader() {
     lazy2: resolve("Lazy 2", 1500),
     lazy3: resolve("Lazy 3", 2000),
     lazyError: reject(new Error("Kaboom!"), 2500),
-  });
+  };
 }
 
 export function DeferredPage() {
@@ -326,10 +326,10 @@ interface DeferredChildLoaderData {
 }
 
 export async function deferredChildLoader() {
-  return defer({
+  return {
     critical: await resolve("Critical Child Data", 500),
     lazy: resolve("Lazy Child Data", 1000),
-  });
+  };
 }
 
 export async function deferredChildAction() {

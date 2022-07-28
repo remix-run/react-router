@@ -30,7 +30,6 @@ import {
   useFetcher,
   useFetchers,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
-  defer,
 } from "react-router-dom";
 
 // Private API
@@ -1396,7 +1395,7 @@ function testDomRouter(
         `);
       });
 
-      it("handles fetcher.load errors (defer)", async () => {
+      it("handles fetcher.load errors (deferred)", async () => {
         let dfd = createDeferred();
         let { container } = render(
           <TestDataRouter
@@ -1407,7 +1406,7 @@ function testDomRouter(
               path="/"
               element={<Comp />}
               errorElement={<ErrorElement />}
-              loader={() => defer({ value: dfd.promise })}
+              loader={() => ({ value: dfd.promise })}
             />
           </TestDataRouter>
         );
