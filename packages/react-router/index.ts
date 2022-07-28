@@ -83,13 +83,14 @@ import {
   useResolvedPath,
   useRoutes,
   useActionData,
-  useAwaitedData,
+  useAsyncError,
+  useAsyncValue,
   useLoaderData,
   useMatches,
-  useRouteLoaderData,
-  useRouteError,
   useNavigation,
   useRevalidator,
+  useRouteError,
+  useRouteLoaderData,
 } from "./lib/hooks";
 
 // Exported for backwards compatibility, but not being used internally anymore
@@ -159,7 +160,8 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
-  useAwaitedData,
+  useAsyncError,
+  useAsyncValue,
   useHref,
   useInRouterContext,
   useLoaderData,

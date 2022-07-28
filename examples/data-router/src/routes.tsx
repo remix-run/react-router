@@ -5,7 +5,7 @@ import {
   Link,
   Outlet,
   deferred,
-  useAwaitedData,
+  useAsyncValue,
   useFetcher,
   useFetchers,
   useLoaderData,
@@ -372,7 +372,7 @@ export function AwaitPage() {
 }
 
 function RenderAwaitedData() {
-  let data = useAwaitedData() as string;
+  let data = useAsyncValue() as string;
   return <p>{data}</p>;
 }
 

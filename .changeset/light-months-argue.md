@@ -35,9 +35,9 @@ function Page() {
 }
 
 // Use separate components to render the data once it resolves, and access it
-// via the useAwaitedData hook
+// via the useAsyncValue hook
 function RenderData() {
-  let data = useAwaitedData();
+  let data = useAsyncValue();
   return <p>Lazy: {data}</p>;
 }
 

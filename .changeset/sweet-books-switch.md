@@ -11,4 +11,4 @@ fix: Rename `<Deferred>` to `<Await>`
   `<Await promise={promise}>` for clarity, and it also now supports using
   `<Await>` with raw promises from anywhere, not only those on `loaderData`
   from a deferred() call.
-- The hook is also changed from `useDefferredData` -> `useAwaitedData`
+- The hook is also changed from `useDefferredData` -> `useAsyncValue`

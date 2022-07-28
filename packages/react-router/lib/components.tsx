@@ -31,7 +31,7 @@ import {
   AwaitContext,
 } from "./context";
 import {
-  useAwaitedData,
+  useAsyncValue,
   useInRouterContext,
   useNavigate,
   useOutlet,
@@ -554,14 +554,14 @@ class AwaitErrorBoundary extends React.Component<
 
 /**
  * @private
- * Indirection to leverage useAwaitedData for a render-prop API on <Await>
+ * Indirection to leverage useAsyncValue for a render-prop API on <Await>
  */
 function ResolveAwait({
   children,
 }: {
   children: React.ReactNode | AwaitResolveRenderFunction;
 }) {
-  let data = useAwaitedData();
+  let data = useAsyncValue();
   if (typeof children === "function") {
     return children(data);
   }

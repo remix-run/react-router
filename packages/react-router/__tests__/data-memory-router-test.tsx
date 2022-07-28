@@ -23,7 +23,8 @@ import {
   Outlet,
   deferred,
   useActionData,
-  useAwaitedData,
+  useAsyncError,
+  useAsyncValue,
   useLoaderData,
   useMatches,
   useRouteLoaderData,
@@ -1956,7 +1957,7 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function LazyData() {
-        let data = useAwaitedData();
+        let data = useAsyncValue();
         return triggerRenderError ? (
           <p>{oops.i.did.it.again}</p>
         ) : (
@@ -1965,7 +1966,7 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function LazyError() {
-        let data = useRouteError();
+        let data = useAsyncError();
         return <p>Await Error:{data.message}</p>;
       }
 
@@ -2508,7 +2509,7 @@ describe("<DataMemoryRouter>", () => {
       );
 
       function ErrorElement() {
-        let error = useRouteError() as string;
+        let error = useAsyncError() as string;
         return <p>Error:{error}</p>;
       }
 

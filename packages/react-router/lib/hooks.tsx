@@ -732,12 +732,6 @@ export function useRouteError(): unknown {
   let state = useDataRouterState(DataRouterHook.UseRouteError);
   let route = React.useContext(RouteContext);
   let thisRoute = route.matches[route.matches.length - 1];
-  let awaitValue = React.useContext(AwaitContext);
-
-  // Return awaited errors if we're inside an Await errorElement
-  if (awaitValue && awaitValue._error !== undefined) {
-    return awaitValue._error;
-  }
 
   // If this was a render error, we put it in a RouteError context inside
   // of RenderErrorBoundary
@@ -758,9 +752,17 @@ export function useRouteError(): unknown {
 /**
  * Returns the happy-path data from the nearest ancestor <Await /> value
  */
-export function useAwaitedData(): unknown {
+export function useAsyncValue(): unknown {
   let value = React.useContext(AwaitContext);
   return value?._data;
+}
+
+/**
+ * Returns the error from the nearest ancestor <Await /> value
+ */
+export function useAsyncError(): unknown {
+  let value = React.useContext(AwaitContext);
+  return value?._error;
 }
 
 const alreadyWarned: Record<string, boolean> = {};

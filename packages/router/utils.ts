@@ -886,33 +886,24 @@ export interface DeferredPromise extends Promise<any> {
   _error?: any;
 }
 
-type DeferredInput =
-  | Record<string, unknown>
-  | Array<unknown>
-  | Promise<unknown>;
-
 export class DeferredData {
   private pendingKeys: Set<string | number> = new Set<string | number>();
   private cancelled: boolean = false;
   private subscriber?: (aborted: boolean) => void = undefined;
-  data: DeferredInput | unknown;
+  data: Record<string, unknown>;
 
-  constructor(data: DeferredInput) {
-    if (data instanceof Promise) {
-      this.data = this.trackPromise("__single__", data);
-    } else if (Array.isArray(data)) {
-      this.data = data.map((value, index) => this.trackPromise(index, value));
-    } else if (typeof data === "object") {
-      this.data = Object.entries(data).reduce(
-        (acc, [key, value]) =>
-          Object.assign(acc, {
-            [key]: this.trackPromise(key, value),
-          }),
-        {}
-      );
-    } else {
-      invariant(false, "Incorrect data type passed to deferred()");
-    }
+  constructor(data: Record<string, unknown>) {
+    invariant(
+      data && typeof data === "object" && !Array.isArray(data),
+      "defer() only accepts plain objects"
+    );
+    this.data = Object.entries(data).reduce(
+      (acc, [key, value]) =>
+        Object.assign(acc, {
+          [key]: this.trackPromise(key, value),
+        }),
+      {}
+    );
   }
 
   private trackPromise(
@@ -992,25 +983,13 @@ export class DeferredData {
       "Can only unwrap data on initialized and settled deferreds"
     );
 
-    if (this.data instanceof Promise) {
-      return unwrapDeferredPromise(this.data);
-    }
-
-    if (Array.isArray(this.data)) {
-      return this.data.map((value) => unwrapDeferredPromise(value));
-    }
-
-    if (typeof this.data === "object") {
-      return Object.entries(this.data).reduce(
-        (acc, [key, value]) =>
-          Object.assign(acc, {
-            [key]: unwrapDeferredPromise(value),
-          }),
-        {}
-      );
-    }
-
-    throw new Error("Invalid DeferredData type");
+    return Object.entries(this.data).reduce(
+      (acc, [key, value]) =>
+        Object.assign(acc, {
+          [key]: unwrapDeferredPromise(value),
+        }),
+      {}
+    );
   }
 }
 
@@ -1031,7 +1010,7 @@ function unwrapDeferredPromise(value: any) {
   return value._data;
 }
 
-export function deferred(data: DeferredInput) {
+export function deferred(data: Record<string, unknown>) {
   return new DeferredData(data);
 }
 

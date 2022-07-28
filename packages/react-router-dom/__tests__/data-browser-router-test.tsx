@@ -31,6 +31,7 @@ import {
   useFetchers,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   deferred,
+  useAsyncError,
 } from "react-router-dom";
 
 // Private API
@@ -1407,7 +1408,7 @@ function testDomRouter(
               path="/"
               element={<Comp />}
               errorElement={<ErrorElement />}
-              loader={() => deferred(dfd.promise)}
+              loader={() => deferred({ value: dfd.promise })}
             />
           </TestDataRouter>
         );
@@ -1418,7 +1419,7 @@ function testDomRouter(
             <>
               <p>
                 {fetcher.state}
-                {fetcher.data ? JSON.stringify(fetcher.data) : null}
+                {fetcher.data ? JSON.stringify(fetcher.data.value) : null}
               </p>
               <button onClick={() => fetcher.load("/")}>load</button>
             </>

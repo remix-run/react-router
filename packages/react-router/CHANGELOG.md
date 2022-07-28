@@ -12,7 +12,7 @@
     - `return deferred([ await critical(), lazy() ])`
     - `return deferred(lazy())`
   - Remove `Deferrable`/`ResolvedDeferrable` in favor of raw `Promise`'s and `Awaited`
-  - Remove generics from `useAwaitedData` until `useLoaderData` generic is decided in 6.5
+  - Remove generics from `useAsyncValue` until `useLoaderData` generic is decided in 6.5
 
 - Updated dependencies
   - @remix-run/router@0.2.0-pre.5
@@ -53,9 +53,9 @@
   }
 
   // Use separate components to render the data once it resolves, and access it
-  // via the useAwaitedData hook
+  // via the useAsyncValue hook
   function RenderData() {
-    let data = useAwaitedData();
+    let data = useAsyncValue();
     return <p>Lazy: {data}</p>;
   }
 
