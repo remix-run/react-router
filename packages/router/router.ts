@@ -5,7 +5,7 @@ import {
   DataResult,
   DataRouteMatch,
   DataRouteObject,
-  deferred,
+  defer,
   DeferredResult,
   ErrorResult,
   FormEncType,
@@ -531,7 +531,7 @@ export function createRouter(init: RouterInit): Router {
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, FetchLoadMatch>();
   // Store DeferredData instances for active route matches.  When a
-  // route loader returns deferred() we stick one in here.  Then, when a nested
+  // route loader returns defer() we stick one in here.  Then, when a nested
   // promise resolves we update loaderData.  If a new navigation starts we
   // cancel active deferreds for eliminated routes.
   let activeDeferreds = new Map<string, DeferredData>();
@@ -909,7 +909,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isDeferredResult(result)) {
-      throw new Error("deferred() is not supported in actions");
+      throw new Error("defer() is not supported in actions");
     }
 
     return {
@@ -1184,7 +1184,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isDeferredResult(actionResult)) {
-      invariant(false, "deferred() is not supported in actions");
+      invariant(false, "defer() is not supported in actions");
     }
 
     // Start the data load for current matches, or the next location if we're
@@ -1791,7 +1791,7 @@ export function unstable_createStaticHandler(
     }
 
     if (isDeferredResult(result)) {
-      throw new Error("deferred() is not supported in actions");
+      throw new Error("defer() is not supported in actions");
     }
 
     if (isRouteRequest) {
@@ -2310,7 +2310,7 @@ async function callLoaderOrAction(
     isPlainObject(result) &&
     Object.values(result).some((v) => v instanceof Promise)
   ) {
-    result = deferred(result);
+    result = defer(result);
   }
 
   if (result instanceof DeferredData) {
@@ -2660,7 +2660,7 @@ async function resolveDeferredData(
         data: result.deferredData.unwrappedData,
       };
     } catch (e) {
-      // Handle any DeferredPromise._error values encountered while unwrapping
+      // Handle any TrackedPromise._error values encountered while unwrapping
       return {
         type: ResultType.error,
         error: e,

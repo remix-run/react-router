@@ -1,6 +1,6 @@
 import * as React from "react";
 import type {
-  DeferredPromise,
+  TrackedPromise,
   HydrationState,
   InitialEntry,
   Location,
@@ -446,11 +446,11 @@ export interface AwaitResolveRenderFunction {
 export interface AwaitProps {
   children: React.ReactNode | AwaitResolveRenderFunction;
   errorElement?: React.ReactNode;
-  promise: DeferredPromise;
+  promise: TrackedPromise;
 }
 
 /**
- * Component to use for rendering lazily loaded data from returning deferred()
+ * Component to use for rendering lazily loaded data from returning defer()
  * in a loader function
  */
 export function Await({ children, errorElement, promise }: AwaitProps) {
@@ -463,7 +463,7 @@ export function Await({ children, errorElement, promise }: AwaitProps) {
 
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
-  promise: DeferredPromise;
+  promise: TrackedPromise;
 }>;
 
 type AwaitErrorBoundaryState = {
@@ -505,7 +505,7 @@ class AwaitErrorBoundary extends React.Component<
       );
     }
 
-    let errorPromise: DeferredPromise | null = null;
+    let errorPromise: TrackedPromise | null = null;
 
     // Grab any render/data errors
     if (this.state.error) {

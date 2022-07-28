@@ -3,16 +3,16 @@
 "@remix-run/router": patch
 ---
 
-Feat: adds `deferred` support to data routers
+Feat: adds `defer()` support to data routers
 
-Returning a `deferred` from a `loader` allows you to separate _critical_ loader data that you want to wait for prior to rendering the destination page from _non-critical_ data that you are OK to show a spinner for until it loads.
+Returning a `defer()` from a `loader` allows you to separate _critical_ loader data that you want to wait for prior to rendering the destination page from _non-critical_ data that you are OK to show a spinner for until it loads.
 
 ```jsx
-// In your route loader, return a deferred() and choose per-key whether to
+// In your route loader, return a defer() and choose per-key whether to
 // await the promise or not.  As soon as the awaited promises resolve, the
 // page will be rendered.
 function loader() {
-  return deferred({
+  return defer({
     critical: await getCriticalData(),
     lazy: getLazyData(),
   });

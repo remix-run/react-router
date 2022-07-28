@@ -17,7 +17,7 @@ export type {
   ActionFunctionArgs,
   DataRouteMatch,
   DataRouteObject,
-  DeferredPromise,
+  TrackedPromise,
   FormEncType,
   FormMethod,
   JsonFunction,
@@ -36,7 +36,7 @@ export type {
 
 export {
   ErrorResponse,
-  deferred,
+  defer,
   generatePath,
   getToPathname,
   invariant,

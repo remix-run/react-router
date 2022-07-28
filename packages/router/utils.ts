@@ -28,7 +28,7 @@ export interface SuccessResult {
 }
 
 /**
- * Successful deferred() result from a loader or action
+ * Successful defer() result from a loader or action
  */
 export interface DeferredResult {
   type: ResultType.deferred;
@@ -880,7 +880,7 @@ export const json: JsonFunction = (data, init = {}) => {
   });
 };
 
-export interface DeferredPromise extends Promise<any> {
+export interface TrackedPromise extends Promise<any> {
   _tracked?: boolean;
   _data?: any;
   _error?: any;
@@ -909,7 +909,7 @@ export class DeferredData {
   private trackPromise(
     key: string | number,
     value: Promise<unknown> | unknown
-  ): DeferredPromise | unknown {
+  ): TrackedPromise | unknown {
     if (!(value instanceof Promise)) {
       return value;
     }
@@ -918,16 +918,16 @@ export class DeferredData {
 
     // We store a little wrapper promise that will be extended with
     // _data/_error props upon resolve/reject
-    let deferredPromise: DeferredPromise = value.then(
-      (data) => this.onSettle(deferredPromise, key, null, data as unknown),
-      (error) => this.onSettle(deferredPromise, key, error as unknown)
+    let promise: TrackedPromise = value.then(
+      (data) => this.onSettle(promise, key, null, data as unknown),
+      (error) => this.onSettle(promise, key, error as unknown)
     );
-    Object.defineProperty(deferredPromise, "_tracked", { get: () => true });
-    return deferredPromise;
+    Object.defineProperty(promise, "_tracked", { get: () => true });
+    return promise;
   }
 
   private onSettle(
-    deferredPromise: DeferredPromise,
+    promise: TrackedPromise,
     key: string | number,
     error: unknown,
     data?: unknown
@@ -938,9 +938,9 @@ export class DeferredData {
     this.pendingKeys.delete(key);
 
     if (error) {
-      Object.defineProperty(deferredPromise, "_error", { get: () => error });
+      Object.defineProperty(promise, "_error", { get: () => error });
     } else {
-      Object.defineProperty(deferredPromise, "_data", { get: () => data });
+      Object.defineProperty(promise, "_data", { get: () => data });
     }
 
     this.subscriber?.(false);
@@ -986,21 +986,21 @@ export class DeferredData {
     return Object.entries(this.data).reduce(
       (acc, [key, value]) =>
         Object.assign(acc, {
-          [key]: unwrapDeferredPromise(value),
+          [key]: unwrapTrackedPromise(value),
         }),
       {}
     );
   }
 }
 
-function isDeferredPromise(value: any): value is DeferredPromise {
+function isTrackedPromise(value: any): value is TrackedPromise {
   return (
-    value instanceof Promise && (value as DeferredPromise)._tracked === true
+    value instanceof Promise && (value as TrackedPromise)._tracked === true
   );
 }
 
-function unwrapDeferredPromise(value: any) {
-  if (!isDeferredPromise(value)) {
+function unwrapTrackedPromise(value: any) {
+  if (!isTrackedPromise(value)) {
     return value;
   }
 
@@ -1010,7 +1010,7 @@ function unwrapDeferredPromise(value: any) {
   return value._data;
 }
 
-export function deferred(data: Record<string, unknown>) {
+export function defer(data: Record<string, unknown>) {
   return new DeferredData(data);
 }
 

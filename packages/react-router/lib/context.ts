@@ -1,6 +1,6 @@
 import * as React from "react";
 import type {
-  DeferredPromise,
+  TrackedPromise,
   History,
   Location,
   RouteMatch,
@@ -34,7 +34,7 @@ if (__DEV__) {
   DataRouterStateContext.displayName = "DataRouterState";
 }
 
-export const AwaitContext = React.createContext<DeferredPromise | null>(null);
+export const AwaitContext = React.createContext<TrackedPromise | null>(null);
 if (__DEV__) {
   AwaitContext.displayName = "Await";
 }

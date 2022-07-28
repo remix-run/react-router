@@ -4,7 +4,8 @@ import {
   Form,
   Link,
   Outlet,
-  deferred,
+  defer,
+  useAsyncError,
   useAsyncValue,
   useFetcher,
   useFetchers,
@@ -268,7 +269,7 @@ const reject = (d: Error | string, ms: number) =>
   );
 
 export async function deferredLoader() {
-  return deferred({
+  return defer({
     critical1: await resolve("Critical 1", 250),
     critical2: await resolve("Critical 2", 500),
     lazyResolved: Promise.resolve("Lazy Data immediately resolved - " + rand()),
@@ -325,7 +326,7 @@ interface DeferredChildLoaderData {
 }
 
 export async function deferredChildLoader() {
-  return deferred({
+  return defer({
     critical: await resolve("Critical Child Data", 500),
     lazy: resolve("Lazy Child Data", 1000),
   });
@@ -377,7 +378,7 @@ function RenderAwaitedData() {
 }
 
 function RenderAwaitedError() {
-  let error = useRouteError() as Error;
+  let error = useAsyncError() as Error;
   return (
     <p style={{ color: "red" }}>
       Error (errorElement)!

@@ -72,7 +72,7 @@ export {
   Routes,
   createPath,
   createRoutesFromChildren,
-  deferred,
+  defer,
   isRouteErrorResponse,
   generatePath,
   json,

@@ -21,7 +21,7 @@ import {
   Await,
   Route,
   Outlet,
-  deferred,
+  defer,
   useActionData,
   useAsyncError,
   useAsyncValue,
@@ -185,7 +185,7 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("renders fallbackElement while first data fetch happens", async () => {
-    let fooDefer = defer();
+    let fooDefer = createDeferred();
     let { container } = render(
       <DataMemoryRouter
         fallbackElement={<FallbackElement />}
@@ -232,7 +232,7 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("renders a null fallbackElement if none is provided", async () => {
-    let fooDefer = defer();
+    let fooDefer = createDeferred();
     let { container } = render(
       <DataMemoryRouter initialEntries={["/foo"]}>
         <Route path="/" element={<Outlet />}>
@@ -266,7 +266,7 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("does not render fallbackElement if no data fetch is required", async () => {
-    let fooDefer = defer();
+    let fooDefer = createDeferred();
     let { container } = render(
       <DataMemoryRouter
         fallbackElement={<FallbackElement />}
@@ -338,7 +338,7 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("executes route loaders on navigation", async () => {
-    let barDefer = defer();
+    let barDefer = createDeferred();
 
     let { container } = render(
       <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
@@ -427,8 +427,8 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("executes route actions/loaders on submission navigations", async () => {
-    let barDefer = defer();
-    let barActionDefer = defer();
+    let barDefer = createDeferred();
+    let barActionDefer = createDeferred();
     let formData = new FormData();
     formData.append("test", "value");
 
@@ -968,8 +968,8 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("renders navigation errors on leaf elements", async () => {
-      let fooDefer = defer();
-      let barDefer = defer();
+      let fooDefer = createDeferred();
+      let barDefer = createDeferred();
 
       let { container } = render(
         <DataMemoryRouter
@@ -1108,8 +1108,8 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("renders navigation errors on parent elements", async () => {
-      let fooDefer = defer();
-      let barDefer = defer();
+      let fooDefer = createDeferred();
+      let barDefer = createDeferred();
 
       let { container } = render(
         <DataMemoryRouter
@@ -1364,8 +1364,8 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("renders navigation errors with a default if no errorElements are provided", async () => {
-      let fooDefer = defer();
-      let barDefer = defer();
+      let fooDefer = createDeferred();
+      let barDefer = createDeferred();
 
       let { container } = render(
         <DataMemoryRouter
@@ -1889,7 +1889,7 @@ describe("<DataMemoryRouter>", () => {
     });
   });
 
-  describe("deferred", () => {
+  describe("defer", () => {
     function setupDeferredTest({
       useRenderProp = false,
       hasRouteErrorElement = false,
@@ -1897,7 +1897,7 @@ describe("<DataMemoryRouter>", () => {
       triggerRenderError = false,
       triggerFallbackError = false,
     } = {}) {
-      let barDefer = defer();
+      let barDefer = createDeferred();
       let { container } = render(
         <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
           <Route path="/" element={<Layout />}>
@@ -1992,9 +1992,9 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      let barValueDfd = defer();
+      let barValueDfd = createDeferred();
       barDefer.resolve(
-        deferred({
+        defer({
           critical: "CRITICAL",
           lazy: barValueDfd.promise,
         })
@@ -2061,9 +2061,9 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      let barValueDfd = defer();
+      let barValueDfd = createDeferred();
       barDefer.resolve(
-        deferred({
+        defer({
           critical: "CRITICAL",
           lazy: barValueDfd.promise,
         })
@@ -2133,9 +2133,9 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      let barValueDfd = defer();
+      let barValueDfd = createDeferred();
       barDefer.resolve(
-        deferred({
+        defer({
           critical: "CRITICAL",
           lazy: barValueDfd.promise,
         })
@@ -2206,9 +2206,9 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      let barValueDfd = defer();
+      let barValueDfd = createDeferred();
       barDefer.resolve(
-        deferred({
+        defer({
           critical: "CRITICAL",
           lazy: barValueDfd.promise,
         })
@@ -2277,9 +2277,9 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      let barValueDfd = defer();
+      let barValueDfd = createDeferred();
       barDefer.resolve(
-        deferred({
+        defer({
           critical: "CRITICAL",
           lazy: barValueDfd.promise,
         })
@@ -2351,9 +2351,9 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      let barValueDfd = defer();
+      let barValueDfd = createDeferred();
       barDefer.resolve(
-        deferred({
+        defer({
           critical: "CRITICAL",
           lazy: barValueDfd.promise,
         })
@@ -2423,9 +2423,9 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      let barValueDfd = defer();
+      let barValueDfd = createDeferred();
       barDefer.resolve(
-        deferred({
+        defer({
           critical: "CRITICAL",
           lazy: barValueDfd.promise,
         })
@@ -2470,7 +2470,7 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("can render raw resolved promises with <Await>", async () => {
-      let dfd = defer();
+      let dfd = createDeferred();
 
       let { container } = render(
         <React.Suspense fallback={<p>Loading...</p>}>
@@ -2498,7 +2498,7 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("can render raw rejected promises with <Await>", async () => {
-      let dfd = defer();
+      let dfd = createDeferred();
 
       let { container } = render(
         <React.Suspense fallback={<p>Loading...</p>}>
@@ -2549,7 +2549,7 @@ describe("<DataMemoryRouter>", () => {
   });
 });
 
-function defer() {
+function createDeferred() {
   let resolve: (val?: any) => Promise<void>;
   let reject: (error?: Error) => Promise<void>;
   let promise = new Promise((res, rej) => {
