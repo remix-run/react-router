@@ -10,10 +10,12 @@ import {
   MemoryRouter,
   MemoryRouterProps,
   NavigateOptions,
-  useLocation,
-  useNavigate,
+  UNSAFE_reactRouterContexts,
+  UNSAFE_createReactRouterContexts,
+  UNSAFE_createReactRouterEnvironment,
+  createScopedMemoryRouterEnvironment as baseCreateScopedMemoryRouterEnvironment,
 } from "react-router";
-import type { To } from "react-router";
+import type { To, Hooks } from "react-router";
 
 import URLSearchParams from "@ungap/url-search-params";
 
@@ -127,6 +129,9 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_createReactRouterContexts,
+  UNSAFE_createReactRouterEnvironment,
+  UNSAFE_reactRouterContexts,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,25 +155,26 @@ export interface LinkProps extends TouchableHighlightProps {
   to: To;
 }
 
-/**
- * A <TouchableHighlight> that navigates to a different URL when touched.
- */
-export function Link({
-  onPress,
-  replace = false,
-  state,
-  to,
-  ...rest
-}: LinkProps) {
-  let internalOnPress = useLinkPressHandler(to, { replace, state });
-  function handlePress(event: GestureResponderEvent) {
-    if (onPress) onPress(event);
-    if (!event.defaultPrevented) {
-      internalOnPress(event);
+function createLink(
+  useLinkPressHandler: ReturnType<typeof createLinkPressHandlerHook>
+) {
+  return function Link({
+    onPress,
+    replace = false,
+    state,
+    to,
+    ...rest
+  }: LinkProps) {
+    let internalOnPress = useLinkPressHandler(to, { replace, state });
+    function handlePress(event: GestureResponderEvent) {
+      if (onPress) onPress(event);
+      if (!event.defaultPrevented) {
+        internalOnPress(event);
+      }
     }
-  }
 
-  return <TouchableHighlight {...rest} onPress={handlePress} />;
+    return <TouchableHighlight {...rest} onPress={handlePress} />;
+  };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -178,135 +184,125 @@ export function Link({
 const HardwareBackPressEventType = "hardwareBackPress";
 const URLEventType = "url";
 
-/**
- * Handles the press behavior for router `<Link>` components. This is useful if
- * you need to create custom `<Link>` components with the same press behavior we
- * use in our exported `<Link>`.
- */
-export function useLinkPressHandler(
-  to: To,
-  {
-    replace,
-    state,
-  }: {
-    replace?: boolean;
-    state?: any;
-  } = {}
-): (event: GestureResponderEvent) => void {
-  let navigate = useNavigate();
-  return function handlePress() {
-    navigate(to, { replace, state });
+function createLinkPressHandlerHook({ useNavigate }: Hooks) {
+  return function useLinkPressHandler(
+    to: To,
+    {
+      replace,
+      state,
+    }: {
+      replace?: boolean;
+      state?: any;
+    } = {}
+  ): (event: GestureResponderEvent) => void {
+    let navigate = useNavigate();
+    return function handlePress() {
+      navigate(to, { replace, state });
+    };
   };
 }
 
-/**
- * Enables support for the hardware back button on Android.
- */
-export function useHardwareBackButton() {
-  React.useEffect(() => {
-    function handleHardwardBackPress() {
-      return undefined;
-      // TODO: The implementation will be something like this
-      // if (history.index === 0) {
-      //   return false; // home screen
-      // } else {
-      //   history.back();
-      //   return true;
-      // }
-    }
+function createHardwareBackButtonHook() {
+  return function useHardwareBackButton() {
+    React.useEffect(() => {
+      function handleHardwardBackPress() {
+        return undefined;
+        // TODO: The implementation will be something like this
+        // if (history.index === 0) {
+        //   return false; // home screen
+        // } else {
+        //   history.back();
+        //   return true;
+        // }
+      }
 
-    BackHandler.addEventListener(
-      HardwareBackPressEventType,
-      handleHardwardBackPress
-    );
-
-    return () => {
-      BackHandler.removeEventListener(
+      BackHandler.addEventListener(
         HardwareBackPressEventType,
         handleHardwardBackPress
       );
-    };
-  }, []);
+
+      return () => {
+        BackHandler.removeEventListener(
+          HardwareBackPressEventType,
+          handleHardwardBackPress
+        );
+      };
+    }, []);
+  };
 }
 
-export { useHardwareBackButton as useAndroidBackButton };
+function createDeepLinkingHook({ useNavigate }: Hooks) {
+  return function useDeepLinking() {
+    let navigate = useNavigate();
 
-/**
- * Enables deep linking, both on the initial app launch and for
- * subsequent incoming links.
- */
-export function useDeepLinking() {
-  let navigate = useNavigate();
+    // Get the initial URL
+    React.useEffect(() => {
+      let current = true;
 
-  // Get the initial URL
-  React.useEffect(() => {
-    let current = true;
+      Linking.getInitialURL().then((url) => {
+        if (current) {
+          if (url) navigate(trimScheme(url));
+        }
+      });
 
-    Linking.getInitialURL().then((url) => {
-      if (current) {
-        if (url) navigate(trimScheme(url));
+      return () => {
+        current = false;
+      };
+    }, [navigate]);
+
+    // Listen for URL changes
+    React.useEffect(() => {
+      function handleURLChange(event: { url: string }) {
+        navigate(trimScheme(event.url));
       }
-    });
 
-    return () => {
-      current = false;
-    };
-  }, [navigate]);
+      Linking.addEventListener(URLEventType, handleURLChange);
 
-  // Listen for URL changes
-  React.useEffect(() => {
-    function handleURLChange(event: { url: string }) {
-      navigate(trimScheme(event.url));
-    }
-
-    Linking.addEventListener(URLEventType, handleURLChange);
-
-    return () => {
-      Linking.removeEventListener(URLEventType, handleURLChange);
-    };
-  }, [navigate]);
+      return () => {
+        Linking.removeEventListener(URLEventType, handleURLChange);
+      };
+    }, [navigate]);
+  };
 }
 
 function trimScheme(url: string) {
   return url.replace(/^.*?:\/\//, "");
 }
 
-/**
- * A convenient wrapper for accessing individual query parameters via the
- * URLSearchParams interface.
- */
-export function useSearchParams(
-  defaultInit?: URLSearchParamsInit
-): [URLSearchParams, SetURLSearchParams] {
-  let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
+function createSearchParamsHook({ useNavigate, useLocation }: Hooks) {
+  return function useSearchParams(
+    defaultInit?: URLSearchParamsInit
+  ): [URLSearchParams, SetURLSearchParams] {
+    let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
 
-  let location = useLocation();
-  let searchParams = React.useMemo(() => {
-    let searchParams = createSearchParams(location.search);
+    let location = useLocation();
+    let searchParams = React.useMemo(() => {
+      let searchParams = createSearchParams(location.search);
 
-    for (let key of defaultSearchParamsRef.current.keys()) {
-      if (!searchParams.has(key)) {
-        defaultSearchParamsRef.current.getAll(key).forEach((value) => {
-          searchParams.append(key, value);
-        });
+      for (let key of defaultSearchParamsRef.current.keys()) {
+        if (!searchParams.has(key)) {
+          defaultSearchParamsRef.current.getAll(key).forEach((value) => {
+            searchParams.append(key, value);
+          });
+        }
       }
-    }
 
-    return searchParams;
-  }, [location.search]);
+      return searchParams;
+    }, [location.search]);
 
-  let navigate = useNavigate();
-  let setSearchParams = React.useCallback<SetURLSearchParams>(
-    (nextInit, navigateOpts) => {
-      const newSearchParams = createSearchParams(
-        typeof nextInit === "function" ? nextInit(searchParams) : nextInit
-      );
-      navigate("?" + newSearchParams, navigateOpts);
-    },
-    [navigate, searchParams]
-  );
+    let navigate = useNavigate();
+    let setSearchParams = React.useCallback<SetURLSearchParams>(
+      (nextInit, navigateOpts) => {
+        const newSearchParams = createSearchParams(
+          typeof nextInit === "function" ? nextInit(searchParams) : nextInit
+        );
+        navigate("?" + newSearchParams, navigateOpts);
+      },
+      [navigate, searchParams]
+    );
 
-  return [searchParams, setSearchParams];
+    return [searchParams, setSearchParams];
+  };
 }
 
 type SetURLSearchParams = (
@@ -360,4 +356,82 @@ export function createSearchParams(
           );
         }, [] as ParamKeyValuePair[])
   );
+}
+
+function createReactRouterNativeEnvironment(
+  contexts = UNSAFE_reactRouterContexts
+) {
+  const { hooks } = UNSAFE_createReactRouterEnvironment(contexts);
+  const useLinkPressHandler = createLinkPressHandlerHook(hooks);
+  const useAndroidBackButton = createHardwareBackButtonHook();
+  const useDeepLinking = createDeepLinkingHook(hooks);
+  const useSearchParams = createSearchParamsHook(hooks);
+
+  const Link = createLink(useLinkPressHandler);
+
+  return {
+    hooks: {
+      /**
+       * Handles the press behavior for router `<Link>` components. This is useful if
+       * you need to create custom `<Link>` components with the same press behavior we
+       * use in our exported `<Link>`.
+       */
+      useLinkPressHandler,
+
+      /**
+       * Enables support for the hardware back button on Android.
+       */
+      useAndroidBackButton,
+
+      /**
+       * Enables deep linking, both on the initial app launch and for
+       * subsequent incoming links.
+       */
+      useDeepLinking,
+
+      /**
+       * A convenient wrapper for accessing individual query parameters via the
+       * URLSearchParams interface.
+       */
+      useSearchParams,
+    },
+    components: {
+      /**
+       * A <TouchableHighlight> that navigates to a different URL when touched.
+       */
+      Link,
+    },
+  };
+}
+
+const {
+  hooks: {
+    useLinkPressHandler,
+    useAndroidBackButton,
+    useDeepLinking,
+    useSearchParams,
+  },
+  components: { Link },
+} = createReactRouterNativeEnvironment();
+
+export {
+  useLinkPressHandler,
+  useAndroidBackButton,
+  useDeepLinking,
+  useSearchParams,
+  Link,
+};
+
+export function createScopedMemoryRouterEnvironment() {
+  const contexts = UNSAFE_createReactRouterContexts();
+  const reactRouterEnvironment =
+    baseCreateScopedMemoryRouterEnvironment(contexts);
+  const reactRouterDomEnvironment =
+    createReactRouterNativeEnvironment(contexts);
+
+  return {
+    ...reactRouterEnvironment,
+    ...reactRouterDomEnvironment.hooks,
+    ...reactRouterDomEnvironment.components,
+  };
 }

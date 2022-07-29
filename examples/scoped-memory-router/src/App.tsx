@@ -1,5 +1,13 @@
 import * as React from "react";
-import { Routes, Route, Outlet, Link } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Outlet,
+  Link,
+  createNestableMemoryRouter,
+} from "react-router-dom";
+
+const { NestableMemoryRouter, hooks } = createNestableMemoryRouter();
 
 export default function App() {
   return (
@@ -22,6 +30,17 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route
+            path="nested"
+            element={
+              <NestableMemoryRouter initialEntries={["/"]}>
+                <Routes>
+                  <Route path="/" element={<NestedHome />} />
+                  <Route path="about" element={<NestedAbout />} />
+                </Routes>
+              </NestableMemoryRouter>
+            }
+          />
 
           {/* Using path="*"" means "match anything", so this route
                 acts like a catch-all for URLs that we don't have explicit
@@ -30,6 +49,28 @@ export default function App() {
         </Route>
       </Routes>
     </div>
+  );
+}
+
+function NestedHome() {
+  const navigate = hooks.useNavigate();
+
+  return (
+    <>
+      <h1>Nested Home</h1>
+      <button onClick={() => navigate("/about")}>Go to Nested About</button>
+    </>
+  );
+}
+
+function NestedAbout() {
+  const navigate = hooks.useNavigate();
+
+  return (
+    <>
+      <h1>Nested About</h1>
+      <button onClick={() => navigate("..")}>Go Back</button>
+    </>
   );
 }
 
@@ -51,6 +92,9 @@ function Layout() {
           </li>
           <li>
             <Link to="/nothing-here">Nothing Here</Link>
+          </li>
+          <li>
+            <Link to="/nested">Nested Memory Router</Link>
           </li>
         </ul>
       </nav>
