@@ -4,22 +4,27 @@ import {
   Route,
   Outlet,
   Link,
-  createNestableMemoryRouter,
+  createScopedMemoryRouterEnvironment,
 } from "react-router-dom";
 
-const { NestableMemoryRouter, hooks } = createNestableMemoryRouter();
+const {
+  MemoryRouter: ScopedMemoryRouter,
+  Routes: ScopedRoutes,
+  Route: ScopedRoute,
+  useNavigate: useScopedNavigate,
+  Link: ScopedLink,
+} = createScopedMemoryRouterEnvironment();
 
 export default function App() {
   return (
     <div>
-      <h1>Basic Example</h1>
+      <h1>Scoped Memory Router Example</h1>
 
       <p>
-        This example demonstrates some of the core features of React Router
-        including nested <code>&lt;Route&gt;</code>s,{" "}
-        <code>&lt;Outlet&gt;</code>s, <code>&lt;Link&gt;</code>s, and using a
-        "*" route (aka "splat route") to render a "not found" page when someone
-        visits an unrecognized URL.
+        This example demonstrates using{" "}
+        <code>createScopedMemoryRouterEnvironment</code> to have nested
+        MemoryRouters. It leverages this feature to create a Modal routing
+        system inside of a BrowserRouter
       </p>
 
       {/* Routes nest inside one another. Nested route paths build upon
@@ -30,17 +35,7 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route
-            path="nested"
-            element={
-              <NestableMemoryRouter initialEntries={["/"]}>
-                <Routes>
-                  <Route path="/" element={<NestedHome />} />
-                  <Route path="about" element={<NestedAbout />} />
-                </Routes>
-              </NestableMemoryRouter>
-            }
-          />
+          <Route path="modals" element={<ModalRouter />} />
 
           {/* Using path="*"" means "match anything", so this route
                 acts like a catch-all for URLs that we don't have explicit
@@ -52,25 +47,15 @@ export default function App() {
   );
 }
 
-function NestedHome() {
-  const navigate = hooks.useNavigate();
-
+function ModalRouter() {
   return (
-    <>
-      <h1>Nested Home</h1>
-      <button onClick={() => navigate("/about")}>Go to Nested About</button>
-    </>
-  );
-}
-
-function NestedAbout() {
-  const navigate = hooks.useNavigate();
-
-  return (
-    <>
-      <h1>Nested About</h1>
-      <button onClick={() => navigate("..")}>Go Back</button>
-    </>
+    <ScopedMemoryRouter initialEntries={["/"]}>
+      <ScopedRoutes>
+        <ScopedRoute path="/" element={<FirstModal />} />
+        <ScopedRoute path="second" element={<SecondModal />} />
+        <ScopedRoute path="third" element={<ThirdModal />} />
+      </ScopedRoutes>
+    </ScopedMemoryRouter>
   );
 }
 
@@ -94,7 +79,7 @@ function Layout() {
             <Link to="/nothing-here">Nothing Here</Link>
           </li>
           <li>
-            <Link to="/nested">Nested Memory Router</Link>
+            <Link to="/modals">Scoped Memory Router Modals</Link>
           </li>
         </ul>
       </nav>
@@ -140,6 +125,45 @@ function NoMatch() {
       <p>
         <Link to="/">Go to the home page</Link>
       </p>
+    </div>
+  );
+}
+
+function FirstModal() {
+  return (
+    <div className="baseModal">
+      <div className="modalContents">
+        <h1>First Modal</h1>
+        <ScopedLink to="/second">Go to second modal</ScopedLink>
+        <Link to="/">Go home</Link>
+      </div>
+    </div>
+  );
+}
+
+function SecondModal() {
+  const navigate = useScopedNavigate();
+  return (
+    <div className="baseModal">
+      <div className="modalContents">
+        <h1>Second Modal</h1>
+        <ScopedLink to="/third">Go to third modal</ScopedLink>
+        <button onClick={() => navigate(-1)}>Go back</button>
+        <Link to="/">Go home</Link>
+      </div>
+    </div>
+  );
+}
+
+function ThirdModal() {
+  const navigate = useScopedNavigate();
+  return (
+    <div className="baseModal">
+      <div className="modalContents">
+        <h1>Third Modal</h1>
+        <button onClick={() => navigate(-1)}>Go back</button>
+        <Link to="/">Go home</Link>
+      </div>
     </div>
   );
 }

@@ -10,3 +10,28 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.baseModal {
+  display: flex;
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modalContents {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 300px;
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 20px;
+}
