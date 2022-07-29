@@ -6,8 +6,15 @@ import {
   Route,
   useOutlet,
   useOutletContext,
-  createNestableMemoryRouter,
+  createScopedMemoryRouterEnvironment,
 } from "react-router";
+
+const {
+  MemoryRouter: NestableMemoryRouter,
+  Routes: NestedRoutes,
+  Route: NestedRoute,
+  useOutlet: useNestedOutlet,
+} = createScopedMemoryRouterEnvironment();
 
 describe("useOutlet", () => {
   describe("when there is no child route", () => {
@@ -31,18 +38,16 @@ describe("useOutlet", () => {
     });
 
     it("returns null on NestableMemoryRouter", () => {
-      const { NestableMemoryRouter, hooks } = createNestableMemoryRouter();
-
       function Home() {
-        return hooks.useOutlet();
+        return useNestedOutlet();
       }
 
       function NestedMemoryRouter() {
         return (
           <NestableMemoryRouter initialEntries={["/"]}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-            </Routes>
+            <NestedRoutes>
+              <NestedRoute path="/" element={<Home />} />
+            </NestedRoutes>
           </NestableMemoryRouter>
         );
       }
@@ -86,19 +91,17 @@ describe("useOutlet", () => {
     });
 
     it("renders the fallback - NestableMemoryRouter", () => {
-      const { NestableMemoryRouter, hooks } = createNestableMemoryRouter();
-
       function Home() {
-        let outlet = hooks.useOutlet();
+        let outlet = useNestedOutlet();
         return <div>{outlet ? "outlet" : "no outlet"}</div>;
       }
 
       function NestedMemoryRouter() {
         return (
           <NestableMemoryRouter initialEntries={["/"]}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-            </Routes>
+            <NestedRoutes>
+              <NestedRoute path="/" element={<Home />} />
+            </NestedRoutes>
           </NestableMemoryRouter>
         );
       }

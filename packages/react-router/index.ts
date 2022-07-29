@@ -34,7 +34,7 @@ import {
   resolvePath,
 } from "@remix-run/router";
 
-import type {
+import {
   DataMemoryRouterProps,
   DeferredProps,
   MemoryRouterProps,
@@ -46,53 +46,78 @@ import type {
   IndexRouteProps,
   RouterProps,
   RoutesProps,
+  createComponents,
 } from "./lib/components";
+import { createRoutesFromChildren } from "./lib/components";
 import {
-  createRoutesFromChildren,
-  renderMatches,
-  DataMemoryRouter,
-  DataRouter,
-  DataRouterProvider,
-  Deferred,
-  MemoryRouter,
-  Navigate,
-  Outlet,
-  Route,
-  Router,
-  Routes,
-  createNestableMemoryRouter,
-} from "./lib/components";
-import type { Navigator, NavigateOptions } from "./lib/context";
-import {
-  DataRouterContext,
-  DataRouterStateContext,
-  DataStaticRouterContext,
-  LocationContext,
-  NavigationContext,
-  RouteContext,
+  Navigator,
+  NavigateOptions,
+  createReactRouterContexts,
+  ReactRouterContexts,
+  reactRouterContexts,
 } from "./lib/context";
-import type { NavigateFunction } from "./lib/hooks";
-import {
-  useHref,
-  useInRouterContext,
-  useLocation,
-  useMatch,
-  useNavigationType,
-  useNavigate,
-  useOutlet,
-  useOutletContext,
-  useParams,
-  useResolvedPath,
-  useRoutes,
-  useActionData,
-  useDeferredData,
-  useLoaderData,
-  useMatches,
-  useRouteLoaderData,
-  useRouteError,
-  useNavigation,
-  useRevalidator,
-} from "./lib/hooks";
+import { DataStaticRouterContext } from "./lib/context";
+import { createHooks, Hooks, NavigateFunction } from "./lib/hooks";
+
+function createReactRouterEnvironment(contexts = reactRouterContexts) {
+  const hooks = createHooks(contexts);
+  const components = createComponents(contexts, hooks);
+
+  return {
+    hooks,
+    components,
+  };
+}
+
+export function createScopedMemoryRouterEnvironment(
+  contexts?: ReactRouterContexts
+) {
+  if (!contexts) {
+    contexts = createReactRouterContexts();
+  }
+  const { hooks, components } = createReactRouterEnvironment(contexts);
+
+  const {
+    useHref,
+    useInRouterContext,
+    useLocation,
+    useMatch,
+    useNavigate,
+    useNavigationType,
+    useOutlet,
+    useOutletContext,
+    useParams,
+    useResolvedPath,
+    useRoutes,
+  } = hooks;
+  const { MemoryRouter, Navigate, Outlet, Route, Routes, renderMatches } =
+    components;
+
+  return {
+    useHref,
+    useInRouterContext,
+    useLocation,
+    useMatch,
+    useNavigate,
+    useNavigationType,
+    useOutlet,
+    useOutletContext,
+    useParams,
+    useResolvedPath,
+    useRoutes,
+    MemoryRouter,
+    Navigate,
+    Outlet,
+    Route,
+    Routes,
+    renderMatches,
+    UNSAFE_NavigationContext: contexts.NavigationContext,
+    UNSAFE_LocationContext: contexts.LocationContext,
+    UNSAFE_RouteContext: contexts.RouteContext,
+    UNSAFE_DataRouterContext: contexts.DataRouterContext,
+    UNSAFE_DataRouterStateContext: contexts.DataRouterStateContext,
+  };
+}
 
 // Exported for backwards compatibility, but not being used internally anymore
 type Hash = string;
@@ -137,7 +162,46 @@ export type {
   Search,
   ShouldRevalidateFunction,
   To,
+  Hooks,
 };
+
+const {
+  hooks: {
+    useActionData,
+    useDeferredData,
+    useHref,
+    useInRouterContext,
+    useLoaderData,
+    useLocation,
+    useMatch,
+    useMatches,
+    useNavigate,
+    useNavigation,
+    useNavigationType,
+    useOutlet,
+    useOutletContext,
+    useParams,
+    useResolvedPath,
+    useRevalidator,
+    useRouteError,
+    useRouteLoaderData,
+    useRoutes,
+  },
+  components: {
+    DataMemoryRouter,
+    Deferred,
+    MemoryRouter,
+    Navigate,
+    Outlet,
+    Route,
+    Router,
+    Routes,
+    renderMatches,
+    DataRouter,
+    DataRouterProvider,
+  },
+} = createReactRouterEnvironment();
+
 export {
   DataMemoryRouter,
   Deferred,
@@ -180,7 +244,6 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
-  createNestableMemoryRouter,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -197,13 +260,23 @@ export {
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @internal */
+const {
+  NavigationContext: DefaultNavigationContext,
+  LocationContext: DefaultLocationContext,
+  RouteContext: DefaultRouteContext,
+  DataRouterContext: DefaultDataRouterContext,
+  DataRouterStateContext: DefaultDataRouterStateContext,
+} = reactRouterContexts;
 export {
   DataRouter as UNSAFE_DataRouter,
   DataRouterProvider as UNSAFE_DataRouterProvider,
-  NavigationContext as UNSAFE_NavigationContext,
-  LocationContext as UNSAFE_LocationContext,
-  RouteContext as UNSAFE_RouteContext,
-  DataRouterContext as UNSAFE_DataRouterContext,
-  DataRouterStateContext as UNSAFE_DataRouterStateContext,
+  DefaultNavigationContext as UNSAFE_NavigationContext,
+  DefaultLocationContext as UNSAFE_LocationContext,
+  DefaultRouteContext as UNSAFE_RouteContext,
+  DefaultDataRouterContext as UNSAFE_DataRouterContext,
+  DefaultDataRouterStateContext as UNSAFE_DataRouterStateContext,
   DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
+  createReactRouterEnvironment as UNSAFE_createReactRouterEnvironment,
+  createReactRouterContexts as UNSAFE_createReactRouterContexts,
+  reactRouterContexts as UNSAFE_reactRouterContexts,
 };

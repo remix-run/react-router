@@ -5,13 +5,20 @@ import "@testing-library/jest-dom";
 import {
   Route,
   Routes,
-  createNestableMemoryRouter,
-  useNavigate,
+  MemoryRouter,
+  createScopedMemoryRouterEnvironment,
   Navigate,
 } from "react-router";
 
 // Private API
-import { MemoryRouter, _resetModuleScope } from "../lib/components";
+import { _resetModuleScope } from "../lib/components";
+
+const {
+  MemoryRouter: NestableMemoryRouter,
+  Routes: NestedRoutes,
+  Route: NestedRoute,
+  Navigate: NestedNavigate,
+} = createScopedMemoryRouterEnvironment();
 
 // eslint-disable-next-line jest/no-focused-tests
 describe.only("<NestableMemoryRouter>", () => {
@@ -29,13 +36,11 @@ describe.only("<NestableMemoryRouter>", () => {
   });
 
   it("renders the first route that matches the URL", () => {
-    const { NestableMemoryRouter } = createNestableMemoryRouter();
-
     let { container } = render(
       <NestableMemoryRouter initialEntries={["/"]}>
-        <Routes>
-          <Route path="/" element={<h1>Home</h1>} />
-        </Routes>
+        <NestedRoutes>
+          <NestedRoute path="/" element={<h1>Home</h1>} />
+        </NestedRoutes>
       </NestableMemoryRouter>
     );
 
@@ -49,14 +54,12 @@ describe.only("<NestableMemoryRouter>", () => {
   });
 
   it("can navigate with a NestableNavigate", () => {
-    const { NestableMemoryRouter } = createNestableMemoryRouter();
-
     function NestedMemoryRouter() {
       return (
         <NestableMemoryRouter initialEntries={["/"]}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/about" />} />
-          </Routes>
+          <NestedRoutes>
+            <NestedRoute path="/" element={<Navigate to="/about" />} />
+          </NestedRoutes>
         </NestableMemoryRouter>
       );
     }
@@ -80,16 +83,13 @@ describe.only("<NestableMemoryRouter>", () => {
   });
 
   it("can navigate MemoryRouter from NestableMemoryRouter", () => {
-    const { NestableMemoryRouter, NestableNavigate } =
-      createNestableMemoryRouter();
-
     function NestedMemoryRouter() {
       return (
         <NestableMemoryRouter initialEntries={["/"]}>
-          <Routes>
-            <Route path="/" element={<NestableNavigate to="/about" />} />
+          <NestedRoutes>
+            <NestedRoute path="/" element={<NestedNavigate to="/about" />} />
             <Route path="about" element={<h1>Nested About</h1>} />
-          </Routes>
+          </NestedRoutes>
         </NestableMemoryRouter>
       );
     }

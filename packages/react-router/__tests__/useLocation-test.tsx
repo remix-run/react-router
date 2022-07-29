@@ -1,9 +1,19 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route, useLocation } from "react-router";
+import {
+  MemoryRouter,
+  Routes,
+  Route,
+  useLocation,
+  createScopedMemoryRouterEnvironment,
+} from "react-router";
 
-// Private API
-import { createNestableMemoryRouter } from "../lib/components";
+const {
+  MemoryRouter: NestableMemoryRouter,
+  Routes: NestedRoutes,
+  Route: NestedRoute,
+  useLocation: useNestedLocation,
+} = createScopedMemoryRouterEnvironment();
 
 function ShowPath() {
   let { pathname, search, hash } = useLocation();
@@ -31,10 +41,8 @@ describe("useLocation", () => {
   });
 
   it("returns the current location object of NestedMemoryRouter", () => {
-    const { NestableMemoryRouter, hooks } = createNestableMemoryRouter();
-
     function ShowNestedPath() {
-      let { pathname, search, hash } = hooks.useLocation();
+      let { pathname, search, hash } = useNestedLocation();
       return <pre>{JSON.stringify({ pathname, search, hash })}</pre>;
     }
 
@@ -43,9 +51,9 @@ describe("useLocation", () => {
         <NestableMemoryRouter
           initialEntries={["/nested?the=nested-search#the-nested-hash"]}
         >
-          <Routes>
-            <Route path="/nested" element={<ShowNestedPath />} />
-          </Routes>
+          <NestedRoutes>
+            <NestedRoute path="/nested" element={<ShowNestedPath />} />
+          </NestedRoutes>
         </NestableMemoryRouter>
       );
     }

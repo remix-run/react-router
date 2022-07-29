@@ -6,7 +6,7 @@ import {
   Outlet,
   Routes,
   Route,
-  createNestableMemoryRouter,
+  createScopedMemoryRouterEnvironment,
 } from "react-router";
 
 describe("<Navigate>", () => {
@@ -32,18 +32,23 @@ describe("<Navigate>", () => {
     });
 
     it("navigates to the correct URL with NestableMemoryRouter", () => {
-      const { NestableMemoryRouter } = createNestableMemoryRouter();
+      const {
+        MemoryRouter: NestableMemoryRouter,
+        Routes: NestedRoutes,
+        Route: NestedRoute,
+        Navigate: NestedNavigate,
+      } = createScopedMemoryRouterEnvironment();
 
       function NestedMemoryRouter() {
         return (
           <NestableMemoryRouter initialEntries={["/nestedhome"]}>
-            <Routes>
-              <Route
+            <NestedRoutes>
+              <NestedRoute
                 path="nestedhome"
-                element={<Navigate to="/nestedabout" />}
+                element={<NestedNavigate to="/nestedabout" />}
               />
               <Route path="nestedabout" element={<h1>Nested About</h1>} />
-            </Routes>
+            </NestedRoutes>
           </NestableMemoryRouter>
         );
       }
