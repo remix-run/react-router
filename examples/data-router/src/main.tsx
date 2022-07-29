@@ -21,6 +21,7 @@ import {
   sleep,
 } from "./routes";
 import "./index.css";
+import { codeSplittingLoader, CodeSplittingWrapper } from "./code-splitting";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -53,6 +54,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         >
           <Route path=":id" loader={todoLoader} element={<Todo />} />
         </Route>
+        <Route
+          path="code-splitting"
+          loader={codeSplittingLoader}
+          element={<CodeSplittingWrapper />}
+        />
       </Route>
     </DataBrowserRouter>
   </React.StrictMode>

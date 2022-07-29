@@ -49,6 +49,8 @@ export function Layout() {
         &nbsp;|&nbsp;
         <Link to="/long-load">Long Load</Link>
         &nbsp;|&nbsp;
+        <Link to="/code-splitting">Code Splitting</Link>
+        &nbsp;|&nbsp;
         <Link to="/404">404 Link</Link>
         &nbsp;&nbsp;
         <button onClick={() => revalidate()}>Revalidate</button>
