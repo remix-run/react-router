@@ -208,7 +208,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
   if (args["--no-interactive"]) {
     flags.interactive = false;
   }
-  flags.interactive ??= require.main === module;
+  flags.interactive = flags.interactive ?? require.main === module;
   if (args["--no-typescript"]) {
     flags.typescript = false;
   }
