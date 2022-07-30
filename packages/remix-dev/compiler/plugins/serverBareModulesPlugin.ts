@@ -36,7 +36,7 @@ export function serverBareModulesPlugin(
   return {
     name: "server-bare-modules",
     setup(build) {
-      build.onResolve({ filter: /.*/ }, ({ importer, path }) => {
+      build.onResolve({ filter: /.*/ }, ({ importer, kind, path }) => {
         // If it's not a bare module ID, bundle it.
         if (!isBareModuleId(resolvePath(path))) {
           return undefined;
@@ -103,6 +103,7 @@ export function serverBareModulesPlugin(
         if (
           onWarning &&
           !isNodeBuiltIn(packageName) &&
+          kind !== "dynamic-import" &&
           (!remixConfig.serverBuildTarget ||
             remixConfig.serverBuildTarget === "node-cjs")
         ) {
