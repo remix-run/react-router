@@ -1,14 +1,6 @@
 # `@remix-run/dev`
 
-## 1.6.6-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/serve@1.6.6-pre.1`
-  - `@remix-run/server-runtime@1.6.6-pre.1`
-
-## 1.6.6-pre.0
+## 1.6.6
 
 ### Patch Changes
 
@@ -17,8 +9,8 @@
 - Ensure that build hashing is deterministic ([#2027](https://github.com/remix-run/remix/pull/2027))
 - Fix types for `@remix-run/dev/server-build` virtual module ([#3743](https://github.com/remix-run/remix/pull/3743))
 - Updated dependencies:
-  - `@remix-run/serve@1.6.6-pre.0`
-  - `@remix-run/server-runtime@1.6.6-pre.0`
+  - `@remix-run/serve@1.6.6`
+  - `@remix-run/server-runtime@1.6.6`
 
 ## 1.6.5
 

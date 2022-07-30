@@ -1,8 +1,8 @@
 # `@remix-run/server-runtime`
 
-## 1.6.6-pre.1
+## 1.6.6
 
-## 1.6.6-pre.0
+No significant changes to this package were made in this release. [See the releases page on GitHub](https://github.com/remix-run/remix/releases/tag/remix%401.6.6) for an overview of all changes in v1.6.6.
 
 ## 1.6.5
 
