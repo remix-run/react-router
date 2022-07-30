@@ -445,14 +445,14 @@ function matchRouteBranch<
  * @private
  * Parameters in the path
  */
- type PathParams<
+ type PathParam<
  Path extends string
 > = Path extends `:${infer Param}/${infer Rest}`
-   ? Param | PathParams<Rest>
+   ? Param | PathParam<Rest>
    : Path extends `:${infer Param}`
      ? Param
      : Path extends `${any}:${infer Param}`
-         ? PathParams<`:${Param}`>
+         ? PathParam<`:${Param}`>
          : Path extends `${any}/*`
            ? "*"
            : Path extends "*"
@@ -465,16 +465,16 @@ function matchRouteBranch<
  * @see https://reactrouter.com/docs/en/v6/utils/generate-path
  */
 export function generatePath<Path extends string>(path: Path, params: {
-  [key in PathParams<Path>]: string
+  [key in PathParam<Path>]: string
 } = {} as any): string {
   return path
-    .replace(/:(\w+)/g, (_, key: PathParams<Path>) => {
+    .replace(/:(\w+)/g, (_, key: PathParam<Path>) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
     })
     .replace(/\/*\*$/, (_) =>
       {
-        const star = "*" as PathParams<Path>
+        const star = "*" as PathParam<Path>
         
         return params[star] == null ? "" : params[star].replace(/^\/*/, "/")
       }
