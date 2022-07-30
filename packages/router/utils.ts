@@ -170,14 +170,19 @@ type Star = "*"
  type PathParam<
  Path extends string
 > = 
+    // Check path string starts with slash and a param string.
     Path extends `:${infer Param}/${infer Rest}`
       ? Param | PathParam<Rest>
+      // Check path string is a param string.
       : Path extends `:${infer Param}`
         ? Param
-        : Path extends `${any}:${infer Param}`
+        // Check path string ends with slash and a param string.
+        : Path extends `${any}/:${infer Param}`
             ? PathParam<`:${Param}`>
+            // Check path string ends with slash and a star.
             : Path extends `${any}/${Star}`
               ? Star
+              // Check string is star.
               : Path extends Star
                 ? Star 
                 : never
