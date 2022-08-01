@@ -890,11 +890,7 @@ export function createRouter(init: RouterInit): Router {
         location: createLocation(state.location, result.location),
         ...submission,
       };
-      await startRedirectNavigation(
-        result,
-        redirectNavigation,
-        opts?.replace === true
-      );
+      await startRedirectNavigation(result, redirectNavigation, opts?.replace);
       return { shortCircuited: true };
     }
 
@@ -1027,11 +1023,7 @@ export function createRouter(init: RouterInit): Router {
     let redirect = findRedirect(results);
     if (redirect) {
       let redirectNavigation = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(
-        redirect,
-        redirectNavigation,
-        replace === true
-      );
+      await startRedirectNavigation(redirect, redirectNavigation, replace);
       return { shortCircuited: true };
     }
 
@@ -1178,11 +1170,7 @@ export function createRouter(init: RouterInit): Router {
         location: createLocation(state.location, actionResult.location),
         ...submission,
       };
-      await startRedirectNavigation(
-        actionResult,
-        redirectNavigation,
-        replace === true
-      );
+      await startRedirectNavigation(actionResult, redirectNavigation, replace);
       return;
     }
 
@@ -1273,11 +1261,7 @@ export function createRouter(init: RouterInit): Router {
     let redirect = findRedirect(results);
     if (redirect) {
       let redirectNavigation = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(
-        redirect,
-        redirectNavigation,
-        replace === true
-      );
+      await startRedirectNavigation(redirect, redirectNavigation, replace);
       return;
     }
 
@@ -1387,11 +1371,7 @@ export function createRouter(init: RouterInit): Router {
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
       let redirectNavigation = getLoaderRedirect(state, result);
-      await startRedirectNavigation(
-        result,
-        redirectNavigation,
-        replace === true
-      );
+      await startRedirectNavigation(result, redirectNavigation, replace);
       return;
     }
 
@@ -1440,7 +1420,7 @@ export function createRouter(init: RouterInit): Router {
   async function startRedirectNavigation(
     redirect: RedirectResult,
     navigation: Navigation,
-    replace: boolean
+    replace?: boolean
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
@@ -1452,11 +1432,12 @@ export function createRouter(init: RouterInit): Router {
     // There's no need to abort on redirects, since we don't detect the
     // redirect until the action/loaders have settled
     pendingNavigationController = null;
-    await startNavigation(
-      replace === true ? HistoryAction.Replace : HistoryAction.Push,
-      navigation.location,
-      { overrideNavigation: navigation }
-    );
+
+    let redirectHistoryAction =
+      replace === true ? HistoryAction.Replace : HistoryAction.Push;
+    await startNavigation(redirectHistoryAction, navigation.location, {
+      overrideNavigation: navigation,
+    });
   }
 
   async function callLoadersAndMaybeResolveData(
