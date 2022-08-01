@@ -830,6 +830,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       loadingNavigation,
       opts?.submission,
+      opts?.replace,
       pendingActionData,
       pendingError
     );
@@ -889,12 +890,11 @@ export function createRouter(init: RouterInit): Router {
         location: createLocation(state.location, result.location),
         ...submission,
       };
-      // By default we use a push redirect here since the user redirecting from
-      // the action already handles avoiding us backing into the POST navigation
-      // However, if they specifically used <Form replace={true}> we should
-      // respect that
-      let isPush = opts?.replace !== true;
-      await startRedirectNavigation(result, redirectNavigation, isPush);
+      await startRedirectNavigation(
+        result,
+        redirectNavigation,
+        opts?.replace === true
+      );
       return { shortCircuited: true };
     }
 
@@ -925,6 +925,7 @@ export function createRouter(init: RouterInit): Router {
     matches: DataRouteMatch[],
     overrideNavigation?: Navigation,
     submission?: Submission,
+    replace?: boolean,
     pendingActionData?: RouteData,
     pendingError?: RouteData
   ): Promise<HandleLoadersResult> {
@@ -1026,7 +1027,11 @@ export function createRouter(init: RouterInit): Router {
     let redirect = findRedirect(results);
     if (redirect) {
       let redirectNavigation = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(redirect, redirectNavigation);
+      await startRedirectNavigation(
+        redirect,
+        redirectNavigation,
+        replace === true
+      );
       return { shortCircuited: true };
     }
 
@@ -1103,14 +1108,14 @@ export function createRouter(init: RouterInit): Router {
     let match = getTargetMatch(matches, path);
 
     if (submission) {
-      handleFetcherAction(key, routeId, path, match, submission);
+      handleFetcherAction(key, routeId, path, match, submission, opts?.replace);
       return;
     }
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
     fetchLoadMatches.set(key, [path, match]);
-    handleFetcherLoader(key, routeId, path, match);
+    handleFetcherLoader(key, routeId, path, match, opts?.replace);
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -1120,7 +1125,8 @@ export function createRouter(init: RouterInit): Router {
     routeId: string,
     path: string,
     match: DataRouteMatch,
-    submission: Submission
+    submission: Submission,
+    replace?: boolean
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
@@ -1172,7 +1178,11 @@ export function createRouter(init: RouterInit): Router {
         location: createLocation(state.location, actionResult.location),
         ...submission,
       };
-      await startRedirectNavigation(actionResult, redirectNavigation);
+      await startRedirectNavigation(
+        actionResult,
+        redirectNavigation,
+        replace === true
+      );
       return;
     }
 
@@ -1263,7 +1273,11 @@ export function createRouter(init: RouterInit): Router {
     let redirect = findRedirect(results);
     if (redirect) {
       let redirectNavigation = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(redirect, redirectNavigation);
+      await startRedirectNavigation(
+        redirect,
+        redirectNavigation,
+        replace === true
+      );
       return;
     }
 
@@ -1325,7 +1339,8 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    match: DataRouteMatch
+    match: DataRouteMatch,
+    replace?: boolean
   ) {
     // Put this fetcher into it's loading state
     let loadingFetcher: FetcherStates["Loading"] = {
@@ -1372,7 +1387,11 @@ export function createRouter(init: RouterInit): Router {
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
       let redirectNavigation = getLoaderRedirect(state, result);
-      await startRedirectNavigation(result, redirectNavigation);
+      await startRedirectNavigation(
+        result,
+        redirectNavigation,
+        replace === true
+      );
       return;
     }
 
@@ -1407,11 +1426,21 @@ export function createRouter(init: RouterInit): Router {
     updateState({ fetchers: new Map(state.fetchers) });
   }
 
-  // Utility function to handle redirects returned from an action or loader
+  // Utility function to handle redirects returned from an action or loader.
+  // By default redirects are PUSH since in normal navigations we've not yet
+  // updated history so unlike the old transition manager, we don't need to
+  // replace the in-flight navigation.  The user can pass replace:true to
+  // force a replace.  The one spot this gets tricky is with redirects
+  // triggered from non-navigations (i.e., fetchers and router.revalidate).
+  // In general PUSH seems like the right default here since otherwise we
+  // completely blow away a perfectly valid location the user was at in the
+  // history stack.  So in both cases we still default to push.  Fetchers can
+  // send along replace:true, but at the moment revalidate() can not (we can
+  // introduce that if the need arises)
   async function startRedirectNavigation(
     redirect: RedirectResult,
     navigation: Navigation,
-    isPush = false
+    replace: boolean
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
@@ -1424,7 +1453,7 @@ export function createRouter(init: RouterInit): Router {
     // redirect until the action/loaders have settled
     pendingNavigationController = null;
     await startNavigation(
-      isPush ? HistoryAction.Push : HistoryAction.Replace,
+      replace === true ? HistoryAction.Replace : HistoryAction.Push,
       navigation.location,
       { overrideNavigation: navigation }
     );
