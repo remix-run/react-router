@@ -164,11 +164,13 @@ export interface DataRouteObject extends RouteObject {
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
   // split path into individual path segments
-  Path extends `${infer L}/${infer R}` ? _PathParam<L> | _PathParam<R> :
-  // find params after `:`
-  Path extends `${string}:${infer Param}` ? Param :
-  // otherwise, there aren't any params present
-  never
+  Path extends `${infer L}/${infer R}`
+    ? _PathParam<L> | _PathParam<R>
+    : // find params after `:`
+    Path extends `${string}:${infer Param}`
+    ? Param
+    : // otherwise, there aren't any params present
+      never;
 
 /**
  * Examples:
@@ -181,19 +183,20 @@ type _PathParam<Path extends string> =
  */
 type PathParam<Path extends string> =
   // check if path is just a wildcard
-  Path extends "*" ? "*" :
-  // look for wildcard at the end of the path
-  Path extends `${infer Rest}/*` ? "*" | _PathParam<Rest> :
-  // look for params in the absence of wildcards
-  _PathParam<Path>
+  Path extends "*"
+    ? "*"
+    : // look for wildcard at the end of the path
+    Path extends `${infer Rest}/*`
+    ? "*" | _PathParam<Rest>
+    : // look for params in the absence of wildcards
+      _PathParam<Path>;
 
 // Attempt to parse the given string segment. If it fails, then just return the
 // plain string type as a default fallback. Otherwise return the union of the
 // parsed string literals that were referenced as dynamic segments in the route.
 export type ParamParseKey<Segment extends string> =
   // if could not find path params, fallback to `string`
-  [PathParam<Segment>] extends [never] ? string :
-  PathParam<Segment>
+  [PathParam<Segment>] extends [never] ? string : PathParam<Segment>;
 
 /**
  * The parameters that were parsed from the URL path.
