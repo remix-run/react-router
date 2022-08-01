@@ -5,7 +5,6 @@ import {
   DataResult,
   DataRouteMatch,
   DataRouteObject,
-  defer,
   DeferredResult,
   ErrorResult,
   FormEncType,
@@ -2305,14 +2304,6 @@ async function callLoaderOrAction(
     return { type: resultType, error: result };
   }
 
-  // auto-track raw objects with promises
-  if (
-    isPlainObject(result) &&
-    Object.values(result).some((v) => v instanceof Promise)
-  ) {
-    result = defer(result);
-  }
-
   if (result instanceof DeferredData) {
     return { type: ResultType.deferred, deferredData: result };
   }
@@ -2593,15 +2584,6 @@ function createHref(location: Partial<Path> | Location | URL) {
 function isHashChangeOnly(a: Location, b: Location): boolean {
   return (
     a.pathname === b.pathname && a.search === b.search && a.hash !== b.hash
-  );
-}
-
-function isPlainObject(data: any) {
-  return (
-    data != null &&
-    typeof data === "object" &&
-    !Array.isArray(data) &&
-    !("entries" in data)
   );
 }
 

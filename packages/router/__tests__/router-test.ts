@@ -7343,7 +7343,7 @@ describe("a router", () => {
   });
 
   describe("deferred data", () => {
-    it("should support returning deferred responses (naked object)", async () => {
+    it("should not track deferred responses on naked objects", async () => {
       let t = setup({
         routes: [
           {
@@ -7361,51 +7361,21 @@ describe("a router", () => {
 
       let A = await t.navigate("/lazy");
 
-      let dfd1 = createDeferred();
-      let dfd2 = createDeferred();
-      let dfd3 = createDeferred();
-      dfd1.resolve("Immediate data");
+      let dfd = createDeferred();
       await A.loaders.lazy.resolve({
-        critical1: "1",
-        critical2: "2",
-        lazy1: dfd1.promise,
-        lazy2: dfd2.promise,
-        lazy3: dfd3.promise,
+        critical: "1",
+        lazy: dfd.promise,
       });
       expect(t.router.state.loaderData).toEqual({
         lazy: {
-          critical1: "1",
-          critical2: "2",
-          lazy1: expect.trackedPromise("Immediate data"),
-          lazy2: expect.trackedPromise(),
-          lazy3: expect.trackedPromise(),
+          critical: "1",
+          lazy: expect.any(Promise),
         },
       });
-
-      await dfd2.resolve("2");
-      expect(t.router.state.loaderData).toEqual({
-        lazy: {
-          critical1: "1",
-          critical2: "2",
-          lazy1: expect.trackedPromise("Immediate data"),
-          lazy2: expect.trackedPromise("2"),
-          lazy3: expect.trackedPromise(),
-        },
-      });
-
-      await dfd3.resolve("3");
-      expect(t.router.state.loaderData).toEqual({
-        lazy: {
-          critical1: "1",
-          critical2: "2",
-          lazy1: expect.trackedPromise("Immediate data"),
-          lazy2: expect.trackedPromise("2"),
-          lazy3: expect.trackedPromise("3"),
-        },
-      });
+      expect(t.router.state.loaderData.lazy.lazy._tracked).toBeUndefined();
     });
 
-    it("should support returning deferred responses (defer())", async () => {
+    it("should support returning deferred responses", async () => {
       let t = setup({
         routes: [
           {
