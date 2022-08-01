@@ -5,6 +5,7 @@ import {
   DataResult,
   DataRouteMatch,
   DataRouteObject,
+  defer,
   DeferredResult,
   ErrorResult,
   FormEncType,
@@ -530,9 +531,9 @@ export function createRouter(init: RouterInit): Router {
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, FetchLoadMatch>();
   // Store DeferredData instances for active route matches.  When a
-  // route loader returns an object with Promise values we stick one in here.
-  // Then, when a nested promise resolves we update loaderData.  If a new
-  // navigation starts we cancel active deferreds for eliminated routes.
+  // route loader returns defer() we stick one in here.  Then, when a nested
+  // promise resolves we update loaderData.  If a new navigation starts we
+  // cancel active deferreds for eliminated routes.
   let activeDeferreds = new Map<string, DeferredData>();
 
   // Initialize the router, all side effects should be kicked off from here.
@@ -908,7 +909,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isDeferredResult(result)) {
-      throw new Error("deferred data is not supported in actions");
+      throw new Error("defer() is not supported in actions");
     }
 
     return {
@@ -1183,7 +1184,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isDeferredResult(actionResult)) {
-      invariant(false, "deferred data is not supported in actions");
+      invariant(false, "defer() is not supported in actions");
     }
 
     // Start the data load for current matches, or the next location if we're
@@ -1790,7 +1791,7 @@ export function unstable_createStaticHandler(
     }
 
     if (isDeferredResult(result)) {
-      throw new Error("deferred data is not supported in actions");
+      throw new Error("defer() is not supported in actions");
     }
 
     if (isRouteRequest) {
@@ -2309,7 +2310,7 @@ async function callLoaderOrAction(
     isPlainObject(result) &&
     Object.values(result).some((v) => v instanceof Promise)
   ) {
-    result = new DeferredData(result);
+    result = defer(result);
   }
 
   if (result instanceof DeferredData) {

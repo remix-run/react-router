@@ -36,6 +36,7 @@ export type {
 
 export {
   ErrorResponse,
+  defer,
   generatePath,
   getToPathname,
   invariant,
