@@ -19,6 +19,7 @@ import {
   todoLoader,
   Todo,
   sleep,
+  AwaitPage,
 } from "./routes";
 import "./index.css";
 
@@ -39,6 +40,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             element={<DeferredChild />}
           />
         </Route>
+        <Route id="await" path="await" element={<AwaitPage />} />
         <Route
           path="long-load"
           loader={() => sleep(3000)}

@@ -1,13 +1,12 @@
 import React from "react";
 import {
-  type ActionFunction,
-  type LoaderFunction,
-  Deferred,
+  Await,
   Form,
   Link,
   Outlet,
-  deferred,
-  useDeferredData,
+  defer,
+  useAsyncError,
+  useAsyncValue,
   useFetcher,
   useFetchers,
   useLoaderData,
@@ -17,12 +16,16 @@ import {
   useRouteError,
   json,
   useActionData,
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
 } from "react-router-dom";
 
 import type { Todos } from "./todos";
 import { addTodo, deleteTodo, getTodos } from "./todos";
 
-export const sleep = (n: number = 500) => new Promise((r) => setTimeout(r, n));
+export function sleep(n: number = 500) {
+  return new Promise((r) => setTimeout(r, n));
+}
 
 export function Fallback() {
   return <p>Performing initial data "load"</p>;
@@ -46,6 +49,8 @@ export function Layout() {
         <Link to="/deferred">Deferred</Link>
         &nbsp;|&nbsp;
         <Link to="/deferred/child">Deferred Child</Link>
+        &nbsp;|&nbsp;
+        <Link to="/await">Await</Link>
         &nbsp;|&nbsp;
         <Link to="/long-load">Long Load</Link>
         &nbsp;|&nbsp;
@@ -79,12 +84,12 @@ interface HomeLoaderData {
   date: string;
 }
 
-export const homeLoader: LoaderFunction = async (): Promise<HomeLoaderData> => {
+export async function homeLoader(): Promise<HomeLoaderData> {
   await sleep();
   return {
     date: new Date().toISOString(),
   };
-};
+}
 
 export function Home() {
   let data = useLoaderData() as HomeLoaderData;
@@ -97,7 +102,7 @@ export function Home() {
 }
 
 // Todos
-export const todosAction: ActionFunction = async ({ request }) => {
+export async function todosAction({ request }: ActionFunctionArgs) {
   await sleep();
 
   let formData = await request.formData();
@@ -121,12 +126,12 @@ export const todosAction: ActionFunction = async ({ request }) => {
     status: 302,
     headers: { Location: "/todos" },
   });
-};
+}
 
-export const todosLoader: LoaderFunction = async (): Promise<Todos> => {
+export async function todosLoader(): Promise<Todos> {
   await sleep();
   return getTodos();
-};
+}
 
 export function TodosList() {
   let todos = useLoaderData() as Todos;
@@ -211,9 +216,9 @@ export function TodoItem({ id, todo }: TodoItemProps) {
 }
 
 // Todo
-export const todoLoader: LoaderFunction = async ({
+export async function todoLoader({
   params,
-}): Promise<string> => {
+}: LoaderFunctionArgs): Promise<string> {
   await sleep();
   let todos = getTodos();
   if (!params.id) {
@@ -224,7 +229,7 @@ export const todoLoader: LoaderFunction = async ({
     throw new Error(`Uh oh, I couldn't find a todo with id "${params.id}"`);
   }
   return todo;
-};
+}
 
 export function Todo() {
   let params = useParams();
@@ -251,57 +256,63 @@ interface DeferredRouteLoaderData {
 const rand = () => Math.round(Math.random() * 100);
 const resolve = (d: string, ms: number) =>
   new Promise((r) => setTimeout(() => r(`${d} - ${rand()}`), ms));
-const reject = (d: string, ms: number) =>
-  new Promise((_, r) => setTimeout(() => r(`${d} - ${rand()}`), ms));
+const reject = (d: Error | string, ms: number) =>
+  new Promise((_, r) =>
+    setTimeout(() => {
+      if (d instanceof Error) {
+        d.message += ` - ${rand()}`;
+      } else {
+        d += ` - ${rand()}`;
+      }
+      r(d);
+    }, ms)
+  );
 
-export const deferredLoader: LoaderFunction = async ({ request }) => {
-  return deferred({
+export async function deferredLoader() {
+  return defer({
     critical1: await resolve("Critical 1", 250),
     critical2: await resolve("Critical 2", 500),
     lazyResolved: Promise.resolve("Lazy Data immediately resolved - " + rand()),
     lazy1: resolve("Lazy 1", 1000),
     lazy2: resolve("Lazy 2", 1500),
     lazy3: resolve("Lazy 3", 2000),
-    lazyError: reject("Kaboom!", 2500),
+    lazyError: reject(new Error("Kaboom!"), 2500),
   });
-};
+}
 
 export function DeferredPage() {
   let data = useLoaderData() as DeferredRouteLoaderData;
-
   return (
     <div>
       <p>{data.critical1}</p>
       <p>{data.critical2}</p>
 
       <React.Suspense fallback={<p>should not see me!</p>}>
-        <Deferred value={data.lazyResolved}>
-          <RenderDeferredData />
-        </Deferred>
+        <Await resolve={data.lazyResolved}>
+          <RenderAwaitedData />
+        </Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading 1...</p>}>
-        <Deferred value={data.lazy1}>
-          <RenderDeferredData />
-        </Deferred>
+        <Await resolve={data.lazy1}>
+          <RenderAwaitedData />
+        </Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading 2...</p>}>
-        <Deferred value={data.lazy2}>
-          <RenderDeferredData />
-        </Deferred>
+        <Await resolve={data.lazy2}>
+          <RenderAwaitedData />
+        </Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading 3...</p>}>
-        <Deferred value={data.lazy3}>
-          {(data: string) => <p>{data}</p>}
-        </Deferred>
+        <Await resolve={data.lazy3}>{(data: string) => <p>{data}</p>}</Await>
       </React.Suspense>
 
       <React.Suspense fallback={<p>loading (error)...</p>}>
-        <Deferred value={data.lazyError} errorElement={<RenderDeferredError />}>
-          <RenderDeferredData />
-        </Deferred>
+        <Await resolve={data.lazyError} errorElement={<RenderAwaitedError />}>
+          <RenderAwaitedData />
+        </Await>
       </React.Suspense>
 
       <Outlet />
@@ -314,16 +325,16 @@ interface DeferredChildLoaderData {
   lazy: Promise<string>;
 }
 
-export const deferredChildLoader: LoaderFunction = async ({ request }) => {
-  return deferred({
+export async function deferredChildLoader() {
+  return defer({
     critical: await resolve("Critical Child Data", 500),
     lazy: resolve("Lazy Child Data", 1000),
   });
-};
+}
 
-export const deferredChildAction: ActionFunction = async ({ request }) => {
+export async function deferredChildAction() {
   return json({ ok: true });
-};
+}
 
 export function DeferredChild() {
   let data = useLoaderData() as DeferredChildLoaderData;
@@ -332,9 +343,9 @@ export function DeferredChild() {
     <div>
       <p>{data.critical}</p>
       <React.Suspense fallback={<p>loading child...</p>}>
-        <Deferred value={data.lazy}>
-          <RenderDeferredData />
-        </Deferred>
+        <Await resolve={data.lazy}>
+          <RenderAwaitedData />
+        </Await>
       </React.Suspense>
       <Form method="post">
         <button type="submit" name="key" value="value">
@@ -346,13 +357,39 @@ export function DeferredChild() {
   );
 }
 
-export function RenderDeferredData() {
-  let data = useDeferredData<string>();
+let shouldResolve = true;
+let rawPromiseResolver: ((value: unknown) => void) | null;
+let rawPromiseRejecter: ((value: unknown) => void) | null;
+let rawPromise: Promise<unknown> = new Promise((r, j) => {
+  rawPromiseResolver = r;
+  rawPromiseRejecter = j;
+});
+
+export function AwaitPage() {
+  React.useEffect(() => {
+    setTimeout(() => {
+      if (shouldResolve) {
+        rawPromiseResolver?.("Resolved raw promise!");
+      } else {
+        rawPromiseRejecter?.("Rejected raw promise!");
+      }
+    }, 1000);
+  }, []);
+
+  return (
+    <React.Suspense fallback={<p>Awaiting raw promise </p>}>
+      <Await resolve={rawPromise}>{(data: string) => <p>{data}</p>}</Await>
+    </React.Suspense>
+  );
+}
+
+function RenderAwaitedData() {
+  let data = useAsyncValue() as string;
   return <p>{data}</p>;
 }
 
-export function RenderDeferredError() {
-  let error = useRouteError() as Error;
+function RenderAwaitedError() {
+  let error = useAsyncError() as Error;
   return (
     <p style={{ color: "red" }}>
       Error (errorElement)!

@@ -30,6 +30,7 @@ import {
   useFetcher,
   useFetchers,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  defer,
 } from "react-router-dom";
 
 // Private API
@@ -221,7 +222,7 @@ function testDomRouter(
     });
 
     it("renders fallbackElement while first data fetch happens", async () => {
-      let fooDefer = defer();
+      let fooDefer = createDeferred();
       let { container } = render(
         <TestDataRouter
           window={getWindow("/foo")}
@@ -272,7 +273,7 @@ function testDomRouter(
     });
 
     it("does not render fallbackElement if no data fetch is required", async () => {
-      let fooDefer = defer();
+      let fooDefer = createDeferred();
       let { container } = render(
         <TestDataRouter
           window={getWindow("/bar")}
@@ -387,7 +388,7 @@ function testDomRouter(
     });
 
     it("executes route loaders on navigation", async () => {
-      let barDefer = defer();
+      let barDefer = createDeferred();
 
       let { container } = render(
         <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
@@ -527,8 +528,8 @@ function testDomRouter(
     });
 
     it("executes route actions/loaders on useSubmit navigations", async () => {
-      let loaderDefer = defer();
-      let actionDefer = defer();
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
 
       let { container } = render(
         <TestDataRouter window={getWindow("/")} hydrationData={{}}>
@@ -629,8 +630,8 @@ function testDomRouter(
     });
 
     it("executes route loaders on <Form method=get> navigations", async () => {
-      let loaderDefer = defer();
-      let actionDefer = defer();
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
 
       let { container } = render(
         <TestDataRouter window={getWindow("/")} hydrationData={{}}>
@@ -716,8 +717,8 @@ function testDomRouter(
     });
 
     it("executes route actions/loaders on <Form method=post> navigations", async () => {
-      let loaderDefer = defer();
-      let actionDefer = defer();
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
 
       let { container } = render(
         <TestDataRouter window={getWindow("/")} hydrationData={{}}>
@@ -1395,6 +1396,74 @@ function testDomRouter(
         `);
       });
 
+      it("handles fetcher.load errors (defer)", async () => {
+        let dfd = createDeferred();
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/")}
+            hydrationData={{ loaderData: { "0": null } }}
+          >
+            <Route
+              path="/"
+              element={<Comp />}
+              errorElement={<ErrorElement />}
+              loader={() => defer({ value: dfd.promise })}
+            />
+          </TestDataRouter>
+        );
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p>
+                {fetcher.state}
+                {fetcher.data ? JSON.stringify(fetcher.data.value) : null}
+              </p>
+              <button onClick={() => fetcher.load("/")}>load</button>
+            </>
+          );
+        }
+
+        function ErrorElement() {
+          let error = useRouteError();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              idle
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        fireEvent.click(screen.getByText("load"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              loading
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        dfd.reject(new Error("Kaboom!"));
+        await waitFor(() => screen.getByText("Kaboom!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom!
+            </p>
+          </div>"
+        `);
+      });
+
       it("handles fetcher.submit errors", async () => {
         let { container } = render(
           <TestDataRouter
@@ -1708,8 +1777,8 @@ function testDomRouter(
       });
 
       it("show all fetchers via useFetchers and cleans up fetchers on unmount", async () => {
-        let dfd1 = defer();
-        let dfd2 = defer();
+        let dfd1 = createDeferred();
+        let dfd2 = createDeferred();
         let { container } = render(
           <TestDataRouter
             window={getWindow("/1")}
@@ -2343,8 +2412,8 @@ function testDomRouter(
       });
 
       it("renders navigation errors on leaf elements", async () => {
-        let fooDefer = defer();
-        let barDefer = defer();
+        let fooDefer = createDeferred();
+        let barDefer = createDeferred();
 
         let { container } = render(
           <TestDataRouter
@@ -2483,8 +2552,8 @@ function testDomRouter(
       });
 
       it("renders navigation errors on parent elements", async () => {
-        let fooDefer = defer();
-        let barDefer = defer();
+        let fooDefer = createDeferred();
+        let barDefer = createDeferred();
 
         let { container } = render(
           <TestDataRouter
@@ -2581,7 +2650,7 @@ function testDomRouter(
   });
 }
 
-function defer() {
+function createDeferred() {
   let resolve: (val?: any) => Promise<void>;
   let reject: (error?: Error) => Promise<void>;
   let promise = new Promise((res, rej) => {

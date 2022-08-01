@@ -7,10 +7,10 @@
 - feat: Deferred API Updates (#9070)
 
   - Support array and single promise usages
-    - `return deferred([ await critical(), lazy() ])`
-    - `return deferred(lazy())`
+    - `return defer([ await critical(), lazy() ])`
+    - `return defer(lazy())`
   - Remove `Deferrable`/`ResolvedDeferrable` in favor of raw `Promise`'s and `Awaited`
-  - Remove generics from `useDeferredData` until `useLoaderData` generic is decided in 6.5
+  - Remove generics from `useAsyncValue` until `useLoaderData` generic is decided in 6.5
 
 - feat: Add `createStaticRouter` for `@remix-run/router` SSR usage (#9013)
 
@@ -85,7 +85,7 @@
 ### Patch Changes
 
 - fix: Handle fetcher 404s as normal boundary errors (#9015)
-- feat: adds `deferred` support to data routers (#9002)
+- feat: adds `defer()` support to data routers (#9002)
 - feat: add basename support for data routers (#9026)
 - ci: simplify dist/ directory for CJS/ESM only (#9017)
 - fix: Fix trailing slash behavior on pathless routing when using a basename (#9045)

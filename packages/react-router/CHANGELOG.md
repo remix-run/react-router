@@ -6,13 +6,13 @@
 
 - feat: Deferred API Updates (#9070)
 
-  - Removes `<Suspense>` from inside `<Deferred>`, requires users to render their own suspense boundaries
-  - Updates `Deferred` to use a true error boundary to catch render errors as well as data errors
+  - Removes `<Suspense>` from inside `<Await>`, requires users to render their own suspense boundaries
+  - Updates `Await` to use a true error boundary to catch render errors as well as data errors
   - Support array and single promise usages
-    - `return deferred([ await critical(), lazy() ])`
-    - `return deferred(lazy())`
+    - `return defer([ await critical(), lazy() ])`
+    - `return defer(lazy())`
   - Remove `Deferrable`/`ResolvedDeferrable` in favor of raw `Promise`'s and `Awaited`
-  - Remove generics from `useDeferredData` until `useLoaderData` generic is decided in 6.5
+  - Remove generics from `useAsyncValue` until `useLoaderData` generic is decided in 6.5
 
 - Updated dependencies
   - @remix-run/router@0.2.0-pre.5
@@ -21,46 +21,46 @@
 
 ### Patch Changes
 
-- Feat: adds `deferred` support to data routers (#9002)
+- Feat: adds `defer()` support to data routers (#9002)
 
-  Returning a `deferred` from a `loader` allows you to separate _critical_ loader data that you want to wait for prior to rendering the destination page from _non-critical_ data that you are OK to show a spinner for until it loads.
+  Returning a `defer()` from a `loader` allows you to separate _critical_ loader data that you want to wait for prior to rendering the destination page from _non-critical_ data that you are OK to show a spinner for until it loads.
 
   ```jsx
-  // In your route loader, return a deferred() and choose per-key whether to
+  // In your route loader, return a defer() and choose per-key whether to
   // await the promise or not.  As soon as the awaited promises resolve, the
   // page will be rendered.
   function loader() {
-    return deferred({
+    return defer({
       critical: await getCriticalData(),
       lazy: getLazyData(),
     });
   };
 
   // In your route element, grab the values from useLoaderData and render them
-  // with <Deferred>
-  function DeferredPage() {
+  // with <Await>
+  function Page() {
     let data = useLoaderData();
     return (
       <>
         <p>Critical Data: {data.critical}</p>
-        <Suspense fallback={<p>Loading...</p>}>
-          <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
-            <RenderDeferredData />
-          </Deferred>
-        </Suspense>
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <Await resolve={data.lazy} errorElement={<RenderError />}>
+            <RenderData />
+          </Await>
+        </React.Suspense>
       </>
     );
   }
 
   // Use separate components to render the data once it resolves, and access it
-  // via the useDeferredData hook
-  function RenderDeferredData() {
-    let data = useDeferredData();
+  // via the useAsyncValue hook
+  function RenderData() {
+    let data = useAsyncValue();
     return <p>Lazy: {data}</p>;
   }
 
-  function RenderDeferredError() {
-    let data = useRouteError();
+  function RenderError() {
+    let data = useAsyncError();
     return <p>Error! {data.message} {data.stack}</p>;
   }
   ```
@@ -69,16 +69,16 @@
   pattern and handle the rendering of the deferred data inline:
 
   ```jsx
-  function DeferredPage() {
+  function Page() {
     let data = useLoaderData();
     return (
       <>
         <p>Critical Data: {data.critical}</p>
-        <Suspense fallback={<p>Loading...</p>}>
-          <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <Await resolve={data.lazy} errorElement={<RenderError />}>
             {(data) => <p>{data}</p>}
-          </Deferred>
-        </Suspense>
+          </Await>
+        </React.Suspense>
       </>
     );
   }
