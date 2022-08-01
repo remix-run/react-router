@@ -161,7 +161,7 @@ export interface DataRouteObject extends RouteObject {
   id: string;
 }
 
-type Star = "*"
+type Star = "*";
 /**
  * @private
  * Return string union from path string.
@@ -169,33 +169,32 @@ type Star = "*"
  * PathParam<"/path/:a/:b"> // "a" | "b"
  * PathParam<"/path/:a/:b/*"> // "a" | "b" | "*"
  */
- type PathParam<
- Path extends string
-> = 
-    // Check path string starts with slash and a param string.
-    Path extends `:${infer Param}/${infer Rest}`
-      ? Param | PathParam<Rest>
-      // Check path string is a param string.
-      : Path extends `:${infer Param}`
-        ? Param
-        // Check path string ends with slash and a param string.
-        : Path extends `${any}/:${infer Param}`
-            ? PathParam<`:${Param}`>
-            // Check path string ends with slash and a star.
-            : Path extends `${any}/${Star}`
-              ? Star
-              // Check string is star.
-              : Path extends Star
-                ? Star 
-                : never
+type PathParam<Path extends string> =
+  // Check path string starts with slash and a param string.
+  Path extends `:${infer Param}/${infer Rest}`
+    ? Param | PathParam<Rest>
+    : // Check path string is a param string.
+    Path extends `:${infer Param}`
+    ? Param
+    : // Check path string ends with slash and a param string.
+    Path extends `${any}/:${infer Param}`
+    ? PathParam<`:${Param}`>
+    : // Check path string ends with slash and a star.
+    Path extends `${any}/${Star}`
+    ? Star
+    : // Check string is star.
+    Path extends Star
+    ? Star
+    : never;
 
 // Attempt to parse the given string segment. If it fails, then just return the
 // plain string type as a default fallback. Otherwise return the union of the
 // parsed string literals that were referenced as dynamic segments in the route.
-export type ParamParseKey<Segment extends string> =
-  [PathParam<Segment>] extends [never]
-    ? PathParam<Segment>
-    : string;
+export type ParamParseKey<Segment extends string> = [
+  PathParam<Segment>
+] extends [never]
+  ? PathParam<Segment>
+  : string;
 
 /**
  * The parameters that were parsed from the URL path.
@@ -464,21 +463,22 @@ function matchRouteBranch<
  *
  * @see https://reactrouter.com/docs/en/v6/utils/generate-path
  */
-export function generatePath<Path extends string>(path: Path, params: {
-  [key in PathParam<Path>]: string
-} = {} as any): string {
+export function generatePath<Path extends string>(
+  path: Path,
+  params: {
+    [key in PathParam<Path>]: string;
+  } = {} as any
+): string {
   return path
     .replace(/:(\w+)/g, (_, key: PathParam<Path>) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
     })
-    .replace(/\/*\*$/, (_) =>
-      {
-        const star = "*" as PathParam<Path>
-        
-        return params[star] == null ? "" : params[star].replace(/^\/*/, "/")
-      }
-    );
+    .replace(/\/*\*$/, (_) => {
+      const star = "*" as PathParam<Path>;
+
+      return params[star] == null ? "" : params[star].replace(/^\/*/, "/");
+    });
 }
 
 /**
