@@ -60,7 +60,7 @@
   }
 
   function RenderError() {
-    let data = useRouteError();
+    let data = useAsyncError();
     return <p>Error! {data.message} {data.stack}</p>;
   }
   ```
