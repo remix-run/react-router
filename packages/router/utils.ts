@@ -161,51 +161,40 @@ export interface DataRouteObject extends RouteObject {
   id: string;
 }
 
-type ParamParseFailed = { failed: true };
-
-type ParamParseSegment<Segment extends string> =
-  // Check here if there exists a forward slash in the string.
-  Segment extends `${infer LeftSegment}/${infer RightSegment}`
-    ? // If there is a forward slash, then attempt to parse each side of the
-      // forward slash.
-      ParamParseSegment<LeftSegment> extends infer LeftResult
-      ? ParamParseSegment<RightSegment> extends infer RightResult
-        ? LeftResult extends string
-          ? // If the left side is successfully parsed as a param, then check if
-            // the right side can be successfully parsed as well. If both sides
-            // can be parsed, then the result is a union of the two sides
-            // (read: "foo" | "bar").
-            RightResult extends string
-            ? LeftResult | RightResult
-            : LeftResult
-          : // If the left side is not successfully parsed as a param, then check
-          // if only the right side can be successfully parse as a param. If it
-          // can, then the result is just right, else it's a failure.
-          RightResult extends string
-          ? RightResult
-          : ParamParseFailed
-        : ParamParseFailed
-      : // If the left side didn't parse into a param, then just check the right
-      // side.
-      ParamParseSegment<RightSegment> extends infer RightResult
-      ? RightResult extends string
-        ? RightResult
-        : ParamParseFailed
-      : ParamParseFailed
-    : // If there's no forward slash, then check if this segment starts with a
-    // colon. If it does, then this is a dynamic segment, so the result is
-    // just the remainder of the string, optionally prefixed with another string.
-    // Otherwise, it's a failure.
-    Segment extends `${string}:${infer Remaining}`
-    ? Remaining
-    : ParamParseFailed;
+type Star = "*"
+/**
+ * @private
+ * Return string union from path string.
+ * @example
+ * PathParam<"/path/:a/:b"> // "a" | "b"
+ * PathParam<"/path/:a/:b/*"> // "a" | "b" | "*"
+ */
+ type PathParam<
+ Path extends string
+> = 
+    // Check path string starts with slash and a param string.
+    Path extends `:${infer Param}/${infer Rest}`
+      ? Param | PathParam<Rest>
+      // Check path string is a param string.
+      : Path extends `:${infer Param}`
+        ? Param
+        // Check path string ends with slash and a param string.
+        : Path extends `${any}/:${infer Param}`
+            ? PathParam<`:${Param}`>
+            // Check path string ends with slash and a star.
+            : Path extends `${any}/${Star}`
+              ? Star
+              // Check string is star.
+              : Path extends Star
+                ? Star 
+                : never
 
 // Attempt to parse the given string segment. If it fails, then just return the
 // plain string type as a default fallback. Otherwise return the union of the
 // parsed string literals that were referenced as dynamic segments in the route.
 export type ParamParseKey<Segment extends string> =
-  ParamParseSegment<Segment> extends string
-    ? ParamParseSegment<Segment>
+  [PathParam<Segment>] extends [never]
+    ? PathParam<Segment>
     : string;
 
 /**
@@ -475,14 +464,20 @@ function matchRouteBranch<
  *
  * @see https://reactrouter.com/docs/en/v6/utils/generate-path
  */
-export function generatePath(path: string, params: Params = {}): string {
+export function generatePath<Path extends string>(path: Path, params: {
+  [key in PathParam<Path>]: string
+} = {} as any): string {
   return path
-    .replace(/:(\w+)/g, (_, key) => {
+    .replace(/:(\w+)/g, (_, key: PathParam<Path>) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
     })
     .replace(/\/*\*$/, (_) =>
-      params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
+      {
+        const star = "*" as PathParam<Path>
+        
+        return params[star] == null ? "" : params[star].replace(/^\/*/, "/")
+      }
     );
 }
 
