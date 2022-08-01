@@ -8,19 +8,6 @@ title: generatePath
   <summary>Type declaration</summary>
 
 ```tsx
-type PathParams<Path extends string> =
-  Path extends `:${infer Param}/${infer Rest}`
-    ? Param | PathParams<Rest>
-    : Path extends `:${infer Param}`
-    ? Param
-    : Path extends `${any}:${infer Param}`
-    ? PathParams<`:${Param}`>
-    : Path extends `${any}/*`
-    ? "*"
-    : Path extends "*"
-    ? "*"
-    : never;
-
 declare function generatePath<Path extends string>(
   path: Path,
   params?: {

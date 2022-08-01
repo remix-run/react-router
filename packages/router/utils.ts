@@ -161,40 +161,39 @@ export interface DataRouteObject extends RouteObject {
   id: string;
 }
 
-type Star = "*";
+// Recursive helper for finding path parameters in the absence of wildcards
+type _PathParam<Path extends string> =
+  // split path into individual path segments
+  Path extends `${infer L}/${infer R}` ? _PathParam<L> | _PathParam<R> :
+  // find params after `:`
+  Path extends `${string}:${infer Param}` ? Param :
+  // otherwise, there aren't any params present
+  never
+
 /**
- * @private
- * Return string union from path string.
- * @example
- * PathParam<"/path/:a/:b"> // "a" | "b"
- * PathParam<"/path/:a/:b/*"> // "a" | "b" | "*"
+ * Examples:
+ * "/a/b/*" -> "*"
+ * ":a" -> "a"
+ * "/a/:b" -> "b"
+ * "/a/blahblahblah:b" -> "b"
+ * "/:a/:b" -> "a" | "b"
+ * "/:a/b/:c/*" -> "a" | "c" | "*"
  */
 type PathParam<Path extends string> =
-  // Check path string starts with slash and a param string.
-  Path extends `:${infer Param}/${infer Rest}`
-    ? Param | PathParam<Rest>
-    : // Check path string is a param string.
-    Path extends `:${infer Param}`
-    ? Param
-    : // Check path string ends with slash and a param string.
-    Path extends `${any}/:${infer Param}`
-    ? PathParam<`:${Param}`>
-    : // Check path string ends with slash and a star.
-    Path extends `${any}/${Star}`
-    ? Star
-    : // Check string is star.
-    Path extends Star
-    ? Star
-    : never;
+  // check if path is just a wildcard
+  Path extends "*" ? "*" :
+  // look for wildcard at the end of the path
+  Path extends `${infer Rest}/*` ? "*" | _PathParam<Rest> :
+  // look for params in the absence of wildcards
+  _PathParam<Path>
 
 // Attempt to parse the given string segment. If it fails, then just return the
 // plain string type as a default fallback. Otherwise return the union of the
 // parsed string literals that were referenced as dynamic segments in the route.
-export type ParamParseKey<Segment extends string> = [
+export type ParamParseKey<Segment extends string> =
+  // if could not find path params, fallback to `string`
+  [PathParam<Segment>] extends [never] ? string :
   PathParam<Segment>
-] extends [never]
-  ? PathParam<Segment>
-  : string;
 
 /**
  * The parameters that were parsed from the URL path.
