@@ -357,12 +357,23 @@ export function DeferredChild() {
   );
 }
 
+let shouldResolve = true;
 let rawPromiseResolver: ((value: unknown) => void) | null;
-let rawPromise: Promise<unknown> = new Promise((r) => (rawPromiseResolver = r));
+let rawPromiseRejecter: ((value: unknown) => void) | null;
+let rawPromise: Promise<unknown> = new Promise((r, j) => {
+  rawPromiseResolver = r;
+  rawPromiseRejecter = j;
+});
 
 export function AwaitPage() {
   React.useEffect(() => {
-    setTimeout(() => rawPromiseResolver?.("Resolved raw promise!"), 1000);
+    setTimeout(() => {
+      if (shouldResolve) {
+        rawPromiseResolver?.("Resolved raw promise!");
+      } else {
+        rawPromiseRejecter?.("Rejected raw promise!");
+      }
+    }, 1000);
   }, []);
 
   return (
