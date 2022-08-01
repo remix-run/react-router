@@ -8,31 +8,6 @@ title: generatePath
   <summary>Type declaration</summary>
 
 ```tsx
-// Recursive helper for finding path parameters in the absence of wildcards
-type _PathParam<Path extends string> =
-  // split path into individual path segments
-  Path extends `${infer L}/${infer R}` ? _PathParam<L> | _PathParam<R> :
-  // find params after `:`
-  Path extends `${string}:${infer Param}` ? Param :
-  // otherwise, there aren't any params present
-  never
-
-/**
- * Examples:
- * "/a/b/*" -> "/*"
- * ":a" -> "a"
- * "/a/:b" -> "b"
- * "/:a/:b" -> "a" | "b"
- */
-type PathParam<Path extends string> =
-  // check if path is just a wildcard
-  Path extends "*" ? "*" :
-  // look for wildcard at the end of the path
-  Path extends `${infer Rest}/*` ? "*" | _PathParam<Rest> :
-  // look for params in the absence of wildcards
-  _PathParam<Path>
-
-
 declare function generatePath<Path extends string>(
   path: Path,
   params?: {
