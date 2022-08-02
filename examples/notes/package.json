@@ -1,5 +1,5 @@
 {
-  "name": "data-router",
+  "name": "notes",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,7 @@
     "localforage": "^1.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.4.0-pre.10"
+    "react-router-dom": "^6.4.0-pre.11"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "4.0.0",
