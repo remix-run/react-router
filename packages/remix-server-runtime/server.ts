@@ -82,7 +82,7 @@ async function handleDataRequest({
   serverMode,
 }: {
   handleDataRequest?: HandleDataRequestFunction;
-  loadContext: unknown;
+  loadContext?: AppLoadContext;
   matches: RouteMatch<ServerRoute>[];
   request: Request;
   serverMode: ServerMode;
@@ -180,7 +180,7 @@ async function handleDocumentRequest({
   serverMode,
 }: {
   build: ServerBuild;
-  loadContext: unknown;
+  loadContext?: AppLoadContext;
   matches: RouteMatch<ServerRoute>[] | null;
   request: Request;
   routes: ServerRoute[];
@@ -516,7 +516,7 @@ async function handleResourceRequest({
   serverMode,
 }: {
   request: Request;
-  loadContext: unknown;
+  loadContext?: AppLoadContext;
   matches: RouteMatch<ServerRoute>[];
   serverMode: ServerMode;
 }): Promise<Response> {
