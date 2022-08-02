@@ -2237,7 +2237,7 @@ describe("a router", () => {
       let B = await A.actions.foo.redirect("/bar");
       await B.loaders.root.resolve("ROOT DATA");
       await B.loaders.bar.resolve("B LOADER");
-      expect(t.router.state.historyAction).toEqual("PUSH");
+      expect(t.router.state.historyAction).toEqual("REPLACE");
       expect(t.router.state.location.pathname).toEqual("/bar");
       expect(B.loaders.root.stub.mock.calls.length).toBe(1);
       expect(t.router.state.loaderData).toEqual({
@@ -4410,7 +4410,7 @@ describe("a router", () => {
 
       await nav2.loaders.tasksId.resolve("TASKS_ID_DATA");
       expect(t.router.state).toMatchObject({
-        historyAction: "PUSH",
+        historyAction: "REPLACE",
         location: {
           pathname: "/tasks/1",
         },
@@ -4421,6 +4421,9 @@ describe("a router", () => {
         },
         errors: null,
       });
+      // We pushed to history since we never moved history to the location that
+      // threw the redirect, but we expose router.state.historyAction as REPLACE
+      // above since technically we the flow was a PUSH that triggered a REPLACE
       expect(t.history.action).toEqual("PUSH");
       expect(t.history.location.pathname).toEqual("/tasks/1");
     });
@@ -4482,7 +4485,7 @@ describe("a router", () => {
 
       await nav2.loaders.tasksId.resolve("TASKS_ID_DATA");
       expect(t.router.state).toMatchObject({
-        historyAction: "PUSH",
+        historyAction: "REPLACE",
         location: {
           pathname: "/tasks/1",
         },
@@ -4493,6 +4496,9 @@ describe("a router", () => {
         },
         errors: null,
       });
+      // We pushed to history since we never moved history to the location that
+      // threw the redirect, but we expose router.state.historyAction as REPLACE
+      // above since technically we the flow was a PUSH that triggered a REPLACE
       expect(t.history.action).toEqual("PUSH");
       expect(t.history.location.pathname).toEqual("/tasks/1");
     });
@@ -5562,7 +5568,7 @@ describe("a router", () => {
       await N.loaders.root.resolve("ROOT_DATA redirect");
       await N.loaders.tasks.resolve("TASKS_DATA");
       expect(t.router.state).toMatchObject({
-        historyAction: "PUSH",
+        historyAction: "REPLACE",
         location: { pathname: "/tasks" },
         navigation: IDLE_NAVIGATION,
         revalidation: "idle",
@@ -6227,6 +6233,7 @@ describe("a router", () => {
 
         await B.loaders.bar.resolve("BAR");
         expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.historyAction).toBe("PUSH");
         expect(t.router.state.location?.pathname).toBe("/bar");
 
         // Back button should take us back to location that triggered the fetch
@@ -6252,6 +6259,7 @@ describe("a router", () => {
 
         await B.loaders.bar.resolve("BAR");
         expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.historyAction).toBe("PUSH");
         expect(t.router.state.location?.pathname).toBe("/bar");
 
         // Back button should take us back to location that triggered the fetch
@@ -6285,6 +6293,8 @@ describe("a router", () => {
           formEncType: undefined,
           formData: undefined,
         });
+        expect(t.router.state.historyAction).toBe("PUSH");
+        expect(t.router.state.location.pathname).toBe("/bar");
         // Root loader should be re-called after fetchActionRedirect
         expect(t.router.state.loaderData).toEqual({
           root: "ROOT*",
@@ -6316,6 +6326,7 @@ describe("a router", () => {
 
         await B.loaders.bar.resolve("BAR");
         expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.historyAction).toBe("REPLACE");
         expect(t.router.state.location?.pathname).toBe("/bar");
 
         // Back button should take us back _through_ /baz and to the original
@@ -6347,6 +6358,7 @@ describe("a router", () => {
 
         await B.loaders.bar.resolve("BAR");
         expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.historyAction).toBe("REPLACE");
         expect(t.router.state.location?.pathname).toBe("/bar");
 
         // Back button should take us back to location that triggered the fetch
@@ -6385,6 +6397,8 @@ describe("a router", () => {
           formEncType: undefined,
           formData: undefined,
         });
+        expect(t.router.state.historyAction).toBe("REPLACE");
+        expect(t.router.state.location.pathname).toBe("/bar");
         // Root loader should be re-called after fetchActionRedirect
         expect(t.router.state.loaderData).toEqual({
           root: "ROOT*",

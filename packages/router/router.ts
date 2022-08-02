@@ -495,7 +495,10 @@ export function createRouter(init: RouterInit): Router {
 
   // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
-  let pendingAction: HistoryAction | null = null;
+  let pendingAction: HistoryAction = HistoryAction.Pop;
+  // Track if the current PUSH pendingAction came from a navigation redirect
+  // and should be exposed to the user via state.historyAction = REPLACE
+  let isNavigationRedirect = false;
   // Should the current navigation reset the scroll position if scroll cannot
   // be restored?
   let pendingResetScroll = true;
@@ -586,11 +589,10 @@ export function createRouter(init: RouterInit): Router {
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
   // and setting state.[historyAction/location/matches] to the new route.
-  // - HistoryAction and Location are required params
+  // - Location is a required param
   // - Navigation will always be set to IDLE_NAVIGATION
   // - Can pass any other state in newState
   function completeNavigation(
-    historyAction: HistoryAction,
     location: Location,
     newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>
   ): void {
@@ -625,7 +627,10 @@ export function createRouter(init: RouterInit): Router {
       ...(isActionReload ? {} : { actionData: null }),
       ...newState,
       ...newLoaderData,
-      historyAction,
+      historyAction:
+        pendingAction === HistoryAction.Push && isNavigationRedirect
+          ? HistoryAction.Replace
+          : pendingAction,
       location,
       initialized: true,
       navigation: IDLE_NAVIGATION,
@@ -640,16 +645,17 @@ export function createRouter(init: RouterInit): Router {
 
     if (isUninterruptedRevalidation) {
       // If this was an uninterrupted revalidation then do not touch history
-    } else if (historyAction === HistoryAction.Pop) {
+    } else if (pendingAction === HistoryAction.Pop) {
       // Do nothing for POP - URL has already been updated
-    } else if (historyAction === HistoryAction.Push) {
+    } else if (pendingAction === HistoryAction.Push) {
       init.history.push(location, location.state);
-    } else if (historyAction === HistoryAction.Replace) {
+    } else if (pendingAction === HistoryAction.Replace) {
       init.history.replace(location, location.state);
     }
 
     // Reset stateful navigation vars
-    pendingAction = null;
+    pendingAction = HistoryAction.Pop;
+    isNavigationRedirect = false;
     pendingResetScroll = true;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
@@ -761,7 +767,7 @@ export function createRouter(init: RouterInit): Router {
       } = getNotFoundMatches(dataRoutes);
       // Cancel all pending deferred on 404s since we don't keep any routes
       cancelActiveDeferreds();
-      completeNavigation(historyAction, location, {
+      completeNavigation(location, {
         matches: notFoundMatches,
         loaderData: {},
         errors: {
@@ -773,9 +779,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Short circuit if it's only a hash change
     if (isHashChangeOnly(state.location, location)) {
-      completeNavigation(historyAction, location, {
-        matches,
-      });
+      completeNavigation(location, { matches });
       return;
     }
 
@@ -825,7 +829,6 @@ export function createRouter(init: RouterInit): Router {
     // Call loaders
     let { shortCircuited, loaderData, errors } = await handleLoaders(
       request,
-      historyAction,
       location,
       matches,
       loadingNavigation,
@@ -844,7 +847,7 @@ export function createRouter(init: RouterInit): Router {
     // been assigned to a new controller for the next navigation
     pendingNavigationController = null;
 
-    completeNavigation(historyAction, location, {
+    completeNavigation(location, {
       matches,
       loaderData,
       errors,
@@ -890,7 +893,12 @@ export function createRouter(init: RouterInit): Router {
         location: createLocation(state.location, result.location),
         ...submission,
       };
-      await startRedirectNavigation(result, redirectNavigation, opts?.replace);
+      await startRedirectNavigation(
+        result,
+        redirectNavigation,
+        opts?.replace,
+        true
+      );
       return { shortCircuited: true };
     }
 
@@ -916,7 +924,6 @@ export function createRouter(init: RouterInit): Router {
   // errors, etc.
   async function handleLoaders(
     request: Request,
-    historyAction: HistoryAction,
     location: Location,
     matches: DataRouteMatch[],
     overrideNavigation?: Navigation,
@@ -963,7 +970,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Short circuit if we have no loaders to run
     if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
-      completeNavigation(historyAction, location, {
+      completeNavigation(location, {
         matches,
         loaderData: mergeLoaderData(state.loaderData, {}, matches),
         // Commit pending error if we're short circuiting
@@ -1023,7 +1030,12 @@ export function createRouter(init: RouterInit): Router {
     let redirect = findRedirect(results);
     if (redirect) {
       let redirectNavigation = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(redirect, redirectNavigation, replace);
+      await startRedirectNavigation(
+        redirect,
+        redirectNavigation,
+        replace,
+        true
+      );
       return { shortCircuited: true };
     }
 
@@ -1299,7 +1311,7 @@ export function createRouter(init: RouterInit): Router {
       invariant(pendingAction, "Expected pending action");
       pendingNavigationController?.abort();
 
-      completeNavigation(pendingAction, state.navigation.location, {
+      completeNavigation(state.navigation.location, {
         matches,
         loaderData,
         errors,
@@ -1406,21 +1418,44 @@ export function createRouter(init: RouterInit): Router {
     updateState({ fetchers: new Map(state.fetchers) });
   }
 
-  // Utility function to handle redirects returned from an action or loader.
-  // By default redirects are PUSH since in normal navigations we've not yet
-  // updated history so unlike the old transition manager, we don't need to
-  // replace the in-flight navigation.  The user can pass replace:true to
-  // force a replace.  The one spot this gets tricky is with redirects
-  // triggered from non-navigations (i.e., fetchers and router.revalidate).
-  // In general PUSH seems like the right default here since otherwise we
-  // completely blow away a perfectly valid location the user was at in the
-  // history stack.  So in both cases we still default to push.  Fetchers can
-  // send along replace:true, but at the moment revalidate() can not (we can
-  // introduce that if the need arises)
+  /**
+   * Utility function to handle redirects returned from an action or loader.
+   * Normally, a redirect "replaces" the navigation that triggered it.  So, for
+   * example:
+   *
+   *  - user is on /a
+   *  - user clicks a link to /b
+   *  - loader for /b redirects to /c
+   *
+   * In a non-JS app the browser would track the in-flight navigation to /b and
+   * then replace it with /c when it encountered the redirect response.  In
+   * the end it would only ever update the URL bar with /c.
+   *
+   * In client-side routing using pushState/replaceState, we aim to emulate
+   * this behavior and we also do not update history until the end of the
+   * navigation (including processed redirects).  This means that even though
+   * we're "replacing" the original [PUSH /b] action with the [REPLACE /c],
+   * since we never pushed it into the history stack to begin with, it's not
+   * there to replace.  So we end up doing a history.pushState('/c')
+   *
+   * However, from the users standpoint and for backwards compatibility with
+   * react-router 6.3.0 and earlier, we want to expose state.historyAction as
+   * REPLACE if we encounter a redirect inside a normal navigation.  This is
+   * what the isNavigation flag is for - telling us that whenever this
+   * redirect navigation completes - we should call pushState() but we should
+   * expose state.historyAction as REPLACE.
+   *
+   * Redirects from fetch() and revalidate() currently default to normal PUSH
+   * unless the user passed replace:true, since we do not want to blow away a
+   * valid location the user visited.  USers can only send replace:true in
+   * fetchers currently, but that cn be added to revalidate() eventually if
+   * the need arises
+   */
   async function startRedirectNavigation(
     redirect: RedirectResult,
     navigation: Navigation,
-    replace?: boolean
+    replace?: boolean,
+    isNavigation = false
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
@@ -1435,6 +1470,9 @@ export function createRouter(init: RouterInit): Router {
 
     let redirectHistoryAction =
       replace === true ? HistoryAction.Replace : HistoryAction.Push;
+    if (isNavigation) {
+      isNavigationRedirect = true;
+    }
     await startNavigation(redirectHistoryAction, navigation.location, {
       overrideNavigation: navigation,
     });
