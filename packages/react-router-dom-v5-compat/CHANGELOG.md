@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Updated dependencies [c3406eb9]
+- Updated dependencies
   - react-router@6.4.0-pre.11
   - react-router-dom@6.4.0-pre.11
 

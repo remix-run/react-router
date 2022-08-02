@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- c3406eb9: fix: Rename `<Deferred>` to `<Await>`
+- c3406eb9: fix: Rename `<Deferred>` to `<Await>` (#9095)
 
   - We are no longer replacing the `Promise` on `loaderData` with the value/error
     when it settles so it's now always a `Promise`.
@@ -12,9 +12,11 @@
     `<Await resolve={promise}>` for clarity, and it also now supports using
     `<Await>` with raw promises from anywhere, not only those on `loaderData`
     from a defer() call.
-  - The hook is also changed from `useDeferredData` -> `useAsyncValue`
+    - Note that raw promises will not be automatically cancelled on interruptions
+      so they are not recommended
+  - The hooks are now `useAsyncValue`/`useAsyncError`
 
-- Updated dependencies [c3406eb9]
+- Updated dependencies
   - @remix-run/router@0.2.0-pre.6
 
 ## 6.4.0-pre.10
@@ -93,7 +95,7 @@
         <p>Critical Data: {data.critical}</p>
         <React.Suspense fallback={<p>Loading...</p>}>
           <Await resolve={data.lazy} errorElement={<RenderError />}>
-            {data => <p>{data}</p>}
+            {(data) => <p>{data}</p>}
           </Await>
         </React.Suspense>
       </>

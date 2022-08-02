@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- c3406eb9: fix: Rename `<Deferred>` to `<Await>`
+- c3406eb9: fix: Rename `<Deferred>` to `<Await>` (#9095)
 
   - We are no longer replacing the `Promise` on `loaderData` with the value/error
     when it settles so it's now always a `Promise`.
@@ -12,7 +12,9 @@
     `<Await resolve={promise}>` for clarity, and it also now supports using
     `<Await>` with raw promises from anywhere, not only those on `loaderData`
     from a defer() call.
-  - The hook is also changed from `useDeferredData` -> `useAsyncValue`
+    - Note that raw promises will not be automatically cancelled on interruptions
+      so they are not recommended
+  - The hooks are now `useAsyncValue`/`useAsyncError`
 
 ## 0.2.0-pre.5
 
@@ -76,8 +78,8 @@
   // Otherwise, construct a Response from the raw data (assuming json here)
   return new Response(JSON.stringify(data), {
     headers: {
-      "Content-Type": "application/json; charset=utf-8"
-    }
+      "Content-Type": "application/json; charset=utf-8",
+    },
   });
   ```
 
