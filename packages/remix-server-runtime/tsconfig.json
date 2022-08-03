@@ -1,5 +1,6 @@
 {
-  "exclude": ["dist", "__tests__"],
+  "include": ["**/*.ts"],
+  "exclude": ["dist", "__tests__", "node_modules"],
   "compilerOptions": {
     "lib": ["ES2019", "DOM", "DOM.Iterable"],
     "target": "ES2019",
