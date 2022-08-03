@@ -1281,7 +1281,7 @@ function testDomRouter(
 
     it("handles ?index param for action <Form>", async () => {
       let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+        <TestDataRouter window={getWindow("/?a=1")} hydrationData={{}}>
           <Route path="/">
             <Route index element={<Home />} />
           </Route>
@@ -1298,13 +1298,13 @@ function testDomRouter(
       }
 
       expect(container.querySelector("form")?.getAttribute("action")).toBe(
-        "/?index"
+        "/?index&a=1"
       );
     });
 
     it("handles ?index param for action <Form action='.'>", async () => {
       let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+        <TestDataRouter window={getWindow("/?a=1")} hydrationData={{}}>
           <Route path="/">
             <Route index element={<Home />} />
           </Route>
