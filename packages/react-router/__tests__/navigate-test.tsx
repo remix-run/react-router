@@ -1,6 +1,14 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Navigate, Outlet, Routes, Route } from "react-router";
+import {
+  DataMemoryRouter,
+  MemoryRouter,
+  Navigate,
+  Outlet,
+  Routes,
+  Route,
+} from "react-router";
+import { prettyDOM, render, screen, waitFor } from "@testing-library/react";
 
 describe("<Navigate>", () => {
   describe("with an absolute href", () => {
@@ -218,4 +226,61 @@ describe("<Navigate>", () => {
       `);
     });
   });
+
+  it("does not cause dual navigations in strict mode", () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <React.StrictMode>
+          <MemoryRouter initialEntries={["/1", "/2", "/3"]} initialIndex={2}>
+            <Routes>
+              <Route path="1" element={<h1>1</h1>} />
+              <Route path="2" element={<h1>2</h1>} />
+              <Route path="3" element={<Navigate to={-1} />} />
+            </Routes>
+          </MemoryRouter>
+        </React.StrictMode>
+      );
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <h1>
+        2
+      </h1>
+    `);
+  });
+
+  it("does not cause navigation loops in data routers", async () => {
+    // Note this is not the idiomatic way to do these redirects, they should
+    // be done with loaders in data routers, but this is a likely scenario to
+    // encounter while migrating to a data router
+    let { container } = render(
+      <React.StrictMode>
+        <DataMemoryRouter initialEntries={["/home"]}>
+          <Route path="home" element={<Navigate to="/about" />} />
+          <Route
+            path="about"
+            element={<h1>About</h1>}
+            loader={() => new Promise((r) => setTimeout(() => r("ok"), 10))}
+          />
+        </DataMemoryRouter>
+      </React.StrictMode>
+    );
+
+    await waitFor(() => screen.getByText("About"));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          About
+        </h1>
+      </div>"
+    `);
+  });
 });
+
+function getHtml(container: HTMLElement) {
+  return prettyDOM(container, undefined, {
+    highlight: false,
+  });
+}

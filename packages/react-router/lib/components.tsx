@@ -254,7 +254,15 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
   );
 
   let navigate = useNavigate();
+
+  // Avoid kicking off multiple navigations during dual-renders in strict mode,
+  // or when components get re-rendered due to global navigation-driven
+  // re-renders (i.e., entering a loading state)
+  let isMountedRef = React.useRef(false);
+
   React.useEffect(() => {
+    if (isMountedRef.current) return;
+    isMountedRef.current = true;
     navigate(to, { replace, state });
   });
 
