@@ -332,7 +332,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
             },
             message: "Which Stack do you want? ",
             loop: false,
-            suffix: "(Learn more about these stacks: https://remix.run/stacks)",
+            suffix: "(Learn more about these stacks: 'https://remix.run/stacks')",
             choices: [
               {
                 name: "Blues",
