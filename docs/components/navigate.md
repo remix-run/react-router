@@ -64,4 +64,4 @@ class LoginForm extends React.Component {
 }
 ```
 
-[use-navigate]: ../hooks/use-navigate
+[use-navigate]: ../hooks/use-navigate.md
