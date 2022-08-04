@@ -287,15 +287,18 @@ export async function readConfig(
   }
 
   let rootDirectory = path.resolve(remixRoot);
-  let configFile = path.resolve(rootDirectory, "remix.config.js");
+  let configFile = findConfig(rootDirectory, "remix.config");
 
-  let appConfig: AppConfig;
-  try {
-    appConfig = require(configFile);
-  } catch (error) {
-    throw new Error(
-      `Error loading Remix config in ${configFile}\n${String(error)}`
-    );
+  let appConfig: AppConfig = {};
+  if (configFile) {
+    try {
+      let appConfigModule = await import(configFile);
+      appConfig = appConfigModule?.default || appConfig;
+    } catch (error) {
+      throw new Error(
+        `Error loading Remix config at ${configFile}\n${String(error)}`
+      );
+    }
   }
 
   let customServerEntryPoint = appConfig.server;
@@ -471,6 +474,17 @@ function findEntry(dir: string, basename: string): string | undefined {
   for (let ext of entryExts) {
     let file = path.resolve(dir, basename + ext);
     if (fse.existsSync(file)) return path.relative(dir, file);
+  }
+
+  return undefined;
+}
+
+const configExts = [".js", ".cjs", ".mjs"];
+
+function findConfig(dir: string, basename: string): string | undefined {
+  for (let ext of configExts) {
+    let file = path.resolve(dir, basename + ext);
+    if (fse.existsSync(file)) return file;
   }
 
   return undefined;
