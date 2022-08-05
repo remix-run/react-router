@@ -4,10 +4,7 @@ title: Link
 
 # `<Link>`
 
-> **Note:**
->
-> This is the web version of `<Link>`. For the React Native version,
-> [go here][link-native].
+<docs-info>ZZZ This is the web version of `<Link>`. For the React Native version, [go here][link-native].</docs-info>
 
 <details>
   <summary>Type declaration</summary>
@@ -55,11 +52,45 @@ function UsersIndexPage({ users }) {
 
 A relative `<Link to>` value (that does not begin with `/`) resolves relative to the parent route, which means that it builds upon the URL path that was matched by the route that rendered that `<Link>`. It may contain `..` to link to routes further up the hierarchy. In these cases, `..` works exactly like the command-line `cd` function; each `..` removes one segment of the parent path.
 
-> **Note:**
->
-> `<Link to>` with a `..` behaves differently from a normal `<a href>` when the
-> current URL ends with `/`. `<Link to>` ignores the trailing slash, and removes
-> one URL segment for each `..`. But an `<a href>` value handles `..`
-> differently when the current URL ends with `/` vs when it does not.
+<docs-info>`<Link to>` with a `..` behaves differently from a normal `<a href>` when the current URL ends with `/`. `<Link to>` ignores the trailing slash, and removes one URL segment for each `..`. But an `<a href>` value handles `..` differently when the current URL ends with `/` vs when it does not.</docs-info>
 
 [link-native]: ./link-native
+
+## `resetScroll`
+
+If you are using [`<ScrollRestoration>`][scrollrestoration], this lets you prevent the scroll position from being reset to the top of the window when the link is clicked.
+
+```tsx
+<Link to="?tab=one" resetScroll={false} />
+```
+
+This does not prevent the scroll position from being restored when the user comes back to the location with the back/forward buttons, it just prevents the reset when the user clicks the link.
+
+An example when you might want this behavior is a list of tabs that manipulate the url search params that aren't at the top of the page. You wouldn't want the scroll position to jump up to the top because it might scroll the toggled content out of the viewport!
+
+```
+      ┌─────────────────────────┐
+      │                         ├──┐
+      │                         │  │
+      │                         │  │ scrolled
+      │                         │  │ out of view
+      │                         │  │
+      │                         │ ◄┘
+    ┌─┴─────────────────────────┴─┐
+    │                             ├─┐
+    │                             │ │ viewport
+    │   ┌─────────────────────┐   │ │
+    │   │  tab   tab   tab    │   │ │
+    │   ├─────────────────────┤   │ │
+    │   │                     │   │ │
+    │   │                     │   │ │
+    │   │ content             │   │ │
+    │   │                     │   │ │
+    │   │                     │   │ │
+    │   └─────────────────────┘   │ │
+    │                             │◄┘
+    └─────────────────────────────┘
+
+```
+
+[scrollrestoration]: ./scroll-restoration

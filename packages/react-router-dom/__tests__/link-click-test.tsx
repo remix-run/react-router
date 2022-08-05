@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import * as ReactDOM from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { MemoryRouter, Routes, Route, Link } from "react-router-dom";
 
@@ -37,14 +37,13 @@ describe("A <Link> click", () => {
     }
 
     act(() => {
-      ReactDOM.render(
+      ReactDOM.createRoot(node).render(
         <MemoryRouter initialEntries={["/home"]}>
           <Routes>
             <Route path="home" element={<Home />} />
             <Route path="about" element={<h1>About</h1>} />
           </Routes>
-        </MemoryRouter>,
-        node
+        </MemoryRouter>
       );
     });
 
@@ -76,14 +75,13 @@ describe("A <Link> click", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>,
-          node
+          </MemoryRouter>
         );
       });
 
@@ -96,6 +94,47 @@ describe("A <Link> click", () => {
       });
 
       expect(event.defaultPrevented).toBe(false);
+    });
+
+    it("calls provided listener", () => {
+      let handlerCalled;
+      let defaultPrevented;
+
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link
+              reloadDocument
+              to="../about"
+              onClick={(e) => {
+                handlerCalled = true;
+                defaultPrevented = e.defaultPrevented;
+              }}
+            >
+              About
+            </Link>
+          </div>
+        );
+      }
+
+      act(() => {
+        ReactDOM.createRoot(node).render(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+              <Route path="about" element={<h1>About</h1>} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      act(() => {
+        click(node.querySelector("a"));
+      });
+
+      expect(handlerCalled).toBe(true);
+      expect(defaultPrevented).toBe(false);
     });
   });
 
@@ -117,14 +156,13 @@ describe("A <Link> click", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>,
-          node
+          </MemoryRouter>
         );
       });
 
@@ -153,14 +191,13 @@ describe("A <Link> click", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>,
-          node
+          </MemoryRouter>
         );
       });
 
@@ -193,14 +230,13 @@ describe("A <Link> click", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>,
-          node
+          </MemoryRouter>
         );
       });
 
@@ -229,14 +265,13 @@ describe("A <Link> click", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <MemoryRouter initialEntries={["/home"]}>
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
             </Routes>
-          </MemoryRouter>,
-          node
+          </MemoryRouter>
         );
       });
 

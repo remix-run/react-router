@@ -1,0 +1,47 @@
+diff --git a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.dev.js b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.dev.js
+index 9bd1b9d..7ebf88a 100644
+--- a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.dev.js
++++ b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.dev.js
+@@ -10,8 +10,14 @@ function _interopDefault (e) { return e && e.__esModule ? e : { 'default': e };
+ var semver__default = /*#__PURE__*/_interopDefault(semver);
+ var chalk__default = /*#__PURE__*/_interopDefault(chalk);
+ 
+-// This is a modified version of the graph-getting in bolt
+-const DEPENDENCY_TYPES = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
++// This is a modified version of the graph-getting in bolt PATCH: Changesets
++// will check all of our internal dependencies to ensure that the versions
++// required match the current version in the repo. This doesn't work for peer
++// dependencies in our case because the compat package requires a peer
++// dependency of v4 or v5.
++// https://twitter.com/AndaristRake/status/1532379909028466688
++const DEPENDENCY_TYPES = ["dependencies", "devDependencies", "optionalDependencies"];
++// const DEPENDENCY_TYPES = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
+ 
+ const getAllDependencies = config => {
+   const allDependencies = new Map();
+diff --git a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.prod.js b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.prod.js
+index b4026bb..dca66fb 100644
+--- a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.prod.js
++++ b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.prod.js
+@@ -14,7 +14,7 @@ function _interopDefault(e) {
+ 
+ var semver__default = _interopDefault(semver), chalk__default = _interopDefault(chalk);
+ 
+-const DEPENDENCY_TYPES = [ "dependencies", "devDependencies", "peerDependencies", "optionalDependencies" ], getAllDependencies = config => {
++const DEPENDENCY_TYPES = [ "dependencies", "devDependencies", "optionalDependencies" ], getAllDependencies = config => {
+   const allDependencies = new Map;
+   for (const type of DEPENDENCY_TYPES) {
+     const deps = config[type];
+diff --git a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.esm.js b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.esm.js
+index b0eaa77..31d9731 100644
+--- a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.esm.js
++++ b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.esm.js
+@@ -2,7 +2,7 @@ import semver from 'semver';
+ import chalk from 'chalk';
+ 
+ // This is a modified version of the graph-getting in bolt
+-const DEPENDENCY_TYPES = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
++const DEPENDENCY_TYPES = ["dependencies", "devDependencies", "optionalDependencies"];
+ 
+ const getAllDependencies = config => {
+   const allDependencies = new Map();

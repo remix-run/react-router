@@ -1,6 +1,6 @@
 ---
 title: Main Concepts
-order: 4
+order: 5
 ---
 
 # Main Concepts
@@ -171,7 +171,7 @@ The last two, `{ state, key }`, are React Router specific.
 
 **Location Pathname**
 
-This is the part of [URL](#url) after the origin, so for `https://example.com/teams/hotspurs` the pathname is `/teams/hostspurs`. This is the only part of the location that routes match against.
+This is the part of [URL](#url) after the origin, so for `https://example.com/teams/hotspurs` the pathname is `/teams/hotspurs`. This is the only part of the location that routes match against.
 
 **Location Search**
 
@@ -211,7 +211,7 @@ Hashes in URLs indicate a scroll position _on the current page_. Before the `win
 
 You may have wondered why the `window.history.pushState()` API is called "push state". State? Aren't we just changing the [URL](#url)? Shouldn't it be `history.push`? Well, we weren't in the room when the API was designed, so we're not sure why "state" was the focus, but it is a cool feature of browsers nonetheless.
 
-Browsers let us persist information about a transition by passing a value to `pushState`. When the user clicks back, the value on `history.state` changes to whatever was "pushed" before.
+Browsers let us persist information about a navigation by passing a value to `pushState`. When the user clicks back, the value on `history.state` changes to whatever was "pushed" before.
 
 ```js
 window.history.pushState("look ma!", undefined, "/contact");

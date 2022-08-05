@@ -14,10 +14,10 @@ import { Router, Routes, Route } from "../react-router-dom";
 // v5 isn't in TypeScript, they'll also lose the @types/react-router with this
 // but not worried about that for now.
 export function CompatRoute(props: any) {
-  let { path } = props;
+  let { location, path } = props;
   if (!props.exact) path += "/*";
   return (
-    <Routes>
+    <Routes location={location}>
       <Route path={path} element={<RouteV5 {...props} />} />
     </Routes>
   );
@@ -56,7 +56,7 @@ export interface StaticRouterProps {
 }
 
 /**
- * A <Router> that may not transition to any other location. This is useful
+ * A <Router> that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
 export function StaticRouter({

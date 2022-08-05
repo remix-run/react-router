@@ -1,4 +1,4 @@
-import { resolveTo } from "../lib/router";
+import { resolveTo } from "@remix-run/router";
 
 describe("resolveTo", () => {
   it('resolve path without mutating the "to" argument', () => {

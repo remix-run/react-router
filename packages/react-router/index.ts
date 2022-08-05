@@ -1,7 +1,41 @@
-import type { Hash, Location, Path, Pathname, Search, To } from "history";
-import { Action as NavigationType, parsePath, createPath } from "history";
+import type {
+  ActionFunction,
+  ActionFunctionArgs,
+  DataRouteMatch,
+  Fetcher,
+  JsonFunction,
+  LoaderFunction,
+  LoaderFunctionArgs,
+  Location,
+  Navigation,
+  Params,
+  ParamParseKey,
+  Path,
+  PathMatch,
+  PathPattern,
+  RedirectFunction,
+  RouteMatch,
+  RouteObject,
+  ShouldRevalidateFunction,
+  To,
+} from "@remix-run/router";
+import {
+  Action as NavigationType,
+  createPath,
+  defer,
+  generatePath,
+  isRouteErrorResponse,
+  json,
+  matchPath,
+  matchRoutes,
+  parsePath,
+  redirect,
+  resolvePath,
+} from "@remix-run/router";
 
 import type {
+  DataMemoryRouterProps,
+  AwaitProps,
   MemoryRouterProps,
   NavigateProps,
   OutletProps,
@@ -15,6 +49,10 @@ import type {
 import {
   createRoutesFromChildren,
   renderMatches,
+  DataMemoryRouter,
+  DataRouter,
+  DataRouterProvider,
+  Await,
   MemoryRouter,
   Navigate,
   Outlet,
@@ -22,13 +60,16 @@ import {
   Router,
   Routes,
 } from "./lib/components";
-import type { Navigator } from "./lib/context";
+import type { Navigator, NavigateOptions } from "./lib/context";
 import {
+  DataRouterContext,
+  DataRouterStateContext,
+  DataStaticRouterContext,
   LocationContext,
   NavigationContext,
   RouteContext,
 } from "./lib/context";
-import type { NavigateFunction, NavigateOptions } from "./lib/hooks";
+import type { NavigateFunction } from "./lib/hooks";
 import {
   useHref,
   useInRouterContext,
@@ -41,48 +82,64 @@ import {
   useParams,
   useResolvedPath,
   useRoutes,
+  useActionData,
+  useAsyncError,
+  useAsyncValue,
+  useLoaderData,
+  useMatches,
+  useNavigation,
+  useRevalidator,
+  useRouteError,
+  useRouteLoaderData,
 } from "./lib/hooks";
-import type {
-  Params,
-  PathMatch,
-  PathPattern,
-  RouteMatch,
-  RouteObject,
-} from "./lib/router";
-import {
-  generatePath,
-  matchPath,
-  matchRoutes,
-  resolvePath,
-} from "./lib/router";
+
+// Exported for backwards compatibility, but not being used internally anymore
+type Hash = string;
+type Pathname = string;
+type Search = string;
 
 // Expose react-router public API
 export type {
+  ActionFunction,
+  ActionFunctionArgs,
+  DataMemoryRouterProps,
+  DataRouteMatch,
+  AwaitProps,
+  Fetcher,
   Hash,
   IndexRouteProps,
+  JsonFunction,
   LayoutRouteProps,
+  LoaderFunction,
+  LoaderFunctionArgs,
   Location,
   MemoryRouterProps,
   NavigateFunction,
   NavigateOptions,
   NavigateProps,
+  Navigation,
+  Navigator,
   OutletProps,
+  Params,
+  ParamParseKey,
+  Path,
   PathMatch,
+  Pathname,
   PathPattern,
   PathRouteProps,
+  RedirectFunction,
   RouteMatch,
   RouteObject,
   RouteProps,
   RouterProps,
   RoutesProps,
-  Navigator,
-  Params,
-  Path,
-  Pathname,
   Search,
+  ShouldRevalidateFunction,
   To,
 };
 export {
+  DataMemoryRouter,
+  Await,
   MemoryRouter,
   Navigate,
   NavigationType,
@@ -92,22 +149,35 @@ export {
   Routes,
   createPath,
   createRoutesFromChildren,
+  defer,
+  isRouteErrorResponse,
   generatePath,
+  json,
   matchPath,
   matchRoutes,
   parsePath,
+  redirect,
   renderMatches,
   resolvePath,
+  useActionData,
+  useAsyncError,
+  useAsyncValue,
   useHref,
   useInRouterContext,
+  useLoaderData,
   useLocation,
   useMatch,
+  useMatches,
   useNavigate,
+  useNavigation,
   useNavigationType,
   useOutlet,
   useOutletContext,
   useParams,
   useResolvedPath,
+  useRevalidator,
+  useRouteError,
+  useRouteLoaderData,
   useRoutes,
 };
 
@@ -126,7 +196,12 @@ export {
 
 /** @internal */
 export {
+  DataRouter as UNSAFE_DataRouter,
+  DataRouterProvider as UNSAFE_DataRouterProvider,
   NavigationContext as UNSAFE_NavigationContext,
   LocationContext as UNSAFE_LocationContext,
   RouteContext as UNSAFE_RouteContext,
+  DataRouterContext as UNSAFE_DataRouterContext,
+  DataRouterStateContext as UNSAFE_DataRouterStateContext,
+  DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
 };
