@@ -5,6 +5,8 @@ import util from "util";
 import fse from "fs-extra";
 import semver from "semver";
 
+import { jestTimeout } from "./setupAfterEnv";
+
 let DOWN = "\x1B\x5B\x42";
 let ENTER = "\x0D";
 
@@ -343,7 +345,7 @@ async function interactWithShell(
       proc.kill();
       deferred.reject({ status: "timeout", stdout, stderr });
     }
-  }, 10_000);
+  }, jestTimeout);
 
   await deferred.promise;
   clearTimeout(timeout);
