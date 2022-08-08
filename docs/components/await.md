@@ -9,21 +9,19 @@ new: true
   <summary>Type declaration</summary>
 
 ```tsx
-export interface AwaitResolveRenderFunction {
-  (data: Awaited<any>): JSX.Element;
-}
+declare function Await(
+  props: AwaitProps
+): React.ReactElement;
 
-export interface AwaitProps {
+interface AwaitProps {
   children: React.ReactNode | AwaitResolveRenderFunction;
   errorElement?: React.ReactNode;
-  promise: DeferredPromise;
+  resolve: TrackedPromise | any;
 }
 
-export declare function Await({
-  children,
-  errorElement,
-  promise,
-}: AwaitProps): JSX.Element;
+interface AwaitResolveRenderFunction {
+  (data: Awaited<any>): React.ReactElement;
+}
 ```
 
 </details>
@@ -35,26 +33,42 @@ This component is responsible for rendering Promises. This can be thought of as 
 Directly as a render function:
 
 ```tsx
-<Await promise={promise}>
-  {(data) => <p>{data}</p>}
-</Deferred>
+<Await resolve={promise}>{(data) => <p>{data}</p>}</Await>
 ```
 
-Or indirectly via the `useAwaitedData` hook:
+Or indirectly via the `useAsyncValue` hook:
 
 ```tsx
 function Accessor() {
-  const data = useAwaitedData();
+  const data = useAsyncValue();
   return <p>{data}</p>;
 }
 
-<Await promise={promise}>
+<Await resolve={promise}>
   <Accessor />
-</Deferred>;
+</Await>;
 ```
 
-`<Await>` is primarily intended to be used with the [`deferred()`][deferred response] data returned from your `loader`. Returning a deferred value from your loader will allow you to render fallbacks with `<Await>`. A full example can be found in the [Deferred guide][deferred guide].
+`<Await>` is primarily intended to be used with the [`defer()`][deferred response] data returned from your `loader`. Returning a deferred value from your loader will allow you to render fallbacks with `<Await>`. A full example can be found in the [Deferred guide][deferred guide].
+
+### Error Handling
+
+If the passed promise rejects, you can provide an optional `errorElement` to handle that error in a contextual UI via the `useAsyncError` hook. If you do not provide an errorElement, the rejected value will bubble up to the nearest route-level `errorElement` and be accessible via the [`useRouteError`][userouteerror] hook.
+
+```tsx
+function ErrorHandler() {
+  const error = useAsyncError();
+  return (
+    <p>Uh Oh, something went wrong! {error.message}</p>
+  );
+}
+
+<Await resolve={promise} errorElement={<ErrorElement />}>
+  <Accessor />
+</Await>;
+```
 
 [useloaderdata]: ../hooks/use-loader-data
-[deferred response]: ../fetch/deferred
+[userouteerror]: ../hooks/use-route-error
+[defer response]: ../fetch/defer
 [deferred guide]: ../guides/deferred

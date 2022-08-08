@@ -1,22 +1,22 @@
 ---
-title: useAwaitedData
+title: useAsyncValue
 new: true
 ---
 
-# `useAwaitedData`
+# `useAsyncValue`
 
 <details>
   <summary>Type declaration</summary>
 
 ```tsx
-export declare function useAwaitedData(): unknown;
+export declare function useAsyncValue(): unknown;
 ```
 
 </details>
 
 ```tsx
 function Accessor() {
-  const data = useAwaitedData();
+  const data = useAsyncValue();
   return <p>{data}</p>;
 }
 

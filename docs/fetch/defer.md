@@ -1,15 +1,15 @@
 ---
-title: deferred
+title: defer
 ---
 
-# `deferred`
+# `defer`
 
 <details>
   <summary>Type declaration</summary>
 
 ```tsx
-export declare function deferred(
-  data: Record<string, any>
+declare function defer(
+  data: Record<string, unknown>
 ): DeferredData;
 ```
 

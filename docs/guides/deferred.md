@@ -1,9 +1,9 @@
 ---
-title: Deferred
-description: When, why, and how to defer non-critical data loading with React 18 and React Router's deferred API.
+title: Deferred Data
+description: When, why, and how to defer non-critical data loading with React 18 and React Router's defer API.
 ---
 
-# Deferred Guide
+# Deferred Data Guide
 
 ## The problem
 
@@ -53,19 +53,19 @@ But it's still sub optimal in most cases (especially if you're code-splitting ro
 
 ## The solution
 
-React Router takes advantage of React 18's Suspense for data fetching using the [`deferred` Response][deferred response] utility and [`<Await />`][await] component / [`useAwaitedData`][useawaiteddata] hook. By using these APIs, you can solve both of these problems:
+React Router takes advantage of React 18's Suspense for data fetching using the [`defer` Response][defer response] utility and [`<Await />`][await] component / [`useAsyncValue`][useasyncvalue] hook. By using these APIs, you can solve both of these problems:
 
 1. You're data is no longer on a waterfall: document -> JavaScript -> Lazy Loaded Route & data (in parallel)
 2. Your can easily switch between rendering the fallback and waiting for the data
 
 Let's take a dive into how to accomplish this.
 
-### Using `deferred`
+### Using `defer`
 
 Start by adding `<Await />` for your slow data requests where you'd rather render a fallback UI. Let's do that for our example above:
 
 ```jsx lines=[1,5,10,20-33]
-import { deferred, useLoaderData } from "react-router-dom";
+import { defer, useLoaderData } from "react-router-dom";
 import { getPackageLocation } from "./api/packages";
 
 async function loader({ params }) {
@@ -73,7 +73,7 @@ async function loader({ params }) {
     params.packageId
   );
 
-  return deferred({
+  return defer({
     packageLocation: packageLocationPromise,
   });
 }
@@ -88,7 +88,7 @@ export default function PackageRoute() {
         fallback={<p>Loading package location...</p>}
       >
         <Await
-          promise={data.packageLocation}
+          resolve={data.packageLocation}
           errorElement={
             <p>Error loading package location!</p>
           }
@@ -107,7 +107,7 @@ export default function PackageRoute() {
 ```
 
 <details>
-  <summary>Alternatively, you can use the `useAwaitedData` hook:</summary>
+  <summary>Alternatively, you can use the `useAsyncValue` hook:</summary>
 
 If you're not jazzed about bringing back render props, you can use a hook, but you'll have to break things out into another component:
 
@@ -122,7 +122,7 @@ export default function PackageRoute() {
         fallback={<p>Loading package location...</p>}
       >
         <Await
-          promise={data.packageLocation}
+          resolve={data.packageLocation}
           errorElement={
             <p>Error loading package location!</p>
           }
@@ -135,7 +135,7 @@ export default function PackageRoute() {
 }
 
 function PackageLocation() {
-  const packageLocation = useAwaitedData();
+  const packageLocation = useAsyncValue();
   return (
     <p>
       Your package is at {packageLocation.latitude} lat and{" "}
@@ -154,7 +154,7 @@ So rather than waiting for the component before we can trigger the fetch request
 Additionally, the API that React Router exposes for this is extremely ergonomic. You can literally switch between whether something is going to be deferred or not based on whether you include the `await` keyword:
 
 ```tsx
-return deferred({
+return defer({
   // not deferred:
   packageLocation: await packageLocationPromise,
   // deferred:
@@ -174,7 +174,7 @@ async function loader({ request, params }) {
     params.packageId
   );
 
-  return deferred({
+  return defer({
     packageLocation: shouldDefer
       ? packageLocationPromise
       : await packageLocationPromise,
@@ -198,12 +198,12 @@ The `<Await />` component will only throw the promise up the `<Suspense>` bounda
 
 This may feel counter-intuitive at first, but stay with us, we really thought this through and it's important that it works this way. Let's imagine a world without the deferred API. For those scenarios you're probably going to want to implement Optimistic UI for form submissions/revalidation and some Pending UI for sibling route navigations.
 
-When you decide you'd like to try the trade-offs of `deferred`, we don't want you to have to change or remove those optimizations because we want you to be able to easily switch between deferring some data and not deferring it. So we ensure that your existing pending states work the same way. If we didn't do this, then you could experience what we call "Popcorn UI" where submissions of data trigger the fallback loading state instead of the optimistic UI you'd worked hard on.
+When you decide you'd like to try the trade-offs of `defer`, we don't want you to have to change or remove those optimizations because we want you to be able to easily switch between deferring some data and not deferring it. So we ensure that your existing pending states work the same way. If we didn't do this, then you could experience what we call "Popcorn UI" where submissions of data trigger the fallback loading state instead of the optimistic UI you'd worked hard on.
 
 So just keep this in mind: **Deferred is 100% only about the initial load of a route.**
 
 [link]: ../components/link
 [usefetcher]: ../hooks/use-fetcher
-[deferred response]: ../fetch/deferred
+[defer response]: ../fetch/defer
 [await]: ../components/await
-[useawaiteddata]: ../hooks/use-awaited-data
+[useasyncvalue]: ../hooks/use-async-data

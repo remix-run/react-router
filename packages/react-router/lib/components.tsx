@@ -440,7 +440,7 @@ export function Routes({
 }
 
 export interface AwaitResolveRenderFunction {
-  (data: Awaited<any>): JSX.Element;
+  (data: Awaited<any>): React.ReactElement;
 }
 
 export interface AwaitProps {
