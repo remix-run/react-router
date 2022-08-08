@@ -857,7 +857,7 @@ export function useFormAction(action?: string): string {
 
   let location = useLocation();
   let [match] = routeContext.matches.slice(-1);
-  let path = useResolvedPath(action || location);
+  let path = useResolvedPath(action ?? location);
 
   if ((!action || action === ".") && match.route.index) {
     path.search = path.search
