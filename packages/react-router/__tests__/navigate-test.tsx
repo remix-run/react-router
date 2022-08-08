@@ -232,11 +232,11 @@ describe("<Navigate>", () => {
     TestRenderer.act(() => {
       renderer = TestRenderer.create(
         <React.StrictMode>
-          <MemoryRouter initialEntries={["/1", "/2", "/3"]} initialIndex={2}>
+          <MemoryRouter initialEntries={["/a", "/b", "/c"]} initialIndex={2}>
             <Routes>
-              <Route path="1" element={<h1>1</h1>} />
-              <Route path="2" element={<h1>2</h1>} />
-              <Route path="3" element={<Navigate to={-1} />} />
+              <Route path="a" element={<h1>A</h1>} />
+              <Route path="b" element={<h1>B</h1>} />
+              <Route path="c" element={<Navigate to={-1} />} />
             </Routes>
           </MemoryRouter>
         </React.StrictMode>
@@ -245,7 +245,7 @@ describe("<Navigate>", () => {
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>
-        2
+        B
       </h1>
     `);
   });
