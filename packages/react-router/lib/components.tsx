@@ -264,7 +264,9 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
     if (isMountedRef.current) return;
     isMountedRef.current = true;
     navigate(to, { replace, state });
-  });
+    // Single-execution effect to avoid duplicate navigations
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return null;
 }
