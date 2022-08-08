@@ -1,4 +1,7 @@
-import { createStaticHandler, StaticHandlerContext } from "@remix-run/router";
+import {
+  unstable_createStaticHandler as createStaticHandler,
+  StaticHandlerContext,
+} from "@remix-run/router";
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import {
@@ -7,7 +10,7 @@ import {
   useLocation,
   useMatches,
 } from "react-router-dom";
-import { DataStaticRouter } from "react-router-dom/server";
+import { unstable_DataStaticRouter as DataStaticRouter } from "react-router-dom/server";
 
 beforeEach(() => {
   jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -44,44 +47,40 @@ describe("A <DataStaticRouter>", () => {
       return <h1>👋</h1>;
     }
 
-    let { dataRoutes, query } = createStaticHandler({
-      routes: [
-        {
-          path: "the",
-          loader: () => ({
-            key1: "value1",
-          }),
-          element: <HooksChecker1 />,
-          handle: "1",
-          children: [
-            {
-              path: "path",
-              loader: () => ({
-                key2: "value2",
-              }),
-              element: <HooksChecker2 />,
-              handle: "2",
-            },
-          ],
-        },
-      ],
-    });
+    let routes = [
+      {
+        path: "the",
+        loader: () => ({
+          key1: "value1",
+        }),
+        element: <HooksChecker1 />,
+        handle: "1",
+        children: [
+          {
+            path: "path",
+            loader: () => ({
+              key2: "value2",
+            }),
+            element: <HooksChecker2 />,
+            handle: "2",
+          },
+        ],
+      },
+    ];
+    let { query } = createStaticHandler(routes);
 
-    let context = await query(
+    let context = (await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
         signal: new AbortController().signal,
       })
-    );
+    )) as StaticHandlerContext;
 
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
-        <DataStaticRouter
-          dataRoutes={dataRoutes}
-          context={context as StaticHandlerContext}
-        />
+        <DataStaticRouter routes={routes} context={context} />
       </React.StrictMode>
     );
-    expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
+    expect(html).toMatch("<h1>👋</h1>");
 
     // @ts-expect-error
     expect(hooksData1.location).toEqual({
@@ -152,27 +151,159 @@ describe("A <DataStaticRouter>", () => {
     ]);
   });
 
-  it("errors if required props are not passed", async () => {
-    let { dataRoutes, query } = createStaticHandler({
-      routes: [
-        {
-          path: "the",
-          element: <h1>👋</h1>,
-        },
-      ],
-    });
+  it("renders hydration data by default", async () => {
+    let routes = [
+      {
+        // provide unique id here but not below, to ensure we add where needed
+        id: "the",
+        path: "the",
+        loader: () => ({
+          key1: "value1",
+        }),
+        element: <Outlet />,
+        children: [
+          {
+            path: "path",
+            loader: () => ({
+              key2: "value2",
+            }),
+            element: <h1>👋</h1>,
+          },
+        ],
+      },
+    ];
+    let { query } = createStaticHandler(routes);
 
-    let context = await query(
+    let context = (await query(
+      new Request("http:/localhost/the/path", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <DataStaticRouter routes={routes} context={context} />
+      </React.StrictMode>
+    );
+    expect(html).toMatch("<h1>👋</h1>");
+
+    let expectedJsonString = JSON.stringify(
+      JSON.stringify({
+        loaderData: {
+          the: { key1: "value1" },
+          "0-0": { key2: "value2" },
+        },
+        actionData: null,
+        errors: null,
+      })
+    );
+    expect(html).toMatch(
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+    );
+  });
+
+  it("supports a nonce prop", async () => {
+    let routes = [
+      {
+        path: "the",
+        element: <Outlet />,
+        children: [
+          {
+            path: "path",
+            element: <h1>👋</h1>,
+          },
+        ],
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http:/localhost/the/path", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <DataStaticRouter
+          routes={routes}
+          context={context}
+          nonce="nonce-string"
+        />
+      </React.StrictMode>
+    );
+    expect(html).toMatch("<h1>👋</h1>");
+
+    let expectedJsonString = JSON.stringify(
+      JSON.stringify({
+        loaderData: {},
+        actionData: null,
+        errors: null,
+      })
+    );
+    expect(html).toMatch(
+      `<script nonce="nonce-string">window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+    );
+  });
+
+  it("allows disabling of automatic hydration", async () => {
+    let routes = [
+      {
+        path: "the",
+        loader: () => ({
+          key1: "value1",
+        }),
+        element: <Outlet />,
+        children: [
+          {
+            path: "path",
+            loader: () => ({
+              key2: "value2",
+            }),
+            element: <h1>👋</h1>,
+          },
+        ],
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http:/localhost/the/path", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <DataStaticRouter routes={routes} context={context} hydrate={false} />
+      </React.StrictMode>
+    );
+    expect(html).toMatch("<h1>👋</h1>");
+    expect(html).not.toMatch("<script>");
+    expect(html).not.toMatch("window");
+    expect(html).not.toMatch("__staticRouterHydrationData");
+  });
+
+  it("errors if required props are not passed", async () => {
+    let routes = [
+      {
+        path: "the",
+        element: <h1>👋</h1>,
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
       new Request("http:/localhost/the/path?the=query#the-hash", {
         signal: new AbortController().signal,
       })
-    );
+    )) as StaticHandlerContext;
 
     expect(() =>
       ReactDOMServer.renderToStaticMarkup(
         <React.StrictMode>
           {/* @ts-expect-error */}
-          <DataStaticRouter context={context as StaticHandlerContext} />
+          <DataStaticRouter context={context} />
         </React.StrictMode>
       )
     ).toThrowErrorMatchingInlineSnapshot(
@@ -183,11 +314,74 @@ describe("A <DataStaticRouter>", () => {
       ReactDOMServer.renderToStaticMarkup(
         <React.StrictMode>
           {/* @ts-expect-error */}
-          <DataStaticRouter dataRoutes={dataRoutes} />
+          <DataStaticRouter routes={routes} />
         </React.StrictMode>
       )
     ).toThrowErrorMatchingInlineSnapshot(
       `"You must provide \`routes\` and \`context\` to <DataStaticRouter>"`
     );
+  });
+
+  describe("boundary tracking", () => {
+    it("tracks the deepest boundary during render", async () => {
+      let routes = [
+        {
+          path: "/",
+          element: <Outlet />,
+          errorElement: <p>Error</p>,
+          children: [
+            {
+              index: true,
+              element: <h1>👋</h1>,
+              errorElement: <p>Error</p>,
+            },
+          ],
+        },
+      ];
+
+      let context = (await createStaticHandler(routes).query(
+        new Request("http:/localhost/", {
+          signal: new AbortController().signal,
+        })
+      )) as StaticHandlerContext;
+
+      let html = ReactDOMServer.renderToStaticMarkup(
+        <React.StrictMode>
+          <DataStaticRouter routes={routes} context={context} hydrate={false} />
+        </React.StrictMode>
+      );
+      expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
+      expect(context._deepestRenderedBoundaryId).toBe("0-0");
+    });
+
+    it("tracks only boundaries that expose an errorElement", async () => {
+      let routes = [
+        {
+          path: "/",
+          element: <Outlet />,
+          errorElement: <p>Error</p>,
+          children: [
+            {
+              index: true,
+              element: <h1>👋</h1>,
+            },
+          ],
+        },
+      ];
+
+      let context = (await createStaticHandler(routes).query(
+        new Request("http:/localhost/", {
+          signal: new AbortController().signal,
+        })
+      )) as StaticHandlerContext;
+
+      let html = ReactDOMServer.renderToStaticMarkup(
+        <React.StrictMode>
+          <DataStaticRouter routes={routes} context={context} hydrate={false} />
+        </React.StrictMode>
+      );
+      expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
+      expect(context._deepestRenderedBoundaryId).toBe("0");
+    });
   });
 });

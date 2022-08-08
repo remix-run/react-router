@@ -1,21 +1,26 @@
 import * as React from "react";
 import type {
-  DataRouteObject,
   RevalidationState,
-  Router as DataRouter,
-  RouterState,
+  RouteObject,
+  Router as RemixRouter,
   StaticHandlerContext,
 } from "@remix-run/router";
-import { IDLE_NAVIGATION, Action, invariant } from "@remix-run/router";
 import {
-  Location,
-  To,
+  IDLE_FETCHER,
+  IDLE_NAVIGATION,
+  Action,
+  invariant,
+  UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
+} from "@remix-run/router";
+import type { Location, To } from "react-router-dom";
+import {
   createPath,
   parsePath,
   Router,
+  UNSAFE_DataRouter as DataRouter,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
-  useRoutes,
+  UNSAFE_DataStaticRouterContext as DataStaticRouterContext,
 } from "react-router-dom";
 
 export interface StaticRouterProps {
@@ -60,53 +65,70 @@ export function StaticRouter({
 }
 
 export interface DataStaticRouterProps {
-  dataRoutes: DataRouteObject[];
   context: StaticHandlerContext;
+  routes: RouteObject[];
+  hydrate?: boolean;
+  nonce?: string;
 }
 
 /**
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function DataStaticRouter({
-  dataRoutes,
+export function unstable_DataStaticRouter({
   context,
+  routes,
+  hydrate = true,
+  nonce,
 }: DataStaticRouterProps) {
   invariant(
-    dataRoutes && context,
+    routes && context,
     "You must provide `routes` and `context` to <DataStaticRouter>"
   );
 
-  let router = getStatelessRouter(dataRoutes, context);
+  let dataRouterContext = {
+    router: getStatelessRemixRouter(routes, context),
+    navigator: getStatelessNavigator(),
+    static: true,
+    basename: "/",
+  };
+
+  let hydrateScript = "";
+
+  if (hydrate !== false) {
+    let data = {
+      loaderData: context.loaderData,
+      actionData: context.actionData,
+      errors: context.errors,
+    };
+    // Use JSON.parse here instead of embedding a raw JS object here to speed
+    // up parsing on the client.  Dual-stringify is needed to ensure all quotes
+    // are properly escaped in the resulting string.  See:
+    //   https://v8.dev/blog/cost-of-javascript-2019#json
+    let json = JSON.stringify(JSON.stringify(data));
+    hydrateScript = `window.__staticRouterHydrationData = JSON.parse(${json});`;
+  }
+
   return (
-    <DataRouterContext.Provider value={router}>
-      <DataRouterStateContext.Provider value={router.state}>
-        <Router
-          location={router.state.location}
-          navigationType={router.state.historyAction}
-          navigator={getStatelessNavigator()}
-          static={true}
-        >
-          <DataStaticRoutes
-            dataRoutes={router.routes}
-            location={router.state.location}
-          />
-        </Router>
-      </DataRouterStateContext.Provider>
-    </DataRouterContext.Provider>
+    <>
+      <DataStaticRouterContext.Provider value={context}>
+        <DataRouterContext.Provider value={dataRouterContext}>
+          <DataRouterStateContext.Provider
+            value={dataRouterContext.router.state}
+          >
+            <DataRouter />
+          </DataRouterStateContext.Provider>
+        </DataRouterContext.Provider>
+      </DataStaticRouterContext.Provider>
+      {hydrateScript ? (
+        <script
+          suppressHydrationWarning
+          nonce={nonce}
+          dangerouslySetInnerHTML={{ __html: hydrateScript }}
+        />
+      ) : null}
+    </>
   );
-}
-
-interface DataStaticRoutesProps {
-  dataRoutes: DataRouteObject[];
-  location: RouterState["location"];
-}
-
-function DataStaticRoutes({
-  dataRoutes,
-  location,
-}: DataStaticRoutesProps): React.ReactElement | null {
-  return useRoutes(dataRoutes, location);
 }
 
 function getStatelessNavigator() {
@@ -151,10 +173,11 @@ function getStatelessNavigator() {
   };
 }
 
-function getStatelessRouter(
-  dataRoutes: DataRouteObject[],
+function getStatelessRemixRouter(
+  routes: RouteObject[],
   context: StaticHandlerContext
-): DataRouter {
+): RemixRouter {
+  let dataRoutes = convertRoutesToDataRoutes(routes);
   let msg = (method: string) =>
     `You cannot use router.${method}() on the server because it is a stateless environment`;
 
@@ -200,7 +223,7 @@ function getStatelessRouter(
       throw msg("createHref");
     },
     getFetcher() {
-      throw msg("getFetcher");
+      return IDLE_FETCHER;
     },
     deleteFetcher() {
       throw msg("deleteFetcher");

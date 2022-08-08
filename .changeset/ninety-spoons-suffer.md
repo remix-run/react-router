@@ -1,5 +1,4 @@
 ---
-"react-router": patch
 "react-router-dom": patch
 "@remix-run/router": patch
 ---
@@ -15,7 +14,7 @@ feat: Add `createStaticRouter` for `@remix-run/router` SSR usage
 
 ```jsx
 // Create a static handler
-let { dataRoutes, query } = createStaticHandler({ routes });
+let { query } = unstable_createStaticHandler(routes);
 
 // Perform a full-document query for the incoming Fetch Request.  This will
 // execute the appropriate action/loaders and return either the state or a
@@ -30,23 +29,16 @@ if (state instanceof Response) {
 // Otherwise, render our application providing the data routes and state
 let html = ReactDOMServer.renderToString(
   <React.StrictMode>
-    <DataStaticRouter dataRoutes={dataRoutes} state={state} />
+    <DataStaticRouter routes={routes} state={state} />
   </React.StrictMode>
 );
-
-// Grab the hydrationData to send to the client for <DataBrowserRouter>
-let hydrationData = {
-  loaderData: state.loaderData,
-  actionData: state.actionData,
-  errors: state.errors,
-};
 ```
 
 **Example usage (Data Requests):**
 
 ```jsx
 // Create a static route handler
-let { queryRoute } = createStaticHandler({ routes });
+let { queryRoute } = unstable_createStaticHandler(routes);
 
 // Perform a single-route query for the incoming Fetch Request.  This will
 // execute the appropriate singular action/loader and return either the raw

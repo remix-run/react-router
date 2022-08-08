@@ -25,10 +25,9 @@ import URLSearchParams from "@ungap/url-search-params";
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  AwaitProps,
   DataMemoryRouterProps,
   DataRouteMatch,
-  Deferrable,
-  DeferredProps,
   Fetcher,
   Hash,
   IndexRouteProps,
@@ -62,8 +61,8 @@ export type {
   To,
 } from "react-router";
 export {
+  Await,
   DataMemoryRouter,
-  Deferred,
   MemoryRouter,
   Navigate,
   NavigationType,
@@ -73,8 +72,7 @@ export {
   Routes,
   createPath,
   createRoutesFromChildren,
-  deferred,
-  isDeferredError,
+  defer,
   isRouteErrorResponse,
   generatePath,
   json,
@@ -85,7 +83,8 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
-  useDeferredData,
+  useAsyncError,
+  useAsyncValue,
   useHref,
   useInRouterContext,
   useLoaderData,
@@ -120,12 +119,14 @@ export {
 
 /** @internal */
 export {
+  UNSAFE_DataRouter,
+  UNSAFE_DataRouterProvider,
+  UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
+  UNSAFE_DataStaticRouterContext,
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
-  UNSAFE_DataRouterContext,
-  UNSAFE_DataRouterStateContext,
-  useRenderDataRouter,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////

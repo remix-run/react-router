@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import * as ReactDOM from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { MemoryRouter, Routes, Route, useSearchParams } from "react-router-dom";
 
@@ -39,13 +39,12 @@ describe("useSearchParams", () => {
     }
 
     act(() => {
-      ReactDOM.render(
+      ReactDOM.createRoot(node).render(
         <MemoryRouter initialEntries={["/search?q=Michael+Jackson"]}>
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </MemoryRouter>,
-        node
+        </MemoryRouter>
       );
     });
 
@@ -97,13 +96,12 @@ describe("useSearchParams", () => {
     }
 
     act(() => {
-      ReactDOM.render(
+      ReactDOM.createRoot(node).render(
         <MemoryRouter initialEntries={["/search?q=Michael+Jackson"]}>
           <Routes>
             <Route path="search" element={<SearchPage />} />
           </Routes>
-        </MemoryRouter>,
-        node
+        </MemoryRouter>
       );
     });
 

@@ -7,10 +7,6 @@ import { routes } from "./App";
 ReactDOM.hydrateRoot(
   document.getElementById("app"),
   <React.StrictMode>
-    <DataBrowserRouter
-      routes={routes}
-      hydrationData={window.__hydrationData}
-      fallbackElement={null}
-    />
+    <DataBrowserRouter routes={routes} fallbackElement={null} />
   </React.StrictMode>
 );

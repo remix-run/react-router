@@ -1,6 +1,5 @@
 import * as React from "react";
 import {
-  isDeferredError,
   isRouteErrorResponse,
   Location,
   ParamParseKey,
@@ -10,7 +9,7 @@ import {
   PathPattern,
   RouteMatch,
   RouteObject,
-  Router as DataRouter,
+  Router as RemixRouter,
   To,
 } from "@remix-run/router";
 import {
@@ -32,7 +31,9 @@ import {
   NavigateOptions,
   RouteContext,
   RouteErrorContext,
-  DeferredContext,
+  AwaitContext,
+  RouteContextObject,
+  DataStaticRouterContext,
 } from "./context";
 
 /**
@@ -428,7 +429,10 @@ function DefaultErrorElement() {
   let error = useRouteError();
   let message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
-    : error?.message || JSON.stringify(error);
+    : error instanceof Error
+    ? error.message
+    : JSON.stringify(error);
+  let stack = error instanceof Error ? error.stack : null;
   let lightgrey = "rgba(200,200,200, 0.5)";
   let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
   let codeStyles = { padding: "2px 4px", backgroundColor: lightgrey };
@@ -436,7 +440,7 @@ function DefaultErrorElement() {
     <>
       <h2>Unhandled Thrown Error!</h2>
       <h3 style={{ fontStyle: "italic" }}>{message}</h3>
-      {error?.stack ? <pre style={preStyles}>{error?.stack}</pre> : null}
+      {stack ? <pre style={preStyles}>{stack}</pre> : null}
       <p>💿 Hey developer 👋</p>
       <p>
         You can provide a way better UX than this when your app throws errors by
@@ -524,10 +528,32 @@ export class RenderErrorBoundary extends React.Component<
   }
 }
 
+interface RenderedRouteProps {
+  routeContext: RouteContextObject;
+  match: RouteMatch<string, RouteObject>;
+  children: React.ReactNode | null;
+}
+
+function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
+  let dataStaticRouterContext = React.useContext(DataStaticRouterContext);
+
+  // Track how deep we got in our render pass to emulate SSR componentDidCatch
+  // in a DataStaticRouter
+  if (dataStaticRouterContext && match.route.errorElement) {
+    dataStaticRouterContext._deepestRenderedBoundaryId = match.route.id;
+  }
+
+  return (
+    <RouteContext.Provider value={routeContext}>
+      {children}
+    </RouteContext.Provider>
+  );
+}
+
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState?: DataRouter["state"]
+  dataRouterState?: RemixRouter["state"]
 ): React.ReactElement | null {
   if (matches == null) {
     if (dataRouterState?.errors) {
@@ -564,21 +590,20 @@ export function _renderMatches(
       ? match.route.errorElement || <DefaultErrorElement />
       : null;
     let getChildren = () => (
-      <RouteContext.Provider
-        children={
-          error
-            ? errorElement
-            : match.route.element !== undefined
-            ? match.route.element
-            : outlet
-        }
-        value={{
+      <RenderedRoute
+        match={match}
+        routeContext={{
           outlet,
           matches: parentMatches.concat(renderedMatches.slice(0, index + 1)),
         }}
-      />
+      >
+        {error
+          ? errorElement
+          : match.route.element !== undefined
+          ? match.route.element
+          : outlet}
+      </RenderedRoute>
     );
-
     // Only wrap in an error boundary within data router usages when we have an
     // errorElement on this route.  Otherwise let it bubble up to an ancestor
     // errorElement
@@ -607,7 +632,7 @@ enum DataRouterHook {
 
 function useDataRouterState(hookName: DataRouterHook) {
   let state = React.useContext(DataRouterStateContext);
-  invariant(state, `${hookName} must be used within a DataRouter`);
+  invariant(state, `${hookName} must be used within a DataRouterStateContext`);
   return state;
 }
 
@@ -625,10 +650,16 @@ export function useNavigation() {
  * as the current state of any manual revalidations
  */
 export function useRevalidator() {
-  let router = React.useContext(DataRouterContext);
-  invariant(router, `useRevalidator must be used within a DataRouter`);
+  let dataRouterContext = React.useContext(DataRouterContext);
+  invariant(
+    dataRouterContext,
+    `useRevalidator must be used within a DataRouterContext`
+  );
   let state = useDataRouterState(DataRouterHook.UseRevalidator);
-  return { revalidate: router.revalidate, state: state.revalidation };
+  return {
+    revalidate: dataRouterContext.router.revalidate,
+    state: state.revalidation,
+  };
 }
 
 /**
@@ -645,8 +676,8 @@ export function useMatches() {
           id: match.route.id,
           pathname,
           params,
-          data: loaderData[match.route.id],
-          handle: match.route.handle,
+          data: loaderData[match.route.id] as unknown,
+          handle: match.route.handle as unknown,
         };
       }),
     [matches, loaderData]
@@ -656,7 +687,7 @@ export function useMatches() {
 /**
  * Returns the loader data for the nearest ancestor Route loader
  */
-export function useLoaderData() {
+export function useLoaderData(): unknown {
   let state = useDataRouterState(DataRouterHook.UseLoaderData);
 
   let route = React.useContext(RouteContext);
@@ -674,7 +705,7 @@ export function useLoaderData() {
 /**
  * Returns the loaderData for the given routeId
  */
-export function useRouteLoaderData(routeId: string): any | undefined {
+export function useRouteLoaderData(routeId: string): unknown {
   let state = useDataRouterState(DataRouterHook.UseRouteLoaderData);
   return state.loaderData[routeId];
 }
@@ -682,7 +713,7 @@ export function useRouteLoaderData(routeId: string): any | undefined {
 /**
  * Returns the action data for the nearest ancestor Route action
  */
-export function useActionData() {
+export function useActionData(): unknown {
   let state = useDataRouterState(DataRouterHook.UseActionData);
 
   let route = React.useContext(RouteContext);
@@ -696,17 +727,11 @@ export function useActionData() {
  * error or a render error.  This is intended to be called from your
  * errorElement to display a proper error message.
  */
-export function useRouteError() {
+export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
   let state = useDataRouterState(DataRouterHook.UseRouteError);
   let route = React.useContext(RouteContext);
   let thisRoute = route.matches[route.matches.length - 1];
-  let deferredValue = React.useContext(DeferredContext);
-
-  // Return deferred errors if we're inside a Deferred errorElement
-  if (deferredValue && isDeferredError(deferredValue)) {
-    return deferredValue;
-  }
 
   // If this was a render error, we put it in a RouteError context inside
   // of RenderErrorBoundary
@@ -724,21 +749,20 @@ export function useRouteError() {
   return state.errors?.[thisRoute.route.id];
 }
 
-export type Deferrable<T> = never | T | Promise<T>;
-export type ResolvedDeferrable<T> = T extends null | undefined
-  ? T
-  : T extends Deferrable<infer T2>
-  ? T2 extends Promise<infer T3>
-    ? T3
-    : T2
-  : T;
+/**
+ * Returns the happy-path data from the nearest ancestor <Await /> value
+ */
+export function useAsyncValue(): unknown {
+  let value = React.useContext(AwaitContext);
+  return value?._data;
+}
 
 /**
- * Returns the happy-path data from the nearest ancestor <Deferred /> value
+ * Returns the error from the nearest ancestor <Await /> value
  */
-export function useDeferredData<Data>() {
-  let value = React.useContext(DeferredContext);
-  return value as ResolvedDeferrable<Data>;
+export function useAsyncError(): unknown {
+  let value = React.useContext(AwaitContext);
+  return value?._error;
 }
 
 const alreadyWarned: Record<string, boolean> = {};

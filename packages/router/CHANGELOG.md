@@ -1,11 +1,107 @@
 # @remix-run/router
 
+## 0.2.0-pre.6
+
+### Patch Changes
+
+- c3406eb9: fix: Rename `<Deferred>` to `<Await>` (#9095)
+
+  - We are no longer replacing the `Promise` on `loaderData` with the value/error
+    when it settles so it's now always a `Promise`.
+  - To that end, we changed from `<Deferred value={promise}>` to
+    `<Await resolve={promise}>` for clarity, and it also now supports using
+    `<Await>` with raw promises from anywhere, not only those on `loaderData`
+    from a defer() call.
+    - Note that raw promises will not be automatically cancelled on interruptions
+      so they are not recommended
+  - The hooks are now `useAsyncValue`/`useAsyncError`
+
+## 0.2.0-pre.5
+
+### Patch Changes
+
+- feat: Deferred API Updates (#9070)
+
+  - Support array and single promise usages
+    - `return defer([ await critical(), lazy() ])`
+    - `return defer(lazy())`
+  - Remove `Deferrable`/`ResolvedDeferrable` in favor of raw `Promise`'s and `Awaited`
+  - Remove generics from `useAsyncValue` until `useLoaderData` generic is decided in 6.5
+
+- feat: Add `createStaticRouter` for `@remix-run/router` SSR usage (#9013)
+
+  **Notable changes:**
+
+  - `request` is now the driving force inside the router utils, so that we can better handle `Request` instances coming form the server (as opposed to `string` and `Path` instances coming from the client)
+  - Removed the `signal` param from `loader` and `action` functions in favor of `request.signal`
+
+  **Example usage (Document Requests):**
+
+  ```jsx
+  // Create a static handler
+  let { query } = unstable_createStaticHandler(routes);
+
+  // Perform a full-document query for the incoming Fetch Request.  This will
+  // execute the appropriate action/loaders and return either the state or a
+  // Fetch Response in the case of redirects.
+  let state = await query(fetchRequest);
+
+  // If we received a Fetch Response back, let our server runtime handle directly
+  if (state instanceof Response) {
+    throw state;
+  }
+
+  // Otherwise, render our application providing the data routes and state
+  let html = ReactDOMServer.renderToString(
+    <React.StrictMode>
+      <DataStaticRouter routes={routes} state={state} />
+    </React.StrictMode>
+  );
+  ```
+
+  **Example usage (Data Requests):**
+
+  ```jsx
+  // Create a static route handler
+  let { queryRoute } = unstable_createStaticHandler(routes);
+
+  // Perform a single-route query for the incoming Fetch Request.  This will
+  // execute the appropriate singular action/loader and return either the raw
+  // data or a Fetch Response
+  let data = await queryRoute(fetchRequest);
+
+  // If we received a Fetch Response back, return it directly
+  if (data instanceof Response) {
+    return data;
+  }
+
+  // Otherwise, construct a Response from the raw data (assuming json here)
+  return new Response(JSON.stringify(data), {
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+    },
+  });
+  ```
+
+- feat: SSR Updates for React Router (#9058)
+
+  _Note: The Data-Router SSR aspects of `@remix-run/router` and `react-router-dom` are being released as **unstable** in this release (`unstable_createStaticHandler` and `unstable_DataStaticRouter`), and we plan to finalize them in a subsequent minor release once the kinks can be worked out with the Remix integration. To that end, they are available for use, but are subject to breaking changes in the next minor release._
+
+  - Remove `useRenderDataRouter()` in favor of `<DataRouterProvider>`/`<DataRouter>`
+  - Support automatic hydration in `<DataStaticRouter>`/`<DataBrowserRouter>`/`<DataHashRouter>`
+    - Uses `window.__staticRouterHydrationData`
+    - Can be disabled on the server via `<DataStaticRouter hydrate={false}>`
+    - Can be disabled (or overridden) in the browser by passing `hydrationData` to `<DataBrowserRouter>`/`<DataHashRouter>`
+  - `<DataStaticRouter>` now tracks it's own SSR error boundaries on `StaticHandlerContext`
+  - `StaticHandlerContext` now exposes `statusCode`/`loaderHeaders`/`actionHeaders`
+  - `foundMissingHydrationData` check removed since Remix routes may have loaders (for modules) that don't return data for `loaderData`
+
 ## 0.2.0-pre.4
 
 ### Patch Changes
 
 - fix: Handle fetcher 404s as normal boundary errors (#9015)
-- feat: adds `deferred` support to data routers (#9002)
+- feat: adds `defer()` support to data routers (#9002)
 - feat: add basename support for data routers (#9026)
 - ci: simplify dist/ directory for CJS/ESM only (#9017)
 - fix: Fix trailing slash behavior on pathless routing when using a basename (#9045)

@@ -1,15 +1,28 @@
 import * as React from "react";
 import type {
+  TrackedPromise,
   History,
   Location,
   RouteMatch,
   Router,
+  StaticHandlerContext,
   To,
 } from "@remix-run/router";
 import { Action as NavigationType } from "@remix-run/router";
 
 // Contexts for data routers
-export const DataRouterContext = React.createContext<Router | null>(null);
+export const DataStaticRouterContext =
+  React.createContext<StaticHandlerContext | null>(null);
+if (__DEV__) {
+  DataStaticRouterContext.displayName = "DataStaticRouterContext";
+}
+
+export interface DataRouterContextObject extends NavigationContextObject {
+  router: Router;
+}
+
+export const DataRouterContext =
+  React.createContext<DataRouterContextObject | null>(null);
 if (__DEV__) {
   DataRouterContext.displayName = "DataRouter";
 }
@@ -21,9 +34,9 @@ if (__DEV__) {
   DataRouterStateContext.displayName = "DataRouterState";
 }
 
-export const DeferredContext = React.createContext<any | null>(null);
+export const AwaitContext = React.createContext<TrackedPromise | null>(null);
 if (__DEV__) {
-  DeferredContext.displayName = "Deferred";
+  AwaitContext.displayName = "Await";
 }
 
 export interface NavigateOptions {
@@ -75,7 +88,7 @@ if (__DEV__) {
   LocationContext.displayName = "Location";
 }
 
-interface RouteContextObject {
+export interface RouteContextObject {
   outlet: React.ReactElement | null;
   matches: RouteMatch[];
 }
@@ -87,11 +100,6 @@ export const RouteContext = React.createContext<RouteContextObject>({
 
 if (__DEV__) {
   RouteContext.displayName = "Route";
-}
-
-interface RouteContextObject {
-  outlet: React.ReactElement | null;
-  matches: RouteMatch[];
 }
 
 export const RouteErrorContext = React.createContext<any>(null);

@@ -1,16 +1,12 @@
 import React from "react";
 import {
-  type ActionFunction,
-  type Deferrable,
-  type LoaderFunction,
-  DataBrowserRouter,
-  Deferred,
+  Await,
   Form,
   Link,
-  Route,
   Outlet,
-  deferred,
-  useDeferredData,
+  defer,
+  useAsyncError,
+  useAsyncValue,
   useFetcher,
   useFetchers,
   useLoaderData,
@@ -20,19 +16,23 @@ import {
   useRouteError,
   json,
   useActionData,
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
 } from "react-router-dom";
 
 import type { Todos } from "./todos";
 import { addTodo, deleteTodo, getTodos } from "./todos";
 
-let sleep = (n: number = 500) => new Promise((r) => setTimeout(r, n));
+export function sleep(n: number = 500) {
+  return new Promise((r) => setTimeout(r, n));
+}
 
-function Fallback() {
+export function Fallback() {
   return <p>Performing initial data "load"</p>;
 }
 
 // Layout
-function Layout() {
+export function Layout() {
   let navigation = useNavigation();
   let { revalidate } = useRevalidator();
   let fetchers = useFetchers();
@@ -49,6 +49,8 @@ function Layout() {
         <Link to="/deferred">Deferred</Link>
         &nbsp;|&nbsp;
         <Link to="/deferred/child">Deferred Child</Link>
+        &nbsp;|&nbsp;
+        <Link to="/await">Await</Link>
         &nbsp;|&nbsp;
         <Link to="/long-load">Long Load</Link>
         &nbsp;|&nbsp;
@@ -78,15 +80,19 @@ function Layout() {
 }
 
 // Home
-const homeLoader: LoaderFunction = async () => {
+interface HomeLoaderData {
+  date: string;
+}
+
+export async function homeLoader(): Promise<HomeLoaderData> {
   await sleep();
   return {
     date: new Date().toISOString(),
   };
-};
+}
 
-function Home() {
-  let data = useLoaderData();
+export function Home() {
+  let data = useLoaderData() as HomeLoaderData;
   return (
     <>
       <h2>Home</h2>
@@ -96,7 +102,7 @@ function Home() {
 }
 
 // Todos
-const todosAction: ActionFunction = async ({ request }) => {
+export async function todosAction({ request }: ActionFunctionArgs) {
   await sleep();
 
   let formData = await request.formData();
@@ -120,14 +126,14 @@ const todosAction: ActionFunction = async ({ request }) => {
     status: 302,
     headers: { Location: "/todos" },
   });
-};
+}
 
-const todosLoader: LoaderFunction = async () => {
+export async function todosLoader(): Promise<Todos> {
   await sleep();
   return getTodos();
-};
+}
 
-function TodosList() {
+export function TodosList() {
   let todos = useLoaderData() as Todos;
   let navigation = useNavigation();
   let formRef = React.useRef<HTMLFormElement>(null);
@@ -176,8 +182,8 @@ function TodosList() {
   );
 }
 
-function TodosBoundary() {
-  let error = useRouteError();
+export function TodosBoundary() {
+  let error = useRouteError() as Error;
   return (
     <>
       <h2>Error 💥</h2>
@@ -191,7 +197,7 @@ interface TodoItemProps {
   todo: string;
 }
 
-function TodoItem({ id, todo }: TodoItemProps) {
+export function TodoItem({ id, todo }: TodoItemProps) {
   let fetcher = useFetcher();
 
   let isDeleting = fetcher.formData != null;
@@ -210,7 +216,9 @@ function TodoItem({ id, todo }: TodoItemProps) {
 }
 
 // Todo
-const todoLoader: LoaderFunction = async ({ params }) => {
+export async function todoLoader({
+  params,
+}: LoaderFunctionArgs): Promise<string> {
   await sleep();
   let todos = getTodos();
   if (!params.id) {
@@ -221,11 +229,11 @@ const todoLoader: LoaderFunction = async ({ params }) => {
     throw new Error(`Uh oh, I couldn't find a todo with id "${params.id}"`);
   }
   return todo;
-};
+}
 
-function Todo() {
+export function Todo() {
   let params = useParams();
-  let todo = useLoaderData();
+  let todo = useLoaderData() as string;
   return (
     <>
       <h2>Nested Todo Route:</h2>
@@ -238,82 +246,107 @@ function Todo() {
 interface DeferredRouteLoaderData {
   critical1: string;
   critical2: string;
-  lazyResolved: Deferrable<string>;
-  lazy1: Deferrable<string>;
-  lazy2: Deferrable<string>;
-  lazy3: Deferrable<string>;
-  lazyError: Deferrable<string>;
+  lazyResolved: Promise<string>;
+  lazy1: Promise<string>;
+  lazy2: Promise<string>;
+  lazy3: Promise<string>;
+  lazyError: Promise<string>;
 }
 
 const rand = () => Math.round(Math.random() * 100);
 const resolve = (d: string, ms: number) =>
   new Promise((r) => setTimeout(() => r(`${d} - ${rand()}`), ms));
-const reject = (d: string, ms: number) =>
-  new Promise((_, r) => setTimeout(() => r(`${d} - ${rand()}`), ms));
+const reject = (d: Error | string, ms: number) =>
+  new Promise((_, r) =>
+    setTimeout(() => {
+      if (d instanceof Error) {
+        d.message += ` - ${rand()}`;
+      } else {
+        d += ` - ${rand()}`;
+      }
+      r(d);
+    }, ms)
+  );
 
-const deferredLoader: LoaderFunction = async ({ request }) => {
-  return deferred({
+export async function deferredLoader() {
+  return defer({
     critical1: await resolve("Critical 1", 250),
     critical2: await resolve("Critical 2", 500),
     lazyResolved: Promise.resolve("Lazy Data immediately resolved - " + rand()),
     lazy1: resolve("Lazy 1", 1000),
     lazy2: resolve("Lazy 2", 1500),
     lazy3: resolve("Lazy 3", 2000),
-    lazyError: reject("Kaboom!", 2500),
+    lazyError: reject(new Error("Kaboom!"), 2500),
   });
-};
+}
 
-function DeferredPage() {
+export function DeferredPage() {
   let data = useLoaderData() as DeferredRouteLoaderData;
-
   return (
     <div>
       <p>{data.critical1}</p>
       <p>{data.critical2}</p>
-      <Deferred value={data.lazyResolved} fallback={<p>should not see me!</p>}>
-        <RenderDeferredData />
-      </Deferred>
-      <Deferred value={data.lazy1} fallback={<p>loading 1...</p>}>
-        <RenderDeferredData />
-      </Deferred>
-      <Deferred value={data.lazy2} fallback={<p>loading 2...</p>}>
-        <RenderDeferredData />
-      </Deferred>
-      <Deferred value={data.lazy3} fallback={<p>loading 3...</p>}>
-        {(data) => <p>{data}</p>}
-      </Deferred>
-      <Deferred
-        value={data.lazyError}
-        fallback={<p>loading (error)...</p>}
-        errorElement={<RenderDeferredError />}
-      >
-        <RenderDeferredData />
-      </Deferred>
+
+      <React.Suspense fallback={<p>should not see me!</p>}>
+        <Await resolve={data.lazyResolved}>
+          <RenderAwaitedData />
+        </Await>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading 1...</p>}>
+        <Await resolve={data.lazy1}>
+          <RenderAwaitedData />
+        </Await>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading 2...</p>}>
+        <Await resolve={data.lazy2}>
+          <RenderAwaitedData />
+        </Await>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading 3...</p>}>
+        <Await resolve={data.lazy3}>{(data: string) => <p>{data}</p>}</Await>
+      </React.Suspense>
+
+      <React.Suspense fallback={<p>loading (error)...</p>}>
+        <Await resolve={data.lazyError} errorElement={<RenderAwaitedError />}>
+          <RenderAwaitedData />
+        </Await>
+      </React.Suspense>
+
       <Outlet />
     </div>
   );
 }
 
-const deferredChildLoader: LoaderFunction = async ({ request }) => {
-  return deferred({
+interface DeferredChildLoaderData {
+  critical: string;
+  lazy: Promise<string>;
+}
+
+export async function deferredChildLoader() {
+  return defer({
     critical: await resolve("Critical Child Data", 500),
     lazy: resolve("Lazy Child Data", 1000),
   });
-};
+}
 
-const deferredChildAction: ActionFunction = async ({ request }) => {
+export async function deferredChildAction() {
   return json({ ok: true });
-};
+}
 
-function DeferredChild() {
-  let data = useLoaderData();
+export function DeferredChild() {
+  let data = useLoaderData() as DeferredChildLoaderData;
   let actionData = useActionData();
   return (
     <div>
       <p>{data.critical}</p>
-      <Deferred value={data.lazy} fallback={<p>loading child...</p>}>
-        <RenderDeferredData />
-      </Deferred>
+      <React.Suspense fallback={<p>loading child...</p>}>
+        <Await resolve={data.lazy}>
+          <RenderAwaitedData />
+        </Await>
+      </React.Suspense>
       <Form method="post">
         <button type="submit" name="key" value="value">
           Submit
@@ -324,13 +357,39 @@ function DeferredChild() {
   );
 }
 
-function RenderDeferredData() {
-  let data = useDeferredData<string>();
+let shouldResolve = true;
+let rawPromiseResolver: ((value: unknown) => void) | null;
+let rawPromiseRejecter: ((value: unknown) => void) | null;
+let rawPromise: Promise<unknown> = new Promise((r, j) => {
+  rawPromiseResolver = r;
+  rawPromiseRejecter = j;
+});
+
+export function AwaitPage() {
+  React.useEffect(() => {
+    setTimeout(() => {
+      if (shouldResolve) {
+        rawPromiseResolver?.("Resolved raw promise!");
+      } else {
+        rawPromiseRejecter?.("Rejected raw promise!");
+      }
+    }, 1000);
+  }, []);
+
+  return (
+    <React.Suspense fallback={<p>Awaiting raw promise </p>}>
+      <Await resolve={rawPromise}>{(data: string) => <p>{data}</p>}</Await>
+    </React.Suspense>
+  );
+}
+
+function RenderAwaitedData() {
+  let data = useAsyncValue() as string;
   return <p>{data}</p>;
 }
 
-function RenderDeferredError() {
-  let error = useRouteError();
+function RenderAwaitedError() {
+  let error = useAsyncError() as Error;
   return (
     <p style={{ color: "red" }}>
       Error (errorElement)!
@@ -339,41 +398,3 @@ function RenderDeferredError() {
     </p>
   );
 }
-
-function App() {
-  return (
-    <DataBrowserRouter fallbackElement={<Fallback />}>
-      <Route path="/" element={<Layout />}>
-        <Route index loader={homeLoader} element={<Home />} />
-        <Route
-          path="deferred"
-          loader={deferredLoader}
-          element={<DeferredPage />}
-        >
-          <Route
-            path="child"
-            loader={deferredChildLoader}
-            action={deferredChildAction}
-            element={<DeferredChild />}
-          />
-        </Route>
-        <Route
-          path="long-load"
-          loader={() => sleep(3000)}
-          element={<h1>👋</h1>}
-        />
-        <Route
-          path="todos"
-          action={todosAction}
-          loader={todosLoader}
-          element={<TodosList />}
-          errorElement={<TodosBoundary />}
-        >
-          <Route path=":id" loader={todoLoader} element={<Todo />} />
-        </Route>
-      </Route>
-    </DataBrowserRouter>
-  );
-}
-
-export default App;
