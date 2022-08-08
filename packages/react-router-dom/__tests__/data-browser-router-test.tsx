@@ -1220,6 +1220,34 @@ function testDomRouter(
       );
     });
 
+    it("handles action for <Form method='get'> correctly in nested routes", async () => {
+      let { container } = render(
+        <TestDataRouter
+          window={getWindow("/foo/bar?a=1#hash")}
+          hydrationData={{}}
+        >
+          <Route path="/">
+            <Route path="foo">
+              <Route path="bar" element={<Component />} />
+            </Route>
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Component() {
+        return (
+          <Form method="get">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe(
+        "/foo/bar?a=1#hash"
+      );
+    });
+
     it("handles action for <Form method='get' action='.'> correctly", async () => {
       let { container } = render(
         <TestDataRouter window={getWindow("/?a=1")} hydrationData={{}}>
@@ -1237,6 +1265,34 @@ function testDomRouter(
       }
 
       expect(container.querySelector("form")?.getAttribute("action")).toBe("/");
+    });
+
+    it("handles action for <Form method='get' action='.'> correctly in nested routes", async () => {
+      let { container } = render(
+        <TestDataRouter
+          window={getWindow("/foo/bar?a=1#hash")}
+          hydrationData={{}}
+        >
+          <Route path="/">
+            <Route path="foo">
+              <Route path="bar" element={<Component />} />
+            </Route>
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Component() {
+        return (
+          <Form method="get" action=".">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe(
+        "/foo/bar"
+      );
     });
 
     it("handles action for <Form method='post'> correctly", async () => {
@@ -1260,6 +1316,34 @@ function testDomRouter(
       );
     });
 
+    it("handles action for <Form method='post'> correctly in nested routes", async () => {
+      let { container } = render(
+        <TestDataRouter
+          window={getWindow("/foo/bar?a=1#hash")}
+          hydrationData={{}}
+        >
+          <Route path="/">
+            <Route path="foo">
+              <Route path="bar" element={<Component />} />
+            </Route>
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Component() {
+        return (
+          <Form method="post">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe(
+        "/foo/bar?a=1#hash"
+      );
+    });
+
     it("handles action for <Form method='post' action='.'> correctly", async () => {
       let { container } = render(
         <TestDataRouter window={getWindow("/?a=1")} hydrationData={{}}>
@@ -1277,6 +1361,34 @@ function testDomRouter(
       }
 
       expect(container.querySelector("form")?.getAttribute("action")).toBe("/");
+    });
+
+    it("handles action for <Form method='post' action='.'> correctly in nested routes", async () => {
+      let { container } = render(
+        <TestDataRouter
+          window={getWindow("/foo/bar?a=1#hash")}
+          hydrationData={{}}
+        >
+          <Route path="/">
+            <Route path="foo">
+              <Route path="bar" element={<Component />} />
+            </Route>
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Component() {
+        return (
+          <Form method="post" action=".">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe(
+        "/foo/bar"
+      );
     });
 
     it("handles ?index param for action <Form>", async () => {
