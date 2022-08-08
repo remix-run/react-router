@@ -3,11 +3,35 @@ import globby from "globby";
 import fs from "fs";
 import path from "path";
 
-import { createFixtureProject } from "./helpers/create-fixture";
+import { createFixtureProject, js } from "./helpers/create-fixture";
 
 test("builds deterministically under different paths", async () => {
-  let dir1 = await createFixtureProject();
-  let dir2 = await createFixtureProject();
+  // This test validates various flavors of remix virtual modules to ensure
+  // we get identical builds regardless of the parent paths. If a virtual
+  // module resolves or imports from absolute paths (e.g. via `path.resolve`),
+  // the build hashes may change even though the output is identical. This
+  // can cause broken apps (i.e. manifest mismatch) if the server and client
+  // are built separately.
+
+  // Virtual modules tested:
+  //  * browserRouteModulesPlugin (implicitly tested by root route)
+  //  * emptyModulesPlugin (via app/routes/foo.tsx' server import)
+  //  * mdx (via app/routes/index.mdx)
+  //  * serverAssetsManifestPlugin (implicitly tested by build)
+  //  * serverEntryModulePlugin (implicitly tested by build)
+  //  * serverRouteModulesPlugin (implicitly tested by build)
+  let init = {
+    files: {
+      "app/routes/index.mdx": "# hello world",
+      "app/routes/foo.tsx": js`
+        export * from "~/foo/bar.server";
+        export default () => "YAY";
+      `,
+      "app/foo/bar.server.ts": "export const meta = () => []",
+    },
+  };
+  let dir1 = await createFixtureProject(init);
+  let dir2 = await createFixtureProject(init);
 
   expect(dir1).not.toEqual(dir2);
 
