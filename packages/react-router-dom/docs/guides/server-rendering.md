@@ -239,9 +239,6 @@ Promise.all(promises).then(data => {
 
 And finally, the client will need to pick up the data. Again, we aren't in the business of prescribing a data loading pattern for your app, but these are the touch points you'll need to implement.
 
-You might be interested in our [React Router Config][rrc] package to assist with data loading and server rendering with static route configs.
-
 [staticrouter]: ../api/StaticRouter.md
 [browserrouter]: ../api/BrowserRouter.md
 [redirect]: ../api/Redirect.md
-[rrc]: https://github.com/remix-run/react-router/tree/main/packages/react-router-config
