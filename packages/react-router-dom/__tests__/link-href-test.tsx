@@ -58,14 +58,25 @@ describe("<Link> href", () => {
           <MemoryRouter initialEntries={["/inbox/messages"]}>
             <Routes>
               <Route path="inbox">
-                <Route path="messages" element={<Link to="../../about" />} />
+                <Route
+                  path="messages"
+                  element={
+                    <>
+                      <Link to="../../about" />
+                      {/* traverse past the root */}
+                      <Link to="../../../about" />
+                    </>
+                  }
+                />
               </Route>
             </Routes>
           </MemoryRouter>
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/about");
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
     });
   });
 
@@ -203,14 +214,25 @@ describe("<Link> href", () => {
           <MemoryRouter initialEntries={["/inbox"]}>
             <Routes>
               <Route path="inbox">
-                <Route index element={<Link to="../../about" />} />
+                <Route
+                  index
+                  element={
+                    <>
+                      <Link to="../../about" />
+                      {/* traverse past the root */}
+                      <Link to="../../../about" />
+                    </>
+                  }
+                />
               </Route>
             </Routes>
           </MemoryRouter>
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/about");
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
     });
   });
 
@@ -289,7 +311,17 @@ describe("<Link> href", () => {
             <Routes>
               <Route path="inbox">
                 <Route
-                  element={<MessagesLayout link={<Link to="../../about" />} />}
+                  element={
+                    <MessagesLayout
+                      link={
+                        <>
+                          <Link to="../../about" />
+                          {/* traverse past the root */}
+                          <Link to="../../../about" />
+                        </>
+                      }
+                    />
+                  }
                 >
                   <Route path="messages" element={<h1>Messages</h1>} />
                 </Route>
@@ -299,7 +331,9 @@ describe("<Link> href", () => {
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/about");
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
     });
   });
 
@@ -388,7 +422,13 @@ describe("<Link> href", () => {
               <Route path="inbox">
                 <Route
                   path="messages/*"
-                  element={<Link to="../../../about" />}
+                  element={
+                    <>
+                      <Link to="../../about" />
+                      {/* traverse past the root */}
+                      <Link to="../../../about" />
+                    </>
+                  }
                 />
               </Route>
             </Routes>
@@ -396,7 +436,9 @@ describe("<Link> href", () => {
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/about");
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
     });
   });
 
@@ -531,7 +573,13 @@ describe("<Link> href", () => {
                   <Routes>
                     <Route
                       path="login"
-                      element={<Link to="../../../about" />}
+                      element={
+                        <>
+                          <Link to="../../about" />
+                          {/* traverse past the root */}
+                          <Link to="../../../about" />
+                        </>
+                      }
                     />
                   </Routes>
                 }
@@ -541,7 +589,9 @@ describe("<Link> href", () => {
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/about");
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
     });
   });
 });
