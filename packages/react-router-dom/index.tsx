@@ -3,7 +3,12 @@
  * you'll need to update the rollup config for react-router-dom-v5-compat.
  */
 import * as React from "react";
-import { createRoutesFromChildren, NavigateOptions, To } from "react-router";
+import {
+  createRoutesFromChildren,
+  NavigateOptions,
+  RouteObject,
+  To,
+} from "react-router";
 import {
   Router,
   createPath,
@@ -27,7 +32,6 @@ import type {
   HashHistory,
   History,
   HydrationState,
-  RouteObject,
   Router as RemixRouter,
 } from "@remix-run/router";
 import {
@@ -72,6 +76,7 @@ export type {
   AwaitProps,
   DataMemoryRouterProps,
   DataRouteMatch,
+  DataRouteObject,
   Fetcher,
   Hash,
   IndexRouteProps,
