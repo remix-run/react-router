@@ -258,8 +258,8 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
 
   React.useEffect(() => {
     // Avoid kicking off multiple navigations if we're in the middle of a
-    // navigation, since components get re-rendered when we enter a
-    // submitting/loading state in data routers
+    // data-router navigation, since components get re-rendered when we enter
+    // a submitting/loading state
     if (dataRouterState && dataRouterState.navigation.state !== "idle") {
       return;
     }
