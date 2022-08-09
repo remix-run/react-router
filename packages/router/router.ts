@@ -301,6 +301,13 @@ export type RouterNavigateOptions =
   | SubmissionNavigateOptions;
 
 /**
+ * Options to pass to fetch()
+ */
+export type RouterFetchOptions =
+  | Omit<LinkNavigateOptions, "replace">
+  | Omit<SubmissionNavigateOptions, "replace">;
+
+/**
  * Potential states for state.navigation
  */
 export type NavigationStates = {
@@ -496,9 +503,6 @@ export function createRouter(init: RouterInit): Router {
   // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
   let pendingAction: HistoryAction = HistoryAction.Pop;
-  // Track if the current PUSH pendingAction came from a navigation redirect
-  // and should be exposed to the user via state.historyAction = REPLACE
-  let isNavigationRedirect = false;
   // Should the current navigation reset the scroll position if scroll cannot
   // be restored?
   let pendingResetScroll = true;
@@ -627,10 +631,7 @@ export function createRouter(init: RouterInit): Router {
       ...(isActionReload ? {} : { actionData: null }),
       ...newState,
       ...newLoaderData,
-      historyAction:
-        pendingAction === HistoryAction.Push && isNavigationRedirect
-          ? HistoryAction.Replace
-          : pendingAction,
+      historyAction: pendingAction,
       location,
       initialized: true,
       navigation: IDLE_NAVIGATION,
@@ -655,7 +656,6 @@ export function createRouter(init: RouterInit): Router {
 
     // Reset stateful navigation vars
     pendingAction = HistoryAction.Pop;
-    isNavigationRedirect = false;
     pendingResetScroll = true;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
@@ -893,12 +893,7 @@ export function createRouter(init: RouterInit): Router {
         location: createLocation(state.location, result.location),
         ...submission,
       };
-      await startRedirectNavigation(
-        result,
-        redirectNavigation,
-        opts?.replace,
-        true
-      );
+      await startRedirectNavigation(result, redirectNavigation, opts?.replace);
       return { shortCircuited: true };
     }
 
@@ -1030,12 +1025,7 @@ export function createRouter(init: RouterInit): Router {
     let redirect = findRedirect(results);
     if (redirect) {
       let redirectNavigation = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(
-        redirect,
-        redirectNavigation,
-        replace,
-        true
-      );
+      await startRedirectNavigation(redirect, redirectNavigation, replace);
       return { shortCircuited: true };
     }
 
@@ -1090,7 +1080,7 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     href: string,
-    opts?: RouterNavigateOptions
+    opts?: RouterFetchOptions
   ) {
     if (typeof AbortController === "undefined") {
       throw new Error(
@@ -1112,14 +1102,14 @@ export function createRouter(init: RouterInit): Router {
     let match = getTargetMatch(matches, path);
 
     if (submission) {
-      handleFetcherAction(key, routeId, path, match, submission, opts?.replace);
+      handleFetcherAction(key, routeId, path, match, submission);
       return;
     }
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
     fetchLoadMatches.set(key, [path, match]);
-    handleFetcherLoader(key, routeId, path, match, opts?.replace);
+    handleFetcherLoader(key, routeId, path, match);
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -1129,8 +1119,7 @@ export function createRouter(init: RouterInit): Router {
     routeId: string,
     path: string,
     match: DataRouteMatch,
-    submission: Submission,
-    replace?: boolean
+    submission: Submission
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
@@ -1182,7 +1171,7 @@ export function createRouter(init: RouterInit): Router {
         location: createLocation(state.location, actionResult.location),
         ...submission,
       };
-      await startRedirectNavigation(actionResult, redirectNavigation, replace);
+      await startRedirectNavigation(actionResult, redirectNavigation);
       return;
     }
 
@@ -1273,7 +1262,7 @@ export function createRouter(init: RouterInit): Router {
     let redirect = findRedirect(results);
     if (redirect) {
       let redirectNavigation = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(redirect, redirectNavigation, replace);
+      await startRedirectNavigation(redirect, redirectNavigation);
       return;
     }
 
@@ -1335,8 +1324,7 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    match: DataRouteMatch,
-    replace?: boolean
+    match: DataRouteMatch
   ) {
     // Put this fetcher into it's loading state
     let loadingFetcher: FetcherStates["Loading"] = {
@@ -1383,7 +1371,7 @@ export function createRouter(init: RouterInit): Router {
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
       let redirectNavigation = getLoaderRedirect(state, result);
-      await startRedirectNavigation(result, redirectNavigation, replace);
+      await startRedirectNavigation(result, redirectNavigation);
       return;
     }
 
@@ -1454,8 +1442,7 @@ export function createRouter(init: RouterInit): Router {
   async function startRedirectNavigation(
     redirect: RedirectResult,
     navigation: Navigation,
-    replace?: boolean,
-    isNavigation = false
+    replace?: boolean
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
@@ -1470,9 +1457,6 @@ export function createRouter(init: RouterInit): Router {
 
     let redirectHistoryAction =
       replace === true ? HistoryAction.Replace : HistoryAction.Push;
-    if (isNavigation) {
-      isNavigationRedirect = true;
-    }
     await startNavigation(redirectHistoryAction, navigation.location, {
       overrideNavigation: navigation,
     });
