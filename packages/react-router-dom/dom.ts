@@ -202,9 +202,10 @@ export function getFormSubmissionInfo(
 
     formData = new FormData(form);
 
-    // Include name + value from a <button>
+    // Include name + value from a <button>, appending in case the button name
+    // matches an existing input name
     if (target.name) {
-      formData.set(target.name, target.value);
+      formData.append(target.name, target.value);
     }
   } else if (isHtmlElement(target)) {
     throw new Error(
