@@ -96,6 +96,7 @@ describe("remix CLI", () => {
             $ remix build [projectDir]
             $ remix dev [projectDir]
             $ remix routes [projectDir]
+            $ remix watch [projectDir]
             $ remix setup [remixPlatform]
             $ remix migrate [-m migration] [projectDir]
 
@@ -170,6 +171,14 @@ describe("remix CLI", () => {
             $ remix dev
             $ remix dev my-app
             $ remix dev --debug
+
+          Start your server separately and watch for changes:
+
+            # custom server start command, for example:
+            $ remix watch
+
+            # in a separate tab:
+            $ node --inspect --require ./node_modules/dotenv/config --require ./mocks ./build/server.js
 
           Show all routes in your app:
 
