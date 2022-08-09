@@ -277,6 +277,29 @@ test.describe("Forms", () => {
             )
           }
         `,
+
+        "app/routes/submitter.jsx": js`
+          import { useLoaderData, Form } from "@remix-run/react";
+
+          export function loader({ request }) {
+            let url = new URL(request.url);
+            return url.searchParams.toString()
+          }
+
+          export default function() {
+            let data = useLoaderData();
+            return (
+              <Form>
+                <input type="text" name="tasks" defaultValue="first" />
+                <input type="text" name="tasks" defaultValue="second" />
+                <button type="submit" name="tasks" value="">
+                  Add Task
+                </button>
+                <pre>{data}</pre>
+              </Form>
+            )
+          }
+        `,
       },
     });
 
@@ -574,5 +597,17 @@ test.describe("Forms", () => {
         expect(el.attr("action")).toMatch("/");
       });
     });
+  });
+
+  test("<Form> submits the submitter's value appended to the form data", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/submitter");
+    await app.clickElement("text=Add Task");
+    await page.waitForLoadState("load");
+    expect(await app.getHtml("pre")).toBe(
+      `<pre>tasks=first&amp;tasks=second&amp;tasks=</pre>`
+    );
   });
 });
