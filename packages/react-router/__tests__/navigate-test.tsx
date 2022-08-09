@@ -227,29 +227,6 @@ describe("<Navigate>", () => {
     });
   });
 
-  it("does not cause dual navigations in strict mode", () => {
-    let renderer: TestRenderer.ReactTestRenderer;
-    TestRenderer.act(() => {
-      renderer = TestRenderer.create(
-        <React.StrictMode>
-          <MemoryRouter initialEntries={["/a", "/b", "/c"]} initialIndex={2}>
-            <Routes>
-              <Route path="a" element={<h1>A</h1>} />
-              <Route path="b" element={<h1>B</h1>} />
-              <Route path="c" element={<Navigate to={-1} />} />
-            </Routes>
-          </MemoryRouter>
-        </React.StrictMode>
-      );
-    });
-
-    expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      <h1>
-        B
-      </h1>
-    `);
-  });
-
   it("does not cause navigation loops in data routers", async () => {
     // Note this is not the idiomatic way to do these redirects, they should
     // be done with loaders in data routers, but this is a likely scenario to

@@ -253,20 +253,18 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
       `only ever rendered in response to some user interaction or state change.`
   );
 
+  let dataRouterState = React.useContext(DataRouterStateContext);
   let navigate = useNavigate();
 
-  // Avoid kicking off multiple navigations during dual-renders in strict mode,
-  // or when components get re-rendered due to global navigation-driven
-  // re-renders (i.e., entering a loading state)
-  let isMountedRef = React.useRef(false);
-
   React.useEffect(() => {
-    if (isMountedRef.current) return;
-    isMountedRef.current = true;
+    // Avoid kicking off multiple navigations if we're in the middle of a
+    // navigation, since components get re-rendered when we enter a
+    // submitting/loading state in data routers
+    if (dataRouterState && dataRouterState.navigation.state !== "idle") {
+      return;
+    }
     navigate(to, { replace, state });
-    // Single-execution effect to avoid duplicate navigations
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  });
 
   return null;
 }
