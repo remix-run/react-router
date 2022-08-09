@@ -8,8 +8,6 @@ export interface RouteData {
   [routeId: string]: any;
 }
 
-export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
-
 export enum ResultType {
   data = "data",
   deferred = "deferred",
@@ -123,9 +121,9 @@ export interface ActionFunction {
 export interface ShouldRevalidateFunction {
   (args: {
     currentUrl: URL;
-    currentParams: DataRouteMatch["params"];
+    currentParams: AgnosticDataRouteMatch["params"];
     nextUrl: URL;
-    nextParams: DataRouteMatch["params"];
+    nextParams: AgnosticDataRouteMatch["params"];
     formMethod?: Submission["formMethod"];
     formAction?: Submission["formAction"];
     formEncType?: Submission["formEncType"];
@@ -139,16 +137,15 @@ export interface ShouldRevalidateFunction {
  * A route object represents a logical route, with (optionally) its child
  * routes organized in a tree-like structure.
  */
-export interface RouteObject {
+export interface AgnosticRouteObject {
   caseSensitive?: boolean;
-  children?: RouteObject[];
-  element?: React.ReactNode;
+  children?: AgnosticRouteObject[];
   index?: boolean;
   path?: string;
   id?: string;
   loader?: LoaderFunction;
   action?: ActionFunction;
-  errorElement?: React.ReactNode;
+  hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
 }
@@ -156,8 +153,8 @@ export interface RouteObject {
 /**
  * A data route object, which is just a RouteObject with a required unique ID
  */
-export interface DataRouteObject extends RouteObject {
-  children?: DataRouteObject[];
+export interface AgnosticDataRouteObject extends AgnosticRouteObject {
+  children?: AgnosticDataRouteObject[];
   id: string;
 }
 
@@ -208,9 +205,9 @@ export type Params<Key extends string = string> = {
 /**
  * A RouteMatch contains info about how a route matched a URL.
  */
-export interface RouteMatch<
+export interface AgnosticRouteMatch<
   ParamKey extends string = string,
-  RouteObjectType extends RouteObject = RouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 > {
   /**
    * The names and values of dynamic parameters in the URL.
@@ -230,13 +227,16 @@ export interface RouteMatch<
   route: RouteObjectType;
 }
 
+export interface AgnosticDataRouteMatch
+  extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
+
 // Walk the route tree generating unique IDs where necessary so we are working
 // solely with DataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
-  routes: RouteObject[],
+  routes: AgnosticRouteObject[],
   parentPath: number[] = [],
   allIds: Set<string> = new Set<string>()
-): DataRouteObject[] {
+): AgnosticDataRouteObject[] {
   return routes.map((route, index) => {
     let treePath = [...parentPath, index];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
@@ -246,7 +246,7 @@ export function convertRoutesToDataRoutes(
         "id's must be globally unique within Data Router usages"
     );
     allIds.add(id);
-    let dataRoute: DataRouteObject = {
+    let dataRoute: AgnosticDataRouteObject = {
       ...route,
       id,
       children: route.children
@@ -262,11 +262,13 @@ export function convertRoutesToDataRoutes(
  *
  * @see https://reactrouter.com/docs/en/v6/utils/match-routes
  */
-export function matchRoutes<RouteObjectType extends RouteObject = RouteObject>(
+export function matchRoutes<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+>(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
   basename = "/"
-): RouteMatch<string, RouteObjectType>[] | null {
+): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
@@ -287,20 +289,26 @@ export function matchRoutes<RouteObjectType extends RouteObject = RouteObject>(
   return matches;
 }
 
-interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
+interface RouteMeta<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
   route: RouteObjectType;
 }
 
-interface RouteBranch<RouteObjectType extends RouteObject = RouteObject> {
+interface RouteBranch<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+> {
   path: string;
   score: number;
   routesMeta: RouteMeta<RouteObjectType>[];
 }
 
-function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
+function flattenRoutes<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+>(
   routes: RouteObjectType[],
   branches: RouteBranch<RouteObjectType>[] = [],
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
@@ -414,16 +422,16 @@ function compareIndexes(a: number[], b: number[]): number {
 
 function matchRouteBranch<
   ParamKey extends string = string,
-  RouteObjectType extends RouteObject = RouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
   branch: RouteBranch<RouteObjectType>,
   pathname: string
-): RouteMatch<ParamKey, RouteObjectType>[] | null {
+): AgnosticRouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
   let matchedParams = {};
   let matchedPathname = "/";
-  let matches: RouteMatch<ParamKey, RouteObjectType>[] = [];
+  let matches: AgnosticRouteMatch<ParamKey, RouteObjectType>[] = [];
   for (let i = 0; i < routesMeta.length; ++i) {
     let meta = routesMeta[i];
     let end = i === routesMeta.length - 1;

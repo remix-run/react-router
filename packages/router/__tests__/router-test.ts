@@ -42,7 +42,7 @@ type TestRouteObject = Pick<
 > & {
   loader?: boolean;
   action?: boolean;
-  errorElement?: boolean;
+  hasErrorBoundary?: boolean;
   children?: TestRouteObject[];
 };
 
@@ -721,7 +721,7 @@ const TASK_ROUTES: TestRouteObject[] = [
     id: "root",
     path: "/",
     loader: true,
-    errorElement: true,
+    hasErrorBoundary: true,
     children: [
       {
         id: "index",
@@ -733,14 +733,14 @@ const TASK_ROUTES: TestRouteObject[] = [
         path: "tasks",
         loader: true,
         action: true,
-        errorElement: true,
+        hasErrorBoundary: true,
       },
       {
         id: "tasksId",
         path: "tasks/:id",
         loader: true,
         action: true,
-        errorElement: true,
+        hasErrorBoundary: true,
       },
       {
         id: "noLoader",
@@ -754,9 +754,9 @@ const TM_ROUTES = [
   {
     path: "",
     id: "root",
-    element: true,
+
     module: "",
-    errorElement: true,
+    hasErrorBoundary: true,
     loader: true,
     children: [
       {
@@ -765,7 +765,7 @@ const TM_ROUTES = [
         hasLoader: true,
         loader: true,
         action: true,
-        element: true,
+
         module: "",
       },
       {
@@ -773,7 +773,7 @@ const TM_ROUTES = [
         id: "foo",
         loader: true,
         action: true,
-        element: true,
+
         module: "",
       },
       {
@@ -781,7 +781,7 @@ const TM_ROUTES = [
         id: "foobar",
         loader: true,
         action: true,
-        element: true,
+
         module: "",
       },
       {
@@ -789,7 +789,7 @@ const TM_ROUTES = [
         id: "bar",
         loader: true,
         action: true,
-        element: true,
+
         module: "",
       },
       {
@@ -797,7 +797,7 @@ const TM_ROUTES = [
         id: "baz",
         loader: true,
         action: true,
-        element: true,
+
         module: "",
       },
       {
@@ -805,7 +805,7 @@ const TM_ROUTES = [
         id: "param",
         loader: true,
         action: true,
-        element: true,
+
         module: "",
       },
     ],
@@ -845,10 +845,9 @@ describe("a router", () => {
       let router = createRouter({
         routes: [
           {
-            element: true,
             id: "root",
             path: "/",
-            errorElement: true,
+            hasErrorBoundary: true,
             loader: () => Promise.resolve(),
           },
         ],
@@ -883,8 +882,7 @@ describe("a router", () => {
             pathname: "/",
             pathnameBase: "/",
             route: {
-              element: true,
-              errorElement: true,
+              hasErrorBoundary: true,
               id: "root",
               loader: expect.any(Function),
               path: "/",
@@ -1435,7 +1433,7 @@ describe("a router", () => {
             id: "root",
             loader: async (...args) => rootLoader(...args),
             shouldRevalidate: (args) => shouldRevalidate(args) === true,
-            element: true,
+
             children: [
               {
                 path: "/",
@@ -1623,7 +1621,7 @@ describe("a router", () => {
           {
             path: "",
             id: "root",
-            element: true,
+
             children: [
               {
                 path: "/",
@@ -1703,7 +1701,7 @@ describe("a router", () => {
           {
             path: "",
             id: "root",
-            element: true,
+
             children: [
               {
                 path: "/",
@@ -1762,7 +1760,7 @@ describe("a router", () => {
             path: "",
             id: "root",
             loader: () => `ROOT ${++count}`,
-            element: true,
+
             children: [
               {
                 path: "/",
@@ -1810,7 +1808,7 @@ describe("a router", () => {
           {
             path: "",
             id: "root",
-            element: true,
+
             children: [
               {
                 path: "/",
@@ -1878,7 +1876,6 @@ describe("a router", () => {
             id: "root",
             loader: () => ++count,
             shouldRevalidate: () => returnValue,
-            element: true,
           },
         ],
         hydrationData: {
@@ -1946,7 +1943,7 @@ describe("a router", () => {
             id: "root",
             loader: () => ++count,
             shouldRevalidate: () => returnValue,
-            element: true,
+
             children: [
               {
                 path: "a",
@@ -2032,9 +2029,9 @@ describe("a router", () => {
           params: {},
           pathname: "",
           route: {
-            errorElement: true,
+            hasErrorBoundary: true,
             children: expect.any(Array),
-            element: true,
+
             id: "root",
             loader: expect.any(Function),
             module: "",
@@ -2083,9 +2080,9 @@ describe("a router", () => {
           params: {},
           pathname: "",
           route: {
-            errorElement: true,
+            hasErrorBoundary: true,
             children: expect.any(Array),
-            element: true,
+
             id: "root",
             loader: expect.any(Function),
             module: "",
@@ -2108,7 +2105,7 @@ describe("a router", () => {
                 {
                   path: "/child",
                   id: "child",
-                  errorElement: true,
+                  hasErrorBoundary: true,
                   loader: true,
                 },
               ],
@@ -2130,7 +2127,7 @@ describe("a router", () => {
             {
               path: "/",
               id: "parent",
-              errorElement: true,
+              hasErrorBoundary: true,
               children: [
                 {
                   path: "/child",
@@ -2164,7 +2161,7 @@ describe("a router", () => {
                     {
                       path: "/child",
                       id: "child",
-                      errorElement: true,
+                      hasErrorBoundary: true,
                       loader: true,
                     },
                   ],
@@ -2198,7 +2195,7 @@ describe("a router", () => {
                 path: "/b",
                 id: "b",
                 loader: true,
-                errorElement: true,
+                hasErrorBoundary: true,
                 children: [
                   {
                     path: "/b/c",
@@ -2626,13 +2623,13 @@ describe("a router", () => {
               {
                 path: "/child",
                 id: "child",
-                errorElement: true,
+                hasErrorBoundary: true,
                 action: true,
                 children: [
                   {
                     index: true,
                     id: "childIndex",
-                    errorElement: true,
+                    hasErrorBoundary: true,
                     action: true,
                   },
                 ],
@@ -2724,7 +2721,7 @@ describe("a router", () => {
                 {
                   path: "/child",
                   id: "child",
-                  errorElement: true,
+                  hasErrorBoundary: true,
                   action: true,
                 },
               ],
@@ -2752,7 +2749,7 @@ describe("a router", () => {
                 {
                   path: "/child",
                   id: "child",
-                  errorElement: true,
+                  hasErrorBoundary: true,
                   loader: true,
                   action: true,
                 },
@@ -2787,7 +2784,7 @@ describe("a router", () => {
             {
               path: "/",
               id: "parent",
-              errorElement: true,
+              hasErrorBoundary: true,
               children: [
                 {
                   path: "/child",
@@ -2816,7 +2813,7 @@ describe("a router", () => {
             {
               path: "/",
               id: "root",
-              errorElement: true,
+              hasErrorBoundary: true,
               children: [
                 {
                   path: "/parent",
@@ -2827,7 +2824,7 @@ describe("a router", () => {
                       path: "/parent/child",
                       id: "child",
                       action: true,
-                      errorElement: true,
+                      hasErrorBoundary: true,
                     },
                   ],
                 },
@@ -2863,7 +2860,7 @@ describe("a router", () => {
                 {
                   path: "/child",
                   id: "child",
-                  errorElement: true,
+                  hasErrorBoundary: true,
                 },
               ],
             },
@@ -2903,7 +2900,7 @@ describe("a router", () => {
                       id: "grandchild",
                       loader: true,
                       // no action to post to
-                      errorElement: true,
+                      hasErrorBoundary: true,
                     },
                   ],
                 },
@@ -3689,7 +3686,7 @@ describe("a router", () => {
                 id: "child",
                 path: "child",
                 loader: true,
-                errorElement: true,
+                hasErrorBoundary: true,
               },
             ],
           },
@@ -6117,7 +6114,7 @@ describe("a router", () => {
             {
               id: "root",
               path: "/",
-              errorElement: true,
+              hasErrorBoundary: true,
               children: [
                 {
                   id: "index",
@@ -6147,13 +6144,13 @@ describe("a router", () => {
             {
               id: "root",
               path: "/",
-              errorElement: true,
+              hasErrorBoundary: true,
               children: [
                 {
                   id: "wit",
                   path: "wit",
                   loader: true,
-                  errorElement: true,
+                  hasErrorBoundary: true,
                 },
                 {
                   id: "witout",
@@ -7329,9 +7326,9 @@ describe("a router", () => {
             tasks: "TASKS*",
           },
           errors: {
-            // Even though tasksId has an errorElement, this bubbles up to
+            // Even though tasksId has an error boundary, this bubbles up to
             // the root since it's the closest "active" rendered route with an
-            // errorElement
+            // error boundary
             root: new Error("Fetcher error"),
           },
         });
@@ -8115,7 +8112,7 @@ describe("a router", () => {
             id: "parent",
             path: "parent",
             loader: true,
-            errorElement: true,
+            hasErrorBoundary: true,
             children: [
               {
                 id: "a",
@@ -8161,7 +8158,7 @@ describe("a router", () => {
       });
 
       // Perform an invalid navigation to /parent/b which will be handled
-      // using parent's errorElement.  Parent's deferred should be left alone
+      // using parent's error boundary.  Parent's deferred should be left alone
       // while A's should be cancelled since they will no longer be rendered
       let formData = new FormData();
       formData.append("file", new Blob(["1", "2"]), "file.txt");
@@ -8223,7 +8220,7 @@ describe("a router", () => {
                 id: "bChild",
                 path: "child",
                 loader: true,
-                errorElement: true,
+                hasErrorBoundary: true,
               },
             ],
           },
@@ -9105,7 +9102,7 @@ describe("a router", () => {
           {
             id: "errorBoundary",
             path: "error-boundary",
-            errorElement: true,
+            hasErrorBoundary: true,
             loader: () => Promise.reject("ERROR BOUNDARY LOADER ERROR"),
             action: () => Promise.reject("ERROR BOUNDARY ACTION ERROR"),
           },
