@@ -771,6 +771,15 @@ type SetURLSearchParams = (
   navigateOpts?: NavigateOptions
 ) => void;
 
+type SubmitTarget =
+  | HTMLFormElement
+  | HTMLButtonElement
+  | HTMLInputElement
+  | FormData
+  | URLSearchParams
+  | { [name: string]: string }
+  | null;
+
 /**
  * Submits a HTML `<form>` to the server without reloading the page.
  */
@@ -784,14 +793,7 @@ export interface SubmitFunction {
      * Note: When using a `<button>` its `name` and `value` will also be
      * included in the form data that is submitted.
      */
-    target:
-      | HTMLFormElement
-      | HTMLButtonElement
-      | HTMLInputElement
-      | FormData
-      | URLSearchParams
-      | { [name: string]: string }
-      | null,
+    target: SubmitTarget,
 
     /**
      * Options that override the `<form>`'s own attributes. Required when
@@ -888,7 +890,11 @@ let fetcherId = 0;
 
 export type FetcherWithComponents<TData> = Fetcher<TData> & {
   Form: ReturnType<typeof createFetcherForm>;
-  submit: ReturnType<typeof useSubmitImpl>;
+  submit: (
+    target: SubmitTarget,
+    // Fetchers cannot replace because they are not navigation events
+    options?: Omit<SubmitOptions, "replace">
+  ) => void;
   load: (href: string) => void;
 };
 

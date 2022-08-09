@@ -3,6 +3,7 @@ import type {
   ActionFunction,
   DataRouteObject,
   Fetcher,
+  RouterFetchOptions,
   HydrationState,
   InitialEntry,
   LoaderFunction,
@@ -589,24 +590,24 @@ function setup({
   // control/assert loader/actions
   async function fetch(
     href: string,
-    opts?: RouterNavigateOptions
+    opts?: RouterFetchOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
-    opts?: RouterNavigateOptions
+    opts?: RouterFetchOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
     key: string,
     routeId: string,
-    opts?: RouterNavigateOptions
+    opts?: RouterFetchOptions
   ): Promise<FetcherHelpers>;
   async function fetch(
     href: string,
-    keyOrOpts?: string | RouterNavigateOptions,
-    routeIdOrOpts?: string | RouterNavigateOptions,
-    opts?: RouterNavigateOptions
+    keyOrOpts?: string | RouterFetchOptions,
+    routeIdOrOpts?: string | RouterFetchOptions,
+    opts?: RouterFetchOptions
   ): Promise<FetcherHelpers> {
     let navigationId = ++guid;
     let key = typeof keyOrOpts === "string" ? keyOrOpts : String(navigationId);
@@ -2226,7 +2227,10 @@ describe("a router", () => {
 
   describe("POP navigations", () => {
     it("does a normal load when backing into an action redirect", async () => {
+      // start at / (history stack: [/])
       let t = initializeTmTest();
+
+      // POST /foo, redirect /bar (history stack: [/, /bar])
       let A = await t.navigate("/foo", {
         formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
@@ -2234,26 +2238,45 @@ describe("a router", () => {
       let B = await A.actions.foo.redirect("/bar");
       await B.loaders.root.resolve("ROOT DATA");
       await B.loaders.bar.resolve("B LOADER");
+      expect(t.router.state.historyAction).toEqual("PUSH");
+      expect(t.router.state.location.pathname).toEqual("/bar");
       expect(B.loaders.root.stub.mock.calls.length).toBe(1);
       expect(t.router.state.loaderData).toEqual({
         root: "ROOT DATA",
         bar: "B LOADER",
       });
 
+      // Link to /baz (history stack: [/, /bar, /baz])
       let C = await t.navigate("/baz");
       await C.loaders.baz.resolve("C LOADER");
+      expect(t.router.state.historyAction).toEqual("PUSH");
+      expect(t.router.state.location.pathname).toEqual("/baz");
       expect(C.loaders.root.stub.mock.calls.length).toBe(0);
       expect(t.router.state.loaderData).toEqual({
         root: "ROOT DATA",
         baz: "C LOADER",
       });
 
+      // POP /bar (history stack: [/, /bar])
       let D = await t.navigate(-1);
       await D.loaders.bar.resolve("D LOADER");
+      expect(t.router.state.historyAction).toEqual("POP");
+      expect(t.router.state.location.pathname).toEqual("/bar");
       expect(D.loaders.root.stub.mock.calls.length).toBe(0);
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT DATA",
         bar: "D LOADER",
+      });
+
+      // POP / (history stack: [/])
+      let E = await t.navigate(-1);
+      await E.loaders.index.resolve("E LOADER");
+      expect(t.router.state.historyAction).toEqual("POP");
+      expect(t.router.state.location.pathname).toEqual("/");
+      expect(E.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT DATA",
+        index: "E LOADER",
       });
     });
 
@@ -2311,6 +2334,57 @@ describe("a router", () => {
       expect(t.router.state.location.pathname).toEqual("/foo");
     });
 
+    it("navigates correctly using POP navigations across loader redirects", async () => {
+      // Start at / (history stack: [/])
+      let t = initializeTmTest();
+
+      // Navigate to /foo (history stack: [/, /foo])
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state.location.pathname).toEqual("/foo");
+      let fooKey = t.router.state.location?.key;
+
+      // Navigate to /bar, redirect to /baz (history stack: [/, /foo, /baz])
+      let B = await t.navigate("/bar");
+      let C = await B.loaders.bar.redirect("/baz");
+      await C.loaders.root.resolve("ROOT");
+      await C.loaders.baz.resolve("BAZ");
+      expect(t.router.state.location.pathname).toEqual("/baz");
+
+      // POP to /foo (history stack: [/, /foo])
+      let E = await t.navigate(-1);
+      await E.loaders.foo.resolve("FOO");
+      expect(t.router.state.location.pathname).toEqual("/foo");
+      expect(t.router.state.location.key).toBe(fooKey);
+    });
+
+    it("navigates correctly using POP navigations across loader redirects with replace:true", async () => {
+      // Start at / (history stack: [/])
+      let t = initializeTmTest();
+      let indexKey = t.router.state.location?.key;
+
+      // Navigate to /foo (history stack: [/, /foo])
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state.historyAction).toEqual("PUSH");
+      expect(t.router.state.location.pathname).toEqual("/foo");
+
+      // Navigate to /bar, redirect to /baz (history stack: [/, /baz])
+      let B = await t.navigate("/bar", { replace: true });
+      let C = await B.loaders.bar.redirect("/baz");
+      await C.loaders.root.resolve("ROOT");
+      await C.loaders.baz.resolve("BAZ");
+      expect(t.router.state.historyAction).toEqual("REPLACE");
+      expect(t.router.state.location.pathname).toEqual("/baz");
+
+      // POP to / (history stack: [/])
+      let E = await t.navigate(-1);
+      await E.loaders.index.resolve("INDEX");
+      expect(t.router.state.historyAction).toEqual("POP");
+      expect(t.router.state.location.pathname).toEqual("/");
+      expect(t.router.state.location.key).toBe(indexKey);
+    });
+
     it("navigates correctly using POP navigations across action redirects", async () => {
       let t = initializeTmTest();
 
@@ -2323,6 +2397,7 @@ describe("a router", () => {
       let B = await t.navigate("/bar");
       let getBarKey = t.router.state.navigation.location?.key;
       await B.loaders.bar.resolve("BAR");
+      expect(t.router.state.historyAction).toEqual("PUSH");
       expect(t.router.state.location.pathname).toEqual("/bar");
 
       // Post to /bar, redirect to /baz
@@ -2334,11 +2409,13 @@ describe("a router", () => {
       let D = await C.actions.bar.redirect("/baz");
       await D.loaders.root.resolve("ROOT");
       await D.loaders.baz.resolve("BAZ");
+      expect(t.router.state.historyAction).toEqual("PUSH");
       expect(t.router.state.location.pathname).toEqual("/baz");
 
       // POP to /bar
       let E = await t.navigate(-1);
       await E.loaders.bar.resolve("BAR");
+      expect(t.router.state.historyAction).toEqual("POP");
       expect(t.router.state.location.pathname).toEqual("/bar");
       expect(t.router.state.location.key).toBe(getBarKey);
       expect(t.router.state.location.key).not.toBe(postBarKey);
@@ -2355,6 +2432,7 @@ describe("a router", () => {
       // Navigate to /bar
       let B = await t.navigate("/bar");
       await B.loaders.bar.resolve("BAR");
+      expect(t.router.state.historyAction).toEqual("PUSH");
       expect(t.router.state.location.pathname).toEqual("/bar");
 
       // Post to /bar, redirect to /baz
@@ -2366,11 +2444,13 @@ describe("a router", () => {
       let D = await C.actions.bar.redirect("/baz");
       await D.loaders.root.resolve("ROOT");
       await D.loaders.baz.resolve("BAZ");
+      expect(t.router.state.historyAction).toEqual("REPLACE");
       expect(t.router.state.location.pathname).toEqual("/baz");
 
       // POP to /foo
       let E = await t.navigate(-1);
       await E.loaders.foo.resolve("FOO");
+      expect(t.router.state.historyAction).toEqual("POP");
       expect(t.router.state.location.pathname).toEqual("/foo");
     });
   });
@@ -4364,7 +4444,7 @@ describe("a router", () => {
 
       await nav2.loaders.tasksId.resolve("TASKS_ID_DATA");
       expect(t.router.state).toMatchObject({
-        historyAction: "REPLACE",
+        historyAction: "PUSH",
         location: {
           pathname: "/tasks/1",
         },
@@ -4375,7 +4455,7 @@ describe("a router", () => {
         },
         errors: null,
       });
-      expect(t.history.action).toEqual("REPLACE");
+      expect(t.history.action).toEqual("PUSH");
       expect(t.history.location.pathname).toEqual("/tasks/1");
     });
 
@@ -4436,7 +4516,7 @@ describe("a router", () => {
 
       await nav2.loaders.tasksId.resolve("TASKS_ID_DATA");
       expect(t.router.state).toMatchObject({
-        historyAction: "REPLACE",
+        historyAction: "PUSH",
         location: {
           pathname: "/tasks/1",
         },
@@ -4447,7 +4527,7 @@ describe("a router", () => {
         },
         errors: null,
       });
-      expect(t.history.action).toEqual("REPLACE");
+      expect(t.history.action).toEqual("PUSH");
       expect(t.history.location.pathname).toEqual("/tasks/1");
     });
 
@@ -5516,7 +5596,7 @@ describe("a router", () => {
       await N.loaders.root.resolve("ROOT_DATA redirect");
       await N.loaders.tasks.resolve("TASKS_DATA");
       expect(t.router.state).toMatchObject({
-        historyAction: "REPLACE",
+        historyAction: "PUSH",
         location: { pathname: "/tasks" },
         navigation: IDLE_NAVIGATION,
         revalidation: "idle",
@@ -5526,6 +5606,22 @@ describe("a router", () => {
         },
       });
       expect(t.router.state.location.key).not.toBe(key);
+
+      let B = await t.navigate(-1);
+      await B.loaders.index.resolve("INDEX_DATA 2");
+      // PUSH on the revalidation redirect means back button takes us back to
+      // the page that triggered the revalidation redirect
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        navigation: IDLE_NAVIGATION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA redirect",
+          index: "INDEX_DATA 2",
+        },
+      });
+      expect(t.router.state.location.key).toBe(key);
     });
 
     it("handles errors from revalidations", async () => {
@@ -6154,29 +6250,58 @@ describe("a router", () => {
     describe("fetcher redirects", () => {
       it("loader fetch", async () => {
         let t = initializeTmTest();
+        let key = t.router.state.location.key;
+
         let A = await t.fetch("/foo");
-        let fetcher = A.fetcher;
-        await A.loaders.foo.redirect("/bar");
-        expect(t.router.getFetcher(A.key)).toBe(fetcher);
+
+        let B = await A.loaders.foo.redirect("/bar");
+        expect(t.router.getFetcher(A.key)).toBe(A.fetcher);
         expect(t.router.state.navigation.state).toBe("loading");
         expect(t.router.state.navigation.location?.pathname).toBe("/bar");
+
+        await B.loaders.bar.resolve("BAR");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.historyAction).toBe("PUSH");
+        expect(t.router.state.location?.pathname).toBe("/bar");
+
+        // Back button should take us back to location that triggered the fetch
+        // redirect
+        let C = await t.navigate(-1);
+        await C.loaders.index.resolve("INDEX");
+        expect(t.router.state.location.pathname).toBe("/");
+        expect(t.router.state.location.key).toBe(key);
       });
 
       it("loader submission fetch", async () => {
         let t = initializeTmTest();
+        let key = t.router.state.location.key;
         let A = await t.fetch("/foo?key=value", {
           formMethod: "get",
           formData: createFormData({ key: "value" }),
         });
-        let fetcher = A.fetcher;
-        await A.loaders.foo.redirect("/bar");
-        expect(t.router.getFetcher(A.key)).toBe(fetcher);
+
+        let B = await A.loaders.foo.redirect("/bar");
+        expect(t.router.getFetcher(A.key)).toBe(A.fetcher);
         expect(t.router.state.navigation.state).toBe("loading");
         expect(t.router.state.navigation.location?.pathname).toBe("/bar");
+
+        await B.loaders.bar.resolve("BAR");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.historyAction).toBe("PUSH");
+        expect(t.router.state.location?.pathname).toBe("/bar");
+
+        // Back button should take us back to location that triggered the fetch
+        // redirect
+        let C = await t.navigate(-1);
+        await C.loaders.index.resolve("INDEX");
+        expect(t.router.state.location.pathname).toBe("/");
+        expect(t.router.state.location.key).toBe(key);
       });
 
       it("action fetch", async () => {
         let t = initializeTmTest();
+        let key = t.router.state.location.key;
+
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -6196,11 +6321,20 @@ describe("a router", () => {
           formEncType: undefined,
           formData: undefined,
         });
+        expect(t.router.state.historyAction).toBe("PUSH");
+        expect(t.router.state.location.pathname).toBe("/bar");
         // Root loader should be re-called after fetchActionRedirect
         expect(t.router.state.loaderData).toEqual({
           root: "ROOT*",
           bar: "stuff",
         });
+
+        // Back button should take us back to location that triggered the fetch
+        // redirect
+        let C = await t.navigate(-1);
+        await C.loaders.index.resolve("INDEX");
+        expect(t.router.state.location.pathname).toBe("/");
+        expect(t.router.state.location.key).toBe(key);
       });
     });
 
