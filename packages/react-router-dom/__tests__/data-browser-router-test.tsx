@@ -1201,6 +1201,337 @@ function testDomRouter(
       `);
     });
 
+    describe("useSubmit/Form FormData", () => {
+      it("gathers form data on <Form> submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          return (
+            <Form method="post">
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button type="submit">Submit</button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("gathers form data on submit(form) submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          let formRef = React.useRef(null);
+          return (
+            <>
+              <Form method="post" ref={formRef}>
+                <input name="a" defaultValue="1" />
+                <input name="b" defaultValue="2" />
+              </Form>
+              <button onClick={() => submit(formRef.current)}>Submit</button>
+            </>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("gathers form data on submit(button) submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <>
+              <Form method="post">
+                <input name="a" defaultValue="1" />
+                <input name="b" defaultValue="2" />
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    submit(e.currentTarget);
+                  }}
+                >
+                  Submit
+                </button>
+              </Form>
+            </>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("gathers form data on submit(input[type=submit]) submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <>
+              <Form method="post">
+                <input name="a" defaultValue="1" />
+                <input name="b" defaultValue="2" />
+                <input
+                  type="submit"
+                  value="Submit"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    submit(e.currentTarget);
+                  }}
+                />
+              </Form>
+            </>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("gathers form data on submit(FormData) submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          let formData = new FormData();
+          formData.set("a", "1");
+          formData.set("b", "2");
+          return (
+            <button onClick={() => submit(formData, { method: "post" })}>
+              Submit
+            </button>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("gathers form data on submit(object) submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <button
+              onClick={() => submit({ a: "1", b: "2" }, { method: "post" })}
+            >
+              Submit
+            </button>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("includes submit button name/value on form submission", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          return (
+            <Form
+              method="post"
+              onSubmit={(e) => {
+                // jsdom doesn't handle submitter so we add it here
+                // See https://github.com/jsdom/jsdom/issues/3117
+                // @ts-expect-error
+                e.nativeEvent.submitter =
+                  e.currentTarget.querySelector("button");
+              }}
+            >
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button name="c" value="3" type="submit">
+                Submit
+              </button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+        expect(formData.get("c")).toBe("3");
+      });
+
+      it("includes submit button name/value on button submission", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <Form
+              method="post"
+              onSubmit={(e) => {
+                // jsdom doesn't handle submitter so we add it here
+                // See https://github.com/jsdom/jsdom/issues/3117
+                // @ts-expect-error
+                e.nativeEvent.submitter =
+                  e.currentTarget.querySelector("button");
+              }}
+            >
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button
+                name="c"
+                value="3"
+                onClick={(e) => {
+                  e.preventDefault();
+                  submit(e.currentTarget);
+                }}
+              >
+                Submit
+              </button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+        expect(formData.get("c")).toBe("3");
+      });
+
+      it("appends button name/value and doesn't overwrite inputs with same name (form)", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          return (
+            <Form
+              method="post"
+              onSubmit={(e) => {
+                // jsdom doesn't handle submitter so we add it here
+                // See https://github.com/jsdom/jsdom/issues/3117
+                // @ts-expect-error
+                e.nativeEvent.submitter =
+                  e.currentTarget.querySelector("button");
+              }}
+            >
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button name="b" value="3" type="submit">
+                Submit
+              </button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.getAll("b")).toEqual(["2", "3"]);
+      });
+
+      it("appends button name/value and doesn't overwrite inputs with same name (button)", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <Form
+              method="post"
+              onSubmit={(e) => {
+                // jsdom doesn't handle submitter so we add it here
+                // See https://github.com/jsdom/jsdom/issues/3117
+                // @ts-expect-error
+                e.nativeEvent.submitter =
+                  e.currentTarget.querySelector("button");
+              }}
+            >
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button
+                name="b"
+                value="3"
+                onClick={(e) => {
+                  e.preventDefault();
+                  submit(e.currentTarget);
+                }}
+              >
+                Submit
+              </button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.getAll("b")).toEqual(["2", "3"]);
+      });
+    });
+
     describe("useFetcher(s)", () => {
       it("handles fetcher.load and fetcher.submit", async () => {
         let count = 0;
