@@ -1421,23 +1421,9 @@ export function createRouter(init: RouterInit): Router {
    *
    * In client-side routing using pushState/replaceState, we aim to emulate
    * this behavior and we also do not update history until the end of the
-   * navigation (including processed redirects).  This means that even though
-   * we're "replacing" the original [PUSH /b] action with the [REPLACE /c],
-   * since we never pushed it into the history stack to begin with, it's not
-   * there to replace.  So we end up doing a history.pushState('/c')
-   *
-   * However, from the users standpoint and for backwards compatibility with
-   * react-router 6.3.0 and earlier, we want to expose state.historyAction as
-   * REPLACE if we encounter a redirect inside a normal navigation.  This is
-   * what the isNavigation flag is for - telling us that whenever this
-   * redirect navigation completes - we should call pushState() but we should
-   * expose state.historyAction as REPLACE.
-   *
-   * Redirects from fetch() and revalidate() currently default to normal PUSH
-   * unless the user passed replace:true, since we do not want to blow away a
-   * valid location the user visited.  USers can only send replace:true in
-   * fetchers currently, but that cn be added to revalidate() eventually if
-   * the need arises
+   * navigation (including processed redirects).  This means that we never
+   * actually touch history until we've processed redirects, so we just use
+   * the history action from the original navigation (PUSH or REPLACE).
    */
   async function startRedirectNavigation(
     redirect: RedirectResult,
