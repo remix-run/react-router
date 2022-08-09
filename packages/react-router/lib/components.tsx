@@ -5,8 +5,6 @@ import type {
   InitialEntry,
   Location,
   MemoryHistory,
-  RouteMatch,
-  RouteObject,
   Router as RemixRouter,
   RouterState,
   To,
@@ -22,7 +20,13 @@ import {
 } from "@remix-run/router";
 import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
-import type { Navigator, DataRouterContextObject } from "./context";
+import type {
+  DataRouteObject,
+  DataRouterContextObject,
+  RouteMatch,
+  RouteObject,
+  Navigator,
+} from "./context";
 import {
   LocationContext,
   NavigationContext,
@@ -442,7 +446,7 @@ export function Routes({
   // need to use child routes.
   let routes =
     dataRouterContext && !children
-      ? dataRouterContext.router.routes
+      ? (dataRouterContext.router.routes as DataRouteObject[])
       : createRoutesFromChildren(children);
   return useRoutes(routes, location);
 }
@@ -631,6 +635,7 @@ export function createRoutesFromChildren(
       loader: element.props.loader,
       action: element.props.action,
       errorElement: element.props.errorElement,
+      hasErrorBoundary: element.props.errorElement != null,
       shouldRevalidate: element.props.shouldRevalidate,
       handle: element.props.handle,
     };

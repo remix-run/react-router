@@ -1,20 +1,18 @@
 import * as React from "react";
-import {
-  isRouteErrorResponse,
+import type {
   Location,
   ParamParseKey,
   Params,
   Path,
   PathMatch,
   PathPattern,
-  RouteMatch,
-  RouteObject,
   Router as RemixRouter,
   To,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
   invariant,
+  isRouteErrorResponse,
   joinPaths,
   matchPath,
   matchRoutes,
@@ -34,6 +32,9 @@ import {
   AwaitContext,
   RouteContextObject,
   DataStaticRouterContext,
+  RouteMatch,
+  RouteObject,
+  DataRouteMatch,
 } from "./context";
 
 /**
@@ -559,7 +560,7 @@ export function _renderMatches(
     if (dataRouterState?.errors) {
       // Don't bail if we have data router errors so we can render them in the
       // boundary.  Use the pre-matched (or shimmed) matches
-      matches = dataRouterState.matches;
+      matches = dataRouterState.matches as DataRouteMatch[];
     } else {
       return null;
     }
