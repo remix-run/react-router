@@ -51,6 +51,7 @@ export interface RedirectResult {
 export interface ErrorResult {
   type: ResultType.error;
   error: any;
+  headers?: Headers;
 }
 
 /**
