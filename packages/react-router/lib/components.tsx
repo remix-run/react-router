@@ -253,8 +253,16 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
       `only ever rendered in response to some user interaction or state change.`
   );
 
+  let dataRouterState = React.useContext(DataRouterStateContext);
   let navigate = useNavigate();
+
   React.useEffect(() => {
+    // Avoid kicking off multiple navigations if we're in the middle of a
+    // data-router navigation, since components get re-rendered when we enter
+    // a submitting/loading state
+    if (dataRouterState && dataRouterState.navigation.state !== "idle") {
+      return;
+    }
     navigate(to, { replace, state });
   });
 
