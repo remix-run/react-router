@@ -1,5 +1,15 @@
 # react-router-dom-v5-compat
 
+## 6.4.0-pre.12
+
+### Patch Changes
+
+- Updated dependencies [c21e38ef]
+- Updated dependencies [f0579d8a]
+- Updated dependencies [b25d53f9]
+  - react-router@6.4.0-pre.12
+  - react-router-dom@6.4.0-pre.12
+
 ## 6.4.0-pre.11
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @remix-run/router
 
+## 0.2.0-pre.7
+
+### Patch Changes
+
+- 5a56b5c9: fix: fix default redirect push/replace behavior (#9117)
+
 ## 0.2.0-pre.6
 
 ### Patch Changes
@@ -78,8 +84,8 @@
   // Otherwise, construct a Response from the raw data (assuming json here)
   return new Response(JSON.stringify(data), {
     headers: {
-      "Content-Type": "application/json; charset=utf-8",
-    },
+      "Content-Type": "application/json; charset=utf-8"
+    }
   });
   ```
 
