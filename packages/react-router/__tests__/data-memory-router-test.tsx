@@ -1478,6 +1478,93 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
 
+    // This test ensures that when manual routes are used, we add hasErrorBoundary
+    it("renders navigation errors on leaf elements (when using manual route objects)", async () => {
+      let barDefer = createDeferred();
+
+      let routes = [
+        {
+          path: "/",
+          element: <Layout />,
+          children: [
+            {
+              path: "foo",
+              element: <h1>Foo</h1>,
+            },
+            {
+              path: "bar",
+              loader: () => barDefer.promise,
+              element: <Bar />,
+              errorElement: <BarError />,
+            },
+          ],
+        },
+      ];
+
+      let { container } = render(
+        <DataMemoryRouter routes={routes} initialEntries={["/foo"]} />
+      );
+
+      function Layout() {
+        let navigation = useNavigation();
+        return (
+          <div>
+            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <p>{navigation.state}</p>
+            <Outlet />
+          </div>
+        );
+      }
+      function Bar() {
+        let data = useLoaderData();
+        return <h1>Bar:{data?.message}</h1>;
+      }
+      function BarError() {
+        let error = useRouteError();
+        return <p>Bar Error:{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href=\\"/bar\\"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      barDefer.reject(new Error("Kaboom!"));
+      await waitFor(() => screen.getByText("Bar Error:Kaboom!"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href=\\"/bar\\"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <p>
+              Bar Error:
+              Kaboom!
+            </p>
+          </div>
+        </div>"
+      `);
+    });
+
     it("handles render errors in parent errorElement", async () => {
       let { container } = render(
         <DataMemoryRouter

@@ -22,6 +22,7 @@ import {
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_RouteContext as RouteContext,
+  UNSAFE_addHasErrorBoundaryToManualRoutes as addHasErrorBoundaryToManualRoutes,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -224,7 +225,9 @@ export function DataBrowserRouter({
       basename,
       hydrationData: hydrationData || window.__staticRouterHydrationData,
       window: windowProp,
-      routes: routes || createRoutesFromChildren(children),
+      routes: routes
+        ? addHasErrorBoundaryToManualRoutes(routes)
+        : createRoutesFromChildren(children),
     }).initialize();
   }
   let router = routerSingleton;
@@ -262,7 +265,9 @@ export function DataHashRouter({
       basename,
       hydrationData: hydrationData || window.__staticRouterHydrationData,
       window: windowProp,
-      routes: routes || createRoutesFromChildren(children),
+      routes: routes
+        ? addHasErrorBoundaryToManualRoutes(routes)
+        : createRoutesFromChildren(children),
     }).initialize();
   }
   let router = routerSingleton;

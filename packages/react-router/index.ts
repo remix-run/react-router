@@ -44,6 +44,7 @@ import type {
   RoutesProps,
 } from "./lib/components";
 import {
+  addHasErrorBoundaryToManualRoutes,
   createRoutesFromChildren,
   renderMatches,
   DataMemoryRouter,
@@ -209,4 +210,5 @@ export {
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
   DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
+  addHasErrorBoundaryToManualRoutes as UNSAFE_addHasErrorBoundaryToManualRoutes,
 };

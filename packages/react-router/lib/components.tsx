@@ -165,7 +165,9 @@ export function DataMemoryRouter({
       hydrationData,
       initialEntries,
       initialIndex,
-      routes: routes || createRoutesFromChildren(children),
+      routes: routes
+        ? addHasErrorBoundaryToManualRoutes(routes)
+        : createRoutesFromChildren(children),
     }).initialize();
   }
   let router = routerSingleton;
@@ -660,4 +662,22 @@ export function renderMatches(
   matches: RouteMatch[] | null
 ): React.ReactElement | null {
   return _renderMatches(matches);
+}
+
+// Walk the route tree and add hasErrorBoundary if it's not provided
+export function addHasErrorBoundaryToManualRoutes(
+  routes: RouteObject[]
+): RouteObject[] {
+  return routes.map((route) => {
+    let routeClone = { ...route };
+    if (routeClone.hasErrorBoundary == null) {
+      routeClone.hasErrorBoundary = routeClone.errorElement != null;
+    }
+    if (routeClone.children) {
+      routeClone.children = addHasErrorBoundaryToManualRoutes(
+        routeClone.children
+      );
+    }
+    return routeClone;
+  });
 }
