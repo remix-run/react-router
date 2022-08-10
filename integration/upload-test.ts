@@ -54,7 +54,7 @@ test.beforeAll(async () => {
             return json({ message: "ERROR" }, 500);
           }
         };
-        
+
         export default function FileUpload() {
           let { message, size } = useActionData() || {};
           return (
@@ -71,7 +71,7 @@ test.beforeAll(async () => {
               </Form>
             </main>
           );
-        }      
+        }
       `,
 
       "app/routes/memory-upload-handler.jsx": js`
@@ -109,7 +109,7 @@ test.beforeAll(async () => {
             return json({ message: "ERROR" }, 500);
           }
         };
-        
+
         export default function MemoryUpload() {
           let { message, size } = useActionData() || {};
           return (
@@ -126,7 +126,7 @@ test.beforeAll(async () => {
               </Form>
             </main>
           );
-        }      
+        }
       `,
 
       "app/routes/passthrough-upload-handler.jsx": js`
@@ -150,7 +150,7 @@ test.beforeAll(async () => {
             );
           }
         };
-        
+
         export default function PassthroughUpload() {
           let { message, size } = useActionData() || {};
           return (
@@ -167,7 +167,7 @@ test.beforeAll(async () => {
               </Form>
             </main>
           );
-        }      
+        }
       `,
     },
   });
@@ -175,7 +175,7 @@ test.beforeAll(async () => {
   appFixture = await createAppFixture(fixture);
 });
 
-test.afterAll(async () => appFixture.close());
+test.afterAll(() => appFixture.close());
 
 test("can upload a file with createFileUploadHandler", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
@@ -190,6 +190,7 @@ test("can upload a file with createFileUploadHandler", async ({ page }) => {
 test("can catch MaxPartSizeExceededError when file is too big with createFileUploadHandler", async ({
   page,
 }) => {
+  test.slow();
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/file-upload-handler");
   await app.uploadFile(

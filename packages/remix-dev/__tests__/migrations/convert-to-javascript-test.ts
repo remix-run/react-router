@@ -53,6 +53,7 @@ beforeEach(() => {
   removeSync(TEMP_DIR);
   ensureDirSync(TEMP_DIR);
 });
+
 afterEach(() => {
   console.log = ORIGINAL_IO.log;
   console.warn = ORIGINAL_IO.warn;
@@ -97,9 +98,7 @@ const checkMigrationRanSuccessfully = async (projectDir: string) => {
 
 const makeApp = () => {
   let projectDir = join(TEMP_DIR, "convert-to-javascript");
-
   copySync(FIXTURE, projectDir);
-
   return projectDir;
 };
 

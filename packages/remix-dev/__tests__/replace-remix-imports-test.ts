@@ -47,6 +47,7 @@ beforeEach(async () => {
   await fse.remove(TEMP_DIR);
   await fse.ensureDir(TEMP_DIR);
 });
+
 afterEach(async () => {
   console.log = ORIGINAL_IO.log;
   console.warn = ORIGINAL_IO.warn;
@@ -87,11 +88,18 @@ describe("`replace-remix-imports` migration", () => {
     );
     expect(packageJson.dependencies).not.toContain("remix");
     expect(packageJson.devDependencies).not.toContain("remix");
-    expect(packageJson.dependencies["@remix-run/react"]).toBe("1.3.4");
-    expect(packageJson.dependencies["@remix-run/node"]).toBe("1.3.4");
-    expect(packageJson.dependencies["@remix-run/serve"]).toBe("1.3.4");
-    expect(packageJson.devDependencies["@remix-run/dev"]).toBe("1.3.4");
-
+    expect(packageJson.dependencies).toEqual(
+      expect.objectContaining({
+        "@remix-run/node": "1.3.4",
+        "@remix-run/react": "1.3.4",
+        "@remix-run/serve": "1.3.4",
+      })
+    );
+    expect(packageJson.devDependencies).toEqual(
+      expect.objectContaining({
+        "@remix-run/dev": "1.3.4",
+      })
+    );
     expect(output).toContain(
       "🗑  I'm removing `remix setup` from your `postinstall` script."
     );
