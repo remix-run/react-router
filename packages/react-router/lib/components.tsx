@@ -166,7 +166,7 @@ export function DataMemoryRouter({
       initialEntries,
       initialIndex,
       routes: routes
-        ? addHasErrorBoundaryToManualRoutes(routes)
+        ? enhanceManualRouteObjects(routes)
         : createRoutesFromChildren(children),
     }).initialize();
   }
@@ -664,8 +664,12 @@ export function renderMatches(
   return _renderMatches(matches);
 }
 
-// Walk the route tree and add hasErrorBoundary if it's not provided
-export function addHasErrorBoundaryToManualRoutes(
+/**
+ * @private
+ * Walk the route tree and add hasErrorBoundary if it's not provided, so that
+ * users providing manual route arrays can just specify errorElement
+ */
+export function enhanceManualRouteObjects(
   routes: RouteObject[]
 ): RouteObject[] {
   return routes.map((route) => {
@@ -674,9 +678,7 @@ export function addHasErrorBoundaryToManualRoutes(
       routeClone.hasErrorBoundary = routeClone.errorElement != null;
     }
     if (routeClone.children) {
-      routeClone.children = addHasErrorBoundaryToManualRoutes(
-        routeClone.children
-      );
+      routeClone.children = enhanceManualRouteObjects(routeClone.children);
     }
     return routeClone;
   });

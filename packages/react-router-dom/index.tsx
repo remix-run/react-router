@@ -22,7 +22,7 @@ import {
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_RouteContext as RouteContext,
-  UNSAFE_addHasErrorBoundaryToManualRoutes as addHasErrorBoundaryToManualRoutes,
+  UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -177,6 +177,7 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_enhanceManualRouteObjects,
 } from "react-router";
 //#endregion
 
@@ -226,7 +227,7 @@ export function DataBrowserRouter({
       hydrationData: hydrationData || window.__staticRouterHydrationData,
       window: windowProp,
       routes: routes
-        ? addHasErrorBoundaryToManualRoutes(routes)
+        ? enhanceManualRouteObjects(routes)
         : createRoutesFromChildren(children),
     }).initialize();
   }
@@ -266,7 +267,7 @@ export function DataHashRouter({
       hydrationData: hydrationData || window.__staticRouterHydrationData,
       window: windowProp,
       routes: routes
-        ? addHasErrorBoundaryToManualRoutes(routes)
+        ? enhanceManualRouteObjects(routes)
         : createRoutesFromChildren(children),
     }).initialize();
   }
