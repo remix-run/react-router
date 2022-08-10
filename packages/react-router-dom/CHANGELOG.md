@@ -1,5 +1,14 @@
 # react-router-dom
 
+## 6.4.0-pre.12
+
+### Patch Changes
+
+- fix: do not overwrite input value from button with same name (#9139)
+- fix: unspecified `<Form>` action should preserve search params (#9060)
+- Updated dependencies
+  - react-router@6.4.0-pre.12
+
 ## 6.4.0-pre.11
 
 ### Patch Changes
