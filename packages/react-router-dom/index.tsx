@@ -867,7 +867,7 @@ export function useFormAction(action?: string): string {
   // the form action, but inconsistent w/ browsers when the action is omitted.
   // https://github.com/remix-run/remix/issues/927
   let location = useLocation();
-  if (action === undefined) {
+  if (action == null) {
     // Safe to write to these directly here since if action was undefined, we
     // would have called useResolvedPath(".") which will never include a search
     // or hash
