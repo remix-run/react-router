@@ -1,5 +1,13 @@
 # react-router
 
+## 6.4.0-pre.12
+
+### Patch Changes
+
+- fix: avoid navigation loops in `<Navigate>` re-renders in data routers (#9124)
+- Updated dependencies
+  - @remix-run/router@0.2.0-pre.7
+
 ## 6.4.0-pre.11
 
 ### Patch Changes
