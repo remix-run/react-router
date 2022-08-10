@@ -10,7 +10,7 @@
     "localforage": "^1.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.4.0-pre.11"
+    "react-router-dom": "^6.4.0-pre.12"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "4.0.0",
