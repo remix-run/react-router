@@ -4,8 +4,8 @@
 
 ### Patch Changes
 
-- c21e38ef: fix: avoid navigation loops in <Navigate> re-renders in data routers (#9124)
-- Updated dependencies [5a56b5c9]
+- fix: avoid navigation loops in `<Navigate>` re-renders in data routers (#9124)
+- Updated dependencies
   - @remix-run/router@0.2.0-pre.7
 
 ## 6.4.0-pre.11
@@ -103,7 +103,7 @@
         <p>Critical Data: {data.critical}</p>
         <React.Suspense fallback={<p>Loading...</p>}>
           <Await resolve={data.lazy} errorElement={<RenderError />}>
-            {data => <p>{data}</p>}
+            {(data) => <p>{data}</p>}
           </Await>
         </React.Suspense>
       </>

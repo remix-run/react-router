@@ -4,9 +4,7 @@
 
 ### Patch Changes
 
-- Updated dependencies [c21e38ef]
-- Updated dependencies [f0579d8a]
-- Updated dependencies [b25d53f9]
+- Updated dependencies
   - react-router@6.4.0-pre.12
   - react-router-dom@6.4.0-pre.12
 

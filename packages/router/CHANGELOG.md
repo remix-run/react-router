@@ -4,13 +4,13 @@
 
 ### Patch Changes
 
-- 5a56b5c9: fix: fix default redirect push/replace behavior (#9117)
+- fix: fix default redirect push/replace behavior (#9117)
 
 ## 0.2.0-pre.6
 
 ### Patch Changes
 
-- c3406eb9: fix: Rename `<Deferred>` to `<Await>` (#9095)
+- fix: Rename `<Deferred>` to `<Await>` (#9095)
 
   - We are no longer replacing the `Promise` on `loaderData` with the value/error
     when it settles so it's now always a `Promise`.
@@ -84,8 +84,8 @@
   // Otherwise, construct a Response from the raw data (assuming json here)
   return new Response(JSON.stringify(data), {
     headers: {
-      "Content-Type": "application/json; charset=utf-8"
-    }
+      "Content-Type": "application/json; charset=utf-8",
+    },
   });
   ```
 

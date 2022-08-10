@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Updated dependencies [c21e38ef]
+- Updated dependencies
   - react-router@6.4.0-pre.12
 
 ## 6.4.0-pre.11
