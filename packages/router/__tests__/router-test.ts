@@ -3597,7 +3597,7 @@ describe("a router", () => {
       expect(t.router.state.navigation.formData).toBeUndefined();
     });
 
-    it("merges URLSearchParams for formMethod=get", async () => {
+    it("does not preserve existing 'action' URLSearchParams for formMethod='get'", async () => {
       let t = setup({
         routes: TASK_ROUTES,
         initialEntries: ["/"],
@@ -3609,10 +3609,30 @@ describe("a router", () => {
       expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location).toMatchObject({
         pathname: "/tasks",
-        search: "?key=1&key=2",
+        search: "?key=2",
       });
       expect(t.router.state.navigation.formMethod).toBeUndefined();
       expect(t.router.state.navigation.formData).toBeUndefined();
+    });
+
+    it("preserves existing 'action' URLSearchParams for formMethod='post'", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+      });
+      await t.navigate("/tasks?key=1", {
+        formMethod: "post",
+        formData: createFormData({ key: "2" }),
+      });
+      expect(t.router.state.navigation.state).toBe("submitting");
+      expect(t.router.state.navigation.location).toMatchObject({
+        pathname: "/tasks",
+        search: "?key=1",
+      });
+      expect(t.router.state.navigation.formMethod).toBe("post");
+      expect(t.router.state.navigation.formData).toEqual(
+        createFormData({ key: "2" })
+      );
     });
 
     it("returns a 400 error if binary data is attempted to be submitted using formMethod=GET", async () => {

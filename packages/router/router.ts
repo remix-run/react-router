@@ -2048,12 +2048,9 @@ function normalizeNavigateOptions(
 
   // Flatten submission onto URLSearchParams for GET submissions
   let parsedPath = parsePath(path);
-  let searchParams;
   try {
-    searchParams = convertFormDataToSearchParams(
-      opts.formData,
-      parsedPath.search
-    );
+    let searchParams = convertFormDataToSearchParams(opts.formData);
+    parsedPath.search = `?${searchParams}`;
   } catch (e) {
     return {
       path,
@@ -2065,9 +2062,7 @@ function normalizeNavigateOptions(
     };
   }
 
-  return {
-    path: createPath({ ...parsedPath, search: `?${searchParams}` }),
-  };
+  return { path: createPath(parsedPath) };
 }
 
 function getLoaderRedirect(
@@ -2350,11 +2345,8 @@ function createRequest(
   return new Request(url, init);
 }
 
-function convertFormDataToSearchParams(
-  formData: FormData,
-  initialSearchParams?: string
-): URLSearchParams {
-  let searchParams = new URLSearchParams(initialSearchParams);
+function convertFormDataToSearchParams(formData: FormData): URLSearchParams {
+  let searchParams = new URLSearchParams();
 
   for (let [key, value] of formData.entries()) {
     invariant(

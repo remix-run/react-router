@@ -1201,6 +1201,342 @@ function testDomRouter(
       `);
     });
 
+    describe("<Form action>", () => {
+      function NoActionComponent() {
+        return (
+          <Form method="post">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      function ActionDotComponent() {
+        return (
+          <Form method="post" action=".">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      function ActionEmptyComponent() {
+        return (
+          <Form method="post" action="">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      describe("static routes", () => {
+        it("uses full URL when no action is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<NoActionComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?a=1#hash"
+          );
+        });
+
+        it("uses current route path when action='.' is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<ActionDotComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+
+        it("uses current route path when action='' is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<ActionEmptyComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+      });
+
+      describe("layout routes", () => {
+        it("uses full URL when no action is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<NoActionComponent />}>
+                    <Route index={true} element={<h1>Index</h1>} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?a=1#hash"
+          );
+        });
+
+        it("uses current route path when action='.' is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<ActionDotComponent />}>
+                    <Route index={true} element={<h1>Index</h1>} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+
+        it("uses current route path when action='' is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<ActionEmptyComponent />}>
+                    <Route index={true} element={<h1>Index</h1>} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+      });
+
+      describe("index routes", () => {
+        it("uses full URL when no action is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar">
+                    <Route index={true} element={<NoActionComponent />} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?index&a=1#hash"
+          );
+        });
+
+        it("uses current route path when action='.' is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar">
+                    <Route index={true} element={<ActionDotComponent />} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?index"
+          );
+        });
+
+        it("uses current route path when action='' is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar">
+                    <Route index={true} element={<ActionEmptyComponent />} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?index"
+          );
+        });
+      });
+
+      describe("dynamic routes", () => {
+        it("uses full URL when no action is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path=":param" element={<NoActionComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?a=1#hash"
+          );
+        });
+
+        it("uses current route path when action='.' is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path=":param" element={<ActionDotComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+
+        it("uses current route path when action='' is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path=":param" element={<ActionEmptyComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+      });
+
+      describe("splat routes", () => {
+        it("uses full URL when no action is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="*" element={<NoActionComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?a=1#hash"
+          );
+        });
+
+        it("uses current route path (excluding splat) when action='.' is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="*" element={<ActionDotComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo"
+          );
+        });
+
+        it("uses current route path (excluding splat) when action='' is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="*" element={<ActionEmptyComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo"
+          );
+        });
+      });
+    });
+
     describe("useSubmit/Form FormData", () => {
       it("gathers form data on <Form> submissions", async () => {
         let actionSpy = jest.fn();
