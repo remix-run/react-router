@@ -1230,7 +1230,7 @@ function testDomRouter(
       }
 
       describe("static routes", () => {
-        it("uses full URL when no action is specified", async () => {
+        it("includes search params + hash when no action is specified", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1249,7 +1249,7 @@ function testDomRouter(
           );
         });
 
-        it("uses current route path when action='.' is specified", async () => {
+        it("does not include search params + hash when action='.'", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1268,7 +1268,7 @@ function testDomRouter(
           );
         });
 
-        it("uses current route path when action='' is specified", async () => {
+        it("does not include search params + hash when action=''", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1289,7 +1289,7 @@ function testDomRouter(
       });
 
       describe("layout routes", () => {
-        it("uses full URL when no action is specified", async () => {
+        it("includes search params + hash when no action is specified", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1310,7 +1310,7 @@ function testDomRouter(
           );
         });
 
-        it("uses current route path when action='.' is specified", async () => {
+        it("does not include search params + hash when action='.'", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1331,7 +1331,7 @@ function testDomRouter(
           );
         });
 
-        it("uses current route path when action='' is specified", async () => {
+        it("does not include search params + hash when action=''", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1354,7 +1354,7 @@ function testDomRouter(
       });
 
       describe("index routes", () => {
-        it("uses full URL when no action is specified", async () => {
+        it("includes search params + hash when no action is specified", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1375,7 +1375,7 @@ function testDomRouter(
           );
         });
 
-        it("uses current route path when action='.' is specified", async () => {
+        it("does not include search params + hash action='.'", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1396,7 +1396,7 @@ function testDomRouter(
           );
         });
 
-        it("uses current route path when action='' is specified", async () => {
+        it("does not include search params + hash action=''", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1419,7 +1419,7 @@ function testDomRouter(
       });
 
       describe("dynamic routes", () => {
-        it("uses full URL when no action is specified", async () => {
+        it("includes search params + hash when no action is specified", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1438,7 +1438,7 @@ function testDomRouter(
           );
         });
 
-        it("uses current route path when action='.' is specified", async () => {
+        it("does not include search params + hash action='.'", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1457,7 +1457,7 @@ function testDomRouter(
           );
         });
 
-        it("uses current route path when action='' is specified", async () => {
+        it("does not include search params + hash when action=''", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1478,7 +1478,7 @@ function testDomRouter(
       });
 
       describe("splat routes", () => {
-        it("uses full URL when no action is specified", async () => {
+        it("includes search params + hash when no action is specified", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1493,11 +1493,11 @@ function testDomRouter(
           );
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?a=1#hash"
+            "/foo?a=1#hash"
           );
         });
 
-        it("uses current route path (excluding splat) when action='.' is specified", async () => {
+        it("does not include search params + hash when action='.'", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}
@@ -1516,7 +1516,7 @@ function testDomRouter(
           );
         });
 
-        it("uses current route path (excluding splat) when action='' is specified", async () => {
+        it("does not include search params + hash when action=''", async () => {
           let { container } = render(
             <TestDataRouter
               window={getWindow("/foo/bar?a=1#hash")}

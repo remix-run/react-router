@@ -857,9 +857,23 @@ export function useFormAction(action?: string): string {
   let routeContext = React.useContext(RouteContext);
   invariant(routeContext, "useFormAction must be used inside a RouteContext");
 
-  let location = useLocation();
   let [match] = routeContext.matches.slice(-1);
-  let path = useResolvedPath(action ?? location);
+  let resolvedAction = action ?? ".";
+  let path = useResolvedPath(resolvedAction);
+
+  // Previously we set the default action to ".". The problem with this is that
+  // `useResolvedPath(".")` excludes search params and the hash of the resolved
+  // URL. This is the intended behavior of when "." is specifically provided as
+  // the form action, but inconsistent w/ browsers when the action is omitted.
+  // https://github.com/remix-run/remix/issues/927
+  let location = useLocation();
+  if (action == null) {
+    // Safe to write to these directly here since if action was undefined, we
+    // would have called useResolvedPath(".") which will never include a search
+    // or hash
+    path.search = location.search;
+    path.hash = location.hash;
+  }
 
   if ((!action || action === ".") && match.route.index) {
     path.search = path.search
