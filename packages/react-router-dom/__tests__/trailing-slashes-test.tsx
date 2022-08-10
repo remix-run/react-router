@@ -1,6 +1,6 @@
 import { JSDOM } from "jsdom";
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import * as ReactDOM from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
 import type { To } from "react-router-dom";
@@ -31,7 +31,7 @@ describe("trailing slashes", () => {
       test("never includes trailing slashes on root links (index route)", () => {
         let window = getWindowImpl("/app");
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app" window={window}>
               <Routes>
                 <Route
@@ -44,8 +44,7 @@ describe("trailing slashes", () => {
                   }
                 />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -64,7 +63,7 @@ describe("trailing slashes", () => {
       test('never includes trailing slashes on root links (path="")', () => {
         let window = getWindowImpl("/app");
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app" window={window}>
               <Routes>
                 <Route
@@ -77,8 +76,7 @@ describe("trailing slashes", () => {
                   }
                 />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -97,7 +95,7 @@ describe("trailing slashes", () => {
       test("allows non-root links to control trailing slashes", () => {
         let window = getWindowImpl("/app/parent/child");
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app" window={window}>
               <Routes>
                 <Route
@@ -136,8 +134,7 @@ describe("trailing slashes", () => {
                   </Route>
                 </Route>
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -182,7 +179,7 @@ describe("trailing slashes", () => {
       test("always contains trailing slashes on root links (index route)", () => {
         let window = getWindowImpl("/app/");
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app/" window={window}>
               <Routes>
                 <Route
@@ -195,8 +192,7 @@ describe("trailing slashes", () => {
                   }
                 />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -215,7 +211,7 @@ describe("trailing slashes", () => {
       test('always contains trailing slashes on root links (path="" route)', () => {
         let window = getWindowImpl("/app/");
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app/" window={window}>
               <Routes>
                 <Route
@@ -228,8 +224,7 @@ describe("trailing slashes", () => {
                   }
                 />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -248,7 +243,7 @@ describe("trailing slashes", () => {
       test("allows non-root links to control trailing slashes", () => {
         let window = getWindowImpl("/app/parent/child");
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/app/" window={window}>
               <Routes>
                 <Route
@@ -287,8 +282,7 @@ describe("trailing slashes", () => {
                   </Route>
                 </Route>
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -338,14 +332,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo" window={window}>
               <Routes>
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="/" />} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
         expect(window.location.href).toBe("https://remix.run/foo");
@@ -357,14 +350,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo" window={window}>
               <Routes>
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="../" />} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
         expect(window.location.href).toBe("https://remix.run/foo");
@@ -377,14 +369,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo" window={window}>
               <Routes>
                 <Route index element={<SingleNavigate to="bar" />} />
                 <Route path="bar" element={<h1>👋</h1>} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -398,14 +389,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo" window={window}>
               <Routes>
                 <Route index element={<SingleNavigate to="bar/" />} />
                 <Route path="bar" element={<h1>👋</h1>} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -420,14 +410,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo/" window={window}>
               <Routes>
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="/" />} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
         expect(window.location.href).toBe("https://remix.run/foo/");
@@ -439,14 +428,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo/" window={window}>
               <Routes>
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to=".." />} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
         expect(window.location.href).toBe("https://remix.run/foo/");
@@ -459,14 +447,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo/");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo/" window={window}>
               <Routes>
                 <Route index element={<SingleNavigate to="bar" />} />
                 <Route path="bar" element={<h1>👋</h1>} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -480,14 +467,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo/");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo/" window={window}>
               <Routes>
                 <Route index element={<SingleNavigate to="bar/" />} />
                 <Route path="bar" element={<h1>👋</h1>} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -503,14 +489,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo" window={window}>
               <Routes>
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="" />} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -524,14 +509,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo/bar/");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo" window={window}>
               <Routes>
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="" />} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -547,14 +531,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo/bar");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo/" window={window}>
               <Routes>
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="." />} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -568,14 +551,13 @@ describe("trailing slashes", () => {
         expect(window.location.href).toBe("https://remix.run/foo/bar/");
 
         act(() => {
-          ReactDOM.render(
+          ReactDOM.createRoot(node).render(
             <BrowserRouter basename="/foo/" window={window}>
               <Routes>
                 <Route index element={<h1>👋</h1>} />
                 <Route path="bar" element={<SingleNavigate to="." />} />
               </Routes>
-            </BrowserRouter>,
-            node
+            </BrowserRouter>
           );
         });
 
@@ -601,13 +583,12 @@ describe("trailing slashes", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <BrowserRouter basename="/foo" window={window}>
             <Routes>
               <Route index element={<SetSearchParams />} />
             </Routes>
-          </BrowserRouter>,
-          node
+          </BrowserRouter>
         );
       });
 
@@ -630,13 +611,12 @@ describe("trailing slashes", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <BrowserRouter basename="/foo/" window={window}>
             <Routes>
               <Route index element={<SetSearchParams />} />
             </Routes>
-          </BrowserRouter>,
-          node
+          </BrowserRouter>
         );
       });
 

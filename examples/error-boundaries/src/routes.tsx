@@ -1,20 +1,20 @@
 import React from "react";
+
 import {
-  DataBrowserRouter,
-  Link,
-  Route,
-  Outlet,
   isRouteErrorResponse,
   json,
+  Link,
+  LoaderFunctionArgs,
+  Outlet,
   useLoaderData,
   useRouteError,
 } from "react-router-dom";
 
-function Fallback() {
+export function Fallback() {
   return <p>Performing initial data "load"</p>;
 }
 
-function Layout() {
+export function Layout() {
   return (
     <>
       <nav>
@@ -52,8 +52,8 @@ function Layout() {
   );
 }
 
-function RootErrorBoundary() {
-  let error = useRouteError();
+export function RootErrorBoundary() {
+  let error = useRouteError() as Error;
   return (
     <div>
       <h1>Uh oh, something went terribly wrong 😩</h1>
@@ -65,7 +65,7 @@ function RootErrorBoundary() {
   );
 }
 
-const projectLoader: LoaderFunction = ({ params }) => {
+export function projectLoader({ params }: LoaderFunctionArgs) {
   if (params.projectId === "unauthorized") {
     throw json({ contactEmail: "administrator@fake.com" }, { status: 401 });
   }
@@ -91,9 +91,9 @@ const projectLoader: LoaderFunction = ({ params }) => {
       cost: "$5,000 USD",
     },
   });
-};
+}
 
-function Project() {
+export function Project() {
   let { project } = useLoaderData();
 
   return (
@@ -106,7 +106,7 @@ function Project() {
   );
 }
 
-function ProjectErrorBoundary() {
+export function ProjectErrorBoundary() {
   let error = useRouteError();
 
   // We only care to handle 401's at this level, so if this is not a 401
@@ -128,26 +128,3 @@ function ProjectErrorBoundary() {
     </>
   );
 }
-
-function App() {
-  return (
-    <DataBrowserRouter fallbackElement={<Fallback />}>
-      <Route path="/" element={<Layout />}>
-        <Route
-          path=""
-          element={<Outlet />}
-          errorElement={<RootErrorBoundary />}
-        >
-          <Route
-            path="projects/:projectId"
-            element={<Project />}
-            errorElement={<ProjectErrorBoundary />}
-            loader={projectLoader}
-          />
-        </Route>
-      </Route>
-    </DataBrowserRouter>
-  );
-}
-
-export default App;

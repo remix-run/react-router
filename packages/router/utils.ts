@@ -28,7 +28,7 @@ export interface SuccessResult {
 }
 
 /**
- * Successful deferred() result from a loader or action
+ * Successful defer() result from a loader or action
  */
 export interface DeferredResult {
   type: ResultType.deferred;
@@ -161,52 +161,42 @@ export interface DataRouteObject extends RouteObject {
   id: string;
 }
 
-type ParamParseFailed = { failed: true };
+// Recursive helper for finding path parameters in the absence of wildcards
+type _PathParam<Path extends string> =
+  // split path into individual path segments
+  Path extends `${infer L}/${infer R}`
+    ? _PathParam<L> | _PathParam<R>
+    : // find params after `:`
+    Path extends `${string}:${infer Param}`
+    ? Param
+    : // otherwise, there aren't any params present
+      never;
 
-type ParamParseSegment<Segment extends string> =
-  // Check here if there exists a forward slash in the string.
-  Segment extends `${infer LeftSegment}/${infer RightSegment}`
-    ? // If there is a forward slash, then attempt to parse each side of the
-      // forward slash.
-      ParamParseSegment<LeftSegment> extends infer LeftResult
-      ? ParamParseSegment<RightSegment> extends infer RightResult
-        ? LeftResult extends string
-          ? // If the left side is successfully parsed as a param, then check if
-            // the right side can be successfully parsed as well. If both sides
-            // can be parsed, then the result is a union of the two sides
-            // (read: "foo" | "bar").
-            RightResult extends string
-            ? LeftResult | RightResult
-            : LeftResult
-          : // If the left side is not successfully parsed as a param, then check
-          // if only the right side can be successfully parse as a param. If it
-          // can, then the result is just right, else it's a failure.
-          RightResult extends string
-          ? RightResult
-          : ParamParseFailed
-        : ParamParseFailed
-      : // If the left side didn't parse into a param, then just check the right
-      // side.
-      ParamParseSegment<RightSegment> extends infer RightResult
-      ? RightResult extends string
-        ? RightResult
-        : ParamParseFailed
-      : ParamParseFailed
-    : // If there's no forward slash, then check if this segment starts with a
-    // colon. If it does, then this is a dynamic segment, so the result is
-    // just the remainder of the string, optionally prefixed with another string.
-    // Otherwise, it's a failure.
-    Segment extends `${string}:${infer Remaining}`
-    ? Remaining
-    : ParamParseFailed;
+/**
+ * Examples:
+ * "/a/b/*" -> "*"
+ * ":a" -> "a"
+ * "/a/:b" -> "b"
+ * "/a/blahblahblah:b" -> "b"
+ * "/:a/:b" -> "a" | "b"
+ * "/:a/b/:c/*" -> "a" | "c" | "*"
+ */
+type PathParam<Path extends string> =
+  // check if path is just a wildcard
+  Path extends "*"
+    ? "*"
+    : // look for wildcard at the end of the path
+    Path extends `${infer Rest}/*`
+    ? "*" | _PathParam<Rest>
+    : // look for params in the absence of wildcards
+      _PathParam<Path>;
 
 // Attempt to parse the given string segment. If it fails, then just return the
 // plain string type as a default fallback. Otherwise return the union of the
 // parsed string literals that were referenced as dynamic segments in the route.
 export type ParamParseKey<Segment extends string> =
-  ParamParseSegment<Segment> extends string
-    ? ParamParseSegment<Segment>
-    : string;
+  // if could not find path params, fallback to `string`
+  [PathParam<Segment>] extends [never] ? string : PathParam<Segment>;
 
 /**
  * The parameters that were parsed from the URL path.
@@ -475,15 +465,22 @@ function matchRouteBranch<
  *
  * @see https://reactrouter.com/docs/en/v6/utils/generate-path
  */
-export function generatePath(path: string, params: Params = {}): string {
+export function generatePath<Path extends string>(
+  path: Path,
+  params: {
+    [key in PathParam<Path>]: string;
+  } = {} as any
+): string {
   return path
-    .replace(/:(\w+)/g, (_, key) => {
+    .replace(/:(\w+)/g, (_, key: PathParam<Path>) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
     })
-    .replace(/\/*\*$/, (_) =>
-      params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
-    );
+    .replace(/\/*\*$/, (_) => {
+      const star = "*" as PathParam<Path>;
+
+      return params[star] == null ? "" : params[star].replace(/^\/*/, "/");
+    });
 }
 
 /**
@@ -880,70 +877,67 @@ export const json: JsonFunction = (data, init = {}) => {
   });
 };
 
-type DeferredInput =
-  | Record<string, unknown>
-  | Array<unknown>
-  | Promise<unknown>;
+export interface TrackedPromise extends Promise<any> {
+  _tracked?: boolean;
+  _data?: any;
+  _error?: any;
+}
 
 export class DeferredData {
   private pendingKeys: Set<string | number> = new Set<string | number>();
   private cancelled: boolean = false;
   private subscriber?: (aborted: boolean) => void = undefined;
-  data: DeferredInput | unknown;
+  data: Record<string, unknown>;
 
-  constructor(data: DeferredInput) {
-    // Store all data in our internal copy and track promise keys
-    if (data instanceof Promise) {
-      this.data = data;
-      this.trackPromise("__single__", data);
-    } else if (Array.isArray(data)) {
-      this.data = [...data];
-      data.forEach((value, index) => this.trackPromise(index, value));
-    } else if (typeof data === "object") {
-      this.data = { ...data };
-      Object.entries(data).forEach(([key, value]) =>
-        this.trackPromise(key, value)
-      );
-    } else {
-      invariant(false, "Incorrect data type passed to deferred()");
-    }
+  constructor(data: Record<string, unknown>) {
+    invariant(
+      data && typeof data === "object" && !Array.isArray(data),
+      "defer() only accepts plain objects"
+    );
+    this.data = Object.entries(data).reduce(
+      (acc, [key, value]) =>
+        Object.assign(acc, {
+          [key]: this.trackPromise(key, value),
+        }),
+      {}
+    );
   }
 
   private trackPromise(
     key: string | number,
     value: Promise<unknown> | unknown
-  ) {
-    if (value instanceof Promise) {
-      this.pendingKeys.add(key);
-      value.then(
-        (data) => this.onSettle(key, null, data as unknown),
-        (error) => this.onSettle(key, error as unknown)
-      );
+  ): TrackedPromise | unknown {
+    if (!(value instanceof Promise)) {
+      return value;
     }
+
+    this.pendingKeys.add(key);
+
+    // We store a little wrapper promise that will be extended with
+    // _data/_error props upon resolve/reject
+    let promise: TrackedPromise = value.then(
+      (data) => this.onSettle(promise, key, null, data as unknown),
+      (error) => this.onSettle(promise, key, error as unknown)
+    );
+    Object.defineProperty(promise, "_tracked", { get: () => true });
+    return promise;
   }
 
-  private onSettle(key: string | number, error: unknown, data?: unknown) {
+  private onSettle(
+    promise: TrackedPromise,
+    key: string | number,
+    error: unknown,
+    data?: unknown
+  ): void {
     if (this.cancelled) {
       return;
     }
     this.pendingKeys.delete(key);
 
-    let value = error ? new DeferredError(error as string) : data;
-
-    if (this.data instanceof Promise) {
-      this.data = value;
-    } else if (Array.isArray(this.data)) {
-      invariant(typeof key === "number", "expected key to be a number");
-      let data = [...this.data];
-      data[key] = value;
-      this.data = data;
-    } else if (typeof this.data === "object") {
-      this.data = {
-        ...this.data,
-        [key]: value,
-      };
+    if (error) {
+      Object.defineProperty(promise, "_error", { get: () => error });
     } else {
-      invariant(false, "Incorrect data type on DeferredData");
+      Object.defineProperty(promise, "_data", { get: () => data });
     }
 
     this.subscriber?.(false);
@@ -959,26 +953,61 @@ export class DeferredData {
     this.subscriber?.(true);
   }
 
+  async resolveData(signal: AbortSignal) {
+    let aborted = false;
+    if (!this.done) {
+      let onAbort = () => this.cancel();
+      signal.addEventListener("abort", onAbort);
+      aborted = await new Promise((resolve) => {
+        this.subscribe((aborted) => {
+          signal.removeEventListener("abort", onAbort);
+          if (aborted || this.done) {
+            resolve(aborted);
+          }
+        });
+      });
+    }
+    return aborted;
+  }
+
   get done() {
     return this.pendingKeys.size === 0;
   }
+
+  get unwrappedData() {
+    invariant(
+      this.data !== null && this.done,
+      "Can only unwrap data on initialized and settled deferreds"
+    );
+
+    return Object.entries(this.data).reduce(
+      (acc, [key, value]) =>
+        Object.assign(acc, {
+          [key]: unwrapTrackedPromise(value),
+        }),
+      {}
+    );
+  }
 }
 
-/**
- * @private
- * Utility class we use to hold deferred promise rejection values
- */
-export class DeferredError extends Error {}
-
-/**
- * Check if the given error is a DeferredError generated from a deferred()
- * promise rejection
- */
-export function isDeferredError(e: any): e is DeferredError {
-  return e instanceof DeferredError;
+function isTrackedPromise(value: any): value is TrackedPromise {
+  return (
+    value instanceof Promise && (value as TrackedPromise)._tracked === true
+  );
 }
 
-export function deferred(data: DeferredInput) {
+function unwrapTrackedPromise(value: any) {
+  if (!isTrackedPromise(value)) {
+    return value;
+  }
+
+  if (value._error) {
+    throw value._error;
+  }
+  return value._data;
+}
+
+export function defer(data: Record<string, unknown>) {
   return new DeferredData(data);
 }
 
