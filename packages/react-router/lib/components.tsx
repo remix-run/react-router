@@ -85,8 +85,8 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
   warning(
     !React.useContext(NavigationContext).static,
     `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
-      `This is a no-op, but you should modify your code so the <Navigate> is ` +
-      `only ever rendered in response to some user interaction or state change.`
+    `This is a no-op, but you should modify your code so the <Navigate> is ` +
+    `only ever rendered in response to some user interaction or state change.`
   );
 
   let navigate = useNavigate();
@@ -147,7 +147,7 @@ export function Route(
   invariant(
     false,
     `A <Route> is only ever to be used as the child of <Routes> element, ` +
-      `never rendered directly. Please wrap your <Route> in a <Routes>.`
+    `never rendered directly. Please wrap your <Route> in a <Routes>.`
   );
 }
 
@@ -169,18 +169,18 @@ export interface RouterProps {
  *
  * @see https://reactrouter.com/docs/en/v6/routers/router
  */
-export function Router({
+export const Router = React.memo(({
   basename: basenameProp = "/",
   children = null,
   location: locationProp,
   navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false,
-}: RouterProps): React.ReactElement | null {
+}: RouterProps): React.ReactElement | null => {
   invariant(
     !useInRouterContext(),
     `You cannot render a <Router> inside another <Router>.` +
-      ` You should never have more than one in your app.`
+    ` You should never have more than one in your app.`
   );
 
   let basename = normalizePathname(basenameProp);
@@ -220,8 +220,8 @@ export function Router({
   warning(
     location != null,
     `<Router basename="${basename}"> is not able to match the URL ` +
-      `"${pathname}${search}${hash}" because it does not start with the ` +
-      `basename, so the <Router> won't render anything.`
+    `"${pathname}${search}${hash}" because it does not start with the ` +
+    `basename, so the <Router> won't render anything.`
   );
 
   if (location == null) {
@@ -236,7 +236,7 @@ export function Router({
       />
     </NavigationContext.Provider>
   );
-}
+})
 
 export interface RoutesProps {
   children?: React.ReactNode;
@@ -290,8 +290,7 @@ export function createRoutesFromChildren(
 
     invariant(
       element.type === Route,
-      `[${
-        typeof element.type === "string" ? element.type : element.type.name
+      `[${typeof element.type === "string" ? element.type : element.type.name
       }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
     );
 

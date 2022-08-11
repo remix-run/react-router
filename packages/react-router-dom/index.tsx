@@ -47,7 +47,7 @@ function warning(cond: boolean, message: string): void {
       // enabling "pause on exceptions" in your JavaScript debugger.
       throw new Error(message);
       // eslint-disable-next-line no-empty
-    } catch (e) {}
+    } catch (e) { }
   }
 }
 
@@ -129,6 +129,12 @@ export {
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
 } from "react-router";
+
+/**
+ * Uses `React.startTransition` in first place and fallback to `requestIdleCallback` when using version less than `React 18` and
+ * due to browser compatibility reason we need to fallback to `queueMicrotask`.
+*/
+const startIndleTransitionTask = React.startTransition || requestIdleCallback || queueMicrotask
 
 ////////////////////////////////////////////////////////////////////////////////
 // COMPONENTS
@@ -260,6 +266,7 @@ export interface LinkProps
   replace?: boolean;
   state?: any;
   to: To;
+  transitionable?: boolean;
 }
 
 /**
@@ -269,7 +276,7 @@ export interface LinkProps
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
-    { onClick, reloadDocument, replace = false, state, target, to, ...rest },
+    { onClick, reloadDocument, replace = false, state, target, transitionable = true, to, ...rest },
     ref
   ) {
     let href = useHref(to);
@@ -279,7 +286,13 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     ) {
       if (onClick) onClick(event);
       if (!event.defaultPrevented && !reloadDocument) {
-        internalOnClick(event);
+        if (!!transitionable) {
+          startIndleTransitionTask(() => {
+            internalOnClick(event);
+          })
+        } else {
+          internalOnClick(event);
+        }
       }
     }
 
@@ -303,14 +316,14 @@ if (__DEV__) {
 export interface NavLinkProps
   extends Omit<LinkProps, "className" | "style" | "children"> {
   children?:
-    | React.ReactNode
-    | ((props: { isActive: boolean }) => React.ReactNode);
+  | React.ReactNode
+  | ((props: { isActive: boolean }) => React.ReactNode);
   caseSensitive?: boolean;
   className?: string | ((props: { isActive: boolean }) => string | undefined);
   end?: boolean;
   style?:
-    | React.CSSProperties
-    | ((props: { isActive: boolean }) => React.CSSProperties);
+  | React.CSSProperties
+  | ((props: { isActive: boolean }) => React.CSSProperties);
 }
 
 /**
@@ -328,6 +341,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       style: styleProp,
       to,
       children,
+      transitionable = true,
       ...rest
     },
     ref
@@ -375,6 +389,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ref={ref}
         style={style}
         to={to}
+        transitionable={transitionable}
       >
         {typeof children === "function" ? children({ isActive }) : children}
       </Link>
@@ -444,13 +459,13 @@ export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   warning(
     typeof URLSearchParams !== "undefined",
     `You cannot use the \`useSearchParams\` hook in a browser that does not ` +
-      `support the URLSearchParams API. If you need to support Internet ` +
-      `Explorer 11, we recommend you load a polyfill such as ` +
-      `https://github.com/ungap/url-search-params\n\n` +
-      `If you're unsure how to load polyfills, we recommend you check out ` +
-      `https://polyfill.io/v3/ which provides some recommendations about how ` +
-      `to load polyfills only for users that need them, instead of for every ` +
-      `user.`
+    `support the URLSearchParams API. If you need to support Internet ` +
+    `Explorer 11, we recommend you load a polyfill such as ` +
+    `https://github.com/ungap/url-search-params\n\n` +
+    `If you're unsure how to load polyfills, we recommend you check out ` +
+    `https://polyfill.io/v3/ which provides some recommendations about how ` +
+    `to load polyfills only for users that need them, instead of for every ` +
+    `user.`
   );
 
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
@@ -520,14 +535,14 @@ export function createSearchParams(
 ): URLSearchParams {
   return new URLSearchParams(
     typeof init === "string" ||
-    Array.isArray(init) ||
-    init instanceof URLSearchParams
+      Array.isArray(init) ||
+      init instanceof URLSearchParams
       ? init
       : Object.keys(init).reduce((memo, key) => {
-          let value = init[key];
-          return memo.concat(
-            Array.isArray(value) ? value.map((v) => [key, v]) : [[key, value]]
-          );
-        }, [] as ParamKeyValuePair[])
+        let value = init[key];
+        return memo.concat(
+          Array.isArray(value) ? value.map((v) => [key, v]) : [[key, value]]
+        );
+      }, [] as ParamKeyValuePair[])
   );
 }

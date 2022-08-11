@@ -118,11 +118,17 @@ export {
   UNSAFE_RouteContext,
 } from "react-router";
 
+/**
+ * Uses `React.startTransition` in first place and fallback to `requestIdleCallback` when using version less than `React 18` and
+ * due to browser compatibility reason we need to fallback to `queueMicrotask`.
+ */
+const startIndleTransitionTask = React.startTransition || requestIdleCallback || queueMicrotask
+
 ////////////////////////////////////////////////////////////////////////////////
 // COMPONENTS
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface NativeRouterProps extends MemoryRouterProps {}
+export interface NativeRouterProps extends MemoryRouterProps { }
 
 /**
  * A <Router> that runs on React Native.
@@ -137,6 +143,7 @@ export interface LinkProps extends TouchableHighlightProps {
   replace?: boolean;
   state?: any;
   to: To;
+  transitionable?: boolean;
 }
 
 /**
@@ -147,13 +154,20 @@ export function Link({
   replace = false,
   state,
   to,
+  transitionable = true,
   ...rest
 }: LinkProps) {
   let internalOnPress = useLinkPressHandler(to, { replace, state });
   function handlePress(event: GestureResponderEvent) {
     if (onPress) onPress(event);
     if (!event.defaultPrevented) {
-      internalOnPress(event);
+      if (!!transitionable) {
+        startIndleTransitionTask(() => {
+          internalOnPress(event);
+        })
+      } else {
+        internalOnPress(event);
+      }
     }
   }
 
@@ -334,14 +348,14 @@ export function createSearchParams(
 ): URLSearchParams {
   return new URLSearchParams(
     typeof init === "string" ||
-    Array.isArray(init) ||
-    init instanceof URLSearchParams
+      Array.isArray(init) ||
+      init instanceof URLSearchParams
       ? init
       : Object.keys(init).reduce((memo, key) => {
-          let value = init[key];
-          return memo.concat(
-            Array.isArray(value) ? value.map((v) => [key, v]) : [[key, value]]
-          );
-        }, [] as ParamKeyValuePair[])
+        let value = init[key];
+        return memo.concat(
+          Array.isArray(value) ? value.map((v) => [key, v]) : [[key, value]]
+        );
+      }, [] as ParamKeyValuePair[])
   );
 }

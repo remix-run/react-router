@@ -24,6 +24,7 @@ interface LinkProps
   state?: any;
   to: To;
   reloadDocument?: boolean;
+  transitionable?: boolean;
 }
 
 type To = string | Partial<Path>;
