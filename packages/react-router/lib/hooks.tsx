@@ -126,6 +126,11 @@ export function useMatch<
     `useMatch() may be used only in the context of a <Router> component.`
   );
 
+  invariant(
+    pattern,
+    `useMatch() must be called with a matchPath argument.`
+  );
+
   let { pathname } = useLocation();
   return React.useMemo(
     () => matchPath<ParamKey, Path>(pattern, pathname),
