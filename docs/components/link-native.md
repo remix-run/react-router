@@ -21,7 +21,7 @@ interface LinkProps extends TouchableHighlightProps {
   replace?: boolean;
   state?: any;
   to: To;
-  transitionable = true;
+  transitionable?: boolean;
 }
 ```
 
