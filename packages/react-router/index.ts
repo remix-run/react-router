@@ -1,7 +1,6 @@
 import type {
   ActionFunction,
   ActionFunctionArgs,
-  DataRouteMatch,
   Fetcher,
   JsonFunction,
   LoaderFunction,
@@ -14,8 +13,6 @@ import type {
   PathMatch,
   PathPattern,
   RedirectFunction,
-  RouteMatch,
-  RouteObject,
   ShouldRevalidateFunction,
   To,
 } from "@remix-run/router";
@@ -47,6 +44,7 @@ import type {
   RoutesProps,
 } from "./lib/components";
 import {
+  enhanceManualRouteObjects,
   createRoutesFromChildren,
   renderMatches,
   DataMemoryRouter,
@@ -60,7 +58,14 @@ import {
   Router,
   Routes,
 } from "./lib/components";
-import type { Navigator, NavigateOptions } from "./lib/context";
+import type {
+  DataRouteMatch,
+  DataRouteObject,
+  Navigator,
+  NavigateOptions,
+  RouteMatch,
+  RouteObject,
+} from "./lib/context";
 import {
   DataRouterContext,
   DataRouterStateContext,
@@ -102,9 +107,10 @@ type Search = string;
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  AwaitProps,
   DataMemoryRouterProps,
   DataRouteMatch,
-  AwaitProps,
+  DataRouteObject,
   Fetcher,
   Hash,
   IndexRouteProps,
@@ -204,4 +210,5 @@ export {
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
   DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
+  enhanceManualRouteObjects as UNSAFE_enhanceManualRouteObjects,
 };

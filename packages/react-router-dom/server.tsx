@@ -1,7 +1,6 @@
 import * as React from "react";
 import type {
   RevalidationState,
-  RouteObject,
   Router as RemixRouter,
   StaticHandlerContext,
 } from "@remix-run/router";
@@ -12,7 +11,7 @@ import {
   invariant,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import type { Location, To } from "react-router-dom";
+import type { Location, RouteObject, To } from "react-router-dom";
 import {
   createPath,
   parsePath,

@@ -3,15 +3,15 @@ import { Action as HistoryAction, createLocation, parsePath } from "./history";
 
 import {
   DataResult,
-  DataRouteMatch,
-  DataRouteObject,
+  AgnosticDataRouteMatch,
+  AgnosticDataRouteObject,
   DeferredResult,
   ErrorResult,
   FormEncType,
   FormMethod,
   RedirectResult,
   RouteData,
-  RouteObject,
+  AgnosticRouteObject,
   Submission,
   SuccessResult,
 } from "./utils";
@@ -41,7 +41,7 @@ export interface Router {
   /**
    * Return the routes for this router instance
    */
-  get routes(): DataRouteObject[];
+  get routes(): AgnosticDataRouteObject[];
 
   /**
    * Initialize the router, including adding history listeners and kicking off
@@ -158,7 +158,7 @@ export interface RouterState {
   /**
    * The current set of route matches
    */
-  matches: DataRouteMatch[];
+  matches: AgnosticDataRouteMatch[];
 
   /**
    * Tracks whether we've completed our initial data load
@@ -222,7 +222,7 @@ export type HydrationState = Partial<
  */
 export interface RouterInit {
   basename?: string;
-  routes: RouteObject[];
+  routes: AgnosticRouteObject[];
   history: History;
   hydrationData?: HydrationState;
 }
@@ -246,7 +246,7 @@ export interface StaticHandlerContext {
  * A StaticHandler instance manages a singular SSR navigation/fetch event
  */
 export interface StaticHandler {
-  dataRoutes: DataRouteObject[];
+  dataRoutes: AgnosticDataRouteObject[];
   query(request: Request): Promise<StaticHandlerContext | Response>;
   queryRoute(request: Request, routeId?: string): Promise<any>;
 }
@@ -263,7 +263,7 @@ export interface RouterSubscriber {
  * for a given location
  */
 export interface GetScrollRestorationKeyFunction {
-  (location: Location, matches: DataRouteMatch[]): string | null;
+  (location: Location, matches: AgnosticDataRouteMatch[]): string | null;
 }
 
 /**
@@ -385,7 +385,7 @@ interface ShortCircuitable {
 interface HandleActionResult extends ShortCircuitable {
   /**
    * Error thrown from the current action, keyed by the route containing the
-   * errorElement to render the error.  To be committed to the state after
+   * error boundary to render the error.  To be committed to the state after
    * loaders have completed
    */
   pendingActionError?: RouteData;
@@ -410,12 +410,12 @@ interface HandleLoadersResult extends ShortCircuitable {
 /**
  * Tuple of [key, href, DataRouterMatch] for a revalidating fetcher.load()
  */
-type RevalidatingFetcher = [string, string, DataRouteMatch];
+type RevalidatingFetcher = [string, string, AgnosticDataRouteMatch];
 
 /**
  * Tuple of [href, DataRouteMatch] for an active fetcher.load()
  */
-type FetchLoadMatch = [string, DataRouteMatch];
+type FetchLoadMatch = [string, AgnosticDataRouteMatch];
 
 export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
   state: "idle",
@@ -475,7 +475,7 @@ export function createRouter(init: RouterInit): Router {
 
   if (initialMatches == null) {
     // If we do not match a user-provided-route, fall back to the root
-    // to allow the errorElement to take over
+    // to allow the error boundary to take over
     let { matches, route, error } = getNotFoundMatches(dataRoutes);
     initialMatches = matches;
     initialErrors = { [route.id]: error };
@@ -687,7 +687,7 @@ export function createRouter(init: RouterInit): Router {
     return await startNavigation(historyAction, location, {
       submission,
       // Send through the formData serialization error if we have one so we can
-      // render at the right errorElement after we match routes
+      // render at the right error boundary after we match routes
       pendingError: error,
       resetScroll,
       replace: opts?.replace,
@@ -860,7 +860,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     location: Location,
     submission: Submission,
-    matches: DataRouteMatch[],
+    matches: AgnosticDataRouteMatch[],
     opts?: { replace?: boolean }
   ): Promise<HandleActionResult> {
     interruptActiveLoads();
@@ -920,7 +920,7 @@ export function createRouter(init: RouterInit): Router {
   async function handleLoaders(
     request: Request,
     location: Location,
-    matches: DataRouteMatch[],
+    matches: AgnosticDataRouteMatch[],
     overrideNavigation?: Navigation,
     submission?: Submission,
     replace?: boolean,
@@ -1118,7 +1118,7 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    match: DataRouteMatch,
+    match: AgnosticDataRouteMatch,
     submission: Submission
   ) {
     interruptActiveLoads();
@@ -1324,7 +1324,7 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    match: DataRouteMatch
+    match: AgnosticDataRouteMatch
   ) {
     // Put this fetcher into it's loading state
     let loadingFetcher: FetcherStates["Loading"] = {
@@ -1449,7 +1449,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   async function callLoadersAndMaybeResolveData(
-    matchesToLoad: DataRouteMatch[],
+    matchesToLoad: AgnosticDataRouteMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request
   ) {
@@ -1620,7 +1620,7 @@ export function createRouter(init: RouterInit): Router {
 
   function saveScrollPosition(
     location: Location,
-    matches: DataRouteMatch[]
+    matches: AgnosticDataRouteMatch[]
   ): void {
     if (savedScrollPositions && getScrollRestorationKey && getScrollPosition) {
       let key = getScrollRestorationKey(location, matches) || location.key;
@@ -1630,7 +1630,7 @@ export function createRouter(init: RouterInit): Router {
 
   function getSavedScrollPosition(
     location: Location,
-    matches: DataRouteMatch[]
+    matches: AgnosticDataRouteMatch[]
   ): number | null {
     if (savedScrollPositions && getScrollRestorationKey && getScrollPosition) {
       let key = getScrollRestorationKey(location, matches) || location.key;
@@ -1672,7 +1672,7 @@ export function createRouter(init: RouterInit): Router {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function unstable_createStaticHandler(
-  routes: RouteObject[]
+  routes: AgnosticRouteObject[]
 ): StaticHandler {
   invariant(
     routes.length > 0,
@@ -1771,8 +1771,8 @@ export function unstable_createStaticHandler(
 
   async function submit(
     request: Request,
-    matches: DataRouteMatch[],
-    actionMatch: DataRouteMatch,
+    matches: AgnosticDataRouteMatch[],
+    actionMatch: AgnosticDataRouteMatch,
     isRouteRequest: boolean
   ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
     let result: DataResult;
@@ -1880,7 +1880,7 @@ export function unstable_createStaticHandler(
 
   async function loadRouteData(
     request: Request,
-    matches: DataRouteMatch[],
+    matches: AgnosticDataRouteMatch[],
     isRouteRequest: boolean,
     pendingActionError?: RouteData
   ): Promise<
@@ -1941,8 +1941,8 @@ export function unstable_createStaticHandler(
     routeId?: string
   ): {
     location: Location;
-    matches: DataRouteMatch[];
-    routeMatch?: DataRouteMatch;
+    matches: AgnosticDataRouteMatch[];
+    routeMatch?: AgnosticDataRouteMatch;
     shortCircuitState?: Omit<StaticHandlerContext, "location">;
   } {
     let url = new URL(req.url);
@@ -1997,7 +1997,7 @@ export function unstable_createStaticHandler(
  * provide an updated StaticHandlerContext suitable for a second SSR render
  */
 export function getStaticContextFromError(
-  routes: DataRouteObject[],
+  routes: AgnosticDataRouteObject[],
   context: StaticHandlerContext,
   error: any
 ) {
@@ -2084,7 +2084,7 @@ function getLoaderRedirect(
 // Filter out all routes below any caught error as they aren't going to
 // render so we don't need to load them
 function getLoaderMatchesUntilBoundary(
-  matches: DataRouteMatch[],
+  matches: AgnosticDataRouteMatch[],
   boundaryId?: string
 ) {
   let boundaryMatches = matches;
@@ -2099,7 +2099,7 @@ function getLoaderMatchesUntilBoundary(
 
 function getMatchesToLoad(
   state: RouterState,
-  matches: DataRouteMatch[],
+  matches: AgnosticDataRouteMatch[],
   submission: Submission | undefined,
   location: Location,
   isRevalidationRequired: boolean,
@@ -2108,7 +2108,7 @@ function getMatchesToLoad(
   pendingActionData?: RouteData,
   pendingError?: RouteData,
   fetchLoadMatches?: Map<string, FetchLoadMatch>
-): [DataRouteMatch[], RevalidatingFetcher[]] {
+): [AgnosticDataRouteMatch[], RevalidatingFetcher[]] {
   let actionResult = pendingError
     ? Object.values(pendingError)[0]
     : pendingActionData
@@ -2162,8 +2162,8 @@ function getMatchesToLoad(
 
 function isNewLoader(
   currentLoaderData: RouteData,
-  currentMatch: DataRouteMatch,
-  match: DataRouteMatch
+  currentMatch: AgnosticDataRouteMatch,
+  match: AgnosticDataRouteMatch
 ) {
   let isNew =
     // [a] -> [a, b]
@@ -2181,10 +2181,10 @@ function isNewLoader(
 
 function shouldRevalidateLoader(
   currentLocation: string | Location,
-  currentMatch: DataRouteMatch,
+  currentMatch: AgnosticDataRouteMatch,
   submission: Submission | undefined,
   location: string | Location,
-  match: DataRouteMatch,
+  match: AgnosticDataRouteMatch,
   isRevalidationRequired: boolean,
   actionResult: DataResult | undefined
 ) {
@@ -2234,7 +2234,7 @@ function shouldRevalidateLoader(
 async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
-  match: DataRouteMatch,
+  match: AgnosticDataRouteMatch,
   skipRedirects: boolean = false,
   isRouteRequest: boolean = false
 ): Promise<DataResult> {
@@ -2361,8 +2361,8 @@ function convertFormDataToSearchParams(formData: FormData): URLSearchParams {
 }
 
 function processRouteLoaderData(
-  matches: DataRouteMatch[],
-  matchesToLoad: DataRouteMatch[],
+  matches: AgnosticDataRouteMatch[],
+  matchesToLoad: AgnosticDataRouteMatch[],
   results: DataResult[],
   pendingError: RouteData | undefined,
   activeDeferreds?: Map<string, DeferredData>
@@ -2388,7 +2388,7 @@ function processRouteLoaderData(
     );
     if (isErrorResult(result)) {
       // Look upwards from the matched route for the closest ancestor
-      // errorElement, defaulting to the root match
+      // error boundary, defaulting to the root match
       let boundaryMatch = findNearestBoundary(matches, id);
       let error = result.error;
       // If we have a pending action error, we report it at the highest-route
@@ -2441,8 +2441,8 @@ function processRouteLoaderData(
 
 function processLoaderData(
   state: RouterState,
-  matches: DataRouteMatch[],
-  matchesToLoad: DataRouteMatch[],
+  matches: AgnosticDataRouteMatch[],
+  matchesToLoad: AgnosticDataRouteMatch[],
   results: DataResult[],
   pendingError: RouteData | undefined,
   revalidatingFetchers: RevalidatingFetcher[],
@@ -2506,7 +2506,7 @@ function processLoaderData(
 function mergeLoaderData(
   loaderData: RouteData,
   newLoaderData: RouteData,
-  matches: DataRouteMatch[]
+  matches: AgnosticDataRouteMatch[]
 ): RouteData {
   let mergedLoaderData = { ...newLoaderData };
   matches.forEach((match) => {
@@ -2519,23 +2519,24 @@ function mergeLoaderData(
 }
 
 // Find the nearest error boundary, looking upwards from the leaf route (or the
-// route specified by routeId) for the closest ancestor errorElement, defaulting
-// to the root match
+// route specified by routeId) for the closest ancestor error boundary,
+// defaulting to the root match
 function findNearestBoundary(
-  matches: DataRouteMatch[],
+  matches: AgnosticDataRouteMatch[],
   routeId?: string
-): DataRouteMatch {
+): AgnosticDataRouteMatch {
   let eligibleMatches = routeId
     ? matches.slice(0, matches.findIndex((m) => m.route.id === routeId) + 1)
     : [...matches];
   return (
-    eligibleMatches.reverse().find((m) => m.route.errorElement) || matches[0]
+    eligibleMatches.reverse().find((m) => m.route.hasErrorBoundary === true) ||
+    matches[0]
   );
 }
 
-function getNotFoundMatches(routes: DataRouteObject[]): {
-  matches: DataRouteMatch[];
-  route: DataRouteObject;
+function getNotFoundMatches(routes: AgnosticDataRouteObject[]): {
+  matches: AgnosticDataRouteMatch[];
+  route: AgnosticDataRouteObject;
   error: ErrorResponse;
 } {
   // Prefer a root layout route if present, otherwise shim in a route object
@@ -2610,7 +2611,7 @@ function isRedirectResult(result?: DataResult): result is RedirectResult {
 }
 
 async function resolveDeferredResults(
-  matchesToLoad: DataRouteMatch[],
+  matchesToLoad: AgnosticDataRouteMatch[],
   results: DataResult[],
   signal: AbortSignal,
   isFetcher: boolean,
@@ -2671,7 +2672,7 @@ function hasNakedIndexQuery(search: string): boolean {
 }
 
 function getTargetMatch(
-  matches: DataRouteMatch[],
+  matches: AgnosticDataRouteMatch[],
   location: Location | string
 ) {
   let search =

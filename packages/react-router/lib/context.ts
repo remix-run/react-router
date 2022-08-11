@@ -3,12 +3,33 @@ import type {
   TrackedPromise,
   History,
   Location,
-  RouteMatch,
   Router,
   StaticHandlerContext,
   To,
+  AgnosticRouteObject,
+  AgnosticRouteMatch,
 } from "@remix-run/router";
 import { Action as NavigationType } from "@remix-run/router";
+
+// Create react-specific types from the agnostic types in @remix-run/router to
+// export from react-router
+export interface RouteObject extends AgnosticRouteObject {
+  children?: RouteObject[];
+  element?: React.ReactNode;
+  errorElement?: React.ReactNode;
+}
+
+export interface DataRouteObject extends RouteObject {
+  children?: DataRouteObject[];
+  id: string;
+}
+
+export interface RouteMatch<
+  ParamKey extends string = string,
+  RouteObjectType extends RouteObject = RouteObject
+> extends AgnosticRouteMatch<ParamKey, RouteObjectType> {}
+
+export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
 // Contexts for data routers
 export const DataStaticRouterContext =

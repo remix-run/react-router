@@ -5,8 +5,6 @@ import type {
   InitialEntry,
   Location,
   MemoryHistory,
-  RouteMatch,
-  RouteObject,
   Router as RemixRouter,
   RouterState,
   To,
@@ -22,7 +20,13 @@ import {
 } from "@remix-run/router";
 import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
-import type { Navigator, DataRouterContextObject } from "./context";
+import type {
+  DataRouteObject,
+  DataRouterContextObject,
+  RouteMatch,
+  RouteObject,
+  Navigator,
+} from "./context";
 import {
   LocationContext,
   NavigationContext,
@@ -161,7 +165,9 @@ export function DataMemoryRouter({
       hydrationData,
       initialEntries,
       initialIndex,
-      routes: routes || createRoutesFromChildren(children),
+      routes: routes
+        ? enhanceManualRouteObjects(routes)
+        : createRoutesFromChildren(children),
     }).initialize();
   }
   let router = routerSingleton;
@@ -442,7 +448,7 @@ export function Routes({
   // need to use child routes.
   let routes =
     dataRouterContext && !children
-      ? dataRouterContext.router.routes
+      ? (dataRouterContext.router.routes as DataRouteObject[])
       : createRoutesFromChildren(children);
   return useRoutes(routes, location);
 }
@@ -631,6 +637,7 @@ export function createRoutesFromChildren(
       loader: element.props.loader,
       action: element.props.action,
       errorElement: element.props.errorElement,
+      hasErrorBoundary: element.props.errorElement != null,
       shouldRevalidate: element.props.shouldRevalidate,
       handle: element.props.handle,
     };
@@ -655,4 +662,24 @@ export function renderMatches(
   matches: RouteMatch[] | null
 ): React.ReactElement | null {
   return _renderMatches(matches);
+}
+
+/**
+ * @private
+ * Walk the route tree and add hasErrorBoundary if it's not provided, so that
+ * users providing manual route arrays can just specify errorElement
+ */
+export function enhanceManualRouteObjects(
+  routes: RouteObject[]
+): RouteObject[] {
+  return routes.map((route) => {
+    let routeClone = { ...route };
+    if (routeClone.hasErrorBoundary == null) {
+      routeClone.hasErrorBoundary = routeClone.errorElement != null;
+    }
+    if (routeClone.children) {
+      routeClone.children = enhanceManualRouteObjects(routeClone.children);
+    }
+    return routeClone;
+  });
 }

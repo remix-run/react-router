@@ -3,7 +3,12 @@
  * you'll need to update the rollup config for react-router-dom-v5-compat.
  */
 import * as React from "react";
-import { createRoutesFromChildren, NavigateOptions, To } from "react-router";
+import {
+  createRoutesFromChildren,
+  NavigateOptions,
+  RouteObject,
+  To,
+} from "react-router";
 import {
   Router,
   createPath,
@@ -17,6 +22,7 @@ import {
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_RouteContext as RouteContext,
+  UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -27,7 +33,6 @@ import type {
   HashHistory,
   History,
   HydrationState,
-  RouteObject,
   Router as RemixRouter,
 } from "@remix-run/router";
 import {
@@ -72,6 +77,7 @@ export type {
   AwaitProps,
   DataMemoryRouterProps,
   DataRouteMatch,
+  DataRouteObject,
   Fetcher,
   Hash,
   IndexRouteProps,
@@ -171,6 +177,7 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_enhanceManualRouteObjects,
 } from "react-router";
 //#endregion
 
@@ -219,7 +226,9 @@ export function DataBrowserRouter({
       basename,
       hydrationData: hydrationData || window.__staticRouterHydrationData,
       window: windowProp,
-      routes: routes || createRoutesFromChildren(children),
+      routes: routes
+        ? enhanceManualRouteObjects(routes)
+        : createRoutesFromChildren(children),
     }).initialize();
   }
   let router = routerSingleton;
@@ -257,7 +266,9 @@ export function DataHashRouter({
       basename,
       hydrationData: hydrationData || window.__staticRouterHydrationData,
       window: windowProp,
-      routes: routes || createRoutesFromChildren(children),
+      routes: routes
+        ? enhanceManualRouteObjects(routes)
+        : createRoutesFromChildren(children),
     }).initialize();
   }
   let router = routerSingleton;

@@ -15,8 +15,10 @@ import { convertRoutesToDataRoutes } from "./utils";
 export type {
   ActionFunction,
   ActionFunctionArgs,
-  DataRouteMatch,
-  DataRouteObject,
+  AgnosticDataRouteMatch,
+  AgnosticDataRouteObject,
+  AgnosticRouteMatch,
+  AgnosticRouteObject,
   TrackedPromise,
   FormEncType,
   FormMethod,
@@ -28,8 +30,6 @@ export type {
   PathMatch,
   PathPattern,
   RedirectFunction,
-  RouteMatch,
-  RouteObject,
   ShouldRevalidateFunction,
   Submission,
 } from "./utils";
