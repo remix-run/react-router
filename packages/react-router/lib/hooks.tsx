@@ -128,7 +128,7 @@ export function useMatch<
 
   invariant(
     pattern,
-    `useMatch() must be called with a matchPath argument.`
+    `useMatch() must be called with a pattern argument.`
   );
 
   let { pathname } = useLocation();
