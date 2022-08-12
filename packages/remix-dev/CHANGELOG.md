@@ -1,5 +1,16 @@
 # `@remix-run/dev`
 
+## 1.6.8
+
+### Patch Changes
+
+- Added support for `.mjs` and `.cjs` file extensions for `remix.config` ([#3675](https://github.com/remix-run/remix/pull/3675))
+- Added support for importing `.sql` files as text content ([#3190](https://github.com/remix-run/remix/pull/3190))
+- Updated the compiler to make MDX builds deterministic (and a little faster!) ([#3966](https://github.com/remix-run/remix/pull/3966))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.6.8`
+  - `@remix-run/serve@1.6.8`
+
 ## 1.6.7
 
 ### Patch Changes

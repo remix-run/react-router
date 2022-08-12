@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/node",
-  "version": "1.6.7",
+  "version": "1.6.8",
   "description": "Node.js platform abstractions for Remix",
   "bugs": {
     "url": "https://github.com/remix-run/remix/issues"
@@ -15,7 +15,7 @@
   "typings": "dist/index.d.ts",
   "sideEffects": false,
   "dependencies": {
-    "@remix-run/server-runtime": "1.6.7",
+    "@remix-run/server-runtime": "1.6.8",
     "@remix-run/web-fetch": "^4.1.3",
     "@remix-run/web-file": "^3.0.2",
     "@remix-run/web-stream": "^1.0.3",

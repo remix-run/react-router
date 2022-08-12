@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/server-runtime",
-  "version": "1.6.7",
+  "version": "1.6.8",
   "description": "Server runtime for Remix",
   "bugs": {
     "url": "https://github.com/remix-run/remix/issues"
@@ -28,8 +28,8 @@
     "@remix-run/web-file": "^3.0.2",
     "@types/jsesc": "^2.5.1",
     "@types/set-cookie-parser": "^2.4.1",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "peerDependencies": {
     "react": ">=16.8",

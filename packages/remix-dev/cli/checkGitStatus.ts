@@ -10,7 +10,7 @@ export const checkGitStatus = (projectDir: string, { force = false }) => {
     clean = isGitClean(projectDir);
     errorMessage = "Git directory is not clean";
   } catch (err: any) {
-    if (err?.stderr.indexOf("Not a git repository") >= 0) {
+    if (err?.stderr?.indexOf("Not a git repository") >= 0) {
       clean = true;
     }
   }
