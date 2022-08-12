@@ -1,5 +1,6 @@
 ---
 title: isRouteErrorResponse
+new: true
 ---
 
 # `isRouteErrorResponse`

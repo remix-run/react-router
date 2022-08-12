@@ -1,3 +1,4 @@
 ---
 title: redirect
+new: true
 ---
