@@ -1,5 +1,6 @@
 ---
 title: Migrating to Remix
+hidden: true
 ---
 
 # Migrating to Remix

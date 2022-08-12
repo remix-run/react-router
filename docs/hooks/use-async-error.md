@@ -5,20 +5,10 @@ new: true
 
 # `useAsyncError`
 
-<details>
-  <summary>Type declaration</summary>
+Returns the rejection value from the nearest [`<Await>`][await] component.
 
-```tsx
-export declare function useAsyncError(): unknown;
-```
-
-</details>
-
-```tsx
-function Accessor() {
-  const data = useAsyncValue();
-  return <p>{data}</p>;
-}
+```tsx [4,12]
+import { useAsyncError, Await } from "react-router-dom";
 
 function ErrorHandler() {
   const error = useAsyncError();
@@ -27,11 +17,13 @@ function ErrorHandler() {
   );
 }
 
-<Await resolve={promise} errorElement={<ErrorElement />}>
-  <Accessor />
-</Await>;
+<Await
+  resolve={promiseThatRejects}
+  errorElement={<ErrorElement />}
+/>;
 ```
 
-This hook returns the rejection value from the nearest `<Await>` component. See the [`<Await>` docs][await docs] for more information.
+See the [Deferred Data Guide][deferred] and [`<Await>` docs][await docs] for more information.
 
-[await docs]: ../components/await
+[await]: ../components/await
+[deferred]: ../guides/deferred

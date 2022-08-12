@@ -1,6 +1,7 @@
 ---
 title: unstable_DataStaticRouter
 new: true
+hidden: true
 ---
 
 # `unstable_DataStaticRouter`

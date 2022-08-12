@@ -5,26 +5,21 @@ new: true
 
 # `useAsyncValue`
 
-<details>
-  <summary>Type declaration</summary>
+Returns the resolved data from the nearest `<Await>` ancestor component.
 
 ```tsx
-export declare function useAsyncValue(): unknown;
-```
-
-</details>
-
-```tsx
-function Accessor() {
-  const data = useAsyncValue();
-  return <p>{data}</p>;
+function ProductVariants() {
+  const variants = useAsyncValue();
+  return <div>{/* ... */}</div>;
 }
 
-<Await promise={promise}>
-  <Accessor />
+// Await creates the context for the value
+<Await promise={somePromiseForProductVariants}>
+  <ProductVariants />
 </Await>;
 ```
 
-This hook returns the resolved data from the nearest `<Await>` component. See the [`<Await>` docs][await docs] for more information.
+See the [Deferred Data Guide][deferred] and [`<Await>` docs][await docs] for more information.
 
 [await docs]: ../components/await
+[deferred]: ../guides/deferred

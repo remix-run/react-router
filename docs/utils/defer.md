@@ -5,17 +5,16 @@ new: true
 
 # `defer`
 
-<details>
-  <summary>Type declaration</summary>
+This utility allows you to defer values returned from loaders by passing promises instead of resolved values.
 
-```tsx
-declare function defer(
-  data: Record<string, unknown>
-): DeferredData;
+```jsx
+function loader() {
+  let product = await getProduct();
+  let reviews = getProductReviews();
+  return defer({ product, reviews });
+}
 ```
 
-</details>
-
-This utility allows you to defer certain parts of your loader. See the [Deferred guide][deferred guide] for more information.
+See the [Deferred Guide][deferred guide] for more information.
 
 [deferred guide]: ../guides/deferred

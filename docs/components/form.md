@@ -200,7 +200,7 @@ Without a framework like [Remix][remix], or your own server handling of posts to
 
 See also:
 
-- [`useTransition`][usetransition]
+- [`useNavigation`][usenavigation]
 - [`useActionData`][useactiondata]
 - [`useSubmit`][usesubmit]
 
@@ -293,6 +293,7 @@ You can access those values from the `request.url`
 - [useSubmit][usesubmit]
 
 [usenavigation]: ../hooks/use-navigation
+[useactiondata]: ../hooks/use-action-data
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [usefetcher]: ../hooks/use-fetcher
 [htmlform]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form
