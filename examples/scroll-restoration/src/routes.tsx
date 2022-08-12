@@ -1,7 +1,6 @@
 import React from "react";
 
 import {
-  type DataRouteMatch,
   type Location,
   Link,
   Outlet,
@@ -9,6 +8,7 @@ import {
   useLoaderData,
   useLocation,
   useNavigation,
+  useMatches,
 } from "react-router-dom";
 
 export function Layout() {
@@ -22,9 +22,9 @@ export function Layout() {
   // previously-accessed path.  Or - go nuts and lump many pages into a
   // single key (i.e., anything /wizard/* uses the same key)!
   let getKey = React.useCallback(
-    (location: Location, matches: DataRouteMatch[]) => {
-      let match = matches.find((m) => m.route.handle?.scrollMode);
-      if (match?.route.handle?.scrollMode === "pathname") {
+    (location: Location, matches: ReturnType<typeof useMatches>) => {
+      let match = matches.find((m) => (m.handle as any)?.scrollMode);
+      if ((match?.handle as any)?.scrollMode === "pathname") {
         return location.pathname;
       }
 
