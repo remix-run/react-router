@@ -14,6 +14,7 @@ import {
   AgnosticRouteObject,
   Submission,
   SuccessResult,
+  AgnosticRouteMatch,
 } from "./utils";
 import {
   DeferredData,
@@ -258,12 +259,20 @@ export interface RouterSubscriber {
   (state: RouterState): void;
 }
 
+interface UseMatchesMatch {
+  id: string;
+  pathname: string;
+  params: AgnosticRouteMatch["params"];
+  data: unknown;
+  handle: unknown;
+}
+
 /**
  * Function signature for determining the key to be used in scroll restoration
  * for a given location
  */
 export interface GetScrollRestorationKeyFunction {
-  (location: Location, matches: AgnosticDataRouteMatch[]): string | null;
+  (location: Location, matches: UseMatchesMatch[]): string | null;
 }
 
 /**
