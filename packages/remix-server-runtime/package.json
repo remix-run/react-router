@@ -19,14 +19,12 @@
     "@types/cookie": "^0.4.0",
     "@web3-storage/multipart-parser": "^1.0.0",
     "cookie": "^0.4.1",
-    "jsesc": "3.0.2",
     "react-router-dom": "^6.2.2",
     "set-cookie-parser": "^2.4.8",
     "source-map": "^0.7.3"
   },
   "devDependencies": {
     "@remix-run/web-file": "^3.0.2",
-    "@types/jsesc": "^2.5.1",
     "@types/set-cookie-parser": "^2.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
