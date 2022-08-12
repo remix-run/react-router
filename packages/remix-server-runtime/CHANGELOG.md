@@ -1,5 +1,19 @@
 # `@remix-run/server-runtime`
 
+## 1.6.8
+
+### Patch Changes
+
+- We've added type safety for load context. `AppLoadContext` is now an an interface mapping `string` to `unknown`, allowing users to extend it via module augmentation: ([#1876](https://github.com/remix-run/remix/pull/1876))
+
+  ```ts
+  declare module "@remix-run/server-runtime" {
+    interface AppLoadContext {
+      // add custom properties here!
+    }
+  }
+  ```
+
 ## 1.6.7
 
 No significant changes to this package were made in this release. [See the releases page on GitHub](https://github.com/remix-run/remix/releases/tag/remix%401.6.7) for an overview of all changes in v1.6.7.
