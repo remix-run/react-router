@@ -254,7 +254,7 @@ When `true`, a `path` that has a trailing slash will only match a `location.path
 ## location: object
 
 A `<Route>` element tries to match its `path` to the current history location (usually the current browser URL).
-However, a [`location`](location.md) with a different `pathname` can also be passed for matching.
+However, a [`location`](./location.md) with a different `pathname` can also be passed for matching.
 
 This is useful in cases when you need to match a `<Route>` to a location other than the current history location, as shown in the [Animated Transitions](https://reactrouter.com/web/example/animated-transitions) example.
 
