@@ -1,5 +1,6 @@
 ---
 title: defer
+new: true
 ---
 
 # `defer`
