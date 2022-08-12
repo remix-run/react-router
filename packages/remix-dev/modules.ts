@@ -18,6 +18,14 @@ declare module "*.gif" {
   let asset: string;
   export default asset;
 }
+declare module "*.gql" {
+  let asset: string;
+  export default asset;
+}
+declare module "*.graphql" {
+  let asset: string;
+  export default asset;
+}
 declare module "*.jpeg" {
   let asset: string;
   export default asset;
@@ -57,6 +65,10 @@ declare module "*.otf" {
   export default asset;
 }
 declare module "*.png" {
+  let asset: string;
+  export default asset;
+}
+declare module "*.sql" {
   let asset: string;
   export default asset;
 }

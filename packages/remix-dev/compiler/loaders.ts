@@ -7,6 +7,8 @@ export const loaders: { [ext: string]: esbuild.Loader } = {
   ".eot": "file",
   ".flac": "file",
   ".gif": "file",
+  ".gql": "text",
+  ".graphql": "text",
   ".ico": "file",
   ".jpeg": "file",
   ".jpg": "file",
