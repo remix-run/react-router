@@ -15,8 +15,8 @@ import { Action as NavigationType } from "@remix-run/router";
 // export from react-router
 export interface RouteObject extends AgnosticRouteObject {
   children?: RouteObject[];
-  element?: React.ReactNode;
-  errorElement?: React.ReactNode;
+  element?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
 }
 
 export interface DataRouteObject extends RouteObject {
