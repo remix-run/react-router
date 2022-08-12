@@ -20,7 +20,7 @@ function Accessor() {
   return <p>{data}</p>;
 }
 
-function ErrorHandler() {
+function ErrorElement() {
   const error = useAsyncError();
   return (
     <p>Uh Oh, something went wrong! {error.message}</p>

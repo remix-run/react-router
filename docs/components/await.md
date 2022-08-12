@@ -49,11 +49,11 @@ function Accessor() {
 </Await>;
 ```
 
-`<Await>` is primarily intended to be used with the [`defer()`][deferred response] data returned from your `loader`. Returning a deferred value from your loader will allow you to render fallbacks with `<Await>`. A full example can be found in the [Deferred guide][deferred guide].
+`<Await>` is primarily intended to be used with the [`defer()`][defer response] data returned from your `loader`. Returning a deferred value from your loader will allow you to render fallbacks with `<Await>`. A full example can be found in the [Deferred guide][deferred guide].
 
 ### Error Handling
 
-If the passed promise rejects, you can provide an optional `errorElement` to handle that error in a contextual UI via the `useAsyncError` hook. If you do not provide an errorElement, the rejected value will bubble up to the nearest route-level `errorElement` and be accessible via the [`useRouteError`][userouteerror] hook.
+If the passed promise rejects, you can provide an optional `errorElement` to handle that error in a contextual UI via the `useAsyncError` hook. If you do not provide an `errorElement`, the rejected value will bubble up to the nearest route-level `errorElement` and be accessible via the [`useRouteError`][userouteerror] hook.
 
 ```tsx
 function ErrorHandler() {

@@ -180,7 +180,7 @@ Instructs the form to replace the current entry in the history stack, instead of
 The default behavior is conditional on the form `method`:
 
 - `get` defaults to `false`
-- every other method defaults to `true`
+- every other method defaults to `true` unless your action returned a redirect
 
 We've found with `get` you often want the user to be able to click "back" to see the previous search results/filters, etc. But with the other methods the default is `true` to avoid the "are you sure you want to resubmit the form?" prompt. Note that even if `replace={false}` React Router _will not_ resubmit the form when the back button is clicked and the method is post, put, patch, or delete.
 
@@ -200,7 +200,7 @@ Without a framework like [Remix][remix], or your own server handling of posts to
 
 See also:
 
-- [`useTransition`][usetransition]
+- [`useNavigation`][usenavigation]
 - [`useActionData`][useactiondata]
 - [`useSubmit`][usesubmit]
 
@@ -292,6 +292,7 @@ You can access those values from the `request.url`
 
 - [useSubmit][usesubmit]
 
+[useactiondata]: ../hooks/use-action-data
 [usenavigation]: ../hooks/use-navigation
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [usefetcher]: ../hooks/use-fetcher

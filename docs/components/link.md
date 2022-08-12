@@ -4,7 +4,7 @@ title: Link
 
 # `<Link>`
 
-<docs-info>ZZZ This is the web version of `<Link>`. For the React Native version, [go here][link-native].</docs-info>
+<docs-info>This is the web version of `<Link>`. For the React Native version, [go here][link-native].</docs-info>
 
 <details>
   <summary>Type declaration</summary>
