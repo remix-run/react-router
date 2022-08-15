@@ -1,5 +1,12 @@
 import type { ImportDeclaration, JSCodeshift } from "jscodeshift";
 
+/**
+ * import { foo } from "foo"
+ * import { foo as bar } from "foo"
+ * =>
+ * const { foo } = require("foo")
+ * const { foo: bar } = require("foo")
+ */
 export const createVariableDeclarationObjectPattern = (
   j: JSCodeshift,
   { source, specifiers }: ImportDeclaration

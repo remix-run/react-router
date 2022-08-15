@@ -1,10 +1,20 @@
 import type { ImportDeclaration, JSCodeshift } from "jscodeshift";
 
+/**
+ * import foo from "foo"
+ * import * as foo from "foo"
+ * =>
+ * const foo = require("foo").default
+ * const foo = require("foo")
+ */
 export const createVariableDeclarationIdentifier = (
   j: JSCodeshift,
   { source, specifiers }: ImportDeclaration
 ) => {
   let callExpression = j.callExpression(j.identifier("require"), [source]);
+  let isDefaultImport = (specifiers || []).some(
+    ({ type }) => type === "ImportDefaultSpecifier"
+  );
 
   return j.variableDeclaration("const", [
     j.variableDeclarator(
@@ -24,7 +34,9 @@ export const createVariableDeclarationIdentifier = (
               : []
           )[0].local?.name || ""
       ),
-      callExpression
+      isDefaultImport
+        ? j.memberExpression(callExpression, j.identifier("default"))
+        : callExpression
     ),
   ]);
 };
