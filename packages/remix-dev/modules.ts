@@ -2,6 +2,10 @@ declare module "*.aac" {
   let asset: string;
   export default asset;
 }
+declare module "*.avif" {
+  let asset: string;
+  export default asset;
+}
 declare module "*.css" {
   let asset: string;
   export default asset;
