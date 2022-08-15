@@ -302,7 +302,7 @@ createRoot(document.getElementById("root")).render(
 );
 ```
 
-Now you you can submit the form and Remix will automatically serialize the form, call the `action` with a [request][request] containing the serialized [FormData][formdata], and then revalidate all of the loaders on the page to capture the change.
+Now you you can submit the form and React Router will automatically serialize the form, call the `action` with a [request][request] containing the serialized [FormData][formdata], and then revalidate all of the loaders on the page to capture the change.
 
 Let's add one last route to this demo that loads, displays, and can delete an individual note. First we'll configure the routes:
 
