@@ -108,3 +108,7 @@ declare module "*.webmanifest" {
   let asset: string;
   export default asset;
 }
+declare module "*.zip" {
+  let asset: string;
+  export default asset;
+}

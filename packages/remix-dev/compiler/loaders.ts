@@ -36,6 +36,7 @@ export const loaders: { [ext: string]: esbuild.Loader } = {
   ".webp": "file",
   ".woff": "file",
   ".woff2": "file",
+  ".zip": "file",
 };
 
 export function getLoaderForFile(file: string): esbuild.Loader {
