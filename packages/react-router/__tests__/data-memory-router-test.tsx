@@ -2392,7 +2392,7 @@ describe("<DataMemoryRouter>", () => {
       `);
 
       barValueDfd.resolve("LAZY");
-      await waitFor(() => !screen.getByText(/Loading.../));
+      await waitFor(() => screen.getByText(/oops is not defined/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <a
@@ -2466,7 +2466,7 @@ describe("<DataMemoryRouter>", () => {
       `);
 
       barValueDfd.resolve("LAZY");
-      await waitFor(() => !screen.getByText(/Loading.../));
+      await waitFor(() => screen.getByText(/oops is not defined/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <a

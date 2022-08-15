@@ -1044,14 +1044,8 @@ export function createRouter(init: RouterInit): Router {
     // Wire up subscribers to update loaderData as promises settle
     activeDeferreds.forEach((deferredData, routeId) => {
       deferredData.subscribe((aborted) => {
-        if (!aborted) {
-          updateState({
-            loaderData: {
-              ...state.loaderData,
-              [routeId]: deferredData.data,
-            },
-          });
-        }
+        // Note: No need to updateState here since the TrackedPromise on
+        // loaderData is stable across resolve/reject
         // Remove this instance if we were aborted or if promises have settled
         if (aborted || deferredData.done) {
           activeDeferreds.delete(routeId);
