@@ -292,7 +292,6 @@ You can access those values from the `request.url`
 
 - [useSubmit][usesubmit]
 
-[useactiondata]: ../hooks/use-action-data
 [usenavigation]: ../hooks/use-navigation
 [useactiondata]: ../hooks/use-action-data
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
