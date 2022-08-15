@@ -8,6 +8,7 @@ order: 1
 This document describes the most common ways people use React Router with various tools in the React Ecosystem.
 
 - [Basic Installation](#basic-installation)
+- [Vite](#vite)
 - [Create React App](#create-react-app)
 - [Parcel](#parcel)
 - [Webpack](#webpack)
@@ -17,32 +18,17 @@ This document describes the most common ways people use React Router with variou
 
 Most modern React projects manage their dependencies using a package manager like [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/). To add React Router to an existing project, the first thing you should do is install the necessary dependencies with the tool of your choice:
 
-<details>
-<summary>npm</summary>
-
 ```sh
-$ npm install react-router-dom@6
+$ npm install react-router-dom
+$ yarn add react-router-dom
+$ pnpm add react-router-dom
 ```
 
 </details>
 
-<details>
-<summary>Yarn</summary>
+## Vite
 
-```sh
-$ yarn add react-router-dom@6
-```
-
-</details>
-
-<details>
-<summary>pnpm</summary>
-
-```sh
-$ pnpm add react-router-dom@6
-```
-
-</details>
+<docs-info>TODO: Our examples use Vite, should add instructions here</docs-info>
 
 ## Create React App
 
