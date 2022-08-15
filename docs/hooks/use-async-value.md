@@ -14,7 +14,7 @@ function ProductVariants() {
 }
 
 // Await creates the context for the value
-<Await promise={somePromiseForProductVariants}>
+<Await resolve={somePromiseForProductVariants}>
   <ProductVariants />
 </Await>;
 ```
