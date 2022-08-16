@@ -51,6 +51,17 @@ describe("File session storage", () => {
     expect(session.get("user")).toBeUndefined();
   });
 
+  it("doesn't destroy the entire session directory when destroying an empty file session", async () => {
+    let { getSession, destroySession } = createFileSessionStorage({
+      dir,
+      cookie: { secrets: ["secret1"] },
+    });
+
+    let session = await getSession();
+
+    await expect(destroySession(session)).resolves.not.toThrowError();
+  });
+
   describe("when a new secret shows up in the rotation", () => {
     it("unsigns old session cookies using the old secret and encodes new cookies using the new secret", async () => {
       let { getSession, commitSession } = createFileSessionStorage({
