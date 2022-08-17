@@ -2331,6 +2331,35 @@ describe("a router", () => {
       expect(t.router.state.location.pathname).toEqual("/foo");
     });
 
+    it("navigates correctly using POP navigations across action errors", async () => {
+      let t = initializeTmTest();
+
+      // Navigate to /foo
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state.location.pathname).toEqual("/foo");
+
+      // Navigate to /bar
+      let B = await t.navigate("/bar");
+      await B.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+
+      // Post to /bar (should push due to our error)
+      let C = await t.navigate("/bar", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await C.actions.bar.reject("BAR ERROR");
+      await C.loaders.root.resolve("ROOT");
+      await C.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+
+      // POP to /bar
+      let D = await t.navigate(-1);
+      await D.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+    });
+
     it("navigates correctly using POP navigations across loader redirects", async () => {
       // Start at / (history stack: [/])
       let t = initializeTmTest();

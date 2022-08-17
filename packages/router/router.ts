@@ -901,6 +901,15 @@ export function createRouter(init: RouterInit): Router {
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+
+      // By default, all submissions are REPLACE navigations, but if the
+      // action threw an error that'll be rendered in an errorElement, we fall
+      // back to PUSH so that the user can use the back button to get back to
+      // the pre-submission form location to try again
+      if (opts?.replace !== true) {
+        pendingAction = HistoryAction.Push;
+      }
+
       return {
         pendingActionError: { [boundaryMatch.route.id]: result.error },
       };
