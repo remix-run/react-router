@@ -185,6 +185,9 @@ test.describe("Forms", () => {
 
         "app/routes/blog/index.jsx": js`
           import { Form } from "@remix-run/react";
+          export function action() {
+            return { ok: true };
+          }
           export default function() {
             return (
               <>
@@ -615,6 +618,27 @@ test.describe("Forms", () => {
         let html = await app.getHtml();
         let el = getElement(html, `#${INDEX_ROUTE_TOO_MANY_DOTS_ACTION}`);
         expect(el.attr("action")).toMatch("/");
+      });
+
+      test("does not repeatedly add index params on submissions", async ({
+        page,
+      }) => {
+        let app = new PlaywrightFixture(appFixture, page);
+        await app.goto("/blog");
+        let html = await app.getHtml();
+        let el = getElement(html, `#${INDEX_ROUTE_NO_ACTION}`);
+        expect(el.attr("action")).toBe("/blog?index");
+        expect(app.page.url()).toMatch(/\/blog$/);
+
+        await app.clickElement(`#${INDEX_ROUTE_NO_ACTION} button`);
+        el = getElement(html, `#${INDEX_ROUTE_NO_ACTION}`);
+        expect(el.attr("action")).toBe("/blog?index");
+        expect(app.page.url()).toMatch(/\/blog\?index$/);
+
+        await app.clickElement(`#${INDEX_ROUTE_NO_ACTION} button`);
+        el = getElement(html, `#${INDEX_ROUTE_NO_ACTION}`);
+        expect(el.attr("action")).toBe("/blog?index");
+        expect(app.page.url()).toMatch(/\/blog\?index$/);
       });
     });
 
