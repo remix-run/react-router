@@ -647,7 +647,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
     let submit = useSubmitImpl(fetcherKey, routeId);
     let formMethod: FormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
-    let formAction = useFormAction(action, relative);
+    let formAction = useFormAction(action, { relative });
     let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
       if (event.defaultPrevented) return;
@@ -891,7 +891,7 @@ function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
 
 export function useFormAction(
   action?: string,
-  relative?: RelativeRoutingType
+  { relative }: { relative?: RelativeRoutingType } = {}
 ): string {
   let routeContext = React.useContext(RouteContext);
   invariant(routeContext, "useFormAction must be used inside a RouteContext");

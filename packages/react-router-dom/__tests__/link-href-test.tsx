@@ -629,7 +629,7 @@ describe("<Link> href", () => {
       expect(renderer.root.findByType("a").props.href).toEqual("/inbox");
     });
 
-    test.only('<Link to=".."> resolves relative to the parent URL segment', () => {
+    test('<Link to=".."> resolves relative to the parent URL segment', () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         renderer = TestRenderer.create(
