@@ -32,4 +32,4 @@ function ErrorBoundary() {
 ```
 
 [errorelement]: ../route/error-element
-[isrouteerrorresponse]: ../fetch/is-route-error-response
+[isrouteerrorresponse]: ../utils/is-route-error-response

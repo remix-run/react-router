@@ -1,6 +1,7 @@
 ---
 title: Data Quick Start
 new: true
+hidden: true
 order: 3
 ---
 

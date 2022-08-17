@@ -209,5 +209,5 @@ The project route doesn't have to think about errors at all. Between the loader 
 [action]: ./action
 [userouteerror]: ../hooks/use-route-error
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
-[isrouteerrorresponse]: ../fetch/is-route-error-response
+[isrouteerrorresponse]: ../utils/is-route-error-response
 [json]: ../fetch/json

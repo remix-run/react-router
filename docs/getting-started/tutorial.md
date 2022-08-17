@@ -5,859 +5,1865 @@ order: 3
 
 # Tutorial
 
-## Introduction
+Welcome to the tutorial! We'll be building a small, but feature-rich app that let's you keep track of your contacts. We expect it to take between 30-60m if you're following along.
 
-[Check out the completed version of the app here][stackblitz-app].
+<img src="/_docs/tutorial/05.png"/>
 
-React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, and on React Native.
+👉 **Every time you see this it means you need to do something in the app!**
 
-If you're just getting started with React generally, we recommend you follow [the excellent Getting Started guide][reactjs-getting-started] in the official docs. There is plenty of information there to get you up and running. React Router is compatible with React >= 16.8.
+The rest is just there for your information and deeper understanding. Let's get to it.
 
-We'll keep this tutorial quick and to the point. By the end you'll know the APIs you deal with day-to-day with React Router. After that, you can dig into some of the other docs to get a deeper understanding.
+## Setup
 
-While building a little bookkeeping app we'll cover:
+### Vite
 
-- Configuring Routes
-- Navigating with Link
-- Creating Links with active styling
-- Using Nested Routes for Layout
-- Navigating programmatically
-- Using URL params for data loading
-- Using URL Search params
-- Creating your own behaviors through composition
-- Server Rendering
+We'll be using [Vite][vite] for our bundler and dev server for this tutorial. You'll need [Node.js][node] installed for the `npm` command line tool.
 
-## Installation
-
-### Recommended: StackBlitz
-
-To do this tutorial you'll need a working React app. We recommend skipping bundlers and using [this demo on StackBlitz][stackblitz-template] to code along in your browser:
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)][stackblitz-template]
-
-As you edit files, the tutorial will update live.
-
-### Using a bundler
-
-Feel free to use your bundler of choice like [Create React App][cra] or [Vite][vite].
+👉️ **Open up your terminal and bootstrap a new React app with Vite:**
 
 ```sh
-# create react app
-npx create-react-app router-tutorial
-
-# vite
-npm init vite@latest router-tutorial --template react
-```
-
-Then install React Router dependencies:
-
-```sh
-cd router-tutorial
-npm install react-router-dom@6
-```
-
-Then edit your App.js to be pretty boring:
-
-```tsx filename=src/App.js
-export default function App() {
-  return (
-    <div>
-      <h1>Bookkeeper!</h1>
-    </div>
-  );
-}
-```
-
-Actually, that "!" doesn't look boring at all. This is pretty exciting. We sat on React Router v6 beta for over a year as we shifted gears with our business after a global pandemic. THIS IS THE MOST EXCITING THING WE'VE DONE IN A WHILE!
-
-Finally, go make sure `index.js` or `main.jsx` (depending on the bundler you used) is actually boring:
-
-```tsx filename=src/main.jsx
-import ReactDOM from "react-dom/client";
-import App from "./App";
-
-const root = ReactDOM.createRoot(
-  document.getElementById("root")
-);
-root.render(<App />);
-```
-
-Finally, start your app:
-
-```sh
-# probably this
-npm start
-
-# or this
+npm create vite@latest -- --template react
+# follow prompts
+cd <your new project directory>
+npm install react-router-dom@pre localforage match-sorter sort-by
 npm run dev
 ```
 
-## Connect the URL
+You should be able to visit the URL printed in the terminal:
 
-First things first, we want to connect your app to the browser's URL: import `BrowserRouter` and render it around your whole app.
+```
+ VITE v3.0.7  ready in 175 ms
 
-```tsx lines=[2,9-11] filename=src/main.jsx
+  ➜  Local:   http://127.0.0.1:5173/
+  ➜  Network: use --host to expose
+```
+
+### CSS
+
+We've got some pre-written CSS for this tutorial so we can stay focused on React Router. Feel free to judge it harshly or write your own 😅 (We did things we normally wouldn't in CSS so that the markup in this tutorial could stay as minimal as possible.)
+
+👉 **Copy/Paste the tutorial CSS [found here][tutorial-css] into `src/index.css`**
+
+### Data Model
+
+This tutorial will be creating, reading, searching, updating, and deleting data. A typical web app would probably be talking to an API on your web server, but we're going to use browser storage and fake some network latency to keep this focused. None of this code is relevant to React Router, so just go ahead and copy/paste it all.
+
+👉 **Copy/Paste the tutorial data module [found here][tutorial-data] into `src/contacts.js`**
+
+### Unused files
+
+All you need in the src folder are `contacts.js`, `main.jsx`, and `index.css`. You can delete anything else (like `App.js` and `assets`, etc.).
+
+👉 **Delete unused files in `src/` so all you have left are these:**
+
+```
+src
+├── contacts.js
+├── index.css
+└── main.jsx
+```
+
+If your app is running, it might blow up momentarily, just keep going 😋
+
+Okay, we're ready to get started!
+
+## Adding a Router
+
+<docs-warning>Make sure to complete the items in the [Setup][setup] section before continuing</docs-warning>
+
+First thing to do is render a "Router" and configure our first route. This will enable client side routing for our web app.
+
+The `main.jsx` file is the entry point. Open it up and we'll put React Router on the page.
+
+👉 **Add [`DataBrowserRouter`][databrowserrouter] and a [`Route`][route] to `main.jsx`**
+
+```jsx lines=[3,8-10] filename=src/main.jsx
+import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App";
+import { DataBrowserRouter, Route } from "react-router-dom";
+import "./index.css";
 
-const root = ReactDOM.createRoot(
-  document.getElementById("root")
-);
-root.render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route path="/" element={<div>Hello world!</div>} />
+    </DataBrowserRouter>
+  </React.StrictMode>
 );
 ```
 
-Nothing changes in your app, but now we're ready to start messing with the URL.
+This first route is what we often call the "root route" since the rest of our routes will render inside of it. It will serve as the root layout of the UI, we'll have nested layouts as we get farther along.
 
-## Add Some Links
+## The Root Route
 
-Open up `src/App.js`, import `Link` and add some global navigation. Side note: don't take the styling too seriously in this tutorial, we're just using inline styles for convenience, style your apps however you want.
+Let's add the global layout for this app.
 
-```tsx lines=[1,7-15] filename=src/App.js
-import { Link } from "react-router-dom";
+👉 **Create `src/routes` and `src/routes/root.jsx`**
 
-export default function App() {
+```sh
+mkdir src/routes
+touch src/routes/root.jsx
+```
+
+<small>(If you don't want to be a command line nerd, use your editor instead of those commands 🤓)</small>
+
+👉 **Create the root layout component**
+
+```jsx filename=src/routes/root.jsx
+export default function Root() {
   return (
-    <div>
-      <h1>Bookkeeper</h1>
-      <nav
-        style={{
-          borderBottom: "solid 1px",
-          paddingBottom: "1rem",
-        }}
-      >
-        <Link to="/invoices">Invoices</Link> |{" "}
-        <Link to="/expenses">Expenses</Link>
-      </nav>
+    <>
+      <div id="sidebar">
+        <h1>React Router Contacts</h1>
+        <div>
+          <form id="search-form" role="search">
+            <input
+              id="q"
+              aria-label="Search contacts"
+              placeholder="Search"
+              type="search"
+              name="q"
+            />
+            <div
+              id="search-spinner"
+              aria-hidden
+              hidden={true}
+            />
+            <div
+              className="sr-only"
+              aria-live="polite"
+            ></div>
+          </form>
+          <form method="post">
+            <button type="submit">New</button>
+          </form>
+        </div>
+        <nav>
+          <ul>
+            <li>
+              <a href={`contacts/1`}>Your Name</a>
+            </li>
+            <li>
+              <a href={`contacts/2`}>Your Friend</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      <div id="detail"></div>
+    </>
+  );
+}
+```
+
+Nothing React Router specific yet, so feel free to copy/paste all of that.
+
+👉 **Render `<Root>` as the root route's [`element`][routeelement]**
+
+```jsx filename=src/main.jsx lines=[7]
+/* existing imports */
+import Root from "./routes/root";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route path="/" element={<Root />} />
+    </DataBrowserRouter>
+  </React.StrictMode>
+);
+```
+
+The app should look something like this now. It sure is nice having a designer who can also write the CSS, isn't it? (Thank you [Jim][jim] 🙏).
+
+<img lazy src="/_docs/tutorial/01.png" />
+
+## Handling Not Found Errors
+
+It's always a good idea to know how your app responds to errors early in the project because we all write far more bugs than features when building a new app! Not only will your users get a good experience when this happens, but it helps you during development as well.
+
+We added some links to this app, let's see what happens when we click them?
+
+👉 **Click one of the sidebar names**
+
+<img lazy alt="screenshot of default React Router error element" src="/_docs/tutorial/02.png" />
+
+Gross! This is the default error screen in React Router, made worse by our flexbox styles on the body in this app 😂.
+
+Anytime your app throws an error while rendering, loading data, or performing data mutations, React Router will catch it and render an error screen. Let's make our own error page.
+
+👉 **Create an error page component**
+
+```sh
+touch src/error-page.jsx
+```
+
+```jsx filename=src/error-page.jsx
+import { useRouteError } from "react-router-dom";
+
+export default function ErrorPage() {
+  const error = useRouteError();
+  console.error(error);
+
+  return (
+    <div id="error-page">
+      <h1>Oops!</h1>
+      <p>Sorry, an unexpected error has occurred.</p>
+      <p>
+        <i>{error.statusText || error.message}</i>
+      </p>
     </div>
   );
 }
 ```
 
-Go ahead and click the links and the back/forward button (if you're using StackBlitz, you'll need to click the "Open in New Window" button in the inline-browser's toolbar). React Router is now controlling the URL!
+👉 **Set the `<ErrorPage>` as the [`errorElement`][errorelement] on the root route**
 
-We don't have any routes that render when the URL changes yet, but Link is changing the URL without causing a full page reload.
+```jsx filename=src/main.jsx lines=[10]
+/* previous imports */
+import ErrorPage from "./error-page";
 
-## Add Some Routes
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route
+        path="/"
+        element={<Root />}
+        errorElement={<ErrorPage />}
+      />
+    </DataBrowserRouter>
+  </React.StrictMode>
+);
+```
 
-Add a couple new files:
+The error page should now look like this:
 
-- `src/routes/invoices.jsx`
-- `src/routes/expenses.jsx`
+<img lazy alt="new error page, but still ugly" src="/_docs/tutorial/03.png" />
 
-(The location of the files doesn't matter, but when you decide you'd like an automatic backend API, server rendering, code splitting bundler and more for this app, naming your files like this way makes it easy to port this app to our other project, [Remix][remix] 😉)
+<small>(Well, that's not much better. Maybe somebody forgot to ask the designer to make an error page. Maybe everybody forgets to ask the designer to make an error page and then blames the designer for not thinking of it 😆)</small>
 
-Now fill 'em up with some code:
+Note that [`useRouteError`][userouteerror] provides the error that was thrown. When the user navigates to routes that don't exist you'll get an [error response][isrouteerrorresponse] with a "Not Found" `statusText`. We'll see some other errors later in the tutorial and discuss them more.
 
-```tsx filename=src/routes/expenses.jsx
-export default function Expenses() {
+For now, it's enough to know that pretty much all of your errors will now be handled by this page instead of infinite spinners, unresponsive pages, or blank screens 🙌
+
+## The Contact Route UI
+
+Instead of a 404 "Not Found" page, we want to actually render something at the URLs we've linked to. For that, we need to make a new route.
+
+👉 **Create the contact route module**
+
+```sh
+touch src/routes/contact.jsx
+```
+
+👉 **Add the contact component UI**
+
+It's just a bunch of elements, feel free to copy/paste.
+
+```jsx filename=src/routes/contact.jsx
+import { Form } from "react-router-dom";
+
+export default function Contact() {
+  const contact = {
+    first: "Your",
+    last: "Name",
+    avatar: "https://placekitten.com/g/200/200",
+    twitter: "your_handle",
+    notes: "Some notes",
+    favorite: true,
+  };
+
   return (
-    <main style={{ padding: "1rem 0" }}>
-      <h2>Expenses</h2>
-    </main>
+    <div id="contact">
+      <div>
+        <img
+          key={contact.avatar}
+          src={contact.avatar || null}
+        />
+      </div>
+
+      <div>
+        <h1>
+          {contact.first || contact.last ? (
+            <>
+              {contact.first} {contact.last}
+            </>
+          ) : (
+            <i>No Name</i>
+          )}{" "}
+          <Favorite contact={contact} />
+        </h1>
+
+        {contact.twitter && (
+          <p>
+            <a
+              target="_blank"
+              href={`https://twitter.com/${contact.twitter}`}
+            >
+              {contact.twitter}
+            </a>
+          </p>
+        )}
+
+        {contact.notes && <p>{contact.notes}</p>}
+
+        <div>
+          <Form action="edit">
+            <button type="submit">Edit</button>
+          </Form>
+          <Form
+            method="post"
+            action="destroy"
+            onSubmit={(event) => {
+              if (
+                !confirm(
+                  "Please confirm you want to delete this record."
+                )
+              ) {
+                event.preventDefault();
+              }
+            }}
+          >
+            <button type="submit">Delete</button>
+          </Form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Favorite({ contact }) {
+  let favorite = contact.favorite;
+  return (
+    <Form method="post">
+      <button
+        name="favorite"
+        value={favorite ? "false" : "true"}
+        aria-label={
+          favorite
+            ? "Remove from favorites"
+            : "Add to favorites"
+        }
+      >
+        {favorite ? "★" : "☆"}
+      </button>
+    </Form>
   );
 }
 ```
 
-```tsx filename=src/routes/invoices.jsx
-export default function Invoices() {
-  return (
-    <main style={{ padding: "1rem 0" }}>
-      <h2>Invoices</h2>
-    </main>
-  );
-}
-```
+Now that we've got a component, let's hook it up to a new route.
 
-Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx` or `index.js`.
+👉 **Import the contact component and create a new route**
 
-```tsx lines=[2,4-5,8-9,15-21] filename=src/main.jsx
-import ReactDOM from "react-dom/client";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-} from "react-router-dom";
-import App from "./App";
-import Expenses from "./routes/expenses";
-import Invoices from "./routes/invoices";
+```js filename=main.jsx lines=[2,12-15]
+/* other imports */
+import Contact from "./routes/contact";
 
-const root = ReactDOM.createRoot(
-  document.getElementById("root")
-);
-root.render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<App />} />
-      <Route path="expenses" element={<Expenses />} />
-      <Route path="invoices" element={<Invoices />} />
-    </Routes>
-  </BrowserRouter>
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route
+        path="/"
+        element={<Root />}
+        errorElement={<ErrorPage />}
+      />
+      <Route
+        path="contacts/:contactId"
+        element={<Contact />}
+      />
+    </DataBrowserRouter>
+  </React.StrictMode>
 );
 ```
 
-Notice at `"/"` it renders `<App>`. At `"/invoices"` it renders `<Invoices>`. Nice work!
+Now if we click one of the links or visit `/contacts/1` we get our new component!
 
-<docs-info>Remember if you're using StackBlitz to click the "Open in New Window" button in the inline browser's toolbar to be able to click the back/forward buttons in your browser.</docs-info>
+<img lazy alt="contact route rendering without the parent layout" src="/_docs/tutorial/04.png" />
+
+However, it's not inside of our root layout 😠
 
 ## Nested Routes
 
-You may have noticed when clicking the links that the layout in `App` disappears. Repeating shared layouts is a pain in the neck. We've learned that most UI is a series of nested layouts that almost always map to segments of the URL so this idea is baked right in to React Router.
+We want the contact component to render _inside_ of the `<Root>` layout like this.
 
-Let's get some automatic, persistent layout handling by doing just two things:
+<img lazy src="/_docs/tutorial/05.png" />
 
-1. Nest the routes inside of the App route
-2. Render an Outlet
+We do it by making the contact route a _child_ of the root route.
 
-First let's nest the routes. Right now the expenses and invoices routes are siblings to the app, we want to make them _children_ of the app route:
+👉 **Move the contacts route to be a child of the root route**
 
-```jsx lines=[17-20] filename=src/main.jsx
-import ReactDOM from "react-dom/client";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-} from "react-router-dom";
-import App from "./App";
-import Expenses from "./routes/expenses";
-import Invoices from "./routes/invoices";
-
-const root = ReactDOM.createRoot(
-  document.getElementById("root")
-);
-root.render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<App />}>
-        <Route path="expenses" element={<Expenses />} />
-        <Route path="invoices" element={<Invoices />} />
+```jsx filename=src/main.jsx lines=[4-13]
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route
+        path="/"
+        element={<Root />}
+        errorElement={<ErrorPage />}
+      >
+        <Route
+          path="contacts/:contactId"
+          element={<Contact />}
+        />
       </Route>
-    </Routes>
-  </BrowserRouter>
+    </DataBrowserRouter>
+  </React.StrictMode>
 );
 ```
 
-When routes have children it does two things:
+You'll now see the root layout again but a blank page on the right. We need to tell the root route _where_ we want it to render its child routes. We do that with [`<Outlet>`][outlet].
 
-1. It nests the URLs (`"/" + "expenses"` and `"/" + "invoices"`)
-2. It will nest the UI components for shared layout when the child route matches:
+Find the `<div id="detail">` and put an outlet inside
 
-However, before (2) will work we need to render an `Outlet` in the `App.jsx` "parent" route.
+👉 **Render an [`<Outlet>`][outlet]**
 
-```jsx lines=[1,16] filename=src/App.jsx
+```jsx filename=src/routes/root.jsx lines=[1,8]
+import { Outlet } from "react-router-dom";
+
+export default function Root() {
+  return (
+    <>
+      {/* all the other elements */}
+      <div id="detail">
+        <Outlet />
+      </div>
+    </>
+  );
+}
+```
+
+## Client Side Routing
+
+You may or may not have noticed, but when we click the links in the sidebar, the browser is doing a full document request for the next URL instead of using React Router.
+
+Client side routing allows our app to update the URL without requesting another document from the server. Instead, the app can immediately render new UI. Let's make it happen with [`<Link>`][link].
+
+👉 **Change the sidebar `<a href>` to `<Link to>`**
+
+```jsx filename=src/routes/root.jsx lines=[1,12,15]
 import { Outlet, Link } from "react-router-dom";
 
-export default function App() {
+export default function Root() {
   return (
-    <div>
-      <h1>Bookkeeper</h1>
-      <nav
-        style={{
-          borderBottom: "solid 1px",
-          paddingBottom: "1rem",
-        }}
+    <>
+      <div id="sidebar">
+        {/* other elements */}
+
+        <nav>
+          <ul>
+            <li>
+              <Link to={`contacts/1`}>Your Name</Link>
+            </li>
+            <li>
+              <Link to={`contacts/2`}>Your Friend</Link>
+            </li>
+          </ul>
+        </nav>
+
+        {/* other elements */}
+      </div>
+    </>
+  );
+}
+```
+
+You can open the network tab in the browser devtools to see that it's not requesting documents anymore.
+
+## Loading Data: Contact List
+
+URL segments, layouts, and data are more often than not coupled (tripled?) together. We can see it in this app already:
+
+| URL Segment  | Component   | Data               |
+| ------------ | ----------- | ------------------ |
+| /            | `<Root>`    | list of contacts   |
+| contacts/:id | `<Contact>` | individual contact |
+
+Because of this natural coupling, React Router has data conventions to get data into your route components easily.
+
+There are two APIs we'll be using to load data, [`<Route loader>`][loader] and [`useLoaderData`][useloaderdata]. First we'll create and export a loader function in the root module, then we'll hook it up to the route. Finally, we'll access and render the data.
+
+<docs-warning>Make sure you already completed the items in the [Setup][setup] section before continuing</docs-warning>
+
+👉 **Export a loader from `root.jsx`**
+
+```jsx filename=src/routes/root.jsx lines=[2,4-7]
+import { Outlet, Link } from "react-router-dom";
+import { getContacts } from "../contacts";
+
+export async function loader() {
+  const contacts = await getContacts();
+  return { contacts };
+}
+```
+
+👉 **Configure the loader on the route**
+
+```jsx filename=src/main.jsx lines=[2,11]
+/* other imports */
+import Root, { loader as rootLoader } from "./routes/root";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route
+        path="/"
+        element={<Root />}
+        errorElement={<ErrorPage />}
+        loader={rootLoader}
       >
-        <Link to="/invoices">Invoices</Link> |{" "}
-        <Link to="/expenses">Expenses</Link>
-      </nav>
-      <Outlet />
-    </div>
+        <Route
+          path="contacts/:contactId"
+          element={<Contact />}
+        />
+      </Route>
+    </DataBrowserRouter>
+  </React.StrictMode>
+);
+```
+
+👉 **Access and render the data**
+
+```jsx filename=src/routes/root.jsx lines=[4,11,19-39]
+import {
+  Outlet,
+  Link,
+  useLoaderData,
+} from "react-router-dom";
+import { getContacts } from "../contacts";
+
+/* other code */
+
+export default function Root() {
+  const { contacts } = useLoaderData();
+  return (
+    <>
+      <div id="sidebar">
+        <h1>React Router Contacts</h1>
+        {/* other code */}
+
+        <nav>
+          {contacts.length ? (
+            <ul>
+              {contacts.map((contact) => (
+                <li key={contact.id}>
+                  <Link to={`contacts/${contact.id}`}>
+                    {contact.first || contact.last ? (
+                      <>
+                        {contact.first} {contact.last}
+                      </>
+                    ) : (
+                      <i>No Name</i>
+                    )}{" "}
+                    {contact.favorite && <span>★</span>}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>
+              <i>No contacts</i>
+            </p>
+          )}
+        </nav>
+
+        {/* other code */}
+      </div>
+    </>
   );
 }
 ```
 
-Now click around again. The parent route (`App.js`) persists while the `<Outlet>` swaps between the two child routes (`<Invoices>` and `<Expenses>`)!
+That's it! React Router will now automatically keep that data in sync with your UI. We don't have any data yet, so you're probably getting a blank list like this:
 
-As we'll see later, this works at _any level_ of the route hierarchy and is incredibly powerful.
+<img lazy src="/_docs/tutorial/06.png" />
 
-## Listing the Invoices
+## Data Writes + HTML Forms
 
-Normally you'd be fetching data from a server somewhere, but for this tutorial let's hard code some fake stuff so we can focus on routing.
+We'll create our first contact in a second, but first let's talk about HTML.
 
-Make a file at `src/data.js` and copy/paste this in there:
+React Router emulates HTML Form navigation as the data mutation primitive, a la web development before the JavaScript cambrian explosion. It gives you the UX capabilities of client rendered apps with the simplicity of the "old school" web model.
 
-```js filename=src/data.js
-let invoices = [
-  {
-    name: "Santa Monica",
-    number: 1995,
-    amount: "$10,800",
-    due: "12/05/1995",
-  },
-  {
-    name: "Stankonia",
-    number: 2000,
-    amount: "$8,000",
-    due: "10/31/2000",
-  },
-  {
-    name: "Ocean Avenue",
-    number: 2003,
-    amount: "$9,500",
-    due: "07/22/2003",
-  },
-  {
-    name: "Tubthumper",
-    number: 1997,
-    amount: "$14,000",
-    due: "09/01/1997",
-  },
-  {
-    name: "Wide Open Spaces",
-    number: 1998,
-    amount: "$4,600",
-    due: "01/27/1998",
-  },
-];
+While unfamiliar to some web developers, HTML forms actually cause a navigation in the browser, just like clicking a link. The only difference is in the request: links can only change the URL while forms can also change the request method (GET vs POST) and the request body (POST form data).
 
-export function getInvoices() {
-  return invoices;
+Without client side routing, the browser will serialize the form's data automatically and send it to the server as the request body for POST, and as URLSearchParams for GET. React Router does the same thing, except instead of sending the request to the server, it uses client side routing and sends it to a route [`action`][action].
+
+We can test this out by clicking the "New" button in our app. The app should blow up because the Vite server isn't configured to handle a POST request (it sends a 404, though it should probably be a 405 🤷).
+
+<img lazy src="/_docs/tutorial/07.png" />
+
+Instead of sending that POST to the Vite server to create a new contact, let's use client side routing instead.
+
+## Creating Contacts
+
+We'll create new contacts by exporting an `action` in our root route, wiring it up to the route config, and changing our `<form>` to a React Router [`<Form>`][form].
+
+👉 **Create the action and change `<form>` to `<Form>`**
+
+```jsx filename=src/routes/root.jsx lines=[5,9-11,22-24]
+import {
+  Outlet,
+  Link,
+  useLoaderData,
+  Form,
+} from "react-router-dom";
+import { getContacts, createContact } from "../contacts";
+
+export async function action() {
+  await createContact();
+}
+
+/* other code */
+
+export default function Root() {
+  const { contacts } = useLoaderData();
+  return (
+    <>
+      <div id="sidebar">
+        <h1>React Router Contacts</h1>
+        <div>
+          <Form method="post">
+            <button type="submit">New</button>
+          </Form>
+        </div>
+
+        {/* other code */}
+      </div>
+    </>
+  );
 }
 ```
 
-Now we can use it in the invoices route. Let's also add a bit of styling to get a sidebar nav layout going on. Feel free to copy/paste all of this, but take special note of the `<Link>` elements `to` prop:
+👉 **Import and set the action on the route**
 
-```js lines=[17] filename=src/routes/invoices.jsx
-import { Link } from "react-router-dom";
-import { getInvoices } from "../data";
+```jsx filename=src/main.jsx lines=[5,16]
+/* other imports */
 
-export default function Invoices() {
-  let invoices = getInvoices();
-  return (
-    <div style={{ display: "flex" }}>
-      <nav
-        style={{
-          borderRight: "solid 1px",
-          padding: "1rem",
-        }}
+import Root, {
+  loader as rootLoader,
+  action as rootAction,
+} from "./routes/root";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route
+        path="/"
+        element={<Root />}
+        errorElement={<ErrorPage />}
+        loader={rootLoader}
+        action={rootAction}
       >
-        {invoices.map((invoice) => (
-          <Link
-            style={{ display: "block", margin: "1rem 0" }}
-            to={`/invoices/${invoice.number}`}
-            key={invoice.number}
-          >
-            {invoice.name}
-          </Link>
-        ))}
-      </nav>
-    </div>
-  );
+        <Route
+          path="contacts/:contactId"
+          element={<Contact />}
+        />
+      </Route>
+    </DataBrowserRouter>
+  </React.StrictMode>
+);
+```
+
+That's it! Go ahead and click the "New" button and you should see a new record pop into the list 🥳
+
+<img lazy src="/_docs/tutorial/08.png" />
+
+The `createContact` method just creates an empty contact with no name or data or anything. But it does still create a record.
+
+> 🧐 Wait a sec ... How did the sidebar update? Where did we call the `action`? Where's the code to refetch the data? Where are `useState`, `onSubmit` and `useEffect`?!
+
+This is where the "old school web" programming model shows up. As we discussed earlier, [`<Form>`][form] prevents the browser from sending the request to the server and sends it to your route `action` instead.
+
+In web semantics, a POST usually means some data is changing. By convention, React Router uses this as a hint to automatically revalidate the data on the page after the action finishes. That means all of your `useLoaderData` hooks update and the UI stays in sync with your data automatically! Pretty cool.
+
+## URL Params in Loaders
+
+👉 **Click on the No Name record**
+
+We should be see our old static contact page again, with one difference: the URL now has a real ID for the record.
+
+<img lazy src="/_docs/tutorial/09.png" />
+
+Reviewing the route config, the route looks like this:
+
+```jsx
+<Route path="contacts/:contactId" element={<Contact />} />
+```
+
+Note the `:contactId` URL segment. The colon (`:`) has special meaning, turning it into a "dynamic segment". Dynamic segments will match dynamic (changing) values in that position of the URL, like the contact ID. We call these values in the URL "URL Params", or just "params" for short.
+
+These [`params`][params] are passed to the loader with keys that match the dynamic segment. For example, our segment is named `:contactId` so the value will be passed as `params.contactId`.
+
+These params are most often used to find a record by ID. Let's try it out.
+
+👉 **Add a loader to the contact page and access data with `useLoaderData`**
+
+```jsx filename=src/routes/contact.jsx lines=[1,2,4-6,9]
+import { Form, useLoaderData } from "react-router-dom";
+import { getContact } from "../contacts";
+
+export async function loader({ params }) {
+  return getContact(params.contactId);
+}
+
+export default function Contact() {
+  const contact = useLoaderData();
+  // existing code
 }
 ```
 
-Cool! Now click an invoice link and see what happens.
+👉 **Configure the loader on the route**
 
-😨😨😨
+```jsx filename=src/main.jsx lines=[3,19]
+/* existing code */
+import Contact, {
+  loader as contactLoader,
+} from "./routes/contact";
 
-## Adding a "No Match" Route
-
-That didn't go as you might have expected. If you click those links the page goes blank! That's because none of the routes we've defined match a URL like the ones we're linking to: `"/invoices/123"`.
-
-Before we move on, it's good practice to always handle this "no match" case. Go back to your route config and add this:
-
-```js lines=[5-12] filename=src/main.jsx
-<Routes>
-  <Route path="/" element={<App />}>
-    <Route path="expenses" element={<Expenses />} />
-    <Route path="invoices" element={<Invoices />} />
-    <Route
-      path="*"
-      element={
-        <main style={{ padding: "1rem" }}>
-          <p>There's nothing here!</p>
-        </main>
-      }
-    />
-  </Route>
-</Routes>
-```
-
-The `"*"` has special meaning here. It will match only when no other routes do.
-
-## Reading URL Params
-
-Alright, back to the individual invoice URLs. Let's add a route for a specific invoice. We just visited some URLs like `"/invoices/1998"` and `"/invoices/2005"`, let's make a new component at `src/routes/invoice.jsx` to render at those URLs:
-
-```js filename=src/routes/invoice.jsx
-export default function Invoice() {
-  return <h2>Invoice #???</h2>;
-}
-```
-
-We'd like to render the invoice number instead of `"???"`. Normally in React you'd pass this as a prop: `<Invoice invoiceId="123" />`, but you don't control that information because it comes from the URL.
-
-Let's define a route that will match these kinds of URLs and enable us to get the invoice number from it.
-
-Create a new `<Route>` _inside_ of the "invoices" route like this:
-
-```js lines=[4-6] filename=src/main.jsx
-<Routes>
-  <Route path="/" element={<App />}>
-    <Route path="expenses" element={<Expenses />} />
-    <Route path="invoices" element={<Invoices />}>
-      <Route path=":invoiceId" element={<Invoice />} />
-    </Route>
-    <Route
-      path="*"
-      element={
-        <main style={{ padding: "1rem" }}>
-          <p>There's nothing here!</p>
-        </main>
-      }
-    />
-  </Route>
-</Routes>
-```
-
-A couple things to note:
-
-- We just created a route that matches urls like "/invoices/2005" and "/invoices/1998". The `:invoiceId` part of the path is a "URL param", meaning it can match any value as long as the pattern is the same.
-- The `<Route>` adds a second layer of route nesting when it matches: `<App><Invoices><Invoice /></Invoices></App>`. Because the `<Route>` is nested the UI will be nested too.
-
-Alright, now go click a link to an invoice, note that the URL changes but the new invoice component doesn't show up yet. Do you know why?
-
-That's right! We need to add an outlet to the parent layout route (we're really proud of you).
-
-```tsx lines=[1,24] filename=src/routes/invoices.jsx
-import { Link, Outlet } from "react-router-dom";
-import { getInvoices } from "../data";
-
-export default function Invoices() {
-  let invoices = getInvoices();
-  return (
-    <div style={{ display: "flex" }}>
-      <nav
-        style={{
-          borderRight: "solid 1px",
-          padding: "1rem",
-        }}
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route
+        path="/"
+        element={<Root />}
+        errorElement={<ErrorPage />}
+        loader={rootLoader}
+        action={rootAction}
       >
-        {invoices.map((invoice) => (
-          <Link
-            style={{ display: "block", margin: "1rem 0" }}
-            to={`/invoices/${invoice.number}`}
-            key={invoice.number}
-          >
-            {invoice.name}
-          </Link>
-        ))}
-      </nav>
-      <Outlet />
-    </div>
-  );
-}
+        <Route
+          path="contacts/:contactId"
+          element={<Contact />}
+          loader={contactLoader}
+        />
+      </Route>
+    </DataBrowserRouter>
+  </React.StrictMode>
+);
 ```
 
-Okay, let's close the circle here. Open up the invoice component again and let's get the `:invoiceId` param from the URL:
+<img lazy src="/_docs/tutorial/10.png" />
 
-```ts lines=[1,4] filename=src/routes/invoice.jsx
-import { useParams } from "react-router-dom";
+## Updating Data
 
-export default function Invoice() {
-  let params = useParams();
-  return <h2>Invoice: {params.invoiceId}</h2>;
-}
-```
+Just like creating data, you update data with [`<Form>`][form]. Let's make a new route at `contacts/:contactId/edit`. Again, we'll start with the component and then wire it up to the route config.
 
-Note that the key of the param on the `params` object is the same as the dynamic segment in the route path:
+👉 **Create the edit component**
 
 ```
-:invoiceId -> params.invoiceId
+touch src/routes/edit.jsx
 ```
 
-Let's use that information to build up a more interesting invoice page. Open up `src/data.js` and add a new function to lookup invoices by their number:
+👉 **Add the edit page UI**
 
-```js filename=src/data.js lines=[7-11]
-// ...
+Nothing we haven't seen before, feel free to copy/paste:
 
-export function getInvoices() {
-  return invoices;
-}
+```jsx filename=src/routes/edit.jsx
+import { Form, useLoaderData } from "react-router-dom";
 
-export function getInvoice(number) {
-  return invoices.find(
-    (invoice) => invoice.number === number
-  );
-}
-```
+export default function Edit() {
+  const contact = useLoaderData();
 
-And now back in `invoice.jsx` we use the param to look up an invoice and display more information:
-
-```js filename=routes/invoice.jsx lines=[2,6]
-import { useParams } from "react-router-dom";
-import { getInvoice } from "../data";
-
-export default function Invoice() {
-  let params = useParams();
-  let invoice = getInvoice(parseInt(params.invoiceId, 10));
   return (
-    <main style={{ padding: "1rem" }}>
-      <h2>Total Due: {invoice.amount}</h2>
+    <Form method="post" id="contact-form">
       <p>
-        {invoice.name}: {invoice.number}
+        <span>Name</span>
+        <input
+          placeholder="First"
+          aria-label="First name"
+          type="text"
+          name="first"
+          defaultValue={contact.first}
+        />
+        <input
+          placeholder="Last"
+          aria-label="Last name"
+          type="text"
+          name="last"
+          defaultValue={contact.last}
+        />
       </p>
-      <p>Due Date: {invoice.due}</p>
-    </main>
+      <label>
+        <span>Twitter</span>
+        <input
+          type="text"
+          name="twitter"
+          placeholder="@jack"
+          defaultValue={contact.twitter}
+        />
+      </label>
+      <label>
+        <span>Avatar URL</span>
+        <input
+          placeholder="https://example.com/avatar.jpg"
+          aria-label="Avatar URL"
+          type="text"
+          name="avatar"
+          defaultValue={contact.avatar}
+        />
+      </label>
+      <label>
+        <span>Notes</span>
+        <textarea
+          name="notes"
+          defaultValue={contact.notes}
+          rows={6}
+        />
+      </label>
+      <p>
+        <button type="submit">Save</button>
+        <button type="button">Cancel</button>
+      </p>
+    </Form>
   );
 }
 ```
 
-Note that we used `parseInt` around the param. It's very common for your data lookups to use a `number` type, but URL params are always `string`.
+👉 **Add the new edit route**
+
+```jsx filename=src/main.jsx lines=[2,19-23]
+/* existing code */
+import EditContact from "./routes/edit";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route
+        path="/"
+        element={<Root />}
+        errorElement={<ErrorPage />}
+        loader={rootLoader}
+        action={rootAction}
+      >
+        <Route
+          path="contacts/:contactId"
+          element={<Contact />}
+          loader={contactLoader}
+        />
+        <Route
+          path="contacts/:contactId/edit"
+          element={<EditContact />}
+          loader={contactLoader}
+        />
+      </Route>
+    </DataBrowserRouter>
+  </React.StrictMode>
+);
+```
+
+We want it to be rendered in the root route's outlet, so we made it a sibling to the existing child route.
+
+> 🤨 Is that `loader={contactLoader}` for both route's?
+
+Yep. Both routes need the contact, and both use the same param name (`:contactId`), so they can share the same loader. Kinda cool.
+
+Alright, clicking the "Edit" button gives us this new UI:
+
+<img lazy src="/_docs/tutorial/11.png" />
+
+## Updating Contacts with FormData
+
+The edit route we just created already renders a form. All we need to do to update the record is wire up an action to the route. The form will post to the action and the data will be automatically revalidated.
+
+👉 **Add an action to the edit module**
+
+```jsx filename=src/routes/edit.jsx lines=[4,6,8-13]
+import {
+  Form,
+  useLoaderData,
+  redirect,
+} from "react-router-dom";
+import { updateContact } from "../contacts";
+
+export async function action({ request, params }) {
+  const formData = await request.formData();
+  const updates = Object.fromEntries(formData);
+  await updateContact(params.contactId, updates);
+  return redirect(`/contacts/${params.contactId}`);
+}
+
+/* existing code */
+```
+
+👉 **Wire the action up to the route**
+
+```jsx filename=src/routes/edit.jsx lines=[3,18]
+/* existing code */
+import EditContact, {
+  action as editAction,
+} from "./routes/edit";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route
+        path="/"
+        // existing code
+      >
+        {/* existing code */}
+        <Route
+          path="contacts/:contactId/edit"
+          element={<EditContact />}
+          loader={contactLoader}
+          action={editAction}
+        />
+      </Route>
+    </DataBrowserRouter>
+  </React.StrictMode>
+);
+```
+
+Fill out the form, hit save, and you should see something like this! <small>(Except easier on the eyes and maybe less hairy.)</small>
+
+<img lazy src="/_docs/tutorial/12.png" />
+
+## Discussion
+
+> 😑 It worked, but I have no idea what is going on here...
+
+You may have noticed all of this worked but you're unclear why! Let's dig in a bit.
+
+### HTML Forms, FormData, and Request.formData
+
+Open up `src/routes/edit.jsx` and look at the form elements. Notice how they each have a name:
+
+```jsx lines=[5] filename=src/routes/edit.jsx
+<input
+  placeholder="First"
+  aria-label="First name"
+  type="text"
+  name="first"
+  defaultValue={contact.first}
+/>
+```
+
+Without JavaScript, when a form is submitted, the browser will create [`FormData`][formdata] and set it as the body of the request when it sends it to the server. As mentioned before, React Router prevents that and sends the request to your action instead, including the [`FormData`][formdata].
+
+Each field in the form is accessible with `formData.get(name)`. For example, given the input field from above, you could access the first and last names like this:
+
+```jsx lines=[3,4]
+export async function action({ request, params }) {
+  const formData = await request.formData();
+  const firstName = formData.get("first");
+  const lastName = formData.get("last");
+  // ...
+}
+```
+
+Since we have a handful of form fields, we used [`Object.fromEntries`][fromentries] to collect them all into an object, which is exactly what our `updateContact` function wants.
+
+```jsx
+const updates = Object.fromEntries(formData);
+updates.first; // "Some"
+updates.last; // "Name"
+```
+
+Aside from `action`, none of these APIs we're discussing are provided by React Router: [`request`][request], [`request.formData`][requestformdata], [`Object.fromEntries`][fromentries] are all provided by the web platform.
+
+### Redirecting in Actions
+
+After we finished the action, note the [`redirect`][redirect] at the end:
+
+```jsx filename=src/routes/edit.jsx lines=[5]
+export async function action({ request, params }) {
+  const formData = await request.formData();
+  const updates = Object.fromEntries(formData);
+  await updateContact(params.contactId, updates);
+  return redirect(`/contacts/${params.contactId}`);
+}
+```
+
+Loaders and actions can both [return a `Response`][returningresponses] (makes sense, since they received a [`Request`][request]!). The [`redirect`][redirect] helper just makes it easier to return a [response][response] that tells the app to change locations.
+
+And finally, as we learned before, React Router automatically revalidates the data on the page after an action, that's why the sidebar automatically updates when we save the form.
+
+Now that we know how to redirect, and we have an edit page, let's update the action that creates new actions to redirect to the edit page:
+
+👉 **Redirect to the new record's edit page**
+
+```jsx filename=src/routes/root.jsx lines=[6,11-12]
+import {
+  Outlet,
+  Link,
+  useLoaderData,
+  Form,
+  redirect,
+} from "react-router-dom";
+import { getContacts, createContact } from "../contacts";
+
+export async function action() {
+  const contact = await createContact();
+  return redirect(`/contacts/${contact.id}/edit`);
+}
+```
+
+Now when we click "New", we should end up on the edit page:
+
+<img lazy src="/_docs/tutorial/13.png" />
+
+👉 **Add a handful of records**
+
+We're going to use the stellar lineup of speakers from the first Remix Conference 😁
+
+<img lazy src="/_docs/tutorial/14.png" />
+
+## Active Link Styling
+
+Now that we have a bunch of records, it's not clear which one we're looking at in the sidebar. We can use [`NavLink`][navlink] to fix this.
+
+👉 **Use a `NavLink` in the sidebar**
+
+```jsx filename=src/routes/root.jsx lines=[3,20-31]
+import {
+  Outlet,
+  NavLink,
+  useLoaderData,
+  Form,
+  redirect,
+} from "react-router-dom";
+
+export default function Root() {
+  return (
+    <>
+      <div id="sidebar">
+        {/* other code */}
+
+        <nav>
+          {contacts.length ? (
+            <ul>
+              {contacts.map((contact) => (
+                <li key={contact.id}>
+                  <NavLink
+                    to={`contacts/${contact.id}`}
+                    className={({ isActive, isPending }) =>
+                      isActive
+                        ? "active"
+                        : isPending
+                        ? "pending"
+                        : ""
+                    }
+                  >
+                    {/* other code */}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>{/* other code */}</p>
+          )}
+        </nav>
+      </div>
+    </>
+  );
+}
+```
+
+Note that we are passing a function to `className`. When the user is at the URL in the `NavLink`, then `isActive` will be true. When it's _about_ to be active (the data is still loading) then `isPending` will be true. This allows us to easily indicate where the user is, as well as provide immediate feedback on links that have been clicked but we're still waiting for data to load.
+
+## Global Pending UI
+
+As the user navigates the app, React Router will _leave the old page up_ as data is loading for the next page. You may have noticed the app feels a little unresponsive as you click between the list. Let's provide the user with some feedback so the app doesn't feel unresponsive.
+
+React Router is managing all of the state behind the scenes and reveals the pieces of it you need to build dynamic web apps. In this case, we'll use the [`useNavigation`][usenavigation] hook.
+
+👉 **`useNavigation` to add global pending UI**
+
+```jsx filename=src/routes/root.jsx lines=[3,10,17-19]
+import {
+  // existing code
+  useNavigation,
+} from "react-router-dom";
+
+// existing code
+
+export default function Root() {
+  const { contacts } = useLoaderData();
+  const navigation = useNavigation();
+
+  return (
+    <>
+      <div id="sidebar">{/* existing code */}</div>
+      <div
+        id="detail"
+        className={
+          navigation.state === "loading" ? "loading" : ""
+        }
+      >
+        <Outlet />
+      </div>
+    </>
+  );
+}
+```
+
+[`useNavigation`][usenavigation] returns the current navigation state: it can be one of `"idle" | "submitting" | "loading"`.
+
+In our case, we add a `"loading"` class to the main part of the app if we're not idle. The CSS then adds a nice fade after a short delay (to avoid flickering the UI for fast loads). You could do anything you want though, like show a spinner or loading bar across the top.
+
+<img lazy src="/_docs/tutorial/16.png" />
+
+## Deleting Records
+
+If we review code in the contact route, we can find the delete button looks like this:
+
+```jsx filename=src/routes/contact.jsx lines=[3]
+<Form
+  method="post"
+  action="destroy"
+  onSubmit={(event) => {
+    if (
+      !confirm(
+        "Please confirm you want to delete this record."
+      )
+    ) {
+      event.preventDefault();
+    }
+  }}
+>
+  <button type="submit">Delete</button>
+</Form>
+```
+
+Note the `action` points to `"destroy"`. Like `<Link to>`, `<Form action>` can take a _relative_ value. Since the form is rendered in `<Route path="contact/:contactId">`, then a relative action with `"destroy"` will submit the form to `contact/:contactId/destroy` when clicked.
+
+At this point you should know everything you need to know to make the delete button work. Maybe give it a shot before moving on? You'll need:
+
+1. A new route
+2. An `action` at that route
+3. `deleteContact` from `src/contacts.js`
+
+👉 **Create the "destroy" route module**
+
+```
+touch src/routes/destroy.jsx
+```
+
+👉 **Add the destroy action**
+
+```jsx filename=src/routes/destroy.jsx
+import { redirect } from "react-router-dom";
+import { deleteContact } from "../contacts";
+
+export async function action({ params }) {
+  await deleteContact(params.contactId);
+  return redirect("/");
+}
+```
+
+👉 **Add the destroy route to the route config**
+
+```jsx filename=src/main.jsx lines=[2,11-14]
+/* existing code */
+import { action as destroyAction } from "./routes/destroy";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route
+        path="/"
+        // other code
+      >
+        <Route
+          path="contacts/:contactId/destroy"
+          action={destroyAction}
+        />
+        {/* other code */}
+      </Route>
+    </DataBrowserRouter>
+  </React.StrictMode>
+);
+```
+
+Alright, navigate to a record and click the "Delete" button. It works!
+
+> 😅 I'm still confused why this all works
+
+When the user clicks the submit button:
+
+1. `<Form>` prevents the default browser behavior of sending a new POST request to the server, but instead emulates the browser by creating a POST request with client side routing
+2. The `<Form action="destroy">` matches the new route at `"contacts/:contactId/destroy"` and sends it the request
+3. After the action redirects, React Router calls all of the loaders for the data on the page to get the latest values (this is "revalidation"). `useLoaderData` returns new values and causes the components to update!
+
+Add a form, add an action, React Router does the rest.
+
+## Contextual Errors
+
+Just for kicks, throw an error in the destroy action:
+
+```jsx filename=src/routes/destroy.jsx
+export async function action({ params }) {
+  throw new Error("oh dang!");
+  await deleteContact(params.contactId);
+  return redirect("/");
+}
+```
+
+<img lazy src="/_docs/tutorial/17.png" />
+
+Recognize that screen? It's our [`errorElement`][errorelement] from before. The user, however, can't really do anything to recover from this screen except to hit refresh.
+
+Let's create a contextual error message for the destroy route:
+
+```jsx filename=src/main.jsx lines=[4]
+<Route
+  path="contacts/:contactId/destroy"
+  action={destroyAction}
+  errorElement={<div>Oops! There was an error.</div>}
+/>
+```
+
+Now try it again:
+
+<img lazy src="/_docs/tutorial/18.png" />
+
+Our user now has more options than slamming refresh, they can continue to interact with the parts of the page that aren't having trouble 🙌
+
+Because the destroy route has its own `errorElement` and is a child of the root route, the error will render there instead of the root. As you probably noticed, these errors bubble up to the nearest `errorElement`. Add as many or as few as you like, as long as you've got one at the root.
 
 ## Index Routes
 
-Index routes are possibly the most difficult concept in React Router for people to understand. So if you've struggled before, we hope this can clarify it for you.
+When we load up the app, you'll notice a big blank page on the right side of our list.
 
-Right now you're probably looking at one of the invoices. Click on the "Invoices" link in the global nav of your app. Notice that the main content area goes blank! We can fix this with an "index" route.
+<img lazy src="/_docs/tutorial/19.png" />
 
-```jsx filename=src/main.jsx lines=[5-12]
-<Routes>
-  <Route path="/" element={<App />}>
-    <Route path="expenses" element={<Expenses />} />
-    <Route path="invoices" element={<Invoices />}>
+When a route has children, and you're at the parent route's path, the `<Outlet>` has nothing to render because no children match. You can think of index routes as the default child route to fill in that space.
+
+👉 **Create the index route module**
+
+```
+touch src/routes/index.jsx
+```
+
+👉 **Fill in the index component's elements**
+
+Feel free to copy paste, nothing special here.
+
+```jsx filename=src/routes/index.jsx
+export default function Index() {
+  return (
+    <p id="index">
+      This is a demo for React Router.
+      <br />
+      Check out{" "}
+      <a href="https://reactrouter.com/">
+        the docs at reactrouter.com
+      </a>
+      .
+    </p>
+  );
+}
+```
+
+👉 **Configure the index route**
+
+```jsx filename=src/main.jsx lines=[2,13]
+// existing code
+import Index from "./routes/index";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
       <Route
-        index
-        element={
-          <main style={{ padding: "1rem" }}>
-            <p>Select an invoice</p>
-          </main>
-        }
-      />
-      <Route path=":invoiceId" element={<Invoice />} />
-    </Route>
-    <Route
-      path="*"
-      element={
-        <main style={{ padding: "1rem" }}>
-          <p>There's nothing here!</p>
-        </main>
-      }
-    />
-  </Route>
-</Routes>
-```
-
-Sweet! Now the index route fills the empty space!
-
-Notice it has the `index` prop instead of a `path`. That's because the index route shares the path of the parent. That's the whole point--it doesn't have a path.
-
-Maybe you're still scratching your head. There are a few ways we try to answer the question "what is an index route?". Hopefully one of these sticks for you:
-
-- Index routes render in the parent routes outlet at the parent route's path.
-- Index routes match when a parent route matches but none of the other children match.
-- Index routes are the default child route for a parent route.
-- Index routes render when the user hasn't clicked one of the items in a navigation list yet.
-
-## Active Links
-
-It's very common, especially in navigation lists, to display the link as the active link the user is looking at. Let's add this treatment to our invoices list by swapping out `Link` for `NavLink`.
-
-```jsx lines=[1,15-27] filename=src/routes/invoices.jsx
-import { NavLink, Outlet } from "react-router-dom";
-import { getInvoices } from "../data";
-
-export default function Invoices() {
-  let invoices = getInvoices();
-  return (
-    <div style={{ display: "flex" }}>
-      <nav
-        style={{
-          borderRight: "solid 1px",
-          padding: "1rem",
-        }}
+        path="/"
+        element={<Root />}
+        loader={rootLoader}
+        action={rootAction}
       >
-        {invoices.map((invoice) => (
-          <NavLink
-            style={({ isActive }) => {
-              return {
-                display: "block",
-                margin: "1rem 0",
-                color: isActive ? "red" : "",
-              };
-            }}
-            to={`/invoices/${invoice.number}`}
-            key={invoice.number}
-          >
-            {invoice.name}
-          </NavLink>
-        ))}
-      </nav>
-      <Outlet />
-    </div>
-  );
-}
+        <Route index element={<Index />} />
+
+        {/* Existing code*/}
+      </Route>
+    </DataBrowserRouter>
+  </React.StrictMode>
+);
 ```
 
-We did three things there:
+Note the [`<Route index>`][index] instead of [`<Route path>`][path]. That tells the router to match and render this route when the user is at the parent route's exact path and there are no other child routes to render in the `<Outlet>`.
 
-1. We swapped out `Link` for `NavLink`.
-2. We changed the `style` from a simple object to a function that returns an object.
-3. We changed the color of our link by looking at the `isActive` value that `NavLink` passed to our styling function.
+<img lazy src="/_docs/tutorial/20.png" />
 
-You can do the same thing with `className` on `NavLink`:
+Viola! No more blank space. It's common to put dashboards, stats, feeds, etc. at index routes. They can participate in data loading as well.
 
-```jsx
-// normal string
-<NavLink className="red" />
+## Cancel Button
 
-// function
-<NavLink className={({ isActive }) => isActive ? "red" : "blue"} />
-```
+On the edit page we've got a cancel button that doesn't do anything yet. We'd like it to do the same thing as the browser's back button.
 
-## Search Params
+We'll need a click handler on the button as well as [`useNavigate`][usenavigate] from React Router.
 
-Search params are like URL params but they sit in a different position in the URL. Instead of being in the normal URL segments separated by `/`, they are at the end after a `?`. You've seen them across the web like `"/login?success=1"` or `"/shoes?brand=nike&sort=asc&sortby=price"`.
+👉 **Add the cancel button click handler with `useNavigate`**
 
-React Router makes it easy to read and manipulate the search params with `useSearchParams`. It works a lot like `React.useState()` but stores and sets the state in the URL search params instead of in memory.
-
-Let's see it in action by adding a little filter on the invoices nav list.
-
-```jsx filename=routes/invoices.jsx lines=[4,10,20-30,32-37]
+```jsx filename=src/routes/edit.jsx lines=[5,10,20-22]
 import {
-  NavLink,
-  Outlet,
-  useSearchParams,
-} from "react-router-dom";
-import { getInvoices } from "../data";
-
-export default function Invoices() {
-  let invoices = getInvoices();
-  let [searchParams, setSearchParams] = useSearchParams();
-
-  return (
-    <div style={{ display: "flex" }}>
-      <nav
-        style={{
-          borderRight: "solid 1px",
-          padding: "1rem",
-        }}
-      >
-        <input
-          value={searchParams.get("filter") || ""}
-          onChange={(event) => {
-            let filter = event.target.value;
-            if (filter) {
-              setSearchParams({ filter });
-            } else {
-              setSearchParams({});
-            }
-          }}
-        />
-        {invoices
-          .filter((invoice) => {
-            let filter = searchParams.get("filter");
-            if (!filter) return true;
-            let name = invoice.name.toLowerCase();
-            return name.startsWith(filter.toLowerCase());
-          })
-          .map((invoice) => (
-            <NavLink
-              style={({ isActive }) => ({
-                display: "block",
-                margin: "1rem 0",
-                color: isActive ? "red" : "",
-              })}
-              to={`/invoices/${invoice.number}`}
-              key={invoice.number}
-            >
-              {invoice.name}
-            </NavLink>
-          ))}
-      </nav>
-      <Outlet />
-    </div>
-  );
-}
-```
-
-Check this out, as the user types:
-
-- `setSearchParams()` is putting the `?filter=...` search params in the URL and rerendering the router.
-- `useSearchParams` is now returning a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) with `"filter"` as one of its values.
-- We set the value of the input to whatever is in the filter search param (it's just like `useState` but in the URLSearchParams instead!)
-- We filter our list of invoices based on the filter search param.
-
-## Custom Behavior
-
-If you filter the list and then click a link, you'll notice that the list is no longer filtered and the search param is cleared from the `<input>` and the URL. You might want this, you might not! Maybe you want to keep the list filtered and keep the param in the URL.
-
-We can persist the query string when we click a link by adding it to the link's href. We'll do that by composing `NavLink` and `useLocation` from React Router into our own `QueryNavLink` (maybe there's a better name, but that's what we're going with today).
-
-```js
-import { useLocation, NavLink } from "react-router-dom";
-
-function QueryNavLink({ to, ...props }) {
-  let location = useLocation();
-  return <NavLink to={to + location.search} {...props} />;
-}
-```
-
-You can put that code anywhere you want in your app and then replace your `NavLink` in `src/routes/invoices.jsx` with `QueryNavLink` and you're done.
-
-Like `useSearchParams`, `useLocation` returns a location that tells us information about the URL. A location looks something like this:
-
-```js
-{
-  pathname: "/invoices",
-  search: "?filter=sa",
-  hash: "",
-  state: null,
-  key: "ae4cz2j"
-}
-```
-
-With that information, the task in `QueryNavLink` is pretty simple: add the `location.search` onto the `to` prop. You might be thinking, "Geez, seems like this should be a built-in component of React Router or something?". Well, let's look at another example.
-
-What if you had links like this on an ecommerce site.
-
-```jsx
-<Link to="/shoes?brand=nike">Nike</Link>
-<Link to="/shoes?brand=vans">Vans</Link>
-```
-
-And then you wanted to style them as "active" when the url search params match the brand? You could make a component that does exactly that pretty quickly with stuff you've learned in this tutorial:
-
-```jsx
-function BrandLink({ brand, ...props }) {
-  let [params] = useSearchParams();
-  let isActive = params.getAll("brand").includes(brand);
-  return (
-    <Link
-      style={{ color: isActive ? "red" : "" }}
-      to={`/shoes?brand=${brand}`}
-      {...props}
-    />
-  );
-}
-```
-
-That's going to be active for `"/shoes?brand=nike"` as well as `"/shoes?brand=nike&brand=vans"`. Maybe you want it to be active when there's only one brand selected:
-
-```js
-let brands = params.getAll("brand");
-let isActive =
-  brands.includes(brand) && brands.length === 1;
-// ...
-```
-
-Or maybe you want the links to be _additive_ (clicking Nike and then Vans adds both brands to the search params) instead of replacing the brand:
-
-```jsx [4-6,10]
-function BrandLink({ brand, ...props }) {
-  let [params] = useSearchParams();
-  let isActive = params.getAll("brand").includes(brand);
-  if (!isActive) {
-    params.append("brand", brand);
-  }
-  return (
-    <Link
-      style={{ color: isActive ? "red" : "" }}
-      to={`/shoes?${params.toString()}`}
-      {...props}
-    />
-  );
-}
-```
-
-Or maybe you want it to add the brand if it's not there already and remove it if it's clicked again!
-
-```jsx [7-12]
-function BrandLink({ brand, ...props }) {
-  let [params] = useSearchParams();
-  let isActive = params.getAll("brand").includes(brand);
-  if (!isActive) {
-    params.append("brand", brand);
-  } else {
-    params = new URLSearchParams(
-      Array.from(params).filter(
-        ([key, value]) => key !== "brand" || value !== brand
-      )
-    );
-  }
-  return (
-    <Link
-      style={{ color: isActive ? "red" : "" }}
-      to={`/shoes?${params.toString()}`}
-      {...props}
-    />
-  );
-}
-```
-
-As you can see, even in this fairly simple example there are a lot of valid behaviors you might want. React Router doesn't try to solve every use-case we've ever heard of directly. Instead, we give you the components and hooks to compose whatever behavior you need.
-
-## Navigating Programmatically
-
-Okay, back to our app. Hang in there, you're almost done!
-
-Most of the time the URL changes is in response to the user clicking a link. But sometimes you, the programmer, want to change the URL. A very common use case is after a data update like creating or deleting a record.
-
-Let's add a button that marks the invoice as paid and then navigates to the index route.
-
-First you can copy and paste this function that deletes an invoice from our fake data store:
-
-```js filename=src/data.js
-export function deleteInvoice(number) {
-  invoices = invoices.filter(
-    (invoice) => invoice.number !== number
-  );
-}
-```
-
-Now let's add the delete button, call our new function, and navigate to the index route:
-
-```js lines=[1-6,9-10,21-30] filename=src/routes/invoice.jsx
-import {
-  useParams,
+  Form,
+  useLoaderData,
+  redirect,
   useNavigate,
-  useLocation,
 } from "react-router-dom";
-import { getInvoice, deleteInvoice } from "../data";
 
-export default function Invoice() {
-  let navigate = useNavigate();
-  let location = useLocation();
-  let params = useParams();
-  let invoice = getInvoice(parseInt(params.invoiceId, 10));
+export default function Edit() {
+  const contact = useLoaderData();
+  const navigate = useNavigate();
 
   return (
-    <main style={{ padding: "1rem" }}>
-      <h2>Total Due: {invoice.amount}</h2>
+    <Form method="post" id="contact-form">
+      {/* existing code */}
+
       <p>
-        {invoice.name}: {invoice.number}
-      </p>
-      <p>Due Date: {invoice.due}</p>
-      <p>
+        <button type="submit">Save</button>
         <button
+          type="button"
           onClick={() => {
-            deleteInvoice(invoice.number);
-            navigate("/invoices" + location.search);
+            navigate(-1);
           }}
         >
-          Delete
+          Cancel
         </button>
       </p>
-    </main>
+    </Form>
   );
 }
 ```
 
-Notice we used `useLocation` again to persist the query string by adding `location.search` to the navigation link.
+Now when the user clicks "Cancel", they'll be sent back one entry in the browser's history.
 
-## Getting Help
+> 🧐 Why is there no `event.preventDefault` on the button?
 
-Congrats! You're all done with this tutorial. We hope it helped you get your bearings with React Router.
+A `<button type="button">`, while seemingly redundant, is the HTML way of preventing a button from submitting its form.
 
-If you're having trouble, check out the [Resources](/resources) page to get help. Good luck!
+Two more features to go. We're on the home stretch!
 
-[stackblitz-app]: https://stackblitz.com/edit/github-agqlf5?file=src/App.jsx
-[stackblitz-template]: https://stackblitz.com/github/remix-run/react-router/tree/main/tutorial?file=src/App.jsx
-[reactjs-getting-started]: https://reactjs.org/docs/getting-started.html
-[cra]: https://create-react-app.dev/
-[vite]: https://vitejs.dev/guide/#scaffolding-your-first-vite-project
-[remix]: https://remix.run
+## URL Search Params and GET Submissions
+
+All of our interactive UI so far have been either links that change the URL or forms that post data to actions. The search field is interesting because it's a mix of both: it's a form but it only changes the URL, it doesn't change data.
+
+Right now it's just a normal HTML `<form>`, not a React Router `<Form>`. Let's see what the browser does with it by default:
+
+👉 **Type a name into the search field and hit the enter key**
+
+Note the browser's URL now contains your query in the URL as [URLSearchParams][urlsearchparams]:
+
+```
+http://127.0.0.1:5173/?q=ryan
+```
+
+If we review the search form, it looks like this:
+
+```jsx filename=src/routes/root.jsx lines=[1,7]
+<form id="search-form" role="search">
+  <input
+    id="q"
+    aria-label="Search contacts"
+    placeholder="Search"
+    type="search"
+    name="q"
+  />
+  <div id="search-spinner" aria-hidden hidden={true} />
+  <div className="sr-only" aria-live="polite"></div>
+</form>
+```
+
+As we've seen before, browsers can serialize forms by the `name` attribute of it's input elements. The name of this input is `q`, that's why the URL has `?q=`. If we named it `search` the URL would be `?search=`.
+
+Note that this form is different from the others we've used, it does not have `<form method="post">`. The default `method` is `"get"`. That means when the browser creates the request for the next document, it doesn't put the form data into the request POST body, but into the [`URLSearchParams`][urlsearchparams] of a GET request.
+
+## GET Submissions with Client Side Routing
+
+Let's use client side routing to submit this form and filter the list in our existing loader.
+
+👉 **Change `<form>` to `<Form>`**
+
+```jsx filename=src/routes/root.jsx lines=[1,11]
+<Form id="search-form" role="search">
+  <input
+    id="q"
+    aria-label="Search contacts"
+    placeholder="Search"
+    type="search"
+    name="q"
+  />
+  <div id="search-spinner" aria-hidden hidden={true} />
+  <div className="sr-only" aria-live="polite"></div>
+</Form>
+```
+
+👉 **Filter the list if there are URLSearchParams**
+
+```jsx filename=src/routes/root.jsx lines=[2-4]
+export async function loader({ request }) {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q");
+  const contacts = await getContacts(q);
+  return { contacts };
+}
+```
+
+<img lazy src="/_docs/tutorial/21.png" />
+
+Because this is a GET, not a POST, React Router _does not_ call the `action`. Submitting a GET form is the same as clicking a link: only the URL changes. That's why the code we added for filtering is in the `loader`, not the `action` of this route.
+
+This also means it's a normal page navigation. You can click the back button to get back to where you were.
+
+## Synchronizing URLs to Form State
+
+There are a couple of UX issues here that we can take care of quickly.
+
+1. If you click back after a search, the form field still has the value you entered even though the list is no longer filtered.
+2. If you refresh the page after searching, the form field no longer has the value in it, even though the list is filtered
+
+In other words, the URL and our form state are out of sync.
+
+👉 **Return `q` from your loader and set it as the search field default value**
+
+```jsx filename=src/routes/root.jsx lines=[7,11,26]
+// existing code
+
+export async function loader({ request }) {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q");
+  const contacts = await getContacts(q);
+  return { contacts, q };
+}
+
+export default function Root() {
+  const { contacts, q } = useLoaderData();
+  const navigation = useNavigation();
+
+  return (
+    <>
+      <div id="sidebar">
+        <h1>React Router Contacts</h1>
+        <div>
+          <Form id="search-form" role="search">
+            <input
+              id="q"
+              aria-label="Search contacts"
+              placeholder="Search"
+              type="search"
+              name="q"
+              defaultValue={q}
+            />
+            {/* existing code */}
+          </Form>
+          {/* existing code */}
+        </div>
+        {/* existing code */}
+      </div>
+      {/* existing code */}
+    </>
+  );
+}
+```
+
+That solves problem (2). If you refresh the page now, the input field will show the query.
+
+<img lazy src="/_docs/tutorial/21.png" />
+
+Now for problem (1), clicking the back button and updating the input. We can bring in `useEffect` from React to manipulate the form's state in the DOM directly.
+
+👉 **Synchronize input value with the URL Search Params**
+
+```jsx filename=src/routes/root.jsx lines=[1,9-11]
+import { useEffect } from "react";
+
+// existing code
+
+export default function Root() {
+  const { contacts, q } = useLoaderData();
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    document.getElementById("q").value = q;
+  }, [q]);
+
+  // existing code
+}
+```
+
+> 🤔 Shouldn't you use a controlled component and React State for this?
+
+You could certainly do this as a controlled component, but you'll end up with more complexity for the same behavior. You don't control the URL, the user does with the back/forward buttons. There would be more synchronization points with a controlled component.
+
+<details>
+<summary>If you're still concerned, expand this to see what it would look like</summary>
+
+Notice how controlling the input requires three points of synchronization now instead of just one. The behavior is identical but the code is more complex.
+
+```jsx filename=src/routes/root.jsx lines=[1,6,9-11,25-28]
+import { useEffect, useState } from "react";
+// existing code
+
+export default function Root() {
+  const { contacts, q } = useLoaderData();
+  const [query, setQuery] = useState(q);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    setQuery(q);
+  }, [q]);
+
+  return (
+    <>
+      <div id="sidebar">
+        <h1>React Router Contacts</h1>
+        <div>
+          <Form id="search-form" role="search">
+            <input
+              id="q"
+              aria-label="Search contacts"
+              placeholder="Search"
+              type="search"
+              name="q"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+              }}
+            />
+            {/* existing code */}
+          </Form>
+          {/* existing code */}
+        </div>
+        {/* existing code */}
+      </div>
+    </>
+  );
+}
+```
+
+</details>
+
+## Submitting Forms `onChange`
+
+We've got a product decision to make here. For this UI, we'd probably rather have the filtering happen on every key stroke instead of when the form is explicitly submitted.
+
+We've seen `useNavigate` already, we'll use its cousin, [`useSubmit`][usesubmit], for this.
+
+```jsx filename=src/routes/root.jsx lines=[4,10,25-27]
+// existing code
+import {
+  // existing code
+  useSubmit,
+} from "react-router-dom";
+
+export default function Root() {
+  const { contacts, q } = useLoaderData();
+  const navigation = useNavigation();
+  const submit = useSubmit();
+
+  return (
+    <>
+      <div id="sidebar">
+        <h1>React Router Contacts</h1>
+        <div>
+          <Form id="search-form" role="search">
+            <input
+              id="q"
+              aria-label="Search contacts"
+              placeholder="Search"
+              type="search"
+              name="q"
+              defaultValue={q}
+              onChange={(event) => {
+                submit(event.currentTarget.form);
+              }}
+            />
+            {/* existing code */}
+          </Form>
+          {/* existing code */}
+        </div>
+        {/* existing code */}
+      </div>
+      {/* existing code */}
+    </>
+  );
+}
+```
+
+Now as you type, the form is submitted automatically!
+
+Note the argument to [`submit`][usesubmit]. We're passing in `event.currentTarget.form`. The `currentTarget` is the DOM node the event is attached to, and the `currentTarget.form` is the input's parent form node. The `submit` function will serialize and submit any form you pass to it.
+
+## Adding Search Spinner
+
+In a production app, it's likely this search will be looking for records in a database that is too large to send all at once and filter client side. That's why this demo has some faked network latency.
+
+Without any loading indicator, the search feels kinda sluggish. Even if we could make our database faster, we'll always have the user's network latency in the way and out of our control. For a better UX, let's add some immediate UI feedback for the search. For this we'll use [`useNavigation`][usenavigation] again.
+
+👉 **Add the search spinner**
+
+```jsx filename=src/routes/root.jsx lines=[8-12,22,28]
+// existing code
+
+export default function Root() {
+  const { contacts, q } = useLoaderData();
+  const navigation = useNavigation();
+  const submit = useSubmit();
+
+  const searching =
+    navigation.location &&
+    new URLSearchParams(navigation.location.search).has(
+      "q"
+    );
+
+  return (
+    <>
+      <div id="sidebar">
+        <h1>React Router Contacts</h1>
+        <div>
+          <Form id="search-form" role="search">
+            <input
+              id="q"
+              className={searching ? "loading" : ""}
+              // existing code
+            />
+            <div
+              id="search-spinner"
+              aria-hidden
+              hidden={!searching}
+            />
+            {/* existing code */}
+          </Form>
+          {/* existing code */}
+        </div>
+        {/* existing code */}
+      </div>
+      {/* existing code */}
+    </>
+  );
+}
+```
+
+<img lazy src="/_docs/tutorial/22.png" />
+
+## Managing the History Stack
+
+Now that the form is submitted for every key stroke, if we type the characters "seba" and then delete them with backspace, we end up with 7 new entries in the stack 😂. We definitely don't want this
+
+<img lazy src="/_docs/tutorial/23.png" />
+
+We can avoid this by _replacing_ the current entry in the history stack with the next page, instead of pushing into it.
+
+👉 **Use `replace` in `submit`**
+
+```jsx filename=src/routes/root.jsx lines=[16-19]
+// existing code
+
+export default function Root() {
+  // existing code
+
+  return (
+    <>
+      <div id="sidebar">
+        <h1>React Router Contacts</h1>
+        <div>
+          <Form id="search-form" role="search">
+            <input
+              id="q"
+              // existing code
+              onChange={(event) => {
+                const isFirstSearch = q == null;
+                submit(event.currentTarget.form, {
+                  replace: !isFirstSearch,
+                });
+              }}
+            />
+            {/* existing code */}
+          </Form>
+          {/* existing code */}
+        </div>
+        {/* existing code */}
+      </div>
+      {/* existing code */}
+    </>
+  );
+}
+```
+
+We only want to replace search results, not the page before we started searching, so we do a quick check if this is the first search or not and then decide to replace.
+
+Each key stroke no longer creates new entries, so the user can click back out of the search results without having to click it 7 times 😅.
+
+## Mutations Without Navigation
+
+So far all of our mutations (the times we change data) have used forms that navigate, creating new entries in the history stack. While these user flows are common, it's equally as common to want to change data _without_ causing a navigation.
+
+For these cases, we have the [`useFetcher`][usefetcher] hook. It allows us to communicate with loaders and actions without causing a navigation.
+
+The ★ button on the contact page makes sense for this. We aren't creating or deleting a new record, we don't want to change pages, we simply want to change the data on the page we're looking at.
+
+👉 **Change the `<Favorite>` form to a fetcher form**
+
+```jsx filename=src/routes/contact.jsx lines=[4,10,14,26]
+import {
+  useLoaderData,
+  Form,
+  useFetcher,
+} from "react-router-dom";
+
+// existing code
+
+function Favorite({ contact }) {
+  const fetcher = useFetcher();
+  let favorite = contact.favorite;
+
+  return (
+    <fetcher.Form method="post">
+      <button
+        name="favorite"
+        value={favorite ? "false" : "true"}
+        aria-label={
+          favorite
+            ? "Remove from favorites"
+            : "Add to favorites"
+        }
+      >
+        {favorite ? "★" : "☆"}
+      </button>
+    </fetcher.Form>
+  );
+}
+```
+
+Might want to take a look at that form while we're here. As always, our form has fields with a `name` prop. This form will send [`formData`][formdata] with a `favorite` key that's either `"true" | "false"`. Since it's got `method="post"` it will call the action. Since there is no `<fetcher.Form action="...">` prop, it will post to the route where the form is rendered.
+
+👉 **Create the action**
+
+```jsx filename=src/routes/contact.jsx lines=[2,4-10]
+// existing code
+import { getContact, updateContact } from "../contacts";
+
+export async function action({ request, params }) {
+  let formData = await request.formData();
+  return updateContact(params.contactId, {
+    favorite:
+      formData.get("favorite") === "true" ? true : false,
+  });
+}
+
+export default function Contact() {
+  // existing code
+}
+```
+
+Pretty simple. Pull the form data off the request and send it to the data model.
+
+👉 **Configure the route's new action**
+
+```jsx filename=src/main.jsx lines=[]
+// existing code
+
+import Contact, {
+  loader as contactLoader,
+  action as contactAction,
+} from "./routes/contact";
+
+// existing code
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <DataBrowserRouter>
+      <Route
+        path="/"
+        // existing code
+      >
+        <Route
+          path="contacts/:contactId"
+          element={<Contact />}
+          loader={contactLoader}
+          action={contactAction}
+        />
+        {/* existing code */}
+      </Route>
+    </DataBrowserRouter>
+  </React.StrictMode>
+);
+```
+
+Alright, we're ready to click the star next to the user's name!
+
+<img lazy src="/_docs/tutorial/24.png" />
+
+Check that out, both stars automatically update. Our new `<fetcher.Form method="post">` works almost exactly like a the `<Form>` we've been using: it calls the action and then all data is revalidated automatically--even your errors will be caught the same way.
+
+There is one key difference though, it's not a navigation--the URL doesn't change, the history stack is unaffected.
+
+## Optimistic UI
+
+You probably noticed the app felt kind of unresponsive when we clicked the the favorite button from the last section. Once again, we added some network latency because you're going to have it in the real world!
+
+To give the user some feedback, we could put the star into a loading state with [`fetcher.state`][fetcherstate] (a lot like `navigation.state` from before), but we can do something even better this time. We can use a strategy called "optimistic UI"
+
+The fetcher knows the form data being submitted to the action, so it's available to you on `fetcher.formData`. We'll use that to immediately update the star's state, even though the network hasn't finished. If the update eventually fails, the UI will revert to the real data.
+
+👉 **Read the optimistic value from `fetcher.formData`**
+
+```jsx filename=src/routes/contact.jsx lines=[7-9]
+// existing code
+
+function Favorite({ contact }) {
+  const fetcher = useFetcher();
+
+  let favorite = contact.favorite;
+  if (fetcher.formData) {
+    favorite = fetcher.formData.get("favorite") === "true";
+  }
+
+  return (
+    <fetcher.Form method="post">
+      <button
+        name="favorite"
+        value={favorite ? "false" : "true"}
+        aria-label={
+          favorite
+            ? "Remove from favorites"
+            : "Add to favorites"
+        }
+      >
+        {favorite ? "★" : "☆"}
+      </button>
+    </fetcher.Form>
+  );
+}
+```
+
+If you click the button now you should see the star _immediately_ change to the new state. Instead of always rendering the actual data, we check if the fetcher has any `formData` being submitted, if so, we'll use that instead. When the action is done, the `fetcher.formData` will no longer exist and we're back to using the actual data. So even if you write bugs in your optimistic UI code, it'll eventually go back to the correct state 🥹
+
+In fact, you can click that button as fast as you want with the choppiest network, React Router will automatically handle all interruptions and race conditions on the revalidation. If you're making a `fetch` call in your action, you can even watch it happen on the network tab, it's pretty cool.
+
+---
+
+- 404
+- replace delete
+
+[vite]: https://vitejs.dev/guide/
+[node]: https://nodejs.org
+[databrowserrouter]: ../routers/data-browser-router
+[route]: ../route/route
+[tutorial-css]: https://gist.githubusercontent.com/ryanflorence/ba20d473ef59e1965543fa013ae4163f/raw/499707f25a5690d490c7b3d54c65c65eb895930c/react-router-6.4-tutorial-css.css
+[tutorial-data]: https://gist.githubusercontent.com/ryanflorence/1e7f5d3344c0db4a8394292c157cd305/raw/f7ff21e9ae7ffd55bfaaaf320e09c6a08a8a6611/contacts.js
+[routeelement]: ../route/route#element
+[jim]: https://blog.jim-nielsen.com/
+[errorelement]: ../route/error-element
+[userouteerror]: ../hooks/use-route-error
+[isrouteerrorresponse]: ../utils/is-route-error-response
+[outlet]: ../components/outlet
+[link]: ../components/link
+[setup]: #setup
+[loader]: ../route/loader
+[useloaderdata]: ../hooks/use-loader-data
+[action]: ../route/action
+[params]: ../route/loader#params
+[form]: ../components/form
+[request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
+[formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
+[fromentries]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries
+[requestformdata]: https://developer.mozilla.org/en-US/docs/Web/API/Request/formData
+[response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
+[redirect]: ../fetch/redirect
+[returningresponses]: ../route/loader#returning-responses
+[usenavigation]: ../hooks/use-navigation
+[index]: ../route/route#index
+[path]: ../route/route#path
+[usenavigate]: ../hooks/use-navigate
+[uselocation]: ../hooks/use-location
+[urlsearchparams]: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+[usesubmit]: ../hooks/use-submit
+[navlink]: ../components/nav-link
+[usefetcher]: ../hooks/use-fetcher
+[fetcherstate]: ../hooks/use-fetcher#fetcherstate
