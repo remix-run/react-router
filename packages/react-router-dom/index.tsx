@@ -884,6 +884,15 @@ export function useFormAction(action?: string): string {
     // or hash
     path.search = location.search;
     path.hash = location.hash;
+
+    // When grabbing search params from the URL, remove the automatically
+    // inserted ?index param so we match the useResolvedPath search behavior
+    // which would not include ?index
+    if (match.route.index) {
+      let params = new URLSearchParams(path.search);
+      params.delete("index");
+      path.search = params.toString() ? `?${params.toString()}` : "";
+    }
   }
 
   if ((!action || action === ".") && match.route.index) {
