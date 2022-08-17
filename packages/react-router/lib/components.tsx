@@ -26,6 +26,7 @@ import type {
   RouteMatch,
   RouteObject,
   Navigator,
+  RelativeRoutingType,
 } from "./context";
 import {
   LocationContext,
@@ -233,6 +234,7 @@ export interface NavigateProps {
   to: To;
   replace?: boolean;
   state?: any;
+  relative?: RelativeRoutingType;
 }
 
 /**
@@ -244,7 +246,12 @@ export interface NavigateProps {
  *
  * @see https://reactrouter.com/docs/en/v6/components/navigate
  */
-export function Navigate({ to, replace, state }: NavigateProps): null {
+export function Navigate({
+  to,
+  replace,
+  state,
+  relative,
+}: NavigateProps): null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of
@@ -269,7 +276,7 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
     if (dataRouterState && dataRouterState.navigation.state !== "idle") {
       return;
     }
-    navigate(to, { replace, state });
+    navigate(to, { replace, state, relative });
   });
 
   return null;

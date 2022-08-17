@@ -3,15 +3,16 @@
  * you'll need to update the rollup config for react-router-dom-v5-compat.
  */
 import * as React from "react";
-import {
-  createRoutesFromChildren,
+import type {
   NavigateOptions,
+  RelativeRoutingType,
   RouteObject,
   To,
 } from "react-router";
 import {
   Router,
   createPath,
+  createRoutesFromChildren,
   useHref,
   useLocation,
   useMatch,
@@ -400,6 +401,7 @@ export interface LinkProps
   replace?: boolean;
   state?: any;
   resetScroll?: boolean;
+  relative?: RelativeRoutingType;
   to: To;
 }
 
@@ -410,6 +412,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
     {
       onClick,
+      relative,
       reloadDocument,
       replace,
       state,
@@ -420,12 +423,13 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
-    let href = useHref(to);
+    let href = useHref(to, { relative });
     let internalOnClick = useLinkClickHandler(to, {
       replace,
       state,
       target,
       resetScroll,
+      relative,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
@@ -582,6 +586,13 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   replace?: boolean;
 
   /**
+   * Determines whether the form action is relative to the route hierarchy or
+   * the pathname.  Use this if you want to opt out of navigating the route
+   * hierarchy and want to instead route based on /-delimited URL segments
+   */
+  relative?: RelativeRoutingType;
+
+  /**
    * A function to call when the form is submitted. If you call
    * `event.preventDefault()` then this form will not do anything.
    */
@@ -627,6 +638,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       onSubmit,
       fetcherKey,
       routeId,
+      relative,
       ...props
     },
     forwardedRef
@@ -634,7 +646,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
     let submit = useSubmitImpl(fetcherKey, routeId);
     let formMethod: FormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
-    let formAction = useFormAction(action);
+    let formAction = useFormAction(action, relative);
     let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
       if (event.defaultPrevented) return;
@@ -643,7 +655,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       let submitter = (event as unknown as HTMLSubmitEvent).nativeEvent
         .submitter as HTMLFormSubmitter | null;
 
-      submit(submitter || event.currentTarget, { method, replace });
+      submit(submitter || event.currentTarget, { method, replace, relative });
     };
 
     return (
@@ -700,16 +712,18 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     replace: replaceProp,
     state,
     resetScroll,
+    relative,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
     resetScroll?: boolean;
+    relative?: RelativeRoutingType;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
   let location = useLocation();
-  let path = useResolvedPath(to);
+  let path = useResolvedPath(to, { relative });
 
   return React.useCallback(
     (event: React.MouseEvent<E, MouseEvent>) => {
@@ -717,16 +731,26 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         event.preventDefault();
 
         // If the URL hasn't changed, a regular <a> will do a replace instead of
-        // a push, so do the same here unless the replace prop is explcitly set
+        // a push, so do the same here unless the replace prop is explicitly set
         let replace =
           replaceProp !== undefined
             ? replaceProp
             : createPath(location) === createPath(path);
 
-        navigate(to, { replace, state, resetScroll });
+        navigate(to, { replace, state, resetScroll, relative });
       }
     },
-    [location, navigate, path, replaceProp, state, target, to, resetScroll]
+    [
+      location,
+      navigate,
+      path,
+      replaceProp,
+      state,
+      target,
+      to,
+      resetScroll,
+      relative,
+    ]
   );
 }
 
@@ -864,13 +888,16 @@ function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
   );
 }
 
-export function useFormAction(action?: string): string {
+export function useFormAction(
+  action?: string,
+  relative?: RelativeRoutingType
+): string {
   let routeContext = React.useContext(RouteContext);
   invariant(routeContext, "useFormAction must be used inside a RouteContext");
 
   let [match] = routeContext.matches.slice(-1);
   let resolvedAction = action ?? ".";
-  let path = useResolvedPath(resolvedAction);
+  let path = useResolvedPath(resolvedAction, { relative });
 
   // Previously we set the default action to ".". The problem with this is that
   // `useResolvedPath(".")` excludes search params and the hash of the resolved

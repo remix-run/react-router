@@ -35,6 +35,7 @@ import {
   RouteMatch,
   RouteObject,
   DataRouteMatch,
+  RelativeRoutingType,
 } from "./context";
 
 /**
@@ -43,7 +44,10 @@ import {
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-href
  */
-export function useHref(to: To): string {
+export function useHref(
+  to: To,
+  { relative }: { relative?: RelativeRoutingType } = {}
+): string {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -52,7 +56,7 @@ export function useHref(to: To): string {
   );
 
   let { basename, navigator } = React.useContext(NavigationContext);
-  let { hash, pathname, search } = useResolvedPath(to);
+  let { hash, pathname, search } = useResolvedPath(to, { relative });
 
   let joinedPathname = pathname;
 
@@ -216,7 +220,8 @@ export function useNavigate(): NavigateFunction {
       let path = resolveTo(
         to,
         JSON.parse(routePathnamesJson),
-        locationPathname
+        locationPathname,
+        options.relative === "path"
       );
 
       // If we're operating within a basename, prepend it to the pathname prior
@@ -290,7 +295,10 @@ export function useParams<
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-resolved-path
  */
-export function useResolvedPath(to: To): Path {
+export function useResolvedPath(
+  to: To,
+  { relative }: { relative?: RelativeRoutingType } = {}
+): Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
@@ -299,8 +307,14 @@ export function useResolvedPath(to: To): Path {
   );
 
   return React.useMemo(
-    () => resolveTo(to, JSON.parse(routePathnamesJson), locationPathname),
-    [to, routePathnamesJson, locationPathname]
+    () =>
+      resolveTo(
+        to,
+        JSON.parse(routePathnamesJson),
+        locationPathname,
+        relative === "path"
+      ),
+    [to, routePathnamesJson, locationPathname, relative]
   );
 }
 
