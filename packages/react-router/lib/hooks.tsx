@@ -58,21 +58,53 @@ export function useHref(
     `useHref() may be used only in the context of a <Router> component.`
   );
 
+  let createHref = useCreateHref();
+
+  return React.useMemo(
+    () => createHref(to, { relative }),
+    [to, relative, createHref]
+  );
+}
+
+/**
+ * Returns a function that creates the full href for the given "to" value. This is useful for building
+ * custom links that are also accessible and preserve right-click behavior.
+ *
+ * @see https://reactrouter.com/docs/en/v6/hooks/use-create-href
+ */
+export function useCreateHref(): (
+  to: To,
+  options?: { relative?: RelativeRoutingType }
+) => string {
+  invariant(
+    useInRouterContext(),
+    // TODO: This error is probably because they somehow have 2 versions of the
+    // router loaded. We can help them understand how to avoid that.
+    `useCreateHref() may be used only in the context of a <Router> component.`
+  );
+
   let { basename, navigator } = React.useContext(NavigationContext);
-  let { hash, pathname, search } = useResolvedPath(to, { relative });
+  let resolvePath = useResolvePath();
 
-  let joinedPathname = pathname;
+  return React.useCallback(
+    (to, options) => {
+      let { hash, pathname, search } = resolvePath(to, options);
 
-  // If we're operating within a basename, prepend it to the pathname prior
-  // to creating the href.  If this is a root navigation, then just use the raw
-  // basename which allows the basename to have full control over the presence
-  // of a trailing slash on root links
-  if (basename !== "/") {
-    joinedPathname =
-      pathname === "/" ? basename : joinPaths([basename, pathname]);
-  }
+      let joinedPathname = pathname;
 
-  return navigator.createHref({ pathname: joinedPathname, search, hash });
+      // If we're operating within a basename, prepend it to the pathname prior
+      // to creating the href.  If this is a root navigation, then just use the raw
+      // basename which allows the basename to have full control over the presence
+      // of a trailing slash on root links
+      if (basename !== "/") {
+        joinedPathname =
+          pathname === "/" ? basename : joinPaths([basename, pathname]);
+      }
+
+      return navigator.createHref({ pathname: joinedPathname, search, hash });
+    },
+    [resolvePath, basename, navigator]
+  );
 }
 
 /**
@@ -272,6 +304,23 @@ export function useResolvedPath(
   to: To,
   { relative }: { relative?: RelativeRoutingType } = {}
 ): Path {
+  let resolvePath = useResolvePath();
+
+  return React.useMemo(
+    () => resolvePath(to, { relative }),
+    [to, relative, resolvePath]
+  );
+}
+
+/**
+ * Returns a function that resolves the pathname of the given `to` value against the current location.
+ *
+ * @see https://reactrouter.com/docs/en/v6/hooks/use-resolve-path
+ */
+export function useResolvePath(): (
+  to: To,
+  options?: { relative?: RelativeRoutingType }
+) => Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
@@ -279,15 +328,15 @@ export function useResolvedPath(
     getPathContributingMatches(matches).map((match) => match.pathnameBase)
   );
 
-  return React.useMemo(
-    () =>
+  return React.useCallback(
+    (to, { relative } = {}) =>
       resolveTo(
         to,
         JSON.parse(routePathnamesJson),
         locationPathname,
         relative === "path"
       ),
-    [to, routePathnamesJson, locationPathname, relative]
+    [routePathnamesJson, locationPathname]
   );
 }
 

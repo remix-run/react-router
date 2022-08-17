@@ -97,6 +97,7 @@ export {
   resolvePath,
   unstable_HistoryRouter,
   useHref,
+  useCreateHref,
   useInRouterContext,
   useLinkClickHandler,
   useLocation,
@@ -107,6 +108,7 @@ export {
   useOutletContext,
   useParams,
   useResolvedPath,
+  useResolvePath,
   useRoutes,
   useSearchParams,
 } from "./react-router-dom";

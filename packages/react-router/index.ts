@@ -84,6 +84,7 @@ import {
 import type { NavigateFunction } from "./lib/hooks";
 import {
   useHref,
+  useCreateHref,
   useInRouterContext,
   useLocation,
   useMatch,
@@ -93,6 +94,7 @@ import {
   useOutletContext,
   useParams,
   useResolvedPath,
+  useResolvePath,
   useRoutes,
   useActionData,
   useAsyncError,
@@ -181,6 +183,7 @@ export {
   useAsyncError,
   useAsyncValue,
   useHref,
+  useCreateHref,
   useInRouterContext,
   useLoaderData,
   useLocation,
@@ -193,6 +196,7 @@ export {
   useOutletContext,
   useParams,
   useResolvedPath,
+  useResolvePath,
   useRevalidator,
   useRouteError,
   useRouteLoaderData,
