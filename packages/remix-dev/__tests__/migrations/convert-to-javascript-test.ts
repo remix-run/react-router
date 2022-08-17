@@ -90,26 +90,10 @@ const checkMigrationRanSuccessfully = async (projectDir: string) => {
     cwd: config.rootDirectory,
     ignore: [`./${config.appDirectory}/**/*`],
   });
-  let importResult = shell.grep("-l", 'from "', JSFiles);
-  expect(importResult.stdout.trim()).toBe("");
-  expect(importResult.stderr).toBeNull();
-  expect(importResult.code).toBe(0);
-  let exportDefaultResult = shell.grep("-l", 'export default "', JSFiles);
-  expect(exportDefaultResult.stdout.trim()).toBe("");
-  expect(exportDefaultResult.stderr).toBeNull();
-  expect(exportDefaultResult.code).toBe(0);
-  let exportClassResult = shell.grep("-l", 'export class "', JSFiles);
-  expect(exportClassResult.stdout.trim()).toBe("");
-  expect(exportClassResult.stderr).toBeNull();
-  expect(exportClassResult.code).toBe(0);
-  let exportConstResult = shell.grep("-l", 'export const "', JSFiles);
-  expect(exportConstResult.stdout.trim()).toBe("");
-  expect(exportConstResult.stderr).toBeNull();
-  expect(exportConstResult.code).toBe(0);
-  let exportFunctionResult = shell.grep("-l", 'export function "', JSFiles);
-  expect(exportFunctionResult.stdout.trim()).toBe("");
-  expect(exportFunctionResult.stderr).toBeNull();
-  expect(exportFunctionResult.code).toBe(0);
+  let result = shell.grep("-l", 'from "', JSFiles);
+  expect(result.stdout.trim()).toBe("");
+  expect(result.stderr).toBeNull();
+  expect(result.code).toBe(0);
 };
 
 const makeApp = () => {

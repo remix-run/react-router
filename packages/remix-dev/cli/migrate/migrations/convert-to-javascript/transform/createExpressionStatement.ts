@@ -1,11 +1,6 @@
 import type { ImportDeclaration, JSCodeshift } from "jscodeshift";
 
-/**
- * import "foo"
- * =>
- * require("foo")
- */
-export const createImportExpressionStatement = (
+export const createExpressionStatement = (
   j: JSCodeshift,
   { source }: ImportDeclaration
 ) => {
