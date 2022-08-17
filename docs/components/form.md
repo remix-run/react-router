@@ -180,7 +180,8 @@ Instructs the form to replace the current entry in the history stack, instead of
 The default behavior is conditional on the form `method`:
 
 - `get` defaults to `false`
-- every other method defaults to `true`
+- every other method defaults to `true` if your `action` is successful
+- if your `action` redirects or throws, then it will still push by default
 
 We've found with `get` you often want the user to be able to click "back" to see the previous search results/filters, etc. But with the other methods the default is `true` to avoid the "are you sure you want to resubmit the form?" prompt. Note that even if `replace={false}` React Router _will not_ resubmit the form when the back button is clicked and the method is post, put, patch, or delete.
 
