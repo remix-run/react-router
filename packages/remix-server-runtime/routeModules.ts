@@ -15,7 +15,7 @@ export interface RouteModules<RouteModule> {
  */
 export interface DataFunctionArgs {
   request: Request;
-  context?: AppLoadContext;
+  context: AppLoadContext;
   params: Params;
 }
 
