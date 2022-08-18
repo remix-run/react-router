@@ -1,5 +1,14 @@
 # @remix-run/router
 
+## 0.2.0-pre.8
+
+### Patch Changes
+
+- fix: avoid uneccesary re-renders on `defer` resolution (#9155)
+- fix: pass `useMatches` objects to `ScrollRestoration` `getKey` (#9157)
+- fix: fetcher submission revalidating fetchers using wrong key (#9166)
+- fix: use a push navigation on submission errors (#9162)
+
 ## 0.2.0-pre.7
 
 ### Patch Changes
