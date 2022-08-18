@@ -31,6 +31,7 @@ import {
   useFetchers,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   defer,
+  useLocation,
 } from "react-router-dom";
 
 // Private API
@@ -325,6 +326,54 @@ function testDomRouter(
         "<div>
           <h1>
             Bar Heading
+          </h1>
+        </div>"
+      `);
+    });
+
+    it("renders fallbackElement within router contexts", async () => {
+      let fooDefer = createDeferred();
+      let { container } = render(
+        <TestDataRouter
+          window={getWindow("/foo")}
+          fallbackElement={<FallbackElement />}
+        >
+          <Route path="/" element={<Outlet />}>
+            <Route
+              path="foo"
+              loader={() => fooDefer.promise}
+              element={<Foo />}
+            />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function FallbackElement() {
+        let location = useLocation();
+        return <p>Loading{location.pathname}</p>;
+      }
+
+      function Foo() {
+        let data = useLoaderData();
+        return <h1>Foo:{data?.message}</h1>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Loading
+            /foo
+          </p>
+        </div>"
+      `);
+
+      fooDefer.resolve({ message: "From Foo Loader" });
+      await waitFor(() => screen.getByText("Foo:From Foo Loader"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h1>
+            Foo:
+            From Foo Loader
           </h1>
         </div>"
       `);

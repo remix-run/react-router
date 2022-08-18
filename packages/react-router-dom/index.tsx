@@ -236,12 +236,8 @@ export function DataBrowserRouter({
   let router = routerSingleton;
 
   return (
-    <DataRouterProvider
-      router={router}
-      basename={basename}
-      fallbackElement={fallbackElement}
-    >
-      <DataRouter />
+    <DataRouterProvider router={router} basename={basename}>
+      <DataRouter fallbackElement={fallbackElement} />
     </DataRouterProvider>
   );
 }
@@ -276,12 +272,8 @@ export function DataHashRouter({
   let router = routerSingleton;
 
   return (
-    <DataRouterProvider
-      router={router}
-      basename={basename}
-      fallbackElement={fallbackElement}
-    >
-      <DataRouter />
+    <DataRouterProvider router={router} basename={basename}>
+      <DataRouter fallbackElement={fallbackElement} />
     </DataRouterProvider>
   );
 }

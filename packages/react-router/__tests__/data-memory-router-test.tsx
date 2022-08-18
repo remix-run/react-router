@@ -11,11 +11,7 @@ import "@testing-library/jest-dom";
 import type { FormMethod, Router } from "@remix-run/router";
 import { createMemoryRouter } from "@remix-run/router";
 
-import {
-  DataMemoryRouterProps,
-  UNSAFE_DataRouter as DataRouter,
-  UNSAFE_DataRouterProvider as DataRouterProvider,
-} from "react-router";
+import type { DataMemoryRouterProps } from "react-router";
 import {
   DataMemoryRouter,
   Await,
@@ -26,6 +22,7 @@ import {
   useAsyncError,
   useAsyncValue,
   useLoaderData,
+  useLocation,
   useMatches,
   useRouteLoaderData,
   useRouteError,
@@ -33,7 +30,9 @@ import {
   useRevalidator,
   MemoryRouter,
   Routes,
+  UNSAFE_DataRouter as DataRouter,
   UNSAFE_DataRouterContext as DataRouterContext,
+  UNSAFE_DataRouterProvider as DataRouterProvider,
 } from "react-router";
 
 // Private API
@@ -296,6 +295,54 @@ describe("<DataMemoryRouter>", () => {
       "<div>
         <h1>
           Bar Heading
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("renders fallbackElement within router contexts", async () => {
+    let fooDefer = createDeferred();
+    let { container } = render(
+      <DataMemoryRouter
+        fallbackElement={<FallbackElement />}
+        initialEntries={["/foo"]}
+      >
+        <Route path="/" element={<Outlet />}>
+          <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
+        </Route>
+      </DataMemoryRouter>
+    );
+
+    function FallbackElement() {
+      let location = useLocation();
+      return (
+        <>
+          <p>Loading{location.pathname}</p>
+        </>
+      );
+    }
+
+    function Foo() {
+      let data = useLoaderData();
+      return <h1>Foo:{data?.message}</h1>;
+    }
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <p>
+          Loading
+          /foo
+        </p>
+      </div>"
+    `);
+
+    fooDefer.resolve({ message: "From Foo Loader" });
+    await waitFor(() => screen.getByText("Foo:From Foo Loader"));
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Foo:
+          From Foo Loader
         </h1>
       </div>"
     `);
