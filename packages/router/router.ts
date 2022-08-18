@@ -1233,7 +1233,7 @@ export function createRouter(init: RouterInit): Router {
       .forEach(([staleKey]) => {
         let revalidatingFetcher: FetcherStates["Loading"] = {
           state: "loading",
-          data: state.fetchers.get(key)?.data,
+          data: state.fetchers.get(staleKey)?.data,
           formMethod: undefined,
           formAction: undefined,
           formEncType: undefined,

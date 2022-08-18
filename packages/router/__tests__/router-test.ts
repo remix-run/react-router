@@ -7373,6 +7373,7 @@ describe("a router", () => {
           hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
         });
 
+        // Load a fetcher
         let A = await t.fetch("/tasks/1", key);
         await A.loaders.tasksId.resolve("TASKS ID");
         expect(t.router.state.fetchers.get(key)).toMatchObject({
@@ -7380,13 +7381,33 @@ describe("a router", () => {
           data: "TASKS ID",
         });
 
+        // Submit a fetcher, leaves loaded fetcher untouched
         let C = await t.fetch("/tasks", actionKey, {
           formMethod: "post",
           formData: createFormData({}),
         });
         t.shimHelper(C.loaders, "fetch", "loader", "tasksId");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "TASKS ID",
+        });
+        expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
+          state: "submitting",
+        });
 
+        // After acton resolves, both fetchers go into a loading state, with
+        // the load fetcher still reflecting it's stale data
         await C.actions.tasks.resolve("TASKS ACTION");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "loading",
+          data: "TASKS ID",
+        });
+        expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
+          state: "loading",
+          data: "TASKS ACTION",
+        });
+
+        // All go back to idle on resolutions
         await C.loaders.root.resolve("ROOT*");
         await C.loaders.index.resolve("INDEX*");
         await C.loaders.tasksId.resolve("TASKS ID*");
