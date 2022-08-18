@@ -766,12 +766,17 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
 export function resolveTo(
   toArg: To,
   routePathnames: string[],
-  locationPathname: string
+  locationPathname: string,
+  isPathRelative = false
 ): Path {
   let to = typeof toArg === "string" ? parsePath(toArg) : { ...toArg };
   let isEmptyPath = toArg === "" || to.pathname === "";
   let toPathname = isEmptyPath ? "/" : to.pathname;
 
+  let from: string;
+
+  // Routing is relative to the current pathname if explicitly requested.
+  //
   // If a pathname is explicitly provided in `to`, it should be relative to the
   // route context. This is explained in `Note on `<Link to>` values` in our
   // migration guide from v5 as a means of disambiguation between `to` values
@@ -779,8 +784,7 @@ export function resolveTo(
   // `to` values that do not provide a pathname. `to` can simply be a search or
   // hash string, in which case we should assume that the navigation is relative
   // to the current location's pathname and *not* the route pathname.
-  let from: string;
-  if (toPathname == null) {
+  if (isPathRelative || toPathname == null) {
     from = locationPathname;
   } else {
     let routePathnameIndex = routePathnames.length - 1;

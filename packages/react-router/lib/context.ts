@@ -60,10 +60,13 @@ if (__DEV__) {
   AwaitContext.displayName = "Await";
 }
 
+export type RelativeRoutingType = "route" | "path";
+
 export interface NavigateOptions {
   replace?: boolean;
   state?: any;
   resetScroll?: boolean;
+  relative?: RelativeRoutingType;
 }
 
 /**

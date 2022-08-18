@@ -1628,6 +1628,119 @@ function testDomRouter(
       });
     });
 
+    describe('<Form action relative="path">', () => {
+      it("navigates relative to the URL for static routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/edit")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/edit"
+                element={<Form action=".." relative="path" />}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for dynamic routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/:id"
+                element={<Form action=".." relative="path" />}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for layout routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/:id"
+                element={
+                  <>
+                    <Form action=".." relative="path" />
+                    <Outlet />
+                  </>
+                }
+              >
+                <Route index element={<h1>Form</h1>} />
+              </Route>
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for index routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route path="messages/:id">
+                <Route index element={<Form action=".." relative="path" />} />
+              </Route>
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for splat routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1/2/3")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/*"
+                element={<Form action=".." relative="path" />}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages/1/2"
+        );
+      });
+    });
+
     describe("useSubmit/Form FormData", () => {
       it("gathers form data on <Form> submissions", async () => {
         let actionSpy = jest.fn();
