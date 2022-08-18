@@ -58,6 +58,12 @@ export function _resetModuleScope() {
   routerSingleton = null;
 }
 
+interface DataRouterProviderProps {
+  basename?: string;
+  children?: React.ReactNode;
+  router: RemixRouter;
+}
+
 /**
  * A higher-order component that, given a Remix Router instance. setups the
  * Context's required for data routing
@@ -65,14 +71,8 @@ export function _resetModuleScope() {
 export function DataRouterProvider({
   basename,
   children,
-  fallbackElement,
   router,
-}: {
-  basename?: string;
-  children?: React.ReactNode;
-  fallbackElement?: React.ReactNode;
-  router: RemixRouter;
-}): React.ReactElement {
+}: DataRouterProviderProps): React.ReactElement {
   // Sync router state to our component state to force re-renders
   let state: RouterState = useSyncExternalStoreShim(
     router.subscribe,
@@ -98,29 +98,29 @@ export function DataRouterProvider({
     };
   }, [router]);
 
-  let dataRouterContext: DataRouterContextObject = {
-    router,
-    navigator,
-    static: false,
-    basename: basename || "/",
-  };
-
-  if (!state.initialized) {
-    return <>{fallbackElement}</>;
-  }
-
   return (
-    <DataRouterContext.Provider value={dataRouterContext}>
+    <DataRouterContext.Provider
+      value={{
+        router,
+        navigator,
+        static: false,
+        basename: basename || "/",
+      }}
+    >
       <DataRouterStateContext.Provider value={state} children={children} />
     </DataRouterContext.Provider>
   );
+}
+
+interface DataRouterProps {
+  fallbackElement?: React.ReactNode;
 }
 
 /**
  * A data-aware wrapper for `<Router>` that leverages the Context's provided by
  * `<DataRouterProvider>`
  */
-export function DataRouter() {
+export function DataRouter({ fallbackElement }: DataRouterProps) {
   let dataRouterContext = React.useContext(DataRouterContext);
   invariant(
     dataRouterContext,
@@ -135,7 +135,7 @@ export function DataRouter() {
       navigationType={router.state.historyAction}
       navigator={navigator}
     >
-      <Routes />
+      {router.state.initialized ? <Routes /> : fallbackElement}
     </Router>
   );
 }
@@ -173,12 +173,8 @@ export function DataMemoryRouter({
   let router = routerSingleton;
 
   return (
-    <DataRouterProvider
-      router={router}
-      basename={basename}
-      fallbackElement={fallbackElement}
-    >
-      <DataRouter />
+    <DataRouterProvider router={router} basename={basename}>
+      <DataRouter fallbackElement={fallbackElement} />
     </DataRouterProvider>
   );
 }
