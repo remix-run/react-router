@@ -49,6 +49,24 @@ function testDomRouter(
   TestDataRouter: typeof DataBrowserRouter,
   getWindow: (initialUrl: string, isHash?: boolean) => Window
 ) {
+  // Utility to assert location info based on the type of router
+  function assertLocation(
+    testWindow: Window,
+    pathname: string,
+    search?: string
+  ) {
+    if (name === "<DataHashRouter>") {
+      // eslint-disable-next-line jest/no-conditional-expect
+      expect(testWindow.location.hash).toEqual("#" + pathname + (search || ""));
+    } else {
+      // eslint-disable-next-line jest/no-conditional-expect
+      expect(testWindow.location.pathname).toEqual(pathname);
+      if (search) {
+        expect(testWindow.location.search).toEqual(search);
+      }
+    }
+  }
+
   describe(`Router: ${name}`, () => {
     let consoleWarn: jest.SpyInstance;
     let consoleError: jest.SpyInstance;
@@ -365,26 +383,16 @@ function testDomRouter(
         );
       }
 
-      function assertPathname(pathname) {
-        if (name === "<DataHashRouter>") {
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(testWindow.location.hash).toEqual("#" + pathname);
-        } else {
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(testWindow.location.pathname).toEqual(pathname);
-        }
-      }
-
-      assertPathname("/base/name/foo");
+      assertLocation(testWindow, "/base/name/foo");
 
       expect(screen.getByText("Foo Heading")).toBeDefined();
       fireEvent.click(screen.getByText("Link to Bar"));
       await waitFor(() => screen.getByText("Bar Heading"));
-      assertPathname("/base/name/bar");
+      assertLocation(testWindow, "/base/name/bar");
 
       fireEvent.click(screen.getByText("Link to Foo"));
       await waitFor(() => screen.getByText("Foo Heading"));
-      assertPathname("/base/name/foo");
+      assertLocation(testWindow, "/base/name/foo");
     });
 
     it("executes route loaders on navigation", async () => {
@@ -1415,6 +1423,40 @@ function testDomRouter(
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar?index"
           );
+        });
+
+        // eslint-disable-next-line jest/expect-expect
+        it("does not repeatedly add ?index params on submissions", async () => {
+          let testWindow = getWindow("/form");
+          render(
+            <TestDataRouter window={testWindow} hydrationData={{}}>
+              <Route path="/">
+                <Route path="form">
+                  <Route
+                    index={true}
+                    action={() => ({})}
+                    element={
+                      <Form method="post">
+                        <button type="submit" name="name" value="value">
+                          Submit
+                        </button>
+                      </Form>
+                    }
+                  />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          assertLocation(testWindow, "/form", "");
+
+          fireEvent.click(screen.getByText("Submit"));
+          await new Promise((r) => setTimeout(r, 0));
+          assertLocation(testWindow, "/form", "?index");
+
+          fireEvent.click(screen.getByText("Submit"));
+          await new Promise((r) => setTimeout(r, 0));
+          assertLocation(testWindow, "/form", "?index");
         });
       });
 
