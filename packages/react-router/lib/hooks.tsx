@@ -673,6 +673,9 @@ export function useMatches() {
     () =>
       matches.map((match) => {
         let { pathname, params } = match;
+        // Note: This structure matches that created by createUseMatchesMatch
+        // in the @remix-run/router , so if you change this please also change
+        // that :)  Eventually we'll DRY this up
         return {
           id: match.route.id,
           pathname,

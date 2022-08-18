@@ -8,6 +8,8 @@ import {
   NavigateOptions,
   RouteObject,
   To,
+  useMatches,
+  useNavigation,
 } from "react-router";
 import {
   Router,
@@ -1017,6 +1019,8 @@ function useScrollRestoration({
   storageKey?: string;
 } = {}) {
   let location = useLocation();
+  let matches = useMatches();
+  let navigation = useNavigation();
   let dataRouterContext = React.useContext(DataRouterContext);
   invariant(
     dataRouterContext,
@@ -1042,10 +1046,8 @@ function useScrollRestoration({
   // Save positions on unload
   useBeforeUnload(
     React.useCallback(() => {
-      if (state?.navigation.state === "idle") {
-        let key =
-          (getKey ? getKey(state.location, state.matches) : null) ||
-          state.location.key;
+      if (navigation.state === "idle") {
+        let key = (getKey ? getKey(location, matches) : null) || location.key;
         savedScrollPositions[key] = window.scrollY;
       }
       sessionStorage.setItem(
@@ -1053,13 +1055,7 @@ function useScrollRestoration({
         JSON.stringify(savedScrollPositions)
       );
       window.history.scrollRestoration = "auto";
-    }, [
-      storageKey,
-      getKey,
-      state.navigation.state,
-      state.location,
-      state.matches,
-    ])
+    }, [storageKey, getKey, navigation.state, location, matches])
   );
 
   // Read in any saved scroll locations

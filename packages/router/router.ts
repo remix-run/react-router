@@ -14,6 +14,7 @@ import {
   AgnosticRouteObject,
   Submission,
   SuccessResult,
+  AgnosticRouteMatch,
 } from "./utils";
 import {
   DeferredData,
@@ -258,12 +259,20 @@ export interface RouterSubscriber {
   (state: RouterState): void;
 }
 
+interface UseMatchesMatch {
+  id: string;
+  pathname: string;
+  params: AgnosticRouteMatch["params"];
+  data: unknown;
+  handle: unknown;
+}
+
 /**
  * Function signature for determining the key to be used in scroll restoration
  * for a given location
  */
 export interface GetScrollRestorationKeyFunction {
-  (location: Location, matches: AgnosticDataRouteMatch[]): string | null;
+  (location: Location, matches: UseMatchesMatch[]): string | null;
 }
 
 /**
@@ -1626,7 +1635,10 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[]
   ): void {
     if (savedScrollPositions && getScrollRestorationKey && getScrollPosition) {
-      let key = getScrollRestorationKey(location, matches) || location.key;
+      let userMatches = matches.map((m) =>
+        createUseMatchesMatch(m, state.loaderData)
+      );
+      let key = getScrollRestorationKey(location, userMatches) || location.key;
       savedScrollPositions[key] = getScrollPosition();
     }
   }
@@ -1636,7 +1648,10 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[]
   ): number | null {
     if (savedScrollPositions && getScrollRestorationKey && getScrollPosition) {
-      let key = getScrollRestorationKey(location, matches) || location.key;
+      let userMatches = matches.map((m) =>
+        createUseMatchesMatch(m, state.loaderData)
+      );
+      let key = getScrollRestorationKey(location, userMatches) || location.key;
       let y = savedScrollPositions[key];
       if (typeof y === "number") {
         return y;
@@ -2672,6 +2687,22 @@ async function resolveDeferredData(
 
 function hasNakedIndexQuery(search: string): boolean {
   return new URLSearchParams(search).getAll("index").some((v) => v === "");
+}
+
+// Note: This should match the format exported by useMatches, so if you change
+// this please also change that :)  Eventually we'll DRY this up
+function createUseMatchesMatch(
+  match: AgnosticDataRouteMatch,
+  loaderData: RouteData
+): UseMatchesMatch {
+  let { route, pathname, params } = match;
+  return {
+    id: route.id,
+    pathname,
+    params,
+    data: loaderData[route.id] as unknown,
+    handle: route.handle as unknown,
+  };
 }
 
 function getTargetMatch(
