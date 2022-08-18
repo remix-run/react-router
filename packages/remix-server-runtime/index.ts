@@ -28,7 +28,6 @@ export type {
   IsSessionFunction,
   JsonFunction,
   RedirectFunction,
-  TypedResponse,
 } from "./interface";
 
 // Remix server runtime packages should re-export these types
@@ -54,12 +53,15 @@ export type {
   LinksFunction,
   LoaderArgs,
   LoaderFunction,
+  MemoryUploadHandlerFilterArgs,
+  MemoryUploadHandlerOptions,
   MetaDescriptor,
   MetaFunction,
   PageLinkDescriptor,
   RequestHandler,
   RouteComponent,
   RouteHandle,
+  SerializeFrom,
   ServerBuild,
   ServerEntryModule,
   Session,
@@ -67,9 +69,8 @@ export type {
   SessionIdStorageStrategy,
   SessionStorage,
   SignFunction,
+  TypedResponse,
   UnsignFunction,
   UploadHandlerPart,
   UploadHandler,
-  MemoryUploadHandlerOptions,
-  MemoryUploadHandlerFilterArgs,
 } from "./reexport";

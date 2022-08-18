@@ -31,6 +31,8 @@ export type {
   PageLinkDescriptor,
 } from "./links";
 
+export type { TypedResponse } from "./responses";
+
 export type {
   ActionArgs,
   ActionFunction,
@@ -46,6 +48,8 @@ export type {
   RouteComponent,
   RouteHandle,
 } from "./routeModules";
+
+export type { SerializeFrom } from "./serialize";
 
 export type { RequestHandler } from "./server";
 
