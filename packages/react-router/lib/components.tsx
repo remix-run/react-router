@@ -22,7 +22,6 @@ import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-ext
 
 import type {
   DataRouteObject,
-  DataRouterContextObject,
   RouteMatch,
   RouteObject,
   Navigator,
