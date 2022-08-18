@@ -4,10 +4,10 @@
 
 ### Patch Changes
 
-- e8dda1ba: fix: avoid uneccesary re-renders on defer resolution (#9155)
-- 5c8fdeca: fix: pass useMatches objects to ScrollRestoration getKey (#9157)
-- 1dc082c0: fix: fetcher submission revalidating fetchers using wrong key (#9166)
-- d0114e26: fix: use a push navigation on submission errors (#9162)
+- fix: avoid uneccesary re-renders on `defer` resolution (#9155)
+- fix: pass `useMatches` objects to `ScrollRestoration` `getKey` (#9157)
+- fix: fetcher submission revalidating fetchers using wrong key (#9166)
+- fix: use a push navigation on submission errors (#9162)
 
 ## 0.2.0-pre.7
 
@@ -93,8 +93,8 @@
   // Otherwise, construct a Response from the raw data (assuming json here)
   return new Response(JSON.stringify(data), {
     headers: {
-      "Content-Type": "application/json; charset=utf-8"
-    }
+      "Content-Type": "application/json; charset=utf-8",
+    },
   });
   ```
 

@@ -4,9 +4,9 @@
 
 ### Patch Changes
 
-- 815e1d17: feat: add `relative=path` option for url-relative routing (#9160)
+- feat: add `relative=path` option for url-relative routing (#9160)
 
-  Adds a `relative=path` option to navigation aspects to allow users to opt-into paths behaving relative to the current URL instead of the current route hierarchy. This is useful if you're sharing route patterns in a non-nested for UI reasons:
+  Adds a `relative=path` option to navigation aspects to allow users to opt-into paths behaving relative to the current URL instead of the current route hierarchy. This is useful if you're sharing route patterns in a non-nested structure UI reasons:
 
   ```jsx
   // Contact and EditContact do not share UI layout
@@ -18,7 +18,7 @@
   }
   ```
 
-  Without this, the user would need to reconstruct the contacts/:id url using useParams and either hardcoding the /contacts prefix or parsing it from useLocation.
+  Without this, the user would need to reconstruct the `contacts/:id` url using `useParams` and either hardcoding the `/contacts` prefix or parsing it from `useLocation`.
 
   This applies to all path-related hooks and components:
 
@@ -26,10 +26,7 @@
   - `react-router-dom`: `useLinkClickHandler`, `useFormAction`, `useSubmit`, `Link`, `Form`
   - `react-router-native`: `useLinkPressHandler`, `Link`
 
-- Updated dependencies [e8dda1ba]
-- Updated dependencies [5c8fdeca]
-- Updated dependencies [1dc082c0]
-- Updated dependencies [d0114e26]
+- Updated dependencies
   - @remix-run/router@0.2.0-pre.8
 
 ## 6.4.0-pre.12
@@ -135,7 +132,7 @@
         <p>Critical Data: {data.critical}</p>
         <React.Suspense fallback={<p>Loading...</p>}>
           <Await resolve={data.lazy} errorElement={<RenderError />}>
-            {data => <p>{data}</p>}
+            {(data) => <p>{data}</p>}
           </Await>
         </React.Suspense>
       </>
