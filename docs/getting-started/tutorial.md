@@ -7,7 +7,7 @@ order: 3
 
 Welcome to the tutorial! We'll be building a small, but feature-rich app that let's you keep track of your contacts. We expect it to take between 30-60m if you're following along.
 
-<img src="/_docs/tutorial/15.png"/>
+<img src="/_docs/tutorial/15.webp"/>
 
 👉 **Every time you see this it means you need to do something in the app!**
 
@@ -149,7 +149,7 @@ Nothing React Router specific yet, so feel free to copy/paste all of that.
 
 👉 **Render `<Root>` as the root route's [`element`][routeelement]**
 
-```jsx filename=src/main.jsx lines=[7]
+```jsx filename=src/main.jsx lines=[2,7]
 /* existing imports */
 import Root from "./routes/root";
 
@@ -164,7 +164,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 The app should look something like this now. It sure is nice having a designer who can also write the CSS, isn't it? (Thank you [Jim][jim] 🙏).
 
-<img loading="lazy" src="/_docs/tutorial/01.png" />
+<img loading="lazy" src="/_docs/tutorial/01.webp" />
 
 ## Handling Not Found Errors
 
@@ -174,9 +174,9 @@ We added some links to this app, let's see what happens when we click them?
 
 👉 **Click one of the sidebar names**
 
-<img loading="lazy" alt="screenshot of default React Router error element" src="/_docs/tutorial/02.png" />
+<img loading="lazy" alt="screenshot of default React Router error element" src="/_docs/tutorial/02.webp" />
 
-Gross! This is the default error screen in React Router, made worse by our flexbox styles on the body in this app 😂.
+Gross! This is the default error screen in React Router, made worse by our flex box styles on the root element in this app 😂.
 
 Anytime your app throws an error while rendering, loading data, or performing data mutations, React Router will catch it and render an error screen. Let's make our own error page.
 
@@ -207,7 +207,7 @@ export default function ErrorPage() {
 
 👉 **Set the `<ErrorPage>` as the [`errorElement`][errorelement] on the root route**
 
-```jsx filename=src/main.jsx lines=[10]
+```jsx filename=src/main.jsx lines=[2,10]
 /* previous imports */
 import ErrorPage from "./error-page";
 
@@ -226,7 +226,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 The error page should now look like this:
 
-<img loading="lazy" alt="new error page, but still ugly" src="/_docs/tutorial/03.png" />
+<img loading="lazy" alt="new error page, but still ugly" src="/_docs/tutorial/03.webp" />
 
 <small>(Well, that's not much better. Maybe somebody forgot to ask the designer to make an error page. Maybe everybody forgets to ask the designer to make an error page and then blames the designer for not thinking of it 😆)</small>
 
@@ -367,7 +367,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 Now if we click one of the links or visit `/contacts/1` we get our new component!
 
-<img loading="lazy" alt="contact route rendering without the parent layout" src="/_docs/tutorial/04.png" />
+<img loading="lazy" alt="contact route rendering without the parent layout" src="/_docs/tutorial/04.webp" />
 
 However, it's not inside of our root layout 😠
 
@@ -375,7 +375,7 @@ However, it's not inside of our root layout 😠
 
 We want the contact component to render _inside_ of the `<Root>` layout like this.
 
-<img loading="lazy" src="/_docs/tutorial/05.png" />
+<img loading="lazy" src="/_docs/tutorial/05.webp" />
 
 We do it by making the contact route a _child_ of the root route.
 
@@ -458,7 +458,7 @@ export default function Root() {
 
 You can open the network tab in the browser devtools to see that it's not requesting documents anymore.
 
-## Loading Data: Contact List
+## Loading Data
 
 URL segments, layouts, and data are more often than not coupled (tripled?) together. We can see it in this app already:
 
@@ -470,8 +470,6 @@ URL segments, layouts, and data are more often than not coupled (tripled?) toget
 Because of this natural coupling, React Router has data conventions to get data into your route components easily.
 
 There are two APIs we'll be using to load data, [`<Route loader>`][loader] and [`useLoaderData`][useloaderdata]. First we'll create and export a loader function in the root module, then we'll hook it up to the route. Finally, we'll access and render the data.
-
-<docs-warning>Make sure you already completed the items in the [Setup][setup] section before continuing</docs-warning>
 
 👉 **Export a loader from `root.jsx`**
 
@@ -564,7 +562,7 @@ export default function Root() {
 
 That's it! React Router will now automatically keep that data in sync with your UI. We don't have any data yet, so you're probably getting a blank list like this:
 
-<img loading="lazy" src="/_docs/tutorial/06.png" />
+<img loading="lazy" src="/_docs/tutorial/06.webp" />
 
 ## Data Writes + HTML Forms
 
@@ -578,7 +576,7 @@ Without client side routing, the browser will serialize the form's data automati
 
 We can test this out by clicking the "New" button in our app. The app should blow up because the Vite server isn't configured to handle a POST request (it sends a 404, though it should probably be a 405 🤷).
 
-<img loading="lazy" src="/_docs/tutorial/07.png" />
+<img loading="lazy" src="/_docs/tutorial/07.webp" />
 
 Instead of sending that POST to the Vite server to create a new contact, let's use client side routing instead.
 
@@ -654,15 +652,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 That's it! Go ahead and click the "New" button and you should see a new record pop into the list 🥳
 
-<img loading="lazy" src="/_docs/tutorial/08.png" />
+<img loading="lazy" src="/_docs/tutorial/08.webp" />
 
-The `createContact` method just creates an empty contact with no name or data or anything. But it does still create a record.
+The `createContact` method just creates an empty contact with no name or data or anything. But it does still create a record, promise!
 
 > 🧐 Wait a sec ... How did the sidebar update? Where did we call the `action`? Where's the code to refetch the data? Where are `useState`, `onSubmit` and `useEffect`?!
 
-This is where the "old school web" programming model shows up. As we discussed earlier, [`<Form>`][form] prevents the browser from sending the request to the server and sends it to your route `action` instead.
-
-In web semantics, a POST usually means some data is changing. By convention, React Router uses this as a hint to automatically revalidate the data on the page after the action finishes. That means all of your `useLoaderData` hooks update and the UI stays in sync with your data automatically! Pretty cool.
+This is where the "old school web" programming model shows up. As we discussed earlier, [`<Form>`][form] prevents the browser from sending the request to the server and sends it to your route `action` instead. In web semantics, a POST usually means some data is changing. By convention, React Router uses this as a hint to automatically revalidate the data on the page after the action finishes. That means all of your `useLoaderData` hooks update and the UI stays in sync with your data automatically! Pretty cool.
 
 ## URL Params in Loaders
 
@@ -670,7 +666,7 @@ In web semantics, a POST usually means some data is changing. By convention, Rea
 
 We should be see our old static contact page again, with one difference: the URL now has a real ID for the record.
 
-<img loading="lazy" src="/_docs/tutorial/09.png" />
+<img loading="lazy" src="/_docs/tutorial/09.webp" />
 
 Reviewing the route config, the route looks like this:
 
@@ -729,7 +725,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 );
 ```
 
-<img loading="lazy" src="/_docs/tutorial/10.png" />
+<img loading="lazy" src="/_docs/tutorial/10.webp" />
 
 ## Updating Data
 
@@ -846,7 +842,7 @@ Yep. Both routes need the contact, and both use the same param name (`:contactId
 
 Alright, clicking the "Edit" button gives us this new UI:
 
-<img loading="lazy" src="/_docs/tutorial/11.png" />
+<img loading="lazy" src="/_docs/tutorial/11.webp" />
 
 ## Updating Contacts with FormData
 
@@ -902,15 +898,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 Fill out the form, hit save, and you should see something like this! <small>(Except easier on the eyes and maybe less hairy.)</small>
 
-<img loading="lazy" src="/_docs/tutorial/12.png" />
+<img loading="lazy" src="/_docs/tutorial/12.webp" />
 
-## Discussion
+## Mutation Discussion
 
 > 😑 It worked, but I have no idea what is going on here...
 
-You may have noticed all of this worked but you're unclear why! Let's dig in a bit.
-
-### HTML Forms, FormData, and Request.formData
+Let's dig in a bit...
 
 Open up `src/routes/edit.jsx` and look at the form elements. Notice how they each have a name:
 
@@ -947,8 +941,6 @@ updates.last; // "Name"
 
 Aside from `action`, none of these APIs we're discussing are provided by React Router: [`request`][request], [`request.formData`][requestformdata], [`Object.fromEntries`][fromentries] are all provided by the web platform.
 
-### Redirecting in Actions
-
 After we finished the action, note the [`redirect`][redirect] at the end:
 
 ```jsx filename=src/routes/edit.jsx lines=[5]
@@ -962,9 +954,11 @@ export async function action({ request, params }) {
 
 Loaders and actions can both [return a `Response`][returningresponses] (makes sense, since they received a [`Request`][request]!). The [`redirect`][redirect] helper just makes it easier to return a [response][response] that tells the app to change locations.
 
-And finally, as we learned before, React Router automatically revalidates the data on the page after an action, that's why the sidebar automatically updates when we save the form.
+Without client side routing, if a server redirected after a POST request, the new page would fetch the latest data and render. As we learned before, React Router emulates this model and automatically revalidates the data on the page after the action. That's why the sidebar automatically updates when we save the form. The extra revalidation code doesn't exist without client side routing, so it doesn't need to exist with client side routing either!
 
-Now that we know how to redirect, and we have an edit page, let's update the action that creates new actions to redirect to the edit page:
+## Redirecting new records to the edit page
+
+Now that we know how to redirect, let's update the action that creates new contacts to redirect to the edit page:
 
 👉 **Redirect to the new record's edit page**
 
@@ -986,13 +980,13 @@ export async function action() {
 
 Now when we click "New", we should end up on the edit page:
 
-<img loading="lazy" src="/_docs/tutorial/13.png" />
+<img loading="lazy" src="/_docs/tutorial/13.webp" />
 
 👉 **Add a handful of records**
 
-We're going to use the stellar lineup of speakers from the first Remix Conference 😁
+I'm going to use the stellar lineup of speakers from the first Remix Conference 😁
 
-<img loading="lazy" src="/_docs/tutorial/14.png" />
+<img loading="lazy" src="/_docs/tutorial/14.webp" />
 
 ## Active Link Styling
 
@@ -1047,6 +1041,8 @@ export default function Root() {
 
 Note that we are passing a function to `className`. When the user is at the URL in the `NavLink`, then `isActive` will be true. When it's _about_ to be active (the data is still loading) then `isPending` will be true. This allows us to easily indicate where the user is, as well as provide immediate feedback on links that have been clicked but we're still waiting for data to load.
 
+<img loading="lazy" src="/_docs/tutorial/15.webp"/>
+
 ## Global Pending UI
 
 As the user navigates the app, React Router will _leave the old page up_ as data is loading for the next page. You may have noticed the app feels a little unresponsive as you click between the list. Let's provide the user with some feedback so the app doesn't feel unresponsive.
@@ -1087,7 +1083,7 @@ export default function Root() {
 
 In our case, we add a `"loading"` class to the main part of the app if we're not idle. The CSS then adds a nice fade after a short delay (to avoid flickering the UI for fast loads). You could do anything you want though, like show a spinner or loading bar across the top.
 
-<img loading="lazy" src="/_docs/tutorial/16.png" />
+<img loading="lazy" src="/_docs/tutorial/16.webp" />
 
 ## Deleting Records
 
@@ -1185,7 +1181,7 @@ export async function action({ params }) {
 }
 ```
 
-<img loading="lazy" src="/_docs/tutorial/17.png" />
+<img loading="lazy" src="/_docs/tutorial/17.webp" />
 
 Recognize that screen? It's our [`errorElement`][errorelement] from before. The user, however, can't really do anything to recover from this screen except to hit refresh.
 
@@ -1201,7 +1197,7 @@ Let's create a contextual error message for the destroy route:
 
 Now try it again:
 
-<img loading="lazy" src="/_docs/tutorial/18.png" />
+<img loading="lazy" src="/_docs/tutorial/18.webp" />
 
 Our user now has more options than slamming refresh, they can continue to interact with the parts of the page that aren't having trouble 🙌
 
@@ -1211,7 +1207,7 @@ Because the destroy route has its own `errorElement` and is a child of the root 
 
 When we load up the app, you'll notice a big blank page on the right side of our list.
 
-<img loading="lazy" src="/_docs/tutorial/19.png" />
+<img loading="lazy" src="/_docs/tutorial/19.webp" />
 
 When a route has children, and you're at the parent route's path, the `<Outlet>` has nothing to render because no children match. You can think of index routes as the default child route to fill in that space.
 
@@ -1267,7 +1263,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 Note the [`<Route index>`][index] instead of [`<Route path>`][path]. That tells the router to match and render this route when the user is at the parent route's exact path and there are no other child routes to render in the `<Outlet>`.
 
-<img loading="lazy" src="/_docs/tutorial/20.png" />
+<img loading="lazy" src="/_docs/tutorial/20.webp" />
 
 Viola! No more blank space. It's common to put dashboards, stats, feeds, etc. at index routes. They can participate in data loading as well.
 
@@ -1384,7 +1380,7 @@ export async function loader({ request }) {
 }
 ```
 
-<img loading="lazy" src="/_docs/tutorial/21.png" />
+<img loading="lazy" src="/_docs/tutorial/21.webp" />
 
 Because this is a GET, not a POST, React Router _does not_ call the `action`. Submitting a GET form is the same as clicking a link: only the URL changes. That's why the code we added for filtering is in the `loader`, not the `action` of this route.
 
@@ -1443,7 +1439,7 @@ export default function Root() {
 
 That solves problem (2). If you refresh the page now, the input field will show the query.
 
-<img loading="lazy" src="/_docs/tutorial/21.png" />
+<img loading="lazy" src="/_docs/tutorial/21.webp" />
 
 Now for problem (1), clicking the back button and updating the input. We can bring in `useEffect` from React to manipulate the form's state in the DOM directly.
 
@@ -1619,13 +1615,15 @@ export default function Root() {
 }
 ```
 
-<img loading="lazy" src="/_docs/tutorial/22.png" />
+<img loading="lazy" src="/_docs/tutorial/22.webp" />
+
+The `navigation.location` will show up when the app is navigating to a new URL and loading the data for it. It then goes away when there is no pending navigation anymore.
 
 ## Managing the History Stack
 
 Now that the form is submitted for every key stroke, if we type the characters "seba" and then delete them with backspace, we end up with 7 new entries in the stack 😂. We definitely don't want this
 
-<img loading="lazy" src="/_docs/tutorial/23.png" />
+<img loading="lazy" src="/_docs/tutorial/23.webp" />
 
 We can avoid this by _replacing_ the current entry in the history stack with the next page, instead of pushing into it.
 
@@ -1767,7 +1765,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 Alright, we're ready to click the star next to the user's name!
 
-<img loading="lazy" src="/_docs/tutorial/24.png" />
+<img loading="lazy" src="/_docs/tutorial/24.webp" />
 
 Check that out, both stars automatically update. Our new `<fetcher.Form method="post">` works almost exactly like a the `<Form>` we've been using: it calls the action and then all data is revalidated automatically--even your errors will be caught the same way.
 
