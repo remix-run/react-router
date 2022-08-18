@@ -2686,6 +2686,8 @@ function hasNakedIndexQuery(search: string): boolean {
   return new URLSearchParams(search).getAll("index").some((v) => v === "");
 }
 
+// Note: This should match the format exported by useMatches, so if you change
+// this please also change that :)  Eventually we'll DRY this up
 function createUseMatchesMatch(
   match: AgnosticDataRouteMatch,
   loaderData: RouteData
