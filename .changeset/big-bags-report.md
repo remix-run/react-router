@@ -6,7 +6,7 @@
 
 feat: add `relative=path` option for url-relative routing (#9160)
 
-Adds a `relative=path` option to navigation aspects to allow users to opt-into paths behaving relative to the current URL instead of the current route hierarchy. This is useful if you're sharing route patterns in a non-nested for UI reasons:
+Adds a `relative=path` option to navigation aspects to allow users to opt-into paths behaving relative to the current URL instead of the current route hierarchy. This is useful if you're sharing route patterns in a non-nested structure for UI reasons:
 
 ```jsx
 // Contact and EditContact do not share UI layout
@@ -18,7 +18,7 @@ function EditContact() {
 }
 ```
 
-Without this, the user would need to reconstruct the contacts/:id url using useParams and either hardcoding the /contacts prefix or parsing it from useLocation.
+Without this, the user would need to reconstruct the `contacts/:id` url using `useParams` and either hardcoding the `/contacts` prefix or parsing it from `useLocation`.
 
 This applies to all path-related hooks and components:
 

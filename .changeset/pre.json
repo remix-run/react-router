@@ -9,7 +9,10 @@
     "@remix-run/router": "0.2.0-pre.0"
   },
   "changesets": [
+    "afraid-games-laugh",
     "afraid-parents-laugh",
+    "beige-buckets-lick",
+    "big-bags-report",
     "brave-shirts-sneeze",
     "chilled-beers-sell",
     "cuddly-dingos-tickle",
@@ -36,11 +39,14 @@
     "strong-bees-pay",
     "stupid-dryers-shout",
     "sweet-books-switch",
+    "sweet-eggs-hug",
     "thick-lions-taste",
     "thirty-monkeys-cheer",
     "tough-zoos-cry",
     "tricky-falcons-peel",
     "unlucky-cows-rhyme",
-    "weak-seas-kiss"
+    "weak-seas-kiss",
+    "wise-scissors-hug",
+    "yellow-cherries-tell"
   ]
 }
