@@ -1,13 +1,13 @@
 /* eslint-disable jest/valid-title */
 import type {
   ActionFunction,
-  DataRouteObject,
+  AgnosticDataRouteObject,
+  AgnosticRouteMatch,
   Fetcher,
   RouterFetchOptions,
   HydrationState,
   InitialEntry,
   LoaderFunction,
-  RouteMatch,
   Router,
   RouterNavigateOptions,
   StaticHandler,
@@ -37,7 +37,7 @@ import { TrackedPromise } from "../utils";
 // Routes passed into setup() should just have a boolean for loader/action
 // indicating they want a stub
 type TestRouteObject = Pick<
-  DataRouteObject,
+  AgnosticDataRouteObject,
   "id" | "index" | "path" | "shouldRevalidate"
 > & {
   loader?: boolean;
@@ -411,7 +411,7 @@ function setup({
   }
 
   function getHelpers(
-    matches: RouteMatch<string, DataRouteObject>[],
+    matches: AgnosticRouteMatch<string, AgnosticDataRouteObject>[],
     navigationId: number,
     addHelpers: (routeId: string, helpers: InternalHelpers) => void
   ): Record<string, Helpers> {
@@ -495,15 +495,14 @@ function setup({
     // @ts-expect-error
     if (opts?.formMethod === "post") {
       if (currentRouter.state.navigation?.location) {
-        activeLoaderMatches = matchRoutes(
+        let matches = matchRoutes(
           enhancedRoutes,
           currentRouter.state.navigation.location
-        ) as RouteMatch<string, EnhancedRouteObject>[];
+        );
+        invariant(matches, "No matches found for fetcher");
+        activeLoaderMatches = matches;
       } else {
-        activeLoaderMatches = currentRouter.state.matches as RouteMatch<
-          string,
-          EnhancedRouteObject
-        >[];
+        activeLoaderMatches = currentRouter.state.matches;
       }
     }
 

@@ -231,7 +231,7 @@ export interface AgnosticDataRouteMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
 
 // Walk the route tree generating unique IDs where necessary so we are working
-// solely with DataRouteObject's within the Router
+// solely with AgnosticDataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
   parentPath: number[] = [],
