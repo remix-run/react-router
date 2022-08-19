@@ -31,6 +31,7 @@ import {
   useFetchers,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   defer,
+  useLocation,
 } from "react-router-dom";
 
 // Private API
@@ -49,6 +50,24 @@ function testDomRouter(
   TestDataRouter: typeof DataBrowserRouter,
   getWindow: (initialUrl: string, isHash?: boolean) => Window
 ) {
+  // Utility to assert location info based on the type of router
+  function assertLocation(
+    testWindow: Window,
+    pathname: string,
+    search?: string
+  ) {
+    if (name === "<DataHashRouter>") {
+      // eslint-disable-next-line jest/no-conditional-expect
+      expect(testWindow.location.hash).toEqual("#" + pathname + (search || ""));
+    } else {
+      // eslint-disable-next-line jest/no-conditional-expect
+      expect(testWindow.location.pathname).toEqual(pathname);
+      if (search) {
+        expect(testWindow.location.search).toEqual(search);
+      }
+    }
+  }
+
   describe(`Router: ${name}`, () => {
     let consoleWarn: jest.SpyInstance;
     let consoleError: jest.SpyInstance;
@@ -312,6 +331,54 @@ function testDomRouter(
       `);
     });
 
+    it("renders fallbackElement within router contexts", async () => {
+      let fooDefer = createDeferred();
+      let { container } = render(
+        <TestDataRouter
+          window={getWindow("/foo")}
+          fallbackElement={<FallbackElement />}
+        >
+          <Route path="/" element={<Outlet />}>
+            <Route
+              path="foo"
+              loader={() => fooDefer.promise}
+              element={<Foo />}
+            />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function FallbackElement() {
+        let location = useLocation();
+        return <p>Loading{location.pathname}</p>;
+      }
+
+      function Foo() {
+        let data = useLoaderData();
+        return <h1>Foo:{data?.message}</h1>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Loading
+            /foo
+          </p>
+        </div>"
+      `);
+
+      fooDefer.resolve({ message: "From Foo Loader" });
+      await waitFor(() => screen.getByText("Foo:From Foo Loader"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h1>
+            Foo:
+            From Foo Loader
+          </h1>
+        </div>"
+      `);
+    });
+
     it("handles link navigations", async () => {
       render(
         <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
@@ -365,26 +432,16 @@ function testDomRouter(
         );
       }
 
-      function assertPathname(pathname) {
-        if (name === "<DataHashRouter>") {
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(testWindow.location.hash).toEqual("#" + pathname);
-        } else {
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(testWindow.location.pathname).toEqual(pathname);
-        }
-      }
-
-      assertPathname("/base/name/foo");
+      assertLocation(testWindow, "/base/name/foo");
 
       expect(screen.getByText("Foo Heading")).toBeDefined();
       fireEvent.click(screen.getByText("Link to Bar"));
       await waitFor(() => screen.getByText("Bar Heading"));
-      assertPathname("/base/name/bar");
+      assertLocation(testWindow, "/base/name/bar");
 
       fireEvent.click(screen.getByText("Link to Foo"));
       await waitFor(() => screen.getByText("Foo Heading"));
-      assertPathname("/base/name/foo");
+      assertLocation(testWindow, "/base/name/foo");
     });
 
     it("executes route loaders on navigation", async () => {
@@ -1416,6 +1473,40 @@ function testDomRouter(
             "/foo/bar?index"
           );
         });
+
+        // eslint-disable-next-line jest/expect-expect
+        it("does not repeatedly add ?index params on submissions", async () => {
+          let testWindow = getWindow("/form");
+          render(
+            <TestDataRouter window={testWindow} hydrationData={{}}>
+              <Route path="/">
+                <Route path="form">
+                  <Route
+                    index={true}
+                    action={() => ({})}
+                    element={
+                      <Form method="post">
+                        <button type="submit" name="name" value="value">
+                          Submit
+                        </button>
+                      </Form>
+                    }
+                  />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          assertLocation(testWindow, "/form", "");
+
+          fireEvent.click(screen.getByText("Submit"));
+          await new Promise((r) => setTimeout(r, 0));
+          assertLocation(testWindow, "/form", "?index");
+
+          fireEvent.click(screen.getByText("Submit"));
+          await new Promise((r) => setTimeout(r, 0));
+          assertLocation(testWindow, "/form", "?index");
+        });
       });
 
       describe("dynamic routes", () => {
@@ -1534,6 +1625,119 @@ function testDomRouter(
             "/foo"
           );
         });
+      });
+    });
+
+    describe('<Form action relative="path">', () => {
+      it("navigates relative to the URL for static routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/edit")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/edit"
+                element={<Form action=".." relative="path" />}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for dynamic routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/:id"
+                element={<Form action=".." relative="path" />}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for layout routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/:id"
+                element={
+                  <>
+                    <Form action=".." relative="path" />
+                    <Outlet />
+                  </>
+                }
+              >
+                <Route index element={<h1>Form</h1>} />
+              </Route>
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for index routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route path="messages/:id">
+                <Route index element={<Form action=".." relative="path" />} />
+              </Route>
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for splat routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1/2/3")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/*"
+                element={<Form action=".." relative="path" />}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages/1/2"
+        );
       });
     });
 

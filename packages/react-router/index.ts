@@ -65,6 +65,7 @@ import type {
   NavigateOptions,
   RouteMatch,
   RouteObject,
+  RelativeRoutingType,
 } from "./lib/context";
 import {
   DataRouterContext,
@@ -134,6 +135,7 @@ export type {
   PathPattern,
   PathRouteProps,
   RedirectFunction,
+  RelativeRoutingType,
   RouteMatch,
   RouteObject,
   RouteProps,

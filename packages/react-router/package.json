@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "6.4.0-pre.12",
+  "version": "6.4.0-pre.13",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -23,7 +23,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "@remix-run/router": "0.2.0-pre.7"
+    "@remix-run/router": "0.2.0-pre.8"
   },
   "devDependencies": {
     "react": "^18.2.0"

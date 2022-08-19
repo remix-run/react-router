@@ -11,14 +11,14 @@
   },
   "dependencies": {
     "@remix-run/node": "^1.6.7",
-    "@remix-run/router": "^0.2.0-pre.7",
+    "@remix-run/router": "^0.2.0-pre.8",
     "compression": "1.7.4",
     "cross-env": "^7.0.3",
     "express": "^4.17.1",
     "history": "^5.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.4.0-pre.12"
+    "react-router-dom": "^6.4.0-pre.13"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "^3.0.0",

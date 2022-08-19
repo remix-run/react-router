@@ -2331,6 +2331,35 @@ describe("a router", () => {
       expect(t.router.state.location.pathname).toEqual("/foo");
     });
 
+    it("navigates correctly using POP navigations across action errors", async () => {
+      let t = initializeTmTest();
+
+      // Navigate to /foo
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state.location.pathname).toEqual("/foo");
+
+      // Navigate to /bar
+      let B = await t.navigate("/bar");
+      await B.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+
+      // Post to /bar (should push due to our error)
+      let C = await t.navigate("/bar", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await C.actions.bar.reject("BAR ERROR");
+      await C.loaders.root.resolve("ROOT");
+      await C.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+
+      // POP to /bar
+      let D = await t.navigate(-1);
+      await D.loaders.bar.resolve("BAR");
+      expect(t.router.state.location.pathname).toEqual("/bar");
+    });
+
     it("navigates correctly using POP navigations across loader redirects", async () => {
       // Start at / (history stack: [/])
       let t = initializeTmTest();
@@ -7344,6 +7373,7 @@ describe("a router", () => {
           hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
         });
 
+        // Load a fetcher
         let A = await t.fetch("/tasks/1", key);
         await A.loaders.tasksId.resolve("TASKS ID");
         expect(t.router.state.fetchers.get(key)).toMatchObject({
@@ -7351,13 +7381,33 @@ describe("a router", () => {
           data: "TASKS ID",
         });
 
+        // Submit a fetcher, leaves loaded fetcher untouched
         let C = await t.fetch("/tasks", actionKey, {
           formMethod: "post",
           formData: createFormData({}),
         });
         t.shimHelper(C.loaders, "fetch", "loader", "tasksId");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "TASKS ID",
+        });
+        expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
+          state: "submitting",
+        });
 
+        // After acton resolves, both fetchers go into a loading state, with
+        // the load fetcher still reflecting it's stale data
         await C.actions.tasks.resolve("TASKS ACTION");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "loading",
+          data: "TASKS ID",
+        });
+        expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
+          state: "loading",
+          data: "TASKS ACTION",
+        });
+
+        // All go back to idle on resolutions
         await C.loaders.root.resolve("ROOT*");
         await C.loaders.index.resolve("INDEX*");
         await C.loaders.tasksId.resolve("TASKS ID*");

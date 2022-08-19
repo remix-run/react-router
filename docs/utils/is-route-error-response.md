@@ -51,4 +51,6 @@ function ErrorBoundary() {
 }
 ```
 
+<docs-info>If the user visits a route that does not match any routes in the app, React Router itself will throw a 404 response.</docs-info>
+
 [routeerror]: ../hooks/use-route-error

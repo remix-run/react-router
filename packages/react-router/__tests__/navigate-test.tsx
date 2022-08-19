@@ -7,6 +7,7 @@ import {
   Outlet,
   Routes,
   Route,
+  useLocation,
 } from "react-router";
 import { prettyDOM, render, screen, waitFor } from "@testing-library/react";
 
@@ -33,7 +34,7 @@ describe("<Navigate>", () => {
     });
   });
 
-  describe("with a relative href", () => {
+  describe("with a relative href (relative=route)", () => {
     it("navigates to the correct URL", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
@@ -223,6 +224,210 @@ describe("<Navigate>", () => {
         <h1>
           Destination
         </h1>
+      `);
+    });
+  });
+
+  describe("with a relative href (relative=path)", () => {
+    it("navigates to the correct URL", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/contacts/1"]}>
+            <Routes>
+              <Route path="contacts" element={<h1>Contacts</h1>} />
+              <Route
+                path="contacts/:id"
+                element={<Navigate to=".." relative="path" />}
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <h1>
+          Contacts
+        </h1>
+      `);
+    });
+
+    it("handles upward navigation from an index routes", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/contacts/1"]}>
+            <Routes>
+              <Route path="contacts" element={<h1>Contacts</h1>} />
+              <Route path="contacts/:id">
+                <Route index element={<Navigate to=".." relative="path" />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <h1>
+          Contacts
+        </h1>
+      `);
+    });
+
+    it("handles upward navigation from inside a pathless layout route", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/contacts/1"]}>
+            <Routes>
+              <Route path="contacts" element={<h1>Contacts</h1>} />
+              <Route element={<Outlet />}>
+                <Route
+                  path="contacts/:id"
+                  element={<Navigate to=".." relative="path" />}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <h1>
+          Contacts
+        </h1>
+      `);
+    });
+
+    it("handles upward navigation from inside multiple pathless layout routes + index route", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/contacts/1"]}>
+            <Routes>
+              <Route path="contacts" element={<h1>Contacts</h1>} />
+              <Route path="contacts/:id">
+                <Route element={<Outlet />}>
+                  <Route element={<Outlet />}>
+                    <Route element={<Outlet />}>
+                      <Route
+                        index
+                        element={<Navigate to=".." relative="path" />}
+                      />
+                    </Route>
+                  </Route>
+                </Route>
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <h1>
+          Contacts
+        </h1>
+      `);
+    });
+
+    it("handles upward navigation from inside multiple pathless layout routes + path route", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/contacts/1"]}>
+            <Routes>
+              <Route path="contacts" element={<Outlet />}>
+                <Route index element={<h1>Contacts</h1>} />
+                <Route element={<Outlet />}>
+                  <Route element={<Outlet />}>
+                    <Route element={<Outlet />}>
+                      <Route
+                        path=":id"
+                        element={<Navigate to=".." relative="path" />}
+                      />
+                    </Route>
+                  </Route>
+                </Route>
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <h1>
+          Contacts
+        </h1>
+      `);
+    });
+
+    it("handles relative navigation from nested index route", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/layout/thing"]}>
+            <Routes>
+              <Route path="layout">
+                <Route path=":param">
+                  {/* redirect /layout/:param/ index routes to /layout/:param/dest */}
+                  <Route
+                    index
+                    element={<Navigate to="dest" relative="path" />}
+                  />
+                  <Route path="dest" element={<h1>Destination</h1>} />
+                </Route>
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <h1>
+          Destination
+        </h1>
+      `);
+    });
+
+    it("preserves search params and hash", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/contacts/1"]}>
+            <Routes>
+              <Route path="contacts" element={<Contacts />} />
+              <Route
+                path="contacts/:id"
+                element={<Navigate to="..?foo=bar#hash" relative="path" />}
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      function Contacts() {
+        let { search, hash } = useLocation();
+        return (
+          <>
+            <h1>Contacts</h1>
+            <p>
+              {search}
+              {hash}
+            </p>
+          </>
+        );
+      }
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        Array [
+          <h1>
+            Contacts
+          </h1>,
+          <p>
+            ?foo=bar
+            #hash
+          </p>,
+        ]
       `);
     });
   });

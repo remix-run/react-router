@@ -3,7 +3,7 @@ title: Await
 new: true
 ---
 
-## `<Await />`
+## `<Await>`
 
 Used to render [deferred][defer] values with automatic error handling. Make sure to review the [Deferred Data Guide][deferred guide] since there are a few APIs that work together with this component.
 

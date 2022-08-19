@@ -1,4 +1,5 @@
 import type { FormEncType, FormMethod } from "@remix-run/router";
+import { RelativeRoutingType } from "react-router";
 
 export const defaultMethod = "get";
 const defaultEncType = "application/x-www-form-urlencoded";
@@ -130,6 +131,13 @@ export interface SubmitOptions {
    * to `false`.
    */
   replace?: boolean;
+
+  /**
+   * Determines whether the form action is relative to the route hierarchy or
+   * the pathname.  Use this if you want to opt out of navigating the route
+   * hierarchy and want to instead route based on /-delimited URL segments
+   */
+  relative?: RelativeRoutingType;
 }
 
 export function getFormSubmissionInfo(

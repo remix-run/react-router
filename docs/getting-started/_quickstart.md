@@ -1,6 +1,7 @@
 ---
 title: Quick Start 2
 order: 1
+hidden: true
 ---
 
 # Quick Start

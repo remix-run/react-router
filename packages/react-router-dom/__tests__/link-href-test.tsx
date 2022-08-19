@@ -594,4 +594,89 @@ describe("<Link> href", () => {
       );
     });
   });
+
+  describe("when using relative=path", () => {
+    test("absolute <Link to> resolves relative to the root URL", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox"]}>
+            <Routes>
+              <Route
+                path="inbox"
+                element={<Link to="/about" relative="path" />}
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual("/about");
+    });
+
+    test('<Link to="."> resolves relative to the current route', () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox"]}>
+            <Routes>
+              <Route path="inbox" element={<Link to="." relative="path" />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual("/inbox");
+    });
+
+    test('<Link to=".."> resolves relative to the parent URL segment', () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox/messages/1"]}>
+            <Routes>
+              <Route path="inbox" />
+              <Route path="inbox/messages" />
+              <Route
+                path="inbox/messages/:id"
+                element={<Link to=".." relative="path" />}
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "/inbox/messages"
+      );
+    });
+
+    test('<Link to=".."> with more .. segments than parent routes resolves to the root URL', () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox/messages"]}>
+            <Routes>
+              <Route path="inbox">
+                <Route
+                  path="messages"
+                  element={
+                    <>
+                      <Link to="../../about" relative="path" />
+                      {/* traverse past the root */}
+                      <Link to="../../../about" relative="path" />
+                    </>
+                  }
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
+    });
+  });
 });

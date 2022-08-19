@@ -1,6 +1,7 @@
 ---
 title: Installation
 order: 1
+hidden: true
 ---
 
 # Installation

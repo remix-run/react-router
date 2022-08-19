@@ -10,6 +10,7 @@ import {
   MemoryRouter,
   MemoryRouterProps,
   NavigateOptions,
+  RelativeRoutingType,
   useLocation,
   useNavigate,
 } from "react-router";
@@ -52,6 +53,7 @@ export type {
   PathPattern,
   PathRouteProps,
   RedirectFunction,
+  RelativeRoutingType,
   RouteMatch,
   RouteObject,
   RouteProps,
@@ -147,6 +149,7 @@ export function NativeRouter(props: NativeRouterProps) {
 export interface LinkProps extends TouchableHighlightProps {
   children?: React.ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
+  relative?: RelativeRoutingType;
   replace?: boolean;
   state?: any;
   to: To;
@@ -157,12 +160,13 @@ export interface LinkProps extends TouchableHighlightProps {
  */
 export function Link({
   onPress,
+  relative,
   replace = false,
   state,
   to,
   ...rest
 }: LinkProps) {
-  let internalOnPress = useLinkPressHandler(to, { replace, state });
+  let internalOnPress = useLinkPressHandler(to, { replace, state, relative });
   function handlePress(event: GestureResponderEvent) {
     if (onPress) onPress(event);
     if (!event.defaultPrevented) {
@@ -190,14 +194,16 @@ export function useLinkPressHandler(
   {
     replace,
     state,
+    relative,
   }: {
     replace?: boolean;
     state?: any;
+    relative?: RelativeRoutingType;
   } = {}
 ): (event: GestureResponderEvent) => void {
   let navigate = useNavigate();
   return function handlePress() {
-    navigate(to, { replace, state });
+    navigate(to, { replace, state, relative });
   };
 }
 

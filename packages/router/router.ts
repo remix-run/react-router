@@ -14,6 +14,7 @@ import {
   AgnosticRouteObject,
   Submission,
   SuccessResult,
+  AgnosticRouteMatch,
 } from "./utils";
 import {
   DeferredData,
@@ -258,12 +259,20 @@ export interface RouterSubscriber {
   (state: RouterState): void;
 }
 
+interface UseMatchesMatch {
+  id: string;
+  pathname: string;
+  params: AgnosticRouteMatch["params"];
+  data: unknown;
+  handle: unknown;
+}
+
 /**
  * Function signature for determining the key to be used in scroll restoration
  * for a given location
  */
 export interface GetScrollRestorationKeyFunction {
-  (location: Location, matches: AgnosticDataRouteMatch[]): string | null;
+  (location: Location, matches: UseMatchesMatch[]): string | null;
 }
 
 /**
@@ -901,6 +910,15 @@ export function createRouter(init: RouterInit): Router {
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+
+      // By default, all submissions are REPLACE navigations, but if the
+      // action threw an error that'll be rendered in an errorElement, we fall
+      // back to PUSH so that the user can use the back button to get back to
+      // the pre-submission form location to try again
+      if (opts?.replace !== true) {
+        pendingAction = HistoryAction.Push;
+      }
+
       return {
         pendingActionError: { [boundaryMatch.route.id]: result.error },
       };
@@ -1044,14 +1062,8 @@ export function createRouter(init: RouterInit): Router {
     // Wire up subscribers to update loaderData as promises settle
     activeDeferreds.forEach((deferredData, routeId) => {
       deferredData.subscribe((aborted) => {
-        if (!aborted) {
-          updateState({
-            loaderData: {
-              ...state.loaderData,
-              [routeId]: deferredData.data,
-            },
-          });
-        }
+        // Note: No need to updateState here since the TrackedPromise on
+        // loaderData is stable across resolve/reject
         // Remove this instance if we were aborted or if promises have settled
         if (aborted || deferredData.done) {
           activeDeferreds.delete(routeId);
@@ -1230,7 +1242,7 @@ export function createRouter(init: RouterInit): Router {
       .forEach(([staleKey]) => {
         let revalidatingFetcher: FetcherStates["Loading"] = {
           state: "loading",
-          data: state.fetchers.get(key)?.data,
+          data: state.fetchers.get(staleKey)?.data,
           formMethod: undefined,
           formAction: undefined,
           formEncType: undefined,
@@ -1623,7 +1635,10 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[]
   ): void {
     if (savedScrollPositions && getScrollRestorationKey && getScrollPosition) {
-      let key = getScrollRestorationKey(location, matches) || location.key;
+      let userMatches = matches.map((m) =>
+        createUseMatchesMatch(m, state.loaderData)
+      );
+      let key = getScrollRestorationKey(location, userMatches) || location.key;
       savedScrollPositions[key] = getScrollPosition();
     }
   }
@@ -1633,7 +1648,10 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[]
   ): number | null {
     if (savedScrollPositions && getScrollRestorationKey && getScrollPosition) {
-      let key = getScrollRestorationKey(location, matches) || location.key;
+      let userMatches = matches.map((m) =>
+        createUseMatchesMatch(m, state.loaderData)
+      );
+      let key = getScrollRestorationKey(location, userMatches) || location.key;
       let y = savedScrollPositions[key];
       if (typeof y === "number") {
         return y;
@@ -2669,6 +2687,22 @@ async function resolveDeferredData(
 
 function hasNakedIndexQuery(search: string): boolean {
   return new URLSearchParams(search).getAll("index").some((v) => v === "");
+}
+
+// Note: This should match the format exported by useMatches, so if you change
+// this please also change that :)  Eventually we'll DRY this up
+function createUseMatchesMatch(
+  match: AgnosticDataRouteMatch,
+  loaderData: RouteData
+): UseMatchesMatch {
+  let { route, pathname, params } = match;
+  return {
+    id: route.id,
+    pathname,
+    params,
+    data: loaderData[route.id] as unknown,
+    handle: route.handle as unknown,
+  };
 }
 
 function getTargetMatch(
