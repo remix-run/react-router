@@ -5,6 +5,7 @@ import type { Params } from "react-router-dom";
 import type { AppLoadContext, AppData } from "./data";
 import type { LinkDescriptor } from "./links";
 import type { RouteData } from "./routeData";
+import type { SerializeFrom } from "./serialize";
 
 export interface RouteModules<RouteModule> {
   [routeId: string]: RouteModule;
@@ -78,11 +79,67 @@ export interface LoaderFunction {
  * A function that returns an object of name + content pairs to use for
  * `<meta>` tags for a route. These tags will be merged with (and take
  * precedence over) tags from parent routes.
+ *
+ * @param Loader - Loader for this meta function's route
+ * @param ParentsLoaders - Mapping from a parent's route filepath to that route's loader
+ *
+ * Note that parent route filepaths are relative to the `app/` directory.
+ *
+ * For example, if this meta function is for `/sales/customers/$customerId`:
+ *
+ * ```ts
+ * // app/root.tsx
+ * const loader = () => {
+ *  return json({ hello: "world" } as const)
+ * }
+ * export type Loader = typeof loader
+ *
+ * // app/routes/sales.tsx
+ * const loader = () => {
+ *  return json({ salesCount: 1074 })
+ * }
+ * export type Loader = typeof loader
+ *
+ * // app/routes/sales/customers.tsx
+ * const loader = () => {
+ *   return json({ customerCount: 74 })
+ * }
+ * export type Loader = typeof loader
+ *
+ * // app/routes/sales/customers/$customersId.tsx
+ * import type { Loader as RootLoader } from "../../../root"
+ * import type { Loader as SalesLoader } from "../../sales"
+ * import type { Loader as CustomersLoader } from "../../sales/customers"
+ *
+ * const loader = () => {
+ *   return json({ name: "Customer name" })
+ * }
+ *
+ * const meta: MetaFunction<typeof loader, {
+ *  "root": RootLoader,
+ *  "routes/sales": SalesLoader,
+ *  "routes/sales/customers": CustomersLoader,
+ * }> = ({ data, parentsData }) => {
+ *   const { name } = data
+ *   //      ^? string
+ *   const { customerCount } = parentsData["routes/sales/customers"]
+ *   //      ^? number
+ *   const { salesCount } = parentsData["routes/sales"]
+ *   //      ^? number
+ *   const { hello } = parentsData["root"]
+ *   //      ^? "world"
+ * }
+ * ```
  */
-export interface MetaFunction {
+export interface MetaFunction<
+  Loader extends LoaderFunction | unknown = unknown,
+  ParentsLoaders extends Record<string, LoaderFunction> = {}
+> {
   (args: {
-    data: AppData;
-    parentsData: RouteData;
+    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData;
+    parentsData: {
+      [k in keyof ParentsLoaders]: SerializeFrom<ParentsLoaders[k]>;
+    } & RouteData;
     params: Params;
     location: Location;
   }): HtmlMetaDescriptor;
