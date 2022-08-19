@@ -1812,12 +1812,121 @@ function Favorite({ contact }) {
 
 If you click the button now you should see the star _immediately_ change to the new state. Instead of always rendering the actual data, we check if the fetcher has any `formData` being submitted, if so, we'll use that instead. When the action is done, the `fetcher.formData` will no longer exist and we're back to using the actual data. So even if you write bugs in your optimistic UI code, it'll eventually go back to the correct state 🥹
 
-In fact, you can click that button as fast as you want with the choppiest network, React Router will automatically handle all interruptions and race conditions on the revalidation. If you're making a `fetch` call in your action, you can even watch it happen on the network tab, it's pretty cool.
+## Not Found Data
+
+What happens if the contact we're trying load doesn't exist?
+
+<img loading="lazy" class="tutorial" src="/_docs/tutorial/25.webp" />
+
+Our root [`errorElement`][errorelement] is catching this unexpected error as we try to render a `null` contact. Nice the error was properly handled, but we can do better!
+
+Whenever you have an expected error case in a loader or action–like the data not existing–you can `throw`. The call stack will break, React Router will catch it, and the error path is rendered instead. We won't even try to render a `null` contact.
+
+👉 **Throw a 404 response in the loader**
+
+```jsx filename=src/routes/contact.jsx lines lines=[4]
+export async function loader({ params }) {
+  const contact = await getContact(params.contactId);
+  if (!contact) {
+    throw new Response("", {
+      status: 404,
+      statusText: "Not Found",
+    });
+  }
+  return contact;
+}
+```
+
+<img loading="lazy" class="tutorial" src="/_docs/tutorial/27.webp" />
+
+Instead of hitting a render error with `Cannot read properties of null`, we avoid the component completely and render the error path instead, telling the user something more specific.
+
+This keeps your happy paths, happy. Your route elements don't need to concern themselves with error and loading states.
+
+## Pathless Routes
+
+One last thing. The last error page we saw would be better if it rendered inside the root outlet, instead of the whole page. In fact, every error in all of our child routes would be better in the outlet, then the user has more options than hitting refresh.
+
+We'd like it to look like this:
+
+<img loading="lazy" class="tutorial" src="/_docs/tutorial/26.webp" />
+
+We could add the error element to every one of the child routes but, since it's all the same error page, this isn't recommended:
+
+```jsx filename=src/main.jsx lines=[11,18,25,30]
+<Route
+  path="/"
+  element={<Root />}
+  loader={rootLoader}
+  action={rootAction}
+  errorElement={<ErrorPage />}
+>
+  <Route
+    index
+    element={<Index />}
+    errorElement={<ErrorPage />}
+  />
+  <Route
+    path="contacts/:contactId"
+    element={<Contact />}
+    loader={contactLoader}
+    action={contactAction}
+    errorElement={<ErrorPage />}
+  />
+  <Route
+    path="contacts/:contactId/edit"
+    element={<EditContact />}
+    loader={contactLoader}
+    action={editAction}
+    errorElement={<ErrorPage />}
+  />
+  <Route
+    path="contacts/:contactId/destroy"
+    action={destroyAction}
+    errorElement={<ErrorPage />}
+  />
+</Route>
+```
+
+There's a cleaner way. Routes can be used _without_ a path, which lets them participate in the UI layout without requiring new path segments in the URL. Check it out:
+
+👉 **Wrap the child routes in a pathless route**
+
+```jsx filename=src/main.jsx lines=[8,26]
+<Route
+  path="/"
+  element={<Root />}
+  loader={rootLoader}
+  action={rootAction}
+  errorElement={<ErrorPage />}
+>
+  <Route errorElement={<ErrorPage />}>
+    <Route index element={<Index />} />
+    <Route
+      path="contacts/:contactId"
+      element={<Contact />}
+      loader={contactLoader}
+      action={contactAction}
+    />
+    <Route
+      path="contacts/:contactId/edit"
+      element={<EditContact />}
+      loader={contactLoader}
+      action={editAction}
+    />
+    <Route
+      path="contacts/:contactId/destroy"
+      action={destroyAction}
+    />
+  </Route>
+</Route>
+```
+
+When any errors are thrown in the child routes, our new pathless route will catch it and render, preserving the root route's UI!
 
 ---
 
-- 404
-- replace delete
+That's it! Thanks for giving React Router a shot. We hope this tutorial gives you a solid start to build great user experiences. There's a lot more you can do with React Router, so make sure to check out all the APIs 😀
 
 [vite]: https://vitejs.dev/guide/
 [node]: https://nodejs.org
