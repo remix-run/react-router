@@ -698,7 +698,7 @@ export default function Contact() {
 }
 ```
 
-👉 **Configure the loaderoute's new action on the route**
+👉 **Configure the loader on the route**
 
 ```jsx filename=src/main.jsx lines=[3,19]
 /* existing code */
