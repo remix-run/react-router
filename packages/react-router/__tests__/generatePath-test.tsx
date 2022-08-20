@@ -42,4 +42,16 @@ describe("generatePath", () => {
       expect(generatePath("/courses/*", {})).toBe("/courses");
     });
   });
+
+  describe("with splat only", () => {
+    it("omits the spat", () => {
+      expect(generatePath("*")).toBe("");
+    });
+  });
+
+  describe("with slash and splat", () => {
+    it("omits the spat and returns slash", () => {
+      expect(generatePath("/*")).toBe("/");
+    });
+  });
 });
