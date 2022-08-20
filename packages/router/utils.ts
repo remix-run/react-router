@@ -487,7 +487,10 @@ export function generatePath<Path extends string>(
     .replace(/\/*\*$/, (_) => {
       const star = "*" as PathParam<Path>;
 
-      return params[star] == null ? "" : params[star].replace(/^\/*/, "/");
+      if (params[star]) return params[star].replace(/^\/*/, "/");
+      const slashSplatRe = /^\/\*$/;
+
+      return path.match(slashSplatRe) ? path.replace(slashSplatRe, "/") : "";
     });
 }
 
