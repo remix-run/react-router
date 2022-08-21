@@ -21,7 +21,7 @@ interface NavigateFunction {
 
 </details>
 
-The `useNavigate` hook returns a function that lets you navigate programmatically, for example after a form is submitted. If using `replace: true`, the navigation will replace the current entry in the history stack instead of adding a new one.
+The `useNavigate` hook returns a function that lets you navigate programmatically with/or without payload, for example after a form is submitted. If using `replace: true`, the navigation will replace the current entry in the history stack instead of adding a new one.
 
 ```tsx
 import { useNavigate } from "react-router-dom";
@@ -38,6 +38,20 @@ function SignupForm() {
   return <form onSubmit={handleSubmit}>{/* ... */}</form>;
 }
 ```
+```js example
+ const [destination, setDestination] = useState("");
+  const [date, setDate] = useState([
+    {
+      startDate: new Date(),
+      endDate: new Date(),
+      key: "selection",
+    },
+  ]);
+  const navigate = useNavigate();
+  const handleSearch = () => {
+    dispatch({ type: "NEW_SEARCH", payload: { destination, date, options } });
+    navigate("/hotels", { state: { destination, date, options } });
+  };
 
 The `navigate` function has two signatures:
 
