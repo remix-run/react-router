@@ -1224,7 +1224,7 @@ Feel free to copy paste, nothing special here.
 ```jsx filename=src/routes/index.jsx
 export default function Index() {
   return (
-    <p id="index">
+    <p id="zero-state">
       This is a demo for React Router.
       <br />
       Check out{" "}
