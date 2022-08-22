@@ -2,4 +2,4 @@
 "@remix-run/router": patch
 ---
 
-fix: fallback on route params navigations (#9181)
+fix: Await should fallback on route params navigations (#9181)
