@@ -67,9 +67,10 @@ The `main.jsx` file is the entry point. Open it up and we'll put React Router on
 
 👉 **Add [`DataBrowserRouter`][databrowserrouter] and a [`Route`][route] to `main.jsx`**
 
-```jsx lines=[3,8-10] filename=src/main.jsx
+```jsx lines=[4, 9-11] bad lines=[3] filename=src/main.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
+import App from './App';
 import { DataBrowserRouter, Route } from "react-router-dom";
 import "./index.css";
 
@@ -586,7 +587,7 @@ We'll create new contacts by exporting an `action` in our root route, wiring it 
 
 👉 **Create the action and change `<form>` to `<Form>`**
 
-```jsx filename=src/routes/root.jsx lines=[5,9-11,22-24]
+```jsx filename=src/routes/root.jsx lines=[7,5,9-11,22-24]
 import {
   Outlet,
   Link,
@@ -608,6 +609,7 @@ export default function Root() {
       <div id="sidebar">
         <h1>React Router Contacts</h1>
         <div>
+          {/* other code */}
           <Form method="post">
             <button type="submit">New</button>
           </Form>
@@ -1733,7 +1735,7 @@ Pretty simple. Pull the form data off the request and send it to the data model.
 
 👉 **Configure the route's new action**
 
-```jsx filename=src/main.jsx lines=[]
+```jsx filename=src/main.jsx lines=[5, 21]
 // existing code
 
 import Contact, {
