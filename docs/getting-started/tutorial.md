@@ -70,7 +70,7 @@ The `main.jsx` file is the entry point. Open it up and we'll put React Router on
 ```jsx lines=[4, 9-11] bad lines=[3] filename=src/main.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from './App';
+import App from "./App";
 import { DataBrowserRouter, Route } from "react-router-dom";
 import "./index.css";
 
