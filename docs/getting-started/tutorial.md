@@ -321,6 +321,7 @@ export default function Contact() {
 }
 
 function Favorite({ contact }) {
+  // yes, this is a `let` for later
   let favorite = contact.favorite;
   return (
     <Form method="post">
@@ -586,7 +587,7 @@ We'll create new contacts by exporting an `action` in our root route, wiring it 
 
 👉 **Create the action and change `<form>` to `<Form>`**
 
-```jsx filename=src/routes/root.jsx lines=[7,5,9-11,22-24]
+```jsx filename=src/routes/root.jsx lines=[5,7,9-11,22-24]
 import {
   Outlet,
   Link,
@@ -744,6 +745,11 @@ Nothing we haven't seen before, feel free to copy/paste:
 
 ```jsx filename=src/routes/edit.jsx
 import { Form, useLoaderData } from "react-router-dom";
+import { getContact } from "../contacts";
+
+export function loader({ params }) {
+  return getContact(params.contactId);
+}
 
 export default function Edit() {
   const contact = useLoaderData();
@@ -836,10 +842,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 ```
 
 We want it to be rendered in the root route's outlet, so we made it a sibling to the existing child route.
-
-> 🤨 Is that `loader={contactLoader}` for both route's?
-
-Yep. Both routes need the contact, and both use the same param name (`:contactId`), so they can share the same loader. Kinda cool.
 
 Alright, clicking the "Edit" button gives us this new UI:
 
@@ -1085,6 +1087,8 @@ export default function Root() {
 In our case, we add a `"loading"` class to the main part of the app if we're not idle. The CSS then adds a nice fade after a short delay (to avoid flickering the UI for fast loads). You could do anything you want though, like show a spinner or loading bar across the top.
 
 <img class="tutorial" loading="lazy" src="/_docs/tutorial/16.webp" />
+
+Note that our data model (`src/contact.js`) has a clientside cache, so navigating to the same contact is fast the second time. This behavior is _not_ React Router, it will re-load data for changing routes no matter if you've been there before or not. It does, however, avoid calling the loaders for _unchanging_ routes (like the list) during a navigation.
 
 ## Deleting Records
 
@@ -1372,7 +1376,7 @@ Let's use client side routing to submit this form and filter the list in our exi
 
 👉 **Filter the list if there are URLSearchParams**
 
-```jsx filename=src/routes/root.jsx lines=[2-4]
+```jsx filename=src/routes/root.jsx lines=[1,2-4]
 export async function loader({ request }) {
   const url = new URL(request.url);
   const q = url.searchParams.get("q");
@@ -1734,7 +1738,7 @@ Pretty simple. Pull the form data off the request and send it to the data model.
 
 👉 **Configure the route's new action**
 
-```jsx filename=src/main.jsx lines=[5, 21]
+```jsx filename=src/main.jsx lines=[]
 // existing code
 
 import Contact, {
