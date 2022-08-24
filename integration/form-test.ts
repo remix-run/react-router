@@ -785,13 +785,21 @@ test.describe("Forms", () => {
 
   test("<Form> submits the submitter's value appended to the form data", async ({
     page,
+    browserName,
   }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/submitter");
     await app.clickElement("text=Add Task");
     await page.waitForLoadState("load");
-    expect(await app.getHtml("pre")).toBe(
-      `<pre>tasks=first&amp;tasks=second&amp;tasks=</pre>`
-    );
+    // TODO: remove after playwright ships safari 16
+    if (browserName === "webkit") {
+      expect(await app.getHtml("pre")).toBe(
+        `<pre>tasks=first&amp;tasks=second&amp;tasks=&amp;tasks=</pre>`
+      );
+    } else {
+      expect(await app.getHtml("pre")).toBe(
+        `<pre>tasks=first&amp;tasks=second&amp;tasks=</pre>`
+      );
+    }
   });
 });
