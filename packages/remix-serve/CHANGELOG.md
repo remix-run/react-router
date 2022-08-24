@@ -1,5 +1,18 @@
 # `@remix-run/serve`
 
+## 1.7.0-pre.0
+
+### Minor Changes
+
+- We've added a new type: `SerializeFrom`. This is used to infer the ([#4013](https://github.com/remix-run/remix/pull/4013))
+  JSON-serialized return type of loaders and actions.
+- `MetaFunction` type can now infer `data` and `parentsData` types from route loaders ([#4022](https://github.com/remix-run/remix/pull/4022))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/express@1.7.0-pre.0`
+
 ## 1.6.8
 
 ### Patch Changes
