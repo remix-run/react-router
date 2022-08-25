@@ -1,7 +1,8 @@
 import type { Transform } from "jscodeshift";
 
 import { checkNoDifferentImportTypesCombined } from "./checkNoDifferentImportTypesCombined";
-import { createExpressionStatement } from "./createExpressionStatement";
+import { createExportExpressionStatementFromExportDefaultDeclaration } from "./createExportExpressionStatementFromExportDefaultDeclaration";
+import { createImportExpressionStatement } from "./createImportExpressionStatement";
 import { createVariableDeclarationIdentifier } from "./createVariableDeclarationIdentifier";
 import { createVariableDeclarationObjectPattern } from "./createVariableDeclarationObjectPattern";
 
@@ -9,9 +10,13 @@ const transform: Transform = (file, api, options) => {
   let j = api.jscodeshift;
   let root = j(file.source);
 
-  let allESImportDeclarations = root.find(j.ImportDeclaration);
-  if (allESImportDeclarations.length === 0) {
-    // This transform doesn't need to run if there are no ES imports
+  let allImportDeclarations = root.find(j.ImportDeclaration);
+  let allExportDefaultDeclarations = root.find(j.ExportDefaultDeclaration);
+  if (
+    allImportDeclarations.length === 0 &&
+    allExportDefaultDeclarations.length === 0
+  ) {
+    // This transform doesn't need to run if there are no ES imports/exports
     return null;
   }
 
@@ -19,20 +24,24 @@ const transform: Transform = (file, api, options) => {
   let getFirstNode = () => root.find(j.Program).get("body", 0).node;
   let oldFirstNode = getFirstNode();
 
-  allESImportDeclarations.forEach((importDeclaration) => {
+  allImportDeclarations.forEach((importDeclaration) => {
     if (importDeclaration.node.importKind === "type") {
       return;
     }
 
     let { specifiers } = importDeclaration.node;
+
+    // import "foo"
     if (!specifiers || specifiers.length === 0) {
       return j(importDeclaration).replaceWith(
-        createExpressionStatement(j, importDeclaration.node)
+        createImportExpressionStatement(j, importDeclaration.node)
       );
     }
 
+    // import Foo, { bar } from "foo"
     checkNoDifferentImportTypesCombined(importDeclaration.node);
 
+    // import foo from "foo" || import * as foo from "foo"
     if (
       ["ImportDefaultSpecifier", "ImportNamespaceSpecifier"].includes(
         specifiers[0].type
@@ -43,8 +52,19 @@ const transform: Transform = (file, api, options) => {
       );
     }
 
+    // import { foo } from "foo" || import { foo as bar } from "foo"
     return j(importDeclaration).replaceWith(
       createVariableDeclarationObjectPattern(j, importDeclaration.node)
+    );
+  });
+
+  allExportDefaultDeclarations.forEach((exportDefaultDeclaration) => {
+    // export default foo
+    j(exportDefaultDeclaration).replaceWith(
+      createExportExpressionStatementFromExportDefaultDeclaration(
+        j,
+        exportDefaultDeclaration.node
+      )
     );
   });
 
