@@ -368,6 +368,10 @@ async function createBrowserBuild(
     sourcemap: options.sourcemap,
     metafile: true,
     incremental: options.incremental,
+    // As pointed out by https://github.com/evanw/esbuild/issues/2440, when tsconfig is set to
+    // `undefined`, esbuild will keep looking for a tsconfig.json recursively up. This unwanted
+    // behavior can only be avoided by creating an empty tsconfig file in the root directory.
+    tsconfig: config.tsconfigPath,
     mainFields: ["browser", "module", "main"],
     treeShaking: true,
     minify: options.mode === BuildMode.Production,
@@ -458,6 +462,10 @@ function createServerBuild(
       loader: loaders,
       bundle: true,
       logLevel: "silent",
+      // As pointed out by https://github.com/evanw/esbuild/issues/2440, when tsconfig is set to
+      // `undefined`, esbuild will keep looking for a tsconfig.json recursively up. This unwanted
+      // behavior can only be avoided by creating an empty tsconfig file in the root directory.
+      tsconfig: config.tsconfigPath,
       incremental: options.incremental,
       sourcemap: options.sourcemap, // use linked (true) to fix up .map file
       // The server build needs to know how to generate asset URLs for imports

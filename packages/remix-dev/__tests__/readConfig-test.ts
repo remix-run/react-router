@@ -21,6 +21,7 @@ describe("readConfig", () => {
         serverBuildPath: expect.any(String),
         assetsBuildDirectory: expect.any(String),
         relativeAssetsBuildDirectory: expect.any(String),
+        tsconfigPath: expect.any(String)
       },
       `
       Object {
@@ -50,6 +51,7 @@ describe("readConfig", () => {
         "serverMode": "production",
         "serverModuleFormat": "cjs",
         "serverPlatform": "node",
+        "tsconfigPath": Any<String>,
         "watchPaths": Array [],
       }
     `

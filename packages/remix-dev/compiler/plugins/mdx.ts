@@ -17,7 +17,7 @@ export function mdxPlugin(config: RemixConfig): esbuild.Plugin {
       ]);
 
       build.onResolve({ filter: /\.mdx?$/ }, (args) => {
-        let matchPath = createMatchPath();
+        let matchPath = createMatchPath(config.tsconfigPath);
         // Resolve paths according to tsconfig paths property
         function resolvePath(id: string) {
           if (!matchPath) {
