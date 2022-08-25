@@ -10,7 +10,6 @@
 ### Patch Changes
 
 - Removed our compiler's React shim in favor of esbuild's new automatic JSX transform ([#3860](https://github.com/remix-run/remix/pull/3860))
-- Fixed a bug in the `import` to `require` conversion in the CLI's `.ts` to `.js` migration script ([#3986](https://github.com/remix-run/remix/pull/3986))
 - Updated dependencies:
   - `@remix-run/server-runtime@1.7.0-pre.0`
   - `@remix-run/serve@1.7.0-pre.0`
