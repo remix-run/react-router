@@ -1,6 +1,6 @@
 # `@remix-run/serve`
 
-## 1.7.0-pre.0
+## 1.7.0
 
 ### Minor Changes
 
@@ -11,7 +11,7 @@
 ### Patch Changes
 
 - Updated dependencies:
-  - `@remix-run/express@1.7.0-pre.0`
+  - `@remix-run/express@1.7.0`
 
 ## 1.6.8
 

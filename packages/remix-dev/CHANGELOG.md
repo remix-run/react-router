@@ -1,6 +1,6 @@
 # `@remix-run/dev`
 
-## 1.7.0-pre.0
+## 1.7.0
 
 ### Minor Changes
 
@@ -11,8 +11,8 @@
 
 - Removed our compiler's React shim in favor of esbuild's new automatic JSX transform ([#3860](https://github.com/remix-run/remix/pull/3860))
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.7.0-pre.0`
-  - `@remix-run/serve@1.7.0-pre.0`
+  - `@remix-run/server-runtime@1.7.0`
+  - `@remix-run/serve@1.7.0`
 
 ## 1.6.8
 

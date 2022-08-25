@@ -1,6 +1,6 @@
 # `@remix-run/node`
 
-## 1.7.0-pre.0
+## 1.7.0
 
 ### Minor Changes
 
@@ -9,9 +9,9 @@
 
 ### Patch Changes
 
-- Fixed a bug when destroying `fileStorage` sessions to prevent deleting entire session directories ([#3986](https://github.com/remix-run/remix/pull/3986))
+- Fixed a bug when destroying `fileStorage` sessions to prevent deleting entire session directories
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.7.0-pre.0`
+  - `@remix-run/server-runtime@1.7.0`
 
 ## 1.6.8
 
