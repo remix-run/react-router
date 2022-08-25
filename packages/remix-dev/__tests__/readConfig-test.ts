@@ -21,7 +21,7 @@ describe("readConfig", () => {
         serverBuildPath: expect.any(String),
         assetsBuildDirectory: expect.any(String),
         relativeAssetsBuildDirectory: expect.any(String),
-        tsconfigPath: expect.any(String)
+        tsconfigPath: expect.any(String),
       },
       `
       Object {

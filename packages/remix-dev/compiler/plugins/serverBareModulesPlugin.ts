@@ -23,7 +23,9 @@ export function serverBareModulesPlugin(
   let isDenoRuntime = remixConfig.serverBuildTarget === "deno";
 
   // Resolve paths according to tsconfig paths property
-  let matchPath = isDenoRuntime ? undefined : createMatchPath(remixConfig.tsconfigPath);
+  let matchPath = isDenoRuntime
+    ? undefined
+    : createMatchPath(remixConfig.tsconfigPath);
   function resolvePath(id: string) {
     if (!matchPath) {
       return id;
