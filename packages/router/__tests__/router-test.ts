@@ -8635,6 +8635,118 @@ describe("a router", () => {
       expect(shouldRevalidateSpy).not.toHaveBeenCalled();
     });
 
+    it("triggers fallbacks on new dynamic route instances", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "invoice",
+            path: "invoices/:id",
+            loader: true,
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/invoices/1");
+      let dfd1 = createDeferred();
+      await A.loaders.invoice.resolve(defer({ lazy: dfd1.promise }));
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise(),
+        },
+      });
+
+      await dfd1.resolve("DATA 1");
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise("DATA 1"),
+        },
+      });
+
+      // Goes back into a loading state since this is a new instance of the
+      // invoice route
+      let B = await t.navigate("/invoices/2");
+      let dfd2 = createDeferred();
+      await B.loaders.invoice.resolve(defer({ lazy: dfd2.promise }));
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise(),
+        },
+      });
+
+      await dfd2.resolve("DATA 2");
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise("DATA 2"),
+        },
+      });
+    });
+
+    it("triggers fallbacks on new splat route instances", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "invoices",
+            path: "invoices",
+            children: [
+              {
+                id: "invoice",
+                path: "*",
+                loader: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/invoices/1");
+      let dfd1 = createDeferred();
+      await A.loaders.invoice.resolve(defer({ lazy: dfd1.promise }));
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise(),
+        },
+      });
+
+      await dfd1.resolve("DATA 1");
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise("DATA 1"),
+        },
+      });
+
+      // Goes back into a loading state since this is a new instance of the
+      // invoice route
+      let B = await t.navigate("/invoices/2");
+      let dfd2 = createDeferred();
+      await B.loaders.invoice.resolve(defer({ lazy: dfd2.promise }));
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise(),
+        },
+      });
+
+      await dfd2.resolve("DATA 2");
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise("DATA 2"),
+        },
+      });
+    });
+
     it("cancels awaited reused deferreds on subsequent navigations", async () => {
       let shouldRevalidateSpy = jest.fn(() => false);
       let t = setup({

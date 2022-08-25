@@ -1025,6 +1025,7 @@ export function createRouter(init: RouterInit): Router {
 
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
+        state.matches,
         matchesToLoad,
         revalidatingFetchers,
         request
@@ -1256,6 +1257,7 @@ export function createRouter(init: RouterInit): Router {
 
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
+        state.matches,
         matchesToLoad,
         revalidatingFetchers,
         revalidationRequest
@@ -1461,6 +1463,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   async function callLoadersAndMaybeResolveData(
+    currentMatches: AgnosticDataRouteMatch[],
     matchesToLoad: AgnosticDataRouteMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request
@@ -1479,6 +1482,7 @@ export function createRouter(init: RouterInit): Router {
 
     await Promise.all([
       resolveDeferredResults(
+        currentMatches,
         matchesToLoad,
         loaderResults,
         request.signal,
@@ -1486,6 +1490,7 @@ export function createRouter(init: RouterInit): Router {
         state.loaderData
       ),
       resolveDeferredResults(
+        currentMatches,
         fetchersToLoad.map(([, , match]) => match),
         fetcherResults,
         request.signal,
@@ -2197,6 +2202,20 @@ function isNewLoader(
   return isNew || isMissingData;
 }
 
+function isNewRouteInstance(
+  currentMatch: AgnosticDataRouteMatch,
+  match: AgnosticDataRouteMatch
+) {
+  return (
+    // param change for this match, /users/123 -> /users/456
+    currentMatch.pathname !== match.pathname ||
+    // splat param changed, which is not present in match.path
+    // e.g. /files/images/avatar.jpg -> files/finances.xls
+    (currentMatch.route.path?.endsWith("*") &&
+      currentMatch.params["*"] !== match.params["*"])
+  );
+}
+
 function shouldRevalidateLoader(
   currentLocation: string | Location,
   currentMatch: AgnosticDataRouteMatch,
@@ -2218,12 +2237,7 @@ function shouldRevalidateLoader(
   // Note that fetchers always provide the same current/next locations so the
   // URL-based checks here don't apply to fetcher shouldRevalidate calls
   let defaultShouldRevalidate =
-    // param change for this match, /users/123 -> /users/456
-    currentMatch.pathname !== match.pathname ||
-    // splat param changed, which is not present in match.path
-    // e.g. /files/images/avatar.jpg -> files/finances.xls
-    (currentMatch.route.path?.endsWith("*") &&
-      currentMatch.params["*"] !== match.params["*"]) ||
+    isNewRouteInstance(currentMatch, match) ||
     // Clicked the same link, resubmitted a GET form
     currentUrl.toString() === nextUrl.toString() ||
     // Search params affect all loaders
@@ -2629,6 +2643,7 @@ function isRedirectResult(result?: DataResult): result is RedirectResult {
 }
 
 async function resolveDeferredResults(
+  currentMatches: AgnosticDataRouteMatch[],
   matchesToLoad: AgnosticDataRouteMatch[],
   results: DataResult[],
   signal: AbortSignal,
@@ -2637,11 +2652,16 @@ async function resolveDeferredResults(
 ) {
   for (let index = 0; index < results.length; index++) {
     let result = results[index];
-    let id = matchesToLoad[index].route.id;
-    if (
-      isDeferredResult(result) &&
-      (isFetcher || currentLoaderData?.[id] !== undefined)
-    ) {
+    let match = matchesToLoad[index];
+    let currentMatch = currentMatches.find(
+      (m) => m.route.id === match.route.id
+    );
+    let isRevalidatingLoader =
+      currentMatch != null &&
+      !isNewRouteInstance(currentMatch, match) &&
+      currentLoaderData?.[match.route.id] !== undefined;
+
+    if (isDeferredResult(result) && (isFetcher || isRevalidatingLoader)) {
       // Note: we do not have to touch activeDeferreds here since we race them
       // against the signal in resolveDeferredData and they'll get aborted
       // there if needed
