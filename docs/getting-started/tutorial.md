@@ -1178,7 +1178,7 @@ Add a form, add an action, React Router does the rest.
 
 Just for kicks, throw an error in the destroy action:
 
-```jsx filename=src/routes/destroy.jsx
+```jsx filename=src/routes/destroy.jsx lines=[2]
 export async function action({ params }) {
   throw new Error("oh dang!");
   await deleteContact(params.contactId);
@@ -1829,7 +1829,7 @@ Whenever you have an expected error case in a loader or action–like the data n
 
 👉 **Throw a 404 response in the loader**
 
-```jsx filename=src/routes/contact.jsx lines lines=[4]
+```jsx filename=src/routes/contact.jsx lines lines=[3-8]
 export async function loader({ params }) {
   const contact = await getContact(params.contactId);
   if (!contact) {
