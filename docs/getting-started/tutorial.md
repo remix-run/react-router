@@ -321,6 +321,7 @@ export default function Contact() {
 }
 
 function Favorite({ contact }) {
+  // yes, this is a `let` for later
   let favorite = contact.favorite;
   return (
     <Form method="post">
@@ -586,7 +587,7 @@ We'll create new contacts by exporting an `action` in our root route, wiring it 
 
 👉 **Create the action and change `<form>` to `<Form>`**
 
-```jsx filename=src/routes/root.jsx lines=[5,9-11,22-24]
+```jsx filename=src/routes/root.jsx lines=[5,7,9-11,22-24]
 import {
   Outlet,
   Link,
@@ -608,6 +609,7 @@ export default function Root() {
       <div id="sidebar">
         <h1>React Router Contacts</h1>
         <div>
+          {/* other code */}
           <Form method="post">
             <button type="submit">New</button>
           </Form>
@@ -743,6 +745,11 @@ Nothing we haven't seen before, feel free to copy/paste:
 
 ```jsx filename=src/routes/edit.jsx
 import { Form, useLoaderData } from "react-router-dom";
+import { getContact } from "../contacts";
+
+export function loader({ params }) {
+  return getContact(params.contactId);
+}
 
 export default function Edit() {
   const contact = useLoaderData();
@@ -835,10 +842,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 ```
 
 We want it to be rendered in the root route's outlet, so we made it a sibling to the existing child route.
-
-> 🤨 Is that `loader={contactLoader}` for both route's?
-
-Yep. Both routes need the contact, and both use the same param name (`:contactId`), so they can share the same loader. Kinda cool.
 
 Alright, clicking the "Edit" button gives us this new UI:
 
@@ -1085,6 +1088,8 @@ In our case, we add a `"loading"` class to the main part of the app if we're not
 
 <img class="tutorial" loading="lazy" src="/_docs/tutorial/16.webp" />
 
+Note that our data model (`src/contact.js`) has a clientside cache, so navigating to the same contact is fast the second time. This behavior is _not_ React Router, it will re-load data for changing routes no matter if you've been there before or not. It does, however, avoid calling the loaders for _unchanging_ routes (like the list) during a navigation.
+
 ## Deleting Records
 
 If we review code in the contact route, we can find the delete button looks like this:
@@ -1224,7 +1229,7 @@ Feel free to copy paste, nothing special here.
 ```jsx filename=src/routes/index.jsx
 export default function Index() {
   return (
-    <p id="index">
+    <p id="zero-state">
       This is a demo for React Router.
       <br />
       Check out{" "}
@@ -1371,7 +1376,7 @@ Let's use client side routing to submit this form and filter the list in our exi
 
 👉 **Filter the list if there are URLSearchParams**
 
-```jsx filename=src/routes/root.jsx lines=[2-4]
+```jsx filename=src/routes/root.jsx lines=[1,2-4]
 export async function loader({ request }) {
   const url = new URL(request.url);
   const q = url.searchParams.get("q");

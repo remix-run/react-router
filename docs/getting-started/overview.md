@@ -5,6 +5,8 @@ order: 1
 
 # Feature Overview
 
+<docs-info>This doc is a WIP</docs-info>
+
 ## Client Side Routing
 
 React Router enables "client side routing".
@@ -15,7 +17,7 @@ Client side routing allows your app to update the URL from a link click without 
 
 This enables faster user experiences because the browser doesn't need to request an entirely new document or re-evaluate CSS and JavaScript assets for the next page. It also enables more dynamic user experiences with things like animation.
 
-Client side routing is enabled by rendering a `Router` and linking to pages with `Link`:
+Client side routing is enabled by rendering a `Router` and linking/submitting to pages with `Link` and `<Form>`:
 
 ```jsx [10,16]
 import React from "react";
@@ -44,21 +46,17 @@ createRoot(document.getElementById("root")).render(
 
 ## Nested Routes
 
-React Router's nested routes were inspired by the routing system in Ember.js circa 2014. The Ember team realized nearly every time you had nested URLs, you also had nested UI layouts, and each layout had its own data dependencies. React Router embraces that convention, too.
-
-A "nested URL" is a URL with multiple segments (the stuff between the `/`):
-
-```
-https://example.com/projects/145242/documents/826247
-```
-
-This URL has
+Nested Routing is the general idea of coupling segments of the URL to component hierarchy and data. React Router's nested routes were inspired by the routing system in Ember.js circa 2014. The Ember team realized that in nearly every case, segments of the URL determine:
 
 - The layouts to render on the page
 - The code split JavaScript bundles to load
 - The data dependencies of those layouts
 
+This [visualization](https://remix.run/_docs/routing) might be helpful.
+
 ## Dynamic Segments
+
+## Ranked Route Matching
 
 ## Active Links
 
