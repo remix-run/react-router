@@ -52,7 +52,7 @@ export function createRequestHandler({
     next: express.NextFunction
   ) => {
     try {
-      let request = createRemixRequest(req);
+      let request = createRemixRequest(req, res);
       let loadContext = getLoadContext?.(req, res);
 
       let response = (await handleRequest(
@@ -89,15 +89,16 @@ export function createRemixHeaders(
   return headers;
 }
 
-export function createRemixRequest(req: express.Request): NodeRequest {
+export function createRemixRequest(
+  req: express.Request,
+  res: express.Response
+): NodeRequest {
   let origin = `${req.protocol}://${req.get("host")}`;
   let url = new URL(req.url, origin);
 
+  // Abort action/loaders once we can no longer write a response
   let controller = new AbortController();
-
-  req.on("close", () => {
-    controller.abort();
-  });
+  res.on("close", () => controller.abort());
 
   let init: NodeRequestInit = {
     method: req.method,

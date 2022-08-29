@@ -1,6 +1,6 @@
 import express from "express";
 import supertest from "supertest";
-import { createRequest } from "node-mocks-http";
+import { createRequest, createResponse } from "node-mocks-http";
 import {
   createRequestHandler as createRemixRequestHandler,
   Response as NodeResponse,
@@ -234,8 +234,10 @@ describe("express createRemixRequest", () => {
         Host: "localhost:3000",
       },
     });
+    let expressResponse = createResponse();
 
-    expect(createRemixRequest(expressRequest)).toMatchInlineSnapshot(`
+    expect(createRemixRequest(expressRequest, expressResponse))
+      .toMatchInlineSnapshot(`
       NodeRequest {
         "agent": undefined,
         "compress": true,
