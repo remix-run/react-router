@@ -980,7 +980,6 @@ export class DeferredData {
           }
         });
       });
-
     }
     return aborted;
   }
