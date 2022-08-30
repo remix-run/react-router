@@ -7637,6 +7637,17 @@ describe("a router", () => {
           lazy3: expect.trackedPromise("3"),
         },
       });
+
+      // Should proxy values through
+      expect({
+        lazy1: await t.router.state.loaderData.lazy.lazy1,
+        lazy2: await t.router.state.loaderData.lazy.lazy2,
+        lazy3: await t.router.state.loaderData.lazy.lazy3,
+      }).toEqual({
+        lazy1: "Immediate data",
+        lazy2: "2",
+        lazy3: "3",
+      });
     });
 
     it("should cancel outstanding deferreds on a new navigation", async () => {
@@ -7810,7 +7821,16 @@ describe("a router", () => {
         })
       );
 
-      await dfd.reject(new Error("Kaboom!"));
+      // should proxy the error through
+      let caughtError: string | null = null;
+      try {
+        dfd.reject(new Error("Kaboom!"));
+        await t.router.state.loaderData.lazy.lazy;
+      } catch (e) {
+        caughtError = e.message;
+      }
+
+      expect(caughtError).toBe("Kaboom!");
       expect(t.router.state.loaderData).toEqual({
         lazy: {
           critical: "1",
@@ -8941,7 +8961,11 @@ describe("a router", () => {
           lazy: dfd.promise,
         })
       );
-      await dfd.reject(new Error("Kaboom!")).catch(() => {});
+
+      try {
+        await dfd.reject(new Error("Kaboom!"));
+      } catch (e) {}
+
       expect(t.router.state.errors).toMatchObject({
         index: new Error("Kaboom!"),
       });

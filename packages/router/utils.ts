@@ -940,7 +940,7 @@ export class DeferredData {
     key: string | number,
     error: unknown,
     data?: unknown
-  ): void {
+  ): unknown {
     if (this.cancelled) {
       return;
     }
@@ -948,11 +948,13 @@ export class DeferredData {
 
     if (error) {
       Object.defineProperty(promise, "_error", { get: () => error });
-    } else {
-      Object.defineProperty(promise, "_data", { get: () => data });
+      this.subscriber?.(false);
+      return Promise.reject(error);
     }
 
+    Object.defineProperty(promise, "_data", { get: () => data });
     this.subscriber?.(false);
+    return data;
   }
 
   subscribe(fn: (aborted: boolean) => void) {
@@ -978,6 +980,7 @@ export class DeferredData {
           }
         });
       });
+
     }
     return aborted;
   }
@@ -986,19 +989,19 @@ export class DeferredData {
     return this.pendingKeys.size === 0;
   }
 
-  get unwrappedData() {
+  async unwrapData() {
     invariant(
       this.data !== null && this.done,
       "Can only unwrap data on initialized and settled deferreds"
     );
 
-    return Object.entries(this.data).reduce(
-      (acc, [key, value]) =>
-        Object.assign(acc, {
-          [key]: unwrapTrackedPromise(value),
-        }),
-      {}
-    );
+    let unwrapped: Record<string, unknown> = {};
+
+    for (let [key, value] of Object.entries(this.data)) {
+      unwrapped[key] = isTrackedPromise(value) ? await value : value;
+    }
+
+    return unwrapped;
   }
 }
 
@@ -1006,17 +1009,6 @@ function isTrackedPromise(value: any): value is TrackedPromise {
   return (
     value instanceof Promise && (value as TrackedPromise)._tracked === true
   );
-}
-
-function unwrapTrackedPromise(value: any) {
-  if (!isTrackedPromise(value)) {
-    return value;
-  }
-
-  if (value._error) {
-    throw value._error;
-  }
-  return value._data;
 }
 
 export function defer(data: Record<string, unknown>) {
