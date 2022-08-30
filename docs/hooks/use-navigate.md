@@ -4,8 +4,26 @@ title: useNavigate
 
 # `useNavigate`
 
-<details>
-  <summary>Type declaration</summary>
+<docs-warning>It's usually better to use [`redirect`][redirect] in loaders and actions than this hook</docs-warning>
+
+The `useNavigate` hook returns a function that lets you navigate programmatically, for example in an effect:
+
+```tsx
+import { useNavigate } from "react-router-dom";
+
+function useLogoutTimer() {
+  const userIsInactive = useFakeInactiveUser();
+
+  useEffect(() => {
+    if (userIsInactive) {
+      fake.logout();
+      navigate("/session-timed-out");
+    }
+  }, [userIsInactive]);
+}
+```
+
+## Type Declaration
 
 ```tsx
 declare function useNavigate(): NavigateFunction;
@@ -19,27 +37,9 @@ interface NavigateFunction {
 }
 ```
 
-</details>
-
-The `useNavigate` hook returns a function that lets you navigate programmatically, for example after a form is submitted.
-
-```tsx
-import { useNavigate } from "react-router-dom";
-
-function SignupForm() {
-  let navigate = useNavigate();
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    await submitForm(event.target);
-    navigate("../success", { replace: true });
-  }
-
-  return <form onSubmit={handleSubmit}>{/* ... */}</form>;
-}
-```
-
 The `navigate` function has two signatures:
 
 - Either pass a `To` value (same type as `<Link to>`) with an optional second `{ replace, state }` arg or
 - Pass the delta you want to go in the history stack. For example, `navigate(-1)` is equivalent to hitting the back button.
+
+[redirect]: ../fetch/redirect
