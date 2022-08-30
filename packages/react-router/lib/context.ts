@@ -65,7 +65,7 @@ export type RelativeRoutingType = "route" | "path";
 export interface NavigateOptions {
   replace?: boolean;
   state?: any;
-  resetScroll?: boolean;
+  preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
 }
 

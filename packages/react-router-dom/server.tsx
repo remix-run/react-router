@@ -192,7 +192,7 @@ function getStatelessRemixRouter(
         initialized: true,
         navigation: IDLE_NAVIGATION,
         restoreScrollPosition: null,
-        resetScrollPosition: true,
+        preventScrollReset: false,
         revalidation: "idle" as RevalidationState,
         fetchers: new Map(),
       };

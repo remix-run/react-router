@@ -88,12 +88,15 @@ export function DataRouterProvider({
       createHref: router.createHref,
       go: (n) => router.navigate(n),
       push: (to, state, opts) =>
-        router.navigate(to, { state, resetScroll: opts?.resetScroll }),
+        router.navigate(to, {
+          state,
+          preventScrollReset: opts?.preventScrollReset,
+        }),
       replace: (to, state, opts) =>
         router.navigate(to, {
           replace: true,
           state,
-          resetScroll: opts?.resetScroll,
+          preventScrollReset: opts?.preventScrollReset,
         }),
     };
   }, [router]);
