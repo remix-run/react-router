@@ -395,7 +395,7 @@ export interface LinkProps
   reloadDocument?: boolean;
   replace?: boolean;
   state?: any;
-  resetScroll?: boolean;
+  preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   to: To;
 }
@@ -413,7 +413,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       state,
       target,
       to,
-      resetScroll,
+      preventScrollReset,
       ...rest
     },
     ref
@@ -423,7 +423,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       replace,
       state,
       target,
-      resetScroll,
+      preventScrollReset,
       relative,
     });
     function handleClick(
@@ -706,13 +706,13 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     target,
     replace: replaceProp,
     state,
-    resetScroll,
+    preventScrollReset,
     relative,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
-    resetScroll?: boolean;
+    preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
@@ -732,7 +732,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             ? replaceProp
             : createPath(location) === createPath(path);
 
-        navigate(to, { replace, state, resetScroll, relative });
+        navigate(to, { replace, state, preventScrollReset, relative });
       }
     },
     [
@@ -743,7 +743,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       state,
       target,
       to,
-      resetScroll,
+      preventScrollReset,
       relative,
     ]
   );
@@ -1053,7 +1053,7 @@ function useScrollRestoration({
     router != null && state != null,
     "useScrollRestoration must be used within a DataRouterStateContext"
   );
-  let { restoreScrollPosition, resetScrollPosition } = state;
+  let { restoreScrollPosition, preventScrollReset } = state;
 
   // Trigger manual scroll restoration while we're active
   React.useEffect(() => {
@@ -1125,13 +1125,13 @@ function useScrollRestoration({
     }
 
     // Opt out of scroll reset if this link requested it
-    if (resetScrollPosition === false) {
+    if (preventScrollReset === true) {
       return;
     }
 
     // otherwise go to the top on new locations
     window.scrollTo(0, 0);
-  }, [location, restoreScrollPosition, resetScrollPosition]);
+  }, [location, restoreScrollPosition, preventScrollReset]);
 }
 
 function useBeforeUnload(callback: () => any): void {

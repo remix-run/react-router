@@ -45,8 +45,8 @@ interface RouterState {
   // should not restore,m or null if we don't have a saved position
   // Note: must be enabled via router.enableScrollRestoration()
   restoreScrollPosition: number | false | null;
-  // Proxied `resetScroll` value passed to router.navigate() (default true)
-  resetScrollPosition: boolean;
+  // Proxied `preventScrollReset` value passed to router.navigate() (default false)
+  preventScrollReset: boolean;
   // Data from the loaders for the current matches
   loaderData: RouteData;
   // Data from the action for the current matches

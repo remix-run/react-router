@@ -96,10 +96,10 @@ Or you may want to only use the pathname for some paths, and use the normal beha
 When navigation creates new scroll keys, the scroll position is reset to the top of the page. You can prevent the "scroll to top" behavior from your links:
 
 ```tsx
-<Link resetScroll={false} />
+<Link preventScrollReset={true} />
 ```
 
-See also: [`<Link resetScroll>`][resetscroll]
+See also: [`<Link preventScrollReset>`][preventscrollreset]
 
 ## Scroll Flashing
 
@@ -108,4 +108,4 @@ Without a server side rendering framework like [Remix][remix], you may experienc
 Server Rendering frameworks can prevent scroll flashing because they can send a fully formed document on the initial load, so scroll can be restored when the page first renders.
 
 [remix]: https://remix.run
-[resetscroll]: ../components/link#resetscroll
+[preventscrollreset]: ../components/link#preventscrollreset

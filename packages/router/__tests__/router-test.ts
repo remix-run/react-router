@@ -893,7 +893,7 @@ describe("a router", () => {
           location: undefined,
           state: "idle",
         },
-        resetScrollPosition: true,
+        preventScrollReset: false,
         restoreScrollPosition: null,
         revalidation: "idle",
         fetchers: new Map(),
@@ -4840,33 +4840,35 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = {};
+
+      // Simulate scrolling to 100 on /
       let activeScrollPosition = 100;
       t.router.enableScrollRestoration(positions, () => activeScrollPosition);
 
-      // No restoration on first click to tasks
+      // No restoration on first click to /tasks
       let nav1 = await t.navigate("/tasks");
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       // Simulate scrolling down on /tasks
       activeScrollPosition = 200;
 
-      // Restore on pop to previous location
+      // Restore on pop back to /
       let nav2 = await t.navigate(-1);
       expect(t.router.state.restoreScrollPosition).toBe(null);
       await nav2.loaders.index.resolve("INDEX");
       expect(t.router.state.restoreScrollPosition).toBe(100);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
-      // Forward to /tasks
+      // Restore on pop forward to /tasks
       let nav3 = await t.navigate(1);
       await nav3.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(200);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
     });
 
     it("restores scroll using custom key", async () => {
@@ -4882,7 +4884,7 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = { "/tasks": 100 };
       let activeScrollPosition = 0;
@@ -4895,7 +4897,7 @@ describe("a router", () => {
       let nav1 = await t.navigate("/tasks");
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(100);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
     });
 
     it("does not restore scroll on submissions", async () => {
@@ -4911,7 +4913,7 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = { "/tasks": 100 };
       let activeScrollPosition = 0;
@@ -4929,7 +4931,7 @@ describe("a router", () => {
       await nav1.loaders.root.resolve("ROOT");
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
     });
 
     it("does not reset scroll", async () => {
@@ -4945,18 +4947,16 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = {};
       let activeScrollPosition = 0;
       t.router.enableScrollRestoration(positions, () => activeScrollPosition);
 
-      let nav1 = await t.navigate("/tasks", {
-        resetScroll: false,
-      });
+      let nav1 = await t.navigate("/tasks", { preventScrollReset: true });
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(false);
+      expect(t.router.state.preventScrollReset).toBe(true);
     });
   });
 

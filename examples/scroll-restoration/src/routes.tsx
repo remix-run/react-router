@@ -94,7 +94,7 @@ export function Layout() {
                   </Link>
                 </li>
                 <li className="navitem">
-                  <Link to="/restore-by-key" resetScroll={false}>
+                  <Link to="/restore-by-key" preventScrollReset>
                     This link will not scroll to the top
                   </Link>
                 </li>
