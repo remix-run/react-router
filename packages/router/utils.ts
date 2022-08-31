@@ -911,7 +911,7 @@ export class DeferredData {
       "defer() only accepts plain objects"
     );
 
-    // Setup an AbortController + Promise we can race against to exit earlY
+    // Set up an AbortController + Promise we can race against to exit early
     // cancellation
     let reject: (e: AbortedDeferredError) => void;
     this.abortPromise = new Promise((_, r) => (reject = r));
