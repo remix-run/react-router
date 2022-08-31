@@ -7639,15 +7639,10 @@ describe("a router", () => {
       });
 
       // Should proxy values through
-      expect({
-        lazy1: await t.router.state.loaderData.lazy.lazy1,
-        lazy2: await t.router.state.loaderData.lazy.lazy2,
-        lazy3: await t.router.state.loaderData.lazy.lazy3,
-      }).toEqual({
-        lazy1: "Immediate data",
-        lazy2: "2",
-        lazy3: "3",
-      });
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy1).resolves.toBe("Immediate data");
+      await expect(data.lazy2).resolves.toBe("2");
+      await expect(data.lazy3).resolves.toBe("3");
     });
 
     it("should cancel outstanding deferreds on a new navigation", async () => {
@@ -7703,6 +7698,11 @@ describe("a router", () => {
           lazy2: expect.trackedPromise(),
         },
       });
+
+      // Cancelled promises should reject
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy1).rejects.toThrowError("Deferred data aborted");
+      await expect(data.lazy2).rejects.toThrowError("Deferred data aborted");
 
       await B.loaders.index.resolve("INDEX*");
       expect(t.router.state.loaderData).toEqual({
@@ -7821,22 +7821,17 @@ describe("a router", () => {
         })
       );
 
-      // should proxy the error through
-      let caughtError: string | null = null;
-      try {
-        dfd.reject(new Error("Kaboom!"));
-        await t.router.state.loaderData.lazy.lazy;
-      } catch (e) {
-        caughtError = e.message;
-      }
-
-      expect(caughtError).toBe("Kaboom!");
+      await dfd.reject(new Error("Kaboom!"));
       expect(t.router.state.loaderData).toEqual({
         lazy: {
           critical: "1",
           lazy: expect.trackedPromise(undefined, new Error("Kaboom!")),
         },
       });
+
+      // should proxy the error through
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy).rejects.toEqual(new Error("Kaboom!"));
     });
 
     it("should cancel all outstanding deferreds on router.revalidate()", async () => {
@@ -8962,9 +8957,7 @@ describe("a router", () => {
         })
       );
 
-      try {
-        await dfd.reject(new Error("Kaboom!"));
-      } catch (e) {}
+      await dfd.reject(new Error("Kaboom!"));
 
       expect(t.router.state.errors).toMatchObject({
         index: new Error("Kaboom!"),

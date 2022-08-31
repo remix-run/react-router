@@ -2688,7 +2688,7 @@ async function resolveDeferredData(
     try {
       return {
         type: ResultType.data,
-        data: await result.deferredData.unwrapData(),
+        data: result.deferredData.unwrappedData,
       };
     } catch (e) {
       // Handle any TrackedPromise._error values encountered while unwrapping

@@ -931,6 +931,11 @@ export class DeferredData {
       (data) => this.onSettle(promise, key, null, data as unknown),
       (error) => this.onSettle(promise, key, error as unknown)
     );
+
+    // Register rejection listeners to avoid uncaught promise rejections on
+    // errors or aborted deferred values
+    promise.catch(() => {});
+
     Object.defineProperty(promise, "_tracked", { get: () => true });
     return promise;
   }
@@ -942,7 +947,7 @@ export class DeferredData {
     data?: unknown
   ): unknown {
     if (this.cancelled) {
-      return;
+      return Promise.reject(new Error("Deferred data aborted"));
     }
     this.pendingKeys.delete(key);
 
@@ -988,19 +993,19 @@ export class DeferredData {
     return this.pendingKeys.size === 0;
   }
 
-  async unwrapData() {
+  get unwrappedData() {
     invariant(
       this.data !== null && this.done,
       "Can only unwrap data on initialized and settled deferreds"
     );
 
-    let unwrapped: Record<string, unknown> = {};
-
-    for (let [key, value] of Object.entries(this.data)) {
-      unwrapped[key] = isTrackedPromise(value) ? await value : value;
-    }
-
-    return unwrapped;
+    return Object.entries(this.data).reduce(
+      (acc, [key, value]) =>
+        Object.assign(acc, {
+          [key]: unwrapTrackedPromise(value),
+        }),
+      {}
+    );
   }
 }
 
@@ -1008,6 +1013,17 @@ function isTrackedPromise(value: any): value is TrackedPromise {
   return (
     value instanceof Promise && (value as TrackedPromise)._tracked === true
   );
+}
+
+function unwrapTrackedPromise(value: any) {
+  if (!isTrackedPromise(value)) {
+    return value;
+  }
+
+  if (value._error) {
+    throw value._error;
+  }
+  return value._data;
 }
 
 export function defer(data: Record<string, unknown>) {
