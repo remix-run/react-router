@@ -35,6 +35,7 @@ export type {
 } from "./utils";
 
 export {
+  AbortedDeferredError,
   ErrorResponse,
   defer,
   generatePath,

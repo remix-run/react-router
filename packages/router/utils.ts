@@ -895,6 +895,8 @@ export interface TrackedPromise extends Promise<any> {
   _error?: any;
 }
 
+export class AbortedDeferredError extends Error {}
+
 export class DeferredData {
   private pendingKeys: Set<string | number> = new Set<string | number>();
   private cancelled: boolean = false;
@@ -947,7 +949,7 @@ export class DeferredData {
     data?: unknown
   ): unknown {
     if (this.cancelled) {
-      return Promise.reject(new Error("Deferred data aborted"));
+      return Promise.reject(new AbortedDeferredError("Deferred data aborted"));
     }
     this.pendingKeys.delete(key);
 

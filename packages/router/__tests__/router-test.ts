@@ -28,7 +28,7 @@ import {
 } from "../index";
 
 // Private API
-import { TrackedPromise } from "../utils";
+import { AbortedDeferredError, TrackedPromise } from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
@@ -2948,7 +2948,7 @@ describe("a router", () => {
         expect(t.router.state.errors).toBe(null);
         expect(A.loaders.parent.stub.mock.calls.length).toBe(1); // called again for revalidation
         expect(A.loaders.child.stub.mock.calls.length).toBe(1); // called because it's above error
-        expect(A.loaders.grandchild.stub.mock.calls.length).toBe(0); // dont call due to error
+        expect(A.loaders.grandchild.stub.mock.calls.length).toBe(0); // don't call due to error
         await A.loaders.parent.resolve("PARENT DATA*");
         await A.loaders.child.resolve("CHILD DATA");
         expect(t.router.state.loaderData).toEqual({
@@ -7701,6 +7701,8 @@ describe("a router", () => {
 
       // Cancelled promises should reject
       let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy1).rejects.toBeInstanceOf(AbortedDeferredError);
+      await expect(data.lazy2).rejects.toBeInstanceOf(AbortedDeferredError);
       await expect(data.lazy1).rejects.toThrowError("Deferred data aborted");
       await expect(data.lazy2).rejects.toThrowError("Deferred data aborted");
 
@@ -8956,9 +8958,7 @@ describe("a router", () => {
           lazy: dfd.promise,
         })
       );
-
       await dfd.reject(new Error("Kaboom!"));
-
       expect(t.router.state.errors).toMatchObject({
         index: new Error("Kaboom!"),
       });
