@@ -1,5 +1,13 @@
 # react-router
 
+## 6.4.0-pre.14
+
+### Patch Changes
+
+- fix: rename resetScroll -> preventScrollReset (#9199)
+- Updated dependencies
+  - @remix-run/router@0.2.0-pre.9
+
 ## 6.4.0-pre.13
 
 ### Patch Changes
