@@ -4,10 +4,8 @@
 
 ### Patch Changes
 
-- a04ab758: fix: rename resetScroll -> preventScrollReset (#9199)
-- Updated dependencies [a04ab758]
-- Updated dependencies [26e8b8e7]
-- Updated dependencies [3e99fb22]
+- fix: rename resetScroll -> preventScrollReset (#9199)
+- Updated dependencies
   - @remix-run/router@0.2.0-pre.9
 
 ## 6.4.0-pre.13
@@ -142,7 +140,7 @@
         <p>Critical Data: {data.critical}</p>
         <React.Suspense fallback={<p>Loading...</p>}>
           <Await resolve={data.lazy} errorElement={<RenderError />}>
-            {data => <p>{data}</p>}
+            {(data) => <p>{data}</p>}
           </Await>
         </React.Suspense>
       </>

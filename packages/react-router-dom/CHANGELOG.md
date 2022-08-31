@@ -4,8 +4,8 @@
 
 ### Patch Changes
 
-- a04ab758: fix: rename resetScroll -> preventScrollReset (#9199)
-- Updated dependencies [a04ab758]
+- fix: rename resetScroll -> preventScrollReset (#9199)
+- Updated dependencies
   - react-router@6.4.0-pre.14
 
 ## 6.4.0-pre.13
