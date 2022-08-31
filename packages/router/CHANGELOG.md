@@ -1,5 +1,13 @@
 # @remix-run/router
 
+## 0.2.0-pre.9
+
+### Patch Changes
+
+- fix: rename resetScroll -> preventScrollReset (#9199)
+- fix: Await should fallback on route params navigations (#9181)
+- fix: proxy defer resolve/reject values through tracked promises (#9200)
+
 ## 0.2.0-pre.8
 
 ### Patch Changes
