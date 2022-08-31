@@ -895,9 +895,13 @@ export interface TrackedPromise extends Promise<any> {
   _error?: any;
 }
 
+export class AbortedDeferredError extends Error {}
+
 export class DeferredData {
   private pendingKeys: Set<string | number> = new Set<string | number>();
-  private cancelled: boolean = false;
+  private controller: AbortController;
+  private abortPromise: Promise<void>;
+  private unlistenAbortSignal: () => void;
   private subscriber?: (aborted: boolean) => void = undefined;
   data: Record<string, unknown>;
 
@@ -906,6 +910,18 @@ export class DeferredData {
       data && typeof data === "object" && !Array.isArray(data),
       "defer() only accepts plain objects"
     );
+
+    // Set up an AbortController + Promise we can race against to exit early
+    // cancellation
+    let reject: (e: AbortedDeferredError) => void;
+    this.abortPromise = new Promise((_, r) => (reject = r));
+    this.controller = new AbortController();
+    let onAbort = () =>
+      reject(new AbortedDeferredError("Deferred data aborted"));
+    this.unlistenAbortSignal = () =>
+      this.controller.signal.removeEventListener("abort", onAbort);
+    this.controller.signal.addEventListener("abort", onAbort);
+
     this.data = Object.entries(data).reduce(
       (acc, [key, value]) =>
         Object.assign(acc, {
@@ -927,10 +943,15 @@ export class DeferredData {
 
     // We store a little wrapper promise that will be extended with
     // _data/_error props upon resolve/reject
-    let promise: TrackedPromise = value.then(
+    let promise: TrackedPromise = Promise.race([value, this.abortPromise]).then(
       (data) => this.onSettle(promise, key, null, data as unknown),
       (error) => this.onSettle(promise, key, error as unknown)
     );
+
+    // Register rejection listeners to avoid uncaught promise rejections on
+    // errors or aborted deferred values
+    promise.catch(() => {});
+
     Object.defineProperty(promise, "_tracked", { get: () => true });
     return promise;
   }
@@ -940,19 +961,31 @@ export class DeferredData {
     key: string | number,
     error: unknown,
     data?: unknown
-  ): void {
-    if (this.cancelled) {
-      return;
+  ): unknown {
+    if (
+      this.controller.signal.aborted &&
+      error instanceof AbortedDeferredError
+    ) {
+      this.unlistenAbortSignal();
+      return Promise.reject(error);
     }
+
     this.pendingKeys.delete(key);
+
+    if (this.done) {
+      // Nothing left to abort!
+      this.unlistenAbortSignal();
+    }
 
     if (error) {
       Object.defineProperty(promise, "_error", { get: () => error });
-    } else {
-      Object.defineProperty(promise, "_data", { get: () => data });
+      this.subscriber?.(false);
+      return Promise.reject(error);
     }
 
+    Object.defineProperty(promise, "_data", { get: () => data });
     this.subscriber?.(false);
+    return data;
   }
 
   subscribe(fn: (aborted: boolean) => void) {
@@ -960,7 +993,7 @@ export class DeferredData {
   }
 
   cancel() {
-    this.cancelled = true;
+    this.controller.abort();
     this.pendingKeys.forEach((v, k) => this.pendingKeys.delete(k));
     this.subscriber?.(true);
   }

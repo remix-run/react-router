@@ -28,7 +28,7 @@ import {
 } from "../index";
 
 // Private API
-import { TrackedPromise } from "../utils";
+import { AbortedDeferredError, TrackedPromise } from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
@@ -2948,7 +2948,7 @@ describe("a router", () => {
         expect(t.router.state.errors).toBe(null);
         expect(A.loaders.parent.stub.mock.calls.length).toBe(1); // called again for revalidation
         expect(A.loaders.child.stub.mock.calls.length).toBe(1); // called because it's above error
-        expect(A.loaders.grandchild.stub.mock.calls.length).toBe(0); // dont call due to error
+        expect(A.loaders.grandchild.stub.mock.calls.length).toBe(0); // don't call due to error
         await A.loaders.parent.resolve("PARENT DATA*");
         await A.loaders.child.resolve("CHILD DATA");
         expect(t.router.state.loaderData).toEqual({
@@ -7637,6 +7637,12 @@ describe("a router", () => {
           lazy3: expect.trackedPromise("3"),
         },
       });
+
+      // Should proxy values through
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy1).resolves.toBe("Immediate data");
+      await expect(data.lazy2).resolves.toBe("2");
+      await expect(data.lazy3).resolves.toBe("3");
     });
 
     it("should cancel outstanding deferreds on a new navigation", async () => {
@@ -7670,7 +7676,17 @@ describe("a router", () => {
       );
 
       // Interrupt pending deferred's from /lazy navigation
-      let B = await t.navigate("/");
+      let navPromise = t.navigate("/");
+
+      // Cancelled promises should reject immediately
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy1).rejects.toBeInstanceOf(AbortedDeferredError);
+      await expect(data.lazy2).rejects.toBeInstanceOf(AbortedDeferredError);
+      await expect(data.lazy1).rejects.toThrowError("Deferred data aborted");
+      await expect(data.lazy2).rejects.toThrowError("Deferred data aborted");
+
+      let B = await navPromise;
+
       // During navigation - deferreds remain as promises
       expect(t.router.state.loaderData).toEqual({
         lazy: {
@@ -7817,6 +7833,10 @@ describe("a router", () => {
           lazy: expect.trackedPromise(undefined, new Error("Kaboom!")),
         },
       });
+
+      // should proxy the error through
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy).rejects.toEqual(new Error("Kaboom!"));
     });
 
     it("should cancel all outstanding deferreds on router.revalidate()", async () => {
@@ -8941,7 +8961,7 @@ describe("a router", () => {
           lazy: dfd.promise,
         })
       );
-      await dfd.reject(new Error("Kaboom!")).catch(() => {});
+      await dfd.reject(new Error("Kaboom!"));
       expect(t.router.state.errors).toMatchObject({
         index: new Error("Kaboom!"),
       });
