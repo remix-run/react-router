@@ -7676,7 +7676,17 @@ describe("a router", () => {
       );
 
       // Interrupt pending deferred's from /lazy navigation
-      let B = await t.navigate("/");
+      let navPromise = t.navigate("/");
+
+      // Cancelled promises should reject immediately
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy1).rejects.toBeInstanceOf(AbortedDeferredError);
+      await expect(data.lazy2).rejects.toBeInstanceOf(AbortedDeferredError);
+      await expect(data.lazy1).rejects.toThrowError("Deferred data aborted");
+      await expect(data.lazy2).rejects.toThrowError("Deferred data aborted");
+
+      let B = await navPromise;
+
       // During navigation - deferreds remain as promises
       expect(t.router.state.loaderData).toEqual({
         lazy: {
@@ -7698,13 +7708,6 @@ describe("a router", () => {
           lazy2: expect.trackedPromise(),
         },
       });
-
-      // Cancelled promises should reject
-      let data = t.router.state.loaderData.lazy;
-      await expect(data.lazy1).rejects.toBeInstanceOf(AbortedDeferredError);
-      await expect(data.lazy2).rejects.toBeInstanceOf(AbortedDeferredError);
-      await expect(data.lazy1).rejects.toThrowError("Deferred data aborted");
-      await expect(data.lazy2).rejects.toThrowError("Deferred data aborted");
 
       await B.loaders.index.resolve("INDEX*");
       expect(t.router.state.loaderData).toEqual({
