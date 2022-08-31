@@ -1,5 +1,13 @@
 # @remix-run/router
 
+## 0.2.0-pre.9
+
+### Patch Changes
+
+- a04ab758: fix: rename resetScroll -> preventScrollReset (#9199)
+- 26e8b8e7: fix: Await should fallback on route params navigations (#9181)
+- 3e99fb22: fix: proxy defer resolve/reject values through tracked promises (#9200)
+
 ## 0.2.0-pre.8
 
 ### Patch Changes
@@ -93,8 +101,8 @@
   // Otherwise, construct a Response from the raw data (assuming json here)
   return new Response(JSON.stringify(data), {
     headers: {
-      "Content-Type": "application/json; charset=utf-8",
-    },
+      "Content-Type": "application/json; charset=utf-8"
+    }
   });
   ```
 
