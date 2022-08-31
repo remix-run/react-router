@@ -115,6 +115,7 @@ export type {
   To,
 } from "react-router";
 export {
+  AbortedDeferredError,
   Await,
   DataMemoryRouter,
   MemoryRouter,
