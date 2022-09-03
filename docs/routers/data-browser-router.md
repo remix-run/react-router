@@ -18,7 +18,7 @@ import Root from "./routes/root";
 ReactDOM.render(
   <DataBrowserRouter>
     <Route element={<Root />} loader={Root.loader}>
-      <Route path="team" element={<Team />} loader={Team.loader}>
+      <Route path="team" element={<Team />} loader={Team.loader} />
     </Route>
   </DataBrowserRouter>,
   root
