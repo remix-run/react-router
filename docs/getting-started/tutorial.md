@@ -1591,7 +1591,7 @@ export default function Root() {
     new URLSearchParams(navigation.location.search).has(
       "q"
     );
-    
+
   useEffect(() => {
     document.getElementById("q").value = q;
   }, [q]);
