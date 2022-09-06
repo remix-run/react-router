@@ -537,7 +537,7 @@ function testDomRouter(
       `);
     });
 
-    it("handles link navigations with resetScroll=false", async () => {
+    it("handles link navigations with preventScrollReset", async () => {
       let { container } = render(
         <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
           <Route path="/" element={<Layout />}>
@@ -551,11 +551,11 @@ function testDomRouter(
         let state = React.useContext(DataRouterStateContext);
         return (
           <div>
-            <Link to="/foo" resetScroll={false}>
+            <Link to="/foo" preventScrollReset>
               Link to Foo
             </Link>
             <Link to="/bar">Link to Bar</Link>
-            <p id="resetScrollPosition">{String(state.resetScrollPosition)}</p>
+            <p id="preventScrollReset">{String(state?.preventScrollReset)}</p>
             <Outlet />
           </div>
         );
@@ -563,23 +563,70 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Link to Bar"));
       await waitFor(() => screen.getByText("Bar Heading"));
-      expect(getHtml(container.querySelector("#resetScrollPosition")))
+      expect(getHtml(container.querySelector("#preventScrollReset")))
         .toMatchInlineSnapshot(`
         "<p
-          id=\\"resetScrollPosition\\"
+          id=\\"preventScrollReset\\"
         >
-          true
+          false
         </p>"
       `);
 
       fireEvent.click(screen.getByText("Link to Foo"));
       await waitFor(() => screen.getByText("Foo Heading"));
-      expect(getHtml(container.querySelector("#resetScrollPosition")))
+      expect(getHtml(container.querySelector("#preventScrollReset")))
         .toMatchInlineSnapshot(`
         "<p
-          id=\\"resetScrollPosition\\"
+          id=\\"preventScrollReset\\"
+        >
+          true
+        </p>"
+      `);
+    });
+
+    it("handles link navigations with preventScrollReset={true}", async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<h1>Foo Heading</h1>} />
+            <Route path="bar" element={<h1>Bar Heading</h1>} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Layout() {
+        let state = React.useContext(DataRouterStateContext);
+        return (
+          <div>
+            <Link to="/foo" preventScrollReset={true}>
+              Link to Foo
+            </Link>
+            <Link to="/bar">Link to Bar</Link>
+            <p id="preventScrollReset">{String(state?.preventScrollReset)}</p>
+            <Outlet />
+          </div>
+        );
+      }
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      await waitFor(() => screen.getByText("Bar Heading"));
+      expect(getHtml(container.querySelector("#preventScrollReset")))
+        .toMatchInlineSnapshot(`
+        "<p
+          id=\\"preventScrollReset\\"
         >
           false
+        </p>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Foo"));
+      await waitFor(() => screen.getByText("Foo Heading"));
+      expect(getHtml(container.querySelector("#preventScrollReset")))
+        .toMatchInlineSnapshot(`
+        "<p
+          id=\\"preventScrollReset\\"
+        >
+          true
         </p>"
       `);
     });

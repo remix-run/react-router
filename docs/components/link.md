@@ -79,12 +79,12 @@ function EditContact() {
 }
 ```
 
-## `resetScroll`
+## `preventScrollReset`
 
 If you are using [`<ScrollRestoration>`][scrollrestoration], this lets you prevent the scroll position from being reset to the top of the window when the link is clicked.
 
 ```tsx
-<Link to="?tab=one" resetScroll={false} />
+<Link to="?tab=one" preventScrollReset={true} />
 ```
 
 This does not prevent the scroll position from being restored when the user comes back to the location with the back/forward buttons, it just prevents the reset when the user clicks the link.

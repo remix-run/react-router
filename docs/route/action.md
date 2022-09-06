@@ -44,7 +44,7 @@ fetcher.submit(data, {
 
 ## `params`
 
-Route params are parsed from [dynamic segments][dynamicsegments] and passed to your loader. This is useful for figuring out which resource to mutate:
+Route params are parsed from [dynamic segments][dynamicsegments] and passed to your action. This is useful for figuring out which resource to mutate:
 
 ```tsx
 <Route

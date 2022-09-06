@@ -17,6 +17,7 @@ import type {
   To,
 } from "@remix-run/router";
 import {
+  AbortedDeferredError,
   Action as NavigationType,
   createPath,
   defer,
@@ -146,8 +147,9 @@ export type {
   To,
 };
 export {
-  DataMemoryRouter,
+  AbortedDeferredError,
   Await,
+  DataMemoryRouter,
   MemoryRouter,
   Navigate,
   NavigationType,

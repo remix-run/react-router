@@ -1,13 +1,13 @@
 /* eslint-disable jest/valid-title */
 import type {
   ActionFunction,
-  DataRouteObject,
+  AgnosticDataRouteObject,
+  AgnosticRouteMatch,
   Fetcher,
   RouterFetchOptions,
   HydrationState,
   InitialEntry,
   LoaderFunction,
-  RouteMatch,
   Router,
   RouterNavigateOptions,
   StaticHandler,
@@ -28,7 +28,7 @@ import {
 } from "../index";
 
 // Private API
-import { TrackedPromise } from "../utils";
+import { AbortedDeferredError, TrackedPromise } from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
@@ -37,7 +37,7 @@ import { TrackedPromise } from "../utils";
 // Routes passed into setup() should just have a boolean for loader/action
 // indicating they want a stub
 type TestRouteObject = Pick<
-  DataRouteObject,
+  AgnosticDataRouteObject,
   "id" | "index" | "path" | "shouldRevalidate"
 > & {
   loader?: boolean;
@@ -411,7 +411,7 @@ function setup({
   }
 
   function getHelpers(
-    matches: RouteMatch<string, DataRouteObject>[],
+    matches: AgnosticRouteMatch<string, AgnosticDataRouteObject>[],
     navigationId: number,
     addHelpers: (routeId: string, helpers: InternalHelpers) => void
   ): Record<string, Helpers> {
@@ -495,15 +495,14 @@ function setup({
     // @ts-expect-error
     if (opts?.formMethod === "post") {
       if (currentRouter.state.navigation?.location) {
-        activeLoaderMatches = matchRoutes(
+        let matches = matchRoutes(
           enhancedRoutes,
           currentRouter.state.navigation.location
-        ) as RouteMatch<string, EnhancedRouteObject>[];
+        );
+        invariant(matches, "No matches found for fetcher");
+        activeLoaderMatches = matches;
       } else {
-        activeLoaderMatches = currentRouter.state.matches as RouteMatch<
-          string,
-          EnhancedRouteObject
-        >[];
+        activeLoaderMatches = currentRouter.state.matches;
       }
     }
 
@@ -894,7 +893,7 @@ describe("a router", () => {
           location: undefined,
           state: "idle",
         },
-        resetScrollPosition: true,
+        preventScrollReset: false,
         restoreScrollPosition: null,
         revalidation: "idle",
         fetchers: new Map(),
@@ -2949,7 +2948,7 @@ describe("a router", () => {
         expect(t.router.state.errors).toBe(null);
         expect(A.loaders.parent.stub.mock.calls.length).toBe(1); // called again for revalidation
         expect(A.loaders.child.stub.mock.calls.length).toBe(1); // called because it's above error
-        expect(A.loaders.grandchild.stub.mock.calls.length).toBe(0); // dont call due to error
+        expect(A.loaders.grandchild.stub.mock.calls.length).toBe(0); // don't call due to error
         await A.loaders.parent.resolve("PARENT DATA*");
         await A.loaders.child.resolve("CHILD DATA");
         expect(t.router.state.loaderData).toEqual({
@@ -4841,33 +4840,35 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = {};
+
+      // Simulate scrolling to 100 on /
       let activeScrollPosition = 100;
       t.router.enableScrollRestoration(positions, () => activeScrollPosition);
 
-      // No restoration on first click to tasks
+      // No restoration on first click to /tasks
       let nav1 = await t.navigate("/tasks");
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       // Simulate scrolling down on /tasks
       activeScrollPosition = 200;
 
-      // Restore on pop to previous location
+      // Restore on pop back to /
       let nav2 = await t.navigate(-1);
       expect(t.router.state.restoreScrollPosition).toBe(null);
       await nav2.loaders.index.resolve("INDEX");
       expect(t.router.state.restoreScrollPosition).toBe(100);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
-      // Forward to /tasks
+      // Restore on pop forward to /tasks
       let nav3 = await t.navigate(1);
       await nav3.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(200);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
     });
 
     it("restores scroll using custom key", async () => {
@@ -4883,7 +4884,7 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = { "/tasks": 100 };
       let activeScrollPosition = 0;
@@ -4896,7 +4897,7 @@ describe("a router", () => {
       let nav1 = await t.navigate("/tasks");
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(100);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
     });
 
     it("does not restore scroll on submissions", async () => {
@@ -4912,7 +4913,7 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = { "/tasks": 100 };
       let activeScrollPosition = 0;
@@ -4930,7 +4931,7 @@ describe("a router", () => {
       await nav1.loaders.root.resolve("ROOT");
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
     });
 
     it("does not reset scroll", async () => {
@@ -4946,18 +4947,16 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = {};
       let activeScrollPosition = 0;
       t.router.enableScrollRestoration(positions, () => activeScrollPosition);
 
-      let nav1 = await t.navigate("/tasks", {
-        resetScroll: false,
-      });
+      let nav1 = await t.navigate("/tasks", { preventScrollReset: true });
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(false);
+      expect(t.router.state.preventScrollReset).toBe(true);
     });
   });
 
@@ -7638,6 +7637,12 @@ describe("a router", () => {
           lazy3: expect.trackedPromise("3"),
         },
       });
+
+      // Should proxy values through
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy1).resolves.toBe("Immediate data");
+      await expect(data.lazy2).resolves.toBe("2");
+      await expect(data.lazy3).resolves.toBe("3");
     });
 
     it("should cancel outstanding deferreds on a new navigation", async () => {
@@ -7671,7 +7676,17 @@ describe("a router", () => {
       );
 
       // Interrupt pending deferred's from /lazy navigation
-      let B = await t.navigate("/");
+      let navPromise = t.navigate("/");
+
+      // Cancelled promises should reject immediately
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy1).rejects.toBeInstanceOf(AbortedDeferredError);
+      await expect(data.lazy2).rejects.toBeInstanceOf(AbortedDeferredError);
+      await expect(data.lazy1).rejects.toThrowError("Deferred data aborted");
+      await expect(data.lazy2).rejects.toThrowError("Deferred data aborted");
+
+      let B = await navPromise;
+
       // During navigation - deferreds remain as promises
       expect(t.router.state.loaderData).toEqual({
         lazy: {
@@ -7818,6 +7833,10 @@ describe("a router", () => {
           lazy: expect.trackedPromise(undefined, new Error("Kaboom!")),
         },
       });
+
+      // should proxy the error through
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy).rejects.toEqual(new Error("Kaboom!"));
     });
 
     it("should cancel all outstanding deferreds on router.revalidate()", async () => {
@@ -8636,6 +8655,118 @@ describe("a router", () => {
       expect(shouldRevalidateSpy).not.toHaveBeenCalled();
     });
 
+    it("triggers fallbacks on new dynamic route instances", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "invoice",
+            path: "invoices/:id",
+            loader: true,
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/invoices/1");
+      let dfd1 = createDeferred();
+      await A.loaders.invoice.resolve(defer({ lazy: dfd1.promise }));
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise(),
+        },
+      });
+
+      await dfd1.resolve("DATA 1");
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise("DATA 1"),
+        },
+      });
+
+      // Goes back into a loading state since this is a new instance of the
+      // invoice route
+      let B = await t.navigate("/invoices/2");
+      let dfd2 = createDeferred();
+      await B.loaders.invoice.resolve(defer({ lazy: dfd2.promise }));
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise(),
+        },
+      });
+
+      await dfd2.resolve("DATA 2");
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise("DATA 2"),
+        },
+      });
+    });
+
+    it("triggers fallbacks on new splat route instances", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "invoices",
+            path: "invoices",
+            children: [
+              {
+                id: "invoice",
+                path: "*",
+                loader: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+        initialEntries: ["/"],
+      });
+
+      let A = await t.navigate("/invoices/1");
+      let dfd1 = createDeferred();
+      await A.loaders.invoice.resolve(defer({ lazy: dfd1.promise }));
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise(),
+        },
+      });
+
+      await dfd1.resolve("DATA 1");
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise("DATA 1"),
+        },
+      });
+
+      // Goes back into a loading state since this is a new instance of the
+      // invoice route
+      let B = await t.navigate("/invoices/2");
+      let dfd2 = createDeferred();
+      await B.loaders.invoice.resolve(defer({ lazy: dfd2.promise }));
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise(),
+        },
+      });
+
+      await dfd2.resolve("DATA 2");
+      expect(t.router.state.loaderData).toEqual({
+        invoice: {
+          lazy: expect.trackedPromise("DATA 2"),
+        },
+      });
+    });
+
     it("cancels awaited reused deferreds on subsequent navigations", async () => {
       let shouldRevalidateSpy = jest.fn(() => false);
       let t = setup({
@@ -8830,7 +8961,7 @@ describe("a router", () => {
           lazy: dfd.promise,
         })
       );
-      await dfd.reject(new Error("Kaboom!")).catch(() => {});
+      await dfd.reject(new Error("Kaboom!"));
       expect(t.router.state.errors).toMatchObject({
         index: new Error("Kaboom!"),
       });

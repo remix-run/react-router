@@ -175,10 +175,10 @@ export interface RouterState {
   restoreScrollPosition: number | false | null;
 
   /**
-   * Indicate whether this navigation should reset the scroll position if we
-   * are unable to restore the scroll position
+   * Indicate whether this navigation should skip resetting the scroll position
+   * if we are unable to restore the scroll position
    */
-  resetScrollPosition: boolean;
+  preventScrollReset: boolean;
 
   /**
    * Tracks the state of the current navigation
@@ -288,7 +288,7 @@ export interface GetScrollPositionFunction {
 type LinkNavigateOptions = {
   replace?: boolean;
   state?: any;
-  resetScroll?: boolean;
+  preventScrollReset?: boolean;
 };
 
 /**
@@ -501,7 +501,7 @@ export function createRouter(init: RouterInit): Router {
     initialized,
     navigation: IDLE_NAVIGATION,
     restoreScrollPosition: null,
-    resetScrollPosition: true,
+    preventScrollReset: false,
     revalidation: "idle",
     loaderData: init.hydrationData?.loaderData || {},
     actionData: init.hydrationData?.actionData || null,
@@ -512,9 +512,9 @@ export function createRouter(init: RouterInit): Router {
   // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
   let pendingAction: HistoryAction = HistoryAction.Pop;
-  // Should the current navigation reset the scroll position if scroll cannot
+  // Should the current navigation prevent the scroll reset if scroll cannot
   // be restored?
-  let pendingResetScroll = true;
+  let pendingPreventScrollReset = false;
   // AbortController for the active navigation
   let pendingNavigationController: AbortController | null;
   // We use this to avoid touching history in completeNavigation if a
@@ -649,8 +649,7 @@ export function createRouter(init: RouterInit): Router {
       restoreScrollPosition: state.navigation.formData
         ? false
         : getSavedScrollPosition(location, newState.matches || state.matches),
-      // Always reset scroll unless explicitly told not to
-      resetScrollPosition: pendingResetScroll,
+      preventScrollReset: pendingPreventScrollReset,
     });
 
     if (isUninterruptedRevalidation) {
@@ -665,7 +664,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Reset stateful navigation vars
     pendingAction = HistoryAction.Pop;
-    pendingResetScroll = true;
+    pendingPreventScrollReset = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
     cancelledDeferredRoutes = [];
@@ -690,15 +689,17 @@ export function createRouter(init: RouterInit): Router {
       opts?.replace === true || submission != null
         ? HistoryAction.Replace
         : HistoryAction.Push;
-    let resetScroll =
-      opts && "resetScroll" in opts ? opts.resetScroll : undefined;
+    let preventScrollReset =
+      opts && "preventScrollReset" in opts
+        ? opts.preventScrollReset === true
+        : undefined;
 
     return await startNavigation(historyAction, location, {
       submission,
       // Send through the formData serialization error if we have one so we can
       // render at the right error boundary after we match routes
       pendingError: error,
-      resetScroll,
+      preventScrollReset,
       replace: opts?.replace,
     });
   }
@@ -747,7 +748,7 @@ export function createRouter(init: RouterInit): Router {
       overrideNavigation?: Navigation;
       pendingError?: ErrorResponse;
       startUninterruptedRevalidation?: boolean;
-      resetScroll?: boolean;
+      preventScrollReset?: boolean;
       replace?: boolean;
     }
   ): Promise<void> {
@@ -762,7 +763,7 @@ export function createRouter(init: RouterInit): Router {
     // Save the current scroll position every time we start a new navigation,
     // and track whether we should reset scroll on completion
     saveScrollPosition(state.location, state.matches);
-    pendingResetScroll = opts?.resetScroll !== false;
+    pendingPreventScrollReset = opts?.preventScrollReset === true;
 
     let loadingNavigation = opts?.overrideNavigation;
     let matches = matchRoutes(dataRoutes, location, init.basename);
@@ -1025,6 +1026,7 @@ export function createRouter(init: RouterInit): Router {
 
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
+        state.matches,
         matchesToLoad,
         revalidatingFetchers,
         request
@@ -1256,6 +1258,7 @@ export function createRouter(init: RouterInit): Router {
 
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
+        state.matches,
         matchesToLoad,
         revalidatingFetchers,
         revalidationRequest
@@ -1461,6 +1464,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   async function callLoadersAndMaybeResolveData(
+    currentMatches: AgnosticDataRouteMatch[],
     matchesToLoad: AgnosticDataRouteMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request
@@ -1479,6 +1483,7 @@ export function createRouter(init: RouterInit): Router {
 
     await Promise.all([
       resolveDeferredResults(
+        currentMatches,
         matchesToLoad,
         loaderResults,
         request.signal,
@@ -1486,6 +1491,7 @@ export function createRouter(init: RouterInit): Router {
         state.loaderData
       ),
       resolveDeferredResults(
+        currentMatches,
         fetchersToLoad.map(([, , match]) => match),
         fetcherResults,
         request.signal,
@@ -2197,6 +2203,20 @@ function isNewLoader(
   return isNew || isMissingData;
 }
 
+function isNewRouteInstance(
+  currentMatch: AgnosticDataRouteMatch,
+  match: AgnosticDataRouteMatch
+) {
+  return (
+    // param change for this match, /users/123 -> /users/456
+    currentMatch.pathname !== match.pathname ||
+    // splat param changed, which is not present in match.path
+    // e.g. /files/images/avatar.jpg -> files/finances.xls
+    (currentMatch.route.path?.endsWith("*") &&
+      currentMatch.params["*"] !== match.params["*"])
+  );
+}
+
 function shouldRevalidateLoader(
   currentLocation: string | Location,
   currentMatch: AgnosticDataRouteMatch,
@@ -2218,12 +2238,7 @@ function shouldRevalidateLoader(
   // Note that fetchers always provide the same current/next locations so the
   // URL-based checks here don't apply to fetcher shouldRevalidate calls
   let defaultShouldRevalidate =
-    // param change for this match, /users/123 -> /users/456
-    currentMatch.pathname !== match.pathname ||
-    // splat param changed, which is not present in match.path
-    // e.g. /files/images/avatar.jpg -> files/finances.xls
-    (currentMatch.route.path?.endsWith("*") &&
-      currentMatch.params["*"] !== match.params["*"]) ||
+    isNewRouteInstance(currentMatch, match) ||
     // Clicked the same link, resubmitted a GET form
     currentUrl.toString() === nextUrl.toString() ||
     // Search params affect all loaders
@@ -2629,6 +2644,7 @@ function isRedirectResult(result?: DataResult): result is RedirectResult {
 }
 
 async function resolveDeferredResults(
+  currentMatches: AgnosticDataRouteMatch[],
   matchesToLoad: AgnosticDataRouteMatch[],
   results: DataResult[],
   signal: AbortSignal,
@@ -2637,11 +2653,16 @@ async function resolveDeferredResults(
 ) {
   for (let index = 0; index < results.length; index++) {
     let result = results[index];
-    let id = matchesToLoad[index].route.id;
-    if (
-      isDeferredResult(result) &&
-      (isFetcher || currentLoaderData?.[id] !== undefined)
-    ) {
+    let match = matchesToLoad[index];
+    let currentMatch = currentMatches.find(
+      (m) => m.route.id === match.route.id
+    );
+    let isRevalidatingLoader =
+      currentMatch != null &&
+      !isNewRouteInstance(currentMatch, match) &&
+      currentLoaderData?.[match.route.id] !== undefined;
+
+    if (isDeferredResult(result) && (isFetcher || isRevalidatingLoader)) {
       // Note: we do not have to touch activeDeferreds here since we race them
       // against the signal in resolveDeferredData and they'll get aborted
       // there if needed
