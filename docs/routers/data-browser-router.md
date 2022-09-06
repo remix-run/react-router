@@ -14,6 +14,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { DataBrowserRouter } from "react-router-dom";
 import Root from "./routes/root";
+import Team from "./routes/team";
 
 ReactDOM.render(
   <DataBrowserRouter>
