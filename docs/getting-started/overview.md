@@ -60,7 +60,11 @@ React Router embraces this convention with APIs for creating nested layouts coup
     <Route
       path="dashboard"
       element={<Dashboard />}
-      loader={() => fetch("/api/dashboard.json")}
+      loader={({ request }) =>
+        fetch("/api/dashboard.json", {
+          signal: request.signal,
+        })
+      }
     />
     <Route element={<AuthLayout />}>
       <Route
@@ -214,9 +218,11 @@ Because URL segments usually map to your app's persistent data, React Router pro
 ```jsx
 <Route
   path="/"
-  loader={async () => {
+  loader={async ({ request }) => {
     // loaders can be async functions
-    const res = await fetch("/api/user.json");
+    const res = await fetch("/api/user.json", {
+      signal: request.signal,
+    });
     const user = await res.json();
     return user;
   }}
