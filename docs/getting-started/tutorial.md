@@ -1729,7 +1729,7 @@ export async function action({ request, params }) {
   let formData = await request.formData();
   return updateContact(params.contactId, {
     favorite:
-      formData.get("favorite") === "true" ? true : false,
+      formData.get("favorite") === "true",
   });
 }
 
