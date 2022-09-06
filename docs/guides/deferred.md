@@ -55,7 +55,7 @@ But it's still sub optimal in most cases (especially if you're code-splitting ro
 
 React Router takes advantage of React 18's Suspense for data fetching using the [`defer` Response][defer response] utility and [`<Await />`][await] component / [`useAsyncValue`][useasyncvalue] hook. By using these APIs, you can solve both of these problems:
 
-1. You're data is no longer on a waterfall: document -> JavaScript -> Lazy Loaded Route & data (in parallel)
+1. Your data is no longer on a waterfall: document -> JavaScript -> Lazy Loaded Route & data (in parallel)
 2. Your can easily switch between rendering the fallback and waiting for the data
 
 Let's take a dive into how to accomplish this.
@@ -198,7 +198,7 @@ The `<Await />` component will only throw the promise up the `<Suspense>` bounda
 
 This may feel counter-intuitive at first, but stay with us, we really thought this through and it's important that it works this way. Let's imagine a world without the deferred API. For those scenarios you're probably going to want to implement Optimistic UI for form submissions/revalidation.
 
-When you decide you'd like to try the trade-offs of `defer`, we don't want you to have to change or remove those optimizations because we want you to be able to easily switch between deferring some data and not deferring it. So we ensure that your existing optimistic states work the same way. If we didn't do this, then you could experience what we call "Popcorn UI" where submissions of data trigger the fallback loading state instead of the optimistic UI you'd worked hard on.
+When you decide you'd like to try the trade-offs of `defer`, we don't want you to have to change or remove those optimizations because we want you to be able to easily switch between deferring some data and not deferring it. So, we ensure that your existing optimistic states work the same way. If we didn't do this, then you could experience what we call "Popcorn UI" where submissions of data trigger the fallback loading state instead of the optimistic UI you'd worked hard on.
 
 So just keep this in mind: **Deferred is 100% only about the initial load of a route and it's params.**
 
