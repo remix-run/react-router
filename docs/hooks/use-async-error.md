@@ -25,5 +25,5 @@ function ErrorHandler() {
 
 See the [Deferred Data Guide][deferred] and [`<Await>` docs][await docs] for more information.
 
-[await]: ../components/await
+[await docs]: ../components/await
 [deferred]: ../guides/deferred
