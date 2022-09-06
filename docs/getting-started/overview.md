@@ -475,15 +475,174 @@ See:
 
 ## Optimistic UI
 
+Knowing the [`formData`][formdata] being sent to an [action][action] is often enough to skip the busy indicators and render the UI in the next state immediately, even if your asynchronous work is still pending. This is called "optimistic UI".
+
+```jsx
+function LikeButton({ tweet }) {
+  const fetcher = useFetcher();
+
+  // if there is `formData` then it is posting to the action
+  const liked = fetcher.formData
+    ? // check the formData to be optimistic
+      fetcher.formData.get("liked") === "yes"
+    : // if its not posting to the action, use the record's value
+      tweet.liked;
+
+  return (
+    <fetcher.Form method="post" action="toggle-liked">
+      <button
+        type="submit"
+        name="liked"
+        value={liked ? "yes" : "no"}
+      />
+    </fetcher.Form>
+  );
+}
+```
+
+(Yes, HTML buttons can have a `name` and a `value`).
+
+While it is more common to do optimistic UI with a [`fetcher`][fetcher], you can do the same with a normal form using [`navigation.formData`][navigationformdata].
+
 ## Data Fetchers
+
+HTML Forms are the model for mutations but they have one major limitation: you can have only one at a time because a form submission is a navigation.
+
+Most web apps need to allow for multiple mutations to be happening at the same time, like a list of records where each can be independently deleted, marked complete, liked, etc.
+
+[Fetchers][fetcher] allow you to interact with the route [actions][action] and [loaders][loader] without causing a navigation in the browser, but still getting all the conventional benefits like error handling, revalidation, interruption handling, and race condition handling.
+
+Imagine a list of tasks:
+
+```jsx
+function Tasks() {
+  const tasks = useLoaderData();
+  return tasks.map((task) => (
+    <div>
+      <p>{task.name}</p>
+      <ToggleCompleteButton task={task} />
+    </div>
+  ));
+}
+```
+
+Each task can be marked complete independently of the rest, with its own pending state and without causing a navigation with a [fetcher][fetcher]:
+
+```jsx
+function ToggleCompleteButton({ task }) {
+  const fetcher = useFetcher();
+
+  return (
+    <fetcher.Form method="post" action="/toggle-complete">
+      <fieldset disabled={fetcher.state !== "idle"}>
+        <input type="hidden" name="id" value={task.id} />
+        <input
+          type="hidden"
+          name="status"
+          value={task.complete ? "incomplete" : "complete"}
+        />
+        <button type="submit">
+          {task.status === "complete"
+            ? "Mark Incomplete"
+            : "Mark Complete"}
+        </button>
+      </fieldset>
+    </fetcher.Form>
+  );
+}
+```
+
+See:
+
+- [`useFetcher`][fetcher]
 
 ## Race Condition Handling
 
+React Router will cancel stale operations and only commit fresh data automatically.
+
+Any time you have asynchronous UI you have the risk of race conditions: when an async operation starts after but completes before an earlier operation. The result is a user interface that shows the wrong state.
+
+Consider a search field that updates a list as the user types:
+
+```
+?q=ry    |---------------|
+                         ^ commit wrong state
+?q=ryan     |--------|
+                     ^ lose correct state
+```
+
+Even though the query for `q?=ryan` went out later, it completed earlier. If not handled correctly, the results will briefly be the correct values for `?q=ryan` but then flip over the incorrect results for `?q=ry`. Throttling and debouncing are not enough (you can still interrupt the requests that get through). You need to cancellation.
+
+If you're using React Router's data conventions you avoid this problem completely and automatically.
+
+```
+?q=ry    |-----------X
+                     ^ cancel wrong state when
+                       correct state completes earlier
+?q=ryan     |--------|
+                     ^ commit correct state
+```
+
+Not only does React Router handle race conditions for a navigation like this, it also handles it for many other cases like loading results for an autocomplete or performing multiple concurrent mutations with [`fetcher`][fetcher] (and its automatic, concurrent revalidations).
+
 ## Error Handling
+
+The vast majority of your application errors are handled automatically by React Router. It will catch any errors that are thrown while:
+
+- rendering
+- loading data
+- updating data
+
+In practice, this is pretty much every error in your app except those thrown in event handlers (`<button onClick>`) or `useEffect`. React Router apps tend to have very few of either.
+
+When an error is thrown, instead of rendering the route's [`element`][element], the [`errorElement`][errorelement] is rendered.
+
+```jsx
+<Route
+  path="/"
+  loader={() => {
+    something.that.throws.an.error();
+  }}
+  // this will not be rendered
+  element={<HappyPath />}
+  // but this will instead
+  errorElement={<ErrorBoundary />}
+/>
+```
+
+If a route doesn't have an `errorElement`, the error will bubble to the nearest parent route with an `errorElement`:
+
+```jsx
+<Route
+  path="/"
+  element={<HappyPath />}
+  errorElement={<ErrorBoundary />}
+>
+  {/* Errors here bubble up to the parent route */}
+  <Route path="login" element={<Login />} />
+</Route>
+```
+
+See:
+
+- [`<Route errorElement>`][errorelement]
+- [`useRouteError`][userouteerror]
 
 ## Scroll Restoration
 
+React Router will emulate the browser's scroll restoration on navigation, waiting for data to load before scrolling. This ensures the scroll position is restored to the right spot.
+
+You can also customize the behavior by restoring based on something other than locations (like a url pathname) and preventing the scroll from happening on certain links (like tabs in the middle of a page).
+
+See:
+
+- [`<ScrollRestoration>`][scrollrestoration]
+
 ## Web Standard APIs
+
+React Router is built on web standard APIs. [Loaders][loader] and [actions][action] receive standard Web Fetch API [`Request`][request] objects and can return [`Response`][response] objects, too. Cancellation is done with [Abort Signals][signal], search params are handled with [`URLSearchParams`][urlsearchparams], and data mutations are handled with [HTML Forms][htmlform].
+
+When you get better at React Router, you get better at the web platform.
 
 ## Search Params
 
@@ -508,3 +667,14 @@ See:
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [creatingcontacts]: ../getting-started/tutorial#creating-contacts
+[navigationformdata]: ../hooks/use-navigation#navigationformdata
+[fetcher]: ../hooks/use-fetcher
+[errorelement]: ../route/error-element
+[userouteerror]: ../hooks/use-route-error
+[element]: ../route/route#element
+[scrollrestoration]: ../components/scroll-restoration
+[request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
+[response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
+[signal]: https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
+[urlsearchparams]: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+[htmlform]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form
