@@ -9,16 +9,21 @@ This is the recommended router for all React Router DOM applications.
 
 `DataBrowserRouter` enables the route data APIs like [loaders][loader], [actions][action], [fetchers][fetcher] and more for browser environments.
 
-```tsx lines=[3,7,11]
+```tsx lines=[3,8,16]
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { DataBrowserRouter } from "react-router-dom";
 import Root from "./routes/root";
+import Team from "./routes/team";
 
 ReactDOM.render(
   <DataBrowserRouter>
     <Route element={<Root />} loader={Root.loader}>
-      <Route path="team" element={<Team />} loader={Team.loader}>
+      <Route
+        path="team"
+        element={<Team />}
+        loader={Team.loader}
+      />
     </Route>
   </DataBrowserRouter>,
   root
