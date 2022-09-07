@@ -35,6 +35,7 @@ declare function DataHashRouter(
 ): React.ReactElement;
 
 export interface DataHashRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   hydrationData?: HydrationState;
   fallbackElement?: React.ReactNode;

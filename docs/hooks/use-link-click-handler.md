@@ -16,6 +16,7 @@ declare function useLinkClickHandler<
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
+    options?: { relative?: RelativeRoutingType };
   }
 ): (event: React.MouseEvent<E, MouseEvent>) => void;
 ```

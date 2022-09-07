@@ -5,7 +5,19 @@ new: true
 
 # `useFormAction`
 
-This hook is used internally in [Form] to automatically resolve default and relative actions to the current route in context. While uncommon, you can use it directly to do things like compute the correct action for a `<button formAction>` to change the action of the button's `<Form>`. <small>(Yes, HTML buttons can change the action of their form!)</small>
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function useFormAction(
+  action?: string,
+  { relative }: { relative?: RelativeRoutingType } = {}
+): string;
+```
+
+</details>
+
+This hook is used internally in [`<Form>`][form] to automatically resolve default and relative actions to the current route in context. While uncommon, you can use it directly to do things like compute the correct action for a `<button formAction>` to change the action of the button's `<Form>`. <small>(Yes, HTML buttons can change the action of their form!)</small>
 
 ```tsx
 import { useFormAction } from "react-router-dom";
@@ -26,9 +38,10 @@ It's also useful for automatically resolving the action for [`submit`][usesubmit
 
 ```tsx
 let submit = useSubmit();
-let action = useResolvedAction();
+let action = useFormAction();
 submit(formData, { action });
 ```
 
+[form]: ../components/form
 [usesubmit]: ./use-submit
 [usefetchersubmit]: ./use-fetcher#fetchersubmit

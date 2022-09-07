@@ -4,7 +4,7 @@ title: Link
 
 # `<Link>`
 
-<docs-info>ZZZ This is the web version of `<Link>`. For the React Native version, [go here][link-native].</docs-info>
+<docs-info>This is the web version of `<Link>`. For the React Native version, [go here][link-native].</docs-info>
 
 <details>
   <summary>Type declaration</summary>
@@ -54,7 +54,30 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 
 <docs-info>`<Link to>` with a `..` behaves differently from a normal `<a href>` when the current URL ends with `/`. `<Link to>` ignores the trailing slash, and removes one URL segment for each `..`. But an `<a href>` value handles `..` differently when the current URL ends with `/` vs when it does not.</docs-info>
 
-[link-native]: ./link-native
+## `relative`
+
+By default, links are relative to the route hierarchy, so `..` will go up one `Route` level. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you're prefer to use relative _path_ routing. You can opt into this behavior with `relative`:
+
+```jsx
+// Contact and EditContact do not share additional UI layout
+<Route path="/" element={<Layout />}>
+  <Route path="contacts/:id" element={<Contact />} />
+  <Route
+    path="contacts/:id/edit"
+    element={<EditContact />}
+  />
+</Route>;
+
+function EditContact() {
+  // Since Contact is not a parent of EditContact we need to go up one level
+  // in the path, instead of one level in the Route hierarchy
+  return (
+    <Link to=".." relative="path">
+      Cancel
+    </Link>
+  );
+}
+```
 
 ## `preventScrollReset`
 
@@ -93,4 +116,5 @@ An example when you might want this behavior is a list of tabs that manipulate t
 
 ```
 
+[link-native]: ./link-native
 [scrollrestoration]: ./scroll-restoration
