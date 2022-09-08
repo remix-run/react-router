@@ -38,6 +38,7 @@ declare function DataBrowserRouter(
 ): React.ReactElement;
 
 export interface DataBrowserRouterProps {
+  basename?: string;
   children?: React.ReactNode;
   hydrationData?: HydrationState;
   fallbackElement?: React.ReactNode;
@@ -94,7 +95,7 @@ Typically, SSR implementations will provide that data on `window`. The `hydratio
     // data for the loaders keyed by route ids
     loaderData: {
       "/": window._remix.routeData.root,
-      "/event/:id": window.routeData.event,
+      "/event/:id": window._remix.routeData.event,
     },
 
     // data for an action, same shape as loaderData or null

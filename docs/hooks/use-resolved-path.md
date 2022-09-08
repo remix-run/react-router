@@ -8,7 +8,10 @@ title: useResolvedPath
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useResolvedPath(to: To): Path;
+declare function useResolvedPath(
+  to: To,
+  options?: { relative?: RelativeRoutingType }
+): Path;
 ```
 
 </details>

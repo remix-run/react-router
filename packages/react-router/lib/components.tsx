@@ -11,6 +11,7 @@ import type {
 } from "@remix-run/router";
 import {
   Action as NavigationType,
+  AbortedDeferredError,
   createMemoryHistory,
   invariant,
   parsePath,
@@ -431,6 +432,8 @@ enum AwaitRenderStatus {
   error,
 }
 
+const neverSettledPromise = new Promise(() => {});
+
 class AwaitErrorBoundary extends React.Component<
   AwaitErrorBoundaryProps,
   AwaitErrorBoundaryState
@@ -490,6 +493,14 @@ class AwaitErrorBoundary extends React.Component<
         (error: any) =>
           Object.defineProperty(resolve, "_error", { get: () => error })
       );
+    }
+
+    if (
+      status === AwaitRenderStatus.error &&
+      promise._error instanceof AbortedDeferredError
+    ) {
+      // Freeze the UI by throwing a never resolved promise
+      throw neverSettledPromise;
     }
 
     if (status === AwaitRenderStatus.error && !errorElement) {

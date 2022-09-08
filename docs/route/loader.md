@@ -127,7 +127,7 @@ You can construct the response yourself as well:
 />
 ```
 
-Remix will automatically call `response.json()` so your components don't need to parse it while rendering:
+React Router will automatically call `response.json()` so your components don't need to parse it while rendering:
 
 ```tsx
 function SomeRoute() {

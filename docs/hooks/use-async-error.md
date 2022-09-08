@@ -10,7 +10,7 @@ Returns the rejection value from the nearest [`<Await>`][await] component.
 ```tsx [4,12]
 import { useAsyncError, Await } from "react-router-dom";
 
-function ErrorHandler() {
+function ErrorElement() {
   const error = useAsyncError();
   return (
     <p>Uh Oh, something went wrong! {error.message}</p>

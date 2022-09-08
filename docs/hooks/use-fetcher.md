@@ -62,7 +62,7 @@ You can know the state of the fetcher with `fetcher.state`. It will be one of:
 
 - **idle** - nothing is being fetched.
 - **submitting** - A route action is being called due to a fetcher submission using POST, PUT, PATCH, or DELETE
-- **loading** - The fetcher is calling a loader (from a `fetcher.load`) or the route data on the page is being revalidated after a fetcher submission
+- **loading** - The fetcher is calling a loader (from a `fetcher.load`) or is being revalidated after a separate submission or `useRevalidator` call
 
 ## `fetcher.Form`
 
@@ -220,6 +220,6 @@ Tells you the method of the form being submitted: get, post, put, patch, or dele
 fetcher.formMethod; // "post"
 ```
 
-[indexsearchparam]: ../route/route
+[indexsearchparam]: ../guides/index-search-param
 [link]: ../components/link
 [form]: ../components/form

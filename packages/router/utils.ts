@@ -967,6 +967,7 @@ export class DeferredData {
       error instanceof AbortedDeferredError
     ) {
       this.unlistenAbortSignal();
+      Object.defineProperty(promise, "_error", { get: () => error });
       return Promise.reject(error);
     }
 

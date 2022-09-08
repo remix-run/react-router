@@ -15,15 +15,15 @@ React Router v6.4 introduces all of the data abstractions from [Remix][remix] fo
 
 ## Installation
 
-The new Data APIs are available on the `next` tag:
+The new Data APIs are available on the `pre` tag:
 
 ```sh
-npm install react-router-dom@next
+npm install react-router-dom@pre
 ```
 
 ## Configuring Routes
 
-Configuring routes is the same, except you need to use [`DataBrowserRouter`][databrowserrouter] to enable the data APIs. note you no longer render `<Routes>` either, just `<Route>`.
+Configuring routes is the same, except you need to use [`DataBrowserRouter`][databrowserrouter] to enable the data APIs. Note you no longer render `<Routes>` either, just `<Route>`.
 
 <docs-info>It's important to render `DataBrowserRouter` at the top of the React tree.</docs-info>
 
@@ -255,6 +255,7 @@ export default function Root() {
 With the route configured, we can create an [`action`][action]. Actions are like [loaders][loader] except instead "reading" data they "write" data. Think of it like `React.useState`. It returns a reader and a writer. In React Router, loaders are your readers, actions are your writers.
 
 ```jsx
+// Sample code - this does not actually work :)
 const [reader, writer] = React.useState();
 <Route loader={reader} action={writer} />;
 ```
@@ -283,7 +284,7 @@ export default function NewNote() {
 
 Now add it to the route config:
 
-```jsx filename=main.jsx lines=[3,13]
+```jsx filename=main.jsx lines=[4,13]
 // ...
 import Root, { loader as rootLoader } from "./routes/root";
 import NewNote, {
