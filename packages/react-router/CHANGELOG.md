@@ -1,5 +1,14 @@
 # react-router
 
+## 6.4.0-pre.15
+
+### Patch Changes
+
+- fix: remove internal router singleton (#9227)
+- fix: Avoid suspense loops on promise aborted values (#9226)
+- Updated dependencies
+  - @remix-run/router@0.2.0-pre.10
+
 ## 6.4.0-pre.14
 
 ### Patch Changes
