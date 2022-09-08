@@ -5,7 +5,7 @@ order: 4
 
 # FAQs
 
-Here are some questions that people commonly have about React Router v6:
+Here are some questions that people commonly have about React Router v6. You might also find what you're looking for in the [examples][examples].
 
 ## What happened to withRouter? I need it!
 
@@ -424,3 +424,4 @@ Instead of rending your component, remix will render the nearest [catch boundary
 [remix]: https://remix.run
 [remix-catchboundary]: https://remix.run/docs/en/v1/api/conventions#catchboundary
 [nested-routes]: ./overview#nested-routes
+[examples]: https://github.com/remix-run/react-router/tree/dev/examples

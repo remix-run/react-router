@@ -1,6 +1,6 @@
 ---
 title: Tutorial
-order: 3
+order: 2
 ---
 
 # Tutorial
@@ -61,23 +61,32 @@ If your app is running, it might blow up momentarily, just keep going 😋. And 
 
 ## Adding a Router
 
-First thing to do is render a "Router" and configure our first route. This will enable client side routing for our web app.
+First thing to do is create a [Browser Router][createbrowserrouter] and configure our first route. This will enable client side routing for our web app.
 
 The `main.jsx` file is the entry point. Open it up and we'll put React Router on the page.
 
-👉 **Add [`DataBrowserRouter`][databrowserrouter] and a [`Route`][route] to `main.jsx`**
+👉 **Create and render a [browser router][createbrowserrouter] in `main.jsx`**
 
-```jsx lines=[3,8-10] filename=src/main.jsx
+```jsx lines=[3-7,10-15,19] filename=src/main.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { DataBrowserRouter, Route } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Route,
+} from "react-router-dom";
 import "./index.css";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <div>Hello world!</div>,
+  },
+]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <DataBrowserRouter>
-      <Route path="/" element={<div>Hello world!</div>} />
-    </DataBrowserRouter>
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 ```
@@ -147,17 +156,22 @@ export default function Root() {
 
 Nothing React Router specific yet, so feel free to copy/paste all of that.
 
-👉 **Render `<Root>` as the root route's [`element`][routeelement]**
+👉 **Set `<Root>` as the root route's [`element`][routeelement]**
 
 ```jsx filename=src/main.jsx lines=[2,7]
 /* existing imports */
 import Root from "./routes/root";
 
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+  },
+]);
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <DataBrowserRouter>
-      <Route path="/" element={<Root />} />
-    </DataBrowserRouter>
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 ```
@@ -207,19 +221,21 @@ export default function ErrorPage() {
 
 👉 **Set the `<ErrorPage>` as the [`errorElement`][errorelement] on the root route**
 
-```jsx filename=src/main.jsx lines=[2,10]
+```jsx filename=src/main.jsx lines=[2,8]
 /* previous imports */
 import ErrorPage from "./error-page";
 
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+  },
+]);
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <DataBrowserRouter>
-      <Route
-        path="/"
-        element={<Root />}
-        errorElement={<ErrorPage />}
-      />
-    </DataBrowserRouter>
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 ```
@@ -345,25 +361,23 @@ Now that we've got a component, let's hook it up to a new route.
 
 👉 **Import the contact component and create a new route**
 
-```js filename=main.jsx lines=[2,12-15]
-/* other imports */
+```js filename=main.jsx lines=[2,10-13]
+/* existing imports */
 import Contact from "./routes/contact";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <DataBrowserRouter>
-      <Route
-        path="/"
-        element={<Root />}
-        errorElement={<ErrorPage />}
-      />
-      <Route
-        path="contacts/:contactId"
-        element={<Contact />}
-      />
-    </DataBrowserRouter>
-  </React.StrictMode>
-);
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "contacts/:contactId",
+    element: <Contact />,
+  },
+]);
+
+/* existing code */
 ```
 
 Now if we click one of the links or visit `/contacts/1` we get our new component!
@@ -382,23 +396,20 @@ We do it by making the contact route a _child_ of the root route.
 
 👉 **Move the contacts route to be a child of the root route**
 
-```jsx filename=src/main.jsx lines=[4-13]
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <DataBrowserRouter>
-      <Route
-        path="/"
-        element={<Root />}
-        errorElement={<ErrorPage />}
-      >
-        <Route
-          path="contacts/:contactId"
-          element={<Contact />}
-        />
-      </Route>
-    </DataBrowserRouter>
-  </React.StrictMode>
-);
+```jsx filename=src/main.jsx lines=[6-11]
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "contacts/:contactId",
+        element: <Contact />,
+      },
+    ],
+  },
+]);
 ```
 
 You'll now see the root layout again but a blank page on the right. We need to tell the root route _where_ we want it to render its child routes. We do that with [`<Outlet>`][outlet].
@@ -486,27 +497,24 @@ export async function loader() {
 
 👉 **Configure the loader on the route**
 
-```jsx filename=src/main.jsx lines=[2,11]
+```jsx filename=src/main.jsx lines=[2,9]
 /* other imports */
 import Root, { loader as rootLoader } from "./routes/root";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <DataBrowserRouter>
-      <Route
-        path="/"
-        element={<Root />}
-        errorElement={<ErrorPage />}
-        loader={rootLoader}
-      >
-        <Route
-          path="contacts/:contactId"
-          element={<Contact />}
-        />
-      </Route>
-    </DataBrowserRouter>
-  </React.StrictMode>
-);
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+    loader: rootLoader,
+    children: [
+      {
+        path: "contacts/:contactId",
+        element: <Contact />,
+      },
+    ],
+  },
+]);
 ```
 
 👉 **Access and render the data**
@@ -624,7 +632,7 @@ export default function Root() {
 
 👉 **Import and set the action on the route**
 
-```jsx filename=src/main.jsx lines=[5,16]
+```jsx filename=src/main.jsx lines=[5,14]
 /* other imports */
 
 import Root, {
@@ -632,24 +640,21 @@ import Root, {
   action as rootAction,
 } from "./routes/root";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <DataBrowserRouter>
-      <Route
-        path="/"
-        element={<Root />}
-        errorElement={<ErrorPage />}
-        loader={rootLoader}
-        action={rootAction}
-      >
-        <Route
-          path="contacts/:contactId"
-          element={<Contact />}
-        />
-      </Route>
-    </DataBrowserRouter>
-  </React.StrictMode>
-);
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+    loader: rootLoader,
+    action: rootAction,
+    children: [
+      {
+        path: "contacts/:contactId",
+        element: <Contact />,
+      },
+    ],
+  },
+]);
 ```
 
 That's it! Go ahead and click the "New" button and you should see a new record pop into the list 🥳
@@ -700,31 +705,30 @@ export default function Contact() {
 
 👉 **Configure the loader on the route**
 
-```jsx filename=src/main.jsx lines=[3,19]
+```jsx filename=src/main.jsx lines=[3,17]
 /* existing code */
 import Contact, {
   loader as contactLoader,
 } from "./routes/contact";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <DataBrowserRouter>
-      <Route
-        path="/"
-        element={<Root />}
-        errorElement={<ErrorPage />}
-        loader={rootLoader}
-        action={rootAction}
-      >
-        <Route
-          path="contacts/:contactId"
-          element={<Contact />}
-          loader={contactLoader}
-        />
-      </Route>
-    </DataBrowserRouter>
-  </React.StrictMode>
-);
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+    loader: rootLoader,
+    action: rootAction,
+    children: [
+      {
+        path: "contacts/:contactId",
+        element: <Contact />,
+        loader: contactLoader,
+      },
+    ],
+  },
+]);
+
+/* existing code */
 ```
 
 <img class="tutorial" loading="lazy" src="/_docs/tutorial/10.webp" />
@@ -811,34 +815,33 @@ export default function Edit() {
 
 👉 **Add the new edit route**
 
-```jsx filename=src/main.jsx lines=[2,19-23]
+```jsx filename=src/main.jsx lines=[2,17-21]
 /* existing code */
 import EditContact from "./routes/edit";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <DataBrowserRouter>
-      <Route
-        path="/"
-        element={<Root />}
-        errorElement={<ErrorPage />}
-        loader={rootLoader}
-        action={rootAction}
-      >
-        <Route
-          path="contacts/:contactId"
-          element={<Contact />}
-          loader={contactLoader}
-        />
-        <Route
-          path="contacts/:contactId/edit"
-          element={<EditContact />}
-          loader={contactLoader}
-        />
-      </Route>
-    </DataBrowserRouter>
-  </React.StrictMode>
-);
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+    loader: rootLoader,
+    action: rootAction,
+    children: [
+      {
+        path: "contacts/:contactId",
+        element: <Contact />,
+        loader: contactLoader,
+      },
+      {
+        path: "contacts/:contactId/edit",
+        element: <EditContact />,
+        loader: contactLoader,
+      },
+    ],
+  },
+]);
+
+/* existing code */
 ```
 
 We want it to be rendered in the root route's outlet, so we made it a sibling to the existing child route.
@@ -873,30 +876,36 @@ export async function action({ request, params }) {
 
 👉 **Wire the action up to the route**
 
-```jsx filename=src/routes/main.jsx lines=[3,18]
+```jsx filename=src/routes/main.jsx lines=[3,23]
 /* existing code */
 import EditContact, {
   action as editAction,
 } from "./routes/edit";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <DataBrowserRouter>
-      <Route
-        path="/"
-        // existing code
-      >
-        {/* existing code */}
-        <Route
-          path="contacts/:contactId/edit"
-          element={<EditContact />}
-          loader={contactLoader}
-          action={editAction}
-        />
-      </Route>
-    </DataBrowserRouter>
-  </React.StrictMode>
-);
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+    loader: rootLoader,
+    action: rootAction,
+    children: [
+      {
+        path: "contacts/:contactId",
+        element: <Contact />,
+        loader: contactLoader,
+      },
+      {
+        path: "contacts/:contactId/edit",
+        element: <EditContact />,
+        loader: contactLoader,
+        action: editAction,
+      },
+    ],
+  },
+]);
+
+/* existing code */
 ```
 
 Fill out the form, hit save, and you should see something like this! <small>(Except easier on the eyes and maybe less hairy.)</small>
@@ -1140,26 +1149,25 @@ export async function action({ params }) {
 
 👉 **Add the destroy route to the route config**
 
-```jsx filename=src/main.jsx lines=[2,11-14]
+```jsx filename=src/main.jsx lines=[2,10-13]
 /* existing code */
 import { action as destroyAction } from "./routes/destroy";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <DataBrowserRouter>
-      <Route
-        path="/"
-        // other code
-      >
-        <Route
-          path="contacts/:contactId/destroy"
-          action={destroyAction}
-        />
-        {/* other code */}
-      </Route>
-    </DataBrowserRouter>
-  </React.StrictMode>
-);
+const router = createBrowserRouter([
+  {
+    path: "/",
+    /* existing root route props */
+    children: [
+      /* existing routes */
+      {
+        path: "contacts/:contactId/destroy",
+        action: destroyAction,
+      },
+    ],
+  },
+]);
+
+/* existing code */
 ```
 
 Alright, navigate to a record and click the "Delete" button. It works!
@@ -1244,29 +1252,26 @@ export default function Index() {
 
 👉 **Configure the index route**
 
-```jsx filename=src/main.jsx lines=[2,13]
+```jsx filename=src/main.jsx lines=[2,12]
 // existing code
 import Index from "./routes/index";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <DataBrowserRouter>
-      <Route
-        path="/"
-        element={<Root />}
-        loader={rootLoader}
-        action={rootAction}
-      >
-        <Route index element={<Index />} />
-
-        {/* Existing code*/}
-      </Route>
-    </DataBrowserRouter>
-  </React.StrictMode>
-);
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+    loader: rootLoader,
+    action: rootAction,
+    children: [
+      { index: true, element: <Index /> },
+      /* existing routes */
+    ],
+  },
+]);
 ```
 
-Note the [`<Route index>`][index] instead of [`<Route path>`][path]. That tells the router to match and render this route when the user is at the parent route's exact path and there are no other child routes to render in the `<Outlet>`.
+Note the [`{ index:true }`][index] instead of [`{ path: "" }`][path]. That tells the router to match and render this route when the user is at the parent route's exact path, so there are no other child routes to render in the `<Outlet>`.
 
 <img class="tutorial" loading="lazy" src="/_docs/tutorial/20.webp" />
 
@@ -1741,34 +1746,32 @@ Pretty simple. Pull the form data off the request and send it to the data model.
 
 👉 **Configure the route's new action**
 
-```jsx filename=src/main.jsx lines=[]
+```jsx filename=src/main.jsx lines=[4,20]
 // existing code
-
 import Contact, {
   loader as contactLoader,
   action as contactAction,
 } from "./routes/contact";
 
-// existing code
-
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <DataBrowserRouter>
-      <Route
-        path="/"
-        // existing code
-      >
-        <Route
-          path="contacts/:contactId"
-          element={<Contact />}
-          loader={contactLoader}
-          action={contactAction}
-        />
-        {/* existing code */}
-      </Route>
-    </DataBrowserRouter>
-  </React.StrictMode>
-);
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+    loader: rootLoader,
+    action: rootAction,
+    children: [
+      { index: true, element: <Index /> },
+      {
+        path: "contacts/:contactId",
+        element: <Contact />,
+        loader: contactLoader,
+        action: contactAction,
+      },
+      /* existing code */
+    ],
+  },
+]);
 ```
 
 Alright, we're ready to click the star next to the user's name!
@@ -1938,7 +1941,7 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 
 [vite]: https://vitejs.dev/guide/
 [node]: https://nodejs.org
-[databrowserrouter]: ../routers/data-browser-router
+[createbrowserrouter]: ../routers/create-browser-router
 [route]: ../route/route
 [tutorial-css]: https://gist.githubusercontent.com/ryanflorence/ba20d473ef59e1965543fa013ae4163f/raw/499707f25a5690d490c7b3d54c65c65eb895930c/react-router-6.4-tutorial-css.css
 [tutorial-data]: https://gist.githubusercontent.com/ryanflorence/1e7f5d3344c0db4a8394292c157cd305/raw/f7ff21e9ae7ffd55bfaaaf320e09c6a08a8a6611/contacts.js

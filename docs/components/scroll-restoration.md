@@ -9,15 +9,10 @@ This component will emulate the browser's scroll restoration on location changes
 
 You should only render one of these and it's recommended you render it in the root route of your app:
 
-```tsx [5,12]
-import * as React from "react";
-import * as ReactDOM from "react-dom";
-import {
-  DataBrowserRouter,
-  ScrollRestoration,
-} from "react-router-dom";
+```tsx [1,7]
+import { ScrollRestoration } from "react-router-dom";
 
-function Root() {
+function RootRouteComponent() {
   return (
     <div>
       {/* ... */}
@@ -25,13 +20,6 @@ function Root() {
     </div>
   );
 }
-
-ReactDOM.render(
-  <DataBrowserRouter>
-    <Route element={<Root />}>{/* child routes */}</Route>
-  </DataBrowserRouter>,
-  root
-);
 ```
 
 ## `getKey`

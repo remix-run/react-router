@@ -7,8 +7,12 @@ new: true
 
 This hook provides the value returned from your route loader.
 
-```tsx lines=[8]
-import { useLoaderData } from "react-router-dom";
+```tsx lines=[4,12]
+import {
+  createBrowserRouter,
+  RouterProvider,
+  useLoaderData,
+} from "react-router-dom";
 
 function loader() {
   return fetchFakeAlbums();
@@ -19,11 +23,16 @@ export function Albums() {
   // ...
 }
 
-ReactDOM.render(
-  <DataBrowserRouter>
-    <Route element={<Albums />} loader={loader} />
-  </DataBrowserRouter>,
-  root
+const router = createBrowserRouter([
+  {
+    path: "/",
+    loader: loader,
+    element: <Albums />,
+  },
+]);
+
+ReactDOM.createRoot(el).render(
+  <RouterProvider router={router} />
 );
 ```
 

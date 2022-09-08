@@ -6,19 +6,81 @@ new: true
 
 # Picking a Router
 
-<form action="/foo">
-  <input type="text"  formAction="/bar" />
-</form>
+While your app will only use a single router, several routers are available depending on the environment you're app is running in. This document should help you figure out which one to use.
 
-<docs-warning>This doc is a work in progress and will be completed when the server rendering APIs around data loading are stable</docs-warning>
+## Using v6.4 Data APIs
 
-React Router ships with several "routers" depending on the environment you're app is running in and the use cases you have. This document should help you figure out which one to use.
+In v6.4, new routers were introduced that support the new data APIs:
 
-- We recommend using [DataBrowserRouter][databrowserrouter] for all web projects. It keeps your UI and data in sync with the URL.
-- For testing, you'll want to use [MemoryRouter][memoryrouter]
-- For React Native apps, use [NativeRouter][nativerouter]
+- [`createBrowserRouter`][createbrowserrouter]
+- [`createMemoryRouter`][creatememoryrouter]
+- [`createHashRouter`][createhashrouter]
+
+The following routers do not support the data APIs:
+
+- [`<BrowserRouter>`][browserrouter]
+- [`<MemoryRouter>`][memoryrouter]
+- [`<HashRouter>`][hashrouter]
+- [`<NativeRouter>`][nativerouter]
+- [`<StaticRouter>`][staticrouter]
+
+We recommend updating your app to use one of the new routers from 6.4. The data APIs are currently not supported in React Native, but should be eventually.
+
+The easiest way to quickly update to a v6.4 is to get the help from [`createRoutesFromElements`][createroutesfromelements] so you don't need to convert your `<Route>` elements to route objects.
+
+```jsx
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route path="/" element={<Root />}>
+      <Route path="dashboard" element={<Dashboard />} />
+      {/* ... etc. */}
+    </Route>
+  )
+);
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
+```
+
+## Web Projects
+
+We recommend all web projects use [`createBrowserRouter`][createbrowserrouter].
+
+It uses the full URL instead of the hash urls (`#this/stuff`) common in web apps before `window.pushState` was standardized. Full URLs are better for SEO, better for server rendering, and are just more compatible with the rest of the web platform.
+
+If you're hosting your app on a static file server, you'll need to configure it to send all requests to your `index.html` to avoid getting 404s.
+
+If for some reason you can't use the full URL, [`createHashRouter`][createhashrouter] is the next best thing.
+
+If you're not interested in the data APIs, you can continue to use [`<BrowserRouter>`][browserrouter] or, if you can't use full URLs, [`<HashRouter>`][hashrouter].
+
+## Testing
+
+Testing components that use React Router APIs is easiest with [`createMemoryRouter`][creatememoryrouter] or [`<MemoryRouter>`][memoryrouter] instead of the routers you use in your app that require DOM history APIs.
+
+## React Native
+
+You will use [`<NativeRouter>`][nativerouter] from React Native projects.
+
+The data APIs from v6.4 are currently not supported in React Native, but should be eventually.
 
 [databrowserrouter]: ./data-browser-router
 [staticrouter]: ./static-router
 [memoryrouter]: ./memory-router
 [nativerouter]: ./native-router
+[createbrowserrouter]: ./create-browser-router
+[createhashrouter]: ./create-hash-router
+[creatememoryrouter]: ./create-memory-router
+[browserrouter]: ../router-components/browser-router
+[hashrouter]: ../router-components/hash-router
+[memoryrouter]: ../router-components/memory-router
+[staticrouter]: ../router-components/static-router
+[createroutesfromelements]: ../utils/create-routes-from-elements

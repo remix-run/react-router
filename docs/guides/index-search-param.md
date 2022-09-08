@@ -11,22 +11,23 @@ Because of nested routes, multiple routes in your route hierarchy can match the 
 
 Because index routes share the same URL as their parent, the `?index` param lets you disambiguate between the two.
 
-For example, consider the following route config and forms:
+For example, consider the following router and forms:
 
 ```jsx
-<DataBrowserRouter>
-  <Route
-    path="/projects"
-    element={<ProjectsLayout />}
-    action={ProjectsLayout.action}
-  >
-    <Route
-      index
-      element={<ProjectsIndex />}
-      action={ProjectsPage.action}
-    />
-  </Route>
-</DataBrowserRouter>;
+createBrowserRouter([
+  {
+    path: "/projects",
+    element: <ProjectsLayout />,
+    action: ProjectsLayout.action,
+    children: [
+      {
+        index: true,
+        element: <ProjectsIndex />,
+        action: ProjectsPage.action,
+      },
+    ],
+  },
+]);
 
 <Form method="post" action="/projects" />;
 <Form method="post" action="/projects?index" />;
