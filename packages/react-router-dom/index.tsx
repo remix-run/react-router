@@ -105,6 +105,7 @@ export type {
   RouteObject,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
@@ -113,13 +114,13 @@ export type {
 export {
   AbortedDeferredError,
   Await,
-  DataRouter,
   MemoryRouter,
   Navigate,
   NavigationType,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
   createMemoryRouter,
   createPath,
@@ -975,7 +976,7 @@ const SCROLL_RESTORATION_STORAGE_KEY = "react-router-scroll-positions";
 let savedScrollPositions: Record<string, number> = {};
 
 /**
- * When rendered inside a DataRouter, will restore scroll positions on navigations
+ * When rendered inside a RouterProvider, will restore scroll positions on navigations
  */
 function useScrollRestoration({
   getKey,

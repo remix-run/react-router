@@ -42,7 +42,7 @@ import {
   _renderMatches,
 } from "./hooks";
 
-interface DataRouterProps {
+export interface RouterProviderProps {
   fallbackElement?: React.ReactNode;
   router: RemixRouter;
 }
@@ -50,10 +50,10 @@ interface DataRouterProps {
 /**
  * Given a Remix Router instance, render the appropriate UI
  */
-export function DataRouter({
+export function RouterProvider({
   fallbackElement,
   router,
-}: DataRouterProps): React.ReactElement {
+}: RouterProviderProps): React.ReactElement {
   // Sync router state to our component state to force re-renders
   let state: RouterState = useSyncExternalStoreShim(
     router.subscribe,

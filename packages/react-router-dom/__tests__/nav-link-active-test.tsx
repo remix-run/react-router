@@ -8,10 +8,10 @@ import { JSDOM } from "jsdom";
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import {
-  DataRouter,
   MemoryRouter,
   Routes,
   Route,
+  RouterProvider,
   NavLink,
   Outlet,
   createBrowserRouter,
@@ -344,7 +344,7 @@ describe("NavLink using a data router", () => {
         window: getWindow("/foo"),
       }
     );
-    render(<DataRouter router={router} />);
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -383,7 +383,7 @@ describe("NavLink using a data router", () => {
         window: getWindow("/foo"),
       }
     );
-    render(<DataRouter router={router} />);
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -438,7 +438,7 @@ describe("NavLink using a data router", () => {
         window: getWindow("/foo"),
       }
     );
-    render(<DataRouter router={router} />);
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -493,7 +493,7 @@ describe("NavLink using a data router", () => {
         window: getWindow("/foo"),
       }
     );
-    render(<DataRouter router={router} />);
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -542,7 +542,7 @@ describe("NavLink using a data router", () => {
         window: getWindow("/foo"),
       }
     );
-    render(<DataRouter router={router} />);
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (

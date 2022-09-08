@@ -15,10 +15,10 @@ import {
 import "@testing-library/jest-dom";
 
 import {
-  DataRouter,
   Form,
   Link,
   Route,
+  RouterProvider,
   Outlet,
   createBrowserRouter,
   createHashRouter,
@@ -89,7 +89,7 @@ function testDomRouter(
       hydrationData,
       window,
     });
-    return <DataRouter router={router} fallbackElement={fallbackElement} />;
+    return <RouterProvider router={router} fallbackElement={fallbackElement} />;
   }
 
   describe(`Router: ${name}`, () => {
@@ -3613,7 +3613,7 @@ function testDomRouter(
         ];
 
         router = createTestRouter(routes, { window: getWindow("/foo") });
-        let { container } = render(<DataRouter router={router} />);
+        let { container } = render(<RouterProvider router={router} />);
 
         function Layout() {
           let navigation = useNavigation();

@@ -47,18 +47,19 @@ import type {
   IndexRouteProps,
   RouterProps,
   RoutesProps,
+  RouterProviderProps,
 } from "./lib/components";
 import {
   enhanceManualRouteObjects,
   createRoutesFromChildren,
   renderMatches,
-  DataRouter,
   Await,
   MemoryRouter,
   Navigate,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
 } from "./lib/components";
 import type {
@@ -143,6 +144,7 @@ export type {
   RouteObject,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
@@ -151,13 +153,13 @@ export type {
 export {
   AbortedDeferredError,
   Await,
-  DataRouter,
   MemoryRouter,
   Navigate,
   NavigationType,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
   createPath,
   createRoutesFromChildren,

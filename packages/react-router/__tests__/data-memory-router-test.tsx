@@ -9,13 +9,13 @@ import {
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import type { FormMethod, Router, RouterInit } from "@remix-run/router";
-import type { DataMemoryRouterProps, RouteObject } from "react-router";
+import type { RouteObject } from "react-router";
 import {
   Await,
-  DataRouter,
   MemoryRouter,
   Route,
   Routes,
+  RouterProvider,
   Outlet,
   createMemoryRouter,
   createRoutesFromChildren,
@@ -63,7 +63,7 @@ describe("<DataMemoryRouter>", () => {
       initialEntries,
       initialIndex,
     });
-    return <DataRouter router={router} fallbackElement={fallbackElement} />;
+    return <RouterProvider router={router} fallbackElement={fallbackElement} />;
   }
 
   beforeEach(() => {
@@ -1840,7 +1840,7 @@ describe("<DataMemoryRouter>", () => {
 
       let { container } = render(
         <div>
-          <DataRouter router={router} />
+          <RouterProvider router={router} />
         </div>
       );
 
@@ -1911,7 +1911,7 @@ describe("<DataMemoryRouter>", () => {
       );
       let { container } = render(
         <div>
-          <DataRouter router={router} />
+          <RouterProvider router={router} />
         </div>
       );
 

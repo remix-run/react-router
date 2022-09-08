@@ -1,12 +1,12 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import {
-  DataRouter,
   MemoryRouter,
   Navigate,
   Outlet,
   Routes,
   Route,
+  RouterProvider,
   createMemoryRouter,
   useLocation,
 } from "react-router";
@@ -456,7 +456,7 @@ describe("<Navigate>", () => {
 
     let { container } = render(
       <React.StrictMode>
-        <DataRouter router={router} />
+        <RouterProvider router={router} />
       </React.StrictMode>
     );
 
