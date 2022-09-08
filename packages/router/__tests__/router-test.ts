@@ -9914,33 +9914,7 @@ describe("a router", () => {
       });
 
       describe("headers", () => {
-        it("should expose headers from loader responses", async () => {
-          let { query } = createStaticHandler([
-            {
-              id: "root",
-              path: "/",
-              loader: () => new Response(null, { headers: { one: "1" } }),
-              children: [
-                {
-                  id: "child",
-                  index: true,
-                  loader: () => new Response(null, { headers: { two: "2" } }),
-                },
-              ],
-            },
-          ]);
-          let context = (await query(
-            createRequest("/")
-          )) as StaticHandlerContext;
-          expect(Array.from(context.loaderHeaders.root.entries())).toEqual([
-            ["one", "1"],
-          ]);
-          expect(Array.from(context.loaderHeaders.child.entries())).toEqual([
-            ["two", "2"],
-          ]);
-        });
-
-        it("should expose headers from action responses", async () => {
+        it("should expose headers from action/loader responses", async () => {
           let { query } = createStaticHandler([
             {
               id: "root",
@@ -9967,6 +9941,58 @@ describe("a router", () => {
           ]);
           expect(Array.from(context.loaderHeaders.child.entries())).toEqual([
             ["three", "3"],
+          ]);
+        });
+
+        it("should expose headers from loader error responses", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => new Response(null, { headers: { one: "1" } }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Response(null, { headers: { two: "2" } });
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = (await query(
+            createRequest("/")
+          )) as StaticHandlerContext;
+          expect(Array.from(context.loaderHeaders.root.entries())).toEqual([
+            ["one", "1"],
+          ]);
+          expect(Array.from(context.loaderHeaders.child.entries())).toEqual([
+            ["two", "2"],
+          ]);
+        });
+
+        it("should expose headers from action error responses", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  action: () => {
+                    throw new Response(null, { headers: { one: "1" } });
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = (await query(
+            createSubmitRequest("/?index")
+          )) as StaticHandlerContext;
+          expect(Array.from(context.actionHeaders.child.entries())).toEqual([
+            ["one", "1"],
           ]);
         });
       });

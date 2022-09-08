@@ -1852,8 +1852,8 @@ export function unstable_createStaticHandler(
           errors: {
             [boundaryMatch.route.id]: result.error,
           },
-          // Note: This is unused in queryRoute as we will return the raw error,
-          // or construct a response from the ErrorResponse
+          // Note: statusCode + headers are unused here since queryRoute will
+          // return the raw Response or value
           statusCode: 500,
           loaderHeaders: {},
           actionHeaders: {},
@@ -1865,13 +1865,11 @@ export function unstable_createStaticHandler(
         loaderData: {},
         actionData: { [actionMatch.route.id]: result.data },
         errors: null,
-        // Note: This is unused in queryRoute as we will return the raw
-        // Response or value
+        // Note: statusCode + headers are unused here since queryRoute will
+        // return the raw Response or value
         statusCode: 200,
         loaderHeaders: {},
-        actionHeaders: {
-          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
-        },
+        actionHeaders: {},
       };
     }
 
@@ -1890,7 +1888,9 @@ export function unstable_createStaticHandler(
           ? result.error.status
           : 500,
         actionData: null,
-        actionHeaders: {},
+        actionHeaders: {
+          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+        },
       };
     }
 
@@ -2342,6 +2342,7 @@ async function callLoaderOrAction(
       return {
         type: resultType,
         error: new ErrorResponse(status, result.statusText, data),
+        headers: result.headers,
       };
     }
 
@@ -2449,9 +2450,13 @@ function processRouteLoaderData(
           ? result.error.status
           : 500;
       }
+      if (result.headers) {
+        loaderHeaders[id] = result.headers;
+      }
     } else if (isDeferredResult(result)) {
       activeDeferreds?.set(id, result.deferredData);
       loaderData[id] = result.deferredData.data;
+      // TODO: Add statusCode/headers once we wire up streaming in Remix
     } else {
       loaderData[id] = result.data;
       // Error status codes always override success status codes, but if all
