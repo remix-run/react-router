@@ -12,7 +12,6 @@ import type {
 import {
   Router,
   createPath,
-  createRoutesFromChildren,
   useHref,
   useLocation,
   useMatch,
@@ -20,15 +19,14 @@ import {
   useNavigate,
   useNavigation,
   useResolvedPath,
-  UNSAFE_DataRouter as DataRouter,
-  UNSAFE_DataRouterProvider as DataRouterProvider,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_RouteContext as RouteContext,
   UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router";
-import type {
+import {
   BrowserHistory,
+  createRouter,
   Fetcher,
   FormEncType,
   FormMethod,
@@ -41,8 +39,6 @@ import type {
 import {
   createBrowserHistory,
   createHashHistory,
-  createBrowserRouter,
-  createHashRouter,
   invariant,
   matchPath,
 } from "@remix-run/router";
@@ -117,7 +113,7 @@ export type {
 export {
   AbortedDeferredError,
   Await,
-  DataMemoryRouter,
+  DataRouter,
   MemoryRouter,
   Navigate,
   NavigationType,
@@ -125,6 +121,7 @@ export {
   Route,
   Router,
   Routes,
+  createMemoryRouter,
   createPath,
   createRoutesFromChildren,
   defer,
@@ -174,8 +171,6 @@ export {
 
 /** @internal */
 export {
-  UNSAFE_DataRouter,
-  UNSAFE_DataRouterProvider,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
   UNSAFE_DataStaticRouterContext,
@@ -190,96 +185,46 @@ declare global {
   var __staticRouterHydrationData: HydrationState | undefined;
 }
 
-// Module-scoped singleton to hold the router.  Extracted from the React lifecycle
-// to avoid issues w.r.t. dual initialization fetches in concurrent rendering.
-// Data router apps are expected to have a static route tree and are not intended
-// to be unmounted/remounted at runtime.
-let routerSingleton: RemixRouter;
+////////////////////////////////////////////////////////////////////////////////
+//#region Routers
+////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Unit-testing-only function to reset the router between tests
- * @private
- */
-export function _resetModuleScope() {
-  // @ts-expect-error
-  routerSingleton = null;
+export function createBrowserRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    hydrationData?: HydrationState;
+    window?: Window;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    history: createBrowserHistory({ window: opts?.window }),
+    hydrationData: opts?.hydrationData || window?.__staticRouterHydrationData,
+    routes: enhanceManualRouteObjects(routes),
+  }).initialize();
 }
+
+export function createHashRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    hydrationData?: HydrationState;
+    window?: Window;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    history: createHashHistory({ window: opts?.window }),
+    hydrationData: opts?.hydrationData || window?.__staticRouterHydrationData,
+    routes: enhanceManualRouteObjects(routes),
+  }).initialize();
+}
+//#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Components
 ////////////////////////////////////////////////////////////////////////////////
-
-export interface DataBrowserRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  hydrationData?: HydrationState;
-  fallbackElement?: React.ReactNode;
-  routes?: RouteObject[];
-  window?: Window;
-}
-
-export function DataBrowserRouter({
-  basename,
-  children,
-  fallbackElement,
-  hydrationData,
-  routes,
-  window: windowProp,
-}: DataBrowserRouterProps): React.ReactElement {
-  if (!routerSingleton) {
-    routerSingleton = createBrowserRouter({
-      basename,
-      hydrationData: hydrationData || window.__staticRouterHydrationData,
-      window: windowProp,
-      routes: routes
-        ? enhanceManualRouteObjects(routes)
-        : createRoutesFromChildren(children),
-    }).initialize();
-  }
-  let router = routerSingleton;
-
-  return (
-    <DataRouterProvider router={router} basename={basename}>
-      <DataRouter fallbackElement={fallbackElement} />
-    </DataRouterProvider>
-  );
-}
-
-export interface DataHashRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  hydrationData?: HydrationState;
-  fallbackElement?: React.ReactNode;
-  routes?: RouteObject[];
-  window?: Window;
-}
-
-export function DataHashRouter({
-  basename,
-  children,
-  hydrationData,
-  fallbackElement,
-  routes,
-  window: windowProp,
-}: DataBrowserRouterProps): React.ReactElement {
-  if (!routerSingleton) {
-    routerSingleton = createHashRouter({
-      basename,
-      hydrationData: hydrationData || window.__staticRouterHydrationData,
-      window: windowProp,
-      routes: routes
-        ? enhanceManualRouteObjects(routes)
-        : createRoutesFromChildren(children),
-    }).initialize();
-  }
-  let router = routerSingleton;
-
-  return (
-    <DataRouterProvider router={router} basename={basename}>
-      <DataRouter fallbackElement={fallbackElement} />
-    </DataRouterProvider>
-  );
-}
 
 export interface BrowserRouterProps {
   basename?: string;

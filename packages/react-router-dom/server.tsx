@@ -11,12 +11,11 @@ import {
   invariant,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import type { Location, RouteObject, To } from "react-router-dom";
+import { Location, RouteObject, Routes, To } from "react-router-dom";
 import {
   createPath,
   parsePath,
   Router,
-  UNSAFE_DataRouter as DataRouter,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_DataStaticRouterContext as DataStaticRouterContext,
@@ -115,7 +114,14 @@ export function unstable_DataStaticRouter({
           <DataRouterStateContext.Provider
             value={dataRouterContext.router.state}
           >
-            <DataRouter />
+            <Router
+              basename={dataRouterContext.basename}
+              location={dataRouterContext.router.state.location}
+              navigationType={dataRouterContext.router.state.historyAction}
+              navigator={dataRouterContext.navigator}
+            >
+              <Routes />
+            </Router>
           </DataRouterStateContext.Provider>
         </DataRouterContext.Provider>
       </DataStaticRouterContext.Provider>
@@ -181,6 +187,9 @@ function getStatelessRemixRouter(
     `You cannot use router.${method}() on the server because it is a stateless environment`;
 
   return {
+    get basename() {
+      return "/";
+    },
     get state() {
       return {
         historyAction: Action.Pop,

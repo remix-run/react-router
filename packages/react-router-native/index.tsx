@@ -66,7 +66,7 @@ export type {
 export {
   AbortedDeferredError,
   Await,
-  DataMemoryRouter,
+  DataRouter,
   MemoryRouter,
   Navigate,
   NavigationType,
@@ -74,6 +74,7 @@ export {
   Route,
   Router,
   Routes,
+  createMemoryRouter,
   createPath,
   createRoutesFromChildren,
   defer,
@@ -123,8 +124,6 @@ export {
 
 /** @internal */
 export {
-  UNSAFE_DataRouter,
-  UNSAFE_DataRouterProvider,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
   UNSAFE_DataStaticRouterContext,

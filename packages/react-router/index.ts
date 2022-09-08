@@ -2,6 +2,7 @@ import type {
   ActionFunction,
   ActionFunctionArgs,
   Fetcher,
+  HydrationState,
   JsonFunction,
   LoaderFunction,
   LoaderFunctionArgs,
@@ -13,13 +14,16 @@ import type {
   PathMatch,
   PathPattern,
   RedirectFunction,
+  Router as RemixRouter,
   ShouldRevalidateFunction,
   To,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
   Action as NavigationType,
+  createMemoryHistory,
   createPath,
+  createRouter,
   defer,
   generatePath,
   isRouteErrorResponse,
@@ -48,9 +52,7 @@ import {
   enhanceManualRouteObjects,
   createRoutesFromChildren,
   renderMatches,
-  DataMemoryRouter,
   DataRouter,
-  DataRouterProvider,
   Await,
   MemoryRouter,
   Navigate,
@@ -149,7 +151,7 @@ export type {
 export {
   AbortedDeferredError,
   Await,
-  DataMemoryRouter,
+  DataRouter,
   MemoryRouter,
   Navigate,
   NavigationType,
@@ -191,6 +193,26 @@ export {
   useRoutes,
 };
 
+export function createMemoryRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    hydrationData?: HydrationState;
+    initialEntries?: string[];
+    initialIndex?: number;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    history: createMemoryHistory({
+      initialEntries: opts?.initialEntries,
+      initialIndex: opts?.initialIndex,
+    }),
+    hydrationData: opts?.hydrationData,
+    routes: enhanceManualRouteObjects(routes),
+  }).initialize();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We provide these exports as an escape hatch in the event that you need any
@@ -206,8 +228,6 @@ export {
 
 /** @internal */
 export {
-  DataRouter as UNSAFE_DataRouter,
-  DataRouterProvider as UNSAFE_DataRouterProvider,
   NavigationContext as UNSAFE_NavigationContext,
   LocationContext as UNSAFE_LocationContext,
   RouteContext as UNSAFE_RouteContext,

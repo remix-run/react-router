@@ -35,6 +35,11 @@ import {
  */
 export interface Router {
   /**
+   * Return the basename for the router
+   */
+  get basename(): RouterInit["basename"];
+
+  /**
    * Return the current state of the router
    */
   get state(): RouterState;
@@ -583,6 +588,7 @@ export function createRouter(init: RouterInit): Router {
   // Subscribe to state updates for the router
   function subscribe(fn: RouterSubscriber) {
     if (subscriber) {
+      // TODO: UPDATE
       throw new Error("A router only accepts one active subscriber");
     }
     subscriber = fn;
@@ -1667,6 +1673,9 @@ export function createRouter(init: RouterInit): Router {
   }
 
   router = {
+    get basename() {
+      return init.basename;
+    },
     get state() {
       return state;
     },
