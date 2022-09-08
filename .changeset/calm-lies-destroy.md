@@ -4,7 +4,7 @@
 "@remix-run/router": patch
 ---
 
-fix: remove internal router singleton
+fix: remove internal router singleton (#9227)
 
 This change removes the internal module-level `routerSingleton` we create and maintain inside our data routers since it was causing a number of headaches for non-simple use cases:
 
