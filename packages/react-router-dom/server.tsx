@@ -63,9 +63,10 @@ export function StaticRouter({
   );
 }
 
-export interface DataStaticRouterProps {
+export interface StaticRouterProviderProps {
+  basename?: string;
   context: StaticHandlerContext;
-  routes: RouteObject[];
+  router: RemixRouter;
   hydrate?: boolean;
   nonce?: string;
 }
@@ -74,22 +75,23 @@ export interface DataStaticRouterProps {
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function unstable_DataStaticRouter({
+export function unstable_StaticRouterProvider({
+  basename,
   context,
-  routes,
+  router,
   hydrate = true,
   nonce,
-}: DataStaticRouterProps) {
+}: StaticRouterProviderProps) {
   invariant(
-    routes && context,
-    "You must provide `routes` and `context` to <DataStaticRouter>"
+    router && context,
+    "You must provide `router` and `context` to <StaticRouterProvider>"
   );
 
   let dataRouterContext = {
-    router: getStatelessRemixRouter(routes, context),
+    router,
     navigator: getStatelessNavigator(),
     static: true,
-    basename: "/",
+    basename: basename || "/",
   };
 
   let hydrateScript = "";
@@ -179,7 +181,7 @@ function getStatelessNavigator() {
   };
 }
 
-function getStatelessRemixRouter(
+export function unstable_createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext
 ): RemixRouter {

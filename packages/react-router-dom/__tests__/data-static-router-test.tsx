@@ -8,7 +8,10 @@ import {
   useLocation,
   useMatches,
 } from "react-router-dom";
-import { unstable_DataStaticRouter as DataStaticRouter } from "react-router-dom/server";
+import {
+  unstable_createStaticRouter as createStaticRouter,
+  unstable_StaticRouterProvider as StaticRouterProvider,
+} from "react-router-dom/server";
 
 beforeEach(() => {
   jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -75,7 +78,10 @@ describe("A <DataStaticRouter>", () => {
 
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
-        <DataStaticRouter routes={routes} context={context} />
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
       </React.StrictMode>
     );
     expect(html).toMatch("<h1>👋</h1>");
@@ -180,7 +186,10 @@ describe("A <DataStaticRouter>", () => {
 
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
-        <DataStaticRouter routes={routes} context={context} />
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
       </React.StrictMode>
     );
     expect(html).toMatch("<h1>👋</h1>");
@@ -223,8 +232,8 @@ describe("A <DataStaticRouter>", () => {
 
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
-        <DataStaticRouter
-          routes={routes}
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
           context={context}
           nonce="nonce-string"
         />
@@ -273,7 +282,11 @@ describe("A <DataStaticRouter>", () => {
 
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
-        <DataStaticRouter routes={routes} context={context} hydrate={false} />
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+          hydrate={false}
+        />
       </React.StrictMode>
     );
     expect(html).toMatch("<h1>👋</h1>");
@@ -301,22 +314,22 @@ describe("A <DataStaticRouter>", () => {
       ReactDOMServer.renderToStaticMarkup(
         <React.StrictMode>
           {/* @ts-expect-error */}
-          <DataStaticRouter context={context} />
+          <StaticRouterProvider context={context} />
         </React.StrictMode>
       )
     ).toThrowErrorMatchingInlineSnapshot(
-      `"You must provide \`routes\` and \`context\` to <DataStaticRouter>"`
+      `"You must provide \`router\` and \`context\` to <StaticRouterProvider>"`
     );
 
     expect(() =>
       ReactDOMServer.renderToStaticMarkup(
         <React.StrictMode>
           {/* @ts-expect-error */}
-          <DataStaticRouter routes={routes} />
+          <StaticRouterProvider router={createStaticRouter(routes, context)} />
         </React.StrictMode>
       )
     ).toThrowErrorMatchingInlineSnapshot(
-      `"You must provide \`routes\` and \`context\` to <DataStaticRouter>"`
+      `"You must provide \`router\` and \`context\` to <StaticRouterProvider>"`
     );
   });
 
@@ -345,7 +358,11 @@ describe("A <DataStaticRouter>", () => {
 
       let html = ReactDOMServer.renderToStaticMarkup(
         <React.StrictMode>
-          <DataStaticRouter routes={routes} context={context} hydrate={false} />
+          <StaticRouterProvider
+            router={createStaticRouter(routes, context)}
+            context={context}
+            hydrate={false}
+          />
         </React.StrictMode>
       );
       expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
@@ -375,7 +392,11 @@ describe("A <DataStaticRouter>", () => {
 
       let html = ReactDOMServer.renderToStaticMarkup(
         <React.StrictMode>
-          <DataStaticRouter routes={routes} context={context} hydrate={false} />
+          <StaticRouterProvider
+            router={createStaticRouter(routes, context)}
+            context={context}
+            hydrate={false}
+          />
         </React.StrictMode>
       );
       expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
