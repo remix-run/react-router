@@ -149,7 +149,7 @@ function isRedirect(result: any) {
 }
 
 interface CustomMatchers<R = unknown> {
-  trackedPromise(data?: any, error?: any): R;
+  trackedPromise(data?: any, error?: any, aborted?: boolean): R;
 }
 
 declare global {
@@ -161,11 +161,12 @@ declare global {
 }
 
 // Custom matcher for asserting deferred promise results inside of `toEqual()`
-//  - expect.trackedPromise()             =>  pending promise
-//  - expect.trackedPromise(value)        =>  promise resolved with `value`
-//  - expect.trackedPromise(null, error)  =>  promise rejected with `error`
+//  - expect.trackedPromise()                  =>  pending promise
+//  - expect.trackedPromise(value)             =>  promise resolved with `value`
+//  - expect.trackedPromise(null, error)       =>  promise rejected with `error`
+//  - expect.trackedPromise(null, null, true)  =>  promise aborted
 expect.extend({
-  trackedPromise(received, data, error) {
+  trackedPromise(received, data, error, aborted = false) {
     let promise = received as TrackedPromise;
     let isTrackedPromise =
       promise instanceof Promise && promise._tracked === true;
@@ -185,6 +186,14 @@ expect.extend({
           : promise._error === error;
       return {
         message: () => `expected ${received} to be a rejected deferred`,
+        pass: isTrackedPromise && errorMatches,
+      };
+    }
+
+    if (aborted) {
+      let errorMatches = promise._error instanceof AbortedDeferredError;
+      return {
+        message: () => `expected ${received} to be an aborted deferred`,
         pass: isTrackedPromise && errorMatches,
       };
     }
@@ -7692,8 +7701,8 @@ describe("a router", () => {
         lazy: {
           critical1: "1",
           critical2: "2",
-          lazy1: expect.trackedPromise(),
-          lazy2: expect.trackedPromise(),
+          lazy1: expect.trackedPromise(null, null, true),
+          lazy2: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -7704,8 +7713,8 @@ describe("a router", () => {
         lazy: {
           critical1: "1",
           critical2: "2",
-          lazy1: expect.trackedPromise(),
-          lazy2: expect.trackedPromise(),
+          lazy1: expect.trackedPromise(null, null, true),
+          lazy2: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -7785,7 +7794,7 @@ describe("a router", () => {
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(), // No re-paint!
+          lazy: expect.trackedPromise(null, null, true), // No re-paint!
         },
       });
 
@@ -7901,11 +7910,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         index: {
           critical: "CRITICAL INDEX",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -7932,11 +7941,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         index: {
           critical: "CRITICAL INDEX",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -7947,11 +7956,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         index: {
           critical: "CRITICAL INDEX",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8020,7 +8029,7 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         foo: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8038,7 +8047,7 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         foo: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8341,11 +8350,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         aChild: {
           critical: "CRITICAL A CHILD",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8467,11 +8476,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8491,11 +8500,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8581,12 +8590,12 @@ describe("a router", () => {
         parent: {
           critical: "CRITICAL PARENT",
           lazy1: expect.trackedPromise("LAZY PARENT 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
           lazy1: expect.trackedPromise("LAZY A 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8613,12 +8622,12 @@ describe("a router", () => {
         parent: {
           critical: "CRITICAL PARENT",
           lazy1: expect.trackedPromise("LAZY PARENT 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
           lazy1: expect.trackedPromise("LAZY A 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8629,12 +8638,12 @@ describe("a router", () => {
         parent: {
           critical: "CRITICAL PARENT",
           lazy1: expect.trackedPromise("LAZY PARENT 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
           lazy1: expect.trackedPromise("LAZY A 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8848,11 +8857,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -9089,11 +9098,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -9124,11 +9133,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -9341,7 +9350,8 @@ describe("a router", () => {
         });
       });
 
-      it("should not touch deferred data on load navigations", async () => {
+      // Note: this is only until we wire up the remix streaming
+      it("should abort deferred data on load navigations (for now)", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/deferred"));
         expect(context).toMatchObject({
@@ -9350,7 +9360,7 @@ describe("a router", () => {
             parent: "PARENT LOADER",
             deferred: {
               critical: "loader",
-              lazy: expect.trackedPromise(),
+              lazy: expect.trackedPromise(null, null, true),
             },
           },
           errors: null,
