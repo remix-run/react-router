@@ -2661,6 +2661,65 @@ describe("<DataMemoryRouter>", () => {
       expect(getAwaitRenderCount()).toBe(3);
     });
 
+    it("should permit direct access to resolved values", async () => {
+      let barDefer = createDeferred();
+      let { container } = render(
+        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+          <Route
+            path="foo"
+            element={
+              <>
+                <h1>Foo</h1>
+                <MemoryNavigate to="/bar">Link to bar</MemoryNavigate>
+              </>
+            }
+          />
+          <Route path="bar" loader={() => barDefer.promise} element={<Bar />} />
+        </DataMemoryRouter>
+      );
+
+      let count = 0;
+      function Bar() {
+        let { bar } = useLoaderData();
+
+        React.useEffect(() => {
+          bar.then((data) => {
+            container.querySelector("#content").innerHTML =
+              data + " " + ++count;
+          });
+        }, [bar]);
+
+        return <div id="content">Waiting for data...</div>;
+      }
+
+      fireEvent.click(screen.getByText("Link to bar"));
+      let barValueDefer = createDeferred();
+      await barDefer.resolve({ bar: barValueDefer.promise });
+      await waitFor(() => screen.getByText("Waiting for data..."));
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div
+            id=\\"content\\"
+          >
+            Waiting for data...
+          </div>
+        </div>"
+      `);
+
+      await barValueDefer.resolve("BAR");
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div
+            id=\\"content\\"
+          >
+            BAR 1
+          </div>
+        </div>"
+      `);
+    });
+
     it("can render raw resolved promises with <Await>", async () => {
       let dfd = createDeferred();
 
