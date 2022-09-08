@@ -1,6 +1,6 @@
 import React from "react";
+import type { Location, useMatches } from "react-router-dom";
 import {
-  type Location,
   createBrowserRouter,
   Link,
   Outlet,
@@ -9,7 +9,6 @@ import {
   useLoaderData,
   useLocation,
   useNavigation,
-  useMatches,
 } from "react-router-dom";
 
 import "./index.css";

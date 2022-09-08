@@ -11,7 +11,8 @@ import {
   invariant,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import { Location, RouteObject, Routes, To } from "react-router-dom";
+import type { Location, RouteObject, To } from "react-router-dom";
+import { Routes } from "react-router-dom";
 import {
   createPath,
   parsePath,

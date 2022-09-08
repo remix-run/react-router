@@ -1,9 +1,7 @@
-import {
-  unstable_createStaticHandler as createStaticHandler,
-  StaticHandlerContext,
-} from "@remix-run/router";
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
+import type { StaticHandlerContext } from "@remix-run/router";
+import { unstable_createStaticHandler as createStaticHandler } from "@remix-run/router";
 import {
   Outlet,
   useLoaderData,

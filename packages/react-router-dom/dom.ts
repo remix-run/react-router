@@ -1,5 +1,5 @@
 import type { FormEncType, FormMethod } from "@remix-run/router";
-import { RelativeRoutingType } from "react-router";
+import type { RelativeRoutingType } from "react-router";
 
 export const defaultMethod = "get";
 const defaultEncType = "application/x-www-form-urlencoded";

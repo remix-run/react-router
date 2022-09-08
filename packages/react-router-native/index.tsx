@@ -1,20 +1,16 @@
 import * as React from "react";
-import {
-  BackHandler,
+import type {
   GestureResponderEvent,
-  Linking,
-  TouchableHighlight,
   TouchableHighlightProps,
 } from "react-native";
-import {
-  MemoryRouter,
+import { BackHandler, Linking, TouchableHighlight } from "react-native";
+import type {
+  To,
   MemoryRouterProps,
   NavigateOptions,
   RelativeRoutingType,
-  useLocation,
-  useNavigate,
 } from "react-router";
-import type { To } from "react-router";
+import { MemoryRouter, useLocation, useNavigate } from "react-router";
 
 import URLSearchParams from "@ungap/url-search-params";
 

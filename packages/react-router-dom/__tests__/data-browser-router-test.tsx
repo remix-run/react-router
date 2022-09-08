@@ -14,6 +14,7 @@ import {
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
+import type { Router, RouterInit } from "@remix-run/router";
 import {
   Form,
   Link,
@@ -35,7 +36,6 @@ import {
   useLocation,
   createRoutesFromElements,
 } from "react-router-dom";
-import { Router, RouterInit } from "@remix-run/router";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
   getWindowImpl(url, false)

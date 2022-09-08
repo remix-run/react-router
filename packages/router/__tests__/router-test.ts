@@ -28,7 +28,8 @@ import {
 } from "../index";
 
 // Private API
-import { AbortedDeferredError, TrackedPromise } from "../utils";
+import type { TrackedPromise } from "../utils";
+import { AbortedDeferredError } from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils

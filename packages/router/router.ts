@@ -1,7 +1,11 @@
-import { createPath, History, Location, Path, To } from "./history";
-import { Action as HistoryAction, createLocation, parsePath } from "./history";
-
+import type { History, Location, Path, To } from "./history";
 import {
+  Action as HistoryAction,
+  createLocation,
+  createPath,
+  parsePath,
+} from "./history";
+import type {
   DataResult,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,

@@ -24,9 +24,8 @@ import {
   UNSAFE_RouteContext as RouteContext,
   UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router";
-import {
+import type {
   BrowserHistory,
-  createRouter,
   Fetcher,
   FormEncType,
   FormMethod,
@@ -37,6 +36,7 @@ import {
   Router as RemixRouter,
 } from "@remix-run/router";
 import {
+  createRouter,
   createBrowserHistory,
   createHashHistory,
   invariant,
