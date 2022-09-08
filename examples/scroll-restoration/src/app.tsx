@@ -2,9 +2,9 @@ import React from "react";
 import {
   type Location,
   createBrowserRouter,
-  DataRouter,
   Link,
   Outlet,
+  RouterProvider,
   ScrollRestoration,
   useLoaderData,
   useLocation,
@@ -48,7 +48,7 @@ if (import.meta.hot) {
 }
 
 export default function App() {
-  return <DataRouter router={router} fallbackElement={<p>Loading...</p>} />;
+  return <RouterProvider router={router} fallbackElement={<p>Loading...</p>} />;
 }
 
 function Layout() {

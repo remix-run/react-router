@@ -2,8 +2,8 @@ import React from "react";
 import {
   createBrowserRouter,
   createRoutesFromChildren,
-  DataRouter,
   Route,
+  RouterProvider,
 } from "react-router-dom";
 
 import {
@@ -63,5 +63,5 @@ if (import.meta.hot) {
 }
 
 export default function App() {
-  return <DataRouter router={router} fallbackElement={<Fallback />} />;
+  return <RouterProvider router={router} fallbackElement={<Fallback />} />;
 }

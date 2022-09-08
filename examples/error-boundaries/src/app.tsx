@@ -1,5 +1,5 @@
 import React from "react";
-import { createBrowserRouter, DataRouter, Outlet } from "react-router-dom";
+import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 
 import "./index.css";
 import {
@@ -38,5 +38,5 @@ if (import.meta.hot) {
 }
 
 export default function App() {
-  return <DataRouter router={router} fallbackElement={<Fallback />} />;
+  return <RouterProvider router={router} fallbackElement={<Fallback />} />;
 }

@@ -1,5 +1,5 @@
 import "./index.css";
-import { createBrowserRouter, DataRouter } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Root, { loader as rootLoader } from "./routes/root";
 import NewNote, { action as newNoteAction } from "./routes/new";
@@ -35,5 +35,5 @@ if (import.meta.hot) {
 }
 
 export default function App() {
-  return <DataRouter router={router} />;
+  return <RouterProvider router={router} />;
 }
