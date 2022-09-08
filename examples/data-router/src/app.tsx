@@ -1,7 +1,7 @@
 import React from "react";
 import {
   createBrowserRouter,
-  createRoutesFromChildren,
+  createRoutesFromElements,
   Route,
   RouterProvider,
 } from "react-router-dom";
@@ -28,7 +28,7 @@ import {
 import "./index.css";
 
 let router = createBrowserRouter(
-  createRoutesFromChildren(
+  createRoutesFromElements(
     <Route path="/" element={<Layout />}>
       <Route index loader={homeLoader} element={<Home />} />
       <Route path="deferred" loader={deferredLoader} element={<DeferredPage />}>

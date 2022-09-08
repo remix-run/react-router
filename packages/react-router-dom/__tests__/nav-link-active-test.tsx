@@ -15,7 +15,7 @@ import {
   NavLink,
   Outlet,
   createBrowserRouter,
-  createRoutesFromChildren,
+  createRoutesFromElements,
 } from "react-router-dom";
 
 describe("NavLink", () => {
@@ -330,7 +330,7 @@ describe("NavLink using a data router", () => {
   it("applies the default 'active'/'pending' classNames to the underlying <a>", async () => {
     let dfd = createDeferred();
     let router = createBrowserRouter(
-      createRoutesFromChildren(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -369,7 +369,7 @@ describe("NavLink using a data router", () => {
   it("applies its className correctly when provided as a function", async () => {
     let dfd = createDeferred();
     let router = createBrowserRouter(
-      createRoutesFromChildren(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -424,7 +424,7 @@ describe("NavLink using a data router", () => {
   it("applies its style correctly when provided as a function", async () => {
     let dfd = createDeferred();
     let router = createBrowserRouter(
-      createRoutesFromChildren(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -479,7 +479,7 @@ describe("NavLink using a data router", () => {
   it("applies its children correctly when provided as a function", async () => {
     let dfd = createDeferred();
     let router = createBrowserRouter(
-      createRoutesFromChildren(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -527,7 +527,7 @@ describe("NavLink using a data router", () => {
   it("does not apply during transitions to non-matching locations", async () => {
     let dfd = createDeferred();
     let router = createBrowserRouter(
-      createRoutesFromChildren(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route path="bar" element={<p>Bar page</p>} />

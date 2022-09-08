@@ -43,10 +43,10 @@ function App() {
 }
 ```
 
-If folks still prefer the JSX notation, they can leverage `createRoutesFromChildren`:
+If folks still prefer the JSX notation, they can leverage `createRoutesFromElements` (aliased from `createRoutesFromChildren` since they are not "children" in this usage):
 
 ```jsx
-let routes = createRoutesFromChildren(
+let routes = createRoutesFromElements(
   <Route path="/" element={<Layout />}>
     <Route index element={<Home />}>
   </Route>
@@ -83,3 +83,4 @@ And finally since `<RouterProvider>` accepts a router, it makes unit testing eas
 **Added APIs**
 
 - `<RouterProvider>`
+- `createRoutesFromElements` (alias of `createRoutesFromChildren`)

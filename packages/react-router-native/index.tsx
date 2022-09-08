@@ -78,6 +78,7 @@ export {
   createMemoryRouter,
   createPath,
   createRoutesFromChildren,
+  createRoutesFromElements,
   defer,
   isRouteErrorResponse,
   generatePath,

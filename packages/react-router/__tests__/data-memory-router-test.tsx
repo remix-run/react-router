@@ -18,7 +18,7 @@ import {
   RouterProvider,
   Outlet,
   createMemoryRouter,
-  createRoutesFromChildren,
+  createRoutesFromElements,
   defer,
   useActionData,
   useAsyncError,
@@ -57,7 +57,7 @@ describe("<DataMemoryRouter>", () => {
     initialIndex?: number;
     routes?: RouteObject[];
   }) {
-    router = createMemoryRouter(routes || createRoutesFromChildren(children), {
+    router = createMemoryRouter(routes || createRoutesFromElements(children), {
       basename,
       hydrationData,
       initialEntries,
@@ -1823,7 +1823,7 @@ describe("<DataMemoryRouter>", () => {
 
     it("handles back button routing away from a child error boundary", async () => {
       let router = createMemoryRouter(
-        createRoutesFromChildren(
+        createRoutesFromElements(
           <Route
             path="/"
             element={<Parent />}
@@ -1903,7 +1903,7 @@ describe("<DataMemoryRouter>", () => {
 
     it("handles back button routing away from a default error boundary", async () => {
       let router = createMemoryRouter(
-        createRoutesFromChildren(
+        createRoutesFromElements(
           <Route path="/" element={<Parent />}>
             <Route path="child" element={<Child />} />
           </Route>

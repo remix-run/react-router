@@ -33,7 +33,7 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   defer,
   useLocation,
-  createRoutesFromChildren,
+  createRoutesFromElements,
 } from "react-router-dom";
 import { Router, RouterInit } from "@remix-run/router";
 
@@ -84,7 +84,7 @@ function testDomRouter(
     hydrationData?: RouterInit["hydrationData"];
     window?: Window;
   }) {
-    router = createTestRouter(createRoutesFromChildren(children), {
+    router = createTestRouter(createRoutesFromElements(children), {
       basename,
       hydrationData,
       window,

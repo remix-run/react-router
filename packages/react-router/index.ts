@@ -163,6 +163,7 @@ export {
   Routes,
   createPath,
   createRoutesFromChildren,
+  createRoutesFromChildren as createRoutesFromElements,
   defer,
   isRouteErrorResponse,
   generatePath,
