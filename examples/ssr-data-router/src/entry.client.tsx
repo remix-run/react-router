@@ -1,12 +1,14 @@
 import * as React from "react";
 import ReactDOM from "react-dom/client";
-import { DataBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, DataRouter } from "react-router-dom";
 
 import { routes } from "./App";
+
+let router = createBrowserRouter(routes);
 
 ReactDOM.hydrateRoot(
   document.getElementById("app"),
   <React.StrictMode>
-    <DataBrowserRouter routes={routes} fallbackElement={null} />
+    <DataRouter router={router} fallbackElement={null} />
   </React.StrictMode>
 );
