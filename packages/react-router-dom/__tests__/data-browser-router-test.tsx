@@ -14,13 +14,15 @@ import {
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
+import type { Router, RouterInit } from "@remix-run/router";
 import {
-  DataBrowserRouter,
-  DataHashRouter,
   Form,
   Link,
   Route,
+  RouterProvider,
   Outlet,
+  createBrowserRouter,
+  createHashRouter,
   useLoaderData,
   useActionData,
   useRouteError,
@@ -32,22 +34,22 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   defer,
   useLocation,
+  createRoutesFromElements,
 } from "react-router-dom";
 
-// Private API
-import { _resetModuleScope } from "../index";
-
-testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
+testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
   getWindowImpl(url, false)
 );
 
-testDomRouter("<DataHashRouter>", DataHashRouter, (url) =>
+testDomRouter("<DataHashRouter>", createHashRouter, (url) =>
   getWindowImpl(url, true)
 );
 
+let router: Router | null = null;
+
 function testDomRouter(
   name: string,
-  TestDataRouter: typeof DataBrowserRouter,
+  createTestRouter: typeof createBrowserRouter | typeof createHashRouter,
   getWindow: (initialUrl: string, isHash?: boolean) => Window
 ) {
   // Utility to assert location info based on the type of router
@@ -68,6 +70,28 @@ function testDomRouter(
     }
   }
 
+  // Abstraction to avoid re-writing all tests for the time being
+  function TestDataRouter({
+    basename,
+    children,
+    fallbackElement,
+    hydrationData,
+    window,
+  }: {
+    basename?: RouterInit["basename"];
+    children: React.ReactNode | React.ReactNode[];
+    fallbackElement?: React.ReactNode;
+    hydrationData?: RouterInit["hydrationData"];
+    window?: Window;
+  }) {
+    router = createTestRouter(createRoutesFromElements(children), {
+      basename,
+      hydrationData,
+      window,
+    });
+    return <RouterProvider router={router} fallbackElement={fallbackElement} />;
+  }
+
   describe(`Router: ${name}`, () => {
     let consoleWarn: jest.SpyInstance;
     let consoleError: jest.SpyInstance;
@@ -77,10 +101,10 @@ function testDomRouter(
     });
 
     afterEach(() => {
+      router = null;
       window.__staticRouterHydrationData = undefined;
       consoleWarn.mockRestore();
       consoleError.mockRestore();
-      _resetModuleScope();
     });
 
     it("renders the first route that matches the URL", () => {
@@ -3588,9 +3612,8 @@ function testDomRouter(
           },
         ];
 
-        let { container } = render(
-          <TestDataRouter window={getWindow("/foo")} routes={routes} />
-        );
+        router = createTestRouter(routes, { window: getWindow("/foo") });
+        let { container } = render(<RouterProvider router={router} />);
 
         function Layout() {
           let navigation = useNavigation();

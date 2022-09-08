@@ -28,7 +28,8 @@ import {
 } from "../index";
 
 // Private API
-import { AbortedDeferredError, TrackedPromise } from "../utils";
+import type { TrackedPromise } from "../utils";
+import { AbortedDeferredError } from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
@@ -1031,6 +1032,61 @@ describe("a router", () => {
         ],
         initialized: true,
       });
+    });
+
+    it("supports subscribers", async () => {
+      let history = createMemoryHistory({ initialEntries: ["/"] });
+      let count = 0;
+      let router = createRouter({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            hasErrorBoundary: true,
+            loader: () => ++count,
+          },
+        ],
+        history,
+        hydrationData: {
+          loaderData: { root: 0 },
+        },
+      }).initialize();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      let subscriber = jest.fn();
+      let unsubscribe = router.subscribe(subscriber);
+      let subscriber2 = jest.fn();
+      let unsubscribe2 = router.subscribe(subscriber2);
+
+      await router.navigate("/?key=a");
+      expect(subscriber.mock.calls[0][0].navigation.state).toBe("loading");
+      expect(subscriber.mock.calls[0][0].navigation.location.search).toBe(
+        "?key=a"
+      );
+      expect(subscriber.mock.calls[1][0].navigation.state).toBe("idle");
+      expect(subscriber.mock.calls[1][0].location.search).toBe("?key=a");
+      expect(subscriber2.mock.calls[0][0].navigation.state).toBe("loading");
+      expect(subscriber2.mock.calls[0][0].navigation.location.search).toBe(
+        "?key=a"
+      );
+      expect(subscriber2.mock.calls[1][0].navigation.state).toBe("idle");
+      expect(subscriber2.mock.calls[1][0].location.search).toBe("?key=a");
+
+      unsubscribe2();
+      await router.navigate("/?key=b");
+      expect(subscriber.mock.calls[2][0].navigation.state).toBe("loading");
+      expect(subscriber.mock.calls[2][0].navigation.location.search).toBe(
+        "?key=b"
+      );
+      expect(subscriber.mock.calls[3][0].navigation.state).toBe("idle");
+      expect(subscriber.mock.calls[3][0].location.search).toBe("?key=b");
+
+      unsubscribe();
+      await router.navigate("/?key=c");
+      expect(subscriber).toHaveBeenCalledTimes(4);
+      expect(subscriber2).toHaveBeenCalledTimes(2);
     });
   });
 

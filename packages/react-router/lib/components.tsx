@@ -13,7 +13,6 @@ import {
   Action as NavigationType,
   AbortedDeferredError,
   createMemoryHistory,
-  createMemoryRouter,
   invariant,
   parsePath,
   stripBasename,
@@ -44,36 +43,18 @@ import {
   _renderMatches,
 } from "./hooks";
 
-// Module-scoped singleton to hold the router.  Extracted from the React lifecycle
-// to avoid issues w.r.t. dual initialization fetches in concurrent rendering.
-// Data router apps are expected to have a static route tree and are not intended
-// to be unmounted/remounted at runtime.
-let routerSingleton: RemixRouter;
-
-/**
- * Unit-testing-only function to reset the router between tests
- * @private
- */
-export function _resetModuleScope() {
-  // @ts-expect-error
-  routerSingleton = null;
-}
-
-interface DataRouterProviderProps {
-  basename?: string;
-  children?: React.ReactNode;
+export interface RouterProviderProps {
+  fallbackElement?: React.ReactNode;
   router: RemixRouter;
 }
 
 /**
- * A higher-order component that, given a Remix Router instance. setups the
- * Context's required for data routing
+ * Given a Remix Router instance, render the appropriate UI
  */
-export function DataRouterProvider({
-  basename,
-  children,
+export function RouterProvider({
+  fallbackElement,
   router,
-}: DataRouterProviderProps): React.ReactElement {
+}: RouterProviderProps): React.ReactElement {
   // Sync router state to our component state to force re-renders
   let state: RouterState = useSyncExternalStoreShim(
     router.subscribe,
@@ -102,45 +83,29 @@ export function DataRouterProvider({
     };
   }, [router]);
 
+  let basename = router.basename || "/";
+
   return (
     <DataRouterContext.Provider
       value={{
         router,
         navigator,
         static: false,
-        basename: basename || "/",
+        // Do we need this?
+        basename,
       }}
     >
-      <DataRouterStateContext.Provider value={state} children={children} />
+      <DataRouterStateContext.Provider value={state}>
+        <Router
+          basename={router.basename}
+          location={router.state.location}
+          navigationType={router.state.historyAction}
+          navigator={navigator}
+        >
+          {router.state.initialized ? <Routes /> : fallbackElement}
+        </Router>
+      </DataRouterStateContext.Provider>
     </DataRouterContext.Provider>
-  );
-}
-
-interface DataRouterProps {
-  fallbackElement?: React.ReactNode;
-}
-
-/**
- * A data-aware wrapper for `<Router>` that leverages the Context's provided by
- * `<DataRouterProvider>`
- */
-export function DataRouter({ fallbackElement }: DataRouterProps) {
-  let dataRouterContext = React.useContext(DataRouterContext);
-  invariant(
-    dataRouterContext,
-    "<DataRouter> may only be rendered within a DataRouterContext"
-  );
-  let { router, navigator, basename } = dataRouterContext;
-
-  return (
-    <Router
-      basename={basename}
-      location={router.state.location}
-      navigationType={router.state.historyAction}
-      navigator={navigator}
-    >
-      {router.state.initialized ? <Routes /> : fallbackElement}
-    </Router>
   );
 }
 
@@ -152,35 +117,6 @@ export interface DataMemoryRouterProps {
   hydrationData?: HydrationState;
   fallbackElement?: React.ReactNode;
   routes?: RouteObject[];
-}
-
-export function DataMemoryRouter({
-  basename,
-  children,
-  initialEntries,
-  initialIndex,
-  hydrationData,
-  fallbackElement,
-  routes,
-}: DataMemoryRouterProps): React.ReactElement {
-  if (!routerSingleton) {
-    routerSingleton = createMemoryRouter({
-      basename,
-      hydrationData,
-      initialEntries,
-      initialIndex,
-      routes: routes
-        ? enhanceManualRouteObjects(routes)
-        : createRoutesFromChildren(children),
-    }).initialize();
-  }
-  let router = routerSingleton;
-
-  return (
-    <DataRouterProvider router={router} basename={basename}>
-      <DataRouter fallbackElement={fallbackElement} />
-    </DataRouterProvider>
-  );
 }
 
 export interface MemoryRouterProps {

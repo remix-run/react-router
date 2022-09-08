@@ -1,7 +1,8 @@
 {
   "extends": ["react-app"],
   "rules": {
-    "import/first": 0
+    "import/first": "off",
+    "@typescript-eslint/consistent-type-imports": "error"
   },
   "overrides": [
     {

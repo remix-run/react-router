@@ -1,17 +1,56 @@
 import React from "react";
-
+import type { Location, useMatches } from "react-router-dom";
 import {
-  type Location,
+  createBrowserRouter,
   Link,
   Outlet,
+  RouterProvider,
   ScrollRestoration,
   useLoaderData,
   useLocation,
   useNavigation,
-  useMatches,
 } from "react-router-dom";
 
-export function Layout() {
+import "./index.css";
+
+let router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <h2>Home</h2>,
+      },
+      {
+        path: "restore-by-key",
+        loader: getArrayLoader,
+        element: <LongPage />,
+      },
+      {
+        path: "restore-by-pathname",
+        loader: getArrayLoader,
+        element: <LongPage />,
+        handle: { scrollMode: "pathname" },
+      },
+      {
+        path: "link-to-hash",
+        loader: getArrayLoader,
+        element: <LongPage />,
+      },
+    ],
+  },
+]);
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => router.dispose());
+}
+
+export default function App() {
+  return <RouterProvider router={router} fallbackElement={<p>Loading...</p>} />;
+}
+
+function Layout() {
   let navigation = useNavigation();
 
   // You can provide a custom implementation of what "key" should be used to
@@ -100,7 +139,7 @@ export function Layout() {
                 </li>
                 <li className="navitem">
                   <a href="https://www.google.com">
-                    Thi links to an external site (google)
+                    This links to an external site (google)
                   </a>
                 </li>
               </ul>
@@ -124,14 +163,14 @@ interface ArrayLoaderData {
   arr: Array<number>;
 }
 
-export async function getArrayLoader(): Promise<ArrayLoaderData> {
+async function getArrayLoader(): Promise<ArrayLoaderData> {
   await new Promise((r) => setTimeout(r, 1000));
   return {
     arr: new Array(100).fill(null).map((_, i) => i),
   };
 }
 
-export function LongPage() {
+function LongPage() {
   let data = useLoaderData() as ArrayLoaderData;
   let location = useLocation();
   return (

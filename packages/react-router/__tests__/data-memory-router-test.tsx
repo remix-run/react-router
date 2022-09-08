@@ -8,15 +8,17 @@ import {
   queryByText,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import type { FormMethod, Router } from "@remix-run/router";
-import { createMemoryRouter } from "@remix-run/router";
-
-import type { DataMemoryRouterProps } from "react-router";
+import type { FormMethod, Router, RouterInit } from "@remix-run/router";
+import type { RouteObject } from "react-router";
 import {
-  DataMemoryRouter,
   Await,
+  MemoryRouter,
   Route,
+  Routes,
+  RouterProvider,
   Outlet,
+  createMemoryRouter,
+  createRoutesFromElements,
   defer,
   useActionData,
   useAsyncError,
@@ -28,19 +30,42 @@ import {
   useRouteError,
   useNavigation,
   useRevalidator,
-  MemoryRouter,
-  Routes,
-  UNSAFE_DataRouter as DataRouter,
   UNSAFE_DataRouterContext as DataRouterContext,
-  UNSAFE_DataRouterProvider as DataRouterProvider,
 } from "react-router";
 
-// Private API
-import { createRoutesFromChildren, _resetModuleScope } from "../lib/components";
+let router: Router | null = null;
 
 describe("<DataMemoryRouter>", () => {
   let consoleWarn: jest.SpyInstance;
   let consoleError: jest.SpyInstance;
+
+  // Abstraction to avoid re-writing all tests for the time being
+  function DataMemoryRouter({
+    basename,
+    children,
+    fallbackElement,
+    hydrationData,
+    initialEntries,
+    initialIndex,
+    routes,
+  }: {
+    basename?: RouterInit["basename"];
+    children?: React.ReactNode | React.ReactNode[];
+    fallbackElement?: React.ReactNode;
+    hydrationData?: RouterInit["hydrationData"];
+    initialEntries?: string[];
+    initialIndex?: number;
+    routes?: RouteObject[];
+  }) {
+    router = createMemoryRouter(routes || createRoutesFromElements(children), {
+      basename,
+      hydrationData,
+      initialEntries,
+      initialIndex,
+    });
+    return <RouterProvider router={router} fallbackElement={fallbackElement} />;
+  }
+
   beforeEach(() => {
     consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
     consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -49,7 +74,7 @@ describe("<DataMemoryRouter>", () => {
   afterEach(() => {
     consoleWarn.mockRestore();
     consoleError.mockRestore();
-    _resetModuleScope();
+    router = null;
   });
 
   it("renders the first route that matches the URL", () => {
@@ -1797,49 +1822,25 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("handles back button routing away from a child error boundary", async () => {
-      let router: Router;
-
-      // Need this to capture a copy of the router so we can trigger a back
-      // navigation from _outside_ the DataMemoryRouter scope to most closely
-      // resemble a browser back button
-      function LocalDataMemoryRouter({
-        children,
-        initialEntries,
-        initialIndex,
-        hydrationData,
-      }: DataMemoryRouterProps): React.ReactElement {
-        router = createMemoryRouter({
-          initialEntries,
-          initialIndex,
-          routes: createRoutesFromChildren(children),
-          hydrationData,
-        }).initialize();
-
-        return (
-          <DataRouterProvider router={router}>
-            <DataRouter />
-          </DataRouterProvider>
-        );
-      }
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            element={<Parent />}
+            errorElement={<p>Don't show this</p>}
+          >
+            <Route
+              path="child"
+              element={<Child />}
+              errorElement={<ErrorBoundary />}
+            />
+          </Route>
+        )
+      );
 
       let { container } = render(
         <div>
-          <LocalDataMemoryRouter
-            initialEntries={["/"]}
-            hydrationData={{ loaderData: {} }}
-          >
-            <Route
-              path="/"
-              element={<Parent />}
-              errorElement={<p>Don't show this</p>}
-            >
-              <Route
-                path="child"
-                element={<Child />}
-                errorElement={<ErrorBoundary />}
-              />
-            </Route>
-          </LocalDataMemoryRouter>
+          <RouterProvider router={router} />
         </div>
       );
 
@@ -1870,7 +1871,6 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      // @ts-expect-error
       router.navigate("/child");
       await waitFor(() => screen.getByText("Kaboom!"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -1886,7 +1886,6 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      // @ts-expect-error
       router.navigate(-1);
       await waitFor(() => {
         expect(queryByText(container, "Kaboom!")).not.toBeInTheDocument();
@@ -1903,41 +1902,16 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("handles back button routing away from a default error boundary", async () => {
-      let router: Router;
-
-      // Need this to capture a copy of the router so we can trigger a back
-      // navigation from _outside_ the DataMemoryRouter scope to most closely
-      // resemble a browser back button
-      function LocalDataMemoryRouter({
-        children,
-        initialEntries,
-        initialIndex,
-        hydrationData,
-        fallbackElement,
-      }: DataMemoryRouterProps): React.ReactElement {
-        router = createMemoryRouter({
-          initialEntries,
-          initialIndex,
-          routes: createRoutesFromChildren(children),
-          hydrationData,
-        }).initialize();
-
-        return (
-          <DataRouterProvider router={router} fallbackElement={fallbackElement}>
-            <DataRouter />
-          </DataRouterProvider>
-        );
-      }
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Parent />}>
+            <Route path="child" element={<Child />} />
+          </Route>
+        )
+      );
       let { container } = render(
         <div>
-          <LocalDataMemoryRouter
-            initialEntries={["/"]}
-            hydrationData={{ loaderData: {} }}
-          >
-            <Route path="/" element={<Parent />}>
-              <Route path="child" element={<Child />} />
-            </Route>
-          </LocalDataMemoryRouter>
+          <RouterProvider router={router} />
         </div>
       );
 
@@ -1966,7 +1940,6 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      // @ts-expect-error
       router.navigate("/child");
       await waitFor(() => screen.getByText("Kaboom!"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -2006,7 +1979,6 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      // @ts-expect-error
       router.navigate(-1);
       await waitFor(() => {
         expect(queryByText(container, "Kaboom!")).not.toBeInTheDocument();

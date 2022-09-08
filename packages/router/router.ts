@@ -1,7 +1,11 @@
-import { createPath, History, Location, Path, To } from "./history";
-import { Action as HistoryAction, createLocation, parsePath } from "./history";
-
+import type { History, Location, Path, To } from "./history";
 import {
+  Action as HistoryAction,
+  createLocation,
+  createPath,
+  parsePath,
+} from "./history";
+import type {
   DataResult,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
@@ -34,6 +38,11 @@ import {
  * A Router instance manages all navigation and data loading/mutations
  */
 export interface Router {
+  /**
+   * Return the basename for the router
+   */
+  get basename(): RouterInit["basename"];
+
   /**
    * Return the current state of the router
    */
@@ -461,8 +470,8 @@ export function createRouter(init: RouterInit): Router {
   let dataRoutes = convertRoutesToDataRoutes(init.routes);
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
-  // Externally-provided function to call on all state changes
-  let subscriber: RouterSubscriber | null = null;
+  // Externally-provided functions to call on all state changes
+  let subscribers = new Set<RouterSubscriber>();
   // Externally-provided object to hold scroll restoration locations during routing
   let savedScrollPositions: Record<string, number> | null = null;
   // Externally-provided function to get scroll restoration keys
@@ -575,20 +584,15 @@ export function createRouter(init: RouterInit): Router {
     if (unlistenHistory) {
       unlistenHistory();
     }
-    subscriber = null;
+    subscribers.clear();
     pendingNavigationController?.abort();
     state.fetchers.forEach((_, key) => deleteFetcher(key));
   }
 
   // Subscribe to state updates for the router
   function subscribe(fn: RouterSubscriber) {
-    if (subscriber) {
-      throw new Error("A router only accepts one active subscriber");
-    }
-    subscriber = fn;
-    return () => {
-      subscriber = null;
-    };
+    subscribers.add(fn);
+    return () => subscribers.delete(fn);
   }
 
   // Update our state and notify the calling context of the change
@@ -597,7 +601,7 @@ export function createRouter(init: RouterInit): Router {
       ...state,
       ...newState,
     };
-    subscriber?.(state);
+    subscribers.forEach((subscriber) => subscriber(state));
   }
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
@@ -1667,6 +1671,9 @@ export function createRouter(init: RouterInit): Router {
   }
 
   router = {
+    get basename() {
+      return init.basename;
+    },
     get state() {
       return state;
     },

@@ -12,11 +12,11 @@ import {
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
 import type { Location, RouteObject, To } from "react-router-dom";
+import { Routes } from "react-router-dom";
 import {
   createPath,
   parsePath,
   Router,
-  UNSAFE_DataRouter as DataRouter,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_DataStaticRouterContext as DataStaticRouterContext,
@@ -63,9 +63,10 @@ export function StaticRouter({
   );
 }
 
-export interface DataStaticRouterProps {
+export interface StaticRouterProviderProps {
+  basename?: string;
   context: StaticHandlerContext;
-  routes: RouteObject[];
+  router: RemixRouter;
   hydrate?: boolean;
   nonce?: string;
 }
@@ -74,22 +75,23 @@ export interface DataStaticRouterProps {
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function unstable_DataStaticRouter({
+export function unstable_StaticRouterProvider({
+  basename,
   context,
-  routes,
+  router,
   hydrate = true,
   nonce,
-}: DataStaticRouterProps) {
+}: StaticRouterProviderProps) {
   invariant(
-    routes && context,
-    "You must provide `routes` and `context` to <DataStaticRouter>"
+    router && context,
+    "You must provide `router` and `context` to <StaticRouterProvider>"
   );
 
   let dataRouterContext = {
-    router: getStatelessRemixRouter(routes, context),
+    router,
     navigator: getStatelessNavigator(),
     static: true,
-    basename: "/",
+    basename: basename || "/",
   };
 
   let hydrateScript = "";
@@ -115,7 +117,14 @@ export function unstable_DataStaticRouter({
           <DataRouterStateContext.Provider
             value={dataRouterContext.router.state}
           >
-            <DataRouter />
+            <Router
+              basename={dataRouterContext.basename}
+              location={dataRouterContext.router.state.location}
+              navigationType={dataRouterContext.router.state.historyAction}
+              navigator={dataRouterContext.navigator}
+            >
+              <Routes />
+            </Router>
           </DataRouterStateContext.Provider>
         </DataRouterContext.Provider>
       </DataStaticRouterContext.Provider>
@@ -172,7 +181,7 @@ function getStatelessNavigator() {
   };
 }
 
-function getStatelessRemixRouter(
+export function unstable_createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext
 ): RemixRouter {
@@ -181,6 +190,9 @@ function getStatelessRemixRouter(
     `You cannot use router.${method}() on the server because it is a stateless environment`;
 
   return {
+    get basename() {
+      return "/";
+    },
     get state() {
       return {
         historyAction: Action.Pop,

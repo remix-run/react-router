@@ -1,4 +1,4 @@
-import * as TestRenderer from "react-test-renderer";
+import type * as TestRenderer from "react-test-renderer";
 
 export class MockEvent {
   type: string;
