@@ -163,8 +163,8 @@ async function handleDataRequest({
       console.error(error);
     }
 
-    if (serverMode === ServerMode.Development) {
-      return errorBoundaryError(error as Error, 500);
+    if (serverMode === ServerMode.Development && error instanceof Error) {
+      return errorBoundaryError(error, 500);
     }
 
     return errorBoundaryError(new Error("Unexpected Server Error"), 500);
