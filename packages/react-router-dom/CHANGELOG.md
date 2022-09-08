@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- c17512d8: fix: remove internal router singleton (#9227)
+- fix: remove internal router singleton (#9227)
 
   This change removes the internal module-level `routerSingleton` we create and maintain inside our data routers since it was causing a number of headaches for non-simple use cases:
 
@@ -85,8 +85,7 @@
   - `<RouterProvider>`
   - `createRoutesFromElements` (alias of `createRoutesFromChildren`)
 
-- Updated dependencies [c17512d8]
-- Updated dependencies [112c02c7]
+- Updated dependencies
   - react-router@6.4.0-pre.15
 
 ## 6.4.0-pre.14
