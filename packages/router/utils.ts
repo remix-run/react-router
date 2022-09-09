@@ -485,10 +485,17 @@ export function generatePath<Path extends string>(
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
     })
-    .replace(/\/*\*$/, (_) => {
+    .replace(/(\/?)\*/, (_, prefix, __, str) => {
       const star = "*" as PathParam<Path>;
 
-      return params[star] == null ? "" : params[star].replace(/^\/*/, "/");
+      if (params[star] == null) {
+        // If no splat was provided, trim the trailing slash _unless_ it's
+        // the entire path
+        return str === "/*" ? "/" : "";
+      }
+
+      // Apply the splat
+      return `${prefix}${params[star]}`;
     });
 }
 
