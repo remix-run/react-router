@@ -1,9 +1,11 @@
 import type {
   ActionFunction,
-  DataRouteMatch,
+  ActionFunctionArgs,
   Fetcher,
+  HydrationState,
   JsonFunction,
   LoaderFunction,
+  LoaderFunctionArgs,
   Location,
   Navigation,
   Params,
@@ -12,14 +14,17 @@ import type {
   PathMatch,
   PathPattern,
   RedirectFunction,
-  RouteMatch,
-  RouteObject,
+  Router as RemixRouter,
   ShouldRevalidateFunction,
   To,
 } from "@remix-run/router";
 import {
+  AbortedDeferredError,
   Action as NavigationType,
+  createMemoryHistory,
   createPath,
+  createRouter,
+  defer,
   generatePath,
   isRouteErrorResponse,
   json,
@@ -32,6 +37,7 @@ import {
 
 import type {
   DataMemoryRouterProps,
+  AwaitProps,
   MemoryRouterProps,
   NavigateProps,
   OutletProps,
@@ -41,23 +47,34 @@ import type {
   IndexRouteProps,
   RouterProps,
   RoutesProps,
+  RouterProviderProps,
 } from "./lib/components";
 import {
+  enhanceManualRouteObjects,
   createRoutesFromChildren,
   renderMatches,
+  Await,
   MemoryRouter,
-  DataMemoryRouter,
   Navigate,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
-  useRenderDataRouter,
 } from "./lib/components";
-import type { Navigator, NavigateOptions } from "./lib/context";
+import type {
+  DataRouteMatch,
+  DataRouteObject,
+  Navigator,
+  NavigateOptions,
+  RouteMatch,
+  RouteObject,
+  RelativeRoutingType,
+} from "./lib/context";
 import {
   DataRouterContext,
   DataRouterStateContext,
+  DataStaticRouterContext,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -76,15 +93,17 @@ import {
   useResolvedPath,
   useRoutes,
   useActionData,
+  useAsyncError,
+  useAsyncValue,
   useLoaderData,
   useMatches,
-  useRouteLoaderData,
-  useRouteError,
   useNavigation,
   useRevalidator,
+  useRouteError,
+  useRouteLoaderData,
 } from "./lib/hooks";
 
-// FIXME: Do we need to still export these to be non-breaking?
+// Exported for backwards compatibility, but not being used internally anymore
 type Hash = string;
 type Pathname = string;
 type Search = string;
@@ -92,14 +111,18 @@ type Search = string;
 // Expose react-router public API
 export type {
   ActionFunction,
+  ActionFunctionArgs,
+  AwaitProps,
   DataMemoryRouterProps,
   DataRouteMatch,
+  DataRouteObject,
   Fetcher,
   Hash,
   IndexRouteProps,
   JsonFunction,
   LayoutRouteProps,
   LoaderFunction,
+  LoaderFunctionArgs,
   Location,
   MemoryRouterProps,
   NavigateFunction,
@@ -116,26 +139,32 @@ export type {
   PathPattern,
   PathRouteProps,
   RedirectFunction,
+  RelativeRoutingType,
   RouteMatch,
   RouteObject,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
   To,
 };
 export {
-  DataMemoryRouter,
+  AbortedDeferredError,
+  Await,
   MemoryRouter,
   Navigate,
   NavigationType,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
   createPath,
   createRoutesFromChildren,
+  createRoutesFromChildren as createRoutesFromElements,
+  defer,
   isRouteErrorResponse,
   generatePath,
   json,
@@ -146,6 +175,8 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
+  useAsyncError,
+  useAsyncValue,
   useHref,
   useInRouterContext,
   useLoaderData,
@@ -164,6 +195,26 @@ export {
   useRouteLoaderData,
   useRoutes,
 };
+
+export function createMemoryRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    hydrationData?: HydrationState;
+    initialEntries?: string[];
+    initialIndex?: number;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    history: createMemoryHistory({
+      initialEntries: opts?.initialEntries,
+      initialIndex: opts?.initialIndex,
+    }),
+    hydrationData: opts?.hydrationData,
+    routes: enhanceManualRouteObjects(routes),
+  }).initialize();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
@@ -185,5 +236,6 @@ export {
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  useRenderDataRouter,
+  DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
+  enhanceManualRouteObjects as UNSAFE_enhanceManualRouteObjects,
 };

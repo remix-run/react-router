@@ -1,15 +1,49 @@
 import * as React from "react";
 import type {
+  TrackedPromise,
   History,
   Location,
-  RouteMatch,
   Router,
+  StaticHandlerContext,
   To,
+  AgnosticRouteObject,
+  AgnosticRouteMatch,
 } from "@remix-run/router";
-import { Action as NavigationType } from "@remix-run/router";
+import type { Action as NavigationType } from "@remix-run/router";
+
+// Create react-specific types from the agnostic types in @remix-run/router to
+// export from react-router
+export interface RouteObject extends AgnosticRouteObject {
+  children?: RouteObject[];
+  element?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
+}
+
+export interface DataRouteObject extends RouteObject {
+  children?: DataRouteObject[];
+  id: string;
+}
+
+export interface RouteMatch<
+  ParamKey extends string = string,
+  RouteObjectType extends RouteObject = RouteObject
+> extends AgnosticRouteMatch<ParamKey, RouteObjectType> {}
+
+export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
 // Contexts for data routers
-export const DataRouterContext = React.createContext<Router | null>(null);
+export const DataStaticRouterContext =
+  React.createContext<StaticHandlerContext | null>(null);
+if (__DEV__) {
+  DataStaticRouterContext.displayName = "DataStaticRouterContext";
+}
+
+export interface DataRouterContextObject extends NavigationContextObject {
+  router: Router;
+}
+
+export const DataRouterContext =
+  React.createContext<DataRouterContextObject | null>(null);
 if (__DEV__) {
   DataRouterContext.displayName = "DataRouter";
 }
@@ -21,10 +55,18 @@ if (__DEV__) {
   DataRouterStateContext.displayName = "DataRouterState";
 }
 
+export const AwaitContext = React.createContext<TrackedPromise | null>(null);
+if (__DEV__) {
+  AwaitContext.displayName = "Await";
+}
+
+export type RelativeRoutingType = "route" | "path";
+
 export interface NavigateOptions {
   replace?: boolean;
   state?: any;
-  resetScroll?: boolean;
+  preventScrollReset?: boolean;
+  relative?: RelativeRoutingType;
 }
 
 /**
@@ -70,7 +112,7 @@ if (__DEV__) {
   LocationContext.displayName = "Location";
 }
 
-interface RouteContextObject {
+export interface RouteContextObject {
   outlet: React.ReactElement | null;
   matches: RouteMatch[];
 }
@@ -82,11 +124,6 @@ export const RouteContext = React.createContext<RouteContextObject>({
 
 if (__DEV__) {
   RouteContext.displayName = "Route";
-}
-
-interface RouteContextObject {
-  outlet: React.ReactElement | null;
-  matches: RouteMatch[];
 }
 
 export const RouteErrorContext = React.createContext<any>(null);

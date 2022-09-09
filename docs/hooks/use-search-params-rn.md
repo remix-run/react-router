@@ -32,7 +32,7 @@ type SetURLSearchParams = (
 interface NavigateOptions {
   replace?: boolean;
   state?: any;
-  resetScroll?: boolean;
+  preventScrollReset?: boolean;
 }
 ```
 

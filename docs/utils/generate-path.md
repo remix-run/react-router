@@ -8,9 +8,11 @@ title: generatePath
   <summary>Type declaration</summary>
 
 ```tsx
-declare function generatePath(
-  path: string,
-  params?: Params
+declare function generatePath<Path extends string>(
+  path: Path,
+  params?: {
+    [key in PathParams<Path>]: string;
+  }
 ): string;
 ```
 

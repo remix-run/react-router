@@ -1,35 +1,58 @@
-name: release
+name: 🕊 Release
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - release
+      - "release-*"
+      - "!release-experimental"
+      - "!release-experimental-*"
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+env:
+  CI: true
 
 jobs:
   release:
+    name: 🦋 Changesets Release
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Node
-        uses: actions/setup-node@v2
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
         with:
-          node-version: 14
-          check-latest: true
+          fetch-depth: 0
+
+      - name: ⎔ Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
           cache: yarn
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: 📥 Install dependencies
+        # even though this is called "npm-install" it does use yarn to install
+        # because we have a yarn.lock and caches efficiently.
+        uses: bahmutov/npm-install@v1
 
-      - name: Build
-        run: yarn build
-
-      - name: Test
-        run: yarn test & yarn size
-
-      - name: Publish
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: 🔐 Setup npm auth
         run: |
-          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
-          node scripts/publish.js
+          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+
+        # This action has two responsibilities. The first time the workflow runs
+        # (initial push to a `release-*` branch) it will create a new branch and
+        # then open a PR with the related changes for the new version. After the
+        # PR is merged, the workflow will run again and this action will build +
+        # publish to npm.
+      - name: 🚀 PR / Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: yarn run version
+          commit: "chore: Update version for release"
+          title: "chore: Update version for release"
+          publish: yarn release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

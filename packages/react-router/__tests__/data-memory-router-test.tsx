@@ -8,33 +8,64 @@ import {
   queryByText,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import type { FormMethod, Router } from "@remix-run/router";
-import { createMemoryRouter } from "@remix-run/router";
-
-import type { DataMemoryRouterProps } from "react-router";
+import type { FormMethod, Router, RouterInit } from "@remix-run/router";
+import type { RouteObject } from "react-router";
 import {
-  DataMemoryRouter,
+  Await,
+  MemoryRouter,
   Route,
+  Routes,
+  RouterProvider,
   Outlet,
+  createMemoryRouter,
+  createRoutesFromElements,
+  defer,
   useActionData,
+  useAsyncError,
+  useAsyncValue,
   useLoaderData,
+  useLocation,
   useMatches,
   useRouteLoaderData,
   useRouteError,
   useNavigation,
-  useRenderDataRouter,
   useRevalidator,
-  UNSAFE_DataRouterContext,
-  MemoryRouter,
-  Routes,
+  UNSAFE_DataRouterContext as DataRouterContext,
 } from "react-router";
 
-// Private API
-import { _resetModuleScope } from "../lib/components";
+let router: Router | null = null;
 
 describe("<DataMemoryRouter>", () => {
   let consoleWarn: jest.SpyInstance;
   let consoleError: jest.SpyInstance;
+
+  // Abstraction to avoid re-writing all tests for the time being
+  function DataMemoryRouter({
+    basename,
+    children,
+    fallbackElement,
+    hydrationData,
+    initialEntries,
+    initialIndex,
+    routes,
+  }: {
+    basename?: RouterInit["basename"];
+    children?: React.ReactNode | React.ReactNode[];
+    fallbackElement?: React.ReactNode;
+    hydrationData?: RouterInit["hydrationData"];
+    initialEntries?: string[];
+    initialIndex?: number;
+    routes?: RouteObject[];
+  }) {
+    router = createMemoryRouter(routes || createRoutesFromElements(children), {
+      basename,
+      hydrationData,
+      initialEntries,
+      initialIndex,
+    });
+    return <RouterProvider router={router} fallbackElement={fallbackElement} />;
+  }
+
   beforeEach(() => {
     consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
     consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -43,7 +74,7 @@ describe("<DataMemoryRouter>", () => {
   afterEach(() => {
     consoleWarn.mockRestore();
     consoleError.mockRestore();
-    _resetModuleScope();
+    router = null;
   });
 
   it("renders the first route that matches the URL", () => {
@@ -86,18 +117,35 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
-  it("renders the first route that matches the URL when wrapped in a 'basename' route", () => {
-    // In data routers there is no basename and you should instead use a root route
+  it("renders the first route that matches the URL when wrapped in a root route", () => {
     let { container } = render(
       <DataMemoryRouter
         initialEntries={["/my/base/path/thing"]}
         hydrationData={{}}
       >
         <Route path="/my/base/path">
-          <Route element={<Outlet />}>
-            <Route path="thing" element={<h1>Heyooo</h1>} />
-          </Route>
+          <Route path="thing" element={<h1>Heyooo</h1>} />
         </Route>
+      </DataMemoryRouter>
+    );
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Heyooo
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("supports a basename prop", () => {
+    let { container } = render(
+      <DataMemoryRouter
+        basename="/my/base/path"
+        initialEntries={["/my/base/path/thing"]}
+        hydrationData={{}}
+      >
+        <Route path="thing" element={<h1>Heyooo</h1>} />
       </DataMemoryRouter>
     );
 
@@ -161,7 +209,7 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("renders fallbackElement while first data fetch happens", async () => {
-    let fooDefer = defer();
+    let fooDefer = createDeferred();
     let { container } = render(
       <DataMemoryRouter
         fallbackElement={<FallbackElement />}
@@ -208,7 +256,7 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("renders a null fallbackElement if none is provided", async () => {
-    let fooDefer = defer();
+    let fooDefer = createDeferred();
     let { container } = render(
       <DataMemoryRouter initialEntries={["/foo"]}>
         <Route path="/" element={<Outlet />}>
@@ -242,7 +290,7 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("does not render fallbackElement if no data fetch is required", async () => {
-    let fooDefer = defer();
+    let fooDefer = createDeferred();
     let { container } = render(
       <DataMemoryRouter
         fallbackElement={<FallbackElement />}
@@ -272,6 +320,54 @@ describe("<DataMemoryRouter>", () => {
       "<div>
         <h1>
           Bar Heading
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("renders fallbackElement within router contexts", async () => {
+    let fooDefer = createDeferred();
+    let { container } = render(
+      <DataMemoryRouter
+        fallbackElement={<FallbackElement />}
+        initialEntries={["/foo"]}
+      >
+        <Route path="/" element={<Outlet />}>
+          <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
+        </Route>
+      </DataMemoryRouter>
+    );
+
+    function FallbackElement() {
+      let location = useLocation();
+      return (
+        <>
+          <p>Loading{location.pathname}</p>
+        </>
+      );
+    }
+
+    function Foo() {
+      let data = useLoaderData();
+      return <h1>Foo:{data?.message}</h1>;
+    }
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <p>
+          Loading
+          /foo
+        </p>
+      </div>"
+    `);
+
+    fooDefer.resolve({ message: "From Foo Loader" });
+    await waitFor(() => screen.getByText("Foo:From Foo Loader"));
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Foo:
+          From Foo Loader
         </h1>
       </div>"
     `);
@@ -314,7 +410,7 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("executes route loaders on navigation", async () => {
-    let barDefer = defer();
+    let barDefer = createDeferred();
 
     let { container } = render(
       <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
@@ -403,8 +499,8 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("executes route actions/loaders on submission navigations", async () => {
-    let barDefer = defer();
-    let barActionDefer = defer();
+    let barDefer = createDeferred();
+    let barActionDefer = createDeferred();
     let formData = new FormData();
     formData.append("test", "value");
 
@@ -944,8 +1040,8 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("renders navigation errors on leaf elements", async () => {
-      let fooDefer = defer();
-      let barDefer = defer();
+      let fooDefer = createDeferred();
+      let barDefer = createDeferred();
 
       let { container } = render(
         <DataMemoryRouter
@@ -1084,8 +1180,8 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("renders navigation errors on parent elements", async () => {
-      let fooDefer = defer();
-      let barDefer = defer();
+      let fooDefer = createDeferred();
+      let barDefer = createDeferred();
 
       let { container } = render(
         <DataMemoryRouter
@@ -1340,8 +1436,8 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("renders navigation errors with a default if no errorElements are provided", async () => {
-      let fooDefer = defer();
-      let barDefer = defer();
+      let fooDefer = createDeferred();
+      let barDefer = createDeferred();
 
       let { container } = render(
         <DataMemoryRouter
@@ -1450,6 +1546,93 @@ describe("<DataMemoryRouter>", () => {
               &lt;Route&gt;
             </code>
           </p>
+        </div>"
+      `);
+    });
+
+    // This test ensures that when manual routes are used, we add hasErrorBoundary
+    it("renders navigation errors on leaf elements (when using manual route objects)", async () => {
+      let barDefer = createDeferred();
+
+      let routes = [
+        {
+          path: "/",
+          element: <Layout />,
+          children: [
+            {
+              path: "foo",
+              element: <h1>Foo</h1>,
+            },
+            {
+              path: "bar",
+              loader: () => barDefer.promise,
+              element: <Bar />,
+              errorElement: <BarError />,
+            },
+          ],
+        },
+      ];
+
+      let { container } = render(
+        <DataMemoryRouter routes={routes} initialEntries={["/foo"]} />
+      );
+
+      function Layout() {
+        let navigation = useNavigation();
+        return (
+          <div>
+            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <p>{navigation.state}</p>
+            <Outlet />
+          </div>
+        );
+      }
+      function Bar() {
+        let data = useLoaderData();
+        return <h1>Bar:{data?.message}</h1>;
+      }
+      function BarError() {
+        let error = useRouteError();
+        return <p>Bar Error:{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href=\\"/bar\\"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      barDefer.reject(new Error("Kaboom!"));
+      await waitFor(() => screen.getByText("Bar Error:Kaboom!"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href=\\"/bar\\"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <p>
+              Bar Error:
+              Kaboom!
+            </p>
+          </div>
         </div>"
       `);
     });
@@ -1639,51 +1822,25 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("handles back button routing away from a child error boundary", async () => {
-      let router: Router;
-
-      // Need this to capture a copy of the router so we can trigger a back
-      // navigation from _outside_ the DataMemoryRouter scope to most closely
-      // resemble a browser back button
-      function LocalDataMemoryRouter({
-        children,
-        initialEntries,
-        initialIndex,
-        hydrationData,
-        fallbackElement,
-      }: DataMemoryRouterProps): React.ReactElement {
-        return useRenderDataRouter({
-          children,
-          fallbackElement,
-          createRouter: (routes) => {
-            router = createMemoryRouter({
-              initialEntries,
-              initialIndex,
-              routes,
-              hydrationData,
-            });
-            return router;
-          },
-        });
-      }
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            element={<Parent />}
+            errorElement={<p>Don't show this</p>}
+          >
+            <Route
+              path="child"
+              element={<Child />}
+              errorElement={<ErrorBoundary />}
+            />
+          </Route>
+        )
+      );
 
       let { container } = render(
         <div>
-          <LocalDataMemoryRouter
-            initialEntries={["/"]}
-            hydrationData={{ loaderData: {} }}
-          >
-            <Route
-              path="/"
-              element={<Parent />}
-              errorElement={<p>Don't show this</p>}
-            >
-              <Route
-                path="child"
-                element={<Child />}
-                errorElement={<ErrorBoundary />}
-              />
-            </Route>
-          </LocalDataMemoryRouter>
+          <RouterProvider router={router} />
         </div>
       );
 
@@ -1745,43 +1902,16 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("handles back button routing away from a default error boundary", async () => {
-      let router: Router;
-
-      // Need this to capture a copy of the router so we can trigger a back
-      // navigation from _outside_ the DataMemoryRouter scope to most closely
-      // resemble a browser back button
-      function LocalDataMemoryRouter({
-        children,
-        initialEntries,
-        initialIndex,
-        hydrationData,
-        fallbackElement,
-      }: DataMemoryRouterProps): React.ReactElement {
-        return useRenderDataRouter({
-          children,
-          fallbackElement,
-          createRouter: (routes) => {
-            router = createMemoryRouter({
-              initialEntries,
-              initialIndex,
-              routes,
-              hydrationData,
-            });
-            return router;
-          },
-        });
-      }
-
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Parent />}>
+            <Route path="child" element={<Child />} />
+          </Route>
+        )
+      );
       let { container } = render(
         <div>
-          <LocalDataMemoryRouter
-            initialEntries={["/"]}
-            hydrationData={{ loaderData: {} }}
-          >
-            <Route path="/" element={<Parent />}>
-              <Route path="child" element={<Child />} />
-            </Route>
-          </LocalDataMemoryRouter>
+          <RouterProvider router={router} />
         </div>
       );
 
@@ -1864,9 +1994,785 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
   });
+
+  describe("defer", () => {
+    function setupDeferredTest({
+      useRenderProp = false,
+      hasRouteErrorElement = false,
+      hasAwaitErrorElement = false,
+      triggerRenderError = false,
+      triggerFallbackError = false,
+    } = {}) {
+      let awaitRenderCount = 0;
+      let barDefer = createDeferred();
+      let bazDefer = createDeferred();
+      let { container } = render(
+        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<h1>Foo</h1>} />
+            <Route
+              path="bar"
+              loader={() => barDefer.promise}
+              element={<Bar />}
+              errorElement={hasRouteErrorElement ? <RouteError /> : null}
+            />
+            <Route
+              path="baz"
+              loader={() => bazDefer.promise}
+              element={<h1>Baz</h1>}
+            />
+          </Route>
+        </DataMemoryRouter>
+      );
+
+      function Layout() {
+        let navigation = useNavigation();
+        return (
+          <>
+            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <MemoryNavigate to="/baz">Link to Baz</MemoryNavigate>
+            <div id="content">
+              <p>{navigation.state}</p>
+              <Outlet />
+            </div>
+          </>
+        );
+      }
+
+      function Bar() {
+        let data = useLoaderData();
+        return (
+          <>
+            <p>{data.critical}</p>
+            <React.Suspense fallback={<LazyFallback />}>
+              <AwaitCounter data={data} />
+            </React.Suspense>
+          </>
+        );
+      }
+
+      function AwaitCounter({ data }) {
+        awaitRenderCount++;
+        return (
+          <>
+            <Await
+              resolve={data.lazy}
+              errorElement={hasAwaitErrorElement ? <LazyError /> : null}
+            >
+              {useRenderProp ? (value) => <p>{value}</p> : <LazyData />}
+            </Await>
+          </>
+        );
+      }
+
+      function RouteError() {
+        let error = useRouteError();
+        return <p>Route Error:{error.message}</p>;
+      }
+
+      function LazyFallback() {
+        return triggerFallbackError ? (
+          <p>{oops.i.did.it}</p>
+        ) : (
+          <p>Loading...</p>
+        );
+      }
+
+      function LazyData() {
+        let data = useAsyncValue();
+        return triggerRenderError ? (
+          <p>{oops.i.did.it.again}</p>
+        ) : (
+          <p>{data}</p>
+        );
+      }
+
+      function LazyError() {
+        let data = useAsyncError();
+        return <p>Await Error:{data.message}</p>;
+      }
+
+      return {
+        container: container.querySelector("#content"),
+        barDefer,
+        bazDefer,
+        getAwaitRenderCount() {
+          return awaitRenderCount;
+        },
+      };
+    }
+
+    it("allows loaders to returned deferred data (child component)", async () => {
+      let { barDefer, container } = setupDeferredTest();
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
+        </div>"
+      `);
+
+      let barValueDfd = createDeferred();
+      barDefer.resolve(
+        defer({
+          critical: "CRITICAL",
+          lazy: barValueDfd.promise,
+        })
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      barValueDfd.resolve("LAZY");
+      await waitFor(() => screen.getByText("LAZY"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            LAZY
+          </p>
+        </div>"
+      `);
+    });
+
+    it("allows loaders to returned deferred data (render prop)", async () => {
+      let { barDefer, container } = setupDeferredTest({ useRenderProp: true });
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
+        </div>"
+      `);
+
+      let barValueDfd = createDeferred();
+      barDefer.resolve(
+        defer({
+          critical: "CRITICAL",
+          lazy: barValueDfd.promise,
+        })
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      barValueDfd.resolve("LAZY");
+      await waitFor(() => screen.getByText("LAZY"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            LAZY
+          </p>
+        </div>"
+      `);
+    });
+
+    it("sends data errors to the provided errorElement", async () => {
+      let { barDefer, container } = setupDeferredTest({
+        hasRouteErrorElement: true,
+        hasAwaitErrorElement: true,
+      });
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
+        </div>"
+      `);
+
+      let barValueDfd = createDeferred();
+      barDefer.resolve(
+        defer({
+          critical: "CRITICAL",
+          lazy: barValueDfd.promise,
+        })
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      barValueDfd.reject(new Error("Kaboom!"));
+      await waitFor(() => screen.getByText(/Kaboom!/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Await Error:
+            Kaboom!
+          </p>
+        </div>"
+      `);
+    });
+
+    it("sends unhandled data errors to the nearest route error boundary", async () => {
+      let { barDefer, container } = setupDeferredTest({
+        hasRouteErrorElement: true,
+        hasAwaitErrorElement: false,
+      });
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
+        </div>"
+      `);
+
+      let barValueDfd = createDeferred();
+      barDefer.resolve(
+        defer({
+          critical: "CRITICAL",
+          lazy: barValueDfd.promise,
+        })
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      barValueDfd.reject(new Error("Kaboom!"));
+      await waitFor(() => screen.getByText(/Kaboom!/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Route Error:
+            Kaboom!
+          </p>
+        </div>"
+      `);
+    });
+
+    it("sends render errors to the provided errorElement", async () => {
+      let { barDefer, container } = setupDeferredTest({
+        hasRouteErrorElement: true,
+        hasAwaitErrorElement: true,
+        triggerRenderError: true,
+      });
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
+        </div>"
+      `);
+
+      let barValueDfd = createDeferred();
+      barDefer.resolve(
+        defer({
+          critical: "CRITICAL",
+          lazy: barValueDfd.promise,
+        })
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      barValueDfd.resolve("LAZY");
+      await waitFor(() => screen.getByText(/oops is not defined/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Await Error:
+            oops is not defined
+          </p>
+        </div>"
+      `);
+    });
+
+    it("sends unhandled render errors to the nearest route error boundary", async () => {
+      let { barDefer, container } = setupDeferredTest({
+        hasRouteErrorElement: true,
+        hasAwaitErrorElement: false,
+        triggerRenderError: true,
+      });
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
+        </div>"
+      `);
+
+      let barValueDfd = createDeferred();
+      barDefer.resolve(
+        defer({
+          critical: "CRITICAL",
+          lazy: barValueDfd.promise,
+        })
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      barValueDfd.resolve("LAZY");
+      await waitFor(() => screen.getByText(/oops is not defined/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Route Error:
+            oops is not defined
+          </p>
+        </div>"
+      `);
+    });
+
+    it("does not handle fallback render errors in the Deferred errorElement", async () => {
+      let { barDefer, container } = setupDeferredTest({
+        hasRouteErrorElement: true,
+        hasAwaitErrorElement: true,
+        triggerRenderError: true,
+        triggerFallbackError: true,
+      });
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
+        </div>"
+      `);
+
+      let barValueDfd = createDeferred();
+      barDefer.resolve(
+        defer({
+          critical: "CRITICAL",
+          lazy: barValueDfd.promise,
+        })
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Route Error:
+            oops is not defined
+          </p>
+        </div>"
+      `);
+
+      // Resolving doesn't do anything
+      barValueDfd.resolve("LAZY");
+      await new Promise((r) => setTimeout(r, 1));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Route Error:
+            oops is not defined
+          </p>
+        </div>"
+      `);
+    });
+
+    it("freezes the UI for aborted deferreds", async () => {
+      let { barDefer, bazDefer, container, getAwaitRenderCount } =
+        setupDeferredTest();
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
+        </div>"
+      `);
+      expect(getAwaitRenderCount()).toBe(0);
+
+      let barValueDfd = createDeferred();
+      barDefer.resolve(
+        defer({
+          critical: "CRITICAL",
+          lazy: barValueDfd.promise,
+        })
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+      expect(getAwaitRenderCount()).toBe(1);
+
+      // Abort the deferred by navigating to /baz
+      fireEvent.click(screen.getByText("Link to Baz"));
+      await new Promise((r) => setTimeout(r, 50));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            loading
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+      // 2 more renders by now - once for the navigation and once for the
+      // promise abort rejection
+      expect(getAwaitRenderCount()).toBe(3);
+
+      // complete /baz navigation
+      bazDefer.resolve();
+      await waitFor(() => screen.getByText("Baz"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <h1>
+            Baz
+          </h1>
+        </div>"
+      `);
+
+      // Does nothing now
+      barValueDfd.resolve("LAZY");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <h1>
+            Baz
+          </h1>
+        </div>"
+      `);
+      expect(getAwaitRenderCount()).toBe(3);
+    });
+
+    it("should permit direct access to resolved values", async () => {
+      let barDefer = createDeferred();
+      let { container } = render(
+        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+          <Route
+            path="foo"
+            element={
+              <>
+                <h1>Foo</h1>
+                <MemoryNavigate to="/bar">Link to bar</MemoryNavigate>
+              </>
+            }
+          />
+          <Route path="bar" loader={() => barDefer.promise} element={<Bar />} />
+        </DataMemoryRouter>
+      );
+
+      let count = 0;
+      function Bar() {
+        let { bar } = useLoaderData();
+
+        React.useEffect(() => {
+          bar.then((data) => {
+            container.querySelector("#content").innerHTML =
+              data + " " + ++count;
+          });
+        }, [bar]);
+
+        return <div id="content">Waiting for data...</div>;
+      }
+
+      fireEvent.click(screen.getByText("Link to bar"));
+      let barValueDefer = createDeferred();
+      await barDefer.resolve({ bar: barValueDefer.promise });
+      await waitFor(() => screen.getByText("Waiting for data..."));
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div
+            id=\\"content\\"
+          >
+            Waiting for data...
+          </div>
+        </div>"
+      `);
+
+      await barValueDefer.resolve("BAR");
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div
+            id=\\"content\\"
+          >
+            BAR 1
+          </div>
+        </div>"
+      `);
+    });
+
+    it("can render raw resolved promises with <Await>", async () => {
+      let dfd = createDeferred();
+
+      let { container } = render(
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <Await resolve={dfd.promise}>{(data) => <p>{data}</p>}</Await>
+        </React.Suspense>
+      );
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      dfd.resolve("RESOLVED");
+      await waitFor(() => screen.getByText("RESOLVED"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            RESOLVED
+          </p>
+        </div>"
+      `);
+    });
+
+    it("can render raw rejected promises with <Await>", async () => {
+      let dfd = createDeferred();
+
+      let { container } = render(
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <Await resolve={dfd.promise} errorElement={<ErrorElement />}>
+            {(data) => <p>{data}</p>}
+          </Await>
+        </React.Suspense>
+      );
+
+      function ErrorElement() {
+        let error = useAsyncError() as string;
+        return <p>Error:{error}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      await dfd.reject("REJECTED");
+      await waitFor(() => screen.getByText("Error:REJECTED"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Error:
+            REJECTED
+          </p>
+        </div>"
+      `);
+    });
+
+    it("can render raw values with <Await>", async () => {
+      let { container } = render(
+        <Await resolve={"VALUE"}>{(data) => <p>{data}</p>}</Await>
+      );
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            VALUE
+          </p>
+        </div>"
+      `);
+    });
+  });
 });
 
-function defer() {
+function createDeferred() {
   let resolve: (val?: any) => Promise<void>;
   let reject: (error?: Error) => Promise<void>;
   let promise = new Promise((res, rej) => {
@@ -1893,15 +2799,8 @@ function defer() {
 }
 
 function getHtml(container: HTMLElement) {
-  return prettyDOM(container, null, {
+  return prettyDOM(container, undefined, {
     highlight: false,
-    theme: {
-      comment: null,
-      content: null,
-      prop: null,
-      tag: null,
-      value: null,
-    },
   });
 }
 
@@ -1916,14 +2815,18 @@ function MemoryNavigate({
   formData?: FormData;
   children: React.ReactNode;
 }) {
-  let router = React.useContext(UNSAFE_DataRouterContext);
+  let dataRouterContext = React.useContext(DataRouterContext);
 
   let onClickHandler = React.useCallback(
     async (event: React.MouseEvent) => {
       event.preventDefault();
-      router.navigate(to, { formMethod, formData });
+      if (formMethod && formData) {
+        dataRouterContext?.router.navigate(to, { formMethod, formData });
+      } else {
+        dataRouterContext?.router.navigate(to);
+      }
     },
-    [router, to, formMethod, formData]
+    [dataRouterContext, to, formMethod, formData]
   );
 
   return formData ? (

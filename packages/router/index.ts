@@ -1,47 +1,13 @@
-import type {
-  BrowserHistoryOptions,
-  HashHistoryOptions,
-  MemoryHistoryOptions,
-} from "./history";
-import {
-  createBrowserHistory,
-  createHashHistory,
-  createMemoryHistory,
-} from "./history";
-import type { Router, RouterInit } from "./router";
-import { createRouter } from "./router";
-
-function createMemoryRouter({
-  initialEntries,
-  initialIndex,
-  ...routerInit
-}: MemoryHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createMemoryHistory({ initialEntries, initialIndex });
-  return createRouter({ history, ...routerInit });
-}
-
-function createBrowserRouter({
-  window,
-  ...routerInit
-}: BrowserHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createBrowserHistory({ window });
-  return createRouter({ history, ...routerInit });
-}
-
-function createHashRouter({
-  window,
-  ...routerInit
-}: HashHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createHashHistory({ window });
-  return createRouter({ history, ...routerInit });
-}
-
-export * from "./router";
+import { convertRoutesToDataRoutes } from "./utils";
 
 export type {
   ActionFunction,
   ActionFunctionArgs,
-  DataRouteObject,
+  AgnosticDataRouteMatch,
+  AgnosticDataRouteObject,
+  AgnosticRouteMatch,
+  AgnosticRouteObject,
+  TrackedPromise,
   FormEncType,
   FormMethod,
   JsonFunction,
@@ -52,13 +18,14 @@ export type {
   PathMatch,
   PathPattern,
   RedirectFunction,
-  RouteMatch,
-  RouteObject,
   ShouldRevalidateFunction,
   Submission,
 } from "./utils";
 
 export {
+  AbortedDeferredError,
+  ErrorResponse,
+  defer,
   generatePath,
   getToPathname,
   invariant,
@@ -77,11 +44,14 @@ export {
 
 export type {
   BrowserHistory,
+  BrowserHistoryOptions,
   HashHistory,
+  HashHistoryOptions,
   History,
   InitialEntry,
   Location,
   MemoryHistory,
+  MemoryHistoryOptions,
   Path,
   To,
 } from "./history";
@@ -95,4 +65,14 @@ export {
   parsePath,
 } from "./history";
 
-export { createBrowserRouter, createHashRouter, createMemoryRouter };
+export * from "./router";
+
+///////////////////////////////////////////////////////////////////////////////
+// DANGER! PLEASE READ ME!
+// We consider these exports an implementation detail and do not guarantee
+// against any breaking changes, regardless of the semver release. Use with
+// extreme caution and only if you understand the consequences. Godspeed.
+///////////////////////////////////////////////////////////////////////////////
+
+/** @internal */
+export { convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes };

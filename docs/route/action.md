@@ -7,6 +7,8 @@ new: true
 
 Route actions are the "writes" to route [loader][loader] "reads". They provide a way for apps to perform data mutations with simple HTML and HTTP semantics while React Router abstracts away the complexity of asynchronous UI and revalidation. This gives you the simple mental model of HTML + HTTP (where the browser handles the asynchrony and revalidation) with the behavior and and UX capabilities of modern SPAs.
 
+<docs-error>This feature only works if using a data router</docs-error>
+
 ```tsx
 <Route
   path="/song/:songId/edit"
@@ -42,7 +44,7 @@ fetcher.submit(data, {
 
 ## `params`
 
-Route params are parsed from [dynamic segments][dynamicsegments] and passed to your loader. This is useful for figuring out which resource to mutate:
+Route params are parsed from [dynamic segments][dynamicsegments] and passed to your action. This is useful for figuring out which resource to mutate:
 
 ```tsx
 <Route

@@ -3,19 +3,26 @@
  * you'll need to update the rollup config for react-router-dom-v5-compat.
  */
 import * as React from "react";
-import type { NavigateOptions, To } from "react-router";
+import type {
+  NavigateOptions,
+  RelativeRoutingType,
+  RouteObject,
+  To,
+} from "react-router";
 import {
   Router,
   createPath,
   useHref,
   useLocation,
   useMatch,
+  useMatches,
   useNavigate,
-  useRenderDataRouter,
+  useNavigation,
   useResolvedPath,
-  UNSAFE_RouteContext,
-  UNSAFE_DataRouterContext,
-  UNSAFE_DataRouterStateContext,
+  UNSAFE_DataRouterContext as DataRouterContext,
+  UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  UNSAFE_RouteContext as RouteContext,
+  UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -26,13 +33,12 @@ import type {
   HashHistory,
   History,
   HydrationState,
-  RouteObject,
+  Router as RemixRouter,
 } from "@remix-run/router";
 import {
+  createRouter,
   createBrowserHistory,
   createHashHistory,
-  createBrowserRouter,
-  createHashRouter,
   invariant,
   matchPath,
 } from "@remix-run/router";
@@ -54,20 +60,30 @@ import {
 //#region Re-exports
 ////////////////////////////////////////////////////////////////////////////////
 
-export type { ParamKeyValuePair, URLSearchParamsInit };
+export type {
+  FormEncType,
+  FormMethod,
+  ParamKeyValuePair,
+  SubmitOptions,
+  URLSearchParamsInit,
+};
 export { createSearchParams };
 
 // Note: Keep in sync with react-router exports!
 export type {
   ActionFunction,
+  ActionFunctionArgs,
+  AwaitProps,
   DataMemoryRouterProps,
   DataRouteMatch,
+  DataRouteObject,
   Fetcher,
   Hash,
   IndexRouteProps,
   JsonFunction,
   LayoutRouteProps,
   LoaderFunction,
+  LoaderFunctionArgs,
   Location,
   MemoryRouterProps,
   NavigateFunction,
@@ -84,26 +100,33 @@ export type {
   PathPattern,
   PathRouteProps,
   RedirectFunction,
+  RelativeRoutingType,
   RouteMatch,
   RouteObject,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
   To,
 } from "react-router";
 export {
-  DataMemoryRouter,
+  AbortedDeferredError,
+  Await,
   MemoryRouter,
   Navigate,
   NavigationType,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
+  createMemoryRouter,
   createPath,
   createRoutesFromChildren,
+  createRoutesFromElements,
+  defer,
   isRouteErrorResponse,
   generatePath,
   json,
@@ -114,6 +137,8 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
+  useAsyncError,
+  useAsyncValue,
   useHref,
   useInRouterContext,
   useLoaderData,
@@ -148,74 +173,60 @@ export {
 
 /** @internal */
 export {
+  UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
+  UNSAFE_DataStaticRouterContext,
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
-  UNSAFE_DataRouterContext,
-  UNSAFE_DataRouterStateContext,
-  useRenderDataRouter,
+  UNSAFE_enhanceManualRouteObjects,
 } from "react-router";
+//#endregion
+
+declare global {
+  var __staticRouterHydrationData: HydrationState | undefined;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//#region Routers
+////////////////////////////////////////////////////////////////////////////////
+
+export function createBrowserRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    hydrationData?: HydrationState;
+    window?: Window;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    history: createBrowserHistory({ window: opts?.window }),
+    hydrationData: opts?.hydrationData || window?.__staticRouterHydrationData,
+    routes: enhanceManualRouteObjects(routes),
+  }).initialize();
+}
+
+export function createHashRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    hydrationData?: HydrationState;
+    window?: Window;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    history: createHashHistory({ window: opts?.window }),
+    hydrationData: opts?.hydrationData || window?.__staticRouterHydrationData,
+    routes: enhanceManualRouteObjects(routes),
+  }).initialize();
+}
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Components
 ////////////////////////////////////////////////////////////////////////////////
-
-export interface DataBrowserRouterProps {
-  children?: React.ReactNode;
-  hydrationData?: HydrationState;
-  fallbackElement?: React.ReactNode;
-  routes?: RouteObject[];
-  window?: Window;
-}
-
-export function DataBrowserRouter({
-  children,
-  fallbackElement,
-  hydrationData,
-  routes,
-  window,
-}: DataBrowserRouterProps): React.ReactElement {
-  return useRenderDataRouter({
-    children,
-    fallbackElement,
-    routes,
-    createRouter: (routes) =>
-      createBrowserRouter({
-        routes,
-        hydrationData,
-        window,
-      }),
-  });
-}
-
-export interface DataHashRouterProps {
-  children?: React.ReactNode;
-  hydrationData?: HydrationState;
-  fallbackElement?: React.ReactNode;
-  routes?: RouteObject[];
-  window?: Window;
-}
-
-export function DataHashRouter({
-  children,
-  hydrationData,
-  fallbackElement,
-  routes,
-  window,
-}: DataBrowserRouterProps): React.ReactElement {
-  return useRenderDataRouter({
-    children,
-    fallbackElement,
-    routes,
-    createRouter: (routes) =>
-      createHashRouter({
-        routes,
-        hydrationData,
-        window,
-      }),
-  });
-}
 
 export interface BrowserRouterProps {
   basename?: string;
@@ -332,7 +343,8 @@ export interface LinkProps
   reloadDocument?: boolean;
   replace?: boolean;
   state?: any;
-  resetScroll?: boolean;
+  preventScrollReset?: boolean;
+  relative?: RelativeRoutingType;
   to: To;
 }
 
@@ -343,28 +355,30 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
     {
       onClick,
+      relative,
       reloadDocument,
       replace,
       state,
       target,
       to,
-      resetScroll,
+      preventScrollReset,
       ...rest
     },
     ref
   ) {
-    let href = useHref(to);
+    let href = useHref(to, { relative });
     let internalOnClick = useLinkClickHandler(to, {
       replace,
       state,
       target,
-      resetScroll,
+      preventScrollReset,
+      relative,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
     ) {
       if (onClick) onClick(event);
-      if (!event.defaultPrevented && !reloadDocument) {
+      if (!event.defaultPrevented) {
         internalOnClick(event);
       }
     }
@@ -374,7 +388,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       <a
         {...rest}
         href={href}
-        onClick={handleClick}
+        onClick={reloadDocument ? onClick : handleClick}
         ref={ref}
         target={target}
       />
@@ -427,7 +441,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let path = useResolvedPath(to);
     let match = useMatch({ path: path.pathname, end, caseSensitive });
 
-    let routerState = React.useContext(UNSAFE_DataRouterStateContext);
+    let routerState = React.useContext(DataRouterStateContext);
     let nextLocation = routerState?.navigation.location;
     let nextPath = useResolvedPath(nextLocation || "");
     let nextMatch = React.useMemo(
@@ -503,11 +517,23 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   action?: string;
 
   /**
+   * Forces a full document navigation instead of a fetch.
+   */
+  reloadDocument?: boolean;
+
+  /**
    * Replaces the current entry in the browser history stack when the form
    * navigates. Use this if you don't want the user to be able to click "back"
    * to the page with the form on it.
    */
   replace?: boolean;
+
+  /**
+   * Determines whether the form action is relative to the route hierarchy or
+   * the pathname.  Use this if you want to opt out of navigating the route
+   * hierarchy and want to instead route based on /-delimited URL segments
+   */
+  relative?: RelativeRoutingType;
 
   /**
    * A function to call when the form is submitted. If you call
@@ -548,12 +574,14 @@ interface FormImplProps extends FormProps {
 const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
   (
     {
+      reloadDocument,
       replace,
       method = defaultMethod,
-      action = ".",
+      action,
       onSubmit,
       fetcherKey,
       routeId,
+      relative,
       ...props
     },
     forwardedRef
@@ -561,7 +589,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
     let submit = useSubmitImpl(fetcherKey, routeId);
     let formMethod: FormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
-    let formAction = useFormAction(action);
+    let formAction = useFormAction(action, { relative });
     let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
       if (event.defaultPrevented) return;
@@ -570,7 +598,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       let submitter = (event as unknown as HTMLSubmitEvent).nativeEvent
         .submitter as HTMLFormSubmitter | null;
 
-      submit(submitter || event.currentTarget, { method, replace });
+      submit(submitter || event.currentTarget, { method, replace, relative });
     };
 
     return (
@@ -578,7 +606,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         ref={forwardedRef}
         method={formMethod}
         action={formAction}
-        onSubmit={submitHandler}
+        onSubmit={reloadDocument ? onSubmit : submitHandler}
         {...props}
       />
     );
@@ -626,17 +654,19 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     target,
     replace: replaceProp,
     state,
-    resetScroll,
+    preventScrollReset,
+    relative,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
-    resetScroll?: boolean;
+    preventScrollReset?: boolean;
+    relative?: RelativeRoutingType;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
   let location = useLocation();
-  let path = useResolvedPath(to);
+  let path = useResolvedPath(to, { relative });
 
   return React.useCallback(
     (event: React.MouseEvent<E, MouseEvent>) => {
@@ -644,16 +674,26 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         event.preventDefault();
 
         // If the URL hasn't changed, a regular <a> will do a replace instead of
-        // a push, so do the same here unless the replace prop is explcitly set
+        // a push, so do the same here unless the replace prop is explicitly set
         let replace =
           replaceProp !== undefined
             ? replaceProp
             : createPath(location) === createPath(path);
 
-        navigate(to, { replace, state, resetScroll });
+        navigate(to, { replace, state, preventScrollReset, relative });
       }
     },
-    [location, navigate, path, replaceProp, state, target, to, resetScroll]
+    [
+      location,
+      navigate,
+      path,
+      replaceProp,
+      state,
+      target,
+      to,
+      preventScrollReset,
+      relative,
+    ]
   );
 }
 
@@ -709,6 +749,15 @@ type SetURLSearchParams = (
   navigateOpts?: NavigateOptions
 ) => void;
 
+type SubmitTarget =
+  | HTMLFormElement
+  | HTMLButtonElement
+  | HTMLInputElement
+  | FormData
+  | URLSearchParams
+  | { [name: string]: string }
+  | null;
+
 /**
  * Submits a HTML `<form>` to the server without reloading the page.
  */
@@ -722,14 +771,7 @@ export interface SubmitFunction {
      * Note: When using a `<button>` its `name` and `value` will also be
      * included in the form data that is submitted.
      */
-    target:
-      | HTMLFormElement
-      | HTMLButtonElement
-      | HTMLInputElement
-      | FormData
-      | URLSearchParams
-      | { [name: string]: string }
-      | null,
+    target: SubmitTarget,
 
     /**
      * Options that override the `<form>`'s own attributes. Required when
@@ -748,16 +790,16 @@ export function useSubmit(): SubmitFunction {
 }
 
 function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
-  let router = React.useContext(UNSAFE_DataRouterContext);
+  let dataRouterContext = React.useContext(DataRouterContext);
+  invariant(
+    dataRouterContext,
+    "useSubmitImpl must be used within a Data Router"
+  );
+  let { router } = dataRouterContext;
   let defaultAction = useFormAction();
 
   return React.useCallback(
     (target, options = {}) => {
-      invariant(
-        router != null,
-        "useSubmit() must be used within a <DataRouter>"
-      );
-
       if (typeof document === "undefined") {
         throw new Error(
           "You are calling submit during the server render. " +
@@ -773,10 +815,7 @@ function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
 
       let href = url.pathname + url.search;
       let opts = {
-        // If replace is not specified, we'll default to false for GET and
-        // true otherwise
-        replace:
-          options.replace != null ? options.replace === true : method !== "get",
+        replace: options.replace,
         formData,
         formMethod: method as FormMethod,
         formEncType: encType as FormEncType,
@@ -792,18 +831,47 @@ function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
   );
 }
 
-export function useFormAction(action = "."): string {
-  let routeContext = React.useContext(UNSAFE_RouteContext);
+export function useFormAction(
+  action?: string,
+  { relative }: { relative?: RelativeRoutingType } = {}
+): string {
+  let routeContext = React.useContext(RouteContext);
   invariant(routeContext, "useFormAction must be used inside a RouteContext");
 
   let [match] = routeContext.matches.slice(-1);
-  let { pathname, search } = useResolvedPath(action);
+  let resolvedAction = action ?? ".";
+  let path = useResolvedPath(resolvedAction, { relative });
 
-  if (action === "." && match.route.index) {
-    search = search ? search.replace(/^\?/, "?index&") : "?index";
+  // Previously we set the default action to ".". The problem with this is that
+  // `useResolvedPath(".")` excludes search params and the hash of the resolved
+  // URL. This is the intended behavior of when "." is specifically provided as
+  // the form action, but inconsistent w/ browsers when the action is omitted.
+  // https://github.com/remix-run/remix/issues/927
+  let location = useLocation();
+  if (action == null) {
+    // Safe to write to these directly here since if action was undefined, we
+    // would have called useResolvedPath(".") which will never include a search
+    // or hash
+    path.search = location.search;
+    path.hash = location.hash;
+
+    // When grabbing search params from the URL, remove the automatically
+    // inserted ?index param so we match the useResolvedPath search behavior
+    // which would not include ?index
+    if (match.route.index) {
+      let params = new URLSearchParams(path.search);
+      params.delete("index");
+      path.search = params.toString() ? `?${params.toString()}` : "";
+    }
   }
 
-  return pathname + search;
+  if ((!action || action === ".") && match.route.index) {
+    path.search = path.search
+      ? path.search.replace(/^\?/, "?index&")
+      : "?index";
+  }
+
+  return createPath(path);
 }
 
 function createFetcherForm(fetcherKey: string, routeId: string) {
@@ -827,9 +895,13 @@ function createFetcherForm(fetcherKey: string, routeId: string) {
 
 let fetcherId = 0;
 
-type FetcherWithComponents<TData> = Fetcher<TData> & {
+export type FetcherWithComponents<TData> = Fetcher<TData> & {
   Form: ReturnType<typeof createFetcherForm>;
-  submit: ReturnType<typeof useSubmitImpl>;
+  submit: (
+    target: SubmitTarget,
+    // Fetchers cannot replace because they are not navigation events
+    options?: Omit<SubmitOptions, "replace">
+  ) => void;
   load: (href: string) => void;
 };
 
@@ -838,10 +910,11 @@ type FetcherWithComponents<TData> = Fetcher<TData> & {
  * for any interaction that stays on the same page.
  */
 export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
-  let router = React.useContext(UNSAFE_DataRouterContext);
-  invariant(router, `useFetcher must be used within a DataRouter`);
+  let dataRouterContext = React.useContext(DataRouterContext);
+  invariant(dataRouterContext, `useFetcher must be used within a Data Router`);
+  let { router } = dataRouterContext;
 
-  let route = React.useContext(UNSAFE_RouteContext);
+  let route = React.useContext(RouteContext);
   invariant(route, `useFetcher must be used inside a RouteContext`);
 
   let routeId = route.matches[route.matches.length - 1]?.route.id;
@@ -895,8 +968,8 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
  * routes that need to provide pending/optimistic UI regarding the fetch.
  */
 export function useFetchers(): Fetcher[] {
-  let state = React.useContext(UNSAFE_DataRouterStateContext);
-  invariant(state, `useFetchers must be used within a DataRouter`);
+  let state = React.useContext(DataRouterStateContext);
+  invariant(state, `useFetchers must be used within a DataRouterStateContext`);
   return [...state.fetchers.values()];
 }
 
@@ -904,7 +977,7 @@ const SCROLL_RESTORATION_STORAGE_KEY = "react-router-scroll-positions";
 let savedScrollPositions: Record<string, number> = {};
 
 /**
- * When rendered inside a DataRouter, will restore scroll positions on navigations
+ * When rendered inside a RouterProvider, will restore scroll positions on navigations
  */
 function useScrollRestoration({
   getKey,
@@ -914,14 +987,21 @@ function useScrollRestoration({
   storageKey?: string;
 } = {}) {
   let location = useLocation();
-  let router = React.useContext(UNSAFE_DataRouterContext);
-  let state = React.useContext(UNSAFE_DataRouterStateContext);
+  let matches = useMatches();
+  let navigation = useNavigation();
+  let dataRouterContext = React.useContext(DataRouterContext);
+  invariant(
+    dataRouterContext,
+    "useScrollRestoration must be used within a DataRouterContext"
+  );
+  let { router } = dataRouterContext;
+  let state = React.useContext(DataRouterStateContext);
 
   invariant(
     router != null && state != null,
-    "useScrollRestoration must be used within a DataRouter"
+    "useScrollRestoration must be used within a DataRouterStateContext"
   );
-  let { restoreScrollPosition, resetScrollPosition } = state;
+  let { restoreScrollPosition, preventScrollReset } = state;
 
   // Trigger manual scroll restoration while we're active
   React.useEffect(() => {
@@ -934,10 +1014,8 @@ function useScrollRestoration({
   // Save positions on unload
   useBeforeUnload(
     React.useCallback(() => {
-      if (state?.navigation.state === "idle") {
-        let key =
-          (getKey ? getKey(state.location, state.matches) : null) ||
-          state.location.key;
+      if (navigation.state === "idle") {
+        let key = (getKey ? getKey(location, matches) : null) || location.key;
         savedScrollPositions[key] = window.scrollY;
       }
       sessionStorage.setItem(
@@ -945,13 +1023,7 @@ function useScrollRestoration({
         JSON.stringify(savedScrollPositions)
       );
       window.history.scrollRestoration = "auto";
-    }, [
-      storageKey,
-      getKey,
-      state.navigation.state,
-      state.location,
-      state.matches,
-    ])
+    }, [storageKey, getKey, navigation.state, location, matches])
   );
 
   // Read in any saved scroll locations
@@ -1001,13 +1073,13 @@ function useScrollRestoration({
     }
 
     // Opt out of scroll reset if this link requested it
-    if (resetScrollPosition === false) {
+    if (preventScrollReset === true) {
       return;
     }
 
     // otherwise go to the top on new locations
     window.scrollTo(0, 0);
-  }, [location, restoreScrollPosition, resetScrollPosition]);
+  }, [location, restoreScrollPosition, preventScrollReset]);
 }
 
 function useBeforeUnload(callback: () => any): void {

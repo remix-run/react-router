@@ -40,4 +40,4 @@ function Home() {
 }
 ```
 
-[link]: ./link-native
+[link]: ./link

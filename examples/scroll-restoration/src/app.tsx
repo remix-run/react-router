@@ -1,15 +1,54 @@
 import React from "react";
-import type { DataRouteMatch, Location } from "react-router-dom";
+import type { Location, useMatches } from "react-router-dom";
 import {
-  DataBrowserRouter,
+  createBrowserRouter,
   Link,
   Outlet,
-  Route,
+  RouterProvider,
   ScrollRestoration,
   useLoaderData,
   useLocation,
   useNavigation,
 } from "react-router-dom";
+
+import "./index.css";
+
+let router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <h2>Home</h2>,
+      },
+      {
+        path: "restore-by-key",
+        loader: getArrayLoader,
+        element: <LongPage />,
+      },
+      {
+        path: "restore-by-pathname",
+        loader: getArrayLoader,
+        element: <LongPage />,
+        handle: { scrollMode: "pathname" },
+      },
+      {
+        path: "link-to-hash",
+        loader: getArrayLoader,
+        element: <LongPage />,
+      },
+    ],
+  },
+]);
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => router.dispose());
+}
+
+export default function App() {
+  return <RouterProvider router={router} fallbackElement={<p>Loading...</p>} />;
+}
 
 function Layout() {
   let navigation = useNavigation();
@@ -22,9 +61,9 @@ function Layout() {
   // previously-accessed path.  Or - go nuts and lump many pages into a
   // single key (i.e., anything /wizard/* uses the same key)!
   let getKey = React.useCallback(
-    (location: Location, matches: DataRouteMatch[]) => {
-      let match = matches.find((m) => m.route.handle?.scrollMode);
-      if (match?.route.handle?.scrollMode === "pathname") {
+    (location: Location, matches: ReturnType<typeof useMatches>) => {
+      let match = matches.find((m) => (m.handle as any)?.scrollMode);
+      if ((match?.handle as any)?.scrollMode === "pathname") {
         return location.pathname;
       }
 
@@ -94,13 +133,13 @@ function Layout() {
                   </Link>
                 </li>
                 <li className="navitem">
-                  <Link to="/restore-by-key" resetScroll={false}>
+                  <Link to="/restore-by-key" preventScrollReset>
                     This link will not scroll to the top
                   </Link>
                 </li>
                 <li className="navitem">
                   <a href="https://www.google.com">
-                    Thi links to an external site (google)
+                    This links to an external site (google)
                   </a>
                 </li>
               </ul>
@@ -112,7 +151,7 @@ function Layout() {
         </div>
       </div>
       {/*
-        Including this component inside a DataRouter component tree is what
+        Including this component inside a data router component tree is what
         enables restoration
       */}
       <ScrollRestoration getKey={getKey} />
@@ -120,7 +159,11 @@ function Layout() {
   );
 }
 
-async function getArrayLoader() {
+interface ArrayLoaderData {
+  arr: Array<number>;
+}
+
+async function getArrayLoader(): Promise<ArrayLoaderData> {
   await new Promise((r) => setTimeout(r, 1000));
   return {
     arr: new Array(100).fill(null).map((_, i) => i),
@@ -128,7 +171,7 @@ async function getArrayLoader() {
 }
 
 function LongPage() {
-  let data = useLoaderData();
+  let data = useLoaderData() as ArrayLoaderData;
   let location = useLocation();
   return (
     <>
@@ -147,31 +190,3 @@ function LongPage() {
     </>
   );
 }
-
-function App() {
-  return (
-    <DataBrowserRouter fallbackElement={<p>Loading...</p>}>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<h2>Home</h2>} />
-        <Route
-          path="restore-by-key"
-          loader={getArrayLoader}
-          element={<LongPage />}
-        />
-        <Route
-          path="restore-by-pathname"
-          loader={getArrayLoader}
-          element={<LongPage />}
-          handle={{ scrollMode: "pathname" }}
-        />
-        <Route
-          path="link-to-hash"
-          loader={getArrayLoader}
-          element={<LongPage />}
-        />
-      </Route>
-    </DataBrowserRouter>
-  );
-}
-
-export default App;

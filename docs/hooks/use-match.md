@@ -8,8 +8,11 @@ title: useMatch
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useMatch<ParamKey extends string = string>(
-  pattern: PathPattern | string
+declare function useMatch<
+  ParamKey extends ParamParseKey<Path>,
+  Path extends string
+>(
+  pattern: PathPattern<Path> | Path
 ): PathMatch<ParamKey> | null;
 ```
 

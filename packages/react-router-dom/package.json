@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "6.4.0-pre.2",
+  "version": "6.4.0-pre.15",
   "description": "Declarative routing for React web applications",
   "keywords": [
     "react",
@@ -23,12 +23,25 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "react-router": "6.4.0-pre.2"
+    "react-router": "6.4.0-pre.15"
+  },
+  "devDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "peerDependencies": {
     "react": ">=16.8",
     "react-dom": ">=16.8"
   },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md",
+    "server.d.ts",
+    "server.js",
+    "server.mjs"
+  ],
   "engines": {
     "node": ">=14"
   }

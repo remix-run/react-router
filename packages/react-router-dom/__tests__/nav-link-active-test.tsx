@@ -11,13 +11,12 @@ import {
   MemoryRouter,
   Routes,
   Route,
+  RouterProvider,
   NavLink,
   Outlet,
-  DataBrowserRouter,
+  createBrowserRouter,
+  createRoutesFromElements,
 } from "react-router-dom";
-
-// Private API
-import { _resetModuleScope } from "../../react-router/lib/components";
 
 describe("NavLink", () => {
   describe("when it does not match", () => {
@@ -328,24 +327,24 @@ describe("NavLink", () => {
 });
 
 describe("NavLink using a data router", () => {
-  afterEach(() => {
-    _resetModuleScope();
-  });
-
   it("applies the default 'active'/'pending' classNames to the underlying <a>", async () => {
-    let deferred = defer();
-    render(
-      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
+    let dfd = createDeferred();
+    let router = createBrowserRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
             path="bar"
-            loader={() => deferred.promise}
+            loader={() => dfd.promise}
             element={<p>Bar page</p>}
           />
         </Route>
-      </DataBrowserRouter>
+      ),
+      {
+        window: getWindow("/foo"),
+      }
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -362,25 +361,29 @@ describe("NavLink using a data router", () => {
     fireEvent.click(screen.getByText("Link to Bar"));
     expect(screen.getByText("Link to Bar").className).toBe("pending");
 
-    deferred.resolve();
+    dfd.resolve();
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar").className).toBe("active");
   });
 
   it("applies its className correctly when provided as a function", async () => {
-    let deferred = defer();
-    render(
-      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
+    let dfd = createDeferred();
+    let router = createBrowserRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
             path="bar"
-            loader={() => deferred.promise}
+            loader={() => dfd.promise}
             element={<p>Bar page</p>}
           />
         </Route>
-      </DataBrowserRouter>
+      ),
+      {
+        window: getWindow("/foo"),
+      }
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -411,7 +414,7 @@ describe("NavLink using a data router", () => {
       "some-pending-classname"
     );
 
-    deferred.resolve();
+    dfd.resolve();
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar").className).toBe(
       "some-active-classname"
@@ -419,19 +422,23 @@ describe("NavLink using a data router", () => {
   });
 
   it("applies its style correctly when provided as a function", async () => {
-    let deferred = defer();
-    render(
-      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
+    let dfd = createDeferred();
+    let router = createBrowserRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
             path="bar"
-            loader={() => deferred.promise}
+            loader={() => dfd.promise}
             element={<p>Bar page</p>}
           />
         </Route>
-      </DataBrowserRouter>
+      ),
+      {
+        window: getWindow("/foo"),
+      }
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -462,7 +469,7 @@ describe("NavLink using a data router", () => {
       "lowercase"
     );
 
-    deferred.resolve();
+    dfd.resolve();
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar").style.textTransform).toBe(
       "uppercase"
@@ -470,19 +477,23 @@ describe("NavLink using a data router", () => {
   });
 
   it("applies its children correctly when provided as a function", async () => {
-    let deferred = defer();
-    render(
-      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
+    let dfd = createDeferred();
+    let router = createBrowserRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
             path="bar"
-            loader={() => deferred.promise}
+            loader={() => dfd.promise}
             element={<p>Bar page</p>}
           />
         </Route>
-      </DataBrowserRouter>
+      ),
+      {
+        window: getWindow("/foo"),
+      }
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -508,26 +519,30 @@ describe("NavLink using a data router", () => {
     fireEvent.click(screen.getByText("Link to Bar (idle)"));
     expect(screen.getByText("Link to Bar (loading...)")).toBeDefined();
 
-    deferred.resolve();
+    dfd.resolve();
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar (current)")).toBeDefined();
   });
 
   it("does not apply during transitions to non-matching locations", async () => {
-    let deferred = defer();
-    render(
-      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
+    let dfd = createDeferred();
+    let router = createBrowserRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route path="bar" element={<p>Bar page</p>} />
           <Route
             path="baz"
-            loader={() => deferred.promise}
+            loader={() => dfd.promise}
             element={<p>Baz page</p>}
           />
         </Route>
-      </DataBrowserRouter>
+      ),
+      {
+        window: getWindow("/foo"),
+      }
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -545,7 +560,7 @@ describe("NavLink using a data router", () => {
     fireEvent.click(screen.getByText("Link to Baz"));
     expect(screen.getByText("Link to Bar").className).toBe("");
 
-    deferred.resolve();
+    dfd.resolve();
     await waitFor(() => screen.getByText("Baz page"));
     expect(screen.getByText("Link to Bar").className).toBe("");
   });
@@ -594,7 +609,7 @@ describe("NavLink under a Routes with a basename", () => {
   });
 });
 
-function defer() {
+function createDeferred() {
   let resolve: (val?: any) => Promise<void>;
   let reject: (error?: Error) => Promise<void>;
   let promise = new Promise((res, rej) => {

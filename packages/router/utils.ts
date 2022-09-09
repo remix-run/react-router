@@ -1,9 +1,70 @@
 import type { Location, Path, To } from "./history";
 import { parsePath } from "./history";
-import { DataResult, DataRouteMatch } from "./router";
+
+/**
+ * Map of routeId -> data returned from a loader/action/error
+ */
+export interface RouteData {
+  [routeId: string]: any;
+}
+
+export enum ResultType {
+  data = "data",
+  deferred = "deferred",
+  redirect = "redirect",
+  error = "error",
+}
+
+/**
+ * Successful result from a loader or action
+ */
+export interface SuccessResult {
+  type: ResultType.data;
+  data: any;
+  statusCode?: number;
+  headers?: Headers;
+}
+
+/**
+ * Successful defer() result from a loader or action
+ */
+export interface DeferredResult {
+  type: ResultType.deferred;
+  deferredData: DeferredData;
+}
+
+/**
+ * Redirect result from a loader or action
+ */
+export interface RedirectResult {
+  type: ResultType.redirect;
+  status: number;
+  location: string;
+  revalidate: boolean;
+}
+
+/**
+ * Unsuccessful result from a loader or action
+ */
+export interface ErrorResult {
+  type: ResultType.error;
+  error: any;
+  headers?: Headers;
+}
+
+/**
+ * Result from a loader or action - potentially successful or unsuccessful
+ */
+export type DataResult =
+  | SuccessResult
+  | DeferredResult
+  | RedirectResult
+  | ErrorResult;
 
 export type FormMethod = "get" | "post" | "put" | "patch" | "delete";
-export type FormEncType = "application/x-www-form-urlencoded";
+export type FormEncType =
+  | "application/x-www-form-urlencoded"
+  | "multipart/form-data";
 
 /**
  * @private
@@ -25,7 +86,6 @@ export interface Submission {
 interface DataFunctionArgs {
   request: Request;
   params: Params;
-  signal: AbortSignal;
 }
 
 /**
@@ -62,9 +122,9 @@ export interface ActionFunction {
 export interface ShouldRevalidateFunction {
   (args: {
     currentUrl: URL;
-    currentParams: DataRouteMatch["params"];
+    currentParams: AgnosticDataRouteMatch["params"];
     nextUrl: URL;
-    nextParams: DataRouteMatch["params"];
+    nextParams: AgnosticDataRouteMatch["params"];
     formMethod?: Submission["formMethod"];
     formAction?: Submission["formAction"];
     formEncType?: Submission["formEncType"];
@@ -78,16 +138,15 @@ export interface ShouldRevalidateFunction {
  * A route object represents a logical route, with (optionally) its child
  * routes organized in a tree-like structure.
  */
-export interface RouteObject {
+export interface AgnosticRouteObject {
   caseSensitive?: boolean;
-  children?: RouteObject[];
-  element?: React.ReactNode;
+  children?: AgnosticRouteObject[];
   index?: boolean;
   path?: string;
   id?: string;
   loader?: LoaderFunction;
   action?: ActionFunction;
-  errorElement?: React.ReactNode;
+  hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
 }
@@ -95,57 +154,47 @@ export interface RouteObject {
 /**
  * A data route object, which is just a RouteObject with a required unique ID
  */
-export interface DataRouteObject extends RouteObject {
-  children?: DataRouteObject[];
+export interface AgnosticDataRouteObject extends AgnosticRouteObject {
+  children?: AgnosticDataRouteObject[];
   id: string;
 }
 
-type ParamParseFailed = { failed: true };
+// Recursive helper for finding path parameters in the absence of wildcards
+type _PathParam<Path extends string> =
+  // split path into individual path segments
+  Path extends `${infer L}/${infer R}`
+    ? _PathParam<L> | _PathParam<R>
+    : // find params after `:`
+    Path extends `${string}:${infer Param}`
+    ? Param
+    : // otherwise, there aren't any params present
+      never;
 
-type ParamParseSegment<Segment extends string> =
-  // Check here if there exists a forward slash in the string.
-  Segment extends `${infer LeftSegment}/${infer RightSegment}`
-    ? // If there is a forward slash, then attempt to parse each side of the
-      // forward slash.
-      ParamParseSegment<LeftSegment> extends infer LeftResult
-      ? ParamParseSegment<RightSegment> extends infer RightResult
-        ? LeftResult extends string
-          ? // If the left side is successfully parsed as a param, then check if
-            // the right side can be successfully parsed as well. If both sides
-            // can be parsed, then the result is a union of the two sides
-            // (read: "foo" | "bar").
-            RightResult extends string
-            ? LeftResult | RightResult
-            : LeftResult
-          : // If the left side is not successfully parsed as a param, then check
-          // if only the right side can be successfully parse as a param. If it
-          // can, then the result is just right, else it's a failure.
-          RightResult extends string
-          ? RightResult
-          : ParamParseFailed
-        : ParamParseFailed
-      : // If the left side didn't parse into a param, then just check the right
-      // side.
-      ParamParseSegment<RightSegment> extends infer RightResult
-      ? RightResult extends string
-        ? RightResult
-        : ParamParseFailed
-      : ParamParseFailed
-    : // If there's no forward slash, then check if this segment starts with a
-    // colon. If it does, then this is a dynamic segment, so the result is
-    // just the remainder of the string, optionally prefixed with another string.
-    // Otherwise, it's a failure.
-    Segment extends `${string}:${infer Remaining}`
-    ? Remaining
-    : ParamParseFailed;
+/**
+ * Examples:
+ * "/a/b/*" -> "*"
+ * ":a" -> "a"
+ * "/a/:b" -> "b"
+ * "/a/blahblahblah:b" -> "b"
+ * "/:a/:b" -> "a" | "b"
+ * "/:a/b/:c/*" -> "a" | "c" | "*"
+ */
+type PathParam<Path extends string> =
+  // check if path is just a wildcard
+  Path extends "*"
+    ? "*"
+    : // look for wildcard at the end of the path
+    Path extends `${infer Rest}/*`
+    ? "*" | _PathParam<Rest>
+    : // look for params in the absence of wildcards
+      _PathParam<Path>;
 
 // Attempt to parse the given string segment. If it fails, then just return the
 // plain string type as a default fallback. Otherwise return the union of the
 // parsed string literals that were referenced as dynamic segments in the route.
 export type ParamParseKey<Segment extends string> =
-  ParamParseSegment<Segment> extends string
-    ? ParamParseSegment<Segment>
-    : string;
+  // if could not find path params, fallback to `string`
+  [PathParam<Segment>] extends [never] ? string : PathParam<Segment>;
 
 /**
  * The parameters that were parsed from the URL path.
@@ -157,9 +206,9 @@ export type Params<Key extends string = string> = {
 /**
  * A RouteMatch contains info about how a route matched a URL.
  */
-export interface RouteMatch<
+export interface AgnosticRouteMatch<
   ParamKey extends string = string,
-  RouteObjectType extends RouteObject = RouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 > {
   /**
    * The names and values of dynamic parameters in the URL.
@@ -179,16 +228,48 @@ export interface RouteMatch<
   route: RouteObjectType;
 }
 
+export interface AgnosticDataRouteMatch
+  extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
+
+// Walk the route tree generating unique IDs where necessary so we are working
+// solely with AgnosticDataRouteObject's within the Router
+export function convertRoutesToDataRoutes(
+  routes: AgnosticRouteObject[],
+  parentPath: number[] = [],
+  allIds: Set<string> = new Set<string>()
+): AgnosticDataRouteObject[] {
+  return routes.map((route, index) => {
+    let treePath = [...parentPath, index];
+    let id = typeof route.id === "string" ? route.id : treePath.join("-");
+    invariant(
+      !allIds.has(id),
+      `Found a route id collision on id "${id}".  Route ` +
+        "id's must be globally unique within Data Router usages"
+    );
+    allIds.add(id);
+    let dataRoute: AgnosticDataRouteObject = {
+      ...route,
+      id,
+      children: route.children
+        ? convertRoutesToDataRoutes(route.children, treePath, allIds)
+        : undefined,
+    };
+    return dataRoute;
+  });
+}
+
 /**
  * Matches the given routes to a location and returns the match data.
  *
  * @see https://reactrouter.com/docs/en/v6/utils/match-routes
  */
-export function matchRoutes<RouteObjectType extends RouteObject = RouteObject>(
+export function matchRoutes<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+>(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
   basename = "/"
-): RouteMatch<string, RouteObjectType>[] | null {
+): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
@@ -209,20 +290,26 @@ export function matchRoutes<RouteObjectType extends RouteObject = RouteObject>(
   return matches;
 }
 
-interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
+interface RouteMeta<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
   route: RouteObjectType;
 }
 
-interface RouteBranch<RouteObjectType extends RouteObject = RouteObject> {
+interface RouteBranch<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+> {
   path: string;
   score: number;
   routesMeta: RouteMeta<RouteObjectType>[];
 }
 
-function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
+function flattenRoutes<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+>(
   routes: RouteObjectType[],
   branches: RouteBranch<RouteObjectType>[] = [],
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
@@ -336,16 +423,16 @@ function compareIndexes(a: number[], b: number[]): number {
 
 function matchRouteBranch<
   ParamKey extends string = string,
-  RouteObjectType extends RouteObject = RouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
   branch: RouteBranch<RouteObjectType>,
   pathname: string
-): RouteMatch<ParamKey, RouteObjectType>[] | null {
+): AgnosticRouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
   let matchedParams = {};
   let matchedPathname = "/";
-  let matches: RouteMatch<ParamKey, RouteObjectType>[] = [];
+  let matches: AgnosticRouteMatch<ParamKey, RouteObjectType>[] = [];
   for (let i = 0; i < routesMeta.length; ++i) {
     let meta = routesMeta[i];
     let end = i === routesMeta.length - 1;
@@ -387,15 +474,22 @@ function matchRouteBranch<
  *
  * @see https://reactrouter.com/docs/en/v6/utils/generate-path
  */
-export function generatePath(path: string, params: Params = {}): string {
+export function generatePath<Path extends string>(
+  path: Path,
+  params: {
+    [key in PathParam<Path>]: string;
+  } = {} as any
+): string {
   return path
-    .replace(/:(\w+)/g, (_, key) => {
+    .replace(/:(\w+)/g, (_, key: PathParam<Path>) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
     })
-    .replace(/\/*\*$/, (_) =>
-      params["*"] == null ? "" : params["*"].replace(/^\/*/, "/")
-    );
+    .replace(/\/*\*$/, (_) => {
+      const star = "*" as PathParam<Path>;
+
+      return params[star] == null ? "" : params[star].replace(/^\/*/, "/");
+    });
 }
 
 /**
@@ -578,13 +672,18 @@ export function stripBasename(
     return null;
   }
 
-  let nextChar = pathname.charAt(basename.length);
+  // We want to leave trailing slash behavior in the user's control, so if they
+  // specify a basename with a trailing slash, we should support it
+  let startIndex = basename.endsWith("/")
+    ? basename.length - 1
+    : basename.length;
+  let nextChar = pathname.charAt(startIndex);
   if (nextChar && nextChar !== "/") {
     // pathname does not start with basename/
     return null;
   }
 
-  return pathname.slice(basename.length) || "/";
+  return pathname.slice(startIndex) || "/";
 }
 
 /**
@@ -668,11 +767,17 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
 export function resolveTo(
   toArg: To,
   routePathnames: string[],
-  locationPathname: string
+  locationPathname: string,
+  isPathRelative = false
 ): Path {
   let to = typeof toArg === "string" ? parsePath(toArg) : { ...toArg };
-  let toPathname = toArg === "" || to.pathname === "" ? "/" : to.pathname;
+  let isEmptyPath = toArg === "" || to.pathname === "";
+  let toPathname = isEmptyPath ? "/" : to.pathname;
 
+  let from: string;
+
+  // Routing is relative to the current pathname if explicitly requested.
+  //
   // If a pathname is explicitly provided in `to`, it should be relative to the
   // route context. This is explained in `Note on `<Link to>` values` in our
   // migration guide from v5 as a means of disambiguation between `to` values
@@ -680,8 +785,7 @@ export function resolveTo(
   // `to` values that do not provide a pathname. `to` can simply be a search or
   // hash string, in which case we should assume that the navigation is relative
   // to the current location's pathname and *not* the route pathname.
-  let from: string;
-  if (toPathname == null) {
+  if (isPathRelative || toPathname == null) {
     from = locationPathname;
   } else {
     let routePathnameIndex = routePathnames.length - 1;
@@ -707,12 +811,15 @@ export function resolveTo(
 
   let path = resolvePath(to, from);
 
-  // Ensure the pathname has a trailing slash if the original to value had one.
+  // Ensure the pathname has a trailing slash if the original "to" had one
+  let hasExplicitTrailingSlash =
+    toPathname && toPathname !== "/" && toPathname.endsWith("/");
+  // Or if this was a link to the current path which has a trailing slash
+  let hasCurrentTrailingSlash =
+    (isEmptyPath || toPathname === ".") && locationPathname.endsWith("/");
   if (
-    toPathname &&
-    toPathname !== "/" &&
-    toPathname.endsWith("/") &&
-    !path.pathname.endsWith("/")
+    !path.pathname.endsWith("/") &&
+    (hasExplicitTrailingSlash || hasCurrentTrailingSlash)
   ) {
     path.pathname += "/";
   }
@@ -782,6 +889,174 @@ export const json: JsonFunction = (data, init = {}) => {
     headers,
   });
 };
+
+export interface TrackedPromise extends Promise<any> {
+  _tracked?: boolean;
+  _data?: any;
+  _error?: any;
+}
+
+export class AbortedDeferredError extends Error {}
+
+export class DeferredData {
+  private pendingKeys: Set<string | number> = new Set<string | number>();
+  private controller: AbortController;
+  private abortPromise: Promise<void>;
+  private unlistenAbortSignal: () => void;
+  private subscriber?: (aborted: boolean) => void = undefined;
+  data: Record<string, unknown>;
+
+  constructor(data: Record<string, unknown>) {
+    invariant(
+      data && typeof data === "object" && !Array.isArray(data),
+      "defer() only accepts plain objects"
+    );
+
+    // Set up an AbortController + Promise we can race against to exit early
+    // cancellation
+    let reject: (e: AbortedDeferredError) => void;
+    this.abortPromise = new Promise((_, r) => (reject = r));
+    this.controller = new AbortController();
+    let onAbort = () =>
+      reject(new AbortedDeferredError("Deferred data aborted"));
+    this.unlistenAbortSignal = () =>
+      this.controller.signal.removeEventListener("abort", onAbort);
+    this.controller.signal.addEventListener("abort", onAbort);
+
+    this.data = Object.entries(data).reduce(
+      (acc, [key, value]) =>
+        Object.assign(acc, {
+          [key]: this.trackPromise(key, value),
+        }),
+      {}
+    );
+  }
+
+  private trackPromise(
+    key: string | number,
+    value: Promise<unknown> | unknown
+  ): TrackedPromise | unknown {
+    if (!(value instanceof Promise)) {
+      return value;
+    }
+
+    this.pendingKeys.add(key);
+
+    // We store a little wrapper promise that will be extended with
+    // _data/_error props upon resolve/reject
+    let promise: TrackedPromise = Promise.race([value, this.abortPromise]).then(
+      (data) => this.onSettle(promise, key, null, data as unknown),
+      (error) => this.onSettle(promise, key, error as unknown)
+    );
+
+    // Register rejection listeners to avoid uncaught promise rejections on
+    // errors or aborted deferred values
+    promise.catch(() => {});
+
+    Object.defineProperty(promise, "_tracked", { get: () => true });
+    return promise;
+  }
+
+  private onSettle(
+    promise: TrackedPromise,
+    key: string | number,
+    error: unknown,
+    data?: unknown
+  ): unknown {
+    if (
+      this.controller.signal.aborted &&
+      error instanceof AbortedDeferredError
+    ) {
+      this.unlistenAbortSignal();
+      Object.defineProperty(promise, "_error", { get: () => error });
+      return Promise.reject(error);
+    }
+
+    this.pendingKeys.delete(key);
+
+    if (this.done) {
+      // Nothing left to abort!
+      this.unlistenAbortSignal();
+    }
+
+    if (error) {
+      Object.defineProperty(promise, "_error", { get: () => error });
+      this.subscriber?.(false);
+      return Promise.reject(error);
+    }
+
+    Object.defineProperty(promise, "_data", { get: () => data });
+    this.subscriber?.(false);
+    return data;
+  }
+
+  subscribe(fn: (aborted: boolean) => void) {
+    this.subscriber = fn;
+  }
+
+  cancel() {
+    this.controller.abort();
+    this.pendingKeys.forEach((v, k) => this.pendingKeys.delete(k));
+    this.subscriber?.(true);
+  }
+
+  async resolveData(signal: AbortSignal) {
+    let aborted = false;
+    if (!this.done) {
+      let onAbort = () => this.cancel();
+      signal.addEventListener("abort", onAbort);
+      aborted = await new Promise((resolve) => {
+        this.subscribe((aborted) => {
+          signal.removeEventListener("abort", onAbort);
+          if (aborted || this.done) {
+            resolve(aborted);
+          }
+        });
+      });
+    }
+    return aborted;
+  }
+
+  get done() {
+    return this.pendingKeys.size === 0;
+  }
+
+  get unwrappedData() {
+    invariant(
+      this.data !== null && this.done,
+      "Can only unwrap data on initialized and settled deferreds"
+    );
+
+    return Object.entries(this.data).reduce(
+      (acc, [key, value]) =>
+        Object.assign(acc, {
+          [key]: unwrapTrackedPromise(value),
+        }),
+      {}
+    );
+  }
+}
+
+function isTrackedPromise(value: any): value is TrackedPromise {
+  return (
+    value instanceof Promise && (value as TrackedPromise)._tracked === true
+  );
+}
+
+function unwrapTrackedPromise(value: any) {
+  if (!isTrackedPromise(value)) {
+    return value;
+  }
+
+  if (value._error) {
+    throw value._error;
+  }
+  return value._data;
+}
+
+export function defer(data: Record<string, unknown>) {
+  return new DeferredData(data);
+}
 
 export type RedirectFunction = (
   url: string,

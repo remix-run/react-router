@@ -1,3 +1,5 @@
+/* eslint-disable jest/expect-expect */
+
 import type { MemoryHistory } from "@remix-run/router";
 import { createMemoryHistory } from "@remix-run/router";
 
