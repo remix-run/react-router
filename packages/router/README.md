@@ -97,7 +97,7 @@ router.fetch("key", "/page", {
 });
 ```
 
-## Revalidation
+### Revalidation
 
 By default, active loaders will revalidate after any navigation or fetcher mutation. If you need to kick off a revalidation for other use-cases, you can use `router.revalidate()` to re-execute all active loaders.
 
