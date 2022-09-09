@@ -39,21 +39,33 @@ import {
  */
 export interface Router {
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Return the basename for the router
    */
   get basename(): RouterInit["basename"];
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Return the current state of the router
    */
   get state(): RouterState;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Return the routes for this router instance
    */
   get routes(): AgnosticDataRouteObject[];
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Initialize the router, including adding history listeners and kicking off
    * initial data fetches.  Returns a function to cleanup listeners and abort
    * any in-progress loads
@@ -61,6 +73,9 @@ export interface Router {
   initialize(): Router;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Subscribe to router.state updates
    *
    * @param fn function to call with the new state
@@ -68,6 +83,9 @@ export interface Router {
   subscribe(fn: RouterSubscriber): () => void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Enable scroll restoration behavior in the router
    *
    * @param savedScrollPositions Object that will manage positions, in case
@@ -82,6 +100,9 @@ export interface Router {
   ): () => void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Navigate forward/backward in the history stack
    * @param to Delta to move in the history stack
    */
@@ -95,6 +116,9 @@ export interface Router {
   navigate(to: To, opts?: RouterNavigateOptions): void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Trigger a fetcher load/submission
    *
    * @param key     Fetcher key
@@ -110,42 +134,61 @@ export interface Router {
   ): void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Trigger a revalidation of all current route loaders and fetcher loads
    */
   revalidate(): void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Utility function to create an href for the given location
    * @param location
    */
   createHref(location: Location | URL): string;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Get/create a fetcher for the given key
    * @param key
    */
   getFetcher<TData = any>(key?: string): Fetcher<TData>;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Delete the fetcher for a given key
    * @param key
    */
   deleteFetcher(key?: string): void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Cleanup listeners and abort any in-progress loads
    */
   dispose(): void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Internal fetch AbortControllers accessed by unit tests
-   * @private
    */
   _internalFetchControllers: Map<string, AbortController>;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Internal pending DeferredData instances accessed by unit tests
-   * @private
    */
   _internalActiveDeferreds: Map<string, DeferredData>;
 }
