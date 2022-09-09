@@ -99,6 +99,9 @@
     "type-fest": "^2.13.0",
     "typescript": "^4.7.3"
   },
+  "engines": {
+    "node": ">=14"
+  },
   "filesize": {
     "packages/router/dist/router.js": {
       "none": "100 kB"

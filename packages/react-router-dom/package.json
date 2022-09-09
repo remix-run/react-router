@@ -41,5 +41,8 @@
     "server.d.ts",
     "server.js",
     "server.mjs"
-  ]
+  ],
+  "engines": {
+    "node": ">=14"
+  }
 }

@@ -36,5 +36,8 @@
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"
-  ]
+  ],
+  "engines": {
+    "node": ">=14"
+  }
 }
