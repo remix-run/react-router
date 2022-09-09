@@ -58,26 +58,65 @@ Nested Routing is the general idea of coupling segments of the URL to component 
 React Router embraces this convention with APIs for creating nested layouts coupled to URL segments and data.
 
 ```jsx
-<Route path="/" element={<Root />}>
-  <Route path="contact" element={<Contact />} />
-  <Route
-    path="dashboard"
-    element={<Dashboard />}
-    loader={({ request }) =>
-      fetch("/api/dashboard.json", {
-        signal: request.signal,
-      })
-    }
-  />
-  <Route element={<AuthLayout />}>
-    <Route
-      path="login"
-      element={<Login />}
-      loader={redirectIfUser}
-    />
-    <Route path="logout" />
-  </Route>
-</Route>
+// Configure nested routes with JSX
+createBrowserRouter(
+  createRoutesFromElements(
+    <Route path="/" element={<Root />}>
+      <Route path="contact" element={<Contact />} />
+      <Route
+        path="dashboard"
+        element={<Dashboard />}
+        loader={fetch("/api/dashboard.json", {
+          signal: request.signal,
+        })}
+      />
+      <Route element={<AuthLayout />}>
+        <Route
+          path="login"
+          element={<Login />}
+          loader={redirectIfUser}
+        />
+        <Route path="logout" />
+      </Route>
+    </Route>
+  )
+);
+
+// Or use plain objects
+createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    children: [
+      {
+        path: "contact",
+        element: <Contact />,
+      },
+      {
+        path: "dashboard",
+        element: <Dashboard />,
+        loader: ({ request }) =>
+          fetch("/api/dashboard.json", {
+            signal: request.signal,
+          }),
+      },
+      {
+        element: <AuthLayout />,
+        children: [
+          {
+            path: "login",
+            element: <Login />,
+            loader: redirectIfUser,
+          },
+          {
+            path: "logout",
+            action: logoutUser,
+          },
+        ],
+      },
+    ],
+  },
+]);
 ```
 
 This [visualization](https://remix.run/_docs/routing) might be helpful.
