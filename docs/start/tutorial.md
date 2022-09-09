@@ -22,7 +22,7 @@ We'll be using [Vite][vite] for our bundler and dev server for this tutorial. Yo
 👉️ **Open up your terminal and bootstrap a new React app with Vite:**
 
 ```sh
-npm create vite@latest -- --template react
+npm create vite@latest name-of-your-project -- --template react
 # follow prompts
 cd <your new project directory>
 npm install react-router-dom@pre localforage match-sorter sort-by
