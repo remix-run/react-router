@@ -28,7 +28,8 @@ import {
 } from "../index";
 
 // Private API
-import { TrackedPromise } from "../utils";
+import type { TrackedPromise } from "../utils";
+import { AbortedDeferredError } from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
@@ -149,7 +150,7 @@ function isRedirect(result: any) {
 }
 
 interface CustomMatchers<R = unknown> {
-  trackedPromise(data?: any, error?: any): R;
+  trackedPromise(data?: any, error?: any, aborted?: boolean): R;
 }
 
 declare global {
@@ -161,11 +162,12 @@ declare global {
 }
 
 // Custom matcher for asserting deferred promise results inside of `toEqual()`
-//  - expect.trackedPromise()             =>  pending promise
-//  - expect.trackedPromise(value)        =>  promise resolved with `value`
-//  - expect.trackedPromise(null, error)  =>  promise rejected with `error`
+//  - expect.trackedPromise()                  =>  pending promise
+//  - expect.trackedPromise(value)             =>  promise resolved with `value`
+//  - expect.trackedPromise(null, error)       =>  promise rejected with `error`
+//  - expect.trackedPromise(null, null, true)  =>  promise aborted
 expect.extend({
-  trackedPromise(received, data, error) {
+  trackedPromise(received, data, error, aborted = false) {
     let promise = received as TrackedPromise;
     let isTrackedPromise =
       promise instanceof Promise && promise._tracked === true;
@@ -185,6 +187,14 @@ expect.extend({
           : promise._error === error;
       return {
         message: () => `expected ${received} to be a rejected deferred`,
+        pass: isTrackedPromise && errorMatches,
+      };
+    }
+
+    if (aborted) {
+      let errorMatches = promise._error instanceof AbortedDeferredError;
+      return {
+        message: () => `expected ${received} to be an aborted deferred`,
         pass: isTrackedPromise && errorMatches,
       };
     }
@@ -893,7 +903,7 @@ describe("a router", () => {
           location: undefined,
           state: "idle",
         },
-        resetScrollPosition: true,
+        preventScrollReset: false,
         restoreScrollPosition: null,
         revalidation: "idle",
         fetchers: new Map(),
@@ -1022,6 +1032,61 @@ describe("a router", () => {
         ],
         initialized: true,
       });
+    });
+
+    it("supports subscribers", async () => {
+      let history = createMemoryHistory({ initialEntries: ["/"] });
+      let count = 0;
+      let router = createRouter({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            hasErrorBoundary: true,
+            loader: () => ++count,
+          },
+        ],
+        history,
+        hydrationData: {
+          loaderData: { root: 0 },
+        },
+      }).initialize();
+      expect(router.state.loaderData).toEqual({
+        root: 0,
+      });
+
+      let subscriber = jest.fn();
+      let unsubscribe = router.subscribe(subscriber);
+      let subscriber2 = jest.fn();
+      let unsubscribe2 = router.subscribe(subscriber2);
+
+      await router.navigate("/?key=a");
+      expect(subscriber.mock.calls[0][0].navigation.state).toBe("loading");
+      expect(subscriber.mock.calls[0][0].navigation.location.search).toBe(
+        "?key=a"
+      );
+      expect(subscriber.mock.calls[1][0].navigation.state).toBe("idle");
+      expect(subscriber.mock.calls[1][0].location.search).toBe("?key=a");
+      expect(subscriber2.mock.calls[0][0].navigation.state).toBe("loading");
+      expect(subscriber2.mock.calls[0][0].navigation.location.search).toBe(
+        "?key=a"
+      );
+      expect(subscriber2.mock.calls[1][0].navigation.state).toBe("idle");
+      expect(subscriber2.mock.calls[1][0].location.search).toBe("?key=a");
+
+      unsubscribe2();
+      await router.navigate("/?key=b");
+      expect(subscriber.mock.calls[2][0].navigation.state).toBe("loading");
+      expect(subscriber.mock.calls[2][0].navigation.location.search).toBe(
+        "?key=b"
+      );
+      expect(subscriber.mock.calls[3][0].navigation.state).toBe("idle");
+      expect(subscriber.mock.calls[3][0].location.search).toBe("?key=b");
+
+      unsubscribe();
+      await router.navigate("/?key=c");
+      expect(subscriber).toHaveBeenCalledTimes(4);
+      expect(subscriber2).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -2948,7 +3013,7 @@ describe("a router", () => {
         expect(t.router.state.errors).toBe(null);
         expect(A.loaders.parent.stub.mock.calls.length).toBe(1); // called again for revalidation
         expect(A.loaders.child.stub.mock.calls.length).toBe(1); // called because it's above error
-        expect(A.loaders.grandchild.stub.mock.calls.length).toBe(0); // dont call due to error
+        expect(A.loaders.grandchild.stub.mock.calls.length).toBe(0); // don't call due to error
         await A.loaders.parent.resolve("PARENT DATA*");
         await A.loaders.child.resolve("CHILD DATA");
         expect(t.router.state.loaderData).toEqual({
@@ -4840,33 +4905,35 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = {};
+
+      // Simulate scrolling to 100 on /
       let activeScrollPosition = 100;
       t.router.enableScrollRestoration(positions, () => activeScrollPosition);
 
-      // No restoration on first click to tasks
+      // No restoration on first click to /tasks
       let nav1 = await t.navigate("/tasks");
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       // Simulate scrolling down on /tasks
       activeScrollPosition = 200;
 
-      // Restore on pop to previous location
+      // Restore on pop back to /
       let nav2 = await t.navigate(-1);
       expect(t.router.state.restoreScrollPosition).toBe(null);
       await nav2.loaders.index.resolve("INDEX");
       expect(t.router.state.restoreScrollPosition).toBe(100);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
-      // Forward to /tasks
+      // Restore on pop forward to /tasks
       let nav3 = await t.navigate(1);
       await nav3.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(200);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
     });
 
     it("restores scroll using custom key", async () => {
@@ -4882,7 +4949,7 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = { "/tasks": 100 };
       let activeScrollPosition = 0;
@@ -4895,7 +4962,7 @@ describe("a router", () => {
       let nav1 = await t.navigate("/tasks");
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(100);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
     });
 
     it("does not restore scroll on submissions", async () => {
@@ -4911,7 +4978,7 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = { "/tasks": 100 };
       let activeScrollPosition = 0;
@@ -4929,7 +4996,7 @@ describe("a router", () => {
       await nav1.loaders.root.resolve("ROOT");
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
     });
 
     it("does not reset scroll", async () => {
@@ -4945,18 +5012,16 @@ describe("a router", () => {
       });
 
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(true);
+      expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = {};
       let activeScrollPosition = 0;
       t.router.enableScrollRestoration(positions, () => activeScrollPosition);
 
-      let nav1 = await t.navigate("/tasks", {
-        resetScroll: false,
-      });
+      let nav1 = await t.navigate("/tasks", { preventScrollReset: true });
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.resetScrollPosition).toBe(false);
+      expect(t.router.state.preventScrollReset).toBe(true);
     });
   });
 
@@ -7637,6 +7702,12 @@ describe("a router", () => {
           lazy3: expect.trackedPromise("3"),
         },
       });
+
+      // Should proxy values through
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy1).resolves.toBe("Immediate data");
+      await expect(data.lazy2).resolves.toBe("2");
+      await expect(data.lazy3).resolves.toBe("3");
     });
 
     it("should cancel outstanding deferreds on a new navigation", async () => {
@@ -7670,14 +7741,24 @@ describe("a router", () => {
       );
 
       // Interrupt pending deferred's from /lazy navigation
-      let B = await t.navigate("/");
+      let navPromise = t.navigate("/");
+
+      // Cancelled promises should reject immediately
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy1).rejects.toBeInstanceOf(AbortedDeferredError);
+      await expect(data.lazy2).rejects.toBeInstanceOf(AbortedDeferredError);
+      await expect(data.lazy1).rejects.toThrowError("Deferred data aborted");
+      await expect(data.lazy2).rejects.toThrowError("Deferred data aborted");
+
+      let B = await navPromise;
+
       // During navigation - deferreds remain as promises
       expect(t.router.state.loaderData).toEqual({
         lazy: {
           critical1: "1",
           critical2: "2",
-          lazy1: expect.trackedPromise(),
-          lazy2: expect.trackedPromise(),
+          lazy1: expect.trackedPromise(null, null, true),
+          lazy2: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -7688,8 +7769,8 @@ describe("a router", () => {
         lazy: {
           critical1: "1",
           critical2: "2",
-          lazy1: expect.trackedPromise(),
-          lazy2: expect.trackedPromise(),
+          lazy1: expect.trackedPromise(null, null, true),
+          lazy2: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -7769,7 +7850,7 @@ describe("a router", () => {
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(), // No re-paint!
+          lazy: expect.trackedPromise(null, null, true), // No re-paint!
         },
       });
 
@@ -7817,6 +7898,10 @@ describe("a router", () => {
           lazy: expect.trackedPromise(undefined, new Error("Kaboom!")),
         },
       });
+
+      // should proxy the error through
+      let data = t.router.state.loaderData.lazy;
+      await expect(data.lazy).rejects.toEqual(new Error("Kaboom!"));
     });
 
     it("should cancel all outstanding deferreds on router.revalidate()", async () => {
@@ -7881,11 +7966,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         index: {
           critical: "CRITICAL INDEX",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -7912,11 +7997,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         index: {
           critical: "CRITICAL INDEX",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -7927,11 +8012,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         index: {
           critical: "CRITICAL INDEX",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8000,7 +8085,7 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         foo: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8018,7 +8103,7 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         foo: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8321,11 +8406,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         aChild: {
           critical: "CRITICAL A CHILD",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8447,11 +8532,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8471,11 +8556,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8561,12 +8646,12 @@ describe("a router", () => {
         parent: {
           critical: "CRITICAL PARENT",
           lazy1: expect.trackedPromise("LAZY PARENT 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
           lazy1: expect.trackedPromise("LAZY A 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8593,12 +8678,12 @@ describe("a router", () => {
         parent: {
           critical: "CRITICAL PARENT",
           lazy1: expect.trackedPromise("LAZY PARENT 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
           lazy1: expect.trackedPromise("LAZY A 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8609,12 +8694,12 @@ describe("a router", () => {
         parent: {
           critical: "CRITICAL PARENT",
           lazy1: expect.trackedPromise("LAZY PARENT 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
           lazy1: expect.trackedPromise("LAZY A 1"),
-          lazy2: expect.trackedPromise(),
+          lazy2: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8828,11 +8913,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -8941,7 +9026,7 @@ describe("a router", () => {
           lazy: dfd.promise,
         })
       );
-      await dfd.reject(new Error("Kaboom!")).catch(() => {});
+      await dfd.reject(new Error("Kaboom!"));
       expect(t.router.state.errors).toMatchObject({
         index: new Error("Kaboom!"),
       });
@@ -9069,11 +9154,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -9104,11 +9189,11 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         parent: {
           critical: "CRITICAL PARENT",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
         a: {
           critical: "CRITICAL A",
-          lazy: expect.trackedPromise(),
+          lazy: expect.trackedPromise(null, null, true),
         },
       });
 
@@ -9321,7 +9406,8 @@ describe("a router", () => {
         });
       });
 
-      it("should not touch deferred data on load navigations", async () => {
+      // Note: this is only until we wire up the remix streaming
+      it("should abort deferred data on load navigations (for now)", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/deferred"));
         expect(context).toMatchObject({
@@ -9330,7 +9416,7 @@ describe("a router", () => {
             parent: "PARENT LOADER",
             deferred: {
               critical: "loader",
-              lazy: expect.trackedPromise(),
+              lazy: expect.trackedPromise(null, null, true),
             },
           },
           errors: null,
@@ -9828,33 +9914,7 @@ describe("a router", () => {
       });
 
       describe("headers", () => {
-        it("should expose headers from loader responses", async () => {
-          let { query } = createStaticHandler([
-            {
-              id: "root",
-              path: "/",
-              loader: () => new Response(null, { headers: { one: "1" } }),
-              children: [
-                {
-                  id: "child",
-                  index: true,
-                  loader: () => new Response(null, { headers: { two: "2" } }),
-                },
-              ],
-            },
-          ]);
-          let context = (await query(
-            createRequest("/")
-          )) as StaticHandlerContext;
-          expect(Array.from(context.loaderHeaders.root.entries())).toEqual([
-            ["one", "1"],
-          ]);
-          expect(Array.from(context.loaderHeaders.child.entries())).toEqual([
-            ["two", "2"],
-          ]);
-        });
-
-        it("should expose headers from action responses", async () => {
+        it("should expose headers from action/loader responses", async () => {
           let { query } = createStaticHandler([
             {
               id: "root",
@@ -9881,6 +9941,58 @@ describe("a router", () => {
           ]);
           expect(Array.from(context.loaderHeaders.child.entries())).toEqual([
             ["three", "3"],
+          ]);
+        });
+
+        it("should expose headers from loader error responses", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => new Response(null, { headers: { one: "1" } }),
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  loader: () => {
+                    throw new Response(null, { headers: { two: "2" } });
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = (await query(
+            createRequest("/")
+          )) as StaticHandlerContext;
+          expect(Array.from(context.loaderHeaders.root.entries())).toEqual([
+            ["one", "1"],
+          ]);
+          expect(Array.from(context.loaderHeaders.child.entries())).toEqual([
+            ["two", "2"],
+          ]);
+        });
+
+        it("should expose headers from action error responses", async () => {
+          let { query } = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  id: "child",
+                  index: true,
+                  action: () => {
+                    throw new Response(null, { headers: { one: "1" } });
+                  },
+                },
+              ],
+            },
+          ]);
+          let context = (await query(
+            createSubmitRequest("/?index")
+          )) as StaticHandlerContext;
+          expect(Array.from(context.actionHeaders.child.entries())).toEqual([
+            ["one", "1"],
           ]);
         });
       });

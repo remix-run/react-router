@@ -8,9 +8,9 @@ import type {
   PathPattern,
   Router as RemixRouter,
   To,
+  Action as NavigationType,
 } from "@remix-run/router";
 import {
-  Action as NavigationType,
   invariant,
   isRouteErrorResponse,
   joinPaths,
@@ -21,21 +21,23 @@ import {
   warning,
 } from "@remix-run/router";
 
+import type {
+  NavigateOptions,
+  RouteContextObject,
+  RouteMatch,
+  RouteObject,
+  DataRouteMatch,
+  RelativeRoutingType,
+} from "./context";
 import {
   DataRouterContext,
   DataRouterStateContext,
   LocationContext,
   NavigationContext,
-  NavigateOptions,
   RouteContext,
   RouteErrorContext,
   AwaitContext,
-  RouteContextObject,
   DataStaticRouterContext,
-  RouteMatch,
-  RouteObject,
-  DataRouteMatch,
-  RelativeRoutingType,
 } from "./context";
 
 /**

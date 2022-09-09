@@ -12,7 +12,6 @@ import type {
 import {
   Router,
   createPath,
-  createRoutesFromChildren,
   useHref,
   useLocation,
   useMatch,
@@ -20,8 +19,6 @@ import {
   useNavigate,
   useNavigation,
   useResolvedPath,
-  UNSAFE_DataRouter as DataRouter,
-  UNSAFE_DataRouterProvider as DataRouterProvider,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_RouteContext as RouteContext,
@@ -39,10 +36,9 @@ import type {
   Router as RemixRouter,
 } from "@remix-run/router";
 import {
+  createRouter,
   createBrowserHistory,
   createHashHistory,
-  createBrowserRouter,
-  createHashRouter,
   invariant,
   matchPath,
 } from "@remix-run/router";
@@ -109,23 +105,27 @@ export type {
   RouteObject,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
   To,
 } from "react-router";
 export {
+  AbortedDeferredError,
   Await,
-  DataMemoryRouter,
   MemoryRouter,
   Navigate,
   NavigationType,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
+  createMemoryRouter,
   createPath,
   createRoutesFromChildren,
+  createRoutesFromElements,
   defer,
   isRouteErrorResponse,
   generatePath,
@@ -173,8 +173,6 @@ export {
 
 /** @internal */
 export {
-  UNSAFE_DataRouter,
-  UNSAFE_DataRouterProvider,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
   UNSAFE_DataStaticRouterContext,
@@ -189,96 +187,46 @@ declare global {
   var __staticRouterHydrationData: HydrationState | undefined;
 }
 
-// Module-scoped singleton to hold the router.  Extracted from the React lifecycle
-// to avoid issues w.r.t. dual initialization fetches in concurrent rendering.
-// Data router apps are expected to have a static route tree and are not intended
-// to be unmounted/remounted at runtime.
-let routerSingleton: RemixRouter;
+////////////////////////////////////////////////////////////////////////////////
+//#region Routers
+////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Unit-testing-only function to reset the router between tests
- * @private
- */
-export function _resetModuleScope() {
-  // @ts-expect-error
-  routerSingleton = null;
+export function createBrowserRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    hydrationData?: HydrationState;
+    window?: Window;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    history: createBrowserHistory({ window: opts?.window }),
+    hydrationData: opts?.hydrationData || window?.__staticRouterHydrationData,
+    routes: enhanceManualRouteObjects(routes),
+  }).initialize();
 }
+
+export function createHashRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    hydrationData?: HydrationState;
+    window?: Window;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    history: createHashHistory({ window: opts?.window }),
+    hydrationData: opts?.hydrationData || window?.__staticRouterHydrationData,
+    routes: enhanceManualRouteObjects(routes),
+  }).initialize();
+}
+//#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Components
 ////////////////////////////////////////////////////////////////////////////////
-
-export interface DataBrowserRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  hydrationData?: HydrationState;
-  fallbackElement?: React.ReactNode;
-  routes?: RouteObject[];
-  window?: Window;
-}
-
-export function DataBrowserRouter({
-  basename,
-  children,
-  fallbackElement,
-  hydrationData,
-  routes,
-  window: windowProp,
-}: DataBrowserRouterProps): React.ReactElement {
-  if (!routerSingleton) {
-    routerSingleton = createBrowserRouter({
-      basename,
-      hydrationData: hydrationData || window.__staticRouterHydrationData,
-      window: windowProp,
-      routes: routes
-        ? enhanceManualRouteObjects(routes)
-        : createRoutesFromChildren(children),
-    }).initialize();
-  }
-  let router = routerSingleton;
-
-  return (
-    <DataRouterProvider router={router} basename={basename}>
-      <DataRouter fallbackElement={fallbackElement} />
-    </DataRouterProvider>
-  );
-}
-
-export interface DataHashRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  hydrationData?: HydrationState;
-  fallbackElement?: React.ReactNode;
-  routes?: RouteObject[];
-  window?: Window;
-}
-
-export function DataHashRouter({
-  basename,
-  children,
-  hydrationData,
-  fallbackElement,
-  routes,
-  window: windowProp,
-}: DataBrowserRouterProps): React.ReactElement {
-  if (!routerSingleton) {
-    routerSingleton = createHashRouter({
-      basename,
-      hydrationData: hydrationData || window.__staticRouterHydrationData,
-      window: windowProp,
-      routes: routes
-        ? enhanceManualRouteObjects(routes)
-        : createRoutesFromChildren(children),
-    }).initialize();
-  }
-  let router = routerSingleton;
-
-  return (
-    <DataRouterProvider router={router} basename={basename}>
-      <DataRouter fallbackElement={fallbackElement} />
-    </DataRouterProvider>
-  );
-}
 
 export interface BrowserRouterProps {
   basename?: string;
@@ -395,7 +343,7 @@ export interface LinkProps
   reloadDocument?: boolean;
   replace?: boolean;
   state?: any;
-  resetScroll?: boolean;
+  preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   to: To;
 }
@@ -413,7 +361,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       state,
       target,
       to,
-      resetScroll,
+      preventScrollReset,
       ...rest
     },
     ref
@@ -423,7 +371,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       replace,
       state,
       target,
-      resetScroll,
+      preventScrollReset,
       relative,
     });
     function handleClick(
@@ -706,13 +654,13 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     target,
     replace: replaceProp,
     state,
-    resetScroll,
+    preventScrollReset,
     relative,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
-    resetScroll?: boolean;
+    preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
@@ -732,7 +680,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             ? replaceProp
             : createPath(location) === createPath(path);
 
-        navigate(to, { replace, state, resetScroll, relative });
+        navigate(to, { replace, state, preventScrollReset, relative });
       }
     },
     [
@@ -743,7 +691,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       state,
       target,
       to,
-      resetScroll,
+      preventScrollReset,
       relative,
     ]
   );
@@ -1029,7 +977,7 @@ const SCROLL_RESTORATION_STORAGE_KEY = "react-router-scroll-positions";
 let savedScrollPositions: Record<string, number> = {};
 
 /**
- * When rendered inside a DataRouter, will restore scroll positions on navigations
+ * When rendered inside a RouterProvider, will restore scroll positions on navigations
  */
 function useScrollRestoration({
   getKey,
@@ -1053,7 +1001,7 @@ function useScrollRestoration({
     router != null && state != null,
     "useScrollRestoration must be used within a DataRouterStateContext"
   );
-  let { restoreScrollPosition, resetScrollPosition } = state;
+  let { restoreScrollPosition, preventScrollReset } = state;
 
   // Trigger manual scroll restoration while we're active
   React.useEffect(() => {
@@ -1125,13 +1073,13 @@ function useScrollRestoration({
     }
 
     // Opt out of scroll reset if this link requested it
-    if (resetScrollPosition === false) {
+    if (preventScrollReset === true) {
       return;
     }
 
     // otherwise go to the top on new locations
     window.scrollTo(0, 0);
-  }, [location, restoreScrollPosition, resetScrollPosition]);
+  }, [location, restoreScrollPosition, preventScrollReset]);
 }
 
 function useBeforeUnload(callback: () => any): void {

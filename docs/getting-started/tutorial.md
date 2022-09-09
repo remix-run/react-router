@@ -859,7 +859,7 @@ import {
   useLoaderData,
   redirect,
 } from "react-router-dom";
-import { updateContact } from "../contacts";
+import { getContact, updateContact } from "../contacts";
 
 export async function action({ request, params }) {
   const formData = await request.formData();
@@ -873,7 +873,7 @@ export async function action({ request, params }) {
 
 👉 **Wire the action up to the route**
 
-```jsx filename=src/routes/edit.jsx lines=[3,18]
+```jsx filename=src/routes/main.jsx lines=[3,18]
 /* existing code */
 import EditContact, {
   action as editAction,
@@ -1178,7 +1178,7 @@ Add a form, add an action, React Router does the rest.
 
 Just for kicks, throw an error in the destroy action:
 
-```jsx filename=src/routes/destroy.jsx
+```jsx filename=src/routes/destroy.jsx lines=[2]
 export async function action({ params }) {
   throw new Error("oh dang!");
   await deleteContact(params.contactId);
@@ -1592,6 +1592,10 @@ export default function Root() {
       "q"
     );
 
+  useEffect(() => {
+    document.getElementById("q").value = q;
+  }, [q]);
+
   return (
     <>
       <div id="sidebar">
@@ -1724,8 +1728,7 @@ import { getContact, updateContact } from "../contacts";
 export async function action({ request, params }) {
   let formData = await request.formData();
   return updateContact(params.contactId, {
-    favorite:
-      formData.get("favorite") === "true" ? true : false,
+    favorite: formData.get("favorite") === "true",
   });
 }
 
@@ -1829,7 +1832,7 @@ Whenever you have an expected error case in a loader or action–like the data n
 
 👉 **Throw a 404 response in the loader**
 
-```jsx filename=src/routes/contact.jsx lines lines=[4]
+```jsx filename=src/routes/contact.jsx lines lines=[3-8]
 export async function loader({ params }) {
   const contact = await getContact(params.contactId);
   if (!contact) {

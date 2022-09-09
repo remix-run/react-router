@@ -187,6 +187,10 @@ We've found with `get` you often want the user to be able to click "back" to see
 
 In other words, this is really only useful for GET submissions and you want to avoid the back button showing the previous results.
 
+## `relative`
+
+By default, paths are relative to the route hierarchy, so `..` will go up one `Route` level. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you're prefer to use relative _path_ routing. You can opt into this behavior with `<Form to="../some/where" relative="path">`
+
 ## `reloadDocument`
 
 Instructs the form to skip React Router and submit the form with the browser's built in behavior.

@@ -8,15 +8,17 @@ import {
   queryByText,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import type { FormMethod, Router } from "@remix-run/router";
-import { createMemoryRouter } from "@remix-run/router";
-
-import type { DataMemoryRouterProps } from "react-router";
+import type { FormMethod, Router, RouterInit } from "@remix-run/router";
+import type { RouteObject } from "react-router";
 import {
-  DataMemoryRouter,
   Await,
+  MemoryRouter,
   Route,
+  Routes,
+  RouterProvider,
   Outlet,
+  createMemoryRouter,
+  createRoutesFromElements,
   defer,
   useActionData,
   useAsyncError,
@@ -28,19 +30,42 @@ import {
   useRouteError,
   useNavigation,
   useRevalidator,
-  MemoryRouter,
-  Routes,
-  UNSAFE_DataRouter as DataRouter,
   UNSAFE_DataRouterContext as DataRouterContext,
-  UNSAFE_DataRouterProvider as DataRouterProvider,
 } from "react-router";
 
-// Private API
-import { createRoutesFromChildren, _resetModuleScope } from "../lib/components";
+let router: Router | null = null;
 
 describe("<DataMemoryRouter>", () => {
   let consoleWarn: jest.SpyInstance;
   let consoleError: jest.SpyInstance;
+
+  // Abstraction to avoid re-writing all tests for the time being
+  function DataMemoryRouter({
+    basename,
+    children,
+    fallbackElement,
+    hydrationData,
+    initialEntries,
+    initialIndex,
+    routes,
+  }: {
+    basename?: RouterInit["basename"];
+    children?: React.ReactNode | React.ReactNode[];
+    fallbackElement?: React.ReactNode;
+    hydrationData?: RouterInit["hydrationData"];
+    initialEntries?: string[];
+    initialIndex?: number;
+    routes?: RouteObject[];
+  }) {
+    router = createMemoryRouter(routes || createRoutesFromElements(children), {
+      basename,
+      hydrationData,
+      initialEntries,
+      initialIndex,
+    });
+    return <RouterProvider router={router} fallbackElement={fallbackElement} />;
+  }
+
   beforeEach(() => {
     consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
     consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -49,7 +74,7 @@ describe("<DataMemoryRouter>", () => {
   afterEach(() => {
     consoleWarn.mockRestore();
     consoleError.mockRestore();
-    _resetModuleScope();
+    router = null;
   });
 
   it("renders the first route that matches the URL", () => {
@@ -1797,49 +1822,25 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("handles back button routing away from a child error boundary", async () => {
-      let router: Router;
-
-      // Need this to capture a copy of the router so we can trigger a back
-      // navigation from _outside_ the DataMemoryRouter scope to most closely
-      // resemble a browser back button
-      function LocalDataMemoryRouter({
-        children,
-        initialEntries,
-        initialIndex,
-        hydrationData,
-      }: DataMemoryRouterProps): React.ReactElement {
-        router = createMemoryRouter({
-          initialEntries,
-          initialIndex,
-          routes: createRoutesFromChildren(children),
-          hydrationData,
-        }).initialize();
-
-        return (
-          <DataRouterProvider router={router}>
-            <DataRouter />
-          </DataRouterProvider>
-        );
-      }
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            element={<Parent />}
+            errorElement={<p>Don't show this</p>}
+          >
+            <Route
+              path="child"
+              element={<Child />}
+              errorElement={<ErrorBoundary />}
+            />
+          </Route>
+        )
+      );
 
       let { container } = render(
         <div>
-          <LocalDataMemoryRouter
-            initialEntries={["/"]}
-            hydrationData={{ loaderData: {} }}
-          >
-            <Route
-              path="/"
-              element={<Parent />}
-              errorElement={<p>Don't show this</p>}
-            >
-              <Route
-                path="child"
-                element={<Child />}
-                errorElement={<ErrorBoundary />}
-              />
-            </Route>
-          </LocalDataMemoryRouter>
+          <RouterProvider router={router} />
         </div>
       );
 
@@ -1870,7 +1871,6 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      // @ts-expect-error
       router.navigate("/child");
       await waitFor(() => screen.getByText("Kaboom!"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -1886,7 +1886,6 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      // @ts-expect-error
       router.navigate(-1);
       await waitFor(() => {
         expect(queryByText(container, "Kaboom!")).not.toBeInTheDocument();
@@ -1903,41 +1902,16 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("handles back button routing away from a default error boundary", async () => {
-      let router: Router;
-
-      // Need this to capture a copy of the router so we can trigger a back
-      // navigation from _outside_ the DataMemoryRouter scope to most closely
-      // resemble a browser back button
-      function LocalDataMemoryRouter({
-        children,
-        initialEntries,
-        initialIndex,
-        hydrationData,
-        fallbackElement,
-      }: DataMemoryRouterProps): React.ReactElement {
-        router = createMemoryRouter({
-          initialEntries,
-          initialIndex,
-          routes: createRoutesFromChildren(children),
-          hydrationData,
-        }).initialize();
-
-        return (
-          <DataRouterProvider router={router} fallbackElement={fallbackElement}>
-            <DataRouter />
-          </DataRouterProvider>
-        );
-      }
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Parent />}>
+            <Route path="child" element={<Child />} />
+          </Route>
+        )
+      );
       let { container } = render(
         <div>
-          <LocalDataMemoryRouter
-            initialEntries={["/"]}
-            hydrationData={{ loaderData: {} }}
-          >
-            <Route path="/" element={<Parent />}>
-              <Route path="child" element={<Child />} />
-            </Route>
-          </LocalDataMemoryRouter>
+          <RouterProvider router={router} />
         </div>
       );
 
@@ -1966,7 +1940,6 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      // @ts-expect-error
       router.navigate("/child");
       await waitFor(() => screen.getByText("Kaboom!"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -2006,7 +1979,6 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      // @ts-expect-error
       router.navigate(-1);
       await waitFor(() => {
         expect(queryByText(container, "Kaboom!")).not.toBeInTheDocument();
@@ -2031,16 +2003,23 @@ describe("<DataMemoryRouter>", () => {
       triggerRenderError = false,
       triggerFallbackError = false,
     } = {}) {
+      let awaitRenderCount = 0;
       let barDefer = createDeferred();
+      let bazDefer = createDeferred();
       let { container } = render(
         <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
           <Route path="/" element={<Layout />}>
-            <Route path="foo" element={<Foo />} />
+            <Route path="foo" element={<h1>Foo</h1>} />
             <Route
               path="bar"
               loader={() => barDefer.promise}
               element={<Bar />}
               errorElement={hasRouteErrorElement ? <RouteError /> : null}
+            />
+            <Route
+              path="baz"
+              loader={() => bazDefer.promise}
+              element={<h1>Baz</h1>}
             />
           </Route>
         </DataMemoryRouter>
@@ -2051,28 +2030,37 @@ describe("<DataMemoryRouter>", () => {
         return (
           <>
             <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
-            <p>{navigation.state}</p>
-            <Outlet />
+            <MemoryNavigate to="/baz">Link to Baz</MemoryNavigate>
+            <div id="content">
+              <p>{navigation.state}</p>
+              <Outlet />
+            </div>
           </>
         );
       }
 
-      function Foo() {
-        return <h1>Foo</h1>;
-      }
       function Bar() {
         let data = useLoaderData();
         return (
           <>
             <p>{data.critical}</p>
             <React.Suspense fallback={<LazyFallback />}>
-              <Await
-                resolve={data.lazy}
-                errorElement={hasAwaitErrorElement ? <LazyError /> : null}
-              >
-                {useRenderProp ? (value) => <p>{value}</p> : <LazyData />}
-              </Await>
+              <AwaitCounter data={data} />
             </React.Suspense>
+          </>
+        );
+      }
+
+      function AwaitCounter({ data }) {
+        awaitRenderCount++;
+        return (
+          <>
+            <Await
+              resolve={data.lazy}
+              errorElement={hasAwaitErrorElement ? <LazyError /> : null}
+            >
+              {useRenderProp ? (value) => <p>{value}</p> : <LazyData />}
+            </Await>
           </>
         );
       }
@@ -2104,19 +2092,23 @@ describe("<DataMemoryRouter>", () => {
         return <p>Await Error:{data.message}</p>;
       }
 
-      return { container, barDefer };
+      return {
+        container: container.querySelector("#content"),
+        barDefer,
+        bazDefer,
+        getAwaitRenderCount() {
+          return awaitRenderCount;
+        },
+      };
     }
 
     it("allows loaders to returned deferred data (child component)", async () => {
       let { barDefer, container } = setupDeferredTest();
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             loading
           </p>
@@ -2135,12 +2127,9 @@ describe("<DataMemoryRouter>", () => {
       );
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2156,12 +2145,9 @@ describe("<DataMemoryRouter>", () => {
       barValueDfd.resolve("LAZY");
       await waitFor(() => screen.getByText("LAZY"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2180,12 +2166,9 @@ describe("<DataMemoryRouter>", () => {
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             loading
           </p>
@@ -2204,12 +2187,9 @@ describe("<DataMemoryRouter>", () => {
       );
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2225,12 +2205,9 @@ describe("<DataMemoryRouter>", () => {
       barValueDfd.resolve("LAZY");
       await waitFor(() => screen.getByText("LAZY"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2252,12 +2229,9 @@ describe("<DataMemoryRouter>", () => {
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             loading
           </p>
@@ -2276,12 +2250,9 @@ describe("<DataMemoryRouter>", () => {
       );
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2297,12 +2268,9 @@ describe("<DataMemoryRouter>", () => {
       barValueDfd.reject(new Error("Kaboom!"));
       await waitFor(() => screen.getByText(/Kaboom!/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2325,12 +2293,9 @@ describe("<DataMemoryRouter>", () => {
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             loading
           </p>
@@ -2349,12 +2314,9 @@ describe("<DataMemoryRouter>", () => {
       );
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2370,12 +2332,9 @@ describe("<DataMemoryRouter>", () => {
       barValueDfd.reject(new Error("Kaboom!"));
       await waitFor(() => screen.getByText(/Kaboom!/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2396,12 +2355,9 @@ describe("<DataMemoryRouter>", () => {
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             loading
           </p>
@@ -2420,12 +2376,9 @@ describe("<DataMemoryRouter>", () => {
       );
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2441,12 +2394,9 @@ describe("<DataMemoryRouter>", () => {
       barValueDfd.resolve("LAZY");
       await waitFor(() => screen.getByText(/oops is not defined/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2470,12 +2420,9 @@ describe("<DataMemoryRouter>", () => {
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             loading
           </p>
@@ -2494,12 +2441,9 @@ describe("<DataMemoryRouter>", () => {
       );
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2515,12 +2459,9 @@ describe("<DataMemoryRouter>", () => {
       barValueDfd.resolve("LAZY");
       await waitFor(() => screen.getByText(/oops is not defined/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2542,12 +2483,9 @@ describe("<DataMemoryRouter>", () => {
 
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             loading
           </p>
@@ -2566,12 +2504,9 @@ describe("<DataMemoryRouter>", () => {
       );
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2586,12 +2521,9 @@ describe("<DataMemoryRouter>", () => {
       barValueDfd.resolve("LAZY");
       await new Promise((r) => setTimeout(r, 1));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <a
-            href=\\"/bar\\"
-          >
-            Link to Bar
-          </a>
+        "<div
+          id=\\"content\\"
+        >
           <p>
             idle
           </p>
@@ -2599,6 +2531,163 @@ describe("<DataMemoryRouter>", () => {
             Route Error:
             oops is not defined
           </p>
+        </div>"
+      `);
+    });
+
+    it("freezes the UI for aborted deferreds", async () => {
+      let { barDefer, bazDefer, container, getAwaitRenderCount } =
+        setupDeferredTest();
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            loading
+          </p>
+          <h1>
+            Foo
+          </h1>
+        </div>"
+      `);
+      expect(getAwaitRenderCount()).toBe(0);
+
+      let barValueDfd = createDeferred();
+      barDefer.resolve(
+        defer({
+          critical: "CRITICAL",
+          lazy: barValueDfd.promise,
+        })
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+      expect(getAwaitRenderCount()).toBe(1);
+
+      // Abort the deferred by navigating to /baz
+      fireEvent.click(screen.getByText("Link to Baz"));
+      await new Promise((r) => setTimeout(r, 50));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            loading
+          </p>
+          <p>
+            CRITICAL
+          </p>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+      // 2 more renders by now - once for the navigation and once for the
+      // promise abort rejection
+      expect(getAwaitRenderCount()).toBe(3);
+
+      // complete /baz navigation
+      bazDefer.resolve();
+      await waitFor(() => screen.getByText("Baz"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <h1>
+            Baz
+          </h1>
+        </div>"
+      `);
+
+      // Does nothing now
+      barValueDfd.resolve("LAZY");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div
+          id=\\"content\\"
+        >
+          <p>
+            idle
+          </p>
+          <h1>
+            Baz
+          </h1>
+        </div>"
+      `);
+      expect(getAwaitRenderCount()).toBe(3);
+    });
+
+    it("should permit direct access to resolved values", async () => {
+      let barDefer = createDeferred();
+      let { container } = render(
+        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+          <Route
+            path="foo"
+            element={
+              <>
+                <h1>Foo</h1>
+                <MemoryNavigate to="/bar">Link to bar</MemoryNavigate>
+              </>
+            }
+          />
+          <Route path="bar" loader={() => barDefer.promise} element={<Bar />} />
+        </DataMemoryRouter>
+      );
+
+      let count = 0;
+      function Bar() {
+        let { bar } = useLoaderData();
+
+        React.useEffect(() => {
+          bar.then((data) => {
+            container.querySelector("#content").innerHTML =
+              data + " " + ++count;
+          });
+        }, [bar]);
+
+        return <div id="content">Waiting for data...</div>;
+      }
+
+      fireEvent.click(screen.getByText("Link to bar"));
+      let barValueDefer = createDeferred();
+      await barDefer.resolve({ bar: barValueDefer.promise });
+      await waitFor(() => screen.getByText("Waiting for data..."));
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div
+            id=\\"content\\"
+          >
+            Waiting for data...
+          </div>
+        </div>"
+      `);
+
+      await barValueDefer.resolve("BAR");
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div
+            id=\\"content\\"
+          >
+            BAR 1
+          </div>
         </div>"
       `);
     });

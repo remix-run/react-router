@@ -1,4 +1,5 @@
 import React from "react";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
 import {
   Await,
   Form,
@@ -16,8 +17,6 @@ import {
   useRouteError,
   json,
   useActionData,
-  ActionFunctionArgs,
-  LoaderFunctionArgs,
 } from "react-router-dom";
 
 import type { Todos } from "./todos";

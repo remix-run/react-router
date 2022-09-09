@@ -1,20 +1,16 @@
 import * as React from "react";
-import {
-  BackHandler,
+import type {
   GestureResponderEvent,
-  Linking,
-  TouchableHighlight,
   TouchableHighlightProps,
 } from "react-native";
-import {
-  MemoryRouter,
+import { BackHandler, Linking, TouchableHighlight } from "react-native";
+import type {
+  To,
   MemoryRouterProps,
   NavigateOptions,
   RelativeRoutingType,
-  useLocation,
-  useNavigate,
 } from "react-router";
-import type { To } from "react-router";
+import { MemoryRouter, useLocation, useNavigate } from "react-router";
 
 import URLSearchParams from "@ungap/url-search-params";
 
@@ -58,23 +54,27 @@ export type {
   RouteObject,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
   To,
 } from "react-router";
 export {
+  AbortedDeferredError,
   Await,
-  DataMemoryRouter,
   MemoryRouter,
   Navigate,
   NavigationType,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
+  createMemoryRouter,
   createPath,
   createRoutesFromChildren,
+  createRoutesFromElements,
   defer,
   isRouteErrorResponse,
   generatePath,
@@ -122,8 +122,6 @@ export {
 
 /** @internal */
 export {
-  UNSAFE_DataRouter,
-  UNSAFE_DataRouterProvider,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
   UNSAFE_DataStaticRouterContext,

@@ -15,7 +15,7 @@ Routes are perhaps the most important part of a React Router app. They couple UR
     element={<Team />}
     // when the URL matches this segment
     path="teams/:teamId"
-    // with this data before rendering
+    // with this data loaded before rendering
     loader={async ({ params }) => {
       return fetch(`/fake/api/teams/${params.teamId}.json`);
     }}
@@ -59,10 +59,13 @@ interface RouteProps {
   index?: boolean;
   children?: React.ReactNode;
   caseSensitive?: boolean;
-  loader?: DataFunction;
-  action?: DataFunction;
+  id?: string;
+  loader?: LoaderFunction;
+  action?: ActionFunction;
   element?: React.ReactNode | null;
-  errorElement?: React.Node | null;
+  errorElement?: React.ReactNode | null;
+  handle?: RouteObject["handle"];
+  shouldRevalidate?: ShouldRevalidateFunction;
 }
 ```
 
@@ -92,7 +95,7 @@ If a path segment starts with `:` then it becomes a "dynamic segment". When the 
 // and the element through `useParams`
 function Team() {
   let params = useParams();
-  console.log(params.teamId); // "hotspurs"
+  console.log(params.teamId); // "hotspur"
 }
 ```
 
@@ -136,7 +139,7 @@ Also known as "catchall" and "star" segments. If a route path pattern ends with 
   path="/files/*"
   // the matching param will be available to the loader
   loader={({ params }) => {
-    console.log(params["*"]); // "files/one/two"
+    console.log(params["*"]); // "one/two"
   }}
   // and the action
   action={({ params }) => {}}
@@ -146,7 +149,7 @@ Also known as "catchall" and "star" segments. If a route path pattern ends with 
 // and the element through `useParams`
 function Team() {
   let params = useParams();
-  console.log(params["*"]); // "hotspurs"
+  console.log(params["*"]); // "one/two"
 }
 ```
 
@@ -250,7 +253,7 @@ When a route throws an exception while rendering, in a `loader` or in an `action
   // or this while loading properties
   loader={() => loadProperties()}
   // or this while creating a property
-  action={({ request }) =>
+  action={async ({ request }) =>
     createProperty(await request.formData())
   }
   // then this element will render

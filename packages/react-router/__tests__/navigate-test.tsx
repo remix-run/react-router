@@ -1,12 +1,13 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import {
-  DataMemoryRouter,
   MemoryRouter,
   Navigate,
   Outlet,
   Routes,
   Route,
+  RouterProvider,
+  createMemoryRouter,
   useLocation,
 } from "react-router";
 import { prettyDOM, render, screen, waitFor } from "@testing-library/react";
@@ -436,16 +437,26 @@ describe("<Navigate>", () => {
     // Note this is not the idiomatic way to do these redirects, they should
     // be done with loaders in data routers, but this is a likely scenario to
     // encounter while migrating to a data router
+    let router = createMemoryRouter(
+      [
+        {
+          path: "home",
+          element: <Navigate to="/about" />,
+        },
+        {
+          path: "about",
+          element: <h1>About</h1>,
+          loader: () => new Promise((r) => setTimeout(() => r("ok"), 10)),
+        },
+      ],
+      {
+        initialEntries: ["/home"],
+      }
+    );
+
     let { container } = render(
       <React.StrictMode>
-        <DataMemoryRouter initialEntries={["/home"]}>
-          <Route path="home" element={<Navigate to="/about" />} />
-          <Route
-            path="about"
-            element={<h1>About</h1>}
-            loader={() => new Promise((r) => setTimeout(() => r("ok"), 10))}
-          />
-        </DataMemoryRouter>
+        <RouterProvider router={router} />
       </React.StrictMode>
     );
 

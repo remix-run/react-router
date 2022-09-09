@@ -1,7 +1,11 @@
-import { createPath, History, Location, Path, To } from "./history";
-import { Action as HistoryAction, createLocation, parsePath } from "./history";
-
+import type { History, Location, Path, To } from "./history";
 import {
+  Action as HistoryAction,
+  createLocation,
+  createPath,
+  parsePath,
+} from "./history";
+import type {
   DataResult,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
@@ -35,16 +39,33 @@ import {
  */
 export interface Router {
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Return the basename for the router
+   */
+  get basename(): RouterInit["basename"];
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Return the current state of the router
    */
   get state(): RouterState;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Return the routes for this router instance
    */
   get routes(): AgnosticDataRouteObject[];
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Initialize the router, including adding history listeners and kicking off
    * initial data fetches.  Returns a function to cleanup listeners and abort
    * any in-progress loads
@@ -52,6 +73,9 @@ export interface Router {
   initialize(): Router;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Subscribe to router.state updates
    *
    * @param fn function to call with the new state
@@ -59,6 +83,9 @@ export interface Router {
   subscribe(fn: RouterSubscriber): () => void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Enable scroll restoration behavior in the router
    *
    * @param savedScrollPositions Object that will manage positions, in case
@@ -73,6 +100,9 @@ export interface Router {
   ): () => void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Navigate forward/backward in the history stack
    * @param to Delta to move in the history stack
    */
@@ -86,6 +116,9 @@ export interface Router {
   navigate(to: To, opts?: RouterNavigateOptions): void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Trigger a fetcher load/submission
    *
    * @param key     Fetcher key
@@ -101,42 +134,61 @@ export interface Router {
   ): void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Trigger a revalidation of all current route loaders and fetcher loads
    */
   revalidate(): void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Utility function to create an href for the given location
    * @param location
    */
   createHref(location: Location | URL): string;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Get/create a fetcher for the given key
    * @param key
    */
   getFetcher<TData = any>(key?: string): Fetcher<TData>;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Delete the fetcher for a given key
    * @param key
    */
   deleteFetcher(key?: string): void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Cleanup listeners and abort any in-progress loads
    */
   dispose(): void;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Internal fetch AbortControllers accessed by unit tests
-   * @private
    */
   _internalFetchControllers: Map<string, AbortController>;
 
   /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Internal pending DeferredData instances accessed by unit tests
-   * @private
    */
   _internalActiveDeferreds: Map<string, DeferredData>;
 }
@@ -175,10 +227,10 @@ export interface RouterState {
   restoreScrollPosition: number | false | null;
 
   /**
-   * Indicate whether this navigation should reset the scroll position if we
-   * are unable to restore the scroll position
+   * Indicate whether this navigation should skip resetting the scroll position
+   * if we are unable to restore the scroll position
    */
-  resetScrollPosition: boolean;
+  preventScrollReset: boolean;
 
   /**
    * Tracks the state of the current navigation
@@ -288,7 +340,7 @@ export interface GetScrollPositionFunction {
 type LinkNavigateOptions = {
   replace?: boolean;
   state?: any;
-  resetScroll?: boolean;
+  preventScrollReset?: boolean;
 };
 
 /**
@@ -461,8 +513,8 @@ export function createRouter(init: RouterInit): Router {
   let dataRoutes = convertRoutesToDataRoutes(init.routes);
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
-  // Externally-provided function to call on all state changes
-  let subscriber: RouterSubscriber | null = null;
+  // Externally-provided functions to call on all state changes
+  let subscribers = new Set<RouterSubscriber>();
   // Externally-provided object to hold scroll restoration locations during routing
   let savedScrollPositions: Record<string, number> | null = null;
   // Externally-provided function to get scroll restoration keys
@@ -501,7 +553,7 @@ export function createRouter(init: RouterInit): Router {
     initialized,
     navigation: IDLE_NAVIGATION,
     restoreScrollPosition: null,
-    resetScrollPosition: true,
+    preventScrollReset: false,
     revalidation: "idle",
     loaderData: init.hydrationData?.loaderData || {},
     actionData: init.hydrationData?.actionData || null,
@@ -512,9 +564,9 @@ export function createRouter(init: RouterInit): Router {
   // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
   let pendingAction: HistoryAction = HistoryAction.Pop;
-  // Should the current navigation reset the scroll position if scroll cannot
+  // Should the current navigation prevent the scroll reset if scroll cannot
   // be restored?
-  let pendingResetScroll = true;
+  let pendingPreventScrollReset = false;
   // AbortController for the active navigation
   let pendingNavigationController: AbortController | null;
   // We use this to avoid touching history in completeNavigation if a
@@ -575,20 +627,15 @@ export function createRouter(init: RouterInit): Router {
     if (unlistenHistory) {
       unlistenHistory();
     }
-    subscriber = null;
+    subscribers.clear();
     pendingNavigationController?.abort();
     state.fetchers.forEach((_, key) => deleteFetcher(key));
   }
 
   // Subscribe to state updates for the router
   function subscribe(fn: RouterSubscriber) {
-    if (subscriber) {
-      throw new Error("A router only accepts one active subscriber");
-    }
-    subscriber = fn;
-    return () => {
-      subscriber = null;
-    };
+    subscribers.add(fn);
+    return () => subscribers.delete(fn);
   }
 
   // Update our state and notify the calling context of the change
@@ -597,7 +644,7 @@ export function createRouter(init: RouterInit): Router {
       ...state,
       ...newState,
     };
-    subscriber?.(state);
+    subscribers.forEach((subscriber) => subscriber(state));
   }
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
@@ -649,8 +696,7 @@ export function createRouter(init: RouterInit): Router {
       restoreScrollPosition: state.navigation.formData
         ? false
         : getSavedScrollPosition(location, newState.matches || state.matches),
-      // Always reset scroll unless explicitly told not to
-      resetScrollPosition: pendingResetScroll,
+      preventScrollReset: pendingPreventScrollReset,
     });
 
     if (isUninterruptedRevalidation) {
@@ -665,7 +711,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Reset stateful navigation vars
     pendingAction = HistoryAction.Pop;
-    pendingResetScroll = true;
+    pendingPreventScrollReset = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
     cancelledDeferredRoutes = [];
@@ -690,15 +736,17 @@ export function createRouter(init: RouterInit): Router {
       opts?.replace === true || submission != null
         ? HistoryAction.Replace
         : HistoryAction.Push;
-    let resetScroll =
-      opts && "resetScroll" in opts ? opts.resetScroll : undefined;
+    let preventScrollReset =
+      opts && "preventScrollReset" in opts
+        ? opts.preventScrollReset === true
+        : undefined;
 
     return await startNavigation(historyAction, location, {
       submission,
       // Send through the formData serialization error if we have one so we can
       // render at the right error boundary after we match routes
       pendingError: error,
-      resetScroll,
+      preventScrollReset,
       replace: opts?.replace,
     });
   }
@@ -747,7 +795,7 @@ export function createRouter(init: RouterInit): Router {
       overrideNavigation?: Navigation;
       pendingError?: ErrorResponse;
       startUninterruptedRevalidation?: boolean;
-      resetScroll?: boolean;
+      preventScrollReset?: boolean;
       replace?: boolean;
     }
   ): Promise<void> {
@@ -762,7 +810,7 @@ export function createRouter(init: RouterInit): Router {
     // Save the current scroll position every time we start a new navigation,
     // and track whether we should reset scroll on completion
     saveScrollPosition(state.location, state.matches);
-    pendingResetScroll = opts?.resetScroll !== false;
+    pendingPreventScrollReset = opts?.preventScrollReset === true;
 
     let loadingNavigation = opts?.overrideNavigation;
     let matches = matchRoutes(dataRoutes, location, init.basename);
@@ -1666,6 +1714,9 @@ export function createRouter(init: RouterInit): Router {
   }
 
   router = {
+    get basename() {
+      return init.basename;
+    },
     get state() {
       return state;
     },
@@ -1844,8 +1895,8 @@ export function unstable_createStaticHandler(
           errors: {
             [boundaryMatch.route.id]: result.error,
           },
-          // Note: This is unused in queryRoute as we will return the raw error,
-          // or construct a response from the ErrorResponse
+          // Note: statusCode + headers are unused here since queryRoute will
+          // return the raw Response or value
           statusCode: 500,
           loaderHeaders: {},
           actionHeaders: {},
@@ -1857,13 +1908,11 @@ export function unstable_createStaticHandler(
         loaderData: {},
         actionData: { [actionMatch.route.id]: result.data },
         errors: null,
-        // Note: This is unused in queryRoute as we will return the raw
-        // Response or value
+        // Note: statusCode + headers are unused here since queryRoute will
+        // return the raw Response or value
         statusCode: 200,
         loaderHeaders: {},
-        actionHeaders: {
-          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
-        },
+        actionHeaders: {},
       };
     }
 
@@ -1882,7 +1931,9 @@ export function unstable_createStaticHandler(
           ? result.error.status
           : 500,
         actionData: null,
-        actionHeaders: {},
+        actionHeaders: {
+          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+        },
       };
     }
 
@@ -2334,6 +2385,7 @@ async function callLoaderOrAction(
       return {
         type: resultType,
         error: new ErrorResponse(status, result.statusText, data),
+        headers: result.headers,
       };
     }
 
@@ -2441,9 +2493,13 @@ function processRouteLoaderData(
           ? result.error.status
           : 500;
       }
+      if (result.headers) {
+        loaderHeaders[id] = result.headers;
+      }
     } else if (isDeferredResult(result)) {
       activeDeferreds?.set(id, result.deferredData);
       loaderData[id] = result.deferredData.data;
+      // TODO: Add statusCode/headers once we wire up streaming in Remix
     } else {
       loaderData[id] = result.data;
       // Error status codes always override success status codes, but if all
