@@ -374,36 +374,47 @@ function rankRouteBranches(branches: RouteBranch[]): void {
 }
 
 const paramRe = /^:\w+$/;
-const dynamicSegmentValue = 3;
-const indexRouteValue = 2;
+const partialParamRe = /:\w+$/;
+const splatRe = /^\*$/;
+const partialSplatRe = /\*$/;
+
+const staticSegmentValue = 10; /*         /static         */
+const partialDynamicSegmentValue = 9; /*  /prefix-:param  */
+const partialSplatValue = 8; /*           /prefix-*       */
+const dynamicSegmentValue = 3; /*         /:param         */
+const indexRouteValue = 2; /*             /               */
 const emptySegmentValue = 1;
-const staticSegmentValue = 10;
-const splatPenalty = -2;
-const isSplat = (s: string) => s === "*";
+const splatPenalty = -2; /*               /*              */
 
 function computeScore(path: string, index: boolean | undefined): number {
   let segments = path.split("/");
-  let initialScore = segments.length;
-  if (segments.some(isSplat)) {
-    initialScore += splatPenalty;
-  }
+  let score = segments.length;
 
   if (index) {
-    initialScore += indexRouteValue;
+    score += indexRouteValue;
   }
 
-  return segments
-    .filter((s) => !isSplat(s))
-    .reduce(
-      (score, segment) =>
-        score +
-        (paramRe.test(segment)
-          ? dynamicSegmentValue
-          : segment === ""
-          ? emptySegmentValue
-          : staticSegmentValue),
-      initialScore
-    );
+  // Penalties apply globally, so only subtract them once
+  let splatPenaltyApplied = false;
+
+  segments.forEach((segment) => {
+    if (splatRe.test(segment)) {
+      score += splatPenaltyApplied ? 0 : splatPenalty;
+      splatPenaltyApplied = true;
+    } else if (partialSplatRe.test(segment)) {
+      score += partialSplatValue;
+    } else if (paramRe.test(segment)) {
+      score += dynamicSegmentValue;
+    } else if (partialParamRe.test(segment)) {
+      score += partialDynamicSegmentValue;
+    } else if (segment === "") {
+      score += emptySegmentValue;
+    } else {
+      score += staticSegmentValue;
+    }
+  });
+
+  return score;
 }
 
 function compareIndexes(a: number[], b: number[]): number {
@@ -475,23 +486,11 @@ function matchRouteBranch<
  * @see https://reactrouter.com/docs/en/v6/utils/generate-path
  */
 export function generatePath<Path extends string>(
-  originalPath: Path,
+  path: Path,
   params: {
     [key in PathParam<Path>]: string;
   } = {} as any
 ): string {
-  let path = originalPath;
-  if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
-    warning(
-      false,
-      `Route path "${path}" will be treated as if it were ` +
-        `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
-        `always follow a \`/\` in the pattern. To get rid of this warning, ` +
-        `please change the route path to "${path.replace(/\*$/, "/*")}".`
-    );
-    path = path.replace(/\*$/, "/*") as Path;
-  }
-
   return path
     .replace(/:(\w+)/g, (_, key: PathParam<Path>) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
@@ -620,14 +619,6 @@ function compilePath(
   caseSensitive = false,
   end = true
 ): [RegExp, string[]] {
-  warning(
-    path === "*" || !path.endsWith("*") || path.endsWith("/*"),
-    `Route path "${path}" will be treated as if it were ` +
-      `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
-      `always follow a \`/\` in the pattern. To get rid of this warning, ` +
-      `please change the route path to "${path.replace(/\*$/, "/*")}".`
-  );
-
   let paramNames: string[] = [];
   let regexpSource =
     "^" +
@@ -640,12 +631,18 @@ function compilePath(
         return "([^\\/]+)";
       });
 
-  if (path.endsWith("*")) {
+  if (path === "*" || path.endsWith("/*")) {
+    // Full splat segment
     paramNames.push("*");
     regexpSource +=
       path === "*" || path === "/*"
         ? "(.*)$" // Already matched the initial /, just match the rest
         : "(?:\\/(.+)|\\/*)$"; // Don't include the / in params["*"]
+  } else if (path.endsWith("*")) {
+    // Partial splat segment
+    paramNames.push("*");
+    regexpSource += "(.*)$";
+    //regexpSource += "(?:\\/(.+)|\\/*)$";
   } else {
     regexpSource += end
       ? "\\/*$" // When matching to the end, ignore trailing slashes

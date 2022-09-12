@@ -298,38 +298,24 @@ describe("matchPath *", () => {
   });
 });
 
-describe("matchPath warnings", () => {
-  let consoleWarn: jest.SpyInstance<void, any>;
-  beforeEach(() => {
-    consoleWarn = jest.spyOn(console, "warn").mockImplementation();
-  });
+describe("when the pattern has a trailing *", () => {
+  it("matches the remaining portion of the pathname", () => {
+    expect(matchPath("/files*", "/files/mj.jpg")).toMatchObject({
+      params: { "*": "/mj.jpg" },
+      pathname: "/files/mj.jpg",
+      pathnameBase: "/files",
+    });
 
-  afterEach(() => {
-    consoleWarn.mockRestore();
-  });
+    expect(matchPath("/files*", "/files/")).toMatchObject({
+      params: { "*": "/" },
+      pathname: "/files/",
+      pathnameBase: "/files",
+    });
 
-  describe("when the pattern has a trailing *", () => {
-    it("issues a warning and matches the remaining portion of the pathname", () => {
-      expect(matchPath("/files*", "/files/mj.jpg")).toMatchObject({
-        params: { "*": "mj.jpg" },
-        pathname: "/files/mj.jpg",
-        pathnameBase: "/files",
-      });
-      expect(consoleWarn).toHaveBeenCalledTimes(1);
-
-      expect(matchPath("/files*", "/files/")).toMatchObject({
-        params: { "*": "" },
-        pathname: "/files/",
-        pathnameBase: "/files",
-      });
-      expect(consoleWarn).toHaveBeenCalledTimes(2);
-
-      expect(matchPath("/files*", "/files")).toMatchObject({
-        params: { "*": "" },
-        pathname: "/files",
-        pathnameBase: "/files",
-      });
-      expect(consoleWarn).toHaveBeenCalledTimes(3);
+    expect(matchPath("/files*", "/files")).toMatchObject({
+      params: { "*": "" },
+      pathname: "/files",
+      pathnameBase: "/files",
     });
   });
 });

@@ -1,9 +1,17 @@
 import type { RouteObject } from "react-router";
 import { matchRoutes } from "react-router";
 
-function pickPaths(routes: RouteObject[], pathname: string): string[] | null {
+function pickPaths(routes: RouteObject[], pathname: string) {
   let matches = matchRoutes(routes, pathname);
   return matches && matches.map((match) => match.route.path || "");
+}
+
+function pickPathsAndParams(routes: RouteObject[], pathname: string) {
+  let matches = matchRoutes(routes, pathname);
+  return (
+    matches &&
+    matches.map((match) => ({ path: match.route.path, params: match.params }))
+  );
 }
 
 describe("path matching", () => {
@@ -287,14 +295,13 @@ describe("path matching with splats", () => {
     expect(matchRoutes(routes, "/prefix/abc")).toMatchInlineSnapshot(`null`);
   });
 
-  test("does not support partial path matching with named parameters", () => {
-    let consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+  test("supports partial path matching with splat parameters", () => {
     let routes = [{ path: "/prefix*" }];
     expect(matchRoutes(routes, "/prefix/abc")).toMatchInlineSnapshot(`
       Array [
         Object {
           "params": Object {
-            "*": "abc",
+            "*": "/abc",
           },
           "pathname": "/prefix/abc",
           "pathnameBase": "/prefix",
@@ -304,20 +311,87 @@ describe("path matching with splats", () => {
         },
       ]
     `);
-    expect(matchRoutes(routes, "/prefixabc")).toMatchInlineSnapshot(`null`);
-
-    // Should warn on each invocation of matchRoutes
-    expect(consoleWarn.mock.calls).toMatchInlineSnapshot(`
+    expect(matchRoutes(routes, "/prefixabc")).toMatchInlineSnapshot(`
       Array [
-        Array [
-          "Route path \\"/prefix*\\" will be treated as if it were \\"/prefix/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"/prefix/*\\".",
-        ],
-        Array [
-          "Route path \\"/prefix*\\" will be treated as if it were \\"/prefix/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"/prefix/*\\".",
-        ],
+        Object {
+          "params": Object {
+            "*": "abc",
+          },
+          "pathname": "/prefixabc",
+          "pathnameBase": "/prefix",
+          "route": Object {
+            "path": "/prefix*",
+          },
+        },
       ]
     `);
+  });
+});
 
-    consoleWarn.mockRestore();
+describe("route scoring", () => {
+  test.only("splat routes versus dynamic routes", () => {
+    let routes = [
+      { path: "nested/prefix-:param/static/prefix-*" }, // Score 43
+      { path: "nested/prefix-:param/static/*" }, // Score 33
+      { path: "nested/prefix-:param/static" }, // Score 34
+      { path: "nested/prefix-:param/*" }, // Score 22
+      { path: "nested/:param/static" }, // Score 28
+      { path: "nested/static" }, // Score 24
+      { path: "nested/prefix-:param" }, // Score 23
+      { path: "nested/prefix-*" }, // Score 22
+      { path: "nested/:param" }, // Score 17
+      { path: "static" }, // Score 13
+      { path: "prefix-:param" }, // Score 12
+      { path: "prefix-*" }, // Score 11
+      { path: ":param" }, // Score 6
+      { path: "*" }, // Score 1
+    ];
+
+    // Matches are defined as [A, B, C], as in:
+    //   "URL A should match path B with params C"
+    let matches: Array<[string, string, Record<string, string>]> = [
+      [
+        "/nested/prefix-foo/static/prefix-bar/baz",
+        "nested/prefix-:param/static/prefix-*",
+        { param: "foo", "*": "bar/baz" },
+      ],
+      [
+        "/nested/prefix-foo/static/bar/baz",
+        "nested/prefix-:param/static/*",
+        { param: "foo", "*": "bar/baz" },
+      ],
+      [
+        "/nested/prefix-foo/static/bar",
+        "nested/prefix-:param/static/*",
+        { param: "foo", "*": "bar" },
+      ],
+      [
+        "/nested/prefix-foo/static",
+        "nested/prefix-:param/static",
+        { param: "foo" },
+      ],
+      [
+        "/nested/prefix-foo/bar",
+        "nested/prefix-:param/*",
+        { param: "foo", "*": "bar" },
+      ],
+      ["/nested/foo/static", "nested/:param/static", { param: "foo" }],
+      ["/nested/static", "nested/static", {}],
+      ["/nested/prefix-foo", "nested/prefix-:param", { param: "foo" }],
+      ["/nested/foo", "nested/:param", { param: "foo" }],
+      ["/static", "static", {}],
+      ["/prefix-foo", "prefix-:param", { param: "foo" }],
+      ["/prefix-foo/bar", "prefix-*", { "*": "foo/bar" }],
+      ["/foo", ":param", { param: "foo" }],
+      ["/foo/bar/baz", "*", { "*": "foo/bar/baz" }],
+    ];
+
+    // Ensure order agnostic by testing route definitions forward + backwards
+    [...matches, ...matches.reverse()].forEach(([url, path, params]) =>
+      expect({
+        url,
+        matches: pickPathsAndParams(routes, url),
+      }).toEqual({ url, matches: [{ path, params }] })
+    );
   });
 });
