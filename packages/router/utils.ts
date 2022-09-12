@@ -475,11 +475,23 @@ function matchRouteBranch<
  * @see https://reactrouter.com/docs/en/v6/utils/generate-path
  */
 export function generatePath<Path extends string>(
-  path: Path,
+  originalPath: Path,
   params: {
     [key in PathParam<Path>]: string;
   } = {} as any
 ): string {
+  let path = originalPath;
+  if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
+    warning(
+      false,
+      `Route path "${path}" will be treated as if it were ` +
+        `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
+        `always follow a \`/\` in the pattern. To get rid of this warning, ` +
+        `please change the route path to "${path.replace(/\*$/, "/*")}".`
+    );
+    path = path.replace(/\*$/, "/*") as Path;
+  }
+
   return path
     .replace(/:(\w+)/g, (_, key: PathParam<Path>) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
