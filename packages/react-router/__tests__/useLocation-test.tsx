@@ -40,7 +40,6 @@ describe("useLocation", () => {
     function App() {
       return (
         <div>
-          <h1>App</h1>
           <Routes>
             <Route path="/home" element={<ShowLocation />} />
           </Routes>
@@ -53,9 +52,6 @@ describe("useLocation", () => {
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <div>
-        <h1>
-          App
-        </h1>
         <pre>
           {"pathname":"/home","search":"?the=search","hash":"#the-hash","state":null,"key":"default"}
         </pre>
