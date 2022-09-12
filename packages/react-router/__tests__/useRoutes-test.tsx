@@ -56,10 +56,7 @@ describe("useRoutes", () => {
   it("Uses the `location` prop instead of context location`", () => {
     let routes = [
       { path: "one", element: <h1>one</h1> },
-      {
-        path: "two",
-        element: <h1>two</h1>,
-      },
+      { path: "two", element: <h1>two</h1> },
     ];
 
     let renderer: TestRenderer.ReactTestRenderer;

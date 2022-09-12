@@ -441,9 +441,9 @@ export function useRoutes(
     dataRouterStateContext || undefined
   );
 
-  // When a user passes in a `locationArg` prop, the associated routes need to
-  // be wrapped in a `LocationContext.Provider` in order for `useLocation` to
-  // use the `locationArg` location instead of the global location.
+  // When a user passes in a `locationArg`, the associated routes need to
+  // be wrapped in a new `LocationContext.Provider` in order for `useLocation`
+  // to use the scoped location instead of the global location.
   if (locationArg) {
     return (
       <LocationContext.Provider
@@ -463,6 +463,7 @@ export function useRoutes(
       </LocationContext.Provider>
     );
   }
+
   return renderedMatches;
 }
 
