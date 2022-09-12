@@ -449,11 +449,11 @@ export function useRoutes(
       <LocationContext.Provider
         value={{
           location: {
-            state: undefined,
-            key: "default",
             pathname: "/",
             search: "",
             hash: "",
+            state: null,
+            key: "default",
             ...location,
           },
           navigationType: NavigationType.Pop,

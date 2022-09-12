@@ -5,4 +5,4 @@
 "react-router-native": patch
 ---
 
-Fix for `useLocation` returning the wrong `Location` when passing a `locationArg` into a `Routes` component.
+fix: update `useLocation` to return the scoped `Location` when inside a `<Routes location>` component

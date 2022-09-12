@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import type { RouteObject } from "react-router";
-import { MemoryRouter, useRoutes, useLocation } from "react-router";
+import { MemoryRouter, useRoutes } from "react-router";
 
 describe("useRoutes", () => {
   it("returns the matching element from a route config", () => {
@@ -54,15 +54,11 @@ describe("useRoutes", () => {
   });
 
   it("Uses the `location` prop instead of context location`", () => {
-    let TwoComponent = () => {
-      const location = useLocation();
-      return <h1>two path:{location.pathname}</h1>;
-    };
     let routes = [
       { path: "one", element: <h1>one</h1> },
       {
         path: "two",
-        element: <TwoComponent />,
+        element: <h1>two</h1>,
       },
     ];
 
@@ -75,11 +71,9 @@ describe("useRoutes", () => {
       );
     });
 
-    // console.log(renderer.toTree());
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>
-        two path:
-        /two
+        two
       </h1>
     `);
   });
