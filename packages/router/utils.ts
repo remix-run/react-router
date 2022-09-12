@@ -642,7 +642,6 @@ function compilePath(
     // Partial splat segment
     paramNames.push("*");
     regexpSource += "(.*)$";
-    //regexpSource += "(?:\\/(.+)|\\/*)$";
   } else {
     regexpSource += end
       ? "\\/*$" // When matching to the end, ignore trailing slashes
