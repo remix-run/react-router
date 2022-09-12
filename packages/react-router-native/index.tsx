@@ -1,19 +1,16 @@
 import * as React from "react";
-import {
-  BackHandler,
+import type {
   GestureResponderEvent,
-  Linking,
-  TouchableHighlight,
   TouchableHighlightProps,
 } from "react-native";
-import {
-  MemoryRouter,
+import { BackHandler, Linking, TouchableHighlight } from "react-native";
+import type {
+  To,
   MemoryRouterProps,
   NavigateOptions,
-  useLocation,
-  useNavigate,
+  RelativeRoutingType,
 } from "react-router";
-import type { To } from "react-router";
+import { MemoryRouter, useLocation, useNavigate } from "react-router";
 
 import URLSearchParams from "@ungap/url-search-params";
 
@@ -28,6 +25,7 @@ export type {
   AwaitProps,
   DataMemoryRouterProps,
   DataRouteMatch,
+  DataRouteObject,
   Fetcher,
   Hash,
   IndexRouteProps,
@@ -51,27 +49,32 @@ export type {
   PathPattern,
   PathRouteProps,
   RedirectFunction,
+  RelativeRoutingType,
   RouteMatch,
   RouteObject,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
   To,
 } from "react-router";
 export {
+  AbortedDeferredError,
   Await,
-  DataMemoryRouter,
   MemoryRouter,
   Navigate,
   NavigationType,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
+  createMemoryRouter,
   createPath,
   createRoutesFromChildren,
+  createRoutesFromElements,
   defer,
   isRouteErrorResponse,
   generatePath,
@@ -119,14 +122,13 @@ export {
 
 /** @internal */
 export {
-  UNSAFE_DataRouter,
-  UNSAFE_DataRouterProvider,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
   UNSAFE_DataStaticRouterContext,
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_enhanceManualRouteObjects,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,6 +147,7 @@ export function NativeRouter(props: NativeRouterProps) {
 export interface LinkProps extends TouchableHighlightProps {
   children?: React.ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
+  relative?: RelativeRoutingType;
   replace?: boolean;
   state?: any;
   to: To;
@@ -155,12 +158,13 @@ export interface LinkProps extends TouchableHighlightProps {
  */
 export function Link({
   onPress,
+  relative,
   replace = false,
   state,
   to,
   ...rest
 }: LinkProps) {
-  let internalOnPress = useLinkPressHandler(to, { replace, state });
+  let internalOnPress = useLinkPressHandler(to, { replace, state, relative });
   function handlePress(event: GestureResponderEvent) {
     if (onPress) onPress(event);
     if (!event.defaultPrevented) {
@@ -188,14 +192,16 @@ export function useLinkPressHandler(
   {
     replace,
     state,
+    relative,
   }: {
     replace?: boolean;
     state?: any;
+    relative?: RelativeRoutingType;
   } = {}
 ): (event: GestureResponderEvent) => void {
   let navigate = useNavigate();
   return function handlePress() {
-    navigate(to, { replace, state });
+    navigate(to, { replace, state, relative });
   };
 }
 

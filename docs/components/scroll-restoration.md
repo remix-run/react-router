@@ -9,15 +9,10 @@ This component will emulate the browser's scroll restoration on location changes
 
 You should only render one of these and it's recommended you render it in the root route of your app:
 
-```tsx
-import * as React from "react";
-import * as ReactDOM from "react-dom";
-import {
-  DataBrowserRouter,
-  ScrollRestoration,
-} from "react-router-dom";
+```tsx [1,7]
+import { ScrollRestoration } from "react-router-dom";
 
-function Root() {
+function RootRouteComponent() {
   return (
     <div>
       {/* ... */}
@@ -25,13 +20,6 @@ function Root() {
     </div>
   );
 }
-
-ReactDOM.render(
-  <DataBrowserRouter>
-    <Route element={<Root />}>{/* child routes */}</Route>
-  </DataBrowserRouter>,
-  root
-);
 ```
 
 ## `getKey`
@@ -96,16 +84,16 @@ Or you may want to only use the pathname for some paths, and use the normal beha
 When navigation creates new scroll keys, the scroll position is reset to the top of the page. You can prevent the "scroll to top" behavior from your links:
 
 ```tsx
-<Link resetScroll={false} />
+<Link preventScrollReset={true} />
 ```
 
-See also: [`<Link resetScroll>`][resetscroll]
+See also: [`<Link preventScrollReset>`][preventscrollreset]
 
 ## Scroll Flashing
 
-Without a server side rendering framework like [Remix][remix], you may experience some scroll flashing on initial page loads. This is because React Router can't restore scroll position until your JS bundles have downloaded (because React Router doesn't exist yet). It also has to wait for the data to load and the the page to render completely before it can accurately restore scroll (if you're rendering a spinner, the viewport is likely not the size it was when the scroll position was saved).
+Without a server side rendering framework like [Remix][remix], you may experience some scroll flashing on initial page loads. This is because React Router can't restore scroll position until your JS bundles have downloaded, data has loaded, and the full page has rendered (if you're rendering a spinner, the viewport is likely not the size it was when the scroll position was saved).
 
-With server rendering in Remix, the document comes to the browser fully formed and Remix actually lets the browser restore the scroll position with the browser's own default behavior.
+Server Rendering frameworks can prevent scroll flashing because they can send a fully formed document on the initial load, so scroll can be restored when the page first renders.
 
 [remix]: https://remix.run
-[resetscroll]: ../components/link#resetscroll
+[preventscrollreset]: ../components/link#preventscrollreset

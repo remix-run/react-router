@@ -47,7 +47,7 @@ export default function SignUp() {
   );
 }
 
-SignUp.action = ({ request }) => {
+export async function action({ request }) {
   const formData = await request.formData();
   const email = formData.get("email");
   const password = formData.get("password");
@@ -71,14 +71,5 @@ SignUp.action = ({ request }) => {
   // otherwise create the user and redirect
   await createUser(email, password);
   return redirect("/dashboard");
-};
-
-// at the top of your app:
-<DataBrowserRouter>
-  <Route
-    path="/sign-up"
-    element={<SignUp />}
-    action={SignUp.action}
-  />
-</DataBrowserRouter>;
+}
 ```

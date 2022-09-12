@@ -1,11 +1,12 @@
-# Router
+# Remix Router
 
-The `@remix-run/router` package is the heart of [React Router](https://github.com/remix-run/react-router) and provides all the core functionality for routing, data loading, data mutations, and navigation.
+The `@remix-run/router` package is a framework-agnostic routing package (sometimes referred to as a browser-emulator) that serves as the heart of [React Router][react-router] and [Remix][remix] and provides all the core functionality for routing coupled with data loading and data mutations. It comes with built-in handling of errors, race-conditions, interruptions, cancellations, lazy-loading data, and much, much more.
 
-If you're using React Router, you should never `import` anything directly from
-the `@remix-run/router` or `react-router` packages, but you should have everything
-you need in either `react-router-dom` or `react-router-native`. Both of those
-packages re-export everything from `@remix-run/router` and `react-router`.
+If you're using React Router, you should never `import` anything directly from the `@remix-run/router` or `react-router` packages, but you should have everything you need in either `react-router-dom` or `react-router-native`. Both of those packages re-export everything from `@remix-run/router` and `react-router`.
+
+> **Warning**
+>
+> This router is a low-level package intended to be consumed by UI layer routing libraries. You should very likely not be using this package directly unless you are authoring a routing library such as [`react-router-dom`][react-router-repo] or one of it's other [UI ports][remix-routers-repo].
 
 ## API
 
@@ -15,12 +16,10 @@ A Router instance can be created using `createRouter`:
 // Create and initialize a router.  "initialize" contains all side effects
 // including history listeners and kicking off the initial data fetch
 let router = createRouter({
-  // Routes array using react-router RouteObject's
-  routes,
+  // Routes array
+  routes: ,
   // History instance
   history,
-  // Optional hydration data for SSR apps
-  hydrationData?: HydrationState;
 }).initialize()
 ```
 
@@ -28,6 +27,8 @@ Internally, the Router represents the state in an object of the following format
 
 ```ts
 interface RouterState {
+  // False during the initial data load, true once we have our initial data
+  initialized: boolean;
   // The `history` action of the most recently completed navigation
   historyAction: Action;
   // The current location of the router.  During a navigation this reflects
@@ -35,18 +36,10 @@ interface RouterState {
   location: Location;
   // The current set of route matches
   matches: DataRouteMatch[];
-  // False during the initial data load, true once we have our initial data
-  initialized: boolean;
   // The state of the current navigation
   navigation: Navigation;
-  // The state of an in-progress router.revalidate() calls
+  // The state of any in-progress router.revalidate() calls
   revalidation: RevalidationState;
-  // Scroll position to restore to for the active Location, false if we
-  // should not restore,m or null if we don't have a saved position
-  // Note: must be enabled via router.enableScrollRestoration()
-  restoreScrollPosition: number | false | null;
-  // Proxied `resetScroll` value passed to router.navigate() (default true)
-  resetScrollPosition: boolean;
   // Data from the loaders for the current matches
   loaderData: RouteData;
   // Data from the action for the current matches
@@ -55,6 +48,12 @@ interface RouterState {
   errors: RouteData | null;
   // Map of all active fetchers
   fetchers: Map<string, Fetcher>;
+  // Scroll position to restore to for the active Location, false if we
+  // should not restore, or null if we don't have a saved position
+  // Note: must be enabled via router.enableScrollRestoration()
+  restoreScrollPosition: number | false | null;
+  // Proxied `preventScrollReset` value passed to router.navigate()
+  preventScrollReset: boolean;
 }
 ```
 
@@ -98,6 +97,11 @@ router.fetch("key", "/page", {
 });
 ```
 
-## Revalidation
+### Revalidation
 
 By default, active loaders will revalidate after any navigation or fetcher mutation. If you need to kick off a revalidation for other use-cases, you can use `router.revalidate()` to re-execute all active loaders.
+
+[react-router]: https://reactrouter.com
+[remix]: https://remix.run
+[react-router-repo]: https://github.com/remix-run/react-router
+[remix-routers-repo]: https://github.com/brophdawg11/remix-routers

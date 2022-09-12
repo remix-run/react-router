@@ -1,10 +1,40 @@
 # @remix-run/router
 
+## 0.2.0-pre.10
+
+### Patch Changes
+
+- fix: remove internal router singleton (#9227)
+- fix: Avoid suspense loops on promise aborted values (#9226)
+
+## 0.2.0-pre.9
+
+### Patch Changes
+
+- fix: rename resetScroll -> preventScrollReset (#9199)
+- fix: Await should fallback on route params navigations (#9181)
+- fix: proxy defer resolve/reject values through tracked promises (#9200)
+
+## 0.2.0-pre.8
+
+### Patch Changes
+
+- fix: avoid uneccesary re-renders on `defer` resolution (#9155)
+- fix: pass `useMatches` objects to `ScrollRestoration` `getKey` (#9157)
+- fix: fetcher submission revalidating fetchers using wrong key (#9166)
+- fix: use a push navigation on submission errors (#9162)
+
+## 0.2.0-pre.7
+
+### Patch Changes
+
+- fix: fix default redirect push/replace behavior (#9117)
+
 ## 0.2.0-pre.6
 
 ### Patch Changes
 
-- c3406eb9: fix: Rename `<Deferred>` to `<Await>` (#9095)
+- fix: Rename `<Deferred>` to `<Await>` (#9095)
 
   - We are no longer replacing the `Promise` on `loaderData` with the value/error
     when it settles so it's now always a `Promise`.

@@ -99,21 +99,24 @@
     "type-fest": "^2.13.0",
     "typescript": "^4.7.3"
   },
+  "engines": {
+    "node": ">=14"
+  },
   "filesize": {
     "packages/router/dist/router.js": {
-      "none": "98 kB"
+      "none": "100 kB"
     },
     "packages/react-router/dist/react-router.production.min.js": {
-      "none": "12 kB"
+      "none": "12.5 kB"
     },
     "packages/react-router/dist/umd/react-router.production.min.js": {
-      "none": "14 kB"
+      "none": "14.5 kB"
     },
     "packages/react-router-dom/dist/react-router-dom.production.min.js": {
       "none": "10 kB"
     },
     "packages/react-router-dom/dist/umd/react-router-dom.production.min.js": {
-      "none": "15.5 kB"
+      "none": "16 kB"
     }
   }
 }

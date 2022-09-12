@@ -8,61 +8,75 @@ order: 1
 
 Routes are perhaps the most important part of a React Router app. They couple URL segments to components, data loading and data mutations. Through route nesting, complex application layouts and data dependencies become simple and declarative.
 
-```tsx
-<DataBrowserRouter>
-  <Route
-    // it renders this element
-    element={<Team />}
-    // when the URL matches this segment
-    path="teams/:teamId"
-    // with this data before rendering
-    loader={async ({ params }) => {
-      return fetch(`/fake/api/teams/${params.teamId}.json`);
-    }}
-    // performing this mutation when data is submitted to it
-    action={async ({ request }) => {
-      return updateFakeTeam(await request.formData());
-    }}
-    // and renders this element in case something went wrong
-    errorElement={<ErrorBoundary />}
-  />
-</DataBrowserRouter>
-```
+Routes are objects passed to the router creation functions:
 
-They can also be configured as objects, which is useful for frameworks and abstractions like [Remix][remix] to do file based routing and server rendering.
-
-```tsx
-const routes = [
+```jsx
+const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Root />,
-    children: [
-      {
-        path: "teams/:teamId",
-        element: <Team />,
-        loader: () => {},
-        action: () => {},
-        errorElement: <ErrorBoundary />,
-      },
-    ],
-  },
-];
+    // it renders this element
+    element: <Team />,
 
-<DataBrowserRouter routes={routes} />;
+    // when the URL matches this segment
+    path: "teams/:teamId",
+
+    // with this data loaded before rendering
+    loader: async ({ request, params }) => {
+      return fetch(
+        `/fake/api/teams/${params.teamId}.json`,
+        { signal: request.signal }
+      );
+    },
+
+    // performing this mutation when data is submitted to it
+    action: async ({ request }) => {
+      return updateFakeTeam(await request.formData());
+    },
+
+    // and renders this element in case something went wrong
+    errorElement: <ErrorBoundary />,
+  },
+]);
 ```
+
+You can also declare your routes with JSX and [`createRoutesFromElements`][createroutesfromelements], the props to the element are identical to the properties of the route objects:
+
+```jsx
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route
+      element={<Team />}
+      path="teams/:teamId"
+      loader={async ({ params }) => {
+        return fetch(
+          `/fake/api/teams/${params.teamId}.json`
+        );
+      }}
+      action={async ({ request }) => {
+        return updateFakeTeam(await request.formData());
+      }}
+      errorElement={<ErrorBoundary />}
+    />
+  )
+);
+```
+
+Neither style is discouraged and behavior is identical. For the majority of this doc we will use the JSX style because that's what most people are accustomed to in the context of React Router.
 
 ## Type declaration
 
 ```tsx
-interface RouteProps {
+interface RouteObject {
   path?: string;
   index?: boolean;
   children?: React.ReactNode;
   caseSensitive?: boolean;
-  loader?: DataFunction;
-  action?: DataFunction;
+  id?: string;
+  loader?: LoaderFunction;
+  action?: ActionFunction;
   element?: React.ReactNode | null;
-  errorElement?: React.Node | null;
+  errorElement?: React.ReactNode | null;
+  handle?: RouteObject["handle"];
+  shouldRevalidate?: ShouldRevalidateFunction;
 }
 ```
 
@@ -92,7 +106,7 @@ If a path segment starts with `:` then it becomes a "dynamic segment". When the 
 // and the element through `useParams`
 function Team() {
   let params = useParams();
-  console.log(params.teamId); // "hotspurs"
+  console.log(params.teamId); // "hotspur"
 }
 ```
 
@@ -136,7 +150,7 @@ Also known as "catchall" and "star" segments. If a route path pattern ends with 
   path="/files/*"
   // the matching param will be available to the loader
   loader={({ params }) => {
-    console.log(params["*"]); // "files/one/two"
+    console.log(params["*"]); // "one/two"
   }}
   // and the action
   action={({ params }) => {}}
@@ -146,7 +160,7 @@ Also known as "catchall" and "star" segments. If a route path pattern ends with 
 // and the element through `useParams`
 function Team() {
   let params = useParams();
-  console.log(params["*"]); // "hotspurs"
+  console.log(params["*"]); // "one/two"
 }
 ```
 
@@ -250,7 +264,7 @@ When a route throws an exception while rendering, in a `loader` or in an `action
   // or this while loading properties
   loader={() => loadProperties()}
   // or this while creating a property
-  action={({ request }) =>
+  action={async ({ request }) =>
     createProperty(await request.formData())
   }
   // then this element will render
@@ -273,3 +287,4 @@ Please see the [errorElement][errorelement] documentation for more details.
 [form]: ../components/form
 [fetcher]: ../hooks/use-fetcher
 [usesubmit]: ../hooks/use-submit
+[createroutesfromelements]: ../utils/create-routes-from-elements

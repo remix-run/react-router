@@ -1,22 +1,12 @@
-import type {
-  BrowserHistoryOptions,
-  HashHistoryOptions,
-  MemoryHistoryOptions,
-} from "./history";
-import {
-  createBrowserHistory,
-  createHashHistory,
-  createMemoryHistory,
-} from "./history";
-import type { Router, RouterInit } from "./router";
-import { createRouter } from "./router";
 import { convertRoutesToDataRoutes } from "./utils";
 
 export type {
   ActionFunction,
   ActionFunctionArgs,
-  DataRouteMatch,
-  DataRouteObject,
+  AgnosticDataRouteMatch,
+  AgnosticDataRouteObject,
+  AgnosticRouteMatch,
+  AgnosticRouteObject,
   TrackedPromise,
   FormEncType,
   FormMethod,
@@ -28,13 +18,12 @@ export type {
   PathMatch,
   PathPattern,
   RedirectFunction,
-  RouteMatch,
-  RouteObject,
   ShouldRevalidateFunction,
   Submission,
 } from "./utils";
 
 export {
+  AbortedDeferredError,
   ErrorResponse,
   defer,
   generatePath,
@@ -55,11 +44,14 @@ export {
 
 export type {
   BrowserHistory,
+  BrowserHistoryOptions,
   HashHistory,
+  HashHistoryOptions,
   History,
   InitialEntry,
   Location,
   MemoryHistory,
+  MemoryHistoryOptions,
   Path,
   To,
 } from "./history";
@@ -74,31 +66,6 @@ export {
 } from "./history";
 
 export * from "./router";
-
-export function createMemoryRouter({
-  initialEntries,
-  initialIndex,
-  ...routerInit
-}: MemoryHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createMemoryHistory({ initialEntries, initialIndex });
-  return createRouter({ history, ...routerInit });
-}
-
-export function createBrowserRouter({
-  window,
-  ...routerInit
-}: BrowserHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createBrowserHistory({ window });
-  return createRouter({ history, ...routerInit });
-}
-
-export function createHashRouter({
-  window,
-  ...routerInit
-}: HashHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createHashHistory({ window });
-  return createRouter({ history, ...routerInit });
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!

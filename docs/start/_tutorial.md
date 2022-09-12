@@ -1,6 +1,7 @@
 ---
 title: Tutorial
 order: 3
+hidden: true
 ---
 
 # Tutorial

@@ -8,8 +8,6 @@ export interface RouteData {
   [routeId: string]: any;
 }
 
-export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
-
 export enum ResultType {
   data = "data",
   deferred = "deferred",
@@ -51,6 +49,7 @@ export interface RedirectResult {
 export interface ErrorResult {
   type: ResultType.error;
   error: any;
+  headers?: Headers;
 }
 
 /**
@@ -123,9 +122,9 @@ export interface ActionFunction {
 export interface ShouldRevalidateFunction {
   (args: {
     currentUrl: URL;
-    currentParams: DataRouteMatch["params"];
+    currentParams: AgnosticDataRouteMatch["params"];
     nextUrl: URL;
-    nextParams: DataRouteMatch["params"];
+    nextParams: AgnosticDataRouteMatch["params"];
     formMethod?: Submission["formMethod"];
     formAction?: Submission["formAction"];
     formEncType?: Submission["formEncType"];
@@ -139,16 +138,15 @@ export interface ShouldRevalidateFunction {
  * A route object represents a logical route, with (optionally) its child
  * routes organized in a tree-like structure.
  */
-export interface RouteObject {
+export interface AgnosticRouteObject {
   caseSensitive?: boolean;
-  children?: RouteObject[];
-  element?: React.ReactNode;
+  children?: AgnosticRouteObject[];
   index?: boolean;
   path?: string;
   id?: string;
   loader?: LoaderFunction;
   action?: ActionFunction;
-  errorElement?: React.ReactNode;
+  hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
 }
@@ -156,8 +154,8 @@ export interface RouteObject {
 /**
  * A data route object, which is just a RouteObject with a required unique ID
  */
-export interface DataRouteObject extends RouteObject {
-  children?: DataRouteObject[];
+export interface AgnosticDataRouteObject extends AgnosticRouteObject {
+  children?: AgnosticDataRouteObject[];
   id: string;
 }
 
@@ -208,9 +206,9 @@ export type Params<Key extends string = string> = {
 /**
  * A RouteMatch contains info about how a route matched a URL.
  */
-export interface RouteMatch<
+export interface AgnosticRouteMatch<
   ParamKey extends string = string,
-  RouteObjectType extends RouteObject = RouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 > {
   /**
    * The names and values of dynamic parameters in the URL.
@@ -230,13 +228,16 @@ export interface RouteMatch<
   route: RouteObjectType;
 }
 
+export interface AgnosticDataRouteMatch
+  extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
+
 // Walk the route tree generating unique IDs where necessary so we are working
-// solely with DataRouteObject's within the Router
+// solely with AgnosticDataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
-  routes: RouteObject[],
+  routes: AgnosticRouteObject[],
   parentPath: number[] = [],
   allIds: Set<string> = new Set<string>()
-): DataRouteObject[] {
+): AgnosticDataRouteObject[] {
   return routes.map((route, index) => {
     let treePath = [...parentPath, index];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
@@ -246,7 +247,7 @@ export function convertRoutesToDataRoutes(
         "id's must be globally unique within Data Router usages"
     );
     allIds.add(id);
-    let dataRoute: DataRouteObject = {
+    let dataRoute: AgnosticDataRouteObject = {
       ...route,
       id,
       children: route.children
@@ -262,11 +263,13 @@ export function convertRoutesToDataRoutes(
  *
  * @see https://reactrouter.com/docs/en/v6/utils/match-routes
  */
-export function matchRoutes<RouteObjectType extends RouteObject = RouteObject>(
+export function matchRoutes<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+>(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
   basename = "/"
-): RouteMatch<string, RouteObjectType>[] | null {
+): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
@@ -287,20 +290,26 @@ export function matchRoutes<RouteObjectType extends RouteObject = RouteObject>(
   return matches;
 }
 
-interface RouteMeta<RouteObjectType extends RouteObject = RouteObject> {
+interface RouteMeta<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+> {
   relativePath: string;
   caseSensitive: boolean;
   childrenIndex: number;
   route: RouteObjectType;
 }
 
-interface RouteBranch<RouteObjectType extends RouteObject = RouteObject> {
+interface RouteBranch<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+> {
   path: string;
   score: number;
   routesMeta: RouteMeta<RouteObjectType>[];
 }
 
-function flattenRoutes<RouteObjectType extends RouteObject = RouteObject>(
+function flattenRoutes<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+>(
   routes: RouteObjectType[],
   branches: RouteBranch<RouteObjectType>[] = [],
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
@@ -414,16 +423,16 @@ function compareIndexes(a: number[], b: number[]): number {
 
 function matchRouteBranch<
   ParamKey extends string = string,
-  RouteObjectType extends RouteObject = RouteObject
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
   branch: RouteBranch<RouteObjectType>,
   pathname: string
-): RouteMatch<ParamKey, RouteObjectType>[] | null {
+): AgnosticRouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
   let matchedParams = {};
   let matchedPathname = "/";
-  let matches: RouteMatch<ParamKey, RouteObjectType>[] = [];
+  let matches: AgnosticRouteMatch<ParamKey, RouteObjectType>[] = [];
   for (let i = 0; i < routesMeta.length; ++i) {
     let meta = routesMeta[i];
     let end = i === routesMeta.length - 1;
@@ -476,10 +485,17 @@ export function generatePath<Path extends string>(
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
     })
-    .replace(/\/*\*$/, (_) => {
+    .replace(/(\/?)\*/, (_, prefix, __, str) => {
       const star = "*" as PathParam<Path>;
 
-      return params[star] == null ? "" : params[star].replace(/^\/*/, "/");
+      if (params[star] == null) {
+        // If no splat was provided, trim the trailing slash _unless_ it's
+        // the entire path
+        return str === "/*" ? "/" : "";
+      }
+
+      // Apply the splat
+      return `${prefix}${params[star]}`;
     });
 }
 
@@ -758,12 +774,17 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
 export function resolveTo(
   toArg: To,
   routePathnames: string[],
-  locationPathname: string
+  locationPathname: string,
+  isPathRelative = false
 ): Path {
   let to = typeof toArg === "string" ? parsePath(toArg) : { ...toArg };
   let isEmptyPath = toArg === "" || to.pathname === "";
   let toPathname = isEmptyPath ? "/" : to.pathname;
 
+  let from: string;
+
+  // Routing is relative to the current pathname if explicitly requested.
+  //
   // If a pathname is explicitly provided in `to`, it should be relative to the
   // route context. This is explained in `Note on `<Link to>` values` in our
   // migration guide from v5 as a means of disambiguation between `to` values
@@ -771,8 +792,7 @@ export function resolveTo(
   // `to` values that do not provide a pathname. `to` can simply be a search or
   // hash string, in which case we should assume that the navigation is relative
   // to the current location's pathname and *not* the route pathname.
-  let from: string;
-  if (toPathname == null) {
+  if (isPathRelative || toPathname == null) {
     from = locationPathname;
   } else {
     let routePathnameIndex = routePathnames.length - 1;
@@ -883,9 +903,13 @@ export interface TrackedPromise extends Promise<any> {
   _error?: any;
 }
 
+export class AbortedDeferredError extends Error {}
+
 export class DeferredData {
   private pendingKeys: Set<string | number> = new Set<string | number>();
-  private cancelled: boolean = false;
+  private controller: AbortController;
+  private abortPromise: Promise<void>;
+  private unlistenAbortSignal: () => void;
   private subscriber?: (aborted: boolean) => void = undefined;
   data: Record<string, unknown>;
 
@@ -894,6 +918,18 @@ export class DeferredData {
       data && typeof data === "object" && !Array.isArray(data),
       "defer() only accepts plain objects"
     );
+
+    // Set up an AbortController + Promise we can race against to exit early
+    // cancellation
+    let reject: (e: AbortedDeferredError) => void;
+    this.abortPromise = new Promise((_, r) => (reject = r));
+    this.controller = new AbortController();
+    let onAbort = () =>
+      reject(new AbortedDeferredError("Deferred data aborted"));
+    this.unlistenAbortSignal = () =>
+      this.controller.signal.removeEventListener("abort", onAbort);
+    this.controller.signal.addEventListener("abort", onAbort);
+
     this.data = Object.entries(data).reduce(
       (acc, [key, value]) =>
         Object.assign(acc, {
@@ -915,10 +951,15 @@ export class DeferredData {
 
     // We store a little wrapper promise that will be extended with
     // _data/_error props upon resolve/reject
-    let promise: TrackedPromise = value.then(
+    let promise: TrackedPromise = Promise.race([value, this.abortPromise]).then(
       (data) => this.onSettle(promise, key, null, data as unknown),
       (error) => this.onSettle(promise, key, error as unknown)
     );
+
+    // Register rejection listeners to avoid uncaught promise rejections on
+    // errors or aborted deferred values
+    promise.catch(() => {});
+
     Object.defineProperty(promise, "_tracked", { get: () => true });
     return promise;
   }
@@ -928,19 +969,32 @@ export class DeferredData {
     key: string | number,
     error: unknown,
     data?: unknown
-  ): void {
-    if (this.cancelled) {
-      return;
+  ): unknown {
+    if (
+      this.controller.signal.aborted &&
+      error instanceof AbortedDeferredError
+    ) {
+      this.unlistenAbortSignal();
+      Object.defineProperty(promise, "_error", { get: () => error });
+      return Promise.reject(error);
     }
+
     this.pendingKeys.delete(key);
+
+    if (this.done) {
+      // Nothing left to abort!
+      this.unlistenAbortSignal();
+    }
 
     if (error) {
       Object.defineProperty(promise, "_error", { get: () => error });
-    } else {
-      Object.defineProperty(promise, "_data", { get: () => data });
+      this.subscriber?.(false);
+      return Promise.reject(error);
     }
 
+    Object.defineProperty(promise, "_data", { get: () => data });
     this.subscriber?.(false);
+    return data;
   }
 
   subscribe(fn: (aborted: boolean) => void) {
@@ -948,7 +1002,7 @@ export class DeferredData {
   }
 
   cancel() {
-    this.cancelled = true;
+    this.controller.abort();
     this.pendingKeys.forEach((v, k) => this.pendingKeys.delete(k));
     this.subscriber?.(true);
   }

@@ -1,20 +1,18 @@
 import * as React from "react";
-import {
-  isRouteErrorResponse,
+import type {
   Location,
   ParamParseKey,
   Params,
   Path,
   PathMatch,
   PathPattern,
-  RouteMatch,
-  RouteObject,
   Router as RemixRouter,
   To,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
   invariant,
+  isRouteErrorResponse,
   joinPaths,
   matchPath,
   matchRoutes,
@@ -23,16 +21,22 @@ import {
   warning,
 } from "@remix-run/router";
 
+import type {
+  NavigateOptions,
+  RouteContextObject,
+  RouteMatch,
+  RouteObject,
+  DataRouteMatch,
+  RelativeRoutingType,
+} from "./context";
 import {
   DataRouterContext,
   DataRouterStateContext,
   LocationContext,
   NavigationContext,
-  NavigateOptions,
   RouteContext,
   RouteErrorContext,
   AwaitContext,
-  RouteContextObject,
   DataStaticRouterContext,
 } from "./context";
 
@@ -42,7 +46,10 @@ import {
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-href
  */
-export function useHref(to: To): string {
+export function useHref(
+  to: To,
+  { relative }: { relative?: RelativeRoutingType } = {}
+): string {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -51,7 +58,7 @@ export function useHref(to: To): string {
   );
 
   let { basename, navigator } = React.useContext(NavigationContext);
-  let { hash, pathname, search } = useResolvedPath(to);
+  let { hash, pathname, search } = useResolvedPath(to, { relative });
 
   let joinedPathname = pathname;
 
@@ -215,7 +222,8 @@ export function useNavigate(): NavigateFunction {
       let path = resolveTo(
         to,
         JSON.parse(routePathnamesJson),
-        locationPathname
+        locationPathname,
+        options.relative === "path"
       );
 
       // If we're operating within a basename, prepend it to the pathname prior
@@ -289,7 +297,10 @@ export function useParams<
  *
  * @see https://reactrouter.com/docs/en/v6/hooks/use-resolved-path
  */
-export function useResolvedPath(to: To): Path {
+export function useResolvedPath(
+  to: To,
+  { relative }: { relative?: RelativeRoutingType } = {}
+): Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
@@ -298,8 +309,14 @@ export function useResolvedPath(to: To): Path {
   );
 
   return React.useMemo(
-    () => resolveTo(to, JSON.parse(routePathnamesJson), locationPathname),
-    [to, routePathnamesJson, locationPathname]
+    () =>
+      resolveTo(
+        to,
+        JSON.parse(routePathnamesJson),
+        locationPathname,
+        relative === "path"
+      ),
+    [to, routePathnamesJson, locationPathname, relative]
   );
 }
 
@@ -583,7 +600,7 @@ export function _renderMatches(
     if (dataRouterState?.errors) {
       // Don't bail if we have data router errors so we can render them in the
       // boundary.  Use the pre-matched (or shimmed) matches
-      matches = dataRouterState.matches;
+      matches = dataRouterState.matches as DataRouteMatch[];
     } else {
       return null;
     }
@@ -696,6 +713,9 @@ export function useMatches() {
     () =>
       matches.map((match) => {
         let { pathname, params } = match;
+        // Note: This structure matches that created by createUseMatchesMatch
+        // in the @remix-run/router , so if you change this please also change
+        // that :)  Eventually we'll DRY this up
         return {
           id: match.route.id,
           pathname,

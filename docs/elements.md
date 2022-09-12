@@ -102,7 +102,7 @@ And then there’s the `<dl>` lists:
 Normal code:
 
 ```tsx
-<DataBrowserRouter initialEntries={["/events/123"]}>
+<WhateverRouter initialEntries={["/events/123"]}>
   <Route path="/" element={<Root />} loader={rootLoader}>
     <Route
       path="events/:id"
@@ -110,13 +110,13 @@ Normal code:
       loader={eventLoader}
     />
   </Route>
-</DataBrowserRouter>
+</WhateverRouter>
 ```
 
 With multiple highlighted lines:
 
 ```tsx lines=[1-2,5]
-<DataBrowserRouter initialEntries={["/events/123"]}>
+<WhateverRouter initialEntries={["/events/123"]}>
   <Route path="/" element={<Root />} loader={rootLoader}>
     <Route
       path="events/:id"
@@ -124,13 +124,13 @@ With multiple highlighted lines:
       loader={eventLoader}
     />
   </Route>
-</DataBrowserRouter>
+</WhateverRouter>
 ```
 
 With a filename:
 
 ```tsx filename=src/main.jsx
-<DataBrowserRouter initialEntries={["/events/123"]}>
+<WhateverRouter initialEntries={["/events/123"]}>
   <Route path="/" element={<Root />} loader={rootLoader}>
     <Route
       path="events/:id"
@@ -138,13 +138,13 @@ With a filename:
       loader={eventLoader}
     />
   </Route>
-</DataBrowserRouter>
+</WhateverRouter>
 ```
 
 Bad code:
 
 ```tsx bad
-<DataBrowserRouter initialEntries={["/events/123"]}>
+<WhateverRouter initialEntries={["/events/123"]}>
   <Route path="/" element={<Root />} loader={rootLoader}>
     <Route
       path="events/:id"
@@ -152,13 +152,13 @@ Bad code:
       loader={eventLoader}
     />
   </Route>
-</DataBrowserRouter>
+</WhateverRouter>
 ```
 
 Bad code with highlighted lines and a filename:
 
 ```tsx filename=src/main.jsx bad lines=[2-5]
-<DataBrowserRouter initialEntries={["/events/123"]}>
+<WhateverRouter initialEntries={["/events/123"]}>
   <Routes>
     <Route path="/" element={<Root />} loader={rootLoader}>
       <Route
@@ -168,7 +168,7 @@ Bad code with highlighted lines and a filename:
       />
     </Route>
   </Routes>
-</DataBrowserRouter>
+</WhateverRouter>
 ```
 
 Lines that overflow:

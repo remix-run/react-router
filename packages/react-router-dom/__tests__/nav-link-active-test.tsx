@@ -11,13 +11,12 @@ import {
   MemoryRouter,
   Routes,
   Route,
+  RouterProvider,
   NavLink,
   Outlet,
-  DataBrowserRouter,
+  createBrowserRouter,
+  createRoutesFromElements,
 } from "react-router-dom";
-
-// Private API
-import { _resetModuleScope } from "../index";
 
 describe("NavLink", () => {
   describe("when it does not match", () => {
@@ -328,14 +327,10 @@ describe("NavLink", () => {
 });
 
 describe("NavLink using a data router", () => {
-  afterEach(() => {
-    _resetModuleScope();
-  });
-
   it("applies the default 'active'/'pending' classNames to the underlying <a>", async () => {
     let dfd = createDeferred();
-    render(
-      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
+    let router = createBrowserRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -344,8 +339,12 @@ describe("NavLink using a data router", () => {
             element={<p>Bar page</p>}
           />
         </Route>
-      </DataBrowserRouter>
+      ),
+      {
+        window: getWindow("/foo"),
+      }
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -369,8 +368,8 @@ describe("NavLink using a data router", () => {
 
   it("applies its className correctly when provided as a function", async () => {
     let dfd = createDeferred();
-    render(
-      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
+    let router = createBrowserRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -379,8 +378,12 @@ describe("NavLink using a data router", () => {
             element={<p>Bar page</p>}
           />
         </Route>
-      </DataBrowserRouter>
+      ),
+      {
+        window: getWindow("/foo"),
+      }
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -420,8 +423,8 @@ describe("NavLink using a data router", () => {
 
   it("applies its style correctly when provided as a function", async () => {
     let dfd = createDeferred();
-    render(
-      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
+    let router = createBrowserRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -430,8 +433,12 @@ describe("NavLink using a data router", () => {
             element={<p>Bar page</p>}
           />
         </Route>
-      </DataBrowserRouter>
+      ),
+      {
+        window: getWindow("/foo"),
+      }
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -471,8 +478,8 @@ describe("NavLink using a data router", () => {
 
   it("applies its children correctly when provided as a function", async () => {
     let dfd = createDeferred();
-    render(
-      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
+    let router = createBrowserRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route
@@ -481,8 +488,12 @@ describe("NavLink using a data router", () => {
             element={<p>Bar page</p>}
           />
         </Route>
-      </DataBrowserRouter>
+      ),
+      {
+        window: getWindow("/foo"),
+      }
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -515,8 +526,8 @@ describe("NavLink using a data router", () => {
 
   it("does not apply during transitions to non-matching locations", async () => {
     let dfd = createDeferred();
-    render(
-      <DataBrowserRouter window={getWindow("/foo")} hydrationData={{}}>
+    let router = createBrowserRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<p>Foo page</p>} />
           <Route path="bar" element={<p>Bar page</p>} />
@@ -526,8 +537,12 @@ describe("NavLink using a data router", () => {
             element={<p>Baz page</p>}
           />
         </Route>
-      </DataBrowserRouter>
+      ),
+      {
+        window: getWindow("/foo"),
+      }
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (

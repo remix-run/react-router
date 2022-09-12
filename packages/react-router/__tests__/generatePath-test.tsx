@@ -17,7 +17,7 @@ describe("generatePath", () => {
         "/courses/routing/grades"
       );
       expect(generatePath("*", { "*": "routing/grades" })).toBe(
-        "/routing/grades"
+        "routing/grades"
       );
     });
   });
@@ -41,5 +41,32 @@ describe("generatePath", () => {
     it("omits the splat and trims the trailing slash", () => {
       expect(generatePath("/courses/*", {})).toBe("/courses");
     });
+  });
+
+  it("throws only on on missing named parameters, but not missing splat params", () => {
+    expect(() => generatePath(":foo")).toThrow();
+    expect(() => generatePath("/:foo")).toThrow();
+    expect(() => generatePath("*")).not.toThrow();
+    expect(() => generatePath("/*")).not.toThrow();
+  });
+
+  it("only interpolates and does not add slashes", () => {
+    expect(generatePath("*")).toBe("");
+    expect(generatePath("/*")).toBe("/");
+
+    expect(generatePath("foo*")).toBe("foo");
+    expect(generatePath("/foo*")).toBe("/foo");
+
+    expect(generatePath(":foo", { foo: "bar" })).toBe("bar");
+    expect(generatePath("/:foo", { foo: "bar" })).toBe("/bar");
+
+    expect(generatePath("*", { "*": "bar" })).toBe("bar");
+    expect(generatePath("/*", { "*": "bar" })).toBe("/bar");
+
+    expect(generatePath("foo:bar", { bar: "baz" })).toBe("foobaz");
+    expect(generatePath("/foo:bar", { bar: "baz" })).toBe("/foobaz");
+
+    expect(generatePath("foo*", { "*": "bar" })).toBe("foobar");
+    expect(generatePath("/foo*", { "*": "bar" })).toBe("/foobar");
   });
 });

@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/router",
-  "version": "0.2.0-pre.6",
+  "version": "0.2.0-pre.10",
   "description": "Nested/Data-driven/Framework-agnostic Routing",
   "keywords": [
     "remix",
@@ -23,6 +23,9 @@
     "*.ts",
     "CHANGELOG.md"
   ],
+  "engines": {
+    "node": ">=14"
+  },
   "publishConfig": {
     "access": "public"
   }

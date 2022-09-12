@@ -1,12 +1,15 @@
 import type * as express from "express";
-import { unstable_createStaticHandler } from "@remix-run/router";
+import { unstable_createStaticHandler as createStaticHandler } from "@remix-run/router";
 import * as React from "react";
 import ReactDOMServer from "react-dom/server";
-import { unstable_DataStaticRouter as DataStaticRouter } from "react-router-dom/server";
+import {
+  unstable_createStaticRouter as createStaticRouter,
+  unstable_StaticRouterProvider as StaticRouterProvider,
+} from "react-router-dom/server";
 import { routes } from "./App";
 
 export async function render(request: express.Request) {
-  let { query } = unstable_createStaticHandler(routes);
+  let { query } = createStaticHandler(routes);
   let remixRequest = createFetchRequest(request);
   let context = await query(remixRequest);
 
@@ -14,9 +17,14 @@ export async function render(request: express.Request) {
     throw context;
   }
 
+  let router = createStaticRouter(routes, context);
   return ReactDOMServer.renderToString(
     <React.StrictMode>
-      <DataStaticRouter routes={routes} context={context} nonce="the-nonce" />
+      <StaticRouterProvider
+        router={router}
+        context={context}
+        nonce="the-nonce"
+      />
     </React.StrictMode>
   );
 }

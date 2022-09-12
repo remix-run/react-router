@@ -1,8 +1,8 @@
 import type {
   ActionFunction,
   ActionFunctionArgs,
-  DataRouteMatch,
   Fetcher,
+  HydrationState,
   JsonFunction,
   LoaderFunction,
   LoaderFunctionArgs,
@@ -14,14 +14,16 @@ import type {
   PathMatch,
   PathPattern,
   RedirectFunction,
-  RouteMatch,
-  RouteObject,
+  Router as RemixRouter,
   ShouldRevalidateFunction,
   To,
 } from "@remix-run/router";
 import {
+  AbortedDeferredError,
   Action as NavigationType,
+  createMemoryHistory,
   createPath,
+  createRouter,
   defer,
   generatePath,
   isRouteErrorResponse,
@@ -45,22 +47,30 @@ import type {
   IndexRouteProps,
   RouterProps,
   RoutesProps,
+  RouterProviderProps,
 } from "./lib/components";
 import {
+  enhanceManualRouteObjects,
   createRoutesFromChildren,
   renderMatches,
-  DataMemoryRouter,
-  DataRouter,
-  DataRouterProvider,
   Await,
   MemoryRouter,
   Navigate,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
 } from "./lib/components";
-import type { Navigator, NavigateOptions } from "./lib/context";
+import type {
+  DataRouteMatch,
+  DataRouteObject,
+  Navigator,
+  NavigateOptions,
+  RouteMatch,
+  RouteObject,
+  RelativeRoutingType,
+} from "./lib/context";
 import {
   DataRouterContext,
   DataRouterStateContext,
@@ -102,9 +112,10 @@ type Search = string;
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  AwaitProps,
   DataMemoryRouterProps,
   DataRouteMatch,
-  AwaitProps,
+  DataRouteObject,
   Fetcher,
   Hash,
   IndexRouteProps,
@@ -128,17 +139,19 @@ export type {
   PathPattern,
   PathRouteProps,
   RedirectFunction,
+  RelativeRoutingType,
   RouteMatch,
   RouteObject,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
   To,
 };
 export {
-  DataMemoryRouter,
+  AbortedDeferredError,
   Await,
   MemoryRouter,
   Navigate,
@@ -146,9 +159,11 @@ export {
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
   createPath,
   createRoutesFromChildren,
+  createRoutesFromChildren as createRoutesFromElements,
   defer,
   isRouteErrorResponse,
   generatePath,
@@ -181,6 +196,26 @@ export {
   useRoutes,
 };
 
+export function createMemoryRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    hydrationData?: HydrationState;
+    initialEntries?: string[];
+    initialIndex?: number;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    history: createMemoryHistory({
+      initialEntries: opts?.initialEntries,
+      initialIndex: opts?.initialIndex,
+    }),
+    hydrationData: opts?.hydrationData,
+    routes: enhanceManualRouteObjects(routes),
+  }).initialize();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We provide these exports as an escape hatch in the event that you need any
@@ -196,12 +231,11 @@ export {
 
 /** @internal */
 export {
-  DataRouter as UNSAFE_DataRouter,
-  DataRouterProvider as UNSAFE_DataRouterProvider,
   NavigationContext as UNSAFE_NavigationContext,
   LocationContext as UNSAFE_LocationContext,
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
   DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
+  enhanceManualRouteObjects as UNSAFE_enhanceManualRouteObjects,
 };

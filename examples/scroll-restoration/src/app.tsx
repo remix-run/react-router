@@ -1,17 +1,56 @@
 import React from "react";
-
+import type { Location, useMatches } from "react-router-dom";
 import {
-  type DataRouteMatch,
-  type Location,
+  createBrowserRouter,
   Link,
   Outlet,
+  RouterProvider,
   ScrollRestoration,
   useLoaderData,
   useLocation,
   useNavigation,
 } from "react-router-dom";
 
-export function Layout() {
+import "./index.css";
+
+let router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <h2>Home</h2>,
+      },
+      {
+        path: "restore-by-key",
+        loader: getArrayLoader,
+        element: <LongPage />,
+      },
+      {
+        path: "restore-by-pathname",
+        loader: getArrayLoader,
+        element: <LongPage />,
+        handle: { scrollMode: "pathname" },
+      },
+      {
+        path: "link-to-hash",
+        loader: getArrayLoader,
+        element: <LongPage />,
+      },
+    ],
+  },
+]);
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => router.dispose());
+}
+
+export default function App() {
+  return <RouterProvider router={router} fallbackElement={<p>Loading...</p>} />;
+}
+
+function Layout() {
   let navigation = useNavigation();
 
   // You can provide a custom implementation of what "key" should be used to
@@ -22,9 +61,9 @@ export function Layout() {
   // previously-accessed path.  Or - go nuts and lump many pages into a
   // single key (i.e., anything /wizard/* uses the same key)!
   let getKey = React.useCallback(
-    (location: Location, matches: DataRouteMatch[]) => {
-      let match = matches.find((m) => m.route.handle?.scrollMode);
-      if (match?.route.handle?.scrollMode === "pathname") {
+    (location: Location, matches: ReturnType<typeof useMatches>) => {
+      let match = matches.find((m) => (m.handle as any)?.scrollMode);
+      if ((match?.handle as any)?.scrollMode === "pathname") {
         return location.pathname;
       }
 
@@ -94,13 +133,13 @@ export function Layout() {
                   </Link>
                 </li>
                 <li className="navitem">
-                  <Link to="/restore-by-key" resetScroll={false}>
+                  <Link to="/restore-by-key" preventScrollReset>
                     This link will not scroll to the top
                   </Link>
                 </li>
                 <li className="navitem">
                   <a href="https://www.google.com">
-                    Thi links to an external site (google)
+                    This links to an external site (google)
                   </a>
                 </li>
               </ul>
@@ -124,14 +163,14 @@ interface ArrayLoaderData {
   arr: Array<number>;
 }
 
-export async function getArrayLoader(): Promise<ArrayLoaderData> {
+async function getArrayLoader(): Promise<ArrayLoaderData> {
   await new Promise((r) => setTimeout(r, 1000));
   return {
     arr: new Array(100).fill(null).map((_, i) => i),
   };
 }
 
-export function LongPage() {
+function LongPage() {
   let data = useLoaderData() as ArrayLoaderData;
   let location = useLocation();
   return (
