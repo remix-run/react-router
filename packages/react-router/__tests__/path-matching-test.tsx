@@ -6,6 +6,14 @@ function pickPaths(routes: RouteObject[], pathname: string): string[] | null {
   return matches && matches.map((match) => match.route.path || "");
 }
 
+function pickPathsAndParams(routes: RouteObject[], pathname: string) {
+  let matches = matchRoutes(routes, pathname);
+  return (
+    matches &&
+    matches.map((match) => ({ path: match.route.path, params: match.params }))
+  );
+}
+
 describe("path matching", () => {
   test("root vs. dynamic", () => {
     let routes = [{ path: "/" }, { path: ":id" }];
@@ -251,20 +259,96 @@ describe("path matching with splats", () => {
 
     expect(match).not.toBeNull();
     expect(match).toHaveLength(3);
-    expect(match[0]).toMatchObject({
+    expect(match![0]).toMatchObject({
       params: { "*": "abc" },
       pathname: "/",
       pathnameBase: "/",
     });
-    expect(match[1]).toMatchObject({
+    expect(match![1]).toMatchObject({
       params: { "*": "abc" },
       pathname: "/courses",
       pathnameBase: "/courses",
     });
-    expect(match[2]).toMatchObject({
+    expect(match![2]).toMatchObject({
       params: { "*": "abc" },
       pathname: "/courses/abc",
       pathnameBase: "/courses",
     });
+  });
+});
+
+describe("path matching with optional dynamic segments", () => {
+  test("optional params at the start of the path", () => {
+    let routes = [
+      {
+        path: "/:lang?/abc",
+      },
+    ];
+
+    expect(pickPathsAndParams(routes, "/")).toEqual(null);
+    expect(pickPathsAndParams(routes, "/abc")).toEqual([
+      {
+        path: "/:lang?/abc",
+        params: {},
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/en/abc")).toEqual([
+      {
+        path: "/:lang?/abc",
+        params: { lang: "en" },
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/en/abc/bar")).toEqual(null);
+  });
+
+  test("optional params at the end of the path", () => {
+    let routes = [
+      {
+        path: "/nested/:one?/:two?",
+      },
+    ];
+
+    expect(pickPathsAndParams(routes, "/nested")).toEqual([
+      {
+        path: "/nested/:one?/:two?",
+        params: {},
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/nested/foo")).toEqual([
+      {
+        path: "/nested/:one?/:two?",
+        params: { one: "foo" },
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/nested/foo/bar")).toEqual([
+      {
+        path: "/nested/:one?/:two?",
+        params: { one: "foo", two: "bar" },
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/nested/foo/bar/baz")).toEqual(null);
+  });
+
+  test("intercalated optional params", () => {
+    let routes = [
+      {
+        path: "/nested/:one?/two/:three?",
+      },
+    ];
+
+    expect(pickPathsAndParams(routes, "/nested")).toEqual(null);
+    expect(pickPathsAndParams(routes, "/nested/foo")).toEqual(null);
+    expect(pickPathsAndParams(routes, "/nested/foo/two")).toEqual([
+      {
+        path: "/nested/:one?/two/:three?",
+        params: { one: "foo" },
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/nested/foo/two/bar")).toEqual([
+      {
+        path: "/nested/:one?/two/:three?",
+        params: { one: "foo", three: "bar" },
+      },
+    ]);
   });
 });
