@@ -22,5 +22,5 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 - @remix-run/router@1.0.0
 
 [rr-docs]: https://reactrouter.com/
-[rr-feature-overview]: https://reactrouter.com/en/v6.4.0/start/overview
-[rr-tutorial]: https://reactrouter.com/en/v6.4.0/start/tutorial
+[rr-feature-overview]: https://reactrouter.com/en/6.4.0/start/overview
+[rr-tutorial]: https://reactrouter.com/en/6.4.0/start/tutorial
