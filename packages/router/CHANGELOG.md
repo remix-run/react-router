@@ -1,5 +1,276 @@
 # @remix-run/router
 
+## 1.0.0
+
+### Major Changes
+
+- 5bab9ebf: feat: bump @remix-run/router to 1.0.0
+
+### Minor Changes
+
+- f264d828: change `formMethod=GET` to be a loading navigation instead of submitting
+
+### Patch Changes
+
+- e8dda1ba: fix: avoid uneccesary re-renders on defer resolution (#9155)
+- f264d828: fix: Capture fetcher errors at contextual route error boundaries (#8945)
+- 5c8fdeca: fix: pass useMatches objects to ScrollRestoration getKey (#9157)
+- 0bb4410b: fix: properly handle `<Form encType="multipart/form-data">` submissions (#8984)
+- c17512d8: fix: remove internal router singleton (#9227)
+
+  This change removes the internal module-level `routerSingleton` we create and maintain inside our data routers since it was causing a number of headaches for non-simple use cases:
+
+  - Unit tests are a pain because you need to find a way to reset the singleton in-between tests
+    - Use use a `_resetModuleScope` singleton for our tests
+    - ...but this isn't exposed to users who may want to do their own tests around our router
+  - The JSX children `<Route>` objects cause non-intuitive behavior based on idiomatic react expectations
+    - Conditional runtime `<Route>`'s won't get picked up
+    - Adding new `<Route>`'s during local dev won't get picked up during HMR
+    - Using external state in your elements doesn't work as one might expect (see #9225)
+
+  Instead, we are going to lift the singleton out into user-land, so that they create the router singleton and manage it outside the react tree - which is what react 18 is encouraging with `useSyncExternalStore` anyways! This also means that since users create the router - there's no longer any difference in the rendering aspect for memory/browser/hash routers (which only impacts router/history creation) - so we can get rid of those and trim to a simple `RouterProvider`
+
+  ```jsx
+  // Before
+  function App() {
+    <DataBrowserRouter>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Home />}>
+      </Route>
+    <DataBrowserRouter>
+  }
+
+  // After
+  let router = createBrowserRouter([{
+    path: "/",
+    element: <Layout />,
+    children: [{
+      index: true,
+      element: <Home />,
+    }]
+  }]);
+
+  function App() {
+    return <RouterProvider router={router} />
+  }
+  ```
+
+  If folks still prefer the JSX notation, they can leverage `createRoutesFromElements` (aliased from `createRoutesFromChildren` since they are not "children" in this usage):
+
+  ```jsx
+  let routes = createRoutesFromElements(
+    <Route path="/" element={<Layout />}>
+      <Route index element={<Home />}>
+    </Route>
+  );
+  let router = createBrowserRouter(routes);
+
+  function App() {
+    return <RouterProvider router={router} />
+  }
+  ```
+
+  And now they can also hook into HMR correctly for router disposal:
+
+  ```
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => router.dispose());
+  }
+  ```
+
+  And finally since `<RouterProvider>` accepts a router, it makes unit testing easer since you can create a fresh router with each test.
+
+  **Removed APIs**
+
+  - `<DataMemoryRouter>`
+  - `<DataBrowserRouter>`
+  - `<DataHashRouter>`
+  - `<DataRouterProvider>`
+  - `<DataRouter>`
+
+  **Modified APIs**
+
+  - `createMemoryRouter`/`createBrowserRouter`/`createHashRouter` used to live in `@remix-run/router` to prevent devs from needing to create their own `history`. These are now moved to `react-router`/`react-router-dom` and handle the `RouteObject -> AgnosticRouteObject` conversion.
+
+  **Added APIs**
+
+  - `<RouterProvider>`
+  - `createRoutesFromElements` (alias of `createRoutesFromChildren`)
+
+- 9fa39a6d: fix: Make path resolution trailing slash agnostic (#8861)
+- 8ed30d37: fix: Handle fetcher 404s as normal boundary errors
+- f264d828: Make `fallbackElement` optional and change type to `ReactNode` (#8896)
+- f264d828: Release script tests
+- f264d828: Properly trigger error boundaries on 404 routes
+- d5b25602: Feat: adds `defer()` support to data routers
+
+  Returning a `defer()` from a `loader` allows you to separate _critical_ loader data that you want to wait for prior to rendering the destination page from _non-critical_ data that you are OK to show a spinner for until it loads.
+
+  ```jsx
+  // In your route loader, return a defer() and choose per-key whether to
+  // await the promise or not.  As soon as the awaited promises resolve, the
+  // page will be rendered.
+  function loader() {
+    return defer({
+      critical: await getCriticalData(),
+      lazy: getLazyData(),
+    });
+  };
+
+  // In your route element, grab the values from useLoaderData and render them
+  // with <Await> inside a <React.Suspense> boundary
+  function Page() {
+    let data = useLoaderData();
+    return (
+      <>
+        <p>Critical Data: {data.critical}</p>
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <Await resolve={data.lazy} errorElement={<RenderError />}>
+            <RenderData />
+          </Await>
+        </React.Suspense>
+      </>
+    );
+  }
+
+  // Use separate components to render the data once it resolves, and access it
+  // via the useAsyncValue hook
+  function RenderData() {
+    let data = useAsyncValue();
+    return <p>Lazy: {data}</p>;
+  }
+
+  function RenderError() {
+    let data = useAsyncError();
+    return <p>Error! {data.message} {data.stack}</p>;
+  }
+  ```
+
+  If you want to skip the separate components, you can use the Render Props
+  pattern and handle the rendering of the deferred data inline:
+
+  ```jsx
+  function Page() {
+    let data = useLoaderData();
+    return (
+      <>
+        <p>Critical Data: {data.critical}</p>
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <Await resolve={data.lazy} errorElement={<RenderError />}>
+            {data => <p>{data}</p>}
+          </Await>
+        </React.Suspense>
+      </>
+    );
+  }
+  ```
+
+- 5a56b5c9: fix: fix default redirect push/replace behavior (#9117)
+- 92aa5bb0: Deferred API Updates
+
+  - Removes `<Suspense>` from inside `<Deferred>`, requires users to render their own suspense boundaries
+  - Updates `Deferred` to use a true error boundary to catch render errors as well as data errors
+  - Support array and single promise usages
+    - `return defer([ await critical(), lazy() ])`
+    - `return defer(lazy())`
+  - Remove `Deferrable`/`ResolvedDeferrable` in favor of raw `Promise`'s and `Awaited`
+  - Remove generics from `useAsyncValue` until `useLoaderData` generic is decided in 6.5
+
+- f264d828: `resolveTo` should not mutate the provided pathname (#8839)
+- 9e2f92ac: feat: Add `createStaticRouter` for `@remix-run/router` SSR usage
+
+  **Notable changes:**
+
+  - `request` is now the driving force inside the router utils, so that we can better handle `Request` instances coming form the server (as opposed to `string` and `Path` instances coming from the client)
+  - Removed the `signal` param from `loader` and `action` functions in favor of `request.signal`
+
+  **Example usage (Document Requests):**
+
+  ```jsx
+  // Create a static handler
+  let { query } = unstable_createStaticHandler(routes);
+
+  // Perform a full-document query for the incoming Fetch Request.  This will
+  // execute the appropriate action/loaders and return either the state or a
+  // Fetch Response in the case of redirects.
+  let state = await query(fetchRequest);
+
+  // If we received a Fetch Response back, let our server runtime handle directly
+  if (state instanceof Response) {
+    throw state;
+  }
+
+  // Otherwise, render our application providing the data routes and state
+  let html = ReactDOMServer.renderToString(
+    <React.StrictMode>
+      <DataStaticRouter routes={routes} state={state} />
+    </React.StrictMode>
+  );
+  ```
+
+  **Example usage (Data Requests):**
+
+  ```jsx
+  // Create a static route handler
+  let { queryRoute } = unstable_createStaticHandler(routes);
+
+  // Perform a single-route query for the incoming Fetch Request.  This will
+  // execute the appropriate singular action/loader and return either the raw
+  // data or a Fetch Response
+  let data = await queryRoute(fetchRequest);
+
+  // If we received a Fetch Response back, return it directly
+  if (data instanceof Response) {
+    return data;
+  }
+
+  // Otherwise, construct a Response from the raw data (assuming json here)
+  return new Response(JSON.stringify(data), {
+    headers: {
+      "Content-Type": "application/json; charset=utf-8"
+    }
+  });
+  ```
+
+- 7a057e19: fix: don't default to a `REPLACE` navigation on form submissions if the action redirected. The redirect takes care of avoiding the back-button-resubmit scenario, so by using a `PUSH` we allow the back button to go back to the pre-submission form page (#8979)
+- a04ab758: fix: rename resetScroll -> preventScrollReset (#9199)
+- 112c02c7: fix: Avoid suspense loops on promise aborted values (#9226)
+- d68d03ed: feat: add basename support for data routers
+- 9fa39a6d: fix: export ActionFunctionArgs/LoaderFunctionArgs up through router packages (#8975)
+- b7fadce8: ci: simplify dist/ directory for CJS/ESM only
+- c3406eb9: fix: Rename `<Deferred>` to `<Await>` (#9095)
+
+  - We are no longer replacing the `Promise` on `loaderData` with the value/error
+    when it settles so it's now always a `Promise`.
+  - To that end, we changed from `<Deferred value={promise}>` to
+    `<Await resolve={promise}>` for clarity, and it also now supports using
+    `<Await>` with raw promises from anywhere, not only those on `loaderData`
+    from a defer() call.
+    - Note that raw promises will not be automatically cancelled on interruptions
+      so they are not recommended
+  - The hooks are now `useAsyncValue`/`useAsyncError`
+
+- 1dc082c0: fix: fetcher submission revalidating fetchers using wrong key (#9166)
+- 3e7e502c: fix: Fix trailing slash behavior on pathless routing when using a basename (#9045)
+- f3182f4a: SSR Updates for React Router
+
+  _Note: The Data-Router SSR aspects of `@remix-run/router` and `react-router-dom` are being released as **unstable** in this release (`unstable_createStaticHandler` and `unstable_DataStaticRouter`), and we plan to finalize them in a subsequent minor release once the kinks can be worked out with the Remix integration. To that end, they are available for use, but are subject to breaking changes in the next minor release._
+
+  - Remove `useRenderDataRouter()` in favor of `<DataRouterProvider>`/`<DataRouter>`
+  - Support automatic hydration in `<DataStaticRouter>`/`<DataBrowserRouter>`/`<DataHashRouter>`
+    - Uses `window.__staticRouterHydrationData`
+    - Can be disabled on the server via `<DataStaticRouter hydrate={false}>`
+    - Can be disabled (or overridden) in the browser by passing `hydrationData` to `<DataBrowserRouter>`/`<DataHashRouter>`
+  - `<DataStaticRouter>` now tracks it's own SSR error boundaries on `StaticHandlerContext`
+  - `StaticHandlerContext` now exposes `statusCode`/`loaderHeaders`/`actionHeaders`
+  - `foundMissingHydrationData` check removed since Remix routes may have loaders (for modules) that don't return data for `loaderData`
+
+- 5ba67d83: fix: preserve loader data for loaders that opted out of revalidation (#8973)
+- f264d828: Pass fetcher `actionResult` through to `shouldRevalidate` on fetcher submissions
+- 26e8b8e7: fix: Await should fallback on route params navigations (#9181)
+- d0114e26: fix: use a push navigation on submission errors (#9162)
+- 3e99fb22: fix: proxy defer resolve/reject values through tracked promises (#9200)
+
 ## 0.2.0-pre.10
 
 ### Patch Changes
@@ -108,8 +379,8 @@
   // Otherwise, construct a Response from the raw data (assuming json here)
   return new Response(JSON.stringify(data), {
     headers: {
-      "Content-Type": "application/json; charset=utf-8",
-    },
+      "Content-Type": "application/json; charset=utf-8"
+    }
   });
   ```
 

@@ -1,5 +1,57 @@
 # react-router-native
 
+## 6.4.0
+
+### Patch Changes
+
+- 815e1d17: feat: add `relative=path` option for url-relative routing (#9160)
+
+  Adds a `relative=path` option to navigation aspects to allow users to opt-into paths behaving relative to the current URL instead of the current route hierarchy. This is useful if you're sharing route patterns in a non-nested structure for UI reasons:
+
+  ```jsx
+  // Contact and EditContact do not share UI layout
+  <Route path="contacts/:id" element={<Contact />} />
+  <Route path="contacts:id/edit" element={<EditContact />} />
+
+  function EditContact() {
+    return <Link to=".." relative="path">Cancel</Link>
+  }
+  ```
+
+  Without this, the user would need to reconstruct the `contacts/:id` url using `useParams` and either hardcoding the `/contacts` prefix or parsing it from `useLocation`.
+
+  This applies to all path-related hooks and components:
+
+  - `react-router`: `useHref`, `useResolvedPath`, `useNavigate`, `Navigate`
+  - `react-router-dom`: `useLinkClickHandler`, `useFormAction`, `useSubmit`, `Link`, `Form`
+  - `react-router-native`: `useLinkPressHandler`, `Link`
+
+- f264d828: Release script tests
+- e766ab5a: fix: update `useLocation` to return the scoped `Location` when inside a `<Routes location>` component
+- Updated dependencies [815e1d17]
+- Updated dependencies [c17512d8]
+- Updated dependencies [9fa39a6d]
+- Updated dependencies [c21e38ef]
+- Updated dependencies [f264d828]
+- Updated dependencies [f264d828]
+- Updated dependencies [f264d828]
+- Updated dependencies [f264d828]
+- Updated dependencies [e766ab5a]
+- Updated dependencies [d5b25602]
+- Updated dependencies [92aa5bb0]
+- Updated dependencies [a04ab758]
+- Updated dependencies [112c02c7]
+- Updated dependencies [e6b68116]
+- Updated dependencies [d68d03ed]
+- Updated dependencies [9fa39a6d]
+- Updated dependencies [f264d828]
+- Updated dependencies [c3406eb9]
+- Updated dependencies [3e7e502c]
+- Updated dependencies [f264d828]
+- Updated dependencies [f264d828]
+- Updated dependencies [f3182f4a]
+  - react-router@6.4.0
+
 ## 6.4.0-pre.15
 
 ### Patch Changes
