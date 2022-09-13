@@ -1,25 +1,7 @@
 {
   "name": "react-router",
-  "version": "6.3.0",
-  "author": "Remix Software <hello@remix.run>",
+  "version": "6.4.0",
   "description": "Declarative routing for React",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/remix-run/react-router.git",
-    "directory": "packages/react-router"
-  },
-  "license": "MIT",
-  "main": "./main.js",
-  "module": "./index.js",
-  "types": "./index.d.ts",
-  "unpkg": "./umd/react-router.production.min.js",
-  "peerDependencies": {
-    "react": ">=16.8"
-  },
-  "dependencies": {
-    "history": "^5.2.0"
-  },
-  "sideEffects": false,
   "keywords": [
     "react",
     "router",
@@ -27,5 +9,35 @@
     "routing",
     "history",
     "link"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remix-run/react-router",
+    "directory": "packages/react-router"
+  },
+  "license": "MIT",
+  "author": "Remix Software <hello@remix.run>",
+  "sideEffects": false,
+  "main": "./dist/main.js",
+  "unpkg": "./dist/umd/react-router.production.min.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@remix-run/router": "1.0.0"
+  },
+  "devDependencies": {
+    "react": "^18.2.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.8"
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=14"
+  }
 }

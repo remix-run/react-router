@@ -1,40 +1,19 @@
+// FIXME: @remix-run/router isn't being automatically versioned
 const path = require("path");
 const { execSync } = require("child_process");
 const fsp = require("fs/promises");
 const chalk = require("chalk");
-const Confirm = require("prompt-confirm");
-const jsonfile = require("jsonfile");
 const semver = require("semver");
 
-const rootDir = path.resolve(__dirname, "..");
-const examplesDir = path.resolve(rootDir, "examples");
-
-/**
- * @param {string} packageName
- * @param {string} [directory]
- * @returns {string}
- */
-function packageJson(packageName, directory = "packages") {
-  return path.join(rootDir, directory, packageName, "package.json");
-}
-
-/**
- * @param {*} cond
- * @param {string} message
- * @returns {asserts cond}
- */
-function invariant(cond, message) {
-  if (!cond) throw new Error(message);
-}
-
-function ensureCleanWorkingDirectory() {
-  let status = execSync(`git status --porcelain`).toString().trim();
-  let lines = status.split("\n");
-  invariant(
-    lines.every((line) => line === "" || line.startsWith("?")),
-    "Working directory is not clean. Please commit or stash your changes."
-  );
-}
+const {
+  ensureCleanWorkingDirectory,
+  getPackageVersion,
+  invariant,
+  prompt,
+  updateExamplesPackageConfig,
+  updatePackageConfig,
+} = require("./utils");
+const { EXAMPLES_DIR } = require("./constants");
 
 /**
  * @param {string} currentVersion
@@ -55,52 +34,18 @@ function getNextVersion(currentVersion, givenVersion, prereleaseId) {
     );
   }
 
-  let nextVersion = semver.inc(currentVersion, givenVersion, prereleaseId);
+  let nextVersion;
+  if (givenVersion === "experimental") {
+    let hash = execSync(`git rev-parse --short HEAD`).toString().trim();
+    nextVersion = `0.0.0-experimental-${hash}`;
+  } else {
+    // @ts-ignore
+    nextVersion = semver.inc(currentVersion, givenVersion, prereleaseId);
+  }
 
   invariant(nextVersion != null, `Invalid version specifier: ${givenVersion}`);
 
   return nextVersion;
-}
-
-/**
- * @param {string} question
- * @returns {Promise<string>}
- */
-async function prompt(question) {
-  let confirm = new Confirm(question);
-  let answer = await confirm.run();
-  return answer;
-}
-
-/**
- * @param {string} packageName
- */
-async function getPackageVersion(packageName) {
-  let file = packageJson(packageName);
-  let json = await jsonfile.readFile(file);
-  return json.version;
-}
-
-/**
- * @param {string} packageName
- * @param {(json: string) => any} transform
- */
-async function updatePackageConfig(packageName, transform) {
-  let file = packageJson(packageName);
-  let json = await jsonfile.readFile(file);
-  transform(json);
-  await jsonfile.writeFile(file, json, { spaces: 2 });
-}
-
-/**
- * @param {string} example
- * @param {(json: string) => any} transform
- */
-async function updateExamplesPackageConfig(example, transform) {
-  let file = packageJson(example, "examples");
-  let json = await jsonfile.readFile(file);
-  transform(json);
-  await jsonfile.writeFile(file, json, { spaces: 2 });
 }
 
 async function run() {
@@ -160,9 +105,9 @@ async function run() {
     );
 
     // 6. Update react-router and react-router-dom versions in the examples
-    let examples = await fsp.readdir(examplesDir);
+    let examples = await fsp.readdir(EXAMPLES_DIR);
     for (const example of examples) {
-      let stat = await fsp.stat(path.join(examplesDir, example));
+      let stat = await fsp.stat(path.join(EXAMPLES_DIR, example));
       if (!stat.isDirectory()) continue;
 
       await updateExamplesPackageConfig(example, (config) => {
@@ -175,6 +120,11 @@ async function run() {
     execSync(`git commit --all --message="Version ${version}"`);
     execSync(`git tag -a -m "Version ${version}" v${version}`);
     console.log(chalk.green(`  Committed and tagged version ${version}`));
+    console.log(
+      chalk.red(
+        `  🚨 @remix-run/router isn't handled by this script, do it manually!`
+      )
+    );
   } catch (error) {
     console.log();
     console.error(chalk.red(`  ${error.message}`));

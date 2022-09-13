@@ -1,39 +1,75 @@
 {
+  "name": "@remix-run/react-router",
   "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/react-router",
+      "packages/react-router-dom",
+      "packages/react-router-dom-v5-compat",
+      "packages/react-router-native",
+      "packages/router"
+    ],
+    "nohoist": [
+      "**/react-native",
+      "**/react-native/**"
+    ]
+  },
   "scripts": {
-    "build": "rollup -c && tsc -b",
+    "build": "rollup -c",
     "clean": "git clean -fdX .",
-    "lint": "eslint --cache .",
     "format": "prettier --ignore-path .eslintignore --write .",
     "format:check": "prettier --ignore-path .eslintignore --check .",
-    "publish": "node ./scripts/publish.js",
+    "postinstall": "patch-package",
+    "lint": "eslint --cache .",
+    "prerelease": "yarn build",
+    "release": "changeset publish",
     "size": "filesize",
     "test": "jest",
-    "version": "node ./scripts/version.js",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "postversion": "node scripts/postversion.mjs",
+    "version:experimental": "node scripts ./scripts/version experimental",
     "watch": "rollup -c -w"
+  },
+  "jest": {
+    "projects": [
+      "<rootDir>/packages/*"
+    ]
+  },
+  "resolutions": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0"
   },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
-    "@ampproject/rollup-plugin-closure-compiler": "^0.26.0",
-    "@babel/core": "^7.7.4",
-    "@babel/preset-env": "^7.15.8",
-    "@babel/preset-modules": "^0.1.4",
-    "@babel/preset-react": "^7.14.5",
-    "@babel/preset-typescript": "^7.15.0",
+    "@babel/core": "^7.18.2",
+    "@babel/preset-env": "^7.18.2",
+    "@babel/preset-modules": "^0.1.5",
+    "@babel/preset-react": "^7.17.12",
+    "@babel/preset-typescript": "^7.17.12",
+    "@changesets/changelog-github": "0.4.4",
+    "@changesets/cli": "^2.22.0",
     "@octokit/graphql": "^4.8.0",
     "@octokit/plugin-paginate-rest": "^2.17.0",
     "@octokit/rest": "^18.12.0",
-    "@rollup/plugin-replace": "^2.2.1",
+    "@remix-run/web-fetch": "4.1.3",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-replace": "^4.0.0",
+    "@rollup/plugin-typescript": "^8.3.2",
+    "@testing-library/jest-dom": "5.16.3",
+    "@testing-library/react": "^13.3.0",
     "@types/jest": "26.x",
+    "@types/jsdom": "16.2.14",
     "@types/jsonfile": "^6.0.1",
-    "@types/react": "^17.0.19",
-    "@types/react-dom": "^17.0.9",
-    "@types/react-native": "*",
-    "@types/react-test-renderer": "16.x",
+    "@types/react": "^18.0.15",
+    "@types/react-dom": "^18.0.6",
+    "@types/react-native": "^0.61.0",
+    "@types/react-test-renderer": "^18.0.0",
     "@types/semver": "^7.3.8",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
     "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.6.3",
     "babel-plugin-dev-expression": "^0.2.2",
     "chalk": "^4.1.1",
     "cheerio": "^1.0.0-rc.10",
@@ -41,57 +77,49 @@
     "eslint-config-react-app": "^6.0.0",
     "eslint-plugin-flowtype": "^5.8.0",
     "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-jest": "^26.5.3",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-react": "^7.24.0",
     "eslint-plugin-react-hooks": "next",
-    "history": "^5.2.0",
+    "fs-extra": "^10.1.0",
+    "history": "^5.3.0",
     "jest": "^26.6.3",
     "jsonfile": "^6.1.0",
     "metro-react-native-babel-preset": "^0.57.0",
-    "node-fetch": "^2.6.1",
+    "patch-package": "^6.4.7",
     "prettier": "^2.5.1",
     "prompt-confirm": "^2.0.4",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-test-renderer": "^17.0.2",
-    "rollup": "^1.27.9",
-    "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-copy": "^3.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-test-renderer": "^18.2.0",
+    "rollup": "^2.75.5",
+    "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-extensions": "^0.1.0",
-    "rollup-plugin-prettier": "^0.6.0",
+    "rollup-plugin-prettier": "^2.2.2",
     "rollup-plugin-terser": "^7.0.2",
     "semver": "^7.3.5",
     "ts-jest": "^26.5.6",
-    "typescript": "^4.3.5"
+    "type-fest": "^2.13.0",
+    "typescript": "^4.7.3"
   },
-  "workspaces": {
-    "packages": [
-      "packages/react-router",
-      "packages/react-router-dom",
-      "packages/react-router-native"
-    ],
-    "nohoist": [
-      "**/react-native",
-      "**/react-native/**"
-    ]
-  },
-  "jest": {
-    "projects": [
-      "<rootDir>/packages/*"
-    ]
+  "engines": {
+    "node": ">=14"
   },
   "filesize": {
-    "build/node_modules/react-router/react-router.production.min.js": {
-      "none": "8 kB"
+    "packages/router/dist/router.js": {
+      "none": "100 kB"
     },
-    "build/node_modules/react-router/umd/react-router.production.min.js": {
-      "none": "9 kB"
+    "packages/react-router/dist/react-router.production.min.js": {
+      "none": "12.5 kB"
     },
-    "build/node_modules/react-router-dom/react-router-dom.production.min.js": {
-      "none": "4 kB"
+    "packages/react-router/dist/umd/react-router.production.min.js": {
+      "none": "14.5 kB"
     },
-    "build/node_modules/react-router-dom/umd/react-router-dom.production.min.js": {
-      "none": "8 kB"
+    "packages/react-router-dom/dist/react-router-dom.production.min.js": {
+      "none": "10 kB"
+    },
+    "packages/react-router-dom/dist/umd/react-router-dom.production.min.js": {
+      "none": "16 kB"
     }
   }
 }

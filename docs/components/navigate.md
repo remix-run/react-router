@@ -14,6 +14,7 @@ interface NavigateProps {
   to: To;
   replace?: boolean;
   state?: any;
+  relative?: RelativeRoutingType;
 }
 ```
 
@@ -21,11 +22,7 @@ interface NavigateProps {
 
 A `<Navigate>` element changes the current location when it is rendered. It's a component wrapper around [`useNavigate`][use-navigate], and accepts all the same arguments as props.
 
-> **Note:**
->
-> Having a component-based version of the `useNavigate` hook makes it easier to
-> use this feature in a [`React.Component`](https://reactjs.org/docs/react-component.html)
-> subclass where hooks are not able to be used.
+<docs-info>Having a component-based version of the `useNavigate` hook makes it easier to use this feature in a [`React.Component`](https://reactjs.org/docs/react-component.html) subclass where hooks are not able to be used.</docs-info>
 
 ```tsx
 import * as React from "react";

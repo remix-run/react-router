@@ -4,10 +4,7 @@ title: useSearchParams
 
 # `useSearchParams`
 
-> **Note:**
->
-> This is the web version of `useSearchParams`. For the React Native version,
-> [go here][usesearchparams-native].
+<docs-info>This is the web version of `useSearchParams`. For the React Native version, [go here][usesearchparams-native].</docs-info>
 
 <details>
   <summary>Type declaration</summary>
@@ -26,14 +23,22 @@ type URLSearchParamsInit =
   | URLSearchParams;
 
 type SetURLSearchParams = (
-  nextInit?: URLSearchParamsInit,
-  navigateOpts?: : { replace?: boolean; state?: any }
+  nextInit?:
+    | URLSearchParamsInit
+    | ((prev: URLSearchParams) => URLSearchParamsInit),
+  navigateOpts?: : NavigateOptions
 ) => void;
+
+interface NavigateOptions {
+  replace?: boolean;
+  state?: any;
+  preventScrollReset?: boolean;
+}
 ```
 
 </details>
 
-The `useSearchParams` hook is used to read and modify the query string in the URL for the current location. Like React's own [`useState` hook](https://reactjs.org/docs/hooks-reference.html#usestate), `useSearchParams` returns an array of two values: the current location's [search params](https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams) and a function that may be used to update them.
+The `useSearchParams` hook is used to read and modify the query string in the URL for the current location. Like React's own [`useState` hook][usestate], `useSearchParams` returns an array of two values: the current location's [search params][searchparams] and a function that may be used to update them. Just as React's [`useState` hook][usestate], `setSearchParams` also supports [functional updates][functional-updates]. Therefore, you may provide a function that takes a `searchParams` and returns an updated version.
 
 ```tsx
 import * as React from "react";
@@ -59,12 +64,10 @@ function App() {
 }
 ```
 
-> **Note:**
->
-> The `setSearchParams` function works like [`navigate`][usenavigate], but
-> only for the [search portion](https://developer.mozilla.org/en-US/docs/Web/API/Location/search)
-> of the URL. Also note that the second arg to `setSearchParams` is
-> the same type as the second arg to `navigate`.
+<docs-info>The `setSearchParams` function works like [`navigate`][usenavigate], but only for the [search portion](https://developer.mozilla.org/en-US/docs/Web/API/Location/search) of the URL. Also note that the second arg to `setSearchParams` is the same type as the second arg to `navigate`.</docs-info>
 
+[functional-updates]: https://reactjs.org/docs/hooks-reference.html#functional-updates
+[searchparams]: https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams
 [usesearchparams-native]: ./use-search-params-rn
+[usestate]: https://reactjs.org/docs/hooks-reference.html#usestate
 [usenavigate]: ./use-navigate

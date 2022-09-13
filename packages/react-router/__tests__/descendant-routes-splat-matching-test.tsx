@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Outlet, Routes, Route, useParams } from "react-router";
-import type { InitialEntry } from "history";
+import type { InitialEntry } from "@remix-run/router";
 
 describe("Descendant <Routes> splat matching", () => {
   describe("when the parent route path ends with /*", () => {
@@ -178,6 +178,32 @@ describe("Descendant <Routes> splat matching", () => {
                 <p>
                   The params are 
                   {"*":"~react-fundamentals","splat":"~react-fundamentals"}
+                </p>
+              </div>
+            </div>
+          </div>
+        `);
+      });
+      it("allows `@` to appear at the beginning", () => {
+        let renderer = renderNestedSplatRoute([
+          "/courses/react/@react-fundamentals",
+        ]);
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <div>
+            <h1>
+              Courses
+            </h1>
+            <div>
+              <h1>
+                React
+              </h1>
+              <div>
+                <h1>
+                  React Fundamentals
+                </h1>
+                <p>
+                  The params are 
+                  {"*":"@react-fundamentals","splat":"@react-fundamentals"}
                 </p>
               </div>
             </div>
