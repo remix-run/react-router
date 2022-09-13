@@ -7,7 +7,7 @@ new: true
 
 When exceptions are thrown in [loaders][loader], [actions][action], or component rendering, instead of the normal render path for your Routes (`<Route element>`), the error path will be rendered (`<Route errorElement>`) and the error made available with [`useRouteError`][userouteerror].
 
-<docs-error>This feature only works if using a data router</docs-error>
+<docs-error>This feature only works if using a data router like [`createBrowserRouter`][createbrowserrouter]</docs-error>
 
 ```tsx
 <Route
@@ -213,3 +213,4 @@ The project route doesn't have to think about errors at all. Between the loader 
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [isrouteerrorresponse]: ../utils/is-route-error-response
 [json]: ../fetch/json
+[createbrowserrouter]: ../routers/create-browser-router.md
