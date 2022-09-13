@@ -329,7 +329,7 @@ describe("path matching with splats", () => {
 });
 
 describe("route scoring", () => {
-  test.only("splat routes versus dynamic routes", () => {
+  test("splat routes versus dynamic routes", () => {
     let routes = [
       { path: "nested/prefix-:param/static/prefix-*" }, // Score 43
       { path: "nested/prefix-:param/static/*" }, // Score 33
