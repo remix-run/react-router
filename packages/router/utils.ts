@@ -986,14 +986,15 @@ export class DeferredData {
       this.unlistenAbortSignal();
     }
 
+    const subscriber = this.subscriber;
     if (error) {
       Object.defineProperty(promise, "_error", { get: () => error });
-      this.subscriber?.(false);
+      subscriber && subscriber(false);
       return Promise.reject(error);
     }
 
     Object.defineProperty(promise, "_data", { get: () => data });
-    this.subscriber?.(false);
+    subscriber && subscriber(false);
     return data;
   }
 
@@ -1004,7 +1005,8 @@ export class DeferredData {
   cancel() {
     this.controller.abort();
     this.pendingKeys.forEach((v, k) => this.pendingKeys.delete(k));
-    this.subscriber?.(true);
+    let subscriber = this.subscriber;
+    subscriber && subscriber(true);
   }
 
   async resolveData(signal: AbortSignal) {
