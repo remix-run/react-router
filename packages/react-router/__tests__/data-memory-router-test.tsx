@@ -769,7 +769,7 @@ describe("<DataMemoryRouter>", () => {
 
     spy.mockClear();
     fireEvent.click(screen.getByText("Link to Child"));
-    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setTimeout(r, 0));
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
