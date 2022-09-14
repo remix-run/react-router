@@ -99,4 +99,4 @@ function Breadcrumbs() {
 
 Now you can render `<Breadcrumbs/>` anywhere you want, probably in the root component.
 
-[createbrowserrouter]: ../routers/create-browser-router.md
+[createbrowserrouter]: ../routers/create-browser-router
