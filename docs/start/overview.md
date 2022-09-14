@@ -66,7 +66,7 @@ createBrowserRouter(
       <Route
         path="dashboard"
         element={<Dashboard />}
-        loader={fetch("/api/dashboard.json", {
+        loader={({ request }) => fetch("/api/dashboard.json", {
           signal: request.signal,
         })}
       />
