@@ -191,17 +191,24 @@ declare global {
 //#region Routers
 ////////////////////////////////////////////////////////////////////////////////
 
+interface HistoryOptions {
+  window?: Window;
+}
+
 export function createBrowserRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
     hydrationData?: HydrationState;
     window?: Window;
+    createHistory?: (options: HistoryOptions) => BrowserHistory;
   }
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    history: createBrowserHistory({ window: opts?.window }),
+    history: (opts?.createHistory ?? createBrowserHistory)({
+      window: opts?.window,
+    }),
     hydrationData: opts?.hydrationData || window?.__staticRouterHydrationData,
     routes: enhanceManualRouteObjects(routes),
   }).initialize();
@@ -213,11 +220,14 @@ export function createHashRouter(
     basename?: string;
     hydrationData?: HydrationState;
     window?: Window;
+    createHistory?: (options: HistoryOptions) => HashHistory;
   }
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    history: createHashHistory({ window: opts?.window }),
+    history: (opts?.createHistory ?? createHashHistory)({
+      window: opts?.window,
+    }),
     hydrationData: opts?.hydrationData || window?.__staticRouterHydrationData,
     routes: enhanceManualRouteObjects(routes),
   }).initialize();
@@ -228,10 +238,15 @@ export function createHashRouter(
 //#region Components
 ////////////////////////////////////////////////////////////////////////////////
 
+interface HistoryOptions {
+  window?: Window;
+}
+
 export interface BrowserRouterProps {
   basename?: string;
   children?: React.ReactNode;
   window?: Window;
+  createHistory?: (options: HistoryOptions) => BrowserHistory;
 }
 
 /**
@@ -241,10 +256,12 @@ export function BrowserRouter({
   basename,
   children,
   window,
+  createHistory = (options: HistoryOptions) =>
+    createBrowserHistory({ ...options, v5Compat: true }),
 }: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
   if (historyRef.current == null) {
-    historyRef.current = createBrowserHistory({ window, v5Compat: true });
+    historyRef.current = createHistory({ window });
   }
 
   let history = historyRef.current;
@@ -270,16 +287,23 @@ export interface HashRouterProps {
   basename?: string;
   children?: React.ReactNode;
   window?: Window;
+  createHistory?: (options: HistoryOptions) => HashHistory;
 }
 
 /**
  * A `<Router>` for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ basename, children, window }: HashRouterProps) {
+export function HashRouter({
+  basename,
+  children,
+  window,
+  createHistory = (options: HistoryOptions) =>
+    createHashHistory({ ...options, v5Compat: true }),
+}: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
-    historyRef.current = createHashHistory({ window, v5Compat: true });
+    historyRef.current = createHistory({ window });
   }
 
   let history = historyRef.current;
