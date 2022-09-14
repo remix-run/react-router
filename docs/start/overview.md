@@ -409,7 +409,9 @@ function Issue() {
         {/* Await manages the deferred data (promise) */}
         <Await resolve={history}>
           {/* this calls back when the data is resolved */}
-          {(resolvedHistory) => <IssueHistory history={resolvedHistory} />}
+          {(resolvedHistory) => (
+            <IssueHistory history={resolvedHistory} />
+          )}
         </Await>
       </Suspense>
 
