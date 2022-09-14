@@ -288,4 +288,4 @@ Please see the [errorElement][errorelement] documentation for more details.
 [fetcher]: ../hooks/use-fetcher
 [usesubmit]: ../hooks/use-submit
 [createroutesfromelements]: ../utils/create-routes-from-elements
-[createbrowserrouter]: ../routers/create-browser-router.md
+[createbrowserrouter]: ../routers/create-browser-router

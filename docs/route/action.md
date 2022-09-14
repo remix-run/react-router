@@ -144,4 +144,4 @@ For more details and expanded use cases, read the [errorElement][errorelement] d
 [workingwithformdata]: ../guides/form-data
 [useactiondata]: ../hooks/use-action-data
 [returningresponses]: ./loader#returning-responses
-[createbrowserrouter]: ../routers/create-browser-router.md
+[createbrowserrouter]: ../routers/create-browser-router

@@ -213,4 +213,4 @@ The project route doesn't have to think about errors at all. Between the loader 
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [isrouteerrorresponse]: ../utils/is-route-error-response
 [json]: ../fetch/json
-[createbrowserrouter]: ../routers/create-browser-router.md
+[createbrowserrouter]: ../routers/create-browser-router
