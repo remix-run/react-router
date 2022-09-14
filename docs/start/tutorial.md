@@ -671,7 +671,7 @@ This is where the "old school web" programming model shows up. As we discussed e
 
 👉 **Click on the No Name record**
 
-We should be see our old static contact page again, with one difference: the URL now has a real ID for the record.
+We should be seeing our old static contact page again, with one difference: the URL now has a real ID for the record.
 
 <img class="tutorial" loading="lazy" src="/_docs/tutorial/09.webp" />
 
