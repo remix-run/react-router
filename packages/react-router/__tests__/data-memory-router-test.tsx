@@ -444,7 +444,7 @@ describe("<DataMemoryRouter>", () => {
       "<div>
         <div>
           <a
-            href=\\"/bar\\"
+            href="/bar"
           >
             Link to Bar
           </a>
@@ -463,7 +463,7 @@ describe("<DataMemoryRouter>", () => {
       "<div>
         <div>
           <a
-            href=\\"/bar\\"
+            href="/bar"
           >
             Link to Bar
           </a>
@@ -483,7 +483,7 @@ describe("<DataMemoryRouter>", () => {
       "<div>
         <div>
           <a
-            href=\\"/bar\\"
+            href="/bar"
           >
             Link to Bar
           </a>
@@ -757,7 +757,7 @@ describe("<DataMemoryRouter>", () => {
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <a
-          href=\\"/bar/child\\"
+          href="/bar/child"
         >
           Link to Child
         </a>
@@ -774,7 +774,7 @@ describe("<DataMemoryRouter>", () => {
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <a
-          href=\\"/bar/child\\"
+          href="/bar/child"
         >
           Link to Child
         </a>
@@ -1104,12 +1104,12 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <a
-              href=\\"/foo\\"
+              href="/foo"
             >
               Link to Foo
             </a>
             <a
-              href=\\"/bar\\"
+              href="/bar"
             >
               Link to Bar
             </a>
@@ -1131,12 +1131,12 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <a
-              href=\\"/foo\\"
+              href="/foo"
             >
               Link to Foo
             </a>
             <a
-              href=\\"/bar\\"
+              href="/bar"
             >
               Link to Bar
             </a>
@@ -1158,12 +1158,12 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <a
-              href=\\"/foo\\"
+              href="/foo"
             >
               Link to Foo
             </a>
             <a
-              href=\\"/bar\\"
+              href="/bar"
             >
               Link to Bar
             </a>
@@ -1242,12 +1242,12 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <a
-              href=\\"/foo\\"
+              href="/foo"
             >
               Link to Foo
             </a>
             <a
-              href=\\"/bar\\"
+              href="/bar"
             >
               Link to Bar
             </a>
@@ -1410,7 +1410,7 @@ describe("<DataMemoryRouter>", () => {
             Unhandled Thrown Error!
           </h2>
           <h3
-            style=\\"font-style: italic;\\"
+            style="font-style: italic;"
           >
             404 Not Found
           </h3>
@@ -1420,13 +1420,13 @@ describe("<DataMemoryRouter>", () => {
           <p>
             You can provide a way better UX than this when your app throws errors by providing your own 
             <code
-              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               errorElement
             </code>
              props on 
             <code
-              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               &lt;Route&gt;
             </code>
@@ -1489,12 +1489,12 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <a
-              href=\\"/foo\\"
+              href="/foo"
             >
               Link to Foo
             </a>
             <a
-              href=\\"/bar\\"
+              href="/bar"
             >
               Link to Bar
             </a>
@@ -1520,12 +1520,12 @@ describe("<DataMemoryRouter>", () => {
             Unhandled Thrown Error!
           </h2>
           <h3
-            style=\\"font-style: italic;\\"
+            style="font-style: italic;"
           >
             Kaboom!
           </h3>
           <pre
-            style=\\"padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);\\"
+            style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
           >
             FAKE STACK TRACE
           </pre>
@@ -1535,13 +1535,13 @@ describe("<DataMemoryRouter>", () => {
           <p>
             You can provide a way better UX than this when your app throws errors by providing your own 
             <code
-              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               errorElement
             </code>
              props on 
             <code
-              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               &lt;Route&gt;
             </code>
@@ -1600,7 +1600,7 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <a
-              href=\\"/bar\\"
+              href="/bar"
             >
               Link to Bar
             </a>
@@ -1621,7 +1621,7 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <a
-              href=\\"/bar\\"
+              href="/bar"
             >
               Link to Bar
             </a>
@@ -1765,12 +1765,12 @@ describe("<DataMemoryRouter>", () => {
             Unhandled Thrown Error!
           </h2>
           <h3
-            style=\\"font-style: italic;\\"
+            style="font-style: italic;"
           >
             Kaboom!
           </h3>
           <pre
-            style=\\"padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);\\"
+            style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
           >
             FAKE STACK TRACE
           </pre>
@@ -1780,13 +1780,13 @@ describe("<DataMemoryRouter>", () => {
           <p>
             You can provide a way better UX than this when your app throws errors by providing your own 
             <code
-              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               errorElement
             </code>
              props on 
             <code
-              style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               &lt;Route&gt;
             </code>
@@ -1949,12 +1949,12 @@ describe("<DataMemoryRouter>", () => {
               Unhandled Thrown Error!
             </h2>
             <h3
-              style=\\"font-style: italic;\\"
+              style="font-style: italic;"
             >
               Kaboom!
             </h3>
             <pre
-              style=\\"padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);\\"
+              style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
             >
               FAKE STACK TRACE
             </pre>
@@ -1964,13 +1964,13 @@ describe("<DataMemoryRouter>", () => {
             <p>
               You can provide a way better UX than this when your app throws errors by providing your own 
               <code
-                style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+                style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
               >
                 errorElement
               </code>
                props on 
               <code
-                style=\\"padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);\\"
+                style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
               >
                 &lt;Route&gt;
               </code>
@@ -2107,7 +2107,7 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             loading
@@ -2128,7 +2128,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2146,7 +2146,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("LAZY"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2167,7 +2167,7 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             loading
@@ -2188,7 +2188,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2206,7 +2206,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("LAZY"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2230,7 +2230,7 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             loading
@@ -2251,7 +2251,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2269,7 +2269,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText(/Kaboom!/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2294,7 +2294,7 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             loading
@@ -2315,7 +2315,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2333,7 +2333,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText(/Kaboom!/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2356,7 +2356,7 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             loading
@@ -2377,7 +2377,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2395,7 +2395,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText(/oops is not defined/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2421,7 +2421,7 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             loading
@@ -2442,7 +2442,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2460,7 +2460,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText(/oops is not defined/));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2484,7 +2484,7 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             loading
@@ -2505,7 +2505,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2522,7 +2522,7 @@ describe("<DataMemoryRouter>", () => {
       await new Promise((r) => setTimeout(r, 1));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2541,7 +2541,7 @@ describe("<DataMemoryRouter>", () => {
       fireEvent.click(screen.getByText("Link to Bar"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             loading
@@ -2563,7 +2563,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2583,7 +2583,7 @@ describe("<DataMemoryRouter>", () => {
       await new Promise((r) => setTimeout(r, 50));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             loading
@@ -2605,7 +2605,7 @@ describe("<DataMemoryRouter>", () => {
       await waitFor(() => screen.getByText("Baz"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2620,7 +2620,7 @@ describe("<DataMemoryRouter>", () => {
       barValueDfd.resolve("LAZY");
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
-          id=\\"content\\"
+          id="content"
         >
           <p>
             idle
@@ -2672,7 +2672,7 @@ describe("<DataMemoryRouter>", () => {
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <div
-            id=\\"content\\"
+            id="content"
           >
             Waiting for data...
           </div>
@@ -2684,7 +2684,7 @@ describe("<DataMemoryRouter>", () => {
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <div
-            id=\\"content\\"
+            id="content"
           >
             BAR 1
           </div>
