@@ -1,4 +1,4 @@
-const Environment = require("jest-environment-jsdom");
+const Environment = require("jest-environment-jsdom").default;
 
 /**
  * A custom environment to set the TextEncoder that is required by JSDOM
