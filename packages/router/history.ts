@@ -325,8 +325,8 @@ export function createBrowserHistory(
       "",
       { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
-      globalHistory.state?.usr || null,
-      globalHistory.state?.key || "default"
+      (globalHistory.state && globalHistory.state.usr) || null,
+      (globalHistory.state && globalHistory.state.key) || "default"
     );
   }
 
@@ -386,8 +386,8 @@ export function createHashHistory(
       "",
       { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
-      globalHistory.state?.usr || null,
-      globalHistory.state?.key || "default"
+      (globalHistory.state && globalHistory.state.usr) || null,
+      (globalHistory.state && globalHistory.state.key) || "default"
     );
   }
 
@@ -476,7 +476,7 @@ export function createLocation(
     // full Locations now and avoid the need to run through this flow at all
     // But that's a pretty big refactor to the current test suite so going to
     // keep as is for the time being and just let any incoming keys take precedence
-    key: (to as Location)?.key || key || createKey(),
+    key: (to && (to as Location).key) || key || createKey(),
   };
   return location;
 }
@@ -551,7 +551,7 @@ function getUrlBasedHistory(
   function push(to: To, state?: any) {
     action = Action.Push;
     let location = createLocation(history.location, to, state);
-    validateLocation?.(location, to);
+    if (validateLocation) validateLocation(location, to);
 
     let historyState = getHistoryState(location);
     let url = history.createHref(location);
@@ -573,7 +573,7 @@ function getUrlBasedHistory(
   function replace(to: To, state?: any) {
     action = Action.Replace;
     let location = createLocation(history.location, to, state);
-    validateLocation?.(location, to);
+    if (validateLocation) validateLocation(location, to);
 
     let historyState = getHistoryState(location);
     let url = history.createHref(location);
