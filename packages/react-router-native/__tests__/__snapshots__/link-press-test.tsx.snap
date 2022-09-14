@@ -8,7 +8,6 @@ exports[`A <Link> press calls the custom onPress handler 1`] = `
   <View
     accessible={true}
     focusable={true}
-    isTVSelectable={true}
     onClick={[Function]}
     onResponderGrant={[Function]}
     onResponderMove={[Function]}
@@ -16,11 +15,8 @@ exports[`A <Link> press calls the custom onPress handler 1`] = `
     onResponderTerminate={[Function]}
     onResponderTerminationRequest={[Function]}
     onStartShouldSetResponder={[Function]}
-    style={null}
   >
-    <Text
-      style={null}
-    >
+    <Text>
       About
     </Text>
   </View>
@@ -35,7 +31,6 @@ exports[`A <Link> press navigates to the new view 1`] = `
   <View
     accessible={true}
     focusable={true}
-    isTVSelectable={true}
     onClick={[Function]}
     onResponderGrant={[Function]}
     onResponderMove={[Function]}
@@ -43,11 +38,8 @@ exports[`A <Link> press navigates to the new view 1`] = `
     onResponderTerminate={[Function]}
     onResponderTerminationRequest={[Function]}
     onStartShouldSetResponder={[Function]}
-    style={null}
   >
-    <Text
-      style={null}
-    >
+    <Text>
       About
     </Text>
   </View>
@@ -70,7 +62,6 @@ exports[`A <Link> press when event.preventDefault() is used in the onPress handl
   <View
     accessible={true}
     focusable={true}
-    isTVSelectable={true}
     onClick={[Function]}
     onResponderGrant={[Function]}
     onResponderMove={[Function]}
@@ -78,11 +69,8 @@ exports[`A <Link> press when event.preventDefault() is used in the onPress handl
     onResponderTerminate={[Function]}
     onResponderTerminationRequest={[Function]}
     onStartShouldSetResponder={[Function]}
-    style={null}
   >
-    <Text
-      style={null}
-    >
+    <Text>
       About
     </Text>
   </View>
@@ -97,7 +85,6 @@ exports[`A <Link> press when event.preventDefault() is used in the onPress handl
   <View
     accessible={true}
     focusable={true}
-    isTVSelectable={true}
     onClick={[Function]}
     onResponderGrant={[Function]}
     onResponderMove={[Function]}
@@ -105,11 +92,8 @@ exports[`A <Link> press when event.preventDefault() is used in the onPress handl
     onResponderTerminate={[Function]}
     onResponderTerminationRequest={[Function]}
     onStartShouldSetResponder={[Function]}
-    style={null}
   >
-    <Text
-      style={null}
-    >
+    <Text>
       About
     </Text>
   </View>

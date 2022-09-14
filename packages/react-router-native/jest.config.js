@@ -2,7 +2,7 @@ module.exports = {
   preset: "react-native",
   testMatch: ["**/__tests__/*-test.[jt]s?(x)"],
   transform: {
-    "\\.[jt]sx?$": "<rootDir>/node_modules/react-native/jest/preprocessor.js",
+    "\\.[jt]sx?$": require.resolve("react-native/jest/preprocessor.js"),
   },
   globals: {
     __DEV__: true,

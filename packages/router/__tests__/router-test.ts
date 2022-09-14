@@ -109,7 +109,7 @@ type FetcherHelpers = NavigationHelpers & {
 };
 
 async function tick() {
-  await new Promise((r) => setImmediate(r));
+  await new Promise((r) => setTimeout(r, 0));
 }
 
 function invariant(value: boolean, message?: string): asserts value;
@@ -440,7 +440,6 @@ function setup({
     }
 
     let routeHelpers: Helpers = {
-      // @ts-expect-error
       get signal() {
         return internalHelpers._signal;
       },
@@ -724,7 +723,7 @@ function setup({
       activeLoaderFetchId = navigationId;
     } else {
       // if a revalidation interrupts an action submission, we don't actually
-      // start a new new navigation so don't increment here
+      // start a new navigation so don't increment here
       navigationId =
         currentRouter.state.navigation.state === "submitting" &&
         currentRouter.state.navigation.formMethod !== "get"
