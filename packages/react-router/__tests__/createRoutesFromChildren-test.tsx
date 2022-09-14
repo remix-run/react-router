@@ -15,12 +15,12 @@ describe("creating routes from JSX", () => {
         </Route>
       )
     ).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "action": undefined,
           "caseSensitive": undefined,
-          "children": Array [
-            Object {
+          "children": [
+            {
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -35,7 +35,7 @@ describe("creating routes from JSX", () => {
               "path": "home",
               "shouldRevalidate": undefined,
             },
-            Object {
+            {
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -50,11 +50,11 @@ describe("creating routes from JSX", () => {
               "path": "about",
               "shouldRevalidate": undefined,
             },
-            Object {
+            {
               "action": undefined,
               "caseSensitive": undefined,
-              "children": Array [
-                Object {
+              "children": [
+                {
                   "action": undefined,
                   "caseSensitive": undefined,
                   "element": <h1>
@@ -69,7 +69,7 @@ describe("creating routes from JSX", () => {
                   "path": undefined,
                   "shouldRevalidate": undefined,
                 },
-                Object {
+                {
                   "action": undefined,
                   "caseSensitive": undefined,
                   "element": <h1>
@@ -120,6 +120,7 @@ describe("creating routes from JSX", () => {
             shouldRevalidate={() => true}
             element={<h1>home</h1>}
           />
+
           <Route path="users">
             <Route
               index
@@ -130,12 +131,12 @@ describe("creating routes from JSX", () => {
         </Route>
       )
     ).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "action": undefined,
           "caseSensitive": undefined,
-          "children": Array [
-            Object {
+          "children": [
+            {
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -150,11 +151,11 @@ describe("creating routes from JSX", () => {
               "path": "home",
               "shouldRevalidate": [Function],
             },
-            Object {
+            {
               "action": undefined,
               "caseSensitive": undefined,
-              "children": Array [
-                Object {
+              "children": [
+                {
                   "action": [Function],
                   "caseSensitive": undefined,
                   "element": <h1>

@@ -297,7 +297,7 @@ function testDomRouter(
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <pre>
-            {\\"status\\":404,\\"statusText\\":\\"Not Found\\",\\"internal\\":false,\\"data\\":{\\"not\\":\\"found\\"}}
+            {"status":404,"statusText":"Not Found","internal":false,"data":{"not":"found"}}
           </pre>
         </div>"
       `);
@@ -590,7 +590,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
               idle
@@ -605,7 +605,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
               loading
@@ -621,7 +621,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
               idle
@@ -662,7 +662,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#preventScrollReset")))
         .toMatchInlineSnapshot(`
         "<p
-          id=\\"preventScrollReset\\"
+          id="preventScrollReset"
         >
           false
         </p>"
@@ -673,7 +673,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#preventScrollReset")))
         .toMatchInlineSnapshot(`
         "<p
-          id=\\"preventScrollReset\\"
+          id="preventScrollReset"
         >
           true
         </p>"
@@ -709,7 +709,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#preventScrollReset")))
         .toMatchInlineSnapshot(`
         "<p
-          id=\\"preventScrollReset\\"
+          id="preventScrollReset"
         >
           false
         </p>"
@@ -720,7 +720,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#preventScrollReset")))
         .toMatchInlineSnapshot(`
         "<p
-          id=\\"preventScrollReset\\"
+          id="preventScrollReset"
         >
           true
         </p>"
@@ -767,7 +767,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             idle
@@ -782,7 +782,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             submitting
@@ -797,7 +797,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             loading
@@ -814,7 +814,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             idle
@@ -873,7 +873,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             idle
@@ -888,7 +888,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             loading
@@ -903,7 +903,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             idle
@@ -958,7 +958,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             idle
@@ -973,7 +973,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             submitting
@@ -988,7 +988,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             loading
@@ -1005,7 +1005,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             idle
@@ -1083,7 +1083,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             index
@@ -1096,7 +1096,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             Page 1
@@ -1109,7 +1109,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             index
@@ -1276,7 +1276,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             index
@@ -1289,7 +1289,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             Page 1
@@ -1302,7 +1302,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             index
@@ -1353,7 +1353,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             index
@@ -1366,7 +1366,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             Page 1
@@ -1379,7 +1379,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             Page 2
@@ -1392,7 +1392,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             Page 1
@@ -1444,7 +1444,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             index
@@ -1457,7 +1457,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             Page 1
@@ -1470,7 +1470,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <p>
             action
@@ -1486,7 +1486,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector(".output")))
         .toMatchInlineSnapshot(`
         "<div
-          class=\\"output\\"
+          class="output"
         >
           <h1>
             index
@@ -1520,20 +1520,20 @@ function testDomRouter(
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <form
-            action=\\"/base/path\\"
-            method=\\"get\\"
+            action="/base/path"
+            method="get"
           >
             <p>
               /path
             </p>
             <input
-              name=\\"a\\"
-              value=\\"1\\"
+              name="a"
+              value="1"
             />
             <button
-              name=\\"b\\"
-              type=\\"submit\\"
-              value=\\"2\\"
+              name="b"
+              type="submit"
+              value="2"
             >
               Submit
             </button>
@@ -1546,20 +1546,20 @@ function testDomRouter(
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <form
-            action=\\"/base/path?a=1&b=2\\"
-            method=\\"get\\"
+            action="/base/path?a=1&b=2"
+            method="get"
           >
             <p>
               /path?a=1&b=2
             </p>
             <input
-              name=\\"a\\"
-              value=\\"1\\"
+              name="a"
+              value="1"
             />
             <button
-              name=\\"b\\"
-              type=\\"submit\\"
-              value=\\"2\\"
+              name="b"
+              type="submit"
+              value="2"
             >
               Submit
             </button>
@@ -1595,20 +1595,20 @@ function testDomRouter(
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <form
-            action=\\"/base/path\\"
-            method=\\"post\\"
+            action="/base/path"
+            method="post"
           >
             <p>
               /path
             </p>
             <input
-              name=\\"a\\"
-              value=\\"1\\"
+              name="a"
+              value="1"
             />
             <button
-              name=\\"b\\"
-              type=\\"submit\\"
-              value=\\"2\\"
+              name="b"
+              type="submit"
+              value="2"
             >
               Submit
             </button>
@@ -1622,8 +1622,8 @@ function testDomRouter(
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <form
-            action=\\"/base/path\\"
-            method=\\"post\\"
+            action="/base/path"
+            method="post"
           >
             <p>
               /path
@@ -1632,13 +1632,13 @@ function testDomRouter(
               action data
             </p>
             <input
-              name=\\"a\\"
-              value=\\"1\\"
+              name="a"
+              value="1"
             />
             <button
-              name=\\"b\\"
-              type=\\"submit\\"
-              value=\\"2\\"
+              name="b"
+              type="submit"
+              value="2"
             >
               Submit
             </button>
@@ -1686,7 +1686,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             idle
@@ -1700,7 +1700,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             loading
@@ -1714,7 +1714,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             idle
@@ -1774,7 +1774,7 @@ function testDomRouter(
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
-          id=\\"output\\"
+          id="output"
         >
           <p>
             idle
@@ -2645,7 +2645,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
           </p>"
@@ -2655,7 +2655,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             loading
           </p>"
@@ -2665,10 +2665,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
-            {\\"count\\":1}
+            {"count":1}
           </p>"
         `);
 
@@ -2676,10 +2676,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             loading
-            {\\"count\\":1}
+            {"count":1}
           </p>"
         `);
 
@@ -2687,10 +2687,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
-            {\\"count\\":6}
+            {"count":6}
           </p>"
         `);
 
@@ -2698,10 +2698,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             submitting
-            {\\"count\\":6}
+            {"count":6}
           </p>"
         `);
 
@@ -2709,10 +2709,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
-            {\\"count\\":16}
+            {"count":16}
           </p>"
         `);
       });
@@ -3067,7 +3067,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
           </p>"
@@ -3077,7 +3077,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             loading
           </p>"
@@ -3087,10 +3087,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
-            {\\"count\\":1}
+            {"count":1}
           </p>"
         `);
 
@@ -3098,10 +3098,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             submitting
-            {\\"count\\":1}
+            {"count":1}
           </p>"
         `);
 
@@ -3109,10 +3109,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
-            {\\"count\\":11}
+            {"count":11}
           </p>"
         `);
       });
@@ -3157,7 +3157,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
           </p>"
@@ -3167,7 +3167,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             loading
           </p>"
@@ -3223,7 +3223,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
           </p>"
@@ -3233,7 +3233,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             submitting
           </p>"
@@ -3316,7 +3316,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
               []
@@ -3337,10 +3337,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
-              [\\"loading\\"]
+              ["loading"]
             </p>
             <p>
               1
@@ -3359,10 +3359,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
-              [\\"idle\\"]
+              ["idle"]
             </p>
             <p>
               1
@@ -3380,10 +3380,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
-              [\\"idle\\"]
+              ["idle"]
             </p>
             <p>
               1
@@ -3404,10 +3404,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
-              [\\"idle\\"]
+              ["idle"]
             </p>
             <p>
               2
@@ -3426,10 +3426,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
-              [\\"loading\\"]
+              ["loading"]
             </p>
             <p>
               2
@@ -3447,10 +3447,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
-              [\\"idle\\"]
+              ["idle"]
             </p>
             <p>
               2
@@ -3512,7 +3512,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
           </p>"
@@ -3525,10 +3525,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
-            {\\"fetchCount\\":1}
+            {"fetchCount":1}
           </p>"
         `);
 
@@ -3539,10 +3539,10 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
-            id=\\"output\\"
+            id="output"
           >
             idle
-            {\\"fetchCount\\":2}
+            {"fetchCount":2}
           </p>"
         `);
       });
@@ -3751,13 +3751,13 @@ function testDomRouter(
         expect(getHtml(container)).toMatchInlineSnapshot(`
           "<div>
             <form
-              action=\\"/fetch\\"
-              method=\\"post\\"
+              action="/fetch"
+              method="post"
             >
               <button
-                name=\\"key\\"
-                type=\\"submit\\"
-                value=\\"value\\"
+                name="key"
+                type="submit"
+                value="value"
               >
                 submit
               </button>
@@ -3950,7 +3950,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
               idle
@@ -3968,7 +3968,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
               idle
@@ -3986,7 +3986,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
               idle
@@ -4063,7 +4063,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
               idle
@@ -4139,7 +4139,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
               idle
@@ -4156,7 +4156,7 @@ function testDomRouter(
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<div
-            id=\\"output\\"
+            id="output"
           >
             <p>
               idle

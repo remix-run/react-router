@@ -1110,7 +1110,7 @@ describe("a router", () => {
           hydrationData: {},
         })
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Found a route id collision on id \\"child\\".  Route id's must be globally unique within Data Router usages"`
+        `"Found a route id collision on id "child".  Route id's must be globally unique within Data Router usages"`
       );
     });
 
@@ -1230,7 +1230,7 @@ describe("a router", () => {
       let A = await t.navigate("/foo");
       await A.loaders.foo.resolve("FOO");
       expect(t.router.state.loaderData).toMatchInlineSnapshot(`
-        Object {
+        {
           "foo": "FOO",
           "root": "ROOT",
         }
@@ -2038,16 +2038,16 @@ describe("a router", () => {
 
       let arg = shouldRevalidate.mock.calls[0][0];
       expect(arg).toMatchInlineSnapshot(`
-        Object {
+        {
           "actionResult": "FETCH",
-          "currentParams": Object {},
+          "currentParams": {},
           "currentUrl": "http://localhost/",
           "defaultShouldRevalidate": true,
           "formAction": "/fetch",
           "formData": FormData {},
           "formEncType": "application/x-www-form-urlencoded",
           "formMethod": "post",
-          "nextParams": Object {},
+          "nextParams": {},
           "nextUrl": "http://localhost/",
         }
       `);
@@ -2099,12 +2099,12 @@ describe("a router", () => {
 
       let arg = shouldRevalidate.mock.calls[0][0];
       expect(arg).toMatchInlineSnapshot(`
-        Object {
+        {
           "actionResult": undefined,
-          "currentParams": Object {},
+          "currentParams": {},
           "currentUrl": "http://localhost/",
           "defaultShouldRevalidate": true,
-          "nextParams": Object {},
+          "nextParams": {},
           "nextUrl": "http://localhost/",
         }
       `);
@@ -9229,16 +9229,16 @@ describe("a router", () => {
           data: 1,
         });
         expect(shouldRevalidate.mock.calls[0][0]).toMatchInlineSnapshot(`
-          Object {
+          {
             "actionResult": null,
-            "currentParams": Object {},
+            "currentParams": {},
             "currentUrl": "http://localhost/fetch",
             "defaultShouldRevalidate": true,
             "formAction": "/",
             "formData": FormData {},
             "formEncType": "application/x-www-form-urlencoded",
             "formMethod": "post",
-            "nextParams": Object {},
+            "nextParams": {},
             "nextUrl": "http://localhost/fetch",
           }
         `);

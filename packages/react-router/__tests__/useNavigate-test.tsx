@@ -75,7 +75,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home
         </p>,
@@ -94,7 +94,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home?key=value
         </p>,
@@ -132,7 +132,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home
         </p>,
@@ -151,7 +151,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home?key=value
         </p>,
