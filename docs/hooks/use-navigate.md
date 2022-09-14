@@ -12,6 +12,7 @@ The `useNavigate` hook returns a function that lets you navigate programmaticall
 import { useNavigate } from "react-router-dom";
 
 function useLogoutTimer() {
+  const navigate = useNavigate();
   const userIsInactive = useFakeInactiveUser();
 
   useEffect(() => {
