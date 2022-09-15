@@ -58,7 +58,7 @@ A solid product decision here is to keep the users scroll position on the home f
 
 ```tsx
 <ScrollRestoration
-  getKey={({ location, matches }) => {
+  getKey={(location, matches) => {
     return location.pathname;
   }}
 />
@@ -68,7 +68,7 @@ Or you may want to only use the pathname for some paths, and use the normal beha
 
 ```tsx
 <ScrollRestoration
-  getKey={({ location, matches }) => {
+  getKey={(location, matches) => {
     const paths = ["/home", "/notifications"];
     return paths.includes(location.pathname)
       ? // home and notifications restore by pathname
