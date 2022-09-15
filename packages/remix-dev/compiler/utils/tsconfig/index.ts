@@ -1,7 +1,5 @@
 import tsConfigPaths from "tsconfig-paths";
 
-import { writeConfigDefaults } from "./write-config-defaults";
-
 export function createMatchPath(tsconfigPath: string | undefined) {
   // There is no tsconfig to match paths against.
   if (!tsconfigPath) {
@@ -21,8 +19,6 @@ export function createMatchPath(tsconfigPath: string | undefined) {
     }
     return undefined;
   }
-
-  writeConfigDefaults(configLoaderResult.configFileAbsolutePath);
 
   return tsConfigPaths.createMatchPath(
     configLoaderResult.absoluteBaseUrl,

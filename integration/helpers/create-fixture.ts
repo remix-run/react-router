@@ -206,6 +206,12 @@ async function writeTestFiles(init: FixtureInit, dir: string) {
       let filePath = path.join(dir, filename);
       await fse.ensureDir(path.dirname(filePath));
       let file = init.files![filename];
+      // if we have a jsconfig we don't want the tsconfig to exist
+      if (filename.endsWith("jsconfig.json")) {
+        let parsed = path.parse(filePath);
+        await fse.remove(path.join(parsed.dir, "tsconfig.json"));
+      }
+
       if (typeof file === "string") {
         await fse.writeFile(filePath, stripIndent(file));
       } else {

@@ -8,6 +8,7 @@ import { defineRoutes } from "./config/routes";
 import { defineConventionalRoutes } from "./config/routesConvention";
 import { ServerMode, isValidServerMode } from "./config/serverModes";
 import { serverBuildVirtualModule } from "./compiler/virtualModules";
+import { writeConfigDefaults } from "./compiler/utils/tsconfig/write-config-defaults";
 
 export interface RemixMdxConfig {
   rehypePlugins?: any[];
@@ -465,6 +466,10 @@ export async function readConfig(
     tsconfigPath = rootTsconfig;
   } else if (fse.existsSync(rootJsConfig)) {
     tsconfigPath = rootJsConfig;
+  }
+
+  if (tsconfigPath) {
+    writeConfigDefaults(tsconfigPath);
   }
 
   return {

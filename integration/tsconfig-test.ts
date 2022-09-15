@@ -6,9 +6,12 @@ import type { TsConfigJson } from "type-fest";
 
 import { createFixture, json } from "./helpers/create-fixture";
 
-async function getTsConfig(projectDir: string) {
-  let tsconfigPath = path.join(projectDir, "tsconfig.json");
-  let config = await fse.readFile(tsconfigPath, "utf8");
+async function getTsConfig(
+  projectDir: string,
+  configType: "tsconfig.json" | "jsconfig.json" = "tsconfig.json"
+) {
+  let configPath = path.join(projectDir, configType);
+  let config = await fse.readFile(configPath, "utf8");
   return JSON5.parse(config);
 }
 
@@ -117,5 +120,23 @@ test("allows for `extends` in tsconfig", async () => {
   expect(tsconfig).toEqual({
     extends: "./tsconfig.base.json",
     ...expected,
+  });
+});
+
+test("works with jsconfig", async () => {
+  let config = {
+    compilerOptions: DEFAULT_CONFIG.compilerOptions,
+  };
+
+  let fixture = await createFixture({
+    files: {
+      "jsconfig.json": json(config),
+    },
+  });
+
+  let jsconfig = await getTsConfig(fixture.projectDir, "jsconfig.json");
+  expect(jsconfig).toEqual({
+    ...config,
+    include: ["**/*.js", "**/*.jsx"],
   });
 });

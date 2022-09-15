@@ -56,7 +56,10 @@ export function writeConfigDefaults(configPath: string) {
     return;
   }
 
-  let configType = path.basename(configPath);
+  let configType = path.basename(configPath) as
+    | "jsconfig.json"
+    | "tsconfig.json";
+
   // sanity checks to make sure we can write the compilerOptions
   if (!fullConfig.compilerOptions) fullConfig.compilerOptions = {};
   if (!config.compilerOptions) config.compilerOptions = {};
@@ -65,12 +68,21 @@ export function writeConfigDefaults(configPath: string) {
   let requiredChanges = [];
 
   if (!("include" in fullConfig)) {
-    config.include = ["remix.env.d.ts", "**/*.ts", "**/*.tsx"];
-    suggestedChanges.push(
-      colors.blue("include") +
-        " was set to " +
-        colors.bold(`['remix.env.d.ts', '**/*.ts', '**/*.tsx']`)
-    );
+    if (configType === "jsconfig.json") {
+      config.include = ["**/*.js", "**/*.jsx"];
+      suggestedChanges.push(
+        colors.blue("include") +
+          " was set to " +
+          colors.bold(`['**/*.js', '**/*.jsx']`)
+      );
+    } else {
+      config.include = ["remix.env.d.ts", "**/*.ts", "**/*.tsx"];
+      suggestedChanges.push(
+        colors.blue("include") +
+          " was set to " +
+          colors.bold(`['remix.env.d.ts', '**/*.ts', '**/*.tsx']`)
+      );
+    }
   }
   // TODO: check for user's typescript version and only add baseUrl if < 4.1
   if (!("baseUrl" in fullConfig.compilerOptions)) {
