@@ -481,7 +481,7 @@ URL segments, layouts, and data are more often than not coupled (tripled?) toget
 
 Because of this natural coupling, React Router has data conventions to get data into your route components easily.
 
-There are two APIs we'll be using to load data, [`<Route loader>`][loader] and [`useLoaderData`][useloaderdata]. First we'll create and export a loader function in the root module, then we'll hook it up to the route. Finally, we'll access and render the data.
+There are two APIs we'll be using to load data, [`loader`][loader] and [`useLoaderData`][useloaderdata]. First we'll create and export a loader function in the root module, then we'll hook it up to the route. Finally, we'll access and render the data.
 
 👉 **Export a loader from `root.jsx`**
 
@@ -678,7 +678,12 @@ We should be seeing our old static contact page again, with one difference: the 
 Reviewing the route config, the route looks like this:
 
 ```jsx
-<Route path="contacts/:contactId" element={<Contact />} />
+[
+  {
+    path: "contacts/:contactId",
+    element: <Contact />,
+  },
+];
 ```
 
 Note the `:contactId` URL segment. The colon (`:`) has special meaning, turning it into a "dynamic segment". Dynamic segments will match dynamic (changing) values in that position of the URL, like the contact ID. We call these values in the URL "URL Params", or just "params" for short.
@@ -1123,7 +1128,7 @@ If we review code in the contact route, we can find the delete button looks like
 </Form>
 ```
 
-Note the `action` points to `"destroy"`. Like `<Link to>`, `<Form action>` can take a _relative_ value. Since the form is rendered in `<Route path="contact/:contactId">`, then a relative action with `"destroy"` will submit the form to `contact/:contactId/destroy` when clicked.
+Note the `action` points to `"destroy"`. Like `<Link to>`, `<Form action>` can take a _relative_ value. Since the form is rendered in `contact/:contactId`, then a relative action with `destroy` will submit the form to `contact/:contactId/destroy` when clicked.
 
 At this point you should know everything you need to know to make the delete button work. Maybe give it a shot before moving on? You'll need:
 
@@ -1202,12 +1207,15 @@ Recognize that screen? It's our [`errorElement`][errorelement] from before. The 
 
 Let's create a contextual error message for the destroy route:
 
-```jsx filename=src/main.jsx lines=[4]
-<Route
-  path="contacts/:contactId/destroy"
-  action={destroyAction}
-  errorElement={<div>Oops! There was an error.</div>}
-/>
+```jsx filename=src/main.jsx lines=[6]
+[
+  /* other routes */
+  {
+    path: "contacts/:contactId/destroy",
+    action: destroyAction,
+    errorElement: <div>Oops! There was an error.</div>,
+  },
+];
 ```
 
 Now try it again:
@@ -1864,78 +1872,83 @@ We'd like it to look like this:
 
 <img loading="lazy" class="tutorial" src="/_docs/tutorial/26.webp" />
 
-We could add the error element to every one of the child routes but, since it's all the same error page, this isn't recommended:
-
-```jsx filename=src/main.jsx lines=[11,18,25,30]
-<Route
-  path="/"
-  element={<Root />}
-  loader={rootLoader}
-  action={rootAction}
-  errorElement={<ErrorPage />}
->
-  <Route
-    index
-    element={<Index />}
-    errorElement={<ErrorPage />}
-  />
-  <Route
-    path="contacts/:contactId"
-    element={<Contact />}
-    loader={contactLoader}
-    action={contactAction}
-    errorElement={<ErrorPage />}
-  />
-  <Route
-    path="contacts/:contactId/edit"
-    element={<EditContact />}
-    loader={contactLoader}
-    action={editAction}
-    errorElement={<ErrorPage />}
-  />
-  <Route
-    path="contacts/:contactId/destroy"
-    action={destroyAction}
-    errorElement={<ErrorPage />}
-  />
-</Route>
-```
+We could add the error element to every one of the child routes but, since it's all the same error page, this isn't recommended.
 
 There's a cleaner way. Routes can be used _without_ a path, which lets them participate in the UI layout without requiring new path segments in the URL. Check it out:
 
 👉 **Wrap the child routes in a pathless route**
 
-```jsx filename=src/main.jsx lines=[8,26]
-<Route
-  path="/"
-  element={<Root />}
-  loader={rootLoader}
-  action={rootAction}
-  errorElement={<ErrorPage />}
->
-  <Route errorElement={<ErrorPage />}>
-    <Route index element={<Index />} />
-    <Route
-      path="contacts/:contactId"
-      element={<Contact />}
-      loader={contactLoader}
-      action={contactAction}
-    />
-    <Route
-      path="contacts/:contactId/edit"
-      element={<EditContact />}
-      loader={contactLoader}
-      action={editAction}
-    />
-    <Route
-      path="contacts/:contactId/destroy"
-      action={destroyAction}
-    />
-  </Route>
-</Route>
+```jsx filename=src/main.jsx lines=[9-22]
+createBrowserRouter([
+  {
+    path: "/",
+    element: <Root />,
+    loader: rootLoader,
+    action: rootAction,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        errorElement: <ErrorPage />,
+        children: [
+          { index: true, element: <Index /> },
+          {
+            path: "contacts/:contactId",
+            element: <Contact />,
+            loader: contactLoader,
+            action: contactAction,
+          },
+          /* the rest of the routes */
+        ],
+      },
+    ],
+  },
+]);
 ```
 
 When any errors are thrown in the child routes, our new pathless route will catch it and render, preserving the root route's UI!
+
+## JSX Routes
+
+And for our final trick, many folks prefer to configure their routes with JSX. You can do that with `createRoutesFromElements`. There is no functional difference between JSX or objects when configuring your routes, it's simply a stylistic preference.
+
+```jsx
+import {
+  createRoutesFromElements,
+  createBrowserRouter,
+} from "react-router-dom";
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route
+      path="/"
+      element={<Root />}
+      loader={rootLoader}
+      action={rootAction}
+      errorElement={<ErrorPage />}
+    >
+      <Route errorElement={<ErrorPage />}>
+        <Route index element={<Index />} />
+        <Route
+          path="contacts/:contactId"
+          element={<Contact />}
+          loader={contactLoader}
+          action={contactAction}
+        />
+        <Route
+          path="contacts/:contactId/edit"
+          element={<EditContact />}
+          loader={contactLoader}
+          action={editAction}
+        />
+        <Route
+          path="contacts/:contactId/destroy"
+          action={destroyAction}
+        />
+      </Route>
+    </Route>
+  )
+);
+```
 
 ---
 
