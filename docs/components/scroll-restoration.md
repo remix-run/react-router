@@ -28,7 +28,7 @@ Optional prop that defines the key React Router should use to restore scroll pos
 
 ```tsx
 <ScrollRestoration
-  getKey={({ location, matches }) => {
+  getKey={(location, matches) => {
     // default behavior
     return location.key;
   }}
