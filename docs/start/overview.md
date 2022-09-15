@@ -393,8 +393,7 @@ Instead of waiting for the data for the next page, you can [`defer`][defer] data
     // defer enables suspense for the un-awaited promises
     return defer({ issue, comments, history });
   }}
-  element={<Issue />}
-/>;
+/>
 
 function Issue() {
   const { issue, history, comments } = useLoaderData();
