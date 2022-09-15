@@ -1878,7 +1878,7 @@ There's a cleaner way. Routes can be used _without_ a path, which lets them part
 
 👉 **Wrap the child routes in a pathless route**
 
-```jsx filename=src/main.jsx lines=[9-22]
+```jsx filename=src/main.jsx lines=[9-21]
 createBrowserRouter([
   {
     path: "/",
