@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.7.1
+
+### Patch Changes
+
+- Properly locked the dependency on `react-router-dom` to version 6.3.0 ([#4203](https://github.com/remix-run/remix/pull/4203))
+
 ## 1.7.0
 
 ### Minor Changes
