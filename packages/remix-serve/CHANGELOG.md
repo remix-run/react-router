@@ -1,26 +1,5 @@
 # `@remix-run/serve`
 
-## 1.7.1-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.7.1-pre.2`
-
-## 1.7.1-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.7.1-pre.1`
-
-## 1.7.1-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.7.1-pre.0`
-
 ## 1.7.0
 
 ### Minor Changes

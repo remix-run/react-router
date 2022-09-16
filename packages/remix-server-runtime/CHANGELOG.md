@@ -1,19 +1,5 @@
 # `@remix-run/server-runtime`
 
-## 1.7.1-pre.2
-
-### Patch Changes
-
-- Lock react-router version ([#4203](https://github.com/remix-run/remix/pull/4203))
-
-## 1.7.1-pre.1
-
-### Patch Changes
-
-- fix: Don't automatically cast `error` without check ([#2455](https://github.com/remix-run/remix/pull/2455))
-
-## 1.7.1-pre.0
-
 ## 1.7.0
 
 ### Minor Changes

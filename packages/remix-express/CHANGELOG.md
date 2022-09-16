@@ -1,27 +1,5 @@
 # `@remix-run/express`
 
-## 1.7.1-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.7.1-pre.2`
-
-## 1.7.1-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.7.1-pre.1`
-
-## 1.7.1-pre.0
-
-### Patch Changes
-
-- Abort requests on response close instead of request close. ([#3626](https://github.com/remix-run/remix/pull/3626))
-- Updated dependencies:
-  - `@remix-run/node@1.7.1-pre.0`
-
 ## 1.7.0
 
 ### Patch Changes
