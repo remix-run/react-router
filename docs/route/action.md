@@ -5,7 +5,7 @@ new: true
 
 # `action`
 
-Route actions are the "writes" to route [loader][loader] "reads". They provide a way for apps to perform data mutations with simple HTML and HTTP semantics while React Router abstracts away the complexity of asynchronous UI and revalidation. This gives you the simple mental model of HTML + HTTP (where the browser handles the asynchrony and revalidation) with the behavior and and UX capabilities of modern SPAs.
+Route actions are the "writes" to route [loader][loader] "reads". They provide a way for apps to perform data mutations with simple HTML and HTTP semantics while React Router abstracts away the complexity of asynchronous UI and revalidation. This gives you the simple mental model of HTML + HTTP (where the browser handles the asynchrony and revalidation) with the behavior and UX capabilities of modern SPAs.
 
 <docs-error>This feature only works if using a data router like [`createBrowserRouter`][createbrowserrouter]</docs-error>
 
@@ -50,7 +50,7 @@ Route params are parsed from [dynamic segments][dynamicsegments] and passed to y
 <Route
   path="/projects/:projectId/delete"
   action={({ params }) => {
-    return fakeDeleteProject(params.teamId);
+    return fakeDeleteProject(params.projectId);
   }}
 />
 ```
