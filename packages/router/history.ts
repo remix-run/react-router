@@ -208,7 +208,11 @@ export function createMemoryHistory(
   let { initialEntries = ["/"], initialIndex, v5Compat = false } = options;
   let entries: Location[]; // Declare so we can access from createMemoryLocation
   entries = initialEntries.map((entry, index) =>
-    createMemoryLocation(entry, null, index === 0 ? "default" : undefined)
+    createMemoryLocation(
+      entry,
+      typeof entry === "string" ? null : entry.state,
+      index === 0 ? "default" : undefined
+    )
   );
   let index = clampIndex(
     initialIndex == null ? entries.length - 1 : initialIndex
