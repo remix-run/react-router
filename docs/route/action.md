@@ -50,7 +50,7 @@ Route params are parsed from [dynamic segments][dynamicsegments] and passed to y
 <Route
   path="/projects/:projectId/delete"
   action={({ params }) => {
-    return fakeDeleteProject(params.teamId);
+    return fakeDeleteProject(params.projectId);
   }}
 />
 ```
