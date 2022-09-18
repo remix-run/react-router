@@ -61,7 +61,7 @@ function createMemoryRouter(
 
 ## `initialEntries`
 
-The initial entires in the history stack. This allows you to start a test (or an app) with multiple locations already in the history stack (for testing a back navigation, etc.)
+The initial entries in the history stack. This allows you to start a test (or an app) with multiple locations already in the history stack (for testing a back navigation, etc.)
 
 ```tsx
 createMemoryRouter(routes, {
