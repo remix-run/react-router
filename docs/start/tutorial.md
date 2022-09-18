@@ -1593,7 +1593,7 @@ Without any loading indicator, the search feels kinda sluggish. Even if we could
 
 👉 **Add the search spinner**
 
-```jsx filename=src/routes/root.jsx lines=[8-12,22,28]
+```jsx filename=src/routes/root.jsx lines=[8-12,26,32]
 // existing code
 
 export default function Root() {
