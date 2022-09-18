@@ -1285,7 +1285,7 @@ Note the [`{ index:true }`][index] instead of [`{ path: "" }`][path]. That tells
 
 <img class="tutorial" loading="lazy" src="/_docs/tutorial/20.webp" />
 
-Viola! No more blank space. It's common to put dashboards, stats, feeds, etc. at index routes. They can participate in data loading as well.
+Voila! No more blank space. It's common to put dashboards, stats, feeds, etc. at index routes. They can participate in data loading as well.
 
 ## Cancel Button
 
