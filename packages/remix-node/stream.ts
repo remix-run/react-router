@@ -17,6 +17,12 @@ export async function writeReadableStreamToWritable(
 
     writable.write(value);
 
+    // If the stream is flushable, flush it to allow streaming to continue.
+    let flushable = writable as { flush?: Function };
+    if (typeof flushable.flush === "function") {
+      flushable.flush();
+    }
+
     await read();
   }
 
