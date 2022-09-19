@@ -634,16 +634,27 @@ function compilePath(
       path === "*" || path === "/*"
         ? "(.*)$" // Already matched the initial /, just match the rest
         : "(?:\\/(.+)|\\/*)$"; // Don't include the / in params["*"]
+  } else if (end) {
+    // When matching to the end, ignore trailing slashes
+    regexpSource += "\\/*$";
+  } else if (path !== "" && path !== "/") {
+    // If our path is non-empty and contains anything beyond an initial slash,
+    // then we have _some_ form of path and we do not want to include the
+    // positive lookahead below, otherwise we incorrectly match things like
+    // /user-preferences for path /user.  So, we look for an optional non-captured
+    // trailing slash (to match a portion of the URL) or the end of the path
+    // (if we've matched to the end).  We used to do this with a word boundary
+    // but that gives false positives on routes like /user-preferences since
+    // `-` counts as a word boundary.
+    regexpSource += "(?:(?=\\/|$))";
   } else {
-    regexpSource += end
-      ? "\\/*$" // When matching to the end, ignore trailing slashes
-      : // Otherwise, match a word boundary or a proceeding /. The word boundary restricts
-        // parent routes to matching only their own words and nothing more, e.g. parent
-        // route "/home" should not match "/home2".
-        // Additionally, allow paths starting with `.`, `-`, `~`, and url-encoded entities,
-        // but do not consume the character in the matched path so they can match against
-        // nested paths.
-        "(?:(?=[@.~-]|%[0-9A-F]{2})|\\b|\\/|$)";
+    // Otherwise, if we are an empty path, match a word boundary or a
+    // proceeding /. The word boundary restricts parent routes to matching only
+    // their own words and nothing more, e.g. parent route "/home" should not
+    // match "/home2". Additionally, allow paths starting with `.`, `-`, `~`,
+    // and url-encoded entities, but do not consume the character in the
+    // matched path so they can match against nested paths.
+    regexpSource += "(?:(?=[@.~-]|%[0-9A-F]{2})|\\b|\\/|$)";
   }
 
   let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
