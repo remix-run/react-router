@@ -1,10 +1,10 @@
 ---
-title: Tutorial
+title: Tutoriel
 order: 3
 hidden: true
 ---
 
-# Tutorial
+# Tutoriel
 
 ## Introduction
 

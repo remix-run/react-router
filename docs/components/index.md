@@ -1,4 +1,4 @@
 ---
-title: Components
+title: Composants
 order: 6
 ---

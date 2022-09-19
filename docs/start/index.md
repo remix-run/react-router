@@ -1,4 +1,4 @@
 ---
-title: Getting Started
+title: Démarrer
 order: 1
 ---

@@ -1,9 +1,9 @@
 ---
-title: FAQs
+title: FAQ
 order: 4
 ---
 
-# FAQs
+# FAQ
 
 Here are some questions that people commonly have about React Router v6. You might also find what you're looking for in the [examples][examples].
 

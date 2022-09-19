@@ -1,9 +1,9 @@
 ---
-title: Main Concepts
+title: Concepts principaux
 order: 5
 ---
 
-# Main Concepts
+# Concepts principaux
 
 <docs-warning>This document needs to be updated for 6.4 data APIs</docs-warning>
 

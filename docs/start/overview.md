@@ -1,21 +1,21 @@
 ---
-title: Feature Overview
+title: Aperçu des fonctionnalités
 order: 1
 ---
 
-# Feature Overview
+# Aperçu des fonctionnalités
 
-## Client Side Routing
+## Routage côté client
 
-React Router enables "client side routing".
+React Router permet de faire du "routage côté client".
 
-In traditional websites, the browser requests a document from a web server, downloads and evaluates CSS and JavaScript assets, and renders the HTML sent from the server. When the user clicks a link, it starts the process all over again for a new page.
+Pour les sites web traditionels, le navigateur demande un document au serveur web, le télécharge, évalue les ressources CSS et JavaScript, et affiche le HTML renvoyé par le serveur. Lorsque l'utilisateur click un lien, il démarre le même processus pour une nouvelle page.
 
-Client side routing allows your app to update the URL from a link click without making another request for another document from the server. Instead, your app can immediately render some new UI and make data requests with `fetch` to update the page with new information.
+Le routage côté client permet à votre application de mettre à jour l'url sans faire une nouvelle demande d'un autre document depuis le serveur. A la place, votre application peut immédiatement afficher une nouvelle interface et envoyer des requêtes avec `fetch` afin de mettre à jour la page avec de nouvelles informations.
 
-This enables faster user experiences because the browser doesn't need to request an entirely new document or re-evaluate CSS and JavaScript assets for the next page. It also enables more dynamic user experiences with things like animation.
+Cette approche permet d'obtenir une expérience utilsateur plus rapide, puisque le navigateur n'a pas besoin de demander un nouveau document, ou ré-évaluer les ressources CSS et JavaScript pour la prochaine page. Cela permet aussi de mettre en place une expérience utilisateur plus dynamiques avec des animations par exemple.
 
-Client side routing is enabled by creating a `Router` and linking/submitting to pages with `Link` and `<Form>`:
+Le routage côté client est activé en créant un `Router` et liant/soumettant des requêtes vers les pages avec `Link` and `<Form>`:
 
 ```jsx [10,16,27]
 import React from "react";
