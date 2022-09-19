@@ -173,4 +173,32 @@ describe("a memory history with some initial entries", () => {
       key: expect.any(String),
     });
   });
+
+  it("allows initial entries to have state and keys", () => {
+    let history = createMemoryHistory({
+      initialEntries: [
+        { pathname: "/one", state: "1", key: "1" },
+        { pathname: "/two", state: "2", key: "2" },
+      ],
+    });
+
+    expect(history.index).toBe(1);
+    expect(history.location).toMatchObject({
+      pathname: "/two",
+      search: "",
+      hash: "",
+      state: "2",
+      key: "2",
+    });
+
+    history.go(-1);
+    expect(history.index).toBe(0);
+    expect(history.location).toMatchObject({
+      pathname: "/one",
+      search: "",
+      hash: "",
+      state: "1",
+      key: "1",
+    });
+  });
 });

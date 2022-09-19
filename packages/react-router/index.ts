@@ -36,7 +36,6 @@ import {
 } from "@remix-run/router";
 
 import type {
-  DataMemoryRouterProps,
   AwaitProps,
   MemoryRouterProps,
   NavigateProps,
@@ -113,7 +112,6 @@ export type {
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
-  DataMemoryRouterProps,
   DataRouteMatch,
   DataRouteObject,
   Fetcher,

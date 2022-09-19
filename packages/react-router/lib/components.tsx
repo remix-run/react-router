@@ -109,16 +109,6 @@ export function RouterProvider({
   );
 }
 
-export interface DataMemoryRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  initialEntries?: InitialEntry[];
-  initialIndex?: number;
-  hydrationData?: HydrationState;
-  fallbackElement?: React.ReactNode;
-  routes?: RouteObject[];
-}
-
 export interface MemoryRouterProps {
   basename?: string;
   children?: React.ReactNode;
