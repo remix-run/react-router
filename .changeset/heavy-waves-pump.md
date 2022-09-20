@@ -3,4 +3,4 @@
 "@remix-run/router": patch
 ---
 
-fix: preserve state from initialEntries (#9288)
+Preserve state from `initialEntries`
