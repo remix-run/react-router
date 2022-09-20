@@ -7,6 +7,8 @@ new: true
 
 This hook makes the data at any currently rendered route available anywhere in the tree. This is useful for components deep in the tree needing data from routes much farther up, as well as parent routes needing the data of child routes deeper in the tree.
 
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
 ```tsx
 import { useRouteLoaderData } from "react-router-dom";
 

@@ -7,6 +7,8 @@ new: true
 
 Returns an array of all inflight [fetchers][usefetcher] without their `load`, `submit`, or `Form` properties (can't have parent components trying to control the behavior of their children! We know from IRL experience that this is a fool's errand.)
 
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
 ```tsx
 import { useFetchers } from "react-router-dom";
 
@@ -134,3 +136,4 @@ function ProjectTaskCount({ project }) {
 It's a little bit of work, but it's mostly just asking React Router for the state it's tracking and doing an optimistic calculation based on it.
 
 [usefetcher]: ./use-fetcher
+[pickingarouter]: ../routers/picking-a-router

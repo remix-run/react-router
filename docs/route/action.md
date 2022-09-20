@@ -7,7 +7,7 @@ new: true
 
 Route actions are the "writes" to route [loader][loader] "reads". They provide a way for apps to perform data mutations with simple HTML and HTTP semantics while React Router abstracts away the complexity of asynchronous UI and revalidation. This gives you the simple mental model of HTML + HTTP (where the browser handles the asynchrony and revalidation) with the behavior and and UX capabilities of modern SPAs.
 
-<docs-error>This feature only works if using a data router</docs-error>
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
 
 ```tsx
 <Route
@@ -130,6 +130,7 @@ You can `throw` in your action to break out of the current call stack (stop runn
 For more details and expanded use cases, read the [errorElement][errorelement] documentation.
 
 [loader]: ./loader
+[pickingarouter]: ../routers/picking-a-router
 [dynamicsegments]: ./route#dynamic-segments
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
