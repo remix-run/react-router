@@ -1,5 +1,14 @@
 # react-router-dom
 
+## 6.4.1-pre.0
+
+### Patch Changes
+
+- Updated dependencies [8b00e7a4]
+- Updated dependencies [c430329a]
+  - react-router@6.4.1-pre.0
+  - @remix-run/router@1.0.1-pre.0
+
 ## 6.4.0
 
 Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs over from Remix. Here's a quick high level overview, but it's recommended you go check out the [docs][rr-docs], especially the [feature overview][rr-feature-overview] and the [tutorial][rr-tutorial].
