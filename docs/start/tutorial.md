@@ -760,7 +760,7 @@ export function loader({ params }) {
   return getContact(params.contactId);
 }
 
-export default function Edit() {
+export default function EditContact() {
   const contact = useLoaderData();
 
   return (
