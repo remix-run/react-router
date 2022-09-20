@@ -15,7 +15,7 @@ When v6 is stable we will publish the docs on our website.
 
 ## Contributing
 
-There are many different ways to contribute to React Router's development. If you're interested, check out [our contributing guidelines](CONTRIBUTING.md) to learn how you can get involved.
+There are many different ways to contribute to React Router's development. If you're interested, check out [our contributing guidelines](docs/guides/contributing.md) to learn how you can get involved.
 
 ## Packages
 

@@ -1956,7 +1956,7 @@ That's it! Thanks for giving React Router a shot. We hope this tutorial gives yo
 
 [vite]: https://vitejs.dev/guide/
 [node]: https://nodejs.org
-[createbrowserrouter]: ../routers/create-browser-router
+[createbrowserrouter]: ../routers/create-browser-router.md
 [route]: ../route/route
 [tutorial-css]: https://gist.githubusercontent.com/ryanflorence/ba20d473ef59e1965543fa013ae4163f/raw/499707f25a5690d490c7b3d54c65c65eb895930c/react-router-6.4-tutorial-css.css
 [tutorial-data]: https://gist.githubusercontent.com/ryanflorence/1e7f5d3344c0db4a8394292c157cd305/raw/f7ff21e9ae7ffd55bfaaaf320e09c6a08a8a6611/contacts.js
