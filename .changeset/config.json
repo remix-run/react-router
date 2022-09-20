@@ -1,9 +1,6 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@2.0.0/schema.json",
-  "changelog": [
-    "@changesets/cli/changelog",
-    { "repo": "remix-run/react-router" }
-  ],
+  "changelog": ["@remix-run/changelog-github", { "repo": "remix-run/remix" }],
   "commit": false,
   "fixed": [
     [

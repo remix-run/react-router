@@ -1441,6 +1441,14 @@
     dataloader "^1.4.0"
     node-fetch "^2.5.0"
 
+"@changesets/get-github-info@^0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@changesets/get-github-info/-/get-github-info-0.5.1.tgz#5a20328b26f301b2193717abb32e73651e8811b7"
+  integrity sha512-w2yl3AuG+hFuEEmT6j1zDlg7GQLM/J2UxTmk0uJBMdRqHni4zXGe/vUlPfLom5KfX3cRfHc0hzGvloDPjWFNZw==
+  dependencies:
+    dataloader "^1.4.0"
+    node-fetch "^2.5.0"
+
 "@changesets/get-release-plan@^3.0.8":
   version "3.0.8"
   resolved "https://registry.yarnpkg.com/@changesets/get-release-plan/-/get-release-plan-3.0.8.tgz#2ac7c4f7903aedede3d27af66311ad1db7937e5d"
@@ -2039,6 +2047,16 @@
     sudo-prompt "^9.0.0"
     wcwidth "^1.0.1"
     ws "^1.1.0"
+
+"@remix-run/changelog-github@^0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@remix-run/changelog-github/-/changelog-github-0.0.5.tgz#d0eecaea45102b35b1c8fd41bb74fd1c38f7f70f"
+  integrity sha512-43tqwUqWqirbv6D9uzo55ASPsCJ61Ein1k/M8qn+Qpros0MmbmuzjLVPmtaxfxfe2ANX0LefLvCD0pAgr1tp4g==
+  dependencies:
+    "@changesets/errors" "^0.1.4"
+    "@changesets/get-github-info" "^0.5.1"
+    "@changesets/types" "^5.0.0"
+    dotenv "^8.1.0"
 
 "@remix-run/web-blob@^3.0.4":
   version "3.0.4"
