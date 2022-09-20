@@ -1,4 +1,4 @@
-# @remix-run/router
+# `@remix-run/router`
 
 ## 1.0.0
 
