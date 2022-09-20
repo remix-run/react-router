@@ -7605,6 +7605,76 @@ describe("a router", () => {
         });
       });
     });
+
+    describe("fetcher ?index params", () => {
+      it("hits the proper Routes when ?index params are present", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "parent",
+              path: "parent",
+              action: true,
+              loader: true,
+              // Turn off revalidation after fetcher action submission for this test
+              shouldRevalidate: () => false,
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  action: true,
+                  loader: true,
+                  // Turn off revalidation after fetcher action submission for this test
+                  shouldRevalidate: () => false,
+                },
+              ],
+            },
+          ],
+          initialEntries: ["/parent"],
+          hydrationData: { loaderData: { parent: "PARENT", index: "INDEX" } },
+        });
+
+        let key = "KEY";
+
+        // fetcher.load()
+        let A = await t.fetch("/parent", key);
+        await A.loaders.parent.resolve("PARENT LOADER");
+        expect(t.router.getFetcher(key).data).toBe("PARENT LOADER");
+
+        let B = await t.fetch("/parent?index", key);
+        await B.loaders.index.resolve("INDEX LOADER");
+        expect(t.router.getFetcher(key).data).toBe("INDEX LOADER");
+
+        // fetcher.submit({}, { method: 'get' })
+        let C = await t.fetch("/parent", key, {
+          formMethod: "get",
+          formData: createFormData({}),
+        });
+        await C.loaders.parent.resolve("PARENT LOADER");
+        expect(t.router.getFetcher(key).data).toBe("PARENT LOADER");
+
+        let D = await t.fetch("/parent?index", key, {
+          formMethod: "get",
+          formData: createFormData({}),
+        });
+        await D.loaders.index.resolve("INDEX LOADER");
+        expect(t.router.getFetcher(key).data).toBe("INDEX LOADER");
+
+        // fetcher.submit({}, { method: 'post' })
+        let E = await t.fetch("/parent", key, {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        await E.actions.parent.resolve("PARENT ACTION");
+        expect(t.router.getFetcher(key).data).toBe("PARENT ACTION");
+
+        let F = await t.fetch("/parent?index", key, {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        await F.actions.index.resolve("INDEX ACTION");
+        expect(t.router.getFetcher(key).data).toBe("INDEX ACTION");
+      });
+    });
   });
 
   describe("deferred data", () => {

@@ -2270,6 +2270,93 @@ function testDomRouter(
         `);
       });
 
+      it("handles fetcher ?index params", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/parent")}
+            hydrationData={{ loaderData: { parent: null, index: null } }}
+          >
+            <Route
+              path="/parent"
+              element={<Outlet />}
+              action={() => "PARENT ACTION"}
+              loader={() => "PARENT LOADER"}
+            >
+              <Route
+                index
+                element={<Index />}
+                action={() => "INDEX ACTION"}
+                loader={() => "INDEX LOADER"}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        function Index() {
+          let fetcher = useFetcher();
+
+          return (
+            <>
+              <p id="output">{fetcher.data}</p>
+              <button onClick={() => fetcher.load("/parent")}>
+                Load parent
+              </button>
+              <button onClick={() => fetcher.load("/parent?index")}>
+                Load index
+              </button>
+              <button onClick={() => fetcher.submit({})}>Submit empty</button>
+              <button
+                onClick={() =>
+                  fetcher.submit({}, { method: "get", action: "/parent" })
+                }
+              >
+                Submit parent get
+              </button>
+              <button
+                onClick={() =>
+                  fetcher.submit({}, { method: "get", action: "/parent?index" })
+                }
+              >
+                Submit index get
+              </button>
+              <button
+                onClick={() =>
+                  fetcher.submit({}, { method: "post", action: "/parent" })
+                }
+              >
+                Submit parent post
+              </button>
+              <button
+                onClick={() =>
+                  fetcher.submit(
+                    {},
+                    { method: "post", action: "/parent?index" }
+                  )
+                }
+              >
+                Submit index post
+              </button>
+            </>
+          );
+        }
+
+        async function clickAndAssert(btnText: string, expectedOutput: string) {
+          fireEvent.click(screen.getByText(btnText));
+          await waitFor(() => screen.getByText(new RegExp(expectedOutput)));
+          expect(getHtml(container.querySelector("#output"))).toContain(
+            expectedOutput
+          );
+        }
+
+        await clickAndAssert("Load parent", "PARENT LOADER");
+        await clickAndAssert("Load index", "INDEX LOADER");
+        await clickAndAssert("Submit empty", "INDEX LOADER");
+        await clickAndAssert("Submit parent get", "PARENT LOADER");
+        await clickAndAssert("Submit index get", "INDEX LOADER");
+        await clickAndAssert("Submit parent post", "PARENT ACTION");
+        await clickAndAssert("Submit index post", "INDEX ACTION");
+      });
+
       it("handles fetcher.load errors", async () => {
         let { container } = render(
           <TestDataRouter
