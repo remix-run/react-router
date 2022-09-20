@@ -1,5 +1,12 @@
 # `@remix-run/router`
 
+## 1.0.1-pre.0
+
+### Patch Changes
+
+- Preserve state from `initialEntries` ([#9288](https://github.com/remix-run/react-router/pull/9288))
+- Preserve `?index` for fetcher get submissions to index routes ([#9312](https://github.com/remix-run/react-router/pull/9312))
+
 ## 1.0.0
 
 This is the first stable release of `@remix-run/router`, which provides all the underlying routing and data loading/mutation logic for `react-router`. You should _not_ be using this package directly unless you are authoring a routing library similar to `react-router`.
