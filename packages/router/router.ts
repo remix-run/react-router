@@ -1165,7 +1165,7 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let { path, submission } = normalizeNavigateOptions(href, opts);
+    let { path, submission } = normalizeNavigateOptions(href, opts, true);
     let match = getTargetMatch(matches, path);
 
     if (submission) {
@@ -2098,7 +2098,8 @@ export function getStaticContextFromError(
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
   to: To,
-  opts?: RouterNavigateOptions
+  opts?: RouterNavigateOptions,
+  isFetcher = false
 ): {
   path: string;
   submission?: Submission;
@@ -2134,6 +2135,16 @@ function normalizeNavigateOptions(
   let parsedPath = parsePath(path);
   try {
     let searchParams = convertFormDataToSearchParams(opts.formData);
+    // Since fetcher GET submissions only run a single loader (as opposed to
+    // navigation GET submissions which run all loaders), we need to preserve
+    // any incoming ?index params
+    if (
+      isFetcher &&
+      parsedPath.search &&
+      hasNakedIndexQuery(parsedPath.search)
+    ) {
+      searchParams.append("index", "");
+    }
     parsedPath.search = `?${searchParams}`;
   } catch (e) {
     return {
