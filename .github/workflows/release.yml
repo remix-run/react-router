@@ -53,6 +53,7 @@ jobs:
           commit: "chore: Update version for release"
           title: "chore: Update version for release"
           publish: yarn release
+          createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
