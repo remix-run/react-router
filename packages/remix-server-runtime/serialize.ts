@@ -1,57 +1,6 @@
 import type { AppData } from "./data";
 import type { TypedResponse } from "./responses";
 
-// inline `type-fest`'s `Merge` to remove dependency on `type-fest`
-// TODO: replace `Merge` with intersection `&`
-
-// type-fest Merge start
-type OmitIndexSignature<ObjectType> = {
-  [KeyType in keyof ObjectType as {} extends Record<KeyType, unknown>
-    ? never
-    : KeyType]: ObjectType[KeyType];
-};
-type PickIndexSignature<ObjectType> = {
-  [KeyType in keyof ObjectType as {} extends Record<KeyType, unknown>
-    ? KeyType
-    : never]: ObjectType[KeyType];
-};
-type Simplify<T> = { [KeyType in keyof T]: T[KeyType] };
-type RequiredFilter<Type, Key extends keyof Type> = undefined extends Type[Key]
-  ? Type[Key] extends undefined
-    ? Key
-    : never
-  : Key;
-type OptionalFilter<Type, Key extends keyof Type> = undefined extends Type[Key]
-  ? Type[Key] extends undefined
-    ? never
-    : Key
-  : never;
-type EnforceOptional<ObjectType> = Simplify<
-  {
-    [Key in keyof ObjectType as RequiredFilter<
-      ObjectType,
-      Key
-    >]: ObjectType[Key];
-  } & {
-    [Key in keyof ObjectType as OptionalFilter<ObjectType, Key>]?: Exclude<
-      ObjectType[Key],
-      undefined
-    >;
-  }
->;
-type SimpleMerge<Destination, Source> = {
-  [Key in keyof Destination | keyof Source]: Key extends keyof Source
-    ? Source[Key]
-    : Key extends keyof Destination
-    ? Destination[Key]
-    : never;
-};
-type Merge<Destination, Source> = EnforceOptional<
-  SimpleMerge<PickIndexSignature<Destination>, PickIndexSignature<Source>> &
-    SimpleMerge<OmitIndexSignature<Destination>, OmitIndexSignature<Source>>
->;
-// type-fest Merge end
-
 type JsonPrimitive =
   | string
   | number
@@ -96,19 +45,16 @@ type SerializeObject<T extends object> = {
  *
  * Example: { a: string | undefined} --> { a?: string}
  */
-type UndefinedToOptional<T extends object> = Merge<
-  {
-    // Property is not a union with `undefined`, keep as-is
-    [k in keyof T as undefined extends T[k] ? never : k]: T[k];
-  },
-  {
-    // Property _is_ a union with `defined`. Set as optional (via `?`) and remove `undefined` from the union
-    [k in keyof T as undefined extends T[k] ? k : never]?: Exclude<
-      T[k],
-      undefined
-    >;
-  }
->;
+type UndefinedToOptional<T extends object> = {
+  // Property is not a union with `undefined`, keep as-is
+  [k in keyof T as undefined extends T[k] ? never : k]: T[k];
+} & {
+  // Property _is_ a union with `defined`. Set as optional (via `?`) and remove `undefined` from the union
+  [k in keyof T as undefined extends T[k] ? k : never]?: Exclude<
+    T[k],
+    undefined
+  >;
+};
 
 type ArbitraryFunction = (...args: any[]) => unknown;
 
