@@ -1,5 +1,13 @@
 # `@remix-run/node`
 
+## 1.7.2
+
+### Patch Changes
+
+- Flush Node streams to address issues with libraries like `compression` that rely on chunk flushing ([#4235](https://github.com/remix-run/remix/pull/4235))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.7.2`
+
 ## 1.7.1
 
 ### Patch Changes
