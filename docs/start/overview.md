@@ -66,9 +66,11 @@ createBrowserRouter(
       <Route
         path="dashboard"
         element={<Dashboard />}
-        loader={fetch("/api/dashboard.json", {
-          signal: request.signal,
-        })}
+        loader={({ request }) =>
+          fetch("/api/dashboard.json", {
+            signal: request.signal,
+          })
+        }
       />
       <Route element={<AuthLayout />}>
         <Route
@@ -406,7 +408,9 @@ function Issue() {
         {/* Await manages the deferred data (promise) */}
         <Await resolve={history}>
           {/* this calls back when the data is resolved */}
-          {(history) => <IssueHistory history={history} />}
+          {(resolvedHistory) => (
+            <IssueHistory history={resolvedHistory} />
+          )}
         </Await>
       </Suspense>
 
