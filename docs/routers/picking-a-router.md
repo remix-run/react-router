@@ -76,7 +76,6 @@ The data APIs from v6.4 are currently not supported in React Native, but should 
 [createhashrouter]: ./create-hash-router
 [creatememoryrouter]: ./create-memory-router
 [createroutesfromelements]: ../utils/create-routes-from-elements
-
 [browserrouter]: ../router-components/browser-router
 [memoryrouter]: ../router-components/memory-router
 [hashrouter]: ../router-components/hash-router
