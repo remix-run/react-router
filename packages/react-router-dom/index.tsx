@@ -642,6 +642,35 @@ if (__DEV__) {
 //#region Hooks
 ////////////////////////////////////////////////////////////////////////////////
 
+enum DataRouterHook {
+  UseScrollRestoration = "useScrollRestoration",
+  UseSubmitImpl = "useSubmitImpl",
+  UseFetcher = "useFetcher",
+}
+
+enum DataRouterStateHook {
+  UseFetchers = "useFetchers",
+  UseScrollRestoration = "useScrollRestoration",
+}
+
+function getDataRouterConsoleError(
+  hookName: DataRouterHook | DataRouterStateHook
+) {
+  return `${hookName} must be used within a data router.  See https://reactrouter.com/en/main/routers/picking-a-router.`;
+}
+
+function useDataRouterContext(hookName: DataRouterHook) {
+  let ctx = React.useContext(DataRouterContext);
+  invariant(ctx, getDataRouterConsoleError(hookName));
+  return ctx;
+}
+
+function useDataRouterState(hookName: DataRouterStateHook) {
+  let state = React.useContext(DataRouterStateContext);
+  invariant(state, getDataRouterConsoleError(hookName));
+  return state;
+}
+
 /**
  * Handles the click behavior for router `<Link>` components. This is useful if
  * you need to create custom `<Link>` components with the same click behavior we
@@ -789,12 +818,7 @@ export function useSubmit(): SubmitFunction {
 }
 
 function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
-  let dataRouterContext = React.useContext(DataRouterContext);
-  invariant(
-    dataRouterContext,
-    "useSubmitImpl must be used within a Data Router"
-  );
-  let { router } = dataRouterContext;
+  let { router } = useDataRouterContext(DataRouterHook.UseSubmitImpl);
   let defaultAction = useFormAction();
 
   return React.useCallback(
@@ -909,9 +933,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  * for any interaction that stays on the same page.
  */
 export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
-  let dataRouterContext = React.useContext(DataRouterContext);
-  invariant(dataRouterContext, `useFetcher must be used within a Data Router`);
-  let { router } = dataRouterContext;
+  let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
 
   let route = React.useContext(RouteContext);
   invariant(route, `useFetcher must be used inside a RouteContext`);
@@ -967,8 +989,7 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
  * routes that need to provide pending/optimistic UI regarding the fetch.
  */
 export function useFetchers(): Fetcher[] {
-  let state = React.useContext(DataRouterStateContext);
-  invariant(state, `useFetchers must be used within a DataRouterStateContext`);
+  let state = useDataRouterState(DataRouterStateHook.UseFetchers);
   return [...state.fetchers.values()];
 }
 
@@ -985,22 +1006,13 @@ function useScrollRestoration({
   getKey?: GetScrollRestorationKeyFunction;
   storageKey?: string;
 } = {}) {
+  let { router } = useDataRouterContext(DataRouterHook.UseScrollRestoration);
+  let { restoreScrollPosition, preventScrollReset } = useDataRouterState(
+    DataRouterStateHook.UseScrollRestoration
+  );
   let location = useLocation();
   let matches = useMatches();
   let navigation = useNavigation();
-  let dataRouterContext = React.useContext(DataRouterContext);
-  invariant(
-    dataRouterContext,
-    "useScrollRestoration must be used within a DataRouterContext"
-  );
-  let { router } = dataRouterContext;
-  let state = React.useContext(DataRouterStateContext);
-
-  invariant(
-    router != null && state != null,
-    "useScrollRestoration must be used within a DataRouterStateContext"
-  );
-  let { restoreScrollPosition, preventScrollReset } = state;
 
   // Trigger manual scroll restoration while we're active
   React.useEffect(() => {

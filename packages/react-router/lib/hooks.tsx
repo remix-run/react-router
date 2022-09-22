@@ -663,6 +663,10 @@ export function _renderMatches(
 }
 
 enum DataRouterHook {
+  UseRevalidator = "useRevalidator",
+}
+
+enum DataRouterStateHook {
   UseLoaderData = "useLoaderData",
   UseActionData = "useActionData",
   UseRouteError = "useRouteError",
@@ -672,9 +676,21 @@ enum DataRouterHook {
   UseRevalidator = "useRevalidator",
 }
 
-function useDataRouterState(hookName: DataRouterHook) {
+function getDataRouterConsoleError(
+  hookName: DataRouterHook | DataRouterStateHook
+) {
+  return `${hookName} must be used within a data router.  See https://reactrouter.com/en/main/routers/picking-a-router.`;
+}
+
+function useDataRouterContext(hookName: DataRouterHook) {
+  let ctx = React.useContext(DataRouterContext);
+  invariant(ctx, getDataRouterConsoleError(hookName));
+  return ctx;
+}
+
+function useDataRouterState(hookName: DataRouterStateHook) {
   let state = React.useContext(DataRouterStateContext);
-  invariant(state, `${hookName} must be used within a DataRouterStateContext`);
+  invariant(state, getDataRouterConsoleError(hookName));
   return state;
 }
 
@@ -683,7 +699,7 @@ function useDataRouterState(hookName: DataRouterHook) {
  * no navigation is in progress
  */
 export function useNavigation() {
-  let state = useDataRouterState(DataRouterHook.UseNavigation);
+  let state = useDataRouterState(DataRouterStateHook.UseNavigation);
   return state.navigation;
 }
 
@@ -692,12 +708,8 @@ export function useNavigation() {
  * as the current state of any manual revalidations
  */
 export function useRevalidator() {
-  let dataRouterContext = React.useContext(DataRouterContext);
-  invariant(
-    dataRouterContext,
-    `useRevalidator must be used within a DataRouterContext`
-  );
-  let state = useDataRouterState(DataRouterHook.UseRevalidator);
+  let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
+  let state = useDataRouterState(DataRouterStateHook.UseRevalidator);
   return {
     revalidate: dataRouterContext.router.revalidate,
     state: state.revalidation,
@@ -709,7 +721,9 @@ export function useRevalidator() {
  * parent/child routes or the route "handle" property
  */
 export function useMatches() {
-  let { matches, loaderData } = useDataRouterState(DataRouterHook.UseMatches);
+  let { matches, loaderData } = useDataRouterState(
+    DataRouterStateHook.UseMatches
+  );
   return React.useMemo(
     () =>
       matches.map((match) => {
@@ -733,7 +747,7 @@ export function useMatches() {
  * Returns the loader data for the nearest ancestor Route loader
  */
 export function useLoaderData(): unknown {
-  let state = useDataRouterState(DataRouterHook.UseLoaderData);
+  let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
 
   let route = React.useContext(RouteContext);
   invariant(route, `useLoaderData must be used inside a RouteContext`);
@@ -751,7 +765,7 @@ export function useLoaderData(): unknown {
  * Returns the loaderData for the given routeId
  */
 export function useRouteLoaderData(routeId: string): unknown {
-  let state = useDataRouterState(DataRouterHook.UseRouteLoaderData);
+  let state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
   return state.loaderData[routeId];
 }
 
@@ -759,7 +773,7 @@ export function useRouteLoaderData(routeId: string): unknown {
  * Returns the action data for the nearest ancestor Route action
  */
 export function useActionData(): unknown {
-  let state = useDataRouterState(DataRouterHook.UseActionData);
+  let state = useDataRouterState(DataRouterStateHook.UseActionData);
 
   let route = React.useContext(RouteContext);
   invariant(route, `useActionData must be used inside a RouteContext`);
@@ -774,7 +788,7 @@ export function useActionData(): unknown {
  */
 export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
-  let state = useDataRouterState(DataRouterHook.UseRouteError);
+  let state = useDataRouterState(DataRouterStateHook.UseRouteError);
   let route = React.useContext(RouteContext);
   let thisRoute = route.matches[route.matches.length - 1];
 

@@ -7,6 +7,8 @@ new: true
 
 This component will emulate the browser's scroll restoration on location changes after loaders have completed to ensure the scroll position is restored to the right spot, even across domains.
 
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
 You should only render one of these and it's recommended you render it in the root route of your app:
 
 ```tsx [1,7]
@@ -97,3 +99,4 @@ Server Rendering frameworks can prevent scroll flashing because they can send a 
 
 [remix]: https://remix.run
 [preventscrollreset]: ../components/link#preventscrollreset
+[pickingarouter]: ../routers/picking-a-router
