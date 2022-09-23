@@ -17,9 +17,9 @@ The examples here were adapted from [TkDodo's blog][tkdodo], thank you for the g
 
 ## Loading Data
 
-Loaders can use your data abstraction inside of loaders. Note that this loading happens outside of the React render lifecycle, so you can't use hooks like React Query's `useQuery`, you'll need to use the query client's methods directly.
+Instead of loading data in components, you use your data abstractions inside of loaders. Note that this loading happens outside of the React render lifecycle, so you can't use hooks like React Query's `useQuery`, you'll need to use the query client's methods directly.
 
-```jsx
+```jsx lines=[4]
 import { queryClient } from "./query-client";
 
 export const loader = ({ params }) => {
@@ -31,7 +31,7 @@ export const loader = ({ params }) => {
 
 If the query client throws errors correctly, then React Router's [`errorElement`][errorelement] will work the same.
 
-Of course, you can use all of the features of the data library, like caching, so ensure when the user clicks the back button to a page you've already seen, the data is loaded from the cache immediately.
+Of course, you can use all of the features of the data library, like caching. Caching your data ensures that when the user clicks the back button to a page you've already seen, the data is loaded from the cache immediately. Sometimes caching is the right choice, sometimes you always want it fresh, but that's not a decision within the scope of React Router's data APIs.
 
 React Router only retains the _current page's loaderData_. If users click "back", all loaders are called again. Without a data caching library like React Query (or HTTP cache headers on your JSON API to use the browser's own HTTP cache), your app will refetch all of the data again.
 
@@ -54,7 +54,7 @@ Because most of these library's have some mechanism for caching, you'll need to 
 
 The perfect place to invalidate those caches is in a React Router [action][action].
 
-```jsx lines=[5]
+```jsx lines=[7]
 import { queryClient } from "./query-client";
 
 export const action = async ({ request, params }) => {
