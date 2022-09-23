@@ -66,6 +66,47 @@ export const action = async ({ request, params }) => {
 };
 ```
 
+## Usage with `defer`
+
+You can similarly take advantage of the deferred APIs:
+
+```jsx lines=[2,10,14,28]
+function loader() {
+  return defer({
+    // no await!
+    someData: queryClient.fetchQuery("someKey", fn),
+  });
+}
+
+function Comp() {
+  // *do* useLoaderData for promise
+  const { someData } = useLoaderData();
+  return (
+    <div>
+      <h1>Something</h1>
+      <Await
+        resolve={someData}
+        errorElement={<div>Oops!</div>}
+      >
+        <SomeView />
+      </Await>
+    </div>
+  );
+}
+
+function SomeView() {
+  // instead of accessing with useAsyncValue
+  // const someData = useAsyncValue();
+  // `useQuery` as usual
+  const { data } = useQuery("someKey");
+  // ...
+}
+```
+
+## The Overlap
+
+Hooks like `useQuery` often return pending and error states you can use to branch your UI. With React Router, you can keep all of that branching out of your happy path components and rely on [`errorElement`][errorelement], [`useNavigation`][usenavigation], and [`Await`][await] instead.
+
 ## Conclusion
 
 With all of these APIs working together, you can now use [`useNavigation`][usenavigation] from React Router to build pending states, optimistic UI, and more. Use React Router for timing of data loading, mutations, and navigation state, then use libraries like React Query for the actual implementation of loading, invalidating, storage, and caching.
@@ -76,3 +117,4 @@ With all of these APIs working together, you can now use [`useNavigation`][usena
 [action]: ../route/action
 [tkdodo]: https://tkdodo.eu/blog/react-query-meets-react-router
 [usenavigation]: ../hooks/use-navigation
+[await]: ../components/await
