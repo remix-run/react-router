@@ -667,7 +667,9 @@ export function createRouter(init: RouterInit): Router {
     let isActionReload =
       state.actionData != null &&
       state.navigation.formMethod != null &&
-      state.navigation.state === "loading";
+      state.navigation.state === "loading" &&
+      state.navigation.formAction?.split("?")[0] ===
+        state.navigation.location.pathname;
 
     // Always preserve any existing loaderData from re-used routes
     let newLoaderData = newState.loaderData

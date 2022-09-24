@@ -2706,6 +2706,51 @@ describe("a router", () => {
       expect(t.router.state.actionData).toBeNull();
     });
 
+    it("removes action data after action redirect (return)", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+            id: "root",
+            loader: true,
+            hasErrorBoundary: true,
+            children: [
+              {
+                index: true,
+                id: "child",
+                action: true,
+              },
+              {
+                path: "/other",
+                id: "other",
+                loader: true,
+                action: true,
+              },
+            ],
+          },
+        ],
+      });
+      let A = await t.navigate("/?index", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "" }),
+      });
+      await A.actions.child.resolve({ error: "invalid" });
+      await A.loaders.root.resolve("ROOT LOADER");
+      expect(t.router.state.actionData).toEqual({
+        child: { error: "invalid" },
+      });
+
+      let B = await t.navigate("/?index", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      let C = await B.actions.child.redirectReturn("/other");
+      await C.loaders.root.resolve("ROOT LOADER");
+      await C.loaders.other.resolve("OTHER LOADER");
+
+      expect(t.router.state.actionData).toBeNull();
+    });
+
     it("uses the proper action for index routes", async () => {
       let t = setup({
         routes: [
