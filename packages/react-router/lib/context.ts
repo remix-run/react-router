@@ -13,16 +13,14 @@ import type { Action as NavigationType } from "@remix-run/router";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router
-export interface RouteObject extends AgnosticRouteObject {
-  children?: RouteObject[];
+export type RouteObject = Omit<AgnosticRouteObject, "index" | "children"> & {
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
-}
+} & ({ index?: false; children?: RouteObject[] } | { index: true });
 
-export interface DataRouteObject extends RouteObject {
-  children?: DataRouteObject[];
+export type DataRouteObject = Omit<RouteObject, "index" | "children"> & {
   id: string;
-}
+} & ({ index?: false; children?: DataRouteObject[] } | { index: true });
 
 export interface RouteMatch<
   ParamKey extends string = string,
