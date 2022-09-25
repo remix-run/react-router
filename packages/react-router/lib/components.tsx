@@ -619,7 +619,7 @@ export function enhanceManualRouteObjects(
     if (routeClone.hasErrorBoundary == null) {
       routeClone.hasErrorBoundary = routeClone.errorElement != null;
     }
-    if (routeClone.children) {
+    if (!routeClone.index && routeClone.children) {
       routeClone.children = enhanceManualRouteObjects(routeClone.children);
     }
     return routeClone;
