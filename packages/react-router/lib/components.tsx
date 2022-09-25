@@ -584,7 +584,7 @@ export function createRoutesFromChildren(
       handle: element.props.handle,
     };
 
-    if (element.props.children) {
+    if (element.props.children && !route.index) {
       route.children = createRoutesFromChildren(
         element.props.children,
         treePath
