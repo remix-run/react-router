@@ -754,11 +754,6 @@ Nothing we haven't seen before, feel free to copy/paste:
 
 ```jsx filename=src/routes/edit.jsx
 import { Form, useLoaderData } from "react-router-dom";
-import { getContact } from "../contacts";
-
-export function loader({ params }) {
-  return getContact(params.contactId);
-}
 
 export default function EditContact() {
   const contact = useLoaderData();
@@ -869,7 +864,7 @@ import {
   useLoaderData,
   redirect,
 } from "react-router-dom";
-import { getContact, updateContact } from "../contacts";
+import { updateContact } from "../contacts";
 
 export async function action({ request, params }) {
   const formData = await request.formData();
