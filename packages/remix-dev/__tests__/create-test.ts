@@ -131,7 +131,7 @@ describe("the create command", () => {
   }
 
   // this also tests sub directories
-  it("works for examples in the remix repo", async () => {
+  it("works for examples in the examples repo", async () => {
     let projectDir = await getProjectDir("example");
     await run([
       "create",

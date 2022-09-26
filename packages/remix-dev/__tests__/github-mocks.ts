@@ -55,13 +55,16 @@ let sendTarball: ResponseResolver = async (req, res, ctx) => {
   invariant(typeof repo === "string", "repo must be a string");
 
   let pathToTarball: string;
-  if (owner === "remix-run" && repo === "remix") {
+  if (owner === "remix-run" && repo === "examples") {
+    pathToTarball = nodePath.join(__dirname, "fixtures/examples-main.tar.gz");
+  } else if (owner === "remix-run" && repo === "remix") {
     pathToTarball = nodePath.join(__dirname, "fixtures/remix-repo.tar.gz");
   } else if (owner === "fake-remix-tester" && repo === "nested-dir") {
     pathToTarball = nodePath.join(__dirname, "fixtures/nested-dir-repo.tar.gz");
   } else {
     pathToTarball = nodePath.join(__dirname, "fixtures/stack.tar.gz");
   }
+
   let fileBuffer = await fsp.readFile(pathToTarball);
 
   return res(
@@ -69,10 +72,17 @@ let sendTarball: ResponseResolver = async (req, res, ctx) => {
     ctx.set("Content-Type", "application/x-gzip")
   );
 };
+
 let githubHandlers: Array<RequestHandler> = [
   rest.head(
     `https://github.com/remix-run/remix/tree/main/:type/:name`,
-    async (req, res, ctx) => {
+    async (_req, res, ctx) => {
+      return res(ctx.status(200));
+    }
+  ),
+  rest.head(
+    `https://github.com/remix-run/examples/tree/main/:type/:name`,
+    async (_req, res, ctx) => {
       return res(ctx.status(200));
     }
   ),

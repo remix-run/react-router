@@ -108,16 +108,14 @@ export async function createApp({
       if (debug) {
         console.log(
           colors.warning(
-            ` 🔍  Using the ${name} example template from the remix-run/remix repo`
+            ` 🔍  Using the ${name} example template from the remix-run/examples repo`
           )
         );
       }
 
       await downloadAndExtractRepoTarball(
         projectDir,
-        getRepoInfo(
-          `https://github.com/remix-run/remix/tree/main/examples/${name}`
-        ),
+        getRepoInfo(`https://github.com/remix-run/examples/tree/main/${name}`),
         options
       );
       break;
@@ -708,12 +706,15 @@ export async function validateTemplate(
     case "example":
     case "template": {
       let spinner = ora("Validating the template…").start();
+      let isExample = templateType === "example";
       let name = input;
-      if (templateType === "example") {
+      if (isExample) {
         name = name.split("/")[1];
       }
-      let typeDir = templateType + "s";
-      let templateUrl = `https://github.com/remix-run/remix/tree/main/${typeDir}/${name}`;
+      let repoBaseUrl = isExample
+        ? "https://github.com/remix-run/examples/tree/main"
+        : "https://github.com/remix-run/remix/tree/main/templates";
+      let templateUrl = `${repoBaseUrl}/${name}`;
       let response;
       try {
         response = await fetch(templateUrl, { method: "HEAD" });
@@ -733,7 +734,7 @@ export async function validateTemplate(
           throw Error(
             "🚨 The template could not be verified. Please double check that " +
               "the template is a valid project directory in " +
-              `https://github.com/remix-run/remix/tree/main/${typeDir} and ` +
+              `${repoBaseUrl} and ` +
               "try again."
           );
         default:
@@ -741,7 +742,7 @@ export async function validateTemplate(
             "🚨 The template could not be verified. The server returned a " +
               `response with a ${response.status} status. Please double ` +
               "check that the template is a valid project directory in " +
-              `https://github.com/remix-run/remix/tree/main/${typeDir} and ` +
+              `${repoBaseUrl} and ` +
               "try again."
           );
       }
@@ -803,7 +804,7 @@ export function detectTemplateType(template: string): TemplateType | null {
     // ignore FS errors and move on
   }
 
-  // 4. examples/<template> will use an example folder in the Remix repo
+  // 4. examples/<template> will use a folder in the Examples repo
   if (/^examples?\/[\w-]+$/.test(template)) {
     return "example";
   }
