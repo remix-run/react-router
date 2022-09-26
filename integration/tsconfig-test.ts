@@ -113,7 +113,7 @@ test("allows for `extends` in tsconfig", async () => {
   let tsconfig = await getTsConfig(fixture.projectDir);
 
   // our base config only sets a few options, so our local config should fill in the missing ones
-  let expected = { ...DEFAULT_CONFIG };
+  let expected = JSON.parse(JSON.stringify({ ...DEFAULT_CONFIG }));
   // these were defined by the base config
   delete expected.compilerOptions.allowJs;
   delete expected.compilerOptions.baseUrl;
