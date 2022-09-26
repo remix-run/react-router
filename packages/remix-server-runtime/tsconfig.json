@@ -4,6 +4,7 @@
   "compilerOptions": {
     "lib": ["ES2019", "DOM", "DOM.Iterable"],
     "target": "ES2019",
+    "composite": true,
 
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
@@ -12,7 +13,6 @@
     "emitDeclarationOnly": true,
     "rootDir": ".",
     "outDir": "../../build/node_modules/@remix-run/server-runtime/dist",
-    "composite": true,
 
     // Avoid naming conflicts between lib.dom.d.ts and globals.ts
     "skipLibCheck": true

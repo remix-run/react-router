@@ -5,6 +5,7 @@
     "lib": ["ES2019", "DOM.Iterable"],
     "target": "ES2019",
     "skipLibCheck": true,
+    "composite": true,
 
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,

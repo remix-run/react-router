@@ -1,9 +1,11 @@
 {
+  "include": ["**/*.ts", "package.json"],
   "exclude": ["dist", "__tests__", "node_modules", "./compiler/shims"],
   "compilerOptions": {
     "lib": ["ES2019", "DOM.Iterable"],
     "target": "ES2019",
     "module": "CommonJS",
+    "composite": true,
 
     "moduleResolution": "node",
     "resolveJsonModule": true,
