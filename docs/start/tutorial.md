@@ -577,7 +577,7 @@ That's it! React Router will now automatically keep that data in sync with your 
 
 We'll create our first contact in a second, but first let's talk about HTML.
 
-React Router emulates HTML Form navigation as the data mutation primitive, a la web development before the JavaScript cambrian explosion. It gives you the UX capabilities of client rendered apps with the simplicity of the "old school" web model.
+React Router emulates HTML Form navigation as the data mutation primitive, according to web development before the JavaScript cambrian explosion. It gives you the UX capabilities of client rendered apps with the simplicity of the "old school" web model.
 
 While unfamiliar to some web developers, HTML forms actually cause a navigation in the browser, just like clicking a link. The only difference is in the request: links can only change the URL while forms can also change the request method (GET vs POST) and the request body (POST form data).
 
