@@ -21,6 +21,7 @@ import {
   useResolvedPath,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
   UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router";
@@ -40,6 +41,7 @@ import {
   createBrowserHistory,
   createHashHistory,
   invariant,
+  joinPaths,
   matchPath,
 } from "@remix-run/router";
 
@@ -858,12 +860,15 @@ export function useFormAction(
   action?: string,
   { relative }: { relative?: RelativeRoutingType } = {}
 ): string {
+  let { basename } = React.useContext(NavigationContext);
   let routeContext = React.useContext(RouteContext);
   invariant(routeContext, "useFormAction must be used inside a RouteContext");
 
   let [match] = routeContext.matches.slice(-1);
   let resolvedAction = action ?? ".";
-  let path = useResolvedPath(resolvedAction, { relative });
+  // Shallow clone path so we can modify it below, otherwise we modify the
+  // object referenced by useMemo inside useResolvedPath
+  let path = { ...useResolvedPath(resolvedAction, { relative }) };
 
   // Previously we set the default action to ".". The problem with this is that
   // `useResolvedPath(".")` excludes search params and the hash of the resolved
@@ -892,6 +897,15 @@ export function useFormAction(
     path.search = path.search
       ? path.search.replace(/^\?/, "?index&")
       : "?index";
+  }
+
+  // If we're operating within a basename, prepend it to the pathname prior
+  // to creating the form action.  If this is a root navigation, then just use
+  // the raw basename which allows the basename to have full control over the
+  // presence of a trailing slash on root actions
+  if (basename !== "/") {
+    path.pathname =
+      path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
   }
 
   return createPath(path);

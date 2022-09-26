@@ -433,7 +433,7 @@ function testDomRouter(
 
     it("handles link navigations when using a basename", async () => {
       let testWindow = getWindow("/base/name/foo");
-      render(
+      let { container } = render(
         <TestDataRouter
           basename="/base/name"
           window={testWindow}
@@ -457,6 +457,12 @@ function testDomRouter(
       }
 
       assertLocation(testWindow, "/base/name/foo");
+      expect(
+        Array.from(container.querySelectorAll("a")).map((a) => a.href)
+      ).toEqual([
+        "http://localhost/base/name/foo",
+        "http://localhost/base/name/bar",
+      ]);
 
       expect(screen.getByText("Foo Heading")).toBeDefined();
       fireEvent.click(screen.getByText("Link to Bar"));
@@ -1325,6 +1331,173 @@ function testDomRouter(
           <h1>
             index
           </h1>
+        </div>"
+      `);
+    });
+
+    it('supports a basename on <Form method="get">', async () => {
+      let testWindow = getWindow("/base/path");
+      let { container } = render(
+        <TestDataRouter basename="/base" window={testWindow} hydrationData={{}}>
+          <Route path="path" element={<Comp />} />
+        </TestDataRouter>
+      );
+
+      function Comp() {
+        let location = useLocation();
+        return (
+          <Form
+            onSubmit={(e) => {
+              // jsdom doesn't handle submitter so we add it here
+              // See https://github.com/jsdom/jsdom/issues/3117
+              // @ts-expect-error
+              e.nativeEvent.submitter = e.currentTarget.querySelector("button");
+            }}
+          >
+            <p>{location.pathname + location.search}</p>
+            <input name="a" defaultValue="1" />
+            <button type="submit" name="b" value="2">
+              Submit
+            </button>
+          </Form>
+        );
+      }
+
+      assertLocation(testWindow, "/base/path");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <form
+            action=\\"/base/path\\"
+            method=\\"get\\"
+          >
+            <p>
+              /path
+            </p>
+            <input
+              name=\\"a\\"
+              value=\\"1\\"
+            />
+            <button
+              name=\\"b\\"
+              type=\\"submit\\"
+              value=\\"2\\"
+            >
+              Submit
+            </button>
+          </form>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit"));
+      assertLocation(testWindow, "/base/path", "?a=1&b=2");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <form
+            action=\\"/base/path?a=1&b=2\\"
+            method=\\"get\\"
+          >
+            <p>
+              /path?a=1&b=2
+            </p>
+            <input
+              name=\\"a\\"
+              value=\\"1\\"
+            />
+            <button
+              name=\\"b\\"
+              type=\\"submit\\"
+              value=\\"2\\"
+            >
+              Submit
+            </button>
+          </form>
+        </div>"
+      `);
+    });
+
+    it('supports a basename on <Form method="post">', async () => {
+      let testWindow = getWindow("/base/path");
+      let { container } = render(
+        <TestDataRouter basename="/base" window={testWindow} hydrationData={{}}>
+          <Route path="path" action={() => "action data"} element={<Comp />} />
+        </TestDataRouter>
+      );
+
+      function Comp() {
+        let location = useLocation();
+        let data = useActionData() as string | undefined;
+        return (
+          <Form
+            method="post"
+            onSubmit={(e) => {
+              // jsdom doesn't handle submitter so we add it here
+              // See https://github.com/jsdom/jsdom/issues/3117
+              // @ts-expect-error
+              e.nativeEvent.submitter = e.currentTarget.querySelector("button");
+            }}
+          >
+            <p>{location.pathname + location.search}</p>
+            {data && <p>{data}</p>}
+            <input name="a" defaultValue="1" />
+            <button type="submit" name="b" value="2">
+              Submit
+            </button>
+          </Form>
+        );
+      }
+
+      assertLocation(testWindow, "/base/path");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <form
+            action=\\"/base/path\\"
+            method=\\"post\\"
+          >
+            <p>
+              /path
+            </p>
+            <input
+              name=\\"a\\"
+              value=\\"1\\"
+            />
+            <button
+              name=\\"b\\"
+              type=\\"submit\\"
+              value=\\"2\\"
+            >
+              Submit
+            </button>
+          </form>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("action data"));
+      assertLocation(testWindow, "/base/path");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <form
+            action=\\"/base/path\\"
+            method=\\"post\\"
+          >
+            <p>
+              /path
+            </p>
+            <p>
+              action data
+            </p>
+            <input
+              name=\\"a\\"
+              value=\\"1\\"
+            />
+            <button
+              name=\\"b\\"
+              type=\\"submit\\"
+              value=\\"2\\"
+            >
+              Submit
+            </button>
+          </form>
         </div>"
       `);
     });
