@@ -2706,49 +2706,79 @@ describe("a router", () => {
       expect(t.router.state.actionData).toBeNull();
     });
 
-    it("removes action data after action redirect (return)", async () => {
+    it("removes action data after action redirect (w/o loaders to run)", async () => {
       let t = setup({
         routes: [
           {
-            path: "/",
-            id: "root",
-            loader: true,
-            hasErrorBoundary: true,
-            children: [
-              {
-                index: true,
-                id: "child",
-                action: true,
-              },
-              {
-                path: "/other",
-                id: "other",
-                loader: true,
-                action: true,
-              },
-            ],
+            index: true,
+            id: "index",
+            action: true,
+          },
+          {
+            path: "/other",
+            id: "other",
           },
         ],
       });
-      let A = await t.navigate("/?index", {
+      let A = await t.navigate("/", {
         formMethod: "post",
         formData: createFormData({ gosh: "" }),
       });
-      await A.actions.child.resolve({ error: "invalid" });
-      await A.loaders.root.resolve("ROOT LOADER");
+      await A.actions.index.resolve({ error: "invalid" });
       expect(t.router.state.actionData).toEqual({
-        child: { error: "invalid" },
+        index: { error: "invalid" },
       });
 
-      let B = await t.navigate("/?index", {
+      let B = await t.navigate("/", {
         formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
       });
-      let C = await B.actions.child.redirectReturn("/other");
-      await C.loaders.root.resolve("ROOT LOADER");
-      await C.loaders.other.resolve("OTHER LOADER");
+      await B.actions.index.redirectReturn("/other");
 
       expect(t.router.state.actionData).toBeNull();
+    });
+
+    it("removes action data after action redirect (w/ loaders to run)", async () => {
+      let t = setup({
+        routes: [
+          {
+            index: true,
+            id: "index",
+            action: true,
+          },
+          {
+            path: "/other",
+            id: "other",
+            loader: true,
+          },
+        ],
+      });
+      let A = await t.navigate("/", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "" }),
+      });
+      await A.actions.index.resolve({ error: "invalid" });
+      expect(t.router.state.actionData).toEqual({
+        index: { error: "invalid" },
+      });
+
+      let B = await t.navigate("/", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+
+      let C = await B.actions.index.redirectReturn("/other");
+      expect(t.router.state.actionData).toEqual({
+        index: { error: "invalid" },
+      });
+      expect(t.router.state.loaderData).toEqual({});
+
+      await C.loaders.other.resolve("OTHER");
+
+      expect(t.router.state.actionData).toBeNull();
+      expect(t.router.state.loaderData).toEqual({
+        other: "OTHER",
+      });
     });
 
     it("uses the proper action for index routes", async () => {
