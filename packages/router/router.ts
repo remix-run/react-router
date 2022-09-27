@@ -660,14 +660,15 @@ export function createRouter(init: RouterInit): Router {
     // - We have committed actionData in the store
     // - The current navigation was a submission
     // - We're past the submitting state and into the loading state
-    // - This should not be susceptible to false positives for
-    //   loading/submissionRedirect since there would not be actionData in the
-    //   state since the prior action would have returned a redirect response
-    //   and short circuited
+    // - The location we've finished loading is different from the submission
+    //   location, indicating we redirected from the action (avoids false
+    //   positives for loading/submissionRedirect when actionData returned
+    //   on a prior submission)
     let isActionReload =
       state.actionData != null &&
       state.navigation.formMethod != null &&
-      state.navigation.state === "loading";
+      state.navigation.state === "loading" &&
+      state.navigation.formAction?.split("?")[0] === location.pathname;
 
     // Always preserve any existing loaderData from re-used routes
     let newLoaderData = newState.loaderData
