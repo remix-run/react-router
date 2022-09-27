@@ -196,4 +196,26 @@ describe("creating routes from JSX", () => {
       ]
     `);
   });
+
+  it("throws when the index route has children", () => {
+    expect(() => {
+      createRoutesFromChildren(
+        <Route errorElement={<h1>💥</h1>} path="/">
+          <Route
+            // @ts-expect-error
+            index
+            loader={async () => {}}
+            shouldRevalidate={() => true}
+            element={<h1>home</h1>}
+          >
+            <Route
+              path="users"
+              action={async () => {}}
+              element={<h1>users index</h1>}
+            />
+          </Route>
+        </Route>
+      );
+    }).toThrow("An index route cannot have children routes.");
+  });
 });
