@@ -216,6 +216,6 @@ describe("creating routes from JSX", () => {
           </Route>
         </Route>
       );
-    }).toThrow("An index route cannot have children routes.");
+    }).toThrow("An index route must not have child routes.");
   });
 });

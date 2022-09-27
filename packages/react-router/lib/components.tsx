@@ -585,7 +585,7 @@ export function createRoutesFromChildren(
     };
 
     if (element.props.children) {
-      invariant(!route.index, "An index route cannot have children routes.");
+      invariant(!route.index, "An index route must not have child routes.");
       route.children = createRoutesFromChildren(
         element.props.children,
         treePath
