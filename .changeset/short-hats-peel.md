@@ -2,4 +2,4 @@
 "@remix-run/router": patch
 ---
 
-reset action data after redirection trigger by action
+fix: reset `actionData` after successful action redirect (#9334)
