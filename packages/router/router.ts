@@ -1783,10 +1783,27 @@ export function unstable_createStaticHandler(
       return result;
     }
 
+    let error = result.errors ? Object.values(result.errors)[0] : undefined;
+    if (error !== undefined) {
+      // While we always re-throw Responses returned from loaders/actions
+      // directly for route requests and prevent the unwrapping into an
+      // ErrorResponse, we still need this for error cases _prior_ the
+      // execution of the loader/action, such as a 404/405 error.
+      if (isRouteErrorResponse(error)) {
+        return new Response(error.data, {
+          status: error.status,
+          statusText: error.statusText,
+        });
+      }
+      // If we got back result.errors, that means the loader/action threw
+      // _something_ that wasn't a Response, but it's not guaranteed/required
+      // to be an `instanceof Error` either, so we have to use throw here to
+      // preserve the "error" state outside of queryImpl.
+      throw error;
+    }
+
     // Pick off the right state value to return
-    let routeData = [result.errors, result.actionData, result.loaderData].find(
-      (v) => v
-    );
+    let routeData = [result.actionData, result.loaderData].find((v) => v);
     let value = Object.values(routeData || {})[0];
 
     if (isRouteErrorResponse(value)) {
@@ -2529,7 +2546,11 @@ function processRouteLoaderData(
       loaderData[id] = result.data;
       // Error status codes always override success status codes, but if all
       // loaders are successful we take the deepest status code.
-      if (result.statusCode !== 200 && !foundError) {
+      if (
+        result.statusCode != null &&
+        result.statusCode !== 200 &&
+        !foundError
+      ) {
         statusCode = result.statusCode;
       }
       if (result.headers) {

@@ -10069,7 +10069,66 @@ describe("a router", () => {
     });
 
     describe("singular route requests", () => {
-      it("should support singular route load navigations", async () => {
+      function setupFlexRouteTest() {
+        function queryRoute(
+          req: Request,
+          routeId: string,
+          type: "loader" | "action",
+          data: any,
+          isError = false
+        ) {
+          let handler = createStaticHandler([
+            {
+              id: "flex",
+              path: "/flex",
+              [type]: () =>
+                isError ? Promise.reject(data) : Promise.resolve(data),
+            },
+          ]);
+          return handler.queryRoute(req, routeId);
+        }
+
+        return {
+          resolveLoader(data: any) {
+            return queryRoute(
+              createRequest("/flex"),
+              "flex",
+              "loader",
+              data,
+              false
+            );
+          },
+          rejectLoader(data: any) {
+            return queryRoute(
+              createRequest("/flex"),
+              "flex",
+              "loader",
+              data,
+              true
+            );
+          },
+          resolveAction(data: any) {
+            return queryRoute(
+              createSubmitRequest("/flex"),
+              "flex",
+              "action",
+              data,
+              false
+            );
+          },
+          rejectAction(data: any) {
+            return queryRoute(
+              createSubmitRequest("/flex"),
+              "flex",
+              "action",
+              data,
+              true
+            );
+          },
+        };
+      }
+
+      it("should support singular route load navigations (primitives)", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data;
 
@@ -10088,9 +10147,116 @@ describe("a router", () => {
         // Child in nested route
         data = await queryRoute(createRequest("/parent/child"), "child");
         expect(data).toBe("CHILD LOADER");
+
+        // Non-undefined falsey values should count
+        let T = setupFlexRouteTest();
+        data = await T.resolveLoader(null);
+        expect(data).toBeNull();
+        data = await T.resolveLoader(false);
+        expect(data).toBe(false);
+        data = await T.resolveLoader("");
+        expect(data).toBe("");
       });
 
-      it("should support singular route submit navigations", async () => {
+      it("should support singular route load navigations (Responses)", async () => {
+        let T = setupFlexRouteTest();
+        let data;
+
+        // When Responses are returned or thrown, it should always resolve the
+        // raw Response from queryRoute
+
+        // Returned Success Response
+        data = await T.resolveLoader(new Response("Created!", { status: 201 }));
+        expect(data.status).toBe(201);
+        expect(await data.text()).toBe("Created!");
+
+        // Thrown Success Response
+        data = await T.rejectLoader(new Response("Created!", { status: 201 }));
+        expect(data.status).toBe(201);
+        expect(await data.text()).toBe("Created!");
+
+        // Returned Redirect Response
+        data = await T.resolveLoader(
+          new Response(null, {
+            status: 302,
+            headers: { Location: "/" },
+          })
+        );
+        expect(data.status).toBe(302);
+        expect(data.headers.get("Location")).toBe("/");
+
+        // Thrown Redirect Response
+        data = await T.rejectLoader(
+          new Response(null, {
+            status: 301,
+            headers: { Location: "/" },
+          })
+        );
+        expect(data.status).toBe(301);
+        expect(data.headers.get("Location")).toBe("/");
+
+        // Returned Error Response
+        data = await T.resolveLoader(new Response("Why?", { status: 400 }));
+        expect(data.status).toBe(400);
+        expect(await data.text()).toBe("Why?");
+
+        // Thrown Error Response
+        data = await T.rejectLoader(new Response("Oh no!", { status: 401 }));
+        expect(data.status).toBe(401);
+        expect(await data.text()).toBe("Oh no!");
+      });
+
+      it("should support singular route load navigations (Errors)", async () => {
+        let T = setupFlexRouteTest();
+        let data;
+
+        // Returned Error instance is treated as data since it was not thrown
+        data = await T.resolveLoader(new Error("Why?"));
+        expect(data).toEqual(new Error("Why?"));
+
+        // Anything thrown (Error instance or not) will throw from queryRoute
+        // so we know to handle it as an errorPath in the server.  Generally
+        // though in queryRoute, we would expect responses to be coming back -
+        // not
+
+        // Thrown Error
+        try {
+          await T.rejectLoader(new Error("Oh no!"));
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toEqual(new Error("Oh no!"));
+
+        // Thrown non-Error
+        try {
+          await T.rejectLoader("This is weird?");
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toEqual("This is weird?");
+
+        // Non-undefined falsey values should count
+        try {
+          await T.rejectLoader(null);
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toBeNull();
+        try {
+          await T.rejectLoader(false);
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toBe(false);
+        try {
+          await T.rejectLoader("");
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toBe("");
+      });
+
+      it("should support singular route submit navigations (primitives)", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data;
 
@@ -10109,6 +10275,113 @@ describe("a router", () => {
         // Child in nested route
         data = await queryRoute(createSubmitRequest("/parent/child"), "child");
         expect(data).toBe("CHILD ACTION");
+
+        // Non-undefined falsey values should count
+        let T = setupFlexRouteTest();
+        data = await T.resolveAction(null);
+        expect(data).toBeNull();
+        data = await T.resolveAction(false);
+        expect(data).toBe(false);
+        data = await T.resolveAction("");
+        expect(data).toBe("");
+      });
+
+      it("should support singular route submit navigations (Responses)", async () => {
+        let T = setupFlexRouteTest();
+        let data;
+
+        // When Responses are returned or thrown, it should always resolve the
+        // raw Response from queryRoute
+
+        // Returned Success Response
+        data = await T.resolveAction(new Response("Created!", { status: 201 }));
+        expect(data.status).toBe(201);
+        expect(await data.text()).toBe("Created!");
+
+        // Thrown Success Response
+        data = await T.rejectAction(new Response("Created!", { status: 201 }));
+        expect(data.status).toBe(201);
+        expect(await data.text()).toBe("Created!");
+
+        // Returned Redirect Response
+        data = await T.resolveAction(
+          new Response(null, {
+            status: 302,
+            headers: { Location: "/" },
+          })
+        );
+        expect(data.status).toBe(302);
+        expect(data.headers.get("Location")).toBe("/");
+
+        // Thrown Redirect Response
+        data = await T.rejectAction(
+          new Response(null, {
+            status: 301,
+            headers: { Location: "/" },
+          })
+        );
+        expect(data.status).toBe(301);
+        expect(data.headers.get("Location")).toBe("/");
+
+        // Returned Error Response
+        data = await T.resolveAction(new Response("Why?", { status: 400 }));
+        expect(data.status).toBe(400);
+        expect(await data.text()).toBe("Why?");
+
+        // Thrown Error Response
+        data = await T.rejectAction(new Response("Oh no!", { status: 401 }));
+        expect(data.status).toBe(401);
+        expect(await data.text()).toBe("Oh no!");
+      });
+
+      it("should support singular route submit navigations (Errors)", async () => {
+        let T = setupFlexRouteTest();
+        let data;
+
+        // Returned Error instance is treated as data since it was not thrown
+        data = await T.resolveAction(new Error("Why?"));
+        expect(data).toEqual(new Error("Why?"));
+
+        // Anything thrown (Error instance or not) will throw from queryRoute
+        // so we know to handle it as an errorPath in the server.  Generally
+        // though in queryRoute, we would expect responses to be coming back -
+        // not
+
+        // Thrown Error
+        try {
+          await T.rejectAction(new Error("Oh no!"));
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toEqual(new Error("Oh no!"));
+
+        // Thrown non-Error
+        try {
+          await T.rejectAction("This is weird?");
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toEqual("This is weird?");
+
+        // Non-undefined falsey values should count
+        try {
+          await T.rejectAction(null);
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toBeNull();
+        try {
+          await T.rejectAction(false);
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toBe(false);
+        try {
+          await T.rejectAction("");
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toBe("");
       });
 
       it("should not unwrap responses returned from loaders", async () => {
@@ -10139,22 +10412,6 @@ describe("a router", () => {
         let data = await queryRoute(request, "root");
         expect(data instanceof Response).toBe(true);
         expect(await data.json()).toEqual({ key: "value" });
-      });
-
-      it("should handle load error responses", async () => {
-        let { queryRoute } = createStaticHandler(SSR_ROUTES);
-        let data;
-
-        data = await queryRoute(createRequest("/parent/error"), "error");
-        expect(data).toBe("ERROR LOADER ERROR");
-      });
-
-      it("should handle submit error responses", async () => {
-        let { queryRoute } = createStaticHandler(SSR_ROUTES);
-        let data;
-
-        data = await queryRoute(createSubmitRequest("/parent/error"), "error");
-        expect(data).toBe("ERROR ACTION ERROR");
       });
 
       it("should handle aborted load requests", async () => {
