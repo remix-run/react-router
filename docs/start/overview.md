@@ -245,14 +245,14 @@ If `<Project />` renders the following links, the hrefs of the links will resolv
 
 | In `<Project>` @ `/home/project/123` | Resolved `<a href>`      |
 | ------------------------------------ | ------------------------ |
-| `<Link to="abc">`                    | `/home/projects/123/abc` |
-| `<Link to=".">`                      | `/home/projects/123`     |
+| `<Link to="abc">`                    | `/home/project/123/abc` |
+| `<Link to=".">`                      | `/home/project/123`     |
 | `<Link to="..">`                     | `/home`                  |
-| `<Link to=".." relative="path">`     | `/home/projects`         |
+| `<Link to=".." relative="path">`     | `/home/project`         |
 
 Note that the first `..` removes both segments of the `project/:projectId` route. By default, the `..` in relative links traverse the route hierarchy, not the URL segments. Adding `relative="path"` in the next example allows you to traverse the path segments instead.
 
-Relative links are always relative to the route path they are _rendered in_, not to the full URL. That means if the user navigates deeper with `<Link to="abc">` to `<Task />` at the URL `/home/projects/123/abc`, the hrefs in `<Project>` will not change (contrary to plain `<a href>`, a common problem with client side routers).
+Relative links are always relative to the route path they are _rendered in_, not to the full URL. That means if the user navigates deeper with `<Link to="abc">` to `<Task />` at the URL `/home/project/123/abc`, the hrefs in `<Project>` will not change (contrary to plain `<a href>`, a common problem with client side routers).
 
 ## Data Loading
 
