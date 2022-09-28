@@ -135,29 +135,75 @@ export interface ShouldRevalidateFunction {
 }
 
 /**
- * A route object represents a logical route, with (optionally) its child
- * routes organized in a tree-like structure.
+ * Base RouteObject with common props shared by all types of routes
  */
-export interface AgnosticRouteObject {
+type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
-  children?: AgnosticRouteObject[];
-  index?: boolean;
-  path?: string;
   id?: string;
   loader?: LoaderFunction;
   action?: ActionFunction;
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
-}
+};
+
+/**
+ * Index routes must not have a path or children
+ */
+export type AgnosticIndexRouteObject = AgnosticBaseRouteObject & {
+  children?: undefined;
+  index: true;
+  path?: never;
+};
+
+/**
+ * Path routes have a path specified, may have children, but cannot have index
+ */
+export type AgnosticPathRouteObject = AgnosticBaseRouteObject & {
+  children?: AgnosticRouteObject[];
+  index?: never;
+  path: string;
+};
+
+/**
+ * (Pathless) Layout routes do not include index/path, but may include children
+ */
+export type AgnosticLayoutRouteObject = AgnosticBaseRouteObject & {
+  children?: AgnosticRouteObject[];
+  index?: never;
+  path?: never;
+};
+
+/**
+ * A route object represents a logical route, with (optionally) its child
+ * routes organized in a tree-like structure.
+ */
+export type AgnosticRouteObject =
+  | AgnosticIndexRouteObject
+  | AgnosticPathRouteObject
+  | AgnosticLayoutRouteObject;
+
+export type AgnosticDataIndexRouteObject = AgnosticIndexRouteObject & {
+  id: string;
+};
+
+export type AgnosticDataPathRouteObject = AgnosticPathRouteObject & {
+  children?: AgnosticDataRouteObject[];
+  id: string;
+};
+
+export type AgnosticDataLayoutRouteObject = AgnosticLayoutRouteObject & {
+  children?: AgnosticDataRouteObject[];
+  id: string;
+};
 
 /**
  * A data route object, which is just a RouteObject with a required unique ID
  */
-export interface AgnosticDataRouteObject extends AgnosticRouteObject {
-  children?: AgnosticDataRouteObject[];
-  id: string;
-}
+export type AgnosticDataRouteObject =
+  | AgnosticDataIndexRouteObject
+  | AgnosticDataPathRouteObject
+  | AgnosticDataLayoutRouteObject;
 
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
@@ -231,6 +277,19 @@ export interface AgnosticRouteMatch<
 export interface AgnosticDataRouteMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
 
+function isIndexRoute(
+  route: AgnosticRouteObject
+): route is AgnosticIndexRouteObject {
+  if (route.index === true) {
+    invariant(
+      route.path == null && route.children == null,
+      `Cannot specify paths or children on an index route`
+    );
+    return true;
+  }
+  return false;
+}
+
 // Walk the route tree generating unique IDs where necessary so we are working
 // solely with AgnosticDataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
@@ -247,14 +306,22 @@ export function convertRoutesToDataRoutes(
         "id's must be globally unique within Data Router usages"
     );
     allIds.add(id);
-    let dataRoute: AgnosticDataRouteObject = {
-      ...route,
-      id,
-      children: route.children
-        ? convertRoutesToDataRoutes(route.children, treePath, allIds)
-        : undefined,
-    };
-    return dataRoute;
+
+    if (isIndexRoute(route)) {
+      let indexRoute: AgnosticDataIndexRouteObject = { ...route, id };
+      return indexRoute;
+    } else {
+      let pathOrLayoutRoute:
+        | AgnosticDataPathRouteObject
+        | AgnosticDataLayoutRouteObject = {
+        ...route,
+        id,
+        children: route.children
+          ? convertRoutesToDataRoutes(route.children, treePath, allIds)
+          : undefined,
+      };
+      return pathOrLayoutRoute;
+    }
   });
 }
 

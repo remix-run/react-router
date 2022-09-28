@@ -26,6 +26,9 @@ import type {
   RouteObject,
   Navigator,
   RelativeRoutingType,
+  PathRouteObject,
+  LayoutRouteObject,
+  IndexRouteObject,
 } from "./context";
 import {
   LocationContext,
@@ -220,49 +223,28 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
 }
 
-interface DataRouteProps {
-  id?: RouteObject["id"];
-  loader?: RouteObject["loader"];
-  action?: RouteObject["action"];
-  errorElement?: RouteObject["errorElement"];
-  shouldRevalidate?: RouteObject["shouldRevalidate"];
-  handle?: RouteObject["handle"];
-}
+// Create JSX-specific types from the RouteObjects, essentially changing
+// ReactElement to ReactNode
+export type PathRouteProps = Omit<PathRouteObject, "children"> & {
+  children?: React.ReactNode | null;
+};
 
-export interface RouteProps extends DataRouteProps {
-  caseSensitive?: boolean;
-  children?: React.ReactNode;
-  element?: React.ReactNode | null;
-  index?: boolean;
-  path?: string;
-}
+export type LayoutRouteProps = Omit<LayoutRouteObject, "children"> & {
+  children?: React.ReactNode | null;
+};
 
-export interface PathRouteProps extends DataRouteProps {
-  caseSensitive?: boolean;
-  children?: React.ReactNode;
-  element?: React.ReactNode | null;
-  index?: false;
-  path: string;
-}
+export type IndexRouteProps = Omit<IndexRouteObject, "children"> & {
+  children?: undefined;
+};
 
-export interface LayoutRouteProps extends DataRouteProps {
-  children?: React.ReactNode;
-  element?: React.ReactNode | null;
-}
-
-export interface IndexRouteProps extends DataRouteProps {
-  element?: React.ReactNode | null;
-  index: true;
-}
+export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 
 /**
  * Declares an element that should be rendered at a certain URL path.
  *
  * @see https://reactrouter.com/docs/en/v6/components/route
  */
-export function Route(
-  _props: PathRouteProps | LayoutRouteProps | IndexRouteProps
-): React.ReactElement | null {
+export function Route(_props: RouteProps): React.ReactElement | null {
   invariant(
     false,
     `A <Route> is only ever to be used as the child of <Routes> element, ` +

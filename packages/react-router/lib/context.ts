@@ -6,21 +6,40 @@ import type {
   Router,
   StaticHandlerContext,
   To,
-  AgnosticRouteObject,
   AgnosticRouteMatch,
+  AgnosticIndexRouteObject,
+  AgnosticLayoutRouteObject,
+  AgnosticPathRouteObject,
 } from "@remix-run/router";
 import type { Action as NavigationType } from "@remix-run/router";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router
-export type RouteObject = Omit<AgnosticRouteObject, "index" | "children"> & {
+export type IndexRouteObject = Omit<AgnosticIndexRouteObject, "children"> & {
+  children?: undefined;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
-} & ({ index?: false; children?: RouteObject[] } | { index: true });
+};
+export type PathRouteObject = Omit<AgnosticPathRouteObject, "children"> & {
+  children?: RouteObject[];
+  element?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
+};
+export type LayoutRouteObject = Omit<AgnosticLayoutRouteObject, "children"> & {
+  children?: RouteObject[];
+  element?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
+};
 
-export type DataRouteObject = Omit<RouteObject, "index" | "children"> & {
+export type RouteObject =
+  | IndexRouteObject
+  | PathRouteObject
+  | LayoutRouteObject;
+
+export type DataRouteObject = RouteObject & {
+  children?: DataRouteObject[];
   id: string;
-} & ({ index?: false; children?: DataRouteObject[] } | { index: true });
+};
 
 export interface RouteMatch<
   ParamKey extends string = string,

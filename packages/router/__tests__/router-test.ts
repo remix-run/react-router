@@ -28,7 +28,7 @@ import {
 } from "../index";
 
 // Private API
-import type { TrackedPromise } from "../utils";
+import type { AgnosticRouteObject, TrackedPromise } from "../utils";
 import { AbortedDeferredError } from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -999,6 +999,44 @@ describe("a router", () => {
         })
       ).toThrowErrorMatchingInlineSnapshot(
         `"Found a route id collision on id \\"child\\".  Route id's must be globally unique within Data Router usages"`
+      );
+    });
+
+    it("throws if it finds invalid route objects", async () => {
+      let routes: AgnosticRouteObject[] = [
+        // @ts-expect-error
+        {
+          path: "path",
+          index: true,
+        },
+      ];
+      expect(() =>
+        createRouter({
+          routes,
+          history: createMemoryHistory(),
+        })
+      ).toThrowErrorMatchingInlineSnapshot(
+        `"Cannot specify paths or children on an index route"`
+      );
+
+      routes = [
+        // @ts-expect-error
+        {
+          index: true,
+          children: [
+            {
+              path: "nope",
+            },
+          ],
+        },
+      ];
+      expect(() =>
+        createRouter({
+          routes,
+          history: createMemoryHistory(),
+        })
+      ).toThrowErrorMatchingInlineSnapshot(
+        `"Cannot specify paths or children on an index route"`
       );
     });
 
