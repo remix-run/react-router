@@ -551,6 +551,12 @@ export function createRoutesFromChildren(
       }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
     );
 
+    invariant(
+      !element.props.index ||
+        (element.props.path === undefined && !element.props.children),
+      "An index route cannot have a path or child routes."
+    );
+
     let treePath = [...parentPath, index];
     let route: RouteObject = {
       id: element.props.id || treePath.join("-"),
@@ -567,7 +573,6 @@ export function createRoutesFromChildren(
     };
 
     if (element.props.children) {
-      invariant(!route.index, "An index route must not have child routes.");
       route.children = createRoutesFromChildren(
         element.props.children,
         treePath
