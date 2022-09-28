@@ -243,11 +243,11 @@ Consider the url https://example.com/home/project/123, which renders the followi
 
 If `<Project />` renders the following links, the hrefs of the links will resolve like so:
 
-| In `<Project>` @ `/home/project/123` | Resolved `<a href>`      |
-| ------------------------------------ | ------------------------ |
+| In `<Project>` @ `/home/project/123` | Resolved `<a href>`     |
+| ------------------------------------ | ----------------------- |
 | `<Link to="abc">`                    | `/home/project/123/abc` |
 | `<Link to=".">`                      | `/home/project/123`     |
-| `<Link to="..">`                     | `/home`                  |
+| `<Link to="..">`                     | `/home`                 |
 | `<Link to=".." relative="path">`     | `/home/project`         |
 
 Note that the first `..` removes both segments of the `project/:projectId` route. By default, the `..` in relative links traverse the route hierarchy, not the URL segments. Adding `relative="path"` in the next example allows you to traverse the path segments instead.
