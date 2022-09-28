@@ -607,7 +607,7 @@ export function enhanceManualRouteObjects(
     if (routeClone.hasErrorBoundary == null) {
       routeClone.hasErrorBoundary = routeClone.errorElement != null;
     }
-    if (!routeClone.index && routeClone.children) {
+    if (routeClone.children) {
       routeClone.children = enhanceManualRouteObjects(routeClone.children);
     }
     return routeClone;
