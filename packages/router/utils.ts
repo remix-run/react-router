@@ -783,23 +783,30 @@ export function resolveTo(
   } else {
     to = { ...toArg };
 
-    let pathError = (char: string, field: string, dest: string) =>
+    let pathError = (
+      char: string,
+      field: string,
+      dest: string,
+      path: Partial<Path>
+    ) =>
       `Cannot include a '${char}' character in a manually specified ` +
-      `\`to.${field}\` field - please separate it out to the \`to.${dest}\` ` +
-      `field. Alternatively you may provide the full path as a string and the ` +
-      `router will parse it for you`;
+      `\`to.${field}\` field [${JSON.stringify(
+        path
+      )}].  Please separate it out to the ` +
+      `\`to.${dest}\` field. Alternatively you may provide the full path as ` +
+      `a string and the router will parse it for you.`;
 
     invariant(
-      to.pathname && !to.pathname.includes("?"),
-      pathError("?", "pathname", "search")
+      !to.pathname || !to.pathname.includes("?"),
+      pathError("?", "pathname", "search", to)
     );
     invariant(
-      to.pathname && !to.pathname.includes("#"),
-      pathError("#", "pathname", "hash")
+      !to.pathname || !to.pathname.includes("#"),
+      pathError("#", "pathname", "hash", to)
     );
     invariant(
-      to.search && !to.search.includes("#"),
-      pathError("#", "search", "hash")
+      !to.search || !to.search.includes("#"),
+      pathError("#", "search", "hash", to)
     );
   }
 
