@@ -1,7 +1,6 @@
 import * as React from "react";
 import type {
   TrackedPromise,
-  HydrationState,
   InitialEntry,
   Location,
   MemoryHistory,
@@ -22,13 +21,12 @@ import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-ext
 
 import type {
   DataRouteObject,
+  IndexRouteObject,
   RouteMatch,
   RouteObject,
   Navigator,
+  NonIndexRouteObject,
   RelativeRoutingType,
-  PathRouteObject,
-  LayoutRouteObject,
-  IndexRouteObject,
 } from "./context";
 import {
   LocationContext,
@@ -223,14 +221,12 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
 }
 
-// Create JSX-specific types from the RouteObjects, essentially changing
-// ReactElement to ReactNode
-export type PathRouteProps = Omit<PathRouteObject, "children"> & {
-  children?: React.ReactNode | null;
+export type PathRouteProps = Omit<NonIndexRouteObject, "children"> & {
+  children?: React.ReactNode;
 };
 
-export type LayoutRouteProps = Omit<LayoutRouteObject, "children"> & {
-  children?: React.ReactNode | null;
+export type LayoutRouteProps = Omit<NonIndexRouteObject, "children"> & {
+  children?: React.ReactNode;
 };
 
 export type IndexRouteProps = Omit<IndexRouteObject, "children"> & {

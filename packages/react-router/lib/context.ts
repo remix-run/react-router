@@ -1,15 +1,14 @@
 import * as React from "react";
 import type {
-  TrackedPromise,
+  AgnosticRouteMatch,
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
   History,
   Location,
   Router,
   StaticHandlerContext,
   To,
-  AgnosticRouteMatch,
-  AgnosticIndexRouteObject,
-  AgnosticLayoutRouteObject,
-  AgnosticPathRouteObject,
+  TrackedPromise,
 } from "@remix-run/router";
 import type { Action as NavigationType } from "@remix-run/router";
 
@@ -20,21 +19,16 @@ export type IndexRouteObject = Omit<AgnosticIndexRouteObject, "children"> & {
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
 };
-export type PathRouteObject = Omit<AgnosticPathRouteObject, "children"> & {
-  children?: RouteObject[];
-  element?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-};
-export type LayoutRouteObject = Omit<AgnosticLayoutRouteObject, "children"> & {
+export type NonIndexRouteObject = Omit<
+  AgnosticNonIndexRouteObject,
+  "children"
+> & {
   children?: RouteObject[];
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
 };
 
-export type RouteObject =
-  | IndexRouteObject
-  | PathRouteObject
-  | LayoutRouteObject;
+export type RouteObject = IndexRouteObject | NonIndexRouteObject;
 
 export type DataRouteObject = RouteObject & {
   children?: DataRouteObject[];

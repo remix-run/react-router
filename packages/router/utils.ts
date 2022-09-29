@@ -139,6 +139,7 @@ export interface ShouldRevalidateFunction {
  */
 type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
+  path?: string;
   id?: string;
   loader?: LoaderFunction;
   action?: ActionFunction;
@@ -148,30 +149,19 @@ type AgnosticBaseRouteObject = {
 };
 
 /**
- * Index routes must not have a path or children
+ * Index routes must not have children
  */
 export type AgnosticIndexRouteObject = AgnosticBaseRouteObject & {
   children?: undefined;
   index: true;
-  path?: never;
 };
 
 /**
- * Path routes have a path specified, may have children, but cannot have index
+ * Non-index routes may have children, but cannot have index
  */
-export type AgnosticPathRouteObject = AgnosticBaseRouteObject & {
+export type AgnosticNonIndexRouteObject = AgnosticBaseRouteObject & {
   children?: AgnosticRouteObject[];
-  index?: never;
-  path: string;
-};
-
-/**
- * (Pathless) Layout routes do not include index/path, but may include children
- */
-export type AgnosticLayoutRouteObject = AgnosticBaseRouteObject & {
-  children?: AgnosticRouteObject[];
-  index?: never;
-  path?: never;
+  index?: false;
 };
 
 /**
@@ -180,19 +170,13 @@ export type AgnosticLayoutRouteObject = AgnosticBaseRouteObject & {
  */
 export type AgnosticRouteObject =
   | AgnosticIndexRouteObject
-  | AgnosticPathRouteObject
-  | AgnosticLayoutRouteObject;
+  | AgnosticNonIndexRouteObject;
 
 export type AgnosticDataIndexRouteObject = AgnosticIndexRouteObject & {
   id: string;
 };
 
-export type AgnosticDataPathRouteObject = AgnosticPathRouteObject & {
-  children?: AgnosticDataRouteObject[];
-  id: string;
-};
-
-export type AgnosticDataLayoutRouteObject = AgnosticLayoutRouteObject & {
+export type AgnosticDataNonIndexRouteObject = AgnosticNonIndexRouteObject & {
   children?: AgnosticDataRouteObject[];
   id: string;
 };
@@ -202,8 +186,7 @@ export type AgnosticDataLayoutRouteObject = AgnosticLayoutRouteObject & {
  */
 export type AgnosticDataRouteObject =
   | AgnosticDataIndexRouteObject
-  | AgnosticDataPathRouteObject
-  | AgnosticDataLayoutRouteObject;
+  | AgnosticDataNonIndexRouteObject;
 
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
@@ -294,8 +277,8 @@ export function convertRoutesToDataRoutes(
     let treePath = [...parentPath, index];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
     invariant(
-      route.index !== true || (route.path == null && !route.children),
-      `Cannot specify paths or children on an index route`
+      route.index !== true || !route.children,
+      `Cannot specify children on an index route`
     );
     invariant(
       !allIds.has(id),
@@ -308,9 +291,7 @@ export function convertRoutesToDataRoutes(
       let indexRoute: AgnosticDataIndexRouteObject = { ...route, id };
       return indexRoute;
     } else {
-      let pathOrLayoutRoute:
-        | AgnosticDataPathRouteObject
-        | AgnosticDataLayoutRouteObject = {
+      let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
         ...route,
         id,
         children: route.children
@@ -401,16 +382,18 @@ function flattenRoutes<
     let path = joinPaths([parentPath, meta.relativePath]);
     let routesMeta = parentsMeta.concat(meta);
 
-    invariant(
-      route.index !== true || (route.path == null && !route.children),
-      `Index routes must not have a path or child routes. Please update the ` +
-        `index route at the path "${path}".`
-    );
-
     // Add the children before adding this route to the array so we traverse the
     // route tree depth-first and child routes appear before their parents in
     // the "flattened" version.
     if (route.children && route.children.length > 0) {
+      invariant(
+        // Our types know better, but runtime JS may not!
+        // @ts-expect-error
+        route.index !== true,
+        `Index routes must not have child routes. Please remove ` +
+          `all child routes from route path "${path}".`
+      );
+
       flattenRoutes(route.children, branches, routesMeta, path);
     }
 

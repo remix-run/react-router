@@ -1002,24 +1002,8 @@ describe("a router", () => {
       );
     });
 
-    it("throws if it finds invalid route objects", async () => {
-      let routes: AgnosticRouteObject[] = [
-        // @ts-expect-error
-        {
-          path: "path",
-          index: true,
-        },
-      ];
-      expect(() =>
-        createRouter({
-          routes,
-          history: createMemoryHistory(),
-        })
-      ).toThrowErrorMatchingInlineSnapshot(
-        `"Cannot specify paths or children on an index route"`
-      );
-
-      routes = [
+    it("throws if it finds index routes with children", async () => {
+      let routes = [
         // @ts-expect-error
         {
           index: true,
@@ -1036,7 +1020,7 @@ describe("a router", () => {
           history: createMemoryHistory(),
         })
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Cannot specify paths or children on an index route"`
+        `"Cannot specify children on an index route"`
       );
     });
 

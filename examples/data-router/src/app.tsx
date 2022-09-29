@@ -3,6 +3,7 @@ import {
   createBrowserRouter,
   createRoutesFromElements,
   Route,
+  RouteObject,
   RouterProvider,
 } from "react-router-dom";
 
@@ -31,6 +32,7 @@ let router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />}>
       <Route index loader={homeLoader} element={<Home />} />
+
       <Route path="deferred" loader={deferredLoader} element={<DeferredPage />}>
         <Route
           path="child"
