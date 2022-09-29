@@ -197,17 +197,6 @@ describe("creating routes from JSX", () => {
     `);
   });
 
-  it("throws when the index route has a path", () => {
-    expect(() => {
-      createRoutesFromChildren(
-        <Route path="/">
-          {/* @ts-expect-error */}
-          <Route index path="foo" />
-        </Route>
-      );
-    }).toThrow("An index route cannot have a path or child routes.");
-  });
-
   it("throws when the index route has children", () => {
     expect(() => {
       createRoutesFromChildren(
@@ -218,6 +207,6 @@ describe("creating routes from JSX", () => {
           </Route>
         </Route>
       );
-    }).toThrow("An index route cannot have a path or child routes.");
+    }).toThrow("An index route cannot have a child routes.");
   });
 });

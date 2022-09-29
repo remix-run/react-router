@@ -27,6 +27,15 @@ describe("matchRoutes", () => {
     element: <h1>Users</h1>,
     children: [{ index: true, element: <h1>Index</h1> }, userProfileRoute],
   };
+  let indexWithPathRoute: RouteObject = {
+    path: "/withpath",
+    index: true,
+  };
+  let layoutRouteIndex: RouteObject = {
+    path: "/layout",
+    index: true,
+    element: <h1>Layout</h1>,
+  };
   let layoutRoute: RouteObject = {
     path: "/layout",
     children: [
@@ -45,7 +54,9 @@ describe("matchRoutes", () => {
         { path: "*", element: <h1>Not Found</h1> },
       ],
     },
+    indexWithPathRoute,
     layoutRoute,
+    layoutRouteIndex,
     usersRoute,
     { path: "*", element: <h1>Not Found</h1> },
   ];
@@ -55,8 +66,12 @@ describe("matchRoutes", () => {
     expect(pickPaths(routes, "/hometypo")).toEqual(["*"]);
   });
 
-  it("matches layout routes", () => {
-    expect(matchRoutes(routes, "/layout")?.length).toBe(1);
+  it("matches index routes with path correctly", () => {
+    expect(pickPaths(routes, "/withpath")).toEqual(["/withpath"]);
+  });
+
+  it("matches index routes with path over layout", () => {
+    expect(matchRoutes(routes, "/layout")?.[0].route.index).toBe(true);
     expect(pickPaths(routes, "/layout")).toEqual(["/layout"]);
   });
 
