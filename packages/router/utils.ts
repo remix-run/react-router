@@ -768,6 +768,22 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
   return segments.length > 1 ? segments.join("/") : "/";
 }
 
+function getInvalidPathError(
+  char: string,
+  field: string,
+  dest: string,
+  path: Partial<Path>
+) {
+  return (
+    `Cannot include a '${char}' character in a manually specified ` +
+    `\`to.${field}\` field [${JSON.stringify(
+      path
+    )}].  Please separate it out to the ` +
+    `\`to.${dest}\` field. Alternatively you may provide the full path as ` +
+    `a string and the router will parse it for you.`
+  );
+}
+
 /**
  * @private
  */
@@ -783,30 +799,17 @@ export function resolveTo(
   } else {
     to = { ...toArg };
 
-    let pathError = (
-      char: string,
-      field: string,
-      dest: string,
-      path: Partial<Path>
-    ) =>
-      `Cannot include a '${char}' character in a manually specified ` +
-      `\`to.${field}\` field [${JSON.stringify(
-        path
-      )}].  Please separate it out to the ` +
-      `\`to.${dest}\` field. Alternatively you may provide the full path as ` +
-      `a string and the router will parse it for you.`;
-
     invariant(
       !to.pathname || !to.pathname.includes("?"),
-      pathError("?", "pathname", "search", to)
+      getInvalidPathError("?", "pathname", "search", to)
     );
     invariant(
       !to.pathname || !to.pathname.includes("#"),
-      pathError("#", "pathname", "hash", to)
+      getInvalidPathError("#", "pathname", "hash", to)
     );
     invariant(
       !to.search || !to.search.includes("#"),
-      pathError("#", "search", "hash", to)
+      getInvalidPathError("#", "search", "hash", to)
     );
   }
 
