@@ -489,7 +489,7 @@ export function generatePath<Path extends string>(
       return params[key]!;
     })
     .replace(/(\/?)\*/, (_, prefix, __, str) => {
-      const star = "*" as PathParam<Path>;
+      let star = "*" as PathParam<Path>;
 
       if (params[star] == null) {
         // If no splat was provided, trim the trailing slash _unless_ it's
@@ -989,7 +989,7 @@ export class DeferredData {
       this.unlistenAbortSignal();
     }
 
-    const subscriber = this.subscriber;
+    let subscriber = this.subscriber;
     if (error) {
       Object.defineProperty(promise, "_error", { get: () => error });
       subscriber && subscriber(false);

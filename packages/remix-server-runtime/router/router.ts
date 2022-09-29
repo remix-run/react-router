@@ -1056,7 +1056,7 @@ export function createRouter(init: RouterInit): Router {
     // a revalidation interrupting an actionReload)
     if (!isUninterruptedRevalidation) {
       revalidatingFetchers.forEach(([key]) => {
-        const fetcher = state.fetchers.get(key);
+        let fetcher = state.fetchers.get(key);
         let revalidatingFetcher: FetcherStates["Loading"] = {
           state: "loading",
           data: fetcher && fetcher.data,

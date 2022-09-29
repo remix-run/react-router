@@ -224,7 +224,9 @@ describe("shared server runtime", () => {
       });
 
       let result = await handler(request);
-      expect(await result.text()).toBe("Unexpected Server Error\n\nError: should be logged when resource loader throws");
+      expect(await result.text()).toBe(
+        "Unexpected Server Error\n\nError: should be logged when resource loader throws"
+      );
     });
 
     test("resource route loader responds with detailed error when thrown in development", async () => {
@@ -370,7 +372,9 @@ describe("shared server runtime", () => {
       });
 
       let result = await handler(request);
-      expect(await result.text()).toBe("Unexpected Server Error\n\nError: should be logged when resource loader throws");
+      expect(await result.text()).toBe(
+        "Unexpected Server Error\n\nError: should be logged when resource loader throws"
+      );
     });
 
     test("resource route action responds with detailed error when thrown in development", async () => {
@@ -1636,7 +1640,9 @@ describe("shared server runtime", () => {
 
       let result = await handler(request);
       expect(result.status).toBe(500);
-      expect(await result.text()).toBe("Unexpected Server Error\n\nError: rofl");
+      expect(await result.text()).toBe(
+        "Unexpected Server Error\n\nError: rofl"
+      );
       expect(rootLoader.mock.calls.length).toBe(0);
       expect(indexLoader.mock.calls.length).toBe(0);
 
