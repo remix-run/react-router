@@ -553,7 +553,7 @@ export function createRoutesFromChildren(
 
     invariant(
       !element.props.index ||
-        (element.props.path === undefined && !element.props.children),
+        (element.props.path == null && !element.props.children),
       "An index route cannot have a path or child routes."
     );
 

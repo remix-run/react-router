@@ -294,7 +294,7 @@ export function convertRoutesToDataRoutes(
     let treePath = [...parentPath, index];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
     invariant(
-      route.index !== true || (route.path == null && route.children == null),
+      route.index !== true || (route.path == null && !route.children),
       `Cannot specify paths or children on an index route`
     );
     invariant(
@@ -402,7 +402,7 @@ function flattenRoutes<
     let routesMeta = parentsMeta.concat(meta);
 
     invariant(
-      route.index !== true || (route.path == null && route.children == null),
+      route.index !== true || (route.path == null && !route.children),
       `Index routes must not have a path or child routes. Please update the ` +
         `index route at the path "${path}".`
     );
