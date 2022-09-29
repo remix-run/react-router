@@ -777,7 +777,32 @@ export function resolveTo(
   locationPathname: string,
   isPathRelative = false
 ): Path {
-  let to = typeof toArg === "string" ? parsePath(toArg) : { ...toArg };
+  let to: Partial<Path>;
+  if (typeof toArg === "string") {
+    to = parsePath(toArg);
+  } else {
+    to = { ...toArg };
+
+    let pathError = (char: string, field: string, dest: string) =>
+      `Cannot include a '${char}' character in a manually specified ` +
+      `\`to.${field}\` field - please separate it out to the \`to.${dest}\` ` +
+      `field. Alternatively you may provide the full path as a string and the ` +
+      `router will parse it for you`;
+
+    invariant(
+      to.pathname && !to.pathname.includes("?"),
+      pathError("?", "pathname", "search")
+    );
+    invariant(
+      to.pathname && !to.pathname.includes("#"),
+      pathError("#", "pathname", "hash")
+    );
+    invariant(
+      to.search && !to.search.includes("#"),
+      pathError("#", "search", "hash")
+    );
+  }
+
   let isEmptyPath = toArg === "" || to.pathname === "";
   let toPathname = isEmptyPath ? "/" : to.pathname;
 
