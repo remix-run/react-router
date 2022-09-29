@@ -8,9 +8,10 @@ describe("index route matching", () => {
           {
             path: "/users",
             children: [
+              // This config is not valid because index routes cannot have children
+              // @ts-expect-error
               {
                 index: true,
-                // This config is not valid because index routes cannot have children
                 children: [{ path: "not-valid" }],
               },
               { path: ":id" },
@@ -19,6 +20,32 @@ describe("index route matching", () => {
         ],
         "/users/mj"
       );
-    }).toThrow("must not have child routes");
+    }).toThrowErrorMatchingInlineSnapshot(
+      `"Index routes must not have a path or child routes. Please update the index route at the path \\"/users/\\"."`
+    );
+  });
+
+  it("throws when the index route has a path", () => {
+    expect(() => {
+      matchRoutes(
+        [
+          {
+            path: "/users",
+            children: [
+              // This config is not valid because index routes cannot have paths
+              // @ts-expect-error
+              {
+                index: true,
+                path: "not-valid",
+              },
+              { path: ":id" },
+            ],
+          },
+        ],
+        "/users/mj"
+      );
+    }).toThrowErrorMatchingInlineSnapshot(
+      `"Index routes must not have a path or child routes. Please update the index route at the path \\"/users/not-valid\\"."`
+    );
   });
 });

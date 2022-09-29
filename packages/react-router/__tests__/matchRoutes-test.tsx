@@ -1,3 +1,4 @@
+import { AgnosticRouteObject } from "@remix-run/router";
 import * as React from "react";
 import type { RouteObject } from "react-router";
 import { matchRoutes } from "react-router";
@@ -26,15 +27,6 @@ describe("matchRoutes", () => {
     element: <h1>Users</h1>,
     children: [{ index: true, element: <h1>Index</h1> }, userProfileRoute],
   };
-  let indexWithPathRoute: RouteObject = {
-    path: "/withpath",
-    index: true,
-  };
-  let layoutRouteIndex: RouteObject = {
-    path: "/layout",
-    index: true,
-    element: <h1>Layout</h1>,
-  };
   let layoutRoute: RouteObject = {
     path: "/layout",
     children: [
@@ -43,8 +35,7 @@ describe("matchRoutes", () => {
       { path: "*", element: <h1>Not Found</h1> },
     ],
   };
-
-  let routes = [
+  let routes: RouteObject[] = [
     { path: "/", element: <h1>Root Layout</h1> },
     {
       path: "/home",
@@ -54,9 +45,7 @@ describe("matchRoutes", () => {
         { path: "*", element: <h1>Not Found</h1> },
       ],
     },
-    indexWithPathRoute,
     layoutRoute,
-    layoutRouteIndex,
     usersRoute,
     { path: "*", element: <h1>Not Found</h1> },
   ];
@@ -66,12 +55,8 @@ describe("matchRoutes", () => {
     expect(pickPaths(routes, "/hometypo")).toEqual(["*"]);
   });
 
-  it("matches index routes with path correctly", () => {
-    expect(pickPaths(routes, "/withpath")).toEqual(["/withpath"]);
-  });
-
-  it("matches index routes with path over layout", () => {
-    expect(matchRoutes(routes, "/layout")[0].route.index).toBe(true);
+  it("matches layout routes", () => {
+    expect(matchRoutes(routes, "/layout")?.length).toBe(1);
     expect(pickPaths(routes, "/layout")).toEqual(["/layout"]);
   });
 

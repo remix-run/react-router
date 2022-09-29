@@ -280,14 +280,7 @@ export interface AgnosticDataRouteMatch
 function isIndexRoute(
   route: AgnosticRouteObject
 ): route is AgnosticIndexRouteObject {
-  if (route.index === true) {
-    invariant(
-      route.path == null && route.children == null,
-      `Cannot specify paths or children on an index route`
-    );
-    return true;
-  }
-  return false;
+  return route.index === true;
 }
 
 // Walk the route tree generating unique IDs where necessary so we are working
@@ -300,6 +293,10 @@ export function convertRoutesToDataRoutes(
   return routes.map((route, index) => {
     let treePath = [...parentPath, index];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
+    invariant(
+      route.index !== true || (route.path == null && route.children == null),
+      `Cannot specify paths or children on an index route`
+    );
     invariant(
       !allIds.has(id),
       `Found a route id collision on id "${id}".  Route ` +
@@ -404,16 +401,16 @@ function flattenRoutes<
     let path = joinPaths([parentPath, meta.relativePath]);
     let routesMeta = parentsMeta.concat(meta);
 
+    invariant(
+      route.index !== true || (route.path == null && route.children == null),
+      `Index routes must not have a path or child routes. Please update the ` +
+        `index route at the path "${path}".`
+    );
+
     // Add the children before adding this route to the array so we traverse the
     // route tree depth-first and child routes appear before their parents in
     // the "flattened" version.
     if (route.children && route.children.length > 0) {
-      invariant(
-        route.index !== true,
-        `Index routes must not have child routes. Please remove ` +
-          `all child routes from route path "${path}".`
-      );
-
       flattenRoutes(route.children, branches, routesMeta, path);
     }
 
