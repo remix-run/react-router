@@ -169,7 +169,9 @@ describe("loaders", () => {
     try {
       possibleError = await callRouteLoader({
         request,
-        match,
+        loader: match.route.module.loader,
+        routeId: match.route.id,
+        params: match.params,
         loadContext: {},
       });
     } catch (error) {
@@ -206,7 +208,9 @@ describe("actions", () => {
     try {
       possibleError = await callRouteAction({
         request,
-        match,
+        action: match.route.module.action,
+        routeId: match.route.id,
+        params: match.params,
         loadContext: {},
       });
     } catch (error) {

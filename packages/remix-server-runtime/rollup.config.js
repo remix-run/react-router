@@ -3,6 +3,7 @@ const path = require("path");
 const babel = require("@rollup/plugin-babel").default;
 const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const copy = require("rollup-plugin-copy");
+const replace = require("@rollup/plugin-replace");
 
 const {
   getOutputDir,
@@ -12,6 +13,15 @@ const {
   magicExportsPlugin,
 } = require("../../rollup.utils");
 const { name: packageName, version } = require("./package.json");
+
+const ENABLE_REMIX_ROUTER = !!process.env.ENABLE_REMIX_ROUTER;
+
+const replacePlugin = replace({
+  preventAssignment: true,
+  values: {
+    "process.env.ENABLE_REMIX_ROUTER": ENABLE_REMIX_ROUTER ? "1" : "0",
+  },
+});
 
 /** @returns {import("rollup").RollupOptions[]} */
 module.exports = function rollup() {
@@ -32,7 +42,12 @@ module.exports = function rollup() {
         preserveModules: true,
         exports: "named",
       },
+      treeshake: {
+        // Without this, we don't tree-shake the require('@remix-run/router') :/
+        moduleSideEffects: false,
+      },
       plugins: [
+        replacePlugin,
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -61,7 +76,12 @@ module.exports = function rollup() {
         format: "esm",
         preserveModules: true,
       },
+      treeshake: {
+        // Without this, we don't tree-shake the require('@remix-run/router') :/
+        moduleSideEffects: false,
+      },
       plugins: [
+        replacePlugin,
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,

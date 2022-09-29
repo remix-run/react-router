@@ -6,6 +6,7 @@ import getPort from "get-port";
 import stripIndent from "strip-indent";
 import { sync as spawnSync } from "cross-spawn";
 import type { JsonObject } from "type-fest";
+import type { ServerMode } from "@remix-run/server-runtime/mode";
 
 import type { ServerBuild } from "../../build/node_modules/@remix-run/server-runtime";
 import { createRequestHandler } from "../../build/node_modules/@remix-run/server-runtime";
@@ -39,7 +40,10 @@ export async function createFixture(init: FixtureInit) {
 
   let requestDocument = async (href: string, init?: RequestInit) => {
     let url = new URL(href, "test://test");
-    let request = new Request(url.toString(), init);
+    let request = new Request(url.toString(), {
+      ...init,
+      signal: new AbortController().signal,
+    });
     return handler(request);
   };
 
@@ -84,7 +88,7 @@ export async function createFixture(init: FixtureInit) {
   };
 }
 
-export async function createAppFixture(fixture: Fixture) {
+export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
   let startAppServer = async (): Promise<{
     port: number;
     stop: () => Promise<void>;
@@ -93,9 +97,13 @@ export async function createAppFixture(fixture: Fixture) {
       let port = await getPort();
       let app = express();
       app.use(express.static(path.join(fixture.projectDir, "public")));
+
       app.all(
         "*",
-        createExpressHandler({ build: fixture.build, mode: "production" })
+        createExpressHandler({
+          build: fixture.build,
+          mode: mode || "production",
+        })
       );
 
       let server = app.listen(port);

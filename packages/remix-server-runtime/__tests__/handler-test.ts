@@ -22,6 +22,7 @@ describe("createRequestHandler", () => {
         headers: {
           "X-Foo": "bar",
         },
+        signal: new AbortController().signal,
       })
     );
 

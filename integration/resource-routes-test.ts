@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { ServerMode } from "@remix-run/server-runtime/mode";
 
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 import type { AppFixture, Fixture } from "./helpers/create-fixture";
@@ -67,9 +68,34 @@ test.describe("loader in an app", async () => {
             );
           }
         `,
+        "app/routes/throw-error.jsx": js`
+          export let loader = () => {
+            throw new Error('Oh noes!')
+          }
+        `,
+        "app/routes/return-response.jsx": js`
+          export let loader = () => {
+            return new Response('Partial', { status: 207 });
+          }
+        `,
+        "app/routes/throw-response.jsx": js`
+          export let loader = () => {
+            throw new Response('Partial', { status: 207 });
+          }
+        `,
+        "app/routes/return-object.jsx": js`
+          export let loader = () => {
+            return { hello: 'world' };
+          }
+        `,
+        "app/routes/throw-object.jsx": js`
+          export let loader = () => {
+            throw { but: 'why' };
+          }
+        `,
       },
     });
-    appFixture = await createAppFixture(fixture);
+    appFixture = await createAppFixture(fixture, ServerMode.Test);
   });
 
   test.afterAll(async () => {
@@ -113,5 +139,54 @@ test.describe("loader in an app", async () => {
       );
       expect(data).toBe(SVG_CONTENTS);
     });
+
+    test("should handle errors thrown from resource routes", async ({
+      page,
+    }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      let res = await app.goto("/throw-error");
+      expect(res.status()).toBe(500);
+      expect(await res.text()).toEqual(
+        "Unexpected Server Error\n\nError: Oh noes!"
+      );
+    });
   }
+
+  test("should handle responses returned from resource routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/return-response");
+    expect(res.status()).toBe(207);
+    expect(await res.text()).toEqual("Partial");
+  });
+
+  test("should handle responses thrown from resource routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/throw-response");
+    expect(res.status()).toBe(207);
+    expect(await res.text()).toEqual("Partial");
+  });
+
+  test("should handle objects returned from resource routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/return-object");
+    expect(res.status()).toBe(200);
+    expect(await res.json()).toEqual({ hello: "world" });
+  });
+
+  test("should handle objects thrown from resource routes", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/throw-object");
+    expect(res.status()).toBe(500);
+    expect(await res.text()).toEqual(
+      "Unexpected Server Error\n\n[object Object]"
+    );
+  });
 });
