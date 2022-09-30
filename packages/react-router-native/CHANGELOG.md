@@ -1,5 +1,13 @@
 # `react-router-native`
 
+## 6.4.2-pre.0
+
+### Patch Changes
+
+- fix: Strengthen `RouteObject`/`RouteProps` types and throw on `index` routes with `children` ([#9366](https://github.com/remix-run/react-router/pull/9366))
+- Updated dependencies:
+  - `react-router@6.4.2-pre.0`
+
 ## 6.4.1
 
 ### Patch Changes

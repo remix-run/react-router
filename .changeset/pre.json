@@ -8,5 +8,12 @@
     "react-router-native": "6.4.1",
     "@remix-run/router": "1.0.1"
   },
-  "changesets": []
+  "changesets": [
+    "dirty-yaks-repair",
+    "hip-colts-serve",
+    "nasty-bugs-promise",
+    "short-hats-peel",
+    "sweet-chicken-suffer",
+    "swift-beers-sell"
+  ]
 }
