@@ -221,17 +221,37 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
 }
 
-export type PathRouteProps = Omit<NonIndexRouteObject, "children"> & {
+export interface PathRouteProps {
+  caseSensitive?: NonIndexRouteObject["caseSensitive"];
+  path?: NonIndexRouteObject["path"];
+  id?: NonIndexRouteObject["id"];
+  loader?: NonIndexRouteObject["loader"];
+  action?: NonIndexRouteObject["action"];
+  hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
+  shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
+  handle?: NonIndexRouteObject["handle"];
+  index?: false;
   children?: React.ReactNode;
-};
+  element?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
+}
 
-export type LayoutRouteProps = Omit<NonIndexRouteObject, "children"> & {
-  children?: React.ReactNode;
-};
+export interface LayoutRouteProps extends PathRouteProps {}
 
-export type IndexRouteProps = Omit<IndexRouteObject, "children"> & {
+export interface IndexRouteProps {
+  caseSensitive?: IndexRouteObject["caseSensitive"];
+  path?: IndexRouteObject["path"];
+  id?: IndexRouteObject["id"];
+  loader?: IndexRouteObject["loader"];
+  action?: IndexRouteObject["action"];
+  hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
+  shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
+  handle?: IndexRouteObject["handle"];
+  index: true;
   children?: undefined;
-};
+  element?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
+}
 
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 
