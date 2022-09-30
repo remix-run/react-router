@@ -780,7 +780,7 @@ function getInvalidPathError(
       path
     )}].  Please separate it out to the ` +
     `\`to.${dest}\` field. Alternatively you may provide the full path as ` +
-    `a string and the router will parse it for you.`
+    `a string in <Link to="..."> and the router will parse it for you.`
   );
 }
 
