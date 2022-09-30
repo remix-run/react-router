@@ -14,7 +14,7 @@ Changesets will do most of the heavy lifting for our releases. When changes are 
 ### Starting a new pre-release
 
 - Ensure you are on the new `release-*` branch
-- Enter Changesets pre-release mode using the `pre` tag: `yarn changeset pre enter next`
+- Enter Changesets pre-release mode using the `pre` tag: `yarn changeset pre enter pre`
 - Commit the changesets and push the the `release-*` branch to GitHub; wait for the release workflow to finish and the Changesets action to open its PR that will increment all versions
 - Review the updated `CHANGELOG` files and make any adjustments necessary, then merge the PR
 - Once the PR is merged, the release workflow will publish the updated packages to npm

@@ -1,0 +1,19 @@
+{
+  "mode": "pre",
+  "tag": "pre",
+  "initialVersions": {
+    "react-router": "6.4.1",
+    "react-router-dom": "6.4.1",
+    "react-router-dom-v5-compat": "6.4.1",
+    "react-router-native": "6.4.1",
+    "@remix-run/router": "1.0.1"
+  },
+  "changesets": [
+    "dirty-yaks-repair",
+    "hip-colts-serve",
+    "nasty-bugs-promise",
+    "short-hats-peel",
+    "sweet-chicken-suffer",
+    "swift-beers-sell"
+  ]
+}
