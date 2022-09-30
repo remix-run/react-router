@@ -819,6 +819,22 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
   return segments.length > 1 ? segments.join("/") : "/";
 }
 
+function getInvalidPathError(
+  char: string,
+  field: string,
+  dest: string,
+  path: Partial<Path>
+) {
+  return (
+    `Cannot include a '${char}' character in a manually specified ` +
+    `\`to.${field}\` field [${JSON.stringify(
+      path
+    )}].  Please separate it out to the ` +
+    `\`to.${dest}\` field. Alternatively you may provide the full path as ` +
+    `a string in <Link to="..."> and the router will parse it for you.`
+  );
+}
+
 /**
  * @private
  */
@@ -828,7 +844,26 @@ export function resolveTo(
   locationPathname: string,
   isPathRelative = false
 ): Path {
-  let to = typeof toArg === "string" ? parsePath(toArg) : { ...toArg };
+  let to: Partial<Path>;
+  if (typeof toArg === "string") {
+    to = parsePath(toArg);
+  } else {
+    to = { ...toArg };
+
+    invariant(
+      !to.pathname || !to.pathname.includes("?"),
+      getInvalidPathError("?", "pathname", "search", to)
+    );
+    invariant(
+      !to.pathname || !to.pathname.includes("#"),
+      getInvalidPathError("#", "pathname", "hash", to)
+    );
+    invariant(
+      !to.search || !to.search.includes("#"),
+      getInvalidPathError("#", "search", "hash", to)
+    );
+  }
+
   let isEmptyPath = toArg === "" || to.pathname === "";
   let toPathname = isEmptyPath ? "/" : to.pathname;
 
