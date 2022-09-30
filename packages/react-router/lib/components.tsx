@@ -1,7 +1,6 @@
 import * as React from "react";
 import type {
   TrackedPromise,
-  HydrationState,
   InitialEntry,
   Location,
   MemoryHistory,
@@ -22,9 +21,11 @@ import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-ext
 
 import type {
   DataRouteObject,
+  IndexRouteObject,
   RouteMatch,
   RouteObject,
   Navigator,
+  NonIndexRouteObject,
   RelativeRoutingType,
 } from "./context";
 import {
@@ -220,49 +221,46 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
 }
 
-interface DataRouteProps {
-  id?: RouteObject["id"];
-  loader?: RouteObject["loader"];
-  action?: RouteObject["action"];
-  errorElement?: RouteObject["errorElement"];
-  shouldRevalidate?: RouteObject["shouldRevalidate"];
-  handle?: RouteObject["handle"];
-}
-
-export interface RouteProps extends DataRouteProps {
-  caseSensitive?: boolean;
-  children?: React.ReactNode;
-  element?: React.ReactNode | null;
-  index?: boolean;
-  path?: string;
-}
-
-export interface PathRouteProps extends DataRouteProps {
-  caseSensitive?: boolean;
-  children?: React.ReactNode;
-  element?: React.ReactNode | null;
+export interface PathRouteProps {
+  caseSensitive?: NonIndexRouteObject["caseSensitive"];
+  path?: NonIndexRouteObject["path"];
+  id?: NonIndexRouteObject["id"];
+  loader?: NonIndexRouteObject["loader"];
+  action?: NonIndexRouteObject["action"];
+  hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
+  shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
+  handle?: NonIndexRouteObject["handle"];
   index?: false;
-  path: string;
-}
-
-export interface LayoutRouteProps extends DataRouteProps {
   children?: React.ReactNode;
   element?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
 }
 
-export interface IndexRouteProps extends DataRouteProps {
-  element?: React.ReactNode | null;
+export interface LayoutRouteProps extends PathRouteProps {}
+
+export interface IndexRouteProps {
+  caseSensitive?: IndexRouteObject["caseSensitive"];
+  path?: IndexRouteObject["path"];
+  id?: IndexRouteObject["id"];
+  loader?: IndexRouteObject["loader"];
+  action?: IndexRouteObject["action"];
+  hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
+  shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
+  handle?: IndexRouteObject["handle"];
   index: true;
+  children?: undefined;
+  element?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
 }
+
+export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 
 /**
  * Declares an element that should be rendered at a certain URL path.
  *
  * @see https://reactrouter.com/docs/en/v6/components/route
  */
-export function Route(
-  _props: PathRouteProps | LayoutRouteProps | IndexRouteProps
-): React.ReactElement | null {
+export function Route(_props: RouteProps): React.ReactElement | null {
   invariant(
     false,
     `A <Route> is only ever to be used as the child of <Routes> element, ` +
@@ -567,6 +565,11 @@ export function createRoutesFromChildren(
       `[${
         typeof element.type === "string" ? element.type : element.type.name
       }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
+    );
+
+    invariant(
+      !element.props.index || !element.props.children,
+      "An index route cannot have child routes."
     );
 
     let treePath = [...parentPath, index];

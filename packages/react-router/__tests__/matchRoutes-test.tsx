@@ -1,3 +1,4 @@
+import { AgnosticRouteObject } from "@remix-run/router";
 import * as React from "react";
 import type { RouteObject } from "react-router";
 import { matchRoutes } from "react-router";
@@ -43,8 +44,7 @@ describe("matchRoutes", () => {
       { path: "*", element: <h1>Not Found</h1> },
     ],
   };
-
-  let routes = [
+  let routes: RouteObject[] = [
     { path: "/", element: <h1>Root Layout</h1> },
     {
       path: "/home",
@@ -71,7 +71,7 @@ describe("matchRoutes", () => {
   });
 
   it("matches index routes with path over layout", () => {
-    expect(matchRoutes(routes, "/layout")[0].route.index).toBe(true);
+    expect(matchRoutes(routes, "/layout")?.[0].route.index).toBe(true);
     expect(pickPaths(routes, "/layout")).toEqual(["/layout"]);
   });
 

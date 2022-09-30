@@ -3,8 +3,12 @@ import { convertRoutesToDataRoutes } from "./utils";
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  AgnosticDataIndexRouteObject,
+  AgnosticDataNonIndexRouteObject,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
   TrackedPromise,
