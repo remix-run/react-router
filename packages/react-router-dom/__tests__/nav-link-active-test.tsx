@@ -218,6 +218,76 @@ describe("NavLink", () => {
 
       expect(anchor.props.className).not.toMatch("active");
     });
+
+    it("does not match when <Link to> path is a subset of the active url", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/user-preferences"]}>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <div>
+                    <NavLink to="user">Go to /user</NavLink>
+                    <NavLink to="user-preferences">
+                      Go to /user-preferences
+                    </NavLink>
+                    <Outlet />
+                  </div>
+                }
+              >
+                <Route index element={<p>Index</p>} />
+                <Route path="user" element={<p>User</p>} />
+                <Route
+                  path="user-preferences"
+                  element={<p>User Preferences</p>}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchors = renderer.root.findAllByType("a");
+
+      expect(anchors.map((a) => a.props.className)).toEqual(["", "active"]);
+    });
+
+    it("does not match when active url is a subset of a <Route path> segment", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/user"]}>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <div>
+                    <NavLink to="user">Go to /user</NavLink>
+                    <NavLink to="user-preferences">
+                      Go to /user-preferences
+                    </NavLink>
+                    <Outlet />
+                  </div>
+                }
+              >
+                <Route index element={<p>Index</p>} />
+                <Route path="user" element={<p>User</p>} />
+                <Route
+                  path="user-preferences"
+                  element={<p>User Preferences</p>}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchors = renderer.root.findAllByType("a");
+
+      expect(anchors.map((a) => a.props.className)).toEqual(["active", ""]);
+    });
   });
 
   describe("when it matches just the beginning but not to the end", () => {
