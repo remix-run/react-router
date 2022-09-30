@@ -4,9 +4,9 @@
 
 ### Patch Changes
 
-- fix: respect `basename` in `useFormAction` (#9352) ([#9352](https://github.com/remix-run/react-router/pull/9352))
+- fix: respect `basename` in `useFormAction` ([#9352](https://github.com/remix-run/react-router/pull/9352))
 - docs: Enhance console error messages for invalid usage of data router hooks ([#9311](https://github.com/remix-run/react-router/pull/9311))
-- fix: Strengthen RouteObject/RouteProps types and throw on index routes with children (#9366) ([#9366](https://github.com/remix-run/react-router/pull/9366))
+- fix: Strengthen `RouteObject`/`RouteProps` types and throw on `index` routes with `children` ([#9366](https://github.com/remix-run/react-router/pull/9366))
 - Updated dependencies:
   - `react-router@6.4.2-pre.0`
   - `@remix-run/router@1.0.2-pre.0`
