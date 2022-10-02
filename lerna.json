@@ -1,6 +1,6 @@
 {
   "packages": ["packages/*", "website"],
-  "version": "5.3.3",
+  "version": "5.3.4",
   "npmClient": "yarn",
   "useWorkspaces": true,
   "changelog": {
