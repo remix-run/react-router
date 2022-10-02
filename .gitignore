@@ -2,6 +2,7 @@ node_modules/
 npm-debug.log
 lerna-debug.log
 
+/.env
 /.tsc-output/
 /build/
 /.changelog/
