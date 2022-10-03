@@ -44,7 +44,7 @@ import {
  * Returns the full href for the given "to" value. This is useful for building
  * custom links that are also accessible and preserve right-click behavior.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-href
+ * @see https://reactrouter.com/docs/en/v6/api#usehref
  */
 export function useHref(
   to: To,
@@ -77,7 +77,7 @@ export function useHref(
 /**
  * Returns true if this component is a descendant of a <Router>.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-in-router-context
+ * @see https://reactrouter.com/docs/en/v6/api#useinroutercontext
  */
 export function useInRouterContext(): boolean {
   return React.useContext(LocationContext) != null;
@@ -91,7 +91,7 @@ export function useInRouterContext(): boolean {
  * "routing" in your app, and we'd like to know what your use case is. We may
  * be able to provide something higher-level to better suit your needs.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-location
+ * @see https://reactrouter.com/docs/en/v6/api#uselocation
  */
 export function useLocation(): Location {
   invariant(
@@ -108,7 +108,7 @@ export function useLocation(): Location {
  * Returns the current navigation action which describes how the router came to
  * the current location, either by a pop, push, or replace on the history stack.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-navigation-type
+ * @see https://reactrouter.com/docs/en/v6/api#usenavigationtype
  */
 export function useNavigationType(): NavigationType {
   return React.useContext(LocationContext).navigationType;
@@ -119,7 +119,7 @@ export function useNavigationType(): NavigationType {
  * This is useful for components that need to know "active" state, e.g.
  * <NavLink>.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-match
+ * @see https://reactrouter.com/docs/en/v6/api#usematch
  */
 export function useMatch<
   ParamKey extends ParamParseKey<Path>,
@@ -181,7 +181,7 @@ function getPathContributingMatches(matches: RouteMatch[]) {
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-navigate
+ * @see https://reactrouter.com/docs/en/v6/api#usenavigate
  */
 export function useNavigate(): NavigateFunction {
   invariant(
@@ -254,7 +254,7 @@ const OutletContext = React.createContext<unknown>(null);
 /**
  * Returns the context (if provided) for the child route at this level of the route
  * hierarchy.
- * @see https://reactrouter.com/docs/en/v6/hooks/use-outlet-context
+ * @see https://reactrouter.com/docs/en/v6/api#useoutletcontext
  */
 export function useOutletContext<Context = unknown>(): Context {
   return React.useContext(OutletContext) as Context;
@@ -264,7 +264,7 @@ export function useOutletContext<Context = unknown>(): Context {
  * Returns the element for the child route at this level of the route
  * hierarchy. Used internally by <Outlet> to render child routes.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-outlet
+ * @see https://reactrouter.com/docs/en/v6/api#useoutlet
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
   let outlet = React.useContext(RouteContext).outlet;
@@ -280,7 +280,7 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
  * Returns an object of key/value pairs of the dynamic params from the current
  * URL that were matched by the route path.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-params
+ * @see https://reactrouter.com/docs/en/v6/api#useparams
  */
 export function useParams<
   ParamsOrKey extends string | Record<string, string | undefined> = string
@@ -295,7 +295,7 @@ export function useParams<
 /**
  * Resolves the pathname of the given `to` value against the current location.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-resolved-path
+ * @see https://reactrouter.com/docs/en/v6/api#useresolvedpath
  */
 export function useResolvedPath(
   to: To,
@@ -326,7 +326,7 @@ export function useResolvedPath(
  * elements in the tree must render an <Outlet> to render their child route's
  * element.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-routes
+ * @see https://reactrouter.com/docs/en/v6/api#useroutes
  */
 export function useRoutes(
   routes: RouteObject[],
