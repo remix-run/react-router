@@ -1,6 +1,15 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route, Link, Outlet } from "react-router-dom";
+import {
+  MemoryRouter,
+  Routes,
+  Route,
+  Link,
+  Outlet,
+  HashRouter,
+  createHashRouter,
+  RouterProvider
+} from "react-router-dom";
 
 describe("<Link> href", () => {
   describe("in a static route", () => {
@@ -677,6 +686,40 @@ describe("<Link> href", () => {
       expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
         ["/about", "/about"]
       );
+    });
+  });
+
+  describe("when using <HashRouter>", () => {
+    test("rendered <Link> hrefs contain #", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+            <HashRouter>
+              <Routes>
+                <Route path="/" element={<Link to="/about" />} />
+              </Routes>
+            </HashRouter>
+        );
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual("#/about");
+    });
+  })
+
+  describe("when using createHashRouter", () => {
+    test("rendered <Link> hrefs contain #", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        const router = createHashRouter([
+          {
+            path: "/",
+            element: <Link to="/about"/>
+          }
+        ]);
+        renderer = TestRenderer.create(
+            <RouterProvider router={router}/>
+        );
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual("#/about");
     });
   });
 });
