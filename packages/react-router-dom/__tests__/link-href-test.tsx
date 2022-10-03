@@ -703,7 +703,7 @@ describe("<Link> href", () => {
       });
       expect(renderer.root.findByType("a").props.href).toEqual("#/about");
     });
-  })
+  });
 
   describe("when using createHashRouter", () => {
     test("rendered <Link> hrefs contain #", () => {
