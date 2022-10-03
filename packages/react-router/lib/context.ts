@@ -20,7 +20,7 @@ export interface IndexRouteObject {
   id?: AgnosticIndexRouteObject["id"];
   loader?: AgnosticIndexRouteObject["loader"];
   action?: AgnosticIndexRouteObject["action"];
-  hasErrorBoundary: AgnosticIndexRouteObject["hasErrorBoundary"];
+  hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
   shouldRevalidate?: AgnosticIndexRouteObject["shouldRevalidate"];
   handle?: AgnosticIndexRouteObject["handle"];
   index: true;
@@ -35,7 +35,7 @@ export interface NonIndexRouteObject {
   id?: AgnosticNonIndexRouteObject["id"];
   loader?: AgnosticNonIndexRouteObject["loader"];
   action?: AgnosticNonIndexRouteObject["action"];
-  hasErrorBoundary: AgnosticNonIndexRouteObject["hasErrorBoundary"];
+  hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
   shouldRevalidate?: AgnosticNonIndexRouteObject["shouldRevalidate"];
   handle?: AgnosticNonIndexRouteObject["handle"];
   index?: false;
