@@ -2,4 +2,4 @@
 "react-router": patch
 ---
 
-fix: make hasErrorelement optional on types
+fix: make `hasErrorElement` optional on types
