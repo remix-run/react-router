@@ -174,12 +174,12 @@ function fetchProject(id) {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  if (res.status === 404) {
+  if (response.status === 404) {
     throw new Response("Not Found", { status: 404 });
   }
 
   // the fetch failed
-  if (!res.ok) {
+  if (!response.ok) {
     throw new Error("Could not fetch project");
   }
 }
