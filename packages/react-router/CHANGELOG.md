@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.4.2-pre.1
+
+### Patch Changes
+
+- fix: make `hasErrorElement` optional on types ([#9394](https://github.com/remix-run/react-router/pull/9394))
+
 ## 6.4.2-pre.0
 
 ### Patch Changes

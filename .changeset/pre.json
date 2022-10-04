@@ -9,6 +9,7 @@
     "@remix-run/router": "1.0.1"
   },
   "changesets": [
+    "calm-insects-obey",
     "dirty-yaks-repair",
     "hip-colts-serve",
     "nasty-bugs-promise",
