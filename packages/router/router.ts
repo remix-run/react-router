@@ -1739,7 +1739,9 @@ export function createRouter(init: RouterInit): Router {
     navigate,
     fetch,
     revalidate,
-    createHref,
+    // Passthrough to history-aware createHref used by useHref so we get proper
+    // hash-aware URLs in DOM paths
+    createHref: (to: To) => init.history.createHref(to),
     getFetcher,
     deleteFetcher,
     dispose,
