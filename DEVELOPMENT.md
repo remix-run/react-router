@@ -4,10 +4,11 @@
 
 New releases should be created from release branches originating from the `dev` branch. When you are ready to begin the release process:
 
+- Make sure you've pulled all of the changes from GitHub for both `dev` and `main` branches
 - Check out the `dev` branch
-- Make sure you have all of the changes from GitHub
 - Create a new release branch with the `release-` prefix (eg, `git checkout -b release-v6.5.1`)
   - **IMPORTANT:** The `release-` prefix is important, as this is what triggers our GitHub CI workflow that will ultimately publish the release.
+- Merge `main` into the release branch
 
 Changesets will do most of the heavy lifting for our releases. When changes are made to the codebase, an accompanying changeset file should be included to document the change. Those files will dictate how Changesets will version our packages and what shows up in the changelogs.
 
