@@ -1,13 +1,12 @@
 # `@remix-run/router`
 
-## 1.0.2-pre.0
+## 1.0.2
 
 ### Patch Changes
 
-- fix: throw error when receiving invalid path object ([#9375](https://github.com/remix-run/react-router/pull/9375))
-- fix: reset `actionData` after successful action redirect ([#9334](https://github.com/remix-run/react-router/pull/9334))
-- fix: update `matchPath` to avoid false positives on dash-separated segments ([#9300](https://github.com/remix-run/react-router/pull/9300))
-- fix: Strengthen `RouteObject`/`RouteProps` types and throw on `index` routes with `children` ([#9366](https://github.com/remix-run/react-router/pull/9366))
+- Reset `actionData` after a successful action redirect ([#9334](https://github.com/remix-run/react-router/pull/9334))
+- Update `matchPath` to avoid false positives on dash-separated segments ([#9300](https://github.com/remix-run/react-router/pull/9300))
+- If an index route has children, it will result in a runtime error. We have strengthened our `RouteObject`/`RouteProps` types to surface the error in TypeScript. ([#9366](https://github.com/remix-run/react-router/pull/9366))
 
 ## 1.0.1
 

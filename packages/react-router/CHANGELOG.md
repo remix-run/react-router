@@ -1,20 +1,14 @@
 # `react-router`
 
-## 6.4.2-pre.1
+## 6.4.2
 
 ### Patch Changes
 
-- fix: make `hasErrorElement` optional on types ([#9394](https://github.com/remix-run/react-router/pull/9394))
-
-## 6.4.2-pre.0
-
-### Patch Changes
-
-- fix: throw error when receiving invalid path object ([#9375](https://github.com/remix-run/react-router/pull/9375))
-- docs: Enhance console error messages for invalid usage of data router hooks ([#9311](https://github.com/remix-run/react-router/pull/9311))
-- fix: Strengthen `RouteObject`/`RouteProps` types and throw on `index` routes with `children` ([#9366](https://github.com/remix-run/react-router/pull/9366))
+- Fix `IndexRouteObject` and `NonIndexRouteObject` types to make `hasErrorElement` optional ([#9394](https://github.com/remix-run/react-router/pull/9394))
+- Enhance console error messages for invalid usage of data router hooks ([#9311](https://github.com/remix-run/react-router/pull/9311))
+- If an index route has children, it will result in a runtime error. We have strengthened our `RouteObject`/`RouteProps` types to surface the error in TypeScript. ([#9366](https://github.com/remix-run/react-router/pull/9366))
 - Updated dependencies:
-  - `@remix-run/router@1.0.2-pre.0`
+  - `@remix-run/router@1.0.2`
 
 ## 6.4.1
 
