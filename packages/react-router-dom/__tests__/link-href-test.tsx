@@ -1,18 +1,17 @@
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as TestRenderer from "react-test-renderer";
 import {
-  MemoryRouter,
-  Routes,
-  Route,
-  Link,
-  Outlet,
   BrowserRouter,
   HashRouter,
-  createBrowserRouter,
+  Link,
+  MemoryRouter,
+  Outlet,
+  Route,
   RouterProvider,
+  Routes,
+  createBrowserRouter,
   createHashRouter,
 } from "react-router-dom";
+import * as TestRenderer from "react-test-renderer";
 
 describe("<Link> href", () => {
   describe("in a static route", () => {
@@ -692,87 +691,71 @@ describe("<Link> href", () => {
     });
   });
 
-  it("inside a browser router", () => {
-    let node: HTMLDivElement = document.createElement("div");
-    document.body.appendChild(node);
-    TestRenderer.act(() => {
-      createRoot(node).render(
-        <BrowserRouter>
-          <Routes>
-            <Route
-              path="/"
-              element={<Link to="/path?search=value#hash">Link</Link>}
-            />
-          </Routes>
-        </BrowserRouter>
+  describe("when using a browser router", () => {
+    it("renders proper <a href>", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Link to="/path?search=value#hash" />} />
+            </Routes>
+          </BrowserRouter>
+        );
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "/path?search=value#hash"
       );
     });
 
-    expect(node.innerHTML).toMatchInlineSnapshot(
-      `"<a href=\\"/path?search=value#hash\\">Link</a>"`
-    );
-
-    document.body.removeChild(node);
-    node = null!;
+    it("renders proper <a href>", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        let router = createBrowserRouter([
+          {
+            path: "/",
+            element: <Link to="/path?search=value#hash">Link</Link>,
+          },
+        ]);
+        renderer = TestRenderer.create(<RouterProvider router={router} />);
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "/path?search=value#hash"
+      );
+    });
   });
 
-  it("inside a hash router", () => {
-    let node: HTMLDivElement = document.createElement("div");
-    document.body.appendChild(node);
-    TestRenderer.act(() => {
-      createRoot(node).render(
-        <HashRouter>
-          <Routes>
-            <Route
-              path="/"
-              element={<Link to="/path?search=value#hash">Link</Link>}
-            />
-          </Routes>
-        </HashRouter>
+  describe("when using a hash router", () => {
+    it("renders proper <a href>", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <HashRouter>
+            <Routes>
+              <Route path="/" element={<Link to="/path?search=value#hash" />} />
+            </Routes>
+          </HashRouter>
+        );
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "#/path?search=value#hash"
       );
     });
 
-    expect(node.innerHTML).toMatchInlineSnapshot(
-      `"<a href=\\"#/path?search=value#hash\\">Link</a>"`
-    );
-
-    document.body.removeChild(node);
-    node = null!;
-  });
-
-  it("inside a data browser router", () => {
-    let node: HTMLDivElement = document.createElement("div");
-    document.body.appendChild(node);
-    TestRenderer.act(() => {
-      let router = createBrowserRouter([
-        { path: "/", element: <Link to="/path?search=value#hash">Link</Link> },
-      ]);
-      createRoot(node).render(<RouterProvider router={router} />);
+    it("renders proper <a href>", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        let router = createHashRouter([
+          {
+            path: "/",
+            element: <Link to="/path?search=value#hash">Link</Link>,
+          },
+        ]);
+        renderer = TestRenderer.create(<RouterProvider router={router} />);
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "#/path?search=value#hash"
+      );
     });
-
-    expect(node.innerHTML).toMatchInlineSnapshot(
-      `"<a href=\\"/path?search=value#hash\\">Link</a>"`
-    );
-
-    document.body.removeChild(node);
-    node = null!;
-  });
-
-  it("inside a data hash router", () => {
-    let node: HTMLDivElement = document.createElement("div");
-    document.body.appendChild(node);
-    TestRenderer.act(() => {
-      let router = createHashRouter([
-        { path: "/", element: <Link to="/path?search=value#hash">Link</Link> },
-      ]);
-      createRoot(node).render(<RouterProvider router={router} />);
-    });
-
-    expect(node.innerHTML).toMatchInlineSnapshot(
-      `"<a href=\\"#/path?search=value#hash\\">Link</a>"`
-    );
-
-    document.body.removeChild(node);
-    node = null!;
   });
 });
