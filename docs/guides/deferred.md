@@ -1,6 +1,7 @@
 ---
 title: Deferred Data
 description: When, why, and how to defer non-critical data loading with React 18 and React Router's defer API.
+new: true
 ---
 
 # Deferred Data Guide

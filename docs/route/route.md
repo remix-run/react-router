@@ -222,7 +222,7 @@ function Team() {
 }
 ```
 
-<docs-warning>If you are not using a Data router, this will do nothing</docs-warning>
+<docs-warning>If you are not using a data router like [`createBrowserRouter`][createbrowserrouter], this will do nothing</docs-warning>
 
 Please see the [loader][loader] documentation for more details.
 
@@ -240,7 +240,7 @@ The route action is called when a submission is sent to the route from a [Form][
 />
 ```
 
-<docs-warning>If you are not using a Data router, this will do nothing</docs-warning>
+<docs-warning>If you are not using a data router like [`createBrowserRouter`][createbrowserrouter], this will do nothing</docs-warning>
 
 Please see the [action][action] documentation for more details.
 
@@ -272,7 +272,7 @@ When a route throws an exception while rendering, in a `loader` or in an `action
 />
 ```
 
-<docs-warning>If you are not using a Data router, this will do nothing</docs-warning>
+<docs-warning>If you are not using a data router like [`createBrowserRouter`][createbrowserrouter], this will do nothing</docs-warning>
 
 Please see the [errorElement][errorelement] documentation for more details.
 
@@ -288,3 +288,4 @@ Please see the [errorElement][errorelement] documentation for more details.
 [fetcher]: ../hooks/use-fetcher
 [usesubmit]: ../hooks/use-submit
 [createroutesfromelements]: ../utils/create-routes-from-elements
+[createbrowserrouter]: ../routers/create-browser-router
