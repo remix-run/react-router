@@ -692,7 +692,7 @@ describe("<Link> href", () => {
   });
 
   describe("when using a browser router", () => {
-    it("renders proper <a href>", () => {
+    it("renders proper <a href> for BrowserRouter", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         renderer = TestRenderer.create(
@@ -708,7 +708,7 @@ describe("<Link> href", () => {
       );
     });
 
-    it("renders proper <a href>", () => {
+    it("renders proper <a href> for createBrowserRouter", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         let router = createBrowserRouter([
@@ -726,7 +726,7 @@ describe("<Link> href", () => {
   });
 
   describe("when using a hash router", () => {
-    it("renders proper <a href>", () => {
+    it("renders proper <a href> for HashRouter", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         renderer = TestRenderer.create(
@@ -742,7 +742,7 @@ describe("<Link> href", () => {
       );
     });
 
-    it("renders proper <a href>", () => {
+    it("renders proper <a href> for createHashRouter", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         let router = createHashRouter([
