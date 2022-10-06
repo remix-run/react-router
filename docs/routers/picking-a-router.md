@@ -6,7 +6,7 @@ new: true
 
 # Picking a Router
 
-While your app will only use a single router, several routers are available depending on the environment you're app is running in. This document should help you figure out which one to use.
+While your app will only use a single router, several routers are available depending on the environment your app is running in. This document should help you figure out which one to use.
 
 ## Using v6.4 Data APIs
 
