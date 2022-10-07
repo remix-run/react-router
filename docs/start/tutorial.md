@@ -1883,6 +1883,7 @@ createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       {
+        action: rootAction,
         errorElement: <ErrorPage />,
         children: [
           { index: true, element: <Index /> },
@@ -1901,6 +1902,7 @@ createBrowserRouter([
 ```
 
 When any errors are thrown in the child routes, our new pathless route will catch it and render, preserving the root route's UI!
+Small gotcha, note that we had to add the rootAction. Otherwise, creating a new user won't work.
 
 ## JSX Routes
 
@@ -1921,7 +1923,10 @@ const router = createBrowserRouter(
       action={rootAction}
       errorElement={<ErrorPage />}
     >
-      <Route errorElement={<ErrorPage />}>
+      <Route
+        errorElement={<ErrorPage />}
+        loader={rootLoader}
+      >
         <Route index element={<Index />} />
         <Route
           path="contacts/:contactId"
