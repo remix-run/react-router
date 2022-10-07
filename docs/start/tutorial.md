@@ -7,7 +7,7 @@ order: 2
 
 Welcome to the tutorial! We'll be building a small, but feature-rich app that let's you keep track of your contacts. We expect it to take between 30-60m if you're following along.
 
-[//]: # (<img class="tutorial" src="/_docs/tutorial/15.webp" />)
+<img class="tutorial" src="/_docs/tutorial/15.webp" />
 
 👉 **Every time you see this it means you need to do something in the app!**
 
