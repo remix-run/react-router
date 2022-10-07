@@ -7,7 +7,7 @@ order: 2
 
 Welcome to the tutorial! We'll be building a small, but feature-rich app that let's you keep track of your contacts. We expect it to take between 30-60m if you're following along.
 
-<img class="tutorial" src="/_docs/tutorial/15.webp" />
+[//]: # (<img class="tutorial" src="/_docs/tutorial/15.webp" />)
 
 👉 **Every time you see this it means you need to do something in the app!**
 
@@ -178,7 +178,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 The app should look something like this now. It sure is nice having a designer who can also write the CSS, isn't it? (Thank you [Jim][jim] 🙏).
 
-<img class="tutorial" loading="lazy" src="/_docs/tutorial/01.webp" />
+<img class="tutorial" loading="lazy" src="../../_docs/tutorial/01.webp" />
 
 ## Handling Not Found Errors
 
@@ -188,7 +188,7 @@ We added some links to this app, let's see what happens when we click them?
 
 👉 **Click one of the sidebar names**
 
-<img class="tutorial" loading="lazy" alt="screenshot of default React Router error element" src="/_docs/tutorial/02.webp" />
+<img class="tutorial" loading="lazy" alt="screenshot of default React Router error element" src="../../_docs/tutorial/02.webp" />
 
 Gross! This is the default error screen in React Router, made worse by our flex box styles on the root element in this app 😂.
 
@@ -242,7 +242,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 The error page should now look like this:
 
-<img class="tutorial" loading="lazy" alt="new error page, but still ugly" src="/_docs/tutorial/03.webp" />
+<img class="tutorial" loading="lazy" alt="new error page, but still ugly" src="../../_docs/tutorial/03.webp" />
 
 <small>(Well, that's not much better. Maybe somebody forgot to ask the designer to make an error page. Maybe everybody forgets to ask the designer to make an error page and then blames the designer for not thinking of it 😆)</small>
 
