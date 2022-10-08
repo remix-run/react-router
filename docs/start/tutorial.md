@@ -1925,7 +1925,7 @@ const router = createBrowserRouter(
     >
       <Route
         errorElement={<ErrorPage />}
-        loader={rootLoader}
+        action={rootAction}
       >
         <Route index element={<Index />} />
         <Route
