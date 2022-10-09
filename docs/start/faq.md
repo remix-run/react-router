@@ -9,7 +9,7 @@ Here are some questions that people commonly have about React Router v6. You mig
 
 ## What happened to withRouter? I need it!
 
-This question usually stems from the fact that you're using React class components, which don't support hooks. In React Router v6, we fully embraced hooks and use them to share all the router's internal state. But that doesn't mean you can't use the router. Assuming you can actually use hooks (you're on React 16.8+), you just need a wrapper.
+This question usually stems from the fact that you're using React class components, which don't support hooks. In React Router v6, we fully embraced hooks and use them to share all the router's internal state. But that doesn't mean you can't use the withRouter. Assuming you can actually use hooks (you're on React 16.8+), you just need a wrapper.
 
 ```js
 import {
