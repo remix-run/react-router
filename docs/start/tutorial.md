@@ -519,7 +519,7 @@ const router = createBrowserRouter([
 
 👉 **Access and render the data**
 
-```jsx filename=src/routes/root.jsx lines=[4,11,19-39]
+```jsx filename=src/routes/root.jsx lines=[4,11,19-40]
 import {
   Outlet,
   Link,
