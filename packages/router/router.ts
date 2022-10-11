@@ -27,6 +27,7 @@ import {
   convertRoutesToDataRoutes,
   invariant,
   isRouteErrorResponse,
+  joinPaths,
   matchRoutes,
 } from "./utils";
 
@@ -1515,6 +1516,17 @@ export function createRouter(init: RouterInit): Router {
 
     let redirectHistoryAction =
       replace === true ? HistoryAction.Replace : HistoryAction.Push;
+    let { basename = "/" } = init;
+
+    // If we're operating within a basename, prepend it to the pathname prior
+    // to handing off to history.
+    if (basename !== "/") {
+      navigation.location.pathname =
+        navigation.location.pathname === "/"
+          ? basename
+          : joinPaths([basename, navigation.location.pathname]);
+    }
+
     await startNavigation(redirectHistoryAction, navigation.location, {
       overrideNavigation: navigation,
     });
