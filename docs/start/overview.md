@@ -693,6 +693,36 @@ React Router is built on web standard APIs. [Loaders][loader] and [actions][acti
 
 When you get better at React Router, you get better at the web platform.
 
+## Using history outside React component
+
+Similar to React Router v5 history instance can be used outside of the component.
+
+Main difference is that in v6+ `history` needs to be installed separately.
+
+```jsx
+npm install history
+```
+
+Then the whole app needs to be wrapped by `unstable_HistoryRouter` imported from `react-router-dom`.
+
+Inside index file:
+
+```tsx
+import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+
+export const history = createBrowserHistory();
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+root.render(
+  <React.StrictMode>
+    <HistoryRouter history={history}>
+      <App />
+    </HistoryRouter>
+  </React.StrictMode>
+);
+```
+
 ## Search Params
 
 <docs-info>TODO:</docs-info>
