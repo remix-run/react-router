@@ -41,9 +41,9 @@ testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
   getWindowImpl(url, false)
 );
 
-// testDomRouter("<DataHashRouter>", createHashRouter, (url) =>
-//   getWindowImpl(url, true)
-// );
+testDomRouter("<DataHashRouter>", createHashRouter, (url) =>
+  getWindowImpl(url, true)
+);
 
 let router: Router | null = null;
 
