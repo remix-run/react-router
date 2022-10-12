@@ -148,7 +148,7 @@ module.exports = function rollup() {
         banner: createBanner("React Router DOM", version),
         globals: {
           history: "HistoryLibrary",
-          "@remix-run/router": "Router",
+          "@remix-run/router": "RemixRouter",
           react: "React",
           "react-router": "ReactRouter",
         },
@@ -183,7 +183,7 @@ module.exports = function rollup() {
         banner: createBanner("React Router DOM", version),
         globals: {
           history: "HistoryLibrary",
-          "@remix-run/router": "Router",
+          "@remix-run/router": "RemixRouter",
           react: "React",
           "react-router": "ReactRouter",
         },
