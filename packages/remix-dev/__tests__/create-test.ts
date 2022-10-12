@@ -822,10 +822,9 @@ describe("the create command", () => {
     });
     it("uses the proxy from env var", async () => {
       let projectDir = await getProjectDir("template");
-      let err : Error | undefined;
+      let err: Error | undefined;
       let prevProxy = process.env.HTTPS_PROXY;
       try {
-        
         process.env.HTTPS_PROXY = "http://127.0.0.1:33128";
         await run([
           "create",
@@ -835,13 +834,12 @@ describe("the create command", () => {
           "--no-install",
           "--typescript",
         ]);
-
-      } catch(e) {
+      } catch (e) {
         err = e;
       } finally {
         process.env.HTTPS_PROXY = prevProxy;
       }
-      expect(err?.message).toMatch("127.0.0.1:33")
+      expect(err?.message).toMatch("127.0.0.1:33");
     });
   });
 });
