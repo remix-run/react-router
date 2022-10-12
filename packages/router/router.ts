@@ -25,10 +25,12 @@ import {
   ErrorResponse,
   ResultType,
   convertRoutesToDataRoutes,
+  getPathContributingMatches,
   invariant,
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,
+  resolveTo,
 } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -470,14 +472,25 @@ interface HandleLoadersResult extends ShortCircuitable {
 }
 
 /**
- * Tuple of [key, href, DataRouterMatch] for a revalidating fetcher.load()
+ * Tuple of [key, href, DataRouteMatch, DataRouteMatch[]] for a revalidating
+ * fetcher.load()
  */
-type RevalidatingFetcher = [string, string, AgnosticDataRouteMatch];
+type RevalidatingFetcher = [
+  string,
+  string,
+  AgnosticDataRouteMatch,
+  AgnosticDataRouteMatch[]
+];
 
 /**
- * Tuple of [href, DataRouteMatch] for an active fetcher.load()
+ * Tuple of [href, DataRouteMatch, DataRouteMatch[]] for an active
+ * fetcher.load()
  */
-type FetchLoadMatch = [string, AgnosticDataRouteMatch];
+type FetchLoadMatch = [
+  string,
+  AgnosticDataRouteMatch,
+  AgnosticDataRouteMatch[]
+];
 
 export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
   state: "idle",
@@ -940,7 +953,13 @@ export function createRouter(init: RouterInit): Router {
     if (!actionMatch.route.action) {
       result = getMethodNotAllowedResult(location);
     } else {
-      result = await callLoaderOrAction("action", request, actionMatch);
+      result = await callLoaderOrAction(
+        "action",
+        request,
+        actionMatch,
+        matches,
+        router.basename
+      );
 
       if (request.signal.aborted) {
         return { shortCircuited: true };
@@ -1082,6 +1101,7 @@ export function createRouter(init: RouterInit): Router {
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
         state.matches,
+        matches,
         matchesToLoad,
         revalidatingFetchers,
         request
@@ -1171,14 +1191,14 @@ export function createRouter(init: RouterInit): Router {
     let match = getTargetMatch(matches, path);
 
     if (submission) {
-      handleFetcherAction(key, routeId, path, match, submission);
+      handleFetcherAction(key, routeId, path, match, matches, submission);
       return;
     }
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
-    fetchLoadMatches.set(key, [path, match]);
-    handleFetcherLoader(key, routeId, path, match);
+    fetchLoadMatches.set(key, [path, match, matches]);
+    handleFetcherLoader(key, routeId, path, match, matches);
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -1188,6 +1208,7 @@ export function createRouter(init: RouterInit): Router {
     routeId: string,
     path: string,
     match: AgnosticDataRouteMatch,
+    requestMatches: AgnosticDataRouteMatch[],
     submission: Submission
   ) {
     interruptActiveLoads();
@@ -1214,7 +1235,13 @@ export function createRouter(init: RouterInit): Router {
     let fetchRequest = createRequest(path, abortController.signal, submission);
     fetchControllers.set(key, abortController);
 
-    let actionResult = await callLoaderOrAction("action", fetchRequest, match);
+    let actionResult = await callLoaderOrAction(
+      "action",
+      fetchRequest,
+      match,
+      requestMatches,
+      router.basename
+    );
 
     if (fetchRequest.signal.aborted) {
       // We can delete this so long as we weren't aborted by ou our own fetcher
@@ -1316,6 +1343,7 @@ export function createRouter(init: RouterInit): Router {
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
         state.matches,
+        matches,
         matchesToLoad,
         revalidatingFetchers,
         revalidationRequest
@@ -1396,7 +1424,8 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     path: string,
-    match: AgnosticDataRouteMatch
+    match: AgnosticDataRouteMatch,
+    matches: AgnosticDataRouteMatch[]
   ) {
     let existingFetcher = state.fetchers.get(key);
     // Put this fetcher into it's loading state
@@ -1418,7 +1447,9 @@ export function createRouter(init: RouterInit): Router {
     let result: DataResult = await callLoaderOrAction(
       "loader",
       fetchRequest,
-      match
+      match,
+      matches,
+      router.basename
     );
 
     // Deferred isn't supported or fetcher loads, await everything and treat it
@@ -1516,16 +1547,6 @@ export function createRouter(init: RouterInit): Router {
 
     let redirectHistoryAction =
       replace === true ? HistoryAction.Replace : HistoryAction.Push;
-    let { basename = "/" } = init;
-
-    // If we're operating within a basename, prepend it to the pathname prior
-    // to handing off to history.
-    if (basename !== "/") {
-      navigation.location.pathname =
-        navigation.location.pathname === "/"
-          ? basename
-          : joinPaths([basename, navigation.location.pathname]);
-    }
 
     await startNavigation(redirectHistoryAction, navigation.location, {
       overrideNavigation: navigation,
@@ -1534,6 +1555,7 @@ export function createRouter(init: RouterInit): Router {
 
   async function callLoadersAndMaybeResolveData(
     currentMatches: AgnosticDataRouteMatch[],
+    matches: AgnosticDataRouteMatch[],
     matchesToLoad: AgnosticDataRouteMatch[],
     fetchersToLoad: RevalidatingFetcher[],
     request: Request
@@ -1542,9 +1564,17 @@ export function createRouter(init: RouterInit): Router {
     // then slice off the results into separate arrays so we can handle them
     // accordingly
     let results = await Promise.all([
-      ...matchesToLoad.map((m) => callLoaderOrAction("loader", request, m)),
-      ...fetchersToLoad.map(([, href, match]) =>
-        callLoaderOrAction("loader", createRequest(href, request.signal), match)
+      ...matchesToLoad.map((match) =>
+        callLoaderOrAction("loader", request, match, matches, router.basename)
+      ),
+      ...fetchersToLoad.map(([, href, match, fetchMatches]) =>
+        callLoaderOrAction(
+          "loader",
+          createRequest(href, request.signal),
+          match,
+          fetchMatches,
+          router.basename
+        )
       ),
     ]);
     let loaderResults = results.slice(0, matchesToLoad.length);
@@ -1845,7 +1875,7 @@ export function unstable_createStaticHandler(
       "query()/queryRoute() requests must contain an AbortController signal"
     );
 
-    let { location, matches, shortCircuitState } = matchRequest(
+    let { location, matches, routeMatch, shortCircuitState } = matchRequest(
       request,
       routeId
     );
@@ -1859,13 +1889,13 @@ export function unstable_createStaticHandler(
         let result = await submit(
           request,
           matches,
-          getTargetMatch(matches, location),
+          routeMatch || getTargetMatch(matches, location),
           routeId != null
         );
         return { location, result };
       }
 
-      let result = await loadRouteData(request, matches, routeId != null);
+      let result = await loadRouteData(request, matches, routeMatch);
       return {
         location,
         result: {
@@ -1897,6 +1927,8 @@ export function unstable_createStaticHandler(
         "action",
         request,
         actionMatch,
+        matches,
+        undefined, // Basename not currently supported in static handlers
         true,
         isRouteRequest
       );
@@ -1909,7 +1941,7 @@ export function unstable_createStaticHandler(
 
     if (isRedirectResult(result)) {
       // Uhhhh - this should never happen, we should always throw these from
-      // calLoaderOrAction, but the type narrowing here keeps TS happy and we
+      // callLoaderOrAction, but the type narrowing here keeps TS happy and we
       // can get back on the "throw all redirect responses" train here should
       // this ever happen :/
       throw new Response(null, {
@@ -1959,7 +1991,7 @@ export function unstable_createStaticHandler(
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-      let context = await loadRouteData(request, matches, isRouteRequest, {
+      let context = await loadRouteData(request, matches, undefined, {
         [boundaryMatch.route.id]: result.error,
       });
 
@@ -1976,7 +2008,7 @@ export function unstable_createStaticHandler(
       };
     }
 
-    let context = await loadRouteData(request, matches, isRouteRequest);
+    let context = await loadRouteData(request, matches);
 
     return {
       ...context,
@@ -1994,16 +2026,20 @@ export function unstable_createStaticHandler(
   async function loadRouteData(
     request: Request,
     matches: AgnosticDataRouteMatch[],
-    isRouteRequest: boolean,
+    routeMatch?: AgnosticDataRouteMatch,
     pendingActionError?: RouteData
   ): Promise<
     | Omit<StaticHandlerContext, "location" | "actionData" | "actionHeaders">
     | Response
   > {
-    let matchesToLoad = getLoaderMatchesUntilBoundary(
-      matches,
-      Object.keys(pendingActionError || {})[0]
-    ).filter((m) => m.route.loader);
+    let isRouteRequest = routeMatch != null;
+    let requestMatches = routeMatch
+      ? [routeMatch]
+      : getLoaderMatchesUntilBoundary(
+          matches,
+          Object.keys(pendingActionError || {})[0]
+        );
+    let matchesToLoad = requestMatches.filter((m) => m.route.loader);
 
     // Short circuit if we have no loaders to run
     if (matchesToLoad.length === 0) {
@@ -2017,8 +2053,16 @@ export function unstable_createStaticHandler(
     }
 
     let results = await Promise.all([
-      ...matchesToLoad.map((m) =>
-        callLoaderOrAction("loader", request, m, true, isRouteRequest)
+      ...matchesToLoad.map((match) =>
+        callLoaderOrAction(
+          "loader",
+          request,
+          match,
+          matches,
+          undefined, // Basename not currently supported in static handlers
+          true,
+          isRouteRequest
+        )
       ),
     ]);
 
@@ -2061,9 +2105,6 @@ export function unstable_createStaticHandler(
     let url = new URL(req.url);
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location);
-    if (matches && routeId) {
-      matches = matches.filter((m) => m.route.id === routeId);
-    }
 
     // Short circuit with a 404 if we match nothing
     if (!matches) {
@@ -2089,7 +2130,16 @@ export function unstable_createStaticHandler(
       };
     }
 
-    return { location, matches };
+    let routeMatch: AgnosticDataRouteMatch | undefined = undefined;
+    if (routeId) {
+      routeMatch = matches.find((m) => m.route.id === routeId);
+      invariant(
+        routeMatch,
+        `queryRoute could not find route "${routeId}" in matches for path ${req.url}`
+      );
+    }
+
+    return { location, matches, routeMatch };
   }
 
   return {
@@ -2263,10 +2313,10 @@ function getMatchesToLoad(
   // Pick fetcher.loads that need to be revalidated
   let revalidatingFetchers: RevalidatingFetcher[] = [];
   fetchLoadMatches &&
-    fetchLoadMatches.forEach(([href, match], key) => {
+    fetchLoadMatches.forEach(([href, match, fetchMatches], key) => {
       // This fetcher was cancelled from a prior action submission - force reload
       if (cancelledFetcherLoads.includes(key)) {
-        revalidatingFetchers.push([key, href, match]);
+        revalidatingFetchers.push([key, href, match, fetchMatches]);
       } else if (isRevalidationRequired) {
         let shouldRevalidate = shouldRevalidateLoader(
           href,
@@ -2278,7 +2328,7 @@ function getMatchesToLoad(
           actionResult
         );
         if (shouldRevalidate) {
-          revalidatingFetchers.push([key, href, match]);
+          revalidatingFetchers.push([key, href, match, fetchMatches]);
         }
       }
     });
@@ -2372,7 +2422,9 @@ async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
   match: AgnosticDataRouteMatch,
-  skipRedirects: boolean = false,
+  matches: AgnosticDataRouteMatch[],
+  basename: string | undefined,
+  isStaticRequest: boolean = false,
   isRouteRequest: boolean = false
 ): Promise<DataResult> {
   let resultType;
@@ -2403,29 +2455,55 @@ async function callLoaderOrAction(
   }
 
   if (result instanceof Response) {
-    // Process redirects
     let status = result.status;
-    let location = result.headers.get("Location");
 
-    // For SSR single-route requests, we want to hand Responses back directly
-    // without unwrapping
-    if (isRouteRequest) {
-      throw result;
-    }
+    // Process redirects
+    if (status >= 300 && status <= 399) {
+      let location = result.headers.get("Location");
+      invariant(
+        location,
+        "Redirects returned/thrown from loaders/actions must have a Location header"
+      );
 
-    if (status >= 300 && status <= 399 && location != null) {
-      // Don't process redirects in the router during SSR document requests.
+      // Support relative routing in redirects
+      let activeMatches = matches.slice(0, matches.indexOf(match) + 1);
+      let routePathnames = getPathContributingMatches(activeMatches).map(
+        (match) => match.pathnameBase
+      );
+      let requestPath = createURL(request.url).pathname;
+      location = resolveTo(location, routePathnames, requestPath).pathname;
+      invariant(
+        location,
+        `Unable to resolve redirect location: ${result.headers.get("Location")}`
+      );
+
+      // Prepend the basename to the redirect location if we have one
+      if (basename) {
+        let path = createURL(location).pathname;
+        location = path === "/" ? basename : joinPaths([basename, path]);
+      }
+
+      // Don't process redirects in the router during static requests requests.
       // Instead, throw the Response and let the server handle it with an HTTP
-      // redirect
-      if (skipRedirects) {
+      // redirect.  We also update the Location header in place in this flow so
+      // basename and relative routing is taken into account
+      if (isStaticRequest) {
+        result.headers.set("Location", location);
         throw result;
       }
+
       return {
         type: ResultType.redirect,
         status,
         location,
         revalidate: result.headers.get("X-Remix-Revalidate") !== null,
       };
+    }
+
+    // For static single-route requests, we want to hand any other non-Redirect
+    // Responses back directly without unwrapping
+    if (isRouteRequest) {
+      throw result;
     }
 
     let data: any;
