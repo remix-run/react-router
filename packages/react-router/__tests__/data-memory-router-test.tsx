@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import type { FormMethod, Router, RouterInit } from "@remix-run/router";
+import { joinPaths } from "@remix-run/router";
 import type { RouteObject } from "react-router";
 import {
   Await,
@@ -20,6 +21,7 @@ import {
   createMemoryRouter,
   createRoutesFromElements,
   defer,
+  redirect,
   useActionData,
   useAsyncError,
   useAsyncValue,
@@ -154,6 +156,116 @@ describe("<DataMemoryRouter>", () => {
         <h1>
           Heyooo
         </h1>
+      </div>"
+    `);
+  });
+
+  it("prepends basename to loader/action redirects", async () => {
+    let { container } = render(
+      <DataMemoryRouter
+        basename="/my/base/path"
+        initialEntries={["/my/base/path"]}
+      >
+        <Route path="/" element={<Root />}>
+          <Route path="thing" loader={() => redirect("/other")} />
+          <Route path="other" element={<h1>Other</h1>} />
+        </Route>
+      </DataMemoryRouter>
+    );
+
+    function Root() {
+      return (
+        <>
+          <MemoryNavigate to="/thing">Link to thing</MemoryNavigate>
+          <Outlet />
+        </>
+      );
+    }
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <a
+          href=\\"/my/base/path/thing\\"
+        >
+          Link to thing
+        </a>
+      </div>"
+    `);
+
+    fireEvent.click(screen.getByText("Link to thing"));
+    await waitFor(() => screen.getByText("Other"));
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <a
+          href=\\"/my/base/path/thing\\"
+        >
+          Link to thing
+        </a>
+        <h1>
+          Other
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("supports relative routing in loader/action redirects", async () => {
+    let { container } = render(
+      <DataMemoryRouter
+        basename="/my/base/path"
+        initialEntries={["/my/base/path"]}
+      >
+        <Route path="/" element={<Root />}>
+          <Route path="parent" element={<Parent />}>
+            <Route path="child" loader={() => redirect("../other")} />
+            <Route path="other" element={<h2>Other</h2>} />
+          </Route>
+        </Route>
+      </DataMemoryRouter>
+    );
+
+    function Root() {
+      return (
+        <>
+          <MemoryNavigate to="/parent/child">Link to child</MemoryNavigate>
+          <Outlet />
+        </>
+      );
+    }
+
+    function Parent() {
+      return (
+        <>
+          <h1>Parent</h1>
+          <Outlet />
+        </>
+      );
+    }
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <a
+          href=\\"/my/base/path/parent/child\\"
+        >
+          Link to child
+        </a>
+      </div>"
+    `);
+
+    fireEvent.click(screen.getByText("Link to child"));
+    await waitFor(() => screen.getByText("Parent"));
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <a
+          href=\\"/my/base/path/parent/child\\"
+        >
+          Link to child
+        </a>
+        <h1>
+          Parent
+        </h1>
+        <h2>
+          Other
+        </h2>
       </div>"
     `);
   });
@@ -2816,6 +2928,11 @@ function MemoryNavigate({
   children: React.ReactNode;
 }) {
   let dataRouterContext = React.useContext(DataRouterContext);
+
+  let basename = dataRouterContext?.basename;
+  if (basename && basename !== "/") {
+    to = to === "/" ? basename : joinPaths([basename, to]);
+  }
 
   let onClickHandler = React.useCallback(
     async (event: React.MouseEvent) => {
