@@ -812,6 +812,38 @@ describe("the create command", () => {
       process.chdir(cwd);
     });
   });
+
+  describe("supports proxy usage", () => {
+    beforeAll(() => {
+      server.close();
+    });
+    afterAll(() => {
+      server.listen({ onUnhandledRequest: "error" });
+    });
+    it("uses the proxy from env var", async () => {
+      let projectDir = await getProjectDir("template");
+      let err : Error | undefined;
+      let prevProxy = process.env.HTTPS_PROXY;
+      try {
+        
+        process.env.HTTPS_PROXY = "http://127.0.0.1:33128";
+        await run([
+          "create",
+          projectDir,
+          "--template",
+          "grunge-stack",
+          "--no-install",
+          "--typescript",
+        ]);
+
+      } catch(e) {
+        err = e;
+      } finally {
+        process.env.HTTPS_PROXY = prevProxy;
+      }
+      expect(err?.message).toMatch("127.0.0.1:33")
+    });
+  });
 });
 
 function getSuccessMessage(projectDirectory: string) {

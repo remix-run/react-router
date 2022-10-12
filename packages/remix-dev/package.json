@@ -49,6 +49,7 @@
     "ora": "^5.4.1",
     "prettier": "2.7.1",
     "pretty-ms": "^7.0.1",
+    "proxy-agent": "^5.0.0",
     "remark-frontmatter": "4.0.1",
     "remark-mdx-frontmatter": "^1.0.1",
     "semver": "^7.3.7",
