@@ -836,6 +836,38 @@ function getInvalidPathError(
 }
 
 /**
+ * When processing relative navigation we want to ignore ancestor routes that
+ * do not contribute to the path, such that index/pathless layout routes don't
+ * interfere.
+ *
+ * For example, when moving a route element into an index route and/or a
+ * pathless layout route, relative link behavior contained within should stay
+ * the same.  Both of the following examples should link back to the root:
+ *
+ *   <Route path="/">
+ *     <Route path="accounts" element={<Link to=".."}>
+ *   </Route>
+ *
+ *   <Route path="/">
+ *     <Route path="accounts">
+ *       <Route element={<AccountsLayout />}>       // <-- Does not contribute
+ *         <Route index element={<Link to=".."} />  // <-- Does not contribute
+ *       </Route
+ *     </Route>
+ *   </Route>
+ */
+export function getPathContributingMatches<
+  T extends AgnosticRouteMatch = AgnosticRouteMatch
+>(matches: T[]) {
+  return matches.filter(
+    (match, index) =>
+      index === 0 ||
+      (!match.route.index &&
+        match.pathnameBase !== matches[index - 1].pathnameBase)
+  );
+}
+
+/**
  * @private
  */
 export function resolveTo(

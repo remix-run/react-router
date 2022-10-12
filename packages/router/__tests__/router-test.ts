@@ -2859,6 +2859,56 @@ describe("a router", () => {
       });
     });
 
+    it("uses the proper action for pathless layout routes", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "parent",
+            path: "/parent",
+            action: true,
+            children: [
+              {
+                hasErrorBoundary: true,
+                children: [
+                  {
+                    id: "index",
+                    index: true,
+                    action: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+      debugger;
+      let A = await t.navigate("/parent", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      await A.actions.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/parent" },
+        actionData: {
+          parent: "PARENT",
+        },
+        errors: null,
+      });
+
+      let B = await t.navigate("/parent?index", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      await B.actions.index.resolve("INDEX");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/parent", search: "?index" },
+        actionData: {
+          index: "INDEX",
+        },
+        errors: null,
+      });
+    });
+
     it("retains the index match when submitting to a layout route", async () => {
       let t = setup({
         routes: [
