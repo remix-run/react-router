@@ -10987,7 +10987,37 @@ describe("a router", () => {
         );
       });
 
-      it("should handle not found action submissions with a 405 Response", async () => {
+      it("should handle not found loads with a 404 Response", async () => {
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+          },
+        ]);
+        let request = createRequest("/");
+        let data = await queryRoute(request, "blah");
+        expect(data instanceof Response).toBe(true);
+        expect(data.status).toBe(404);
+        expect(data.statusText).toBe("Not Found");
+        expect(await data.text()).toBe("");
+      });
+
+      it("should handle not found submits  with a 404 Response", async () => {
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+          },
+        ]);
+        let request = createSubmitRequest("/");
+        let data = await queryRoute(request, "blah");
+        expect(data instanceof Response).toBe(true);
+        expect(data.status).toBe(404);
+        expect(data.statusText).toBe("Not Found");
+        expect(await data.text()).toBe("");
+      });
+
+      it("should handle missing actions with a 405 Response", async () => {
         let { queryRoute } = createStaticHandler([
           {
             id: "root",

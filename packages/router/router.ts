@@ -2105,9 +2105,13 @@ export function unstable_createStaticHandler(
     let url = new URL(req.url);
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location);
+    let routeMatch: AgnosticDataRouteMatch | undefined = undefined;
+    if (matches && routeId) {
+      routeMatch = matches.find((m) => m.route.id === routeId);
+    }
 
     // Short circuit with a 404 if we match nothing
-    if (!matches) {
+    if (!matches || (routeId && !routeMatch)) {
       let {
         matches: notFoundMatches,
         route,
@@ -2128,15 +2132,6 @@ export function unstable_createStaticHandler(
           actionHeaders: {},
         },
       };
-    }
-
-    let routeMatch: AgnosticDataRouteMatch | undefined = undefined;
-    if (routeId) {
-      routeMatch = matches.find((m) => m.route.id === routeId);
-      invariant(
-        routeMatch,
-        `queryRoute could not find route "${routeId}" in matches for path ${req.url}`
-      );
     }
 
     return { location, matches, routeMatch };
