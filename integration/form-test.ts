@@ -308,6 +308,76 @@ test.describe("Forms", () => {
           }
         `,
 
+        "app/routes/submitter-formmethod.jsx": js`
+          import { useActionData, useLoaderData, Form } from "@remix-run/react";
+          import { json } from '@remix-run/node'
+
+          export function action({ request }) {
+            return json(request.method)
+          }
+
+          export function loader({ request }) {
+            return json(request.method)
+          }
+
+          export default function Index() {
+            let actionData = useActionData();
+            let loaderData = useLoaderData();
+            return (
+              <>
+                <Form method="post">
+                  <button type="submit" formMethod="get">Submit with GET</button>
+                </Form>
+                <Form method="get">
+                  <button type="submit" formMethod="post">Submit with POST</button>
+                </Form>
+
+                <pre>{actionData || loaderData}</pre>
+              </>
+            )
+          }
+        `,
+
+        "app/routes/form-method.jsx": js`
+          import { Form, useActionData } from "@remix-run/react";
+          import { json } from "@remix-run/node";
+
+          export function action({ request }) {
+            return json(request.method)
+          }
+          export default function() {
+            let actionData = useActionData();
+            return (
+              <>
+                <Form method="post">
+                  <button type="submit">Submit</button>
+                </Form>
+                <pre>{actionData}</pre>
+              </>
+            )
+          }
+        `,
+
+        "app/routes/button-form-method.jsx": js`
+          import { Form, useActionData } from "@remix-run/react";
+          import { json } from "@remix-run/node";
+
+          export function action({ request }) {
+            return json(request.method)
+          }
+          export default function() {
+            let actionData = useActionData();
+            return (
+              <>
+                <Form>
+                  <button type="submit" formMethod="post">Submit</button>
+                </Form>
+                <pre>{actionData}</pre>
+              </>
+            )
+          }
+        `,
+        
         "app/routes/submitter.jsx": js`
           import { useLoaderData, Form } from "@remix-run/react";
 
@@ -815,6 +885,43 @@ test.describe("Forms", () => {
         let el = getElement(html, `#${SPLAT_ROUTE_TOO_MANY_DOTS_ACTION}`);
         expect(el.attr("action")).toMatch("/");
       });
+    });
+  });
+
+  test.describe("with submitter button having `formMethod` attribute", () => {
+
+    test.describe("overrides the form `method` attribute with the button `formmethod` attribute", () => {
+      test("submits with GET instead of POST", async ({ page }) => {
+        let app = new PlaywrightFixture(appFixture, page);
+        await app.goto("/submitter-formmethod");
+        await app.clickElement("text=Submit with GET");
+        await page.waitForLoadState("load");
+        expect(await app.getHtml("pre")).toBe("<pre>GET</pre>");
+      });
+  
+      test("submits with POST instead of GET", async ({ page }) => {
+        let app = new PlaywrightFixture(appFixture, page);
+        await app.goto("/submitter-formmethod");
+        await app.clickElement("text=Submit with POST");
+        await page.waitForLoadState("load");
+        expect(await app.getHtml("pre")).toBe("<pre>POST</pre>");
+      });
+    })
+
+    test("uses the form `method` attribute", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/form-method");
+      await app.clickElement("button");
+      await page.waitForLoadState("load");
+      expect(await app.getHtml("pre")).toMatch("POST");
+    });
+  
+    test("uses the button `formmethod` attribute", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/button-form-method");
+      await app.clickElement("button");
+      await page.waitForLoadState("load");
+      expect(await app.getHtml("pre")).toMatch("POST");
     });
   });
 
