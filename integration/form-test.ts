@@ -377,7 +377,7 @@ test.describe("Forms", () => {
             )
           }
         `,
-        
+
         "app/routes/submitter.jsx": js`
           import { useLoaderData, Form } from "@remix-run/react";
 
@@ -889,7 +889,6 @@ test.describe("Forms", () => {
   });
 
   test.describe("with submitter button having `formMethod` attribute", () => {
-
     test.describe("overrides the form `method` attribute with the button `formmethod` attribute", () => {
       test("submits with GET instead of POST", async ({ page }) => {
         let app = new PlaywrightFixture(appFixture, page);
@@ -898,7 +897,7 @@ test.describe("Forms", () => {
         await page.waitForLoadState("load");
         expect(await app.getHtml("pre")).toBe("<pre>GET</pre>");
       });
-  
+
       test("submits with POST instead of GET", async ({ page }) => {
         let app = new PlaywrightFixture(appFixture, page);
         await app.goto("/submitter-formmethod");
@@ -906,7 +905,7 @@ test.describe("Forms", () => {
         await page.waitForLoadState("load");
         expect(await app.getHtml("pre")).toBe("<pre>POST</pre>");
       });
-    })
+    });
 
     test("uses the form `method` attribute", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
@@ -915,7 +914,7 @@ test.describe("Forms", () => {
       await page.waitForLoadState("load");
       expect(await app.getHtml("pre")).toMatch("POST");
     });
-  
+
     test("uses the button `formmethod` attribute", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/button-form-method");
