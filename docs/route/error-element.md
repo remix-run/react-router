@@ -7,7 +7,7 @@ new: true
 
 When exceptions are thrown in [loaders][loader], [actions][action], or component rendering, instead of the normal render path for your Routes (`<Route element>`), the error path will be rendered (`<Route errorElement>`) and the error made available with [`useRouteError`][userouteerror].
 
-<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+<docs-error>This feature only works if using a data router like [`createBrowserRouter`][createbrowserrouter]</docs-error>
 
 ```tsx
 <Route
@@ -174,12 +174,12 @@ function fetchProject(id) {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  if (res.status === 404) {
+  if (response.status === 404) {
     throw new Response("Not Found", { status: 404 });
   }
 
   // the fetch failed
-  if (!res.ok) {
+  if (!response.ok) {
     throw new Error("Could not fetch project");
   }
 }
@@ -214,3 +214,4 @@ The project route doesn't have to think about errors at all. Between the loader 
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [isrouteerrorresponse]: ../utils/is-route-error-response
 [json]: ../fetch/json
+[createbrowserrouter]: ../routers/create-browser-router

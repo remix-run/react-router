@@ -39,7 +39,7 @@ A `match` has the following shape:
 
 Pairing `<Route handle>` with `useMatches` gets very powerful since you can put whatever you want on a route `handle` and have access to `useMatches` anywhere.
 
-<docs-warning>This feature only works if using a data router (see [Picking a Router][pickingarouter]) since they know the full route tree up front and can provide all of the current matches. Additionally, `useMatches` will not match down into any descendant route trees since the router isn't aware of the descendant routes.</docs-warning>
+<docs-warning>`useMatches` only works with a data router like [`createBrowserRouter`][createbrowserrouter], since they know the full route tree up front and can provide all of the current matches. Additionally, `useMatches` will not match down into any descendant route trees since the router isn't aware of the descendant routes.</docs-warning>
 
 ## Breadcrumbs
 
@@ -99,4 +99,4 @@ function Breadcrumbs() {
 
 Now you can render `<Breadcrumbs/>` anywhere you want, probably in the root component.
 
-[pickingarouter]: ../routers/picking-a-router
+[createbrowserrouter]: ../routers/create-browser-router

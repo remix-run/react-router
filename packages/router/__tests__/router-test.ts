@@ -1,13 +1,11 @@
 /* eslint-disable jest/valid-title */
 import type {
-  ActionFunction,
   AgnosticDataRouteObject,
   AgnosticRouteMatch,
   Fetcher,
   RouterFetchOptions,
   HydrationState,
   InitialEntry,
-  LoaderFunction,
   Router,
   RouterNavigateOptions,
   StaticHandler,
@@ -28,7 +26,12 @@ import {
 } from "../index";
 
 // Private API
-import type { AgnosticRouteObject, TrackedPromise } from "../utils";
+import type {
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
+  AgnosticRouteObject,
+  TrackedPromise,
+} from "../utils";
 import { AbortedDeferredError } from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,9 +39,19 @@ import { AbortedDeferredError } from "../utils";
 ///////////////////////////////////////////////////////////////////////////////
 
 // Routes passed into setup() should just have a boolean for loader/action
-// indicating they want a stub
-type TestRouteObject = Pick<
-  AgnosticDataRouteObject,
+// indicating they want a stub.  They get enhanced back to AgnosticRouteObjects
+// by our test harness
+type TestIndexRouteObject = Pick<
+  AgnosticIndexRouteObject,
+  "id" | "index" | "path" | "shouldRevalidate"
+> & {
+  loader?: boolean;
+  action?: boolean;
+  hasErrorBoundary?: boolean;
+};
+
+type TestNonIndexRouteObject = Pick<
+  AgnosticNonIndexRouteObject,
   "id" | "index" | "path" | "shouldRevalidate"
 > & {
   loader?: boolean;
@@ -47,16 +60,7 @@ type TestRouteObject = Pick<
   children?: TestRouteObject[];
 };
 
-// Enhanced route objects are what is passed to the router for testing, as they
-// have been enhanced with stubbed loaders and actions
-type EnhancedRouteObject = Omit<
-  TestRouteObject,
-  "loader" | "action" | "children"
-> & {
-  loader?: LoaderFunction;
-  action?: ActionFunction;
-  children?: EnhancedRouteObject[];
-};
+type TestRouteObject = TestIndexRouteObject | TestNonIndexRouteObject;
 
 // A helper that includes the Deferred and stubs for any loaders/actions for the
 // route allowing fine-grained test execution
@@ -251,7 +255,7 @@ function setup({
   // active navigation loader/action
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
-      let enhancedRoute: EnhancedRouteObject = {
+      let enhancedRoute: AgnosticRouteObject = {
         ...r,
         loader: undefined,
         action: undefined,
@@ -313,7 +317,7 @@ function setup({
           );
         };
       }
-      if (r.children) {
+      if (!r.index && r.children) {
         enhancedRoute.children = enhanceRoutes(r.children);
       }
       return enhancedRoute;
@@ -438,7 +442,11 @@ function setup({
     href: string,
     navigationId: number
   ): NavigationHelpers {
-    let matches = matchRoutes(enhancedRoutes, href);
+    invariant(
+      currentRouter?.routes,
+      "No currentRouter.routes available in getNavigationHelpers"
+    );
+    let matches = matchRoutes(currentRouter.routes, href);
 
     // Generate helpers for all route matches that contain loaders
     let loaderHelpers = getHelpers(
@@ -473,7 +481,11 @@ function setup({
     navigationId: number,
     opts?: RouterNavigateOptions
   ): FetcherHelpers {
-    let matches = matchRoutes(enhancedRoutes, href);
+    invariant(
+      currentRouter?.routes,
+      "No currentRouter.routes available in getFetcherHelpers"
+    );
+    let matches = matchRoutes(currentRouter.routes, href);
     invariant(currentRouter, "No currentRouter available");
     let search = parsePath(href).search || "";
     let hasNakedIndexQuery = new URLSearchParams(search)
@@ -506,7 +518,7 @@ function setup({
     if (opts?.formMethod === "post") {
       if (currentRouter.state.navigation?.location) {
         let matches = matchRoutes(
-          enhancedRoutes,
+          currentRouter.routes,
           currentRouter.state.navigation.location
         );
         invariant(matches, "No matches found for fetcher");
@@ -1003,7 +1015,7 @@ describe("a router", () => {
     });
 
     it("throws if it finds index routes with children", async () => {
-      let routes = [
+      let routes: AgnosticRouteObject[] = [
         // @ts-expect-error
         {
           index: true,

@@ -1,4 +1,3 @@
-import { AgnosticRouteObject } from "@remix-run/router";
 import * as React from "react";
 import type { RouteObject } from "react-router";
 import { matchRoutes } from "react-router";

@@ -57,3 +57,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  comment:
+    needs: [release]
+    name: 📝 Comment on related issues and pull requests
+    if: github.repository == 'remix-run/react-router'
+    uses: remix-run/react-router/.github/workflows/release-comments.yml@main
+    with:
+      ref: ${{ github.ref }}

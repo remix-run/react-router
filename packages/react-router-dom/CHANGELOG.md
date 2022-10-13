@@ -1,22 +1,15 @@
 # `react-router-dom`
 
-## 6.4.2-pre.1
+## 6.4.2
 
 ### Patch Changes
 
+- Respect `basename` in `useFormAction` ([#9352](https://github.com/remix-run/react-router/pull/9352))
+- Enhance console error messages for invalid usage of data router hooks ([#9311](https://github.com/remix-run/react-router/pull/9311))
+- If an index route has children, it will result in a runtime error. We have strengthened our `RouteObject`/`RouteProps` types to surface the error in TypeScript. ([#9366](https://github.com/remix-run/react-router/pull/9366))
 - Updated dependencies:
-  - `react-router@6.4.2-pre.1`
-
-## 6.4.2-pre.0
-
-### Patch Changes
-
-- fix: respect `basename` in `useFormAction` ([#9352](https://github.com/remix-run/react-router/pull/9352))
-- docs: Enhance console error messages for invalid usage of data router hooks ([#9311](https://github.com/remix-run/react-router/pull/9311))
-- fix: Strengthen `RouteObject`/`RouteProps` types and throw on `index` routes with `children` ([#9366](https://github.com/remix-run/react-router/pull/9366))
-- Updated dependencies:
-  - `react-router@6.4.2-pre.0`
-  - `@remix-run/router@1.0.2-pre.0`
+  - `react-router@6.4.2`
+  - `@remix-run/router@1.0.2`
 
 ## 6.4.1
 
@@ -56,5 +49,5 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 - `react-router@6.4.0`
 
 [rr-docs]: https://reactrouter.com/
-[rr-feature-overview]: https://reactrouter.com/en/v6.4.0/start/overview
-[rr-tutorial]: https://reactrouter.com/en/v6.4.0/start/tutorial
+[rr-feature-overview]: https://reactrouter.com/en/6.4.0/start/overview
+[rr-tutorial]: https://reactrouter.com/en/6.4.0/start/tutorial

@@ -37,7 +37,7 @@ Here are some words we use a lot when we talk about React Router. The rest of th
 
 - <a id="csr">**Client Side Routing (CSR)**</a> - A plain HTML document can link to other documents and the browser handles the [history stack](#history-stack) itself. Client Side Routing enables developers to manipulate the browser history stack without making a document request to the server.
 
-- <a id="history-object">**History**</a> - An object that allows React Router to subscribe to changes in the [URL](#url) as well as providing APIs to manipulate the browser [history stack](#history-stack) programmatically.
+- <a id="history">**History**</a> - An object that allows React Router to subscribe to changes in the [URL](#url) as well as providing APIs to manipulate the browser [history stack](#history-stack) programmatically.
 
 - <a id="history-action">**History Action**</a> - One of `POP`, `PUSH`, or `REPLACE`. Users can arrive at a [URL](#url) for one of these three reasons. A push when a new entry is added to the history stack (typically a link click or the programmer forced a navigation). A replace is similar except it replaces the current entry on the stack instead of pushing a new one. Finally, a pop happens when the user clicks the back or forward buttons in the browser chrome.
 
@@ -659,11 +659,9 @@ Here's a part of our route config we haven't matched yet: `/privacy`. Let's look
 And the resulting element tree rendered will be:
 
 ```jsx
-<App>
-  <PageLayout>
-    <Privacy />
-  </PageLayout>
-</App>
+<PageLayout>
+  <Privacy />
+</PageLayout>
 ```
 
 The `PageLayout` route is admittedly weird. We call it a [layout route](#layout-route) because it doesn't participate in the matching at all (though its children do). It only exists to make wrapping multiple child routes in the same layout simpler. If we didn't allow this then you'd have to handle layouts in two different ways: sometimes your routes do it for you, sometimes you do it manually with lots of layout component repetition throughout your app:
