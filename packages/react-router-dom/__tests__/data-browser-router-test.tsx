@@ -433,7 +433,7 @@ function testDomRouter(
 
     it("handles link navigations when using a basename", async () => {
       let testWindow = getWindow("/base/name/foo");
-      let { container } = render(
+      render(
         <TestDataRouter
           basename="/base/name"
           window={testWindow}
@@ -451,33 +451,16 @@ function testDomRouter(
           <div>
             <Link to="/foo">Link to Foo</Link>
             <Link to="/bar">Link to Bar</Link>
-            <Outlet />
+            <div id="output">
+              <Outlet />
+            </div>
           </div>
         );
       }
 
       assertLocation(testWindow, "/base/name/foo");
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <a
-              href=\\"/base/name/foo\\"
-            >
-              Link to Foo
-            </a>
-            <a
-              href=\\"/base/name/bar\\"
-            >
-              Link to Bar
-            </a>
-            <h1>
-              Foo Heading
-            </h1>
-          </div>
-        </div>"
-      `);
-
       expect(screen.getByText("Foo Heading")).toBeDefined();
+
       fireEvent.click(screen.getByText("Link to Bar"));
       await waitFor(() => screen.getByText("Bar Heading"));
       assertLocation(testWindow, "/base/name/bar");
@@ -508,8 +491,10 @@ function testDomRouter(
         return (
           <div>
             <Link to="/bar">Link to Bar</Link>
-            <p>{navigation.state}</p>
-            <Outlet />
+            <div id="output">
+              <p>{navigation.state}</p>
+              <Outlet />
+            </div>
           </div>
         );
       }
@@ -522,62 +507,50 @@ function testDomRouter(
         return <h1>{data?.message}</h1>;
       }
 
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
             <p>
               idle
             </p>
             <h1>
               Foo
             </h1>
-          </div>
-        </div>"
-      `);
+          </div>"
+        `);
 
       fireEvent.click(screen.getByText("Link to Bar"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
             <p>
               loading
             </p>
             <h1>
               Foo
             </h1>
-          </div>
-        </div>"
-      `);
+          </div>"
+        `);
 
       barDefer.resolve({ message: "Bar Loader" });
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
             <p>
               idle
             </p>
             <h1>
               Bar Loader
             </h1>
-          </div>
-        </div>"
-      `);
+          </div>"
+        `);
     });
 
     it("handles link navigations with preventScrollReset", async () => {
@@ -3664,8 +3637,10 @@ function testDomRouter(
             <div>
               <Link to="/foo">Link to Foo</Link>
               <Link to="/bar">Link to Bar</Link>
-              <p>{navigation.state}</p>
-              <Outlet />
+              <div id="output">
+                <p>{navigation.state}</p>
+                <Outlet />
+              </div>
             </div>
           );
         }
@@ -3687,83 +3662,56 @@ function testDomRouter(
           return <p>Bar Error:{error.message}</p>;
         }
 
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <div>
-              <a
-                href=\\"/foo\\"
-              >
-                Link to Foo
-              </a>
-              <a
-                href=\\"/bar\\"
-              >
-                Link to Bar
-              </a>
-              <p>
-                idle
-              </p>
-              <h1>
-                Foo:
-                hydrated from foo
-              </h1>
-            </div>
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo:
+              hydrated from foo
+            </h1>
           </div>"
         `);
 
         fireEvent.click(screen.getByText("Link to Bar"));
         barDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <div>
-              <a
-                href=\\"/foo\\"
-              >
-                Link to Foo
-              </a>
-              <a
-                href=\\"/bar\\"
-              >
-                Link to Bar
-              </a>
-              <p>
-                idle
-              </p>
-              <p>
-                Bar Error:
-                Kaboom!
-              </p>
-            </div>
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <p>
+              Bar Error:
+              Kaboom!
+            </p>
           </div>"
         `);
 
         fireEvent.click(screen.getByText("Link to Foo"));
         fooDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <div>
-              <a
-                href=\\"/foo\\"
-              >
-                Link to Foo
-              </a>
-              <a
-                href=\\"/bar\\"
-              >
-                Link to Bar
-              </a>
-              <p>
-                idle
-              </p>
-              <p>
-                Foo Error:
-                Kaboom!
-              </p>
-            </div>
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <p>
+              Foo Error:
+              Kaboom!
+            </p>
           </div>"
-         `);
+        `);
       });
 
       it("renders navigation errors on parent elements", async () => {
@@ -3803,8 +3751,10 @@ function testDomRouter(
             <div>
               <Link to="/foo">Link to Foo</Link>
               <Link to="/bar">Link to Bar</Link>
-              <p>{navigation.state}</p>
-              <Outlet />
+              <div id="output">
+                <p>{navigation.state}</p>
+                <Outlet />
+              </div>
             </div>
           );
         }
@@ -3825,27 +3775,18 @@ function testDomRouter(
           return <h1>Bar:{data?.message}</h1>;
         }
 
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <div>
-              <a
-                href=\\"/foo\\"
-              >
-                Link to Foo
-              </a>
-              <a
-                href=\\"/bar\\"
-              >
-                Link to Bar
-              </a>
-              <p>
-                idle
-              </p>
-              <h1>
-                Foo:
-                hydrated from foo
-              </h1>
-            </div>
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo:
+              hydrated from foo
+            </h1>
           </div>"
         `);
 
@@ -3893,8 +3834,10 @@ function testDomRouter(
           return (
             <div>
               <Link to="/bar">Link to Bar</Link>
-              <p>{navigation.state}</p>
-              <Outlet />
+              <div id="output">
+                <p>{navigation.state}</p>
+                <Outlet />
+              </div>
             </div>
           );
         }
@@ -3908,43 +3851,35 @@ function testDomRouter(
           return <p>Bar Error:{error.message}</p>;
         }
 
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <div>
-              <a
-                href=\\"/bar\\"
-              >
-                Link to Bar
-              </a>
-              <p>
-                idle
-              </p>
-              <h1>
-                Foo
-              </h1>
-            </div>
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo
+            </h1>
           </div>"
         `);
 
         fireEvent.click(screen.getByText("Link to Bar"));
         barDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <div>
-              <a
-                href=\\"/bar\\"
-              >
-                Link to Bar
-              </a>
-              <p>
-                idle
-              </p>
-              <p>
-                Bar Error:
-                Kaboom!
-              </p>
-            </div>
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <p>
+              Bar Error:
+              Kaboom!
+            </p>
           </div>"
         `);
       });
