@@ -118,6 +118,260 @@ describe("matchRoutes", () => {
     expect(matches[1].route).toBe(userProfileRoute);
   });
 
+  it("matches routes with special characters", () => {
+    // Ensure we can use special characters in any number of ways:
+    //   As a static route: /✅
+    //   As a static child of root layout route: /✅
+    //   As a static child of a static layout route: /static/✅
+    //   As a static child of a param layout route: /:param/✅
+    //   As a root splat route: /*
+    //   As a root param route: /:param
+    //   As a child splat route: /splat/*
+    //   As a child param route: /dynamic/:param/
+
+    let getStaticRoutes = (char) => [{ path: char }];
+    let getNestedStaticRoutes = (char) => [
+      {
+        path: "/",
+        children: [{ path: char }],
+      },
+      {
+        path: "/static",
+        children: [{ path: char }],
+      },
+      {
+        path: "/:param",
+        children: [{ path: char }],
+      },
+    ];
+    let rootSplatRoutes = [
+      {
+        index: true,
+      },
+      {
+        path: "*",
+      },
+    ];
+    let rootParamRoute = [
+      {
+        index: true,
+      },
+      {
+        path: ":param",
+      },
+    ];
+    let nestedRoutes = [
+      {
+        index: true,
+      },
+      {
+        path: "dynamic",
+        children: [
+          {
+            path: ":param",
+          },
+        ],
+      },
+      {
+        path: "splat",
+        children: [
+          {
+            path: "*",
+          },
+        ],
+      },
+    ];
+
+    let specialChars = [
+      // Include non-special characters here to ensure the behavior is the same
+      "x",
+      "X",
+      "!",
+      "@",
+      "$",
+      "^",
+      "&",
+      "*",
+      "(",
+      ")",
+      "_",
+      "+",
+      "-",
+      "=",
+      "~",
+      "{",
+      "}",
+      "[",
+      "]",
+      "|",
+      "<",
+      ">",
+      ".",
+      ",",
+      ":",
+      ";",
+      "🤯",
+      "✅",
+      "🔥",
+      "ä",
+      "Ä",
+      "ø",
+      "山",
+      "人",
+      "口",
+      "刀",
+      "木",
+    ];
+
+    specialChars.forEach((char) => {
+      expect(matchRoutes(rootSplatRoutes, `/${char}`)).toEqual([
+        {
+          params: {
+            "*": char,
+          },
+          pathname: `/${char}`,
+          pathnameBase: "/",
+          route: expect.objectContaining({
+            path: "*",
+          }),
+        },
+      ]);
+      expect(matchRoutes(rootParamRoute, `/${char}`)).toEqual([
+        {
+          params: {
+            param: char,
+          },
+          pathname: `/${char}`,
+          pathnameBase: `/${char}`,
+          route: expect.objectContaining({
+            path: ":param",
+          }),
+        },
+      ]);
+      expect(matchRoutes(nestedRoutes, `/dynamic/${char}`)).toEqual([
+        {
+          params: {
+            param: char,
+          },
+          pathname: "/dynamic",
+          pathnameBase: "/dynamic",
+          route: expect.objectContaining({
+            path: "dynamic",
+          }),
+        },
+        {
+          params: {
+            param: char,
+          },
+          pathname: `/dynamic/${char}`,
+          pathnameBase: `/dynamic/${char}`,
+          route: {
+            path: ":param",
+          },
+        },
+      ]);
+      expect(matchRoutes(nestedRoutes, `/splat/${char}`)).toEqual([
+        {
+          params: {
+            "*": char,
+          },
+          pathname: "/splat",
+          pathnameBase: "/splat",
+          route: expect.objectContaining({
+            path: "splat",
+          }),
+        },
+        {
+          params: {
+            "*": char,
+          },
+          pathname: `/splat/${char}`,
+          pathnameBase: `/splat`,
+          route: {
+            path: "*",
+          },
+        },
+      ]);
+
+      // This just becomes a splat/param route - skip it for static routes :)
+      if (char === "*" || char === ":") {
+        return;
+      }
+
+      expect(matchRoutes(getStaticRoutes(char), `/${char}`)).toEqual([
+        {
+          params: {},
+          pathname: `/${char}`,
+          pathnameBase: `/${char}`,
+          route: expect.objectContaining({
+            path: char,
+          }),
+        },
+      ]);
+
+      expect(matchRoutes(getNestedStaticRoutes(char), `/${char}`)).toEqual([
+        {
+          params: {},
+          pathname: `/`,
+          pathnameBase: `/`,
+          route: expect.objectContaining({
+            path: "/",
+          }),
+        },
+        {
+          params: {},
+          pathname: `/${char}`,
+          pathnameBase: `/${char}`,
+          route: expect.objectContaining({
+            path: char,
+          }),
+        },
+      ]);
+      expect(
+        matchRoutes(getNestedStaticRoutes(char), `/static/${char}`)
+      ).toEqual([
+        {
+          params: {},
+          pathname: `/static`,
+          pathnameBase: `/static`,
+          route: expect.objectContaining({
+            path: "/static",
+          }),
+        },
+        {
+          params: {},
+          pathname: `/static/${char}`,
+          pathnameBase: `/static/${char}`,
+          route: expect.objectContaining({
+            path: char,
+          }),
+        },
+      ]);
+      expect(matchRoutes(getNestedStaticRoutes(char), `/foo/${char}`)).toEqual([
+        {
+          params: {
+            param: "foo",
+          },
+          pathname: `/foo`,
+          pathnameBase: `/foo`,
+          route: expect.objectContaining({
+            path: "/:param",
+          }),
+        },
+        {
+          params: {
+            param: "foo",
+          },
+          pathname: `/foo/${char}`,
+          pathnameBase: `/foo/${char}`,
+          route: expect.objectContaining({
+            path: char,
+          }),
+        },
+      ]);
+    });
+  });
+
   describe("with a basename", () => {
     it("matches a pathname that starts with the basename", () => {
       expect(pickPaths(routes, "/app/users/mj", "/app")).toEqual([
