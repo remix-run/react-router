@@ -10651,6 +10651,7 @@ describe("a router", () => {
           expect(data instanceof Response).toBe(true);
           expect(data.status).toBe(404);
           expect(data.statusText).toBe("Not Found");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
         }
 
         try {
@@ -10660,6 +10661,7 @@ describe("a router", () => {
           expect(data instanceof Response).toBe(true);
           expect(data.status).toBe(404);
           expect(data.statusText).toBe("Not Found");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
         }
 
         try {
@@ -10669,6 +10671,7 @@ describe("a router", () => {
           expect(data instanceof Response).toBe(true);
           expect(data.status).toBe(404);
           expect(data.statusText).toBe("Not Found");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
         }
 
         try {
@@ -10678,6 +10681,7 @@ describe("a router", () => {
           expect(data instanceof Response).toBe(true);
           expect(data.status).toBe(404);
           expect(data.statusText).toBe("Not Found");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
         }
 
         /* eslint-enable jest/no-conditional-expect */
@@ -10699,6 +10703,7 @@ describe("a router", () => {
           expect(data instanceof Response).toBe(true);
           expect(data.status).toBe(405);
           expect(data.statusText).toBe("Method Not Allowed");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
           expect(await data.text()).toBe("No action found for [/]");
         }
         /* eslint-enable jest/no-conditional-expect */
