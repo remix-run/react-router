@@ -23,10 +23,11 @@ import { serverAssetsManifestPlugin } from "./compiler/plugins/serverAssetsManif
 import { serverBareModulesPlugin } from "./compiler/plugins/serverBareModulesPlugin";
 import { serverEntryModulePlugin } from "./compiler/plugins/serverEntryModulePlugin";
 import { serverRouteModulesPlugin } from "./compiler/plugins/serverRouteModulesPlugin";
+import { cssFilePlugin } from "./compiler/plugins/cssFilePlugin";
 import { writeFileSafe } from "./compiler/utils/fs";
 import { urlImportsPlugin } from "./compiler/plugins/urlImportsPlugin";
 
-interface BuildConfig {
+export interface BuildConfig {
   mode: BuildMode;
   target: BuildTarget;
   sourcemap: boolean;
@@ -347,6 +348,7 @@ async function createBrowserBuild(
   }
 
   let plugins = [
+    cssFilePlugin(options),
     urlImportsPlugin(),
     mdxPlugin(config),
     browserRouteModulesPlugin(config, /\?browser$/),
@@ -415,6 +417,7 @@ function createServerBuild(
   let isDenoRuntime = config.serverBuildTarget === "deno";
 
   let plugins: esbuild.Plugin[] = [
+    cssFilePlugin(options),
     urlImportsPlugin(),
     mdxPlugin(config),
     emptyModulesPlugin(config, /\.client(\.[jt]sx?)?$/),

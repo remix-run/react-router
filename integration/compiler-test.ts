@@ -1,5 +1,5 @@
 import path from "path";
-import fs from "fs/promises";
+import fse from "fs-extra";
 import { test, expect } from "@playwright/test";
 import { PassThrough } from "stream";
 
@@ -9,6 +9,7 @@ import {
   js,
   json,
   createFixtureProject,
+  css,
 } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
 import { PlaywrightFixture } from "./helpers/playwright-fixture";
@@ -89,6 +90,18 @@ test.describe("compiler", () => {
             return <div id="package-with-submodule">{submodule()}</div>;
           }
         `,
+        "app/routes/css.jsx": js`
+          import stylesUrl from "@org/css/index.css";
+
+          export function links() {
+            return [{ rel: "stylesheet", href: stylesUrl }]
+          }
+
+          export default function PackageWithSubModule() {
+            return <div id="package-with-submodule">{submodule()}</div>;
+          }
+        `,
+
         "remix.config.js": js`
           let { getDependenciesToBundle } = require("@remix-run/dev");
           module.exports = {
@@ -154,6 +167,22 @@ test.describe("compiler", () => {
         "node_modules/@org/package/sub-package/esm/submodule.js": js`
           export default function submodule() {
             return "package-with-submodule";
+          }
+        `,
+        "node_modules/@org/css/package.json": json({
+          name: "@org/css",
+          version: "1.0.0",
+          main: "index.css",
+        }),
+        "node_modules/@org/css/font.woff2": "font",
+        "node_modules/@org/css/index.css": css`
+          body {
+            background: red;
+          }
+
+          @font-face {
+            font-family: "MyFont";
+            src: url("./font.woff2");
           }
         `,
       },
@@ -266,6 +295,17 @@ test.describe("compiler", () => {
     );
   });
 
+  test("copies imports in css files to assetsBuildDirectory", async () => {
+    let buildDir = path.join(fixture.projectDir, "public", "build", "_assets");
+    let files = await fse.readdir(buildDir);
+    expect(files).toHaveLength(2);
+
+    let cssFile = files.find((file) => file.match(/index-[a-z0-9]{8}\.css/i));
+    let fontFile = files.find((file) => file.match(/font-[a-z0-9]{8}\.woff2/i));
+    expect(cssFile).toBeTruthy();
+    expect(fontFile).toBeTruthy();
+  });
+
   // TODO: remove this when we get rid of that feature.
   test("magic imports still works", async () => {
     let magicExportsForNode = [
@@ -314,7 +354,7 @@ test.describe("compiler", () => {
       "useSubmit",
       "useTransition",
     ];
-    let magicRemix = await fs.readFile(
+    let magicRemix = await fse.readFile(
       path.resolve(fixture.projectDir, "node_modules/remix/dist/index.js"),
       "utf8"
     );
