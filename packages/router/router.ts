@@ -478,6 +478,16 @@ type RevalidatingFetcher = [string, string, AgnosticDataRouteMatch];
  */
 type FetchLoadMatch = [string, AgnosticDataRouteMatch];
 
+/**
+ * Wrapper object to allow us to throw any response out from callLoaderOrAction
+ * for queryRouter while preserving whether or not it was thrown or returned
+ * from the loader/action
+ */
+interface QueryRouteResponse {
+  type: ResultType.data | ResultType.error;
+  response: Response;
+}
+
 export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
   state: "idle",
   location: undefined,
@@ -1768,34 +1778,71 @@ export function unstable_createStaticHandler(
   async function query(
     request: Request
   ): Promise<StaticHandlerContext | Response> {
-    let { location, result } = await queryImpl(request);
+    let url = new URL(request.url);
+    let location = createLocation("", createPath(url), null, "default");
+    let matches = matchRoutes(dataRoutes, location);
+
+    if (!matches) {
+      let {
+        matches: notFoundMatches,
+        route,
+        error,
+      } = getNotFoundMatches(dataRoutes);
+      return {
+        location,
+        matches: notFoundMatches,
+        loaderData: {},
+        actionData: null,
+        errors: {
+          [route.id]: error,
+        },
+        statusCode: 404,
+        loaderHeaders: {},
+        actionHeaders: {},
+      };
+    }
+
+    let result = await queryImpl(request, location, matches, false);
     if (result instanceof Response) {
       return result;
     }
+
     // When returning StaticHandlerContext, we patch back in the location here
     // since we need it for React Context.  But this helps keep our submit and
     // loadRouteData operating on a Request instead of a Location
     return { location, ...result };
   }
 
-  async function queryRoute(request: Request, routeId: string): Promise<any> {
-    let { result } = await queryImpl(request, routeId);
+  async function queryRoute(request: Request, routeId?: string): Promise<any> {
+    let url = new URL(request.url);
+    let location = createLocation("", createPath(url), null, "default");
+    let matches = matchRoutes(dataRoutes, location);
+
+    if (!matches) {
+      throw createRouterErrorResponse(null, {
+        status: 404,
+        statusText: "Not Found",
+      });
+    }
+
+    let match = routeId
+      ? matches.find((m) => m.route.id === routeId)
+      : getTargetMatch(matches, location);
+
+    if (!match) {
+      throw createRouterErrorResponse(null, {
+        status: 404,
+        statusText: "Not Found",
+      });
+    }
+
+    let result = await queryImpl(request, location, [match], true);
     if (result instanceof Response) {
       return result;
     }
 
     let error = result.errors ? Object.values(result.errors)[0] : undefined;
     if (error !== undefined) {
-      // While we always re-throw Responses returned from loaders/actions
-      // directly for route requests and prevent the unwrapping into an
-      // ErrorResponse, we still need this for error cases _prior_ the
-      // execution of the loader/action, such as a 404/405 error.
-      if (isRouteErrorResponse(error)) {
-        return new Response(error.data, {
-          status: error.status,
-          statusText: error.statusText,
-        });
-      }
       // If we got back result.errors, that means the loader/action threw
       // _something_ that wasn't a Response, but it's not guaranteed/required
       // to be an `instanceof Error` either, so we have to use throw here to
@@ -1805,25 +1852,15 @@ export function unstable_createStaticHandler(
 
     // Pick off the right state value to return
     let routeData = [result.actionData, result.loaderData].find((v) => v);
-    let value = Object.values(routeData || {})[0];
-
-    if (isRouteErrorResponse(value)) {
-      return new Response(value.data, {
-        status: value.status,
-        statusText: value.statusText,
-      });
-    }
-
-    return value;
+    return Object.values(routeData || {})[0];
   }
 
   async function queryImpl(
     request: Request,
-    routeId?: string
-  ): Promise<{
-    location: Location;
-    result: Omit<StaticHandlerContext, "location"> | Response;
-  }> {
+    location: Location,
+    matches: AgnosticDataRouteMatch[],
+    isRouteRequest: boolean
+  ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
     invariant(
       request.method !== "HEAD",
       "query()/queryRoute() do not support HEAD requests"
@@ -1833,38 +1870,39 @@ export function unstable_createStaticHandler(
       "query()/queryRoute() requests must contain an AbortController signal"
     );
 
-    let { location, matches, shortCircuitState } = matchRequest(
-      request,
-      routeId
-    );
-
     try {
-      if (shortCircuitState) {
-        return { location, result: shortCircuitState };
-      }
-
       if (request.method !== "GET") {
         let result = await submit(
           request,
           matches,
           getTargetMatch(matches, location),
-          routeId != null
+          isRouteRequest
         );
-        return { location, result };
+        return result;
       }
 
-      let result = await loadRouteData(request, matches, routeId != null);
-      return {
-        location,
-        result: {
-          ...result,
-          actionData: null,
-          actionHeaders: {},
-        },
-      };
+      let result = await loadRouteData(request, matches, isRouteRequest);
+      return result instanceof Response
+        ? result
+        : {
+            ...result,
+            actionData: null,
+            actionHeaders: {},
+          };
     } catch (e) {
-      if (e instanceof Response) {
-        return { location, result: e };
+      // If the user threw/returned a Response in callLoaderOrAction, we throw
+      // it to bail out and then return or throw here based on whether the user
+      // returned or threw
+      if (isQueryRouteResponse(e)) {
+        if (e.type === ResultType.error && !isRedirectResponse(e.response)) {
+          throw e.response;
+        }
+        return e.response;
+      }
+      // Redirects are always returned since they don't propagate to catch
+      // boundaries
+      if (isRedirectResponse(e)) {
+        return e;
       }
       throw e;
     }
@@ -1879,6 +1917,12 @@ export function unstable_createStaticHandler(
     let result: DataResult;
     if (!actionMatch.route.action) {
       let href = createHref(new URL(request.url));
+      if (isRouteRequest) {
+        throw createRouterErrorResponse(`No action found for [${href}]`, {
+          status: 405,
+          statusText: "Method Not Allowed",
+        });
+      }
       result = getMethodNotAllowedResult(href);
     } else {
       result = await callLoaderOrAction(
@@ -1913,6 +1957,8 @@ export function unstable_createStaticHandler(
     }
 
     if (isRouteRequest) {
+      // Note: This should only be non-Response values if we get here, since
+      // isRouteRequest should throw any Response received in callLoaderOrAction
       if (isErrorResult(result)) {
         let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
         return {
@@ -2037,47 +2083,17 @@ export function unstable_createStaticHandler(
     };
   }
 
-  function matchRequest(
-    req: Request,
-    routeId?: string
-  ): {
-    location: Location;
-    matches: AgnosticDataRouteMatch[];
-    routeMatch?: AgnosticDataRouteMatch;
-    shortCircuitState?: Omit<StaticHandlerContext, "location">;
-  } {
-    let url = new URL(req.url);
-    let location = createLocation("", createPath(url), null, "default");
-    let matches = matchRoutes(dataRoutes, location);
-    if (matches && routeId) {
-      matches = matches.filter((m) => m.route.id === routeId);
-    }
-
-    // Short circuit with a 404 if we match nothing
-    if (!matches) {
-      let {
-        matches: notFoundMatches,
-        route,
-        error,
-      } = getNotFoundMatches(dataRoutes);
-      return {
-        location,
-        matches: notFoundMatches,
-        shortCircuitState: {
-          matches: notFoundMatches,
-          loaderData: {},
-          actionData: null,
-          errors: {
-            [route.id]: error,
-          },
-          statusCode: 404,
-          loaderHeaders: {},
-          actionHeaders: {},
-        },
-      };
-    }
-
-    return { location, matches };
+  function createRouterErrorResponse(
+    body: BodyInit | null | undefined,
+    init: ResponseInit
+  ) {
+    return new Response(body, {
+      ...init,
+      headers: {
+        ...init.headers,
+        "X-Remix-Router-Error": "yes",
+      },
+    });
   }
 
   return {
@@ -2396,9 +2412,14 @@ async function callLoaderOrAction(
     let location = result.headers.get("Location");
 
     // For SSR single-route requests, we want to hand Responses back directly
-    // without unwrapping
+    // without unwrapping.  Wer do this with the QueryRouteResponse wrapper
+    // interface so we can know whether it was returned or thrown
     if (isRouteRequest) {
-      throw result;
+      // eslint-disable-next-line no-throw-literal
+      throw {
+        type: resultType || ResultType.data,
+        response: result,
+      };
     }
 
     if (status >= 300 && status <= 399 && location != null) {
@@ -2743,6 +2764,24 @@ function isErrorResult(result: DataResult): result is ErrorResult {
 
 function isRedirectResult(result?: DataResult): result is RedirectResult {
   return (result && result.type) === ResultType.redirect;
+}
+
+function isRedirectResponse(result: any): result is Response {
+  if (!(result instanceof Response)) {
+    return false;
+  }
+
+  let status = result.status;
+  let location = result.headers.get("Location");
+  return status >= 300 && status <= 399 && location != null;
+}
+
+function isQueryRouteResponse(obj: any): obj is QueryRouteResponse {
+  return (
+    obj &&
+    obj.response instanceof Response &&
+    (obj.type === ResultType.data || ResultType.error)
+  );
 }
 
 async function resolveDeferredResults(

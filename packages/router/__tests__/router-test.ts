@@ -10237,6 +10237,20 @@ describe("a router", () => {
         };
       }
 
+      it("should match routes automatically if no routeId is provided", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let data;
+
+        data = await queryRoute(createRequest("/parent"));
+        expect(data).toBe("PARENT LOADER");
+
+        data = await queryRoute(createRequest("/parent?index"));
+        expect(data).toBe("PARENT INDEX LOADER");
+
+        data = await queryRoute(createRequest("/parent/child"), "child");
+        expect(data).toBe("CHILD LOADER");
+      });
+
       it("should support singular route load navigations (primitives)", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data;
@@ -10268,6 +10282,7 @@ describe("a router", () => {
       });
 
       it("should support singular route load navigations (Responses)", async () => {
+        /* eslint-disable jest/no-conditional-expect */
         let T = setupFlexRouteTest();
         let data;
 
@@ -10280,9 +10295,13 @@ describe("a router", () => {
         expect(await data.text()).toBe("Created!");
 
         // Thrown Success Response
-        data = await T.rejectLoader(new Response("Created!", { status: 201 }));
-        expect(data.status).toBe(201);
-        expect(await data.text()).toBe("Created!");
+        try {
+          await T.rejectLoader(new Response("Created!", { status: 201 }));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data.status).toBe(201);
+          expect(await data.text()).toBe("Created!");
+        }
 
         // Returned Redirect Response
         data = await T.resolveLoader(
@@ -10310,9 +10329,14 @@ describe("a router", () => {
         expect(await data.text()).toBe("Why?");
 
         // Thrown Error Response
-        data = await T.rejectLoader(new Response("Oh no!", { status: 401 }));
-        expect(data.status).toBe(401);
-        expect(await data.text()).toBe("Oh no!");
+        try {
+          await T.rejectLoader(new Response("Oh no!", { status: 401 }));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data.status).toBe(401);
+          expect(await data.text()).toBe("Oh no!");
+        }
+        /* eslint-enable jest/no-conditional-expect */
       });
 
       it("should support singular route load navigations (Errors)", async () => {
@@ -10396,6 +10420,7 @@ describe("a router", () => {
       });
 
       it("should support singular route submit navigations (Responses)", async () => {
+        /* eslint-disable jest/no-conditional-expect */
         let T = setupFlexRouteTest();
         let data;
 
@@ -10408,9 +10433,13 @@ describe("a router", () => {
         expect(await data.text()).toBe("Created!");
 
         // Thrown Success Response
-        data = await T.rejectAction(new Response("Created!", { status: 201 }));
-        expect(data.status).toBe(201);
-        expect(await data.text()).toBe("Created!");
+        try {
+          await T.rejectAction(new Response("Created!", { status: 201 }));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data.status).toBe(201);
+          expect(await data.text()).toBe("Created!");
+        }
 
         // Returned Redirect Response
         data = await T.resolveAction(
@@ -10438,9 +10467,14 @@ describe("a router", () => {
         expect(await data.text()).toBe("Why?");
 
         // Thrown Error Response
-        data = await T.rejectAction(new Response("Oh no!", { status: 401 }));
-        expect(data.status).toBe(401);
-        expect(await data.text()).toBe("Oh no!");
+        try {
+          await T.rejectAction(new Response("Oh no!", { status: 401 }));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data.status).toBe(401);
+          expect(await data.text()).toBe("Oh no!");
+        }
+        /* eslint-enable jest/no-conditional-expect */
       });
 
       it("should support singular route submit navigations (Errors)", async () => {
@@ -10601,19 +10635,73 @@ describe("a router", () => {
         );
       });
 
-      it("should handle not found action submissions with a 405 Response", async () => {
+      it("should handle not found routes with a 404 Response", async () => {
+        /* eslint-disable jest/no-conditional-expect */
         let { queryRoute } = createStaticHandler([
           {
             id: "root",
             path: "/",
           },
         ]);
-        let request = createSubmitRequest("/");
-        let data = await queryRoute(request, "root");
-        expect(data instanceof Response).toBe(true);
-        expect(data.status).toBe(405);
-        expect(data.statusText).toBe("Method Not Allowed");
-        expect(await data.text()).toBe("No action found for [/]");
+
+        try {
+          await queryRoute(createRequest("/junk"));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(404);
+          expect(data.statusText).toBe("Not Found");
+        }
+
+        try {
+          await queryRoute(createRequest("/"), "junk");
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(404);
+          expect(data.statusText).toBe("Not Found");
+        }
+
+        try {
+          await queryRoute(createSubmitRequest("/junk"));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(404);
+          expect(data.statusText).toBe("Not Found");
+        }
+
+        try {
+          await queryRoute(createSubmitRequest("/"), "junk");
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(404);
+          expect(data.statusText).toBe("Not Found");
+        }
+
+        /* eslint-enable jest/no-conditional-expect */
+      });
+
+      it("should handle not found action submissions with a 405 Response", async () => {
+        /* eslint-disable jest/no-conditional-expect */
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+          },
+        ]);
+
+        try {
+          await queryRoute(createSubmitRequest("/"), "root");
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(405);
+          expect(data.statusText).toBe("Method Not Allowed");
+          expect(await data.text()).toBe("No action found for [/]");
+        }
+        /* eslint-enable jest/no-conditional-expect */
       });
     });
   });
