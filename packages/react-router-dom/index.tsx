@@ -68,6 +68,7 @@ export type {
   ParamKeyValuePair,
   SubmitOptions,
   URLSearchParamsInit,
+  RemixRouter,
 };
 export { createSearchParams };
 
