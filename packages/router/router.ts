@@ -505,6 +505,12 @@ export const IDLE_FETCHER: FetcherStates["Idle"] = {
   formEncType: undefined,
   formData: undefined,
 };
+
+const isBrowser =
+  typeof window !== "undefined" &&
+  typeof window.document !== "undefined" &&
+  typeof window.document.createElement !== "undefined";
+const isServer = !isBrowser;
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1160,7 +1166,7 @@ export function createRouter(init: RouterInit): Router {
     href: string,
     opts?: RouterFetchOptions
   ) {
-    if (typeof AbortController === "undefined") {
+    if (isServer) {
       throw new Error(
         "router.fetch() was called during the server render, but it shouldn't be. " +
           "You are likely calling a useFetcher() method in the body of your component. " +
