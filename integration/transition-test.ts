@@ -247,8 +247,12 @@ test.describe("rendering", () => {
     expect(new URL(page.url()).pathname).toBe(`/${REDIRECT_TARGET}`);
 
     expect(
-      responses.map((res) => new URL(res.url()).searchParams.get("_data")).sort()
-    ).toEqual([`routes/${REDIRECT}`, `routes/${PAGE}`, `routes/${PAGE}/index`].sort());
+      responses
+        .map((res) => new URL(res.url()).searchParams.get("_data"))
+        .sort()
+    ).toEqual(
+      [`routes/${REDIRECT}`, `routes/${PAGE}`, `routes/${PAGE}/index`].sort()
+    );
 
     let html = await app.getHtml("main");
     expect(html).toMatch(PAGE_TEXT);

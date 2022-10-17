@@ -1,5 +1,5 @@
 // @ts-nocheck
- // eslint-disable
+// eslint-disable
 import type { Location, Path, To } from "./history";
 import { parsePath } from "./history";
 
