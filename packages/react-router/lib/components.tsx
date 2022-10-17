@@ -1,6 +1,9 @@
 import * as React from "react";
 import type {
-  TrackedPromise,
+  Thenable,
+  FulfilledThenable,
+  PendingThenable,
+  RejectedThenable,
   InitialEntry,
   Location,
   MemoryHistory,
@@ -13,6 +16,7 @@ import {
   AbortedDeferredError,
   createMemoryHistory,
   invariant,
+  isThenable,
   parsePath,
   stripBasename,
   warning,
@@ -390,7 +394,7 @@ export interface AwaitResolveRenderFunction {
 export interface AwaitProps {
   children: React.ReactNode | AwaitResolveRenderFunction;
   errorElement?: React.ReactNode;
-  resolve: TrackedPromise | any;
+  resolve: Thenable<unknown> | any;
 }
 
 /**
@@ -407,18 +411,12 @@ export function Await({ children, errorElement, resolve }: AwaitProps) {
 
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
-  resolve: TrackedPromise | any;
+  resolve: Thenable<unknown> | any;
 }>;
 
 type AwaitErrorBoundaryState = {
   error: any;
 };
-
-enum AwaitRenderStatus {
-  pending,
-  success,
-  error,
-}
 
 const neverSettledPromise = new Promise(() => {});
 
@@ -446,68 +444,66 @@ class AwaitErrorBoundary extends React.Component<
   render() {
     let { children, errorElement, resolve } = this.props;
 
-    let promise: TrackedPromise | null = null;
-    let status: AwaitRenderStatus = AwaitRenderStatus.pending;
+    let thenable: Thenable<unknown> | null = null;
 
-    if (!(resolve instanceof Promise)) {
+    if (!isThenable(resolve)) {
       // Didn't get a promise - provide as a resolved promise
-      status = AwaitRenderStatus.success;
-      promise = Promise.resolve();
-      Object.defineProperty(promise, "_tracked", { get: () => true });
-      Object.defineProperty(promise, "_data", { get: () => resolve });
+      thenable = Promise.resolve() as unknown as FulfilledThenable<unknown>;
+      thenable.status = "fulfilled";
+      thenable.value = resolve;
     } else if (this.state.error) {
       // Caught a render error, provide it as a rejected promise
-      status = AwaitRenderStatus.error;
       let renderError = this.state.error;
-      promise = Promise.reject().catch(() => {}); // Avoid unhandled rejection warnings
-      Object.defineProperty(promise, "_tracked", { get: () => true });
-      Object.defineProperty(promise, "_error", { get: () => renderError });
-    } else if ((resolve as TrackedPromise)._tracked) {
+      thenable = Promise.reject().catch(
+        () => {}
+      ) as unknown as RejectedThenable<unknown>; // Avoid unhandled rejection warnings
+      thenable.status = "rejected";
+      thenable.reason = renderError;
+    } else if (resolve.status) {
       // Already tracked promise - check contents
-      promise = resolve;
-      status =
-        promise._error !== undefined
-          ? AwaitRenderStatus.error
-          : promise._data !== undefined
-          ? AwaitRenderStatus.success
-          : AwaitRenderStatus.pending;
+      thenable = resolve as Thenable<unknown>;
     } else {
       // Raw (untracked) promise - track it
-      status = AwaitRenderStatus.pending;
-      Object.defineProperty(resolve, "_tracked", { get: () => true });
-      promise = resolve.then(
-        (data: any) =>
-          Object.defineProperty(resolve, "_data", { get: () => data }),
-        (error: any) =>
-          Object.defineProperty(resolve, "_error", { get: () => error })
-      );
+      thenable = resolve.then(
+        (data: any) => {
+          resolve.status = "fulfilled";
+          resolve.value = data;
+        },
+        (error: any) => {
+          resolve.status = "rejected";
+          resolve.reason = error;
+        }
+      ) as unknown as PendingThenable<unknown>;
+      if (!thenable.status) {
+        (thenable as unknown as PendingThenable<unknown>).status = "pending";
+      }
     }
 
     if (
-      status === AwaitRenderStatus.error &&
-      promise._error instanceof AbortedDeferredError
+      thenable.status === "rejected" &&
+      thenable.reason instanceof AbortedDeferredError
     ) {
       // Freeze the UI by throwing a never resolved promise
       throw neverSettledPromise;
     }
 
-    if (status === AwaitRenderStatus.error && !errorElement) {
+    if (thenable.status === "rejected" && !errorElement) {
       // No errorElement, throw to the nearest route-level error boundary
-      throw promise._error;
+      throw thenable.reason;
     }
 
-    if (status === AwaitRenderStatus.error) {
+    if (thenable.status === "rejected") {
       // Render via our errorElement
-      return <AwaitContext.Provider value={promise} children={errorElement} />;
+      return <AwaitContext.Provider value={thenable} children={errorElement} />;
     }
 
-    if (status === AwaitRenderStatus.success) {
+    if (thenable.status === "fulfilled") {
       // Render children with resolved value
-      return <AwaitContext.Provider value={promise} children={children} />;
+      return <AwaitContext.Provider value={thenable} children={children} />;
     }
 
     // Throw to the suspense boundary
-    throw promise;
+    throw thenable;
   }
 }
 

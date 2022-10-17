@@ -10,6 +10,8 @@ import type {
   RouterNavigateOptions,
   StaticHandler,
   StaticHandlerContext,
+  Thenable,
+  RejectedThenable,
 } from "../index";
 import {
   createMemoryHistory,
@@ -30,7 +32,6 @@ import type {
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
   AgnosticRouteObject,
-  TrackedPromise,
 } from "../utils";
 import { AbortedDeferredError } from "../utils";
 
@@ -165,6 +166,10 @@ declare global {
   }
 }
 
+function isThenable(value: any): value is Thenable<unknown> {
+  return value && typeof value.then === "function";
+}
+
 // Custom matcher for asserting deferred promise results inside of `toEqual()`
 //  - expect.trackedPromise()                  =>  pending promise
 //  - expect.trackedPromise(value)             =>  promise resolved with `value`
@@ -172,12 +177,12 @@ declare global {
 //  - expect.trackedPromise(null, null, true)  =>  promise aborted
 expect.extend({
   trackedPromise(received, data, error, aborted = false) {
-    let promise = received as TrackedPromise;
-    let isTrackedPromise =
-      promise instanceof Promise && promise._tracked === true;
+    let thenable = received as Thenable<unknown>;
+    let isTrackedPromise = isThenable(thenable);
 
     if (data != null) {
-      let dataMatches = promise._data === data;
+      let dataMatches =
+        thenable.status === "fulfilled" && thenable.value === data;
       return {
         message: () => `expected ${received} to be a resolved deferred`,
         pass: isTrackedPromise && dataMatches,
@@ -185,10 +190,11 @@ expect.extend({
     }
 
     if (error != null) {
+      thenable = thenable as RejectedThenable<unknown>;
       let errorMatches =
-        error instanceof Error
-          ? promise._error.toString() === error.toString()
-          : promise._error === error;
+        thenable.status === "rejected" && error instanceof Error
+          ? (thenable.reason as Error).toString() === error.toString()
+          : thenable.reason === error;
       return {
         message: () => `expected ${received} to be a rejected deferred`,
         pass: isTrackedPromise && errorMatches,
@@ -196,7 +202,9 @@ expect.extend({
     }
 
     if (aborted) {
-      let errorMatches = promise._error instanceof AbortedDeferredError;
+      let errorMatches =
+        thenable.status === "rejected" &&
+        thenable.reason instanceof AbortedDeferredError;
       return {
         message: () => `expected ${received} to be an aborted deferred`,
         pass: isTrackedPromise && errorMatches,
@@ -205,10 +213,7 @@ expect.extend({
 
     return {
       message: () => `expected ${received} to be a pending deferred`,
-      pass:
-        isTrackedPromise &&
-        promise._data === undefined &&
-        promise._error === undefined,
+      pass: isTrackedPromise && thenable.status === "pending",
     };
   },
 });

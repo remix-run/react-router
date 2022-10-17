@@ -1015,10 +1015,48 @@ export const json: JsonFunction = (data, init = {}) => {
   });
 };
 
-export interface TrackedPromise extends Promise<any> {
-  _tracked?: boolean;
-  _data?: any;
-  _error?: any;
+interface UntrackedThenable<T> extends PromiseLike<T> {
+  status?: void;
+}
+
+export interface PendingThenable<T> extends PromiseLike<T> {
+  status: "pending";
+}
+
+export interface FulfilledThenable<T> extends PromiseLike<T> {
+  status: "fulfilled";
+  value: T;
+}
+
+export interface RejectedThenable<T> extends PromiseLike<T> {
+  status: "rejected";
+  reason: unknown;
+}
+
+export type Thenable<T> =
+  | UntrackedThenable<T>
+  | PendingThenable<T>
+  | FulfilledThenable<T>
+  | RejectedThenable<T>;
+
+export function isThenable(value: any): value is Thenable<unknown> {
+  return value && typeof value.then === "function";
+}
+
+function unwrapThenable(value: any) {
+  if (!isThenable(value)) {
+    return value;
+  }
+
+  if (value.status === "rejected") {
+    throw value.reason;
+  }
+
+  if (value.status === "fulfilled") {
+    return value.value;
+  }
+
+  throw new Error("Cannot unwrap a pending thenable.");
 }
 
 export class AbortedDeferredError extends Error {}
@@ -1060,30 +1098,39 @@ export class DeferredData {
   private trackPromise(
     key: string | number,
     value: Promise<unknown> | unknown
-  ): TrackedPromise | unknown {
-    if (!(value instanceof Promise)) {
+  ): Thenable<unknown> | unknown {
+    if (!isThenable(value)) {
       return value;
     }
 
     this.pendingKeys.add(key);
 
     // We store a little wrapper promise that will be extended with
-    // _data/_error props upon resolve/reject
-    let promise: TrackedPromise = Promise.race([value, this.abortPromise]).then(
+    // status/value/reason props upon resolve/reject
+    let promise: Thenable<unknown> = Promise.race([
+      value,
+      this.abortPromise,
+    ]).then(
       (data) => this.onSettle(promise, key, null, data as unknown),
       (error) => this.onSettle(promise, key, error as unknown)
     );
 
+    if (!promise.status) {
+      (promise as unknown as PendingThenable<unknown>).status = "pending";
+    }
+
     // Register rejection listeners to avoid uncaught promise rejections on
     // errors or aborted deferred values
-    promise.catch(() => {});
+    promise.then(
+      () => {},
+      () => {}
+    );
 
-    Object.defineProperty(promise, "_tracked", { get: () => true });
     return promise;
   }
 
   private onSettle(
-    promise: TrackedPromise,
+    promise: Thenable<unknown>,
     key: string | number,
     error: unknown,
     data?: unknown
@@ -1093,7 +1140,8 @@ export class DeferredData {
       error instanceof AbortedDeferredError
     ) {
       this.unlistenAbortSignal();
-      Object.defineProperty(promise, "_error", { get: () => error });
+      promise.status = "rejected";
+      (promise as RejectedThenable<unknown>).reason = error;
       return Promise.reject(error);
     }
 
@@ -1106,12 +1154,14 @@ export class DeferredData {
 
     const subscriber = this.subscriber;
     if (error) {
-      Object.defineProperty(promise, "_error", { get: () => error });
+      promise.status = "rejected";
+      (promise as RejectedThenable<unknown>).reason = error;
       subscriber && subscriber(false);
       return Promise.reject(error);
     }
 
-    Object.defineProperty(promise, "_data", { get: () => data });
+    promise.status = "fulfilled";
+    (promise as FulfilledThenable<unknown>).value = data;
     subscriber && subscriber(false);
     return data;
   }
@@ -1157,28 +1207,11 @@ export class DeferredData {
     return Object.entries(this.data).reduce(
       (acc, [key, value]) =>
         Object.assign(acc, {
-          [key]: unwrapTrackedPromise(value),
+          [key]: unwrapThenable(value),
         }),
       {}
     );
   }
-}
-
-function isTrackedPromise(value: any): value is TrackedPromise {
-  return (
-    value instanceof Promise && (value as TrackedPromise)._tracked === true
-  );
-}
-
-function unwrapTrackedPromise(value: any) {
-  if (!isTrackedPromise(value)) {
-    return value;
-  }
-
-  if (value._error) {
-    throw value._error;
-  }
-  return value._data;
 }
 
 export function defer(data: Record<string, unknown>) {

@@ -11,7 +11,6 @@ export type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
-  TrackedPromise,
   FormEncType,
   FormMethod,
   JsonFunction,
@@ -24,6 +23,10 @@ export type {
   RedirectFunction,
   ShouldRevalidateFunction,
   Submission,
+  Thenable,
+  FulfilledThenable,
+  PendingThenable,
+  RejectedThenable,
 } from "./utils";
 
 export {
@@ -34,6 +37,7 @@ export {
   getToPathname,
   invariant,
   isRouteErrorResponse,
+  isThenable,
   joinPaths,
   json,
   matchPath,

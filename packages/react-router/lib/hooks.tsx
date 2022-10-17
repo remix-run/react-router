@@ -813,7 +813,11 @@ export function useRouteError(): unknown {
  */
 export function useAsyncValue(): unknown {
   let value = React.useContext(AwaitContext);
-  return value?._data;
+  invariant(
+    !value || value?.status === "fulfilled",
+    "useAsyncValue tried to access a value that was not yet fulfilled"
+  );
+  return value?.status === "fulfilled" ? value.value : undefined;
 }
 
 /**
@@ -821,7 +825,11 @@ export function useAsyncValue(): unknown {
  */
 export function useAsyncError(): unknown {
   let value = React.useContext(AwaitContext);
-  return value?._error;
+  invariant(
+    !value || value?.status === "rejected",
+    "useAsyncValue tried to access a value that was not yet rejected"
+  );
+  return value?.status === "rejected" ? value.reason : undefined;
 }
 
 const alreadyWarned: Record<string, boolean> = {};

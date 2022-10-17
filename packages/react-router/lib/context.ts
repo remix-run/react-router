@@ -8,7 +8,7 @@ import type {
   Router,
   StaticHandlerContext,
   To,
-  TrackedPromise,
+  Thenable,
 } from "@remix-run/router";
 import type { Action as NavigationType } from "@remix-run/router";
 
@@ -82,7 +82,7 @@ if (__DEV__) {
   DataRouterStateContext.displayName = "DataRouterState";
 }
 
-export const AwaitContext = React.createContext<TrackedPromise | null>(null);
+export const AwaitContext = React.createContext<Thenable<unknown> | null>(null);
 if (__DEV__) {
   AwaitContext.displayName = "Await";
 }

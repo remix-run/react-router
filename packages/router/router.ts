@@ -1119,7 +1119,7 @@ export function createRouter(init: RouterInit): Router {
     // Wire up subscribers to update loaderData as promises settle
     activeDeferreds.forEach((deferredData, routeId) => {
       deferredData.subscribe((aborted) => {
-        // Note: No need to updateState here since the TrackedPromise on
+        // Note: No need to updateState here since the Thenable on
         // loaderData is stable across resolve/reject
         // Remove this instance if we were aborted or if promises have settled
         if (aborted || deferredData.done) {
@@ -2797,7 +2797,7 @@ async function resolveDeferredData(
         data: result.deferredData.unwrappedData,
       };
     } catch (e) {
-      // Handle any TrackedPromise._error values encountered while unwrapping
+      // Handle any Thenable.reason values encountered while unwrapping
       return {
         type: ResultType.error,
         error: e,
