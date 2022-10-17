@@ -1,6 +1,17 @@
 import * as React from "react";
+import {
+  BrowserRouter,
+  HashRouter,
+  Link,
+  MemoryRouter,
+  Outlet,
+  Route,
+  RouterProvider,
+  Routes,
+  createBrowserRouter,
+  createHashRouter,
+} from "react-router-dom";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route, Link, Outlet } from "react-router-dom";
 
 describe("<Link> href", () => {
   describe("in a static route", () => {
@@ -676,6 +687,74 @@ describe("<Link> href", () => {
 
       expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
         ["/about", "/about"]
+      );
+    });
+  });
+
+  describe("when using a browser router", () => {
+    it("renders proper <a href> for BrowserRouter", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Link to="/path?search=value#hash" />} />
+            </Routes>
+          </BrowserRouter>
+        );
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "/path?search=value#hash"
+      );
+    });
+
+    it("renders proper <a href> for createBrowserRouter", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        let router = createBrowserRouter([
+          {
+            path: "/",
+            element: <Link to="/path?search=value#hash">Link</Link>,
+          },
+        ]);
+        renderer = TestRenderer.create(<RouterProvider router={router} />);
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "/path?search=value#hash"
+      );
+    });
+  });
+
+  describe("when using a hash router", () => {
+    it("renders proper <a href> for HashRouter", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <HashRouter>
+            <Routes>
+              <Route path="/" element={<Link to="/path?search=value#hash" />} />
+            </Routes>
+          </HashRouter>
+        );
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "#/path?search=value#hash"
+      );
+    });
+
+    it("renders proper <a href> for createHashRouter", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        let router = createHashRouter([
+          {
+            path: "/",
+            element: <Link to="/path?search=value#hash">Link</Link>,
+          },
+        ]);
+        renderer = TestRenderer.create(<RouterProvider router={router} />);
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "#/path?search=value#hash"
       );
     });
   });
