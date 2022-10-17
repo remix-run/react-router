@@ -125,7 +125,6 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/resource`, {
         method: "get",
-        signal: new AbortController().signal,
       });
 
       let result = await handler(request);
@@ -163,7 +162,6 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/resource/sub`, {
         method: "get",
-        signal: new AbortController().signal,
       });
 
       let result = await handler(request);
@@ -195,7 +193,6 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/resource`, {
         method: "get",
-        signal: new AbortController().signal,
       });
 
       let result = await handler(request);
@@ -220,7 +217,6 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/resource`, {
         method: "get",
-        signal: new AbortController().signal,
       });
 
       let result = await handler(request);
@@ -244,7 +240,6 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/resource`, {
         method: "get",
-        signal: new AbortController().signal,
       });
 
       let result = await handler(request);
@@ -273,7 +268,6 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/resource`, {
         method: "post",
-        signal: new AbortController().signal,
       });
 
       let result = await handler(request);
@@ -311,7 +305,6 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/resource/sub`, {
         method: "post",
-        signal: new AbortController().signal,
       });
 
       let result = await handler(request);
@@ -343,7 +336,6 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/resource`, {
         method: "post",
-        signal: new AbortController().signal,
       });
 
       let result = await handler(request);
@@ -368,7 +360,6 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/resource`, {
         method: "post",
-        signal: new AbortController().signal,
       });
 
       let result = await handler(request);
@@ -392,7 +383,6 @@ describe("shared server runtime", () => {
 
       let request = new Request(`${baseUrl}/resource`, {
         method: "post",
-        signal: new AbortController().signal,
       });
 
       let result = await handler(request);
@@ -452,7 +442,7 @@ describe("shared server runtime", () => {
       expect(result.status).toBe(200);
       expect(await result.json()).toBe("index");
       expect(rootLoader.mock.calls.length).toBe(0);
-      expect(indexLoader.mock.calls.length).toBe(1);
+      expect(indexLoader.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
     });
 
     test("data request calls loader and responds with generic message and error header", async () => {
@@ -483,7 +473,7 @@ describe("shared server runtime", () => {
       expect(result.status).toBe(500);
       expect((await result.json()).message).toBe("Unexpected Server Error");
       expect(result.headers.get("X-Remix-Error")).toBe("yes");
-      expect(rootLoader.mock.calls.length).toBe(1);
+      expect(rootLoader.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
       expect(testAction.mock.calls.length).toBe(0);
     });
 
@@ -517,9 +507,9 @@ describe("shared server runtime", () => {
       expect(result.status).toBe(500);
       expect((await result.json()).message).toBe(message);
       expect(result.headers.get("X-Remix-Error")).toBe("yes");
-      expect(rootLoader.mock.calls.length).toBe(1);
+      expect(rootLoader.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
       expect(testAction.mock.calls.length).toBe(0);
-      expect(spy.console.mock.calls.length).toBe(1);
+      expect(spy.console.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
     });
 
     test("data request calls loader and responds with catch header", async () => {
@@ -550,7 +540,7 @@ describe("shared server runtime", () => {
       expect(result.status).toBe(400);
       expect(await result.text()).toBe("test");
       expect(result.headers.get("X-Remix-Catch")).toBe("yes");
-      expect(rootLoader.mock.calls.length).toBe(1);
+      expect(rootLoader.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
       expect(testAction.mock.calls.length).toBe(0);
     });
 
@@ -582,7 +572,7 @@ describe("shared server runtime", () => {
       expect(result.status).toBe(200);
       expect(await result.json()).toBe("test");
       expect(rootLoader.mock.calls.length).toBe(0);
-      expect(testAction.mock.calls.length).toBe(1);
+      expect(testAction.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
     });
 
     test("data request calls action and responds with generic message and error header", async () => {
@@ -614,7 +604,7 @@ describe("shared server runtime", () => {
       expect((await result.json()).message).toBe("Unexpected Server Error");
       expect(result.headers.get("X-Remix-Error")).toBe("yes");
       expect(rootLoader.mock.calls.length).toBe(0);
-      expect(testAction.mock.calls.length).toBe(1);
+      expect(testAction.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
     });
 
     test("data request calls action and responds with detailed info and error header in development mode", async () => {
@@ -648,8 +638,8 @@ describe("shared server runtime", () => {
       expect((await result.json()).message).toBe(message);
       expect(result.headers.get("X-Remix-Error")).toBe("yes");
       expect(rootLoader.mock.calls.length).toBe(0);
-      expect(testAction.mock.calls.length).toBe(1);
-      expect(spy.console.mock.calls.length).toBe(1);
+      expect(testAction.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
+      expect(spy.console.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
     });
 
     test("data request calls action and responds with catch header", async () => {
@@ -681,7 +671,7 @@ describe("shared server runtime", () => {
       expect(await result.text()).toBe("test");
       expect(result.headers.get("X-Remix-Catch")).toBe("yes");
       expect(rootLoader.mock.calls.length).toBe(0);
-      expect(testAction.mock.calls.length).toBe(1);
+      expect(testAction.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
     });
 
     test("data request calls layout action", async () => {
@@ -704,13 +694,15 @@ describe("shared server runtime", () => {
       });
       let handler = createRequestHandler(build, ServerMode.Test);
 
-      let request = new Request(`${baseUrl}/?_data=root`, { method: "post" });
+      let request = new Request(`${baseUrl}/?_data=root`, {
+        method: "post",
+      });
 
       let result = await handler(request);
       expect(result.status).toBe(200);
       expect(await result.json()).toBe("root");
       expect(rootLoader.mock.calls.length).toBe(0);
-      expect(rootAction.mock.calls.length).toBe(1);
+      expect(rootAction.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
     });
 
     test("data request calls index action", async () => {
@@ -741,7 +733,7 @@ describe("shared server runtime", () => {
       expect(result.status).toBe(200);
       expect(await result.json()).toBe("index");
       expect(rootLoader.mock.calls.length).toBe(0);
-      expect(indexAction.mock.calls.length).toBe(1);
+      expect(indexAction.mock.calls.length).toBe(1 * DATA_CALL_MULTIPIER);
     });
   });
 
@@ -758,7 +750,9 @@ describe("shared server runtime", () => {
       });
       let handler = createRequestHandler(build, ServerMode.Test);
 
-      let request = new Request(`${baseUrl}/`, { method: "get" });
+      let request = new Request(`${baseUrl}/`, {
+        method: "get",
+      });
 
       let result = await handler(request);
       expect(result.status).toBe(404);

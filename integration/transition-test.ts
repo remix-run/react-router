@@ -156,9 +156,17 @@ test.describe("rendering", () => {
         "app/routes/parent.jsx": js`
           import { Outlet, useLoaderData } from "@remix-run/react";
 
-          let count = 0;
-          export const loader = async ({ request }) => {
-            return { count: ++count };
+          if (!global.counts) {
+            global.count = 0;
+            global.counts = new Set();
+          }
+          export const loader = async ({ request, context }) => {
+            let count = global.count;
+            if (!global.counts.has(context)) {
+              counts.add(context);
+              count = ++global.count;
+            }
+            return { count };
           };
 
           export default function Parent() {
@@ -239,8 +247,8 @@ test.describe("rendering", () => {
     expect(new URL(page.url()).pathname).toBe(`/${REDIRECT_TARGET}`);
 
     expect(
-      responses.map((res) => new URL(res.url()).searchParams.get("_data"))
-    ).toEqual([`routes/${REDIRECT}`, `routes/${PAGE}`, `routes/${PAGE}/index`]);
+      responses.map((res) => new URL(res.url()).searchParams.get("_data")).sort()
+    ).toEqual([`routes/${REDIRECT}`, `routes/${PAGE}`, `routes/${PAGE}/index`].sort());
 
     let html = await app.getHtml("main");
     expect(html).toMatch(PAGE_TEXT);

@@ -46,7 +46,7 @@ test.describe("CatchBoundary", () => {
               <html>
                 <head />
                 <body>
-                  <div>${ROOT_BOUNDARY_TEXT}</div>
+                  <div id="root-boundary">${ROOT_BOUNDARY_TEXT}</div>
                   <Scripts />
                 </body>
               </html>
@@ -82,7 +82,7 @@ test.describe("CatchBoundary", () => {
         "app/routes/fetcher-boundary.jsx": js`
           import { useFetcher } from "@remix-run/react";
           export function CatchBoundary() {
-            return <p>${OWN_BOUNDARY_TEXT}</p>
+            return <p id="fetcher-boundary">${OWN_BOUNDARY_TEXT}</p>
           }
           export default function() {
             let fetcher = useFetcher();
@@ -118,7 +118,7 @@ test.describe("CatchBoundary", () => {
             throw new Response("", { status: 401 })
           }
           export function CatchBoundary() {
-            return <p>${OWN_BOUNDARY_TEXT}</p>
+            return <p id="action-boundary">${OWN_BOUNDARY_TEXT}</p>
           }
           export default function Index() {
             return (
@@ -149,7 +149,7 @@ test.describe("CatchBoundary", () => {
 
         [`app/routes${HAS_BOUNDARY_NO_LOADER_OR_ACTION}.jsx`]: js`
           export function CatchBoundary() {
-            return <div>${OWN_BOUNDARY_TEXT}</div>
+            return <div id="boundary-no-loader-or-action">${OWN_BOUNDARY_TEXT}</div>
           }
           export default function Index() {
             return <div/>
@@ -167,7 +167,7 @@ test.describe("CatchBoundary", () => {
             throw new Response("", { status: 401 })
           }
           export function CatchBoundary() {
-            return <div>${OWN_BOUNDARY_TEXT}</div>
+            return <div id="boundary-loader">${OWN_BOUNDARY_TEXT}</div>
           }
           export default function Index() {
             return <div/>
@@ -348,7 +348,7 @@ test.describe("CatchBoundary", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton(NO_BOUNDARY_NO_LOADER_OR_ACTION);
-    expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
+    await page.waitForSelector("#root-boundary");
   });
 
   test("renders own boundary in document POST without action requests", async () => {
@@ -365,7 +365,7 @@ test.describe("CatchBoundary", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton(HAS_BOUNDARY_NO_LOADER_OR_ACTION);
-    expect(await app.getHtml()).toMatch(OWN_BOUNDARY_TEXT);
+    await page.waitForSelector("#boundary-no-loader-or-action");
   });
 
   test("renders own boundary in fetcher action submission without action from other routes", async ({
@@ -374,7 +374,7 @@ test.describe("CatchBoundary", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/fetcher-boundary");
     await app.clickSubmitButton(NO_BOUNDARY_NO_LOADER_OR_ACTION);
-    expect(await app.getHtml()).toMatch(OWN_BOUNDARY_TEXT);
+    await page.waitForSelector("#fetcher-boundary");
   });
 
   test("renders root boundary in fetcher action submission without action from other routes", async ({
@@ -383,7 +383,7 @@ test.describe("CatchBoundary", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/fetcher-no-boundary");
     await app.clickSubmitButton(NO_BOUNDARY_NO_LOADER_OR_ACTION);
-    expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
+    await page.waitForSelector("#root-boundary");
   });
 
   test("uses correct catch boundary on server action errors", async ({

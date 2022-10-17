@@ -38,9 +38,11 @@ test("builds deterministically under different paths", async () => {
   let files1 = await globby(["build/index.js", "public/build/**/*.js"], {
     cwd: dir1,
   });
+  files1 = files1.sort();
   let files2 = await globby(["build/index.js", "public/build/**/*.js"], {
     cwd: dir2,
   });
+  files2 = files2.sort();
 
   expect(files1.length).toBeGreaterThan(0);
   expect(files1).toEqual(files2);

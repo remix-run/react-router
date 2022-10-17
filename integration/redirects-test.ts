@@ -16,10 +16,16 @@ test.describe("redirects", () => {
 
           if (typeof global.actionCount === "undefined") {
             global.actionCount = 0;
+            global.actionRequests = new Set();
           }
 
-          export async function loader({ request }) {
-            return { count: ++global.actionCount };
+          export async function loader({ request, context }) {
+            let count = global.actionCount;
+            if (!global.actionRequests.has(context)) {
+              global.actionRequests.add(context);
+              count = ++global.actionCount;
+            }
+            return { count };
           };
 
           export default function Parent() {
@@ -75,12 +81,18 @@ test.describe("redirects", () => {
 
           if (typeof global.loaderCount === "undefined") {
             global.loaderCount = 0;
+            global.loaderRequests = new Set();
           }
 
-          export async function loader({ request }) {
+          export async function loader({ request, context }) {
             const cookieHeader = request.headers.get("Cookie");
             const { value } = (await session.parse(cookieHeader)) || {};
-            return { count: ++global.loaderCount, value };
+            let count = global.loaderCount;
+            if (!global.loaderRequests.has(context)) {
+              global.loaderRequests.add(context);
+              count = ++global.loaderCount;
+            }
+            return { count, value };
           };
 
           export default function Parent() {
@@ -150,7 +162,9 @@ test.describe("redirects", () => {
     expect(await app.getHtml("#count")).toMatch("1");
     // Submitting this form will trigger an action -> redirect -> redirect
     // and we need to ensure that the parent loader is called on both redirects
-    await app.clickElement('button[type="submit"]');
+    await app.waitForNetworkAfter(() =>
+      app.clickElement('button[type="submit"]')
+    );
     expect(await app.getHtml("#app")).toMatch("Page 2");
     // Loader called twice
     expect(await app.getHtml("#count")).toMatch("3");
@@ -165,7 +179,9 @@ test.describe("redirects", () => {
     // Clicking this link will trigger a normalRedirect -> normalRedirect with
     // a cookie set on the first one, and we need to ensure that the parent
     // loader is called on both redirects
-    await app.clickElement('a[href="/loader/redirect"]');
+    await app.waitForNetworkAfter(() =>
+      app.clickElement('a[href="/loader/redirect"]')
+    );
     expect(await app.getHtml("#app")).toMatch("Page 2");
     expect(await app.getHtml("#app")).toMatch("cookie-value");
     // Loader called twice

@@ -419,7 +419,7 @@ test.describe("Forms", () => {
         page.waitForNavigation(),
         app.clickSubmitButton("/get-submission", { wait: false }),
       ]);
-      expect(await app.getHtml("pre")).toMatch(CHEESESTEAK);
+      await page.waitForSelector(`pre:has-text("${CHEESESTEAK}")`);
     });
   });
 
@@ -429,7 +429,7 @@ test.describe("Forms", () => {
       // this indirectly tests that clicking SVG children in buttons works
       await app.goto("/get-submission");
       await app.clickSubmitButton("/get-submission");
-      expect(await app.getHtml("pre")).toMatch(CHEESESTEAK);
+      await page.waitForSelector(`pre:has-text("${CHEESESTEAK}")`);
     });
   });
 
@@ -440,7 +440,7 @@ test.describe("Forms", () => {
     await app.goto("/get-submission");
     await app.clickElement(`#${FORM_WITH_ACTION_INPUT} button`);
     await page.waitForLoadState("load");
-    expect(await app.getHtml("pre")).toMatch(EAT);
+    await page.waitForSelector(`pre:has-text("${EAT}")`);
   });
 
   test("posts to a loader with button data with click", async ({ page }) => {
@@ -450,7 +450,7 @@ test.describe("Forms", () => {
       page.waitForNavigation(),
       app.clickElement("#buttonWithValue"),
     ]);
-    expect(await app.getHtml("pre")).toMatch(LAKSA);
+    await page.waitForSelector(`pre:has-text("${LAKSA}")`);
   });
 
   test("posts to a loader with button data with keyboard", async ({ page }) => {
@@ -459,23 +459,22 @@ test.describe("Forms", () => {
     await page.focus(`#${KEYBOARD_INPUT}`);
     await page.keyboard.press("Enter");
     await page.waitForLoadState("networkidle");
-    expect(await app.getHtml("pre")).toMatch(LAKSA);
+    await page.waitForSelector(`pre:has-text("${LAKSA}")`);
   });
 
   test("posts with the correct checkbox data", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/get-submission");
     await app.clickElement(`#${CHECKBOX_BUTTON}`);
-    expect(await app.getHtml("pre")).toBe(
-      `<pre>LUNCH=CHEESESTEAK&amp;LUNCH=LAKSA</pre>`
-    );
+    await page.waitForSelector(`pre:has-text("${LAKSA}")`);
+    await page.waitForSelector(`pre:has-text("${CHEESESTEAK}")`);
   });
 
   test("posts button data from outside the form", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/get-submission");
     await app.clickElement(`#${ORPHAN_BUTTON}`);
-    expect(await app.getHtml("pre")).toMatch(SQUID_INK_HOTDOG);
+    await page.waitForSelector(`pre:has-text("${SQUID_INK_HOTDOG}")`);
   });
 
   test("when clicking on a submit button as a descendant of an element that stops propagation on click, still passes the clicked submit button's `name` and `value` props to the request payload", async ({

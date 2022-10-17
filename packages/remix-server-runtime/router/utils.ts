@@ -1,6 +1,5 @@
 // @ts-nocheck
-// eslint-disable
-
+ // eslint-disable
 import type { Location, Path, To } from "./history";
 import { parsePath } from "./history";
 
@@ -138,13 +137,10 @@ export interface ShouldRevalidateFunction {
 }
 
 /**
- * A route object represents a logical route, with (optionally) its child
- * routes organized in a tree-like structure.
+ * Base RouteObject with common props shared by all types of routes
  */
-export interface AgnosticRouteObject {
+type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
-  children?: AgnosticRouteObject[];
-  index?: boolean;
   path?: string;
   id?: string;
   loader?: LoaderFunction;
@@ -152,15 +148,47 @@ export interface AgnosticRouteObject {
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
-}
+};
+
+/**
+ * Index routes must not have children
+ */
+export type AgnosticIndexRouteObject = AgnosticBaseRouteObject & {
+  children?: undefined;
+  index: true;
+};
+
+/**
+ * Non-index routes may have children, but cannot have index
+ */
+export type AgnosticNonIndexRouteObject = AgnosticBaseRouteObject & {
+  children?: AgnosticRouteObject[];
+  index?: false;
+};
+
+/**
+ * A route object represents a logical route, with (optionally) its child
+ * routes organized in a tree-like structure.
+ */
+export type AgnosticRouteObject =
+  | AgnosticIndexRouteObject
+  | AgnosticNonIndexRouteObject;
+
+export type AgnosticDataIndexRouteObject = AgnosticIndexRouteObject & {
+  id: string;
+};
+
+export type AgnosticDataNonIndexRouteObject = AgnosticNonIndexRouteObject & {
+  children?: AgnosticDataRouteObject[];
+  id: string;
+};
 
 /**
  * A data route object, which is just a RouteObject with a required unique ID
  */
-export interface AgnosticDataRouteObject extends AgnosticRouteObject {
-  children?: AgnosticDataRouteObject[];
-  id: string;
-}
+export type AgnosticDataRouteObject =
+  | AgnosticDataIndexRouteObject
+  | AgnosticDataNonIndexRouteObject;
 
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
@@ -234,6 +262,12 @@ export interface AgnosticRouteMatch<
 export interface AgnosticDataRouteMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
 
+function isIndexRoute(
+  route: AgnosticRouteObject
+): route is AgnosticIndexRouteObject {
+  return route.index === true;
+}
+
 // Walk the route tree generating unique IDs where necessary so we are working
 // solely with AgnosticDataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
@@ -245,19 +279,29 @@ export function convertRoutesToDataRoutes(
     let treePath = [...parentPath, index];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
     invariant(
+      route.index !== true || !route.children,
+      `Cannot specify children on an index route`
+    );
+    invariant(
       !allIds.has(id),
       `Found a route id collision on id "${id}".  Route ` +
         "id's must be globally unique within Data Router usages"
     );
     allIds.add(id);
-    let dataRoute: AgnosticDataRouteObject = {
-      ...route,
-      id,
-      children: route.children
-        ? convertRoutesToDataRoutes(route.children, treePath, allIds)
-        : undefined,
-    };
-    return dataRoute;
+
+    if (isIndexRoute(route)) {
+      let indexRoute: AgnosticDataIndexRouteObject = { ...route, id };
+      return indexRoute;
+    } else {
+      let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
+        ...route,
+        id,
+        children: route.children
+          ? convertRoutesToDataRoutes(route.children, treePath, allIds)
+          : undefined,
+      };
+      return pathOrLayoutRoute;
+    }
   });
 }
 
@@ -345,6 +389,8 @@ function flattenRoutes<
     // the "flattened" version.
     if (route.children && route.children.length > 0) {
       invariant(
+        // Our types know better, but runtime JS may not!
+        // @ts-expect-error
         route.index !== true,
         `Index routes must not have child routes. Please remove ` +
           `all child routes from route path "${path}".`
@@ -637,16 +683,20 @@ function compilePath(
       path === "*" || path === "/*"
         ? "(.*)$" // Already matched the initial /, just match the rest
         : "(?:\\/(.+)|\\/*)$"; // Don't include the / in params["*"]
+  } else if (end) {
+    // When matching to the end, ignore trailing slashes
+    regexpSource += "\\/*$";
+  } else if (path !== "" && path !== "/") {
+    // If our path is non-empty and contains anything beyond an initial slash,
+    // then we have _some_ form of path in our regex so we should expect to
+    // match only if we find the end of this path segment.  Look for an optional
+    // non-captured trailing slash (to match a portion of the URL) or the end
+    // of the path (if we've matched to the end).  We used to do this with a
+    // word boundary but that gives false positives on routes like
+    // /user-preferences since `-` counts as a word boundary.
+    regexpSource += "(?:(?=\\/|$))";
   } else {
-    regexpSource += end
-      ? "\\/*$" // When matching to the end, ignore trailing slashes
-      : // Otherwise, match a word boundary or a proceeding /. The word boundary restricts
-        // parent routes to matching only their own words and nothing more, e.g. parent
-        // route "/home" should not match "/home2".
-        // Additionally, allow paths starting with `.`, `-`, `~`, and url-encoded entities,
-        // but do not consume the character in the matched path so they can match against
-        // nested paths.
-        "(?:(?=[@.~-]|%[0-9A-F]{2})|\\b|\\/|$)";
+    // Nothing to match for "" or "/"
   }
 
   let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
@@ -771,6 +821,22 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
   return segments.length > 1 ? segments.join("/") : "/";
 }
 
+function getInvalidPathError(
+  char: string,
+  field: string,
+  dest: string,
+  path: Partial<Path>
+) {
+  return (
+    `Cannot include a '${char}' character in a manually specified ` +
+    `\`to.${field}\` field [${JSON.stringify(
+      path
+    )}].  Please separate it out to the ` +
+    `\`to.${dest}\` field. Alternatively you may provide the full path as ` +
+    `a string in <Link to="..."> and the router will parse it for you.`
+  );
+}
+
 /**
  * @private
  */
@@ -780,7 +846,26 @@ export function resolveTo(
   locationPathname: string,
   isPathRelative = false
 ): Path {
-  let to = typeof toArg === "string" ? parsePath(toArg) : { ...toArg };
+  let to: Partial<Path>;
+  if (typeof toArg === "string") {
+    to = parsePath(toArg);
+  } else {
+    to = { ...toArg };
+
+    invariant(
+      !to.pathname || !to.pathname.includes("?"),
+      getInvalidPathError("?", "pathname", "search", to)
+    );
+    invariant(
+      !to.pathname || !to.pathname.includes("#"),
+      getInvalidPathError("#", "pathname", "hash", to)
+    );
+    invariant(
+      !to.search || !to.search.includes("#"),
+      getInvalidPathError("#", "search", "hash", to)
+    );
+  }
+
   let isEmptyPath = toArg === "" || to.pathname === "";
   let toPathname = isEmptyPath ? "/" : to.pathname;
 

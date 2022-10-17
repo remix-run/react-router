@@ -42,7 +42,7 @@ export async function createFixture(init: FixtureInit) {
     let url = new URL(href, "test://test");
     let request = new Request(url.toString(), {
       ...init,
-      signal: new AbortController().signal,
+      signal: init?.signal || new AbortController().signal,
     });
     return handler(request);
   };
@@ -52,6 +52,8 @@ export async function createFixture(init: FixtureInit) {
     routeId: string,
     init?: RequestInit
   ) => {
+    init = init || {};
+    init.signal = init.signal || new AbortController().signal;
     let url = new URL(href, "test://test");
     url.searchParams.set("_data", routeId);
     let request = new Request(url.toString(), init);

@@ -1,5 +1,9 @@
 // TODO: RRR - Change import to @remix-run/router
-import type { AgnosticDataRouteObject } from "./router";
+import type {
+  AgnosticDataRouteObject,
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+} from "./router";
 import type { AppLoadContext } from "./data";
 import { callRouteAction, callRouteLoader } from "./data";
 import type { ServerRouteModule } from "./routeModules";
@@ -55,37 +59,51 @@ export function createStaticHandlerDataRoutes(
 ): AgnosticDataRouteObject[] {
   return Object.values(manifest)
     .filter((route) => route.parentId === parentId)
-    .map((route) => ({
-      caseSensitive: route.caseSensitive,
-      children: createStaticHandlerDataRoutes(manifest, loadContext, route.id),
-      // Always include root due to default boundaries
-      hasErrorBoundary:
-        route.id === "root" ||
-        route.module.CatchBoundary != null ||
-        route.module.ErrorBoundary != null,
-      id: route.id,
-      index: route.index,
-      path: route.path,
-      loader: route.module.loader
-        ? (args) =>
-            callRouteLoader({
-              ...args,
-              routeId: route.id,
-              loader: route.module.loader,
+    .map((route) => {
+      let commonRoute = {
+        // Always include root due to default boundaries
+        hasErrorBoundary:
+          route.id === "root" ||
+          route.module.CatchBoundary != null ||
+          route.module.ErrorBoundary != null,
+        id: route.id,
+        path: route.path,
+        loader: route.module.loader
+          ? (args: LoaderFunctionArgs) =>
+              callRouteLoader({
+                ...args,
+                routeId: route.id,
+                loader: route.module.loader,
+                loadContext,
+              })
+          : undefined,
+        action: route.module.action
+          ? (args: ActionFunctionArgs) =>
+              callRouteAction({
+                ...args,
+                routeId: route.id,
+                action: route.module.action,
+                loadContext,
+              })
+          : undefined,
+        handle: route.module.handle,
+        // TODO: RRR - Implement!
+        shouldRevalidate: () => true,
+      };
+
+      return route.index
+        ? {
+            index: true,
+            ...commonRoute,
+          }
+        : {
+            caseSensitive: route.caseSensitive,
+            children: createStaticHandlerDataRoutes(
+              manifest,
               loadContext,
-            })
-        : undefined,
-      action: route.module.action
-        ? (args) =>
-            callRouteAction({
-              ...args,
-              routeId: route.id,
-              action: route.module.action,
-              loadContext,
-            })
-        : undefined,
-      handle: route.module.handle,
-      // TODO: RRR - Implement!
-      shouldRevalidate: () => true,
-    }));
+              route.id
+            ),
+            ...commonRoute,
+          };
+    });
 }

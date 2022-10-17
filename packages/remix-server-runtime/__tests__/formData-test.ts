@@ -161,8 +161,7 @@ describe("parseMultipartFormData", () => {
 
       let error: Error;
       try {
-        let formData = await parseMultipartFormData(req, async () => undefined);
-        console.log(formData);
+        await parseMultipartFormData(req, async () => undefined);
         throw new Error("should have thrown");
       } catch (err) {
         error = err;

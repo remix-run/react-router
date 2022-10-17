@@ -16,7 +16,7 @@
   "sideEffects": false,
   "dependencies": {
     "@remix-run/server-runtime": "1.7.2",
-    "@remix-run/web-fetch": "^4.3.0",
+    "@remix-run/web-fetch": "^4.3.1",
     "@remix-run/web-file": "^3.0.2",
     "@remix-run/web-stream": "^1.0.3",
     "@web3-storage/multipart-parser": "^1.0.0",
