@@ -2881,7 +2881,6 @@ describe("a router", () => {
           },
         ],
       });
-      debugger;
       let A = await t.navigate("/parent", {
         formMethod: "post",
         formData: createFormData({ gosh: "dang" }),
