@@ -25,6 +25,7 @@ import {
   ErrorResponse,
   ResultType,
   convertRoutesToDataRoutes,
+  getPathContributingMatches,
   invariant,
   isRouteErrorResponse,
   matchRoutes,
@@ -2838,11 +2839,15 @@ function getTargetMatch(
     typeof location === "string" ? parsePath(location).search : location.search;
   if (
     matches[matches.length - 1].route.index &&
-    !hasNakedIndexQuery(search || "")
+    hasNakedIndexQuery(search || "")
   ) {
-    return matches.slice(-2)[0];
+    // Return the leaf index route when index is present
+    return matches[matches.length - 1];
   }
-  return matches.slice(-1)[0];
+  // Otherwise grab the deepest "path contributing" match (ignoring index and
+  // pathless layout routes)
+  let pathMatches = getPathContributingMatches(matches);
+  return pathMatches[pathMatches.length - 1];
 }
 
 function createURL(location: Location | string): URL {
