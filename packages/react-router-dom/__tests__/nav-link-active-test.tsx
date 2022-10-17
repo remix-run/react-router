@@ -394,6 +394,33 @@ describe("NavLink", () => {
       });
     });
   });
+
+  describe("when it matches with relative=path links", () => {
+    it("applies the default 'active' className to the underlying <a>", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/contacts/1"]}>
+            <Routes>
+              <Route
+                path="contacts/:id"
+                element={
+                  <NavLink to="../1" relative="path">
+                    Link
+                  </NavLink>
+                }
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.props.href).toEqual("/contacts/1");
+      expect(anchor.props.className).toEqual("active");
+    });
+  });
 });
 
 describe("NavLink using a data router", () => {

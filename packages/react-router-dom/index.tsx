@@ -441,7 +441,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     },
     ref
   ) {
-    let path = useResolvedPath(to);
+    let path = useResolvedPath(to, { relative: rest.relative });
     let match = useMatch({ path: path.pathname, end, caseSensitive });
 
     let routerState = React.useContext(DataRouterStateContext);
