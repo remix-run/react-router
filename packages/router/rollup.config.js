@@ -1,9 +1,12 @@
 const path = require("path");
+
 const babel = require("@rollup/plugin-babel").default;
+const typescript = require("@rollup/plugin-typescript");
 const copy = require("rollup-plugin-copy");
 const extensions = require("rollup-plugin-extensions");
 const prettier = require("rollup-plugin-prettier");
-const typescript = require("@rollup/plugin-typescript");
+const { terser } = require("rollup-plugin-terser");
+
 const {
   createBanner,
   getBuildDirectories,
@@ -11,7 +14,11 @@ const {
 } = require("../../rollup.utils");
 const { name, version } = require("./package.json");
 
-function getRollupConfig(format, filename, includeTypesAndCopy = false) {
+function getRollupConfig(
+  format,
+  filename,
+  { includeTypesAndCopy, minify } = {}
+) {
   const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
     name,
     // We don't live in a folder matching our package name
@@ -25,6 +32,7 @@ function getRollupConfig(format, filename, includeTypesAndCopy = false) {
       format,
       sourcemap: !PRETTY,
       banner: createBanner("@remix-run/router", version),
+      ...(format === "umd" ? { name: "RemixRouter" } : {}),
     },
     plugins: [
       extensions({ extensions: [".ts"] }),
@@ -37,7 +45,7 @@ function getRollupConfig(format, filename, includeTypesAndCopy = false) {
         ],
         extensions: [".ts"],
       }),
-      ...(includeTypesAndCopy
+      ...(includeTypesAndCopy === true
         ? [
             typescript({
               tsconfig: path.join(__dirname, "tsconfig.json"),
@@ -52,14 +60,17 @@ function getRollupConfig(format, filename, includeTypesAndCopy = false) {
             }),
           ]
         : []),
+      ...(minify === true ? [terser()] : []),
     ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
   };
 }
 
 module.exports = function rollup() {
   return [
-    getRollupConfig("esm", "router.js", true),
-    getRollupConfig("cjs", "router.cjs.js", false),
+    getRollupConfig("esm", "router.js", { includeTypesAndCopy: true }),
+    getRollupConfig("cjs", "router.cjs.js"),
+    getRollupConfig("umd", "router.umd.js"),
+    getRollupConfig("umd", "router.umd.min.js", { minify: true }),
   ];
 };
 

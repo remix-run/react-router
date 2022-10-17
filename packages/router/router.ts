@@ -25,6 +25,7 @@ import {
   ErrorResponse,
   ResultType,
   convertRoutesToDataRoutes,
+  getPathContributingMatches,
   invariant,
   isRouteErrorResponse,
   matchRoutes,
@@ -1755,7 +1756,9 @@ export function createRouter(init: RouterInit): Router {
     navigate,
     fetch,
     revalidate,
-    createHref,
+    // Passthrough to history-aware createHref used by useHref so we get proper
+    // hash-aware URLs in DOM paths
+    createHref: (to: To) => init.history.createHref(to),
     getFetcher,
     deleteFetcher,
     dispose,
@@ -1958,7 +1961,7 @@ export function unstable_createStaticHandler(
   ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
     let result: DataResult;
     if (!actionMatch.route.action) {
-      let href = createHref(new URL(request.url));
+      let href = createServerHref(new URL(request.url));
       if (isRouteRequest) {
         throw createRouterErrorResponse(`No action found for [${href}]`, {
           status: 405,
@@ -2194,7 +2197,7 @@ function normalizeNavigateOptions(
       path,
       submission: {
         formMethod: opts.formMethod,
-        formAction: createHref(parsePath(path)),
+        formAction: createServerHref(parsePath(path)),
         formEncType:
           (opts && opts.formEncType) || "application/x-www-form-urlencoded",
         formData: opts.formData,
@@ -2759,7 +2762,7 @@ function getNotFoundMatches(routes: AgnosticDataRouteObject[]): {
 }
 
 function getMethodNotAllowedResult(path: Location | string): ErrorResult {
-  let href = typeof path === "string" ? path : createHref(path);
+  let href = typeof path === "string" ? path : createServerHref(path);
   console.warn(
     "You're trying to submit to a route that does not have an action.  To " +
       "fix this, please add an `action` function to the route for " +
@@ -2786,7 +2789,7 @@ function findRedirect(results: DataResult[]): RedirectResult | undefined {
 }
 
 // Create an href to represent a "server" URL without the hash
-function createHref(location: Partial<Path> | Location | URL) {
+function createServerHref(location: Partial<Path> | Location | URL) {
   return (location.pathname || "") + (location.search || "");
 }
 
@@ -2917,11 +2920,15 @@ function getTargetMatch(
     typeof location === "string" ? parsePath(location).search : location.search;
   if (
     matches[matches.length - 1].route.index &&
-    !hasNakedIndexQuery(search || "")
+    hasNakedIndexQuery(search || "")
   ) {
-    return matches.slice(-2)[0];
+    // Return the leaf index route when index is present
+    return matches[matches.length - 1];
   }
-  return matches.slice(-1)[0];
+  // Otherwise grab the deepest "path contributing" match (ignoring index and
+  // pathless layout routes)
+  let pathMatches = getPathContributingMatches(matches);
+  return pathMatches[pathMatches.length - 1];
 }
 
 function createURL(location: Location | string): URL {
@@ -2929,7 +2936,8 @@ function createURL(location: Location | string): URL {
     typeof window !== "undefined" && typeof window.location !== "undefined"
       ? window.location.origin
       : "unknown://unknown";
-  let href = typeof location === "string" ? location : createHref(location);
+  let href =
+    typeof location === "string" ? location : createServerHref(location);
   return new URL(href, base);
 }
 //#endregion
