@@ -62,7 +62,7 @@ test.describe("actions", () => {
 
         [`app/routes/${REDIRECT_TARGET}.jsx`]: js`
           export default function () {
-            return <div>${PAGE_TEXT}</div>
+            return <div id="${REDIRECT_TARGET}">${PAGE_TEXT}</div>
           }
         `,
       },
@@ -108,13 +108,11 @@ test.describe("actions", () => {
   test("is called on script transition POST requests", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto(`/urlencoded`);
-    let html = await app.getHtml("#text");
-    expect(html).toMatch(WAITING_VALUE);
+    await page.waitForSelector(`#text:has-text("${WAITING_VALUE}")`);
 
     await page.click("button[type=submit]");
     await page.waitForSelector("#action-text");
-    html = await app.getHtml("#text");
-    expect(html).toMatch(SUBMITTED_VALUE);
+    await page.waitForSelector(`#text:has-text("${SUBMITTED_VALUE}")`);
   });
 
   test("redirects a thrown response on document requests", async () => {
@@ -131,6 +129,9 @@ test.describe("actions", () => {
     await app.goto(`/${THROWS_REDIRECT}`);
     let responses = app.collectDataResponses();
     await app.clickSubmitButton(`/${THROWS_REDIRECT}`);
+
+    await page.waitForSelector(`#${REDIRECT_TARGET}`);
+
     expect(responses.length).toBe(1);
     expect(responses[0].status()).toBe(204);
 

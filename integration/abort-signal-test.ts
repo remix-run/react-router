@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 
 import { PlaywrightFixture } from "./helpers/playwright-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
@@ -50,10 +50,11 @@ test.afterAll(async () => appFixture.close());
 test("should not abort the request in a new event loop", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/");
-  expect(await app.getHtml(".action")).toMatch("empty");
-  expect(await app.getHtml(".loader")).toMatch("false");
+  await page.waitForSelector(`.action:has-text("empty")`);
+  await page.waitForSelector(`.loader:has-text("false")`);
 
   await app.clickElement('button[type="submit"]');
-  expect(await app.getHtml(".action")).toMatch("false");
-  expect(await app.getHtml(".loader")).toMatch("false");
+
+  await page.waitForSelector(`.action:has-text("false")`);
+  await page.waitForSelector(`.loader:has-text("false")`);
 });

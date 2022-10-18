@@ -19,15 +19,19 @@ const config: PlaywrightTestConfig = {
   projects: [
     {
       name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-      },
+      use: devices["Desktop Chrome"],
     },
     {
       name: "webkit",
-      use: {
-        ...devices["Desktop Safari"],
-      },
+      use: devices["Desktop Safari"],
+    },
+    {
+      name: "edge",
+      use: devices["Desktop Edge"],
+    },
+    {
+      name: "firefox",
+      use: devices["Desktop Firefox"],
     },
   ],
 };
