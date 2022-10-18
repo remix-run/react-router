@@ -329,7 +329,13 @@ export function matchRoutes<
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    matches = matchRouteBranch<string, RouteObjectType>(branches[i], pathname);
+    matches = matchRouteBranch<string, RouteObjectType>(
+      branches[i],
+      // incoming pathnames are always encoded from either window.location or
+      // from route.navigate, but we want to match against the unencoded paths
+      // in the route definitions
+      safelyDecodeURI(pathname)
+    );
   }
 
   return matches;
@@ -700,6 +706,21 @@ function compilePath(
   let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
 
   return [matcher, paramNames];
+}
+
+function safelyDecodeURI(value: string) {
+  try {
+    return decodeURI(value);
+  } catch (error) {
+    warning(
+      false,
+      `The URL path "${value}" could not be decoded because it is is a ` +
+        `malformed URL segment. This is probably due to a bad percent ` +
+        `encoding (${error}).`
+    );
+
+    return value;
+  }
 }
 
 function safelyDecodeURIComponent(value: string, paramName: string) {
