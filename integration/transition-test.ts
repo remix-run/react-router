@@ -218,9 +218,8 @@ test.describe("rendering", () => {
       responses.map((res) => new URL(res.url()).searchParams.get("_data"))
     ).toEqual([`routes/${PAGE}`, `routes/${PAGE}/index`]);
 
-    let html = await app.getHtml("main");
-    expect(html).toMatch(PAGE_TEXT);
-    expect(html).toMatch(PAGE_INDEX_TEXT);
+    await page.waitForSelector(`h2:has-text("${PAGE_TEXT}")`);
+    await page.waitForSelector(`h3:has-text("${PAGE_INDEX_TEXT}")`);
   });
 
   test("calls only loaders for changing routes", async ({ page }) => {
@@ -233,9 +232,8 @@ test.describe("rendering", () => {
       responses.map((res) => new URL(res.url()).searchParams.get("_data"))
     ).toEqual([`routes/${PAGE}/${CHILD}`]);
 
-    let html = await app.getHtml("main");
-    expect(html).toMatch(PAGE_TEXT);
-    expect(html).toMatch(CHILD_TEXT);
+    await page.waitForSelector(`h2:has-text("${PAGE_TEXT}")`);
+    await page.waitForSelector(`h3:has-text("${CHILD_TEXT}")`);
   });
 
   test("loader redirect", async ({ page }) => {
@@ -243,8 +241,9 @@ test.describe("rendering", () => {
     await app.goto("/");
 
     let responses = app.collectDataResponses();
+
     await app.clickLink(`/${REDIRECT}`);
-    expect(new URL(page.url()).pathname).toBe(`/${REDIRECT_TARGET}`);
+    await page.waitForURL(/\/page/);
 
     expect(
       responses
@@ -254,9 +253,8 @@ test.describe("rendering", () => {
       [`routes/${REDIRECT}`, `routes/${PAGE}`, `routes/${PAGE}/index`].sort()
     );
 
-    let html = await app.getHtml("main");
-    expect(html).toMatch(PAGE_TEXT);
-    expect(html).toMatch(PAGE_INDEX_TEXT);
+    await page.waitForSelector(`h2:has-text("${PAGE_TEXT}")`);
+    await page.waitForSelector(`h3:has-text("${PAGE_INDEX_TEXT}")`);
   });
 
   test("loader redirect with hash", async ({ page }) => {
@@ -265,6 +263,7 @@ test.describe("rendering", () => {
 
     await app.clickLink(`/${REDIRECT_HASH}`);
 
+    await page.waitForURL(/\/page#my-hash/);
     let url = new URL(page.url());
     expect(url.pathname).toBe(`/${REDIRECT_TARGET}`);
     expect(url.hash).toBe(`#my-hash`);
@@ -283,9 +282,8 @@ test.describe("rendering", () => {
       responses.map((res) => new URL(res.url()).searchParams.get("_data"))
     ).toEqual([`routes/${PAGE}/index`]);
 
-    let html = await app.getHtml("main");
-    expect(html).toMatch(PAGE_TEXT);
-    expect(html).toMatch(PAGE_INDEX_TEXT);
+    await page.waitForSelector(`h2:has-text("${PAGE_TEXT}")`);
+    await page.waitForSelector(`h3:has-text("${PAGE_INDEX_TEXT}")`);
   });
 
   test("useFetcher state should return to the idle when redirect from an action", async ({
@@ -295,16 +293,18 @@ test.describe("rendering", () => {
     await app.goto("/gh-1691");
     expect(await app.getHtml("span")).toMatch("idle");
 
-    await app.clickSubmitButton("/gh-1691");
-    expect(await app.getHtml("span")).toMatch("idle");
+    await app.waitForNetworkAfter(async () => {
+      await app.clickSubmitButton("/gh-1691");
+    });
+    await page.waitForSelector(`span:has-text("idle")`);
   });
 
   test("fetcher action redirects re-call parent loaders", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/parent/child");
-    expect(await app.getHtml("#parent")).toMatch("1");
+    await page.waitForSelector(`#parent:has-text("1")`);
 
     await app.clickElement("#fetcher-submit-redirect");
-    expect(await app.getHtml("#parent")).toMatch("2");
+    await page.waitForSelector(`#parent:has-text("2")`);
   });
 });

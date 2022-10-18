@@ -165,9 +165,8 @@ test.describe("redirects", () => {
     await app.waitForNetworkAfter(() =>
       app.clickElement('button[type="submit"]')
     );
-    expect(await app.getHtml("#app")).toMatch("Page 2");
-    // Loader called twice
-    expect(await app.getHtml("#count")).toMatch("3");
+    await page.waitForSelector(`#app:has-text("Page 2")`);
+    await page.waitForSelector(`#count:has-text("3")`);
   });
 
   test("preserves revalidation across loader multi-redirects with cookies set", async ({
@@ -182,9 +181,9 @@ test.describe("redirects", () => {
     await app.waitForNetworkAfter(() =>
       app.clickElement('a[href="/loader/redirect"]')
     );
-    expect(await app.getHtml("#app")).toMatch("Page 2");
-    expect(await app.getHtml("#app")).toMatch("cookie-value");
+    await page.waitForSelector(`#app:has-text("Page 2")`);
+    await page.waitForSelector(`#app:has-text("cookie-value")`);
     // Loader called twice
-    expect(await app.getHtml("#count")).toMatch("3");
+    await page.waitForSelector(`#count:has-text("3")`);
   });
 });

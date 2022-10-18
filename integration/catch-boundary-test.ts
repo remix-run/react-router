@@ -247,7 +247,7 @@ test.describe("CatchBoundary", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickLink(NOT_FOUND_HREF, { wait: false });
-    expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
+    await page.waitForSelector("#root-boundary");
   });
 
   test("invalid request methods", async () => {
@@ -269,7 +269,7 @@ test.describe("CatchBoundary", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton(HAS_BOUNDARY_ACTION);
-    expect(await app.getHtml()).toMatch(OWN_BOUNDARY_TEXT);
+    await page.waitForSelector("#action-boundary");
   });
 
   test("own boundary, action, client transition from itself", async ({
@@ -278,7 +278,7 @@ test.describe("CatchBoundary", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto(HAS_BOUNDARY_ACTION);
     await app.clickSubmitButton(HAS_BOUNDARY_ACTION);
-    expect(await app.getHtml()).toMatch(OWN_BOUNDARY_TEXT);
+    await page.waitForSelector("#action-boundary");
   });
 
   test("bubbles to parent in action document requests", async () => {
@@ -294,7 +294,7 @@ test.describe("CatchBoundary", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton(NO_BOUNDARY_ACTION);
-    expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
+    await page.waitForSelector("#root-boundary");
   });
 
   test("bubbles to parent in action script transitions from self", async ({
@@ -303,7 +303,7 @@ test.describe("CatchBoundary", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto(NO_BOUNDARY_ACTION);
     await app.clickSubmitButton(NO_BOUNDARY_ACTION);
-    expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
+    await page.waitForSelector("#root-boundary");
   });
 
   test("own boundary, loader, document request", async () => {
@@ -316,7 +316,7 @@ test.describe("CatchBoundary", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickLink(HAS_BOUNDARY_LOADER);
-    expect(await app.getHtml()).toMatch(OWN_BOUNDARY_TEXT);
+    await page.waitForSelector("#boundary-loader");
   });
 
   test("bubbles to parent in loader document requests", async () => {
@@ -331,7 +331,7 @@ test.describe("CatchBoundary", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickLink(NO_BOUNDARY_LOADER);
-    expect(await app.getHtml()).toMatch(ROOT_BOUNDARY_TEXT);
+    await page.waitForSelector("#root-boundary");
   });
 
   test("renders root boundary in document POST without action requests", async () => {

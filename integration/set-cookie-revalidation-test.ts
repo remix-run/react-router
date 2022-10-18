@@ -123,5 +123,6 @@ test("should revalidate when cookie is set on redirect from loader", async ({
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/");
   await app.clickLink("/protected");
+  await page.waitForSelector(`#message:has-text("${BANNER_MESSAGE}")`);
   expect(await app.getHtml()).toMatch(BANNER_MESSAGE);
 });
