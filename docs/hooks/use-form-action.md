@@ -42,6 +42,6 @@ let action = useFormAction();
 submit(formData, { action });
 ```
 
-[form]: ../components/form
-[usesubmit]: ./use-submit
-[usefetchersubmit]: ./use-fetcher#fetchersubmit
+[form]: ../components/form.md
+[usesubmit]: ./use-submit.md
+[usefetchersubmit]: ./use-fetcher.md#fetchersubmit

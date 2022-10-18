@@ -42,4 +42,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 );
 ```
 
-[createbrowserrouter]: ./create-browser-router
+[createbrowserrouter]: ./create-browser-router.md

@@ -21,5 +21,5 @@ function ProductVariants() {
 
 See the [Deferred Data Guide][deferred] and [`<Await>` docs][await docs] for more information.
 
-[await docs]: ../components/await
-[deferred]: ../guides/deferred
+[await docs]: ../components/await.md
+[deferred]: ../guides/deferred.md

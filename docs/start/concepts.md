@@ -831,4 +831,4 @@ Let's put it all together from the top!
 
 That's it! We hope this guide has helped you gain a deeper understanding of the main concepts in React Router.
 
-[tutorial]: ./tutorial
+[tutorial]: ./tutorial.md

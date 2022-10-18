@@ -135,5 +135,5 @@ function ProjectTaskCount({ project }) {
 
 It's a little bit of work, but it's mostly just asking React Router for the state it's tracking and doing an optimistic calculation based on it.
 
-[usefetcher]: ./use-fetcher
-[pickingarouter]: ../routers/picking-a-router
+[usefetcher]: ./use-fetcher.md
+[pickingarouter]: ../routers/picking-a-router.md

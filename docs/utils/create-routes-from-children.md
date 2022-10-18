@@ -6,4 +6,4 @@ title: createRoutesFromChildren
 
 Alias for [`createRoutesFromElements`][createroutesfromelements]
 
-[createroutesfromelements]: ./create-routes-from-elements
+[createroutesfromelements]: ./create-routes-from-elements.md

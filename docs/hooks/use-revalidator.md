@@ -60,7 +60,7 @@ Race conditions are automatically handled when calling `revalidate()` when a rev
 
 If a navigation happens while a revalidation is in flight, the revalidation will be cancelled and fresh data will be requested from all loaders for the next page.
 
-[form]: ../components/form
-[usefetcher]: ./use-fetcher
-[usesubmit]: ./use-submit
-[pickingarouter]: ../routers/picking-a-router
+[form]: ../components/form.md
+[usefetcher]: ./use-fetcher.md
+[usesubmit]: ./use-submit.md
+[pickingarouter]: ../routers/picking-a-router.md

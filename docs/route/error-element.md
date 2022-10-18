@@ -207,11 +207,11 @@ Let's put it together into a route:
 
 The project route doesn't have to think about errors at all. Between the loader utility functions like `fetchProject` and `getUserToken` throwing whenever something isn't right, and the `RootBoundary` handling all of the cases, the project route gets to focus strictly on the happy path.
 
-[loader]: ./loader
-[action]: ./action
-[userouteerror]: ../hooks/use-route-error
-[pickingarouter]: ../routers/picking-a-router
+[loader]: ./loader.md
+[action]: ./action.md
+[userouteerror]: ../hooks/use-route-error.md
+[pickingarouter]: ../routers/picking-a-router.md
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
-[isrouteerrorresponse]: ../utils/is-route-error-response
-[json]: ../fetch/json
-[createbrowserrouter]: ../routers/create-browser-router
+[isrouteerrorresponse]: ../utils/is-route-error-response.md
+[json]: ../fetch/json.md
+[createbrowserrouter]: ../routers/create-browser-router.md

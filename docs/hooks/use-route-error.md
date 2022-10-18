@@ -33,6 +33,6 @@ function ErrorBoundary() {
 />;
 ```
 
-[errorelement]: ../route/error-element
-[isrouteerrorresponse]: ../utils/is-route-error-response
-[pickingarouter]: ../routers/picking-a-router
+[errorelement]: ../route/error-element.md
+[isrouteerrorresponse]: ../utils/is-route-error-response.md
+[pickingarouter]: ../routers/picking-a-router.md

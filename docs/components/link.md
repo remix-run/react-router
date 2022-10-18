@@ -116,5 +116,5 @@ An example when you might want this behavior is a list of tabs that manipulate t
 
 ```
 
-[link-native]: ./link-native
-[scrollrestoration]: ./scroll-restoration
+[link-native]: ./link-native.md
+[scrollrestoration]: ./scroll-restoration.md

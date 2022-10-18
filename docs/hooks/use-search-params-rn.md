@@ -67,5 +67,5 @@ function App() {
 
 [functional-updates]: https://reactjs.org/docs/hooks-reference.html#functional-updates
 [searchparams]: https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams
-[usesearchparams]: ./use-search-params
+[usesearchparams]: ./use-search-params.md
 [usestate]: https://reactjs.org/docs/hooks-reference.html#usestate

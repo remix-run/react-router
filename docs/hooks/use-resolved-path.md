@@ -22,5 +22,5 @@ This is useful when building links from relative values. For example, check out 
 
 See [resolvePath][resolvepath] for more information.
 
-[navlink]: ../components/nav-link
-[resolvepath]: ../utils/resolve-path
+[navlink]: ../components/nav-link.md
+[resolvepath]: ../utils/resolve-path.md

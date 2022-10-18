@@ -72,12 +72,12 @@ You will use [`<NativeRouter>`][nativerouter] from React Native projects.
 
 The data APIs from v6.4 are currently not supported in React Native, but should be eventually.
 
-[createbrowserrouter]: ./create-browser-router
-[createhashrouter]: ./create-hash-router
-[creatememoryrouter]: ./create-memory-router
-[createroutesfromelements]: ../utils/create-routes-from-elements
-[browserrouter]: ../router-components/browser-router
-[memoryrouter]: ../router-components/memory-router
-[hashrouter]: ../router-components/hash-router
-[nativerouter]: ../router-components/native-router
-[staticrouter]: ../router-components/static-router
+[createbrowserrouter]: ./create-browser-router.md
+[createhashrouter]: ./create-hash-router.md
+[creatememoryrouter]: ./create-memory-router.md
+[createroutesfromelements]: ../utils/create-routes-from-elements.md
+[browserrouter]: ../router-components/browser-router.md
+[memoryrouter]: ../router-components/memory-router.md
+[hashrouter]: ../router-components/hash-router.md
+[nativerouter]: ../router-components/native-router.md
+[staticrouter]: ../router-components/static-router.md

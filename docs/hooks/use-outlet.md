@@ -15,4 +15,4 @@ declare function useOutlet(): React.ReactElement | null;
 
 Returns the element for the child route at this level of the route hierarchy. This hook is used internally by [`<Outlet>`][outlet] to render child routes.
 
-[outlet]: ../components/outlet
+[outlet]: ../components/outlet.md

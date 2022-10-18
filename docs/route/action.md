@@ -129,20 +129,20 @@ You can `throw` in your action to break out of the current call stack (stop runn
 
 For more details and expanded use cases, read the [errorElement][errorelement] documentation.
 
-[loader]: ./loader
-[pickingarouter]: ../routers/picking-a-router
-[dynamicsegments]: ./route#dynamic-segments
+[loader]: ./loader.md
+[pickingarouter]: ../routers/picking-a-router.md
+[dynamicsegments]: ./route#dynamic-segments.md
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [url]: https://developer.mozilla.org/en-US/docs/Web/API/URL
 [urlsearchparams]: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
-[migratingtoremix]: ../guides/migrating-to-remix
-[useloaderdata]: ../hooks/use-loader-data
-[json]: ../fetch/json
-[errorelement]: ./error-element
-[form]: ../components/form
-[workingwithformdata]: ../guides/form-data
-[useactiondata]: ../hooks/use-action-data
-[returningresponses]: ./loader#returning-responses
-[createbrowserrouter]: ../routers/create-browser-router
+[migratingtoremix]: ../guides/migrating-to-remix.md
+[useloaderdata]: ../hooks/use-loader-data.md
+[json]: ../fetch/json.md
+[errorelement]: ./error-element.md
+[form]: ../components/form.md
+[workingwithformdata]: ../guides/form-data.md
+[useactiondata]: ../hooks/use-action-data.md
+[returningresponses]: ./loader.md#returning-responses
+[createbrowserrouter]: ../routers/create-browser-router.md

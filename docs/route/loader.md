@@ -164,13 +164,13 @@ function loader({ request, params }) {
 
 For more details, read the [`errorElement`][errorelement] documentation.
 
-[dynamicsegments]: ./route#dynamic-segments
+[dynamicsegments]: ./route.md#dynamic-segments
 [request]: https://developer.mozilla.org/en-US/docs/Web/API/Request
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
 [url]: https://developer.mozilla.org/en-US/docs/Web/API/URL
 [urlsearchparams]: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
-[migratingtoremix]: ../guides/migrating-to-remix
-[useloaderdata]: ../hooks/use-loader-data
-[json]: ../fetch/json
-[errorelement]: ./error-element
-[pickingarouter]: ../routers/picking-a-router
+[migratingtoremix]: ../guides/migrating-to-remix.md
+[useloaderdata]: ../hooks/use-loader-data.md
+[json]: ../fetch/json.md
+[errorelement]: ./error-element.md
+[pickingarouter]: ../routers/picking-a-router.md

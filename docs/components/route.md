@@ -14,8 +14,8 @@ Please refer to:
 - [`errorElement`][errorelement]
 - [`shouldRevalidate`][shouldrevalidate]
 
-[route]: ../route/route
-[loader]: ../route/loader
-[action]: ../route/action
-[errorelement]: ../route/error-element
-[shouldrevalidate]: ../route/should-revalidate
+[route]: ../route/route.md
+[loader]: ../route/loader.md
+[action]: ../route/action.md
+[errorelement]: ../route/error-element.md
+[shouldrevalidate]: ../route/should-revalidate.md

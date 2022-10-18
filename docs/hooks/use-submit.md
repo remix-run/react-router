@@ -92,4 +92,4 @@ submit(null, {
 <Form action="/logout" method="post" />;
 ```
 
-[pickingarouter]: ../routers/picking-a-router
+[pickingarouter]: ../routers/picking-a-router.md

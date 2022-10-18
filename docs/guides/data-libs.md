@@ -113,8 +113,8 @@ With all of these APIs working together, you can now use [`useNavigation`][usena
 
 [react-query]: https://tanstack.com/query/v4/
 [useswr]: https://swr.vercel.app/
-[errorelement]: ../route/error-element
-[action]: ../route/action
+[errorelement]: ../route/error-element.md
+[action]: ../route/action.md
 [tkdodo]: https://tkdodo.eu/blog/react-query-meets-react-router
-[usenavigation]: ../hooks/use-navigation
-[await]: ../components/await
+[usenavigation]: ../hooks/use-navigation.md
+[await]: ../components/await.md

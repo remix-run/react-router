@@ -84,4 +84,4 @@ createMemoryRouter(routes, {
 
 For all other props, see [`createBrowserRouter`][createbrowserrouter]
 
-[createbrowserrouter]: ./create-browser-router
+[createbrowserrouter]: ./create-browser-router.md

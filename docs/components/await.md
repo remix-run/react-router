@@ -147,11 +147,11 @@ function Book() {
 }
 ```
 
-[useloaderdata]: ../hooks/use-loader-data
-[userouteerror]: ../hooks/use-route-error
-[defer]: ../utils/defer
-[deferred guide]: ../guides/deferred
-[useasyncvalue]: ../hooks/use-async-value
-[useasyncerror]: ../hooks/use-async-error
-[routeerrorelement]: ../route/error-element
-[loader]: ../route/loader
+[useloaderdata]: ../hooks/use-loader-data.md
+[userouteerror]: ../hooks/use-route-error.md
+[defer]: ../utils/defer.md
+[deferred guide]: ../guides/deferred.md
+[useasyncvalue]: ../hooks/use-async-value.md
+[useasyncerror]: ../hooks/use-async-error.md
+[routeerrorelement]: ../route/error-element.md
+[loader]: ../route/loader.md

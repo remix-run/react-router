@@ -98,5 +98,5 @@ Without a server side rendering framework like [Remix][remix], you may experienc
 Server Rendering frameworks can prevent scroll flashing because they can send a fully formed document on the initial load, so scroll can be restored when the page first renders.
 
 [remix]: https://remix.run
-[preventscrollreset]: ../components/link#preventscrollreset
-[pickingarouter]: ../routers/picking-a-router
+[preventscrollreset]: ../components/link.md#preventscrollreset
+[pickingarouter]: ../routers/picking-a-router.md

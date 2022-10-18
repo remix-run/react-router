@@ -222,9 +222,9 @@ Tells you the method of the form being submitted: get, post, put, patch, or dele
 fetcher.formMethod; // "post"
 ```
 
-[loader]: ../route/loader
-[action]: ../route/action
-[pickingarouter]: ../routers/picking-a-router
-[indexsearchparam]: ../guides/index-search-param
-[link]: ../components/link
-[form]: ../components/form
+[loader]: ../route/loader.md
+[action]: ../route/action.md
+[pickingarouter]: ../routers/picking-a-router.md
+[indexsearchparam]: ../guides/index-search-param.md
+[link]: ../components/link.md
+[form]: ../components/form.md

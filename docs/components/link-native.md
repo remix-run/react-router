@@ -42,4 +42,4 @@ function Home() {
 }
 ```
 
-[link]: ./link
+[link]: ./link.md

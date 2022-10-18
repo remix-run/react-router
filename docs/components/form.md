@@ -299,18 +299,18 @@ You can access those values from the `request.url`
 
 - [useSubmit][usesubmit]
 
-[usenavigation]: ../hooks/use-navigation
-[useactiondata]: ../hooks/use-action-data
+[usenavigation]: ../hooks/use-navigation.md
+[useactiondata]: ../hooks/use-action-data.md
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
-[usefetcher]: ../hooks/use-fetcher
+[usefetcher]: ../hooks/use-fetcher.md
 [htmlform]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form
 [htmlformaction]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action
 [htmlform-method]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-method
 [urlsearchparams]: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
 [url]: https://developer.mozilla.org/en-US/docs/Web/API/URL
-[usesubmit]: ../hooks/use-submit
+[usesubmit]: ../hooks/use-submit.md
 [requestmethod]: https://developer.mozilla.org/en-US/docs/Web/API/Request/method
 [remix]: https://remix.run
 [formvalidation]: https://developer.mozilla.org/en-US/docs/Learn/Forms/Form_validation
-[indexsearchparam]: ../guides/index-search-param
-[pickingarouter]: ../routers/picking-a-router
+[indexsearchparam]: ../guides/index-search-param.md
+[pickingarouter]: ../routers/picking-a-router.md

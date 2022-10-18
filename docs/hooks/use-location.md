@@ -38,4 +38,4 @@ function App() {
 }
 ```
 
-[location]: ../utils/location
+[location]: ../utils/location.md

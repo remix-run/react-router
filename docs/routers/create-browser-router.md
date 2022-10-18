@@ -101,11 +101,11 @@ createBrowserRouter(routes, {
 
 Useful for environments like browser devtool plugins or testing to use a different window than the global `window`.
 
-[loader]: ../route/loader
-[action]: ../route/action
-[fetcher]: ../hooks/use-fetcher
-[browser-router]: ./browser-router
-[form]: ../components/form
-[route]: ../components/route
-[routes]: ../components/routes
+[loader]: ../route/loader.md
+[action]: ../route/action.md
+[fetcher]: ../hooks/use-fetcher.md
+[browser-router]: ./browser-router.md
+[form]: ../components/form.md
+[route]: ../components/route.md
+[routes]: ../components/routes.md
 [historyapi]: https://developer.mozilla.org/en-US/docs/Web/API/History

@@ -72,10 +72,10 @@ interface ShouldRevalidateFunction {
 }
 ```
 
-[action]: ./action
-[form]: ../components/form
-[fetcher]: ../hooks/use-fetcher
-[loader]: ./loader
-[useloaderdata]: ../hooks/use-loader-data
-[params]: ./route#dynamic-segments
-[pickingarouter]: ../routers/picking-a-router
+[action]: ./action.md
+[form]: ../components/form.md
+[fetcher]: ../hooks/use-fetcher.md
+[loader]: ./loader.md
+[useloaderdata]: ../hooks/use-loader-data.md
+[params]: ./route#dynamic-segments.md
+[pickingarouter]: ../routers/picking-a-router.md

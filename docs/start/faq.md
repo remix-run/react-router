@@ -423,5 +423,5 @@ Instead of rending your component, remix will render the nearest [catch boundary
 
 [remix]: https://remix.run
 [remix-catchboundary]: https://remix.run/docs/en/v1/api/conventions#catchboundary
-[nested-routes]: ./overview#nested-routes
+[nested-routes]: ./overview#nested-routes.md
 [examples]: https://github.com/remix-run/react-router/tree/dev/examples

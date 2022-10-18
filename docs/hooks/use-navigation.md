@@ -96,5 +96,5 @@ This tells you what the next [location][location] is going to be.
 
 Note that this link will not appear "pending" if a form is being submitted to the URL the link points to, because we only do this for "loading" states. The form will contain the pending UI for when the state is "submitting", once the action is complete, then the link will go pending.
 
-[location]: ../utils/location
-[pickingarouter]: ../routers/picking-a-router
+[location]: ../utils/location.md
+[pickingarouter]: ../routers/picking-a-router.md

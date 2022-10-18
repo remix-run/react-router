@@ -276,16 +276,16 @@ When a route throws an exception while rendering, in a `loader` or in an `action
 
 Please see the [errorElement][errorelement] documentation for more details.
 
-[outlet]: ./outlet
+[outlet]: ./outlet.md
 [remix]: https://remix.run
-[indexroute]: ../guides/index-route
-[outlet]: ../components/outlet
-[useloaderdata]: ../hooks/use-loader-data
-[loader]: ./loader
-[action]: ./action
-[errorelement]: ./error-element
-[form]: ../components/form
-[fetcher]: ../hooks/use-fetcher
-[usesubmit]: ../hooks/use-submit
-[createroutesfromelements]: ../utils/create-routes-from-elements
-[createbrowserrouter]: ../routers/create-browser-router
+[indexroute]: ../guides/index-route.md
+[outlet]: ../components/outlet.md
+[useloaderdata]: ../hooks/use-loader-data.md
+[loader]: ./loader.md
+[action]: ./action.md
+[errorelement]: ./error-element.md
+[form]: ../components/form.md
+[fetcher]: ../hooks/use-fetcher.md
+[usesubmit]: ../hooks/use-submit.md
+[createroutesfromelements]: ../utils/create-routes-from-elements.md
+[createbrowserrouter]: ../routers/create-browser-router.md

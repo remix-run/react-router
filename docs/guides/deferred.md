@@ -203,8 +203,8 @@ When you decide you'd like to try the trade-offs of `defer`, we don't want you t
 
 So just keep this in mind: **Deferred is 100% only about the initial load of a route and it's params.**
 
-[link]: ../components/link
-[usefetcher]: ../hooks/use-fetcher
-[defer response]: ../fetch/defer
-[await]: ../components/await
-[useasyncvalue]: ../hooks/use-async-data
+[link]: ../components/link.md
+[usefetcher]: ../hooks/use-fetcher.md
+[defer response]: ../fetch/defer.md
+[await]: ../components/await.md
+[useasyncvalue]: ../hooks/use-async-data.md

@@ -46,5 +46,5 @@ You can use this hook in any component or any custom hook, not just the Route el
 
 To get data from any active route on the page, see [`useRouteLoaderData`][routeloaderdata].
 
-[actions]: ../components/route#action
-[routeloaderdata]: ./use-route-loader-data
+[actions]: ../components/route.md#action
+[routeloaderdata]: ./use-route-loader-data.md

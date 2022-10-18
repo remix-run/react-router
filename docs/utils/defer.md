@@ -17,4 +17,4 @@ function loader() {
 
 See the [Deferred Guide][deferred guide] for more information.
 
-[deferred guide]: ../guides/deferred
+[deferred guide]: ../guides/deferred.md

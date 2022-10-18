@@ -30,4 +30,4 @@ See also:
 
 - [Returning Responses from Loaders][responses]
 
-[responses]: ../route/loader#returning-responses
+[responses]: ../route/loader.md#returning-responses

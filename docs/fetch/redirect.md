@@ -56,5 +56,5 @@ redirect("/login");
 
 The [Response][response] options to be used in the response.
 
-[responses]: ../route/loader#returning-responses
+[responses]: ../route/loader.md#returning-responses
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response/Response
