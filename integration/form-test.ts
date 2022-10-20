@@ -400,6 +400,47 @@ test.describe("Forms", () => {
             )
           }
         `,
+
+        "app/routes/pathless-layout-parent.jsx": js`
+          import { json } from '@remix-run/server-runtime'
+          import { Form, Outlet, useActionData } from '@remix-run/react'
+
+          export async function action({ request }) {
+            return json({ submitted: true });
+          }
+          export default function () {
+            let data = useActionData();
+            return (
+              <>
+                <Form method="post">
+                  <h1>Pathless Layout Parent</h1>
+                  <button type="submit">Submit</button>
+                </Form>
+                <Outlet />
+                <p>{data?.submitted === true ? 'Submitted - Yes' : 'Submitted - No'}</p>
+              </>
+            );
+          }
+        `,
+
+        "app/routes/pathless-layout-parent/__pathless.jsx": js`
+          import { Outlet } from '@remix-run/react';
+
+          export default function () {
+            return (
+              <>
+                <h2>Pathless Layout</h2>
+                <Outlet />
+              </>
+            );
+          }
+        `,
+
+        "app/routes/pathless-layout-parent/__pathless/index.jsx": js`
+          export default function () {
+            return <h3>Pathless Layout Index</h3>
+          }
+        `,
       },
     });
 
@@ -941,5 +982,25 @@ test.describe("Forms", () => {
         `<pre>tasks=first&amp;tasks=second&amp;tasks=</pre>`
       );
     }
+  });
+
+  test("pathless layout routes are ignored in form actions", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/pathless-layout-parent");
+    let html = await app.getHtml();
+    expect(html).toMatch("Pathless Layout Parent");
+    expect(html).toMatch("Pathless Layout ");
+    expect(html).toMatch("Pathless Layout Index");
+
+    let el = getElement(html, `form`);
+    expect(el.attr("action")).toMatch("/pathless-layout-parent");
+
+    expect(await app.getHtml()).toMatch("Submitted - No");
+    // This submission should ignore the index route and the pathless layout
+    // route above it and hit the action in routes/pathless-layout-parent.jsx
+    await app.clickSubmitButton("/pathless-layout-parent");
+    expect(await app.getHtml()).toMatch("Submitted - Yes");
   });
 });

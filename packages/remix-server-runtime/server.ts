@@ -708,11 +708,19 @@ function isIndexRequestUrl(url: URL) {
 function getRequestMatch(url: URL, matches: RouteMatch<ServerRoute>[]) {
   let match = matches.slice(-1)[0];
 
-  if (!isIndexRequestUrl(url) && match.route.id.endsWith("/index")) {
-    return matches.slice(-2)[0];
+  if (isIndexRequestUrl(url) && match.route.id.endsWith("/index")) {
+    return match;
   }
 
-  return match;
+  return getPathContributingMatches(matches).slice(-1)[0];
+}
+
+function getPathContributingMatches(matches: RouteMatch<ServerRoute>[]) {
+  return matches.filter(
+    (match, index) =>
+      index === 0 ||
+      (!match.route.index && match.route.path && match.route.path.length > 0)
+  );
 }
 
 function getDeepestRouteIdWithBoundary(
