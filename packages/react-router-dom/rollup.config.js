@@ -26,13 +26,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: [
-        "history",
-        "react",
-        "react-dom",
-        "react-router",
-        "@remix-run/router",
-      ],
+      external: ["react", "react-dom", "react-router", "@remix-run/router"],
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
@@ -73,7 +67,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["history", "react", "react-router", "@remix-run/router"],
+      external: ["react", "react-router", "@remix-run/router"],
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
@@ -101,7 +95,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["history", "react", "react-router", "@remix-run/router"],
+      external: ["react", "react-router", "@remix-run/router"],
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
@@ -147,14 +141,13 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
         globals: {
-          history: "HistoryLibrary",
-          "@remix-run/router": "Router",
+          "@remix-run/router": "RemixRouter",
           react: "React",
           "react-router": "ReactRouter",
         },
         name: "ReactRouterDOM",
       },
-      external: ["history", "react", "react-router", "@remix-run/router"],
+      external: ["react", "react-router", "@remix-run/router"],
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
@@ -182,14 +175,13 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
         globals: {
-          history: "HistoryLibrary",
-          "@remix-run/router": "Router",
+          "@remix-run/router": "RemixRouter",
           react: "React",
           "react-router": "ReactRouter",
         },
         name: "ReactRouterDOM",
       },
-      external: ["history", "react", "react-router", "@remix-run/router"],
+      external: ["react", "react-router", "@remix-run/router"],
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
@@ -240,7 +232,6 @@ module.exports = function rollup() {
       ],
       external: [
         "url",
-        "history",
         "react",
         "react-dom/server",
         "react-router-dom",
@@ -284,7 +275,6 @@ module.exports = function rollup() {
       ],
       external: [
         "url",
-        "history",
         "react",
         "react-dom/server",
         "react-router-dom",
