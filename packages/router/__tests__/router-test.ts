@@ -2139,6 +2139,31 @@ describe("a router", () => {
       ]);
     });
 
+    it("matches root pathless route", () => {
+      let t = setup({
+        routes: [{ id: "root", children: [{ path: "foo" }] }],
+      });
+
+      t.navigate("/not-found");
+      expect(t.router.state.errors).toEqual({
+        root: {
+          status: 404,
+          statusText: "Not Found",
+          data: null,
+        },
+      });
+      expect(t.router.state.matches).toMatchObject([
+        {
+          params: {},
+          pathname: "",
+          route: {
+            id: "root",
+            children: expect.any(Array),
+          },
+        },
+      ]);
+    });
+
     it("clears prior loader/action data", async () => {
       let t = initializeTmTest();
       expect(t.router.state.loaderData).toEqual({
@@ -9681,6 +9706,39 @@ describe("a router", () => {
         });
       });
 
+      it("should support alternative submission methods", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+        let context;
+
+        let expected = {
+          actionData: {
+            child: "CHILD ACTION",
+          },
+          loaderData: {
+            parent: "PARENT LOADER",
+            child: "CHILD LOADER",
+          },
+          errors: null,
+          location: { pathname: "/parent/child" },
+          matches: [{ route: { id: "parent" } }, { route: { id: "child" } }],
+        };
+
+        context = await query(
+          createSubmitRequest("/parent/child", { method: "PUT" })
+        );
+        expect(context).toMatchObject(expected);
+
+        context = await query(
+          createSubmitRequest("/parent/child", { method: "PATCH" })
+        );
+        expect(context).toMatchObject(expected);
+
+        context = await query(
+          createSubmitRequest("/parent/child", { method: "DELETE" })
+        );
+        expect(context).toMatchObject(expected);
+      });
+
       it("should support document submit navigations returning responses", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createSubmitRequest("/parent/json"));
@@ -9906,6 +9964,29 @@ describe("a router", () => {
               status: 405,
               statusText: "Method Not Allowed",
               data: "",
+            },
+          },
+          matches: [{ route: { id: "root" } }],
+        });
+      });
+
+      it("should handle unsupported methods with a 405 error", async () => {
+        let { query } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+          },
+        ]);
+        let request = createRequest("/", { method: "OPTIONS" });
+        let context = await query(request);
+        expect(context).toMatchObject({
+          actionData: null,
+          loaderData: {},
+          errors: {
+            root: {
+              status: 405,
+              statusText: "Method Not Allowed",
+              data: null,
             },
           },
           matches: [{ route: { id: "root" } }],
@@ -10467,6 +10548,29 @@ describe("a router", () => {
         expect(data).toBe("");
       });
 
+      it("should support alternative submission methods", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let data;
+
+        data = await queryRoute(
+          createSubmitRequest("/parent", { method: "PUT" }),
+          "parent"
+        );
+        expect(data).toBe("PARENT ACTION");
+
+        data = await queryRoute(
+          createSubmitRequest("/parent", { method: "PATCH" }),
+          "parent"
+        );
+        expect(data).toBe("PARENT ACTION");
+
+        data = await queryRoute(
+          createSubmitRequest("/parent", { method: "DELETE" }),
+          "parent"
+        );
+        expect(data).toBe("PARENT ACTION");
+      });
+
       it("should support singular route submit navigations (Responses)", async () => {
         /* eslint-disable jest/no-conditional-expect */
         let T = setupFlexRouteTest();
@@ -10732,6 +10836,31 @@ describe("a router", () => {
 
         try {
           await queryRoute(createSubmitRequest("/"), "root");
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(405);
+          expect(data.statusText).toBe("Method Not Allowed");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
+          expect(await data.text()).toBe("");
+        }
+        /* eslint-enable jest/no-conditional-expect */
+      });
+
+      it("should handle unsupported methods with a 405 Response", async () => {
+        /* eslint-disable jest/no-conditional-expect */
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+          },
+        ]);
+
+        try {
+          await queryRoute(
+            createSubmitRequest("/", { method: "OPTIONS" }),
+            "root"
+          );
           expect(false).toBe(true);
         } catch (data) {
           expect(data instanceof Response).toBe(true);
