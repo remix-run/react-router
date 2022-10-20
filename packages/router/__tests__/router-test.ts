@@ -3123,11 +3123,7 @@ describe("a router", () => {
           formData: createFormData({ gosh: "dang" }),
         });
         expect(t.router.state.errors).toEqual({
-          child: new ErrorResponse(
-            405,
-            "Method Not Allowed",
-            "No action found for [/child]"
-          ),
+          child: new ErrorResponse(405, "Method Not Allowed", ""),
         });
         expect(console.warn).toHaveBeenCalled();
         spy.mockReset();
@@ -3180,11 +3176,7 @@ describe("a router", () => {
         });
         expect(t.router.state.actionData).toBe(null);
         expect(t.router.state.errors).toEqual({
-          grandchild: new ErrorResponse(
-            405,
-            "Method Not Allowed",
-            "No action found for [/child/grandchild]"
-          ),
+          grandchild: new ErrorResponse(405, "Method Not Allowed", ""),
         });
       });
     });
@@ -6381,11 +6373,7 @@ describe("a router", () => {
         });
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(
-            405,
-            "Method Not Allowed",
-            "No action found for [/]"
-          ),
+          root: new ErrorResponse(405, "Method Not Allowed", ""),
         });
       });
 
@@ -9620,6 +9608,23 @@ describe("a router", () => {
         });
       });
 
+      it("should support document load navigations with HEAD requests", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+        let context = await query(
+          createRequest("/parent/child", { method: "HEAD" })
+        );
+        expect(context).toMatchObject({
+          actionData: null,
+          loaderData: {
+            parent: "PARENT LOADER",
+            child: "CHILD LOADER",
+          },
+          errors: null,
+          location: { pathname: "/parent/child" },
+          matches: [{ route: { id: "parent" } }, { route: { id: "child" } }],
+        });
+      });
+
       it("should support document load navigations returning responses", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/json"));
@@ -9870,20 +9875,6 @@ describe("a router", () => {
         expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
       });
 
-      it("should not support HEAD requests", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
-        let request = createRequest("/", { method: "head" });
-        let e;
-        try {
-          await query(request);
-        } catch (_e) {
-          e = _e;
-        }
-        expect(e).toMatchInlineSnapshot(
-          `[Error: query()/queryRoute() do not support HEAD requests]`
-        );
-      });
-
       it("should require a signal on the request", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
@@ -9914,7 +9905,7 @@ describe("a router", () => {
             root: {
               status: 405,
               statusText: "Method Not Allowed",
-              data: "No action found for [/]",
+              data: "",
             },
           },
           matches: [{ route: { id: "root" } }],
@@ -10656,20 +10647,6 @@ describe("a router", () => {
         expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
       });
 
-      it("should not support HEAD requests", async () => {
-        let { queryRoute } = createStaticHandler(SSR_ROUTES);
-        let request = createRequest("/", { method: "head" });
-        let e;
-        try {
-          await queryRoute(request, "index");
-        } catch (_e) {
-          e = _e;
-        }
-        expect(e).toMatchInlineSnapshot(
-          `[Error: query()/queryRoute() do not support HEAD requests]`
-        );
-      });
-
       it("should require a signal on the request", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
@@ -10753,7 +10730,7 @@ describe("a router", () => {
           expect(data.status).toBe(405);
           expect(data.statusText).toBe("Method Not Allowed");
           expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
-          expect(await data.text()).toBe("No action found for [/]");
+          expect(await data.text()).toBe("");
         }
         /* eslint-enable jest/no-conditional-expect */
       });
