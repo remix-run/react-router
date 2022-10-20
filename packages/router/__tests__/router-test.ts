@@ -10291,6 +10291,14 @@ describe("a router", () => {
         expect(data).toBe("CHILD LOADER");
       });
 
+      it("should support HEAD requests", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let data = await queryRoute(
+          createRequest("/parent", { method: "HEAD" })
+        );
+        expect(data).toBe("PARENT LOADER");
+      });
+
       it("should support singular route load navigations (primitives)", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data;
