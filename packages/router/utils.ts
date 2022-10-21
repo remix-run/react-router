@@ -836,6 +836,8 @@ function getInvalidPathError(
 }
 
 /**
+ * @private
+ *
  * When processing relative navigation we want to ignore ancestor routes that
  * do not contribute to the path, such that index/pathless layout routes don't
  * interfere.

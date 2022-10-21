@@ -1,4 +1,4 @@
-import { convertRoutesToDataRoutes } from "./utils";
+import { convertRoutesToDataRoutes, getPathContributingMatches } from "./utils";
 
 export type {
   ActionFunction,
@@ -79,4 +79,7 @@ export * from "./router";
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @internal */
-export { convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes };
+export {
+  convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
+  getPathContributingMatches as UNSAFE_getPathContributingMatches,
+};
