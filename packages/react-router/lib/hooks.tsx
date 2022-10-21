@@ -415,7 +415,7 @@ export function useRoutes(
   // When a user passes in a `locationArg`, the associated routes need to
   // be wrapped in a new `LocationContext.Provider` in order for `useLocation`
   // to use the scoped location instead of the global location.
-  if (locationArg) {
+  if (locationArg && renderedMatches) {
     return (
       <LocationContext.Provider
         value={{
