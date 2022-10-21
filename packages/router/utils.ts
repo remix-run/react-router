@@ -863,7 +863,7 @@ export function getPathContributingMatches<
 >(matches: T[]) {
   return matches.filter(
     (match, index) =>
-      index === 0 || match.pathnameBase !== matches[index - 1].pathnameBase
+      index === 0 || (match.route.path && match.route.path.length > 0)
   );
 }
 
