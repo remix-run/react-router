@@ -171,9 +171,7 @@ export interface NavigateFunction {
 function getPathContributingMatches(matches: RouteMatch[]) {
   return matches.filter(
     (match, index) =>
-      index === 0 ||
-      (!match.route.index &&
-        match.pathnameBase !== matches[index - 1].pathnameBase)
+      index === 0 || match.pathnameBase !== matches[index - 1].pathnameBase
   );
 }
 
