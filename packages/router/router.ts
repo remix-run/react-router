@@ -2561,17 +2561,20 @@ async function callLoaderOrAction(
         (match) => match.pathnameBase
       );
       let requestPath = createURL(request.url).pathname;
-      location = resolveTo(location, routePathnames, requestPath).pathname;
+      let resolvedLocation = resolveTo(location, routePathnames, requestPath);
       invariant(
-        location,
+        createPath(resolvedLocation),
         `Unable to resolve redirect location: ${result.headers.get("Location")}`
       );
 
       // Prepend the basename to the redirect location if we have one
       if (basename) {
-        let path = createURL(location).pathname;
-        location = path === "/" ? basename : joinPaths([basename, path]);
+        let path = resolvedLocation.pathname;
+        resolvedLocation.pathname =
+          path === "/" ? basename : joinPaths([basename, path]);
       }
+
+      location = createPath(resolvedLocation);
 
       // Don't process redirects in the router during static requests requests.
       // Instead, throw the Response and let the server handle it with an HTTP
