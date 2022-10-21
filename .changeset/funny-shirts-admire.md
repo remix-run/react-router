@@ -2,4 +2,4 @@
 "@remix-run/router": patch
 ---
 
-Changes to statis handler for incorporating into Remix"
+Changes to static handler for incorporating into Remix
