@@ -1,5 +1,17 @@
 # `react-router-dom`
 
+## 6.4.3-pre.0
+
+### Patch Changes
+
+- properly support `index` routes with a `path` in `useResolvedPath` ([#9486](https://github.com/remix-run/react-router/pull/9486))
+- Respect `relative=path` prop on `NavLink` ([#9453](https://github.com/remix-run/react-router/pull/9453))
+- Fix hrefs generated for `createHashRouter` ([#9409](https://github.com/remix-run/react-router/pull/9409))
+- fix encoding/matching issues with special chars ([#9477](https://github.com/remix-run/react-router/pull/9477))
+- Updated dependencies:
+  - `@remix-run/router@1.0.3-pre.0`
+  - `react-router@6.4.3-pre.0`
+
 ## 6.4.2
 
 ### Patch Changes

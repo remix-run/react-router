@@ -3,4 +3,4 @@
 "@remix-run/router": patch
 ---
 
-properly support index routes with a path in useResolvedPath
+properly support `index` routes with a `path` in `useResolvedPath`

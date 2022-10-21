@@ -3,4 +3,4 @@
 "@remix-run/router": patch
 ---
 
-Fix hrefs generated for createHashRouter
+Fix hrefs generated for `createHashRouter`

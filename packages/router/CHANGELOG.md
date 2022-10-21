@@ -1,5 +1,18 @@
 # `@remix-run/router`
 
+## 1.0.3-pre.0
+
+### Patch Changes
+
+- properly support `index` routes with a path in `useResolvedPath` ([#9486](https://github.com/remix-run/react-router/pull/9486))
+- Fix hrefs generated for `createHashRouter` ([#9409](https://github.com/remix-run/react-router/pull/9409))
+- fix encoding/matching issues with special chars ([#9477](https://github.com/remix-run/react-router/pull/9477))
+- Ignore pathless layout routes when looking for proper submission `action` function ([#9455](https://github.com/remix-run/react-router/pull/9455))
+- Support `basename` and relative routing in `loader`/`action` redirects ([#9447](https://github.com/remix-run/react-router/pull/9447))
+- Add UMD build for `@remix-run/router` ([#9446](https://github.com/remix-run/react-router/pull/9446))
+- Clean up response APIs for `unstable_createStaticHandler` `queryRoute` ([#9465](https://github.com/remix-run/react-router/pull/9465))
+- Changes to static handler for incorporating into Remix ([#9482](https://github.com/remix-run/react-router/pull/9482))
+
 ## 1.0.2
 
 ### Patch Changes
