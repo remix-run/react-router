@@ -763,6 +763,20 @@ export function createRouter(init: RouterInit): Router {
     let { path, submission, error } = normalizeNavigateOptions(to, opts);
 
     let location = createLocation(state.location, path, opts && opts.state);
+
+    // When using navigate as a PUSH/REPLACE we aren't reading an already-encoded
+    // URL from window.location, so we need to encode it here so the behavior
+    // remains the same as POP and non-data-router usages.  new URL() does all
+    // the same encoding we'd get from a history.pushState/window.location read
+    // without having to touch history
+    let url = createURL(createPath(location));
+    location = {
+      ...location,
+      pathname: url.pathname,
+      search: url.search,
+      hash: url.hash,
+    };
+
     let historyAction =
       (opts && opts.replace) === true || submission != null
         ? HistoryAction.Replace
