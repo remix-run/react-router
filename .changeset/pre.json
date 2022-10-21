@@ -8,5 +8,15 @@
     "react-router-native": "6.4.2",
     "@remix-run/router": "1.0.2"
   },
-  "changesets": []
+  "changesets": [
+    "cyan-poems-clean",
+    "fluffy-buttons-push",
+    "funny-hotels-repeat",
+    "funny-shirts-admire",
+    "hot-badgers-grow",
+    "metal-drinks-melt",
+    "moody-bulldogs-enjoy",
+    "smart-ants-decide",
+    "weak-lizards-occur"
+  ]
 }
