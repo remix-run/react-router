@@ -2,6 +2,7 @@ import {
   ReadableStream as NodeReadableStream,
   WritableStream as NodeWritableStream,
 } from "@remix-run/web-stream";
+import { AbortController as NodeAbortController } from "abort-controller";
 
 import { atob, btoa } from "./base64";
 import {
@@ -35,6 +36,8 @@ declare global {
 
       ReadableStream: typeof ReadableStream;
       WritableStream: typeof WritableStream;
+
+      AbortController: typeof AbortController;
     }
   }
 }
@@ -54,4 +57,6 @@ export function installGlobals() {
 
   global.ReadableStream = NodeReadableStream;
   global.WritableStream = NodeWritableStream;
+
+  global.AbortController = global.AbortController || NodeAbortController;
 }
