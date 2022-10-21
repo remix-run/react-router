@@ -1,0 +1,12 @@
+{
+  "mode": "pre",
+  "tag": "pre",
+  "initialVersions": {
+    "react-router": "6.4.2",
+    "react-router-dom": "6.4.2",
+    "react-router-dom-v5-compat": "6.4.2",
+    "react-router-native": "6.4.2",
+    "@remix-run/router": "1.0.2"
+  },
+  "changesets": []
+}
