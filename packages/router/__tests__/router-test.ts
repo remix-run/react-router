@@ -5350,6 +5350,61 @@ describe("a router", () => {
         errors: null,
       });
     });
+
+    it("preserves query and hash in redirects", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let nav1 = await t.fetch("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let nav2 = await nav1.actions.child.redirectReturn(
+        "/parent?key=value#hash"
+      );
+      await nav2.loaders.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/parent",
+          search: "?key=value",
+          hash: "#hash",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT",
+        },
+        errors: null,
+      });
+    });
+
+    it("preserves query and hash in relative redirects", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let nav1 = await t.fetch("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let nav2 = await nav1.actions.child.redirectReturn(
+        "..?key=value#hash",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+      await nav2.loaders.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/parent",
+          search: "?key=value",
+          hash: "#hash",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT",
+        },
+        errors: null,
+      });
+    });
   });
 
   describe("scroll restoration", () => {
