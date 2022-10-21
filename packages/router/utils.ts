@@ -857,6 +857,8 @@ function getInvalidPathError(
 }
 
 /**
+ * @private
+ *
  * When processing relative navigation we want to ignore ancestor routes that
  * do not contribute to the path, such that index/pathless layout routes don't
  * interfere.
@@ -882,9 +884,7 @@ export function getPathContributingMatches<
 >(matches: T[]) {
   return matches.filter(
     (match, index) =>
-      index === 0 ||
-      (!match.route.index &&
-        match.pathnameBase !== matches[index - 1].pathnameBase)
+      index === 0 || (match.route.path && match.route.path.length > 0)
   );
 }
 

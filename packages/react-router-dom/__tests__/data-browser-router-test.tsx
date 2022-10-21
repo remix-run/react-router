@@ -1737,6 +1737,29 @@ function testDomRouter(
           await new Promise((r) => setTimeout(r, 0));
           assertLocation(testWindow, "/form", "?index");
         });
+
+        it("handles index routes with a path", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route
+                    index={true}
+                    path="bar"
+                    element={<NoActionComponent />}
+                  />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?index&a=1#hash"
+          );
+        });
       });
 
       describe("dynamic routes", () => {
