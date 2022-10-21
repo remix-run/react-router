@@ -5,7 +5,7 @@ order: 2
 
 # Tutorial
 
-Welcome to the tutorial! We'll be building a small, but feature-rich app that let's you keep track of your contacts. We expect it to take between 30-60m if you're following along.
+Welcome to the tutorial! We'll be building a small, but feature-rich app that lets you keep track of your contacts. We expect it to take between 30-60m if you're following along.
 
 <img class="tutorial" src="/_docs/tutorial/15.webp" />
 
@@ -519,7 +519,7 @@ const router = createBrowserRouter([
 
 👉 **Access and render the data**
 
-```jsx filename=src/routes/root.jsx lines=[4,11,19-39]
+```jsx filename=src/routes/root.jsx lines=[4,11,19-40]
 import {
   Outlet,
   Link,
