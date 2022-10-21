@@ -1103,7 +1103,7 @@ export function createRouter(init: RouterInit): Router {
     // a revalidation interrupting an actionReload)
     if (!isUninterruptedRevalidation) {
       revalidatingFetchers.forEach(([key]) => {
-        const fetcher = state.fetchers.get(key);
+        let fetcher = state.fetchers.get(key);
         let revalidatingFetcher: FetcherStates["Loading"] = {
           state: "loading",
           data: fetcher && fetcher.data,
@@ -1829,6 +1829,9 @@ export function createRouter(init: RouterInit): Router {
 //#region createStaticHandler
 ////////////////////////////////////////////////////////////////////////////////
 
+const validActionMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+const validRequestMethods = new Set(["GET", "HEAD", ...validActionMethods]);
+
 export function unstable_createStaticHandler(
   routes: AgnosticRouteObject[]
 ): StaticHandler {
@@ -1865,7 +1868,25 @@ export function unstable_createStaticHandler(
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location);
 
-    if (!matches) {
+    if (!validRequestMethods.has(request.method)) {
+      let {
+        matches: methodNotAllowedMatches,
+        route,
+        error,
+      } = getMethodNotAllowedMatches(dataRoutes);
+      return {
+        location,
+        matches: methodNotAllowedMatches,
+        loaderData: {},
+        actionData: null,
+        errors: {
+          [route.id]: error,
+        },
+        statusCode: error.status,
+        loaderHeaders: {},
+        actionHeaders: {},
+      };
+    } else if (!matches) {
       let {
         matches: notFoundMatches,
         route,
@@ -1879,7 +1900,7 @@ export function unstable_createStaticHandler(
         errors: {
           [route.id]: error,
         },
-        statusCode: 404,
+        statusCode: error.status,
         loaderHeaders: {},
         actionHeaders: {},
       };
@@ -1918,7 +1939,12 @@ export function unstable_createStaticHandler(
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location);
 
-    if (!matches) {
+    if (!validRequestMethods.has(request.method)) {
+      throw createRouterErrorResponse(null, {
+        status: 405,
+        statusText: "Method Not Allowed",
+      });
+    } else if (!matches) {
       throw createRouterErrorResponse(null, {
         status: 404,
         statusText: "Not Found",
@@ -1962,16 +1988,12 @@ export function unstable_createStaticHandler(
     routeMatch?: AgnosticDataRouteMatch
   ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
     invariant(
-      request.method !== "HEAD",
-      "query()/queryRoute() do not support HEAD requests"
-    );
-    invariant(
       request.signal,
       "query()/queryRoute() requests must contain an AbortController signal"
     );
 
     try {
-      if (request.method !== "GET") {
+      if (validActionMethods.has(request.method)) {
         let result = await submit(
           request,
           matches,
@@ -2018,7 +2040,7 @@ export function unstable_createStaticHandler(
     if (!actionMatch.route.action) {
       let href = createServerHref(new URL(request.url));
       if (isRouteRequest) {
-        throw createRouterErrorResponse(`No action found for [${href}]`, {
+        throw createRouterErrorResponse(null, {
           status: 405,
           statusText: "Method Not Allowed",
         });
@@ -2832,16 +2854,18 @@ function findNearestBoundary(
   );
 }
 
-function getNotFoundMatches(routes: AgnosticDataRouteObject[]): {
+function getShortCircuitMatches(
+  routes: AgnosticDataRouteObject[],
+  status: number,
+  statusText: string
+): {
   matches: AgnosticDataRouteMatch[];
   route: AgnosticDataRouteObject;
   error: ErrorResponse;
 } {
   // Prefer a root layout route if present, otherwise shim in a route object
-  let route = routes.find(
-    (r) => r.index || r.path === "" || r.path === "/"
-  ) || {
-    id: "__shim-404-route__",
+  let route = routes.find((r) => r.index || !r.path || r.path === "/") || {
+    id: `__shim-${status}-route__`,
   };
 
   return {
@@ -2854,8 +2878,16 @@ function getNotFoundMatches(routes: AgnosticDataRouteObject[]): {
       },
     ],
     route,
-    error: new ErrorResponse(404, "Not Found", null),
+    error: new ErrorResponse(status, statusText, null),
   };
+}
+
+function getNotFoundMatches(routes: AgnosticDataRouteObject[]) {
+  return getShortCircuitMatches(routes, 404, "Not Found");
+}
+
+function getMethodNotAllowedMatches(routes: AgnosticDataRouteObject[]) {
+  return getShortCircuitMatches(routes, 405, "Method Not Allowed");
 }
 
 function getMethodNotAllowedResult(path: Location | string): ErrorResult {
@@ -2867,11 +2899,7 @@ function getMethodNotAllowedResult(path: Location | string): ErrorResult {
   );
   return {
     type: ResultType.error,
-    error: new ErrorResponse(
-      405,
-      "Method Not Allowed",
-      `No action found for [${href}]`
-    ),
+    error: new ErrorResponse(405, "Method Not Allowed", ""),
   };
 }
 
