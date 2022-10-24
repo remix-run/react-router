@@ -288,6 +288,57 @@ describe("NavLink", () => {
 
       expect(anchors.map((a) => a.props.className)).toEqual(["active", ""]);
     });
+
+    it("does not automatically apply to root non-layout segments", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route index element={<h1>Root</h1>} />
+              <Route
+                path="home"
+                element={<NavLink to="/">Root</NavLink>}
+              ></Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.props.className).not.toMatch("active");
+    });
+
+    it("does not automatically apply to root layout segments", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <>
+                    <h1>Root</h1>
+                    <Outlet />
+                  </>
+                }
+              >
+                <Route
+                  path="home"
+                  element={<NavLink to="/">Root</NavLink>}
+                ></Route>
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.props.className).not.toMatch("active");
+    });
   });
 
   describe("when it matches just the beginning but not to the end", () => {
