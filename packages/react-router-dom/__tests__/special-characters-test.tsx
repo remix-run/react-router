@@ -9,7 +9,15 @@ import {
   waitFor,
   screen,
 } from "@testing-library/react";
-import type { Location, Params } from "react-router-dom";
+import {
+  createHashRouter,
+  createMemoryRouter,
+  HashRouter,
+  Location,
+  MemoryRouter,
+  Params,
+  useNavigate,
+} from "react-router-dom";
 import {
   BrowserRouter,
   Link,
@@ -707,6 +715,268 @@ describe("special character tests", () => {
           }
         );
       }
+    });
+  });
+
+  describe("encodes characters based on history implementation", () => {
+    function ShowPath() {
+      let { pathname, search, hash } = useLocation();
+      return <pre>{JSON.stringify({ pathname, search, hash })}</pre>;
+    }
+
+    describe("memory routers", () => {
+      it("does not encode characters in MemoryRouter", () => {
+        let ctx = render(
+          <MemoryRouter initialEntries={["/with space"]}>
+            <Routes>
+              <Route path="/with space" element={<ShowPath />} />
+            </Routes>
+          </MemoryRouter>
+        );
+
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
+
+      it("does not encode characters in MemoryRouter (navigate)", () => {
+        function Start() {
+          let navigate = useNavigate();
+          React.useEffect(() => navigate("/with space"), []);
+          return null;
+        }
+        let ctx = render(
+          <MemoryRouter>
+            <Routes>
+              <Route path="/" element={<Start />} />
+              <Route path="/with space" element={<ShowPath />} />
+            </Routes>
+          </MemoryRouter>
+        );
+
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
+
+      it("does not encode characters in createMemoryRouter", () => {
+        let router = createMemoryRouter(
+          [{ path: "/with space", element: <ShowPath /> }],
+          { initialEntries: ["/with space"] }
+        );
+        let ctx = render(<RouterProvider router={router} />);
+
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
+
+      it("does not encode characters in createMemoryRouter (navigate)", () => {
+        function Start() {
+          let navigate = useNavigate();
+          React.useEffect(() => navigate("/with space"), []);
+          return null;
+        }
+        let router = createMemoryRouter([
+          { path: "/", element: <Start /> },
+          { path: "/with space", element: <ShowPath /> },
+        ]);
+        let ctx = render(<RouterProvider router={router} />);
+
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
+    });
+
+    describe("browser routers", () => {
+      let testWindow: Window;
+
+      beforeEach(() => {
+        // Need to use our own custom DOM in order to get a working history
+        const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`, {
+          url: "https://remix.run/",
+        });
+        testWindow = dom.window as unknown as Window;
+        testWindow.history.pushState({}, "", "/");
+      });
+
+      it("encodes characters in BrowserRouter", () => {
+        testWindow.history.replaceState(null, "", "/with space");
+
+        let ctx = render(
+          <BrowserRouter window={testWindow}>
+            <Routes>
+              <Route path="/with space" element={<ShowPath />} />
+            </Routes>
+          </BrowserRouter>
+        );
+
+        expect(testWindow.location.pathname).toBe("/with%20space");
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
+
+      it("encodes characters in BrowserRouter (navigate)", () => {
+        testWindow.history.replaceState(null, "", "/");
+
+        function Start() {
+          let navigate = useNavigate();
+          React.useEffect(() => navigate("/with space"), []);
+          return null;
+        }
+
+        let ctx = render(
+          <BrowserRouter window={testWindow}>
+            <Routes>
+              <Route path="/" element={<Start />} />
+              <Route path="/with space" element={<ShowPath />} />
+            </Routes>
+          </BrowserRouter>
+        );
+
+        expect(testWindow.location.pathname).toBe("/with%20space");
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
+
+      it("encodes characters in createBrowserRouter", () => {
+        testWindow.history.replaceState(null, "", "/with space");
+
+        let router = createBrowserRouter(
+          [{ path: "/with space", element: <ShowPath /> }],
+          { window: testWindow }
+        );
+        let ctx = render(<RouterProvider router={router} />);
+
+        expect(testWindow.location.pathname).toBe("/with%20space");
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
+
+      it("encodes characters in createBrowserRouter (navigate)", () => {
+        testWindow.history.replaceState(null, "", "/with space");
+
+        function Start() {
+          let navigate = useNavigate();
+          React.useEffect(() => navigate("/with space"), []);
+          return null;
+        }
+
+        let router = createBrowserRouter(
+          [
+            { path: "/", element: <Start /> },
+            { path: "/with space", element: <ShowPath /> },
+          ],
+          { window: testWindow }
+        );
+        let ctx = render(<RouterProvider router={router} />);
+
+        expect(testWindow.location.pathname).toBe("/with%20space");
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
+    });
+
+    describe("hash routers", () => {
+      let testWindow: Window;
+
+      beforeEach(() => {
+        // Need to use our own custom DOM in order to get a working history
+        const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`, {
+          url: "https://remix.run/",
+        });
+        testWindow = dom.window as unknown as Window;
+        testWindow.history.pushState({}, "", "/");
+      });
+
+      it("encodes characters in HashRouter", () => {
+        testWindow.history.replaceState(null, "", "/#/with space");
+
+        let ctx = render(
+          <HashRouter window={testWindow}>
+            <Routes>
+              <Route path="/with space" element={<ShowPath />} />
+            </Routes>
+          </HashRouter>
+        );
+
+        expect(testWindow.location.pathname).toBe("/");
+        expect(testWindow.location.hash).toBe("#/with%20space");
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
+
+      it("encodes characters in HashRouter (navigate)", () => {
+        testWindow.history.replaceState(null, "", "/");
+
+        function Start() {
+          let navigate = useNavigate();
+          React.useEffect(() => navigate("/with space"), []);
+          return null;
+        }
+
+        let ctx = render(
+          <HashRouter window={testWindow}>
+            <Routes>
+              <Route path="/" element={<Start />} />
+              <Route path="/with space" element={<ShowPath />} />
+            </Routes>
+          </HashRouter>
+        );
+
+        expect(testWindow.location.pathname).toBe("/");
+        expect(testWindow.location.hash).toBe("#/with%20space");
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
+
+      it("encodes characters in createHashRouter", () => {
+        testWindow.history.replaceState(null, "", "/#/with space");
+
+        let router = createHashRouter(
+          [{ path: "/with space", element: <ShowPath /> }],
+          { window: testWindow }
+        );
+        let ctx = render(<RouterProvider router={router} />);
+
+        expect(testWindow.location.pathname).toBe("/");
+        expect(testWindow.location.hash).toBe("#/with%20space");
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
+
+      it("encodes characters in createHashRouter (navigate)", () => {
+        testWindow.history.replaceState(null, "", "/");
+
+        function Start() {
+          let navigate = useNavigate();
+          React.useEffect(() => navigate("/with space"), []);
+          return null;
+        }
+
+        let router = createHashRouter(
+          [
+            { path: "/", element: <Start /> },
+            { path: "/with space", element: <ShowPath /> },
+          ],
+          { window: testWindow }
+        );
+        let ctx = render(<RouterProvider router={router} />);
+
+        expect(testWindow.location.pathname).toBe("/");
+        expect(testWindow.location.hash).toBe("#/with%20space");
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(
+          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+        );
+      });
     });
   });
 });

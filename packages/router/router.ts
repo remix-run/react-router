@@ -1,9 +1,12 @@
+import { pathExists } from "fs-extra";
 import type { History, Location, Path, To } from "./history";
 import {
   Action as HistoryAction,
   createLocation,
   createPath,
+  createURL,
   parsePath,
+  safelyDecodeURI,
 } from "./history";
 import type {
   DataResult,
@@ -769,13 +772,7 @@ export function createRouter(init: RouterInit): Router {
     // remains the same as POP and non-data-router usages.  new URL() does all
     // the same encoding we'd get from a history.pushState/window.location read
     // without having to touch history
-    let url = createURL(createPath(location));
-    location = {
-      ...location,
-      pathname: url.pathname,
-      search: url.search,
-      hash: url.hash,
-    };
+    location = init.history.encodeLocation(location);
 
     let historyAction =
       (opts && opts.replace) === true || submission != null
@@ -2038,14 +2035,13 @@ export function unstable_createStaticHandler(
   ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
     let result: DataResult;
     if (!actionMatch.route.action) {
-      let href = createServerHref(new URL(request.url));
       if (isRouteRequest) {
         throw createRouterErrorResponse(null, {
           status: 405,
           statusText: "Method Not Allowed",
         });
       }
-      result = getMethodNotAllowedResult(href);
+      result = getMethodNotAllowedResult(request.url);
     } else {
       result = await callLoaderOrAction(
         "action",
@@ -2288,7 +2284,7 @@ function normalizeNavigateOptions(
       path,
       submission: {
         formMethod: opts.formMethod,
-        formAction: createServerHref(parsePath(path)),
+        formAction: stripHashFromPath(path),
         formEncType:
           (opts && opts.formEncType) || "application/x-www-form-urlencoded",
         formData: opts.formData,
@@ -2644,7 +2640,7 @@ function createRequest(
   signal: AbortSignal,
   submission?: Submission
 ): Request {
-  let url = createURL(location).toString();
+  let url = createURL(stripHashFromPath(location)).toString();
   let init: RequestInit = { signal };
 
   if (submission) {
@@ -2894,7 +2890,7 @@ function getMethodNotAllowedMatches(routes: AgnosticDataRouteObject[]) {
 }
 
 function getMethodNotAllowedResult(path: Location | string): ErrorResult {
-  let href = typeof path === "string" ? path : createServerHref(path);
+  let href = typeof path === "string" ? path : createPath(path);
   console.warn(
     "You're trying to submit to a route that does not have an action.  To " +
       "fix this, please add an `action` function to the route for " +
@@ -2914,11 +2910,6 @@ function findRedirect(results: DataResult[]): RedirectResult | undefined {
       return result;
     }
   }
-}
-
-// Create an href to represent a "server" URL without the hash
-function createServerHref(location: Partial<Path> | Location | URL) {
-  return (location.pathname || "") + (location.search || "");
 }
 
 function isHashChangeOnly(a: Location, b: Location): boolean {
@@ -3059,13 +3050,8 @@ function getTargetMatch(
   return pathMatches[pathMatches.length - 1];
 }
 
-function createURL(location: Location | string): URL {
-  let base =
-    typeof window !== "undefined" && typeof window.location !== "undefined"
-      ? window.location.origin
-      : "unknown://unknown";
-  let href =
-    typeof location === "string" ? location : createServerHref(location);
-  return new URL(href, base);
+function stripHashFromPath(path: To) {
+  let parsedPath = typeof path === "string" ? parsePath(path) : path;
+  return createPath({ ...parsedPath, hash: "" });
 }
 //#endregion
