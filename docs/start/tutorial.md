@@ -1830,7 +1830,7 @@ If you click the button now you should see the star _immediately_ change to the 
 
 ## Not Found Data
 
-What happens if the contact we're trying load doesn't exist?
+What happens if the contact we're trying to load doesn't exist?
 
 <img loading="lazy" class="tutorial" src="/_docs/tutorial/25.webp" />
 
