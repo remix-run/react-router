@@ -1,12 +1,10 @@
-import { pathExists } from "fs-extra";
-import type { History, Location, Path, To } from "./history";
+import type { History, Location, To } from "./history";
 import {
   Action as HistoryAction,
   createLocation,
   createPath,
   createURL,
   parsePath,
-  safelyDecodeURI,
 } from "./history";
 import type {
   DataResult,
