@@ -2910,6 +2910,11 @@ function findRedirect(results: DataResult[]): RedirectResult | undefined {
   }
 }
 
+function stripHashFromPath(path: To) {
+  let parsedPath = typeof path === "string" ? parsePath(path) : path;
+  return createPath({ ...parsedPath, hash: "" });
+}
+
 function isHashChangeOnly(a: Location, b: Location): boolean {
   return (
     a.pathname === b.pathname && a.search === b.search && a.hash !== b.hash
@@ -3046,10 +3051,5 @@ function getTargetMatch(
   // pathless layout routes)
   let pathMatches = getPathContributingMatches(matches);
   return pathMatches[pathMatches.length - 1];
-}
-
-function stripHashFromPath(path: To) {
-  let parsedPath = typeof path === "string" ? parsePath(path) : path;
-  return createPath({ ...parsedPath, hash: "" });
 }
 //#endregion
