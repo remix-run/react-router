@@ -75,6 +75,57 @@ describe("useRoutes", () => {
     `);
   });
 
+  it("returns null when no route matches", () => {
+    let routes = [{ path: "one", element: <h1>one</h1> }];
+
+    const NullRenderer = (props: { routes: RouteObject[] }) => {
+      const element = useRoutes(props.routes);
+      return element === null ? <div>is null</div> : <div>is not null</div>;
+    };
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/two"]}>
+          <NullRenderer routes={routes} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <div>
+        is null
+      </div>
+    `);
+  });
+
+  it("returns null when no route matches and a `location` prop is passed", () => {
+    let routes = [{ path: "one", element: <h1>one</h1> }];
+
+    const NullRenderer = (props: {
+      routes: RouteObject[];
+      location?: Partial<Location> & { pathname: string };
+    }) => {
+      const element = useRoutes(props.routes, props.location);
+      return element === null ? <div>is null</div> : <div>is not null</div>;
+    };
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/two"]}>
+          <NullRenderer routes={routes} location={{ pathname: "/three" }} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <div>
+        is null
+      </div>
+    `);
+  });
+
   describe("warns", () => {
     let consoleWarn: jest.SpyInstance;
     beforeEach(() => {
