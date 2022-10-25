@@ -188,6 +188,8 @@ export function createRoutePath(partialRouteId: string): string | undefined {
 
   if (rawSegmentBuffer === "index" && result.endsWith("index")) {
     result = result.replace(/\/?index$/, "");
+  } else {
+    result = result.replace(/\/$/, "");
   }
 
   return result || undefined;
