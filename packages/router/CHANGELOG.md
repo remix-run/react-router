@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.0.3-pre.1
+
+### Patch Changes
+
+- make url-encoding history-aware ([#9496](https://github.com/remix-run/react-router/pull/9496))
+
 ## 1.0.3-pre.0
 
 ### Patch Changes
