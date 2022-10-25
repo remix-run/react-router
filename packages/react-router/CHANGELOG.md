@@ -1,5 +1,14 @@
 # `react-router`
 
+## 6.4.3-pre.1
+
+### Patch Changes
+
+- `useRoutes` should be able to return `null` when passing `locationArg` ([#9485](https://github.com/remix-run/react-router/pull/9485))
+- fix `initialEntries` type in `createMemoryRouter` ([#9498](https://github.com/remix-run/react-router/pull/9498))
+- Updated dependencies:
+  - `@remix-run/router@1.0.3-pre.1`
+
 ## 6.4.3-pre.0
 
 ### Patch Changes
