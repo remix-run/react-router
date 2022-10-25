@@ -540,8 +540,13 @@ export function parsePath(path: string): Partial<Path> {
 }
 
 export function createURL(location: Location | string): URL {
+  // window.location.origin is "null" (the literal string value) in Firefox
+  // under certain conditions, notably when serving from a local HTML file
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
   let base =
-    typeof window !== "undefined" && typeof window.location !== "undefined"
+    typeof window !== "undefined" &&
+    typeof window.location !== "undefined" &&
+    window.location.origin !== "null"
       ? window.location.origin
       : "unknown://unknown";
   let href = typeof location === "string" ? location : createPath(location);
