@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- fix `createURL` in local file execution in Firefox ([#9464](https://github.com/remix-run/react-router/pull/9464)) ([`433c0c0a`](https://github.com/remix-run/react-router/commit/433c0c0a3259e72769ca9cec511449c0b9e75a60))
+- fix `createURL` in local file execution in Firefox ([#9464](https://github.com/remix-run/react-router/pull/9464))
 - make url-encoding history-aware ([#9496](https://github.com/remix-run/react-router/pull/9496))
 
 ## 1.0.3-pre.0
