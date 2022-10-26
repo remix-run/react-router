@@ -546,9 +546,13 @@ export function generatePath<Path extends string>(
   }
 
   return path
-    .replace(/:(\w+)/g, (_, key: PathParam<Path>) => {
+    .replace(/^:(\w+)/g, (_, key: PathParam<Path>) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
+    })
+    .replace(/\/:(\w+)/g, (_, key: PathParam<Path>) => {
+      invariant(params[key] != null, `Missing ":${key}" param`);
+      return `/${params[key]!}`;
     })
     .replace(/(\/?)\*/, (_, prefix, __, str) => {
       const star = "*" as PathParam<Path>;
@@ -688,9 +692,9 @@ function compilePath(
       .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
       .replace(/^\/*/, "/") // Make sure it has a leading /
       .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
-      .replace(/:(\w+)/g, (_: string, paramName: string) => {
+      .replace(/\/:(\w+)/g, (_: string, paramName: string) => {
         paramNames.push(paramName);
-        return "([^\\/]+)";
+        return "/([^\\/]+)";
       });
 
   if (path.endsWith("*")) {

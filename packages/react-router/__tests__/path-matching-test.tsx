@@ -268,26 +268,25 @@ describe("path matching with splats", () => {
     });
   });
 
-  test("supports partial path matching with named parameters", () => {
+  test("does not support partial path matching with named parameters", () => {
     let routes = [{ path: "/prefix:id" }];
-    expect(matchRoutes(routes, "/prefixabc")).toMatchInlineSnapshot(`
+    expect(matchRoutes(routes, "/prefix:id")).toMatchInlineSnapshot(`
       Array [
         Object {
-          "params": Object {
-            "id": "abc",
-          },
-          "pathname": "/prefixabc",
-          "pathnameBase": "/prefixabc",
+          "params": Object {},
+          "pathname": "/prefix:id",
+          "pathnameBase": "/prefix:id",
           "route": Object {
             "path": "/prefix:id",
           },
         },
       ]
     `);
-    expect(matchRoutes(routes, "/prefix/abc")).toMatchInlineSnapshot(`null`);
+    expect(matchRoutes(routes, "/prefixabc")).toEqual(null);
+    expect(matchRoutes(routes, "/prefix/abc")).toEqual(null);
   });
 
-  test("does not support partial path matching with named parameters", () => {
+  test("does not support partial path matching with splat parameters", () => {
     let consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
     let routes = [{ path: "/prefix*" }];
     expect(matchRoutes(routes, "/prefix/abc")).toMatchInlineSnapshot(`

@@ -13,6 +13,12 @@ describe("generatePath", () => {
       expect(generatePath("/courses/:id", { id: "routing" })).toBe(
         "/courses/routing"
       );
+      expect(
+        generatePath("/courses/:id/student/:studentId", {
+          id: "routing",
+          studentId: "matt",
+        })
+      ).toBe("/courses/routing/student/matt");
       expect(generatePath("/courses/*", { "*": "routing/grades" })).toBe(
         "/courses/routing/grades"
       );
@@ -65,8 +71,9 @@ describe("generatePath", () => {
     expect(generatePath("*", { "*": "bar" })).toBe("bar");
     expect(generatePath("/*", { "*": "bar" })).toBe("/bar");
 
-    expect(generatePath("foo:bar", { bar: "baz" })).toBe("foobaz");
-    expect(generatePath("/foo:bar", { bar: "baz" })).toBe("/foobaz");
+    // No support for partial dynamic params
+    expect(generatePath("foo:bar", { bar: "baz" })).toBe("foo:bar");
+    expect(generatePath("/foo:bar", { bar: "baz" })).toBe("/foo:bar");
 
     // Partial splats are treated as independent path segments
     expect(generatePath("foo*", { "*": "bar" })).toBe("foo/bar");
