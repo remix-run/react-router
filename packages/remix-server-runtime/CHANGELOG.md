@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.7.4-pre.0
+
+### Patch Changes
+
+- Ignore pathless layout routes in action matches ([#4376](https://github.com/remix-run/remix/pull/4376))
+
 ## 1.7.3
 
 No significant changes to this package were made in this release. [See the releases page on GitHub](https://github.com/remix-run/remix/releases/tag/remix%401.7.3) for an overview of all changes in v1.7.3.
