@@ -29,10 +29,12 @@ export type {
 export {
   AbortedDeferredError,
   ErrorResponse,
+  ErrorWithStatus,
   defer,
   generatePath,
   getToPathname,
   invariant,
+  isErrorWithStatus,
   isRouteErrorResponse,
   joinPaths,
   json,

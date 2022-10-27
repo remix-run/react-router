@@ -32,7 +32,11 @@ import type {
   AgnosticRouteObject,
   TrackedPromise,
 } from "../utils";
-import { AbortedDeferredError, stripBasename } from "../utils";
+import {
+  AbortedDeferredError,
+  isErrorWithStatus,
+  stripBasename,
+} from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
@@ -5068,6 +5072,61 @@ describe("a router", () => {
       expect(router.state.location.pathname).toBe("/bar");
 
       router.dispose();
+    });
+
+    it("throws an error if actions/loaders return undefined", async () => {
+      let t = setup({
+        routes: [
+          {
+            index: true,
+          },
+          {
+            id: "path",
+            path: "/path",
+            loader: true,
+            action: true,
+          },
+        ],
+      });
+
+      let nav1 = await t.navigate("/path");
+      await nav1.loaders.path.resolve(undefined);
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/path",
+        },
+        errors: {
+          path: new Error(
+            'You defined a loader for route "path" but didn\'t return anything ' +
+              "from your `loader` function. Please return a value or `null`."
+          ),
+        },
+      });
+
+      await t.navigate("/");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/",
+        },
+        errors: {},
+      });
+
+      let nav3 = await t.navigate("/path", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      await nav3.actions.path.resolve(undefined);
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/path",
+        },
+        errors: {
+          path: new Error(
+            'You defined an action for route "path" but didn\'t return anything ' +
+              "from your `action` function. Please return a value or `null`."
+          ),
+        },
+      });
     });
   });
 
@@ -11066,6 +11125,35 @@ describe("a router", () => {
         expect(data).toBe("");
       });
 
+      it("should error if an action/loader returns undefined", async () => {
+        let T = setupFlexRouteTest();
+        let data;
+
+        try {
+          data = await T.resolveLoader(undefined);
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toEqual(
+          new Error(
+            'You defined a loader for route "flex" but didn\'t return anything ' +
+              "from your `loader` function. Please return a value or `null`."
+          )
+        );
+
+        try {
+          data = await T.resolveAction(undefined);
+        } catch (e) {
+          data = e;
+        }
+        expect(data).toEqual(
+          new Error(
+            'You defined an action for route "flex" but didn\'t return anything ' +
+              "from your `action` function. Please return a value or `null`."
+          )
+        );
+      });
+
       it("should handle relative redirect responses (loader)", async () => {
         let { queryRoute } = createStaticHandler([
           {
@@ -11214,7 +11302,7 @@ describe("a router", () => {
         );
       });
 
-      it("should handle not found routes with a 404 Response", async () => {
+      describe("Errors with Status Codes", () => {
         /* eslint-disable jest/no-conditional-expect */
         let { queryRoute } = createStaticHandler([
           {
@@ -11223,93 +11311,83 @@ describe("a router", () => {
           },
         ]);
 
-        try {
-          await queryRoute(createRequest("/junk"));
-          expect(false).toBe(true);
-        } catch (data) {
-          expect(data instanceof Response).toBe(true);
-          expect(data.status).toBe(404);
-          expect(data.statusText).toBe("Not Found");
-          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
-        }
+        it("should handle not found paths with a 404 Response", async () => {
+          try {
+            await queryRoute(createRequest("/junk"));
+            expect(false).toBe(true);
+          } catch (data) {
+            expect(isErrorWithStatus(data)).toBe(true);
+            expect(data.status).toBe(404);
+            expect(data.message).toBe('No route matches URL "/junk"');
+          }
 
-        try {
-          await queryRoute(createRequest("/"), "junk");
-          expect(false).toBe(true);
-        } catch (data) {
-          expect(data instanceof Response).toBe(true);
-          expect(data.status).toBe(404);
-          expect(data.statusText).toBe("Not Found");
-          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
-        }
+          try {
+            await queryRoute(createSubmitRequest("/junk"));
+            expect(false).toBe(true);
+          } catch (data) {
+            expect(isErrorWithStatus(data)).toBe(true);
+            expect(data.status).toBe(404);
+            expect(data.message).toBe('No route matches URL "/junk"');
+          }
+        });
 
-        try {
-          await queryRoute(createSubmitRequest("/junk"));
-          expect(false).toBe(true);
-        } catch (data) {
-          expect(data instanceof Response).toBe(true);
-          expect(data.status).toBe(404);
-          expect(data.statusText).toBe("Not Found");
-          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
-        }
+        it("should handle not found routeIds with a 403 Response", async () => {
+          try {
+            await queryRoute(createRequest("/"), "junk");
+            expect(false).toBe(true);
+          } catch (data) {
+            expect(isErrorWithStatus(data)).toBe(true);
+            expect(data.status).toBe(403);
+            expect(data.message).toBe('Route "junk" does not match URL "/"');
+          }
 
-        try {
-          await queryRoute(createSubmitRequest("/"), "junk");
-          expect(false).toBe(true);
-        } catch (data) {
-          expect(data instanceof Response).toBe(true);
-          expect(data.status).toBe(404);
-          expect(data.statusText).toBe("Not Found");
-          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
-        }
+          try {
+            await queryRoute(createSubmitRequest("/"), "junk");
+            expect(false).toBe(true);
+          } catch (data) {
+            expect(isErrorWithStatus(data)).toBe(true);
+            expect(data.status).toBe(403);
+            expect(data.message).toBe('Route "junk" does not match URL "/"');
+          }
+        });
 
-        /* eslint-enable jest/no-conditional-expect */
-      });
+        it("should handle not found action/loader submissions with a 405 Response", async () => {
+          try {
+            await queryRoute(createRequest("/"), "root");
+            expect(false).toBe(true);
+          } catch (data) {
+            expect(isErrorWithStatus(data)).toBe(true);
+            expect(data.status).toBe(405);
+            expect(data.message).toBe(
+              'You made a GET request to "/" but did not provide a `loader` ' +
+                'for route "root", so there is no way to handle the request.'
+            );
+          }
 
-      it("should handle not found action submissions with a 405 Response", async () => {
-        /* eslint-disable jest/no-conditional-expect */
-        let { queryRoute } = createStaticHandler([
-          {
-            id: "root",
-            path: "/",
-          },
-        ]);
+          try {
+            await queryRoute(createSubmitRequest("/"), "root");
+            expect(false).toBe(true);
+          } catch (data) {
+            expect(isErrorWithStatus(data)).toBe(true);
+            expect(data.status).toBe(405);
+            expect(data.message).toBe(
+              'You made a POST request to "/" but did not provide an `action` ' +
+                'for route "root", so there is no way to handle the request.'
+            );
+          }
+        });
 
-        try {
-          await queryRoute(createSubmitRequest("/"), "root");
-          expect(false).toBe(true);
-        } catch (data) {
-          expect(data instanceof Response).toBe(true);
-          expect(data.status).toBe(405);
-          expect(data.statusText).toBe("Method Not Allowed");
-          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
-          expect(await data.text()).toBe("");
-        }
-        /* eslint-enable jest/no-conditional-expect */
-      });
+        it("should handle unsupported methods with a 405 Response", async () => {
+          try {
+            await queryRoute(createRequest("/", { method: "OPTIONS" }), "root");
+            expect(false).toBe(true);
+          } catch (data) {
+            expect(isErrorWithStatus(data)).toBe(true);
+            expect(data.status).toBe(405);
+            expect(data.message).toBe('Invalid request method "OPTIONS"');
+          }
+        });
 
-      it("should handle unsupported methods with a 405 Response", async () => {
-        /* eslint-disable jest/no-conditional-expect */
-        let { queryRoute } = createStaticHandler([
-          {
-            id: "root",
-            path: "/",
-          },
-        ]);
-
-        try {
-          await queryRoute(
-            createSubmitRequest("/", { method: "OPTIONS" }),
-            "root"
-          );
-          expect(false).toBe(true);
-        } catch (data) {
-          expect(data instanceof Response).toBe(true);
-          expect(data.status).toBe(405);
-          expect(data.statusText).toBe("Method Not Allowed");
-          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
-          expect(await data.text()).toBe("");
-        }
         /* eslint-enable jest/no-conditional-expect */
       });
     });

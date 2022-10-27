@@ -24,6 +24,7 @@ import type {
 import {
   DeferredData,
   ErrorResponse,
+  ErrorWithStatus,
   ResultType,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
@@ -1925,9 +1926,11 @@ export function unstable_createStaticHandler(
    * can do proper boundary identification in Remix where a thrown Response
    * must go to the Catch Boundary but a returned Response is happy-path.
    *
-   * One thing to note is that any Router-initiated thrown Response (such as a
-   * 404 or 405) will have a custom X-Remix-Router-Error: "yes" header on it
-   * in order to differentiate from responses thrown from user actions/loaders.
+   * One thing to note is that any Router-initiated Errors that make sense
+   * to associate with a status code will be thrown as an ErrorWithStatus
+   * instance, such that the calling context can serialize the error as they
+   * see fit while including the proper response code.  Examples here are 404
+   * and 405 errors that occur prior to reaching any user-defined loaders.
    */
   async function queryRoute(request: Request, routeId?: string): Promise<any> {
     let url = new URL(request.url);
@@ -1935,26 +1938,32 @@ export function unstable_createStaticHandler(
     let matches = matchRoutes(dataRoutes, location);
 
     if (!validRequestMethods.has(request.method)) {
-      throw createRouterErrorResponse(null, {
-        status: 405,
-        statusText: "Method Not Allowed",
-      });
+      throw new ErrorWithStatus(
+        `Invalid request method "${request.method}"`,
+        405
+      );
     } else if (!matches) {
-      throw createRouterErrorResponse(null, {
-        status: 404,
-        statusText: "Not Found",
-      });
+      throw new ErrorWithStatus(
+        `No route matches URL "${location.pathname}"`,
+        404
+      );
     }
 
     let match = routeId
       ? matches.find((m) => m.route.id === routeId)
       : getTargetMatch(matches, location);
 
-    if (!match) {
-      throw createRouterErrorResponse(null, {
-        status: 404,
-        statusText: "Not Found",
-      });
+    if (routeId && !match) {
+      throw new ErrorWithStatus(
+        `Route "${routeId}" does not match URL "${location.pathname}"`,
+        403
+      );
+    } else if (!match) {
+      // This should never hit I don't think?
+      throw new ErrorWithStatus(
+        `No route matches URL "${createPath(location)}"`,
+        404
+      );
     }
 
     let result = await queryImpl(request, location, matches, match);
@@ -2032,12 +2041,16 @@ export function unstable_createStaticHandler(
     isRouteRequest: boolean
   ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
     let result: DataResult;
+
     if (!actionMatch.route.action) {
       if (isRouteRequest) {
-        throw createRouterErrorResponse(null, {
-          status: 405,
-          statusText: "Method Not Allowed",
-        });
+        let pathname = createURL(request.url).pathname;
+        throw new ErrorWithStatus(
+          `You made a ${request.method} request to "${pathname}" but ` +
+            `did not provide an \`action\` for route "${actionMatch.route.id}", ` +
+            `so there is no way to handle the request.`,
+          405
+        );
       }
       result = getMethodNotAllowedResult(request.url);
     } else {
@@ -2078,20 +2091,7 @@ export function unstable_createStaticHandler(
       // Note: This should only be non-Response values if we get here, since
       // isRouteRequest should throw any Response received in callLoaderOrAction
       if (isErrorResult(result)) {
-        let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-        return {
-          matches: [actionMatch],
-          loaderData: {},
-          actionData: null,
-          errors: {
-            [boundaryMatch.route.id]: result.error,
-          },
-          // Note: statusCode + headers are unused here since queryRoute will
-          // return the raw Response or value
-          statusCode: 500,
-          loaderHeaders: {},
-          actionHeaders: {},
-        };
+        throw result.error;
       }
 
       return {
@@ -2153,6 +2153,18 @@ export function unstable_createStaticHandler(
     | Response
   > {
     let isRouteRequest = routeMatch != null;
+
+    // Short circuit if we have no loaders to run (queryRoute())
+    if (isRouteRequest && !routeMatch?.route.loader) {
+      let pathname = createURL(request.url).pathname;
+      throw new ErrorWithStatus(
+        `You made a ${request.method} request to "${pathname}" but ` +
+          `did not provide a \`loader\` for route "${routeMatch?.route.id}", ` +
+          `so there is no way to handle the request.`,
+        405
+      );
+    }
+
     let requestMatches = routeMatch
       ? [routeMatch]
       : getLoaderMatchesUntilBoundary(
@@ -2161,7 +2173,7 @@ export function unstable_createStaticHandler(
         );
     let matchesToLoad = requestMatches.filter((m) => m.route.loader);
 
-    // Short circuit if we have no loaders to run
+    // Short circuit if we have no loaders to run (query())
     if (matchesToLoad.length === 0) {
       return {
         matches,
@@ -2211,19 +2223,6 @@ export function unstable_createStaticHandler(
       ...context,
       matches,
     };
-  }
-
-  function createRouterErrorResponse(
-    body: BodyInit | null | undefined,
-    init: ResponseInit
-  ) {
-    return new Response(body, {
-      ...init,
-      headers: {
-        ...init.headers,
-        "X-Remix-Router-Error": "yes",
-      },
-    });
   }
 
   return {
@@ -2531,6 +2530,13 @@ async function callLoaderOrAction(
       handler({ request, params: match.params }),
       abortPromise,
     ]);
+
+    invariant(
+      result !== undefined,
+      `You defined ${type === "action" ? "an action" : "a loader"} for route ` +
+        `"${match.route.id}" but didn't return anything from your \`${type}\` ` +
+        `function. Please return a value or \`null\`.`
+    );
   } catch (e) {
     resultType = ResultType.error;
     result = e;
