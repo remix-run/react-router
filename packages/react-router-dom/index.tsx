@@ -442,24 +442,36 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     ref
   ) {
     let path = useResolvedPath(to, { relative: rest.relative });
-    let match = useMatch({ path: path.pathname, end, caseSensitive });
-
+    let location = useLocation();
     let routerState = React.useContext(DataRouterStateContext);
-    let nextLocation = routerState?.navigation.location;
-    let nextPath = useResolvedPath(nextLocation || "");
-    let nextMatch = React.useMemo(
-      () =>
-        nextLocation
-          ? matchPath(
-              { path: path.pathname, end, caseSensitive },
-              nextPath.pathname
-            )
-          : null,
-      [nextLocation, path.pathname, caseSensitive, end, nextPath.pathname]
-    );
 
-    let isPending = nextMatch != null;
-    let isActive = match != null;
+    let toPathname = path.pathname;
+    let locationPathname = location.pathname;
+    let nextLocationPathname =
+      routerState && routerState.navigation && routerState.navigation.location
+        ? routerState.navigation.location.pathname
+        : null;
+
+    if (!caseSensitive) {
+      locationPathname = locationPathname.toLowerCase();
+      nextLocationPathname = nextLocationPathname
+        ? nextLocationPathname.toLowerCase()
+        : null;
+      toPathname = toPathname.toLowerCase();
+    }
+
+    let isActive =
+      locationPathname === toPathname ||
+      (!end &&
+        locationPathname.startsWith(toPathname) &&
+        locationPathname.charAt(toPathname.length) === "/");
+
+    let isPending =
+      nextLocationPathname != null &&
+      (nextLocationPathname === toPathname ||
+        (!end &&
+          nextLocationPathname.startsWith(toPathname) &&
+          nextLocationPathname.charAt(toPathname.length) === "/"));
 
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
