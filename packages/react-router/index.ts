@@ -49,18 +49,10 @@ import type {
   RoutesProps,
   RouterProviderProps,
 } from "./lib/components";
+import { createComponents } from "./lib/components";
 import {
   enhanceManualRouteObjects,
   createRoutesFromChildren,
-  renderMatches,
-  Await,
-  MemoryRouter,
-  Navigate,
-  Outlet,
-  Route,
-  Router,
-  RouterProvider,
-  Routes,
 } from "./lib/components";
 import type {
   DataRouteMatch,
@@ -72,38 +64,104 @@ import type {
   RouteMatch,
   RouteObject,
   RelativeRoutingType,
+  ReactRouterContexts,
 } from "./lib/context";
-import {
-  DataRouterContext,
-  DataRouterStateContext,
-  DataStaticRouterContext,
-  LocationContext,
-  NavigationContext,
-  RouteContext,
-} from "./lib/context";
-import type { NavigateFunction } from "./lib/hooks";
-import {
-  useHref,
-  useInRouterContext,
-  useLocation,
-  useMatch,
-  useNavigationType,
-  useNavigate,
-  useOutlet,
-  useOutletContext,
-  useParams,
-  useResolvedPath,
-  useRoutes,
-  useActionData,
-  useAsyncError,
-  useAsyncValue,
-  useLoaderData,
-  useMatches,
-  useNavigation,
-  useRevalidator,
-  useRouteError,
-  useRouteLoaderData,
-} from "./lib/hooks";
+import { reactRouterContexts, createReactRouterContexts } from "./lib/context";
+import { DataStaticRouterContext } from "./lib/context";
+import type { Hooks, NavigateFunction } from "./lib/hooks";
+import { createHooks } from "./lib/hooks";
+
+function createReactRouterEnvironment(contexts = reactRouterContexts) {
+  const hooks = createHooks(contexts);
+  const components = createComponents(contexts, hooks);
+
+  return {
+    hooks,
+    components,
+  };
+}
+
+export function createScopedMemoryRouterEnvironment(
+  contexts?: ReactRouterContexts
+) {
+  if (!contexts) {
+    contexts = createReactRouterContexts();
+  }
+
+  const { hooks, components } = createReactRouterEnvironment(contexts);
+
+  const {
+    useHref,
+    useInRouterContext,
+    useLocation,
+    useMatch,
+    useNavigationType,
+    useNavigate,
+    useOutlet,
+    useOutletContext,
+    useParams,
+    useResolvedPath,
+    useRoutes,
+    useActionData,
+    useAsyncError,
+    useAsyncValue,
+    useLoaderData,
+    useMatches,
+    useNavigation,
+    useRevalidator,
+    useRouteError,
+    useRouteLoaderData,
+  } = hooks;
+
+  const {
+    renderMatches,
+    Await,
+    MemoryRouter,
+    Navigate,
+    Outlet,
+    Route,
+    Router,
+    RouterProvider,
+    Routes,
+  } = components;
+
+  return {
+    useHref,
+    useInRouterContext,
+    useLocation,
+    useMatch,
+    useNavigationType,
+    useNavigate,
+    useOutlet,
+    useOutletContext,
+    useParams,
+    useResolvedPath,
+    useRoutes,
+    useActionData,
+    useAsyncError,
+    useAsyncValue,
+    useLoaderData,
+    useMatches,
+    useNavigation,
+    useRevalidator,
+    useRouteError,
+    useRouteLoaderData,
+    renderMatches,
+    Await,
+    MemoryRouter,
+    Navigate,
+    Outlet,
+    Route,
+    Router,
+    RouterProvider,
+    Routes,
+    UNSAFE_NavigationContext: contexts.NavigationContext,
+    UNSAFE_LocationContext: contexts.LocationContext,
+    UNSAFE_RouteContext: contexts.RouteContext,
+    UNSAFE_DataRouterContext: contexts.DataRouterContext,
+    UNSAFE_DataRouterStateContext: contexts.DataRouterStateContext,
+  };
+}
 
 // Exported for backwards compatibility, but not being used internally anymore
 type Hash = string;
@@ -152,7 +210,45 @@ export type {
   Search,
   ShouldRevalidateFunction,
   To,
+  Hooks,
 };
+
+const {
+  hooks: {
+    useActionData,
+    useAsyncError,
+    useAsyncValue,
+    useHref,
+    useInRouterContext,
+    useLoaderData,
+    useLocation,
+    useMatch,
+    useMatches,
+    useNavigate,
+    useNavigation,
+    useNavigationType,
+    useOutlet,
+    useOutletContext,
+    useParams,
+    useResolvedPath,
+    useRevalidator,
+    useRouteError,
+    useRouteLoaderData,
+    useRoutes,
+  },
+  components: {
+    Await,
+    MemoryRouter,
+    Navigate,
+    Outlet,
+    Route,
+    Router,
+    RouterProvider,
+    Routes,
+    renderMatches,
+  },
+} = createReactRouterEnvironment();
+
 export {
   AbortedDeferredError,
   Await,
@@ -233,12 +329,22 @@ export function createMemoryRouter(
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @internal */
+const {
+  NavigationContext: DefaultNavigationContext,
+  LocationContext: DefaultLocationContext,
+  RouteContext: DefaultRouteContext,
+  DataRouterContext: DefaultDataRouterContext,
+  DataRouterStateContext: DefaultDataRouterStateContext,
+} = reactRouterContexts;
 export {
-  NavigationContext as UNSAFE_NavigationContext,
-  LocationContext as UNSAFE_LocationContext,
-  RouteContext as UNSAFE_RouteContext,
-  DataRouterContext as UNSAFE_DataRouterContext,
-  DataRouterStateContext as UNSAFE_DataRouterStateContext,
+  DefaultNavigationContext as UNSAFE_NavigationContext,
+  DefaultLocationContext as UNSAFE_LocationContext,
+  DefaultRouteContext as UNSAFE_RouteContext,
+  DefaultDataRouterContext as UNSAFE_DataRouterContext,
+  DefaultDataRouterStateContext as UNSAFE_DataRouterStateContext,
   DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
   enhanceManualRouteObjects as UNSAFE_enhanceManualRouteObjects,
+  createReactRouterEnvironment as UNSAFE_createReactRouterEnvironment,
+  createReactRouterContexts as UNSAFE_createReactRouterContexts,
+  reactRouterContexts as UNSAFE_reactRouterContexts,
 };

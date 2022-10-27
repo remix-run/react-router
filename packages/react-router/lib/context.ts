@@ -69,22 +69,34 @@ export interface DataRouterContextObject extends NavigationContextObject {
   router: Router;
 }
 
-export const DataRouterContext =
-  React.createContext<DataRouterContextObject | null>(null);
-if (__DEV__) {
-  DataRouterContext.displayName = "DataRouter";
+function createDataRouterContext() {
+  const DataRouterContext = React.createContext<DataRouterContextObject | null>(
+    null
+  );
+  if (__DEV__) {
+    DataRouterContext.displayName = "DataRouter";
+  }
+  return DataRouterContext;
 }
 
-export const DataRouterStateContext = React.createContext<
-  Router["state"] | null
->(null);
-if (__DEV__) {
-  DataRouterStateContext.displayName = "DataRouterState";
+function createDataRouterStateContext() {
+  const DataRouterStateContext = React.createContext<Router["state"] | null>(
+    null
+  );
+
+  if (__DEV__) {
+    DataRouterStateContext.displayName = "DataRouterState";
+  }
+
+  return DataRouterStateContext;
 }
 
-export const AwaitContext = React.createContext<TrackedPromise | null>(null);
-if (__DEV__) {
-  AwaitContext.displayName = "Await";
+function createAwaitContext() {
+  const AwaitContext = React.createContext<TrackedPromise | null>(null);
+  if (__DEV__) {
+    AwaitContext.displayName = "Await";
+  }
+  return AwaitContext;
 }
 
 export type RelativeRoutingType = "route" | "path";
@@ -112,49 +124,77 @@ export interface Navigator {
   replace(to: To, state?: any, opts?: NavigateOptions): void;
 }
 
-interface NavigationContextObject {
+export interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
 }
 
-export const NavigationContext = React.createContext<NavigationContextObject>(
-  null!
-);
+function createNavigationContext() {
+  const NavigationContext = React.createContext<NavigationContextObject>(null!);
 
-if (__DEV__) {
-  NavigationContext.displayName = "Navigation";
+  if (__DEV__) {
+    NavigationContext.displayName = "Navigation";
+  }
+
+  return NavigationContext;
 }
-
-interface LocationContextObject {
+export interface LocationContextObject {
   location: Location;
   navigationType: NavigationType;
 }
 
-export const LocationContext = React.createContext<LocationContextObject>(
-  null!
-);
-
-if (__DEV__) {
-  LocationContext.displayName = "Location";
+function createLocationContext() {
+  const LocationContext = React.createContext<LocationContextObject>(null!);
+  if (__DEV__) {
+    LocationContext.displayName = "Location";
+  }
+  return LocationContext;
 }
 
 export interface RouteContextObject {
   outlet: React.ReactElement | null;
   matches: RouteMatch[];
 }
+function createRouteContext() {
+  const RouteContext = React.createContext<RouteContextObject>({
+    outlet: null,
+    matches: [],
+  });
 
-export const RouteContext = React.createContext<RouteContextObject>({
-  outlet: null,
-  matches: [],
-});
+  if (__DEV__) {
+    RouteContext.displayName = "Route";
+  }
 
-if (__DEV__) {
-  RouteContext.displayName = "Route";
+  return RouteContext;
 }
 
-export const RouteErrorContext = React.createContext<any>(null);
+function createRouteErrorContext() {
+  const RouteErrorContext = React.createContext<any>(null);
 
-if (__DEV__) {
-  RouteErrorContext.displayName = "RouteError";
+  if (__DEV__) {
+    RouteErrorContext.displayName = "RouteError";
+  }
+
+  return RouteErrorContext;
 }
+
+function createOutletContext() {
+  return React.createContext<unknown>(null);
+}
+
+export function createReactRouterContexts() {
+  return {
+    LocationContext: createLocationContext(),
+    NavigationContext: createNavigationContext(),
+    DataRouterStateContext: createDataRouterStateContext(),
+    RouteContext: createRouteContext(),
+    OutletContext: createOutletContext(),
+    RouteErrorContext: createRouteErrorContext(),
+    AwaitContext: createAwaitContext(),
+    DataRouterContext: createDataRouterContext(),
+  };
+}
+
+export const reactRouterContexts = createReactRouterContexts();
+export type ReactRouterContexts = typeof reactRouterContexts;

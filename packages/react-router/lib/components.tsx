@@ -27,89 +27,82 @@ import type {
   Navigator,
   NonIndexRouteObject,
   RelativeRoutingType,
+  ReactRouterContexts,
 } from "./context";
-import {
-  LocationContext,
-  NavigationContext,
-  DataRouterContext,
-  DataRouterStateContext,
-  AwaitContext,
-} from "./context";
-import {
-  useAsyncValue,
-  useInRouterContext,
-  useNavigate,
-  useOutlet,
-  useRoutes,
-  _renderMatches,
-} from "./hooks";
+
+import type { Hooks } from "./hooks";
 
 export interface RouterProviderProps {
   fallbackElement?: React.ReactNode;
   router: RemixRouter;
 }
 
-/**
- * Given a Remix Router instance, render the appropriate UI
- */
-export function RouterProvider({
-  fallbackElement,
-  router,
-}: RouterProviderProps): React.ReactElement {
-  // Sync router state to our component state to force re-renders
-  let state: RouterState = useSyncExternalStoreShim(
-    router.subscribe,
-    () => router.state,
-    // We have to provide this so React@18 doesn't complain during hydration,
-    // but we pass our serialized hydration data into the router so state here
-    // is already synced with what the server saw
-    () => router.state
-  );
+function createRouterProvider(
+  contexts: ReactRouterContexts,
+  Router: ReturnType<typeof createRouter>,
+  Routes: ReturnType<typeof createRoutes>
+) {
+  /**
+   * Given a Remix Router instance, render the appropriate UI
+   */
+  return function RouterProvider({
+    fallbackElement,
+    router,
+  }: RouterProviderProps): React.ReactElement {
+    // Sync router state to our component state to force re-renders
+    let state: RouterState = useSyncExternalStoreShim(
+      router.subscribe,
+      () => router.state,
+      // We have to provide this so React@18 doesn't complain during hydration,
+      // but we pass our serialized hydration data into the router so state here
+      // is already synced with what the server saw
+      () => router.state
+    );
 
-  let navigator = React.useMemo((): Navigator => {
-    return {
-      createHref: router.createHref,
-      go: (n) => router.navigate(n),
-      push: (to, state, opts) =>
-        router.navigate(to, {
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-      replace: (to, state, opts) =>
-        router.navigate(to, {
-          replace: true,
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-    };
-  }, [router]);
+    let navigator = React.useMemo((): Navigator => {
+      return {
+        createHref: router.createHref,
+        go: (n) => router.navigate(n),
+        push: (to, state, opts) =>
+          router.navigate(to, {
+            state,
+            preventScrollReset: opts?.preventScrollReset,
+          }),
+        replace: (to, state, opts) =>
+          router.navigate(to, {
+            replace: true,
+            state,
+            preventScrollReset: opts?.preventScrollReset,
+          }),
+      };
+    }, [router]);
 
-  let basename = router.basename || "/";
+    let basename = router.basename || "/";
 
-  return (
-    <DataRouterContext.Provider
-      value={{
-        router,
-        navigator,
-        static: false,
-        // Do we need this?
-        basename,
-      }}
-    >
-      <DataRouterStateContext.Provider value={state}>
-        <Router
-          basename={router.basename}
-          location={router.state.location}
-          navigationType={router.state.historyAction}
-          navigator={navigator}
-        >
-          {router.state.initialized ? <Routes /> : fallbackElement}
-        </Router>
-      </DataRouterStateContext.Provider>
-    </DataRouterContext.Provider>
-  );
+    return (
+      <contexts.DataRouterContext.Provider
+        value={{
+          router,
+          navigator,
+          static: false,
+          // Do we need this?
+          basename,
+        }}
+      >
+        <contexts.DataRouterStateContext.Provider value={state}>
+          <Router
+            basename={router.basename}
+            location={router.state.location}
+            navigationType={router.state.historyAction}
+            navigator={navigator}
+          >
+            {router.state.initialized ? <Routes /> : fallbackElement}
+          </Router>
+        </contexts.DataRouterStateContext.Provider>
+      </contexts.DataRouterContext.Provider>
+    );
+  };
 }
-
 export interface MemoryRouterProps {
   basename?: string;
   children?: React.ReactNode;
@@ -117,45 +110,46 @@ export interface MemoryRouterProps {
   initialIndex?: number;
 }
 
-/**
- * A <Router> that stores all entries in memory.
- *
- * @see https://reactrouter.com/docs/en/v6/routers/memory-router
- */
-export function MemoryRouter({
-  basename,
-  children,
-  initialEntries,
-  initialIndex,
-}: MemoryRouterProps): React.ReactElement {
-  let historyRef = React.useRef<MemoryHistory>();
-  if (historyRef.current == null) {
-    historyRef.current = createMemoryHistory({
-      initialEntries,
-      initialIndex,
-      v5Compat: true,
+function createMemoryRouter(Router: ReturnType<typeof createRouter>) {
+  /**
+   * A <Router> that stores all entries in memory.
+   *
+   * @see https://reactrouter.com/docs/en/v6/routers/memory-router
+   */
+  return function MemoryRouter({
+    basename,
+    children,
+    initialEntries,
+    initialIndex,
+  }: MemoryRouterProps): React.ReactElement {
+    let historyRef = React.useRef<MemoryHistory>();
+    if (historyRef.current == null) {
+      historyRef.current = createMemoryHistory({
+        initialEntries,
+        initialIndex,
+        v5Compat: true,
+      });
+    }
+
+    let history = historyRef.current;
+    let [state, setState] = React.useState({
+      action: history.action,
+      location: history.location,
     });
-  }
 
-  let history = historyRef.current;
-  let [state, setState] = React.useState({
-    action: history.action,
-    location: history.location,
-  });
+    React.useLayoutEffect(() => history.listen(setState), [history]);
 
-  React.useLayoutEffect(() => history.listen(setState), [history]);
-
-  return (
-    <Router
-      basename={basename}
-      children={children}
-      location={state.location}
-      navigationType={state.action}
-      navigator={history}
-    />
-  );
+    return (
+      <Router
+        basename={basename}
+        children={children}
+        location={state.location}
+        navigationType={state.action}
+        navigator={history}
+      />
+    );
+  };
 }
-
 export interface NavigateProps {
   to: To;
   replace?: boolean;
@@ -163,64 +157,70 @@ export interface NavigateProps {
   relative?: RelativeRoutingType;
 }
 
-/**
- * Changes the current location.
- *
- * Note: This API is mostly useful in React.Component subclasses that are not
- * able to use hooks. In functional components, we recommend you use the
- * `useNavigate` hook instead.
- *
- * @see https://reactrouter.com/docs/en/v6/components/navigate
- */
-export function Navigate({
-  to,
-  replace,
-  state,
-  relative,
-}: NavigateProps): null {
-  invariant(
-    useInRouterContext(),
-    // TODO: This error is probably because they somehow have 2 versions of
-    // the router loaded. We can help them understand how to avoid that.
-    `<Navigate> may be used only in the context of a <Router> component.`
-  );
+function createNavigate(
+  { NavigationContext, DataRouterStateContext }: ReactRouterContexts,
+  { useInRouterContext, useNavigate }: Hooks
+) {
+  /**
+   * Changes the current location.
+   *
+   * Note: This API is mostly useful in React.Component subclasses that are not
+   * able to use hooks. In functional components, we recommend you use the
+   * `useNavigate` hook instead.
+   *
+   * @see https://reactrouter.com/docs/en/v6/components/navigate
+   */
+  return function Navigate({
+    to,
+    replace,
+    state,
+    relative,
+  }: NavigateProps): null {
+    invariant(
+      useInRouterContext(),
+      // TODO: This error is probably because they somehow have 2 versions of
+      // the router loaded. We can help them understand how to avoid that.
+      `<Navigate> may be used only in the context of a <Router> component.`
+    );
 
-  warning(
-    !React.useContext(NavigationContext).static,
-    `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
-      `This is a no-op, but you should modify your code so the <Navigate> is ` +
-      `only ever rendered in response to some user interaction or state change.`
-  );
+    warning(
+      !React.useContext(NavigationContext).static,
+      `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
+        `This is a no-op, but you should modify your code so the <Navigate> is ` +
+        `only ever rendered in response to some user interaction or state change.`
+    );
 
-  let dataRouterState = React.useContext(DataRouterStateContext);
-  let navigate = useNavigate();
+    let dataRouterState = React.useContext(DataRouterStateContext);
+    let navigate = useNavigate();
 
-  React.useEffect(() => {
-    // Avoid kicking off multiple navigations if we're in the middle of a
-    // data-router navigation, since components get re-rendered when we enter
-    // a submitting/loading state
-    if (dataRouterState && dataRouterState.navigation.state !== "idle") {
-      return;
-    }
-    navigate(to, { replace, state, relative });
-  });
+    React.useEffect(() => {
+      // Avoid kicking off multiple navigations if we're in the middle of a
+      // data-router navigation, since components get re-rendered when we enter
+      // a submitting/loading state
+      if (dataRouterState && dataRouterState.navigation.state !== "idle") {
+        return;
+      }
+      navigate(to, { replace, state, relative });
+    });
 
-  return null;
+    return null;
+  };
 }
 
 export interface OutletProps {
   context?: unknown;
 }
 
-/**
- * Renders the child route's element, if there is one.
- *
- * @see https://reactrouter.com/docs/en/v6/components/outlet
- */
-export function Outlet(props: OutletProps): React.ReactElement | null {
-  return useOutlet(props.context);
+function createOutlet({ useOutlet }: Hooks) {
+  /**
+   * Renders the child route's element, if there is one.
+   *
+   * @see https://reactrouter.com/docs/en/v6/components/outlet
+   */
+  return function Outlet(props: OutletProps): React.ReactElement | null {
+    return useOutlet(props.context);
+  };
 }
-
 export interface PathRouteProps {
   caseSensitive?: NonIndexRouteObject["caseSensitive"];
   path?: NonIndexRouteObject["path"];
@@ -260,7 +260,7 @@ export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
  *
  * @see https://reactrouter.com/docs/en/v6/components/route
  */
-export function Route(_props: RouteProps): React.ReactElement | null {
+function Route(_props: RouteProps): React.ReactElement | null {
   invariant(
     false,
     `A <Route> is only ever to be used as the child of <Routes> element, ` +
@@ -277,84 +277,89 @@ export interface RouterProps {
   static?: boolean;
 }
 
-/**
- * Provides location context for the rest of the app.
- *
- * Note: You usually won't render a <Router> directly. Instead, you'll render a
- * router that is more specific to your environment such as a <BrowserRouter>
- * in web browsers or a <StaticRouter> for server rendering.
- *
- * @see https://reactrouter.com/docs/en/v6/routers/router
- */
-export function Router({
-  basename: basenameProp = "/",
-  children = null,
-  location: locationProp,
-  navigationType = NavigationType.Pop,
-  navigator,
-  static: staticProp = false,
-}: RouterProps): React.ReactElement | null {
-  invariant(
-    !useInRouterContext(),
-    `You cannot render a <Router> inside another <Router>.` +
-      ` You should never have more than one in your app.`
-  );
+function createRouter({
+  LocationContext,
+  NavigationContext,
+}: ReactRouterContexts) {
+  /**
+   * Provides location context for the rest of the app.
+   *
+   * Note: You usually won't render a <Router> directly. Instead, you'll render a
+   * router that is more specific to your environment such as a <BrowserRouter>
+   * in web browsers or a <StaticRouter> for server rendering.
+   *
+   * @see https://reactrouter.com/docs/en/v6/routers/router
+   */
+  return function Router({
+    basename: basenameProp = "/",
+    children = null,
+    location: locationProp,
+    navigationType = NavigationType.Pop,
+    navigator,
+    static: staticProp = false,
+  }: RouterProps): React.ReactElement | null {
+    invariant(
+      React.useContext(LocationContext) == null,
+      `You cannot render a <Router> inside another <Router>.` +
+        ` You should never have more than one in your app.`
+    );
 
-  // Preserve trailing slashes on basename, so we can let the user control
-  // the enforcement of trailing slashes throughout the app
-  let basename = basenameProp.replace(/^\/*/, "/");
-  let navigationContext = React.useMemo(
-    () => ({ basename, navigator, static: staticProp }),
-    [basename, navigator, staticProp]
-  );
+    // Preserve trailing slashes on basename, so we can let the user control
+    // the enforcement of trailing slashes throughout the app
+    let basename = basenameProp.replace(/^\/*/, "/");
+    let navigationContext = React.useMemo(
+      () => ({ basename, navigator, static: staticProp }),
+      [basename, navigator, staticProp]
+    );
 
-  if (typeof locationProp === "string") {
-    locationProp = parsePath(locationProp);
-  }
+    if (typeof locationProp === "string") {
+      locationProp = parsePath(locationProp);
+    }
 
-  let {
-    pathname = "/",
-    search = "",
-    hash = "",
-    state = null,
-    key = "default",
-  } = locationProp;
+    let {
+      pathname = "/",
+      search = "",
+      hash = "",
+      state = null,
+      key = "default",
+    } = locationProp;
 
-  let location = React.useMemo(() => {
-    let trailingPathname = stripBasename(pathname, basename);
+    let location = React.useMemo(() => {
+      let trailingPathname = stripBasename(pathname, basename);
 
-    if (trailingPathname == null) {
+      if (trailingPathname == null) {
+        return null;
+      }
+
+      return {
+        pathname: trailingPathname,
+        search,
+        hash,
+        state,
+        key,
+      };
+    }, [basename, pathname, search, hash, state, key]);
+
+    warning(
+      location != null,
+      `<Router basename="${basename}"> is not able to match the URL ` +
+        `"${pathname}${search}${hash}" because it does not start with the ` +
+        `basename, so the <Router> won't render anything.`
+    );
+
+    if (location == null) {
       return null;
     }
 
-    return {
-      pathname: trailingPathname,
-      search,
-      hash,
-      state,
-      key,
-    };
-  }, [basename, pathname, search, hash, state, key]);
-
-  warning(
-    location != null,
-    `<Router basename="${basename}"> is not able to match the URL ` +
-      `"${pathname}${search}${hash}" because it does not start with the ` +
-      `basename, so the <Router> won't render anything.`
-  );
-
-  if (location == null) {
-    return null;
-  }
-
-  return (
-    <NavigationContext.Provider value={navigationContext}>
-      <LocationContext.Provider
-        children={children}
-        value={{ location, navigationType }}
-      />
-    </NavigationContext.Provider>
-  );
+    return (
+      <NavigationContext.Provider value={navigationContext}>
+        <LocationContext.Provider
+          children={children}
+          value={{ location, navigationType }}
+        />
+      </NavigationContext.Provider>
+    );
+  };
 }
 
 export interface RoutesProps {
@@ -362,27 +367,31 @@ export interface RoutesProps {
   location?: Partial<Location> | string;
 }
 
-/**
- * A container for a nested tree of <Route> elements that renders the branch
- * that best matches the current location.
- *
- * @see https://reactrouter.com/docs/en/v6/components/routes
- */
-export function Routes({
-  children,
-  location,
-}: RoutesProps): React.ReactElement | null {
-  let dataRouterContext = React.useContext(DataRouterContext);
-  // When in a DataRouterContext _without_ children, we use the router routes
-  // directly.  If we have children, then we're in a descendant tree and we
-  // need to use child routes.
-  let routes =
-    dataRouterContext && !children
-      ? (dataRouterContext.router.routes as DataRouteObject[])
-      : createRoutesFromChildren(children);
-  return useRoutes(routes, location);
+function createRoutes(
+  { DataRouterContext }: ReactRouterContexts,
+  { useRoutes }: Hooks
+) {
+  /**
+   * A container for a nested tree of <Route> elements that renders the branch
+   * that best matches the current location.
+   *
+   * @see https://reactrouter.com/docs/en/v6/components/routes
+   */
+  return function Routes({
+    children,
+    location,
+  }: RoutesProps): React.ReactElement | null {
+    let dataRouterContext = React.useContext(DataRouterContext);
+    // When in a DataRouterContext _without_ children, we use the router routes
+    // directly.  If we have children, then we're in a descendant tree and we
+    // need to use child routes.
+    let routes =
+      dataRouterContext && !children
+        ? (dataRouterContext.router.routes as DataRouteObject[])
+        : createRoutesFromChildren(children);
+    return useRoutes(routes, location);
+  };
 }
-
 export interface AwaitResolveRenderFunction {
   (data: Awaited<any>): React.ReactElement;
 }
@@ -393,21 +402,30 @@ export interface AwaitProps {
   resolve: TrackedPromise | any;
 }
 
-/**
- * Component to use for rendering lazily loaded data from returning defer()
- * in a loader function
- */
-export function Await({ children, errorElement, resolve }: AwaitProps) {
-  return (
-    <AwaitErrorBoundary resolve={resolve} errorElement={errorElement}>
-      <ResolveAwait>{children}</ResolveAwait>
-    </AwaitErrorBoundary>
-  );
+function createAwait({ AwaitContext }: ReactRouterContexts, hooks: Hooks) {
+  const ResolveAwait = createResolveAwait(hooks);
+
+  /**
+   * Component to use for rendering lazily loaded data from returning defer()
+   * in a loader function
+   */
+  return function Await({ children, errorElement, resolve }: AwaitProps) {
+    return (
+      <AwaitErrorBoundary
+        resolve={resolve}
+        errorElement={errorElement}
+        AwaitContext={AwaitContext}
+      >
+        <ResolveAwait>{children}</ResolveAwait>
+      </AwaitErrorBoundary>
+    );
+  };
 }
 
 type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
   resolve: TrackedPromise | any;
+  AwaitContext: ReactRouterContexts["AwaitContext"];
 }>;
 
 type AwaitErrorBoundaryState = {
@@ -444,7 +462,7 @@ class AwaitErrorBoundary extends React.Component<
   }
 
   render() {
-    let { children, errorElement, resolve } = this.props;
+    let { children, errorElement, resolve, AwaitContext } = this.props;
 
     let promise: TrackedPromise | null = null;
     let status: AwaitRenderStatus = AwaitRenderStatus.pending;
@@ -511,20 +529,22 @@ class AwaitErrorBoundary extends React.Component<
   }
 }
 
-/**
- * @private
- * Indirection to leverage useAsyncValue for a render-prop API on <Await>
- */
-function ResolveAwait({
-  children,
-}: {
-  children: React.ReactNode | AwaitResolveRenderFunction;
-}) {
-  let data = useAsyncValue();
-  if (typeof children === "function") {
-    return children(data);
-  }
-  return <>{children}</>;
+function createResolveAwait({ useAsyncValue }: Hooks) {
+  /**
+   * @private
+   * Indirection to leverage useAsyncValue for a render-prop API on <Await>
+   */
+  return function ResolveAwait({
+    children,
+  }: {
+    children: React.ReactNode | AwaitResolveRenderFunction;
+  }) {
+    let data = useAsyncValue();
+    if (typeof children === "function") {
+      return children(data);
+    }
+    return <>{children}</>;
+  };
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -600,13 +620,15 @@ export function createRoutesFromChildren(
   return routes;
 }
 
-/**
- * Renders the result of `matchRoutes()` into a React element.
- */
-export function renderMatches(
-  matches: RouteMatch[] | null
-): React.ReactElement | null {
-  return _renderMatches(matches);
+function createRenderMatches({ _renderMatches }: Hooks) {
+  /**
+   * Renders the result of `matchRoutes()` into a React element.
+   */
+  return function renderMatches(
+    matches: RouteMatch[] | null
+  ): React.ReactElement | null {
+    return _renderMatches(matches);
+  };
 }
 
 /**
@@ -627,4 +649,86 @@ export function enhanceManualRouteObjects(
     }
     return routeClone;
   });
+}
+
+export function createComponents(contexts: ReactRouterContexts, hooks: Hooks) {
+  const Router = createRouter(contexts);
+  const Routes = createRoutes(contexts, hooks);
+
+  const RouterProvider = createRouterProvider(contexts, Router, Routes);
+
+  const MemoryRouter = createMemoryRouter(Router);
+
+  const Navigate = createNavigate(contexts, hooks);
+  const Await = createAwait(contexts, hooks);
+  const Outlet = createOutlet(hooks);
+
+  return {
+    /**
+     * Provides location context for the rest of the app.
+     *
+     * Note: You usually won't render a <Router> directly. Instead, you'll render a
+     * router that is more specific to your environment such as a <BrowserRouter>
+     * in web browsers or a <StaticRouter> for server rendering.
+     *
+     * @see https://reactrouter.com/docs/en/v6/routers/router
+     */
+    Router,
+
+    /**
+     * Given a Remix Router instance, render the appropriate UI
+     */
+    RouterProvider,
+
+    /**
+     * A <Router> that stores all entries in memory.
+     *
+     * @see https://reactrouter.com/docs/en/v6/routers/memory-router
+     */
+    MemoryRouter,
+
+    /**
+     * Changes the current location.
+     *
+     * Note: This API is mostly useful in React.Component subclasses that are not
+     * able to use hooks. In functional components, we recommend you use the
+     * `useNavigate` hook instead.
+     *
+     * @see https://reactrouter.com/docs/en/v6/components/navigate
+     */
+    Navigate,
+
+    /**
+     * A container for a nested tree of <Route> elements that renders the branch
+     * that best matches the current location.
+     *
+     * @see https://reactrouter.com/docs/en/v6/components/routes
+     */
+    Routes,
+
+    /**
+     * Renders the result of `matchRoutes()` into a React element.
+     */
+    renderMatches: createRenderMatches(hooks),
+
+    /**
+     * Declares an element that should be rendered at a certain URL path.
+     *
+     * @see https://reactrouter.com/docs/en/v6/components/route
+     */
+    Route,
+
+    /**
+     * Renders the child route's element, if there is one.
+     *
+     * @see https://reactrouter.com/docs/en/v6/components/outlet
+     */
+    Outlet,
+
+    /**
+     * Component to use for rendering lazily loaded data from returning defer()
+     * in a loader function
+     */
+    Await,
+  };
 }
