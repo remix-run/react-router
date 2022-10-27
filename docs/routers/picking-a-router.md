@@ -31,6 +31,8 @@ The easiest way to quickly update to a v6.4 is to get the help from [`createRout
 ```jsx
 import {
   createBrowserRouter,
+  createRoutesFromElements,
+  Route,
   RouterProvider,
 } from "react-router-dom";
 
