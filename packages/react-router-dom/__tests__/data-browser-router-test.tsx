@@ -5,6 +5,7 @@
 import { JSDOM } from "jsdom";
 import * as React from "react";
 import {
+  act,
   render,
   fireEvent,
   waitFor,
@@ -13,13 +14,15 @@ import {
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
+import type { Router, RouterInit } from "@remix-run/router";
 import {
-  DataBrowserRouter,
-  DataHashRouter,
   Form,
   Link,
   Route,
+  RouterProvider,
   Outlet,
+  createBrowserRouter,
+  createHashRouter,
   useLoaderData,
   useActionData,
   useRouteError,
@@ -29,24 +32,66 @@ import {
   useFetcher,
   useFetchers,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  defer,
+  useLocation,
+  createRoutesFromElements,
 } from "react-router-dom";
 
-// Private API
-import { _resetModuleScope } from "../index";
-
-testDomRouter("<DataBrowserRouter>", DataBrowserRouter, (url) =>
+testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
   getWindowImpl(url, false)
 );
 
-testDomRouter("<DataHashRouter>", DataHashRouter, (url) =>
+testDomRouter("<DataHashRouter>", createHashRouter, (url) =>
   getWindowImpl(url, true)
 );
 
+let router: Router | null = null;
+
 function testDomRouter(
   name: string,
-  TestDataRouter: typeof DataBrowserRouter,
+  createTestRouter: typeof createBrowserRouter | typeof createHashRouter,
   getWindow: (initialUrl: string, isHash?: boolean) => Window
 ) {
+  // Utility to assert location info based on the type of router
+  function assertLocation(
+    testWindow: Window,
+    pathname: string,
+    search?: string
+  ) {
+    if (name === "<DataHashRouter>") {
+      // eslint-disable-next-line jest/no-conditional-expect
+      expect(testWindow.location.hash).toEqual("#" + pathname + (search || ""));
+    } else {
+      // eslint-disable-next-line jest/no-conditional-expect
+      expect(testWindow.location.pathname).toEqual(pathname);
+      if (search) {
+        expect(testWindow.location.search).toEqual(search);
+      }
+    }
+  }
+
+  // Abstraction to avoid re-writing all tests for the time being
+  function TestDataRouter({
+    basename,
+    children,
+    fallbackElement,
+    hydrationData,
+    window,
+  }: {
+    basename?: RouterInit["basename"];
+    children: React.ReactNode | React.ReactNode[];
+    fallbackElement?: React.ReactNode;
+    hydrationData?: RouterInit["hydrationData"];
+    window?: Window;
+  }) {
+    router = createTestRouter(createRoutesFromElements(children), {
+      basename,
+      hydrationData,
+      window,
+    });
+    return <RouterProvider router={router} fallbackElement={fallbackElement} />;
+  }
+
   describe(`Router: ${name}`, () => {
     let consoleWarn: jest.SpyInstance;
     let consoleError: jest.SpyInstance;
@@ -56,10 +101,10 @@ function testDomRouter(
     });
 
     afterEach(() => {
+      router = null;
       window.__staticRouterHydrationData = undefined;
       consoleWarn.mockRestore();
       consoleError.mockRestore();
-      _resetModuleScope();
     });
 
     it("renders the first route that matches the URL", () => {
@@ -220,7 +265,7 @@ function testDomRouter(
     });
 
     it("renders fallbackElement while first data fetch happens", async () => {
-      let fooDefer = defer();
+      let fooDefer = createDeferred();
       let { container } = render(
         <TestDataRouter
           window={getWindow("/foo")}
@@ -271,7 +316,7 @@ function testDomRouter(
     });
 
     it("does not render fallbackElement if no data fetch is required", async () => {
-      let fooDefer = defer();
+      let fooDefer = createDeferred();
       let { container } = render(
         <TestDataRouter
           window={getWindow("/bar")}
@@ -305,6 +350,54 @@ function testDomRouter(
         "<div>
           <h1>
             Bar Heading
+          </h1>
+        </div>"
+      `);
+    });
+
+    it("renders fallbackElement within router contexts", async () => {
+      let fooDefer = createDeferred();
+      let { container } = render(
+        <TestDataRouter
+          window={getWindow("/foo")}
+          fallbackElement={<FallbackElement />}
+        >
+          <Route path="/" element={<Outlet />}>
+            <Route
+              path="foo"
+              loader={() => fooDefer.promise}
+              element={<Foo />}
+            />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function FallbackElement() {
+        let location = useLocation();
+        return <p>Loading{location.pathname}</p>;
+      }
+
+      function Foo() {
+        let data = useLoaderData();
+        return <h1>Foo:{data?.message}</h1>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Loading
+            /foo
+          </p>
+        </div>"
+      `);
+
+      fooDefer.resolve({ message: "From Foo Loader" });
+      await waitFor(() => screen.getByText("Foo:From Foo Loader"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h1>
+            Foo:
+            From Foo Loader
           </h1>
         </div>"
       `);
@@ -358,35 +451,27 @@ function testDomRouter(
           <div>
             <Link to="/foo">Link to Foo</Link>
             <Link to="/bar">Link to Bar</Link>
-            <Outlet />
+            <div id="output">
+              <Outlet />
+            </div>
           </div>
         );
       }
 
-      function assertPathname(pathname) {
-        if (name === "<DataHashRouter>") {
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(testWindow.location.hash).toEqual("#" + pathname);
-        } else {
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(testWindow.location.pathname).toEqual(pathname);
-        }
-      }
-
-      assertPathname("/base/name/foo");
-
+      assertLocation(testWindow, "/base/name/foo");
       expect(screen.getByText("Foo Heading")).toBeDefined();
+
       fireEvent.click(screen.getByText("Link to Bar"));
       await waitFor(() => screen.getByText("Bar Heading"));
-      assertPathname("/base/name/bar");
+      assertLocation(testWindow, "/base/name/bar");
 
       fireEvent.click(screen.getByText("Link to Foo"));
       await waitFor(() => screen.getByText("Foo Heading"));
-      assertPathname("/base/name/foo");
+      assertLocation(testWindow, "/base/name/foo");
     });
 
     it("executes route loaders on navigation", async () => {
-      let barDefer = defer();
+      let barDefer = createDeferred();
 
       let { container } = render(
         <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
@@ -406,8 +491,10 @@ function testDomRouter(
         return (
           <div>
             <Link to="/bar">Link to Bar</Link>
-            <p>{navigation.state}</p>
-            <Outlet />
+            <div id="output">
+              <p>{navigation.state}</p>
+              <Outlet />
+            </div>
           </div>
         );
       }
@@ -420,65 +507,53 @@ function testDomRouter(
         return <h1>{data?.message}</h1>;
       }
 
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
             <p>
               idle
             </p>
             <h1>
               Foo
             </h1>
-          </div>
-        </div>"
-      `);
+          </div>"
+        `);
 
       fireEvent.click(screen.getByText("Link to Bar"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
             <p>
               loading
             </p>
             <h1>
               Foo
             </h1>
-          </div>
-        </div>"
-      `);
+          </div>"
+        `);
 
       barDefer.resolve({ message: "Bar Loader" });
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <a
-              href=\\"/bar\\"
-            >
-              Link to Bar
-            </a>
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
             <p>
               idle
             </p>
             <h1>
               Bar Loader
             </h1>
-          </div>
-        </div>"
-      `);
+          </div>"
+        `);
     });
 
-    it("handles link navigations with resetScroll=false", async () => {
+    it("handles link navigations with preventScrollReset", async () => {
       let { container } = render(
         <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
           <Route path="/" element={<Layout />}>
@@ -492,11 +567,11 @@ function testDomRouter(
         let state = React.useContext(DataRouterStateContext);
         return (
           <div>
-            <Link to="/foo" resetScroll={false}>
+            <Link to="/foo" preventScrollReset>
               Link to Foo
             </Link>
             <Link to="/bar">Link to Bar</Link>
-            <p id="resetScrollPosition">{String(state.resetScrollPosition)}</p>
+            <p id="preventScrollReset">{String(state?.preventScrollReset)}</p>
             <Outlet />
           </div>
         );
@@ -504,30 +579,77 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Link to Bar"));
       await waitFor(() => screen.getByText("Bar Heading"));
-      expect(getHtml(container.querySelector("#resetScrollPosition")))
+      expect(getHtml(container.querySelector("#preventScrollReset")))
         .toMatchInlineSnapshot(`
         "<p
-          id=\\"resetScrollPosition\\"
+          id=\\"preventScrollReset\\"
         >
-          true
+          false
         </p>"
       `);
 
       fireEvent.click(screen.getByText("Link to Foo"));
       await waitFor(() => screen.getByText("Foo Heading"));
-      expect(getHtml(container.querySelector("#resetScrollPosition")))
+      expect(getHtml(container.querySelector("#preventScrollReset")))
         .toMatchInlineSnapshot(`
         "<p
-          id=\\"resetScrollPosition\\"
+          id=\\"preventScrollReset\\"
+        >
+          true
+        </p>"
+      `);
+    });
+
+    it("handles link navigations with preventScrollReset={true}", async () => {
+      let { container } = render(
+        <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<h1>Foo Heading</h1>} />
+            <Route path="bar" element={<h1>Bar Heading</h1>} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Layout() {
+        let state = React.useContext(DataRouterStateContext);
+        return (
+          <div>
+            <Link to="/foo" preventScrollReset={true}>
+              Link to Foo
+            </Link>
+            <Link to="/bar">Link to Bar</Link>
+            <p id="preventScrollReset">{String(state?.preventScrollReset)}</p>
+            <Outlet />
+          </div>
+        );
+      }
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      await waitFor(() => screen.getByText("Bar Heading"));
+      expect(getHtml(container.querySelector("#preventScrollReset")))
+        .toMatchInlineSnapshot(`
+        "<p
+          id=\\"preventScrollReset\\"
         >
           false
+        </p>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Foo"));
+      await waitFor(() => screen.getByText("Foo Heading"));
+      expect(getHtml(container.querySelector("#preventScrollReset")))
+        .toMatchInlineSnapshot(`
+        "<p
+          id=\\"preventScrollReset\\"
+        >
+          true
         </p>"
       `);
     });
 
     it("executes route actions/loaders on useSubmit navigations", async () => {
-      let loaderDefer = defer();
-      let actionDefer = defer();
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
 
       let { container } = render(
         <TestDataRouter window={getWindow("/")} hydrationData={{}}>
@@ -628,8 +750,8 @@ function testDomRouter(
     });
 
     it("executes route loaders on <Form method=get> navigations", async () => {
-      let loaderDefer = defer();
-      let actionDefer = defer();
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
 
       let { container } = render(
         <TestDataRouter window={getWindow("/")} hydrationData={{}}>
@@ -715,8 +837,8 @@ function testDomRouter(
     });
 
     it("executes route actions/loaders on <Form method=post> navigations", async () => {
-      let loaderDefer = defer();
-      let actionDefer = defer();
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
 
       let { container } = render(
         <TestDataRouter window={getWindow("/")} hydrationData={{}}>
@@ -1199,6 +1321,1010 @@ function testDomRouter(
       `);
     });
 
+    it('supports a basename on <Form method="get">', async () => {
+      let testWindow = getWindow("/base/path");
+      let { container } = render(
+        <TestDataRouter basename="/base" window={testWindow} hydrationData={{}}>
+          <Route path="path" element={<Comp />} />
+        </TestDataRouter>
+      );
+
+      function Comp() {
+        let location = useLocation();
+        return (
+          <Form
+            onSubmit={(e) => {
+              // jsdom doesn't handle submitter so we add it here
+              // See https://github.com/jsdom/jsdom/issues/3117
+              // @ts-expect-error
+              e.nativeEvent.submitter = e.currentTarget.querySelector("button");
+            }}
+          >
+            <p>{location.pathname + location.search}</p>
+            <input name="a" defaultValue="1" />
+            <button type="submit" name="b" value="2">
+              Submit
+            </button>
+          </Form>
+        );
+      }
+
+      assertLocation(testWindow, "/base/path");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <form
+            action=\\"/base/path\\"
+            method=\\"get\\"
+          >
+            <p>
+              /path
+            </p>
+            <input
+              name=\\"a\\"
+              value=\\"1\\"
+            />
+            <button
+              name=\\"b\\"
+              type=\\"submit\\"
+              value=\\"2\\"
+            >
+              Submit
+            </button>
+          </form>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit"));
+      assertLocation(testWindow, "/base/path", "?a=1&b=2");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <form
+            action=\\"/base/path?a=1&b=2\\"
+            method=\\"get\\"
+          >
+            <p>
+              /path?a=1&b=2
+            </p>
+            <input
+              name=\\"a\\"
+              value=\\"1\\"
+            />
+            <button
+              name=\\"b\\"
+              type=\\"submit\\"
+              value=\\"2\\"
+            >
+              Submit
+            </button>
+          </form>
+        </div>"
+      `);
+    });
+
+    it('supports a basename on <Form method="post">', async () => {
+      let testWindow = getWindow("/base/path");
+      let { container } = render(
+        <TestDataRouter basename="/base" window={testWindow} hydrationData={{}}>
+          <Route path="path" action={() => "action data"} element={<Comp />} />
+        </TestDataRouter>
+      );
+
+      function Comp() {
+        let location = useLocation();
+        let data = useActionData() as string | undefined;
+        return (
+          <Form
+            method="post"
+            onSubmit={(e) => {
+              // jsdom doesn't handle submitter so we add it here
+              // See https://github.com/jsdom/jsdom/issues/3117
+              // @ts-expect-error
+              e.nativeEvent.submitter = e.currentTarget.querySelector("button");
+            }}
+          >
+            <p>{location.pathname + location.search}</p>
+            {data && <p>{data}</p>}
+            <input name="a" defaultValue="1" />
+            <button type="submit" name="b" value="2">
+              Submit
+            </button>
+          </Form>
+        );
+      }
+
+      assertLocation(testWindow, "/base/path");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <form
+            action=\\"/base/path\\"
+            method=\\"post\\"
+          >
+            <p>
+              /path
+            </p>
+            <input
+              name=\\"a\\"
+              value=\\"1\\"
+            />
+            <button
+              name=\\"b\\"
+              type=\\"submit\\"
+              value=\\"2\\"
+            >
+              Submit
+            </button>
+          </form>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("action data"));
+      assertLocation(testWindow, "/base/path");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <form
+            action=\\"/base/path\\"
+            method=\\"post\\"
+          >
+            <p>
+              /path
+            </p>
+            <p>
+              action data
+            </p>
+            <input
+              name=\\"a\\"
+              value=\\"1\\"
+            />
+            <button
+              name=\\"b\\"
+              type=\\"submit\\"
+              value=\\"2\\"
+            >
+              Submit
+            </button>
+          </form>
+        </div>"
+      `);
+    });
+
+    describe("<Form action>", () => {
+      function NoActionComponent() {
+        return (
+          <Form method="post">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      function ActionDotComponent() {
+        return (
+          <Form method="post" action=".">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      function ActionEmptyComponent() {
+        return (
+          <Form method="post" action="">
+            <input name="b" value="2" />
+            <button type="submit">Submit Form</button>
+          </Form>
+        );
+      }
+
+      describe("static routes", () => {
+        it("includes search params + hash when no action is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<NoActionComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?a=1#hash"
+          );
+        });
+
+        it("does not include search params + hash when action='.'", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<ActionDotComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+
+        it("does not include search params + hash when action=''", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<ActionEmptyComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+      });
+
+      describe("layout routes", () => {
+        it("includes search params + hash when no action is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<NoActionComponent />}>
+                    <Route index={true} element={<h1>Index</h1>} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?a=1#hash"
+          );
+        });
+
+        it("does not include search params + hash when action='.'", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<ActionDotComponent />}>
+                    <Route index={true} element={<h1>Index</h1>} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+
+        it("does not include search params + hash when action=''", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<ActionEmptyComponent />}>
+                    <Route index={true} element={<h1>Index</h1>} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+      });
+
+      describe("index routes", () => {
+        it("includes search params + hash when no action is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar">
+                    <Route index={true} element={<NoActionComponent />} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?index&a=1#hash"
+          );
+        });
+
+        it("does not include search params + hash action='.'", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar">
+                    <Route index={true} element={<ActionDotComponent />} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?index"
+          );
+        });
+
+        it("does not include search params + hash action=''", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar">
+                    <Route index={true} element={<ActionEmptyComponent />} />
+                  </Route>
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?index"
+          );
+        });
+
+        // eslint-disable-next-line jest/expect-expect
+        it("does not repeatedly add ?index params on submissions", async () => {
+          let testWindow = getWindow("/form");
+          render(
+            <TestDataRouter window={testWindow} hydrationData={{}}>
+              <Route path="/">
+                <Route path="form">
+                  <Route
+                    index={true}
+                    action={() => ({})}
+                    element={
+                      <Form method="post">
+                        <button type="submit" name="name" value="value">
+                          Submit
+                        </button>
+                      </Form>
+                    }
+                  />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          assertLocation(testWindow, "/form", "");
+
+          fireEvent.click(screen.getByText("Submit"));
+          await new Promise((r) => setTimeout(r, 0));
+          assertLocation(testWindow, "/form", "?index");
+
+          fireEvent.click(screen.getByText("Submit"));
+          await new Promise((r) => setTimeout(r, 0));
+          assertLocation(testWindow, "/form", "?index");
+        });
+
+        it("handles index routes with a path", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route
+                    index={true}
+                    path="bar"
+                    element={<NoActionComponent />}
+                  />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?index&a=1#hash"
+          );
+        });
+      });
+
+      describe("dynamic routes", () => {
+        it("includes search params + hash when no action is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path=":param" element={<NoActionComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?a=1#hash"
+          );
+        });
+
+        it("does not include search params + hash action='.'", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path=":param" element={<ActionDotComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+
+        it("does not include search params + hash when action=''", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path=":param" element={<ActionEmptyComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+      });
+
+      describe("splat routes", () => {
+        it("includes search params + hash when no action is specified", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="*" element={<NoActionComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo?a=1#hash"
+          );
+        });
+
+        it("does not include search params + hash when action='.'", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="*" element={<ActionDotComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo"
+          );
+        });
+
+        it("does not include search params + hash when action=''", async () => {
+          let { container } = render(
+            <TestDataRouter
+              window={getWindow("/foo/bar?a=1#hash")}
+              hydrationData={{}}
+            >
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="*" element={<ActionEmptyComponent />} />
+                </Route>
+              </Route>
+            </TestDataRouter>
+          );
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo"
+          );
+        });
+      });
+    });
+
+    describe('<Form action relative="path">', () => {
+      it("navigates relative to the URL for static routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/edit")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/edit"
+                element={<Form action=".." relative="path" />}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for dynamic routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/:id"
+                element={<Form action=".." relative="path" />}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for layout routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/:id"
+                element={
+                  <>
+                    <Form action=".." relative="path" />
+                    <Outlet />
+                  </>
+                }
+              >
+                <Route index element={<h1>Form</h1>} />
+              </Route>
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for index routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route path="messages/:id">
+                <Route index element={<Form action=".." relative="path" />} />
+              </Route>
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages"
+        );
+      });
+
+      it("navigates relative to the URL for splat routes", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/inbox/messages/1/2/3")}
+            hydrationData={{}}
+          >
+            <Route path="inbox">
+              <Route path="messages" />
+              <Route
+                path="messages/*"
+                element={<Form action=".." relative="path" />}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/inbox/messages/1/2"
+        );
+      });
+    });
+
+    describe("useSubmit/Form FormData", () => {
+      it("gathers form data on <Form> submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          return (
+            <Form method="post">
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button type="submit">Submit</button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("gathers form data on submit(form) submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          let formRef = React.useRef(null);
+          return (
+            <>
+              <Form method="post" ref={formRef}>
+                <input name="a" defaultValue="1" />
+                <input name="b" defaultValue="2" />
+              </Form>
+              <button onClick={() => submit(formRef.current)}>Submit</button>
+            </>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("gathers form data on submit(button) submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <>
+              <Form method="post">
+                <input name="a" defaultValue="1" />
+                <input name="b" defaultValue="2" />
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    submit(e.currentTarget);
+                  }}
+                >
+                  Submit
+                </button>
+              </Form>
+            </>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("gathers form data on submit(input[type=submit]) submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <>
+              <Form method="post">
+                <input name="a" defaultValue="1" />
+                <input name="b" defaultValue="2" />
+                <input
+                  type="submit"
+                  value="Submit"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    submit(e.currentTarget);
+                  }}
+                />
+              </Form>
+            </>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("gathers form data on submit(FormData) submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          let formData = new FormData();
+          formData.set("a", "1");
+          formData.set("b", "2");
+          return (
+            <button onClick={() => submit(formData, { method: "post" })}>
+              Submit
+            </button>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("gathers form data on submit(object) submissions", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <button
+              onClick={() => submit({ a: "1", b: "2" }, { method: "post" })}
+            >
+              Submit
+            </button>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+      });
+
+      it("includes submit button name/value on form submission", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          return (
+            <Form
+              method="post"
+              onSubmit={(e) => {
+                // jsdom doesn't handle submitter so we add it here
+                // See https://github.com/jsdom/jsdom/issues/3117
+                // @ts-expect-error
+                e.nativeEvent.submitter =
+                  e.currentTarget.querySelector("button");
+              }}
+            >
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button name="c" value="3" type="submit">
+                Submit
+              </button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+        expect(formData.get("c")).toBe("3");
+      });
+
+      it("includes submit button name/value on button submission", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <Form
+              method="post"
+              onSubmit={(e) => {
+                // jsdom doesn't handle submitter so we add it here
+                // See https://github.com/jsdom/jsdom/issues/3117
+                // @ts-expect-error
+                e.nativeEvent.submitter =
+                  e.currentTarget.querySelector("button");
+              }}
+            >
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button
+                name="c"
+                value="3"
+                onClick={(e) => {
+                  e.preventDefault();
+                  submit(e.currentTarget);
+                }}
+              >
+                Submit
+              </button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.get("b")).toBe("2");
+        expect(formData.get("c")).toBe("3");
+      });
+
+      it("appends button name/value and doesn't overwrite inputs with same name (form)", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          return (
+            <Form
+              method="post"
+              onSubmit={(e) => {
+                // jsdom doesn't handle submitter so we add it here
+                // See https://github.com/jsdom/jsdom/issues/3117
+                // @ts-expect-error
+                e.nativeEvent.submitter =
+                  e.currentTarget.querySelector("button");
+              }}
+            >
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button name="b" value="3" type="submit">
+                Submit
+              </button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.getAll("b")).toEqual(["2", "3"]);
+      });
+
+      it("appends button name/value and doesn't overwrite inputs with same name (button)", async () => {
+        let actionSpy = jest.fn();
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <Form
+              method="post"
+              onSubmit={(e) => {
+                // jsdom doesn't handle submitter so we add it here
+                // See https://github.com/jsdom/jsdom/issues/3117
+                // @ts-expect-error
+                e.nativeEvent.submitter =
+                  e.currentTarget.querySelector("button");
+              }}
+            >
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button
+                name="b"
+                value="3"
+                onClick={(e) => {
+                  e.preventDefault();
+                  submit(e.currentTarget);
+                }}
+              >
+                Submit
+              </button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("a")).toBe("1");
+        expect(formData.getAll("b")).toEqual(["2", "3"]);
+      });
+    });
+
     describe("useFetcher(s)", () => {
       it("handles fetcher.load and fetcher.submit", async () => {
         let count = 0;
@@ -1326,6 +2452,93 @@ function testDomRouter(
         `);
       });
 
+      it("handles fetcher ?index params", async () => {
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/parent")}
+            hydrationData={{ loaderData: { parent: null, index: null } }}
+          >
+            <Route
+              path="/parent"
+              element={<Outlet />}
+              action={() => "PARENT ACTION"}
+              loader={() => "PARENT LOADER"}
+            >
+              <Route
+                index
+                element={<Index />}
+                action={() => "INDEX ACTION"}
+                loader={() => "INDEX LOADER"}
+              />
+            </Route>
+          </TestDataRouter>
+        );
+
+        function Index() {
+          let fetcher = useFetcher();
+
+          return (
+            <>
+              <p id="output">{fetcher.data}</p>
+              <button onClick={() => fetcher.load("/parent")}>
+                Load parent
+              </button>
+              <button onClick={() => fetcher.load("/parent?index")}>
+                Load index
+              </button>
+              <button onClick={() => fetcher.submit({})}>Submit empty</button>
+              <button
+                onClick={() =>
+                  fetcher.submit({}, { method: "get", action: "/parent" })
+                }
+              >
+                Submit parent get
+              </button>
+              <button
+                onClick={() =>
+                  fetcher.submit({}, { method: "get", action: "/parent?index" })
+                }
+              >
+                Submit index get
+              </button>
+              <button
+                onClick={() =>
+                  fetcher.submit({}, { method: "post", action: "/parent" })
+                }
+              >
+                Submit parent post
+              </button>
+              <button
+                onClick={() =>
+                  fetcher.submit(
+                    {},
+                    { method: "post", action: "/parent?index" }
+                  )
+                }
+              >
+                Submit index post
+              </button>
+            </>
+          );
+        }
+
+        async function clickAndAssert(btnText: string, expectedOutput: string) {
+          fireEvent.click(screen.getByText(btnText));
+          await waitFor(() => screen.getByText(new RegExp(expectedOutput)));
+          expect(getHtml(container.querySelector("#output"))).toContain(
+            expectedOutput
+          );
+        }
+
+        await clickAndAssert("Load parent", "PARENT LOADER");
+        await clickAndAssert("Load index", "INDEX LOADER");
+        await clickAndAssert("Submit empty", "INDEX LOADER");
+        await clickAndAssert("Submit parent get", "PARENT LOADER");
+        await clickAndAssert("Submit index get", "INDEX LOADER");
+        await clickAndAssert("Submit parent post", "PARENT ACTION");
+        await clickAndAssert("Submit index post", "INDEX ACTION");
+      });
+
       it("handles fetcher.load errors", async () => {
         let { container } = render(
           <TestDataRouter
@@ -1384,6 +2597,74 @@ function testDomRouter(
           </div>"
         `);
 
+        await waitFor(() => screen.getByText("Kaboom!"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom!
+            </p>
+          </div>"
+        `);
+      });
+
+      it("handles fetcher.load errors (defer)", async () => {
+        let dfd = createDeferred();
+        let { container } = render(
+          <TestDataRouter
+            window={getWindow("/")}
+            hydrationData={{ loaderData: { "0": null } }}
+          >
+            <Route
+              path="/"
+              element={<Comp />}
+              errorElement={<ErrorElement />}
+              loader={() => defer({ value: dfd.promise })}
+            />
+          </TestDataRouter>
+        );
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p>
+                {fetcher.state}
+                {fetcher.data ? JSON.stringify(fetcher.data.value) : null}
+              </p>
+              <button onClick={() => fetcher.load("/")}>load</button>
+            </>
+          );
+        }
+
+        function ErrorElement() {
+          let error = useRouteError();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              idle
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        fireEvent.click(screen.getByText("load"));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              loading
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        dfd.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("Kaboom!"));
         expect(getHtml(container)).toMatchInlineSnapshot(`
           "<div>
@@ -1707,8 +2988,8 @@ function testDomRouter(
       });
 
       it("show all fetchers via useFetchers and cleans up fetchers on unmount", async () => {
-        let dfd1 = defer();
-        let dfd2 = defer();
+        let dfd1 = createDeferred();
+        let dfd2 = createDeferred();
         let { container } = render(
           <TestDataRouter
             window={getWindow("/1")}
@@ -1975,8 +3256,10 @@ function testDomRouter(
           </p>"
         `);
 
-        fireEvent.click(screen.getByText("load fetcher"));
-        await waitFor(() => screen.getByText(/idle/));
+        await act(async () => {
+          fireEvent.click(screen.getByText("load fetcher"));
+          await waitFor(() => screen.getByText(/idle/));
+        });
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
@@ -1987,8 +3270,10 @@ function testDomRouter(
           </p>"
         `);
 
-        fireEvent.click(screen.getByText("submit"));
-        await waitFor(() => screen.getByText(/idle/));
+        await act(async () => {
+          fireEvent.click(screen.getByText("submit"));
+          await waitFor(() => screen.getByText(/idle/));
+        });
         expect(getHtml(container.querySelector("#output")))
           .toMatchInlineSnapshot(`
           "<p
@@ -2338,8 +3623,8 @@ function testDomRouter(
       });
 
       it("renders navigation errors on leaf elements", async () => {
-        let fooDefer = defer();
-        let barDefer = defer();
+        let fooDefer = createDeferred();
+        let barDefer = createDeferred();
 
         let { container } = render(
           <TestDataRouter
@@ -2375,8 +3660,10 @@ function testDomRouter(
             <div>
               <Link to="/foo">Link to Foo</Link>
               <Link to="/bar">Link to Bar</Link>
-              <p>{navigation.state}</p>
-              <Outlet />
+              <div id="output">
+                <p>{navigation.state}</p>
+                <Outlet />
+              </div>
             </div>
           );
         }
@@ -2398,88 +3685,61 @@ function testDomRouter(
           return <p>Bar Error:{error.message}</p>;
         }
 
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <div>
-              <a
-                href=\\"/foo\\"
-              >
-                Link to Foo
-              </a>
-              <a
-                href=\\"/bar\\"
-              >
-                Link to Bar
-              </a>
-              <p>
-                idle
-              </p>
-              <h1>
-                Foo:
-                hydrated from foo
-              </h1>
-            </div>
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo:
+              hydrated from foo
+            </h1>
           </div>"
         `);
 
         fireEvent.click(screen.getByText("Link to Bar"));
         barDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <div>
-              <a
-                href=\\"/foo\\"
-              >
-                Link to Foo
-              </a>
-              <a
-                href=\\"/bar\\"
-              >
-                Link to Bar
-              </a>
-              <p>
-                idle
-              </p>
-              <p>
-                Bar Error:
-                Kaboom!
-              </p>
-            </div>
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <p>
+              Bar Error:
+              Kaboom!
+            </p>
           </div>"
         `);
 
         fireEvent.click(screen.getByText("Link to Foo"));
         fooDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <div>
-              <a
-                href=\\"/foo\\"
-              >
-                Link to Foo
-              </a>
-              <a
-                href=\\"/bar\\"
-              >
-                Link to Bar
-              </a>
-              <p>
-                idle
-              </p>
-              <p>
-                Foo Error:
-                Kaboom!
-              </p>
-            </div>
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <p>
+              Foo Error:
+              Kaboom!
+            </p>
           </div>"
-         `);
+        `);
       });
 
       it("renders navigation errors on parent elements", async () => {
-        let fooDefer = defer();
-        let barDefer = defer();
+        let fooDefer = createDeferred();
+        let barDefer = createDeferred();
 
         let { container } = render(
           <TestDataRouter
@@ -2514,8 +3774,10 @@ function testDomRouter(
             <div>
               <Link to="/foo">Link to Foo</Link>
               <Link to="/bar">Link to Bar</Link>
-              <p>{navigation.state}</p>
-              <Outlet />
+              <div id="output">
+                <p>{navigation.state}</p>
+                <Outlet />
+              </div>
             </div>
           );
         }
@@ -2536,27 +3798,18 @@ function testDomRouter(
           return <h1>Bar:{data?.message}</h1>;
         }
 
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <div>
-              <a
-                href=\\"/foo\\"
-              >
-                Link to Foo
-              </a>
-              <a
-                href=\\"/bar\\"
-              >
-                Link to Bar
-              </a>
-              <p>
-                idle
-              </p>
-              <h1>
-                Foo:
-                hydrated from foo
-              </h1>
-            </div>
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo:
+              hydrated from foo
+            </h1>
           </div>"
         `);
 
@@ -2572,11 +3825,92 @@ function testDomRouter(
           </div>"
         `);
       });
+
+      // This test ensures that when manual routes are used, we add hasErrorBoundary
+      it("renders navigation errors on leaf elements (when using manual route objects)", async () => {
+        let barDefer = createDeferred();
+
+        let routes = [
+          {
+            path: "/",
+            element: <Layout />,
+            children: [
+              {
+                path: "foo",
+                element: <h1>Foo</h1>,
+              },
+              {
+                path: "bar",
+                loader: () => barDefer.promise,
+                element: <Bar />,
+                errorElement: <BarError />,
+              },
+            ],
+          },
+        ];
+
+        router = createTestRouter(routes, { window: getWindow("/foo") });
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Layout() {
+          let navigation = useNavigation();
+          return (
+            <div>
+              <Link to="/bar">Link to Bar</Link>
+              <div id="output">
+                <p>{navigation.state}</p>
+                <Outlet />
+              </div>
+            </div>
+          );
+        }
+
+        function Bar() {
+          let data = useLoaderData();
+          return <h1>Bar:{data?.message}</h1>;
+        }
+        function BarError() {
+          let error = useRouteError();
+          return <p>Bar Error:{error.message}</p>;
+        }
+
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>"
+        `);
+
+        fireEvent.click(screen.getByText("Link to Bar"));
+        barDefer.reject(new Error("Kaboom!"));
+        await waitFor(() => screen.getByText("idle"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id=\\"output\\"
+          >
+            <p>
+              idle
+            </p>
+            <p>
+              Bar Error:
+              Kaboom!
+            </p>
+          </div>"
+        `);
+      });
     });
   });
 }
 
-function defer() {
+function createDeferred() {
   let resolve: (val?: any) => Promise<void>;
   let reject: (error?: Error) => Promise<void>;
   let promise = new Promise((res, rej) => {

@@ -7,6 +7,8 @@ new: true
 
 This hook makes the data at any currently rendered route available anywhere in the tree. This is useful for components deep in the tree needing data from routes much farther up, as well as parent routes needing the data of child routes deeper in the tree.
 
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
 ```tsx
 import { useRouteLoaderData } from "react-router-dom";
 
@@ -16,26 +18,27 @@ function SomeComp() {
 }
 ```
 
-React Router stores data internally with deterministic, auto-generated route ids, but you can supply your own route id to make this hook much easier to work with.
+React Router stores data internally with deterministic, auto-generated route ids, but you can supply your own route id to make this hook much easier to work with. Consider a router with a route that defines an id:
 
 ```tsx [6]
-<DataBrowserRouter>
-  <Route
-    path="/"
-    loader={() => fetchUser()}
-    element={<Root />}
-    id="root"
-  >
-    <Route
-      path="jobs/$jobId"
-      loader={({ params }) => fetchJob(params.jobId)}
-      element={<Job />}
-    />
-  </Route>
-</DataBrowserRouter>
+createBrowserRouter([
+  {
+    path: "/",
+    loader: () => fetchUser(),
+    element: <Root />,
+    id: "root",
+    children: [
+      {
+        path: "jobs/:jobId",
+        loader: loadJob,
+        element: <JobListing />,
+      },
+    ],
+  },
+]);
 ```
 
-Now the user is available anywhere in the app.
+Now the user is available anywhere else in the app.
 
 ```tsx
 const user = useRouteLoaderData("root");

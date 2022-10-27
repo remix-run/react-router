@@ -1,21 +1,23 @@
 import * as React from "react";
-import {
-  BackHandler,
+import type {
   GestureResponderEvent,
-  Linking,
-  TouchableHighlight,
   TouchableHighlightProps,
 } from "react-native";
-import {
-  MemoryRouter,
+import { BackHandler, Linking, TouchableHighlight } from "react-native";
+import type {
+  To,
   MemoryRouterProps,
   NavigateOptions,
+  RelativeRoutingType,
+  Hooks,
+} from "react-router";
+import {
+  MemoryRouter,
   UNSAFE_reactRouterContexts,
   UNSAFE_createReactRouterContexts,
   UNSAFE_createReactRouterEnvironment,
   createScopedMemoryRouterEnvironment as baseCreateScopedMemoryRouterEnvironment,
 } from "react-router";
-import type { To, Hooks } from "react-router";
 
 import URLSearchParams from "@ungap/url-search-params";
 
@@ -27,11 +29,12 @@ import URLSearchParams from "@ungap/url-search-params";
 export type {
   ActionFunction,
   ActionFunctionArgs,
-  DataMemoryRouterProps,
+  AwaitProps,
   DataRouteMatch,
-  DeferredProps,
+  DataRouteObject,
   Fetcher,
   Hash,
+  IndexRouteObject,
   IndexRouteProps,
   JsonFunction,
   LayoutRouteProps,
@@ -44,6 +47,7 @@ export type {
   NavigateProps,
   Navigation,
   Navigator,
+  NonIndexRouteObject,
   OutletProps,
   Params,
   ParamParseKey,
@@ -53,29 +57,33 @@ export type {
   PathPattern,
   PathRouteProps,
   RedirectFunction,
+  RelativeRoutingType,
   RouteMatch,
   RouteObject,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
   To,
 } from "react-router";
 export {
-  DataMemoryRouter,
-  Deferred,
+  AbortedDeferredError,
+  Await,
   MemoryRouter,
   Navigate,
   NavigationType,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
+  createMemoryRouter,
   createPath,
   createRoutesFromChildren,
-  deferred,
-  isDeferredError,
+  createRoutesFromElements,
+  defer,
   isRouteErrorResponse,
   generatePath,
   json,
@@ -86,7 +94,8 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
-  useDeferredData,
+  useAsyncError,
+  useAsyncValue,
   useHref,
   useInRouterContext,
   useLoaderData,
@@ -121,17 +130,13 @@ export {
 
 /** @internal */
 export {
-  UNSAFE_DataRouter,
-  UNSAFE_DataRouterProvider,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
   UNSAFE_DataStaticRouterContext,
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
-  UNSAFE_createReactRouterContexts,
-  UNSAFE_createReactRouterEnvironment,
-  UNSAFE_reactRouterContexts,
+  UNSAFE_enhanceManualRouteObjects,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,6 +155,7 @@ export function NativeRouter(props: NativeRouterProps) {
 export interface LinkProps extends TouchableHighlightProps {
   children?: React.ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
+  relative?: RelativeRoutingType;
   replace?: boolean;
   state?: any;
   to: To;
@@ -158,14 +164,18 @@ export interface LinkProps extends TouchableHighlightProps {
 function createLink(
   useLinkPressHandler: ReturnType<typeof createLinkPressHandlerHook>
 ) {
+  /**
+   * A <TouchableHighlight> that navigates to a different URL when touched.
+   */
   return function Link({
     onPress,
+    relative,
     replace = false,
     state,
     to,
     ...rest
   }: LinkProps) {
-    let internalOnPress = useLinkPressHandler(to, { replace, state });
+    let internalOnPress = useLinkPressHandler(to, { replace, state, relative });
     function handlePress(event: GestureResponderEvent) {
       if (onPress) onPress(event);
       if (!event.defaultPrevented) {
@@ -185,24 +195,34 @@ const HardwareBackPressEventType = "hardwareBackPress";
 const URLEventType = "url";
 
 function createLinkPressHandlerHook({ useNavigate }: Hooks) {
+  /**
+   * Handles the press behavior for router `<Link>` components. This is useful if
+   * you need to create custom `<Link>` components with the same press behavior we
+   * use in our exported `<Link>`.
+   */
   return function useLinkPressHandler(
     to: To,
     {
       replace,
       state,
+      relative,
     }: {
       replace?: boolean;
       state?: any;
+      relative?: RelativeRoutingType;
     } = {}
   ): (event: GestureResponderEvent) => void {
     let navigate = useNavigate();
     return function handlePress() {
-      navigate(to, { replace, state });
+      navigate(to, { replace, state, relative });
     };
   };
 }
 
 function createHardwareBackButtonHook() {
+  /**
+   * Enables support for the hardware back button on Android.
+   */
   return function useHardwareBackButton() {
     React.useEffect(() => {
       function handleHardwardBackPress() {
@@ -232,6 +252,10 @@ function createHardwareBackButtonHook() {
 }
 
 function createDeepLinkingHook({ useNavigate }: Hooks) {
+  /**
+   * Enables deep linking, both on the initial app launch and for
+   * subsequent incoming links.
+   */
   return function useDeepLinking() {
     let navigate = useNavigate();
 
@@ -270,6 +294,10 @@ function trimScheme(url: string) {
 }
 
 function createSearchParamsHook({ useNavigate, useLocation }: Hooks) {
+  /**
+   * A convenient wrapper for accessing individual query parameters via the
+   * URLSearchParams interface.
+   */
   return function useSearchParams(
     defaultInit?: URLSearchParamsInit
   ): [URLSearchParams, SetURLSearchParams] {

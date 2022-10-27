@@ -7,6 +7,8 @@ new: true
 
 Inside of an [`errorElement`][errorelement], this hooks returns anything thrown during an action, loader, or rendering. Note that thrown responses have special treatment, see [`isRouteErrorResponse`][isrouteerrorresponse] for more information.
 
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
 ```jsx
 function ErrorBoundary() {
   const error = useRouteError();
@@ -32,4 +34,5 @@ function ErrorBoundary() {
 ```
 
 [errorelement]: ../route/error-element
-[isrouteerrorresponse]: ../fetch/is-route-error-response
+[isrouteerrorresponse]: ../utils/is-route-error-response
+[pickingarouter]: ../routers/picking-a-router

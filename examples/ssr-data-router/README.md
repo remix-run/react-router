@@ -11,7 +11,7 @@ With SSR, the server renders your app and sends real HTML to the browser instead
 
 This example contains a server (see [server.js](server.js)) that can run in both development and production modes.
 
-In the browser entry point (see [src/entry.client.tsx](src/entry.client.tsx)), we use React Router like we would traditionally do in a purely client-side app and render a `<DataBrowserRouter>` to provide routing context to the rest of the app. The main difference is that instead of using `ReactDOM.render()` to render the app, since the HTML was already sent by the server, all we need is `ReactDOM.hydrate()`.
+In the browser entry point (see [src/entry.client.tsx](src/entry.client.tsx)), we use React Router like we would traditionally do in a purely client-side app and render a `<DataBrowserRouter>` to provide routing context to the rest of the app. The main difference is that instead of using `ReactDOM.createRoot(el).render()` to render the app, since the HTML was already sent by the server, all we need is `ReactDOM.hydrateRoot()`.
 
 On the server (see [src/entry.server.tsx](src/entry.server.tsx)), we create a static request handler using `createStaticHandler` and query for the incoming `Request` we get from Express (note that we convert the Express request to a Web Fetch Request). Once the router is finished with data loading, we use React Router's `<unstable_DataStaticRouter>` to render the app in the correct state.
 

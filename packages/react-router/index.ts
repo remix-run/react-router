@@ -1,8 +1,8 @@
 import type {
   ActionFunction,
   ActionFunctionArgs,
-  DataRouteMatch,
   Fetcher,
+  HydrationState,
   JsonFunction,
   LoaderFunction,
   LoaderFunctionArgs,
@@ -14,17 +14,19 @@ import type {
   PathMatch,
   PathPattern,
   RedirectFunction,
-  RouteMatch,
-  RouteObject,
+  Router as RemixRouter,
   ShouldRevalidateFunction,
   To,
+  InitialEntry,
 } from "@remix-run/router";
 import {
+  AbortedDeferredError,
   Action as NavigationType,
+  createMemoryHistory,
   createPath,
-  deferred,
+  createRouter,
+  defer,
   generatePath,
-  isDeferredError,
   isRouteErrorResponse,
   json,
   matchPath,
@@ -34,9 +36,8 @@ import {
   resolvePath,
 } from "@remix-run/router";
 
-import {
-  DataMemoryRouterProps,
-  DeferredProps,
+import type {
+  AwaitProps,
   MemoryRouterProps,
   NavigateProps,
   OutletProps,
@@ -46,18 +47,29 @@ import {
   IndexRouteProps,
   RouterProps,
   RoutesProps,
-  createComponents,
+  RouterProviderProps,
 } from "./lib/components";
-import { createRoutesFromChildren } from "./lib/components";
+import { createComponents } from "./lib/components";
 import {
+  enhanceManualRouteObjects,
+  createRoutesFromChildren,
+} from "./lib/components";
+import type {
+  DataRouteMatch,
+  DataRouteObject,
+  IndexRouteObject,
   Navigator,
   NavigateOptions,
-  createReactRouterContexts,
+  NonIndexRouteObject,
+  RouteMatch,
+  RouteObject,
+  RelativeRoutingType,
   ReactRouterContexts,
-  reactRouterContexts,
 } from "./lib/context";
+import { reactRouterContexts, createReactRouterContexts } from "./lib/context";
 import { DataStaticRouterContext } from "./lib/context";
-import { createHooks, Hooks, NavigateFunction } from "./lib/hooks";
+import type { Hooks, NavigateFunction } from "./lib/hooks";
+import { createHooks } from "./lib/hooks";
 
 function createReactRouterEnvironment(contexts = reactRouterContexts) {
   const hooks = createHooks(contexts);
@@ -82,35 +94,66 @@ export function createScopedMemoryRouterEnvironment(
     useInRouterContext,
     useLocation,
     useMatch,
-    useNavigate,
     useNavigationType,
+    useNavigate,
     useOutlet,
     useOutletContext,
     useParams,
     useResolvedPath,
     useRoutes,
+    useActionData,
+    useAsyncError,
+    useAsyncValue,
+    useLoaderData,
+    useMatches,
+    useNavigation,
+    useRevalidator,
+    useRouteError,
+    useRouteLoaderData,
   } = hooks;
-  const { MemoryRouter, Navigate, Outlet, Route, Routes, renderMatches } =
-    components;
+
+  const {
+    renderMatches,
+    Await,
+    MemoryRouter,
+    Navigate,
+    Outlet,
+    Route,
+    Router,
+    RouterProvider,
+    Routes,
+  } = components;
 
   return {
     useHref,
     useInRouterContext,
     useLocation,
     useMatch,
-    useNavigate,
     useNavigationType,
+    useNavigate,
     useOutlet,
     useOutletContext,
     useParams,
     useResolvedPath,
     useRoutes,
+    useActionData,
+    useAsyncError,
+    useAsyncValue,
+    useLoaderData,
+    useMatches,
+    useNavigation,
+    useRevalidator,
+    useRouteError,
+    useRouteLoaderData,
+    renderMatches,
+    Await,
     MemoryRouter,
     Navigate,
     Outlet,
     Route,
+    Router,
+    RouterProvider,
     Routes,
-    renderMatches,
     UNSAFE_NavigationContext: contexts.NavigationContext,
     UNSAFE_LocationContext: contexts.LocationContext,
     UNSAFE_RouteContext: contexts.RouteContext,
@@ -128,11 +171,12 @@ type Search = string;
 export type {
   ActionFunction,
   ActionFunctionArgs,
-  DataMemoryRouterProps,
+  AwaitProps,
   DataRouteMatch,
-  DeferredProps,
+  DataRouteObject,
   Fetcher,
   Hash,
+  IndexRouteObject,
   IndexRouteProps,
   JsonFunction,
   LayoutRouteProps,
@@ -145,6 +189,7 @@ export type {
   NavigateProps,
   Navigation,
   Navigator,
+  NonIndexRouteObject,
   OutletProps,
   Params,
   ParamParseKey,
@@ -154,10 +199,12 @@ export type {
   PathPattern,
   PathRouteProps,
   RedirectFunction,
+  RelativeRoutingType,
   RouteMatch,
   RouteObject,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
@@ -168,7 +215,8 @@ export type {
 const {
   hooks: {
     useActionData,
-    useDeferredData,
+    useAsyncError,
+    useAsyncValue,
     useHref,
     useInRouterContext,
     useLoaderData,
@@ -188,34 +236,33 @@ const {
     useRoutes,
   },
   components: {
-    DataMemoryRouter,
-    Deferred,
+    Await,
     MemoryRouter,
     Navigate,
     Outlet,
     Route,
     Router,
+    RouterProvider,
     Routes,
     renderMatches,
-    DataRouter,
-    DataRouterProvider,
   },
 } = createReactRouterEnvironment();
 
 export {
-  DataMemoryRouter,
-  Deferred,
+  AbortedDeferredError,
+  Await,
   MemoryRouter,
   Navigate,
   NavigationType,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
   createPath,
   createRoutesFromChildren,
-  deferred,
-  isDeferredError,
+  createRoutesFromChildren as createRoutesFromElements,
+  defer,
   isRouteErrorResponse,
   generatePath,
   json,
@@ -226,7 +273,8 @@ export {
   renderMatches,
   resolvePath,
   useActionData,
-  useDeferredData,
+  useAsyncError,
+  useAsyncValue,
   useHref,
   useInRouterContext,
   useLoaderData,
@@ -245,6 +293,26 @@ export {
   useRouteLoaderData,
   useRoutes,
 };
+
+export function createMemoryRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    hydrationData?: HydrationState;
+    initialEntries?: InitialEntry[];
+    initialIndex?: number;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    history: createMemoryHistory({
+      initialEntries: opts?.initialEntries,
+      initialIndex: opts?.initialIndex,
+    }),
+    hydrationData: opts?.hydrationData,
+    routes: enhanceManualRouteObjects(routes),
+  }).initialize();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
@@ -268,14 +336,13 @@ const {
   DataRouterStateContext: DefaultDataRouterStateContext,
 } = reactRouterContexts;
 export {
-  DataRouter as UNSAFE_DataRouter,
-  DataRouterProvider as UNSAFE_DataRouterProvider,
   DefaultNavigationContext as UNSAFE_NavigationContext,
   DefaultLocationContext as UNSAFE_LocationContext,
   DefaultRouteContext as UNSAFE_RouteContext,
   DefaultDataRouterContext as UNSAFE_DataRouterContext,
   DefaultDataRouterStateContext as UNSAFE_DataRouterStateContext,
   DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
+  enhanceManualRouteObjects as UNSAFE_enhanceManualRouteObjects,
   createReactRouterEnvironment as UNSAFE_createReactRouterEnvironment,
   createReactRouterContexts as UNSAFE_createReactRouterContexts,
   reactRouterContexts as UNSAFE_reactRouterContexts,

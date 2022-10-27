@@ -26,7 +26,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["history", "@remix-run/router", "react"],
+      external: ["@remix-run/router", "react"],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -60,7 +60,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["history", "@remix-run/router", "react"],
+      external: ["@remix-run/router", "react"],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -93,7 +93,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["history", "@remix-run/router", "react"],
+      external: ["@remix-run/router", "react"],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -139,13 +139,12 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
         globals: {
-          history: "HistoryLibrary",
-          "@remix-run/router": "Router",
+          "@remix-run/router": "RemixRouter",
           react: "React",
         },
         name: "ReactRouter",
       },
-      external: ["history", "@remix-run/router", "react"],
+      external: ["@remix-run/router", "react"],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -173,13 +172,12 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
         globals: {
-          history: "HistoryLibrary",
-          "@remix-run/router": "Router",
+          "@remix-run/router": "RemixRouter",
           react: "React",
         },
         name: "ReactRouter",
       },
-      external: ["history", "@remix-run/router", "react"],
+      external: ["@remix-run/router", "react"],
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({

@@ -1,134 +1,44 @@
-# react-router
+# `react-router`
 
-## 6.4.0-pre.10
-
-### Patch Changes
-
-- feat: Deferred API Updates (#9070)
-
-  - Removes `<Suspense>` from inside `<Deferred>`, requires users to render their own suspense boundaries
-  - Updates `Deferred` to use a true error boundary to catch render errors as well as data errors
-  - Support array and single promise usages
-    - `return deferred([ await critical(), lazy() ])`
-    - `return deferred(lazy())`
-  - Remove `Deferrable`/`ResolvedDeferrable` in favor of raw `Promise`'s and `Awaited`
-  - Remove generics from `useDeferredData` until `useLoaderData` generic is decided in 6.5
-
-- Updated dependencies
-  - @remix-run/router@0.2.0-pre.5
-
-## 6.4.0-pre.9
+## 6.4.2
 
 ### Patch Changes
 
-- Feat: adds `deferred` support to data routers (#9002)
+- Fix `IndexRouteObject` and `NonIndexRouteObject` types to make `hasErrorElement` optional ([#9394](https://github.com/remix-run/react-router/pull/9394))
+- Enhance console error messages for invalid usage of data router hooks ([#9311](https://github.com/remix-run/react-router/pull/9311))
+- If an index route has children, it will result in a runtime error. We have strengthened our `RouteObject`/`RouteProps` types to surface the error in TypeScript. ([#9366](https://github.com/remix-run/react-router/pull/9366))
+- Updated dependencies:
+  - `@remix-run/router@1.0.2`
 
-  Returning a `deferred` from a `loader` allows you to separate _critical_ loader data that you want to wait for prior to rendering the destination page from _non-critical_ data that you are OK to show a spinner for until it loads.
-
-  ```jsx
-  // In your route loader, return a deferred() and choose per-key whether to
-  // await the promise or not.  As soon as the awaited promises resolve, the
-  // page will be rendered.
-  function loader() {
-    return deferred({
-      critical: await getCriticalData(),
-      lazy: getLazyData(),
-    });
-  };
-
-  // In your route element, grab the values from useLoaderData and render them
-  // with <Deferred>
-  function DeferredPage() {
-    let data = useLoaderData();
-    return (
-      <>
-        <p>Critical Data: {data.critical}</p>
-        <Suspense fallback={<p>Loading...</p>}>
-          <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
-            <RenderDeferredData />
-          </Deferred>
-        </Suspense>
-      </>
-    );
-  }
-
-  // Use separate components to render the data once it resolves, and access it
-  // via the useDeferredData hook
-  function RenderDeferredData() {
-    let data = useDeferredData();
-    return <p>Lazy: {data}</p>;
-  }
-
-  function RenderDeferredError() {
-    let data = useRouteError();
-    return <p>Error! {data.message} {data.stack}</p>;
-  }
-  ```
-
-  If you want to skip the separate components, you can use the Render Props
-  pattern and handle the rendering of the deferred data inline:
-
-  ```jsx
-  function DeferredPage() {
-    let data = useLoaderData();
-    return (
-      <>
-        <p>Critical Data: {data.critical}</p>
-        <Suspense fallback={<p>Loading...</p>}>
-          <Deferred value={data.lazy} errorElement={<RenderDeferredError />}>
-            {(data) => <p>{data}</p>}
-          </Deferred>
-        </Suspense>
-      </>
-    );
-  }
-  ```
-
-- feat: add basename support for data routers (#9026)
-- fix: Fix trailing slash behavior on pathless routing when using a basename (#9045)
-- Updated dependencies
-  - @remix-run/router@0.2.0-pre.4
-
-## 6.4.0-pre.8
+## 6.4.1
 
 ### Patch Changes
 
-- fix: Make path resolution trailing slash agnostic (#8861)
-- fix: Additional logic fixed for relative navigation from index/pathless layout routes (#8985)
-- fix: export ActionFunctionArgs/LoaderFunctionArgs up through router packages (#8975)
-- Updated dependencies
-  - @remix-run/router@0.2.0-pre.3
+- Preserve state from `initialEntries` ([#9288](https://github.com/remix-run/react-router/pull/9288))
+- Updated dependencies:
+  - `@remix-run/router@1.0.1`
 
-## 6.4.0-pre.7
+## 6.4.0
 
-### Minor Changes
+Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs over from Remix. Here's a quick high level overview, but it's recommended you go check out the [docs][rr-docs], especially the [feature overview][rr-feature-overview] and the [tutorial][rr-tutorial].
 
-- Add support for functional updates in `useSearchParams` (similar to the `useState` callback signature) (#8955)
+**New APIs**
 
-### Patch Changes
+- Create your router with `createMemoryRouter`
+- Render your router with `<RouterProvider>`
+- Load data with a Route `loader` and mutate with a Route `action`
+- Handle errors with Route `errorElement`
+- Defer non-critical data with `defer` and `Await`
 
-- Properly handle relative navigation from index/pathless routes (#8954)
-- Fix issues building with webpack + React 17 (#8938)
-- Updated dependencies
-  - `@remix-run/router@0.2.0-pre.2`
+**Bug Fixes**
 
-## 6.4.0-pre.6
+- Path resolution is now trailing slash agnostic (#8861)
+- `useLocation` returns the scoped location inside a `<Routes location>` component (#9094)
 
-## 6.4.0-pre.5
+**Updated Dependencies**
 
-### Patch Changes
+- `@remix-run/router@1.0.0`
 
-- Fix broken require for CJS builds
-
-## 6.4.0-pre.4
-
-### Patch Changes
-
-- Fix missing `dist` files
-
-## 6.4.0-pre.3
-
-### Patch Changes
-
-- Make `fallbackElement` optional and change type to `ReactNode` (type changes only) (#8896)
-- Properly trigger error boundaries on 404 routes
+[rr-docs]: https://reactrouter.com/
+[rr-feature-overview]: https://reactrouter.com/en/6.4.0/start/overview
+[rr-tutorial]: https://reactrouter.com/en/6.4.0/start/tutorial

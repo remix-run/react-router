@@ -1,40 +1,52 @@
 import * as React from "react";
-import {
-  isRouteErrorResponse,
+import type {
   Location,
   ParamParseKey,
   Params,
   Path,
   PathMatch,
   PathPattern,
-  RouteMatch,
-  RouteObject,
   Router as RemixRouter,
   To,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
   invariant,
+  isRouteErrorResponse,
   joinPaths,
   matchPath,
   matchRoutes,
   parsePath,
   resolveTo,
   warning,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
 } from "@remix-run/router";
 
-import {
+import type {
   NavigateOptions,
   RouteContextObject,
-  DataStaticRouterContext,
+  RouteMatch,
+  RouteObject,
+  DataRouteMatch,
+  RelativeRoutingType,
   ReactRouterContexts,
 } from "./context";
+import { DataStaticRouterContext } from "./context";
 
 function createHrefHook(contexts: ReactRouterContexts) {
   const useInRouterContext = createInRouterContextHook(contexts);
   const useResolvedPath = createResolvedPathHook(contexts);
 
-  return function useHref(to: To): string {
+  /**
+   * Returns the full href for the given "to" value. This is useful for building
+   * custom links that are also accessible and preserve right-click behavior.
+   *
+   * @see https://reactrouter.com/docs/en/v6/hooks/use-href
+   */
+  return function useHref(
+    to: To,
+    { relative }: { relative?: RelativeRoutingType } = {}
+  ): string {
     invariant(
       useInRouterContext(),
       // TODO: This error is probably because they somehow have 2 versions of the
@@ -43,7 +55,7 @@ function createHrefHook(contexts: ReactRouterContexts) {
     );
 
     let { basename, navigator } = React.useContext(contexts.NavigationContext);
-    let { hash, pathname, search } = useResolvedPath(to);
+    let { hash, pathname, search } = useResolvedPath(to, { relative });
 
     let joinedPathname = pathname;
 
@@ -60,6 +72,11 @@ function createHrefHook(contexts: ReactRouterContexts) {
   };
 }
 
+/**
+ * Returns true if this component is a descendant of a <Router>.
+ *
+ * @see https://reactrouter.com/docs/en/v6/hooks/use-in-router-context
+ */
 function createInRouterContextHook({ LocationContext }: ReactRouterContexts) {
   return function useInRouterContext(): boolean {
     return React.useContext(LocationContext) != null;
@@ -69,6 +86,16 @@ function createInRouterContextHook({ LocationContext }: ReactRouterContexts) {
 function createLocationHook(contexts: ReactRouterContexts) {
   const useInRouterContext = createInRouterContextHook(contexts);
 
+  /**
+   * Returns the current location object, which represents the current URL in web
+   * browsers.
+   *
+   * Note: If you're using this it may mean you're doing some of your own
+   * "routing" in your app, and we'd like to know what your use case is. We may
+   * be able to provide something higher-level to better suit your needs.
+   *
+   * @see https://reactrouter.com/docs/en/v6/hooks/use-location
+   */
   return function useLocation(): Location {
     invariant(
       useInRouterContext(),
@@ -81,6 +108,12 @@ function createLocationHook(contexts: ReactRouterContexts) {
 }
 
 function createNavigationTypeHook({ LocationContext }: ReactRouterContexts) {
+  /**
+   * Returns the current navigation action which describes how the router came to
+   * the current location, either by a pop, push, or replace on the history stack.
+   *
+   * @see https://reactrouter.com/docs/en/v6/hooks/use-navigation-type
+   */
   return function useNavigationType(): NavigationType {
     return React.useContext(LocationContext).navigationType;
   };
@@ -90,6 +123,13 @@ function createMatchHook(contexts: ReactRouterContexts) {
   const useInRouterContext = createInRouterContextHook(contexts);
   const useLocation = createLocationHook(contexts);
 
+  /**
+   * Returns true if the URL for the given "to" value matches the current URL.
+   * This is useful for components that need to know "active" state, e.g.
+   * <NavLink>.
+   *
+   * @see https://reactrouter.com/docs/en/v6/hooks/use-match
+   */
   return function useMatch<
     ParamKey extends ParamParseKey<Path>,
     Path extends string
@@ -117,40 +157,16 @@ export interface NavigateFunction {
   (delta: number): void;
 }
 
-/**
- * When processing relative navigation we want to ignore ancestor routes that
- * do not contribute to the path, such that index/pathless layout routes don't
- * interfere.
- *
- * For example, when moving a route element into an index route and/or a
- * pathless layout route, relative link behavior contained within should stay
- * the same.  Both of the following examples should link back to the root:
- *
- *   <Route path="/">
- *     <Route path="accounts" element={<Link to=".."}>
- *   </Route>
- *
- *   <Route path="/">
- *     <Route path="accounts">
- *       <Route element={<AccountsLayout />}>       // <-- Does not contribute
- *         <Route index element={<Link to=".."} />  // <-- Does not contribute
- *       </Route
- *     </Route>
- *   </Route>
- */
-function getPathContributingMatches(matches: RouteMatch[]) {
-  return matches.filter(
-    (match, index) =>
-      index === 0 ||
-      (!match.route.index &&
-        match.pathnameBase !== matches[index - 1].pathnameBase)
-  );
-}
-
 function createNavigateHook(contexts: ReactRouterContexts) {
   const useInRouterContext = createInRouterContextHook(contexts);
   const useLocation = createLocationHook(contexts);
 
+  /**
+   * Returns an imperative method for changing the location. Used by <Link>s, but
+   * may also be used by other elements to change the location.
+   *
+   * @see https://reactrouter.com/docs/en/v6/hooks/use-navigate
+   */
   return function useNavigate(): NavigateFunction {
     invariant(
       useInRouterContext(),
@@ -217,10 +233,27 @@ function createNavigateHook(contexts: ReactRouterContexts) {
   };
 }
 
+function createOutletContextHook({ OutletContext }: ReactRouterContexts) {
+  /**
+   * Returns the context (if provided) for the child route at this level of the route
+   * hierarchy.
+   * @see https://reactrouter.com/docs/en/v6/hooks/use-outlet-context
+   */
+  return function useOutletContext<Context = unknown>(): Context {
+    return React.useContext(OutletContext) as Context;
+  };
+}
+
 function createOutletHook({
   OutletContext,
   RouteContext,
 }: ReactRouterContexts) {
+  /**
+   * Returns the element for the child route at this level of the route
+   * hierarchy. Used internally by <Outlet> to render child routes.
+   *
+   * @see https://reactrouter.com/docs/en/v6/hooks/use-outlet
+   */
   return function useOutlet(context?: unknown): React.ReactElement | null {
     let outlet = React.useContext(RouteContext).outlet;
     if (outlet) {
@@ -234,13 +267,13 @@ function createOutletHook({
   };
 }
 
-function createOutletContextHook({ OutletContext }: ReactRouterContexts) {
-  return function useOutletContext<Context = unknown>(): Context {
-    return React.useContext(OutletContext) as Context;
-  };
-}
-
 function createParamsHook({ RouteContext }: ReactRouterContexts) {
+  /**
+   * Returns an object of key/value pairs of the dynamic params from the current
+   * URL that were matched by the route path.
+   *
+   * @see https://reactrouter.com/docs/en/v6/hooks/use-params
+   */
   return function useParams<
     ParamsOrKey extends string | Record<string, string | undefined> = string
   >(): Readonly<
@@ -255,7 +288,15 @@ function createParamsHook({ RouteContext }: ReactRouterContexts) {
 function createResolvedPathHook(contexts: ReactRouterContexts) {
   const useLocation = createLocationHook(contexts);
 
-  return function useResolvedPath(to: To): Path {
+  /**
+   * Resolves the pathname of the given `to` value against the current location.
+   *
+   * @see https://reactrouter.com/docs/en/v6/hooks/use-resolved-path
+   */
+  return function useResolvedPath(
+    to: To,
+    { relative }: { relative?: RelativeRoutingType } = {}
+  ): Path {
     let { matches } = React.useContext(contexts.RouteContext);
     let { pathname: locationPathname } = useLocation();
 
@@ -264,8 +305,14 @@ function createResolvedPathHook(contexts: ReactRouterContexts) {
     );
 
     return React.useMemo(
-      () => resolveTo(to, JSON.parse(routePathnamesJson), locationPathname),
-      [to, routePathnamesJson, locationPathname]
+      () =>
+        resolveTo(
+          to,
+          JSON.parse(routePathnamesJson),
+          locationPathname,
+          relative === "path"
+        ),
+      [to, routePathnamesJson, locationPathname, relative]
     );
   };
 }
@@ -275,6 +322,14 @@ function createRoutesHook(contexts: ReactRouterContexts) {
   const useLocation = createLocationHook(contexts);
   const _renderMatches = _createRenderMatches(contexts);
 
+  /**
+   * Returns the element of the route that matched the current location, prepared
+   * with the correct context to render the remainder of the route tree. Route
+   * elements in the tree must render an <Outlet> to render their child route's
+   * element.
+   *
+   * @see https://reactrouter.com/docs/en/v6/hooks/use-routes
+   */
   return function useRoutes(
     routes: RouteObject[],
     locationArg?: Partial<Location> | string
@@ -286,7 +341,7 @@ function createRoutesHook(contexts: ReactRouterContexts) {
       `useRoutes() may be used only in the context of a <Router> component.`
     );
 
-    let dataRouterStateContextValue = React.useContext(
+    let dataRouterStateContext = React.useContext(
       contexts.DataRouterStateContext
     );
     let { matches: parentMatches } = React.useContext(contexts.RouteContext);
@@ -374,7 +429,7 @@ function createRoutesHook(contexts: ReactRouterContexts) {
       );
     }
 
-    return _renderMatches(
+    let renderedMatches = _renderMatches(
       matches &&
         matches.map((match) =>
           Object.assign({}, match, {
@@ -387,8 +442,33 @@ function createRoutesHook(contexts: ReactRouterContexts) {
           })
         ),
       parentMatches,
-      dataRouterStateContextValue || undefined
+      dataRouterStateContext || undefined
     );
+
+    // When a user passes in a `locationArg`, the associated routes need to
+    // be wrapped in a new `LocationContext.Provider` in order for `useLocation`
+    // to use the scoped location instead of the global location.
+    if (locationArg && renderedMatches) {
+      return (
+        <contexts.LocationContext.Provider
+          value={{
+            location: {
+              pathname: "/",
+              search: "",
+              hash: "",
+              state: null,
+              key: "default",
+              ...location,
+            },
+            navigationType: NavigationType.Pop,
+          }}
+        >
+          {renderedMatches}
+        </contexts.LocationContext.Provider>
+      );
+    }
+
+    return renderedMatches;
   };
 }
 
@@ -543,7 +623,7 @@ function _createRenderMatches(contexts: ReactRouterContexts) {
       if (dataRouterState?.errors) {
         // Don't bail if we have data router errors so we can render them in the
         // boundary.  Use the pre-matched (or shimmed) matches
-        matches = dataRouterState.matches;
+        matches = dataRouterState.matches as DataRouteMatch[];
       } else {
         return null;
       }
@@ -607,6 +687,10 @@ function _createRenderMatches(contexts: ReactRouterContexts) {
 }
 
 enum DataRouterHook {
+  UseRevalidator = "useRevalidator",
+}
+
+enum DataRouterStateHook {
   UseLoaderData = "useLoaderData",
   UseActionData = "useActionData",
   UseRouteError = "useRouteError",
@@ -616,15 +700,28 @@ enum DataRouterHook {
   UseRevalidator = "useRevalidator",
 }
 
+function getDataRouterConsoleError(
+  hookName: DataRouterHook | DataRouterStateHook
+) {
+  return `${hookName} must be used within a data router.  See https://reactrouter.com/en/main/routers/picking-a-router.`;
+}
+
+function createDataRouterContextHook({
+  DataRouterContext,
+}: ReactRouterContexts) {
+  return function useDataRouterContext(hookName: DataRouterHook) {
+    let ctx = React.useContext(DataRouterContext);
+    invariant(ctx, getDataRouterConsoleError(hookName));
+    return ctx;
+  };
+}
+
 function createDataRouterStateHook({
   DataRouterStateContext,
 }: ReactRouterContexts) {
-  return function useDataRouterState(hookName: DataRouterHook) {
+  return function useDataRouterState(hookName: DataRouterStateHook) {
     let state = React.useContext(DataRouterStateContext);
-    invariant(
-      state,
-      `${hookName} must be used within a DataRouterStateContext`
-    );
+    invariant(state, getDataRouterConsoleError(hookName));
     return state;
   };
 }
@@ -632,22 +729,27 @@ function createDataRouterStateHook({
 function createNavigationHook(contexts: ReactRouterContexts) {
   const useDataRouterState = createDataRouterStateHook(contexts);
 
+  /**
+   * Returns the current navigation, defaulting to an "idle" navigation when
+   * no navigation is in progress
+   */
   return function useNavigation() {
-    let state = useDataRouterState(DataRouterHook.UseNavigation);
+    let state = useDataRouterState(DataRouterStateHook.UseNavigation);
     return state.navigation;
   };
 }
 
 function createRevalidatorHook(contexts: ReactRouterContexts) {
+  const useDataRouterContext = createDataRouterContextHook(contexts);
   const useDataRouterState = createDataRouterStateHook(contexts);
 
+  /**
+   * Returns a revalidate function for manually triggering revalidation, as well
+   * as the current state of any manual revalidations
+   */
   return function useRevalidator() {
-    let dataRouterContext = React.useContext(contexts.DataRouterContext);
-    invariant(
-      dataRouterContext,
-      `useRevalidator must be used within a DataRouterContext`
-    );
-    let state = useDataRouterState(DataRouterHook.UseRevalidator);
+    let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
+    let state = useDataRouterState(DataRouterStateHook.UseRevalidator);
     return {
       revalidate: dataRouterContext.router.revalidate,
       state: state.revalidation,
@@ -658,8 +760,14 @@ function createRevalidatorHook(contexts: ReactRouterContexts) {
 function createMatchesHook(contexts: ReactRouterContexts) {
   const useDataRouterState = createDataRouterStateHook(contexts);
 
+  /**
+   * Returns the active route matches, useful for accessing loaderData for
+   * parent/child routes or the route "handle" property
+   */
   return function useMatches() {
-    let { matches, loaderData } = useDataRouterState(DataRouterHook.UseMatches);
+    let { matches, loaderData } = useDataRouterState(
+      DataRouterStateHook.UseMatches
+    );
     return React.useMemo(
       () =>
         matches.map((match) => {
@@ -680,8 +788,11 @@ function createMatchesHook(contexts: ReactRouterContexts) {
 function createLoaderDataHook(contexts: ReactRouterContexts) {
   const useDataRouterState = createDataRouterStateHook(contexts);
 
+  /**
+   * Returns the loader data for the nearest ancestor Route loader
+   */
   return function useLoaderData(): unknown {
-    let state = useDataRouterState(DataRouterHook.UseLoaderData);
+    let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
 
     let route = React.useContext(contexts.RouteContext);
     invariant(route, `useLoaderData must be used inside a RouteContext`);
@@ -699,8 +810,11 @@ function createLoaderDataHook(contexts: ReactRouterContexts) {
 function createRouteLoaderDataHook(contexts: ReactRouterContexts) {
   const useDataRouterState = createDataRouterStateHook(contexts);
 
+  /**
+   * Returns the loaderData for the given routeId
+   */
   return function useRouteLoaderData(routeId: string): unknown {
-    let state = useDataRouterState(DataRouterHook.UseRouteLoaderData);
+    let state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
     return state.loaderData[routeId];
   };
 }
@@ -708,8 +822,11 @@ function createRouteLoaderDataHook(contexts: ReactRouterContexts) {
 function createActionDataHook(contexts: ReactRouterContexts) {
   const useDataRouterState = createDataRouterStateHook(contexts);
 
+  /**
+   * Returns the action data for the nearest ancestor Route action
+   */
   return function useActionData(): unknown {
-    let state = useDataRouterState(DataRouterHook.UseActionData);
+    let state = useDataRouterState(DataRouterStateHook.UseActionData);
 
     let route = React.useContext(contexts.RouteContext);
     invariant(route, `useActionData must be used inside a RouteContext`);
@@ -721,17 +838,16 @@ function createActionDataHook(contexts: ReactRouterContexts) {
 function createRouteErrorHook(contexts: ReactRouterContexts) {
   const useDataRouterState = createDataRouterStateHook(contexts);
 
+  /**
+   * Returns the nearest ancestor Route error, which could be a loader/action
+   * error or a render error.  This is intended to be called from your
+   * errorElement to display a proper error message.
+   */
   return function useRouteError(): unknown {
     let error = React.useContext(contexts.RouteErrorContext);
-    let state = useDataRouterState(DataRouterHook.UseRouteError);
+    let state = useDataRouterState(DataRouterStateHook.UseRouteError);
     let route = React.useContext(contexts.RouteContext);
     let thisRoute = route.matches[route.matches.length - 1];
-    let deferredValue = React.useContext(contexts.DeferredContext);
-
-    // Return deferred errors if we're inside a Deferred errorElement
-    if (deferredValue && deferredValue instanceof Error) {
-      return deferredValue;
-    }
 
     // If this was a render error, we put it in a RouteError context inside
     // of RenderErrorBoundary
@@ -750,10 +866,23 @@ function createRouteErrorHook(contexts: ReactRouterContexts) {
   };
 }
 
-function createDeferredDataHook({ DeferredContext }: ReactRouterContexts) {
-  return function useDeferredData(): unknown {
-    let value = React.useContext(DeferredContext);
-    return value;
+function createAsyncValueHook({ AwaitContext }: ReactRouterContexts) {
+  /**
+   * Returns the happy-path data from the nearest ancestor <Await /> value
+   */
+  return function useAsyncValue(): unknown {
+    let value = React.useContext(AwaitContext);
+    return value?._data;
+  };
+}
+
+function createAsyncErrorHook({ AwaitContext }: ReactRouterContexts) {
+  /**
+   * Returns the error from the nearest ancestor <Await /> value
+   */
+  return function useAsyncError(): unknown {
+    let value = React.useContext(AwaitContext);
+    return value?._error;
   };
 }
 
@@ -770,7 +899,8 @@ export function createHooks(contexts: ReactRouterContexts) {
   const _renderMatches = _createRenderMatches(contexts);
 
   const useActionData = createActionDataHook(contexts);
-  const useDeferredData = createDeferredDataHook(contexts);
+  const useAsyncValue = createAsyncValueHook(contexts);
+  const useAsyncError = createAsyncErrorHook(contexts);
   const useHref = createHrefHook(contexts);
   const useInRouterContext = createInRouterContextHook(contexts);
   const useLoaderData = createLoaderDataHook(contexts);
@@ -798,9 +928,14 @@ export function createHooks(contexts: ReactRouterContexts) {
     useActionData,
 
     /**
-     * Returns the happy-path data from the nearest ancestor <Deferred /> value
+     * Returns the happy-path data from the nearest ancestor <Await /> value
      */
-    useDeferredData,
+    useAsyncValue,
+
+    /**
+     * Returns the error from the nearest ancestor <Await /> value
+     */
+    useAsyncError,
 
     /**
      * Returns the full href for the given "to" value. This is useful for building

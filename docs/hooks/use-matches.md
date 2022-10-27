@@ -39,45 +39,40 @@ A `match` has the following shape:
 
 Pairing `<Route handle>` with `useMatches` gets very powerful since you can put whatever you want on a route `handle` and have access to `useMatches` anywhere.
 
-<docs-warning>`useMatches` only works with Data Routers, since they know the full route tree up front and can provide all of the current matches. Additionally, `useMatches` will not match down into any descendant route trees since the router isn't aware of the descendant routes.</docs-warning>
+<docs-warning>`useMatches` only works with a data router like [`createBrowserRouter`][createbrowserrouter], since they know the full route tree up front and can provide all of the current matches. Additionally, `useMatches` will not match down into any descendant route trees since the router isn't aware of the descendant routes.</docs-warning>
 
 ## Breadcrumbs
 
 The proverbial use case here is adding breadcrumbs to a parent layout that uses data from the child routes.
 
 ```jsx filename=app.jsx
-ReactDOM.render(
-  <DataBrowserRouter>
-    <Route element={<Root />}>
-      <Route
-        path="messages"
-        element={<Messages />}
-        loader={loadMessages}
-        handle={{
-          // you can put whatever you want on a route handle
-          // here we use "crumb" and return some elements,
-          // this is what we'll render in the breadcrumbs
-          // for this route
-          crumb: () => <Link to="/message">Messages</Link>,
-        }}
-      >
-        <Route
-          path="conversation/:id"
-          element={<Thread />}
-          loader={loadThread}
-          handle={{
-            // `crumb` is your own abstraction, we decided
-            // to make this one a function so we can pass
-            // the data from the loader to it so that our
-            // breadcrumb is made up of dynamic content
-            crumb: (data) => <span>{data.threadName}</span>,
-          }}
-        />
-      </Route>
-    </Route>
-  </DataBrowserRouter>,
-  root
-);
+<Route element={<Root />}>
+  <Route
+    path="messages"
+    element={<Messages />}
+    loader={loadMessages}
+    handle={{
+      // you can put whatever you want on a route handle
+      // here we use "crumb" and return some elements,
+      // this is what we'll render in the breadcrumbs
+      // for this route
+      crumb: () => <Link to="/message">Messages</Link>,
+    }}
+  >
+    <Route
+      path="conversation/:id"
+      element={<Thread />}
+      loader={loadThread}
+      handle={{
+        // `crumb` is your own abstraction, we decided
+        // to make this one a function so we can pass
+        // the data from the loader to it so that our
+        // breadcrumb is made up of dynamic content
+        crumb: (data) => <span>{data.threadName}</span>,
+      }}
+    />
+  </Route>
+</Route>
 ```
 
 Now we can create a `Breadcrumbs` component that takes advantage of our home-grown `crumb` abstraction with `useMatches` and `handle`.
@@ -103,3 +98,5 @@ function Breadcrumbs() {
 ```
 
 Now you can render `<Breadcrumbs/>` anywhere you want, probably in the root component.
+
+[createbrowserrouter]: ../routers/create-browser-router

@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import * as ReactDOM from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import {
   BrowserRouter,
@@ -12,6 +12,7 @@ import {
 describe("navigate with params", () => {
   let node: HTMLDivElement;
   beforeEach(() => {
+    global.history.pushState({}, "", "/");
     node = document.createElement("div");
     document.body.appendChild(node);
   });
@@ -39,14 +40,13 @@ describe("navigate with params", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Start />} />
               <Route path="blog/:slug" element={<Blog />} />
             </Routes>
-          </BrowserRouter>,
-          node
+          </BrowserRouter>
         );
       });
 
@@ -73,14 +73,13 @@ describe("navigate with params", () => {
       }
 
       act(() => {
-        ReactDOM.render(
+        ReactDOM.createRoot(node).render(
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Start />} />
               <Route path="blog/:slug" element={<Blog />} />
             </Routes>
-          </BrowserRouter>,
-          node
+          </BrowserRouter>
         );
       });
 
@@ -90,7 +89,8 @@ describe("navigate with params", () => {
       let pathname = window.location.pathname.replace(/%20/g, "+");
       expect(pathname).toEqual("/blog/react+router");
 
-      expect(node.innerHTML).toMatch(/react router/);
+      // Note decodeURIComponent doesn't decode +
+      expect(node.innerHTML).toMatch(/react\+router/);
     });
   });
 });

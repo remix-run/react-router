@@ -7,6 +7,8 @@ new: true
 
 When exceptions are thrown in [loaders][loader], [actions][action], or component rendering, instead of the normal render path for your Routes (`<Route element>`), the error path will be rendered (`<Route errorElement>`) and the error made available with [`useRouteError`][userouteerror].
 
+<docs-error>This feature only works if using a data router like [`createBrowserRouter`][createbrowserrouter]</docs-error>
+
 ```tsx
 <Route
   path="/invoices/:id"
@@ -34,7 +36,7 @@ function ErrorBoundary() {
 
 ## Bubbling
 
-When a route does not have an `errorElement`, errors will bubble up through parent routes. This let's you get as granular or general as you like.
+When a route does not have an `errorElement`, errors will bubble up through parent routes. This lets you get as granular or general as you like.
 
 Put an `errorElement` at the top of your route tree and handle nearly every error in your app in one place. Or, put them on all of your routes and allow the parts of the app that don't have errors to continue to render normally. This gives the user more options to recover from errors instead of a hard refresh and 🤞.
 
@@ -172,12 +174,12 @@ function fetchProject(id) {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  if (res.status === 404) {
+  if (response.status === 404) {
     throw new Response("Not Found", { status: 404 });
   }
 
   // the fetch failed
-  if (!res.ok) {
+  if (!response.ok) {
     throw new Error("Could not fetch project");
   }
 }
@@ -208,6 +210,8 @@ The project route doesn't have to think about errors at all. Between the loader 
 [loader]: ./loader
 [action]: ./action
 [userouteerror]: ../hooks/use-route-error
+[pickingarouter]: ../routers/picking-a-router
 [response]: https://developer.mozilla.org/en-US/docs/Web/API/Response
-[isrouteerrorresponse]: ../fetch/is-route-error-response
+[isrouteerrorresponse]: ../utils/is-route-error-response
 [json]: ../fetch/json
+[createbrowserrouter]: ../routers/create-browser-router

@@ -7,6 +7,8 @@ new: true
 
 This hook allows you to revalidate the data for any reason. React Router automatically revalidates the data after actions are called, but you may want to revalidate for other reasons like when focus returns to the window.
 
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
 ```tsx
 import { useRevalidator } from "react-router-dom";
 
@@ -61,3 +63,4 @@ If a navigation happens while a revalidation is in flight, the revalidation will
 [form]: ../components/form
 [usefetcher]: ./use-fetcher
 [usesubmit]: ./use-submit
+[pickingarouter]: ../routers/picking-a-router

@@ -7,6 +7,8 @@ new: true
 
 The Form component is a wrapper around a plain HTML [form][htmlform] that emulates the browser for client side routing and data mutations. It is _not_ a form validation/state management library like you might be used to in the React ecosystem (for that, we recommend the browser's built in [HTML Form Validation][formvalidation] and data validation on your backend server).
 
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
 ```tsx
 import { Form } from "react-router-dom";
 
@@ -180,11 +182,16 @@ Instructs the form to replace the current entry in the history stack, instead of
 The default behavior is conditional on the form `method`:
 
 - `get` defaults to `false`
-- every other method defaults to `true`
+- every other method defaults to `true` if your `action` is successful
+- if your `action` redirects or throws, then it will still push by default
 
 We've found with `get` you often want the user to be able to click "back" to see the previous search results/filters, etc. But with the other methods the default is `true` to avoid the "are you sure you want to resubmit the form?" prompt. Note that even if `replace={false}` React Router _will not_ resubmit the form when the back button is clicked and the method is post, put, patch, or delete.
 
 In other words, this is really only useful for GET submissions and you want to avoid the back button showing the previous results.
+
+## `relative`
+
+By default, paths are relative to the route hierarchy, so `..` will go up one `Route` level. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you're prefer to use relative _path_ routing. You can opt into this behavior with `<Form to="../some/where" relative="path">`
 
 ## `reloadDocument`
 
@@ -200,7 +207,7 @@ Without a framework like [Remix][remix], or your own server handling of posts to
 
 See also:
 
-- [`useTransition`][usetransition]
+- [`useNavigation`][usenavigation]
 - [`useActionData`][useactiondata]
 - [`useSubmit`][usesubmit]
 
@@ -293,6 +300,7 @@ You can access those values from the `request.url`
 - [useSubmit][usesubmit]
 
 [usenavigation]: ../hooks/use-navigation
+[useactiondata]: ../hooks/use-action-data
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [usefetcher]: ../hooks/use-fetcher
 [htmlform]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form
@@ -305,3 +313,4 @@ You can access those values from the `request.url`
 [remix]: https://remix.run
 [formvalidation]: https://developer.mozilla.org/en-US/docs/Learn/Forms/Form_validation
 [indexsearchparam]: ../guides/index-search-param
+[pickingarouter]: ../routers/picking-a-router

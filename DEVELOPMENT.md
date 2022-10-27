@@ -4,17 +4,18 @@
 
 New releases should be created from release branches originating from the `dev` branch. When you are ready to begin the release process:
 
+- Make sure you've pulled all of the changes from GitHub for both `dev` and `main` branches
 - Check out the `dev` branch
-- Make sure you have all of the changes from GitHub
 - Create a new release branch with the `release-` prefix (eg, `git checkout -b release-v6.5.1`)
   - **IMPORTANT:** The `release-` prefix is important, as this is what triggers our GitHub CI workflow that will ultimately publish the release.
+- Merge `main` into the release branch
 
 Changesets will do most of the heavy lifting for our releases. When changes are made to the codebase, an accompanying changeset file should be included to document the change. Those files will dictate how Changesets will version our packages and what shows up in the changelogs.
 
 ### Starting a new pre-release
 
 - Ensure you are on the new `release-*` branch
-- Enter Changesets pre-release mode using the `pre` tag: `yarn changeset pre enter next`
+- Enter Changesets pre-release mode using the `pre` tag: `yarn changeset pre enter pre`
 - Commit the changesets and push the the `release-*` branch to GitHub; wait for the release workflow to finish and the Changesets action to open its PR that will increment all versions
 - Review the updated `CHANGELOG` files and make any adjustments necessary, then merge the PR
 - Once the PR is merged, the release workflow will publish the updated packages to npm

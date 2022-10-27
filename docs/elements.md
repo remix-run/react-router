@@ -45,7 +45,7 @@ Examples:
 
 <docs-info>`<Link to>` with a `..` behaves differently from a normal `<a href>` when the current URL ends with `/`. `<Link to>` ignores the trailing slash, and removes one URL segment for each `..`. But an `<a href>` value handles `..` differently when the current URL ends with `/` vs when it does not.</docs-info>
 
-<docs-warning>`useMatches` only works with Data Routers, since they know the full route tree up front and can provide all of the current matches. Additionally, `useMatches` will not match down into any descendant route trees since the router isn't aware of the descendant routes.</docs-warning>
+<docs-warning>`useMatches` only works with a data router like [`createBrowserRouter`][createbrowserrouter], since they know the full route tree up front and can provide all of the current matches. Additionally, `useMatches` will not match down into any descendant route trees since the router isn't aware of the descendant routes.</docs-warning>
 
 <docs-error>Do not do this</docs-error>
 
@@ -102,7 +102,7 @@ And then there’s the `<dl>` lists:
 Normal code:
 
 ```tsx
-<DataBrowserRouter initialEntries={["/events/123"]}>
+<WhateverRouter initialEntries={["/events/123"]}>
   <Route path="/" element={<Root />} loader={rootLoader}>
     <Route
       path="events/:id"
@@ -110,13 +110,13 @@ Normal code:
       loader={eventLoader}
     />
   </Route>
-</DataBrowserRouter>
+</WhateverRouter>
 ```
 
 With multiple highlighted lines:
 
 ```tsx lines=[1-2,5]
-<DataBrowserRouter initialEntries={["/events/123"]}>
+<WhateverRouter initialEntries={["/events/123"]}>
   <Route path="/" element={<Root />} loader={rootLoader}>
     <Route
       path="events/:id"
@@ -124,13 +124,13 @@ With multiple highlighted lines:
       loader={eventLoader}
     />
   </Route>
-</DataBrowserRouter>
+</WhateverRouter>
 ```
 
 With a filename:
 
 ```tsx filename=src/main.jsx
-<DataBrowserRouter initialEntries={["/events/123"]}>
+<WhateverRouter initialEntries={["/events/123"]}>
   <Route path="/" element={<Root />} loader={rootLoader}>
     <Route
       path="events/:id"
@@ -138,13 +138,13 @@ With a filename:
       loader={eventLoader}
     />
   </Route>
-</DataBrowserRouter>
+</WhateverRouter>
 ```
 
 Bad code:
 
 ```tsx bad
-<DataBrowserRouter initialEntries={["/events/123"]}>
+<WhateverRouter initialEntries={["/events/123"]}>
   <Route path="/" element={<Root />} loader={rootLoader}>
     <Route
       path="events/:id"
@@ -152,13 +152,13 @@ Bad code:
       loader={eventLoader}
     />
   </Route>
-</DataBrowserRouter>
+</WhateverRouter>
 ```
 
 Bad code with highlighted lines and a filename:
 
 ```tsx filename=src/main.jsx bad lines=[2-5]
-<DataBrowserRouter initialEntries={["/events/123"]}>
+<WhateverRouter initialEntries={["/events/123"]}>
   <Routes>
     <Route path="/" element={<Root />} loader={rootLoader}>
       <Route
@@ -168,7 +168,7 @@ Bad code with highlighted lines and a filename:
       />
     </Route>
   </Routes>
-</DataBrowserRouter>
+</WhateverRouter>
 ```
 
 Lines that overflow:
@@ -182,3 +182,4 @@ Lines that overflow:
 ---
 
 [$link]: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+[createbrowserrouter]: ./routers/create-browser-router

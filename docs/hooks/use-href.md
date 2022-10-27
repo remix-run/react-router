@@ -8,7 +8,10 @@ title: useHref
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useHref(to: To): string;
+declare function useHref(
+  to: To,
+  options?: { relative?: RelativeRoutingType }
+): string;
 ```
 
 </details>

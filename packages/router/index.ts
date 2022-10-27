@@ -1,22 +1,17 @@
-import type {
-  BrowserHistoryOptions,
-  HashHistoryOptions,
-  MemoryHistoryOptions,
-} from "./history";
-import {
-  createBrowserHistory,
-  createHashHistory,
-  createMemoryHistory,
-} from "./history";
-import type { Router, RouterInit } from "./router";
-import { createRouter } from "./router";
-import { convertRoutesToDataRoutes } from "./utils";
+import { convertRoutesToDataRoutes, getPathContributingMatches } from "./utils";
 
 export type {
   ActionFunction,
   ActionFunctionArgs,
-  DataRouteMatch,
-  DataRouteObject,
+  AgnosticDataIndexRouteObject,
+  AgnosticDataNonIndexRouteObject,
+  AgnosticDataRouteMatch,
+  AgnosticDataRouteObject,
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
+  AgnosticRouteMatch,
+  AgnosticRouteObject,
+  TrackedPromise,
   FormEncType,
   FormMethod,
   JsonFunction,
@@ -27,19 +22,17 @@ export type {
   PathMatch,
   PathPattern,
   RedirectFunction,
-  RouteMatch,
-  RouteObject,
   ShouldRevalidateFunction,
   Submission,
 } from "./utils";
 
 export {
+  AbortedDeferredError,
   ErrorResponse,
-  deferred,
+  defer,
   generatePath,
   getToPathname,
   invariant,
-  isDeferredError,
   isRouteErrorResponse,
   joinPaths,
   json,
@@ -55,11 +48,14 @@ export {
 
 export type {
   BrowserHistory,
+  BrowserHistoryOptions,
   HashHistory,
+  HashHistoryOptions,
   History,
   InitialEntry,
   Location,
   MemoryHistory,
+  MemoryHistoryOptions,
   Path,
   To,
 } from "./history";
@@ -75,31 +71,6 @@ export {
 
 export * from "./router";
 
-export function createMemoryRouter({
-  initialEntries,
-  initialIndex,
-  ...routerInit
-}: MemoryHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createMemoryHistory({ initialEntries, initialIndex });
-  return createRouter({ history, ...routerInit });
-}
-
-export function createBrowserRouter({
-  window,
-  ...routerInit
-}: BrowserHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createBrowserHistory({ window });
-  return createRouter({ history, ...routerInit });
-}
-
-export function createHashRouter({
-  window,
-  ...routerInit
-}: HashHistoryOptions & Omit<RouterInit, "history">): Router {
-  let history = createHashHistory({ window });
-  return createRouter({ history, ...routerInit });
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We consider these exports an implementation detail and do not guarantee
@@ -108,4 +79,7 @@ export function createHashRouter({
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @internal */
-export { convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes };
+export {
+  convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
+  getPathContributingMatches as UNSAFE_getPathContributingMatches,
+};

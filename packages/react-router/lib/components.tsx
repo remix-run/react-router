@@ -1,48 +1,270 @@
 import * as React from "react";
 import type {
-  HydrationState,
+  TrackedPromise,
   InitialEntry,
   Location,
   MemoryHistory,
-  RouteMatch,
-  RouteObject,
   Router as RemixRouter,
   RouterState,
   To,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
+  AbortedDeferredError,
   createMemoryHistory,
-  createMemoryRouter as createMemoryRouterSingleton,
   invariant,
-  isDeferredError,
   parsePath,
   stripBasename,
   warning,
 } from "@remix-run/router";
 import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
-import {
+import type {
+  DataRouteObject,
+  IndexRouteObject,
+  RouteMatch,
+  RouteObject,
   Navigator,
-  DataRouterContextObject,
+  NonIndexRouteObject,
+  RelativeRoutingType,
   ReactRouterContexts,
-  reactRouterContexts,
 } from "./context";
-import { createHooks, Hooks } from "./hooks";
 
-// Module-scoped singleton to hold the router.  Extracted from the React lifecycle
-// to avoid issues w.r.t. dual initialization fetches in concurrent rendering.
-// Data router apps are expected to have a static route tree and are not intended
-// to be unmounted/remounted at runtime.
-let routerSingleton: RemixRouter;
+import type { Hooks } from "./hooks";
+
+export interface RouterProviderProps {
+  fallbackElement?: React.ReactNode;
+  router: RemixRouter;
+}
+
+function createRouterProvider(
+  contexts: ReactRouterContexts,
+  Router: ReturnType<typeof createRouter>,
+  Routes: ReturnType<typeof createRoutes>
+) {
+  /**
+   * Given a Remix Router instance, render the appropriate UI
+   */
+  return function RouterProvider({
+    fallbackElement,
+    router,
+  }: RouterProviderProps): React.ReactElement {
+    // Sync router state to our component state to force re-renders
+    let state: RouterState = useSyncExternalStoreShim(
+      router.subscribe,
+      () => router.state,
+      // We have to provide this so React@18 doesn't complain during hydration,
+      // but we pass our serialized hydration data into the router so state here
+      // is already synced with what the server saw
+      () => router.state
+    );
+
+    let navigator = React.useMemo((): Navigator => {
+      return {
+        createHref: router.createHref,
+        go: (n) => router.navigate(n),
+        push: (to, state, opts) =>
+          router.navigate(to, {
+            state,
+            preventScrollReset: opts?.preventScrollReset,
+          }),
+        replace: (to, state, opts) =>
+          router.navigate(to, {
+            replace: true,
+            state,
+            preventScrollReset: opts?.preventScrollReset,
+          }),
+      };
+    }, [router]);
+
+    let basename = router.basename || "/";
+
+    return (
+      <contexts.DataRouterContext.Provider
+        value={{
+          router,
+          navigator,
+          static: false,
+          // Do we need this?
+          basename,
+        }}
+      >
+        <contexts.DataRouterStateContext.Provider value={state}>
+          <Router
+            basename={router.basename}
+            location={router.state.location}
+            navigationType={router.state.historyAction}
+            navigator={navigator}
+          >
+            {router.state.initialized ? <Routes /> : fallbackElement}
+          </Router>
+        </contexts.DataRouterStateContext.Provider>
+      </contexts.DataRouterContext.Provider>
+    );
+  };
+}
+export interface MemoryRouterProps {
+  basename?: string;
+  children?: React.ReactNode;
+  initialEntries?: InitialEntry[];
+  initialIndex?: number;
+}
+
+function createMemoryRouter(Router: ReturnType<typeof createRouter>) {
+  /**
+   * A <Router> that stores all entries in memory.
+   *
+   * @see https://reactrouter.com/docs/en/v6/routers/memory-router
+   */
+  return function MemoryRouter({
+    basename,
+    children,
+    initialEntries,
+    initialIndex,
+  }: MemoryRouterProps): React.ReactElement {
+    let historyRef = React.useRef<MemoryHistory>();
+    if (historyRef.current == null) {
+      historyRef.current = createMemoryHistory({
+        initialEntries,
+        initialIndex,
+        v5Compat: true,
+      });
+    }
+
+    let history = historyRef.current;
+    let [state, setState] = React.useState({
+      action: history.action,
+      location: history.location,
+    });
+
+    React.useLayoutEffect(() => history.listen(setState), [history]);
+
+    return (
+      <Router
+        basename={basename}
+        children={children}
+        location={state.location}
+        navigationType={state.action}
+        navigator={history}
+      />
+    );
+  };
+}
+export interface NavigateProps {
+  to: To;
+  replace?: boolean;
+  state?: any;
+  relative?: RelativeRoutingType;
+}
+
+function createNavigate(
+  { NavigationContext, DataRouterStateContext }: ReactRouterContexts,
+  { useInRouterContext, useNavigate }: Hooks
+) {
+  /**
+   * Changes the current location.
+   *
+   * Note: This API is mostly useful in React.Component subclasses that are not
+   * able to use hooks. In functional components, we recommend you use the
+   * `useNavigate` hook instead.
+   *
+   * @see https://reactrouter.com/docs/en/v6/components/navigate
+   */
+  return function Navigate({
+    to,
+    replace,
+    state,
+    relative,
+  }: NavigateProps): null {
+    invariant(
+      useInRouterContext(),
+      // TODO: This error is probably because they somehow have 2 versions of
+      // the router loaded. We can help them understand how to avoid that.
+      `<Navigate> may be used only in the context of a <Router> component.`
+    );
+
+    warning(
+      !React.useContext(NavigationContext).static,
+      `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
+        `This is a no-op, but you should modify your code so the <Navigate> is ` +
+        `only ever rendered in response to some user interaction or state change.`
+    );
+
+    let dataRouterState = React.useContext(DataRouterStateContext);
+    let navigate = useNavigate();
+
+    React.useEffect(() => {
+      // Avoid kicking off multiple navigations if we're in the middle of a
+      // data-router navigation, since components get re-rendered when we enter
+      // a submitting/loading state
+      if (dataRouterState && dataRouterState.navigation.state !== "idle") {
+        return;
+      }
+      navigate(to, { replace, state, relative });
+    });
+
+    return null;
+  };
+}
+export interface OutletProps {
+  context?: unknown;
+}
+
+function createOutlet({ useOutlet }: Hooks) {
+  /**
+   * Renders the child route's element, if there is one.
+   *
+   * @see https://reactrouter.com/docs/en/v6/components/outlet
+   */
+  return function Outlet(props: OutletProps): React.ReactElement | null {
+    return useOutlet(props.context);
+  };
+}
+export interface PathRouteProps {
+  caseSensitive?: NonIndexRouteObject["caseSensitive"];
+  path?: NonIndexRouteObject["path"];
+  id?: NonIndexRouteObject["id"];
+  loader?: NonIndexRouteObject["loader"];
+  action?: NonIndexRouteObject["action"];
+  hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
+  shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
+  handle?: NonIndexRouteObject["handle"];
+  index?: false;
+  children?: React.ReactNode;
+  element?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
+}
+
+export interface LayoutRouteProps extends PathRouteProps {}
+
+export interface IndexRouteProps {
+  caseSensitive?: IndexRouteObject["caseSensitive"];
+  path?: IndexRouteObject["path"];
+  id?: IndexRouteObject["id"];
+  loader?: IndexRouteObject["loader"];
+  action?: IndexRouteObject["action"];
+  hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
+  shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
+  handle?: IndexRouteObject["handle"];
+  index: true;
+  children?: undefined;
+  element?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
+}
+
+export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 
 /**
- * Unit-testing-only function to reset the router between tests
- * @private
+ * Declares an element that should be rendered at a certain URL path.
+ *
+ * @see https://reactrouter.com/docs/en/v6/components/route
  */
-export function _resetModuleScope() {
-  // @ts-expect-error
-  routerSingleton = null;
+function Route(_props: RouteProps): React.ReactElement | null {
+  invariant(
+    false,
+    `A <Route> is only ever to be used as the child of <Routes> element, ` +
+      `never rendered directly. Please wrap your <Route> in a <Routes>.`
+  );
 }
 
 export interface RouterProps {
@@ -58,6 +280,15 @@ function createRouter({
   LocationContext,
   NavigationContext,
 }: ReactRouterContexts) {
+  /**
+   * Provides location context for the rest of the app.
+   *
+   * Note: You usually won't render a <Router> directly. Instead, you'll render a
+   * router that is more specific to your environment such as a <BrowserRouter>
+   * in web browsers or a <StaticRouter> for server rendering.
+   *
+   * @see https://reactrouter.com/docs/en/v6/routers/router
+   */
   return function Router({
     basename: basenameProp = "/",
     children = null,
@@ -130,272 +361,6 @@ function createRouter({
   };
 }
 
-export interface MemoryRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  initialEntries?: InitialEntry[];
-  initialIndex?: number;
-}
-
-function createMemoryRouter(Router: ReturnType<typeof createRouter>) {
-  return function MemoryRouter({
-    basename,
-    children,
-    initialEntries,
-    initialIndex,
-  }: MemoryRouterProps): React.ReactElement {
-    let historyRef = React.useRef<MemoryHistory>();
-    if (historyRef.current == null) {
-      historyRef.current = createMemoryHistory({
-        initialEntries,
-        initialIndex,
-        v5Compat: true,
-      });
-    }
-
-    let history = historyRef.current;
-    let [state, setState] = React.useState({
-      action: history.action,
-      location: history.location,
-    });
-
-    React.useLayoutEffect(() => history.listen(setState), [history]);
-
-    return (
-      <Router
-        basename={basename}
-        children={children}
-        location={state.location}
-        navigationType={state.action}
-        navigator={history}
-      />
-    );
-  };
-}
-
-function createDataRouterProvider({
-  DataRouterContext,
-  DataRouterStateContext,
-}: ReactRouterContexts) {
-  return function DataRouterProvider({
-    basename,
-    children,
-    fallbackElement,
-    router,
-  }: {
-    basename?: string;
-    children?: React.ReactNode;
-    fallbackElement?: React.ReactNode;
-    router: RemixRouter;
-  }): React.ReactElement {
-    // Sync router state to our component state to force re-renders
-    let state: RouterState = useSyncExternalStoreShim(
-      router.subscribe,
-      () => router.state,
-      // We have to provide this so React@18 doesn't complain during hydration,
-      // but we pass our serialized hydration data into the router so state here
-      // is already synced with what the server saw
-      () => router.state
-    );
-
-    let navigator = React.useMemo((): Navigator => {
-      return {
-        createHref: router.createHref,
-        go: (n) => router.navigate(n),
-        push: (to, state, opts) =>
-          router.navigate(to, { state, resetScroll: opts?.resetScroll }),
-        replace: (to, state, opts) =>
-          router.navigate(to, {
-            replace: true,
-            state,
-            resetScroll: opts?.resetScroll,
-          }),
-      };
-    }, [router]);
-
-    let dataRouterContext: DataRouterContextObject = {
-      router,
-      navigator,
-      static: false,
-      basename: basename || "/",
-    };
-
-    if (!state.initialized) {
-      return <>{fallbackElement}</>;
-    }
-
-    return (
-      <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={state} children={children} />
-      </DataRouterContext.Provider>
-    );
-  };
-}
-
-function createDataRouter(
-  { DataRouterContext }: ReactRouterContexts,
-  Router: ReturnType<typeof createRouter>,
-  Routes: ReturnType<typeof createRoutes>
-) {
-  return function DataRouter() {
-    let dataRouterContext = React.useContext(DataRouterContext);
-    invariant(
-      dataRouterContext,
-      "<DataRouter> may only be rendered within a DataRouterContext"
-    );
-    let { router, navigator, basename } = dataRouterContext;
-
-    return (
-      <Router
-        basename={basename}
-        location={router.state.location}
-        navigationType={router.state.historyAction}
-        navigator={navigator}
-      >
-        <Routes />
-      </Router>
-    );
-  };
-}
-
-export interface DataMemoryRouterProps {
-  basename?: string;
-  children?: React.ReactNode;
-  initialEntries?: InitialEntry[];
-  initialIndex?: number;
-  hydrationData?: HydrationState;
-  fallbackElement?: React.ReactNode;
-  routes?: RouteObject[];
-}
-
-function createDataMemoryRouter(
-  DataRouterProvider: ReturnType<typeof createDataRouterProvider>,
-  DataRouter: ReturnType<typeof createDataRouter>
-) {
-  return function DataMemoryRouter({
-    basename,
-    children,
-    initialEntries,
-    initialIndex,
-    hydrationData,
-    fallbackElement,
-    routes,
-  }: DataMemoryRouterProps): React.ReactElement {
-    if (!routerSingleton) {
-      routerSingleton = createMemoryRouterSingleton({
-        basename,
-        hydrationData,
-        initialEntries,
-        initialIndex,
-        routes: routes || createRoutesFromChildren(children),
-      }).initialize();
-    }
-    let router = routerSingleton;
-
-    return (
-      <DataRouterProvider
-        router={router}
-        basename={basename}
-        fallbackElement={fallbackElement}
-      >
-        <DataRouter />
-      </DataRouterProvider>
-    );
-  };
-}
-
-export interface NavigateProps {
-  to: To;
-  replace?: boolean;
-  state?: any;
-}
-
-function createNavigate(
-  { NavigationContext }: ReactRouterContexts,
-  { useInRouterContext, useNavigate }: Hooks
-) {
-  return function Navigate({ to, replace, state }: NavigateProps): null {
-    invariant(
-      useInRouterContext(),
-      // TODO: This error is probably because they somehow have 2 versions of
-      // the router loaded. We can help them understand how to avoid that.
-      `<Navigate> may be used only in the context of a <Router> component.`
-    );
-
-    warning(
-      !React.useContext(NavigationContext).static,
-      `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
-        `This is a no-op, but you should modify your code so the <Navigate> is ` +
-        `only ever rendered in response to some user interaction or state change.`
-    );
-
-    let navigate = useNavigate();
-    React.useEffect(() => {
-      navigate(to, { replace, state });
-    });
-
-    return null;
-  };
-}
-export interface OutletProps {
-  context?: unknown;
-}
-
-function createOutlet({ useOutlet }: Hooks) {
-  return function Outlet(props: OutletProps): React.ReactElement | null {
-    return useOutlet(props.context);
-  };
-}
-
-export interface DataRouteProps {
-  id?: RouteObject["id"];
-  loader?: RouteObject["loader"];
-  action?: RouteObject["action"];
-  errorElement?: RouteObject["errorElement"];
-  shouldRevalidate?: RouteObject["shouldRevalidate"];
-  handle?: RouteObject["handle"];
-}
-
-export interface RouteProps extends DataRouteProps {
-  caseSensitive?: boolean;
-  children?: React.ReactNode;
-  element?: React.ReactNode | null;
-  index?: boolean;
-  path?: string;
-}
-
-export interface PathRouteProps extends DataRouteProps {
-  caseSensitive?: boolean;
-  children?: React.ReactNode;
-  element?: React.ReactNode | null;
-  index?: false;
-  path: string;
-}
-
-export interface LayoutRouteProps extends DataRouteProps {
-  children?: React.ReactNode;
-  element?: React.ReactNode | null;
-}
-
-export interface IndexRouteProps extends DataRouteProps {
-  element?: React.ReactNode | null;
-  index: true;
-}
-
-/**
- * Declares an element that should be rendered at a certain URL path.
- *
- * @see https://reactrouter.com/docs/en/v6/components/route
- */
-function Route(
-  _props: PathRouteProps | LayoutRouteProps | IndexRouteProps
-): React.ReactElement | null {
-  invariant(
-    false,
-    `A <Route> is only ever to be used as the child of <Routes> element, ` +
-      `never rendered directly. Please wrap your <Route> in a <Routes>.`
-  );
-}
 export interface RoutesProps {
   children?: React.ReactNode;
   location?: Partial<Location> | string;
@@ -405,6 +370,12 @@ function createRoutes(
   { DataRouterContext }: ReactRouterContexts,
   { useRoutes }: Hooks
 ) {
+  /**
+   * A container for a nested tree of <Route> elements that renders the branch
+   * that best matches the current location.
+   *
+   * @see https://reactrouter.com/docs/en/v6/components/routes
+   */
   return function Routes({
     children,
     location,
@@ -415,56 +386,64 @@ function createRoutes(
     // need to use child routes.
     let routes =
       dataRouterContext && !children
-        ? dataRouterContext.router.routes
+        ? (dataRouterContext.router.routes as DataRouteObject[])
         : createRoutesFromChildren(children);
     return useRoutes(routes, location);
   };
 }
-
-export interface DeferredResolveRenderFunction {
-  (data: Awaited<any>): JSX.Element;
+export interface AwaitResolveRenderFunction {
+  (data: Awaited<any>): React.ReactElement;
 }
 
-export interface DeferredProps {
-  children: React.ReactNode | DeferredResolveRenderFunction;
-  value: any;
+export interface AwaitProps {
+  children: React.ReactNode | AwaitResolveRenderFunction;
   errorElement?: React.ReactNode;
+  resolve: TrackedPromise | any;
 }
 
-function createDeferred(
-  { DeferredContext }: ReactRouterContexts,
-  hooks: Hooks
-) {
-  const ResolveDeferred = createResolveDeferred(hooks);
+function createAwait({ AwaitContext }: ReactRouterContexts, hooks: Hooks) {
+  const ResolveAwait = createResolveAwait(hooks);
 
-  return function Deferred({ children, value, errorElement }: DeferredProps) {
+  /**
+   * Component to use for rendering lazily loaded data from returning defer()
+   * in a loader function
+   */
+  return function Await({ children, errorElement, resolve }: AwaitProps) {
     return (
-      <DeferredErrorBoundary
-        value={value}
+      <AwaitErrorBoundary
+        resolve={resolve}
         errorElement={errorElement}
-        DeferredContext={DeferredContext}
+        AwaitContext={AwaitContext}
       >
-        <ResolveDeferred>{children}</ResolveDeferred>
-      </DeferredErrorBoundary>
+        <ResolveAwait>{children}</ResolveAwait>
+      </AwaitErrorBoundary>
     );
   };
 }
 
-type DeferredErrorBoundaryProps = React.PropsWithChildren<{
-  value: any;
+type AwaitErrorBoundaryProps = React.PropsWithChildren<{
   errorElement?: React.ReactNode;
-  DeferredContext: ReactRouterContexts["DeferredContext"];
+  resolve: TrackedPromise | any;
+  AwaitContext: ReactRouterContexts["AwaitContext"];
 }>;
 
-type DeferredErrorBoundaryState = {
+type AwaitErrorBoundaryState = {
   error: any;
 };
 
-class DeferredErrorBoundary extends React.Component<
-  DeferredErrorBoundaryProps,
-  DeferredErrorBoundaryState
+enum AwaitRenderStatus {
+  pending,
+  success,
+  error,
+}
+
+const neverSettledPromise = new Promise(() => {});
+
+class AwaitErrorBoundary extends React.Component<
+  AwaitErrorBoundaryProps,
+  AwaitErrorBoundaryState
 > {
-  constructor(props: DeferredErrorBoundaryProps) {
+  constructor(props: AwaitErrorBoundaryProps) {
     super(props);
     this.state = { error: null };
   }
@@ -475,50 +454,91 @@ class DeferredErrorBoundary extends React.Component<
 
   componentDidCatch(error: any, errorInfo: any) {
     console.error(
-      "<Deferred> caught the following error during render",
+      "<Await> caught the following error during render",
       error,
       errorInfo
     );
   }
 
   render() {
-    let { children, errorElement, value, DeferredContext } = this.props;
+    let { children, errorElement, resolve, AwaitContext } = this.props;
 
-    // Handle render errors from this.state, or data errors from context
-    let error = this.state.error || (isDeferredError(value) ? value : null);
+    let promise: TrackedPromise | null = null;
+    let status: AwaitRenderStatus = AwaitRenderStatus.pending;
 
-    if (error) {
-      if (errorElement) {
-        // We have our own errorElement, provide our error and render it
-        return (
-          <DeferredContext.Provider value={error} children={errorElement} />
-        );
-      }
-      // Throw to the nearest ancestor route-level error boundary
-      throw error;
+    if (!(resolve instanceof Promise)) {
+      // Didn't get a promise - provide as a resolved promise
+      status = AwaitRenderStatus.success;
+      promise = Promise.resolve();
+      Object.defineProperty(promise, "_tracked", { get: () => true });
+      Object.defineProperty(promise, "_data", { get: () => resolve });
+    } else if (this.state.error) {
+      // Caught a render error, provide it as a rejected promise
+      status = AwaitRenderStatus.error;
+      let renderError = this.state.error;
+      promise = Promise.reject().catch(() => {}); // Avoid unhandled rejection warnings
+      Object.defineProperty(promise, "_tracked", { get: () => true });
+      Object.defineProperty(promise, "_error", { get: () => renderError });
+    } else if ((resolve as TrackedPromise)._tracked) {
+      // Already tracked promise - check contents
+      promise = resolve;
+      status =
+        promise._error !== undefined
+          ? AwaitRenderStatus.error
+          : promise._data !== undefined
+          ? AwaitRenderStatus.success
+          : AwaitRenderStatus.pending;
+    } else {
+      // Raw (untracked) promise - track it
+      status = AwaitRenderStatus.pending;
+      Object.defineProperty(resolve, "_tracked", { get: () => true });
+      promise = resolve.then(
+        (data: any) =>
+          Object.defineProperty(resolve, "_data", { get: () => data }),
+        (error: any) =>
+          Object.defineProperty(resolve, "_error", { get: () => error })
+      );
     }
 
-    if (value instanceof Promise) {
-      // Throw to the suspense boundary
-      throw value;
+    if (
+      status === AwaitRenderStatus.error &&
+      promise._error instanceof AbortedDeferredError
+    ) {
+      // Freeze the UI by throwing a never resolved promise
+      throw neverSettledPromise;
     }
 
-    // We've resolved successfully, provide the value and render the children
-    return <DeferredContext.Provider value={value} children={children} />;
+    if (status === AwaitRenderStatus.error && !errorElement) {
+      // No errorElement, throw to the nearest route-level error boundary
+      throw promise._error;
+    }
+
+    if (status === AwaitRenderStatus.error) {
+      // Render via our errorElement
+      return <AwaitContext.Provider value={promise} children={errorElement} />;
+    }
+
+    if (status === AwaitRenderStatus.success) {
+      // Render children with resolved value
+      return <AwaitContext.Provider value={promise} children={children} />;
+    }
+
+    // Throw to the suspense boundary
+    throw promise;
   }
 }
 
-function createResolveDeferred({ useDeferredData }: Hooks) {
+function createResolveAwait({ useAsyncValue }: Hooks) {
   /**
    * @private
-   * Indirection to leverage useDeferredData for a render-prop API on <Deferred>
+   * Indirection to leverage useAsyncValue for a render-prop API on <Await>
    */
-  return function ResolveDeferred({
+  return function ResolveAwait({
     children,
   }: {
-    children: React.ReactNode | DeferredResolveRenderFunction;
+    children: React.ReactNode | AwaitResolveRenderFunction;
   }) {
-    let data = useDeferredData();
+    let data = useAsyncValue();
     if (typeof children === "function") {
       return children(data);
     }
@@ -566,6 +586,11 @@ export function createRoutesFromChildren(
       }] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
     );
 
+    invariant(
+      !element.props.index || !element.props.children,
+      "An index route cannot have child routes."
+    );
+
     let treePath = [...parentPath, index];
     let route: RouteObject = {
       id: element.props.id || treePath.join("-"),
@@ -576,6 +601,7 @@ export function createRoutesFromChildren(
       loader: element.props.loader,
       action: element.props.action,
       errorElement: element.props.errorElement,
+      hasErrorBoundary: element.props.errorElement != null,
       shouldRevalidate: element.props.shouldRevalidate,
       handle: element.props.handle,
     };
@@ -594,6 +620,9 @@ export function createRoutesFromChildren(
 }
 
 function createRenderMatches({ _renderMatches }: Hooks) {
+  /**
+   * Renders the result of `matchRoutes()` into a React element.
+   */
   return function renderMatches(
     matches: RouteMatch[] | null
   ): React.ReactElement | null {
@@ -601,25 +630,36 @@ function createRenderMatches({ _renderMatches }: Hooks) {
   };
 }
 
-export function createComponents(
-  contexts: ReactRouterContexts,
-  hooks: ReturnType<typeof createHooks>
-) {
+/**
+ * @private
+ * Walk the route tree and add hasErrorBoundary if it's not provided, so that
+ * users providing manual route arrays can just specify errorElement
+ */
+export function enhanceManualRouteObjects(
+  routes: RouteObject[]
+): RouteObject[] {
+  return routes.map((route) => {
+    let routeClone = { ...route };
+    if (routeClone.hasErrorBoundary == null) {
+      routeClone.hasErrorBoundary = routeClone.errorElement != null;
+    }
+    if (routeClone.children) {
+      routeClone.children = enhanceManualRouteObjects(routeClone.children);
+    }
+    return routeClone;
+  });
+}
+
+export function createComponents(contexts: ReactRouterContexts, hooks: Hooks) {
   const Router = createRouter(contexts);
   const Routes = createRoutes(contexts, hooks);
 
-  const DataRouterProvider = createDataRouterProvider(contexts);
-  const DataRouter = createDataRouter(contexts, Router, Routes);
-  const DataMemoryRouter = createDataMemoryRouter(
-    DataRouterProvider,
-    DataRouter
-  );
+  const RouterProvider = createRouterProvider(contexts, Router, Routes);
+
   const MemoryRouter = createMemoryRouter(Router);
 
   const Navigate = createNavigate(contexts, hooks);
-
-  const Deferred = createDeferred(contexts, hooks);
-
+  const Await = createAwait(contexts, hooks);
   const Outlet = createOutlet(hooks);
 
   return {
@@ -635,14 +675,9 @@ export function createComponents(
     Router,
 
     /**
-     * A MemoryRouter that enables the data APIs like loader and action.
-     *
-     * Instead of using the browsers history stack like DataBrowserRouter, a DataMemoryRouter
-     * manages it's own history stack in memory. It's primarily useful for testing and
-     * component development tools like Storybook,
-     * but can also be used for running React Router in any JavaScript environment.
+     * Given a Remix Router instance, render the appropriate UI
      */
-    DataMemoryRouter,
+    RouterProvider,
 
     /**
      * A <Router> that stores all entries in memory.
@@ -650,18 +685,6 @@ export function createComponents(
      * @see https://reactrouter.com/docs/en/v6/routers/memory-router
      */
     MemoryRouter,
-
-    /**
-     * A higher-order component that, given a Remix Router instance. setups the
-     * Context's required for data routing
-     */
-    DataRouterProvider,
-
-    /**
-     * A data-aware wrapper for `<Router>` that leverages the Context's provided by
-     * `<DataRouterProvider>`
-     */
-    DataRouter,
 
     /**
      * Changes the current location.
@@ -702,9 +725,9 @@ export function createComponents(
     Outlet,
 
     /**
-     * Component to use for rendering lazily loaded data from returning deferred()
+     * Component to use for rendering lazily loaded data from returning defer()
      * in a loader function
      */
-    Deferred,
+    Await,
   };
 }

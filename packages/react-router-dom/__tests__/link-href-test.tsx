@@ -1,6 +1,17 @@
 import * as React from "react";
+import {
+  BrowserRouter,
+  HashRouter,
+  Link,
+  MemoryRouter,
+  Outlet,
+  Route,
+  RouterProvider,
+  Routes,
+  createBrowserRouter,
+  createHashRouter,
+} from "react-router-dom";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Routes, Route, Link, Outlet } from "react-router-dom";
 
 describe("<Link> href", () => {
   describe("in a static route", () => {
@@ -58,14 +69,25 @@ describe("<Link> href", () => {
           <MemoryRouter initialEntries={["/inbox/messages"]}>
             <Routes>
               <Route path="inbox">
-                <Route path="messages" element={<Link to="../../about" />} />
+                <Route
+                  path="messages"
+                  element={
+                    <>
+                      <Link to="../../about" />
+                      {/* traverse past the root */}
+                      <Link to="../../../about" />
+                    </>
+                  }
+                />
               </Route>
             </Routes>
           </MemoryRouter>
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/about");
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
     });
   });
 
@@ -203,14 +225,25 @@ describe("<Link> href", () => {
           <MemoryRouter initialEntries={["/inbox"]}>
             <Routes>
               <Route path="inbox">
-                <Route index element={<Link to="../../about" />} />
+                <Route
+                  index
+                  element={
+                    <>
+                      <Link to="../../about" />
+                      {/* traverse past the root */}
+                      <Link to="../../../about" />
+                    </>
+                  }
+                />
               </Route>
             </Routes>
           </MemoryRouter>
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/about");
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
     });
   });
 
@@ -289,7 +322,17 @@ describe("<Link> href", () => {
             <Routes>
               <Route path="inbox">
                 <Route
-                  element={<MessagesLayout link={<Link to="../../about" />} />}
+                  element={
+                    <MessagesLayout
+                      link={
+                        <>
+                          <Link to="../../about" />
+                          {/* traverse past the root */}
+                          <Link to="../../../about" />
+                        </>
+                      }
+                    />
+                  }
                 >
                   <Route path="messages" element={<h1>Messages</h1>} />
                 </Route>
@@ -299,7 +342,9 @@ describe("<Link> href", () => {
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/about");
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
     });
   });
 
@@ -388,7 +433,13 @@ describe("<Link> href", () => {
               <Route path="inbox">
                 <Route
                   path="messages/*"
-                  element={<Link to="../../../about" />}
+                  element={
+                    <>
+                      <Link to="../../about" />
+                      {/* traverse past the root */}
+                      <Link to="../../../about" />
+                    </>
+                  }
                 />
               </Route>
             </Routes>
@@ -396,7 +447,9 @@ describe("<Link> href", () => {
         );
       });
 
-      expect(renderer.root.findByType("a").props.href).toEqual("/about");
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
     });
   });
 
@@ -531,7 +584,13 @@ describe("<Link> href", () => {
                   <Routes>
                     <Route
                       path="login"
-                      element={<Link to="../../../about" />}
+                      element={
+                        <>
+                          <Link to="../../about" />
+                          {/* traverse past the root */}
+                          <Link to="../../../about" />
+                        </>
+                      }
                     />
                   </Routes>
                 }
@@ -541,7 +600,162 @@ describe("<Link> href", () => {
         );
       });
 
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
+    });
+  });
+
+  describe("when using relative=path", () => {
+    test("absolute <Link to> resolves relative to the root URL", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox"]}>
+            <Routes>
+              <Route
+                path="inbox"
+                element={<Link to="/about" relative="path" />}
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
       expect(renderer.root.findByType("a").props.href).toEqual("/about");
+    });
+
+    test('<Link to="."> resolves relative to the current route', () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox"]}>
+            <Routes>
+              <Route path="inbox" element={<Link to="." relative="path" />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual("/inbox");
+    });
+
+    test('<Link to=".."> resolves relative to the parent URL segment', () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox/messages/1"]}>
+            <Routes>
+              <Route path="inbox" />
+              <Route path="inbox/messages" />
+              <Route
+                path="inbox/messages/:id"
+                element={<Link to=".." relative="path" />}
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "/inbox/messages"
+      );
+    });
+
+    test('<Link to=".."> with more .. segments than parent routes resolves to the root URL', () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox/messages"]}>
+            <Routes>
+              <Route path="inbox">
+                <Route
+                  path="messages"
+                  element={
+                    <>
+                      <Link to="../../about" relative="path" />
+                      {/* traverse past the root */}
+                      <Link to="../../../about" relative="path" />
+                    </>
+                  }
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findAllByType("a").map((a) => a.props.href)).toEqual(
+        ["/about", "/about"]
+      );
+    });
+  });
+
+  describe("when using a browser router", () => {
+    it("renders proper <a href> for BrowserRouter", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Link to="/path?search=value#hash" />} />
+            </Routes>
+          </BrowserRouter>
+        );
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "/path?search=value#hash"
+      );
+    });
+
+    it("renders proper <a href> for createBrowserRouter", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        let router = createBrowserRouter([
+          {
+            path: "/",
+            element: <Link to="/path?search=value#hash">Link</Link>,
+          },
+        ]);
+        renderer = TestRenderer.create(<RouterProvider router={router} />);
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "/path?search=value#hash"
+      );
+    });
+  });
+
+  describe("when using a hash router", () => {
+    it("renders proper <a href> for HashRouter", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <HashRouter>
+            <Routes>
+              <Route path="/" element={<Link to="/path?search=value#hash" />} />
+            </Routes>
+          </HashRouter>
+        );
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "#/path?search=value#hash"
+      );
+    });
+
+    it("renders proper <a href> for createHashRouter", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        let router = createHashRouter([
+          {
+            path: "/",
+            element: <Link to="/path?search=value#hash">Link</Link>,
+          },
+        ]);
+        renderer = TestRenderer.create(<RouterProvider router={router} />);
+      });
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "#/path?search=value#hash"
+      );
     });
   });
 });

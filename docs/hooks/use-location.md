@@ -28,6 +28,7 @@ function App() {
   let location = useLocation();
 
   React.useEffect(() => {
+    // Google Analytics
     ga('send', 'pageview');
   }, [location]);
 

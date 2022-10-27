@@ -1,6 +1,7 @@
 ---
 title: Code Splitting
 new: true
+hidden: true
 ---
 
 # Code Splitting
