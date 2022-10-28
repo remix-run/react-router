@@ -1,7 +1,7 @@
 import type esbuild from "esbuild";
 
 import type { RemixConfig } from "../../config";
-import { getRouteModuleExportsCached } from "../routes";
+import { getRouteModuleExports } from "../routeExports";
 import invariant from "../../invariant";
 
 type Route = RemixConfig["routes"][string];
@@ -53,9 +53,9 @@ export function browserRouteModulesPlugin(
           try {
             invariant(route, `Cannot get route by path: ${args.path}`);
 
-            theExports = (
-              await getRouteModuleExportsCached(config, route.id)
-            ).filter((ex) => !!browserSafeRouteExports[ex]);
+            theExports = (await getRouteModuleExports(config, route.id)).filter(
+              (ex) => !!browserSafeRouteExports[ex]
+            );
           } catch (error: any) {
             return {
               errors: [

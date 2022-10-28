@@ -28,7 +28,7 @@ afterAll(async () => {
 
 async function execRemix(
   args: Array<string>,
-  options: Parameters<typeof execFile>[2] = {}
+  options: Exclude<Parameters<typeof execFile>[2], null | undefined> = {}
 ) {
   if (process.platform === "win32") {
     let cp = childProcess.spawnSync(
@@ -275,7 +275,7 @@ function defer() {
       return rej(reason);
     };
   });
-  return { promise, resolve, reject, state };
+  return { promise, resolve: resolve!, reject: reject!, state };
 }
 
 async function interactWithShell(

@@ -8,7 +8,7 @@ import { getFileHash } from "./utils/crypto";
 
 type CachedRouteExports = { hash: string; exports: string[] };
 
-export async function getRouteModuleExportsCached(
+export async function getRouteModuleExports(
   config: RemixConfig,
   routeId: string
 ): Promise<string[]> {
@@ -24,7 +24,7 @@ export async function getRouteModuleExportsCached(
   }
 
   if (!cached || cached.hash !== hash) {
-    let exports = await getRouteModuleExports(config, routeId);
+    let exports = await _getRouteModuleExports(config, routeId);
     cached = { hash, exports };
     try {
       await cache.putJson(config.cacheDirectory, key, cached);
@@ -41,7 +41,7 @@ export async function getRouteModuleExportsCached(
   return cached.exports;
 }
 
-export async function getRouteModuleExports(
+async function _getRouteModuleExports(
   config: RemixConfig,
   routeId: string
 ): Promise<string[]> {

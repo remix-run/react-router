@@ -1,10 +1,8 @@
 import type { Plugin } from "esbuild";
 import jsesc from "jsesc";
 
-import invariant from "../../invariant";
-import { assetsManifestVirtualModule } from "../virtualModules";
-
-export type AssetsManifestPromiseRef = { current?: Promise<unknown> };
+import type { AssetsManifest } from "../../compiler/assets";
+import { assetsManifestVirtualModule } from "../../compiler/virtualModules";
 
 /**
  * Creates a virtual module called `@remix-run/dev/assets-manifest` that exports
@@ -12,7 +10,7 @@ export type AssetsManifestPromiseRef = { current?: Promise<unknown> };
  * assets manifest in the server build.
  */
 export function serverAssetsManifestPlugin(
-  assetsManifestPromiseRef: AssetsManifestPromiseRef
+  assetsManifestPromise: Promise<AssetsManifest>
 ): Plugin {
   let filter = assetsManifestVirtualModule.filter;
 
@@ -27,15 +25,9 @@ export function serverAssetsManifestPlugin(
       });
 
       build.onLoad({ filter }, async () => {
-        invariant(
-          assetsManifestPromiseRef.current,
-          "Missing assets manifests in server build."
-        );
-
-        let manifest = await assetsManifestPromiseRef.current;
-
+        let assetsManifest = await assetsManifestPromise;
         return {
-          contents: `export default ${jsesc(manifest, { es6: true })};`,
+          contents: `export default ${jsesc(assetsManifest, { es6: true })};`,
           loader: "js",
         };
       });
