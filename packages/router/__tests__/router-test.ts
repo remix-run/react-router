@@ -3168,7 +3168,6 @@ describe("a router", () => {
             true
           ),
         });
-        expect(console.warn).toHaveBeenCalled();
         spy.mockReset();
       });
 

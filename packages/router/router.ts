@@ -24,7 +24,6 @@ import type {
 import {
   DeferredData,
   ErrorResponse,
-  ErrorWithStatus,
   ResultType,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
@@ -2927,9 +2926,12 @@ function getInternalRouterError(
     errorMessage = "Unknown @remix-run/router error";
   }
 
-  let error = new Error(errorMessage);
-  console.warn(error);
-  return new ErrorResponse(status || 500, statusText, error, true);
+  return new ErrorResponse(
+    status || 500,
+    statusText,
+    new Error(errorMessage),
+    true
+  );
 }
 
 // Find any returned redirect errors, starting from the lowest match
