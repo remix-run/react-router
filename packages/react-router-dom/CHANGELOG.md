@@ -1,5 +1,13 @@
 # `react-router-dom`
 
+## 6.4.3-pre.2
+
+### Patch Changes
+
+- Fix `NavLink` behavior for root urls ([#9497](https://github.com/remix-run/react-router/pull/9497))
+- Updated dependencies:
+  - `react-router@6.4.3-pre.2`
+
 ## 6.4.3-pre.1
 
 ### Patch Changes

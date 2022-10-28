@@ -1,5 +1,9 @@
 # `react-router`
 
+## 6.4.3-pre.2
+
+No Changes
+
 ## 6.4.3-pre.1
 
 ### Patch Changes
