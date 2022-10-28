@@ -20,20 +20,19 @@ import {
 } from "./remixSetup";
 import { resolveTransformOptions } from "./resolveTransformOptions";
 import type { Options } from "./transform/options";
+import { CliError } from "../../../error";
 
 const TRANSFORM_PATH = join(__dirname, "transform");
 
 const getRemixVersionSpec = (remixDeps: Dependency[]): string => {
   let candidate = maxBy(remixDeps, (dep) => semver.minVersion(dep.versionSpec));
   if (candidate === undefined) {
-    console.error("❌ I couldn't find versions for your Remix packages.");
-    process.exit(1);
+    throw new CliError("❌ I couldn't find versions for your Remix packages.");
   }
 
   let candidateMin = semver.minVersion(candidate.versionSpec);
   if (candidateMin === null) {
-    console.error("❌ I couldn't find versions for your Remix packages.");
-    process.exit(1);
+    throw new CliError("❌ I couldn't find versions for your Remix packages.");
   }
 
   if (semver.lt(candidateMin, "1.3.3")) {
@@ -175,7 +174,7 @@ export const replaceRemixImports: MigrationFunction = async (
     if (!flags.debug) {
       console.log("👉 Try again with the `--debug` flag to see what failed.");
     }
-    process.exit(1);
+    throw new CliError();
   }
   console.log("✅ Your Remix imports look good!");
 
