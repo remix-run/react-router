@@ -1243,11 +1243,24 @@ export class ErrorResponse {
   status: number;
   statusText: string;
   data: any;
+  error?: Error;
+  internal: boolean;
 
-  constructor(status: number, statusText: string | undefined, data: any) {
+  constructor(
+    status: number,
+    statusText: string | undefined,
+    data: any,
+    internal = false
+  ) {
     this.status = status;
     this.statusText = statusText || "";
-    this.data = data;
+    this.internal = internal;
+    if (data instanceof Error) {
+      this.data = data.toString();
+      this.error = data;
+    } else {
+      this.data = data;
+    }
   }
 }
 
@@ -1257,25 +1270,4 @@ export class ErrorResponse {
  */
 export function isRouteErrorResponse(e: any): e is ErrorResponse {
   return e instanceof ErrorResponse;
-}
-
-/**
- * @private
- * Utility class we use to hold thrown Errors that are status-code-aware
- */
-export class ErrorWithStatus extends Error {
-  status: number;
-
-  constructor(msg: string, status: number) {
-    super(msg);
-    this.status = status;
-  }
-}
-
-/**
- * Check if the given error is an ErrorResponse generated from a 4xx/5xx
- * Response throw from an action/loader
- */
-export function isErrorWithStatus(e: any): e is ErrorWithStatus {
-  return e instanceof ErrorWithStatus;
 }

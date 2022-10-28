@@ -34,7 +34,7 @@ import type {
 } from "../utils";
 import {
   AbortedDeferredError,
-  isErrorWithStatus,
+  isRouteErrorResponse,
   stripBasename,
 } from "../utils";
 
@@ -2125,11 +2125,12 @@ describe("a router", () => {
         root: "ROOT",
       });
       expect(t.router.state.errors).toEqual({
-        root: {
-          status: 404,
-          statusText: "Not Found",
-          data: null,
-        },
+        root: new ErrorResponse(
+          404,
+          "Not Found",
+          new Error('No route matches URL "/not-found"'),
+          true
+        ),
       });
       expect(t.router.state.matches).toMatchObject([
         {
@@ -2138,7 +2139,6 @@ describe("a router", () => {
           route: {
             hasErrorBoundary: true,
             children: expect.any(Array),
-
             id: "root",
             loader: expect.any(Function),
             module: "",
@@ -2155,11 +2155,12 @@ describe("a router", () => {
 
       t.navigate("/not-found");
       expect(t.router.state.errors).toEqual({
-        root: {
-          status: 404,
-          statusText: "Not Found",
-          data: null,
-        },
+        root: new ErrorResponse(
+          404,
+          "Not Found",
+          new Error('No route matches URL "/not-found"'),
+          true
+        ),
       });
       expect(t.router.state.matches).toMatchObject([
         {
@@ -2201,11 +2202,12 @@ describe("a router", () => {
         root: "ROOT*",
       });
       expect(t.router.state.errors).toEqual({
-        root: {
-          status: 404,
-          statusText: "Not Found",
-          data: null,
-        },
+        root: new ErrorResponse(
+          404,
+          "Not Found",
+          new Error('No route matches URL "/not-found"'),
+          true
+        ),
       });
       expect(t.router.state.matches).toMatchObject([
         {
@@ -2214,7 +2216,6 @@ describe("a router", () => {
           route: {
             hasErrorBoundary: true,
             children: expect.any(Array),
-
             id: "root",
             loader: expect.any(Function),
             module: "",
@@ -3157,7 +3158,15 @@ describe("a router", () => {
           formData: createFormData({ gosh: "dang" }),
         });
         expect(t.router.state.errors).toEqual({
-          child: new ErrorResponse(405, "Method Not Allowed", ""),
+          child: new ErrorResponse(
+            405,
+            "Method Not Allowed",
+            new Error(
+              'You made a POST request to "/child" but did not provide an ' +
+                '`action` for route "child", so there is no way to handle the request.'
+            ),
+            true
+          ),
         });
         expect(console.warn).toHaveBeenCalled();
         spy.mockReset();
@@ -3210,7 +3219,16 @@ describe("a router", () => {
         });
         expect(t.router.state.actionData).toBe(null);
         expect(t.router.state.errors).toEqual({
-          grandchild: new ErrorResponse(405, "Method Not Allowed", ""),
+          grandchild: new ErrorResponse(
+            405,
+            "Method Not Allowed",
+            new Error(
+              'You made a POST request to "/child/grandchild" but did not ' +
+                'provide an `action` for route "grandchild", so there is no way ' +
+                "to handle the request."
+            ),
+            true
+          ),
         });
       });
     });
@@ -3827,11 +3845,12 @@ describe("a router", () => {
         navigation: IDLE_NAVIGATION,
         loaderData: {},
         errors: {
-          root: {
-            status: 404,
-            statusText: "Not Found",
-            data: null,
-          },
+          root: new ErrorResponse(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/junk"'),
+            true
+          ),
         },
       });
     });
@@ -3942,7 +3961,8 @@ describe("a router", () => {
         tasks: new ErrorResponse(
           400,
           "Bad Request",
-          "Cannot submit binary form data using GET"
+          new Error("Cannot submit binary form data using GET"),
+          true
         ),
       });
     });
@@ -3996,7 +4016,8 @@ describe("a router", () => {
         child: new ErrorResponse(
           400,
           "Bad Request",
-          "Cannot submit binary form data using GET"
+          new Error("Cannot submit binary form data using GET"),
+          true
         ),
       });
     });
@@ -6798,7 +6819,15 @@ describe("a router", () => {
         });
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(405, "Method Not Allowed", ""),
+          root: new ErrorResponse(
+            405,
+            "Method Not Allowed",
+            new Error(
+              'You made a post request to "/" but did not provide a `loader` ' +
+                'for route "root", so there is no way to handle the request.'
+            ),
+            true
+          ),
         });
       });
 
@@ -6842,7 +6871,12 @@ describe("a router", () => {
         await t.fetch("/not-found", "key2", "wit");
         expect(t.router.getFetcher("key2")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(404, "Not Found", null),
+          root: new ErrorResponse(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/not-found"'),
+            true
+          ),
         });
 
         // Navigate to /wit and trigger errors, handled at the wit boundary
@@ -6862,13 +6896,23 @@ describe("a router", () => {
         });
         expect(t.router.getFetcher("key4")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          wit: new ErrorResponse(404, "Not Found", null),
+          wit: new ErrorResponse(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/not-found"'),
+            true
+          ),
         });
 
         await t.fetch("/not-found", "key5", "wit");
         expect(t.router.getFetcher("key5")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          wit: new ErrorResponse(404, "Not Found", null),
+          wit: new ErrorResponse(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/not-found"'),
+            true
+          ),
         });
 
         // Navigate to /witout and fetch a 404, handled at the root boundary
@@ -6885,7 +6929,12 @@ describe("a router", () => {
         await t.fetch("/not-found", "key7", "witout");
         expect(t.router.getFetcher("key7")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(404, "Not Found", null),
+          root: new ErrorResponse(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/not-found"'),
+            true
+          ),
         });
       });
     });
@@ -8952,7 +9001,8 @@ describe("a router", () => {
         parent: new ErrorResponse(
           400,
           "Bad Request",
-          "Cannot submit binary form data using GET"
+          new Error("Cannot submit binary form data using GET"),
+          true
         ),
       });
 
@@ -9063,7 +9113,8 @@ describe("a router", () => {
         bChild: new ErrorResponse(
           400,
           "Bad Request",
-          "Cannot submit binary form data using GET"
+          new Error("Cannot submit binary form data using GET"),
+          true
         ),
       });
       expect(B.loaders.bChild.stub).not.toHaveBeenCalled();
@@ -10255,11 +10306,12 @@ describe("a router", () => {
           loaderData: {},
           actionData: null,
           errors: {
-            index: {
-              data: null,
-              status: 404,
-              statusText: "Not Found",
-            },
+            index: new ErrorResponse(
+              404,
+              "Not Found",
+              new Error('No route matches URL "/not/found"'),
+              true
+            ),
           },
           matches: [{ route: { id: "index" } }],
         });
@@ -10406,11 +10458,15 @@ describe("a router", () => {
           actionData: null,
           loaderData: {},
           errors: {
-            root: {
-              status: 405,
-              statusText: "Method Not Allowed",
-              data: "",
-            },
+            root: new ErrorResponse(
+              405,
+              "Method Not Allowed",
+              new Error(
+                'You made a POST request to "/" but did not provide an `action` ' +
+                  'for route "root", so there is no way to handle the request.'
+              ),
+              true
+            ),
           },
           matches: [{ route: { id: "root" } }],
         });
@@ -10429,11 +10485,12 @@ describe("a router", () => {
           actionData: null,
           loaderData: {},
           errors: {
-            root: {
-              status: 405,
-              statusText: "Method Not Allowed",
-              data: null,
-            },
+            root: new ErrorResponse(
+              405,
+              "Method Not Allowed",
+              new Error('Invalid request method "OPTIONS"'),
+              true
+            ),
           },
           matches: [{ route: { id: "root" } }],
         });
@@ -11316,18 +11373,24 @@ describe("a router", () => {
             await queryRoute(createRequest("/junk"));
             expect(false).toBe(true);
           } catch (data) {
-            expect(isErrorWithStatus(data)).toBe(true);
+            expect(isRouteErrorResponse(data)).toBe(true);
             expect(data.status).toBe(404);
-            expect(data.message).toBe('No route matches URL "/junk"');
+            expect(data.error).toEqual(
+              new Error('No route matches URL "/junk"')
+            );
+            expect(data.internal).toBe(true);
           }
 
           try {
             await queryRoute(createSubmitRequest("/junk"));
             expect(false).toBe(true);
           } catch (data) {
-            expect(isErrorWithStatus(data)).toBe(true);
+            expect(isRouteErrorResponse(data)).toBe(true);
             expect(data.status).toBe(404);
-            expect(data.message).toBe('No route matches URL "/junk"');
+            expect(data.error).toEqual(
+              new Error('No route matches URL "/junk"')
+            );
+            expect(data.internal).toBe(true);
           }
         });
 
@@ -11336,18 +11399,24 @@ describe("a router", () => {
             await queryRoute(createRequest("/"), "junk");
             expect(false).toBe(true);
           } catch (data) {
-            expect(isErrorWithStatus(data)).toBe(true);
+            expect(isRouteErrorResponse(data)).toBe(true);
             expect(data.status).toBe(403);
-            expect(data.message).toBe('Route "junk" does not match URL "/"');
+            expect(data.error).toEqual(
+              new Error('Route "junk" does not match URL "/"')
+            );
+            expect(data.internal).toBe(true);
           }
 
           try {
             await queryRoute(createSubmitRequest("/"), "junk");
             expect(false).toBe(true);
           } catch (data) {
-            expect(isErrorWithStatus(data)).toBe(true);
+            expect(isRouteErrorResponse(data)).toBe(true);
             expect(data.status).toBe(403);
-            expect(data.message).toBe('Route "junk" does not match URL "/"');
+            expect(data.error).toEqual(
+              new Error('Route "junk" does not match URL "/"')
+            );
+            expect(data.internal).toBe(true);
           }
         });
 
@@ -11356,24 +11425,30 @@ describe("a router", () => {
             await queryRoute(createRequest("/"), "root");
             expect(false).toBe(true);
           } catch (data) {
-            expect(isErrorWithStatus(data)).toBe(true);
+            expect(isRouteErrorResponse(data)).toBe(true);
             expect(data.status).toBe(405);
-            expect(data.message).toBe(
-              'You made a GET request to "/" but did not provide a `loader` ' +
-                'for route "root", so there is no way to handle the request.'
+            expect(data.error).toEqual(
+              new Error(
+                'You made a GET request to "/" but did not provide a `loader` ' +
+                  'for route "root", so there is no way to handle the request.'
+              )
             );
+            expect(data.internal).toBe(true);
           }
 
           try {
             await queryRoute(createSubmitRequest("/"), "root");
             expect(false).toBe(true);
           } catch (data) {
-            expect(isErrorWithStatus(data)).toBe(true);
+            expect(isRouteErrorResponse(data)).toBe(true);
             expect(data.status).toBe(405);
-            expect(data.message).toBe(
-              'You made a POST request to "/" but did not provide an `action` ' +
-                'for route "root", so there is no way to handle the request.'
+            expect(data.error).toEqual(
+              new Error(
+                'You made a POST request to "/" but did not provide an `action` ' +
+                  'for route "root", so there is no way to handle the request.'
+              )
             );
+            expect(data.internal).toBe(true);
           }
         });
 
@@ -11382,9 +11457,12 @@ describe("a router", () => {
             await queryRoute(createRequest("/", { method: "OPTIONS" }), "root");
             expect(false).toBe(true);
           } catch (data) {
-            expect(isErrorWithStatus(data)).toBe(true);
+            expect(isRouteErrorResponse(data)).toBe(true);
             expect(data.status).toBe(405);
-            expect(data.message).toBe('Invalid request method "OPTIONS"');
+            expect(data.error).toEqual(
+              new Error('Invalid request method "OPTIONS"')
+            );
+            expect(data.internal).toBe(true);
           }
         });
 
