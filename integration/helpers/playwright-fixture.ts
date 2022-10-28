@@ -264,6 +264,7 @@ async function doAndWait(
   page.on("request", onRequest);
   page.on("requestfinished", onRequestDone);
   page.on("requestfailed", onRequestDone);
+  page.on("load", networkSettledCallback); // e.g. navigation with javascript disabled
 
   let timeoutId: NodeJS.Timer | undefined;
   if (DEBUG) {
@@ -287,6 +288,7 @@ async function doAndWait(
   page.removeListener("request", onRequest);
   page.removeListener("requestfinished", onRequestDone);
   page.removeListener("requestfailed", onRequestDone);
+  page.removeListener("load", networkSettledCallback);
 
   if (DEBUG && timeoutId) {
     clearTimeout(timeoutId);
