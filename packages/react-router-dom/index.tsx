@@ -1038,8 +1038,8 @@ function useScrollRestoration({
     };
   }, []);
 
-  // Save positions on unload
-  useBeforeUnload(
+  // Save positions on pagehide
+  usePagehide(
     React.useCallback(() => {
       if (navigation.state === "idle") {
         let key = (getKey ? getKey(location, matches) : null) || location.key;
@@ -1109,11 +1109,11 @@ function useScrollRestoration({
   }, [location, restoreScrollPosition, preventScrollReset]);
 }
 
-function useBeforeUnload(callback: () => any): void {
+function usePagehide(callback: () => any): void {
   React.useEffect(() => {
-    window.addEventListener("beforeunload", callback);
+    window.addEventListener("pagehide", callback);
     return () => {
-      window.removeEventListener("beforeunload", callback);
+      window.removeEventListener("pagehide", callback);
     };
   }, [callback]);
 }
