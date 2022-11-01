@@ -1243,11 +1243,24 @@ export class ErrorResponse {
   status: number;
   statusText: string;
   data: any;
+  error?: Error;
+  internal: boolean;
 
-  constructor(status: number, statusText: string | undefined, data: any) {
+  constructor(
+    status: number,
+    statusText: string | undefined,
+    data: any,
+    internal = false
+  ) {
     this.status = status;
     this.statusText = statusText || "";
-    this.data = data;
+    this.internal = internal;
+    if (data instanceof Error) {
+      this.data = data.toString();
+      this.error = data;
+    } else {
+      this.data = data;
+    }
   }
 }
 
