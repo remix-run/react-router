@@ -15,7 +15,7 @@ import {
   invariant,
   parsePath,
   stripBasename,
-  warning,
+  warning, generatePath,
 } from "@remix-run/router";
 import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
@@ -41,7 +41,7 @@ import {
   useNavigate,
   useOutlet,
   useRoutes,
-  _renderMatches,
+  _renderMatches, useParams,
 } from "./hooks";
 
 export interface RouterProviderProps {
@@ -161,6 +161,7 @@ export interface NavigateProps {
   replace?: boolean;
   state?: any;
   relative?: RelativeRoutingType;
+  autoSubstitute?: boolean;
 }
 
 /**
@@ -177,6 +178,7 @@ export function Navigate({
   replace,
   state,
   relative,
+  autoSubstitute,
 }: NavigateProps): null {
   invariant(
     useInRouterContext(),
@@ -194,6 +196,7 @@ export function Navigate({
 
   let dataRouterState = React.useContext(DataRouterStateContext);
   let navigate = useNavigate();
+  let params = useParams();
 
   React.useEffect(() => {
     // Avoid kicking off multiple navigations if we're in the middle of a
@@ -201,6 +204,9 @@ export function Navigate({
     // a submitting/loading state
     if (dataRouterState && dataRouterState.navigation.state !== "idle") {
       return;
+    }
+    if (autoSubstitute && typeof to === 'string') {
+      to = generatePath(to, params);
     }
     navigate(to, { replace, state, relative });
   });

@@ -390,6 +390,36 @@ describe("<Navigate>", () => {
       `);
     });
 
+    it("handles substituted navigation param from current route params", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/layout1/dest"]}>
+            <Routes>
+              <Route path="layout1">
+                <Route path=":param">
+                  {/* redirect /layout/:param/ index routes to /layout/:param/dest */}
+                  <Route
+                    index
+                    element={
+                      <Navigate to="/layout2/:param" autoSubstitute />
+                    }
+                  />
+                </Route>
+              </Route>
+              <Route path="layout2">
+                <Route path=":param">
+                  <Route path="dest" element={<h1>Destination</h1>} />
+                </Route>
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`null`);
+    });
+
     it("preserves search params and hash", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
