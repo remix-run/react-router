@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 1.7.5-pre.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/serve@1.7.5-pre.0`
+  - `@remix-run/server-runtime@1.7.5-pre.0`
+
 ## 1.7.4
 
 ### Patch Changes
