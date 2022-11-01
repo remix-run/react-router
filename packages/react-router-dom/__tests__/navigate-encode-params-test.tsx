@@ -12,6 +12,7 @@ import {
 describe("navigate with params", () => {
   let node: HTMLDivElement;
   beforeEach(() => {
+    global.history.pushState({}, "", "/");
     node = document.createElement("div");
     document.body.appendChild(node);
   });
@@ -88,7 +89,8 @@ describe("navigate with params", () => {
       let pathname = window.location.pathname.replace(/%20/g, "+");
       expect(pathname).toEqual("/blog/react+router");
 
-      expect(node.innerHTML).toMatch(/react router/);
+      // Note decodeURIComponent doesn't decode +
+      expect(node.innerHTML).toMatch(/react\+router/);
     });
   });
 });

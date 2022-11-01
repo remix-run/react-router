@@ -126,6 +126,15 @@ export interface History {
   createHref(to: To): string;
 
   /**
+   * Encode a location the same way window.history would do (no-op for memory
+   * history) so we ensure our PUSH/REPLAC e navigations for data routers
+   * behave the same as POP
+   *
+   * @param location The incoming location from router.navigate()
+   */
+  encodeLocation(location: Location): Location;
+
+  /**
    * Pushes a new location onto the history stack, increasing its length by one.
    * If there were any entries in the stack after the current one, they are
    * lost.
@@ -258,6 +267,9 @@ export function createMemoryHistory(
     },
     createHref(to) {
       return typeof to === "string" ? to : createPath(to);
+    },
+    encodeLocation(location) {
+      return location;
     },
     push(to, state) {
       action = Action.Push;
@@ -527,6 +539,20 @@ export function parsePath(path: string): Partial<Path> {
   return parsedPath;
 }
 
+export function createURL(location: Location | string): URL {
+  // window.location.origin is "null" (the literal string value) in Firefox
+  // under certain conditions, notably when serving from a local HTML file
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
+  let base =
+    typeof window !== "undefined" &&
+    typeof window.location !== "undefined" &&
+    window.location.origin !== "null"
+      ? window.location.origin
+      : "unknown://unknown";
+  let href = typeof location === "string" ? location : createPath(location);
+  return new URL(href, base);
+}
+
 export interface UrlHistory extends History {}
 
 export type UrlHistoryOptions = {
@@ -570,7 +596,7 @@ function getUrlBasedHistory(
     }
 
     if (v5Compat && listener) {
-      listener({ action, location });
+      listener({ action, location: history.location });
     }
   }
 
@@ -584,7 +610,7 @@ function getUrlBasedHistory(
     globalHistory.replaceState(historyState, "", url);
 
     if (v5Compat && listener) {
-      listener({ action, location: location });
+      listener({ action, location: history.location });
     }
   }
 
@@ -609,6 +635,16 @@ function getUrlBasedHistory(
     },
     createHref(to) {
       return createHref(window, to);
+    },
+    encodeLocation(location) {
+      // Encode a Location the same way window.location would
+      let url = createURL(createPath(location));
+      return {
+        ...location,
+        pathname: url.pathname,
+        search: url.search,
+        hash: url.hash,
+      };
     },
     push,
     replace,

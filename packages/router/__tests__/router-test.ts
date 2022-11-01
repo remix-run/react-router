@@ -1,13 +1,11 @@
 /* eslint-disable jest/valid-title */
 import type {
-  ActionFunction,
   AgnosticDataRouteObject,
   AgnosticRouteMatch,
   Fetcher,
   RouterFetchOptions,
   HydrationState,
   InitialEntry,
-  LoaderFunction,
   Router,
   RouterNavigateOptions,
   StaticHandler,
@@ -28,17 +26,32 @@ import {
 } from "../index";
 
 // Private API
-import type { AgnosticRouteObject, TrackedPromise } from "../utils";
-import { AbortedDeferredError } from "../utils";
+import type {
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
+  AgnosticRouteObject,
+  TrackedPromise,
+} from "../utils";
+import { AbortedDeferredError, stripBasename } from "../utils";
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
 ///////////////////////////////////////////////////////////////////////////////
 
 // Routes passed into setup() should just have a boolean for loader/action
-// indicating they want a stub
-type TestRouteObject = Pick<
-  AgnosticDataRouteObject,
+// indicating they want a stub.  They get enhanced back to AgnosticRouteObjects
+// by our test harness
+type TestIndexRouteObject = Pick<
+  AgnosticIndexRouteObject,
+  "id" | "index" | "path" | "shouldRevalidate"
+> & {
+  loader?: boolean;
+  action?: boolean;
+  hasErrorBoundary?: boolean;
+};
+
+type TestNonIndexRouteObject = Pick<
+  AgnosticNonIndexRouteObject,
   "id" | "index" | "path" | "shouldRevalidate"
 > & {
   loader?: boolean;
@@ -47,16 +60,7 @@ type TestRouteObject = Pick<
   children?: TestRouteObject[];
 };
 
-// Enhanced route objects are what is passed to the router for testing, as they
-// have been enhanced with stubbed loaders and actions
-type EnhancedRouteObject = Omit<
-  TestRouteObject,
-  "loader" | "action" | "children"
-> & {
-  loader?: LoaderFunction;
-  action?: ActionFunction;
-  children?: EnhancedRouteObject[];
-};
+type TestRouteObject = TestIndexRouteObject | TestNonIndexRouteObject;
 
 // A helper that includes the Deferred and stubs for any loaders/actions for the
 // route allowing fine-grained test execution
@@ -251,7 +255,7 @@ function setup({
   // active navigation loader/action
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
-      let enhancedRoute: EnhancedRouteObject = {
+      let enhancedRoute: AgnosticRouteObject = {
         ...r,
         loader: undefined,
         action: undefined,
@@ -313,7 +317,7 @@ function setup({
           );
         };
       }
-      if (r.children) {
+      if (!r.index && r.children) {
         enhancedRoute.children = enhanceRoutes(r.children);
       }
       return enhancedRoute;
@@ -438,7 +442,11 @@ function setup({
     href: string,
     navigationId: number
   ): NavigationHelpers {
-    let matches = matchRoutes(enhancedRoutes, href);
+    invariant(
+      currentRouter?.routes,
+      "No currentRouter.routes available in getNavigationHelpers"
+    );
+    let matches = matchRoutes(currentRouter.routes, href);
 
     // Generate helpers for all route matches that contain loaders
     let loaderHelpers = getHelpers(
@@ -473,7 +481,11 @@ function setup({
     navigationId: number,
     opts?: RouterNavigateOptions
   ): FetcherHelpers {
-    let matches = matchRoutes(enhancedRoutes, href);
+    invariant(
+      currentRouter?.routes,
+      "No currentRouter.routes available in getFetcherHelpers"
+    );
+    let matches = matchRoutes(currentRouter.routes, href);
     invariant(currentRouter, "No currentRouter available");
     let search = parsePath(href).search || "";
     let hasNakedIndexQuery = new URLSearchParams(search)
@@ -506,7 +518,7 @@ function setup({
     if (opts?.formMethod === "post") {
       if (currentRouter.state.navigation?.location) {
         let matches = matchRoutes(
-          enhancedRoutes,
+          currentRouter.routes,
           currentRouter.state.navigation.location
         );
         invariant(matches, "No matches found for fetcher");
@@ -576,10 +588,11 @@ function setup({
       let promise = new Promise<void>((r) => {
         invariant(currentRouter, "No currentRouter available");
         let unsubscribe = currentRouter.subscribe(() => {
-          helpers = getNavigationHelpers(
-            history.createHref(history.location),
-            navigationId
-          );
+          let popHref = history.createHref(history.location);
+          if (currentRouter?.basename) {
+            popHref = stripBasename(popHref, currentRouter.basename) as string;
+          }
+          helpers = getNavigationHelpers(popHref, navigationId);
           unsubscribe();
           r();
         });
@@ -590,7 +603,11 @@ function setup({
       return helpers;
     }
 
-    helpers = getNavigationHelpers(href, navigationId);
+    let navHref = href;
+    if (currentRouter.basename) {
+      navHref = stripBasename(navHref, currentRouter.basename) as string;
+    }
+    helpers = getNavigationHelpers(navHref, navigationId);
     currentRouter.navigate(href, opts);
     return helpers;
   }
@@ -1003,7 +1020,7 @@ describe("a router", () => {
     });
 
     it("throws if it finds index routes with children", async () => {
-      let routes = [
+      let routes: AgnosticRouteObject[] = [
         // @ts-expect-error
         {
           index: true,
@@ -2127,6 +2144,31 @@ describe("a router", () => {
       ]);
     });
 
+    it("matches root pathless route", () => {
+      let t = setup({
+        routes: [{ id: "root", children: [{ path: "foo" }] }],
+      });
+
+      t.navigate("/not-found");
+      expect(t.router.state.errors).toEqual({
+        root: {
+          status: 404,
+          statusText: "Not Found",
+          data: null,
+        },
+      });
+      expect(t.router.state.matches).toMatchObject([
+        {
+          params: {},
+          pathname: "",
+          route: {
+            id: "root",
+            children: expect.any(Array),
+          },
+        },
+      ]);
+    });
+
     it("clears prior loader/action data", async () => {
       let t = initializeTmTest();
       expect(t.router.state.loaderData).toEqual({
@@ -2847,6 +2889,55 @@ describe("a router", () => {
       });
     });
 
+    it("uses the proper action for pathless layout routes", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "parent",
+            path: "/parent",
+            action: true,
+            children: [
+              {
+                hasErrorBoundary: true,
+                children: [
+                  {
+                    id: "index",
+                    index: true,
+                    action: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+      let A = await t.navigate("/parent", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      await A.actions.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/parent" },
+        actionData: {
+          parent: "PARENT",
+        },
+        errors: null,
+      });
+
+      let B = await t.navigate("/parent?index", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+      await B.actions.index.resolve("INDEX");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/parent", search: "?index" },
+        actionData: {
+          index: "INDEX",
+        },
+        errors: null,
+      });
+    });
+
     it("retains the index match when submitting to a layout route", async () => {
       let t = setup({
         routes: [
@@ -3062,11 +3153,7 @@ describe("a router", () => {
           formData: createFormData({ gosh: "dang" }),
         });
         expect(t.router.state.errors).toEqual({
-          child: new ErrorResponse(
-            405,
-            "Method Not Allowed",
-            "No action found for [/child]"
-          ),
+          child: new ErrorResponse(405, "Method Not Allowed", ""),
         });
         expect(console.warn).toHaveBeenCalled();
         spy.mockReset();
@@ -3119,11 +3206,7 @@ describe("a router", () => {
         });
         expect(t.router.state.actionData).toBe(null);
         expect(t.router.state.errors).toEqual({
-          grandchild: new ErrorResponse(
-            405,
-            "Method Not Allowed",
-            "No action found for [/child/grandchild]"
-          ),
+          grandchild: new ErrorResponse(405, "Method Not Allowed", ""),
         });
       });
     });
@@ -4988,6 +5071,342 @@ describe("a router", () => {
     });
   });
 
+  describe("redirects", () => {
+    let REDIRECT_ROUTES: TestRouteObject[] = [
+      {
+        id: "root",
+        path: "/",
+        children: [
+          {
+            id: "parent",
+            path: "parent",
+            action: true,
+            loader: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                action: true,
+                loader: true,
+                children: [
+                  {
+                    id: "index",
+                    index: true,
+                    action: true,
+                    loader: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    it("applies the basename to redirects returned from loaders", async () => {
+      let t = setup({
+        routes: REDIRECT_ROUTES,
+        basename: "/base/name",
+        initialEntries: ["/base/name"],
+      });
+
+      let nav1 = await t.navigate("/base/name/parent");
+
+      let nav2 = await nav1.loaders.parent.redirectReturn("/parent/child");
+      await nav2.loaders.parent.resolve("PARENT");
+      await nav2.loaders.child.resolve("CHILD");
+      await nav2.loaders.index.resolve("INDEX");
+      expect(t.router.state).toMatchObject({
+        historyAction: "PUSH",
+        location: {
+          pathname: "/base/name/parent/child",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT",
+          child: "CHILD",
+          index: "INDEX",
+        },
+        errors: null,
+      });
+      expect(t.history.action).toEqual("PUSH");
+      expect(t.history.location.pathname).toEqual("/base/name/parent/child");
+    });
+
+    it("supports relative routing in redirects (from parent navigation loader)", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let nav1 = await t.navigate("/parent/child");
+
+      await nav1.loaders.child.resolve("CHILD");
+      await nav1.loaders.index.resolve("INDEX");
+      await nav1.loaders.parent.redirectReturn("..");
+      // No root loader so redirect lands immediately
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {},
+        errors: null,
+      });
+    });
+
+    it("supports relative routing in redirects (from child navigation loader)", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let nav1 = await t.navigate("/parent/child");
+
+      await nav1.loaders.parent.resolve("PARENT");
+      await nav1.loaders.index.resolve("INDEX");
+      let nav2 = await nav1.loaders.child.redirectReturn(
+        "..",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+      await nav2.loaders.parent.resolve("PARENT 2");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/parent",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT 2",
+        },
+        errors: null,
+      });
+    });
+
+    it("supports relative routing in redirects (from index navigation loader)", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let nav1 = await t.navigate("/parent/child");
+
+      await nav1.loaders.parent.resolve("PARENT");
+      await nav1.loaders.child.resolve("INDEX");
+      let nav2 = await nav1.loaders.index.redirectReturn(
+        "..",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+      await nav2.loaders.parent.resolve("PARENT 2");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/parent",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT 2",
+        },
+        errors: null,
+      });
+    });
+
+    it("supports relative routing in redirects (from parent fetch loader)", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let fetch = await t.fetch("/parent");
+
+      await fetch.loaders.parent.redirectReturn("..");
+      // No root loader so redirect lands immediately
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {},
+        errors: null,
+      });
+    });
+
+    it("supports relative routing in redirects (from child fetch loader)", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let fetch = await t.fetch("/parent/child");
+      let nav = await fetch.loaders.child.redirectReturn(
+        "..",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+
+      await nav.loaders.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/parent",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT",
+        },
+        errors: null,
+      });
+    });
+
+    it("supports relative routing in redirects (from index fetch loader)", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let fetch = await t.fetch("/parent/child?index");
+      let nav = await fetch.loaders.index.redirectReturn(
+        "..",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+
+      await nav.loaders.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/parent",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT",
+        },
+        errors: null,
+      });
+    });
+
+    it("supports . redirects", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let nav1 = await t.navigate("/parent");
+
+      let nav2 = await nav1.loaders.parent.redirectReturn(
+        "./child",
+        undefined,
+        undefined,
+        ["parent", "child", "index"]
+      );
+      await nav2.loaders.parent.resolve("PARENT");
+      await nav2.loaders.child.resolve("CHILD");
+      await nav2.loaders.index.resolve("INDEX");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/parent/child",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT",
+          child: "CHILD",
+          index: "INDEX",
+        },
+        errors: null,
+      });
+    });
+
+    it("supports relative routing in navigation action redirects", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let nav1 = await t.navigate("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let nav2 = await nav1.actions.child.redirectReturn(
+        "..",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+      await nav2.loaders.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/parent",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT",
+        },
+        errors: null,
+      });
+    });
+
+    it("supports relative routing in fetch action redirects", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let nav1 = await t.fetch("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let nav2 = await nav1.actions.child.redirectReturn(
+        "..",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+      await nav2.loaders.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/parent",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT",
+        },
+        errors: null,
+      });
+    });
+
+    it("preserves query and hash in redirects", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let nav1 = await t.fetch("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let nav2 = await nav1.actions.child.redirectReturn(
+        "/parent?key=value#hash"
+      );
+      await nav2.loaders.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/parent",
+          search: "?key=value",
+          hash: "#hash",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT",
+        },
+        errors: null,
+      });
+    });
+
+    it("preserves query and hash in relative redirects", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let nav1 = await t.fetch("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let nav2 = await nav1.actions.child.redirectReturn(
+        "..?key=value#hash",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+      await nav2.loaders.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/parent",
+          search: "?key=value",
+          hash: "#hash",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          parent: "PARENT",
+        },
+        errors: null,
+      });
+    });
+  });
+
   describe("scroll restoration", () => {
     it("restores scroll on navigations", async () => {
       let t = setup({
@@ -6320,11 +6739,7 @@ describe("a router", () => {
         });
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(
-            405,
-            "Method Not Allowed",
-            "No action found for [/]"
-          ),
+          root: new ErrorResponse(405, "Method Not Allowed", ""),
         });
       });
 
@@ -9559,6 +9974,23 @@ describe("a router", () => {
         });
       });
 
+      it("should support document load navigations with HEAD requests", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+        let context = await query(
+          createRequest("/parent/child", { method: "HEAD" })
+        );
+        expect(context).toMatchObject({
+          actionData: null,
+          loaderData: {
+            parent: "PARENT LOADER",
+            child: "CHILD LOADER",
+          },
+          errors: null,
+          location: { pathname: "/parent/child" },
+          matches: [{ route: { id: "parent" } }, { route: { id: "child" } }],
+        });
+      });
+
       it("should support document load navigations returning responses", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/json"));
@@ -9613,6 +10045,39 @@ describe("a router", () => {
           location: { pathname: "/parent/child" },
           matches: [{ route: { id: "parent" } }, { route: { id: "child" } }],
         });
+      });
+
+      it("should support alternative submission methods", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+        let context;
+
+        let expected = {
+          actionData: {
+            child: "CHILD ACTION",
+          },
+          loaderData: {
+            parent: "PARENT LOADER",
+            child: "CHILD LOADER",
+          },
+          errors: null,
+          location: { pathname: "/parent/child" },
+          matches: [{ route: { id: "parent" } }, { route: { id: "child" } }],
+        };
+
+        context = await query(
+          createSubmitRequest("/parent/child", { method: "PUT" })
+        );
+        expect(context).toMatchObject(expected);
+
+        context = await query(
+          createSubmitRequest("/parent/child", { method: "PATCH" })
+        );
+        expect(context).toMatchObject(expected);
+
+        context = await query(
+          createSubmitRequest("/parent/child", { method: "DELETE" })
+        );
+        expect(context).toMatchObject(expected);
       });
 
       it("should support document submit navigations returning responses", async () => {
@@ -9671,10 +10136,56 @@ describe("a router", () => {
 
       it("should handle redirect Responses", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
-        let redirect = await query(createRequest("/redirect"));
-        expect(redirect instanceof Response).toBe(true);
-        expect((redirect as Response).status).toBe(302);
-        expect((redirect as Response).headers.get("Location")).toBe("/");
+        let response = await query(createRequest("/redirect"));
+        expect(response instanceof Response).toBe(true);
+        expect((response as Response).status).toBe(302);
+        expect((response as Response).headers.get("Location")).toBe("/");
+      });
+
+      it("should handle relative redirect responses (loader)", async () => {
+        let { query } = createStaticHandler([
+          {
+            path: "/",
+            children: [
+              {
+                path: "parent",
+                children: [
+                  {
+                    path: "child",
+                    loader: () => redirect(".."),
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+        let response = await query(createRequest("/parent/child"));
+        expect(response instanceof Response).toBe(true);
+        expect((response as Response).status).toBe(302);
+        expect((response as Response).headers.get("Location")).toBe("/parent");
+      });
+
+      it("should handle relative redirect responses (action)", async () => {
+        let { query } = createStaticHandler([
+          {
+            path: "/",
+            children: [
+              {
+                path: "parent",
+                children: [
+                  {
+                    path: "child",
+                    action: () => redirect(".."),
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+        let response = await query(createSubmitRequest("/parent/child"));
+        expect(response instanceof Response).toBe(true);
+        expect((response as Response).status).toBe(302);
+        expect((response as Response).headers.get("Location")).toBe("/parent");
       });
 
       it("should handle 404 navigations", async () => {
@@ -9809,20 +10320,6 @@ describe("a router", () => {
         expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
       });
 
-      it("should not support HEAD requests", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES);
-        let request = createRequest("/", { method: "head" });
-        let e;
-        try {
-          await query(request);
-        } catch (_e) {
-          e = _e;
-        }
-        expect(e).toMatchInlineSnapshot(
-          `[Error: query()/queryRoute() do not support HEAD requests]`
-        );
-      });
-
       it("should require a signal on the request", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
@@ -9853,7 +10350,30 @@ describe("a router", () => {
             root: {
               status: 405,
               statusText: "Method Not Allowed",
-              data: "No action found for [/]",
+              data: "",
+            },
+          },
+          matches: [{ route: { id: "root" } }],
+        });
+      });
+
+      it("should handle unsupported methods with a 405 error", async () => {
+        let { query } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+          },
+        ]);
+        let request = createRequest("/", { method: "OPTIONS" });
+        let context = await query(request);
+        expect(context).toMatchObject({
+          actionData: null,
+          loaderData: {},
+          errors: {
+            root: {
+              status: 405,
+              statusText: "Method Not Allowed",
+              data: null,
             },
           },
           matches: [{ route: { id: "root" } }],
@@ -10225,6 +10745,28 @@ describe("a router", () => {
         };
       }
 
+      it("should match routes automatically if no routeId is provided", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let data;
+
+        data = await queryRoute(createRequest("/parent"));
+        expect(data).toBe("PARENT LOADER");
+
+        data = await queryRoute(createRequest("/parent?index"));
+        expect(data).toBe("PARENT INDEX LOADER");
+
+        data = await queryRoute(createRequest("/parent/child"), "child");
+        expect(data).toBe("CHILD LOADER");
+      });
+
+      it("should support HEAD requests", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let data = await queryRoute(
+          createRequest("/parent", { method: "HEAD" })
+        );
+        expect(data).toBe("PARENT LOADER");
+      });
+
       it("should support singular route load navigations (primitives)", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data;
@@ -10256,6 +10798,7 @@ describe("a router", () => {
       });
 
       it("should support singular route load navigations (Responses)", async () => {
+        /* eslint-disable jest/no-conditional-expect */
         let T = setupFlexRouteTest();
         let data;
 
@@ -10268,9 +10811,13 @@ describe("a router", () => {
         expect(await data.text()).toBe("Created!");
 
         // Thrown Success Response
-        data = await T.rejectLoader(new Response("Created!", { status: 201 }));
-        expect(data.status).toBe(201);
-        expect(await data.text()).toBe("Created!");
+        try {
+          await T.rejectLoader(new Response("Created!", { status: 201 }));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data.status).toBe(201);
+          expect(await data.text()).toBe("Created!");
+        }
 
         // Returned Redirect Response
         data = await T.resolveLoader(
@@ -10298,9 +10845,14 @@ describe("a router", () => {
         expect(await data.text()).toBe("Why?");
 
         // Thrown Error Response
-        data = await T.rejectLoader(new Response("Oh no!", { status: 401 }));
-        expect(data.status).toBe(401);
-        expect(await data.text()).toBe("Oh no!");
+        try {
+          await T.rejectLoader(new Response("Oh no!", { status: 401 }));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data.status).toBe(401);
+          expect(await data.text()).toBe("Oh no!");
+        }
+        /* eslint-enable jest/no-conditional-expect */
       });
 
       it("should support singular route load navigations (Errors)", async () => {
@@ -10383,7 +10935,31 @@ describe("a router", () => {
         expect(data).toBe("");
       });
 
+      it("should support alternative submission methods", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let data;
+
+        data = await queryRoute(
+          createSubmitRequest("/parent", { method: "PUT" }),
+          "parent"
+        );
+        expect(data).toBe("PARENT ACTION");
+
+        data = await queryRoute(
+          createSubmitRequest("/parent", { method: "PATCH" }),
+          "parent"
+        );
+        expect(data).toBe("PARENT ACTION");
+
+        data = await queryRoute(
+          createSubmitRequest("/parent", { method: "DELETE" }),
+          "parent"
+        );
+        expect(data).toBe("PARENT ACTION");
+      });
+
       it("should support singular route submit navigations (Responses)", async () => {
+        /* eslint-disable jest/no-conditional-expect */
         let T = setupFlexRouteTest();
         let data;
 
@@ -10396,9 +10972,13 @@ describe("a router", () => {
         expect(await data.text()).toBe("Created!");
 
         // Thrown Success Response
-        data = await T.rejectAction(new Response("Created!", { status: 201 }));
-        expect(data.status).toBe(201);
-        expect(await data.text()).toBe("Created!");
+        try {
+          await T.rejectAction(new Response("Created!", { status: 201 }));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data.status).toBe(201);
+          expect(await data.text()).toBe("Created!");
+        }
 
         // Returned Redirect Response
         data = await T.resolveAction(
@@ -10426,9 +11006,14 @@ describe("a router", () => {
         expect(await data.text()).toBe("Why?");
 
         // Thrown Error Response
-        data = await T.rejectAction(new Response("Oh no!", { status: 401 }));
-        expect(data.status).toBe(401);
-        expect(await data.text()).toBe("Oh no!");
+        try {
+          await T.rejectAction(new Response("Oh no!", { status: 401 }));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data.status).toBe(401);
+          expect(await data.text()).toBe("Oh no!");
+        }
+        /* eslint-enable jest/no-conditional-expect */
       });
 
       it("should support singular route submit navigations (Errors)", async () => {
@@ -10479,6 +11064,60 @@ describe("a router", () => {
           data = e;
         }
         expect(data).toBe("");
+      });
+
+      it("should handle relative redirect responses (loader)", async () => {
+        let { queryRoute } = createStaticHandler([
+          {
+            path: "/",
+            children: [
+              {
+                path: "parent",
+                children: [
+                  {
+                    id: "child",
+                    path: "child",
+                    loader: () => redirect(".."),
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+        let response = await queryRoute(
+          createRequest("/parent/child"),
+          "child"
+        );
+        expect(response instanceof Response).toBe(true);
+        expect((response as Response).status).toBe(302);
+        expect((response as Response).headers.get("Location")).toBe("/parent");
+      });
+
+      it("should handle relative redirect responses (action)", async () => {
+        let { queryRoute } = createStaticHandler([
+          {
+            path: "/",
+            children: [
+              {
+                path: "parent",
+                children: [
+                  {
+                    id: "child",
+                    path: "child",
+                    action: () => redirect(".."),
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+        let response = await queryRoute(
+          createSubmitRequest("/parent/child"),
+          "child"
+        );
+        expect(response instanceof Response).toBe(true);
+        expect((response as Response).status).toBe(302);
+        expect((response as Response).headers.get("Location")).toBe("/parent");
       });
 
       it("should not unwrap responses returned from loaders", async () => {
@@ -10561,20 +11200,6 @@ describe("a router", () => {
         expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
       });
 
-      it("should not support HEAD requests", async () => {
-        let { queryRoute } = createStaticHandler(SSR_ROUTES);
-        let request = createRequest("/", { method: "head" });
-        let e;
-        try {
-          await queryRoute(request, "index");
-        } catch (_e) {
-          e = _e;
-        }
-        expect(e).toMatchInlineSnapshot(
-          `[Error: query()/queryRoute() do not support HEAD requests]`
-        );
-      });
-
       it("should require a signal on the request", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
@@ -10589,19 +11214,103 @@ describe("a router", () => {
         );
       });
 
-      it("should handle not found action submissions with a 405 Response", async () => {
+      it("should handle not found routes with a 404 Response", async () => {
+        /* eslint-disable jest/no-conditional-expect */
         let { queryRoute } = createStaticHandler([
           {
             id: "root",
             path: "/",
           },
         ]);
-        let request = createSubmitRequest("/");
-        let data = await queryRoute(request, "root");
-        expect(data instanceof Response).toBe(true);
-        expect(data.status).toBe(405);
-        expect(data.statusText).toBe("Method Not Allowed");
-        expect(await data.text()).toBe("No action found for [/]");
+
+        try {
+          await queryRoute(createRequest("/junk"));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(404);
+          expect(data.statusText).toBe("Not Found");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
+        }
+
+        try {
+          await queryRoute(createRequest("/"), "junk");
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(404);
+          expect(data.statusText).toBe("Not Found");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
+        }
+
+        try {
+          await queryRoute(createSubmitRequest("/junk"));
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(404);
+          expect(data.statusText).toBe("Not Found");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
+        }
+
+        try {
+          await queryRoute(createSubmitRequest("/"), "junk");
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(404);
+          expect(data.statusText).toBe("Not Found");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
+        }
+
+        /* eslint-enable jest/no-conditional-expect */
+      });
+
+      it("should handle not found action submissions with a 405 Response", async () => {
+        /* eslint-disable jest/no-conditional-expect */
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+          },
+        ]);
+
+        try {
+          await queryRoute(createSubmitRequest("/"), "root");
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(405);
+          expect(data.statusText).toBe("Method Not Allowed");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
+          expect(await data.text()).toBe("");
+        }
+        /* eslint-enable jest/no-conditional-expect */
+      });
+
+      it("should handle unsupported methods with a 405 Response", async () => {
+        /* eslint-disable jest/no-conditional-expect */
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+          },
+        ]);
+
+        try {
+          await queryRoute(
+            createSubmitRequest("/", { method: "OPTIONS" }),
+            "root"
+          );
+          expect(false).toBe(true);
+        } catch (data) {
+          expect(data instanceof Response).toBe(true);
+          expect(data.status).toBe(405);
+          expect(data.statusText).toBe("Method Not Allowed");
+          expect(data.headers.get("X-Remix-Router-Error")).toBe("yes");
+          expect(await data.text()).toBe("");
+        }
+        /* eslint-enable jest/no-conditional-expect */
       });
     });
   });

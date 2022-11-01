@@ -19,6 +19,7 @@ import {
   parsePath,
   resolveTo,
   warning,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
 } from "@remix-run/router";
 
 import type {
@@ -145,36 +146,6 @@ export function useMatch<
 export interface NavigateFunction {
   (to: To, options?: NavigateOptions): void;
   (delta: number): void;
-}
-
-/**
- * When processing relative navigation we want to ignore ancestor routes that
- * do not contribute to the path, such that index/pathless layout routes don't
- * interfere.
- *
- * For example, when moving a route element into an index route and/or a
- * pathless layout route, relative link behavior contained within should stay
- * the same.  Both of the following examples should link back to the root:
- *
- *   <Route path="/">
- *     <Route path="accounts" element={<Link to=".."}>
- *   </Route>
- *
- *   <Route path="/">
- *     <Route path="accounts">
- *       <Route element={<AccountsLayout />}>       // <-- Does not contribute
- *         <Route index element={<Link to=".."} />  // <-- Does not contribute
- *       </Route
- *     </Route>
- *   </Route>
- */
-function getPathContributingMatches(matches: RouteMatch[]) {
-  return matches.filter(
-    (match, index) =>
-      index === 0 ||
-      (!match.route.index &&
-        match.pathnameBase !== matches[index - 1].pathnameBase)
-  );
 }
 
 /**
@@ -444,7 +415,7 @@ export function useRoutes(
   // When a user passes in a `locationArg`, the associated routes need to
   // be wrapped in a new `LocationContext.Provider` in order for `useLocation`
   // to use the scoped location instead of the global location.
-  if (locationArg) {
+  if (locationArg && renderedMatches) {
     return (
       <LocationContext.Provider
         value={{

@@ -329,7 +329,16 @@ export function matchRoutes<
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    matches = matchRouteBranch<string, RouteObjectType>(branches[i], pathname);
+    matches = matchRouteBranch<string, RouteObjectType>(
+      branches[i],
+      // Incoming pathnames are generally encoded from either window.location
+      // or from router.navigate, but we want to match against the unencoded
+      // paths in the route definitions.  Memory router locations won't be
+      // encoded here but there also shouldn't be anything to decode so this
+      // should be a safe operation.  This avoids needing matchRoutes to be
+      // history-aware.
+      safelyDecodeURI(pathname)
+    );
   }
 
   return matches;
@@ -702,6 +711,21 @@ function compilePath(
   return [matcher, paramNames];
 }
 
+function safelyDecodeURI(value: string) {
+  try {
+    return decodeURI(value);
+  } catch (error) {
+    warning(
+      false,
+      `The URL path "${value}" could not be decoded because it is is a ` +
+        `malformed URL segment. This is probably due to a bad percent ` +
+        `encoding (${error}).`
+    );
+
+    return value;
+  }
+}
+
 function safelyDecodeURIComponent(value: string, paramName: string) {
   try {
     return decodeURIComponent(value);
@@ -832,6 +856,38 @@ function getInvalidPathError(
     )}].  Please separate it out to the ` +
     `\`to.${dest}\` field. Alternatively you may provide the full path as ` +
     `a string in <Link to="..."> and the router will parse it for you.`
+  );
+}
+
+/**
+ * @private
+ *
+ * When processing relative navigation we want to ignore ancestor routes that
+ * do not contribute to the path, such that index/pathless layout routes don't
+ * interfere.
+ *
+ * For example, when moving a route element into an index route and/or a
+ * pathless layout route, relative link behavior contained within should stay
+ * the same.  Both of the following examples should link back to the root:
+ *
+ *   <Route path="/">
+ *     <Route path="accounts" element={<Link to=".."}>
+ *   </Route>
+ *
+ *   <Route path="/">
+ *     <Route path="accounts">
+ *       <Route element={<AccountsLayout />}>       // <-- Does not contribute
+ *         <Route index element={<Link to=".."} />  // <-- Does not contribute
+ *       </Route
+ *     </Route>
+ *   </Route>
+ */
+export function getPathContributingMatches<
+  T extends AgnosticRouteMatch = AgnosticRouteMatch
+>(matches: T[]) {
+  return matches.filter(
+    (match, index) =>
+      index === 0 || (match.route.path && match.route.path.length > 0)
   );
 }
 

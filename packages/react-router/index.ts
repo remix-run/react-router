@@ -17,6 +17,7 @@ import type {
   Router as RemixRouter,
   ShouldRevalidateFunction,
   To,
+  InitialEntry,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -203,7 +204,7 @@ export function createMemoryRouter(
   opts?: {
     basename?: string;
     hydrationData?: HydrationState;
-    initialEntries?: string[];
+    initialEntries?: InitialEntry[];
     initialIndex?: number;
   }
 ): RemixRouter {
