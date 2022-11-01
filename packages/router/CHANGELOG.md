@@ -10,7 +10,7 @@
 - Ignore pathless layout routes when looking for proper submission `action` function ([#9455](https://github.com/remix-run/react-router/pull/9455))
 - properly support `index` routes with a `path` in `useResolvedPath` ([#9486](https://github.com/remix-run/react-router/pull/9486))
 - Add UMD build for `@remix-run/router` ([#9446](https://github.com/remix-run/react-router/pull/9446))
-- fix `createURL` in local file execution in Firefox ([#9464](https://github.com/remix-run/react-router/pull/9464)) ([#9506](https://github.com/remix-run/react-router/pull/9506))
+- fix `createURL` in local file execution in Firefox ([#9464](https://github.com/remix-run/react-router/pull/9464))
 - Updates to `unstable_createStaticHandler` for incorporating into Remix ([#9482](https://github.com/remix-run/react-router/pull/9482), [#9465](https://github.com/remix-run/react-router/pull/9465))
 
 ## 1.0.2
