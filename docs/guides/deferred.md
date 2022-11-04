@@ -205,6 +205,6 @@ So just keep this in mind: **Deferred is 100% only about the initial load of a r
 
 [link]: ../components/link
 [usefetcher]: ../hooks/use-fetcher
-[defer response]: ../fetch/defer
+[defer response]: ../utils/defer
 [await]: ../components/await
-[useasyncvalue]: ../hooks/use-async-data
+[useasyncvalue]: ../hooks/use-async-value
