@@ -301,7 +301,7 @@ test.describe("Forms", () => {
               <div onClick={(event) => event.stopPropagation()}>
                 <pre>{JSON.stringify(actionData)}</pre>
                 <Form method="post">
-                  <button type="submit" name="action" value="add">Add</button>
+                  <button type="submit" name="intent" value="add">Add</button>
                 </Form>
               </div>
             )
@@ -530,7 +530,7 @@ test.describe("Forms", () => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/stop-propagation");
       await app.clickSubmitButton("/stop-propagation", { wait: true });
-      expect(await app.getHtml()).toMatch('{"action":"add"}');
+      expect(await app.getHtml()).toMatch('{"intent":"add"}');
     });
 
     test.describe("<Form> action", () => {

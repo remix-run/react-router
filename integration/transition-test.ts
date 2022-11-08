@@ -125,15 +125,15 @@ test.describe("rendering", () => {
         `,
 
         "app/routes/gh-1691.jsx": js`
-          import { redirect } from "@remix-run/node";
-          import { Form, useFetcher, useTransition} from "@remix-run/react";
+          import { json, redirect } from "@remix-run/node";
+          import { useFetcher} from "@remix-run/react";
 
-          export const action = async ({ request }) => {
+          export const action = async ( ) => {
             return redirect("/gh-1691");
           };
 
-          export const loader = async ({ request }) => {
-            return {};
+          export const loader = async () => {
+            return json({});
           };
 
           export default function GitHubIssue1691() {
@@ -144,7 +144,7 @@ test.describe("rendering", () => {
                 <span>{fetcher.state}</span>
                 <fetcher.Form method="post">
                   <input type="hidden" name="source" value="fetcher" />
-                  <button type="submit" name="action" value="add">
+                  <button type="submit" name="intent" value="add">
                     Submit
                   </button>
                 </fetcher.Form>
