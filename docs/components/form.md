@@ -140,7 +140,7 @@ The method will be available on [`request.method`][requestmethod] inside the rou
       case "delete": {
         return fakeDeleteProject(params.id);
       }
-      default {
+      default: {
         throw new Response("", { status: 405 })
       }
     }
