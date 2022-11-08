@@ -1025,15 +1025,14 @@ const SCROLL_RESTORATION_STORAGE_KEY = "react-router-scroll-positions";
 let savedScrollPositions: Record<string, number> = {};
 
 /**
- * When rendered inside a RouterProvider, will restore scroll positions on navigations
+ * When rendered inside a RouterProvider, will restore scroll positions on navigations.
+ * If element `id` is not specified, will use `window` instead.
  */
-function useScrollRestoration({
+function useElementScrollRestoration({
+  id,
   getKey,
   storageKey,
-}: {
-  getKey?: GetScrollRestorationKeyFunction;
-  storageKey?: string;
-} = {}) {
+}: { id?: string } & ScrollRestorationProps = {}) {
   let { router } = useDataRouterContext(DataRouterHook.UseScrollRestoration);
   let { restoreScrollPosition, preventScrollReset } = useDataRouterState(
     DataRouterStateHook.UseScrollRestoration
@@ -1041,6 +1040,14 @@ function useScrollRestoration({
   let location = useLocation();
   let matches = useMatches();
   let navigation = useNavigation();
+
+  const getScrollElement = () => (id && document.getElementById(id)) || window;
+
+  // window has scrollY but normal elements have scrollTop
+  const getScrollY = () => {
+    const el = getScrollElement();
+    return el ? el.scrollY || el.scrollTop : undefined;
+  };
 
   // Trigger manual scroll restoration while we're active
   React.useEffect(() => {
@@ -1054,8 +1061,9 @@ function useScrollRestoration({
   useBeforeUnload(
     React.useCallback(() => {
       if (navigation.state === "idle") {
+        // TODO: key should probably incorporate the ID somehow
         let key = (getKey ? getKey(location, matches) : null) || location.key;
-        savedScrollPositions[key] = window.scrollY;
+        savedScrollPositions[key] = getScrollY();
       }
       sessionStorage.setItem(
         storageKey || SCROLL_RESTORATION_STORAGE_KEY,
@@ -1083,7 +1091,7 @@ function useScrollRestoration({
   React.useLayoutEffect(() => {
     let disableScrollRestoration = router?.enableScrollRestoration(
       savedScrollPositions,
-      () => window.scrollY,
+      getScrollY,
       getKey
     );
     return () => disableScrollRestoration && disableScrollRestoration();
@@ -1098,7 +1106,7 @@ function useScrollRestoration({
 
     // been here before, scroll to it
     if (typeof restoreScrollPosition === "number") {
-      window.scrollTo(0, restoreScrollPosition);
+      getScrollElement().scrollTo(0, restoreScrollPosition);
       return;
     }
 
@@ -1117,8 +1125,16 @@ function useScrollRestoration({
     }
 
     // otherwise go to the top on new locations
-    window.scrollTo(0, 0);
+    getScrollElement().scrollTo(0, 0);
   }, [location, restoreScrollPosition, preventScrollReset]);
+}
+
+/**
+ * When rendered inside a RouterProvider, will restore scroll positions on navigations
+ */
+function useScrollRestoration(options: ScrollRestorationProps = {}) {
+  // default no id means it will use window
+  useElementScrollRestoration(options);
 }
 
 function useBeforeUnload(callback: () => any): void {
