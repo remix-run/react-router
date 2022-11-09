@@ -9,10 +9,7 @@
       "packages/react-router-native",
       "packages/router"
     ],
-    "nohoist": [
-      "**/react-native",
-      "**/react-native/**"
-    ]
+    "nohoist": ["**/react-native", "**/react-native/**"]
   },
   "scripts": {
     "build": "rollup -c",
@@ -32,9 +29,7 @@
     "watch": "rollup -c -w"
   },
   "jest": {
-    "projects": [
-      "<rootDir>/packages/*"
-    ]
+    "projects": ["<rootDir>/packages/*"]
   },
   "resolutions": {
     "@types/react": "^18.0.0",
@@ -116,7 +111,7 @@
       "none": "14.5 kB"
     },
     "packages/react-router-dom/dist/react-router-dom.production.min.js": {
-      "none": "10 kB"
+      "none": "10.5 kB"
     },
     "packages/react-router-dom/dist/umd/react-router-dom.production.min.js": {
       "none": "16 kB"
