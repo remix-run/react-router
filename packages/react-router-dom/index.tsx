@@ -1046,7 +1046,7 @@ function useElementScrollRestoration({
   // window has scrollY but normal elements have scrollTop
   const getScrollY = () => {
     const el = getScrollElement();
-    return el ? el.scrollY || el.scrollTop : undefined;
+    return "scrollY" in el ? el.scrollY : el.scrollTop;
   };
 
   // Trigger manual scroll restoration while we're active
