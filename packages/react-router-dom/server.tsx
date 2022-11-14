@@ -1,5 +1,6 @@
 import * as React from "react";
 import type {
+  Path,
   RevalidationState,
   Router as RemixRouter,
   StaticHandlerContext,
@@ -141,9 +142,8 @@ export function unstable_StaticRouterProvider({
 
 function getStatelessNavigator() {
   return {
-    createHref(to: To) {
-      return typeof to === "string" ? to : createPath(to);
-    },
+    createHref,
+    encodeLocation,
     push(to: To) {
       throw new Error(
         `You cannot use navigator.push() on the server because it is a stateless ` +
@@ -230,9 +230,8 @@ export function unstable_createStaticRouter(
     revalidate() {
       throw msg("revalidate");
     },
-    createHref() {
-      throw msg("createHref");
-    },
+    createHref,
+    encodeLocation,
     getFetcher() {
       return IDLE_FETCHER;
     },
@@ -244,5 +243,19 @@ export function unstable_createStaticRouter(
     },
     _internalFetchControllers: new Map(),
     _internalActiveDeferreds: new Map(),
+  };
+}
+
+function createHref(to: To) {
+  return typeof to === "string" ? to : createPath(to);
+}
+
+function encodeLocation(to: To): Path {
+  // Locations should already be encoded on the server, so just return as-is
+  let path = typeof to === "string" ? parsePath(to) : to;
+  return {
+    pathname: path.pathname || "",
+    search: path.search || "",
+    hash: path.hash || "",
   };
 }
