@@ -577,6 +577,7 @@ async function handleDocumentRequest({
     appState: appState,
     matches: entryMatches,
     routeData,
+    future: build.future,
   };
 
   let entryContext: EntryContext = {

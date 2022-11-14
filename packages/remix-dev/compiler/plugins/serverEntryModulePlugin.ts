@@ -45,6 +45,7 @@ ${Object.keys(config.routes)
   export const assetsBuildDirectory = ${JSON.stringify(
     config.relativeAssetsBuildDirectory
   )};
+  export const future = ${JSON.stringify(config.future)};
   export const publicPath = ${JSON.stringify(config.publicPath)};
   export const entry = { module: entryServer };
   export const routes = {
