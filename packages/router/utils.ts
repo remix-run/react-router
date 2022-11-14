@@ -331,9 +331,12 @@ export function matchRoutes<
   for (let i = 0; matches == null && i < branches.length; ++i) {
     matches = matchRouteBranch<string, RouteObjectType>(
       branches[i],
-      // incoming pathnames are always encoded from either window.location or
-      // from route.navigate, but we want to match against the unencoded paths
-      // in the route definitions
+      // Incoming pathnames are generally encoded from either window.location
+      // or from router.navigate, but we want to match against the unencoded
+      // paths in the route definitions.  Memory router locations won't be
+      // encoded here but there also shouldn't be anything to decode so this
+      // should be a safe operation.  This avoids needing matchRoutes to be
+      // history-aware.
       safelyDecodeURI(pathname)
     );
   }
