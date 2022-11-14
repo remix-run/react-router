@@ -64,7 +64,6 @@ export function StaticRouter({
 }
 
 export interface StaticRouterProviderProps {
-  basename?: string;
   context: StaticHandlerContext;
   router: RemixRouter;
   hydrate?: boolean;
@@ -76,7 +75,6 @@ export interface StaticRouterProviderProps {
  * on the server where there is no stateful UI.
  */
 export function unstable_StaticRouterProvider({
-  basename,
   context,
   router,
   hydrate = true,
@@ -91,7 +89,7 @@ export function unstable_StaticRouterProvider({
     router,
     navigator: getStatelessNavigator(),
     static: true,
-    basename: basename || "/",
+    basename: context.basename || "/",
   };
 
   let hydrateScript = "";
@@ -191,7 +189,7 @@ export function unstable_createStaticRouter(
 
   return {
     get basename() {
-      return "/";
+      return context.basename;
     },
     get state() {
       return {
@@ -231,6 +229,7 @@ export function unstable_createStaticRouter(
       throw msg("revalidate");
     },
     createHref() {
+      // Not needed since we use navigator.createHref internally
       throw msg("createHref");
     },
     getFetcher() {
