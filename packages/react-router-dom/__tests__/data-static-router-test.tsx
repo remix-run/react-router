@@ -163,7 +163,7 @@ describe("A <StaticRouterProvider>", () => {
     ]);
   });
 
-  it.only("renders an initialized router with a basename", async () => {
+  it("renders an initialized router with a basename", async () => {
     let location: ReturnType<typeof useLocation>;
 
     function GetLocation() {
