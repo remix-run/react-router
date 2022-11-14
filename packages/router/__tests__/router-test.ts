@@ -5433,7 +5433,7 @@ describe("a router", () => {
     it("preserves query and hash in redirects", async () => {
       let t = setup({ routes: REDIRECT_ROUTES });
 
-      let nav1 = await t.fetch("/parent/child", {
+      let nav1 = await t.navigate("/parent/child", {
         formMethod: "post",
         formData: createFormData({}),
       });
@@ -5459,7 +5459,7 @@ describe("a router", () => {
     it("preserves query and hash in relative redirects", async () => {
       let t = setup({ routes: REDIRECT_ROUTES });
 
-      let nav1 = await t.fetch("/parent/child", {
+      let nav1 = await t.navigate("/parent/child", {
         formMethod: "post",
         formData: createFormData({}),
       });
@@ -5483,6 +5483,30 @@ describe("a router", () => {
         },
         errors: null,
       });
+    });
+
+    it("processes external redirects if window is present", async () => {
+      // This is gross, don't blame me, blame SO :)
+      // https://stackoverflow.com/a/60697570
+      let oldLocation = window.location;
+      const location = new URL(window.location.href) as unknown as Location;
+      location.replace = jest.fn();
+      delete (window as any).location;
+      window.location = location as unknown as Location;
+
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let A = await t.navigate("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      await A.actions.child.redirectReturn("http://remix.run/blog");
+      expect(window.location.replace).toHaveBeenCalledWith(
+        "http://remix.run/blog"
+      );
+
+      window.location = oldLocation;
     });
   });
 
@@ -10297,6 +10321,18 @@ describe("a router", () => {
         expect((response as Response).headers.get("Location")).toBe("/parent");
       });
 
+      it("should handle external redirect Responses", async () => {
+        let { query } = createStaticHandler([
+          { path: "/", loader: () => redirect("http://remix.run/blog") },
+        ]);
+        let response = await query(createRequest("/"));
+        expect(response instanceof Response).toBe(true);
+        expect((response as Response).status).toBe(302);
+        expect((response as Response).headers.get("Location")).toBe(
+          "http://remix.run/blog"
+        );
+      });
+
       it("should handle 404 navigations", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/not/found"));
@@ -11262,6 +11298,22 @@ describe("a router", () => {
         expect(response instanceof Response).toBe(true);
         expect((response as Response).status).toBe(302);
         expect((response as Response).headers.get("Location")).toBe("/parent");
+      });
+
+      it("should handle external redirect Responses", async () => {
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            loader: () => redirect("http://remix.run/blog"),
+          },
+        ]);
+        let response = await queryRoute(createRequest("/"), "root");
+        expect(response instanceof Response).toBe(true);
+        expect((response as Response).status).toBe(302);
+        expect((response as Response).headers.get("Location")).toBe(
+          "http://remix.run/blog"
+        );
       });
 
       it("should not unwrap responses returned from loaders", async () => {
