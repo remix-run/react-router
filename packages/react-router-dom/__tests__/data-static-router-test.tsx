@@ -13,7 +13,6 @@ import {
   unstable_createStaticRouter as createStaticRouter,
   unstable_StaticRouterProvider as StaticRouterProvider,
 } from "react-router-dom/server";
-import { getPositionOfLineAndCharacter } from "typescript";
 
 beforeEach(() => {
   jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -195,7 +194,6 @@ describe("A <StaticRouterProvider>", () => {
       })
     )) as StaticHandlerContext;
 
-    debugger;
     let html = ReactDOMServer.renderToStaticMarkup(
       <React.StrictMode>
         <StaticRouterProvider
