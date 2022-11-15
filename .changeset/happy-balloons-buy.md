@@ -3,7 +3,7 @@
 "@remix-run/router": patch
 ---
 
-Stop incorrectly matching on partial named parameters, i.e. `<Route path="prefix-:param">`, to align with how splat parameters work. If you were previously relying on this behavior then it's recommended to extract the static portion of the path at the ``useParams` call site:
+Stop incorrectly matching on partial named parameters, i.e. `<Route path="prefix-:param">`, to align with how splat parameters work. If you were previously relying on this behavior then it's recommended to extract the static portion of the path at the `useParams` call site:
 
 ```jsx
 // Old behavior at URL /prefix-123
