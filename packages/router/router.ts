@@ -158,9 +158,9 @@ export interface Router {
    * @internal
    * PRIVATE - DO NOT USE
    *
-   * Utility function to URL encode a location according to the internal
+   * Utility function to URL encode a destination path according to the internal
    * history implementation
-   * @param location
+   * @param to
    */
   encodeLocation(to: To): Path;
 
