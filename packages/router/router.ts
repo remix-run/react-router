@@ -1000,15 +1000,10 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isRedirectResult(result)) {
-      let redirectNavigation: NavigationStates["Loading"] = {
-        state: "loading",
-        location: createLocation(state.location, result.location),
-        ...submission,
-      };
       await startRedirectNavigation(
+        state,
         result,
-        redirectNavigation,
-        opts && opts.replace
+        opts && opts.replace === true
       );
       return { shortCircuited: true };
     }
@@ -1152,8 +1147,7 @@ export function createRouter(init: RouterInit): Router {
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
     if (redirect) {
-      let redirectNavigation = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(redirect, redirectNavigation, replace);
+      await startRedirectNavigation(state, redirect, replace);
       return { shortCircuited: true };
     }
 
@@ -1304,12 +1298,7 @@ export function createRouter(init: RouterInit): Router {
       state.fetchers.set(key, loadingFetcher);
       updateState({ fetchers: new Map(state.fetchers) });
 
-      let redirectNavigation: NavigationStates["Loading"] = {
-        state: "loading",
-        location: createLocation(state.location, actionResult.location),
-        ...submission,
-      };
-      await startRedirectNavigation(actionResult, redirectNavigation);
+      await startRedirectNavigation(state, actionResult);
       return;
     }
 
@@ -1402,8 +1391,7 @@ export function createRouter(init: RouterInit): Router {
 
     let redirect = findRedirect(results);
     if (redirect) {
-      let redirectNavigation = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(redirect, redirectNavigation);
+      await startRedirectNavigation(state, redirect);
       return;
     }
 
@@ -1515,8 +1503,7 @@ export function createRouter(init: RouterInit): Router {
 
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
-      let redirectNavigation = getLoaderRedirect(state, result);
-      await startRedirectNavigation(result, redirectNavigation);
+      await startRedirectNavigation(state, result);
       return;
     }
 
@@ -1571,15 +1558,17 @@ export function createRouter(init: RouterInit): Router {
    * the history action from the original navigation (PUSH or REPLACE).
    */
   async function startRedirectNavigation(
+    state: RouterState,
     redirect: RedirectResult,
-    navigation: Navigation,
     replace?: boolean
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
     }
+
+    let redirectLocation = createLocation(state.location, redirect.location);
     invariant(
-      navigation.location,
+      redirectLocation,
       "Expected a location on the redirect navigation"
     );
     // There's no need to abort on redirects, since we don't detect the
@@ -1589,9 +1578,41 @@ export function createRouter(init: RouterInit): Router {
     let redirectHistoryAction =
       replace === true ? HistoryAction.Replace : HistoryAction.Push;
 
-    await startNavigation(redirectHistoryAction, navigation.location, {
-      overrideNavigation: navigation,
-    });
+    let { formMethod, formAction, formEncType, formData } = state.navigation;
+
+    // If this was a 307/308 submission we want to preserve the HTTP method and
+    // re-submit the POST/PUT/PATCH/DELETE as a submission navigation to the
+    // redirected location
+    if (
+      [307, 308].includes(redirect.status) &&
+      formMethod &&
+      formMethod !== "get" &&
+      formMethod !== "head" &&
+      formEncType &&
+      formData
+    ) {
+      await startNavigation(redirectHistoryAction, redirectLocation, {
+        submission: {
+          formMethod,
+          formAction: redirect.location,
+          formEncType,
+          formData,
+        },
+      });
+    } else {
+      // Otherwise, we kick off a new loading navigation, preserving the
+      // submission info for the duration of this navigation
+      await startNavigation(redirectHistoryAction, redirectLocation, {
+        overrideNavigation: {
+          state: "loading",
+          location: redirectLocation,
+          formMethod: formMethod || undefined,
+          formAction: formAction || undefined,
+          formEncType: formEncType || undefined,
+          formData: formData || undefined,
+        },
+      });
+    }
   }
 
   async function callLoadersAndMaybeResolveData(
@@ -2279,7 +2300,11 @@ function normalizeNavigateOptions(
   }
 
   // Create a Submission on non-GET navigations
-  if (opts.formMethod != null && opts.formMethod !== "get") {
+  if (
+    opts.formMethod != null &&
+    opts.formMethod !== "get" &&
+    opts.formMethod !== "head"
+  ) {
     return {
       path,
       submission: {
@@ -2320,22 +2345,6 @@ function normalizeNavigateOptions(
   }
 
   return { path: createPath(parsedPath) };
-}
-
-function getLoaderRedirect(
-  state: RouterState,
-  redirect: RedirectResult
-): Navigation {
-  let { formMethod, formAction, formEncType, formData } = state.navigation;
-  let navigation: NavigationStates["Loading"] = {
-    state: "loading",
-    location: createLocation(state.location, redirect.location),
-    formMethod: formMethod || undefined,
-    formAction: formAction || undefined,
-    formEncType: formEncType || undefined,
-    formData: formData || undefined,
-  };
-  return navigation;
 }
 
 // Filter out all routes below any caught error as they aren't going to
@@ -2547,7 +2556,7 @@ async function callLoaderOrAction(
     let status = result.status;
 
     // Process redirects
-    if (status >= 300 && status <= 399) {
+    if ([301, 302, 303, 307, 308].includes(status)) {
       let location = result.headers.get("Location");
       invariant(
         location,
