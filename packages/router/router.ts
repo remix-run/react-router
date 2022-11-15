@@ -2171,7 +2171,7 @@ export function unstable_createStaticHandler(
 
     // Short circuit if we have no loaders to run (queryRoute())
     if (isRouteRequest && !routeMatch?.route.loader) {
-      throw getInternalRouterError(405, {
+      throw getInternalRouterError(400, {
         method: request.method,
         pathname: createURL(request.url).pathname,
         routeId: routeMatch?.route.id,
@@ -2913,7 +2913,14 @@ function getInternalRouterError(
 
   if (status === 400) {
     statusText = "Bad Request";
-    errorMessage = "Cannot submit binary form data using GET";
+    if (method && pathname && routeId) {
+      errorMessage =
+        `You made a ${method} request to "${pathname}" but ` +
+        `did not provide a \`loader\` for route "${routeId}", ` +
+        `so there is no way to handle the request.`;
+    } else {
+      errorMessage = "Cannot submit binary form data using GET";
+    }
   } else if (status === 403) {
     statusText = "Forbidden";
     errorMessage = `Route "${routeId}" does not match URL "${pathname}"`;
@@ -2923,17 +2930,10 @@ function getInternalRouterError(
   } else if (status === 405) {
     statusText = "Method Not Allowed";
     if (method && pathname && routeId) {
-      if (validActionMethods.has(method)) {
-        errorMessage =
-          `You made a ${method} request to "${pathname}" but ` +
-          `did not provide an \`action\` for route "${routeId}", ` +
-          `so there is no way to handle the request.`;
-      } else {
-        errorMessage =
-          `You made a ${method} request to "${pathname}" but ` +
-          `did not provide a \`loader\` for route "${routeId}", ` +
-          `so there is no way to handle the request.`;
-      }
+      errorMessage =
+        `You made a ${method} request to "${pathname}" but ` +
+        `did not provide an \`action\` for route "${routeId}", ` +
+        `so there is no way to handle the request.`;
     } else {
       errorMessage = `Invalid request method "${method}"`;
     }

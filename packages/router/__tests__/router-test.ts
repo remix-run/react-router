@@ -6846,7 +6846,7 @@ describe("a router", () => {
             405,
             "Method Not Allowed",
             new Error(
-              'You made a post request to "/" but did not provide a `loader` ' +
+              'You made a post request to "/" but did not provide an `action` ' +
                 'for route "root", so there is no way to handle the request.'
             ),
             true
@@ -11471,13 +11471,13 @@ describe("a router", () => {
           }
         });
 
-        it("should handle not found action/loader submissions with a 405 Response", async () => {
+        it("should handle missing loaders with a 400 Response", async () => {
           try {
             await queryRoute(createRequest("/"), "root");
             expect(false).toBe(true);
           } catch (data) {
             expect(isRouteErrorResponse(data)).toBe(true);
-            expect(data.status).toBe(405);
+            expect(data.status).toBe(400);
             expect(data.error).toEqual(
               new Error(
                 'You made a GET request to "/" but did not provide a `loader` ' +
@@ -11486,7 +11486,9 @@ describe("a router", () => {
             );
             expect(data.internal).toBe(true);
           }
+        });
 
+        it("should handle missing actions with a 405 Response", async () => {
           try {
             await queryRoute(createSubmitRequest("/"), "root");
             expect(false).toBe(true);
