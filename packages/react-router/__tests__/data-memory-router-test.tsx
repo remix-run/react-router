@@ -2713,7 +2713,7 @@ describe("<DataMemoryRouter>", () => {
       expect(getAwaitRenderCount()).toBe(3);
 
       // complete /baz navigation
-      bazDefer.resolve();
+      bazDefer.resolve(null);
       await waitFor(() => screen.getByText("Baz"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div

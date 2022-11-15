@@ -288,6 +288,57 @@ describe("NavLink", () => {
 
       expect(anchors.map((a) => a.props.className)).toEqual(["active", ""]);
     });
+
+    it("does not automatically apply to root non-layout segments", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route index element={<h1>Root</h1>} />
+              <Route
+                path="home"
+                element={<NavLink to="/">Root</NavLink>}
+              ></Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.props.className).not.toMatch("active");
+    });
+
+    it("does not automatically apply to root layout segments", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home"]}>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <>
+                    <h1>Root</h1>
+                    <Outlet />
+                  </>
+                }
+              >
+                <Route
+                  path="home"
+                  element={<NavLink to="/">Root</NavLink>}
+                ></Route>
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.props.className).not.toMatch("active");
+    });
   });
 
   describe("when it matches just the beginning but not to the end", () => {
@@ -458,7 +509,7 @@ describe("NavLink using a data router", () => {
     fireEvent.click(screen.getByText("Link to Bar"));
     expect(screen.getByText("Link to Bar").className).toBe("pending");
 
-    dfd.resolve();
+    dfd.resolve(null);
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar").className).toBe("active");
   });
@@ -511,7 +562,7 @@ describe("NavLink using a data router", () => {
       "some-pending-classname"
     );
 
-    dfd.resolve();
+    dfd.resolve(null);
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar").className).toBe(
       "some-active-classname"
@@ -566,7 +617,7 @@ describe("NavLink using a data router", () => {
       "lowercase"
     );
 
-    dfd.resolve();
+    dfd.resolve(null);
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar").style.textTransform).toBe(
       "uppercase"
@@ -616,7 +667,7 @@ describe("NavLink using a data router", () => {
     fireEvent.click(screen.getByText("Link to Bar (idle)"));
     expect(screen.getByText("Link to Bar (loading...)")).toBeDefined();
 
-    dfd.resolve();
+    dfd.resolve(null);
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar (current)")).toBeDefined();
   });
@@ -657,7 +708,7 @@ describe("NavLink using a data router", () => {
     fireEvent.click(screen.getByText("Link to Baz"));
     expect(screen.getByText("Link to Bar").className).toBe("");
 
-    dfd.resolve();
+    dfd.resolve(null);
     await waitFor(() => screen.getByText("Baz page"));
     expect(screen.getByText("Link to Bar").className).toBe("");
   });
