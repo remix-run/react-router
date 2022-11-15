@@ -1,24 +1,29 @@
-import chalk, { supportsColor } from "chalk";
+import chalk from "chalk";
 
-export const useColor =
-  supportsColor &&
-  // https://no-color.org/
-  !process.env.NO_COLOR;
+// https://no-color.org/
+const useColor = chalk.supportsColor && !process.env.NO_COLOR;
 
-const K = (x: any) => x;
+const identity = <T>(x: T) => x;
+const safe = (style: chalk.Chalk) => (useColor ? style : identity);
 
-export const heading = useColor ? chalk.underline : K;
-export const arg = useColor ? chalk.yellowBright : K;
-export const error = useColor ? chalk.red : K;
-export const warning = useColor ? chalk.yellow : K;
-export const hint = useColor ? chalk.blue : K;
+export const heading = safe(chalk.underline);
+export const arg = safe(chalk.yellowBright);
+export const error = safe(chalk.red);
+export const warning = safe(chalk.yellow);
+export const hint = safe(chalk.blue);
 
-export const logoBlue = useColor ? chalk.blueBright : K;
-export const logoGreen = useColor ? chalk.greenBright : K;
-export const logoYellow = useColor ? chalk.yellowBright : K;
-export const logoPink = useColor ? chalk.magentaBright : K;
-export const logoRed = useColor ? chalk.redBright : K;
+export const logoBlue = safe(chalk.blueBright);
+export const logoGreen = safe(chalk.greenBright);
+export const logoYellow = safe(chalk.yellowBright);
+export const logoPink = safe(chalk.magentaBright);
+export const logoRed = safe(chalk.redBright);
 
-export const gray = useColor ? chalk.gray : K;
-export const blue = useColor ? chalk.blue : K;
-export const bold = useColor ? chalk.bold : K;
+// raw styles
+export const bold = safe(chalk.bold);
+
+// raw colors
+export const blue = safe(chalk.blue);
+export const cyan = safe(chalk.cyan);
+export const gray = safe(chalk.gray);
+export const red = safe(chalk.red);
+export const yellow = safe(chalk.yellow);

@@ -22,8 +22,9 @@ import { log } from "../logging";
 import { createApp } from "./create";
 import { getPreferredPackageManager } from "./getPreferredPackageManager";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "./setup";
-
-export * as migrate from "./migrate";
+import runCodemod from "../codemod";
+import { CodemodError } from "../codemod/utils/error";
+import { TaskError } from "../codemod/utils/task";
 
 export async function create({
   appTemplate,
@@ -337,6 +338,41 @@ export async function dev(
     });
   } finally {
     server!?.close();
+  }
+}
+
+export async function codemod(
+  codemodName?: string,
+  projectDir?: string,
+  { dry = false, force = false } = {}
+) {
+  if (!codemodName) {
+    console.error(colors.red("Error: Missing codemod name"));
+    console.log(
+      "Usage: " +
+        colors.gray(
+          `remix codemod <${colors.arg("codemod")}> [${colors.arg(
+            "projectDir"
+          )}]`
+        )
+    );
+    process.exit(1);
+  }
+  try {
+    await runCodemod(projectDir ?? process.cwd(), codemodName, {
+      dry,
+      force,
+    });
+  } catch (error) {
+    if (error instanceof CodemodError) {
+      console.error(`${colors.red("Error:")} ${error.message}`);
+      if (error.additionalInfo) console.info(colors.gray(error.additionalInfo));
+      process.exit(1);
+    }
+    if (error instanceof TaskError) {
+      process.exit(1);
+    }
+    throw error;
   }
 }
 

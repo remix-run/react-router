@@ -4,9 +4,3 @@ export type MigrationFunction = (
   projectDir: string,
   flags?: Flags
 ) => Promise<void>;
-
-export interface Migration {
-  id: string;
-  description: string;
-  function: MigrationFunction;
-}
