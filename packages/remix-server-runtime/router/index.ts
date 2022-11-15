@@ -1,12 +1,16 @@
 // @ts-nocheck
 
-import { convertRoutesToDataRoutes } from "./utils";
+import { convertRoutesToDataRoutes, getPathContributingMatches } from "./utils";
 
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  AgnosticDataIndexRouteObject,
+  AgnosticDataNonIndexRouteObject,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
   TrackedPromise,
@@ -77,4 +81,7 @@ export * from "./router";
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @internal */
-export { convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes };
+export {
+  convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
+  getPathContributingMatches as UNSAFE_getPathContributingMatches,
+};

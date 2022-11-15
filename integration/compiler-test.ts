@@ -364,6 +364,19 @@ test.describe("compiler", () => {
   });
 
   test.describe("serverBareModulesPlugin", () => {
+    let ogConsole: typeof global.console;
+    test.beforeEach(() => {
+      ogConsole = global.console;
+      // @ts-ignore
+      global.console = {
+        log() {},
+        warn() {},
+        error() {},
+      };
+    });
+    test.afterEach(() => {
+      global.console = ogConsole;
+    });
     test("warns when a module isn't installed", async () => {
       let buildOutput: string;
       let buildStdio = new PassThrough();

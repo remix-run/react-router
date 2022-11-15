@@ -168,7 +168,7 @@ test.describe("useFetcher", () => {
         }),
       ]);
 
-      expect(await app.getHtml("pre")).toMatch(LUNCH);
+      await page.waitForSelector(`pre:has-text("${LUNCH}")`);
     });
 
     test("Form can hit an action", async ({ page }) => {
@@ -181,7 +181,7 @@ test.describe("useFetcher", () => {
           method: "post",
         }),
       ]);
-      expect(await app.getHtml("pre")).toMatch(CHEESESTEAK);
+      await page.waitForSelector(`pre:has-text("${CHEESESTEAK}")`);
     });
   });
 
@@ -189,21 +189,21 @@ test.describe("useFetcher", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickElement("#fetcher-load");
-    expect(await app.getHtml("pre")).toMatch(LUNCH);
+    await page.waitForSelector(`pre:has-text("${LUNCH}")`);
   });
 
   test("submit can hit an action", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickElement("#fetcher-submit");
-    expect(await app.getHtml("pre")).toMatch(CHEESESTEAK);
+    await page.waitForSelector(`pre:has-text("${CHEESESTEAK}")`);
   });
 
   test("submit can hit an action only route", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/fetcher-action-only-call");
     await app.clickElement("#fetcher-submit");
-    expect(await app.getHtml("pre")).toMatch(CHEESESTEAK);
+    await page.waitForSelector(`pre:has-text("${CHEESESTEAK}")`);
   });
 
   test("fetchers handle ?index param correctly", async ({ page }) => {
@@ -211,25 +211,25 @@ test.describe("useFetcher", () => {
     await app.goto("/parent");
 
     await app.clickElement("#load-parent");
-    expect(await app.getHtml("pre")).toMatch(PARENT_LAYOUT_LOADER);
+    await page.waitForSelector(`pre:has-text("${PARENT_LAYOUT_LOADER}")`);
 
     await app.clickElement("#load-index");
-    expect(await app.getHtml("pre")).toMatch(PARENT_INDEX_LOADER);
+    await page.waitForSelector(`pre:has-text("${PARENT_INDEX_LOADER}")`);
 
     // fetcher.submit({}) defaults to GET for the current Route
     await app.clickElement("#submit-empty");
-    expect(await app.getHtml("pre")).toMatch(PARENT_INDEX_LOADER);
+    await page.waitForSelector(`pre:has-text("${PARENT_INDEX_LOADER}")`);
 
     await app.clickElement("#submit-parent-get");
-    expect(await app.getHtml("pre")).toMatch(PARENT_LAYOUT_LOADER);
+    await page.waitForSelector(`pre:has-text("${PARENT_LAYOUT_LOADER}")`);
 
     await app.clickElement("#submit-index-get");
-    expect(await app.getHtml("pre")).toMatch(PARENT_INDEX_LOADER);
+    await page.waitForSelector(`pre:has-text("${PARENT_INDEX_LOADER}")`);
 
     await app.clickElement("#submit-parent-post");
-    expect(await app.getHtml("pre")).toMatch(PARENT_LAYOUT_ACTION);
+    await page.waitForSelector(`pre:has-text("${PARENT_LAYOUT_ACTION}")`);
 
     await app.clickElement("#submit-index-post");
-    expect(await app.getHtml("pre")).toMatch(PARENT_INDEX_ACTION);
+    await page.waitForSelector(`pre:has-text("${PARENT_INDEX_ACTION}")`);
   });
 });

@@ -4,8 +4,8 @@ import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
 } from "./router";
-import type { AppLoadContext } from "./data";
-import { callRouteAction, callRouteLoader } from "./data";
+import { type AppLoadContext } from "./data";
+import { callRouteActionRR, callRouteLoaderRR } from "./data";
 import type { ServerRouteModule } from "./routeModules";
 
 export interface RouteManifest<Route> {
@@ -70,20 +70,20 @@ export function createStaticHandlerDataRoutes(
         path: route.path,
         loader: route.module.loader
           ? (args: LoaderFunctionArgs) =>
-              callRouteLoader({
+              callRouteLoaderRR({
                 ...args,
-                routeId: route.id,
-                loader: route.module.loader,
                 loadContext,
+                loader: route.module.loader!,
+                routeId: route.id,
               })
           : undefined,
         action: route.module.action
           ? (args: ActionFunctionArgs) =>
-              callRouteAction({
+              callRouteActionRR({
                 ...args,
-                routeId: route.id,
-                action: route.module.action,
                 loadContext,
+                action: route.module.action!,
+                routeId: route.id,
               })
           : undefined,
         handle: route.module.handle,
