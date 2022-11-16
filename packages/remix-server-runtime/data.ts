@@ -1,10 +1,9 @@
-import { json, isResponse, isRedirectResponse } from "./responses";
+import { json, isResponse } from "./responses";
 import type {
   ActionFunction,
   DataFunctionArgs,
   LoaderFunction,
 } from "./routeModules";
-import { ErrorResponse } from "./router";
 
 /**
  * An object of unknown type for route loaders and actions provided by the
@@ -18,104 +17,6 @@ export interface AppLoadContext {
  * Data for a route that was returned from a `loader()`.
  */
 export type AppData = any;
-
-export async function callRouteAction({
-  loadContext,
-  routeId,
-  action,
-  params,
-  request,
-}: {
-  loadContext: AppLoadContext;
-  routeId: string;
-  action?: ActionFunction;
-  params: DataFunctionArgs["params"];
-  request: Request;
-}) {
-  if (!action) {
-    let pathname = new URL(request.url).pathname;
-    let msg =
-      `You made a ${request.method} request to "${pathname}" but did not provide ` +
-      `an \`action\` for route "${routeId}", so there is no way to handle the request.`;
-    throw new ErrorResponse(405, "Method Not Allowed", new Error(msg), true);
-  }
-
-  let result;
-  try {
-    result = await action({
-      request: stripDataParam(stripIndexParam(request)),
-      context: loadContext,
-      params,
-    });
-  } catch (error: unknown) {
-    if (!isResponse(error)) {
-      throw error;
-    }
-
-    if (!isRedirectResponse(error)) {
-      error.headers.set("X-Remix-Catch", "yes");
-    }
-    result = error;
-  }
-
-  if (result === undefined) {
-    throw new Error(
-      `You defined an action for route "${routeId}" but didn't return ` +
-        `anything from your \`action\` function. Please return a value or \`null\`.`
-    );
-  }
-
-  return isResponse(result) ? result : json(result);
-}
-
-export async function callRouteLoader({
-  loadContext,
-  routeId,
-  loader,
-  params,
-  request,
-}: {
-  request: Request;
-  routeId: string;
-  loader?: LoaderFunction;
-  params: DataFunctionArgs["params"];
-  loadContext: AppLoadContext;
-}) {
-  if (!loader) {
-    let pathname = new URL(request.url).pathname;
-    let msg =
-      `You made a ${request.method} request to "${pathname}" but did not provide ` +
-      `a \`loader\` for route "${routeId}", so there is no way to handle the request.`;
-    throw new ErrorResponse(400, "Bad Request", new Error(msg), true);
-  }
-
-  let result;
-  try {
-    result = await loader({
-      request: stripDataParam(stripIndexParam(request)),
-      context: loadContext,
-      params,
-    });
-  } catch (error: unknown) {
-    if (!isResponse(error)) {
-      throw error;
-    }
-
-    if (!isRedirectResponse(error)) {
-      error.headers.set("X-Remix-Catch", "yes");
-    }
-    result = error;
-  }
-
-  if (result === undefined) {
-    throw new Error(
-      `You defined a loader for route "${routeId}" but didn't return ` +
-        `anything from your \`loader\` function. Please return a value or \`null\`.`
-    );
-  }
-
-  return isResponse(result) ? result : json(result);
-}
 
 export async function callRouteActionRR({
   loadContext,
@@ -175,6 +76,11 @@ export async function callRouteLoaderRR({
   return isResponse(result) ? result : json(result);
 }
 
+// TODO: Document these search params better
+// and stop stripping these in V2. These break
+// support for running in a SW and also expose
+// valuable info to data funcs that is being asked
+// for such as "is this a data request?".
 function stripIndexParam(request: Request) {
   let url = new URL(request.url);
   let indexValues = url.searchParams.getAll("index");
@@ -196,20 +102,4 @@ function stripDataParam(request: Request) {
   let url = new URL(request.url);
   url.searchParams.delete("_data");
   return new Request(url.href, request);
-}
-
-export function extractData(response: Response): Promise<unknown> {
-  let contentType = response.headers.get("Content-Type");
-
-  if (contentType && /\bapplication\/json\b/.test(contentType)) {
-    return response.json();
-  }
-
-  // What other data types do we need to handle here? What other kinds of
-  // responses are people going to be returning from their loaders?
-  // - application/x-www-form-urlencoded ?
-  // - multipart/form-data ?
-  // - binary (audio/video) ?
-
-  return response.text();
 }
