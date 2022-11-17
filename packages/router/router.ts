@@ -515,6 +515,9 @@ const validActionMethods = new Set<SubmissionFormMethod>(validActionMethodsArr);
 const validRequestMethodsArr: FormMethod[] = ["get", ...validActionMethodsArr];
 const validRequestMethods = new Set<FormMethod>(validRequestMethodsArr);
 
+const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
+const redirectPreserveMethodStatusCodes = new Set([307, 308]);
+
 export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
   state: "idle",
   location: undefined,
@@ -1596,7 +1599,7 @@ export function createRouter(init: RouterInit): Router {
     // re-submit the POST/PUT/PATCH/DELETE as a submission navigation to the
     // redirected location
     if (
-      [307, 308].includes(redirect.status) &&
+      redirectPreserveMethodStatusCodes.has(redirect.status) &&
       formMethod &&
       isSubmissionMethod(formMethod) &&
       formEncType &&
@@ -2572,7 +2575,7 @@ async function callLoaderOrAction(
     let status = result.status;
 
     // Process redirects
-    if ([301, 302, 303, 307, 308].includes(status)) {
+    if (redirectStatusCodes.has(status)) {
       let location = result.headers.get("Location");
       invariant(
         location,
