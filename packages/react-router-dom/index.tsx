@@ -629,7 +629,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
 );
 
 if (__DEV__) {
-  Form.displayName = "Form";
+  FormImpl.displayName = "FormImpl";
 }
 
 interface ScrollRestorationProps {
