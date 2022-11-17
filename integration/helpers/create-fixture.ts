@@ -143,6 +143,9 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const symlinks = new Map<string, boolean>();
+
 export async function createFixtureProject(
   init: FixtureInit = {}
 ): Promise<string> {
@@ -153,11 +156,21 @@ export async function createFixtureProject(
 
   await fse.ensureDir(projectDir);
   await fse.copy(integrationTemplateDir, projectDir);
-  await fse.copy(
-    path.join(__dirname, "../../build/node_modules"),
-    path.join(projectDir, "node_modules"),
-    { overwrite: true }
+
+  await fse.ensureDir(path.join(projectDir, "node_modules"));
+  await fse.symlink(
+    path.join(__dirname, "../../build/node_modules/@remix-run"),
+    path.join(projectDir, "node_modules/@remix-run")
   );
+  await fse.symlink(
+    path.join(__dirname, "../../build/node_modules/create-remix"),
+    path.join(projectDir, "node_modules/create-remix")
+  );
+  await fse.symlink(
+    path.join(__dirname, "../../build/node_modules/remix"),
+    path.join(projectDir, "node_modules/remix")
+  );
+
   if (init.setup) {
     let setupSpawn = spawnSync(
       "node",

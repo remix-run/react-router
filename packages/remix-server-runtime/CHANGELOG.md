@@ -1,5 +1,9 @@
 # `@remix-run/server-runtime`
 
+## 1.7.6
+
+No significant changes to this package were made in this release. [See the releases page on GitHub](https://github.com/remix-run/remix/releases/tag/remix%401.7.6) for an overview of all changes in v1.7.6.
+
 ## 1.7.5
 
 No significant changes to this package were made in this release. [See the releases page on GitHub](https://github.com/remix-run/remix/releases/tag/remix%401.7.5) for an overview of all changes in v1.7.5.
