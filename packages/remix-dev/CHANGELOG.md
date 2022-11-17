@@ -1,6 +1,12 @@
 # `@remix-run/dev`
 
-## 1.7.6-pre.0
+## 1.7.6
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/serve@1.7.6`
+  - `@remix-run/server-runtime@1.7.6`
 
 ### Patch Changes
 
