@@ -20,6 +20,7 @@ import type {
   Submission,
   SuccessResult,
   AgnosticRouteMatch,
+  SubmissionFormMethod,
 } from "./utils";
 import {
   DeferredData,
@@ -502,6 +503,17 @@ interface QueryRouteResponse {
   type: ResultType.data | ResultType.error;
   response: Response;
 }
+
+const validActionMethodsArr: SubmissionFormMethod[] = [
+  "post",
+  "put",
+  "patch",
+  "delete",
+];
+const validActionMethods = new Set<SubmissionFormMethod>(validActionMethodsArr);
+
+const validRequestMethodsArr: FormMethod[] = ["get", ...validActionMethodsArr];
+const validRequestMethods = new Set<FormMethod>(validRequestMethodsArr);
 
 export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
   state: "idle",
@@ -1586,8 +1598,7 @@ export function createRouter(init: RouterInit): Router {
     if (
       [307, 308].includes(redirect.status) &&
       formMethod &&
-      formMethod !== "get" &&
-      formMethod !== "head" &&
+      isSubmissionMethod(formMethod) &&
       formEncType &&
       formData
     ) {
@@ -1861,9 +1872,6 @@ export function createRouter(init: RouterInit): Router {
 //#region createStaticHandler
 ////////////////////////////////////////////////////////////////////////////////
 
-const validActionMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-const validRequestMethods = new Set(["GET", "HEAD", ...validActionMethods]);
-
 export function unstable_createStaticHandler(
   routes: AgnosticRouteObject[]
 ): StaticHandler {
@@ -1897,11 +1905,13 @@ export function unstable_createStaticHandler(
     request: Request
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
+    let method = request.method.toLowerCase();
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location);
 
-    if (!validRequestMethods.has(request.method)) {
-      let error = getInternalRouterError(405, { method: request.method });
+    // SSR supports HEAD requests while SPA doesn't
+    if (!isValidMethod(method) && method !== "head") {
+      let error = getInternalRouterError(405, { method });
       let { matches: methodNotAllowedMatches, route } =
         getShortCircuitMatches(dataRoutes);
       return {
@@ -1967,11 +1977,13 @@ export function unstable_createStaticHandler(
    */
   async function queryRoute(request: Request, routeId?: string): Promise<any> {
     let url = new URL(request.url);
+    let method = request.method.toLowerCase();
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location);
 
-    if (!validRequestMethods.has(request.method)) {
-      throw getInternalRouterError(405, { method: request.method });
+    // SSR supports HEAD requests while SPA doesn't
+    if (!isValidMethod(method) && method !== "head") {
+      throw getInternalRouterError(405, { method });
     } else if (!matches) {
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
@@ -2021,7 +2033,7 @@ export function unstable_createStaticHandler(
     );
 
     try {
-      if (validActionMethods.has(request.method)) {
+      if (isSubmissionMethod(request.method.toLowerCase())) {
         let result = await submit(
           request,
           matches,
@@ -2281,6 +2293,12 @@ export function getStaticContextFromError(
   return newContext;
 }
 
+function isSubmissionNavigation(
+  opts: RouterNavigateOptions
+): opts is SubmissionNavigateOptions {
+  return opts != null && "formData" in opts;
+}
+
 // Normalize navigation options by converting formMethod=GET formData objects to
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
@@ -2295,16 +2313,19 @@ function normalizeNavigateOptions(
   let path = typeof to === "string" ? to : createPath(to);
 
   // Return location verbatim on non-submission navigations
-  if (!opts || (!("formMethod" in opts) && !("formData" in opts))) {
+  if (!opts || !isSubmissionNavigation(opts)) {
     return { path };
   }
 
+  if (opts.formMethod && !isValidMethod(opts.formMethod)) {
+    return {
+      path,
+      error: getInternalRouterError(405, { method: opts.formMethod }),
+    };
+  }
+
   // Create a Submission on non-GET navigations
-  if (
-    opts.formMethod != null &&
-    opts.formMethod !== "get" &&
-    opts.formMethod !== "head"
-  ) {
+  if (isSubmissionMethod(opts.formMethod)) {
     return {
       path,
       submission: {
@@ -2315,11 +2336,6 @@ function normalizeNavigateOptions(
         formData: opts.formData,
       },
     };
-  }
-
-  // No formData to flatten for GET submission
-  if (!opts.formData) {
-    return { path };
   }
 
   // Flatten submission onto URLSearchParams for GET submissions
@@ -2901,8 +2917,8 @@ function getInternalRouterError(
     message?: string;
   } = {}
 ) {
-  let statusText: string;
-  let errorMessage = message;
+  let statusText = "Unknown Server Error";
+  let errorMessage = "Unknown @remix-run/router error";
 
   if (status === 400) {
     statusText = "Bad Request";
@@ -2916,23 +2932,20 @@ function getInternalRouterError(
   } else if (status === 405) {
     statusText = "Method Not Allowed";
     if (method && pathname && routeId) {
-      if (validActionMethods.has(method)) {
+      if (isSubmissionMethod(method.toLowerCase())) {
         errorMessage =
-          `You made a ${method} request to "${pathname}" but ` +
+          `You made a ${method.toUpperCase()} request to "${pathname}" but ` +
           `did not provide an \`action\` for route "${routeId}", ` +
           `so there is no way to handle the request.`;
       } else {
         errorMessage =
-          `You made a ${method} request to "${pathname}" but ` +
+          `You made a ${method.toUpperCase()} request to "${pathname}" but ` +
           `did not provide a \`loader\` for route "${routeId}", ` +
           `so there is no way to handle the request.`;
       }
-    } else {
-      errorMessage = `Invalid request method "${method}"`;
+    } else if (method) {
+      errorMessage = `Invalid request method "${method.toUpperCase()}"`;
     }
-  } else {
-    statusText = "Unknown Server Error";
-    errorMessage = "Unknown @remix-run/router error";
   }
 
   return new ErrorResponse(
@@ -2992,6 +3005,18 @@ function isQueryRouteResponse(obj: any): obj is QueryRouteResponse {
     obj.response instanceof Response &&
     (obj.type === ResultType.data || ResultType.error)
   );
+}
+
+function isValidMethod(method: string | undefined): method is FormMethod {
+  if (!method) return false;
+  return validRequestMethods.has(method as FormMethod);
+}
+
+function isSubmissionMethod(
+  method: string | undefined
+): method is SubmissionFormMethod {
+  if (!method) return false;
+  return validActionMethods.has(method as SubmissionFormMethod);
 }
 
 async function resolveDeferredResults(

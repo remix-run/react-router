@@ -3971,6 +3971,86 @@ describe("a router", () => {
       });
     });
 
+    it("returns a 405 error if attempting to submit with method=HEAD", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT DATA",
+            index: "INDEX DATA",
+          },
+        },
+      });
+
+      let formData = new FormData();
+      formData.append(
+        "blob",
+        new Blob(["<h1>Some html file contents</h1>"], {
+          type: "text/html",
+        })
+      );
+
+      await t.navigate("/tasks", {
+        // @ts-expect-error
+        formMethod: "head",
+        formData: formData,
+      });
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.location).toMatchObject({
+        pathname: "/tasks",
+        search: "",
+      });
+      expect(t.router.state.errors).toEqual({
+        tasks: new ErrorResponse(
+          405,
+          "Method Not Allowed",
+          new Error('Invalid request method "HEAD"'),
+          true
+        ),
+      });
+    });
+
+    it("returns a 405 error if attempting to submit with method=OPTIONS", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT DATA",
+            index: "INDEX DATA",
+          },
+        },
+      });
+
+      let formData = new FormData();
+      formData.append(
+        "blob",
+        new Blob(["<h1>Some html file contents</h1>"], {
+          type: "text/html",
+        })
+      );
+
+      await t.navigate("/tasks", {
+        // @ts-expect-error
+        formMethod: "options",
+        formData: formData,
+      });
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.location).toMatchObject({
+        pathname: "/tasks",
+        search: "",
+      });
+      expect(t.router.state.errors).toEqual({
+        tasks: new ErrorResponse(
+          405,
+          "Method Not Allowed",
+          new Error('Invalid request method "OPTIONS"'),
+          true
+        ),
+      });
+    });
+
     it("runs loaders above the boundary for 400 errors if binary data is attempted to be submitted using formMethod=GET", async () => {
       let t = setup({
         routes: [
@@ -6994,7 +7074,7 @@ describe("a router", () => {
             405,
             "Method Not Allowed",
             new Error(
-              'You made a post request to "/" but did not provide a `loader` ' +
+              'You made a POST request to "/" but did not provide an `action` ' +
                 'for route "root", so there is no way to handle the request.'
             ),
             true
