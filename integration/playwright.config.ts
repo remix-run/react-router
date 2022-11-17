@@ -12,7 +12,7 @@ const config: PlaywrightTestConfig = {
     timeout: 5_000,
   },
   forbidOnly: !!process.env.CI,
-  retries: 3,
+  retries: process.env.CI ? 3 : 0,
   reporter: process.env.CI ? "github" : [["html", { open: "never" }]],
   use: { actionTimeout: 0 },
 
