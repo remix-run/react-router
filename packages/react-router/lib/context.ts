@@ -107,6 +107,7 @@ export interface NavigateOptions {
  */
 export interface Navigator {
   createHref: History["createHref"];
+  encodeLocation: History["encodeLocation"];
   go: History["go"];
   push(to: To, state?: any, opts?: NavigateOptions): void;
   replace(to: To, state?: any, opts?: NavigateOptions): void;
