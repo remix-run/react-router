@@ -1,4 +1,4 @@
-import type { History, Location, To } from "./history";
+import type { History, Location, Path, To } from "./history";
 import {
   Action as HistoryAction,
   createLocation,
@@ -153,6 +153,16 @@ export interface Router {
    * @param location
    */
   createHref(location: Location | URL): string;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Utility function to URL encode a destination path according to the internal
+   * history implementation
+   * @param to
+   */
+  encodeLocation(to: To): Path;
 
   /**
    * @internal
@@ -773,7 +783,10 @@ export function createRouter(init: RouterInit): Router {
     // remains the same as POP and non-data-router usages.  new URL() does all
     // the same encoding we'd get from a history.pushState/window.location read
     // without having to touch history
-    location = init.history.encodeLocation(location);
+    location = {
+      ...location,
+      ...init.history.encodeLocation(location),
+    };
 
     let historyAction =
       (opts && opts.replace) === true || submission != null
@@ -1825,6 +1838,7 @@ export function createRouter(init: RouterInit): Router {
     // Passthrough to history-aware createHref used by useHref so we get proper
     // hash-aware URLs in DOM paths
     createHref: (to: To) => init.history.createHref(to),
+    encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
     deleteFetcher,
     dispose,
