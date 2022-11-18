@@ -2,7 +2,6 @@ import * as path from "path";
 import * as esbuild from "esbuild";
 import * as fse from "fs-extra";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
-import { pnpPlugin as yarnPnpPlugin } from "@yarnpkg/esbuild-plugin-pnp";
 
 import { type ReadChannel } from "../channel";
 import { type RemixConfig } from "../config";
@@ -56,7 +55,6 @@ const createEsbuildConfig = (
     serverEntryModulePlugin(config),
     serverAssetsManifestPlugin(assetsManifestChannel.read()),
     serverBareModulesPlugin(config, options.onWarning),
-    yarnPnpPlugin(),
   ];
 
   if (config.serverPlatform !== "node") {
