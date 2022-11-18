@@ -18,13 +18,13 @@ function isEntryPoint(config: RemixConfig, file: string): boolean {
   return entryPoints.includes(appFile);
 }
 
-type WatchOptions = Partial<CompileOptions> & {
+export type WatchOptions = Partial<CompileOptions> & {
   onRebuildStart?(): void;
   onRebuildFinish?(durationMs: number): void;
   onFileCreated?(file: string): void;
   onFileChanged?(file: string): void;
   onFileDeleted?(file: string): void;
-  onInitialBuild?(): void;
+  onInitialBuild?(durationMs: number): void;
 };
 
 export async function watch(
@@ -51,11 +51,12 @@ export async function watch(
     onWarning,
   };
 
+  let start = Date.now();
   let compiler = createRemixCompiler(config, options);
 
   // initial build
   await compile(compiler);
-  onInitialBuild?.();
+  onInitialBuild?.(Date.now() - start);
 
   let restart = debounce(async () => {
     onRebuildStart?.();

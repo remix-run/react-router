@@ -1,10 +1,10 @@
+import { createChannel } from "../channel";
 import { type RemixConfig } from "../config";
 import { type AssetsManifest } from "./assets";
 import { type BrowserCompiler, createBrowserCompiler } from "./compileBrowser";
 import { type ServerCompiler, createServerCompiler } from "./compilerServer";
 import { type OnCompileFailure } from "./onCompileFailure";
 import { type CompileOptions } from "./options";
-import { createChannel } from "./utils/channel";
 
 type RemixCompiler = {
   browser: BrowserCompiler;
