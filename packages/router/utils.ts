@@ -194,7 +194,7 @@ type _PathParam<Path extends string> =
   Path extends `${infer L}/${infer R}`
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
-    Path extends `${string}:${infer Param}`
+    Path extends `:${infer Param}`
     ? Param
     : // otherwise, there aren't any params present
       never;
