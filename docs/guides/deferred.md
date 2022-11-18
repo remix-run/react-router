@@ -112,7 +112,7 @@ export default function PackageRoute() {
 
 If you're not jazzed about bringing back render props, you can use a hook, but you'll have to break things out into another component:
 
-```jsx lines=[21]
+```jsx lines=[11, 16, 23-31]
 export default function PackageRoute() {
   const data = useLoaderData();
 
