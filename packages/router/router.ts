@@ -1313,8 +1313,7 @@ export function createRouter(init: RouterInit): Router {
       state.fetchers.set(key, loadingFetcher);
       updateState({ fetchers: new Map(state.fetchers) });
 
-      await startRedirectNavigation(state, actionResult);
-      return;
+      return startRedirectNavigation(state, actionResult);
     }
 
     // Process any non-redirect errors thrown
@@ -1406,8 +1405,7 @@ export function createRouter(init: RouterInit): Router {
 
     let redirect = findRedirect(results);
     if (redirect) {
-      await startRedirectNavigation(state, redirect);
-      return;
+      return startRedirectNavigation(state, redirect);
     }
 
     // Process and commit output from loaders
@@ -2328,7 +2326,7 @@ function normalizeNavigateOptions(
   }
 
   // Create a Submission on non-GET navigations
-  if (isSubmissionMethod(opts.formMethod)) {
+  if (opts.formMethod && isSubmissionMethod(opts.formMethod)) {
     return {
       path,
       submission: {
@@ -3010,15 +3008,11 @@ function isQueryRouteResponse(obj: any): obj is QueryRouteResponse {
   );
 }
 
-function isValidMethod(method: string | undefined): method is FormMethod {
-  if (!method) return false;
+function isValidMethod(method: string): method is FormMethod {
   return validRequestMethods.has(method as FormMethod);
 }
 
-function isSubmissionMethod(
-  method: string | undefined
-): method is SubmissionFormMethod {
-  if (!method) return false;
+function isSubmissionMethod(method: string): method is SubmissionFormMethod {
   return validActionMethods.has(method as SubmissionFormMethod);
 }
 
