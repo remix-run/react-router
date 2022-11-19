@@ -1,5 +1,22 @@
 # `@remix-run/node`
 
+## 1.8.0-pre.0
+
+### Minor Changes
+
+- Importing functions and types from the `remix` package is deprecated, and all ([#3284](https://github.com/remix-run/remix/pull/3284))
+  exported modules will be removed in the next major release. For more details,
+  [see the release notes for 1.4.0](https://github.com/remix-run/remix/releases/tag/v1.4.0)
+  where these changes were first announced.
+
+### Patch Changes
+
+- Update `@remix-run/web-fetch`. This addresses two bugs: ([#4644](https://github.com/remix-run/remix/pull/4644))
+  - It fixes a memory leak caused by unregistered listeners
+  - It adds support for custom `"credentials"` values (Remix does nothing with these at the moment, but they pass through for the consumer of the request to access if needed)
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.8.0-pre.0`
+
 ## 1.7.6
 
 ### Patch Changes

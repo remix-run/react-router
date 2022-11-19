@@ -1,5 +1,25 @@
 # `@remix-run/dev`
 
+## 1.8.0-pre.0
+
+### Minor Changes
+
+- Added support for a new route `meta` API to handle arrays of tags instead of an object. For details, check out the [RFC](https://github.com/remix-run/remix/discussions/4462). ([#4610](https://github.com/remix-run/remix/pull/4610))
+
+### Patch Changes
+
+- Added support for feature flags in `remix.config.js` ([#4566](https://github.com/remix-run/remix/pull/4566))
+- Replace `migration` scripts with `codemod`. Specifically, `npx @remix-run/dev migrate` is now `@remix-run/dev codemod`. ([#4572](https://github.com/remix-run/remix/pull/4572))
+
+  Under the hood, codemods are now written via Babel's Visitor API instead of `jscodeshift`.
+  This makes some scripts much faster as it a) no longer depends on a network connection, and b)
+  and no longer incurs the overhead of spinning up workers for `jscodeshift`.
+
+- Fixed a bug where spreading props followed by a `key` would result in a thrown error ([#4301](https://github.com/remix-run/remix/pull/4301))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.8.0-pre.0`
+  - `@remix-run/serve@1.8.0-pre.0`
+
 ## 1.7.6
 
 ### Patch Changes
