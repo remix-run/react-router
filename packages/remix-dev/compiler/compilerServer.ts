@@ -9,6 +9,7 @@ import { type AssetsManifest } from "./assets";
 import { loaders } from "./loaders";
 import { type CompileOptions } from "./options";
 import { cssFilePlugin } from "./plugins/cssFilePlugin";
+import { deprecatedRemixPackagePlugin } from "./plugins/deprecatedRemixPackagePlugin";
 import { emptyModulesPlugin } from "./plugins/emptyModulesPlugin";
 import { mdxPlugin } from "./plugins/mdx";
 import { serverAssetsManifestPlugin } from "./plugins/serverAssetsManifestPlugin";
@@ -47,6 +48,7 @@ const createEsbuildConfig = (
   let isDenoRuntime = config.serverBuildTarget === "deno";
 
   let plugins: esbuild.Plugin[] = [
+    deprecatedRemixPackagePlugin(options.onWarning),
     cssFilePlugin(options),
     urlImportsPlugin(),
     mdxPlugin(config),
