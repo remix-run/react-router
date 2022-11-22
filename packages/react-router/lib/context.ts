@@ -24,7 +24,6 @@ export interface IndexRouteObject {
   shouldRevalidate?: AgnosticIndexRouteObject["shouldRevalidate"];
   handle?: AgnosticIndexRouteObject["handle"];
   index: true;
-  children?: undefined;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
 }
