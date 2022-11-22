@@ -298,18 +298,16 @@ export interface RouterInit {
 /**
  * State returned from a server-side query() call
  */
-export interface StaticHandlerContext {
-  basename: Router["basename"];
-  location: RouterState["location"];
-  matches: RouterState["matches"];
-  loaderData: RouterState["loaderData"];
-  actionData: RouterState["actionData"];
-  errors: RouterState["errors"];
-  statusCode: number;
-  loaderHeaders: Record<string, Headers>;
-  actionHeaders: Record<string, Headers>;
-  _deepestRenderedBoundaryId?: string | null;
-}
+export type StaticHandlerContext = Pick<Router, "basename"> &
+  Pick<
+    RouterState,
+    "actionData" | "errors" | "loaderData" | "location" | "matches"
+  > & {
+    statusCode: number;
+    loaderHeaders: Record<string, Headers>;
+    actionHeaders: Record<string, Headers>;
+    _deepestRenderedBoundaryId?: string | null;
+  };
 
 /**
  * A StaticHandler instance manages a singular SSR navigation/fetch event
@@ -327,13 +325,12 @@ export interface RouterSubscriber {
   (state: RouterState): void;
 }
 
-interface UseMatchesMatch {
+type UseMatchesMatch = Pick<AgnosticRouteMatch, "params"> & {
   id: string;
   pathname: string;
-  params: AgnosticRouteMatch["params"];
   data: unknown;
   handle: unknown;
-}
+};
 
 /**
  * Function signature for determining the key to be used in scroll restoration
@@ -2755,15 +2752,13 @@ function processRouteLoaderData(
   results: DataResult[],
   pendingError: RouteData | undefined,
   activeDeferreds?: Map<string, DeferredData>
-): {
-  loaderData: RouterState["loaderData"];
-  errors: RouterState["errors"] | null;
+): Pick<RouterState, "errors" | "loaderData"> & {
   statusCode: number;
   loaderHeaders: Record<string, Headers>;
 } {
   // Fill in loaderData/errors from our loaders
   let loaderData: RouterState["loaderData"] = {};
-  let errors: RouterState["errors"] | null = null;
+  let errors: RouterState["errors"] = null;
   let statusCode: number | undefined;
   let foundError = false;
   let loaderHeaders: Record<string, Headers> = {};
@@ -2845,10 +2840,7 @@ function processLoaderData(
   revalidatingFetchers: RevalidatingFetcher[],
   fetcherResults: DataResult[],
   activeDeferreds: Map<string, DeferredData>
-): {
-  loaderData: RouterState["loaderData"];
-  errors?: RouterState["errors"];
-} {
+): Pick<RouterState, "loaderData"> & Partial<Pick<RouterState, "errors">> {
   let { loaderData, errors } = processRouteLoaderData(
     matches,
     matchesToLoad,

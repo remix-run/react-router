@@ -123,18 +123,18 @@ export interface ActionFunction {
  * have to re-run based on the data models that were potentially mutated.
  */
 export interface ShouldRevalidateFunction {
-  (args: {
-    currentUrl: URL;
-    currentParams: AgnosticDataRouteMatch["params"];
-    nextUrl: URL;
-    nextParams: AgnosticDataRouteMatch["params"];
-    formMethod?: Submission["formMethod"];
-    formAction?: Submission["formAction"];
-    formEncType?: Submission["formEncType"];
-    formData?: Submission["formData"];
-    actionResult?: DataResult;
-    defaultShouldRevalidate: boolean;
-  }): boolean;
+  (
+    args: Partial<
+      Pick<Submission, "formAction" | "formData" | "formEncType" | "formMethod">
+    > & {
+      currentUrl: URL;
+      currentParams: AgnosticDataRouteMatch["params"];
+      nextUrl: URL;
+      nextParams: AgnosticDataRouteMatch["params"];
+      actionResult?: DataResult;
+      defaultShouldRevalidate: boolean;
+    }
+  ): boolean;
 }
 
 /**
