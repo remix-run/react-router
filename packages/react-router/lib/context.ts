@@ -14,35 +14,39 @@ import type { Action as NavigationType } from "@remix-run/router";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router
-export interface IndexRouteObject {
-  caseSensitive?: AgnosticIndexRouteObject["caseSensitive"];
-  path?: AgnosticIndexRouteObject["path"];
-  id?: AgnosticIndexRouteObject["id"];
-  loader?: AgnosticIndexRouteObject["loader"];
-  action?: AgnosticIndexRouteObject["action"];
-  hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: AgnosticIndexRouteObject["shouldRevalidate"];
-  handle?: AgnosticIndexRouteObject["handle"];
-  index: true;
-  children?: undefined;
+export type IndexRouteObject = Pick<
+  AgnosticIndexRouteObject,
+  | "action"
+  | "caseSensitive"
+  | "handle"
+  | "hasErrorBoundary"
+  | "id"
+  | "loader"
+  | "path"
+  | "shouldRevalidate"
+> & {
+  index: true; // this is also the same as in `AgnosticIndexRouteObject`
+  children?: undefined; // this is also the same as in `AgnosticIndexRouteObject`
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
-}
+};
 
-export interface NonIndexRouteObject {
-  caseSensitive?: AgnosticNonIndexRouteObject["caseSensitive"];
-  path?: AgnosticNonIndexRouteObject["path"];
-  id?: AgnosticNonIndexRouteObject["id"];
-  loader?: AgnosticNonIndexRouteObject["loader"];
-  action?: AgnosticNonIndexRouteObject["action"];
-  hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: AgnosticNonIndexRouteObject["shouldRevalidate"];
-  handle?: AgnosticNonIndexRouteObject["handle"];
-  index?: false;
+export type NonIndexRouteObject = Pick<
+  AgnosticNonIndexRouteObject,
+  | "action"
+  | "caseSensitive"
+  | "handle"
+  | "hasErrorBoundary"
+  | "id"
+  | "loader"
+  | "path"
+  | "shouldRevalidate"
+> & {
+  index?: false; // this is also the same as in `AgnosticNonIndexRouteObject`
   children?: RouteObject[];
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
-}
+};
 
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;
 
@@ -105,14 +109,12 @@ export interface NavigateOptions {
  * to avoid "tearing" that may occur in a suspense-enabled app if the action
  * and/or location were to be read directly from the history instance.
  */
-export interface Navigator {
-  createHref: History["createHref"];
+export type Navigator = Pick<History, "createHref" | "go"> &
   // Optional for backwards-compat with Router/HistoryRouter usage (edge case)
-  encodeLocation?: History["encodeLocation"];
-  go: History["go"];
-  push(to: To, state?: any, opts?: NavigateOptions): void;
-  replace(to: To, state?: any, opts?: NavigateOptions): void;
-}
+  Partial<Pick<History, "encodeLocation">> & {
+    push(to: To, state?: any, opts?: NavigateOptions): void;
+    replace(to: To, state?: any, opts?: NavigateOptions): void;
+  };
 
 interface NavigationContextObject {
   basename: string;

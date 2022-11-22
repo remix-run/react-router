@@ -222,37 +222,41 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
 }
 
-export interface PathRouteProps {
-  caseSensitive?: NonIndexRouteObject["caseSensitive"];
-  path?: NonIndexRouteObject["path"];
-  id?: NonIndexRouteObject["id"];
-  loader?: NonIndexRouteObject["loader"];
-  action?: NonIndexRouteObject["action"];
-  hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
-  handle?: NonIndexRouteObject["handle"];
-  index?: false;
+export type PathRouteProps = Pick<
+  NonIndexRouteObject,
+  | "action"
+  | "caseSensitive"
+  | "handle"
+  | "hasErrorBoundary"
+  | "id"
+  | "loader"
+  | "path"
+  | "shouldRevalidate"
+> & {
+  index?: false; // this is also the same as in `NonIndexRouteObject`
   children?: React.ReactNode;
-  element?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-}
+  element?: React.ReactNode | null; // this is also the same as in `NonIndexRouteObject`
+  errorElement?: React.ReactNode | null; // this is also the same as in `NonIndexRouteObject`
+};
 
 export interface LayoutRouteProps extends PathRouteProps {}
 
-export interface IndexRouteProps {
-  caseSensitive?: IndexRouteObject["caseSensitive"];
-  path?: IndexRouteObject["path"];
-  id?: IndexRouteObject["id"];
-  loader?: IndexRouteObject["loader"];
-  action?: IndexRouteObject["action"];
-  hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
-  handle?: IndexRouteObject["handle"];
-  index: true;
-  children?: undefined;
-  element?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-}
+export type IndexRouteProps = Pick<
+  IndexRouteObject,
+  | "action"
+  | "caseSensitive"
+  | "handle"
+  | "hasErrorBoundary"
+  | "id"
+  | "loader"
+  | "path"
+  | "shouldRevalidate"
+> & {
+  index: true; // this is also the same as in `IndexRouteObject`
+  children?: undefined; // this is also the same as in `IndexRouteObject`
+  element?: React.ReactNode | null; // this is also the same as in `IndexRouteObject`
+  errorElement?: React.ReactNode | null; // this is also the same as in `IndexRouteObject`
+};
 
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 
