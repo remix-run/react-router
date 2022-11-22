@@ -178,7 +178,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 The app should look something like this now. It sure is nice having a designer who can also write the CSS, isn't it? (Thank you [Jim][jim] 🙏).
 
-<img class="tutorial" loading="lazy" src="/_docs/tutorial/01.webp" />
+![image](https://user-images.githubusercontent.com/82429084/203245968-e7c909f2-e800-411a-8c17-8d885f8e1c7f.png)
 
 ## Handling Not Found Errors
 
