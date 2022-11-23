@@ -1,5 +1,6 @@
 import * as React from "react";
 import type {
+  AgnosticDataRouteObject,
   Path,
   RevalidationState,
   Router as RemixRouter,
@@ -13,7 +14,12 @@ import {
   isRouteErrorResponse,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import type { Location, RouteObject, To } from "react-router-dom";
+import type {
+  DataRouteObject,
+  Location,
+  RouteObject,
+  To,
+} from "react-router-dom";
 import { Routes } from "react-router-dom";
 import {
   createPath,
@@ -22,6 +28,7 @@ import {
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_DataStaticRouterContext as DataStaticRouterContext,
+  UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router-dom";
 
 export interface StaticRouterProps {
@@ -198,11 +205,41 @@ function getStatelessNavigator() {
   };
 }
 
+// Temporary manifest generation - we should optimize this by combining the
+// tree-walks between convertRoutesToDataRoutes, enhanceManualRouteObjects,
+// and generateManifest.
+// Also look into getting rid of `route as AgnosticDataRouteObject` down below?
+function generateManifest(
+  routes: DataRouteObject[],
+  manifest: Map<string, DataRouteObject> = new Map<string, DataRouteObject>()
+): Map<string, RouteObject> {
+  routes.forEach((route) => {
+    manifest.set(route.id, route);
+    if (route.children) {
+      generateManifest(route.children, manifest);
+    }
+  });
+  return manifest;
+}
+
 export function unstable_createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext
 ): RemixRouter {
-  let dataRoutes = convertRoutesToDataRoutes(routes);
+  let dataRoutes = convertRoutesToDataRoutes(enhanceManualRouteObjects(routes));
+  let manifest = generateManifest(dataRoutes);
+
+  // Because our context matches may be from a framework-agnostic set of
+  // routes passed to createStaticHandler(), we update them here with our
+  // newly created/enhanced data routes
+  let matches = context.matches.map((match) => {
+    let route = manifest.get(match.route.id) || match.route;
+    return {
+      ...match,
+      route: route as AgnosticDataRouteObject,
+    };
+  });
+
   let msg = (method: string) =>
     `You cannot use router.${method}() on the server because it is a stateless environment`;
 
@@ -214,7 +251,7 @@ export function unstable_createStaticRouter(
       return {
         historyAction: Action.Pop,
         location: context.location,
-        matches: context.matches,
+        matches,
         loaderData: context.loaderData,
         actionData: context.actionData,
         errors: context.errors,
