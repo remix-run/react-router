@@ -365,6 +365,11 @@ function setup({
       let redirectNavigationId = ++guid;
       activeLoaderType = "navigation";
       activeLoaderNavigationId = redirectNavigationId;
+      if (status === 307 || status === 308) {
+        activeActionType = "navigation";
+        activeActionNavigationId = redirectNavigationId;
+      }
+
       let helpers = getNavigationHelpers(href, redirectNavigationId);
 
       // Since a redirect kicks off and awaits a new navigation we can't shim
@@ -3966,6 +3971,86 @@ describe("a router", () => {
       });
     });
 
+    it("returns a 405 error if attempting to submit with method=HEAD", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT DATA",
+            index: "INDEX DATA",
+          },
+        },
+      });
+
+      let formData = new FormData();
+      formData.append(
+        "blob",
+        new Blob(["<h1>Some html file contents</h1>"], {
+          type: "text/html",
+        })
+      );
+
+      await t.navigate("/tasks", {
+        // @ts-expect-error
+        formMethod: "head",
+        formData: formData,
+      });
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.location).toMatchObject({
+        pathname: "/tasks",
+        search: "",
+      });
+      expect(t.router.state.errors).toEqual({
+        tasks: new ErrorResponse(
+          405,
+          "Method Not Allowed",
+          new Error('Invalid request method "HEAD"'),
+          true
+        ),
+      });
+    });
+
+    it("returns a 405 error if attempting to submit with method=OPTIONS", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT DATA",
+            index: "INDEX DATA",
+          },
+        },
+      });
+
+      let formData = new FormData();
+      formData.append(
+        "blob",
+        new Blob(["<h1>Some html file contents</h1>"], {
+          type: "text/html",
+        })
+      );
+
+      await t.navigate("/tasks", {
+        // @ts-expect-error
+        formMethod: "options",
+        formData: formData,
+      });
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.location).toMatchObject({
+        pathname: "/tasks",
+        search: "",
+      });
+      expect(t.router.state.errors).toEqual({
+        tasks: new ErrorResponse(
+          405,
+          "Method Not Allowed",
+          new Error('Invalid request method "OPTIONS"'),
+          true
+        ),
+      });
+    });
+
     it("runs loaders above the boundary for 400 errors if binary data is attempted to be submitted using formMethod=GET", async () => {
       let t = setup({
         routes: [
@@ -5515,6 +5600,173 @@ describe("a router", () => {
         window.location = oldLocation;
       }
     });
+
+    describe("redirect status code handling", () => {
+      it("should not treat 300 as a redirect", async () => {
+        let t = setup({ routes: REDIRECT_ROUTES });
+
+        let A = await t.navigate("/parent");
+        await A.loaders.parent.redirectReturn("/idk", 300);
+        expect(t.router.state).toMatchObject({
+          loaderData: {},
+          location: {
+            pathname: "/parent",
+          },
+          navigation: {
+            state: "idle",
+          },
+        });
+      });
+
+      it("should not preserve the method on 301 redirects", async () => {
+        let t = setup({ routes: REDIRECT_ROUTES });
+
+        let A = await t.navigate("/parent/child", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        // Triggers a GET redirect
+        let B = await A.actions.child.redirectReturn("/parent", 301);
+        await B.loaders.parent.resolve("PARENT");
+        expect(t.router.state).toMatchObject({
+          loaderData: {
+            parent: "PARENT",
+          },
+          location: {
+            pathname: "/parent",
+          },
+          navigation: {
+            state: "idle",
+          },
+        });
+      });
+
+      it("should not preserve the method on 302 redirects", async () => {
+        let t = setup({ routes: REDIRECT_ROUTES });
+
+        let A = await t.navigate("/parent/child", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        // Triggers a GET redirect
+        let B = await A.actions.child.redirectReturn("/parent", 302);
+        await B.loaders.parent.resolve("PARENT");
+        expect(t.router.state).toMatchObject({
+          loaderData: {
+            parent: "PARENT",
+          },
+          location: {
+            pathname: "/parent",
+          },
+          navigation: {
+            state: "idle",
+          },
+        });
+      });
+
+      it("should not preserve the method on 303 redirects", async () => {
+        let t = setup({ routes: REDIRECT_ROUTES });
+
+        let A = await t.navigate("/parent/child", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        // Triggers a GET redirect
+        let B = await A.actions.child.redirectReturn("/parent", 303);
+        await B.loaders.parent.resolve("PARENT");
+        expect(t.router.state).toMatchObject({
+          loaderData: {
+            parent: "PARENT",
+          },
+          location: {
+            pathname: "/parent",
+          },
+          navigation: {
+            state: "idle",
+          },
+        });
+      });
+
+      it("should not treat 304 as a redirect", async () => {
+        let t = setup({ routes: REDIRECT_ROUTES });
+
+        let A = await t.navigate("/parent");
+        await A.loaders.parent.resolve(new Response(null, { status: 304 }));
+        expect(t.router.state).toMatchObject({
+          loaderData: {},
+          location: {
+            pathname: "/parent",
+          },
+          navigation: {
+            state: "idle",
+          },
+        });
+      });
+
+      it("should preserve the method on 307 redirects", async () => {
+        let t = setup({ routes: REDIRECT_ROUTES });
+
+        let A = await t.navigate("/parent/child", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        // Triggers a POST redirect
+        let B = await A.actions.child.redirectReturn("/parent", 307);
+        await B.actions.parent.resolve("PARENT ACTION");
+        await B.loaders.parent.resolve("PARENT");
+        expect(t.router.state).toMatchObject({
+          actionData: {
+            parent: "PARENT ACTION",
+          },
+          loaderData: {
+            parent: "PARENT",
+          },
+          location: {
+            pathname: "/parent",
+          },
+          navigation: {
+            state: "idle",
+          },
+        });
+
+        let request = B.actions.parent.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        let fd = await request.formData();
+        expect(Array.from(fd.entries())).toEqual([["key", "value"]]);
+      });
+
+      it("should preserve the method on 308 redirects", async () => {
+        let t = setup({ routes: REDIRECT_ROUTES });
+
+        let A = await t.navigate("/parent/child", {
+          formMethod: "post",
+          formData: createFormData({ key: "value" }),
+        });
+        // Triggers a POST redirect
+        let B = await A.actions.child.redirectReturn("/parent", 308);
+        await B.actions.parent.resolve("PARENT ACTION");
+        await B.loaders.parent.resolve("PARENT");
+        expect(t.router.state).toMatchObject({
+          actionData: {
+            parent: "PARENT ACTION",
+          },
+          loaderData: {
+            parent: "PARENT",
+          },
+          location: {
+            pathname: "/parent",
+          },
+          navigation: {
+            state: "idle",
+          },
+        });
+
+        let request = B.actions.parent.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        let fd = await request.formData();
+        expect(Array.from(fd.entries())).toEqual([["key", "value"]]);
+      });
+    });
   });
 
   describe("scroll restoration", () => {
@@ -6853,7 +7105,7 @@ describe("a router", () => {
             405,
             "Method Not Allowed",
             new Error(
-              'You made a post request to "/" but did not provide an `action` ' +
+              'You made a POST request to "/" but did not provide an `action` ' +
                 'for route "root", so there is no way to handle the request.'
             ),
             true
