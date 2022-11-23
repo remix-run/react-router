@@ -8,5 +8,12 @@
     "react-router-native": "6.4.3",
     "@remix-run/router": "1.0.3"
   },
-  "changesets": []
+  "changesets": [
+    "blue-cycles-check",
+    "flat-trainers-speak",
+    "funny-oranges-arrive",
+    "pretty-dolls-bathe",
+    "proud-timers-tickle",
+    "stale-coats-smoke"
+  ]
 }

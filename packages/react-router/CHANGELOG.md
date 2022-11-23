@@ -1,5 +1,13 @@
 # `react-router`
 
+## 6.4.4-pre.0
+
+### Patch Changes
+
+- Fix issues with encoded characters in descendant routes ([#9589](https://github.com/remix-run/react-router/pull/9589))
+- Updated dependencies:
+  - `@remix-run/router@1.0.4-pre.0`
+
 ## 6.4.3
 
 ### Patch Changes
