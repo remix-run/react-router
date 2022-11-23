@@ -10,6 +10,7 @@ import {
   IDLE_NAVIGATION,
   Action,
   invariant,
+  isRouteErrorResponse,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
 import type { Location, RouteObject, To } from "react-router-dom";
@@ -99,7 +100,7 @@ export function unstable_StaticRouterProvider({
     let data = {
       loaderData: context.loaderData,
       actionData: context.actionData,
-      errors: context.errors,
+      errors: serializeErrors(context.errors),
     };
     // Use JSON.parse here instead of embedding a raw JS object here to speed
     // up parsing on the client.  Dual-stringify is needed to ensure all quotes
@@ -136,6 +137,24 @@ export function unstable_StaticRouterProvider({
       ) : null}
     </>
   );
+}
+
+function serializeErrors(
+  errors: StaticHandlerContext["errors"]
+): StaticHandlerContext["errors"] {
+  if (!errors) return null;
+  let entries = Object.entries(errors);
+  let serialized: StaticHandlerContext["errors"] = {};
+  for (let [key, val] of entries) {
+    // Hey you!  If you change this, please change the corresponding logic in
+    // deserializeErrors in react-router-dom/index.tsx :)
+    if (isRouteErrorResponse(val)) {
+      serialized[key] = { ...val, __type: "RouteErrorResponse" };
+    } else {
+      serialized[key] = val;
+    }
+  }
+  return serialized;
 }
 
 function getStatelessNavigator() {
