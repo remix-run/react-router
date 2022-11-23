@@ -221,6 +221,17 @@ describe("special character tests", () => {
             path="/reset"
             element={<Link to={navigatePath}>Link to path</Link>}
           />
+          <Route
+            path="/descendant/:param/*"
+            element={
+              <Routes>
+                <Route
+                  path="match"
+                  element={<Comp heading="Descendant Route" />}
+                />
+              </Routes>
+            }
+          />
           <Route path="/*" element={<Comp heading="Root Splat Route" />} />
         </>
       );
@@ -483,6 +494,34 @@ describe("special character tests", () => {
             hash: "",
           },
           { "*": `foo/bar${char}` }
+        );
+      }
+    });
+
+    it("handles special chars in descendant routes paths", async () => {
+      for (let charDef of specialChars) {
+        let { char, pathChar } = charDef;
+
+        await testParamValues(
+          `/descendant/${char}/match`,
+          "Descendant Route",
+          {
+            pathname: `/descendant/${pathChar}/match`,
+            search: "",
+            hash: "",
+          },
+          { param: char, "*": "match" }
+        );
+
+        await testParamValues(
+          `/descendant/foo${char}bar/match`,
+          "Descendant Route",
+          {
+            pathname: `/descendant/foo${pathChar}bar/match`,
+            search: "",
+            hash: "",
+          },
+          { param: `foo${char}bar`, "*": "match" }
         );
       }
     });

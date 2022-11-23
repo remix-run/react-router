@@ -1,4 +1,4 @@
-import type { History, Location, To } from "./history";
+import type { History, Location, Path, To } from "./history";
 import {
   Action as HistoryAction,
   createLocation,
@@ -159,6 +159,16 @@ export interface Router {
    * @internal
    * PRIVATE - DO NOT USE
    *
+   * Utility function to URL encode a destination path according to the internal
+   * history implementation
+   * @param to
+   */
+  encodeLocation(to: To): Path;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Get/create a fetcher for the given key
    * @param key
    */
@@ -289,6 +299,7 @@ export interface RouterInit {
  * State returned from a server-side query() call
  */
 export interface StaticHandlerContext {
+  basename: Router["basename"];
   location: RouterState["location"];
   matches: RouterState["matches"];
   loaderData: RouterState["loaderData"];
@@ -788,7 +799,10 @@ export function createRouter(init: RouterInit): Router {
     // remains the same as POP and non-data-router usages.  new URL() does all
     // the same encoding we'd get from a history.pushState/window.location read
     // without having to touch history
-    location = init.history.encodeLocation(location);
+    location = {
+      ...location,
+      ...init.history.encodeLocation(location),
+    };
 
     let historyAction =
       (opts && opts.replace) === true || submission != null
@@ -1584,6 +1598,16 @@ export function createRouter(init: RouterInit): Router {
       redirectLocation,
       "Expected a location on the redirect navigation"
     );
+
+    if (
+      redirect.external &&
+      typeof window !== "undefined" &&
+      typeof window.location !== "undefined"
+    ) {
+      window.location.replace(redirect.location);
+      return;
+    }
+
     // There's no need to abort on redirects, since we don't detect the
     // redirect until the action/loaders have settled
     pendingNavigationController = null;
@@ -1858,6 +1882,7 @@ export function createRouter(init: RouterInit): Router {
     // Passthrough to history-aware createHref used by useHref so we get proper
     // hash-aware URLs in DOM paths
     createHref: (to: To) => init.history.createHref(to),
+    encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
     deleteFetcher,
     dispose,
@@ -1874,7 +1899,10 @@ export function createRouter(init: RouterInit): Router {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function unstable_createStaticHandler(
-  routes: AgnosticRouteObject[]
+  routes: AgnosticRouteObject[],
+  opts?: {
+    basename?: string;
+  }
 ): StaticHandler {
   invariant(
     routes.length > 0,
@@ -1882,6 +1910,7 @@ export function unstable_createStaticHandler(
   );
 
   let dataRoutes = convertRoutesToDataRoutes(routes);
+  let basename = (opts ? opts.basename : null) || "/";
 
   /**
    * The query() method is intended for document requests, in which we want to
@@ -1908,7 +1937,7 @@ export function unstable_createStaticHandler(
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
     let location = createLocation("", createPath(url), null, "default");
-    let matches = matchRoutes(dataRoutes, location);
+    let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
     if (!isValidMethod(method) && method !== "head") {
@@ -1916,6 +1945,7 @@ export function unstable_createStaticHandler(
       let { matches: methodNotAllowedMatches, route } =
         getShortCircuitMatches(dataRoutes);
       return {
+        basename,
         location,
         matches: methodNotAllowedMatches,
         loaderData: {},
@@ -1932,6 +1962,7 @@ export function unstable_createStaticHandler(
       let { matches: notFoundMatches, route } =
         getShortCircuitMatches(dataRoutes);
       return {
+        basename,
         location,
         matches: notFoundMatches,
         loaderData: {},
@@ -1953,7 +1984,7 @@ export function unstable_createStaticHandler(
     // When returning StaticHandlerContext, we patch back in the location here
     // since we need it for React Context.  But this helps keep our submit and
     // loadRouteData operating on a Request instead of a Location
-    return { location, ...result };
+    return { location, basename, ...result };
   }
 
   /**
@@ -1980,7 +2011,7 @@ export function unstable_createStaticHandler(
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
     let location = createLocation("", createPath(url), null, "default");
-    let matches = matchRoutes(dataRoutes, location);
+    let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
     if (!isValidMethod(method) && method !== "head") {
@@ -2027,7 +2058,7 @@ export function unstable_createStaticHandler(
     location: Location,
     matches: AgnosticDataRouteMatch[],
     routeMatch?: AgnosticDataRouteMatch
-  ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
+  ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
       request.signal,
       "query()/queryRoute() requests must contain an AbortController signal"
@@ -2076,7 +2107,7 @@ export function unstable_createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     isRouteRequest: boolean
-  ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
+  ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
 
     if (!actionMatch.route.action) {
@@ -2098,7 +2129,7 @@ export function unstable_createStaticHandler(
         request,
         actionMatch,
         matches,
-        undefined, // Basename not currently supported in static handlers
+        basename,
         true,
         isRouteRequest
       );
@@ -2188,14 +2219,17 @@ export function unstable_createStaticHandler(
     routeMatch?: AgnosticDataRouteMatch,
     pendingActionError?: RouteData
   ): Promise<
-    | Omit<StaticHandlerContext, "location" | "actionData" | "actionHeaders">
+    | Omit<
+        StaticHandlerContext,
+        "location" | "basename" | "actionData" | "actionHeaders"
+      >
     | Response
   > {
     let isRouteRequest = routeMatch != null;
 
     // Short circuit if we have no loaders to run (queryRoute())
     if (isRouteRequest && !routeMatch?.route.loader) {
-      throw getInternalRouterError(405, {
+      throw getInternalRouterError(400, {
         method: request.method,
         pathname: createURL(request.url).pathname,
         routeId: routeMatch?.route.id,
@@ -2228,7 +2262,7 @@ export function unstable_createStaticHandler(
           request,
           match,
           matches,
-          undefined, // Basename not currently supported in static handlers
+          basename,
           true,
           isRouteRequest
         )
@@ -2531,7 +2565,7 @@ async function callLoaderOrAction(
   request: Request,
   match: AgnosticDataRouteMatch,
   matches: AgnosticDataRouteMatch[],
-  basename: string | undefined,
+  basename = "/",
   isStaticRequest: boolean = false,
   isRouteRequest: boolean = false
 ): Promise<DataResult> {
@@ -2580,26 +2614,31 @@ async function callLoaderOrAction(
         "Redirects returned/thrown from loaders/actions must have a Location header"
       );
 
-      // Support relative routing in redirects
-      let activeMatches = matches.slice(0, matches.indexOf(match) + 1);
-      let routePathnames = getPathContributingMatches(activeMatches).map(
-        (match) => match.pathnameBase
-      );
-      let requestPath = createURL(request.url).pathname;
-      let resolvedLocation = resolveTo(location, routePathnames, requestPath);
-      invariant(
-        createPath(resolvedLocation),
-        `Unable to resolve redirect location: ${result.headers.get("Location")}`
-      );
+      // Check if this an external redirect that goes to a new origin
+      let external = createURL(location).origin !== createURL("/").origin;
 
-      // Prepend the basename to the redirect location if we have one
-      if (basename) {
-        let path = resolvedLocation.pathname;
-        resolvedLocation.pathname =
-          path === "/" ? basename : joinPaths([basename, path]);
+      // Support relative routing in internal redirects
+      if (!external) {
+        let activeMatches = matches.slice(0, matches.indexOf(match) + 1);
+        let routePathnames = getPathContributingMatches(activeMatches).map(
+          (match) => match.pathnameBase
+        );
+        let requestPath = createURL(request.url).pathname;
+        let resolvedLocation = resolveTo(location, routePathnames, requestPath);
+        invariant(
+          createPath(resolvedLocation),
+          `Unable to resolve redirect location: ${location}`
+        );
+
+        // Prepend the basename to the redirect location if we have one
+        if (basename) {
+          let path = resolvedLocation.pathname;
+          resolvedLocation.pathname =
+            path === "/" ? basename : joinPaths([basename, path]);
+        }
+
+        location = createPath(resolvedLocation);
       }
-
-      location = createPath(resolvedLocation);
 
       // Don't process redirects in the router during static requests requests.
       // Instead, throw the Response and let the server handle it with an HTTP
@@ -2615,6 +2654,7 @@ async function callLoaderOrAction(
         status,
         location,
         revalidate: result.headers.get("X-Remix-Revalidate") !== null,
+        external,
       };
     }
 
@@ -2923,7 +2963,14 @@ function getInternalRouterError(
 
   if (status === 400) {
     statusText = "Bad Request";
-    errorMessage = "Cannot submit binary form data using GET";
+    if (method && pathname && routeId) {
+      errorMessage =
+        `You made a ${method} request to "${pathname}" but ` +
+        `did not provide a \`loader\` for route "${routeId}", ` +
+        `so there is no way to handle the request.`;
+    } else {
+      errorMessage = "Cannot submit binary form data using GET";
+    }
   } else if (status === 403) {
     statusText = "Forbidden";
     errorMessage = `Route "${routeId}" does not match URL "${pathname}"`;
@@ -2933,17 +2980,10 @@ function getInternalRouterError(
   } else if (status === 405) {
     statusText = "Method Not Allowed";
     if (method && pathname && routeId) {
-      if (isSubmissionMethod(method.toLowerCase())) {
-        errorMessage =
-          `You made a ${method.toUpperCase()} request to "${pathname}" but ` +
-          `did not provide an \`action\` for route "${routeId}", ` +
-          `so there is no way to handle the request.`;
-      } else {
-        errorMessage =
-          `You made a ${method.toUpperCase()} request to "${pathname}" but ` +
-          `did not provide a \`loader\` for route "${routeId}", ` +
-          `so there is no way to handle the request.`;
-      }
+      errorMessage =
+        `You made a ${method.toUpperCase()} request to "${pathname}" but ` +
+        `did not provide an \`action\` for route "${routeId}", ` +
+        `so there is no way to handle the request.`;
     } else if (method) {
       errorMessage = `Invalid request method "${method.toUpperCase()}"`;
     }

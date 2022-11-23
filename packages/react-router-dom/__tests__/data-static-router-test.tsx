@@ -1,8 +1,12 @@
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import type { StaticHandlerContext } from "@remix-run/router";
-import { unstable_createStaticHandler as createStaticHandler } from "@remix-run/router";
 import {
+  json,
+  unstable_createStaticHandler as createStaticHandler,
+} from "@remix-run/router";
+import {
+  Link,
   Outlet,
   useLoaderData,
   useLocation,
@@ -17,7 +21,7 @@ beforeEach(() => {
   jest.spyOn(console, "warn").mockImplementation(() => {});
 });
 
-describe("A <DataStaticRouter>", () => {
+describe("A <StaticRouterProvider>", () => {
   it("renders an initialized router", async () => {
     let hooksData1: {
       location: ReturnType<typeof useLocation>;
@@ -45,7 +49,12 @@ describe("A <DataStaticRouter>", () => {
         loaderData: useLoaderData(),
         matches: useMatches(),
       };
-      return <h1>👋</h1>;
+      return (
+        <>
+          <h1>👋</h1>
+          <Link to="/the/other/path">Other</Link>
+        </>
+      );
     }
 
     let routes = [
@@ -71,7 +80,7 @@ describe("A <DataStaticRouter>", () => {
     let { query } = createStaticHandler(routes);
 
     let context = (await query(
-      new Request("http:/localhost/the/path?the=query#the-hash", {
+      new Request("http://localhost/the/path?the=query#the-hash", {
         signal: new AbortController().signal,
       })
     )) as StaticHandlerContext;
@@ -85,6 +94,7 @@ describe("A <DataStaticRouter>", () => {
       </React.StrictMode>
     );
     expect(html).toMatch("<h1>👋</h1>");
+    expect(html).toMatch('<a href="/the/other/path">');
 
     // @ts-expect-error
     expect(hooksData1.location).toEqual({
@@ -155,6 +165,59 @@ describe("A <DataStaticRouter>", () => {
     ]);
   });
 
+  it("renders an initialized router with a basename", async () => {
+    let location: ReturnType<typeof useLocation>;
+
+    function GetLocation() {
+      location = useLocation();
+      return (
+        <>
+          <h1>👋</h1>
+          <Link to="/the/other/path">Other</Link>
+        </>
+      );
+    }
+
+    let routes = [
+      {
+        path: "the",
+        children: [
+          {
+            path: "path",
+            element: <GetLocation />,
+          },
+        ],
+      },
+    ];
+    let { query } = createStaticHandler(routes, { basename: "/base" });
+
+    let context = (await query(
+      new Request("http://localhost/base/the/path?the=query#the-hash", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+    expect(html).toMatch("<h1>👋</h1>");
+    expect(html).toMatch('<a href="/base/the/other/path">');
+
+    // @ts-expect-error
+    expect(location).toEqual({
+      pathname: "/the/path",
+      search: "?the=query",
+      hash: "#the-hash",
+      state: null,
+      key: expect.any(String),
+    });
+  });
+
   it("renders hydration data by default", async () => {
     let routes = [
       {
@@ -179,7 +242,7 @@ describe("A <DataStaticRouter>", () => {
     let { query } = createStaticHandler(routes);
 
     let context = (await query(
-      new Request("http:/localhost/the/path", {
+      new Request("http://localhost/the/path", {
         signal: new AbortController().signal,
       })
     )) as StaticHandlerContext;
@@ -209,6 +272,55 @@ describe("A <DataStaticRouter>", () => {
     );
   });
 
+  it("serializes ErrorResponse instances", async () => {
+    let routes = [
+      {
+        path: "/",
+        loader: () => {
+          throw json(
+            { not: "found" },
+            { status: 404, statusText: "Not Found" }
+          );
+        },
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+
+    let expectedJsonString = JSON.stringify(
+      JSON.stringify({
+        loaderData: {},
+        actionData: null,
+        errors: {
+          "0": {
+            status: 404,
+            statusText: "Not Found",
+            internal: false,
+            data: { not: "found" },
+            __type: "RouteErrorResponse",
+          },
+        },
+      })
+    );
+    expect(html).toMatch(
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+    );
+  });
+
   it("supports a nonce prop", async () => {
     let routes = [
       {
@@ -225,7 +337,7 @@ describe("A <DataStaticRouter>", () => {
     let { query } = createStaticHandler(routes);
 
     let context = (await query(
-      new Request("http:/localhost/the/path", {
+      new Request("http://localhost/the/path", {
         signal: new AbortController().signal,
       })
     )) as StaticHandlerContext;
@@ -275,7 +387,7 @@ describe("A <DataStaticRouter>", () => {
     let { query } = createStaticHandler(routes);
 
     let context = (await query(
-      new Request("http:/localhost/the/path", {
+      new Request("http://localhost/the/path", {
         signal: new AbortController().signal,
       })
     )) as StaticHandlerContext;
@@ -305,7 +417,7 @@ describe("A <DataStaticRouter>", () => {
     let { query } = createStaticHandler(routes);
 
     let context = (await query(
-      new Request("http:/localhost/the/path?the=query#the-hash", {
+      new Request("http://localhost/the/path?the=query#the-hash", {
         signal: new AbortController().signal,
       })
     )) as StaticHandlerContext;
@@ -351,7 +463,7 @@ describe("A <DataStaticRouter>", () => {
       ];
 
       let context = (await createStaticHandler(routes).query(
-        new Request("http:/localhost/", {
+        new Request("http://localhost/", {
           signal: new AbortController().signal,
         })
       )) as StaticHandlerContext;
@@ -385,7 +497,7 @@ describe("A <DataStaticRouter>", () => {
       ];
 
       let context = (await createStaticHandler(routes).query(
-        new Request("http:/localhost/", {
+        new Request("http://localhost/", {
           signal: new AbortController().signal,
         })
       )) as StaticHandlerContext;

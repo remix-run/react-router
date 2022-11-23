@@ -1,5 +1,6 @@
 import * as React from "react";
 import type {
+  Path,
   RevalidationState,
   Router as RemixRouter,
   StaticHandlerContext,
@@ -9,6 +10,7 @@ import {
   IDLE_NAVIGATION,
   Action,
   invariant,
+  isRouteErrorResponse,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
 import type { Location, RouteObject, To } from "react-router-dom";
@@ -64,7 +66,6 @@ export function StaticRouter({
 }
 
 export interface StaticRouterProviderProps {
-  basename?: string;
   context: StaticHandlerContext;
   router: RemixRouter;
   hydrate?: boolean;
@@ -76,7 +77,6 @@ export interface StaticRouterProviderProps {
  * on the server where there is no stateful UI.
  */
 export function unstable_StaticRouterProvider({
-  basename,
   context,
   router,
   hydrate = true,
@@ -91,7 +91,7 @@ export function unstable_StaticRouterProvider({
     router,
     navigator: getStatelessNavigator(),
     static: true,
-    basename: basename || "/",
+    basename: context.basename || "/",
   };
 
   let hydrateScript = "";
@@ -100,7 +100,7 @@ export function unstable_StaticRouterProvider({
     let data = {
       loaderData: context.loaderData,
       actionData: context.actionData,
-      errors: context.errors,
+      errors: serializeErrors(context.errors),
     };
     // Use JSON.parse here instead of embedding a raw JS object here to speed
     // up parsing on the client.  Dual-stringify is needed to ensure all quotes
@@ -139,11 +139,28 @@ export function unstable_StaticRouterProvider({
   );
 }
 
+function serializeErrors(
+  errors: StaticHandlerContext["errors"]
+): StaticHandlerContext["errors"] {
+  if (!errors) return null;
+  let entries = Object.entries(errors);
+  let serialized: StaticHandlerContext["errors"] = {};
+  for (let [key, val] of entries) {
+    // Hey you!  If you change this, please change the corresponding logic in
+    // deserializeErrors in react-router-dom/index.tsx :)
+    if (isRouteErrorResponse(val)) {
+      serialized[key] = { ...val, __type: "RouteErrorResponse" };
+    } else {
+      serialized[key] = val;
+    }
+  }
+  return serialized;
+}
+
 function getStatelessNavigator() {
   return {
-    createHref(to: To) {
-      return typeof to === "string" ? to : createPath(to);
-    },
+    createHref,
+    encodeLocation,
     push(to: To) {
       throw new Error(
         `You cannot use navigator.push() on the server because it is a stateless ` +
@@ -191,7 +208,7 @@ export function unstable_createStaticRouter(
 
   return {
     get basename() {
-      return "/";
+      return context.basename;
     },
     get state() {
       return {
@@ -230,9 +247,8 @@ export function unstable_createStaticRouter(
     revalidate() {
       throw msg("revalidate");
     },
-    createHref() {
-      throw msg("createHref");
-    },
+    createHref,
+    encodeLocation,
     getFetcher() {
       return IDLE_FETCHER;
     },
@@ -244,5 +260,19 @@ export function unstable_createStaticRouter(
     },
     _internalFetchControllers: new Map(),
     _internalActiveDeferreds: new Map(),
+  };
+}
+
+function createHref(to: To) {
+  return typeof to === "string" ? to : createPath(to);
+}
+
+function encodeLocation(to: To): Path {
+  // Locations should already be encoded on the server, so just return as-is
+  let path = typeof to === "string" ? parsePath(to) : to;
+  return {
+    pathname: path.pathname || "",
+    search: path.search || "",
+    hash: path.hash || "",
   };
 }
