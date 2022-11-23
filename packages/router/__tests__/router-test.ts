@@ -10100,6 +10100,21 @@ describe("a router", () => {
         });
       });
 
+      it("should support document load navigations with a basename", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES, { basename: "/base" });
+        let context = await query(createRequest("/base/parent/child"));
+        expect(context).toMatchObject({
+          actionData: null,
+          loaderData: {
+            parent: "PARENT LOADER",
+            child: "CHILD LOADER",
+          },
+          errors: null,
+          location: { pathname: "/base/parent/child" },
+          matches: [{ route: { id: "parent" } }, { route: { id: "child" } }],
+        });
+      });
+
       it("should support document load navigations returning responses", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/json"));
@@ -11017,6 +11032,38 @@ describe("a router", () => {
         } catch (e) {
           data = e;
         }
+        expect(data).toBe("");
+      });
+
+      it("should support singular route load navigations (with a basename)", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES, {
+          basename: "/base",
+        });
+        let data;
+
+        // Layout route
+        data = await queryRoute(createRequest("/base/parent"), "parent");
+        expect(data).toBe("PARENT LOADER");
+
+        // Index route
+        data = await queryRoute(createRequest("/base/parent"), "parentIndex");
+        expect(data).toBe("PARENT INDEX LOADER");
+
+        // Parent in nested route
+        data = await queryRoute(createRequest("/base/parent/child"), "parent");
+        expect(data).toBe("PARENT LOADER");
+
+        // Child in nested route
+        data = await queryRoute(createRequest("/base/parent/child"), "child");
+        expect(data).toBe("CHILD LOADER");
+
+        // Non-undefined falsey values should count
+        let T = setupFlexRouteTest();
+        data = await T.resolveLoader(null);
+        expect(data).toBeNull();
+        data = await T.resolveLoader(false);
+        expect(data).toBe(false);
+        data = await T.resolveLoader("");
         expect(data).toBe("");
       });
 

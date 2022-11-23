@@ -298,6 +298,7 @@ export interface RouterInit {
  * State returned from a server-side query() call
  */
 export interface StaticHandlerContext {
+  basename: Router["basename"];
   location: RouterState["location"];
   matches: RouterState["matches"];
   loaderData: RouterState["loaderData"];
@@ -1858,7 +1859,10 @@ const validActionMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const validRequestMethods = new Set(["GET", "HEAD", ...validActionMethods]);
 
 export function unstable_createStaticHandler(
-  routes: AgnosticRouteObject[]
+  routes: AgnosticRouteObject[],
+  opts?: {
+    basename?: string;
+  }
 ): StaticHandler {
   invariant(
     routes.length > 0,
@@ -1866,6 +1870,7 @@ export function unstable_createStaticHandler(
   );
 
   let dataRoutes = convertRoutesToDataRoutes(routes);
+  let basename = (opts ? opts.basename : null) || "/";
 
   /**
    * The query() method is intended for document requests, in which we want to
@@ -1891,13 +1896,14 @@ export function unstable_createStaticHandler(
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
     let location = createLocation("", createPath(url), null, "default");
-    let matches = matchRoutes(dataRoutes, location);
+    let matches = matchRoutes(dataRoutes, location, basename);
 
     if (!validRequestMethods.has(request.method)) {
       let error = getInternalRouterError(405, { method: request.method });
       let { matches: methodNotAllowedMatches, route } =
         getShortCircuitMatches(dataRoutes);
       return {
+        basename,
         location,
         matches: methodNotAllowedMatches,
         loaderData: {},
@@ -1914,6 +1920,7 @@ export function unstable_createStaticHandler(
       let { matches: notFoundMatches, route } =
         getShortCircuitMatches(dataRoutes);
       return {
+        basename,
         location,
         matches: notFoundMatches,
         loaderData: {},
@@ -1935,7 +1942,7 @@ export function unstable_createStaticHandler(
     // When returning StaticHandlerContext, we patch back in the location here
     // since we need it for React Context.  But this helps keep our submit and
     // loadRouteData operating on a Request instead of a Location
-    return { location, ...result };
+    return { location, basename, ...result };
   }
 
   /**
@@ -1961,7 +1968,7 @@ export function unstable_createStaticHandler(
   async function queryRoute(request: Request, routeId?: string): Promise<any> {
     let url = new URL(request.url);
     let location = createLocation("", createPath(url), null, "default");
-    let matches = matchRoutes(dataRoutes, location);
+    let matches = matchRoutes(dataRoutes, location, basename);
 
     if (!validRequestMethods.has(request.method)) {
       throw getInternalRouterError(405, { method: request.method });
@@ -2007,7 +2014,7 @@ export function unstable_createStaticHandler(
     location: Location,
     matches: AgnosticDataRouteMatch[],
     routeMatch?: AgnosticDataRouteMatch
-  ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
+  ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
       request.signal,
       "query()/queryRoute() requests must contain an AbortController signal"
@@ -2056,7 +2063,7 @@ export function unstable_createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     isRouteRequest: boolean
-  ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
+  ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
 
     if (!actionMatch.route.action) {
@@ -2078,7 +2085,7 @@ export function unstable_createStaticHandler(
         request,
         actionMatch,
         matches,
-        undefined, // Basename not currently supported in static handlers
+        basename,
         true,
         isRouteRequest
       );
@@ -2168,7 +2175,10 @@ export function unstable_createStaticHandler(
     routeMatch?: AgnosticDataRouteMatch,
     pendingActionError?: RouteData
   ): Promise<
-    | Omit<StaticHandlerContext, "location" | "actionData" | "actionHeaders">
+    | Omit<
+        StaticHandlerContext,
+        "location" | "basename" | "actionData" | "actionHeaders"
+      >
     | Response
   > {
     let isRouteRequest = routeMatch != null;
@@ -2208,7 +2218,7 @@ export function unstable_createStaticHandler(
           request,
           match,
           matches,
-          undefined, // Basename not currently supported in static handlers
+          basename,
           true,
           isRouteRequest
         )
@@ -2519,7 +2529,7 @@ async function callLoaderOrAction(
   request: Request,
   match: AgnosticDataRouteMatch,
   matches: AgnosticDataRouteMatch[],
-  basename: string | undefined,
+  basename = "/",
   isStaticRequest: boolean = false,
   isRouteRequest: boolean = false
 ): Promise<DataResult> {
