@@ -410,14 +410,14 @@ describe("A <StaticRouterProvider>", () => {
   it("errors if required props are not passed", async () => {
     let routes = [
       {
-        path: "the",
+        path: "",
         element: <h1>👋</h1>,
       },
     ];
     let { query } = createStaticHandler(routes);
 
     let context = (await query(
-      new Request("http://localhost/the/path?the=query#the-hash", {
+      new Request("http://localhost/", {
         signal: new AbortController().signal,
       })
     )) as StaticHandlerContext;
@@ -443,6 +443,128 @@ describe("A <StaticRouterProvider>", () => {
     ).toThrowErrorMatchingInlineSnapshot(
       `"You must provide \`router\` and \`context\` to <StaticRouterProvider>"`
     );
+  });
+
+  it("handles framework agnostic static handler routes", async () => {
+    let frameworkAgnosticRoutes = [
+      {
+        path: "the",
+        hasErrorElement: true,
+        children: [
+          {
+            path: "path",
+            hasErrorElement: true,
+          },
+        ],
+      },
+    ];
+    let { query } = createStaticHandler(frameworkAgnosticRoutes);
+
+    let context = (await query(
+      new Request("http://localhost/the/path", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let frameworkAwareRoutes = [
+      {
+        path: "the",
+        element: <h1>Hi!</h1>,
+        errorElement: <h1>Error!</h1>,
+        children: [
+          {
+            path: "path",
+            element: <h2>Hi again!</h2>,
+            errorElement: <h2>Error again!</h2>,
+          },
+        ],
+      },
+    ];
+
+    // This should add route ids + hasErrorBoundary, and also update the
+    // context.matches to include the full framework-aware routes
+    let router = createStaticRouter(frameworkAwareRoutes, context);
+
+    expect(router.routes).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "children": Array [
+            Object {
+              "children": undefined,
+              "element": <h2>
+                Hi again!
+              </h2>,
+              "errorElement": <h2>
+                Error again!
+              </h2>,
+              "hasErrorBoundary": true,
+              "id": "0-0",
+              "path": "path",
+            },
+          ],
+          "element": <h1>
+            Hi!
+          </h1>,
+          "errorElement": <h1>
+            Error!
+          </h1>,
+          "hasErrorBoundary": true,
+          "id": "0",
+          "path": "the",
+        },
+      ]
+    `);
+    expect(router.state.matches).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "params": Object {},
+          "pathname": "/the",
+          "pathnameBase": "/the",
+          "route": Object {
+            "children": Array [
+              Object {
+                "children": undefined,
+                "element": <h2>
+                  Hi again!
+                </h2>,
+                "errorElement": <h2>
+                  Error again!
+                </h2>,
+                "hasErrorBoundary": true,
+                "id": "0-0",
+                "path": "path",
+              },
+            ],
+            "element": <h1>
+              Hi!
+            </h1>,
+            "errorElement": <h1>
+              Error!
+            </h1>,
+            "hasErrorBoundary": true,
+            "id": "0",
+            "path": "the",
+          },
+        },
+        Object {
+          "params": Object {},
+          "pathname": "/the/path",
+          "pathnameBase": "/the/path",
+          "route": Object {
+            "children": undefined,
+            "element": <h2>
+              Hi again!
+            </h2>,
+            "errorElement": <h2>
+              Error again!
+            </h2>,
+            "hasErrorBoundary": true,
+            "id": "0-0",
+            "path": "path",
+          },
+        },
+      ]
+    `);
   });
 
   describe("boundary tracking", () => {
