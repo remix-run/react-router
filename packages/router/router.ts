@@ -1596,6 +1596,16 @@ export function createRouter(init: RouterInit): Router {
       navigation.location,
       "Expected a location on the redirect navigation"
     );
+
+    if (
+      redirect.external &&
+      typeof window !== "undefined" &&
+      typeof window.location !== "undefined"
+    ) {
+      window.location.replace(redirect.location);
+      return;
+    }
+
     // There's no need to abort on redirects, since we don't detect the
     // redirect until the action/loaders have settled
     pendingNavigationController = null;
@@ -2185,7 +2195,7 @@ export function unstable_createStaticHandler(
 
     // Short circuit if we have no loaders to run (queryRoute())
     if (isRouteRequest && !routeMatch?.route.loader) {
-      throw getInternalRouterError(405, {
+      throw getInternalRouterError(400, {
         method: request.method,
         pathname: createURL(request.url).pathname,
         routeId: routeMatch?.route.id,
@@ -2578,26 +2588,31 @@ async function callLoaderOrAction(
         "Redirects returned/thrown from loaders/actions must have a Location header"
       );
 
-      // Support relative routing in redirects
-      let activeMatches = matches.slice(0, matches.indexOf(match) + 1);
-      let routePathnames = getPathContributingMatches(activeMatches).map(
-        (match) => match.pathnameBase
-      );
-      let requestPath = createURL(request.url).pathname;
-      let resolvedLocation = resolveTo(location, routePathnames, requestPath);
-      invariant(
-        createPath(resolvedLocation),
-        `Unable to resolve redirect location: ${result.headers.get("Location")}`
-      );
+      // Check if this an external redirect that goes to a new origin
+      let external = createURL(location).origin !== createURL("/").origin;
 
-      // Prepend the basename to the redirect location if we have one
-      if (basename) {
-        let path = resolvedLocation.pathname;
-        resolvedLocation.pathname =
-          path === "/" ? basename : joinPaths([basename, path]);
+      // Support relative routing in internal redirects
+      if (!external) {
+        let activeMatches = matches.slice(0, matches.indexOf(match) + 1);
+        let routePathnames = getPathContributingMatches(activeMatches).map(
+          (match) => match.pathnameBase
+        );
+        let requestPath = createURL(request.url).pathname;
+        let resolvedLocation = resolveTo(location, routePathnames, requestPath);
+        invariant(
+          createPath(resolvedLocation),
+          `Unable to resolve redirect location: ${location}`
+        );
+
+        // Prepend the basename to the redirect location if we have one
+        if (basename) {
+          let path = resolvedLocation.pathname;
+          resolvedLocation.pathname =
+            path === "/" ? basename : joinPaths([basename, path]);
+        }
+
+        location = createPath(resolvedLocation);
       }
-
-      location = createPath(resolvedLocation);
 
       // Don't process redirects in the router during static requests requests.
       // Instead, throw the Response and let the server handle it with an HTTP
@@ -2613,6 +2628,7 @@ async function callLoaderOrAction(
         status,
         location,
         revalidate: result.headers.get("X-Remix-Revalidate") !== null,
+        external,
       };
     }
 
@@ -2921,7 +2937,14 @@ function getInternalRouterError(
 
   if (status === 400) {
     statusText = "Bad Request";
-    errorMessage = "Cannot submit binary form data using GET";
+    if (method && pathname && routeId) {
+      errorMessage =
+        `You made a ${method} request to "${pathname}" but ` +
+        `did not provide a \`loader\` for route "${routeId}", ` +
+        `so there is no way to handle the request.`;
+    } else {
+      errorMessage = "Cannot submit binary form data using GET";
+    }
   } else if (status === 403) {
     statusText = "Forbidden";
     errorMessage = `Route "${routeId}" does not match URL "${pathname}"`;
@@ -2931,17 +2954,10 @@ function getInternalRouterError(
   } else if (status === 405) {
     statusText = "Method Not Allowed";
     if (method && pathname && routeId) {
-      if (validActionMethods.has(method)) {
-        errorMessage =
-          `You made a ${method} request to "${pathname}" but ` +
-          `did not provide an \`action\` for route "${routeId}", ` +
-          `so there is no way to handle the request.`;
-      } else {
-        errorMessage =
-          `You made a ${method} request to "${pathname}" but ` +
-          `did not provide a \`loader\` for route "${routeId}", ` +
-          `so there is no way to handle the request.`;
-      }
+      errorMessage =
+        `You made a ${method} request to "${pathname}" but ` +
+        `did not provide an \`action\` for route "${routeId}", ` +
+        `so there is no way to handle the request.`;
     } else {
       errorMessage = `Invalid request method "${method}"`;
     }

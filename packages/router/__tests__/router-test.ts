@@ -5433,7 +5433,7 @@ describe("a router", () => {
     it("preserves query and hash in redirects", async () => {
       let t = setup({ routes: REDIRECT_ROUTES });
 
-      let nav1 = await t.fetch("/parent/child", {
+      let nav1 = await t.navigate("/parent/child", {
         formMethod: "post",
         formData: createFormData({}),
       });
@@ -5459,7 +5459,7 @@ describe("a router", () => {
     it("preserves query and hash in relative redirects", async () => {
       let t = setup({ routes: REDIRECT_ROUTES });
 
-      let nav1 = await t.fetch("/parent/child", {
+      let nav1 = await t.navigate("/parent/child", {
         formMethod: "post",
         formData: createFormData({}),
       });
@@ -5483,6 +5483,37 @@ describe("a router", () => {
         },
         errors: null,
       });
+    });
+
+    it("processes external redirects if window is present", async () => {
+      let urls = [
+        "http://remix.run/blog",
+        "https://remix.run/blog",
+        "//remix.run/blog",
+        "app://whatever",
+      ];
+
+      for (let url of urls) {
+        // This is gross, don't blame me, blame SO :)
+        // https://stackoverflow.com/a/60697570
+        let oldLocation = window.location;
+        const location = new URL(window.location.href) as unknown as Location;
+        location.replace = jest.fn();
+        delete (window as any).location;
+        window.location = location as unknown as Location;
+
+        let t = setup({ routes: REDIRECT_ROUTES });
+
+        let A = await t.navigate("/parent/child", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+
+        await A.actions.child.redirectReturn(url);
+        expect(window.location.replace).toHaveBeenCalledWith(url);
+
+        window.location = oldLocation;
+      }
     });
   });
 
@@ -6822,7 +6853,7 @@ describe("a router", () => {
             405,
             "Method Not Allowed",
             new Error(
-              'You made a post request to "/" but did not provide a `loader` ' +
+              'You made a post request to "/" but did not provide an `action` ' +
                 'for route "root", so there is no way to handle the request.'
             ),
             true
@@ -10312,6 +10343,28 @@ describe("a router", () => {
         expect((response as Response).headers.get("Location")).toBe("/parent");
       });
 
+      it("should handle external redirect Responses", async () => {
+        let urls = [
+          "http://remix.run/blog",
+          "https://remix.run/blog",
+          "//remix.run/blog",
+          "app://whatever",
+        ];
+
+        for (let url of urls) {
+          let handler = createStaticHandler([
+            {
+              path: "/",
+              loader: () => redirect(url),
+            },
+          ]);
+          let response = await handler.query(createRequest("/"));
+          expect(response instanceof Response).toBe(true);
+          expect((response as Response).status).toBe(302);
+          expect((response as Response).headers.get("Location")).toBe(url);
+        }
+      });
+
       it("should handle 404 navigations", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/not/found"));
@@ -11311,6 +11364,29 @@ describe("a router", () => {
         expect((response as Response).headers.get("Location")).toBe("/parent");
       });
 
+      it("should handle external redirect Responses", async () => {
+        let urls = [
+          "http://remix.run/blog",
+          "https://remix.run/blog",
+          "//remix.run/blog",
+          "app://whatever",
+        ];
+
+        for (let url of urls) {
+          let handler = createStaticHandler([
+            {
+              id: "root",
+              path: "/",
+              loader: () => redirect(url),
+            },
+          ]);
+          let response = await handler.queryRoute(createRequest("/"), "root");
+          expect(response instanceof Response).toBe(true);
+          expect((response as Response).status).toBe(302);
+          expect((response as Response).headers.get("Location")).toBe(url);
+        }
+      });
+
       it("should not unwrap responses returned from loaders", async () => {
         let response = json({ key: "value" });
         let { queryRoute } = createStaticHandler([
@@ -11466,13 +11542,13 @@ describe("a router", () => {
           }
         });
 
-        it("should handle not found action/loader submissions with a 405 Response", async () => {
+        it("should handle missing loaders with a 400 Response", async () => {
           try {
             await queryRoute(createRequest("/"), "root");
             expect(false).toBe(true);
           } catch (data) {
             expect(isRouteErrorResponse(data)).toBe(true);
-            expect(data.status).toBe(405);
+            expect(data.status).toBe(400);
             expect(data.error).toEqual(
               new Error(
                 'You made a GET request to "/" but did not provide a `loader` ' +
@@ -11481,7 +11557,9 @@ describe("a router", () => {
             );
             expect(data.internal).toBe(true);
           }
+        });
 
+        it("should handle missing actions with a 405 Response", async () => {
           try {
             await queryRoute(createSubmitRequest("/"), "root");
             expect(false).toBe(true);
