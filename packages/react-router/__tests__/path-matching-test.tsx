@@ -277,6 +277,82 @@ describe("path matching with splats", () => {
   });
 });
 
+describe("path matchine with optional segments", () => {
+  test("optional static segment at the start of the path", () => {
+    let routes = [
+      {
+        path: "/en?/abc",
+      },
+    ];
+
+    expect(pickPathsAndParams(routes, "/")).toEqual(null);
+    expect(pickPathsAndParams(routes, "/abc")).toEqual([
+      {
+        path: "/en?/abc",
+        params: {},
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/en/abc")).toEqual([
+      {
+        path: "/en?/abc",
+        params: {},
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/en/abc/bar")).toEqual(null);
+  });
+
+  test("optional static segment at the end of the path", () => {
+    let routes = [
+      {
+        path: "/nested/one?/two?",
+      },
+    ];
+
+    expect(pickPathsAndParams(routes, "/nested")).toEqual([
+      {
+        path: "/nested/one?/two?",
+        params: {},
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/nested/one")).toEqual([
+      {
+        path: "/nested/one?/two?",
+        params: {},
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/nested/one/two")).toEqual([
+      {
+        path: "/nested/one?/two?",
+        params: {},
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/nested/one/two/baz")).toEqual(null);
+  });
+
+  test("intercalated optional static segments", () => {
+    let routes = [
+      {
+        path: "/nested/one?/two/three?",
+      },
+    ];
+
+    expect(pickPathsAndParams(routes, "/nested")).toEqual(null);
+    expect(pickPathsAndParams(routes, "/nested/one")).toEqual(null);
+    expect(pickPathsAndParams(routes, "/nested/one/two")).toEqual([
+      {
+        path: "/nested/one?/two/three?",
+        params: {},
+      },
+    ]);
+    expect(pickPathsAndParams(routes, "/nested/one/two/three")).toEqual([
+      {
+        path: "/nested/one?/two/three?",
+        params: {},
+      },
+    ]);
+  });
+});
+
 describe("path matching with optional dynamic segments", () => {
   test("optional params at the start of the path", () => {
     let routes = [

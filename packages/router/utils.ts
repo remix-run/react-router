@@ -419,7 +419,7 @@ function flattenRoutes<
     let segments = path.split("/");
     let optionalParams: string[] = [];
     segments.forEach((segment) => {
-      let match = segment.match(/^:([^?]+)\?$/);
+      let match = segment.match(/^:?([^?]+)\?$/);
       if (match) {
         optionalParams.push(match[1]);
       }
@@ -431,7 +431,7 @@ function flattenRoutes<
         let newMeta = routesMeta.map((m) => ({ ...m }));
 
         for (let j = optionalParams.length - 1; j >= 0; j--) {
-          let re = new RegExp(`(\\/:${optionalParams[j]})\\?`);
+          let re = new RegExp(`(\\/:?${optionalParams[j]})\\?`);
           let replacement = j < i ? "$1" : "";
           newPath = newPath.replace(re, replacement);
           newMeta[newMeta.length - 1].relativePath = newMeta[
