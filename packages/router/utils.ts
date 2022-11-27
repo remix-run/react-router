@@ -1047,15 +1047,15 @@ export interface TrackedPromise extends Promise<any> {
 
 export class AbortedDeferredError extends Error {}
 
-export class DeferredData {
+export class DeferredData<Data = Record<string, unknown>> {
   private pendingKeys: Set<string | number> = new Set<string | number>();
   private controller: AbortController;
   private abortPromise: Promise<void>;
   private unlistenAbortSignal: () => void;
   private subscriber?: (aborted: boolean) => void = undefined;
-  data: Record<string, unknown>;
+  data: Data;
 
-  constructor(data: Record<string, unknown>) {
+  constructor(data: Data) {
     invariant(
       data && typeof data === "object" && !Array.isArray(data),
       "defer() only accepts plain objects"
