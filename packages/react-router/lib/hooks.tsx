@@ -405,7 +405,9 @@ export function useRoutes(
           pathname: joinPaths([
             parentPathnameBase,
             // Re-encode pathnames that were decoded inside matchRoutes
-            navigator.encodeLocation(match.pathname).pathname,
+            navigator.encodeLocation
+              ? navigator.encodeLocation(match.pathname).pathname
+              : match.pathname,
           ]),
           pathnameBase:
             match.pathnameBase === "/"
@@ -413,7 +415,9 @@ export function useRoutes(
               : joinPaths([
                   parentPathnameBase,
                   // Re-encode pathnames that were decoded inside matchRoutes
-                  navigator.encodeLocation(match.pathnameBase).pathname,
+                  navigator.encodeLocation
+                    ? navigator.encodeLocation(match.pathnameBase).pathname
+                    : match.pathnameBase,
                 ]),
         })
       ),

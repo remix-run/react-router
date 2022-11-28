@@ -480,7 +480,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let routerState = React.useContext(DataRouterStateContext);
     let { navigator } = React.useContext(NavigationContext);
 
-    let toPathname = navigator.encodeLocation(path).pathname;
+    let toPathname = navigator.encodeLocation
+      ? navigator.encodeLocation(path).pathname
+      : path.pathname;
     let locationPathname = location.pathname;
     let nextLocationPathname =
       routerState && routerState.navigation && routerState.navigation.location
