@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.8.0-pre.2
+
+### Patch Changes
+
+- Remove duplicated router code in favor of `@remix-run/router` dependency ([#4699](https://github.com/remix-run/remix/pull/4699))
+
 ## 1.8.0-pre.1
 
 ## 1.8.0-pre.0
