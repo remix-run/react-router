@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.4.4-pre.1
+
+### Patch Changes
+
+- backwards compatibility for encodeLocation ([#9647](https://github.com/remix-run/react-router/pull/9647))
+
 ## 6.4.4-pre.0
 
 ### Patch Changes
