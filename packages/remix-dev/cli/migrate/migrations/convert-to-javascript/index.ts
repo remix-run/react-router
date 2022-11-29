@@ -1,4 +1,4 @@
-import { join } from "path";
+import path from "path";
 import glob from "fast-glob";
 
 import { readConfig } from "../../../../config";
@@ -9,7 +9,7 @@ import { convertTSConfigs } from "./convertTSConfigs";
 import { convertTSFilesToJS } from "./convertTSFilesToJS";
 import { CliError } from "../../../error";
 
-const TRANSFORM_PATH = join(__dirname, "transform");
+const TRANSFORM_PATH = path.join(__dirname, "transform");
 
 export const convertToJavaScript: MigrationFunction = async (
   projectDir,
@@ -23,11 +23,20 @@ export const convertToJavaScript: MigrationFunction = async (
   // 2. Remove @types/* & TypeScript dependencies + `typecheck` script from `package.json`
   await cleanupPackageJson(config.rootDirectory);
 
-  // 3. Run codemod
+  // 3. convert appDirectory to relative and force unix style path
+  let relativeAppDirectory = path.relative(
+    config.rootDirectory,
+    config.appDirectory
+  );
+  let unixAppDirectory = path.posix.join(
+    ...relativeAppDirectory.split(path.delimiter)
+  );
+
+  // 4. Run codemod
   let files = glob.sync("**/*.+(ts|tsx)", {
     absolute: true,
     cwd: config.rootDirectory,
-    ignore: [`./${config.appDirectory}/**/*`, "**/node_modules/**"],
+    ignore: [`${unixAppDirectory}/**/*`, "**/node_modules/**"],
   });
   let codemodOk = await jscodeshift.run({
     files,
