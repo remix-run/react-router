@@ -415,46 +415,75 @@ function flattenRoutes<
       return;
     }
 
-    // Handle optional params - /path/:optional?
-    let segments = path.split("/");
-    let optionalParams: string[] = [];
-    segments.forEach((segment) => {
-      let match = segment.match(/^:?([^?]+)\?$/);
-      if (match) {
-        optionalParams.push(match[1]);
-      }
-    });
-
-    if (optionalParams.length > 0) {
-      for (let i = 0; i <= optionalParams.length; i++) {
-        let newPath = path;
-        let newMeta = routesMeta.map((m) => ({ ...m }));
-
-        for (let j = optionalParams.length - 1; j >= 0; j--) {
-          let re = new RegExp(`(\\/:?${optionalParams[j]})\\?`);
-          let replacement = j < i ? "$1" : "";
-          newPath = newPath.replace(re, replacement);
-          newMeta[newMeta.length - 1].relativePath = newMeta[
-            newMeta.length - 1
-          ].relativePath.replace(re, replacement);
-        }
-
-        branches.push({
-          path: newPath,
-          score: computeScore(newPath, route.index),
-          routesMeta: newMeta,
-        });
-      }
-    } else {
+    let hasOptionalSegments = path.includes("?");
+    if (!hasOptionalSegments) {
       branches.push({
         path,
         score: computeScore(path, route.index),
         routesMeta,
       });
+      return;
     }
+
+    // Handle option path segments like `/one/two?/three/:four?` where trailing `?` denotes an optional segment.
+    // The goal is to emulate users manually exploding a path with optional segments.
+
+    // Explode path with optional segments into the equivalent set of paths _without_ optional segments.
+    // For each of the exploded paths, we'll need to patch the last item in `routesMeta` (the one that corresponds to this relative path).
+    // Specifically, we want to update `relativePath` to be consistent with the exploded path,
+    // **BUT** we want to keep `routesMeta.route.path` as-is so that it refers to the original path _with_ optional segments.
+    // That way, whenever we report paths to the user, we will always report the path the user authored and not leak these internal, exploded paths to the user.
+    explode(path).forEach((explodedPath) => {
+      let [explodedRoutesMeta, last] = tail(routesMeta);
+      if (last !== undefined) {
+        explodedRoutesMeta.push({
+          ...last,
+          relativePath: explodedPath.slice(parentPath.length),
+        });
+      }
+      branches.push({
+        path: explodedPath,
+        score: computeScore(explodedPath, route.index),
+        routesMeta: explodedRoutesMeta,
+      });
+    });
   });
 
   return branches;
+}
+
+function tail<Item>(arr: Item[]): [Item[], Item | undefined] {
+  return [arr.slice(0, -1), arr.at(-1)];
+}
+
+/**
+ * Given a route path with optional segments,
+ * produces the equivalent combinations of paths _without_ optionals.
+ *
+ * For example, exploding `/one/two?/three/four?` produces:
+ * - `/one/three`
+ * - `/one/two/three`
+ * - `/one/three/four`
+ * - `/one/two/three/four`
+ */
+function explode(path: string): string[] {
+  let segments = path.split("/");
+  if (segments.length === 0) return [];
+
+  let [first, ...rest] = segments;
+  let isOptional = first.endsWith("?");
+  let segment = isOptional ? first.slice(0, -1) : first;
+
+  if (rest.length === 0) {
+    if (!isOptional) return [segment];
+    return ["", segment];
+  }
+
+  let restExploded = explode(rest.join("/"));
+  let exploded = restExploded.map((x) => segment + "/" + x);
+
+  if (!isOptional) return exploded;
+  return [...restExploded, ...exploded];
 }
 
 function rankRouteBranches(branches: RouteBranch[]): void {
