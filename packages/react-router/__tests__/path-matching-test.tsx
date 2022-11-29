@@ -10,7 +10,20 @@ function pickPathsAndParams(routes: RouteObject[], pathname: string) {
   let matches = matchRoutes(routes, pathname);
   return (
     matches &&
-    matches.map((match) => ({ path: match.route.path, params: match.params }))
+    matches.map((match) => {
+      let { path } = match.route
+
+      // filter params to only include params for the current (relative) route path
+      let paramNames = path?.split('/')
+        .filter(seg => seg.startsWith(':'))
+        .map(paramSeg => paramSeg.replace(/^:/, "").replace(/\?$/, ""))
+      let params = Object.fromEntries(Object.entries(match.params).filter(([k,v]) => paramNames?.includes(k)))
+
+      return {
+        path: match.route.path,
+        params,
+      }
+    })
   );
 }
 
@@ -277,7 +290,7 @@ describe("path matching with splats", () => {
   });
 });
 
-describe("path matchine with optional segments", () => {
+describe("path matching with optional segments", () => {
   test("optional static segment at the start of the path", () => {
     let routes = [
       {
@@ -355,6 +368,25 @@ describe("path matchine with optional segments", () => {
         path: "/nested/one?/two/three?",
         params: {},
       },
+    ]);
+  });
+
+  test("optional static segment in nested routes", () => {
+    let nested = [
+      {
+        path: "/en?",
+        children: [
+          {
+            path: "abc",
+          },
+        ],
+      },
+    ];
+
+
+    expect(pickPathsAndParams(nested, "/en/abc")).toEqual([
+      { path: "/en?", params: {} },
+      { path: "abc", params: {} },
     ]);
   });
 });
@@ -438,5 +470,28 @@ describe("path matching with optional dynamic segments", () => {
         params: { one: "foo", three: "bar" },
       },
     ]);
+  });
+
+  test("consecutive optional dynamic segments in nested routes", () => {
+    let nested = [
+      {
+        path: "/one/:two?",
+        children: [
+          {
+            path: "three/:four?",
+            children: [
+              {
+                path: ":five?"
+              }
+            ]
+          }
+        ],
+      },
+    ];
+    expect(pickPathsAndParams(nested, "/one/three/cuatro/cinco")).toEqual([
+      {path: "/one/:two?", params: {}},
+      {path: "three/:four?", params: { four: 'cuatro' }},
+      {path: ":five?", params: { five: 'cinco' }},
+    ])
   });
 });

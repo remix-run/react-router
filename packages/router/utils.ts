@@ -372,9 +372,13 @@ function flattenRoutes<
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
   parentPath = ""
 ): RouteBranch<RouteObjectType>[] {
-  routes.forEach((route, index) => {
+  let flattenRoute = (
+    route: RouteObjectType,
+    index: number,
+    relativePath?: string
+  ) => {
     let meta: RouteMeta<RouteObjectType> = {
-      relativePath: route.path || "",
+      relativePath: relativePath || route.path || "",
       caseSensitive: route.caseSensitive === true,
       childrenIndex: index,
       route,
@@ -415,47 +419,97 @@ function flattenRoutes<
       return;
     }
 
-    // Handle optional params - /path/:optional?
-    let segments = path.split("/");
-    let optionalParams: string[] = [];
-    segments.forEach((segment) => {
-      let match = segment.match(/^:?([^?]+)\?$/);
-      if (match) {
-        optionalParams.push(match[1]);
-      }
+    branches.push({
+      path,
+      score: computeScore(path, route.index),
+      routesMeta,
     });
-
-    if (optionalParams.length > 0) {
-      for (let i = 0; i <= optionalParams.length; i++) {
-        let newPath = path;
-        let newMeta = routesMeta.map((m) => ({ ...m }));
-
-        for (let j = optionalParams.length - 1; j >= 0; j--) {
-          let re = new RegExp(`(\\/:?${optionalParams[j]})\\?`);
-          let replacement = j < i ? "$1" : "";
-          newPath = newPath.replace(re, replacement);
-          newMeta[newMeta.length - 1].relativePath = newMeta[
-            newMeta.length - 1
-          ].relativePath.replace(re, replacement);
-        }
-
-        branches.push({
-          path: newPath,
-          score: computeScore(newPath, route.index),
-          routesMeta: newMeta,
-        });
-      }
+  };
+  routes.forEach((route, index) => {
+    // coarse-grain check for optional params
+    if (route.path === "" || !route.path?.includes("?")) {
+      flattenRoute(route, index);
     } else {
-      branches.push({
-        path,
-        score: computeScore(path, route.index),
-        routesMeta,
-      });
+      for (let exploded of explodeOptionalSegments(route.path)) {
+        flattenRoute(route, index, exploded);
+      }
     }
   });
 
   return branches;
 }
+
+/**
+ * Computes all combinations of optional path segments for a given path.
+ */
+let _explodeOptionalSegments = (path: string): string[] => {
+  let segments = path.split("/");
+  if (segments.length === 0) return [];
+
+  let [first, ...rest] = segments;
+
+  // Optional path segments are denoted by a trailing `?`
+  let isOptional = first.endsWith("?");
+  // Compute the corresponding required segment: `foo?` -> `foo`
+  let required = first.replace(/\?$/, "");
+
+  if (rest.length === 0) {
+    // Intepret empty string as omitting an optional segment
+    // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
+    return isOptional ? ["", required] : [required];
+  }
+
+  let restExploded = _explodeOptionalSegments(rest.join("/"));
+  return restExploded.flatMap((subpath) => {
+    // /one + / + :two/three -> /one/:two/three
+    let requiredExploded = subpath === "" ? required : required + "/" + subpath;
+    // For optional segments, return the exploded path _without_ current segment first (`subpath`)
+    // and exploded path _with_ current segment later (`subpath`)
+    // This ensures that exploded paths are emitted in priority order
+    // `/one/three/:four` will come before `/one/three/:five`
+    return isOptional ? [subpath, requiredExploded] : [requiredExploded];
+  });
+};
+
+/**
+ * Computes all combinations of optional path segments for a given path,
+ * excluding combinations that are ambiguous and of lower priority.
+ *
+ * For example, `/one/:two?/three/:four?/:five?` explodes to:
+ * - `/one/three`
+ * - `/one/:two/three`
+ * - `/one/three/:four`
+ * - `/one/:two/three/:four`
+ * - `/one/three/:four/:five`
+ * - `/one/:two/three/:four/:five`
+ *
+ * Note that these paths are not returned:
+ * - `/one/three/:five` (because `/one/three/:four` has priority)
+ * - `/one/:two/three/:five` (because `/one/:two/three/:four` has priority)
+ */
+let explodeOptionalSegments = function* (path: string) {
+  // Compute hash for dynamic path segments
+  // /one/:two/three/:four -> /one/:/three/:
+  let dynamicHash = (subpath: string) =>
+    subpath
+      .split("/")
+      .map((segment) => (segment.startsWith(":") ? ":" : segment))
+      .join("/");
+
+  let dynamicHashes = new Set<string>();
+  for (let exploded of _explodeOptionalSegments(path)) {
+    let hash = dynamicHash(exploded);
+
+    // `/one/three/:four` and `/one/three/:five` have the same hash: `/one/three/:`
+    // so we only emit the first one of these we come across
+    // _explodeOptionalSegments returns exploded paths in priority order,
+    // so `/one/three/:four` will come before `/one/three/:five`
+    if (dynamicHashes.has(hash)) continue;
+
+    dynamicHashes.add(hash);
+    yield exploded;
+  }
+};
 
 function rankRouteBranches(branches: RouteBranch[]): void {
   branches.sort((a, b) =>
