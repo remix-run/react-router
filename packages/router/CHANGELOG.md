@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.0.4-pre.1
+
+### Patch Changes
+
+- Respect `replace` behavior on external redirects ([#9654](https://github.com/remix-run/react-router/pull/9654))
+
 ## 1.0.4-pre.0
 
 ### Patch Changes
