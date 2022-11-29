@@ -66,7 +66,11 @@ Let's take a dive into how to accomplish this.
 Start by adding `<Await />` for your slow data requests where you'd rather render a fallback UI. Let's do that for our example above:
 
 ```jsx lines=[1,5,10,20-33]
-import { Await, defer, useLoaderData } from "react-router-dom";
+import {
+  Await,
+  defer,
+  useLoaderData,
+} from "react-router-dom";
 import { getPackageLocation } from "./api/packages";
 
 async function loader({ params }) {
