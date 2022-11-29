@@ -1604,7 +1604,11 @@ export function createRouter(init: RouterInit): Router {
       typeof window !== "undefined" &&
       typeof window.location !== "undefined"
     ) {
-      window.location.replace(redirect.location);
+      if (replace) {
+        window.location.replace(redirect.location);
+      } else {
+        window.location.assign(redirect.location);
+      }
       return;
     }
 
