@@ -1,5 +1,14 @@
 # `react-router`
 
+## 6.4.4
+
+### Patch Changes
+
+- backwards compatibility for encodeLocation ([#9647](https://github.com/remix-run/react-router/pull/9647))
+- Fix issues with encoded characters in descendant routes ([#9589](https://github.com/remix-run/react-router/pull/9589))
+- Updated dependencies:
+  - `@remix-run/router@1.0.4`
+
 ## 6.4.4-pre.2
 
 ### Patch Changes
