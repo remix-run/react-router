@@ -952,6 +952,9 @@ export function createRouter(init: RouterInit): Router {
         ...opts.submission,
       };
       loadingNavigation = navigation;
+
+      // Create a GET request for the loaders
+      request = createRequest(request.url, request.signal);
     }
 
     // Call loaders
@@ -2202,7 +2205,9 @@ export function unstable_createStaticHandler(
       };
     }
 
-    let context = await loadRouteData(request, matches);
+    // Create a GET request for the loaders
+    let loaderRequest = createRequest(request.url, request.signal);
+    let context = await loadRouteData(loaderRequest, matches);
 
     return {
       ...context,
