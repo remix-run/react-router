@@ -1,20 +1,6 @@
 # `@remix-run/server-runtime`
 
-## 1.8.0-pre.3
-
-### Patch Changes
-
-- Update to use stable `@remix-run/router@1.0.4` release ([#4720](https://github.com/remix-run/remix/pull/4720))
-
-## 1.8.0-pre.2
-
-### Patch Changes
-
-- Remove duplicated router code in favor of `@remix-run/router` dependency ([#4699](https://github.com/remix-run/remix/pull/4699))
-
-## 1.8.0-pre.1
-
-## 1.8.0-pre.0
+## 1.8.0
 
 ### Minor Changes
 
@@ -27,6 +13,8 @@
 
 ### Patch Changes
 
+- Update to use stable `@remix-run/router@1.0.4` release ([#4720](https://github.com/remix-run/remix/pull/4720))
+- Remove duplicated router code in favor of `@remix-run/router` dependency ([#4699](https://github.com/remix-run/remix/pull/4699))
 - Properly categorize internal framework-thrown error Responses as error boundary errors ([#4385](https://github.com/remix-run/remix/pull/4385))
 
   Previously there was some ambiguity around _"thrown Responses go to the `CatchBoundary`"_.

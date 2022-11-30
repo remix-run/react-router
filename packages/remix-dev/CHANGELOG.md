@@ -1,32 +1,6 @@
 # `@remix-run/dev`
 
-## 1.8.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.8.0-pre.3`
-  - `@remix-run/serve@1.8.0-pre.3`
-
-## 1.8.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/serve@1.8.0-pre.2`
-  - `@remix-run/server-runtime@1.8.0-pre.2`
-
-## 1.8.0-pre.1
-
-### Patch Changes
-
-- Fix missing async return in `remix dev` command ([#4660](https://github.com/remix-run/remix/pull/4660))
-- Importing functions and types from the `remix` package is deprecated, and all exported modules will be removed in the next major release. For more details,[see the release notes for 1.4.0](https://github.com/remix-run/remix/releases/tag/v1.4.0) where these changes were first announced. ([#4661](https://github.com/remix-run/remix/pull/4661))
-- Updated dependencies:
-  - `@remix-run/serve@1.8.0-pre.1`
-  - `@remix-run/server-runtime@1.8.0-pre.1`
-
-## 1.8.0-pre.0
+## 1.8.0
 
 ### Minor Changes
 
@@ -34,17 +8,11 @@
 
 ### Patch Changes
 
-- Added support for feature flags in `remix.config.js` ([#4566](https://github.com/remix-run/remix/pull/4566))
-- Replace `migration` scripts with `codemod`. Specifically, `npx @remix-run/dev migrate` is now `@remix-run/dev codemod`. ([#4572](https://github.com/remix-run/remix/pull/4572))
-
-  Under the hood, codemods are now written via Babel's Visitor API instead of `jscodeshift`.
-  This makes some scripts much faster as it a) no longer depends on a network connection, and b)
-  and no longer incurs the overhead of spinning up workers for `jscodeshift`.
-
-- Fixed a bug where spreading props followed by a `key` would result in a thrown error ([#4301](https://github.com/remix-run/remix/pull/4301))
+- Fix missing async return in `remix dev` command ([#4660](https://github.com/remix-run/remix/pull/4660))
+- Importing functions and types from the `remix` package is deprecated, and all exported modules will be removed in the next major release. For more details,[see the release notes for 1.4.0](https://github.com/remix-run/remix/releases/tag/v1.4.0) where these changes were first announced. ([#4661](https://github.com/remix-run/remix/pull/4661))
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.8.0-pre.0`
-  - `@remix-run/serve@1.8.0-pre.0`
+  - `@remix-run/server-runtime@1.8.0`
+  - `@remix-run/serve@1.8.0`
 
 ## 1.7.6
 

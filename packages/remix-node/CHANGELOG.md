@@ -1,27 +1,6 @@
 # `@remix-run/node`
 
-## 1.8.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.8.0-pre.3`
-
-## 1.8.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.8.0-pre.2`
-
-## 1.8.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.8.0-pre.1`
-
-## 1.8.0-pre.0
+## 1.8.0
 
 ### Minor Changes
 
@@ -36,7 +15,7 @@
   - It fixes a memory leak caused by unregistered listeners
   - It adds support for custom `"credentials"` values (Remix does nothing with these at the moment, but they pass through for the consumer of the request to access if needed)
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.8.0-pre.0`
+  - `@remix-run/server-runtime@1.8.0`
 
 ## 1.7.6
 
