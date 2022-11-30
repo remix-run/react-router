@@ -338,6 +338,12 @@ describe("path matchine with optional segments", () => {
 
     expect(pickPathsAndParams(routes, "/nested")).toEqual(null);
     expect(pickPathsAndParams(routes, "/nested/one")).toEqual(null);
+    expect(pickPathsAndParams(routes, "/nested/two")).toEqual([
+      {
+        path: "/nested/one?/two/three?",
+        params: {},
+      },
+    ]);
     expect(pickPathsAndParams(routes, "/nested/one/two")).toEqual([
       {
         path: "/nested/one?/two/three?",
@@ -414,6 +420,12 @@ describe("path matching with optional dynamic segments", () => {
 
     expect(pickPathsAndParams(routes, "/nested")).toEqual(null);
     expect(pickPathsAndParams(routes, "/nested/foo")).toEqual(null);
+    expect(pickPathsAndParams(routes, "/nested/two")).toEqual([
+      {
+        path: "/nested/:one?/two/:three?",
+        params: {},
+      },
+    ]);
     expect(pickPathsAndParams(routes, "/nested/foo/two")).toEqual([
       {
         path: "/nested/:one?/two/:three?",
