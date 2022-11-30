@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- We have been busy at work [Layering Remix on top of React Router 6.4](https://github.com/remix-run/remix/blob/main/decisions/0007-remix-on-react-router-6-4-0.md) and are excited to be releasing step 1 in this process that consists of performing all server-side data fetches/mutations through the new framework agnostic `@remix-run/router`. Server- and client-side rendering are still done the same as before, and will be updated in subsequent releases.  ([#4612](https://github.com/remix-run/remix/pull/4612))
+- We have been busy at work [Layering Remix on top of React Router 6.4](https://github.com/remix-run/remix/blob/main/decisions/0007-remix-on-react-router-6-4-0.md) and are excited to be releasing step 1 in this process that consists of performing all server-side data fetches/mutations through the new framework agnostic `@remix-run/router`. Server- and client-side rendering are still done the same as before, and will be updated in subsequent releases. ([#4612](https://github.com/remix-run/remix/pull/4612))
 - Importing functions and types from the `remix` package is deprecated, and all ([#3284](https://github.com/remix-run/remix/pull/3284))
   exported modules will be removed in the next major release. For more details,
   [see the release notes for 1.4.0](https://github.com/remix-run/remix/releases/tag/v1.4.0)
