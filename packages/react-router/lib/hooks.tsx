@@ -116,7 +116,7 @@ export function useNavigationType(): NavigationType {
 }
 
 /**
- * Returns true if the URL for the given "to" value matches the current URL.
+ * Returns a PathMatch object if the given pattern matches the current URL.
  * This is useful for components that need to know "active" state, e.g.
  * <NavLink>.
  *
@@ -310,6 +310,7 @@ export function useRoutes(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
+  let { navigator } = React.useContext(NavigationContext);
   let dataRouterStateContext = React.useContext(DataRouterStateContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
@@ -401,11 +402,23 @@ export function useRoutes(
       matches.map((match) =>
         Object.assign({}, match, {
           params: Object.assign({}, parentParams, match.params),
-          pathname: joinPaths([parentPathnameBase, match.pathname]),
+          pathname: joinPaths([
+            parentPathnameBase,
+            // Re-encode pathnames that were decoded inside matchRoutes
+            navigator.encodeLocation
+              ? navigator.encodeLocation(match.pathname).pathname
+              : match.pathname,
+          ]),
           pathnameBase:
             match.pathnameBase === "/"
               ? parentPathnameBase
-              : joinPaths([parentPathnameBase, match.pathnameBase]),
+              : joinPaths([
+                  parentPathnameBase,
+                  // Re-encode pathnames that were decoded inside matchRoutes
+                  navigator.encodeLocation
+                    ? navigator.encodeLocation(match.pathnameBase).pathname
+                    : match.pathnameBase,
+                ]),
         })
       ),
     parentMatches,

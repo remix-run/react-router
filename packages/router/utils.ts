@@ -41,6 +41,7 @@ export interface RedirectResult {
   status: number;
   location: string;
   revalidate: boolean;
+  external: boolean;
 }
 
 /**
@@ -61,7 +62,9 @@ export type DataResult =
   | RedirectResult
   | ErrorResult;
 
-export type FormMethod = "get" | "post" | "put" | "patch" | "delete";
+export type SubmissionFormMethod = "post" | "put" | "patch" | "delete";
+export type FormMethod = "get" | SubmissionFormMethod;
+
 export type FormEncType =
   | "application/x-www-form-urlencoded"
   | "multipart/form-data";
@@ -72,7 +75,7 @@ export type FormEncType =
  * external consumption
  */
 export interface Submission {
-  formMethod: Exclude<FormMethod, "get">;
+  formMethod: SubmissionFormMethod;
   formAction: string;
   formEncType: FormEncType;
   formData: FormData;
@@ -412,7 +415,43 @@ function flattenRoutes<
       return;
     }
 
-    branches.push({ path, score: computeScore(path, route.index), routesMeta });
+    // Handle optional params - /path/:optional?
+    let segments = path.split("/");
+    let optionalParams: string[] = [];
+    segments.forEach((segment) => {
+      let match = segment.match(/^:?([^?]+)\?$/);
+      if (match) {
+        optionalParams.push(match[1]);
+      }
+    });
+
+    if (optionalParams.length > 0) {
+      for (let i = 0; i <= optionalParams.length; i++) {
+        let newPath = path;
+        let newMeta = routesMeta.map((m) => ({ ...m }));
+
+        for (let j = optionalParams.length - 1; j >= 0; j--) {
+          let re = new RegExp(`(\\/:?${optionalParams[j]})\\?`);
+          let replacement = j < i ? "$1" : "";
+          newPath = newPath.replace(re, replacement);
+          newMeta[newMeta.length - 1].relativePath = newMeta[
+            newMeta.length - 1
+          ].relativePath.replace(re, replacement);
+        }
+
+        branches.push({
+          path: newPath,
+          score: computeScore(newPath, route.index),
+          routesMeta: newMeta,
+        });
+      }
+    } else {
+      branches.push({
+        path,
+        score: computeScore(path, route.index),
+        routesMeta,
+      });
+    }
   });
 
   return branches;

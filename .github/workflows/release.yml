@@ -55,7 +55,7 @@ jobs:
           publish: yarn release
           createGithubReleases: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN_SO_OTHER_ACTIONS_RUN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # comment:

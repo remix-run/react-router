@@ -23,6 +23,7 @@ import {
   Outlet,
   createBrowserRouter,
   createHashRouter,
+  isRouteErrorResponse,
   useLoaderData,
   useActionData,
   useRouteError,
@@ -260,6 +261,40 @@ function testDomRouter(
               idle
             </div>
           </div>
+        </div>"
+      `);
+    });
+
+    it("deserializes ErrorResponse instances from the window", async () => {
+      window.__staticRouterHydrationData = {
+        loaderData: {},
+        actionData: null,
+        errors: {
+          "0": {
+            status: 404,
+            statusText: "Not Found",
+            internal: false,
+            data: { not: "found" },
+            __type: "RouteErrorResponse",
+          },
+        },
+      };
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")}>
+          <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
+        </TestDataRouter>
+      );
+
+      function Boundary() {
+        let error = useRouteError();
+        return isRouteErrorResponse(error) ? <h1>Yes!</h1> : <h2>No :(</h2>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h1>
+            Yes!
+          </h1>
         </div>"
       `);
     });

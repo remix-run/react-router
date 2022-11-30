@@ -1,4 +1,4 @@
-import type { History, Location, To } from "./history";
+import type { History, Location, Path, To } from "./history";
 import {
   Action as HistoryAction,
   createLocation,
@@ -20,6 +20,7 @@ import type {
   Submission,
   SuccessResult,
   AgnosticRouteMatch,
+  SubmissionFormMethod,
 } from "./utils";
 import {
   DeferredData,
@@ -158,6 +159,16 @@ export interface Router {
    * @internal
    * PRIVATE - DO NOT USE
    *
+   * Utility function to URL encode a destination path according to the internal
+   * history implementation
+   * @param to
+   */
+  encodeLocation(to: To): Path;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Get/create a fetcher for the given key
    * @param key
    */
@@ -288,6 +299,7 @@ export interface RouterInit {
  * State returned from a server-side query() call
  */
 export interface StaticHandlerContext {
+  basename: Router["basename"];
   location: RouterState["location"];
   matches: RouterState["matches"];
   loaderData: RouterState["loaderData"];
@@ -502,6 +514,20 @@ interface QueryRouteResponse {
   type: ResultType.data | ResultType.error;
   response: Response;
 }
+
+const validActionMethodsArr: SubmissionFormMethod[] = [
+  "post",
+  "put",
+  "patch",
+  "delete",
+];
+const validActionMethods = new Set<SubmissionFormMethod>(validActionMethodsArr);
+
+const validRequestMethodsArr: FormMethod[] = ["get", ...validActionMethodsArr];
+const validRequestMethods = new Set<FormMethod>(validRequestMethodsArr);
+
+const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
+const redirectPreserveMethodStatusCodes = new Set([307, 308]);
 
 export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
   state: "idle",
@@ -773,7 +799,10 @@ export function createRouter(init: RouterInit): Router {
     // remains the same as POP and non-data-router usages.  new URL() does all
     // the same encoding we'd get from a history.pushState/window.location read
     // without having to touch history
-    location = init.history.encodeLocation(location);
+    location = {
+      ...location,
+      ...init.history.encodeLocation(location),
+    };
 
     let historyAction =
       (opts && opts.replace) === true || submission != null
@@ -1000,15 +1029,10 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isRedirectResult(result)) {
-      let redirectNavigation: NavigationStates["Loading"] = {
-        state: "loading",
-        location: createLocation(state.location, result.location),
-        ...submission,
-      };
       await startRedirectNavigation(
+        state,
         result,
-        redirectNavigation,
-        opts && opts.replace
+        opts && opts.replace === true
       );
       return { shortCircuited: true };
     }
@@ -1152,8 +1176,7 @@ export function createRouter(init: RouterInit): Router {
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
     if (redirect) {
-      let redirectNavigation = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(redirect, redirectNavigation, replace);
+      await startRedirectNavigation(state, redirect, replace);
       return { shortCircuited: true };
     }
 
@@ -1304,13 +1327,7 @@ export function createRouter(init: RouterInit): Router {
       state.fetchers.set(key, loadingFetcher);
       updateState({ fetchers: new Map(state.fetchers) });
 
-      let redirectNavigation: NavigationStates["Loading"] = {
-        state: "loading",
-        location: createLocation(state.location, actionResult.location),
-        ...submission,
-      };
-      await startRedirectNavigation(actionResult, redirectNavigation);
-      return;
+      return startRedirectNavigation(state, actionResult);
     }
 
     // Process any non-redirect errors thrown
@@ -1402,9 +1419,7 @@ export function createRouter(init: RouterInit): Router {
 
     let redirect = findRedirect(results);
     if (redirect) {
-      let redirectNavigation = getLoaderRedirect(state, redirect);
-      await startRedirectNavigation(redirect, redirectNavigation);
-      return;
+      return startRedirectNavigation(state, redirect);
     }
 
     // Process and commit output from loaders
@@ -1515,8 +1530,7 @@ export function createRouter(init: RouterInit): Router {
 
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
-      let redirectNavigation = getLoaderRedirect(state, result);
-      await startRedirectNavigation(result, redirectNavigation);
+      await startRedirectNavigation(state, result);
       return;
     }
 
@@ -1571,17 +1585,33 @@ export function createRouter(init: RouterInit): Router {
    * the history action from the original navigation (PUSH or REPLACE).
    */
   async function startRedirectNavigation(
+    state: RouterState,
     redirect: RedirectResult,
-    navigation: Navigation,
     replace?: boolean
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
     }
+
+    let redirectLocation = createLocation(state.location, redirect.location);
     invariant(
-      navigation.location,
+      redirectLocation,
       "Expected a location on the redirect navigation"
     );
+
+    if (
+      redirect.external &&
+      typeof window !== "undefined" &&
+      typeof window.location !== "undefined"
+    ) {
+      if (replace) {
+        window.location.replace(redirect.location);
+      } else {
+        window.location.assign(redirect.location);
+      }
+      return;
+    }
+
     // There's no need to abort on redirects, since we don't detect the
     // redirect until the action/loaders have settled
     pendingNavigationController = null;
@@ -1589,9 +1619,40 @@ export function createRouter(init: RouterInit): Router {
     let redirectHistoryAction =
       replace === true ? HistoryAction.Replace : HistoryAction.Push;
 
-    await startNavigation(redirectHistoryAction, navigation.location, {
-      overrideNavigation: navigation,
-    });
+    let { formMethod, formAction, formEncType, formData } = state.navigation;
+
+    // If this was a 307/308 submission we want to preserve the HTTP method and
+    // re-submit the POST/PUT/PATCH/DELETE as a submission navigation to the
+    // redirected location
+    if (
+      redirectPreserveMethodStatusCodes.has(redirect.status) &&
+      formMethod &&
+      isSubmissionMethod(formMethod) &&
+      formEncType &&
+      formData
+    ) {
+      await startNavigation(redirectHistoryAction, redirectLocation, {
+        submission: {
+          formMethod,
+          formAction: redirect.location,
+          formEncType,
+          formData,
+        },
+      });
+    } else {
+      // Otherwise, we kick off a new loading navigation, preserving the
+      // submission info for the duration of this navigation
+      await startNavigation(redirectHistoryAction, redirectLocation, {
+        overrideNavigation: {
+          state: "loading",
+          location: redirectLocation,
+          formMethod: formMethod || undefined,
+          formAction: formAction || undefined,
+          formEncType: formEncType || undefined,
+          formData: formData || undefined,
+        },
+      });
+    }
   }
 
   async function callLoadersAndMaybeResolveData(
@@ -1825,6 +1886,7 @@ export function createRouter(init: RouterInit): Router {
     // Passthrough to history-aware createHref used by useHref so we get proper
     // hash-aware URLs in DOM paths
     createHref: (to: To) => init.history.createHref(to),
+    encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
     deleteFetcher,
     dispose,
@@ -1840,11 +1902,11 @@ export function createRouter(init: RouterInit): Router {
 //#region createStaticHandler
 ////////////////////////////////////////////////////////////////////////////////
 
-const validActionMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-const validRequestMethods = new Set(["GET", "HEAD", ...validActionMethods]);
-
 export function unstable_createStaticHandler(
-  routes: AgnosticRouteObject[]
+  routes: AgnosticRouteObject[],
+  opts?: {
+    basename?: string;
+  }
 ): StaticHandler {
   invariant(
     routes.length > 0,
@@ -1852,6 +1914,7 @@ export function unstable_createStaticHandler(
   );
 
   let dataRoutes = convertRoutesToDataRoutes(routes);
+  let basename = (opts ? opts.basename : null) || "/";
 
   /**
    * The query() method is intended for document requests, in which we want to
@@ -1876,14 +1939,17 @@ export function unstable_createStaticHandler(
     request: Request
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
+    let method = request.method.toLowerCase();
     let location = createLocation("", createPath(url), null, "default");
-    let matches = matchRoutes(dataRoutes, location);
+    let matches = matchRoutes(dataRoutes, location, basename);
 
-    if (!validRequestMethods.has(request.method)) {
-      let error = getInternalRouterError(405, { method: request.method });
+    // SSR supports HEAD requests while SPA doesn't
+    if (!isValidMethod(method) && method !== "head") {
+      let error = getInternalRouterError(405, { method });
       let { matches: methodNotAllowedMatches, route } =
         getShortCircuitMatches(dataRoutes);
       return {
+        basename,
         location,
         matches: methodNotAllowedMatches,
         loaderData: {},
@@ -1900,6 +1966,7 @@ export function unstable_createStaticHandler(
       let { matches: notFoundMatches, route } =
         getShortCircuitMatches(dataRoutes);
       return {
+        basename,
         location,
         matches: notFoundMatches,
         loaderData: {},
@@ -1921,7 +1988,7 @@ export function unstable_createStaticHandler(
     // When returning StaticHandlerContext, we patch back in the location here
     // since we need it for React Context.  But this helps keep our submit and
     // loadRouteData operating on a Request instead of a Location
-    return { location, ...result };
+    return { location, basename, ...result };
   }
 
   /**
@@ -1946,11 +2013,13 @@ export function unstable_createStaticHandler(
    */
   async function queryRoute(request: Request, routeId?: string): Promise<any> {
     let url = new URL(request.url);
+    let method = request.method.toLowerCase();
     let location = createLocation("", createPath(url), null, "default");
-    let matches = matchRoutes(dataRoutes, location);
+    let matches = matchRoutes(dataRoutes, location, basename);
 
-    if (!validRequestMethods.has(request.method)) {
-      throw getInternalRouterError(405, { method: request.method });
+    // SSR supports HEAD requests while SPA doesn't
+    if (!isValidMethod(method) && method !== "head") {
+      throw getInternalRouterError(405, { method });
     } else if (!matches) {
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
@@ -1993,14 +2062,14 @@ export function unstable_createStaticHandler(
     location: Location,
     matches: AgnosticDataRouteMatch[],
     routeMatch?: AgnosticDataRouteMatch
-  ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
+  ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
       request.signal,
       "query()/queryRoute() requests must contain an AbortController signal"
     );
 
     try {
-      if (validActionMethods.has(request.method)) {
+      if (isSubmissionMethod(request.method.toLowerCase())) {
         let result = await submit(
           request,
           matches,
@@ -2042,7 +2111,7 @@ export function unstable_createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     isRouteRequest: boolean
-  ): Promise<Omit<StaticHandlerContext, "location"> | Response> {
+  ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
 
     if (!actionMatch.route.action) {
@@ -2064,7 +2133,7 @@ export function unstable_createStaticHandler(
         request,
         actionMatch,
         matches,
-        undefined, // Basename not currently supported in static handlers
+        basename,
         true,
         isRouteRequest
       );
@@ -2154,14 +2223,17 @@ export function unstable_createStaticHandler(
     routeMatch?: AgnosticDataRouteMatch,
     pendingActionError?: RouteData
   ): Promise<
-    | Omit<StaticHandlerContext, "location" | "actionData" | "actionHeaders">
+    | Omit<
+        StaticHandlerContext,
+        "location" | "basename" | "actionData" | "actionHeaders"
+      >
     | Response
   > {
     let isRouteRequest = routeMatch != null;
 
     // Short circuit if we have no loaders to run (queryRoute())
     if (isRouteRequest && !routeMatch?.route.loader) {
-      throw getInternalRouterError(405, {
+      throw getInternalRouterError(400, {
         method: request.method,
         pathname: createURL(request.url).pathname,
         routeId: routeMatch?.route.id,
@@ -2194,7 +2266,7 @@ export function unstable_createStaticHandler(
           request,
           match,
           matches,
-          undefined, // Basename not currently supported in static handlers
+          basename,
           true,
           isRouteRequest
         )
@@ -2260,6 +2332,12 @@ export function getStaticContextFromError(
   return newContext;
 }
 
+function isSubmissionNavigation(
+  opts: RouterNavigateOptions
+): opts is SubmissionNavigateOptions {
+  return opts != null && "formData" in opts;
+}
+
 // Normalize navigation options by converting formMethod=GET formData objects to
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
@@ -2274,12 +2352,19 @@ function normalizeNavigateOptions(
   let path = typeof to === "string" ? to : createPath(to);
 
   // Return location verbatim on non-submission navigations
-  if (!opts || (!("formMethod" in opts) && !("formData" in opts))) {
+  if (!opts || !isSubmissionNavigation(opts)) {
     return { path };
   }
 
+  if (opts.formMethod && !isValidMethod(opts.formMethod)) {
+    return {
+      path,
+      error: getInternalRouterError(405, { method: opts.formMethod }),
+    };
+  }
+
   // Create a Submission on non-GET navigations
-  if (opts.formMethod != null && opts.formMethod !== "get") {
+  if (opts.formMethod && isSubmissionMethod(opts.formMethod)) {
     return {
       path,
       submission: {
@@ -2290,11 +2375,6 @@ function normalizeNavigateOptions(
         formData: opts.formData,
       },
     };
-  }
-
-  // No formData to flatten for GET submission
-  if (!opts.formData) {
-    return { path };
   }
 
   // Flatten submission onto URLSearchParams for GET submissions
@@ -2320,22 +2400,6 @@ function normalizeNavigateOptions(
   }
 
   return { path: createPath(parsedPath) };
-}
-
-function getLoaderRedirect(
-  state: RouterState,
-  redirect: RedirectResult
-): Navigation {
-  let { formMethod, formAction, formEncType, formData } = state.navigation;
-  let navigation: NavigationStates["Loading"] = {
-    state: "loading",
-    location: createLocation(state.location, redirect.location),
-    formMethod: formMethod || undefined,
-    formAction: formAction || undefined,
-    formEncType: formEncType || undefined,
-    formData: formData || undefined,
-  };
-  return navigation;
 }
 
 // Filter out all routes below any caught error as they aren't going to
@@ -2505,7 +2569,7 @@ async function callLoaderOrAction(
   request: Request,
   match: AgnosticDataRouteMatch,
   matches: AgnosticDataRouteMatch[],
-  basename: string | undefined,
+  basename = "/",
   isStaticRequest: boolean = false,
   isRouteRequest: boolean = false
 ): Promise<DataResult> {
@@ -2547,33 +2611,38 @@ async function callLoaderOrAction(
     let status = result.status;
 
     // Process redirects
-    if (status >= 300 && status <= 399) {
+    if (redirectStatusCodes.has(status)) {
       let location = result.headers.get("Location");
       invariant(
         location,
         "Redirects returned/thrown from loaders/actions must have a Location header"
       );
 
-      // Support relative routing in redirects
-      let activeMatches = matches.slice(0, matches.indexOf(match) + 1);
-      let routePathnames = getPathContributingMatches(activeMatches).map(
-        (match) => match.pathnameBase
-      );
-      let requestPath = createURL(request.url).pathname;
-      let resolvedLocation = resolveTo(location, routePathnames, requestPath);
-      invariant(
-        createPath(resolvedLocation),
-        `Unable to resolve redirect location: ${result.headers.get("Location")}`
-      );
+      // Check if this an external redirect that goes to a new origin
+      let external = createURL(location).origin !== createURL("/").origin;
 
-      // Prepend the basename to the redirect location if we have one
-      if (basename) {
-        let path = resolvedLocation.pathname;
-        resolvedLocation.pathname =
-          path === "/" ? basename : joinPaths([basename, path]);
+      // Support relative routing in internal redirects
+      if (!external) {
+        let activeMatches = matches.slice(0, matches.indexOf(match) + 1);
+        let routePathnames = getPathContributingMatches(activeMatches).map(
+          (match) => match.pathnameBase
+        );
+        let requestPath = createURL(request.url).pathname;
+        let resolvedLocation = resolveTo(location, routePathnames, requestPath);
+        invariant(
+          createPath(resolvedLocation),
+          `Unable to resolve redirect location: ${location}`
+        );
+
+        // Prepend the basename to the redirect location if we have one
+        if (basename) {
+          let path = resolvedLocation.pathname;
+          resolvedLocation.pathname =
+            path === "/" ? basename : joinPaths([basename, path]);
+        }
+
+        location = createPath(resolvedLocation);
       }
-
-      location = createPath(resolvedLocation);
 
       // Don't process redirects in the router during static requests requests.
       // Instead, throw the Response and let the server handle it with an HTTP
@@ -2589,6 +2658,7 @@ async function callLoaderOrAction(
         status,
         location,
         revalidate: result.headers.get("X-Remix-Revalidate") !== null,
+        external,
       };
     }
 
@@ -2892,12 +2962,19 @@ function getInternalRouterError(
     message?: string;
   } = {}
 ) {
-  let statusText: string;
-  let errorMessage = message;
+  let statusText = "Unknown Server Error";
+  let errorMessage = "Unknown @remix-run/router error";
 
   if (status === 400) {
     statusText = "Bad Request";
-    errorMessage = "Cannot submit binary form data using GET";
+    if (method && pathname && routeId) {
+      errorMessage =
+        `You made a ${method} request to "${pathname}" but ` +
+        `did not provide a \`loader\` for route "${routeId}", ` +
+        `so there is no way to handle the request.`;
+    } else {
+      errorMessage = "Cannot submit binary form data using GET";
+    }
   } else if (status === 403) {
     statusText = "Forbidden";
     errorMessage = `Route "${routeId}" does not match URL "${pathname}"`;
@@ -2907,23 +2984,13 @@ function getInternalRouterError(
   } else if (status === 405) {
     statusText = "Method Not Allowed";
     if (method && pathname && routeId) {
-      if (validActionMethods.has(method)) {
-        errorMessage =
-          `You made a ${method} request to "${pathname}" but ` +
-          `did not provide an \`action\` for route "${routeId}", ` +
-          `so there is no way to handle the request.`;
-      } else {
-        errorMessage =
-          `You made a ${method} request to "${pathname}" but ` +
-          `did not provide a \`loader\` for route "${routeId}", ` +
-          `so there is no way to handle the request.`;
-      }
-    } else {
-      errorMessage = `Invalid request method "${method}"`;
+      errorMessage =
+        `You made a ${method.toUpperCase()} request to "${pathname}" but ` +
+        `did not provide an \`action\` for route "${routeId}", ` +
+        `so there is no way to handle the request.`;
+    } else if (method) {
+      errorMessage = `Invalid request method "${method.toUpperCase()}"`;
     }
-  } else {
-    statusText = "Unknown Server Error";
-    errorMessage = "Unknown @remix-run/router error";
   }
 
   return new ErrorResponse(
@@ -2983,6 +3050,14 @@ function isQueryRouteResponse(obj: any): obj is QueryRouteResponse {
     obj.response instanceof Response &&
     (obj.type === ResultType.data || ResultType.error)
   );
+}
+
+function isValidMethod(method: string): method is FormMethod {
+  return validRequestMethods.has(method as FormMethod);
+}
+
+function isSubmissionMethod(method: string): method is SubmissionFormMethod {
+  return validActionMethods.has(method as SubmissionFormMethod);
 }
 
 async function resolveDeferredResults(

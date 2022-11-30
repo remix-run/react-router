@@ -127,12 +127,12 @@ export interface History {
 
   /**
    * Encode a location the same way window.history would do (no-op for memory
-   * history) so we ensure our PUSH/REPLAC e navigations for data routers
+   * history) so we ensure our PUSH/REPLACE navigations for data routers
    * behave the same as POP
    *
-   * @param location The incoming location from router.navigate()
+   * @param to Unencoded path
    */
-  encodeLocation(location: Location): Location;
+  encodeLocation(to: To): Path;
 
   /**
    * Pushes a new location onto the history stack, increasing its length by one.
@@ -268,8 +268,13 @@ export function createMemoryHistory(
     createHref(to) {
       return typeof to === "string" ? to : createPath(to);
     },
-    encodeLocation(location) {
-      return location;
+    encodeLocation(to: To) {
+      let path = typeof to === "string" ? parsePath(to) : to;
+      return {
+        pathname: path.pathname || "",
+        search: path.search || "",
+        hash: path.hash || "",
+      };
     },
     push(to, state) {
       action = Action.Push;
@@ -636,11 +641,10 @@ function getUrlBasedHistory(
     createHref(to) {
       return createHref(window, to);
     },
-    encodeLocation(location) {
+    encodeLocation(to) {
       // Encode a Location the same way window.location would
-      let url = createURL(createPath(location));
+      let url = createURL(typeof to === "string" ? to : createPath(to));
       return {
-        ...location,
         pathname: url.pathname,
         search: url.search,
         hash: url.hash,
