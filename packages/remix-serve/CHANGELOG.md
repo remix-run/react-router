@@ -1,5 +1,12 @@
 # `@remix-run/serve`
 
+## 1.8.0-pre.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/express@1.8.0-pre.3`
+
 ## 1.8.0-pre.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.8.0-pre.3
+
+### Patch Changes
+
+- Update to use stable `@remix-run/router@1.0.4` release ([#4720](https://github.com/remix-run/remix/pull/4720))
+
 ## 1.8.0-pre.2
 
 ### Patch Changes
