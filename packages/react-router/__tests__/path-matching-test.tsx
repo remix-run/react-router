@@ -275,6 +275,58 @@ describe("path matching with splats", () => {
       pathnameBase: "/courses",
     });
   });
+
+  test("does not support partial path matching with named parameters", () => {
+    let routes = [{ path: "/prefix:id" }];
+    expect(matchRoutes(routes, "/prefix:id")).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "params": Object {},
+          "pathname": "/prefix:id",
+          "pathnameBase": "/prefix:id",
+          "route": Object {
+            "path": "/prefix:id",
+          },
+        },
+      ]
+    `);
+    expect(matchRoutes(routes, "/prefixabc")).toEqual(null);
+    expect(matchRoutes(routes, "/prefix/abc")).toEqual(null);
+  });
+
+  test("does not support partial path matching with splat parameters", () => {
+    let consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let routes = [{ path: "/prefix*" }];
+    expect(matchRoutes(routes, "/prefix/abc")).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "params": Object {
+            "*": "abc",
+          },
+          "pathname": "/prefix/abc",
+          "pathnameBase": "/prefix",
+          "route": Object {
+            "path": "/prefix*",
+          },
+        },
+      ]
+    `);
+    expect(matchRoutes(routes, "/prefixabc")).toMatchInlineSnapshot(`null`);
+
+    // Should warn on each invocation of matchRoutes
+    expect(consoleWarn.mock.calls).toMatchInlineSnapshot(`
+      Array [
+        Array [
+          "Route path \\"/prefix*\\" will be treated as if it were \\"/prefix/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"/prefix/*\\".",
+        ],
+        Array [
+          "Route path \\"/prefix*\\" will be treated as if it were \\"/prefix/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"/prefix/*\\".",
+        ],
+      ]
+    `);
+
+    consoleWarn.mockRestore();
+  });
 });
 
 describe("path matchine with optional segments", () => {
