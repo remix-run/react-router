@@ -197,7 +197,7 @@ export async function watch(
 export async function dev(remixRoot: string, modeArg?: string, port?: number) {
   let config = await readConfig(remixRoot);
   let mode = compiler.parseMode(modeArg ?? "", "development");
-  devServer.serve(config, mode, port);
+  return devServer.serve(config, mode, port);
 }
 
 export async function codemod(

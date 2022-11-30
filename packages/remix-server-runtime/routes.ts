@@ -3,7 +3,8 @@ import type {
   AgnosticDataRouteObject,
   ActionFunctionArgs,
   LoaderFunctionArgs,
-} from "./router";
+} from "@remix-run/router";
+
 import { type AppLoadContext } from "./data";
 import { callRouteActionRR, callRouteLoaderRR } from "./data";
 import type { ServerRouteModule } from "./routeModules";

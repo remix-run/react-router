@@ -11,6 +11,7 @@ import { loaders } from "./loaders";
 import { type CompileOptions } from "./options";
 import { browserRouteModulesPlugin } from "./plugins/browserRouteModulesPlugin";
 import { cssFilePlugin } from "./plugins/cssFilePlugin";
+import { deprecatedRemixPackagePlugin } from "./plugins/deprecatedRemixPackagePlugin";
 import { emptyModulesPlugin } from "./plugins/emptyModulesPlugin";
 import { mdxPlugin } from "./plugins/mdx";
 import { urlImportsPlugin } from "./plugins/urlImportsPlugin";
@@ -70,6 +71,7 @@ const createEsbuildConfig = (
   }
 
   let plugins = [
+    deprecatedRemixPackagePlugin(options.onWarning),
     cssFilePlugin(options),
     urlImportsPlugin(),
     mdxPlugin(config),

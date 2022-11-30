@@ -144,6 +144,12 @@ test.describe("redirects", () => {
             return <h1>Page 2</h1>
           }
         `,
+        [`app/routes/loader/external.js`]: js`
+          import { redirect } from "@remix-run/node";
+          export const loader = () => {
+            return redirect("https://www.google.com/");
+          }
+        `,
       },
     });
 
@@ -185,5 +191,12 @@ test.describe("redirects", () => {
     await page.waitForSelector(`#app:has-text("cookie-value")`);
     // Loader called twice
     await page.waitForSelector(`#count:has-text("3")`);
+  });
+
+  test("redirects to external URLs", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.waitForNetworkAfter(() => app.goto("/loader/external"));
+    expect(app.page.url()).toBe("https://www.google.com/");
   });
 });
