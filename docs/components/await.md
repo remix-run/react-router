@@ -108,7 +108,7 @@ import {
   defer,
   Route,
   useLoaderData,
-  Async,
+  Await,
 } from "react-router-dom";
 
 // given this route

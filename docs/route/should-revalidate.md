@@ -75,6 +75,7 @@ interface ShouldRevalidateFunction {
 [action]: ./action
 [form]: ../components/form
 [fetcher]: ../hooks/use-fetcher
+[usesubmit]: ../hooks/use-submit
 [loader]: ./loader
 [useloaderdata]: ../hooks/use-loader-data
 [params]: ./route#dynamic-segments

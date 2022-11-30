@@ -6,6 +6,9 @@ on:
       ref:
         required: true
         type: string
+      packageVersionToFollow:
+        required: true
+        type: string
 
 jobs:
   comment:
@@ -20,16 +23,20 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: ".nvmrc"
-          cache: "yarn"
+          cache: "npm"
+          cache-dependency-path: scripts/release/package-lock.json
 
       - name: 📥 Install deps
-        # even though this is called "npm-install" it does use yarn to install
-        # because we have a yarn.lock and caches efficiently.
-        uses: bahmutov/npm-install@v1
+        run: npm ci
+        working-directory: ./scripts/release
 
       - name: 📝 Comment on issues
-        run: node ./scripts/release/comment.mjs
+        working-directory: ./scripts/release
+        run: node -r esbuild-register ./comment.ts
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.ref }}
+          DEFAULT_BRANCH: "main"
+          NIGHTLY_BRANCH: "dev"
+          PACKAGE_VERSION_TO_FOLLOW: ${{ inputs.packageVersionToFollow }}

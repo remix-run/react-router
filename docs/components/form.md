@@ -128,7 +128,7 @@ The method will be available on [`request.method`][requestmethod] inside the rou
   path="/projects/:id"
   element={<Project />}
   loader={async ({ params }) => {
-    return fakeLoadProject(params.id)
+    return fakeLoadProject(params.id);
   }}
   action={async ({ request, params }) => {
     switch (request.method) {
@@ -140,8 +140,8 @@ The method will be available on [`request.method`][requestmethod] inside the rou
       case "delete": {
         return fakeDeleteProject(params.id);
       }
-      default {
-        throw new Response("", { status: 405 })
+      default: {
+        throw new Response("", { status: 405 });
       }
     }
   }}

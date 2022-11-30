@@ -5570,7 +5570,7 @@ describe("a router", () => {
       });
     });
 
-    it("processes external redirects if window is present", async () => {
+    it("processes external redirects if window is present (push)", async () => {
       let urls = [
         "http://remix.run/blog",
         "https://remix.run/blog",
@@ -5583,6 +5583,7 @@ describe("a router", () => {
         // https://stackoverflow.com/a/60697570
         let oldLocation = window.location;
         const location = new URL(window.location.href) as unknown as Location;
+        location.assign = jest.fn();
         location.replace = jest.fn();
         delete (window as any).location;
         window.location = location as unknown as Location;
@@ -5595,7 +5596,42 @@ describe("a router", () => {
         });
 
         await A.actions.child.redirectReturn(url);
+        expect(window.location.assign).toHaveBeenCalledWith(url);
+        expect(window.location.replace).not.toHaveBeenCalled();
+
+        window.location = oldLocation;
+      }
+    });
+
+    it("processes external redirects if window is present (replace)", async () => {
+      let urls = [
+        "http://remix.run/blog",
+        "https://remix.run/blog",
+        "//remix.run/blog",
+        "app://whatever",
+      ];
+
+      for (let url of urls) {
+        // This is gross, don't blame me, blame SO :)
+        // https://stackoverflow.com/a/60697570
+        let oldLocation = window.location;
+        const location = new URL(window.location.href) as unknown as Location;
+        location.assign = jest.fn();
+        location.replace = jest.fn();
+        delete (window as any).location;
+        window.location = location as unknown as Location;
+
+        let t = setup({ routes: REDIRECT_ROUTES });
+
+        let A = await t.navigate("/parent/child", {
+          formMethod: "post",
+          formData: createFormData({}),
+          replace: true,
+        });
+
+        await A.actions.child.redirectReturn(url);
         expect(window.location.replace).toHaveBeenCalledWith(url);
+        expect(window.location.assign).not.toHaveBeenCalled();
 
         window.location = oldLocation;
       }

@@ -89,7 +89,7 @@ Note that the APIs here are not React Router specific, but rather standard web o
 
 While you can return anything you want from a loader and get access to it from [`useLoaderData`][useloaderdata], you can also return a web [Response][response].
 
-This might not seem immediately useful, but consider `fetch`. Since the return value of of `fetch` is a Response, and loaders understand responses, many loaders can return a simple fetch!
+This might not seem immediately useful, but consider `fetch`. Since the return value of `fetch` is a Response, and loaders understand responses, many loaders can return a simple fetch!
 
 ```tsx
 // an HTTP/REST API

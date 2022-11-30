@@ -40,6 +40,12 @@ When a route does not have an `errorElement`, errors will bubble up through pare
 
 Put an `errorElement` at the top of your route tree and handle nearly every error in your app in one place. Or, put them on all of your routes and allow the parts of the app that don't have errors to continue to render normally. This gives the user more options to recover from errors instead of a hard refresh and 🤞.
 
+### Default Error Element
+
+<docs-warning>We recommend _always_ providing at least a root-level `errorElement` before shipping your application to production, because the UI of the default `errorElement` is ugly and not intended for end-user consumption.</docs-warning>
+
+If you do not provide an `errorElement` in your route tree to handle a given error, errors will bubble up and be handled by a default `errorElement` which will print the error message and stack trace. Some folks have questioned why the stack trace shows up in production builds. Normally, you don't want to expose stack traces on your production sites for security reasons. However, this is more applicable to server-side errors (and Remix does indeed strip stack traces from server-side loader/action responses). In the case of client-side `react-router-dom` applications the code is already available in the browser anyway so any hiding is just security through obscurity. Furthermore, we would still want to expose the error in the console, so removing it from the UI display is still not hiding any information about the stack trace. Not showing it in the UI _and_ not logging it to to the console would mean that application developers have no information _at all_ about production bugs, which poses its own set of issues. So, again we recommend you always add a root level `errorElement` before deploying your site to production!
+
 ## Throwing Manually
 
 While `errorElement` handles unexpected errors, it can also be used to handle exceptions you expect.

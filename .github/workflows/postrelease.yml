@@ -1,0 +1,17 @@
+name: 🕊 Post-release
+
+on:
+  push:
+    tags:
+      # only run on `react-router` tags
+      - "react-router@*"
+
+jobs:
+  comment:
+    name: 📝 Comment on related issues and pull requests
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/release-comments.yml
+    with:
+      ref: ${{ github.ref }}
+      # this should match the above tag to watch excluding the trailing "@"
+      packageVersionToFollow: "react-router"

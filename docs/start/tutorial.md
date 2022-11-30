@@ -595,7 +595,7 @@ We'll create new contacts by exporting an `action` in our root route, wiring it 
 
 👉 **Create the action and change `<form>` to `<Form>`**
 
-```jsx filename=src/routes/root.jsx lines=[5,7,9-11,22-24]
+```jsx filename=src/routes/root.jsx lines=[5,7,9-11,22-25]
 import {
   Outlet,
   Link,
@@ -1830,7 +1830,7 @@ If you click the button now you should see the star _immediately_ change to the 
 
 ## Not Found Data
 
-What happens if the contact we're trying load doesn't exist?
+What happens if the contact we're trying to load doesn't exist?
 
 <img loading="lazy" class="tutorial" src="/_docs/tutorial/25.webp" />
 
