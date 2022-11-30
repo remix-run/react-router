@@ -1,30 +1,15 @@
 # `react-router-dom`
 
-## 6.4.4-pre.2
+## 6.4.4
 
 ### Patch Changes
 
-- Updated dependencies:
-  - `@remix-run/router@1.0.4-pre.1`
-  - `react-router@6.4.4-pre.2`
-
-## 6.4.4-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@6.4.4-pre.1`
-
-## 6.4.4-pre.0
-
-### Patch Changes
-
+- Fix issues with encoded characters in `NavLink` and descendant `<Routes>` ([#9589](https://github.com/remix-run/react-router/pull/9589), [#9647](https://github.com/remix-run/react-router/pull/9647))
 - Properly serialize/deserialize `ErrorResponse` instances when using built-in hydration ([#9593](https://github.com/remix-run/react-router/pull/9593))
 - Support `basename` in static data routers ([#9591](https://github.com/remix-run/react-router/pull/9591))
-- Fix issues with encoded characters in descendant routes ([#9589](https://github.com/remix-run/react-router/pull/9589))
 - Updated dependencies:
-  - `@remix-run/router@1.0.4-pre.0`
-  - `react-router@6.4.4-pre.0`
+  - `@remix-run/router@1.0.4`
+  - `react-router@6.4.4`
 
 ## 6.4.3
 
