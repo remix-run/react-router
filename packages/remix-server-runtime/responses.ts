@@ -71,7 +71,3 @@ const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
 export function isRedirectResponse(response: Response): boolean {
   return redirectStatusCodes.has(response.status);
 }
-
-export function isCatchResponse(response: Response) {
-  return response.headers.get("X-Remix-Catch") != null;
-}

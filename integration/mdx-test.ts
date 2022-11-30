@@ -17,7 +17,6 @@ test.describe("mdx", () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
-        import { json } from "@remix-run/node";
         import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
@@ -37,10 +36,9 @@ test.describe("mdx", () => {
         `,
 
         "app/routes/blog.jsx": js`
-          import { json } from "@remix-run/node";
           import { useMatches, Outlet } from "@remix-run/react";
 
-          export default function Index() {
+          export default function Blog() {
             const matches = useMatches();
             const mdxMatch = matches[matches.length - 1];
             return (

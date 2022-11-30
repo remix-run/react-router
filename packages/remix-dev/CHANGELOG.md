@@ -1,5 +1,18 @@
 # `@remix-run/dev`
 
+## 1.8.0
+
+### Minor Changes
+
+- Added support for a new route `meta` API to handle arrays of tags instead of an object. For details, check out the [RFC](https://github.com/remix-run/remix/discussions/4462). ([#4610](https://github.com/remix-run/remix/pull/4610))
+
+### Patch Changes
+
+- Importing functions and types from the `remix` package is deprecated, and all exported modules will be removed in the next major release. For more details,[see the release notes for 1.4.0](https://github.com/remix-run/remix/releases/tag/v1.4.0) where these changes were first announced. ([#4661](https://github.com/remix-run/remix/pull/4661))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.8.0`
+  - `@remix-run/serve@1.8.0`
+
 ## 1.7.6
 
 ### Patch Changes

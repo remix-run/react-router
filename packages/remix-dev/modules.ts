@@ -84,6 +84,10 @@ declare module "*.ttf" {
   let asset: string;
   export default asset;
 }
+declare module "*.wasm" {
+  let asset: string;
+  export default asset;
+}
 declare module "*.wav" {
   let asset: string;
   export default asset;

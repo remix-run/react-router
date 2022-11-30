@@ -72,16 +72,14 @@ export async function createAssetsManifest(
     let output = metafile.outputs[key];
     if (!output.entryPoint) continue;
 
-    // When using yarn-pnp, esbuild-plugin-pnp resolves files under the pnp namespace, even entry.client.tsx
-    let entryPointFile = output.entryPoint.replace(/^pnp:/, "");
-    if (path.resolve(entryPointFile) === entryClientFile) {
+    if (path.resolve(output.entryPoint) === entryClientFile) {
       entry = {
         module: resolveUrl(key),
         imports: resolveImports(output.imports),
       };
       // Only parse routes otherwise dynamic imports can fall into here and fail the build
-    } else if (entryPointFile.startsWith("browser-route-module:")) {
-      entryPointFile = entryPointFile.replace(
+    } else if (output.entryPoint.startsWith("browser-route-module:")) {
+      let entryPointFile = output.entryPoint.replace(
         /(^browser-route-module:|\?browser$)/g,
         ""
       );

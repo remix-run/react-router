@@ -3,9 +3,10 @@ import type {
   AgnosticDataRouteObject,
   ActionFunctionArgs,
   LoaderFunctionArgs,
-} from "./router";
-import type { AppLoadContext } from "./data";
-import { callRouteAction, callRouteLoader } from "./data";
+} from "@remix-run/router";
+
+import { type AppLoadContext } from "./data";
+import { callRouteActionRR, callRouteLoaderRR } from "./data";
 import type { ServerRouteModule } from "./routeModules";
 
 export interface RouteManifest<Route> {
@@ -15,7 +16,7 @@ export interface RouteManifest<Route> {
 export type ServerRouteManifest = RouteManifest<Omit<ServerRoute, "children">>;
 
 // NOTE: make sure to change the Route in remix-react if you change this
-interface Route {
+export interface Route {
   index?: boolean;
   caseSensitive?: boolean;
   id: string;
@@ -31,6 +32,7 @@ export interface EntryRoute extends Route {
   hasErrorBoundary: boolean;
   imports?: string[];
   module: string;
+  parentId?: string;
 }
 
 export interface ServerRoute extends Route {
@@ -70,20 +72,20 @@ export function createStaticHandlerDataRoutes(
         path: route.path,
         loader: route.module.loader
           ? (args: LoaderFunctionArgs) =>
-              callRouteLoader({
+              callRouteLoaderRR({
                 ...args,
-                routeId: route.id,
-                loader: route.module.loader,
                 loadContext,
+                loader: route.module.loader!,
+                routeId: route.id,
               })
           : undefined,
         action: route.module.action
           ? (args: ActionFunctionArgs) =>
-              callRouteAction({
+              callRouteActionRR({
                 ...args,
-                routeId: route.id,
-                action: route.module.action,
                 loadContext,
+                action: route.module.action!,
+                routeId: route.id,
               })
           : undefined,
         handle: route.module.handle,

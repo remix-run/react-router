@@ -72,26 +72,6 @@ module.exports = function rollup() {
     },
     getCliConfig({ packageName, version }),
     {
-      external: (id) => isBareModuleId(id),
-      input: [`${sourceDir}/cli/migrate/migrations/transforms.ts`],
-      output: {
-        banner: createBanner("@remix-run/dev", version),
-        dir: `${outputDist}/cli/migrate/migrations`,
-        exports: "named",
-        format: "cjs",
-        preserveModules: true,
-      },
-      plugins: [
-        babel({
-          babelHelpers: "bundled",
-          exclude: /node_modules/,
-          extensions: [".ts"],
-        }),
-        nodeResolve({ extensions: [".ts"] }),
-        copyToPlaygrounds(),
-      ],
-    },
-    {
       external() {
         return true;
       },

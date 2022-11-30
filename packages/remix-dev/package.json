@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/dev",
-  "version": "1.7.6",
+  "version": "1.8.0",
   "description": "Dev tools and CLI for Remix",
   "homepage": "https://remix.run",
   "bugs": {
@@ -20,18 +20,20 @@
   "dependencies": {
     "@babel/core": "^7.18.6",
     "@babel/plugin-syntax-jsx": "^7.18.6",
+    "@babel/plugin-syntax-typescript": "^7.20.0",
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
+    "@babel/types": "^7.20.2",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@npmcli/package-json": "^2.0.0",
-    "@remix-run/server-runtime": "1.7.6",
-    "@yarnpkg/esbuild-plugin-pnp": "3.0.0-rc.11",
+    "@remix-run/server-runtime": "1.8.0",
     "arg": "^5.0.1",
     "cacache": "^15.0.5",
     "chalk": "^4.1.2",
     "chokidar": "^3.5.1",
     "dotenv": "^16.0.0",
-    "esbuild": "0.14.51",
+    "esbuild": "0.15.12",
+    "execa": "5.1.1",
     "exit-hook": "2.2.1",
     "express": "^4.17.1",
     "fast-glob": "3.2.11",
@@ -50,6 +52,7 @@
     "prettier": "2.7.1",
     "pretty-ms": "^7.0.1",
     "proxy-agent": "^5.0.0",
+    "recast": "^0.21.5",
     "remark-frontmatter": "4.0.1",
     "remark-mdx-frontmatter": "^1.0.1",
     "semver": "^7.3.7",
@@ -60,7 +63,7 @@
     "xdm": "^2.0.0"
   },
   "devDependencies": {
-    "@remix-run/serve": "1.7.6",
+    "@remix-run/serve": "1.8.0",
     "@types/cacache": "^15.0.0",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/inquirer": "^8.2.0",
@@ -79,7 +82,7 @@
     "type-fest": "^2.16.0"
   },
   "peerDependencies": {
-    "@remix-run/serve": "1.7.6"
+    "@remix-run/serve": "1.8.0"
   },
   "peerDependenciesMeta": {
     "@remix-run/serve": {

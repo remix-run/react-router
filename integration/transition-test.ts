@@ -213,10 +213,13 @@ test.describe("rendering", () => {
     await app.goto("/");
     let responses = app.collectDataResponses();
     await app.clickLink(`/${PAGE}`);
+    await page.waitForLoadState("networkidle");
 
     expect(
-      responses.map((res) => new URL(res.url()).searchParams.get("_data"))
-    ).toEqual([`routes/${PAGE}`, `routes/${PAGE}/index`]);
+      responses
+        .map((res) => new URL(res.url()).searchParams.get("_data"))
+        .sort()
+    ).toEqual([`routes/${PAGE}`, `routes/${PAGE}/index`].sort());
 
     await page.waitForSelector(`h2:has-text("${PAGE_TEXT}")`);
     await page.waitForSelector(`h3:has-text("${PAGE_INDEX_TEXT}")`);
@@ -227,6 +230,7 @@ test.describe("rendering", () => {
     await app.goto(`/${PAGE}`);
     let responses = app.collectDataResponses();
     await app.clickLink(`/${PAGE}/${CHILD}`);
+    await page.waitForLoadState("networkidle");
 
     expect(
       responses.map((res) => new URL(res.url()).searchParams.get("_data"))
@@ -244,6 +248,7 @@ test.describe("rendering", () => {
 
     await app.clickLink(`/${REDIRECT}`);
     await page.waitForURL(/\/page/);
+    await page.waitForLoadState("networkidle");
 
     expect(
       responses

@@ -2,13 +2,14 @@ import * as path from "path";
 import * as esbuild from "esbuild";
 import * as fse from "fs-extra";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
-import { pnpPlugin as yarnPnpPlugin } from "@yarnpkg/esbuild-plugin-pnp";
 
+import { type ReadChannel } from "../channel";
 import { type RemixConfig } from "../config";
 import { type AssetsManifest } from "./assets";
 import { loaders } from "./loaders";
 import { type CompileOptions } from "./options";
 import { cssFilePlugin } from "./plugins/cssFilePlugin";
+import { deprecatedRemixPackagePlugin } from "./plugins/deprecatedRemixPackagePlugin";
 import { emptyModulesPlugin } from "./plugins/emptyModulesPlugin";
 import { mdxPlugin } from "./plugins/mdx";
 import { serverAssetsManifestPlugin } from "./plugins/serverAssetsManifestPlugin";
@@ -16,7 +17,6 @@ import { serverBareModulesPlugin } from "./plugins/serverBareModulesPlugin";
 import { serverEntryModulePlugin } from "./plugins/serverEntryModulePlugin";
 import { serverRouteModulesPlugin } from "./plugins/serverRouteModulesPlugin";
 import { urlImportsPlugin } from "./plugins/urlImportsPlugin";
-import { type ReadChannel } from "./utils/channel";
 
 export type ServerCompiler = {
   // produce ./build/index.js
@@ -48,6 +48,7 @@ const createEsbuildConfig = (
   let isDenoRuntime = config.serverBuildTarget === "deno";
 
   let plugins: esbuild.Plugin[] = [
+    deprecatedRemixPackagePlugin(options.onWarning),
     cssFilePlugin(options),
     urlImportsPlugin(),
     mdxPlugin(config),
@@ -56,7 +57,6 @@ const createEsbuildConfig = (
     serverEntryModulePlugin(config),
     serverAssetsManifestPlugin(assetsManifestChannel.read()),
     serverBareModulesPlugin(config, options.onWarning),
-    yarnPnpPlugin(),
   ];
 
   if (config.serverPlatform !== "node") {

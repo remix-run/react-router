@@ -1,6 +1,5 @@
-import { spawnSync } from "child_process";
 import { tmpdir } from "os";
-import { join, resolve } from "path";
+import { join } from "path";
 import glob from "fast-glob";
 import {
   copySync,
@@ -13,8 +12,8 @@ import shell from "shelljs";
 import stripAnsi from "strip-ansi";
 import type { PackageJson, TsConfigJson } from "type-fest";
 
-import { run } from "../../cli/run";
 import { readConfig } from "../../config";
+import { convertToJavaScript } from "../../cli/migrate/migrations/convert-to-javascript";
 
 let output: string;
 const ORIGINAL_IO = {
@@ -107,46 +106,11 @@ const makeApp = () => {
   return projectDir;
 };
 
-const getRunArgs = (projectDir: string) => [
-  "migrate",
-  "--migration",
-  "convert-to-javascript",
-  projectDir,
-  "--force",
-];
-const runConvertToJavaScriptMigrationProgrammatically = (projectDir: string) =>
-  run([...getRunArgs(projectDir), "--no-interactive"]);
-const runConvertToJavaScriptMigrationViaCLI = (projectDir: string) =>
-  spawnSync(
-    "node",
-    [
-      "--require",
-      require.resolve("esbuild-register"),
-      "--require",
-      join(__dirname, "..", "msw.ts"),
-      resolve(__dirname, "..", "..", "cli.ts"),
-      ...getRunArgs(projectDir),
-      "--interactive",
-    ],
-    { cwd: projectDir }
-  ).stdout?.toString("utf-8");
-
 describe("`convert-to-javascript` migration", () => {
-  it("runs successfully when ran via CLI", async () => {
-    let projectDir = makeApp();
-
-    let output = runConvertToJavaScriptMigrationViaCLI(projectDir);
-
-    await checkMigrationRanSuccessfully(projectDir);
-
-    expect(output).toContain("✅ Your JavaScript looks good!");
-    expect(output).toContain("successfully migrated");
-  });
-
   it("runs successfully when ran programmatically", async () => {
     let projectDir = makeApp();
 
-    await runConvertToJavaScriptMigrationProgrammatically(projectDir);
+    await convertToJavaScript(projectDir, { force: true });
 
     await checkMigrationRanSuccessfully(projectDir);
 

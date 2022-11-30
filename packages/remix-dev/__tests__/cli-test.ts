@@ -99,7 +99,7 @@ describe("remix CLI", () => {
             $ remix routes [projectDir]
             $ remix watch [projectDir]
             $ remix setup [remixPlatform]
-            $ remix migrate [-m migration] [projectDir]
+            $ remix codemod <codemod> [projectDir]
 
           Options:
             --help, -h          Print this help message and exit
@@ -119,17 +119,14 @@ describe("remix CLI", () => {
             --no-delete         Skip deleting the \`remix.init\` script
           \`routes\` Options:
             --json              Print the routes as JSON
-          \`migrate\` Options:
-            --debug             Show debugging logs
+          \`codemod\` Options:
             --dry               Dry run (no changes are made to files)
-            --force             Bypass Git safety checks and forcibly run migration
-            --migration, -m     Name of the migration to run
+            --force             Bypass Git safety checks
 
           Values:
             - projectDir        The Remix project directory
             - template          The project template to use
             - remixPlatform     \`node\` or \`cloudflare\`
-            - migration         One of the choices from https://github.com/remix-run/remix/blob/main/packages/remix-dev/cli/migrate/migrations/index.ts
 
           Creating a new project:
 
