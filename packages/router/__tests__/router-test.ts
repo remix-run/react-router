@@ -5052,12 +5052,21 @@ describe("a router", () => {
       // Assert request internals, cannot do a deep comparison above since some
       // internals aren't the same on separate creations
       let request = nav.actions.tasks.stub.mock.calls[0][0].request;
-      expect(request.url).toBe("http://localhost/tasks");
       expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/tasks");
       expect(request.headers.get("Content-Type")).toBe(
         "application/x-www-form-urlencoded;charset=UTF-8"
       );
       expect((await request.formData()).get("query")).toBe("params");
+
+      await nav.actions.tasks.resolve("TASKS ACTION");
+      let rootLoaderRequest = nav.loaders.root.stub.mock.calls[0][0].request;
+      expect(rootLoaderRequest.method).toBe("GET");
+      expect(rootLoaderRequest.url).toBe("http://localhost/tasks");
+
+      let tasksLoaderRequest = nav.loaders.tasks.stub.mock.calls[0][0].request;
+      expect(tasksLoaderRequest.method).toBe("GET");
+      expect(tasksLoaderRequest.url).toBe("http://localhost/tasks");
     });
 
     it("sends proper arguments to actions (using query string)", async () => {
@@ -10379,9 +10388,12 @@ describe("a router", () => {
     }
 
     function createSubmitRequest(path: string, opts?: RequestInit) {
+      let searchParams = new URLSearchParams();
+      searchParams.append("key", "value");
+
       return createRequest(path, {
         method: "post",
-        body: createFormData({ key: "value" }),
+        body: searchParams,
         ...opts,
       });
     }
@@ -10849,6 +10861,75 @@ describe("a router", () => {
           },
           matches: [{ route: { id: "root" } }],
         });
+      });
+
+      it("should send proper arguments to loaders", async () => {
+        let rootLoaderStub = jest.fn(() => "ROOT");
+        let childLoaderStub = jest.fn(() => "CHILD");
+        let { query } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            loader: rootLoaderStub,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                loader: childLoaderStub,
+              },
+            ],
+          },
+        ]);
+        await query(createRequest("/child"));
+
+        // @ts-expect-error
+        let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
+        // @ts-expect-error
+        let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
+        expect(rootLoaderRequest.method).toBe("GET");
+        expect(rootLoaderRequest.url).toBe("http://localhost/child");
+        expect(childLoaderRequest.method).toBe("GET");
+        expect(childLoaderRequest.url).toBe("http://localhost/child");
+      });
+
+      it("should send proper arguments to actions", async () => {
+        let actionStub = jest.fn(() => "ACTION");
+        let rootLoaderStub = jest.fn(() => "ROOT");
+        let childLoaderStub = jest.fn(() => "CHILD");
+        let { query } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            loader: rootLoaderStub,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                action: actionStub,
+                loader: childLoaderStub,
+              },
+            ],
+          },
+        ]);
+        await query(createSubmitRequest("/child"));
+
+        // @ts-expect-error
+        let actionRequest = actionStub.mock.calls[0][0]?.request;
+        expect(actionRequest.method).toBe("POST");
+        expect(actionRequest.url).toBe("http://localhost/child");
+        expect(actionRequest.headers.get("Content-Type")).toBe(
+          "application/x-www-form-urlencoded;charset=UTF-8"
+        );
+        expect((await actionRequest.formData()).get("key")).toBe("value");
+
+        // @ts-expect-error
+        let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
+        // @ts-expect-error
+        let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
+        expect(rootLoaderRequest.method).toBe("GET");
+        expect(rootLoaderRequest.url).toBe("http://localhost/child");
+        expect(childLoaderRequest.method).toBe("GET");
+        expect(childLoaderRequest.url).toBe("http://localhost/child");
       });
 
       describe("statusCode", () => {
