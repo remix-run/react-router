@@ -8,6 +8,7 @@ import { JSDOM } from "jsdom";
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import {
+  BrowserRouter,
   MemoryRouter,
   Routes,
   Route,
@@ -188,6 +189,37 @@ describe("NavLink", () => {
       let anchor = renderer.root.findByType("a");
 
       expect(anchor.children[0]).toMatch("Home (current)");
+    });
+
+    it("matches when portions of the url are encoded", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <BrowserRouter window={getWindow("/users/matt brophy")}>
+            <Routes>
+              <Route
+                path="/users/:name"
+                element={
+                  <>
+                    <NavLink to=".">Matt</NavLink>
+                    <NavLink to="/users/matt brophy">Matt</NavLink>
+                    <NavLink to="/users/michael jackson">Michael</NavLink>
+                  </>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
+        );
+      });
+
+      let anchors = renderer.root.findAllByType("a");
+
+      expect(anchors.map((a) => a.props.className)).toEqual([
+        "active",
+        "active",
+        "",
+      ]);
     });
   });
 
@@ -509,7 +541,7 @@ describe("NavLink using a data router", () => {
     fireEvent.click(screen.getByText("Link to Bar"));
     expect(screen.getByText("Link to Bar").className).toBe("pending");
 
-    dfd.resolve();
+    dfd.resolve(null);
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar").className).toBe("active");
   });
@@ -562,7 +594,7 @@ describe("NavLink using a data router", () => {
       "some-pending-classname"
     );
 
-    dfd.resolve();
+    dfd.resolve(null);
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar").className).toBe(
       "some-active-classname"
@@ -617,7 +649,7 @@ describe("NavLink using a data router", () => {
       "lowercase"
     );
 
-    dfd.resolve();
+    dfd.resolve(null);
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar").style.textTransform).toBe(
       "uppercase"
@@ -667,7 +699,7 @@ describe("NavLink using a data router", () => {
     fireEvent.click(screen.getByText("Link to Bar (idle)"));
     expect(screen.getByText("Link to Bar (loading...)")).toBeDefined();
 
-    dfd.resolve();
+    dfd.resolve(null);
     await waitFor(() => screen.getByText("Bar page"));
     expect(screen.getByText("Link to Bar (current)")).toBeDefined();
   });
@@ -708,9 +740,67 @@ describe("NavLink using a data router", () => {
     fireEvent.click(screen.getByText("Link to Baz"));
     expect(screen.getByText("Link to Bar").className).toBe("");
 
-    dfd.resolve();
+    dfd.resolve(null);
     await waitFor(() => screen.getByText("Baz page"));
     expect(screen.getByText("Link to Bar").className).toBe("");
+  });
+
+  it("applies the default 'active'/'pending' classNames when the url has encoded characters", async () => {
+    let barDfd = createDeferred();
+    let bazDfd = createDeferred();
+    let router = createBrowserRouter(
+      createRoutesFromElements(
+        <Route path="/" element={<Layout />}>
+          <Route path="foo" element={<p>Foo page</p>} />
+          <Route
+            path="bar/:param"
+            loader={() => barDfd.promise}
+            element={<p>Bar page</p>}
+          />
+          <Route
+            path="baz-✅"
+            loader={() => bazDfd.promise}
+            element={<p>Baz page</p>}
+          />
+        </Route>
+      ),
+      {
+        window: getWindow("/foo"),
+      }
+    );
+    render(<RouterProvider router={router} />);
+
+    function Layout() {
+      return (
+        <>
+          <NavLink to="/foo">Link to Foo</NavLink>
+          <NavLink to="/bar/matt brophy">Link to Bar</NavLink>
+          <NavLink to="/baz-✅">Link to Baz</NavLink>
+          <Outlet />
+        </>
+      );
+    }
+
+    expect(screen.getByText("Link to Bar").className).toBe("");
+    expect(screen.getByText("Link to Baz").className).toBe("");
+
+    fireEvent.click(screen.getByText("Link to Bar"));
+    expect(screen.getByText("Link to Bar").className).toBe("pending");
+    expect(screen.getByText("Link to Baz").className).toBe("");
+
+    barDfd.resolve(null);
+    await waitFor(() => screen.getByText("Bar page"));
+    expect(screen.getByText("Link to Bar").className).toBe("active");
+    expect(screen.getByText("Link to Baz").className).toBe("");
+
+    fireEvent.click(screen.getByText("Link to Baz"));
+    expect(screen.getByText("Link to Bar").className).toBe("active");
+    expect(screen.getByText("Link to Baz").className).toBe("pending");
+
+    bazDfd.resolve(null);
+    await waitFor(() => screen.getByText("Baz page"));
+    expect(screen.getByText("Link to Bar").className).toBe("");
+    expect(screen.getByText("Link to Baz").className).toBe("active");
   });
 });
 

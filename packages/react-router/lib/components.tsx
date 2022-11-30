@@ -69,6 +69,7 @@ export function RouterProvider({
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
+      encodeLocation: router.encodeLocation,
       go: (n) => router.navigate(n),
       push: (to, state, opts) =>
         router.navigate(to, {

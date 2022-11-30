@@ -81,6 +81,14 @@ export function StaticRouter({
     createHref(to: To) {
       return typeof to === "string" ? to : createPath(to);
     },
+    encodeLocation(to: To) {
+      let path = typeof to === "string" ? parsePath(to) : to;
+      return {
+        pathname: path.pathname || "",
+        search: path.search || "",
+        hash: path.hash || "",
+      };
+    },
     push(to: To) {
       throw new Error(
         `You cannot use navigator.push() on the server because it is a stateless ` +

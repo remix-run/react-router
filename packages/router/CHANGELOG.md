@@ -1,5 +1,15 @@
 # `@remix-run/router`
 
+## 1.0.4
+
+### Patch Changes
+
+- Throw an error if an `action`/`loader` function returns `undefined` as revalidations need to know whether the loader has previously been executed. `undefined` also causes issues during SSR stringification for hydration. You should always ensure you `loader`/`action` returns a value, and you may return `null` if you don't wish to return anything. ([#9511](https://github.com/remix-run/react-router/pull/9511))
+- Properly handle redirects to external domains ([#9590](https://github.com/remix-run/react-router/pull/9590), [#9654](https://github.com/remix-run/react-router/pull/9654))
+- Preserve the HTTP method on 307/308 redirects ([#9597](https://github.com/remix-run/react-router/pull/9597))
+- Support `basename` in static data routers ([#9591](https://github.com/remix-run/react-router/pull/9591))
+- Enhanced `ErrorResponse` bodies to contain more descriptive text in internal 403/404/405 scenarios
+
 ## 1.0.3
 
 ### Patch Changes

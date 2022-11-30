@@ -17,6 +17,21 @@ describe("A <Link> in a <StaticRouter>", () => {
 
       expect(renderer.root.findByType("a").props.href).toEqual("/mjackson");
     });
+
+    it("uses the right href with a basename", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <StaticRouter location="/base" basename="/base">
+            <Link to="mjackson" />
+          </StaticRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "/base/mjackson"
+      );
+    });
   });
 
   describe("with an object", () => {

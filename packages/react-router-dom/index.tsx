@@ -14,7 +14,6 @@ import {
   createPath,
   useHref,
   useLocation,
-  useMatch,
   useMatches,
   useNavigate,
   useNavigation,
@@ -42,7 +41,7 @@ import {
   createHashHistory,
   invariant,
   joinPaths,
-  matchPath,
+  ErrorResponse,
 } from "@remix-run/router";
 
 import type {
@@ -205,7 +204,7 @@ export function createBrowserRouter(
   return createRouter({
     basename: opts?.basename,
     history: createBrowserHistory({ window: opts?.window }),
-    hydrationData: opts?.hydrationData || window?.__staticRouterHydrationData,
+    hydrationData: opts?.hydrationData || parseHydrationData(),
     routes: enhanceManualRouteObjects(routes),
   }).initialize();
 }
@@ -221,10 +220,45 @@ export function createHashRouter(
   return createRouter({
     basename: opts?.basename,
     history: createHashHistory({ window: opts?.window }),
-    hydrationData: opts?.hydrationData || window?.__staticRouterHydrationData,
+    hydrationData: opts?.hydrationData || parseHydrationData(),
     routes: enhanceManualRouteObjects(routes),
   }).initialize();
 }
+
+function parseHydrationData(): HydrationState | undefined {
+  let state = window?.__staticRouterHydrationData;
+  if (state && state.errors) {
+    state = {
+      ...state,
+      errors: deserializeErrors(state.errors),
+    };
+  }
+  return state;
+}
+
+function deserializeErrors(
+  errors: RemixRouter["state"]["errors"]
+): RemixRouter["state"]["errors"] {
+  if (!errors) return null;
+  let entries = Object.entries(errors);
+  let serialized: RemixRouter["state"]["errors"] = {};
+  for (let [key, val] of entries) {
+    // Hey you!  If you change this, please change the corresponding logic in
+    // serializeErrors in react-router-dom/server.tsx :)
+    if (val && val.__type === "RouteErrorResponse") {
+      serialized[key] = new ErrorResponse(
+        val.status,
+        val.statusText,
+        val.data,
+        val.internal === true
+      );
+    } else {
+      serialized[key] = val;
+    }
+  }
+  return serialized;
+}
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -444,8 +478,11 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let path = useResolvedPath(to, { relative: rest.relative });
     let location = useLocation();
     let routerState = React.useContext(DataRouterStateContext);
+    let { navigator } = React.useContext(NavigationContext);
 
-    let toPathname = path.pathname;
+    let toPathname = navigator.encodeLocation
+      ? navigator.encodeLocation(path).pathname
+      : path.pathname;
     let locationPathname = location.pathname;
     let nextLocationPathname =
       routerState && routerState.navigation && routerState.navigation.location
@@ -629,7 +666,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
 );
 
 if (__DEV__) {
-  Form.displayName = "Form";
+  FormImpl.displayName = "FormImpl";
 }
 
 interface ScrollRestorationProps {

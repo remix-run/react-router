@@ -41,6 +41,7 @@ export interface RedirectResult {
   status: number;
   location: string;
   revalidate: boolean;
+  external: boolean;
 }
 
 /**
@@ -61,7 +62,9 @@ export type DataResult =
   | RedirectResult
   | ErrorResult;
 
-export type FormMethod = "get" | "post" | "put" | "patch" | "delete";
+export type SubmissionFormMethod = "post" | "put" | "patch" | "delete";
+export type FormMethod = "get" | SubmissionFormMethod;
+
 export type FormEncType =
   | "application/x-www-form-urlencoded"
   | "multipart/form-data";
@@ -72,7 +75,7 @@ export type FormEncType =
  * external consumption
  */
 export interface Submission {
-  formMethod: Exclude<FormMethod, "get">;
+  formMethod: SubmissionFormMethod;
   formAction: string;
   formEncType: FormEncType;
   formData: FormData;
@@ -1243,11 +1246,24 @@ export class ErrorResponse {
   status: number;
   statusText: string;
   data: any;
+  error?: Error;
+  internal: boolean;
 
-  constructor(status: number, statusText: string | undefined, data: any) {
+  constructor(
+    status: number,
+    statusText: string | undefined,
+    data: any,
+    internal = false
+  ) {
     this.status = status;
     this.statusText = statusText || "";
-    this.data = data;
+    this.internal = internal;
+    if (data instanceof Error) {
+      this.data = data.toString();
+      this.error = data;
+    } else {
+      this.data = data;
+    }
   }
 }
 
