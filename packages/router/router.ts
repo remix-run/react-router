@@ -2252,7 +2252,10 @@ export function unstable_createStaticHandler(
     if (matchesToLoad.length === 0) {
       return {
         matches,
-        loaderData: {},
+        loaderData: matches.reduce(
+          (acc, m) => Object.assign(acc, { [m.route.id]: null }),
+          {}
+        ),
         errors: pendingActionError || null,
         statusCode: 200,
         loaderHeaders: {},
@@ -2280,7 +2283,9 @@ export function unstable_createStaticHandler(
 
     // Can't do anything with these without the Remix side of things, so just
     // cancel them for now
-    results.forEach((result) => {
+    let executedLoaders = new Set<string>();
+    results.forEach((result, i) => {
+      executedLoaders.add(matchesToLoad[i].route.id);
       if (isDeferredResult(result)) {
         result.deferredData.cancel();
       }
@@ -2293,6 +2298,16 @@ export function unstable_createStaticHandler(
       results,
       pendingActionError
     );
+
+    // Add a null for any routes that didn't have loaders so we know they've been
+    // previously "executed" and qualify as a revalidation on subsequent
+    // invocations.  This is mostly needed for SSr scenarios where there may be
+    // no server loader but there may be a client loaders to fetch code split bundles
+    matches.forEach((match) => {
+      if (!executedLoaders.has(match.route.id)) {
+        context.loaderData[match.route.id] = null;
+      }
+    });
 
     return {
       ...context,
