@@ -923,10 +923,9 @@ export function useFormAction(
   invariant(routeContext, "useFormAction must be used inside a RouteContext");
 
   let [match] = routeContext.matches.slice(-1);
-  let resolvedAction = action ?? ".";
   // Shallow clone path so we can modify it below, otherwise we modify the
   // object referenced by useMemo inside useResolvedPath
-  let path = { ...useResolvedPath(resolvedAction, { relative }) };
+  let path = { ...useResolvedPath(action ? action : ".", { relative }) };
 
   // Previously we set the default action to ".". The problem with this is that
   // `useResolvedPath(".")` excludes search params and the hash of the resolved
