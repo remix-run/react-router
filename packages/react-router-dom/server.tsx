@@ -157,6 +157,12 @@ function serializeErrors(
     // deserializeErrors in react-router-dom/index.tsx :)
     if (isRouteErrorResponse(val)) {
       serialized[key] = { ...val, __type: "RouteErrorResponse" };
+    } else if (val instanceof Error) {
+      serialized[key] = {
+        message: val.message,
+        stack: val.stack,
+        __type: "Error",
+      };
     } else {
       serialized[key] = val;
     }

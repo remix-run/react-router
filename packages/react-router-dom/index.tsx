@@ -252,6 +252,10 @@ function deserializeErrors(
         val.data,
         val.internal === true
       );
+    } else if (val && val.__type === "Error") {
+      let error = new Error(val.message);
+      error.stack = val.stack;
+      serialized[key] = error;
     } else {
       serialized[key] = val;
     }
