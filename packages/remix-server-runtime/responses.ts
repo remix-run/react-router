@@ -5,7 +5,7 @@ export type JsonFunction = <Data extends unknown>(
 
 // must be a type since this is a subtype of response
 // interfaces must conform to the types they extend
-export type TypedResponse<T extends unknown = unknown> = Response & {
+export type TypedResponse<T extends unknown = unknown> = Omit<Response, 'json'> & {
   json(): Promise<T>;
 };
 

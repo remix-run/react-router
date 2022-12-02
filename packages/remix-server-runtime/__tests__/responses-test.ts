@@ -44,6 +44,11 @@ describe("json", () => {
     expect(result).toMatchObject({ hello: "remix" });
   });
 
+  it("disallows unmatched typed responses", async () => {
+    let response = json("hello");
+    isEqual<TypedResponse<number>, typeof response>(false);
+  });
+
   it("disallows unserializables", () => {
     // @ts-expect-error
     expect(() => json(124n)).toThrow();
