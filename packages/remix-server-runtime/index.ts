@@ -8,8 +8,8 @@ export { json, redirect } from "./responses";
 export { createRequestHandler } from "./server";
 export {
   createSession,
-  isSession,
   createSessionStorageFactory,
+  isSession,
 } from "./sessions";
 export { createCookieSessionStorageFactory } from "./sessions/cookieStorage";
 export { createMemorySessionStorageFactory } from "./sessions/memoryStorage";
@@ -71,6 +71,24 @@ export type {
   SignFunction,
   TypedResponse,
   UnsignFunction,
-  UploadHandlerPart,
   UploadHandler,
+  UploadHandlerPart,
 } from "./reexport";
+
+export type {
+  AgnosticDataRouteObject,
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
+  AgnosticRouteObject,
+  InitialEntry,
+  Location,
+  MemoryHistory,
+  StaticHandler,
+} from "./router";
+export {
+  createMemoryHistory,
+  matchRoutes,
+  unstable_createStaticHandler,
+} from "./router";
+export type { Update } from "./router/history";
+export type { AgnosticRouteMatch } from "./router/utils";
