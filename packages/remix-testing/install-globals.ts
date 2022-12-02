@@ -1,9 +1,11 @@
 import { installGlobals as installNodeGlobals } from "@remix-run/node";
 
-export async function installGlobals(framework: 'jsdom' | 'happy-dom' = 'jsdom') {
+export async function installGlobals(
+  framework: "jsdom" | "happy-dom" = "jsdom"
+) {
   installNodeGlobals();
 
-  if (framework === 'happy-dom') {
+  if (framework === "happy-dom") {
     throw new Error(
       `happy-dom is not currently supported as it doesn't have a FormData implementation`
     );
