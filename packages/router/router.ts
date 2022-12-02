@@ -1327,7 +1327,7 @@ export function createRouter(init: RouterInit): Router {
       state.fetchers.set(key, loadingFetcher);
       updateState({ fetchers: new Map(state.fetchers) });
 
-      return startRedirectNavigation(state, actionResult);
+      return startRedirectNavigation(state, actionResult, false, true);
     }
 
     // Process any non-redirect errors thrown
@@ -1587,13 +1587,23 @@ export function createRouter(init: RouterInit): Router {
   async function startRedirectNavigation(
     state: RouterState,
     redirect: RedirectResult,
-    replace?: boolean
+    replace?: boolean,
+    isFetchActionRedirect?: boolean
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
     }
 
-    let redirectLocation = createLocation(state.location, redirect.location);
+    let redirectLocation = createLocation(
+      state.location,
+      redirect.location,
+      // TODO: This can be removed once we get rid of useTransition in Remix v2
+      isFetchActionRedirect
+        ? {
+            isFetchActionRedirect: true,
+          }
+        : undefined
+    );
     invariant(
       redirectLocation,
       "Expected a location on the redirect navigation"
