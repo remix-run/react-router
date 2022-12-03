@@ -41,6 +41,8 @@ import {
   RouteErrorContext,
   AwaitContext,
 } from "./context";
+import type { SerializeFrom } from "./serialize";
+import type { ArbitraryFunction } from "./serialize";
 
 /**
  * Returns the full href for the given "to" value. This is useful for building
@@ -799,7 +801,9 @@ export function useMatches() {
 /**
  * Returns the loader data for the nearest ancestor Route loader
  */
-export function useLoaderData(): unknown {
+export function useLoaderData<
+  T extends ArbitraryFunction = () => unknown
+>(): SerializeFrom<T> {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
 
@@ -823,7 +827,9 @@ export function useRouteLoaderData(routeId: string): unknown {
 /**
  * Returns the action data for the nearest ancestor Route action
  */
-export function useActionData(): unknown {
+export function useActionData<
+  T extends ArbitraryFunction = () => unknown
+>(): SerializeFrom<T> {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
 
   let route = React.useContext(RouteContext);
