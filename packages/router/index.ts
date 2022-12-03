@@ -24,6 +24,7 @@ export type {
   RedirectFunction,
   ShouldRevalidateFunction,
   V7_FormMethod,
+  TypedResponse,
 } from "./utils";
 
 export {

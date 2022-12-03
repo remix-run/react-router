@@ -1197,14 +1197,23 @@ export const normalizeSearch = (search: string): string =>
 export const normalizeHash = (hash: string): string =>
   !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
 
-export type JsonFunction = <Data>(
+export type JsonFunction = <Data extends unknown>(
   data: Data,
   init?: number | ResponseInit
-) => Response;
+) => TypedResponse<Data>;
+
+export type TypedResponse<T extends unknown = unknown> = Omit<
+  Response,
+  "json"
+> & {
+  json(): Promise<T>;
+};
 
 /**
  * This is a shortcut for creating `application/json` responses. Converts `data`
  * to JSON and sets the `Content-Type` header.
+ *
+ * @see https://reactrouter.com/fetch/json
  */
 export const json: JsonFunction = (data, init = {}) => {
   let responseInit = typeof init === "number" ? { status: init } : init;
@@ -1418,11 +1427,13 @@ export const defer: DeferFunction = (data, init = {}) => {
 export type RedirectFunction = (
   url: string,
   init?: number | ResponseInit
-) => Response;
+) => TypedResponse<never>;
 
 /**
  * A redirect response. Sets the status code and the `Location` header.
  * Defaults to "302 Found".
+ *
+ * @see https://reactrouter.com/fetch/redirect
  */
 export const redirect: RedirectFunction = (url, init = 302) => {
   let responseInit = init;
@@ -1438,7 +1449,7 @@ export const redirect: RedirectFunction = (url, init = 302) => {
   return new Response(null, {
     ...responseInit,
     headers,
-  });
+  }) as TypedResponse<never>;
 };
 
 /**
