@@ -1047,7 +1047,7 @@ export interface TrackedPromise extends Promise<any> {
 
 export class AbortedDeferredError extends Error {}
 
-export class DeferredData<Data = Record<string, unknown>> {
+export class DeferredData<Data extends Record<string, unknown> = Record<string, unknown>> {
   private pendingKeys: Set<string | number> = new Set<string | number>();
   private controller: AbortController;
   private abortPromise: Promise<void>;
