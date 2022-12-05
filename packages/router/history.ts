@@ -544,7 +544,7 @@ export function parsePath(path: string): Partial<Path> {
   return parsedPath;
 }
 
-export function createURL(location: Location | string): URL {
+export function createClientSideURL(location: Location | string): URL {
   // window.location.origin is "null" (the literal string value) in Firefox
   // under certain conditions, notably when serving from a local HTML file
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
@@ -643,7 +643,9 @@ function getUrlBasedHistory(
     },
     encodeLocation(to) {
       // Encode a Location the same way window.location would
-      let url = createURL(typeof to === "string" ? to : createPath(to));
+      let url = createClientSideURL(
+        typeof to === "string" ? to : createPath(to)
+      );
       return {
         pathname: url.pathname,
         search: url.search,
