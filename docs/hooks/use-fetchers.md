@@ -44,8 +44,8 @@ When the user clicks a checkbox, the submission goes to the action to change the
 function Task({ task }) {
   const { projectId, id } = task;
   const toggle = useFetcher();
-  const checked =
-    toggle.formData?.get("complete") || task.complete;
+  const checked = toggle.formData
+    ? toggle.formData.get("complete") === "on" : task.complete;
 
   return (
     <toggle.Form
