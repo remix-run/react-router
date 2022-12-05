@@ -8,5 +8,7 @@
     "react-router-native": "6.4.4",
     "@remix-run/router": "1.0.4"
   },
-  "changesets": []
+  "changesets": [
+    "pretty-kiwis-study"
+  ]
 }

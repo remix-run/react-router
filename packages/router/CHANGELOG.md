@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.0.5-pre.0
+
+### Patch Changes
+
+- Fix requests sent to revalidating loaders so they reflect a GET request ([#9680](https://github.com/remix-run/react-router/pull/9680))
+
 ## 1.0.4
 
 ### Patch Changes
