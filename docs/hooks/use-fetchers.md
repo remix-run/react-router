@@ -98,7 +98,7 @@ function ProjectTaskCount({ project }) {
   const fetchers = useFetchers();
 
   // Find this project's fetchers
-  let projectFetchers = fetchers.filter((fetcher) => {
+  const relevantFetchers = fetchers.filter((fetcher) => {
     return fetcher.formAction?.startsWith(
       `/projects/${project.id}/tasks/`
     );
@@ -106,7 +106,7 @@ function ProjectTaskCount({ project }) {
 
   // Store in a map for easy lookup
   const myFetchers = new Map(
-    fetchers.map(({ formData }) => [
+    relevantFetchers.map(({ formData }) => [
       formData.get("id"),
       formData.get("complete") === "on",
     ])
