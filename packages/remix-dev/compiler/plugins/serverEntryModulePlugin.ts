@@ -33,6 +33,8 @@ export function serverEntryModulePlugin(config: RemixConfig): Plugin {
 import * as entryServer from ${JSON.stringify(`./${config.entryServerFile}`)};
 ${Object.keys(config.routes)
   .map((key, index) => {
+    // IMPORTANT: Any values exported from this generated module must also be
+    // typed in `packages/remix-dev/server-build.ts` to avoid tsc errors.
     let route = config.routes[key];
     return `import * as route${index} from ${JSON.stringify(
       `./${route.file}`
