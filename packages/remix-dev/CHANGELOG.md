@@ -1,13 +1,13 @@
 # `@remix-run/dev`
 
-## 1.8.1-pre.0
+## 1.8.1
 
 ### Patch Changes
 
 - Added a missing type definition for the Remix config `future` option to the `@remix-run/dev/server-build` virtual module ([#4771](https://github.com/remix-run/remix/pull/4771))
 - Updated dependencies:
-  - `@remix-run/serve@1.8.1-pre.0`
-  - `@remix-run/server-runtime@1.8.1-pre.0`
+  - `@remix-run/serve@1.8.1`
+  - `@remix-run/server-runtime@1.8.1`
 
 ## 1.8.0
 
