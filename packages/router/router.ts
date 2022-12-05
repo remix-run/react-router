@@ -3,7 +3,8 @@ import {
   Action as HistoryAction,
   createLocation,
   createPath,
-  createURL,
+  createClientSideURL,
+  invariant,
   parsePath,
 } from "./history";
 import type {
@@ -28,7 +29,6 @@ import {
   ResultType,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
-  invariant,
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,
@@ -913,7 +913,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Create a controller/Request for this navigation
     pendingNavigationController = new AbortController();
-    let request = createRequest(
+    let request = createClientSideRequest(
       location,
       pendingNavigationController.signal,
       opts && opts.submission
@@ -954,7 +954,7 @@ export function createRouter(init: RouterInit): Router {
       loadingNavigation = navigation;
 
       // Create a GET request for the loaders
-      request = createRequest(request.url, request.signal);
+      request = new Request(request.url, { signal: request.signal });
     }
 
     // Call loaders
@@ -1299,7 +1299,11 @@ export function createRouter(init: RouterInit): Router {
 
     // Call the action for the fetcher
     let abortController = new AbortController();
-    let fetchRequest = createRequest(path, abortController.signal, submission);
+    let fetchRequest = createClientSideRequest(
+      path,
+      abortController.signal,
+      submission
+    );
     fetchControllers.set(key, abortController);
 
     let actionResult = await callLoaderOrAction(
@@ -1346,7 +1350,7 @@ export function createRouter(init: RouterInit): Router {
     // Start the data load for current matches, or the next location if we're
     // in the middle of a navigation
     let nextLocation = state.navigation.location || state.location;
-    let revalidationRequest = createRequest(
+    let revalidationRequest = createClientSideRequest(
       nextLocation,
       abortController.signal
     );
@@ -1501,7 +1505,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Call the loader for this fetcher route match
     let abortController = new AbortController();
-    let fetchRequest = createRequest(path, abortController.signal);
+    let fetchRequest = createClientSideRequest(path, abortController.signal);
     fetchControllers.set(key, abortController);
     let result: DataResult = await callLoaderOrAction(
       "loader",
@@ -1675,7 +1679,7 @@ export function createRouter(init: RouterInit): Router {
       ...fetchersToLoad.map(([, href, match, fetchMatches]) =>
         callLoaderOrAction(
           "loader",
-          createRequest(href, request.signal),
+          createClientSideRequest(href, request.signal),
           match,
           fetchMatches,
           router.basename
@@ -2120,7 +2124,7 @@ export function unstable_createStaticHandler(
     if (!actionMatch.route.action) {
       let error = getInternalRouterError(405, {
         method: request.method,
-        pathname: createURL(request.url).pathname,
+        pathname: new URL(request.url).pathname,
         routeId: actionMatch.route.id,
       });
       if (isRouteRequest) {
@@ -2206,7 +2210,7 @@ export function unstable_createStaticHandler(
     }
 
     // Create a GET request for the loaders
-    let loaderRequest = createRequest(request.url, request.signal);
+    let loaderRequest = new Request(request.url, { signal: request.signal });
     let context = await loadRouteData(loaderRequest, matches);
 
     return {
@@ -2240,7 +2244,7 @@ export function unstable_createStaticHandler(
     if (isRouteRequest && !routeMatch?.route.loader) {
       throw getInternalRouterError(400, {
         method: request.method,
-        pathname: createURL(request.url).pathname,
+        pathname: new URL(request.url).pathname,
         routeId: routeMatch?.route.id,
       });
     }
@@ -2531,9 +2535,9 @@ function shouldRevalidateLoader(
   isRevalidationRequired: boolean,
   actionResult: DataResult | undefined
 ) {
-  let currentUrl = createURL(currentLocation);
+  let currentUrl = createClientSideURL(currentLocation);
   let currentParams = currentMatch.params;
-  let nextUrl = createURL(location);
+  let nextUrl = createClientSideURL(location);
   let nextParams = match.params;
 
   // This is the default implementation as to when we revalidate.  If the route
@@ -2624,7 +2628,10 @@ async function callLoaderOrAction(
       );
 
       // Check if this an external redirect that goes to a new origin
-      let external = createURL(location).origin !== createURL("/").origin;
+      let currentUrl = new URL(request.url);
+      let currentOrigin = currentUrl.origin;
+      let newOrigin = new URL(location, currentOrigin).origin;
+      let external = newOrigin !== currentOrigin;
 
       // Support relative routing in internal redirects
       if (!external) {
@@ -2632,8 +2639,11 @@ async function callLoaderOrAction(
         let routePathnames = getPathContributingMatches(activeMatches).map(
           (match) => match.pathnameBase
         );
-        let requestPath = createURL(request.url).pathname;
-        let resolvedLocation = resolveTo(location, routePathnames, requestPath);
+        let resolvedLocation = resolveTo(
+          location,
+          routePathnames,
+          currentUrl.pathname
+        );
         invariant(
           createPath(resolvedLocation),
           `Unable to resolve redirect location: ${location}`
@@ -2713,12 +2723,15 @@ async function callLoaderOrAction(
   return { type: ResultType.data, data: result };
 }
 
-function createRequest(
+// Utility method for creating the Request instances for loaders/actions during
+// client-side navigations and fetches.  During SSR we will always have a
+// Request instance from the static handler (query/queryRoute)
+function createClientSideRequest(
   location: string | Location,
   signal: AbortSignal,
   submission?: Submission
 ): Request {
-  let url = createURL(stripHashFromPath(location)).toString();
+  let url = createClientSideURL(stripHashFromPath(location)).toString();
   let init: RequestInit = { signal };
 
   if (submission) {
