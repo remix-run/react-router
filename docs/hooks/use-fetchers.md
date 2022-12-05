@@ -50,7 +50,7 @@ function Task({ task }) {
   return (
     <toggle.Form
       method="put"
-      action={`/project/${projectId}/tasks/${id}`}
+      action={`/projects/${projectId}/tasks/${id}`}
     >
       <label>
         <input
@@ -100,7 +100,7 @@ function ProjectTaskCount({ project }) {
   // Find this project's fetchers
   let projectFetchers = fetchers.filter((fetcher) => {
     return fetcher.formAction?.startsWith(
-      `/projects/${project.id}/task`
+      `/projects/${project.id}/tasks/`
     );
   });
 
