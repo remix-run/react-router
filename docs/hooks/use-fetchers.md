@@ -52,8 +52,14 @@ function Task({ task }) {
       method="put"
       action={`/projects/${projectId}/tasks/${id}`}
     >
+      <input
+        name="id"
+        type="hidden"
+        defaultValue={id}
+      />
       <label>
         <input
+          name="complete"
           type="checkbox"
           checked={checked}
           onChange={(e) => toggle.submit(e.target.form)}
