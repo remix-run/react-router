@@ -573,7 +573,7 @@ export function createClientSideURL(location: Location | string): URL {
     base,
     `No window.location.(origin|href) available to create URL for href: ${href}`
   );
-  return new URL(href, window.location.origin);
+  return new URL(href, base);
 }
 
 export interface UrlHistory extends History {}
