@@ -567,11 +567,11 @@ export function createClientSideURL(location: Location | string): URL {
     typeof window.location !== "undefined" &&
     window.location.origin !== "null"
       ? window.location.origin
-      : null;
+      : window.location.href;
   let href = typeof location === "string" ? location : createPath(location);
   invariant(
     base,
-    `No window.location.origin available to create URL for href: ${href}`
+    `No window.location.(origin|href) available to create URL for href: ${href}`
   );
   return new URL(href, window.location.origin);
 }
