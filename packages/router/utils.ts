@@ -1,5 +1,5 @@
 import type { Location, Path, To } from "./history";
-import { parsePath } from "./history";
+import { invariant, parsePath } from "./history";
 
 /**
  * Map of routeId -> data returned from a loader/action/error
@@ -769,20 +769,6 @@ export function stripBasename(
   }
 
   return pathname.slice(startIndex) || "/";
-}
-
-/**
- * @private
- */
-export function invariant(value: boolean, message?: string): asserts value;
-export function invariant<T>(
-  value: T | null | undefined,
-  message?: string
-): asserts value is T;
-export function invariant(value: any, message?: string) {
-  if (value === false || value === null || typeof value === "undefined") {
-    throw new Error(message);
-  }
 }
 
 /**

@@ -4,6 +4,7 @@ import {
   createLocation,
   createPath,
   createClientSideURL,
+  invariant,
   parsePath,
 } from "./history";
 import type {
@@ -28,7 +29,6 @@ import {
   ResultType,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
-  invariant,
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,

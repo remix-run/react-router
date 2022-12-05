@@ -447,6 +447,20 @@ export function createHashHistory(
 //#region UTILS
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * @private
+ */
+export function invariant(value: boolean, message?: string): asserts value;
+export function invariant<T>(
+  value: T | null | undefined,
+  message?: string
+): asserts value is T;
+export function invariant(value: any, message?: string) {
+  if (value === false || value === null || typeof value === "undefined") {
+    throw new Error(message);
+  }
+}
+
 function warning(cond: any, message: string) {
   if (!cond) {
     // eslint-disable-next-line no-console
@@ -553,9 +567,13 @@ export function createClientSideURL(location: Location | string): URL {
     typeof window.location !== "undefined" &&
     window.location.origin !== "null"
       ? window.location.origin
-      : "unknown://unknown";
+      : null;
   let href = typeof location === "string" ? location : createPath(location);
-  return new URL(href, base);
+  invariant(
+    base,
+    `No window.location.origin available to create URL for href: ${href}`
+  );
+  return new URL(href, window.location.origin);
 }
 
 export interface UrlHistory extends History {}
