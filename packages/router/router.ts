@@ -1988,7 +1988,7 @@ export function unstable_createStaticHandler(
     }
 
     let result = await queryImpl(request, location, matches);
-    if (result instanceof Response) {
+    if (isResponse(result)) {
       return result;
     }
 
@@ -2046,7 +2046,7 @@ export function unstable_createStaticHandler(
     }
 
     let result = await queryImpl(request, location, matches, match);
-    if (result instanceof Response) {
+    if (isResponse(result)) {
       return result;
     }
 
@@ -2087,7 +2087,7 @@ export function unstable_createStaticHandler(
       }
 
       let result = await loadRouteData(request, matches, routeMatch);
-      return result instanceof Response
+      return isResponse(result)
         ? result
         : {
             ...result,
@@ -2616,7 +2616,7 @@ async function callLoaderOrAction(
     request.signal.removeEventListener("abort", onReject);
   }
 
-  if (result instanceof Response) {
+  if (isResponse(result)) {
     let status = result.status;
 
     // Process redirects
@@ -3048,8 +3048,18 @@ function isRedirectResult(result?: DataResult): result is RedirectResult {
   return (result && result.type) === ResultType.redirect;
 }
 
+function isResponse(value: any): value is Response {
+  return (
+    value != null &&
+    typeof value.status === "number" &&
+    typeof value.statusText === "string" &&
+    typeof value.headers === "object" &&
+    typeof value.body !== "undefined"
+  );
+}
+
 function isRedirectResponse(result: any): result is Response {
-  if (!(result instanceof Response)) {
+  if (!isResponse(result)) {
     return false;
   }
 
@@ -3061,7 +3071,7 @@ function isRedirectResponse(result: any): result is Response {
 function isQueryRouteResponse(obj: any): obj is QueryRouteResponse {
   return (
     obj &&
-    obj.response instanceof Response &&
+    isResponse(obj.response) &&
     (obj.type === ResultType.data || ResultType.error)
   );
 }
