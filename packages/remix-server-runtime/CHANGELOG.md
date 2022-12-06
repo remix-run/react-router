@@ -1,5 +1,13 @@
 # `@remix-run/server-runtime`
 
+## 1.8.2-pre.0
+
+### Patch Changes
+
+- Remove `instanceof Response` checks in favor of `isResponse` ([#4782](https://github.com/remix-run/remix/pull/4782))
+- Updated dependencies: ([`de11a2acd`](https://github.com/remix-run/remix/commit/de11a2acd83c96d2c592ea5a84b794acd9daad85))
+  - `@remix-run/router@1.0.5-pre.0`
+
 ## 1.8.1
 
 No significant changes to this package were made in this release. [See the releases page on GitHub](https://github.com/remix-run/remix/releases/tag/remix%401.8.1) for an overview of all changes in v1.8.1.
