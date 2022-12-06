@@ -88,6 +88,7 @@ export interface Submission {
 interface DataFunctionArgs {
   request: Request;
   params: Params;
+  context?: any;
 }
 
 /**

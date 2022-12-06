@@ -316,8 +316,14 @@ export interface StaticHandlerContext {
  */
 export interface StaticHandler {
   dataRoutes: AgnosticDataRouteObject[];
-  query(request: Request): Promise<StaticHandlerContext | Response>;
-  queryRoute(request: Request, routeId?: string): Promise<any>;
+  query(
+    request: Request,
+    opts?: { requestContext?: unknown }
+  ): Promise<StaticHandlerContext | Response>;
+  queryRoute(
+    request: Request,
+    opts?: { routeId?: string; requestContext?: unknown }
+  ): Promise<any>;
 }
 
 /**
@@ -1943,7 +1949,8 @@ export function unstable_createStaticHandler(
    * return it directly.
    */
   async function query(
-    request: Request
+    request: Request,
+    { requestContext }: { requestContext?: unknown } = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
@@ -1987,7 +1994,7 @@ export function unstable_createStaticHandler(
       };
     }
 
-    let result = await queryImpl(request, location, matches);
+    let result = await queryImpl(request, location, matches, requestContext);
     if (isResponse(result)) {
       return result;
     }
@@ -2018,7 +2025,13 @@ export function unstable_createStaticHandler(
    * code.  Examples here are 404 and 405 errors that occur prior to reaching
    * any user-defined loaders.
    */
-  async function queryRoute(request: Request, routeId?: string): Promise<any> {
+  async function queryRoute(
+    request: Request,
+    {
+      routeId,
+      requestContext,
+    }: { requestContext?: unknown; routeId?: string } = {}
+  ): Promise<any> {
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
     let location = createLocation("", createPath(url), null, "default");
@@ -2045,7 +2058,13 @@ export function unstable_createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    let result = await queryImpl(request, location, matches, match);
+    let result = await queryImpl(
+      request,
+      location,
+      matches,
+      requestContext,
+      match
+    );
     if (isResponse(result)) {
       return result;
     }
@@ -2068,6 +2087,7 @@ export function unstable_createStaticHandler(
     request: Request,
     location: Location,
     matches: AgnosticDataRouteMatch[],
+    requestContext: unknown,
     routeMatch?: AgnosticDataRouteMatch
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
@@ -2081,12 +2101,18 @@ export function unstable_createStaticHandler(
           request,
           matches,
           routeMatch || getTargetMatch(matches, location),
+          requestContext,
           routeMatch != null
         );
         return result;
       }
 
-      let result = await loadRouteData(request, matches, routeMatch);
+      let result = await loadRouteData(
+        request,
+        matches,
+        requestContext,
+        routeMatch
+      );
       return isResponse(result)
         ? result
         : {
@@ -2117,6 +2143,7 @@ export function unstable_createStaticHandler(
     request: Request,
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
+    requestContext: unknown,
     isRouteRequest: boolean
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
@@ -2142,7 +2169,8 @@ export function unstable_createStaticHandler(
         matches,
         basename,
         true,
-        isRouteRequest
+        isRouteRequest,
+        requestContext
       );
 
       if (request.signal.aborted) {
@@ -2192,9 +2220,15 @@ export function unstable_createStaticHandler(
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-      let context = await loadRouteData(request, matches, undefined, {
-        [boundaryMatch.route.id]: result.error,
-      });
+      let context = await loadRouteData(
+        request,
+        matches,
+        requestContext,
+        undefined,
+        {
+          [boundaryMatch.route.id]: result.error,
+        }
+      );
 
       // action status codes take precedence over loader status codes
       return {
@@ -2211,7 +2245,7 @@ export function unstable_createStaticHandler(
 
     // Create a GET request for the loaders
     let loaderRequest = new Request(request.url, { signal: request.signal });
-    let context = await loadRouteData(loaderRequest, matches);
+    let context = await loadRouteData(loaderRequest, matches, requestContext);
 
     return {
       ...context,
@@ -2229,6 +2263,7 @@ export function unstable_createStaticHandler(
   async function loadRouteData(
     request: Request,
     matches: AgnosticDataRouteMatch[],
+    requestContext: unknown,
     routeMatch?: AgnosticDataRouteMatch,
     pendingActionError?: RouteData
   ): Promise<
@@ -2277,7 +2312,8 @@ export function unstable_createStaticHandler(
           matches,
           basename,
           true,
-          isRouteRequest
+          isRouteRequest,
+          requestContext
         )
       ),
     ]);
@@ -2580,7 +2616,8 @@ async function callLoaderOrAction(
   matches: AgnosticDataRouteMatch[],
   basename = "/",
   isStaticRequest: boolean = false,
-  isRouteRequest: boolean = false
+  isRouteRequest: boolean = false,
+  requestContext?: unknown
 ): Promise<DataResult> {
   let resultType;
   let result;
@@ -2599,7 +2636,7 @@ async function callLoaderOrAction(
     );
 
     result = await Promise.race([
-      handler({ request, params: match.params }),
+      handler({ request, params: match.params, context: requestContext }),
       abortPromise,
     ]);
 
@@ -2968,12 +3005,10 @@ function getInternalRouterError(
     pathname,
     routeId,
     method,
-    message,
   }: {
     pathname?: string;
     routeId?: string;
     method?: string;
-    message?: string;
   } = {}
 ) {
   let statusText = "Unknown Server Error";
