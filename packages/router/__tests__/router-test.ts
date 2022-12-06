@@ -6953,6 +6953,10 @@ describe("a router", () => {
           formData: createFormData({ key: "value" }),
         });
         expect(A.fetcher.state).toBe("loading");
+        expect(A.fetcher.formMethod).toBe("get");
+        expect(A.fetcher.formAction).toBe("/foo");
+        expect(A.fetcher.formData).toEqual(createFormData({ key: "value" }));
+        expect(A.fetcher.formEncType).toBe("application/x-www-form-urlencoded");
         expect(
           new URL(
             A.loaders.foo.stub.mock.calls[0][0].request.url
