@@ -1,5 +1,12 @@
 # `@remix-run/router`
 
+## 1.0.5-pre.1
+
+### Patch Changes
+
+- Remove `instanceof Response` checks in favor of `isResponse` ([#9690](https://github.com/remix-run/react-router/pull/9690))
+- Fix URL creation in Remix integration tests ([#9689](https://github.com/remix-run/react-router/pull/9689))
+
 ## 1.0.5-pre.0
 
 ### Patch Changes
