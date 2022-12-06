@@ -9,6 +9,7 @@
     "@remix-run/router": "1.0.4"
   },
   "changesets": [
+    "afraid-snakes-cough",
     "curvy-hairs-deliver",
     "new-kiwis-confess",
     "pretty-kiwis-study",
