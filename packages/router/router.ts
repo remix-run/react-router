@@ -1606,17 +1606,18 @@ export function createRouter(init: RouterInit): Router {
       "Expected a location on the redirect navigation"
     );
 
-    if (
-      redirect.external &&
-      typeof window !== "undefined" &&
-      typeof window.location !== "undefined"
-    ) {
-      if (replace) {
-        window.location.replace(redirect.location);
-      } else {
-        window.location.assign(redirect.location);
+    // Check if this an external redirect that goes to a new origin
+    if (typeof window?.location !== "undefined") {
+      let currentOrigin = window.location.origin;
+      let newOrigin = new URL(redirect.location, currentOrigin).origin;
+      if (currentOrigin !== newOrigin) {
+        if (replace) {
+          window.location.replace(redirect.location);
+        } else {
+          window.location.assign(redirect.location);
+        }
+        return;
       }
-      return;
     }
 
     // There's no need to abort on redirects, since we don't detect the
@@ -2627,14 +2628,11 @@ async function callLoaderOrAction(
         "Redirects returned/thrown from loaders/actions must have a Location header"
       );
 
-      // Check if this an external redirect that goes to a new origin
-      let currentUrl = new URL(request.url);
-      let currentOrigin = currentUrl.origin;
-      let newOrigin = new URL(location, currentOrigin).origin;
-      let external = newOrigin !== currentOrigin;
+      let isAbsolute =
+        /^[a-z+]+:\/\//i.test(location) || location.startsWith("//");
 
       // Support relative routing in internal redirects
-      if (!external) {
+      if (!isAbsolute) {
         let activeMatches = matches.slice(0, matches.indexOf(match) + 1);
         let routePathnames = getPathContributingMatches(activeMatches).map(
           (match) => match.pathnameBase
@@ -2642,7 +2640,7 @@ async function callLoaderOrAction(
         let resolvedLocation = resolveTo(
           location,
           routePathnames,
-          currentUrl.pathname
+          new URL(request.url).pathname
         );
         invariant(
           createPath(resolvedLocation),
@@ -2673,7 +2671,6 @@ async function callLoaderOrAction(
         status,
         location,
         revalidate: result.headers.get("X-Remix-Revalidate") !== null,
-        external,
       };
     }
 
