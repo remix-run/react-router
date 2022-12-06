@@ -17,7 +17,7 @@ import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute, ServerRouteManifest } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
-import { json, isRedirectResponse } from "./responses";
+import { json, isRedirectResponse, isResponse } from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
 
 export type RequestHandler = (
@@ -123,7 +123,7 @@ async function handleDataRequestRR(
 
     return response;
   } catch (error) {
-    if (error instanceof Response) {
+    if (isResponse(error)) {
       error.headers.set("X-Remix-Catch", "yes");
       return error;
     }
@@ -217,7 +217,7 @@ async function handleDocumentRequestRR(
     return new Response(null, { status: 500 });
   }
 
-  if (context instanceof Response) {
+  if (isResponse(context)) {
     return context;
   }
 
@@ -373,12 +373,12 @@ async function handleResourceRequestRR(
     let response = await staticHandler.queryRoute(request, routeId);
     // callRouteLoader/callRouteAction always return responses
     invariant(
-      response instanceof Response,
+      isResponse(response),
       "Expected a Response to be returned from queryRoute"
     );
     return response;
   } catch (error) {
-    if (error instanceof Response) {
+    if (isResponse(error)) {
       // Note: Not functionally required but ensures that our response headers
       // match identically to what Remix returns
       error.headers.set("X-Remix-Catch", "yes");
