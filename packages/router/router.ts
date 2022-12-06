@@ -1608,9 +1608,8 @@ export function createRouter(init: RouterInit): Router {
 
     // Check if this an external redirect that goes to a new origin
     if (typeof window?.location !== "undefined") {
-      let currentOrigin = window.location.origin;
       let newOrigin = createClientSideURL(redirect.location).origin;
-      if (currentOrigin !== newOrigin) {
+      if (window.location.origin !== newOrigin) {
         if (replace) {
           window.location.replace(redirect.location);
         } else {
