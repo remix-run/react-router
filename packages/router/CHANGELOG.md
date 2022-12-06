@@ -5,7 +5,6 @@
 ### Patch Changes
 
 - Add `requestContext` support to static handler `query`/`queryRoute` ([#9696](https://github.com/remix-run/react-router/pull/9696))
-
   - Note that the unstable API of `queryRoute(path, routeId)` has been changed to `queryRoute(path, { routeId, requestContext })`
 
 ## 1.0.5-pre.1
