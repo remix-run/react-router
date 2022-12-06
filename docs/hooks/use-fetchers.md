@@ -45,18 +45,15 @@ function Task({ task }) {
   const { projectId, id } = task;
   const toggle = useFetcher();
   const checked = toggle.formData
-    ? toggle.formData.get("complete") === "on" : task.complete;
+    ? toggle.formData.get("complete") === "on"
+    : task.complete;
 
   return (
     <toggle.Form
       method="put"
       action={`/projects/${projectId}/tasks/${id}`}
     >
-      <input
-        name="id"
-        type="hidden"
-        defaultValue={id}
-      />
+      <input name="id" type="hidden" defaultValue={id} />
       <label>
         <input
           name="complete"
