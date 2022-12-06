@@ -41,7 +41,6 @@ export interface RedirectResult {
   status: number;
   location: string;
   revalidate: boolean;
-  external: boolean;
 }
 
 /**
