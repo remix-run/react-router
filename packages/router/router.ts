@@ -318,11 +318,11 @@ export interface StaticHandler {
   dataRoutes: AgnosticDataRouteObject[];
   query(
     request: Request,
-    opts?: { requestContext?: any }
+    opts?: { requestContext?: unknown }
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
     request: Request,
-    opts?: { routeId?: string; requestContext?: any }
+    opts?: { routeId?: string; requestContext?: unknown }
   ): Promise<any>;
 }
 
@@ -1950,7 +1950,7 @@ export function unstable_createStaticHandler(
    */
   async function query(
     request: Request,
-    { requestContext }: { requestContext?: any } = {}
+    { requestContext }: { requestContext?: unknown } = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
@@ -2027,7 +2027,10 @@ export function unstable_createStaticHandler(
    */
   async function queryRoute(
     request: Request,
-    { routeId, requestContext }: { requestContext?: any; routeId?: string } = {}
+    {
+      routeId,
+      requestContext,
+    }: { requestContext?: unknown; routeId?: string } = {}
   ): Promise<any> {
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
@@ -2084,7 +2087,7 @@ export function unstable_createStaticHandler(
     request: Request,
     location: Location,
     matches: AgnosticDataRouteMatch[],
-    requestContext: any,
+    requestContext: unknown,
     routeMatch?: AgnosticDataRouteMatch
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
@@ -2140,7 +2143,7 @@ export function unstable_createStaticHandler(
     request: Request,
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
-    requestContext: any,
+    requestContext: unknown,
     isRouteRequest: boolean
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
@@ -2260,7 +2263,7 @@ export function unstable_createStaticHandler(
   async function loadRouteData(
     request: Request,
     matches: AgnosticDataRouteMatch[],
-    requestContext: any,
+    requestContext: unknown,
     routeMatch?: AgnosticDataRouteMatch,
     pendingActionError?: RouteData
   ): Promise<
@@ -2614,7 +2617,7 @@ async function callLoaderOrAction(
   basename = "/",
   isStaticRequest: boolean = false,
   isRouteRequest: boolean = false,
-  requestContext: any = undefined
+  requestContext?: unknown
 ): Promise<DataResult> {
   let resultType;
   let result;
@@ -2633,7 +2636,7 @@ async function callLoaderOrAction(
     );
 
     result = await Promise.race([
-      handler({ request, params: match.params, requestContext }),
+      handler({ request, params: match.params, context: requestContext }),
       abortPromise,
     ]);
 

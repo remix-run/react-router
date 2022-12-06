@@ -10955,17 +10955,17 @@ describe("a router", () => {
         ]);
 
         await query(createRequest("/child"), { requestContext });
-        expect(arg(rootStub).requestContext.sessionId).toBe("12345");
-        expect(arg(childStub).requestContext.sessionId).toBe("12345");
+        expect(arg(rootStub).context.sessionId).toBe("12345");
+        expect(arg(childStub).context.sessionId).toBe("12345");
 
         actionStub.mockClear();
         rootStub.mockClear();
         childStub.mockClear();
 
         await query(createSubmitRequest("/child"), { requestContext });
-        expect(arg(actionStub).requestContext.sessionId).toBe("12345");
-        expect(arg(rootStub).requestContext.sessionId).toBe("12345");
-        expect(arg(childStub).requestContext.sessionId).toBe("12345");
+        expect(arg(actionStub).context.sessionId).toBe("12345");
+        expect(arg(rootStub).context.sessionId).toBe("12345");
+        expect(arg(childStub).context.sessionId).toBe("12345");
       });
 
       describe("statusCode", () => {
@@ -11935,13 +11935,13 @@ describe("a router", () => {
           routeId: "child",
           requestContext,
         });
-        expect(arg(childStub).requestContext.sessionId).toBe("12345");
+        expect(arg(childStub).context.sessionId).toBe("12345");
 
         await queryRoute(createSubmitRequest("/child"), {
           routeId: "child",
           requestContext,
         });
-        expect(arg(actionStub).requestContext.sessionId).toBe("12345");
+        expect(arg(actionStub).context.sessionId).toBe("12345");
       });
 
       describe("Errors with Status Codes", () => {
