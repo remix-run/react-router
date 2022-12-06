@@ -62,8 +62,8 @@ export type DataResult =
   | RedirectResult
   | ErrorResult;
 
-export type SubmissionFormMethod = "post" | "put" | "patch" | "delete";
-export type FormMethod = "get" | SubmissionFormMethod;
+export type MutationFormMethod = "post" | "put" | "patch" | "delete";
+export type FormMethod = "get" | MutationFormMethod;
 
 export type FormEncType =
   | "application/x-www-form-urlencoded"
@@ -75,7 +75,7 @@ export type FormEncType =
  * external consumption
  */
 export interface Submission {
-  formMethod: SubmissionFormMethod;
+  formMethod: FormMethod;
   formAction: string;
   formEncType: FormEncType;
   formData: FormData;
