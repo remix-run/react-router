@@ -9,7 +9,9 @@
     "@remix-run/router": "1.0.4"
   },
   "changesets": [
+    "curvy-hairs-deliver",
     "new-kiwis-confess",
-    "pretty-kiwis-study"
+    "pretty-kiwis-study",
+    "swift-lemons-cough"
   ]
 }
