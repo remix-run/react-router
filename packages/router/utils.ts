@@ -378,7 +378,8 @@ function flattenRoutes<
     relativePath?: string
   ) => {
     let meta: RouteMeta<RouteObjectType> = {
-      relativePath: relativePath ?? (route.path || ""),
+      relativePath:
+        relativePath === undefined ? route.path || "" : relativePath,
       caseSensitive: route.caseSensitive === true,
       childrenIndex: index,
       route,
