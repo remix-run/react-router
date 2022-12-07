@@ -18,7 +18,7 @@
   "dependencies": {
     "@remix-run/node": "1.8.2",
     "@remix-run/react": "1.8.2",
-    "@remix-run/router": "1.0.4",
+    "@remix-run/router": "1.0.5",
     "@remix-run/server-runtime": "1.8.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
