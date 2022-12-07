@@ -17,7 +17,7 @@ import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute, ServerRouteManifest } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
-import { json, isRedirectResponse } from "./responses";
+import { json, isRedirectResponse, isResponse } from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
 
 export type RequestHandler = (
@@ -35,15 +35,13 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   mode
 ) => {
   let routes = createRoutes(build.routes);
+  let dataRoutes = createStaticHandlerDataRoutes(build.routes);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
+  let staticHandler = unstable_createStaticHandler(dataRoutes);
 
   return async function requestHandler(request, loadContext = {}) {
     let url = new URL(request.url);
     let matches = matchServerRoutes(routes, url.pathname);
-
-    let staticHandler = unstable_createStaticHandler(
-      createStaticHandlerDataRoutes(build.routes, loadContext)
-    );
 
     let response: Response;
     if (url.searchParams.has("_data")) {
@@ -51,9 +49,10 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
       response = await handleDataRequestRR(
         serverMode,
-        staticHandler!,
+        staticHandler,
         routeId,
-        request
+        request,
+        loadContext
       );
 
       if (build.entry.module.handleDataRequest) {
@@ -70,16 +69,18 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     ) {
       response = await handleResourceRequestRR(
         serverMode,
-        staticHandler!,
+        staticHandler,
         matches.slice(-1)[0].route.id,
-        request
+        request,
+        loadContext
       );
     } else {
       response = await handleDocumentRequestRR(
         serverMode,
         build,
-        staticHandler!,
-        request
+        staticHandler,
+        request,
+        loadContext
       );
     }
 
@@ -99,10 +100,14 @@ async function handleDataRequestRR(
   serverMode: ServerMode,
   staticHandler: StaticHandler,
   routeId: string,
-  request: Request
+  request: Request,
+  loadContext: AppLoadContext
 ) {
   try {
-    let response = await staticHandler.queryRoute(request, routeId);
+    let response = await staticHandler.queryRoute(request, {
+      routeId,
+      requestContext: loadContext,
+    });
 
     if (isRedirectResponse(response)) {
       // We don't have any way to prevent a fetch request from following
@@ -123,7 +128,7 @@ async function handleDataRequestRR(
 
     return response;
   } catch (error) {
-    if (error instanceof Response) {
+    if (isResponse(error)) {
       error.headers.set("X-Remix-Catch", "yes");
       return error;
     }
@@ -204,11 +209,14 @@ async function handleDocumentRequestRR(
   serverMode: ServerMode,
   build: ServerBuild,
   staticHandler: StaticHandler,
-  request: Request
+  request: Request,
+  loadContext: AppLoadContext
 ) {
   let context;
   try {
-    context = await staticHandler.query(request);
+    context = await staticHandler.query(request, {
+      requestContext: loadContext,
+    });
   } catch (error) {
     if (!request.signal.aborted && serverMode !== ServerMode.Test) {
       console.error(error);
@@ -217,7 +225,7 @@ async function handleDocumentRequestRR(
     return new Response(null, { status: 500 });
   }
 
-  if (context instanceof Response) {
+  if (isResponse(context)) {
     return context;
   }
 
@@ -364,21 +372,25 @@ async function handleResourceRequestRR(
   serverMode: ServerMode,
   staticHandler: StaticHandler,
   routeId: string,
-  request: Request
+  request: Request,
+  loadContext: AppLoadContext
 ) {
   try {
     // Note we keep the routeId here to align with the Remix handling of
     // resource routes which doesn't take ?index into account and just takes
     // the leaf match
-    let response = await staticHandler.queryRoute(request, routeId);
+    let response = await staticHandler.queryRoute(request, {
+      routeId,
+      requestContext: loadContext,
+    });
     // callRouteLoader/callRouteAction always return responses
     invariant(
-      response instanceof Response,
+      isResponse(response),
       "Expected a Response to be returned from queryRoute"
     );
     return response;
   } catch (error) {
-    if (error instanceof Response) {
+    if (isResponse(error)) {
       // Note: Not functionally required but ensures that our response headers
       // match identically to what Remix returns
       error.headers.set("X-Remix-Catch", "yes");

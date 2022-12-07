@@ -1,11 +1,9 @@
-// TODO: RRR - Change import to @remix-run/router
 import type {
   AgnosticDataRouteObject,
   ActionFunctionArgs,
   LoaderFunctionArgs,
 } from "@remix-run/router";
 
-import { type AppLoadContext } from "./data";
 import { callRouteActionRR, callRouteLoaderRR } from "./data";
 import type { ServerRouteModule } from "./routeModules";
 
@@ -56,7 +54,6 @@ export function createRoutes(
 // createStaticHandler
 export function createStaticHandlerDataRoutes(
   manifest: ServerRouteManifest,
-  loadContext: AppLoadContext,
   parentId?: string
 ): AgnosticDataRouteObject[] {
   return Object.values(manifest)
@@ -73,8 +70,9 @@ export function createStaticHandlerDataRoutes(
         loader: route.module.loader
           ? (args: LoaderFunctionArgs) =>
               callRouteLoaderRR({
-                ...args,
-                loadContext,
+                request: args.request,
+                params: args.params,
+                loadContext: args.context,
                 loader: route.module.loader!,
                 routeId: route.id,
               })
@@ -82,8 +80,9 @@ export function createStaticHandlerDataRoutes(
         action: route.module.action
           ? (args: ActionFunctionArgs) =>
               callRouteActionRR({
-                ...args,
-                loadContext,
+                request: args.request,
+                params: args.params,
+                loadContext: args.context,
                 action: route.module.action!,
                 routeId: route.id,
               })
@@ -100,11 +99,7 @@ export function createStaticHandlerDataRoutes(
           }
         : {
             caseSensitive: route.caseSensitive,
-            children: createStaticHandlerDataRoutes(
-              manifest,
-              loadContext,
-              route.id
-            ),
+            children: createStaticHandlerDataRoutes(manifest, route.id),
             ...commonRoute,
           };
     });
