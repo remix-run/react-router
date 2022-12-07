@@ -1,5 +1,13 @@
 # `react-router-dom`
 
+## 6.4.5
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.0.5`
+  - `react-router@6.4.5`
+
 ## 6.4.4
 
 ### Patch Changes
@@ -72,6 +80,6 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 - `react-router@6.4.0`
 
-[rr-docs]: https://reactrouter.com/
-[rr-feature-overview]: https://reactrouter.com/en/6.4.0/start/overview
-[rr-tutorial]: https://reactrouter.com/en/6.4.0/start/tutorial
+[rr-docs]: https://reactrouter.com
+[rr-feature-overview]: https://reactrouter.com/start/overview
+[rr-tutorial]: https://reactrouter.com/start/tutorial

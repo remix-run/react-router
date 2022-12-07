@@ -3,7 +3,8 @@ import {
   Action as HistoryAction,
   createLocation,
   createPath,
-  createURL,
+  createClientSideURL,
+  invariant,
   parsePath,
 } from "./history";
 import type {
@@ -20,7 +21,7 @@ import type {
   Submission,
   SuccessResult,
   AgnosticRouteMatch,
-  SubmissionFormMethod,
+  MutationFormMethod,
 } from "./utils";
 import {
   DeferredData,
@@ -28,7 +29,6 @@ import {
   ResultType,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
-  invariant,
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,
@@ -316,8 +316,14 @@ export interface StaticHandlerContext {
  */
 export interface StaticHandler {
   dataRoutes: AgnosticDataRouteObject[];
-  query(request: Request): Promise<StaticHandlerContext | Response>;
-  queryRoute(request: Request, routeId?: string): Promise<any>;
+  query(
+    request: Request,
+    opts?: { requestContext?: unknown }
+  ): Promise<StaticHandlerContext | Response>;
+  queryRoute(
+    request: Request,
+    opts?: { routeId?: string; requestContext?: unknown }
+  ): Promise<any>;
 }
 
 /**
@@ -515,15 +521,20 @@ interface QueryRouteResponse {
   response: Response;
 }
 
-const validActionMethodsArr: SubmissionFormMethod[] = [
+const validMutationMethodsArr: MutationFormMethod[] = [
   "post",
   "put",
   "patch",
   "delete",
 ];
-const validActionMethods = new Set<SubmissionFormMethod>(validActionMethodsArr);
+const validMutationMethods = new Set<MutationFormMethod>(
+  validMutationMethodsArr
+);
 
-const validRequestMethodsArr: FormMethod[] = ["get", ...validActionMethodsArr];
+const validRequestMethodsArr: FormMethod[] = [
+  "get",
+  ...validMutationMethodsArr,
+];
 const validRequestMethods = new Set<FormMethod>(validRequestMethodsArr);
 
 const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
@@ -805,7 +816,8 @@ export function createRouter(init: RouterInit): Router {
     };
 
     let historyAction =
-      (opts && opts.replace) === true || submission != null
+      (opts && opts.replace) === true ||
+      (submission != null && isMutationMethod(submission.formMethod))
         ? HistoryAction.Replace
         : HistoryAction.Push;
     let preventScrollReset =
@@ -913,7 +925,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Create a controller/Request for this navigation
     pendingNavigationController = new AbortController();
-    let request = createRequest(
+    let request = createClientSideRequest(
       location,
       pendingNavigationController.signal,
       opts && opts.submission
@@ -929,7 +941,11 @@ export function createRouter(init: RouterInit): Router {
       pendingError = {
         [findNearestBoundary(matches).route.id]: opts.pendingError,
       };
-    } else if (opts && opts.submission) {
+    } else if (
+      opts &&
+      opts.submission &&
+      isMutationMethod(opts.submission.formMethod)
+    ) {
       // Call action if we received an action submission
       let actionOutput = await handleAction(
         request,
@@ -952,6 +968,9 @@ export function createRouter(init: RouterInit): Router {
         ...opts.submission,
       };
       loadingNavigation = navigation;
+
+      // Create a GET request for the loaders
+      request = new Request(request.url, { signal: request.signal });
     }
 
     // Call loaders
@@ -1086,6 +1105,7 @@ export function createRouter(init: RouterInit): Router {
         formAction: undefined,
         formEncType: undefined,
         formData: undefined,
+        ...submission,
       };
       loadingNavigation = navigation;
     }
@@ -1250,7 +1270,7 @@ export function createRouter(init: RouterInit): Router {
     let { path, submission } = normalizeNavigateOptions(href, opts, true);
     let match = getTargetMatch(matches, path);
 
-    if (submission) {
+    if (submission && isMutationMethod(submission.formMethod)) {
       handleFetcherAction(key, routeId, path, match, matches, submission);
       return;
     }
@@ -1258,7 +1278,7 @@ export function createRouter(init: RouterInit): Router {
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
     fetchLoadMatches.set(key, [path, match, matches]);
-    handleFetcherLoader(key, routeId, path, match, matches);
+    handleFetcherLoader(key, routeId, path, match, matches, submission);
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -1296,7 +1316,11 @@ export function createRouter(init: RouterInit): Router {
 
     // Call the action for the fetcher
     let abortController = new AbortController();
-    let fetchRequest = createRequest(path, abortController.signal, submission);
+    let fetchRequest = createClientSideRequest(
+      path,
+      abortController.signal,
+      submission
+    );
     fetchControllers.set(key, abortController);
 
     let actionResult = await callLoaderOrAction(
@@ -1343,7 +1367,7 @@ export function createRouter(init: RouterInit): Router {
     // Start the data load for current matches, or the next location if we're
     // in the middle of a navigation
     let nextLocation = state.navigation.location || state.location;
-    let revalidationRequest = createRequest(
+    let revalidationRequest = createClientSideRequest(
       nextLocation,
       abortController.signal
     );
@@ -1481,7 +1505,8 @@ export function createRouter(init: RouterInit): Router {
     routeId: string,
     path: string,
     match: AgnosticDataRouteMatch,
-    matches: AgnosticDataRouteMatch[]
+    matches: AgnosticDataRouteMatch[],
+    submission?: Submission
   ) {
     let existingFetcher = state.fetchers.get(key);
     // Put this fetcher into it's loading state
@@ -1491,6 +1516,7 @@ export function createRouter(init: RouterInit): Router {
       formAction: undefined,
       formEncType: undefined,
       formData: undefined,
+      ...submission,
       data: existingFetcher && existingFetcher.data,
     };
     state.fetchers.set(key, loadingFetcher);
@@ -1498,7 +1524,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Call the loader for this fetcher route match
     let abortController = new AbortController();
-    let fetchRequest = createRequest(path, abortController.signal);
+    let fetchRequest = createClientSideRequest(path, abortController.signal);
     fetchControllers.set(key, abortController);
     let result: DataResult = await callLoaderOrAction(
       "loader",
@@ -1609,17 +1635,17 @@ export function createRouter(init: RouterInit): Router {
       "Expected a location on the redirect navigation"
     );
 
-    if (
-      redirect.external &&
-      typeof window !== "undefined" &&
-      typeof window.location !== "undefined"
-    ) {
-      if (replace) {
-        window.location.replace(redirect.location);
-      } else {
-        window.location.assign(redirect.location);
+    // Check if this an external redirect that goes to a new origin
+    if (typeof window?.location !== "undefined") {
+      let newOrigin = createClientSideURL(redirect.location).origin;
+      if (window.location.origin !== newOrigin) {
+        if (replace) {
+          window.location.replace(redirect.location);
+        } else {
+          window.location.assign(redirect.location);
+        }
+        return;
       }
-      return;
     }
 
     // There's no need to abort on redirects, since we don't detect the
@@ -1632,12 +1658,12 @@ export function createRouter(init: RouterInit): Router {
     let { formMethod, formAction, formEncType, formData } = state.navigation;
 
     // If this was a 307/308 submission we want to preserve the HTTP method and
-    // re-submit the POST/PUT/PATCH/DELETE as a submission navigation to the
+    // re-submit the GET/POST/PUT/PATCH/DELETE as a submission navigation to the
     // redirected location
     if (
       redirectPreserveMethodStatusCodes.has(redirect.status) &&
       formMethod &&
-      isSubmissionMethod(formMethod) &&
+      isMutationMethod(formMethod) &&
       formEncType &&
       formData
     ) {
@@ -1682,7 +1708,7 @@ export function createRouter(init: RouterInit): Router {
       ...fetchersToLoad.map(([, href, match, fetchMatches]) =>
         callLoaderOrAction(
           "loader",
-          createRequest(href, request.signal),
+          createClientSideRequest(href, request.signal),
           match,
           fetchMatches,
           router.basename
@@ -1946,7 +1972,8 @@ export function unstable_createStaticHandler(
    * return it directly.
    */
   async function query(
-    request: Request
+    request: Request,
+    { requestContext }: { requestContext?: unknown } = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
@@ -1990,8 +2017,8 @@ export function unstable_createStaticHandler(
       };
     }
 
-    let result = await queryImpl(request, location, matches);
-    if (result instanceof Response) {
+    let result = await queryImpl(request, location, matches, requestContext);
+    if (isResponse(result)) {
       return result;
     }
 
@@ -2021,7 +2048,13 @@ export function unstable_createStaticHandler(
    * code.  Examples here are 404 and 405 errors that occur prior to reaching
    * any user-defined loaders.
    */
-  async function queryRoute(request: Request, routeId?: string): Promise<any> {
+  async function queryRoute(
+    request: Request,
+    {
+      routeId,
+      requestContext,
+    }: { requestContext?: unknown; routeId?: string } = {}
+  ): Promise<any> {
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
     let location = createLocation("", createPath(url), null, "default");
@@ -2048,8 +2081,14 @@ export function unstable_createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    let result = await queryImpl(request, location, matches, match);
-    if (result instanceof Response) {
+    let result = await queryImpl(
+      request,
+      location,
+      matches,
+      requestContext,
+      match
+    );
+    if (isResponse(result)) {
       return result;
     }
 
@@ -2071,6 +2110,7 @@ export function unstable_createStaticHandler(
     request: Request,
     location: Location,
     matches: AgnosticDataRouteMatch[],
+    requestContext: unknown,
     routeMatch?: AgnosticDataRouteMatch
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
@@ -2079,18 +2119,24 @@ export function unstable_createStaticHandler(
     );
 
     try {
-      if (isSubmissionMethod(request.method.toLowerCase())) {
+      if (isMutationMethod(request.method.toLowerCase())) {
         let result = await submit(
           request,
           matches,
           routeMatch || getTargetMatch(matches, location),
+          requestContext,
           routeMatch != null
         );
         return result;
       }
 
-      let result = await loadRouteData(request, matches, routeMatch);
-      return result instanceof Response
+      let result = await loadRouteData(
+        request,
+        matches,
+        requestContext,
+        routeMatch
+      );
+      return isResponse(result)
         ? result
         : {
             ...result,
@@ -2120,6 +2166,7 @@ export function unstable_createStaticHandler(
     request: Request,
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
+    requestContext: unknown,
     isRouteRequest: boolean
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
@@ -2127,7 +2174,7 @@ export function unstable_createStaticHandler(
     if (!actionMatch.route.action) {
       let error = getInternalRouterError(405, {
         method: request.method,
-        pathname: createURL(request.url).pathname,
+        pathname: new URL(request.url).pathname,
         routeId: actionMatch.route.id,
       });
       if (isRouteRequest) {
@@ -2145,7 +2192,8 @@ export function unstable_createStaticHandler(
         matches,
         basename,
         true,
-        isRouteRequest
+        isRouteRequest,
+        requestContext
       );
 
       if (request.signal.aborted) {
@@ -2195,9 +2243,15 @@ export function unstable_createStaticHandler(
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-      let context = await loadRouteData(request, matches, undefined, {
-        [boundaryMatch.route.id]: result.error,
-      });
+      let context = await loadRouteData(
+        request,
+        matches,
+        requestContext,
+        undefined,
+        {
+          [boundaryMatch.route.id]: result.error,
+        }
+      );
 
       // action status codes take precedence over loader status codes
       return {
@@ -2212,7 +2266,9 @@ export function unstable_createStaticHandler(
       };
     }
 
-    let context = await loadRouteData(request, matches);
+    // Create a GET request for the loaders
+    let loaderRequest = new Request(request.url, { signal: request.signal });
+    let context = await loadRouteData(loaderRequest, matches, requestContext);
 
     return {
       ...context,
@@ -2230,6 +2286,7 @@ export function unstable_createStaticHandler(
   async function loadRouteData(
     request: Request,
     matches: AgnosticDataRouteMatch[],
+    requestContext: unknown,
     routeMatch?: AgnosticDataRouteMatch,
     pendingActionError?: RouteData
   ): Promise<
@@ -2245,7 +2302,7 @@ export function unstable_createStaticHandler(
     if (isRouteRequest && !routeMatch?.route.loader) {
       throw getInternalRouterError(400, {
         method: request.method,
-        pathname: createURL(request.url).pathname,
+        pathname: new URL(request.url).pathname,
         routeId: routeMatch?.route.id,
       });
     }
@@ -2281,7 +2338,8 @@ export function unstable_createStaticHandler(
           matches,
           basename,
           true,
-          isRouteRequest
+          isRouteRequest,
+          requestContext
         )
       ),
     ]);
@@ -2389,17 +2447,19 @@ function normalizeNavigateOptions(
   }
 
   // Create a Submission on non-GET navigations
-  if (opts.formMethod && isSubmissionMethod(opts.formMethod)) {
-    return {
-      path,
-      submission: {
-        formMethod: opts.formMethod,
-        formAction: stripHashFromPath(path),
-        formEncType:
-          (opts && opts.formEncType) || "application/x-www-form-urlencoded",
-        formData: opts.formData,
-      },
+  let submission: Submission | undefined;
+  if (opts.formData) {
+    submission = {
+      formMethod: opts.formMethod || "get",
+      formAction: stripHashFromPath(path),
+      formEncType:
+        (opts && opts.formEncType) || "application/x-www-form-urlencoded",
+      formData: opts.formData,
     };
+
+    if (isMutationMethod(submission.formMethod)) {
+      return { path, submission };
+    }
   }
 
   // Flatten submission onto URLSearchParams for GET submissions
@@ -2424,7 +2484,7 @@ function normalizeNavigateOptions(
     };
   }
 
-  return { path: createPath(parsedPath) };
+  return { path: createPath(parsedPath), submission };
 }
 
 // Filter out all routes below any caught error as they aren't going to
@@ -2551,9 +2611,9 @@ function shouldRevalidateLoader(
   isRevalidationRequired: boolean,
   actionResult: DataResult | undefined
 ) {
-  let currentUrl = createURL(currentLocation);
+  let currentUrl = createClientSideURL(currentLocation);
   let currentParams = currentMatch.params;
-  let nextUrl = createURL(location);
+  let nextUrl = createClientSideURL(location);
   let nextParams = match.params;
 
   // This is the default implementation as to when we revalidate.  If the route
@@ -2596,7 +2656,8 @@ async function callLoaderOrAction(
   matches: AgnosticDataRouteMatch[],
   basename = "/",
   isStaticRequest: boolean = false,
-  isRouteRequest: boolean = false
+  isRouteRequest: boolean = false,
+  requestContext?: unknown
 ): Promise<DataResult> {
   let resultType;
   let result;
@@ -2615,7 +2676,7 @@ async function callLoaderOrAction(
     );
 
     result = await Promise.race([
-      handler({ request, params: match.params }),
+      handler({ request, params: match.params, context: requestContext }),
       abortPromise,
     ]);
 
@@ -2632,7 +2693,7 @@ async function callLoaderOrAction(
     request.signal.removeEventListener("abort", onReject);
   }
 
-  if (result instanceof Response) {
+  if (isResponse(result)) {
     let status = result.status;
 
     // Process redirects
@@ -2643,17 +2704,20 @@ async function callLoaderOrAction(
         "Redirects returned/thrown from loaders/actions must have a Location header"
       );
 
-      // Check if this an external redirect that goes to a new origin
-      let external = createURL(location).origin !== createURL("/").origin;
+      let isAbsolute =
+        /^[a-z+]+:\/\//i.test(location) || location.startsWith("//");
 
       // Support relative routing in internal redirects
-      if (!external) {
+      if (!isAbsolute) {
         let activeMatches = matches.slice(0, matches.indexOf(match) + 1);
         let routePathnames = getPathContributingMatches(activeMatches).map(
           (match) => match.pathnameBase
         );
-        let requestPath = createURL(request.url).pathname;
-        let resolvedLocation = resolveTo(location, routePathnames, requestPath);
+        let resolvedLocation = resolveTo(
+          location,
+          routePathnames,
+          new URL(request.url).pathname
+        );
         invariant(
           createPath(resolvedLocation),
           `Unable to resolve redirect location: ${location}`
@@ -2683,7 +2747,6 @@ async function callLoaderOrAction(
         status,
         location,
         revalidate: result.headers.get("X-Remix-Revalidate") !== null,
-        external,
       };
     }
 
@@ -2733,15 +2796,18 @@ async function callLoaderOrAction(
   return { type: ResultType.data, data: result };
 }
 
-function createRequest(
+// Utility method for creating the Request instances for loaders/actions during
+// client-side navigations and fetches.  During SSR we will always have a
+// Request instance from the static handler (query/queryRoute)
+function createClientSideRequest(
   location: string | Location,
   signal: AbortSignal,
   submission?: Submission
 ): Request {
-  let url = createURL(stripHashFromPath(location)).toString();
+  let url = createClientSideURL(stripHashFromPath(location)).toString();
   let init: RequestInit = { signal };
 
-  if (submission) {
+  if (submission && isMutationMethod(submission.formMethod)) {
     let { formMethod, formEncType, formData } = submission;
     init.method = formMethod.toUpperCase();
     init.body =
@@ -2979,12 +3045,10 @@ function getInternalRouterError(
     pathname,
     routeId,
     method,
-    message,
   }: {
     pathname?: string;
     routeId?: string;
     method?: string;
-    message?: string;
   } = {}
 ) {
   let statusText = "Unknown Server Error";
@@ -3059,8 +3123,18 @@ function isRedirectResult(result?: DataResult): result is RedirectResult {
   return (result && result.type) === ResultType.redirect;
 }
 
+function isResponse(value: any): value is Response {
+  return (
+    value != null &&
+    typeof value.status === "number" &&
+    typeof value.statusText === "string" &&
+    typeof value.headers === "object" &&
+    typeof value.body !== "undefined"
+  );
+}
+
 function isRedirectResponse(result: any): result is Response {
-  if (!(result instanceof Response)) {
+  if (!isResponse(result)) {
     return false;
   }
 
@@ -3072,7 +3146,7 @@ function isRedirectResponse(result: any): result is Response {
 function isQueryRouteResponse(obj: any): obj is QueryRouteResponse {
   return (
     obj &&
-    obj.response instanceof Response &&
+    isResponse(obj.response) &&
     (obj.type === ResultType.data || ResultType.error)
   );
 }
@@ -3081,8 +3155,8 @@ function isValidMethod(method: string): method is FormMethod {
   return validRequestMethods.has(method as FormMethod);
 }
 
-function isSubmissionMethod(method: string): method is SubmissionFormMethod {
-  return validActionMethods.has(method as SubmissionFormMethod);
+function isMutationMethod(method?: string): method is MutationFormMethod {
+  return validMutationMethods.has(method as MutationFormMethod);
 }
 
 async function resolveDeferredResults(

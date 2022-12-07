@@ -113,7 +113,7 @@ You can `throw` in your action to break out of the current call stack (stop runn
 
 ```tsx [10]
 <Route
-  action={async ({ params }) => {
+  action={async ({ params, request }) => {
     const res = await fetch(
       `/api/properties/${params.id}`,
       {
