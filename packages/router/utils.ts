@@ -440,9 +440,20 @@ function flattenRoutes<
 }
 
 /**
- * Computes all combinations of optional path segments for a given path.
+ * Computes all combinations of optional path segments for a given path,
+ * excluding combinations that are ambiguous and of lower priority.
+ *
+ * For example, `/one/:two?/three/:four?/:five?` explodes to:
+ * - `/one/three`
+ * - `/one/:two/three`
+ * - `/one/three/:four`
+ * - `/one/three/:five`
+ * - `/one/:two/three/:four`
+ * - `/one/:two/three/:five`
+ * - `/one/three/:four/:five`
+ * - `/one/:two/three/:four/:five`
  */
-let _explodeOptionalSegments = (path: string): string[] => {
+function explodeOptionalSegments(path: string): string[] {
   let segments = path.split("/");
   if (segments.length === 0) return [];
 
@@ -459,66 +470,23 @@ let _explodeOptionalSegments = (path: string): string[] => {
     return isOptional ? ["", required] : [required];
   }
 
-  let restExploded = _explodeOptionalSegments(rest.join("/"));
-  return restExploded.flatMap((subpath) => {
-    // /one + / + :two/three -> /one/:two/three
-    let requiredExploded = subpath === "" ? required : required + "/" + subpath;
-    // For optional segments, return the exploded path _without_ current segment first (`subpath`)
-    // and exploded path _with_ current segment later (`subpath`)
-    // This ensures that exploded paths are emitted in priority order
-    // `/one/three/:four` will come before `/one/three/:five`
-    return isOptional ? [subpath, requiredExploded] : [requiredExploded];
-  });
-};
-
-/**
- * Computes all combinations of optional path segments for a given path,
- * excluding combinations that are ambiguous and of lower priority.
- *
- * For example, `/one/:two?/three/:four?/:five?` explodes to:
- * - `/one/three`
- * - `/one/:two/three`
- * - `/one/three/:four`
- * - `/one/:two/three/:four`
- * - `/one/three/:four/:five`
- * - `/one/:two/three/:four/:five`
- *
- * Note that these paths are not returned:
- * - `/one/three/:five` (because `/one/three/:four` has priority)
- * - `/one/:two/three/:five` (because `/one/:two/three/:four` has priority)
- */
-let explodeOptionalSegments = (path: string) => {
-  let result: string[] = [];
-  // Compute hash for dynamic path segments
-  // /one/:two/three/:four -> /one/:/three/:
-  let dynamicHash = (subpath: string) =>
-    subpath
-      .split("/")
-      .map((segment) => (segment.startsWith(":") ? ":" : segment))
-      .join("/");
-
-  let dynamicHashes = new Set<string>();
-  for (let exploded of _explodeOptionalSegments(path)) {
-    let hash = dynamicHash(exploded);
-
-    // `/one/three/:four` and `/one/three/:five` have the same hash: `/one/three/:`
-    // so we only emit the first one of these we come across
-    // _explodeOptionalSegments returns exploded paths in priority order,
-    // so `/one/three/:four` will come before `/one/three/:five`
-    if (dynamicHashes.has(hash)) continue;
-
-    dynamicHashes.add(hash);
-
-    // for absolute paths, ensure `/` instead of empty segment
-    if (path.startsWith("/") && exploded === "") {
-      result.push("/");
-      continue;
-    }
-
-    result.push(exploded);
-  }
-  return result;
-};
+  let restExploded = explodeOptionalSegments(rest.join("/"));
+  return restExploded
+    .flatMap((subpath) => {
+      // /one + / + :two/three -> /one/:two/three
+      let requiredExploded =
+        subpath === "" ? required : required + "/" + subpath;
+      // For optional segments, return the exploded path _without_ current segment first (`subpath`)
+      // and exploded path _with_ current segment later (`subpath`)
+      // This ensures that exploded paths are emitted in priority order
+      // `/one/three/:four` will come before `/one/three/:five`
+      return isOptional ? [subpath, requiredExploded] : [requiredExploded];
+    })
+    .map((exploded) => {
+      // for absolute paths, ensure `/` instead of empty segment
+      return path.startsWith("/") && exploded === "" ? "/" : exploded;
+    });
+}
 
 function rankRouteBranches(branches: RouteBranch[]): void {
   branches.sort((a, b) =>
