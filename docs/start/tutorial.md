@@ -605,7 +605,8 @@ import {
 import { getContacts, createContact } from "../contacts";
 
 export async function action() {
-  await createContact();
+  const contact = await createContact();
+  return { contact }
 }
 
 /* other code */
