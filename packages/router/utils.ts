@@ -1,5 +1,5 @@
 import type { Location, Path, To } from "./history";
-import { parsePath } from "./history";
+import { invariant, parsePath } from "./history";
 
 /**
  * Map of routeId -> data returned from a loader/action/error
@@ -41,7 +41,6 @@ export interface RedirectResult {
   status: number;
   location: string;
   revalidate: boolean;
-  external: boolean;
 }
 
 /**
@@ -89,6 +88,7 @@ export interface Submission {
 interface DataFunctionArgs {
   request: Request;
   params: Params;
+  context?: any;
 }
 
 /**
@@ -309,7 +309,7 @@ export function convertRoutesToDataRoutes(
 /**
  * Matches the given routes to a location and returns the match data.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/match-routes
+ * @see https://reactrouter.com/utils/match-routes
  */
 export function matchRoutes<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
@@ -567,7 +567,7 @@ function matchRouteBranch<
 /**
  * Returns a path with params interpolated.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/generate-path
+ * @see https://reactrouter.com/utils/generate-path
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
@@ -661,7 +661,7 @@ type Mutable<T> = {
  * Performs pattern matching on a URL pathname and returns information about
  * the match.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/match-path
+ * @see https://reactrouter.com/utils/match-path
  */
 export function matchPath<
   ParamKey extends ParamParseKey<Path>,
@@ -826,20 +826,6 @@ export function stripBasename(
 /**
  * @private
  */
-export function invariant(value: boolean, message?: string): asserts value;
-export function invariant<T>(
-  value: T | null | undefined,
-  message?: string
-): asserts value is T;
-export function invariant(value: any, message?: string) {
-  if (value === false || value === null || typeof value === "undefined") {
-    throw new Error(message);
-  }
-}
-
-/**
- * @private
- */
 export function warning(cond: any, message: string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
@@ -860,7 +846,7 @@ export function warning(cond: any, message: string): void {
 /**
  * Returns a resolved path object relative to the given pathname.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/resolve-path
+ * @see https://reactrouter.com/utils/resolve-path
  */
 export function resolvePath(to: To, fromPathname = "/"): Path {
   let {

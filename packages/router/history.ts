@@ -447,6 +447,20 @@ export function createHashHistory(
 //#region UTILS
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * @private
+ */
+export function invariant(value: boolean, message?: string): asserts value;
+export function invariant<T>(
+  value: T | null | undefined,
+  message?: string
+): asserts value is T;
+export function invariant(value: any, message?: string) {
+  if (value === false || value === null || typeof value === "undefined") {
+    throw new Error(message);
+  }
+}
+
 function warning(cond: any, message: string) {
   if (!cond) {
     // eslint-disable-next-line no-console
@@ -544,7 +558,7 @@ export function parsePath(path: string): Partial<Path> {
   return parsedPath;
 }
 
-export function createURL(location: Location | string): URL {
+export function createClientSideURL(location: Location | string): URL {
   // window.location.origin is "null" (the literal string value) in Firefox
   // under certain conditions, notably when serving from a local HTML file
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
@@ -553,8 +567,12 @@ export function createURL(location: Location | string): URL {
     typeof window.location !== "undefined" &&
     window.location.origin !== "null"
       ? window.location.origin
-      : "unknown://unknown";
+      : window.location.href;
   let href = typeof location === "string" ? location : createPath(location);
+  invariant(
+    base,
+    `No window.location.(origin|href) available to create URL for href: ${href}`
+  );
   return new URL(href, base);
 }
 
@@ -643,7 +661,9 @@ function getUrlBasedHistory(
     },
     encodeLocation(to) {
       // Encode a Location the same way window.location would
-      let url = createURL(typeof to === "string" ? to : createPath(to));
+      let url = createClientSideURL(
+        typeof to === "string" ? to : createPath(to)
+      );
       return {
         pathname: url.pathname,
         search: url.search,
