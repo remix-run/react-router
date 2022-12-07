@@ -1,20 +1,12 @@
 # `@remix-run/server-runtime`
 
-## 1.8.2-pre.1
-
-### Patch Changes
-
-- Fix performance regression with creation of `@remix-run/router` static handler ([#4790](https://github.com/remix-run/remix/pull/4790))
-- Updated dependencies: ([#4790](https://github.com/remix-run/remix/pull/4790))
-  - `@remix-run/router@1.0.5-pre.2`
-
-## 1.8.2-pre.0
+## 1.8.2
 
 ### Patch Changes
 
 - Remove `instanceof Response` checks in favor of `isResponse` ([#4782](https://github.com/remix-run/remix/pull/4782))
-- Updated dependencies: ([`de11a2acd`](https://github.com/remix-run/remix/commit/de11a2acd83c96d2c592ea5a84b794acd9daad85))
-  - `@remix-run/router@1.0.5-pre.0`
+- Fix performance regression with creation of `@remix-run/router` static handler ([#4790](https://github.com/remix-run/remix/pull/4790))
+- Update dependency for `@remix-run/router` to `v1.0.5` ([`bd84a9317`](https://github.com/remix-run/remix/commit/bd84a931770a6b5e20c2f21839b4322023432b25))
 
 ## 1.8.1
 
