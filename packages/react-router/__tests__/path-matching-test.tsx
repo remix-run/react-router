@@ -10,7 +10,11 @@ function pickPathsAndParams(routes: RouteObject[], pathname: string) {
   let matches = matchRoutes(routes, pathname);
   return (
     matches &&
-    matches.map((match) => ({ path: match.route.path, params: match.params }))
+    matches.map((match) => ({
+      ...(match.route.index ? { index: match.route.index } : {}),
+      ...(match.route.path ? { path: match.route.path } : {}),
+      params: match.params,
+    }))
   );
 }
 
@@ -329,7 +333,7 @@ describe("path matching with splats", () => {
   });
 });
 
-describe("path matchine with optional segments", () => {
+describe("path matching with optional segments", () => {
   test("optional static segment at the start of the path", () => {
     let routes = [
       {
@@ -407,6 +411,24 @@ describe("path matchine with optional segments", () => {
         path: "/nested/one?/two/three?",
         params: {},
       },
+    ]);
+  });
+
+  test("optional static segment in nested routes", () => {
+    let nested = [
+      {
+        path: "/en?",
+        children: [
+          {
+            path: "abc",
+          },
+        ],
+      },
+    ];
+
+    expect(pickPathsAndParams(nested, "/en/abc")).toEqual([
+      { path: "/en?", params: {} },
+      { path: "abc", params: {} },
     ]);
   });
 });
@@ -488,6 +510,314 @@ describe("path matching with optional dynamic segments", () => {
       {
         path: "/nested/:one?/two/:three?",
         params: { one: "foo", three: "bar" },
+      },
+    ]);
+  });
+
+  test("consecutive optional dynamic segments in nested routes", () => {
+    let nested = [
+      {
+        path: "/one/:two?",
+        children: [
+          {
+            path: "three/:four?",
+            children: [
+              {
+                path: ":five?",
+              },
+            ],
+          },
+        ],
+      },
+    ];
+    expect(pickPathsAndParams(nested, "/one/dos/three/cuatro/cinco")).toEqual([
+      {
+        path: "/one/:two?",
+        params: { two: "dos", four: "cuatro", five: "cinco" },
+      },
+      {
+        path: "three/:four?",
+        params: { two: "dos", four: "cuatro", five: "cinco" },
+      },
+      { path: ":five?", params: { two: "dos", four: "cuatro", five: "cinco" } },
+    ]);
+    expect(pickPathsAndParams(nested, "/one/dos/three/cuatro")).toEqual([
+      {
+        path: "/one/:two?",
+        params: { two: "dos", four: "cuatro" },
+      },
+      {
+        path: "three/:four?",
+        params: { two: "dos", four: "cuatro" },
+      },
+      {
+        path: ":five?",
+        params: { two: "dos", four: "cuatro" },
+      },
+    ]);
+    expect(pickPathsAndParams(nested, "/one/dos/three")).toEqual([
+      {
+        path: "/one/:two?",
+        params: { two: "dos" },
+      },
+      {
+        path: "three/:four?",
+        params: { two: "dos" },
+      },
+      // Matches into 5 because it's just like if we did path=""
+      {
+        path: ":five?",
+        params: { two: "dos" },
+      },
+    ]);
+    expect(pickPathsAndParams(nested, "/one/dos")).toEqual([
+      {
+        path: "/one/:two?",
+        params: { two: "dos" },
+      },
+    ]);
+    expect(pickPathsAndParams(nested, "/one")).toEqual([
+      {
+        path: "/one/:two?",
+        params: {},
+      },
+    ]);
+    expect(pickPathsAndParams(nested, "/one/three/cuatro/cinco")).toEqual([
+      {
+        path: "/one/:two?",
+        params: { four: "cuatro", five: "cinco" },
+      },
+      {
+        path: "three/:four?",
+        params: { four: "cuatro", five: "cinco" },
+      },
+      { path: ":five?", params: { four: "cuatro", five: "cinco" } },
+    ]);
+    expect(pickPathsAndParams(nested, "/one/three/cuatro")).toEqual([
+      {
+        path: "/one/:two?",
+        params: { four: "cuatro" },
+      },
+      {
+        path: "three/:four?",
+        params: { four: "cuatro" },
+      },
+      {
+        path: ":five?",
+        params: { four: "cuatro" },
+      },
+    ]);
+    expect(pickPathsAndParams(nested, "/one/three")).toEqual([
+      {
+        path: "/one/:two?",
+        params: {},
+      },
+      {
+        path: "three/:four?",
+        params: {},
+      },
+      // Matches into 5 because it's just like if we did path=""
+      {
+        path: ":five?",
+        params: {},
+      },
+    ]);
+    expect(pickPathsAndParams(nested, "/one")).toEqual([
+      {
+        path: "/one/:two?",
+        params: {},
+      },
+    ]);
+  });
+
+  test("prefers optional static over optional dynamic segments", () => {
+    let nested = [
+      {
+        path: "/one",
+        children: [
+          {
+            path: ":param?",
+            children: [
+              {
+                path: "three",
+              },
+            ],
+          },
+          {
+            path: "two?",
+            children: [
+              {
+                path: "three",
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    // static `two` segment should win
+    expect(pickPathsAndParams(nested, "/one/two/three")).toEqual([
+      {
+        params: {},
+        path: "/one",
+      },
+      {
+        params: {},
+        path: "two?",
+      },
+      {
+        params: {},
+        path: "three",
+      },
+    ]);
+
+    // fall back to param when no static match
+    expect(pickPathsAndParams(nested, "/one/not-two/three")).toEqual([
+      {
+        params: {
+          param: "not-two",
+        },
+        path: "/one",
+      },
+      {
+        params: {
+          param: "not-two",
+        },
+        path: ":param?",
+      },
+      {
+        params: {
+          param: "not-two",
+        },
+        path: "three",
+      },
+    ]);
+
+    // No optional segment provided - earlier "dup" route should win
+    expect(pickPathsAndParams(nested, "/one/three")).toEqual([
+      {
+        params: {},
+        path: "/one",
+      },
+      {
+        params: {},
+        path: ":param?",
+      },
+      {
+        params: {},
+        path: "three",
+      },
+    ]);
+  });
+
+  test("prefers index routes over optional static segments", () => {
+    let nested = [
+      {
+        path: "/one",
+        children: [
+          {
+            path: ":param?",
+            children: [
+              {
+                path: "three?",
+              },
+              {
+                index: true,
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    expect(pickPathsAndParams(nested, "/one/two")).toEqual([
+      {
+        params: {
+          param: "two",
+        },
+        path: "/one",
+      },
+      {
+        params: {
+          param: "two",
+        },
+        path: ":param?",
+      },
+      {
+        index: true,
+        params: {
+          param: "two",
+        },
+      },
+    ]);
+    expect(pickPathsAndParams(nested, "/one")).toEqual([
+      {
+        params: {},
+        path: "/one",
+      },
+      {
+        params: {},
+        path: ":param?",
+      },
+      {
+        index: true,
+        params: {},
+      },
+    ]);
+  });
+
+  test("prefers index routes over optional dynamic segments", () => {
+    let nested = [
+      {
+        path: "/one",
+        children: [
+          {
+            path: ":param?",
+            children: [
+              {
+                path: ":three?",
+              },
+              {
+                index: true,
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    expect(pickPathsAndParams(nested, "/one/two")).toEqual([
+      {
+        params: {
+          param: "two",
+        },
+        path: "/one",
+      },
+      {
+        params: {
+          param: "two",
+        },
+        path: ":param?",
+      },
+      {
+        index: true,
+        params: {
+          param: "two",
+        },
+      },
+    ]);
+    expect(pickPathsAndParams(nested, "/one")).toEqual([
+      {
+        params: {},
+        path: "/one",
+      },
+      {
+        params: {},
+        path: ":param?",
+      },
+      {
+        index: true,
+        params: {},
       },
     ]);
   });
