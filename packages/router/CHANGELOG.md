@@ -1,25 +1,14 @@
 # `@remix-run/router`
 
-## 1.0.5-pre.2
+## 1.0.5
 
 ### Patch Changes
 
+- Fix requests sent to revalidating loaders so they reflect a `GET` request ([#9680](https://github.com/remix-run/react-router/pull/9680))
+- Remove `instanceof Response` checks in favor of `isResponse` ([#9690](https://github.com/remix-run/react-router/pull/9690))
+- Fix `URL` creation in Cloudflare Pages or other non-browser-environments ([#9682](https://github.com/remix-run/react-router/pull/9682), [#9689](https://github.com/remix-run/react-router/pull/9689))
 - Add `requestContext` support to static handler `query`/`queryRoute` ([#9696](https://github.com/remix-run/react-router/pull/9696))
   - Note that the unstable API of `queryRoute(path, routeId)` has been changed to `queryRoute(path, { routeId, requestContext })`
-
-## 1.0.5-pre.1
-
-### Patch Changes
-
-- Remove `instanceof Response` checks in favor of `isResponse` ([#9690](https://github.com/remix-run/react-router/pull/9690))
-- Fix URL creation in Remix integration tests ([#9689](https://github.com/remix-run/react-router/pull/9689))
-
-## 1.0.5-pre.0
-
-### Patch Changes
-
-- Fix URL creation in Cloudflare Pages or other non-browser-environment ([#9682](https://github.com/remix-run/react-router/pull/9682))
-- Fix requests sent to revalidating loaders so they reflect a GET request ([#9680](https://github.com/remix-run/react-router/pull/9680))
 
 ## 1.0.4
 
