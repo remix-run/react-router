@@ -7,27 +7,6 @@
 - Updated dependencies:
   - `react-router@6.4.5`
 
-## 6.4.5-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@6.4.5-pre.2`
-
-## 6.4.5-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@6.4.5-pre.1`
-
-## 6.4.5-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@6.4.5-pre.0`
-
 ## 6.4.4
 
 ### Patch Changes
