@@ -378,7 +378,7 @@ function flattenRoutes<
     relativePath?: string
   ) => {
     let meta: RouteMeta<RouteObjectType> = {
-      relativePath: relativePath || route.path || "",
+      relativePath: relativePath ?? (route.path || ""),
       caseSensitive: route.caseSensitive === true,
       childrenIndex: index,
       route,
@@ -507,6 +507,13 @@ let explodeOptionalSegments = function* (path: string) {
     if (dynamicHashes.has(hash)) continue;
 
     dynamicHashes.add(hash);
+
+    // for absolute paths, ensure `/` instead of empty segment
+    if (path.startsWith("/") && exploded === "") {
+      yield "/";
+      continue;
+    }
+
     yield exploded;
   }
 };
