@@ -1,5 +1,13 @@
 # `@remix-run/server-runtime`
 
+## 1.8.2-pre.1
+
+### Patch Changes
+
+- Fix performance regression with creation of `@remix-run/router` static handler ([#4790](https://github.com/remix-run/remix/pull/4790))
+- Updated dependencies: ([#4790](https://github.com/remix-run/remix/pull/4790))
+  - `@remix-run/router@1.0.5-pre.2`
+
 ## 1.8.2-pre.0
 
 ### Patch Changes
