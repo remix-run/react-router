@@ -487,7 +487,8 @@ let _explodeOptionalSegments = (path: string): string[] => {
  * - `/one/three/:five` (because `/one/three/:four` has priority)
  * - `/one/:two/three/:five` (because `/one/:two/three/:four` has priority)
  */
-let explodeOptionalSegments = function* (path: string) {
+let explodeOptionalSegments = (path: string) => {
+  let result: string[] = [];
   // Compute hash for dynamic path segments
   // /one/:two/three/:four -> /one/:/three/:
   let dynamicHash = (subpath: string) =>
@@ -510,12 +511,13 @@ let explodeOptionalSegments = function* (path: string) {
 
     // for absolute paths, ensure `/` instead of empty segment
     if (path.startsWith("/") && exploded === "") {
-      yield "/";
+      result.push("/");
       continue;
     }
 
-    yield exploded;
+    result.push(exploded);
   }
+  return result;
 };
 
 function rankRouteBranches(branches: RouteBranch[]): void {
