@@ -49,6 +49,7 @@ export function defineConventionalRoutes(
   });
 
   let routeIds = Object.keys(files).sort(byLongestFirst);
+  let parentRouteIds = getParentRouteIds(routeIds);
 
   let uniqueRoutes = new Map<string, string>();
 
@@ -58,7 +59,7 @@ export function defineConventionalRoutes(
     parentId?: string
   ): void {
     let childRouteIds = routeIds.filter(
-      (id) => findParentRouteId(routeIds, id) === parentId
+      (id) => parentRouteIds[id] === parentId
     );
 
     for (let routeId of childRouteIds) {
@@ -86,7 +87,7 @@ export function defineConventionalRoutes(
 
       if (isIndexRoute) {
         let invalidChildRoutes = routeIds.filter(
-          (id) => findParentRouteId(routeIds, id) === routeId
+          (id) => parentRouteIds[id] === routeId
         );
 
         if (invalidChildRoutes.length > 0) {
@@ -193,11 +194,16 @@ export function createRoutePath(partialRouteId: string): string | undefined {
   return result || undefined;
 }
 
-function findParentRouteId(
-  routeIds: string[],
-  childRouteId: string
-): string | undefined {
-  return routeIds.find((id) => childRouteId.startsWith(`${id}/`));
+function getParentRouteIds(
+  routeIds: string[]
+): Record<string, string | undefined> {
+  return routeIds.reduce<Record<string, string | undefined>>(
+    (parentRouteIds, childRouteId) => ({
+      ...parentRouteIds,
+      [childRouteId]: routeIds.find((id) => childRouteId.startsWith(`${id}/`)),
+    }),
+    {}
+  );
 }
 
 function byLongestFirst(a: string, b: string): number {

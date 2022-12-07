@@ -1,4 +1,6 @@
-import { createRoutePath } from "../config/routesConvention";
+import * as path from "path";
+
+import { createRoutePath, defineConventionalRoutes } from "../config/routesConvention";
 
 describe("createRoutePath", () => {
   describe("creates proper route paths", () => {
@@ -45,3 +47,13 @@ describe("createRoutePath", () => {
     }
   });
 });
+
+describe("defineConventionalRoutes", () => {
+  it("creates a route manifest from the routes directory", () => {
+    let routes = defineConventionalRoutes(path.join(__dirname, "fixtures/replace-remix-magic-imports/app"));
+    let keys = Object.keys(routes);
+    expect(keys.length).toBe(14)
+    expect(keys.filter(key => routes[key].parentId).length).toBe(5)
+    expect(keys.filter(key => routes[key].index).length).toBe(4)
+  })
+})
