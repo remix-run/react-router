@@ -1624,11 +1624,10 @@ export function createRouter(init: RouterInit): Router {
       state.location,
       redirect.location,
       // TODO: This can be removed once we get rid of useTransition in Remix v2
-      isFetchActionRedirect
-        ? {
-            isFetchActionRedirect: true,
-          }
-        : undefined
+      {
+        _isRedirect: true,
+        ...(isFetchActionRedirect ? { _isFetchActionRedirect: true } : {}),
+      }
     );
     invariant(
       redirectLocation,
