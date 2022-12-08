@@ -267,6 +267,7 @@ export function createStaticRouter(
         preventScrollReset: false,
         revalidation: "idle" as RevalidationState,
         fetchers: new Map(),
+        blockers: new Map(),
       };
     },
     get routes() {
