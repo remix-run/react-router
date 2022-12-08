@@ -82,7 +82,7 @@ export interface Update {
    */
   location: Location;
 
-  delta?: number;
+  delta: number;
 }
 
 /**
@@ -171,12 +171,6 @@ export interface History {
    * @returns unlisten - A function that may be used to stop listening
    */
   listen(listener: Listener): () => void;
-}
-
-interface Events<F> {
-  length: number;
-  push(fn: F): () => void;
-  call(arg: any): void;
 }
 
 type HistoryState = {
@@ -291,7 +285,7 @@ export function createMemoryHistory(
       index += 1;
       entries.splice(index, entries.length, nextLocation);
       if (v5Compat && listener) {
-        listener({ action, location: nextLocation });
+        listener({ action, location: nextLocation, delta: 1 });
       }
     },
     replace(to, state) {
@@ -299,7 +293,7 @@ export function createMemoryHistory(
       let nextLocation = createMemoryLocation(to, state);
       entries[index] = nextLocation;
       if (v5Compat && listener) {
-        listener({ action, location: nextLocation });
+        listener({ action, location: nextLocation, delta: 0 });
       }
     },
     go(delta) {
@@ -308,7 +302,7 @@ export function createMemoryHistory(
       let nextLocation = entries[nextIndex];
       index = nextIndex;
       if (listener) {
-        listener({ action, location: nextLocation });
+        listener({ action, location: nextLocation, delta });
       }
     },
     listen(fn: Listener) {
@@ -664,7 +658,7 @@ function getUrlBasedHistory(
     }
 
     if (v5Compat && listener) {
-      listener({ action, location: history.location });
+      listener({ action, location: history.location, delta: 1 });
     }
   }
 
@@ -679,7 +673,7 @@ function getUrlBasedHistory(
     globalHistory.replaceState(historyState, "", url);
 
     if (v5Compat && listener) {
-      listener({ action, location: history.location });
+      listener({ action, location: history.location, delta: 0 });
     }
   }
 
