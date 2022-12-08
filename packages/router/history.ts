@@ -89,18 +89,7 @@ export interface Update {
  * A function that receives notifications about location changes.
  */
 export interface Listener {
-  (update: Update): void | Promise<void>;
-}
-
-/**
- * A change to the current location that was blocked. May be retried
- * after obtaining user confirmation.
- */
-export interface Transition extends Update {
-  /**
-   * Retries the update to the current location.
-   */
-  retry(): void;
+  (update: Update): void;
 }
 
 /**
@@ -181,7 +170,7 @@ export interface History {
    * @param listener - A function that will be called when the location changes
    * @returns unlisten - A function that may be used to stop listening
    */
-  listen(listener: Listener): (() => void) | (() => Promise<void>);
+  listen(listener: Listener): () => void;
 }
 
 interface Events<F> {
@@ -247,7 +236,7 @@ export function createMemoryHistory(
     initialIndex == null ? entries.length - 1 : initialIndex
   );
   let action = Action.Pop;
-  let listeners = createEvents<Listener>();
+  let listener: Listener | null = null;
 
   function clampIndex(n: number): number {
     return Math.min(Math.max(n, 0), entries.length - 1);
@@ -301,27 +290,32 @@ export function createMemoryHistory(
       let nextLocation = createMemoryLocation(to, state);
       index += 1;
       entries.splice(index, entries.length, nextLocation);
-      if (v5Compat) {
-        listeners.call({ action, location: nextLocation });
+      if (v5Compat && listener) {
+        listener({ action, location: nextLocation });
       }
     },
     replace(to, state) {
       action = Action.Replace;
       let nextLocation = createMemoryLocation(to, state);
       entries[index] = nextLocation;
-      if (v5Compat) {
-        listeners.call({ action, location: nextLocation });
+      if (v5Compat && listener) {
+        listener({ action, location: nextLocation });
       }
     },
     go(delta) {
-      action = Action.Replace;
+      action = Action.Pop;
       let nextIndex = clampIndex(index + delta);
       let nextLocation = entries[nextIndex];
       index = nextIndex;
-      listeners.call({ action, location: nextLocation });
+      if (listener) {
+        listener({ action, location: nextLocation });
+      }
     },
-    listen(fn) {
-      return listeners.push(fn);
+    listen(fn: Listener) {
+      listener = fn;
+      return () => {
+        listener = null;
+      };
     },
   };
 
@@ -495,24 +489,6 @@ function warning(cond: any, message: string) {
   }
 }
 
-function createEvents<F extends Function>(): Events<F> {
-  let handlers: F[] = [];
-  return {
-    get length() {
-      return handlers.length;
-    },
-    push(fn: F) {
-      handlers.push(fn);
-      return function () {
-        handlers = handlers.filter((handler) => handler !== fn);
-      };
-    },
-    call(arg) {
-      handlers.forEach((fn) => fn && fn(arg));
-    },
-  };
-}
-
 function createKey() {
   return Math.random().toString(36).substr(2, 8);
 }
@@ -628,7 +604,7 @@ function getUrlBasedHistory(
   let { window = document.defaultView!, v5Compat = false } = options;
   let globalHistory = window.history;
   let action = Action.Pop;
-  let listeners = createEvents<Listener>();
+  let listener: Listener | null = null;
 
   let index = getIndex()!;
   // Index should only be null when we initialize. If not, it's because the
@@ -651,7 +627,9 @@ function getUrlBasedHistory(
     if (nextIndex != null) {
       let delta = index - nextIndex;
       action = nextAction;
-      listeners.call({ action, location: history.location, delta });
+      if (listener) {
+        listener({ action, location: history.location, delta });
+      }
     } else {
       warning(
         false,
@@ -685,8 +663,8 @@ function getUrlBasedHistory(
       window.location.assign(url);
     }
 
-    if (v5Compat) {
-      listeners.call({ action, location: history.location });
+    if (v5Compat && listener) {
+      listener({ action, location: history.location });
     }
   }
 
@@ -700,8 +678,8 @@ function getUrlBasedHistory(
     let url = history.createHref(location);
     globalHistory.replaceState(historyState, "", url);
 
-    if (v5Compat) {
-      listeners.call({ action, location: history.location });
+    if (v5Compat && listener) {
+      listener({ action, location: history.location });
     }
   }
 
@@ -713,11 +691,15 @@ function getUrlBasedHistory(
       return getLocation(window, globalHistory);
     },
     listen(fn: Listener) {
+      if (listener) {
+        throw new Error("A history only accepts one active listener");
+      }
       window.addEventListener(PopStateEventType, handlePop);
-      let removeListener = listeners.push(fn);
+      listener = fn;
+
       return () => {
         window.removeEventListener(PopStateEventType, handlePop);
-        removeListener();
+        listener = null;
       };
     },
     createHref(to) {
