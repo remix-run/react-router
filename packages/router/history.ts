@@ -81,13 +81,15 @@ export interface Update {
    * The new location.
    */
   location: Location;
+
+  delta?: number;
 }
 
 /**
  * A function that receives notifications about location changes.
  */
 export interface Listener {
-  (update: Update): void;
+  (update: Update): void | Promise<void>;
 }
 
 /**
@@ -179,7 +181,7 @@ export interface History {
    * @param listener - A function that will be called when the location changes
    * @returns unlisten - A function that may be used to stop listening
    */
-  listen(listener: Listener): () => void;
+  listen(listener: Listener): (() => void) | (() => Promise<void>);
 }
 
 interface Events<F> {
@@ -191,6 +193,7 @@ interface Events<F> {
 type HistoryState = {
   usr: any;
   key?: string;
+  idx: number;
 };
 
 const PopStateEventType = "popstate";
@@ -311,9 +314,11 @@ export function createMemoryHistory(
       }
     },
     go(delta) {
-      action = Action.Pop;
-      index = clampIndex(index + delta);
-      listeners.call({ action, location: getCurrentLocation() });
+      action = Action.Replace;
+      let nextIndex = clampIndex(index + delta);
+      let nextLocation = entries[nextIndex];
+      index = nextIndex;
+      listeners.call({ action, location: nextLocation });
     },
     listen(fn) {
       return listeners.push(fn);
@@ -515,10 +520,11 @@ function createKey() {
 /**
  * For browser-based histories, we combine the state and key into an object
  */
-function getHistoryState(location: Location): HistoryState {
+function getHistoryState(location: Location, index: number): HistoryState {
   return {
     usr: location.state,
     key: location.key,
+    idx: index,
   };
 }
 
@@ -624,9 +630,41 @@ function getUrlBasedHistory(
   let action = Action.Pop;
   let listeners = createEvents<Listener>();
 
+  let index = getIndex()!;
+  // Index should only be null when we initialize. If not, it's because the
+  // user called history.pushState or history.replaceState directly, in which
+  // case we should log a warning as it will result in bugs.
+  if (index == null) {
+    index = 0;
+    globalHistory.replaceState({ ...globalHistory.state, idx: index }, "");
+  }
+
+  function getIndex(): number {
+    let state = globalHistory.state || { idx: null };
+    return state.idx;
+  }
+
   function handlePop() {
-    action = Action.Pop;
-    listeners.call({ action, location: history.location });
+    let nextAction = Action.Pop;
+    let nextIndex = getIndex();
+
+    if (nextIndex != null) {
+      let delta = index - nextIndex;
+      action = nextAction;
+      listeners.call({ action, location: history.location, delta });
+    } else {
+      warning(
+        false,
+        // TODO: Write up a doc that explains our blocking strategy in detail
+        // and link to it here so people can understand better what is going on
+        // and how to avoid it.
+        `You are trying to block a POP navigation to a location that was not ` +
+          `created by @remix-run/router. The block will fail silently in ` +
+          `production, but in general you should do all navigation with the ` +
+          `router (instead of using window.history.pushState directly) ` +
+          `to avoid this situation.`
+      );
+    }
   }
 
   function push(to: To, state?: any) {
@@ -634,7 +672,8 @@ function getUrlBasedHistory(
     let location = createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
-    let historyState = getHistoryState(location);
+    index = getIndex() + 1;
+    let historyState = getHistoryState(location, index);
     let url = history.createHref(location);
 
     // try...catch because iOS limits us to 100 pushState calls :/
@@ -656,7 +695,8 @@ function getUrlBasedHistory(
     let location = createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
-    let historyState = getHistoryState(location);
+    index = getIndex();
+    let historyState = getHistoryState(location, index);
     let url = history.createHref(location);
     globalHistory.replaceState(historyState, "", url);
 
