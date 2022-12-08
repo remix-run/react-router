@@ -1,5 +1,5 @@
 import type { Location, Path, To } from "./history";
-import { parsePath } from "./history";
+import { invariant, parsePath } from "./history";
 
 /**
  * Map of routeId -> data returned from a loader/action/error
@@ -41,7 +41,6 @@ export interface RedirectResult {
   status: number;
   location: string;
   revalidate: boolean;
-  external: boolean;
 }
 
 /**
@@ -62,8 +61,8 @@ export type DataResult =
   | RedirectResult
   | ErrorResult;
 
-export type SubmissionFormMethod = "post" | "put" | "patch" | "delete";
-export type FormMethod = "get" | SubmissionFormMethod;
+export type MutationFormMethod = "post" | "put" | "patch" | "delete";
+export type FormMethod = "get" | MutationFormMethod;
 
 export type FormEncType =
   | "application/x-www-form-urlencoded"
@@ -75,7 +74,7 @@ export type FormEncType =
  * external consumption
  */
 export interface Submission {
-  formMethod: SubmissionFormMethod;
+  formMethod: FormMethod;
   formAction: string;
   formEncType: FormEncType;
   formData: FormData;
@@ -89,6 +88,7 @@ export interface Submission {
 interface DataFunctionArgs {
   request: Request;
   params: Params;
+  context?: any;
 }
 
 /**
@@ -309,7 +309,7 @@ export function convertRoutesToDataRoutes(
 /**
  * Matches the given routes to a location and returns the match data.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/match-routes
+ * @see https://reactrouter.com/utils/match-routes
  */
 export function matchRoutes<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
@@ -372,9 +372,14 @@ function flattenRoutes<
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
   parentPath = ""
 ): RouteBranch<RouteObjectType>[] {
-  routes.forEach((route, index) => {
+  let flattenRoute = (
+    route: RouteObjectType,
+    index: number,
+    relativePath?: string
+  ) => {
     let meta: RouteMeta<RouteObjectType> = {
-      relativePath: route.path || "",
+      relativePath:
+        relativePath === undefined ? route.path || "" : relativePath,
       caseSensitive: route.caseSensitive === true,
       childrenIndex: index,
       route,
@@ -415,46 +420,73 @@ function flattenRoutes<
       return;
     }
 
-    // Handle optional params - /path/:optional?
-    let segments = path.split("/");
-    let optionalParams: string[] = [];
-    segments.forEach((segment) => {
-      let match = segment.match(/^:?([^?]+)\?$/);
-      if (match) {
-        optionalParams.push(match[1]);
-      }
+    branches.push({
+      path,
+      score: computeScore(path, route.index),
+      routesMeta,
     });
-
-    if (optionalParams.length > 0) {
-      for (let i = 0; i <= optionalParams.length; i++) {
-        let newPath = path;
-        let newMeta = routesMeta.map((m) => ({ ...m }));
-
-        for (let j = optionalParams.length - 1; j >= 0; j--) {
-          let re = new RegExp(`(\\/:?${optionalParams[j]})\\?`);
-          let replacement = j < i ? "$1" : "";
-          newPath = newPath.replace(re, replacement);
-          newMeta[newMeta.length - 1].relativePath = newMeta[
-            newMeta.length - 1
-          ].relativePath.replace(re, replacement);
-        }
-
-        branches.push({
-          path: newPath,
-          score: computeScore(newPath, route.index),
-          routesMeta: newMeta,
-        });
-      }
+  };
+  routes.forEach((route, index) => {
+    // coarse-grain check for optional params
+    if (route.path === "" || !route.path?.includes("?")) {
+      flattenRoute(route, index);
     } else {
-      branches.push({
-        path,
-        score: computeScore(path, route.index),
-        routesMeta,
-      });
+      for (let exploded of explodeOptionalSegments(route.path)) {
+        flattenRoute(route, index, exploded);
+      }
     }
   });
 
   return branches;
+}
+
+/**
+ * Computes all combinations of optional path segments for a given path,
+ * excluding combinations that are ambiguous and of lower priority.
+ *
+ * For example, `/one/:two?/three/:four?/:five?` explodes to:
+ * - `/one/three`
+ * - `/one/:two/three`
+ * - `/one/three/:four`
+ * - `/one/three/:five`
+ * - `/one/:two/three/:four`
+ * - `/one/:two/three/:five`
+ * - `/one/three/:four/:five`
+ * - `/one/:two/three/:four/:five`
+ */
+function explodeOptionalSegments(path: string): string[] {
+  let segments = path.split("/");
+  if (segments.length === 0) return [];
+
+  let [first, ...rest] = segments;
+
+  // Optional path segments are denoted by a trailing `?`
+  let isOptional = first.endsWith("?");
+  // Compute the corresponding required segment: `foo?` -> `foo`
+  let required = first.replace(/\?$/, "");
+
+  if (rest.length === 0) {
+    // Intepret empty string as omitting an optional segment
+    // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
+    return isOptional ? ["", required] : [required];
+  }
+
+  let restExploded = explodeOptionalSegments(rest.join("/"));
+  return restExploded
+    .flatMap((subpath) => {
+      // /one + / + :two/three -> /one/:two/three
+      let requiredExploded =
+        subpath === "" ? required : required + "/" + subpath;
+      // For optional segments, return the exploded path _without_ current segment first (`subpath`)
+      // and exploded path _with_ current segment later (`subpath`)
+      // This ensures that exploded paths are emitted in priority order
+      // `/one/three/:four` will come before `/one/three/:five`
+      return isOptional ? [subpath, requiredExploded] : [requiredExploded];
+    })
+    .map((exploded) => {
+      // for absolute paths, ensure `/` instead of empty segment
+      return path.startsWith("/") && exploded === "" ? "/" : exploded;
+    });
 }
 
 function rankRouteBranches(branches: RouteBranch[]): void {
@@ -567,7 +599,7 @@ function matchRouteBranch<
 /**
  * Returns a path with params interpolated.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/generate-path
+ * @see https://reactrouter.com/utils/generate-path
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
@@ -661,7 +693,7 @@ type Mutable<T> = {
  * Performs pattern matching on a URL pathname and returns information about
  * the match.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/match-path
+ * @see https://reactrouter.com/utils/match-path
  */
 export function matchPath<
   ParamKey extends ParamParseKey<Path>,
@@ -826,20 +858,6 @@ export function stripBasename(
 /**
  * @private
  */
-export function invariant(value: boolean, message?: string): asserts value;
-export function invariant<T>(
-  value: T | null | undefined,
-  message?: string
-): asserts value is T;
-export function invariant(value: any, message?: string) {
-  if (value === false || value === null || typeof value === "undefined") {
-    throw new Error(message);
-  }
-}
-
-/**
- * @private
- */
 export function warning(cond: any, message: string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
@@ -860,7 +878,7 @@ export function warning(cond: any, message: string): void {
 /**
  * Returns a resolved path object relative to the given pathname.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/resolve-path
+ * @see https://reactrouter.com/utils/resolve-path
  */
 export function resolvePath(to: To, fromPathname = "/"): Path {
   let {

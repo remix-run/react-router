@@ -1,4 +1,4 @@
-name: test
+name: 🧪 Test
 
 on:
   push:
@@ -11,36 +11,36 @@ on:
       - "docs/**"
       - "**/README.md"
   pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
     paths-ignore:
       - "docs/**"
       - "**/*.md"
 
 jobs:
   test:
+    name: 🧪 Test
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
 
-      - name: Set up Node
-        uses: actions/setup-node@v2
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
         with:
-          node-version: 14
-          check-latest: true
           cache: yarn
+          check-latest: true
+          node-version-file: ".nvmrc"
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: 📥 Install deps
+        run: yarn --frozen-lockfile
 
-      - name: Build
+      - name: 🏗 Build
         run: yarn build
 
-      - name: Test
+      - name: 🧪 Run tests
         run: yarn test
 
       - name: Check bundle size

@@ -32,7 +32,6 @@ export {
   defer,
   generatePath,
   getToPathname,
-  invariant,
   isRouteErrorResponse,
   joinPaths,
   json,
@@ -59,13 +58,13 @@ export type {
   Path,
   To,
 } from "./history";
-
 export {
   Action,
   createBrowserHistory,
   createPath,
   createHashHistory,
   createMemoryHistory,
+  invariant,
   parsePath,
 } from "./history";
 

@@ -3372,9 +3372,9 @@ describe("a router", () => {
       });
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(navigation.formData).toBeUndefined();
-      expect(navigation.formMethod).toBeUndefined();
-      expect(navigation.formEncType).toBeUndefined();
+      expect(navigation.formData).toEqual(createFormData({ gosh: "dang" }));
+      expect(navigation.formMethod).toBe("get");
+      expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location).toMatchObject({
         pathname: "/foo",
         search: "?gosh=dang",
@@ -3400,9 +3400,9 @@ describe("a router", () => {
 
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(navigation.formData).toBeUndefined();
-      expect(navigation.formMethod).toBeUndefined();
-      expect(navigation.formEncType).toBeUndefined();
+      expect(navigation.formData).toEqual(createFormData({ gosh: "dang" }));
+      expect(navigation.formMethod).toBe("get");
+      expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location?.pathname).toBe("/bar");
 
       await B.loaders.bar.resolve("B");
@@ -3872,8 +3872,10 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=value",
       });
-      expect(t.router.state.navigation.formMethod).toBeUndefined();
-      expect(t.router.state.navigation.formData).toBeUndefined();
+      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formData).toEqual(
+        createFormData({ key: "value" })
+      );
     });
 
     it("converts formData to URLSearchParams for formMethod=get", async () => {
@@ -3890,8 +3892,10 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=value",
       });
-      expect(t.router.state.navigation.formMethod).toBeUndefined();
-      expect(t.router.state.navigation.formData).toBeUndefined();
+      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formData).toEqual(
+        createFormData({ key: "value" })
+      );
     });
 
     it("does not preserve existing 'action' URLSearchParams for formMethod='get'", async () => {
@@ -3908,8 +3912,10 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=2",
       });
-      expect(t.router.state.navigation.formMethod).toBeUndefined();
-      expect(t.router.state.navigation.formData).toBeUndefined();
+      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formData).toEqual(
+        createFormData({ key: "2" })
+      );
     });
 
     it("preserves existing 'action' URLSearchParams for formMethod='post'", async () => {
@@ -4656,6 +4662,20 @@ describe("a router", () => {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
       });
+
+      let nav4 = await t.navigate("/tasks#hash", {
+        formData: createFormData({ foo: "bar" }),
+      });
+      expect(nav4.loaders.tasks.stub).toHaveBeenCalledWith({
+        params: {},
+        request: new Request("http://localhost/tasks?foo=bar", {
+          signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
+        }),
+      });
+
+      expect(t.router.state.navigation.formAction).toBe("/tasks");
+      expect(t.router.state.navigation?.location?.pathname).toBe("/tasks");
+      expect(t.router.state.navigation?.location?.search).toBe("?foo=bar");
     });
 
     it("handles errors thrown from loaders", async () => {
@@ -6165,8 +6185,8 @@ describe("a router", () => {
             pathname: "/tasks",
             search: "?key=value",
           },
-          formMethod: undefined,
-          formData: undefined,
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
         },
         revalidation: "loading",
         loaderData: {
@@ -6933,6 +6953,10 @@ describe("a router", () => {
           formData: createFormData({ key: "value" }),
         });
         expect(A.fetcher.state).toBe("loading");
+        expect(A.fetcher.formMethod).toBe("get");
+        expect(A.fetcher.formAction).toBe("/foo");
+        expect(A.fetcher.formData).toEqual(createFormData({ key: "value" }));
+        expect(A.fetcher.formEncType).toBe("application/x-www-form-urlencoded");
         expect(
           new URL(
             A.loaders.foo.stub.mock.calls[0][0].request.url
@@ -10932,6 +10956,42 @@ describe("a router", () => {
         expect(childLoaderRequest.url).toBe("http://localhost/child");
       });
 
+      it("should support a requestContext passed to loaders and actions", async () => {
+        let requestContext = { sessionId: "12345" };
+        let rootStub = jest.fn(() => "ROOT");
+        let childStub = jest.fn(() => "CHILD");
+        let actionStub = jest.fn(() => "CHILD ACTION");
+        let arg = (s) => s.mock.calls[0][0];
+        let { query } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            loader: rootStub,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                action: actionStub,
+                loader: childStub,
+              },
+            ],
+          },
+        ]);
+
+        await query(createRequest("/child"), { requestContext });
+        expect(arg(rootStub).context.sessionId).toBe("12345");
+        expect(arg(childStub).context.sessionId).toBe("12345");
+
+        actionStub.mockClear();
+        rootStub.mockClear();
+        childStub.mockClear();
+
+        await query(createSubmitRequest("/child"), { requestContext });
+        expect(arg(actionStub).context.sessionId).toBe("12345");
+        expect(arg(rootStub).context.sessionId).toBe("12345");
+        expect(arg(childStub).context.sessionId).toBe("12345");
+      });
+
       describe("statusCode", () => {
         it("should expose a 200 status code by default", async () => {
           let { query } = createStaticHandler([
@@ -11254,7 +11314,7 @@ describe("a router", () => {
                 isError ? Promise.reject(data) : Promise.resolve(data),
             },
           ]);
-          return handler.queryRoute(req, routeId);
+          return handler.queryRoute(req, { routeId });
         }
 
         return {
@@ -11307,7 +11367,9 @@ describe("a router", () => {
         data = await queryRoute(createRequest("/parent?index"));
         expect(data).toBe("PARENT INDEX LOADER");
 
-        data = await queryRoute(createRequest("/parent/child"), "child");
+        data = await queryRoute(createRequest("/parent/child"), {
+          routeId: "child",
+        });
         expect(data).toBe("CHILD LOADER");
       });
 
@@ -11324,19 +11386,27 @@ describe("a router", () => {
         let data;
 
         // Layout route
-        data = await queryRoute(createRequest("/parent"), "parent");
+        data = await queryRoute(createRequest("/parent"), {
+          routeId: "parent",
+        });
         expect(data).toBe("PARENT LOADER");
 
         // Index route
-        data = await queryRoute(createRequest("/parent"), "parentIndex");
+        data = await queryRoute(createRequest("/parent"), {
+          routeId: "parentIndex",
+        });
         expect(data).toBe("PARENT INDEX LOADER");
 
         // Parent in nested route
-        data = await queryRoute(createRequest("/parent/child"), "parent");
+        data = await queryRoute(createRequest("/parent/child"), {
+          routeId: "parent",
+        });
         expect(data).toBe("PARENT LOADER");
 
         // Child in nested route
-        data = await queryRoute(createRequest("/parent/child"), "child");
+        data = await queryRoute(createRequest("/parent/child"), {
+          routeId: "child",
+        });
         expect(data).toBe("CHILD LOADER");
 
         // Non-undefined falsey values should count
@@ -11464,19 +11534,27 @@ describe("a router", () => {
         let data;
 
         // Layout route
-        data = await queryRoute(createRequest("/base/parent"), "parent");
+        data = await queryRoute(createRequest("/base/parent"), {
+          routeId: "parent",
+        });
         expect(data).toBe("PARENT LOADER");
 
         // Index route
-        data = await queryRoute(createRequest("/base/parent"), "parentIndex");
+        data = await queryRoute(createRequest("/base/parent"), {
+          routeId: "parentIndex",
+        });
         expect(data).toBe("PARENT INDEX LOADER");
 
         // Parent in nested route
-        data = await queryRoute(createRequest("/base/parent/child"), "parent");
+        data = await queryRoute(createRequest("/base/parent/child"), {
+          routeId: "parent",
+        });
         expect(data).toBe("PARENT LOADER");
 
         // Child in nested route
-        data = await queryRoute(createRequest("/base/parent/child"), "child");
+        data = await queryRoute(createRequest("/base/parent/child"), {
+          routeId: "child",
+        });
         expect(data).toBe("CHILD LOADER");
 
         // Non-undefined falsey values should count
@@ -11494,19 +11572,27 @@ describe("a router", () => {
         let data;
 
         // Layout route
-        data = await queryRoute(createSubmitRequest("/parent"), "parent");
+        data = await queryRoute(createSubmitRequest("/parent"), {
+          routeId: "parent",
+        });
         expect(data).toBe("PARENT ACTION");
 
         // Index route
-        data = await queryRoute(createSubmitRequest("/parent"), "parentIndex");
+        data = await queryRoute(createSubmitRequest("/parent"), {
+          routeId: "parentIndex",
+        });
         expect(data).toBe("PARENT INDEX ACTION");
 
         // Parent in nested route
-        data = await queryRoute(createSubmitRequest("/parent/child"), "parent");
+        data = await queryRoute(createSubmitRequest("/parent/child"), {
+          routeId: "parent",
+        });
         expect(data).toBe("PARENT ACTION");
 
         // Child in nested route
-        data = await queryRoute(createSubmitRequest("/parent/child"), "child");
+        data = await queryRoute(createSubmitRequest("/parent/child"), {
+          routeId: "child",
+        });
         expect(data).toBe("CHILD ACTION");
 
         // Non-undefined falsey values should count
@@ -11525,19 +11611,19 @@ describe("a router", () => {
 
         data = await queryRoute(
           createSubmitRequest("/parent", { method: "PUT" }),
-          "parent"
+          { routeId: "parent" }
         );
         expect(data).toBe("PARENT ACTION");
 
         data = await queryRoute(
           createSubmitRequest("/parent", { method: "PATCH" }),
-          "parent"
+          { routeId: "parent" }
         );
         expect(data).toBe("PARENT ACTION");
 
         data = await queryRoute(
           createSubmitRequest("/parent", { method: "DELETE" }),
-          "parent"
+          { routeId: "parent" }
         );
         expect(data).toBe("PARENT ACTION");
       });
@@ -11697,10 +11783,9 @@ describe("a router", () => {
             ],
           },
         ]);
-        let response = await queryRoute(
-          createRequest("/parent/child"),
-          "child"
-        );
+        let response = await queryRoute(createRequest("/parent/child"), {
+          routeId: "child",
+        });
         expect(response instanceof Response).toBe(true);
         expect((response as Response).status).toBe(302);
         expect((response as Response).headers.get("Location")).toBe("/parent");
@@ -11724,10 +11809,9 @@ describe("a router", () => {
             ],
           },
         ]);
-        let response = await queryRoute(
-          createSubmitRequest("/parent/child"),
-          "child"
-        );
+        let response = await queryRoute(createSubmitRequest("/parent/child"), {
+          routeId: "child",
+        });
         expect(response instanceof Response).toBe(true);
         expect((response as Response).status).toBe(302);
         expect((response as Response).headers.get("Location")).toBe("/parent");
@@ -11749,7 +11833,9 @@ describe("a router", () => {
               loader: () => redirect(url),
             },
           ]);
-          let response = await handler.queryRoute(createRequest("/"), "root");
+          let response = await handler.queryRoute(createRequest("/"), {
+            routeId: "root",
+          });
           expect(response instanceof Response).toBe(true);
           expect((response as Response).status).toBe(302);
           expect((response as Response).headers.get("Location")).toBe(url);
@@ -11766,7 +11852,7 @@ describe("a router", () => {
           },
         ]);
         let request = createRequest("/");
-        let data = await queryRoute(request, "root");
+        let data = await queryRoute(request, { routeId: "root" });
         expect(data instanceof Response).toBe(true);
         expect(await data.json()).toEqual({ key: "value" });
       });
@@ -11781,7 +11867,7 @@ describe("a router", () => {
           },
         ]);
         let request = createSubmitRequest("/");
-        let data = await queryRoute(request, "root");
+        let data = await queryRoute(request, { routeId: "root" });
         expect(data instanceof Response).toBe(true);
         expect(await data.json()).toEqual({ key: "value" });
       });
@@ -11801,7 +11887,7 @@ describe("a router", () => {
         });
         let e;
         try {
-          let statePromise = queryRoute(request, "root");
+          let statePromise = queryRoute(request, { routeId: "root" });
           controller.abort();
           // This should resolve even though we never resolved the loader
           await statePromise;
@@ -11826,7 +11912,7 @@ describe("a router", () => {
         });
         let e;
         try {
-          let statePromise = queryRoute(request, "root");
+          let statePromise = queryRoute(request, { routeId: "root" });
           controller.abort();
           // This should resolve even though we never resolved the loader
           await statePromise;
@@ -11841,13 +11927,45 @@ describe("a router", () => {
         let request = createRequest("/", { signal: undefined });
         let e;
         try {
-          await queryRoute(request, "index");
+          await queryRoute(request, { routeId: "index" });
         } catch (_e) {
           e = _e;
         }
         expect(e).toMatchInlineSnapshot(
           `[Error: query()/queryRoute() requests must contain an AbortController signal]`
         );
+      });
+
+      it("should support a requestContext passed to loaders and actions", async () => {
+        let requestContext = { sessionId: "12345" };
+        let childStub = jest.fn(() => "CHILD");
+        let actionStub = jest.fn(() => "CHILD ACTION");
+        let arg = (s) => s.mock.calls[0][0];
+        let { queryRoute } = createStaticHandler([
+          {
+            path: "/",
+            children: [
+              {
+                id: "child",
+                path: "child",
+                action: actionStub,
+                loader: childStub,
+              },
+            ],
+          },
+        ]);
+
+        await queryRoute(createRequest("/child"), {
+          routeId: "child",
+          requestContext,
+        });
+        expect(arg(childStub).context.sessionId).toBe("12345");
+
+        await queryRoute(createSubmitRequest("/child"), {
+          routeId: "child",
+          requestContext,
+        });
+        expect(arg(actionStub).context.sessionId).toBe("12345");
       });
 
       describe("Errors with Status Codes", () => {
@@ -11887,7 +12005,7 @@ describe("a router", () => {
 
         it("should handle not found routeIds with a 403 Response", async () => {
           try {
-            await queryRoute(createRequest("/"), "junk");
+            await queryRoute(createRequest("/"), { routeId: "junk" });
             expect(false).toBe(true);
           } catch (data) {
             expect(isRouteErrorResponse(data)).toBe(true);
@@ -11899,7 +12017,7 @@ describe("a router", () => {
           }
 
           try {
-            await queryRoute(createSubmitRequest("/"), "junk");
+            await queryRoute(createSubmitRequest("/"), { routeId: "junk" });
             expect(false).toBe(true);
           } catch (data) {
             expect(isRouteErrorResponse(data)).toBe(true);
@@ -11913,7 +12031,7 @@ describe("a router", () => {
 
         it("should handle missing loaders with a 400 Response", async () => {
           try {
-            await queryRoute(createRequest("/"), "root");
+            await queryRoute(createRequest("/"), { routeId: "root" });
             expect(false).toBe(true);
           } catch (data) {
             expect(isRouteErrorResponse(data)).toBe(true);
@@ -11930,7 +12048,7 @@ describe("a router", () => {
 
         it("should handle missing actions with a 405 Response", async () => {
           try {
-            await queryRoute(createSubmitRequest("/"), "root");
+            await queryRoute(createSubmitRequest("/"), { routeId: "root" });
             expect(false).toBe(true);
           } catch (data) {
             expect(isRouteErrorResponse(data)).toBe(true);
@@ -11947,7 +12065,9 @@ describe("a router", () => {
 
         it("should handle unsupported methods with a 405 Response", async () => {
           try {
-            await queryRoute(createRequest("/", { method: "OPTIONS" }), "root");
+            await queryRoute(createRequest("/", { method: "OPTIONS" }), {
+              routeId: "root",
+            });
             expect(false).toBe(true);
           } catch (data) {
             expect(isRouteErrorResponse(data)).toBe(true);
