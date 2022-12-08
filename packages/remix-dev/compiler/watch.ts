@@ -65,7 +65,7 @@ export async function watch(
 
     try {
       config = await readConfig(config.rootDirectory);
-    } catch (error) {
+    } catch (error: unknown) {
       onCompileFailure(error as Error);
       return;
     }
@@ -110,7 +110,7 @@ export async function watch(
 
       try {
         config = await readConfig(config.rootDirectory);
-      } catch (error) {
+      } catch (error: unknown) {
         onCompileFailure(error as Error);
         return;
       }

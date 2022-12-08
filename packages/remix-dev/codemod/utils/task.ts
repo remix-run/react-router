@@ -15,7 +15,7 @@ export const task = async <Result>(
     let result = await callback(spinner);
     spinner.succeed(typeof succeed === "string" ? succeed : succeed(result));
     return result;
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof CodemodError) {
       spinner.fail(error.message);
       if (error.additionalInfo) log.info(error.additionalInfo);

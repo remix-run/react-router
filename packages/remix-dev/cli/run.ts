@@ -266,7 +266,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
                   try {
                     await validateNewProjectPath(String(input));
                     return true;
-                  } catch (error) {
+                  } catch (error: unknown) {
                     if (error instanceof Error && error.message) {
                       return error.message;
                     }

@@ -9,7 +9,7 @@ const retry = async (
 ) => {
   try {
     await callback();
-  } catch (error) {
+  } catch (error: unknown) {
     if (times === 0) throw error;
     setTimeout(() => retry(callback, times - 1), delayMs);
   }

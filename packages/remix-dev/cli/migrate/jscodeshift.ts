@@ -46,7 +46,7 @@ export const run = async <TransformOptions extends Options = Options>({
   try {
     let { error } = await jscodeshift(transformPath, files, options);
     return error === 0;
-  } catch (error) {
+  } catch (error: unknown) {
     return false;
   }
 };
