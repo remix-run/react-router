@@ -76,7 +76,7 @@ test.describe("rendering", () => {
                 </li>
                 <li>
                   <Form action="/${STATES.SUBMITTING_LOADER}" method="get">
-                    <button type="submit">
+                    <button type="submit" name="key" value="value">
                       ${STATES.SUBMITTING_LOADER}
                     </button>
                   </Form>
@@ -283,13 +283,16 @@ test.describe("rendering", () => {
         type: "loaderSubmission",
         location: {
           pathname: `/${STATES.SUBMITTING_LOADER}`,
-          search: "",
+          search: "?key=value",
           hash: "",
           state: null,
           key: expect.any(String),
         },
         submission: {
-          action: `/${STATES.SUBMITTING_LOADER}`,
+          // Note: This is a bug in Remix but we're going to keep it that way
+          // in useTransition (including the back-compat version) and it'll be
+          // fixed with useNavigation
+          action: `/${STATES.SUBMITTING_LOADER}?key=value`,
           encType: "application/x-www-form-urlencoded",
           method: "GET",
           key: expect.any(String),
