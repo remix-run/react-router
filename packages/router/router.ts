@@ -435,6 +435,7 @@ type FetcherStates<TData = any> = {
     formEncType: undefined;
     formData: undefined;
     data: TData | undefined;
+    " _hasFetcherDoneAnything "?: boolean;
   };
   Loading: {
     state: "loading";
@@ -443,6 +444,7 @@ type FetcherStates<TData = any> = {
     formEncType: FormEncType | undefined;
     formData: FormData | undefined;
     data: TData | undefined;
+    " _hasFetcherDoneAnything "?: boolean;
   };
   Submitting: {
     state: "submitting";
@@ -451,6 +453,7 @@ type FetcherStates<TData = any> = {
     formEncType: FormEncType;
     formData: FormData;
     data: TData | undefined;
+    " _hasFetcherDoneAnything "?: boolean;
   };
 };
 
@@ -815,11 +818,26 @@ export function createRouter(init: RouterInit): Router {
       ...init.history.encodeLocation(location),
     };
 
-    let historyAction =
-      (opts && opts.replace) === true ||
-      (submission != null && isMutationMethod(submission.formMethod))
-        ? HistoryAction.Replace
-        : HistoryAction.Push;
+    let historyAction = HistoryAction.Push;
+
+    if (opts && opts?.replace === true) {
+      historyAction = HistoryAction.Replace;
+    } else if (opts && opts.replace === false) {
+      // no-op
+    } else if (
+      submission != null &&
+      isMutationMethod(submission.formMethod) &&
+      parsePath(submission.formAction).pathname === state.location.pathname
+    ) {
+      // TODO check this with Ryan
+
+      // By default on submissions to the current location we REPLACE so that
+      // users don't have to double-click the back button to get to the prior
+      // location.  If the user redirects from the action/loader this will be
+      // ignored and the redirect will be a PUSH
+      historyAction = HistoryAction.Replace;
+    }
+
     let preventScrollReset =
       opts && "preventScrollReset" in opts
         ? opts.preventScrollReset === true
@@ -1158,6 +1176,7 @@ export function createRouter(init: RouterInit): Router {
           formAction: undefined,
           formEncType: undefined,
           formData: undefined,
+          " _hasFetcherDoneAnything ": true,
         };
         state.fetchers.set(key, revalidatingFetcher);
       });
@@ -1310,6 +1329,7 @@ export function createRouter(init: RouterInit): Router {
       state: "submitting",
       ...submission,
       data: existingFetcher && existingFetcher.data,
+      " _hasFetcherDoneAnything ": true,
     };
     state.fetchers.set(key, fetcher);
     updateState({ fetchers: new Map(state.fetchers) });
@@ -1347,6 +1367,7 @@ export function createRouter(init: RouterInit): Router {
         state: "loading",
         ...submission,
         data: undefined,
+        " _hasFetcherDoneAnything ": true,
       };
       state.fetchers.set(key, loadingFetcher);
       updateState({ fetchers: new Map(state.fetchers) });
@@ -1385,6 +1406,7 @@ export function createRouter(init: RouterInit): Router {
       state: "loading",
       data: actionResult.data,
       ...submission,
+      " _hasFetcherDoneAnything ": true,
     };
     state.fetchers.set(key, loadFetcher);
 
@@ -1415,6 +1437,7 @@ export function createRouter(init: RouterInit): Router {
           formAction: undefined,
           formEncType: undefined,
           formData: undefined,
+          " _hasFetcherDoneAnything ": true,
         };
         state.fetchers.set(staleKey, revalidatingFetcher);
         fetchControllers.set(staleKey, abortController);
@@ -1465,6 +1488,7 @@ export function createRouter(init: RouterInit): Router {
       formAction: undefined,
       formEncType: undefined,
       formData: undefined,
+      " _hasFetcherDoneAnything ": true,
     };
     state.fetchers.set(key, doneFetcher);
 
@@ -1518,6 +1542,7 @@ export function createRouter(init: RouterInit): Router {
       formData: undefined,
       ...submission,
       data: existingFetcher && existingFetcher.data,
+      " _hasFetcherDoneAnything ": true,
     };
     state.fetchers.set(key, loadingFetcher);
     updateState({ fetchers: new Map(state.fetchers) });
@@ -1586,6 +1611,7 @@ export function createRouter(init: RouterInit): Router {
       formAction: undefined,
       formEncType: undefined,
       formData: undefined,
+      " _hasFetcherDoneAnything ": true,
     };
     state.fetchers.set(key, doneFetcher);
     updateState({ fetchers: new Map(state.fetchers) });
@@ -1791,6 +1817,7 @@ export function createRouter(init: RouterInit): Router {
         formAction: undefined,
         formEncType: undefined,
         formData: undefined,
+        " _hasFetcherDoneAnything ": true,
       };
       state.fetchers.set(key, doneFetcher);
     }
@@ -2977,6 +3004,7 @@ function processLoaderData(
         formAction: undefined,
         formEncType: undefined,
         formData: undefined,
+        " _hasFetcherDoneAnything ": true,
       };
       state.fetchers.set(key, doneFetcher);
     }
