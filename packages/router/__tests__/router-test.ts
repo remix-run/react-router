@@ -983,6 +983,7 @@ describe("a router", () => {
         restoreScrollPosition: false,
         revalidation: "idle",
         fetchers: new Map(),
+        blockers: new Map(),
       });
     });
 
