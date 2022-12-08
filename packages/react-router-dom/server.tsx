@@ -9,6 +9,7 @@ import type {
 import {
   IDLE_FETCHER,
   IDLE_NAVIGATION,
+  UNBLOCKED_BLOCKER,
   Action,
   invariant,
   isRouteErrorResponse,
@@ -301,6 +302,21 @@ export function createStaticRouter(
     },
     dispose() {
       throw msg("dispose");
+    },
+    getBlocker() {
+      return UNBLOCKED_BLOCKER;
+    },
+    deleteBlocker() {
+      throw msg("deleteBlocker");
+    },
+    createBlocker() {
+      throw msg("createBlocker");
+    },
+    setBlockerFunction() {
+      throw msg("setBlockerFunction");
+    },
+    setBlockerState() {
+      throw msg("setBlockerState");
     },
     _internalFetchControllers: new Map(),
     _internalActiveDeferreds: new Map(),

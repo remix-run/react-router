@@ -637,6 +637,13 @@ export const IDLE_FETCHER: FetcherStates["Idle"] = {
   formData: undefined,
 };
 
+export const UNBLOCKED_BLOCKER: Blocker & { state: "unblocked" } = {
+  state: "unblocked",
+  fn: () => false,
+  proceed: undefined,
+  reset: undefined,
+};
+
 const isBrowser =
   typeof window !== "undefined" &&
   typeof window.document !== "undefined" &&
