@@ -98,8 +98,8 @@ test.describe("loader in an app", async () => {
     appFixture = await createAppFixture(fixture, ServerMode.Test);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test.describe("with JavaScript", () => {

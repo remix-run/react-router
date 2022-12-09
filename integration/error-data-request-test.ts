@@ -96,9 +96,9 @@ test.describe("ErrorBoundary", () => {
     errorLogs = [];
   });
 
-  test.afterAll(async () => {
+  test.afterAll(() => {
     console.error = _consoleError;
-    await appFixture.close();
+    appFixture.close();
   });
 
   function assertConsoleError(str: string) {

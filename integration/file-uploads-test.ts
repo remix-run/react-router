@@ -80,8 +80,8 @@ test.describe("file-uploads", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test("handles files under upload size limit", async ({ page }) => {

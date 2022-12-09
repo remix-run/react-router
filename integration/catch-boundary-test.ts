@@ -183,7 +183,9 @@ test.describe("CatchBoundary", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(() => appFixture.close());
+  test.afterAll(() => {
+    appFixture.close();
+  });
 
   test("non-matching urls on document requests", async () => {
     let res = await fixture.requestDocument(NOT_FOUND_HREF);

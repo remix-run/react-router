@@ -92,8 +92,8 @@ export function ComponentUsingData() {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test("can render basic markdown", async ({ page }) => {

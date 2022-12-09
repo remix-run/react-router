@@ -149,8 +149,8 @@ test.describe("useFetcher", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test.describe("No JavaScript", () => {

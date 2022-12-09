@@ -44,7 +44,9 @@ test.describe("rendering", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => appFixture.close());
+  test.afterAll(() => {
+    appFixture.close();
+  });
 
   test("server renders matching routes", async () => {
     let res = await fixture.requestDocument("/");

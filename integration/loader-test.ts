@@ -116,8 +116,8 @@ test.describe("loader in an app", () => {
     );
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test("sends a redirect", async ({ page }) => {
