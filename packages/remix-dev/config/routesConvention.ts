@@ -113,12 +113,17 @@ export function defineConventionalRoutes(
 let escapeStart = "[";
 let escapeEnd = "]";
 
+let optionalStart = "(";
+let optionalEnd = ")";
+
 // TODO: Cleanup and write some tests for this function
 export function createRoutePath(partialRouteId: string): string | undefined {
   let result = "";
   let rawSegmentBuffer = "";
 
   let inEscapeSequence = 0;
+  let inOptionalSegment = 0;
+  let optionalSegmentIndex = null;
   let skipSegment = false;
   for (let i = 0; i < partialRouteId.length; i++) {
     let char = partialRouteId.charAt(i);
@@ -140,8 +145,34 @@ export function createRoutePath(partialRouteId: string): string | undefined {
       return char === "_" && nextChar === "_" && !rawSegmentBuffer;
     }
 
+    function isSegmentSeparator(checkChar = char) {
+      return (
+        checkChar === "/" || checkChar === "." || checkChar === path.win32.sep
+      );
+    }
+
+    function isNewOptionalSegment() {
+      return (
+        char === optionalStart &&
+        lastChar !== optionalStart &&
+        (isSegmentSeparator(lastChar) || lastChar === undefined) &&
+        !inOptionalSegment &&
+        !inEscapeSequence
+      );
+    }
+
+    function isCloseOptionalSegment() {
+      return (
+        char === optionalEnd &&
+        nextChar !== optionalEnd &&
+        (isSegmentSeparator(nextChar) || nextChar === undefined) &&
+        inOptionalSegment &&
+        !inEscapeSequence
+      );
+    }
+
     if (skipSegment) {
-      if (char === "/" || char === "." || char === path.win32.sep) {
+      if (isSegmentSeparator()) {
         skipSegment = false;
       }
       continue;
@@ -157,18 +188,40 @@ export function createRoutePath(partialRouteId: string): string | undefined {
       continue;
     }
 
+    if (isNewOptionalSegment()) {
+      inOptionalSegment++;
+      optionalSegmentIndex = result.length;
+      result += "(";
+      continue;
+    }
+
+    if (isCloseOptionalSegment()) {
+      if (optionalSegmentIndex !== null) {
+        result =
+          result.slice(0, optionalSegmentIndex) +
+          result.slice(optionalSegmentIndex + 1);
+      }
+      optionalSegmentIndex = null;
+      inOptionalSegment--;
+      result += "?";
+      continue;
+    }
+
     if (inEscapeSequence) {
       result += char;
       continue;
     }
 
-    if (char === "/" || char === path.win32.sep || char === ".") {
+    if (isSegmentSeparator()) {
       if (rawSegmentBuffer === "index" && result.endsWith("index")) {
         result = result.replace(/\/?index$/, "");
       } else {
         result += "/";
       }
+
       rawSegmentBuffer = "";
+      inOptionalSegment = 0;
+      optionalSegmentIndex = null;
       continue;
     }
 
@@ -180,6 +233,11 @@ export function createRoutePath(partialRouteId: string): string | undefined {
     rawSegmentBuffer += char;
 
     if (char === "$") {
+      if (nextChar === ")") {
+        throw new Error(
+          `Invalid route path: ${partialRouteId}. Splat route $ is already optional`
+        );
+      }
       result += typeof nextChar === "undefined" ? "*" : ":";
       continue;
     }
@@ -189,6 +247,12 @@ export function createRoutePath(partialRouteId: string): string | undefined {
 
   if (rawSegmentBuffer === "index" && result.endsWith("index")) {
     result = result.replace(/\/?index$/, "");
+  }
+
+  if (rawSegmentBuffer === "index" && result.endsWith("index?")) {
+    throw new Error(
+      `Invalid route path: ${partialRouteId}. Make index route optional by using [index]`
+    );
   }
 
   return result || undefined;
