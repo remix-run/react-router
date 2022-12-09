@@ -10560,6 +10560,57 @@ describe("a router", () => {
         });
       });
 
+      it("should fill in null loaderData values for routes without loaders", async () => {
+        let { query } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            children: [
+              {
+                id: "none",
+                path: "none",
+              },
+              {
+                id: "a",
+                path: "a",
+                loader: () => "A",
+                children: [
+                  {
+                    id: "b",
+                    path: "b",
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+
+        // No loaders at all
+        let context = await query(createRequest("/none"));
+        expect(context).toMatchObject({
+          actionData: null,
+          loaderData: {
+            root: null,
+            none: null,
+          },
+          errors: null,
+          location: { pathname: "/none" },
+        });
+
+        // Mix of loaders and no loaders
+        context = await query(createRequest("/a/b"));
+        expect(context).toMatchObject({
+          actionData: null,
+          loaderData: {
+            root: null,
+            a: "A",
+            b: null,
+          },
+          errors: null,
+          location: { pathname: "/a/b" },
+        });
+      });
+
       it("should support document load navigations returning responses", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/json"));
