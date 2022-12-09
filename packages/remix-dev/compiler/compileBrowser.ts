@@ -16,6 +16,7 @@ import { emptyModulesPlugin } from "./plugins/emptyModulesPlugin";
 import { mdxPlugin } from "./plugins/mdx";
 import { urlImportsPlugin } from "./plugins/urlImportsPlugin";
 import { writeFileSafe } from "./utils/fs";
+import invariant from "../invariant";
 
 export type BrowserCompiler = {
   // produce ./public/build/
@@ -70,7 +71,7 @@ const createEsbuildConfig = (
     entryPoints[id] = config.routes[id].file + "?browser";
   }
 
-  let plugins = [
+  let plugins: esbuild.Plugin[] = [
     deprecatedRemixPackagePlugin(options.onWarning),
     cssFilePlugin(options),
     urlImportsPlugin(),
@@ -128,9 +129,12 @@ export const createBrowserCompiler = (
         metafile: true,
         incremental: true,
       });
-      metafile = compiler.metafile!;
+      invariant(compiler.metafile, "Expected metafile to be defined");
+      metafile = compiler.metafile;
     } else {
-      metafile = (await compiler.rebuild()).metafile!;
+      let rebuild = await compiler.rebuild();
+      invariant(rebuild.metafile, "Expected metafile to be defined");
+      metafile = rebuild.metafile;
     }
     let manifest = await createAssetsManifest(remixConfig, metafile);
     manifestChannel.write(manifest);
