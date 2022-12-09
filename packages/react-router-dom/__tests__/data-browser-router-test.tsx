@@ -287,14 +287,59 @@ function testDomRouter(
 
       function Boundary() {
         let error = useRouteError();
-        return isRouteErrorResponse(error) ? <h1>Yes!</h1> : <h2>No :(</h2>;
+        return isRouteErrorResponse(error) ? (
+          <pre>{JSON.stringify(error)}</pre>
+        ) : (
+          <p>No :(</p>
+        );
       }
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <h1>
-            Yes!
-          </h1>
+          <pre>
+            {\\"status\\":404,\\"statusText\\":\\"Not Found\\",\\"internal\\":false,\\"data\\":{\\"not\\":\\"found\\"}}
+          </pre>
+        </div>"
+      `);
+    });
+
+    it("deserializes Error instances from the window", async () => {
+      window.__staticRouterHydrationData = {
+        loaderData: {},
+        actionData: null,
+        errors: {
+          "0": {
+            message: "error message",
+            __type: "Error",
+          },
+        },
+      };
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")}>
+          <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
+        </TestDataRouter>
+      );
+
+      function Boundary() {
+        let error = useRouteError();
+        return error instanceof Error ? (
+          <>
+            <pre>{error.toString()}</pre>
+            <pre>stack:{error.stack}</pre>
+          </>
+        ) : (
+          <p>No :(</p>
+        );
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <pre>
+            Error: error message
+          </pre>
+          <pre>
+            stack:
+          </pre>
         </div>"
       `);
     });

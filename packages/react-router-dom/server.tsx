@@ -158,9 +158,9 @@ function serializeErrors(
     if (isRouteErrorResponse(val)) {
       serialized[key] = { ...val, __type: "RouteErrorResponse" };
     } else if (val instanceof Error) {
+      // Do not serialize stack traces from SSR for security reasons
       serialized[key] = {
         message: val.message,
-        stack: val.stack,
         __type: "Error",
       };
     } else {

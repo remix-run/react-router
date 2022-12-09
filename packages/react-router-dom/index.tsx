@@ -254,7 +254,9 @@ function deserializeErrors(
       );
     } else if (val && val.__type === "Error") {
       let error = new Error(val.message);
-      error.stack = val.stack;
+      // Wipe away the client-side stack trace.  Nothing to fill it in with
+      // because we don't serialize SSR stack traces for security reasons
+      error.stack = "";
       serialized[key] = error;
     } else {
       serialized[key] = val;
