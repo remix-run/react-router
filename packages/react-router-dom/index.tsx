@@ -657,7 +657,8 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         .submitter as HTMLFormSubmitter | null;
 
       let submitMethod =
-        (submitter?.formMethod as FormMethod | undefined) || method;
+        (submitter?.getAttribute("formmethod") as FormMethod | undefined) ||
+        method;
 
       submit(submitter || event.currentTarget, {
         method: submitMethod,

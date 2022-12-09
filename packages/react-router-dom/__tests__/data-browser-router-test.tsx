@@ -1662,6 +1662,157 @@ function testDomRouter(
       `);
     });
 
+    it("allows a button to override the <form method>", async () => {
+      let loaderDefer = createDeferred();
+
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route
+            path="/"
+            action={async ({ request }) => {
+              throw new Error("Should not hit this");
+            }}
+            loader={() => loaderDefer.promise}
+            element={<Home />}
+          />
+        </TestDataRouter>
+      );
+
+      function Home() {
+        let data = useLoaderData();
+        let navigation = useNavigation();
+        return (
+          <div>
+            <Form
+              method="post"
+              onSubmit={(e) => {
+                // jsdom doesn't handle submitter so we add it here
+                // See https://github.com/jsdom/jsdom/issues/3117
+                // @ts-expect-error
+                e.nativeEvent.submitter =
+                  e.currentTarget.querySelector("button");
+              }}
+            >
+              <input name="test" value="value" />
+              <button type="submit" formMethod="get">
+                Submit Form
+              </button>
+            </Form>
+            <div id="output">
+              <p>{navigation.state}</p>
+              <p>{data}</p>
+            </div>
+            <Outlet />
+          </div>
+        );
+      }
+
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id=\\"output\\"
+        >
+          <p>
+            idle
+          </p>
+          <p />
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      await waitFor(() => screen.getByText("loading"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id=\\"output\\"
+        >
+          <p>
+            loading
+          </p>
+          <p />
+        </div>"
+      `);
+
+      loaderDefer.resolve("Loader Data");
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id=\\"output\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Loader Data
+          </p>
+        </div>"
+      `);
+    });
+
+    it("supports uppercase form method attributes", async () => {
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
+
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route
+            path="/"
+            action={async ({ request }) => {
+              let resolvedValue = await actionDefer.promise;
+              let formData = await request.formData();
+              return `${resolvedValue}:${formData.get("test")}`;
+            }}
+            loader={() => loaderDefer.promise}
+            element={<Home />}
+          />
+        </TestDataRouter>
+      );
+
+      function Home() {
+        let data = useLoaderData();
+        let actionData = useActionData();
+        let navigation = useNavigation();
+        return (
+          <div>
+            <Form method="POST">
+              <input name="test" value="value" />
+              <button type="submit">Submit Form</button>
+            </Form>
+            <div id="output">
+              <p>{navigation.state}</p>
+              <p>{data}</p>
+              <p>{actionData}</p>
+            </div>
+            <Outlet />
+          </div>
+        );
+      }
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      await waitFor(() => screen.getByText("submitting"));
+      actionDefer.resolve("Action Data");
+      await waitFor(() => screen.getByText("loading"));
+      loaderDefer.resolve("Loader Data");
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id=\\"output\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Loader Data
+          </p>
+          <p>
+            Action Data:value
+          </p>
+        </div>"
+      `);
+    });
+
     describe("<Form action>", () => {
       function NoActionComponent() {
         return (
