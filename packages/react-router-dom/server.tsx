@@ -9,11 +9,11 @@ import type {
 import {
   IDLE_FETCHER,
   IDLE_NAVIGATION,
-  UNBLOCKED_BLOCKER,
   Action,
   invariant,
   isRouteErrorResponse,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
+  getInitialBlocker,
 } from "@remix-run/router";
 import type {
   DataRouteObject,
@@ -304,16 +304,17 @@ export function createStaticRouter(
       throw msg("dispose");
     },
     getBlocker() {
-      return UNBLOCKED_BLOCKER;
+      return getInitialBlocker(() => {
+        throw msg("getBlocker");
+      });
     },
     deleteBlocker() {
       throw msg("deleteBlocker");
     },
     createBlocker() {
-      throw msg("createBlocker");
-    },
-    setBlockerFunction() {
-      throw msg("setBlockerFunction");
+      return getInitialBlocker(() => {
+        throw msg("createBlocker");
+      });
     },
     setBlockerState() {
       throw msg("setBlockerState");

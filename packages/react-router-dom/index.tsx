@@ -26,6 +26,7 @@ import {
 } from "react-router";
 import type {
   BrowserHistory,
+  Blocker,
   Fetcher,
   FormEncType,
   FormMethod,
@@ -39,6 +40,7 @@ import {
   createRouter,
   createBrowserHistory,
   createHashHistory,
+  getInitialBlocker,
   invariant,
   joinPaths,
   ErrorResponse,
@@ -974,6 +976,31 @@ export function useFormAction(
   }
 
   return createPath(path);
+}
+
+let blockerId = 0;
+
+export function useBlocker(shouldBlock: boolean | (() => boolean)) {
+  let [blockerKey] = React.useState(() => String(++blockerId));
+  let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
+  let [blocker, setBlocker] = React.useState<Blocker>(() =>
+    getInitialBlocker(() => {
+      throw Error("Navigation should not occur during render.");
+    })
+  );
+
+  React.useEffect(() => {
+    let blocker = router.createBlocker(
+      blockerKey,
+      typeof shouldBlock === "function" ? shouldBlock : () => !!shouldBlock
+    );
+    setBlocker(blocker);
+    return () => {
+      router.deleteBlocker(blockerKey);
+    };
+  }, [blockerKey, shouldBlock, router]);
+
+  return blocker;
 }
 
 function createFetcherForm(fetcherKey: string, routeId: string) {
