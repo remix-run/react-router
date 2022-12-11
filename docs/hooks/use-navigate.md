@@ -41,6 +41,7 @@ interface NavigateFunction {
   (delta: number): void;
 }
 ```
+// Is it possible to mention the type declaration of To and RelativeRoutingType also in the Type Declaration section?
 
 The `navigate` function has two signatures:
 
