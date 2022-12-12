@@ -56,7 +56,7 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 
 ## `relative`
 
-By default, links are relative to the route hierarchy, so `..` will go up one `Route` level. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you're prefer to use relative _path_ routing. You can opt into this behavior with `relative`:
+By default, links are relative to the route hierarchy, so `..` will go up one `Route` level. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you'd prefer to use relative _path_ routing. You can opt into this behavior with `relative`:
 
 ```jsx
 // Contact and EditContact do not share additional UI layout
