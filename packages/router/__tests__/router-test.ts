@@ -10935,7 +10935,13 @@ describe("a router", () => {
             ],
           },
         ]);
-        await query(createSubmitRequest("/child"));
+        await query(
+          createSubmitRequest("/child", {
+            headers: {
+              test: "value",
+            },
+          })
+        );
 
         // @ts-expect-error
         let actionRequest = actionStub.mock.calls[0][0]?.request;
@@ -10950,10 +10956,12 @@ describe("a router", () => {
         let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
         // @ts-expect-error
         let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
-        expect(rootLoaderRequest.method).toBe("GET");
+        expect(rootLoaderRequest.method).toBe("POST");
         expect(rootLoaderRequest.url).toBe("http://localhost/child");
-        expect(childLoaderRequest.method).toBe("GET");
+        expect(rootLoaderRequest.headers.get("test")).toBe("value");
+        expect(childLoaderRequest.method).toBe("POST");
         expect(childLoaderRequest.url).toBe("http://localhost/child");
+        expect(childLoaderRequest.headers.get("test")).toBe("value");
       });
 
       it("should support a requestContext passed to loaders and actions", async () => {
