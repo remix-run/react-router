@@ -64,6 +64,7 @@ import {
 export type {
   FormEncType,
   FormMethod,
+  GetScrollRestorationKeyFunction,
   ParamKeyValuePair,
   SubmitOptions,
   URLSearchParamsInit,
@@ -683,7 +684,7 @@ if (__DEV__) {
   FormImpl.displayName = "FormImpl";
 }
 
-interface ScrollRestorationProps {
+export interface ScrollRestorationProps {
   getKey?: GetScrollRestorationKeyFunction;
   storageKey?: string;
 }
@@ -1080,9 +1081,11 @@ let savedScrollPositions: Record<string, number> = {};
 function useScrollRestoration({
   getKey,
   storageKey,
+  skip = false,
 }: {
   getKey?: GetScrollRestorationKeyFunction;
   storageKey?: string;
+  skip?: boolean;
 } = {}) {
   let { router } = useDataRouterContext(DataRouterHook.UseScrollRestoration);
   let { restoreScrollPosition, preventScrollReset } = useDataRouterState(
@@ -1141,6 +1144,11 @@ function useScrollRestoration({
 
   // Restore scrolling when state.restoreScrollPosition changes
   React.useLayoutEffect(() => {
+    // Skip if the consumer asked us to (used for SSR)
+    if (skip) {
+      return;
+    }
+
     // Explicit false means don't do anything (used for submissions)
     if (restoreScrollPosition === false) {
       return;
@@ -1168,7 +1176,7 @@ function useScrollRestoration({
 
     // otherwise go to the top on new locations
     window.scrollTo(0, 0);
-  }, [location, restoreScrollPosition, preventScrollReset]);
+  }, [location, restoreScrollPosition, preventScrollReset, skip]);
 }
 
 function useBeforeUnload(callback: () => any): void {
@@ -1203,3 +1211,5 @@ function warning(cond: boolean, message: string): void {
   }
 }
 //#endregion
+
+export { useScrollRestoration as UNSAFE_useScrollRestoration };
