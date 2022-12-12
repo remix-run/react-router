@@ -1179,7 +1179,17 @@ function useScrollRestoration({
   }, [location, restoreScrollPosition, preventScrollReset, skip]);
 }
 
-function useBeforeUnload(callback: () => any): void {
+/**
+ * Setup a callback to be fired on the window's `beforeunload` event. This is
+ * useful for saving some data to `window.localStorage` just before the page
+ * refreshes.
+ *
+ * Note: The `callback` argument should be a function created with
+ * `React.useCallback()`.
+ */
+export function useBeforeUnload(
+  callback: (event: BeforeUnloadEvent) => any
+): void {
   React.useEffect(() => {
     window.addEventListener("beforeunload", callback);
     return () => {
@@ -1187,7 +1197,6 @@ function useBeforeUnload(callback: () => any): void {
     };
   }, [callback]);
 }
-
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
