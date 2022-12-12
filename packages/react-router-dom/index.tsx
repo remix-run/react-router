@@ -1119,64 +1119,69 @@ function useScrollRestoration({
   );
 
   // Read in any saved scroll locations
-  React.useLayoutEffect(() => {
-    try {
-      let sessionPositions = sessionStorage.getItem(
-        storageKey || SCROLL_RESTORATION_STORAGE_KEY
-      );
-      if (sessionPositions) {
-        savedScrollPositions = JSON.parse(sessionPositions);
+  if (typeof document !== "undefined") {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useLayoutEffect(() => {
+      try {
+        let sessionPositions = sessionStorage.getItem(
+          storageKey || SCROLL_RESTORATION_STORAGE_KEY
+        );
+        if (sessionPositions) {
+          savedScrollPositions = JSON.parse(sessionPositions);
+        }
+      } catch (e) {
+        // no-op, use default empty object
       }
-    } catch (e) {
-      // no-op, use default empty object
-    }
-  }, [storageKey]);
+    }, [storageKey]);
 
-  // Enable scroll restoration in the router
-  React.useLayoutEffect(() => {
-    let disableScrollRestoration = router?.enableScrollRestoration(
-      savedScrollPositions,
-      () => window.scrollY,
-      getKey
-    );
-    return () => disableScrollRestoration && disableScrollRestoration();
-  }, [router, getKey]);
+    // Enable scroll restoration in the router
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useLayoutEffect(() => {
+      let disableScrollRestoration = router?.enableScrollRestoration(
+        savedScrollPositions,
+        () => window.scrollY,
+        getKey
+      );
+      return () => disableScrollRestoration && disableScrollRestoration();
+    }, [router, getKey]);
 
-  // Restore scrolling when state.restoreScrollPosition changes
-  React.useLayoutEffect(() => {
-    // Skip if the consumer asked us to (used for SSR)
-    if (skip) {
-      return;
-    }
-
-    // Explicit false means don't do anything (used for submissions)
-    if (restoreScrollPosition === false) {
-      return;
-    }
-
-    // been here before, scroll to it
-    if (typeof restoreScrollPosition === "number") {
-      window.scrollTo(0, restoreScrollPosition);
-      return;
-    }
-
-    // try to scroll to the hash
-    if (location.hash) {
-      let el = document.getElementById(location.hash.slice(1));
-      if (el) {
-        el.scrollIntoView();
+    // Restore scrolling when state.restoreScrollPosition changes
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useLayoutEffect(() => {
+      // Skip if the consumer asked us to (used for SSR)
+      if (skip) {
         return;
       }
-    }
 
-    // Opt out of scroll reset if this link requested it
-    if (preventScrollReset === true) {
-      return;
-    }
+      // Explicit false means don't do anything (used for submissions)
+      if (restoreScrollPosition === false) {
+        return;
+      }
 
-    // otherwise go to the top on new locations
-    window.scrollTo(0, 0);
-  }, [location, restoreScrollPosition, preventScrollReset, skip]);
+      // been here before, scroll to it
+      if (typeof restoreScrollPosition === "number") {
+        window.scrollTo(0, restoreScrollPosition);
+        return;
+      }
+
+      // try to scroll to the hash
+      if (location.hash) {
+        let el = document.getElementById(location.hash.slice(1));
+        if (el) {
+          el.scrollIntoView();
+          return;
+        }
+      }
+
+      // Opt out of scroll reset if this link requested it
+      if (preventScrollReset === true) {
+        return;
+      }
+
+      // otherwise go to the top on new locations
+      window.scrollTo(0, 0);
+    }, [location, restoreScrollPosition, preventScrollReset, skip]);
+  }
 }
 
 /**
