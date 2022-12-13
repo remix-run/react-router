@@ -67,6 +67,9 @@ test.describe("CatchBoundary", () => {
                 <Link to="${HAS_BOUNDARY_LOADER}">
                   ${HAS_BOUNDARY_LOADER}
                 </Link>
+                <Link to="${HAS_BOUNDARY_LOADER}/child">
+                  ${HAS_BOUNDARY_LOADER}/child
+                </Link>
                 <Link to="${NO_BOUNDARY_LOADER}">
                   ${NO_BOUNDARY_LOADER}
                 </Link>
@@ -111,11 +114,27 @@ test.describe("CatchBoundary", () => {
         `,
 
         [`app/routes${HAS_BOUNDARY_LOADER}.jsx`]: js`
+          import { useCatch } from '@remix-run/react';
           export function loader() {
             throw new Response("", { status: 401 })
           }
           export function CatchBoundary() {
-            return <div id="boundary-loader">${OWN_BOUNDARY_TEXT}</div>
+            let caught = useCatch();
+            return (
+              <>
+                <div id="boundary-loader">${OWN_BOUNDARY_TEXT}</div>
+                <pre id="status">{caught.status}</pre>
+              </>
+            );
+          }
+          export default function Index() {
+            return <div/>
+          }
+        `,
+
+        [`app/routes${HAS_BOUNDARY_LOADER}/child.jsx`]: js`
+          export function loader() {
+            throw new Response("", { status: 404 })
           }
           export default function Index() {
             return <div/>
@@ -291,5 +310,24 @@ test.describe("CatchBoundary", () => {
     expect(await app.getHtml("#parent-data")).toMatch("PARENT");
     expect(await app.getHtml("#child-catch")).toMatch("400");
     expect(await app.getHtml("#child-catch")).toMatch("Caught!");
+  });
+
+  test("prefers parent catch when child loader also bubbles, document request", async () => {
+    let res = await fixture.requestDocument(`${HAS_BOUNDARY_LOADER}/child`);
+    expect(res.status).toBe(401);
+    let text = await res.text();
+    expect(text).toMatch(OWN_BOUNDARY_TEXT);
+    expect(text).toMatch('<pre id="status">401</pre>');
+  });
+
+  test("prefers parent catch when child loader also bubbles, client transition", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickLink(`${HAS_BOUNDARY_LOADER}/child`);
+    await page.waitForSelector("#boundary-loader");
+    expect(await app.getHtml("#boundary-loader")).toMatch(OWN_BOUNDARY_TEXT);
+    expect(await app.getHtml("#status")).toMatch("401");
   });
 });
