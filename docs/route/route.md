@@ -278,7 +278,7 @@ Please see the [errorElement][errorelement] documentation for more details.
 
 ## `handle`
 
-Any application-specific data. Please see the [useMatches][useMatches] documentation for details and examples.
+Any application-specific data. Please see the [useMatches][usematches] documentation for details and examples.
 
 [outlet]: ./outlet
 [remix]: https://remix.run
@@ -293,4 +293,4 @@ Any application-specific data. Please see the [useMatches][useMatches] documenta
 [usesubmit]: ../hooks/use-submit
 [createroutesfromelements]: ../utils/create-routes-from-elements
 [createbrowserrouter]: ../routers/create-browser-router
-[useMatches]: ../hooks/use-matches
+[usematches]: ../hooks/use-matches
