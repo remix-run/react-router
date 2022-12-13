@@ -10774,6 +10774,61 @@ describe("a router", () => {
         });
       });
 
+      it("should handle multiple errors at separate boundaries", async () => {
+        let routes = [
+          {
+            id: "root",
+            path: "/",
+            loader: () => Promise.reject("ROOT"),
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                loader: () => Promise.reject("CHILD"),
+                hasErrorBoundary: true,
+              },
+            ],
+          },
+        ];
+
+        let { query } = createStaticHandler(routes);
+        let context;
+
+        context = await query(createRequest("/child"));
+        expect(context.errors).toEqual({
+          root: "ROOT",
+          child: "CHILD",
+        });
+      });
+
+      it("should handle multiple errors at the same boundary", async () => {
+        let routes = [
+          {
+            id: "root",
+            path: "/",
+            loader: () => Promise.reject("ROOT"),
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                loader: () => Promise.reject("CHILD"),
+              },
+            ],
+          },
+        ];
+
+        let { query } = createStaticHandler(routes);
+        let context;
+
+        context = await query(createRequest("/child"));
+        expect(context.errors).toEqual({
+          // higher error value wins
+          root: "ROOT",
+        });
+      });
+
       it("should handle aborted load requests", async () => {
         let dfd = createDeferred();
         let controller = new AbortController();

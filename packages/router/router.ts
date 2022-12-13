@@ -2848,9 +2848,14 @@ function processRouteLoaderData(
         error = Object.values(pendingError)[0];
         pendingError = undefined;
       }
-      errors = Object.assign(errors || {}, {
-        [boundaryMatch.route.id]: error,
-      });
+
+      errors = errors || {};
+
+      // Prefer higher error values if lower errors bubble to the same boundary
+      if (errors[boundaryMatch.route.id] == null) {
+        errors[boundaryMatch.route.id] = error;
+      }
+
       // Once we find our first (highest) error, we set the status code and
       // prevent deeper status codes from overriding
       if (!foundError) {
