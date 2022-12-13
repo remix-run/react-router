@@ -8,5 +8,12 @@
     "react-router-native": "6.4.5",
     "@remix-run/router": "1.0.5"
   },
-  "changesets": []
+  "changesets": [
+    "happy-balloons-buy",
+    "kind-dodos-shop",
+    "new-taxis-stare",
+    "pretty-kiwis-study",
+    "thin-kids-eat",
+    "violet-rules-rest"
+  ]
 }
