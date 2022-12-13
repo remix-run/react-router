@@ -2257,7 +2257,11 @@ export function unstable_createStaticHandler(
     }
 
     // Create a GET request for the loaders
-    let loaderRequest = new Request(request.url, { signal: request.signal });
+    let loaderRequest = new Request(request.url, {
+      headers: request.headers,
+      redirect: request.redirect,
+      signal: request.signal,
+    });
     let context = await loadRouteData(loaderRequest, matches, requestContext);
 
     return {
