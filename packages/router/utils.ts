@@ -329,6 +329,7 @@ export function matchRoutes<
 
   let branches = flattenRoutes(routes);
   rankRouteBranches(branches);
+  console.log(branches.map((b) => ({ path: b.path, score: b.score })));
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
@@ -468,25 +469,35 @@ function explodeOptionalSegments(path: string): string[] {
   if (rest.length === 0) {
     // Intepret empty string as omitting an optional segment
     // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
-    return isOptional ? ["", required] : [required];
+    return isOptional ? [required, ""] : [required];
   }
 
   let restExploded = explodeOptionalSegments(rest.join("/"));
-  return restExploded
-    .flatMap((subpath) => {
-      // /one + / + :two/three -> /one/:two/three
-      let requiredExploded =
-        subpath === "" ? required : required + "/" + subpath;
-      // For optional segments, return the exploded path _without_ current segment first (`subpath`)
-      // and exploded path _with_ current segment later (`subpath`)
-      // This ensures that exploded paths are emitted in priority order
-      // `/one/three/:four` will come before `/one/three/:five`
-      return isOptional ? [subpath, requiredExploded] : [requiredExploded];
-    })
-    .map((exploded) => {
-      // for absolute paths, ensure `/` instead of empty segment
-      return path.startsWith("/") && exploded === "" ? "/" : exploded;
-    });
+
+  let result: string[] = [];
+
+  // All child paths with the prefix.  Do this for all children before the
+  // optional version for all children so we get consistent ordering where the
+  // parent optional aspect is preferred as required.  Otherwise, we can get
+  // child sections interspersed where deeper optional segments are higher than
+  // parent optional segments, where for example, /:two would explodes _earlier_
+  // then /:one.  By always including the parent as required _for all children_
+  // first, we avoid this issue
+  result.push(
+    ...restExploded.map((subpath) =>
+      subpath === "" ? required : [required, subpath].join("/")
+    )
+  );
+
+  // Then if this is an optional value, add all child versions without
+  if (isOptional) {
+    result.push(...restExploded);
+  }
+
+  // for absolute paths, ensure `/` instead of empty segment
+  return result.map((exploded) =>
+    path.startsWith("/") && exploded === "" ? "/" : exploded
+  );
 }
 
 function rankRouteBranches(branches: RouteBranch[]): void {
