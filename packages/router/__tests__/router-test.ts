@@ -10915,6 +10915,61 @@ describe("a router", () => {
         });
       });
 
+      it("should handle multiple errors at separate boundaries", async () => {
+        let routes = [
+          {
+            id: "root",
+            path: "/",
+            loader: () => Promise.reject("ROOT"),
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                loader: () => Promise.reject("CHILD"),
+                hasErrorBoundary: true,
+              },
+            ],
+          },
+        ];
+
+        let { query } = createStaticHandler(routes);
+        let context;
+
+        context = await query(createRequest("/child"));
+        expect(context.errors).toEqual({
+          root: "ROOT",
+          child: "CHILD",
+        });
+      });
+
+      it("should handle multiple errors at the same boundary", async () => {
+        let routes = [
+          {
+            id: "root",
+            path: "/",
+            loader: () => Promise.reject("ROOT"),
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                loader: () => Promise.reject("CHILD"),
+              },
+            ],
+          },
+        ];
+
+        let { query } = createStaticHandler(routes);
+        let context;
+
+        context = await query(createRequest("/child"));
+        expect(context.errors).toEqual({
+          // higher error value wins
+          root: "ROOT",
+        });
+      });
+
       it("should handle aborted load requests", async () => {
         let dfd = createDeferred();
         let controller = new AbortController();
@@ -11076,7 +11131,13 @@ describe("a router", () => {
             ],
           },
         ]);
-        await query(createSubmitRequest("/child"));
+        await query(
+          createSubmitRequest("/child", {
+            headers: {
+              test: "value",
+            },
+          })
+        );
 
         // @ts-expect-error
         let actionRequest = actionStub.mock.calls[0][0]?.request;
@@ -11093,8 +11154,12 @@ describe("a router", () => {
         let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
         expect(rootLoaderRequest.method).toBe("GET");
         expect(rootLoaderRequest.url).toBe("http://localhost/child");
+        expect(rootLoaderRequest.headers.get("test")).toBe("value");
+        expect(await rootLoaderRequest.text()).toBe("");
         expect(childLoaderRequest.method).toBe("GET");
         expect(childLoaderRequest.url).toBe("http://localhost/child");
+        expect(childLoaderRequest.headers.get("test")).toBe("value");
+        // Can't re-read body here since it's the same request as the root
       });
 
       it("should support a requestContext passed to loaders and actions", async () => {

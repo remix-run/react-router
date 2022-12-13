@@ -2293,7 +2293,11 @@ export function unstable_createStaticHandler(
     }
 
     // Create a GET request for the loaders
-    let loaderRequest = new Request(request.url, { signal: request.signal });
+    let loaderRequest = new Request(request.url, {
+      headers: request.headers,
+      redirect: request.redirect,
+      signal: request.signal,
+    });
     let context = await loadRouteData(loaderRequest, matches, requestContext);
 
     return {
@@ -2897,9 +2901,14 @@ function processRouteLoaderData(
         error = Object.values(pendingError)[0];
         pendingError = undefined;
       }
-      errors = Object.assign(errors || {}, {
-        [boundaryMatch.route.id]: error,
-      });
+
+      errors = errors || {};
+
+      // Prefer higher error values if lower errors bubble to the same boundary
+      if (errors[boundaryMatch.route.id] == null) {
+        errors[boundaryMatch.route.id] = error;
+      }
+
       // Once we find our first (highest) error, we set the status code and
       // prevent deeper status codes from overriding
       if (!foundError) {
