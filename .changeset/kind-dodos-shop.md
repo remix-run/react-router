@@ -2,4 +2,4 @@
 "@remix-run/router": patch
 ---
 
-Persist method/headers on loader requests after SSR document action request
+Persist `headers` on `loader` `request`'s after SSR document `action` request
