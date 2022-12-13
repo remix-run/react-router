@@ -329,7 +329,6 @@ export function matchRoutes<
 
   let branches = flattenRoutes(routes);
   rankRouteBranches(branches);
-  console.log(branches.map((b) => ({ path: b.path, score: b.score })));
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
