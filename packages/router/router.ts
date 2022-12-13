@@ -2256,11 +2256,9 @@ export function unstable_createStaticHandler(
       };
     }
 
-    // Create a request for the loaders
+    // Create a GET request for the loaders
     let loaderRequest = new Request(request.url, {
-      body: null,
       headers: request.headers,
-      method: request.method,
       redirect: request.redirect,
       signal: request.signal,
     });

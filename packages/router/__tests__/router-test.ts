@@ -10956,11 +10956,11 @@ describe("a router", () => {
         let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
         // @ts-expect-error
         let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
-        expect(rootLoaderRequest.method).toBe("POST");
+        expect(rootLoaderRequest.method).toBe("GET");
         expect(rootLoaderRequest.url).toBe("http://localhost/child");
         expect(rootLoaderRequest.headers.get("test")).toBe("value");
         expect(await rootLoaderRequest.text()).toBe("");
-        expect(childLoaderRequest.method).toBe("POST");
+        expect(childLoaderRequest.method).toBe("GET");
         expect(childLoaderRequest.url).toBe("http://localhost/child");
         expect(childLoaderRequest.headers.get("test")).toBe("value");
         // Can't re-read body here since it's the same request as the root
