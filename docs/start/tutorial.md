@@ -1908,8 +1908,10 @@ And for our final trick, many folks prefer to configure their routes with JSX. Y
 
 ```jsx
 import {
-  createRoutesFromElements,
-  createBrowserRouter,
+    createBrowserRouter,
+    RouterProvider,
+    createRoutesFromElements,
+    Route,
 } from "react-router-dom";
 
 const router = createBrowserRouter(
