@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.1.0-pre.1
+
+### Patch Changes
+
+- Fix issue with deeply nested optional segments ([#9727](https://github.com/remix-run/react-router/pull/9727))
+
 ## 1.1.0-pre.0
 
 ### Minor Changes
