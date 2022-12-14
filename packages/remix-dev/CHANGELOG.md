@@ -1,5 +1,55 @@
 # `@remix-run/dev`
 
+## 1.9.0-pre.0
+
+### Minor Changes
+
+- allow defining multiple routes for the same route module file ([#3970](https://github.com/remix-run/remix/pull/3970))
+
+### Patch Changes
+
+- Support Typescript 4.9 features (like `satisfies`) in Remix `app/` code ([#4754](https://github.com/remix-run/remix/pull/4754))
+
+  esbuild 0.15.13 added support for parsing TS 4.9 `satisfies`, so upgrading to esbuild 0.16.3 adds that ability to the Remix compiler
+
+- Optimize `parentRouteId` lookup in `defineConventionalRoutes` ([#4800](https://github.com/remix-run/remix/pull/4800))
+
+  Local runs of production Remix builds:
+
+  - Realistic project w/ 700 routes: 10-15s -> <1s (>10x faster)
+  - Example project w/ 1,111 routes: 27s -> 0.104s (259x faster)
+
+- Convention for Remix optional segments ([#4706](https://github.com/remix-run/remix/pull/4706))
+
+  Note that this only set ups the convention conversion for React Router.
+  Optional segments won't be available in Remix until Remix is built on top of React Router v6.5
+
+  Converts segments surrounded by parenthesis into optional segments for React Router.
+  For example `/($lang)/about` will be converted to `/:lang?/about` in React Router.
+
+  This means `/($lang)/about` would match:
+
+  ```
+  /en/about
+  /fr/about
+  /about
+  ```
+
+  Another example: `/(one)/($two)/(three).($four)` route would match all of the following:
+
+  ```
+  /
+  /one
+  /one/param1
+  /one/param1/three
+  /one/param1/three/param2
+  ```
+
+- fixes a bug in ts -> js conversion on windows by using a relative unix style path as fast-glob uses unix style paths ([#4718](https://github.com/remix-run/remix/pull/4718))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.9.0-pre.0`
+  - `@remix-run/serve@1.9.0-pre.0`
+
 ## 1.8.2
 
 ### Patch Changes
