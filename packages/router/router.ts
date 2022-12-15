@@ -829,17 +829,16 @@ export function createRouter(init: RouterInit): Router {
       historyAction = HistoryAction.Replace;
     } else if (userReplace === false) {
       // no-op
-    } else if (submission != null && isMutationMethod(submission.formMethod)) {
+    } else if (
+      submission != null &&
+      isMutationMethod(submission.formMethod) &&
+      submission.formAction === state.location.pathname + state.location.search
+    ) {
       // By default on submissions to the current location we REPLACE so that
       // users don't have to double-click the back button to get to the prior
-      // location.  If the user redirects from the action/loader this will be
-      // ignored and the redirect will be a PUSH
-      if (
-        submission.formAction ===
-        state.location.pathname + state.location.search
-      ) {
-        historyAction = HistoryAction.Replace;
-      }
+      // location.  If the user redirects to a different location from the
+      // action/loader this will be ignored and the redirect will be a PUSH
+      historyAction = HistoryAction.Replace;
     }
 
     let preventScrollReset =
