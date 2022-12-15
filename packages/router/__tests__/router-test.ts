@@ -7124,7 +7124,7 @@ describe("a router", () => {
 
         let key = "key";
         router.fetch(key, "root", "/");
-        expect(router.state.fetchers.get(key)).toMatchObject({
+        expect(router.state.fetchers.get(key)).toEqual({
           state: "loading",
           formMethod: undefined,
           formEncType: undefined,
@@ -7134,7 +7134,7 @@ describe("a router", () => {
         });
 
         await dfd.resolve("DATA");
-        expect(router.state.fetchers.get(key)).toMatchObject({
+        expect(router.state.fetchers.get(key)).toEqual({
           state: "idle",
           formMethod: undefined,
           formEncType: undefined,
@@ -7626,7 +7626,7 @@ describe("a router", () => {
         expect(t.router.state.navigation.location?.pathname).toBe("/bar");
         await AR.loaders.root.resolve("ROOT*");
         await AR.loaders.bar.resolve("stuff");
-        expect(A.fetcher).toMatchObject({
+        expect(A.fetcher).toEqual({
           data: undefined,
           state: "idle",
           formMethod: undefined,
