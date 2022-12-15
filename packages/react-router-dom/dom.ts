@@ -245,5 +245,5 @@ export function getFormSubmissionInfo(
   let { protocol, host } = window.location;
   let url = new URL(action, `${protocol}//${host}`);
 
-  return { url, method, encType, formData };
+  return { url, method: method.toLowerCase(), encType, formData };
 }

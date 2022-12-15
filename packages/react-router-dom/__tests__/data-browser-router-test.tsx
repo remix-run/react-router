@@ -287,14 +287,59 @@ function testDomRouter(
 
       function Boundary() {
         let error = useRouteError();
-        return isRouteErrorResponse(error) ? <h1>Yes!</h1> : <h2>No :(</h2>;
+        return isRouteErrorResponse(error) ? (
+          <pre>{JSON.stringify(error)}</pre>
+        ) : (
+          <p>No :(</p>
+        );
       }
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
-          <h1>
-            Yes!
-          </h1>
+          <pre>
+            {\\"status\\":404,\\"statusText\\":\\"Not Found\\",\\"internal\\":false,\\"data\\":{\\"not\\":\\"found\\"}}
+          </pre>
+        </div>"
+      `);
+    });
+
+    it("deserializes Error instances from the window", async () => {
+      window.__staticRouterHydrationData = {
+        loaderData: {},
+        actionData: null,
+        errors: {
+          "0": {
+            message: "error message",
+            __type: "Error",
+          },
+        },
+      };
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")}>
+          <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
+        </TestDataRouter>
+      );
+
+      function Boundary() {
+        let error = useRouteError();
+        return error instanceof Error ? (
+          <>
+            <pre>{error.toString()}</pre>
+            <pre>stack:{error.stack}</pre>
+          </>
+        ) : (
+          <p>No :(</p>
+        );
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <pre>
+            Error: error message
+          </pre>
+          <pre>
+            stack:
+          </pre>
         </div>"
       `);
     });
@@ -1519,6 +1564,157 @@ function testDomRouter(
               Submit
             </button>
           </form>
+        </div>"
+      `);
+    });
+
+    it("allows a button to override the <form method>", async () => {
+      let loaderDefer = createDeferred();
+
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route
+            path="/"
+            action={async ({ request }) => {
+              throw new Error("Should not hit this");
+            }}
+            loader={() => loaderDefer.promise}
+            element={<Home />}
+          />
+        </TestDataRouter>
+      );
+
+      function Home() {
+        let data = useLoaderData();
+        let navigation = useNavigation();
+        return (
+          <div>
+            <Form
+              method="post"
+              onSubmit={(e) => {
+                // jsdom doesn't handle submitter so we add it here
+                // See https://github.com/jsdom/jsdom/issues/3117
+                // @ts-expect-error
+                e.nativeEvent.submitter =
+                  e.currentTarget.querySelector("button");
+              }}
+            >
+              <input name="test" value="value" />
+              <button type="submit" formMethod="get">
+                Submit Form
+              </button>
+            </Form>
+            <div id="output">
+              <p>{navigation.state}</p>
+              <p>{data}</p>
+            </div>
+            <Outlet />
+          </div>
+        );
+      }
+
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id=\\"output\\"
+        >
+          <p>
+            idle
+          </p>
+          <p />
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      await waitFor(() => screen.getByText("loading"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id=\\"output\\"
+        >
+          <p>
+            loading
+          </p>
+          <p />
+        </div>"
+      `);
+
+      loaderDefer.resolve("Loader Data");
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id=\\"output\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Loader Data
+          </p>
+        </div>"
+      `);
+    });
+
+    it("supports uppercase form method attributes", async () => {
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
+
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route
+            path="/"
+            action={async ({ request }) => {
+              let resolvedValue = await actionDefer.promise;
+              let formData = await request.formData();
+              return `${resolvedValue}:${formData.get("test")}`;
+            }}
+            loader={() => loaderDefer.promise}
+            element={<Home />}
+          />
+        </TestDataRouter>
+      );
+
+      function Home() {
+        let data = useLoaderData();
+        let actionData = useActionData();
+        let navigation = useNavigation();
+        return (
+          <div>
+            <Form method="POST">
+              <input name="test" value="value" />
+              <button type="submit">Submit Form</button>
+            </Form>
+            <div id="output">
+              <p>{navigation.state}</p>
+              <p>{data}</p>
+              <p>{actionData}</p>
+            </div>
+            <Outlet />
+          </div>
+        );
+      }
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      await waitFor(() => screen.getByText("submitting"));
+      actionDefer.resolve("Action Data");
+      await waitFor(() => screen.getByText("loading"));
+      loaderDefer.resolve("Loader Data");
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id=\\"output\\"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Loader Data
+          </p>
+          <p>
+            Action Data:value
+          </p>
         </div>"
       `);
     });
