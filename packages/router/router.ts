@@ -596,7 +596,9 @@ export function createRouter(init: RouterInit): Router {
   // we don't get the saved positions from <ScrollRestoration /> until _after_
   // the initial render, we need to manually trigger a separate updateState to
   // send along the restoreScrollPosition
-  let initialScrollRestored = false;
+  // Set to true if we have `hydrationData` since we assume we were SSR'd and that
+  // SSR did the initial scroll restoration.
+  let initialScrollRestored = init.hydrationData != null;
 
   let initialMatches = matchRoutes(
     dataRoutes,
@@ -626,7 +628,8 @@ export function createRouter(init: RouterInit): Router {
     matches: initialMatches,
     initialized,
     navigation: IDLE_NAVIGATION,
-    restoreScrollPosition: null,
+    // Don't restore on initial updateState() if we were SSR'd
+    restoreScrollPosition: init.hydrationData != null ? false : null,
     preventScrollReset: false,
     revalidation: "idle",
     loaderData: (init.hydrationData && init.hydrationData.loaderData) || {},

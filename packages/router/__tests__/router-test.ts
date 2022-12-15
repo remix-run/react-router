@@ -875,7 +875,57 @@ afterEach(() => {
 
 describe("a router", () => {
   describe("init", () => {
-    it("with initial values", async () => {
+    it("initial state w/o hydrationData", async () => {
+      let history = createMemoryHistory({ initialEntries: ["/"] });
+      let router = createRouter({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            hasErrorBoundary: true,
+            loader: () => Promise.resolve(),
+          },
+        ],
+        history,
+      });
+      expect(router.state).toEqual({
+        historyAction: "POP",
+        loaderData: {},
+        actionData: null,
+        errors: null,
+        location: {
+          hash: "",
+          key: expect.any(String),
+          pathname: "/",
+          search: "",
+          state: null,
+        },
+        matches: [
+          {
+            params: {},
+            pathname: "/",
+            pathnameBase: "/",
+            route: {
+              hasErrorBoundary: true,
+              id: "root",
+              loader: expect.any(Function),
+              path: "/",
+            },
+          },
+        ],
+        initialized: false,
+        navigation: {
+          location: undefined,
+          state: "idle",
+        },
+        preventScrollReset: false,
+        restoreScrollPosition: null,
+        revalidation: "idle",
+        fetchers: new Map(),
+      });
+    });
+
+    it("initial state w/hydrationData values", async () => {
       let history = createMemoryHistory({ initialEntries: ["/"] });
       let router = createRouter({
         routes: [
@@ -930,7 +980,7 @@ describe("a router", () => {
           state: "idle",
         },
         preventScrollReset: false,
-        restoreScrollPosition: null,
+        restoreScrollPosition: false,
         revalidation: "idle",
         fetchers: new Map(),
       });
@@ -5925,19 +5975,77 @@ describe("a router", () => {
   });
 
   describe("scroll restoration", () => {
-    it("restores scroll on navigations", async () => {
+    // Version of TASK_ROUTES with no root loader to allow for initialized
+    // hydrationData:null usage
+    const SCROLL_ROUTES: TestRouteObject[] = [
+      {
+        path: "/",
+        children: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "tasks",
+            path: "tasks",
+            loader: true,
+            action: true,
+          },
+          {
+            path: "no-loader",
+          },
+        ],
+      },
+    ];
+
+    it("restores scroll on initial load (w/o hydrationData)", async () => {
       let t = setup({
-        routes: TASK_ROUTES,
+        routes: SCROLL_ROUTES,
+        initialEntries: ["/no-loader"],
+      });
+
+      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.preventScrollReset).toBe(false);
+
+      // Assume initial location had a saved position
+      let positions = { default: 50 };
+      t.router.enableScrollRestoration(positions, () => 0);
+      expect(t.router.state.restoreScrollPosition).toBe(50);
+    });
+
+    it("restores scroll on initial load (w/ hydrationData)", async () => {
+      let t = setup({
+        routes: SCROLL_ROUTES,
         initialEntries: ["/"],
         hydrationData: {
           loaderData: {
-            root: "ROOT_DATA",
+            index: "INDEX",
+          },
+        },
+      });
+
+      expect(t.router.state.restoreScrollPosition).toBe(false);
+      expect(t.router.state.preventScrollReset).toBe(false);
+
+      // Assume initial location had a saved position
+      let positions = { default: 50 };
+      t.router.enableScrollRestoration(positions, () => 0);
+      expect(t.router.state.restoreScrollPosition).toBe(false);
+    });
+
+    it("restores scroll on navigations", async () => {
+      let t = setup({
+        routes: SCROLL_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
             index: "INDEX_DATA",
           },
         },
       });
 
-      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.restoreScrollPosition).toBe(false);
       expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = {};
@@ -5971,17 +6079,16 @@ describe("a router", () => {
 
     it("restores scroll using custom key", async () => {
       let t = setup({
-        routes: TASK_ROUTES,
+        routes: SCROLL_ROUTES,
         initialEntries: ["/"],
         hydrationData: {
           loaderData: {
-            root: "ROOT_DATA",
             index: "INDEX_DATA",
           },
         },
       });
 
-      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.restoreScrollPosition).toBe(false);
       expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = { "/tasks": 100 };
@@ -6000,17 +6107,16 @@ describe("a router", () => {
 
     it("does not restore scroll on submissions", async () => {
       let t = setup({
-        routes: TASK_ROUTES,
+        routes: SCROLL_ROUTES,
         initialEntries: ["/"],
         hydrationData: {
           loaderData: {
-            root: "ROOT_DATA",
             index: "INDEX_DATA",
           },
         },
       });
 
-      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.restoreScrollPosition).toBe(false);
       expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = { "/tasks": 100 };
@@ -6026,7 +6132,6 @@ describe("a router", () => {
         formData: createFormData({}),
       });
       await nav1.actions.tasks.resolve("ACTION");
-      await nav1.loaders.root.resolve("ROOT");
       await nav1.loaders.tasks.resolve("TASKS");
       expect(t.router.state.restoreScrollPosition).toBe(false);
       expect(t.router.state.preventScrollReset).toBe(false);
@@ -6034,17 +6139,16 @@ describe("a router", () => {
 
     it("does not reset scroll", async () => {
       let t = setup({
-        routes: TASK_ROUTES,
+        routes: SCROLL_ROUTES,
         initialEntries: ["/"],
         hydrationData: {
           loaderData: {
-            root: "ROOT_DATA",
             index: "INDEX_DATA",
           },
         },
       });
 
-      expect(t.router.state.restoreScrollPosition).toBe(null);
+      expect(t.router.state.restoreScrollPosition).toBe(false);
       expect(t.router.state.preventScrollReset).toBe(false);
 
       let positions = {};
