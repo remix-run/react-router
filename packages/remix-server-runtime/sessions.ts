@@ -14,7 +14,7 @@ export interface SessionData {
 /**
  * Session persists data across HTTP requests.
  *
- * @see https://remix.run/api/remix#session-api
+ * @see https://remix.run/utils/sessions#session-api
  */
 export interface Session {
   /**
@@ -76,7 +76,7 @@ export type CreateSessionFunction = (
  * Note: This function is typically not invoked directly by application code.
  * Instead, use a `SessionStorage` object's `getSession` method.
  *
- * @see https://remix.run/api/remix#createsession
+ * @see https://remix.run/utils/sessions#createsession
  */
 export const createSession: CreateSessionFunction = (
   initialData = {},
@@ -123,7 +123,7 @@ export type IsSessionFunction = (object: any) => object is Session;
 /**
  * Returns true if an object is a Remix session.
  *
- * @see https://remix.run/api/remix#issession
+ * @see https://remix.run/utils/sessions#issession
  */
 export const isSession: IsSessionFunction = (object): object is Session => {
   return (
@@ -222,7 +222,7 @@ export type CreateSessionStorageFunction = (
  * Note: This is a low-level API that should only be used if none of the
  * existing session storage options meet your requirements.
  *
- * @see https://remix.run/api/remix#createsessionstorage
+ * @see https://remix.run/utils/sessions#createsessionstorage
  */
 export const createSessionStorageFactory =
   (createCookie: CreateCookieFunction): CreateSessionStorageFunction =>
@@ -265,7 +265,7 @@ export function warnOnceAboutSigningSessionCookie(cookie: Cookie) {
     cookie.isSigned,
     `The "${cookie.name}" cookie is not signed, but session cookies should be ` +
       `signed to prevent tampering on the client before they are sent back to the ` +
-      `server. See https://remix.run/api/remix#signing-cookies ` +
+      `server. See https://remix.run/utils/cookies#signing-cookies ` +
       `for more information.`
   );
 }
