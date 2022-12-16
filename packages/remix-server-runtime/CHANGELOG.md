@@ -1,5 +1,33 @@
 # `@remix-run/server-runtime`
 
+## 1.9.0
+
+### Patch Changes
+
+- Fix `TypedResponse` so that Typescript correctly shows errors for incompatible types in `loader` and `action` functions. ([#4734](https://github.com/remix-run/remix/pull/4734))
+
+  Previously, when the return type of a `loader` or `action` was explicitly set to `TypedResponse<SomeType>`,
+  Typescript would not show errors when the function returned an incompatible type.
+
+  For example:
+
+  ```ts
+  export const action = async (
+    args: ActionArgs
+  ): Promise<TypedResponse<string>> => {
+    return json(42);
+  };
+  ```
+
+  In this case, Typescript would not show an error even though `42` is clearly not a `string`.
+
+  This happens because `json` returns a `TypedResponse<string>`, but because `TypedReponse<string>` was previously just `Response & { json: () => Promise<string> }` and `Response` already defines `{ json: () => Promise<any> }`, type erasure caused `Promise<any>` to be used for `42`.
+
+  To fix this, we explicitly omit the `Response` object's `json` property before intersecting with `{ json: () => Promise<T> }`.
+
+- Fix error boundary tracking for multiple errors bubbling to the same boundary ([#4829](https://github.com/remix-run/remix/pull/4829))
+- Fixed an issue where a loader's `Request` object reflected `method: "POST"` on document submissions ([`a74e51830`](https://github.com/remix-run/remix/commit/a74e51830ec7ecb3ad30e45013270ebf71d7b425))
+
 ## 1.8.2
 
 ### Patch Changes

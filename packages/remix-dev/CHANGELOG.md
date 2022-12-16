@@ -1,5 +1,42 @@
 # `@remix-run/dev`
 
+## 1.9.0
+
+### Minor Changes
+
+- Allow defining multiple routes for the same route module file ([#3970](https://github.com/remix-run/remix/pull/3970))
+- Added support and conventions for optional route segments ([#4706](https://github.com/remix-run/remix/pull/4706))
+
+  Routes surrounded by parenthesis will be converted into optional segments for React Router. For example `/($lang)/about` will be converted to `/:lang?/about` in React Router.
+
+  This means `/($lang)/about` would match:
+
+  ```
+  /en/about
+  /fr/about
+  /about
+  ```
+
+  Another example: `/(one)/($two)/(three).($four)` route would match all of the following:
+
+  ```
+  /
+  /one
+  /one/param1
+  /one/param1/three
+  /one/param1/three/param2
+  ```
+
+  As with any of our conventions, you can escape this conversion by wrapping the route filename in square brackets. For example, `/[(one)]/two` would match the URL path `/(one)/two`.
+
+### Patch Changes
+
+- The Remix compiler now supports new Typescript 4.9 syntax (like the `satisfies` keyword) ([#4754](https://github.com/remix-run/remix/pull/4754))
+- Optimize `parentRouteId` lookup in `defineConventionalRoutes`. ([#4800](https://github.com/remix-run/remix/pull/4800))
+- Fixed a bug in `.ts` -> `.js` conversion on Windows by using a relative unix-style path ([#4718](https://github.com/remix-run/remix/pull/4718))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.9.0`
+
 ## 1.8.2
 
 ### Patch Changes
