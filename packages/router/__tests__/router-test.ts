@@ -14,7 +14,7 @@ import type {
 import {
   createMemoryHistory,
   createRouter,
-  unstable_createStaticHandler as createStaticHandler,
+  createStaticHandler,
   defer,
   ErrorResponse,
   IDLE_FETCHER,
