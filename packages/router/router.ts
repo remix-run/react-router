@@ -821,11 +821,26 @@ export function createRouter(init: RouterInit): Router {
       ...init.history.encodeLocation(location),
     };
 
-    let historyAction =
-      (opts && opts.replace) === true ||
-      (submission != null && isMutationMethod(submission.formMethod))
-        ? HistoryAction.Replace
-        : HistoryAction.Push;
+    let userReplace = opts && opts.replace != null ? opts.replace : undefined;
+
+    let historyAction = HistoryAction.Push;
+
+    if (userReplace === true) {
+      historyAction = HistoryAction.Replace;
+    } else if (userReplace === false) {
+      // no-op
+    } else if (
+      submission != null &&
+      isMutationMethod(submission.formMethod) &&
+      submission.formAction === state.location.pathname + state.location.search
+    ) {
+      // By default on submissions to the current location we REPLACE so that
+      // users don't have to double-click the back button to get to the prior
+      // location.  If the user redirects to a different location from the
+      // action/loader this will be ignored and the redirect will be a PUSH
+      historyAction = HistoryAction.Replace;
+    }
+
     let preventScrollReset =
       opts && "preventScrollReset" in opts
         ? opts.preventScrollReset === true
@@ -1054,11 +1069,17 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isRedirectResult(result)) {
-      await startRedirectNavigation(
-        state,
-        result,
-        opts && opts.replace === true
-      );
+      let replace: boolean;
+      if (opts && opts.replace != null) {
+        replace = opts.replace;
+      } else {
+        // If the user didn't explicity indicate replace behavior, replace if
+        // we redirected to the exact same location we're currently at to avoid
+        // double back-buttons
+        replace =
+          result.location === state.location.pathname + state.location.search;
+      }
+      await startRedirectNavigation(state, result, replace);
       return { shortCircuited: true };
     }
 
