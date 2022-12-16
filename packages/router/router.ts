@@ -21,7 +21,7 @@ import type {
   Submission,
   SuccessResult,
   AgnosticRouteMatch,
-  SubmissionFormMethod,
+  MutationFormMethod,
 } from "./utils";
 import {
   DeferredData,
@@ -521,15 +521,20 @@ interface QueryRouteResponse {
   response: Response;
 }
 
-const validActionMethodsArr: SubmissionFormMethod[] = [
+const validMutationMethodsArr: MutationFormMethod[] = [
   "post",
   "put",
   "patch",
   "delete",
 ];
-const validActionMethods = new Set<SubmissionFormMethod>(validActionMethodsArr);
+const validMutationMethods = new Set<MutationFormMethod>(
+  validMutationMethodsArr
+);
 
-const validRequestMethodsArr: FormMethod[] = ["get", ...validActionMethodsArr];
+const validRequestMethodsArr: FormMethod[] = [
+  "get",
+  ...validMutationMethodsArr,
+];
 const validRequestMethods = new Set<FormMethod>(validRequestMethodsArr);
 
 const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
@@ -811,7 +816,8 @@ export function createRouter(init: RouterInit): Router {
     };
 
     let historyAction =
-      (opts && opts.replace) === true || submission != null
+      (opts && opts.replace) === true ||
+      (submission != null && isMutationMethod(submission.formMethod))
         ? HistoryAction.Replace
         : HistoryAction.Push;
     let preventScrollReset =
@@ -935,7 +941,11 @@ export function createRouter(init: RouterInit): Router {
       pendingError = {
         [findNearestBoundary(matches).route.id]: opts.pendingError,
       };
-    } else if (opts && opts.submission) {
+    } else if (
+      opts &&
+      opts.submission &&
+      isMutationMethod(opts.submission.formMethod)
+    ) {
       // Call action if we received an action submission
       let actionOutput = await handleAction(
         request,
@@ -1095,6 +1105,7 @@ export function createRouter(init: RouterInit): Router {
         formAction: undefined,
         formEncType: undefined,
         formData: undefined,
+        ...submission,
       };
       loadingNavigation = navigation;
     }
@@ -1259,7 +1270,7 @@ export function createRouter(init: RouterInit): Router {
     let { path, submission } = normalizeNavigateOptions(href, opts, true);
     let match = getTargetMatch(matches, path);
 
-    if (submission) {
+    if (submission && isMutationMethod(submission.formMethod)) {
       handleFetcherAction(key, routeId, path, match, matches, submission);
       return;
     }
@@ -1267,7 +1278,7 @@ export function createRouter(init: RouterInit): Router {
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
     fetchLoadMatches.set(key, [path, match, matches]);
-    handleFetcherLoader(key, routeId, path, match, matches);
+    handleFetcherLoader(key, routeId, path, match, matches, submission);
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -1494,7 +1505,8 @@ export function createRouter(init: RouterInit): Router {
     routeId: string,
     path: string,
     match: AgnosticDataRouteMatch,
-    matches: AgnosticDataRouteMatch[]
+    matches: AgnosticDataRouteMatch[],
+    submission?: Submission
   ) {
     let existingFetcher = state.fetchers.get(key);
     // Put this fetcher into it's loading state
@@ -1504,6 +1516,7 @@ export function createRouter(init: RouterInit): Router {
       formAction: undefined,
       formEncType: undefined,
       formData: undefined,
+      ...submission,
       data: existingFetcher && existingFetcher.data,
     };
     state.fetchers.set(key, loadingFetcher);
@@ -1635,12 +1648,12 @@ export function createRouter(init: RouterInit): Router {
     let { formMethod, formAction, formEncType, formData } = state.navigation;
 
     // If this was a 307/308 submission we want to preserve the HTTP method and
-    // re-submit the POST/PUT/PATCH/DELETE as a submission navigation to the
+    // re-submit the GET/POST/PUT/PATCH/DELETE as a submission navigation to the
     // redirected location
     if (
       redirectPreserveMethodStatusCodes.has(redirect.status) &&
       formMethod &&
-      isSubmissionMethod(formMethod) &&
+      isMutationMethod(formMethod) &&
       formEncType &&
       formData
     ) {
@@ -2096,7 +2109,7 @@ export function unstable_createStaticHandler(
     );
 
     try {
-      if (isSubmissionMethod(request.method.toLowerCase())) {
+      if (isMutationMethod(request.method.toLowerCase())) {
         let result = await submit(
           request,
           matches,
@@ -2244,7 +2257,11 @@ export function unstable_createStaticHandler(
     }
 
     // Create a GET request for the loaders
-    let loaderRequest = new Request(request.url, { signal: request.signal });
+    let loaderRequest = new Request(request.url, {
+      headers: request.headers,
+      redirect: request.redirect,
+      signal: request.signal,
+    });
     let context = await loadRouteData(loaderRequest, matches, requestContext);
 
     return {
@@ -2409,17 +2426,19 @@ function normalizeNavigateOptions(
   }
 
   // Create a Submission on non-GET navigations
-  if (opts.formMethod && isSubmissionMethod(opts.formMethod)) {
-    return {
-      path,
-      submission: {
-        formMethod: opts.formMethod,
-        formAction: stripHashFromPath(path),
-        formEncType:
-          (opts && opts.formEncType) || "application/x-www-form-urlencoded",
-        formData: opts.formData,
-      },
+  let submission: Submission | undefined;
+  if (opts.formData) {
+    submission = {
+      formMethod: opts.formMethod || "get",
+      formAction: stripHashFromPath(path),
+      formEncType:
+        (opts && opts.formEncType) || "application/x-www-form-urlencoded",
+      formData: opts.formData,
     };
+
+    if (isMutationMethod(submission.formMethod)) {
+      return { path, submission };
+    }
   }
 
   // Flatten submission onto URLSearchParams for GET submissions
@@ -2444,7 +2463,7 @@ function normalizeNavigateOptions(
     };
   }
 
-  return { path: createPath(parsedPath) };
+  return { path: createPath(parsedPath), submission };
 }
 
 // Filter out all routes below any caught error as they aren't going to
@@ -2767,7 +2786,7 @@ function createClientSideRequest(
   let url = createClientSideURL(stripHashFromPath(location)).toString();
   let init: RequestInit = { signal };
 
-  if (submission) {
+  if (submission && isMutationMethod(submission.formMethod)) {
     let { formMethod, formEncType, formData } = submission;
     init.method = formMethod.toUpperCase();
     init.body =
@@ -2833,9 +2852,14 @@ function processRouteLoaderData(
         error = Object.values(pendingError)[0];
         pendingError = undefined;
       }
-      errors = Object.assign(errors || {}, {
-        [boundaryMatch.route.id]: error,
-      });
+
+      errors = errors || {};
+
+      // Prefer higher error values if lower errors bubble to the same boundary
+      if (errors[boundaryMatch.route.id] == null) {
+        errors[boundaryMatch.route.id] = error;
+      }
+
       // Once we find our first (highest) error, we set the status code and
       // prevent deeper status codes from overriding
       if (!foundError) {
@@ -3115,8 +3139,8 @@ function isValidMethod(method: string): method is FormMethod {
   return validRequestMethods.has(method as FormMethod);
 }
 
-function isSubmissionMethod(method: string): method is SubmissionFormMethod {
-  return validActionMethods.has(method as SubmissionFormMethod);
+function isMutationMethod(method?: string): method is MutationFormMethod {
+  return validMutationMethods.has(method as MutationFormMethod);
 }
 
 async function resolveDeferredResults(

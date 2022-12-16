@@ -76,6 +76,8 @@ describe("useRoutes", () => {
   });
 
   it("returns null when no route matches", () => {
+    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
     let routes = [{ path: "one", element: <h1>one</h1> }];
 
     const NullRenderer = (props: { routes: RouteObject[] }) => {
@@ -97,9 +99,13 @@ describe("useRoutes", () => {
         is null
       </div>
     `);
+
+    spy.mockRestore();
   });
 
   it("returns null when no route matches and a `location` prop is passed", () => {
+    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
     let routes = [{ path: "one", element: <h1>one</h1> }];
 
     const NullRenderer = (props: {
@@ -114,7 +120,10 @@ describe("useRoutes", () => {
     TestRenderer.act(() => {
       renderer = TestRenderer.create(
         <MemoryRouter initialEntries={["/two"]}>
-          <NullRenderer routes={routes} location={{ pathname: "/three" }} />
+          <NullRenderer
+            routes={routes}
+            location={{ pathname: "/three", search: "", hash: "" }}
+          />
         </MemoryRouter>
       );
     });
@@ -124,6 +133,8 @@ describe("useRoutes", () => {
         is null
       </div>
     `);
+
+    spy.mockRestore();
   });
 
   describe("warns", () => {

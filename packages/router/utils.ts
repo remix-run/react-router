@@ -61,8 +61,8 @@ export type DataResult =
   | RedirectResult
   | ErrorResult;
 
-export type SubmissionFormMethod = "post" | "put" | "patch" | "delete";
-export type FormMethod = "get" | SubmissionFormMethod;
+export type MutationFormMethod = "post" | "put" | "patch" | "delete";
+export type FormMethod = "get" | MutationFormMethod;
 
 export type FormEncType =
   | "application/x-www-form-urlencoded"
@@ -74,7 +74,7 @@ export type FormEncType =
  * external consumption
  */
 export interface Submission {
-  formMethod: SubmissionFormMethod;
+  formMethod: FormMethod;
   formAction: string;
   formEncType: FormEncType;
   formData: FormData;
@@ -197,7 +197,7 @@ type _PathParam<Path extends string> =
   Path extends `${infer L}/${infer R}`
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
-    Path extends `${string}:${infer Param}`
+    Path extends `:${infer Param}`
     ? Param
     : // otherwise, there aren't any params present
       never;
@@ -372,9 +372,14 @@ function flattenRoutes<
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
   parentPath = ""
 ): RouteBranch<RouteObjectType>[] {
-  routes.forEach((route, index) => {
+  let flattenRoute = (
+    route: RouteObjectType,
+    index: number,
+    relativePath?: string
+  ) => {
     let meta: RouteMeta<RouteObjectType> = {
-      relativePath: route.path || "",
+      relativePath:
+        relativePath === undefined ? route.path || "" : relativePath,
       caseSensitive: route.caseSensitive === true,
       childrenIndex: index,
       route,
@@ -415,10 +420,83 @@ function flattenRoutes<
       return;
     }
 
-    branches.push({ path, score: computeScore(path, route.index), routesMeta });
+    branches.push({
+      path,
+      score: computeScore(path, route.index),
+      routesMeta,
+    });
+  };
+  routes.forEach((route, index) => {
+    // coarse-grain check for optional params
+    if (route.path === "" || !route.path?.includes("?")) {
+      flattenRoute(route, index);
+    } else {
+      for (let exploded of explodeOptionalSegments(route.path)) {
+        flattenRoute(route, index, exploded);
+      }
+    }
   });
 
   return branches;
+}
+
+/**
+ * Computes all combinations of optional path segments for a given path,
+ * excluding combinations that are ambiguous and of lower priority.
+ *
+ * For example, `/one/:two?/three/:four?/:five?` explodes to:
+ * - `/one/three`
+ * - `/one/:two/three`
+ * - `/one/three/:four`
+ * - `/one/three/:five`
+ * - `/one/:two/three/:four`
+ * - `/one/:two/three/:five`
+ * - `/one/three/:four/:five`
+ * - `/one/:two/three/:four/:five`
+ */
+function explodeOptionalSegments(path: string): string[] {
+  let segments = path.split("/");
+  if (segments.length === 0) return [];
+
+  let [first, ...rest] = segments;
+
+  // Optional path segments are denoted by a trailing `?`
+  let isOptional = first.endsWith("?");
+  // Compute the corresponding required segment: `foo?` -> `foo`
+  let required = first.replace(/\?$/, "");
+
+  if (rest.length === 0) {
+    // Intepret empty string as omitting an optional segment
+    // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
+    return isOptional ? [required, ""] : [required];
+  }
+
+  let restExploded = explodeOptionalSegments(rest.join("/"));
+
+  let result: string[] = [];
+
+  // All child paths with the prefix.  Do this for all children before the
+  // optional version for all children so we get consistent ordering where the
+  // parent optional aspect is preferred as required.  Otherwise, we can get
+  // child sections interspersed where deeper optional segments are higher than
+  // parent optional segments, where for example, /:two would explodes _earlier_
+  // then /:one.  By always including the parent as required _for all children_
+  // first, we avoid this issue
+  result.push(
+    ...restExploded.map((subpath) =>
+      subpath === "" ? required : [required, subpath].join("/")
+    )
+  );
+
+  // Then if this is an optional value, add all child versions without
+  if (isOptional) {
+    result.push(...restExploded);
+  }
+
+  // for absolute paths, ensure `/` instead of empty segment
+  return result.map((exploded) =>
+    path.startsWith("/") && exploded === "" ? "/" : exploded
+  );
 }
 
 function rankRouteBranches(branches: RouteBranch[]): void {
@@ -534,15 +612,31 @@ function matchRouteBranch<
  * @see https://reactrouter.com/utils/generate-path
  */
 export function generatePath<Path extends string>(
-  path: Path,
+  originalPath: Path,
   params: {
     [key in PathParam<Path>]: string;
   } = {} as any
 ): string {
+  let path = originalPath;
+  if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
+    warning(
+      false,
+      `Route path "${path}" will be treated as if it were ` +
+        `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
+        `always follow a \`/\` in the pattern. To get rid of this warning, ` +
+        `please change the route path to "${path.replace(/\*$/, "/*")}".`
+    );
+    path = path.replace(/\*$/, "/*") as Path;
+  }
+
   return path
-    .replace(/:(\w+)/g, (_, key: PathParam<Path>) => {
+    .replace(/^:(\w+)/g, (_, key: PathParam<Path>) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
+    })
+    .replace(/\/:(\w+)/g, (_, key: PathParam<Path>) => {
+      invariant(params[key] != null, `Missing ":${key}" param`);
+      return `/${params[key]!}`;
     })
     .replace(/(\/?)\*/, (_, prefix, __, str) => {
       const star = "*" as PathParam<Path>;
@@ -682,9 +776,9 @@ function compilePath(
       .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
       .replace(/^\/*/, "/") // Make sure it has a leading /
       .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
-      .replace(/:(\w+)/g, (_: string, paramName: string) => {
+      .replace(/\/:(\w+)/g, (_: string, paramName: string) => {
         paramNames.push(paramName);
-        return "([^\\/]+)";
+        return "/([^\\/]+)";
       });
 
   if (path.endsWith("*")) {

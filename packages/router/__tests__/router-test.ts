@@ -3372,9 +3372,9 @@ describe("a router", () => {
       });
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(navigation.formData).toBeUndefined();
-      expect(navigation.formMethod).toBeUndefined();
-      expect(navigation.formEncType).toBeUndefined();
+      expect(navigation.formData).toEqual(createFormData({ gosh: "dang" }));
+      expect(navigation.formMethod).toBe("get");
+      expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location).toMatchObject({
         pathname: "/foo",
         search: "?gosh=dang",
@@ -3400,9 +3400,9 @@ describe("a router", () => {
 
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
-      expect(navigation.formData).toBeUndefined();
-      expect(navigation.formMethod).toBeUndefined();
-      expect(navigation.formEncType).toBeUndefined();
+      expect(navigation.formData).toEqual(createFormData({ gosh: "dang" }));
+      expect(navigation.formMethod).toBe("get");
+      expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location?.pathname).toBe("/bar");
 
       await B.loaders.bar.resolve("B");
@@ -3872,8 +3872,10 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=value",
       });
-      expect(t.router.state.navigation.formMethod).toBeUndefined();
-      expect(t.router.state.navigation.formData).toBeUndefined();
+      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formData).toEqual(
+        createFormData({ key: "value" })
+      );
     });
 
     it("converts formData to URLSearchParams for formMethod=get", async () => {
@@ -3890,8 +3892,10 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=value",
       });
-      expect(t.router.state.navigation.formMethod).toBeUndefined();
-      expect(t.router.state.navigation.formData).toBeUndefined();
+      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formData).toEqual(
+        createFormData({ key: "value" })
+      );
     });
 
     it("does not preserve existing 'action' URLSearchParams for formMethod='get'", async () => {
@@ -3908,8 +3912,10 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=2",
       });
-      expect(t.router.state.navigation.formMethod).toBeUndefined();
-      expect(t.router.state.navigation.formData).toBeUndefined();
+      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formData).toEqual(
+        createFormData({ key: "2" })
+      );
     });
 
     it("preserves existing 'action' URLSearchParams for formMethod='post'", async () => {
@@ -4656,6 +4662,20 @@ describe("a router", () => {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
       });
+
+      let nav4 = await t.navigate("/tasks#hash", {
+        formData: createFormData({ foo: "bar" }),
+      });
+      expect(nav4.loaders.tasks.stub).toHaveBeenCalledWith({
+        params: {},
+        request: new Request("http://localhost/tasks?foo=bar", {
+          signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
+        }),
+      });
+
+      expect(t.router.state.navigation.formAction).toBe("/tasks");
+      expect(t.router.state.navigation?.location?.pathname).toBe("/tasks");
+      expect(t.router.state.navigation?.location?.search).toBe("?foo=bar");
     });
 
     it("handles errors thrown from loaders", async () => {
@@ -6165,8 +6185,8 @@ describe("a router", () => {
             pathname: "/tasks",
             search: "?key=value",
           },
-          formMethod: undefined,
-          formData: undefined,
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
         },
         revalidation: "loading",
         loaderData: {
@@ -6933,6 +6953,10 @@ describe("a router", () => {
           formData: createFormData({ key: "value" }),
         });
         expect(A.fetcher.state).toBe("loading");
+        expect(A.fetcher.formMethod).toBe("get");
+        expect(A.fetcher.formAction).toBe("/foo");
+        expect(A.fetcher.formData).toEqual(createFormData({ key: "value" }));
+        expect(A.fetcher.formEncType).toBe("application/x-www-form-urlencoded");
         expect(
           new URL(
             A.loaders.foo.stub.mock.calls[0][0].request.url
@@ -10750,6 +10774,61 @@ describe("a router", () => {
         });
       });
 
+      it("should handle multiple errors at separate boundaries", async () => {
+        let routes = [
+          {
+            id: "root",
+            path: "/",
+            loader: () => Promise.reject("ROOT"),
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                loader: () => Promise.reject("CHILD"),
+                hasErrorBoundary: true,
+              },
+            ],
+          },
+        ];
+
+        let { query } = createStaticHandler(routes);
+        let context;
+
+        context = await query(createRequest("/child"));
+        expect(context.errors).toEqual({
+          root: "ROOT",
+          child: "CHILD",
+        });
+      });
+
+      it("should handle multiple errors at the same boundary", async () => {
+        let routes = [
+          {
+            id: "root",
+            path: "/",
+            loader: () => Promise.reject("ROOT"),
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                loader: () => Promise.reject("CHILD"),
+              },
+            ],
+          },
+        ];
+
+        let { query } = createStaticHandler(routes);
+        let context;
+
+        context = await query(createRequest("/child"));
+        expect(context.errors).toEqual({
+          // higher error value wins
+          root: "ROOT",
+        });
+      });
+
       it("should handle aborted load requests", async () => {
         let dfd = createDeferred();
         let controller = new AbortController();
@@ -10911,7 +10990,13 @@ describe("a router", () => {
             ],
           },
         ]);
-        await query(createSubmitRequest("/child"));
+        await query(
+          createSubmitRequest("/child", {
+            headers: {
+              test: "value",
+            },
+          })
+        );
 
         // @ts-expect-error
         let actionRequest = actionStub.mock.calls[0][0]?.request;
@@ -10928,8 +11013,12 @@ describe("a router", () => {
         let childLoaderRequest = childLoaderStub.mock.calls[0][0]?.request;
         expect(rootLoaderRequest.method).toBe("GET");
         expect(rootLoaderRequest.url).toBe("http://localhost/child");
+        expect(rootLoaderRequest.headers.get("test")).toBe("value");
+        expect(await rootLoaderRequest.text()).toBe("");
         expect(childLoaderRequest.method).toBe("GET");
         expect(childLoaderRequest.url).toBe("http://localhost/child");
+        expect(childLoaderRequest.headers.get("test")).toBe("value");
+        // Can't re-read body here since it's the same request as the root
       });
 
       it("should support a requestContext passed to loaders and actions", async () => {
