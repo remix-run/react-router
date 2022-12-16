@@ -1973,7 +1973,7 @@ export function createRouter(init: RouterInit): Router {
 //#region createStaticHandler
 ////////////////////////////////////////////////////////////////////////////////
 
-export function unstable_createStaticHandler(
+export function createStaticHandler(
   routes: AgnosticRouteObject[],
   opts?: {
     basename?: string;
@@ -1981,7 +1981,7 @@ export function unstable_createStaticHandler(
 ): StaticHandler {
   invariant(
     routes.length > 0,
-    "You must provide a non-empty routes array to unstable_createStaticHandler"
+    "You must provide a non-empty routes array to createStaticHandler"
   );
 
   let dataRoutes = convertRoutesToDataRoutes(routes);
