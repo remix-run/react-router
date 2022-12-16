@@ -8,5 +8,15 @@
     "react-router-native": "6.5.0",
     "@remix-run/router": "1.1.0"
   },
-  "changesets": []
+  "changesets": [
+    "afraid-kiwis-grow",
+    "bright-gorillas-pump",
+    "empty-teachers-tie",
+    "kind-gifts-reflect",
+    "ninety-moles-bake",
+    "polite-coins-tap",
+    "rare-clouds-behave",
+    "shiny-pants-decide",
+    "small-dots-try"
+  ]
 }
