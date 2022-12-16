@@ -1,10 +1,7 @@
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import type { StaticHandlerContext } from "@remix-run/router";
-import {
-  json,
-  unstable_createStaticHandler as createStaticHandler,
-} from "@remix-run/router";
+import { json, createStaticHandler } from "@remix-run/router";
 import {
   Link,
   Outlet,
@@ -13,8 +10,8 @@ import {
   useMatches,
 } from "react-router-dom";
 import {
-  unstable_createStaticRouter as createStaticRouter,
-  unstable_StaticRouterProvider as StaticRouterProvider,
+  createStaticRouter,
+  StaticRouterProvider,
 } from "react-router-dom/server";
 
 beforeEach(() => {

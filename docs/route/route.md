@@ -278,7 +278,7 @@ Please see the [errorElement][errorelement] documentation for more details.
 
 [outlet]: ./outlet
 [remix]: https://remix.run
-[indexroute]: ../guides/index-route
+[indexroute]: ../start/concepts#index-routes
 [outlet]: ../components/outlet
 [useloaderdata]: ../hooks/use-loader-data
 [loader]: ./loader

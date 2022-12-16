@@ -43,6 +43,10 @@ You may need to make changes to a pre-release prior to publishing a final stable
   - Convert the `react-router@6.x.y` tag to a Release on Github with the name `v6.x.y`
   - Copy the relevant changelog entries from all packages into the Release Notes and adjust accordingly, matching the format used by prior releases
 
+### Hotfix releases
+
+Hotfix releases follow the same process as standard releases above, but the `release-*` branch should be branched off latest `main` instead of `dev`. Once the stable hotfix is published, the `release-*` branch should be merged back into both `main` and `dev` just like a normal release.
+
 ### Experimental releases
 
 Experimental releases and hot-fixes do not need to be branched off of `dev`. Experimental releases can be branched from anywhere as they are not intended for general use.

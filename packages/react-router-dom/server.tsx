@@ -83,7 +83,7 @@ export interface StaticRouterProviderProps {
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function unstable_StaticRouterProvider({
+export function StaticRouterProvider({
   context,
   router,
   hydrate = true,
@@ -228,7 +228,7 @@ function generateManifest(
   return manifest;
 }
 
-export function unstable_createStaticRouter(
+export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext
 ): RemixRouter {
