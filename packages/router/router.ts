@@ -747,24 +747,36 @@ export function createRouter(init: RouterInit): Router {
       state.navigation.state === "loading" &&
       state.navigation.formAction?.split("?")[0] === location.pathname;
 
+    let actionData: RouteData | null;
+    if (newState.actionData) {
+      if (Object.keys(newState.actionData).length > 0) {
+        actionData = newState.actionData;
+      } else {
+        // Empty actionData -> clear prior actionData due to an action error
+        actionData = null;
+      }
+    } else if (isActionReload) {
+      // Keep the current data if we're wrapping up the action reload
+      actionData = state.actionData;
+    } else {
+      // Clear actionData on any other completed navigations
+      actionData = null;
+    }
+
     // Always preserve any existing loaderData from re-used routes
-    let newLoaderData = newState.loaderData
-      ? {
-          loaderData: mergeLoaderData(
-            state.loaderData,
-            newState.loaderData,
-            newState.matches || []
-          ),
-        }
-      : {};
+    let loaderData = newState.loaderData
+      ? mergeLoaderData(
+          state.loaderData,
+          newState.loaderData,
+          newState.matches || [],
+          newState.errors
+        )
+      : state.loaderData;
 
     updateState({
-      // Clear existing actionData on any completed navigation beyond the original
-      // action, unless we're currently finishing the loading/actionReload state.
-      // Do this prior to spreading in newState in case we got back to back actions
-      ...(isActionReload ? {} : { actionData: null }),
-      ...newState,
-      ...newLoaderData,
+      ...newState, // matches, errors, fetchers go through as-is
+      actionData,
+      loaderData,
       historyAction: pendingAction,
       location,
       initialized: true,
@@ -1017,6 +1029,7 @@ export function createRouter(init: RouterInit): Router {
 
     completeNavigation(location, {
       matches,
+      ...(pendingActionData ? { actionData: pendingActionData } : {}),
       loaderData,
       errors,
     });
@@ -1097,6 +1110,8 @@ export function createRouter(init: RouterInit): Router {
       }
 
       return {
+        // Send back an empty object we can use to clear out any prior actionData
+        pendingActionData: {},
         pendingActionError: { [boundaryMatch.route.id]: result.error },
       };
     }
@@ -1163,10 +1178,10 @@ export function createRouter(init: RouterInit): Router {
     if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
       completeNavigation(location, {
         matches,
-        loaderData: mergeLoaderData(state.loaderData, {}, matches),
+        loaderData: {},
         // Commit pending error if we're short circuiting
         errors: pendingError || null,
-        actionData: pendingActionData || null,
+        ...(pendingActionData ? { actionData: pendingActionData } : {}),
       });
       return { shortCircuited: true };
     }
@@ -1189,9 +1204,14 @@ export function createRouter(init: RouterInit): Router {
         };
         state.fetchers.set(key, revalidatingFetcher);
       });
+      let actionData = pendingActionData || state.actionData;
       updateState({
         navigation: loadingNavigation,
-        actionData: pendingActionData || state.actionData || null,
+        ...(actionData
+          ? Object.keys(actionData).length === 0
+            ? { actionData: null }
+            : { actionData }
+          : {}),
         ...(revalidatingFetchers.length > 0
           ? { fetchers: new Map(state.fetchers) }
           : {}),
@@ -1525,7 +1545,12 @@ export function createRouter(init: RouterInit): Router {
       // manually merge here since we aren't going through completeNavigation
       updateState({
         errors,
-        loaderData: mergeLoaderData(state.loaderData, loaderData, matches),
+        loaderData: mergeLoaderData(
+          state.loaderData,
+          loaderData,
+          matches,
+          errors
+        ),
         ...(didAbortFetchLoads ? { fetchers: new Map(state.fetchers) } : {}),
       });
       isRevalidationRequired = false;
@@ -2556,7 +2581,7 @@ function getMatchesToLoad(
     ? Object.values(pendingError)[0]
     : pendingActionData
     ? Object.values(pendingActionData)[0]
-    : null;
+    : undefined;
 
   // Pick navigation matches that are net-new or qualify for revalidation
   let boundaryId = pendingError ? Object.keys(pendingError)[0] : undefined;
@@ -2920,6 +2945,9 @@ function processRouteLoaderData(
         errors[boundaryMatch.route.id] = error;
       }
 
+      // Clear our any prior loaderData for the throwing route
+      loaderData[id] = undefined;
+
       // Once we find our first (highest) error, we set the status code and
       // prevent deeper status codes from overriding
       if (!foundError) {
@@ -2953,9 +2981,11 @@ function processRouteLoaderData(
   });
 
   // If we didn't consume the pending action error (i.e., all loaders
-  // resolved), then consume it here
+  // resolved), then consume it here.  Also clear out any loaderData for the
+  // throwing route
   if (pendingError) {
     errors = pendingError;
+    loaderData[Object.keys(pendingError)[0]] = undefined;
   }
 
   return {
@@ -3034,15 +3064,29 @@ function processLoaderData(
 function mergeLoaderData(
   loaderData: RouteData,
   newLoaderData: RouteData,
-  matches: AgnosticDataRouteMatch[]
+  matches: AgnosticDataRouteMatch[],
+  errors: RouteData | null | undefined
 ): RouteData {
   let mergedLoaderData = { ...newLoaderData };
-  matches.forEach((match) => {
+  for (let match of matches) {
     let id = match.route.id;
-    if (newLoaderData[id] === undefined && loaderData[id] !== undefined) {
+    if (newLoaderData.hasOwnProperty(id)) {
+      if (newLoaderData[id] !== undefined) {
+        mergedLoaderData[id] = newLoaderData[id];
+      } else {
+        // No-op - this is so we ignore existing data if we have a key in the
+        // incoming object with an undefined value, which is how we unset a prior
+        // loaderData if we encounter a loader error
+      }
+    } else if (loaderData[id] !== undefined) {
       mergedLoaderData[id] = loaderData[id];
     }
-  });
+
+    if (errors && errors.hasOwnProperty(id)) {
+      // Don't keep any loader data below the boundary
+      break;
+    }
+  }
   return mergedLoaderData;
 }
 

@@ -1652,7 +1652,7 @@ describe("a router", () => {
         },
         nextUrl: new URL("http://localhost/params/aValue/bValue"),
         defaultShouldRevalidate: false,
-        actionResult: null,
+        actionResult: undefined,
       });
       rootLoader.mockClear();
       shouldRevalidate.mockClear();
@@ -2302,6 +2302,44 @@ describe("a router", () => {
         });
         let nav = await t.navigate("/child");
         await nav.loaders.child.reject(new Error("Kaboom!"));
+        expect(t.router.state.errors).toEqual({
+          child: new Error("Kaboom!"),
+        });
+      });
+
+      it("clears previous loaderData at that route", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+              id: "parent",
+              loader: true,
+              children: [
+                {
+                  path: "/child",
+                  id: "child",
+                  hasErrorBoundary: true,
+                  loader: true,
+                },
+              ],
+            },
+          ],
+        });
+        let nav = await t.navigate("/child");
+        await nav.loaders.parent.resolve("PARENT");
+        await nav.loaders.child.resolve("CHILD");
+        expect(t.router.state.loaderData).toEqual({
+          parent: "PARENT",
+          child: "CHILD",
+        });
+        expect(t.router.state.errors).toEqual(null);
+
+        let nav2 = await t.navigate("/child");
+        await nav2.loaders.parent.resolve("PARENT2");
+        await nav2.loaders.child.reject(new Error("Kaboom!"));
+        expect(t.router.state.loaderData).toEqual({
+          parent: "PARENT2",
+        });
         expect(t.router.state.errors).toEqual({
           child: new Error("Kaboom!"),
         });
@@ -3410,6 +3448,99 @@ describe("a router", () => {
             true
           ),
         });
+      });
+    });
+
+    it("clears previous actionData at the throwing route", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+            id: "parent",
+            loader: true,
+            children: [
+              {
+                path: "/child",
+                id: "child",
+                hasErrorBoundary: true,
+                action: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+      });
+      let nav = await t.navigate("/child", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await nav.actions.child.resolve("ACTION");
+      await nav.loaders.parent.resolve("PARENT");
+      await nav.loaders.child.resolve("CHILD");
+      expect(t.router.state.actionData).toEqual({
+        child: "ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({
+        parent: "PARENT",
+        child: "CHILD",
+      });
+      expect(t.router.state.errors).toEqual(null);
+
+      let nav2 = await t.navigate("/child", {
+        formMethod: "post",
+        formData: createFormData({ key2: "value2" }),
+      });
+      await nav2.actions.child.reject(new Error("Kaboom!"));
+      await nav2.loaders.parent.resolve("PARENT2");
+      expect(t.router.state.actionData).toEqual(null);
+      expect(t.router.state.loaderData).toEqual({
+        parent: "PARENT2",
+      });
+      expect(t.router.state.errors).toEqual({
+        child: new Error("Kaboom!"),
+      });
+    });
+
+    it("does not clear previous loaderData at the handling route", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+            id: "parent",
+            loader: true,
+            hasErrorBoundary: true,
+            children: [
+              {
+                path: "/child",
+                id: "child",
+                action: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+      });
+      let nav = await t.navigate("/child");
+      await nav.loaders.parent.resolve("PARENT");
+      await nav.loaders.child.resolve("CHILD");
+      expect(t.router.state.actionData).toEqual(null);
+      expect(t.router.state.loaderData).toEqual({
+        parent: "PARENT",
+        child: "CHILD",
+      });
+      expect(t.router.state.errors).toEqual(null);
+
+      let nav2 = await t.navigate("/child", {
+        formMethod: "post",
+        formData: createFormData({ key2: "value2" }),
+      });
+      await nav2.actions.child.reject(new Error("Kaboom!"));
+      expect(t.router.state.actionData).toEqual(null);
+      expect(t.router.state.loaderData).toEqual({
+        parent: "PARENT",
+      });
+      expect(t.router.state.errors).toEqual({
+        parent: new Error("Kaboom!"),
       });
     });
   });
@@ -6940,7 +7071,7 @@ describe("a router", () => {
         navigation: IDLE_NAVIGATION,
         revalidation: "idle",
         loaderData: {
-          root: "ROOT_DATA",
+          root: undefined,
           index: "INDEX_DATA*",
         },
         errors: {
