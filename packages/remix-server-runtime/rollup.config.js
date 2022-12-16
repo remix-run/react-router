@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-globals, import/no-nodejs-modules */
+/* eslint-disable import/no-nodejs-modules */
 const path = require("path");
 const babel = require("@rollup/plugin-babel").default;
 const nodeResolve = require("@rollup/plugin-node-resolve").default;
