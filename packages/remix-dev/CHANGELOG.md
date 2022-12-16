@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 1.9.0-pre.1
+
+### Patch Changes
+
+- Update react-router ([`31bb30741`](https://github.com/remix-run/remix/commit/31bb307419f733d9cfd2c16e74890a075eac7682))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.9.0-pre.1`
+
 ## 1.9.0-pre.0
 
 ### Minor Changes
