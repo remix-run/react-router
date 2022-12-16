@@ -717,14 +717,9 @@ export function createRouter(init: RouterInit): Router {
 
   // Update our state and notify the calling context of the change
   function updateState(newState: Partial<RouterState>): void {
-    // If we receive an empty actionData object, that's indicative that the
-    // action errored and we want to clear out any current actionData
-    let isEmptyActionData =
-      newState.actionData && Object.keys(newState.actionData).length === 0;
     state = {
       ...state,
       ...newState,
-      ...(isEmptyActionData ? { actionData: null } : {}),
     };
     subscribers.forEach((subscriber) => subscriber(state));
   }
@@ -752,25 +747,36 @@ export function createRouter(init: RouterInit): Router {
       state.navigation.state === "loading" &&
       state.navigation.formAction?.split("?")[0] === location.pathname;
 
+    let actionData: RouteData | null;
+    if (newState.actionData) {
+      if (Object.keys(newState.actionData).length > 0) {
+        actionData = newState.actionData;
+      } else {
+        // Empty actionData -> clear prior actionData due to an action error
+        actionData = null;
+      }
+    } else if (isActionReload) {
+      // Keep the current data if we're wrapping up the action reload
+      actionData = state.actionData;
+    } else {
+      // Clear actionData on any other completed navigations
+      actionData = null;
+    }
+
     // Always preserve any existing loaderData from re-used routes
-    let newLoaderData = newState.loaderData
-      ? {
-          loaderData: mergeLoaderData(
-            state.loaderData,
-            newState.loaderData,
-            newState.matches || [],
-            newState.errors
-          ),
-        }
-      : {};
+    let loaderData = newState.loaderData
+      ? mergeLoaderData(
+          state.loaderData,
+          newState.loaderData,
+          newState.matches || [],
+          newState.errors
+        )
+      : state.loaderData;
 
     updateState({
-      // Clear existing actionData on any completed navigation beyond the original
-      // action, unless we're currently finishing the loading/actionReload state.
-      // Do this prior to spreading in newState in case we got back to back actions
-      ...(isActionReload ? {} : { actionData: null }),
-      ...newState,
-      ...newLoaderData,
+      ...newState, // matches, errors, fetchers go through as-is
+      actionData,
+      loaderData,
       historyAction: pendingAction,
       location,
       initialized: true,
@@ -1201,7 +1207,11 @@ export function createRouter(init: RouterInit): Router {
       let actionData = pendingActionData || state.actionData;
       updateState({
         navigation: loadingNavigation,
-        ...(actionData ? { actionData } : {}),
+        ...(actionData
+          ? Object.keys(actionData).length === 0
+            ? { actionData: null }
+            : { actionData }
+          : {}),
         ...(revalidatingFetchers.length > 0
           ? { fetchers: new Map(state.fetchers) }
           : {}),
