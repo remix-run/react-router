@@ -1,5 +1,13 @@
 # `@remix-run/serve`
 
+## 1.9.0
+
+### Patch Changes
+
+- Fix `TypedResponse` so that Typescript correctly shows errors for incompatible types in `loader` and `action` functions. ([#4734](https://github.com/remix-run/remix/pull/4734))
+- Updated dependencies:
+  - `@remix-run/express@1.9.0`
+
 ## 1.8.2
 
 ### Patch Changes

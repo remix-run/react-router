@@ -471,8 +471,8 @@ test.describe("route module link export", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test("adds responsive image preload links to the document", async ({

@@ -18,7 +18,7 @@ function purgeAppRequireCache(buildPath: string) {
 function tryImport(packageName: string) {
   try {
     return require(packageName);
-  } catch (err) {
+  } catch {
     throw new Error(
       `Could not locate ${packageName}. Verify that you have it installed to use the dev command.`
     );

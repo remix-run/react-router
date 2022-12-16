@@ -32,8 +32,8 @@ export const compile = async (
     let browserPromise = compiler.browser.compile(assetsManifestChannel);
     let serverPromise = compiler.server.compile(assetsManifestChannel);
     await Promise.all([browserPromise, serverPromise]);
-  } catch (err) {
-    options.onCompileFailure?.(err as Error);
+  } catch (error: unknown) {
+    options.onCompileFailure?.(error as Error);
   }
 };
 

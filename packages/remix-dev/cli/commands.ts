@@ -94,7 +94,7 @@ export async function init(
     if (deleteScript) {
       await fse.remove(initScriptDir);
     }
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error) {
       error.message = `${colors.error("🚨 Oops, remix.init failed")}\n\n${
         error.message
@@ -222,7 +222,7 @@ export async function codemod(
       dry,
       force,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof CodemodError) {
       console.error(`${colors.red("Error:")} ${error.message}`);
       if (error.additionalInfo) console.info(colors.gray(error.additionalInfo));

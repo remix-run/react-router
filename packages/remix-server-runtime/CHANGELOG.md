@@ -1,5 +1,13 @@
 # `@remix-run/server-runtime`
 
+## 1.9.0
+
+### Patch Changes
+
+- Fix `TypedResponse` so that Typescript correctly shows errors for incompatible types in `loader` and `action` functions. ([#4734](https://github.com/remix-run/remix/pull/4734))
+- Fix error boundary tracking for multiple errors bubbling to the same boundary ([#4829](https://github.com/remix-run/remix/pull/4829))
+- Fixed an issue where a loader's `Request` object reflected `method: "POST"` on document submissions ([`a74e51830`](https://github.com/remix-run/remix/commit/a74e51830ec7ecb3ad30e45013270ebf71d7b425))
+
 ## 1.8.2
 
 ### Patch Changes

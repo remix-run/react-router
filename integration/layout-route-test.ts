@@ -35,8 +35,8 @@ test.describe("pathless layout routes", () => {
     );
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test("should render pathless index route", async ({ page }) => {

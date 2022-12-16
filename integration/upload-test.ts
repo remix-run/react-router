@@ -175,7 +175,9 @@ test.beforeAll(async () => {
   appFixture = await createAppFixture(fixture);
 });
 
-test.afterAll(() => appFixture.close());
+test.afterAll(() => {
+  appFixture.close();
+});
 
 test("can upload a file with createFileUploadHandler", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);

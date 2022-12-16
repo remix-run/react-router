@@ -83,7 +83,9 @@ test.describe("prefetch=none", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(() => appFixture.close());
+  test.afterAll(() => {
+    appFixture.close();
+  });
 
   test("does not render prefetch tags during SSR", async ({ page }) => {
     let res = await fixture.requestDocument("/");
@@ -107,8 +109,8 @@ test.describe("prefetch=render", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test("does not render prefetch tags during SSR", async ({ page }) => {
@@ -149,8 +151,8 @@ test.describe("prefetch=intent (hover)", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test("does not render prefetch tags during SSR", async ({ page }) => {
@@ -220,8 +222,8 @@ test.describe("prefetch=intent (focus)", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test("does not render prefetch tags during SSR", async ({ page }) => {

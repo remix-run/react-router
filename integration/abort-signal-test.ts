@@ -45,7 +45,9 @@ test.beforeAll(async () => {
   appFixture = await createAppFixture(fixture);
 });
 
-test.afterAll(async () => appFixture.close());
+test.afterAll(() => {
+  appFixture.close();
+});
 
 test("should not abort the request in a new event loop", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);

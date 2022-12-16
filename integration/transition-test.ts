@@ -204,8 +204,8 @@ test.describe("rendering", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test("calls all loaders for new routes", async ({ page }) => {

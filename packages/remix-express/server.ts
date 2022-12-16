@@ -61,7 +61,7 @@ export function createRequestHandler({
       )) as NodeResponse;
 
       await sendRemixResponse(res, response);
-    } catch (error) {
+    } catch (error: unknown) {
       // Express doesn't support async functions, so we have to pass along the
       // error manually using next().
       next(error);

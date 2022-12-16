@@ -18,7 +18,7 @@ test.beforeAll(async () => {
         export function loader() {
           try {
             throw new Error("💩");
-          } catch (err) {
+          } catch {
             return json(err.stack);
           }
         }

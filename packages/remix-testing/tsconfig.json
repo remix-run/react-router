@@ -1,0 +1,20 @@
+{
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["dist", "__tests__", "node_modules"],
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "target": "ES2020",
+    "module": "ES2020",
+    "skipLibCheck": true,
+    "composite": true,
+
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "jsx": "react",
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": ".",
+    "outDir": "../../build/node_modules/@remix-run/testing/dist"
+  }
+}

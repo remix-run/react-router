@@ -256,7 +256,9 @@ test.describe("meta", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(() => appFixture.close());
+  test.afterAll(() => {
+    appFixture.close();
+  });
 
   test("empty meta does not render a tag", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
@@ -475,7 +477,9 @@ test.describe("v2_meta", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(() => appFixture.close());
+  test.afterAll(() => {
+    appFixture.close();
+  });
 
   test("empty meta does not render a tag", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);

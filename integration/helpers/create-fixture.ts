@@ -1,6 +1,6 @@
-import path from "path";
+import type { Writable } from "node:stream";
+import path from "node:path";
 import fse from "fs-extra";
-import type { Writable } from "stream";
 import express from "express";
 import getPort from "get-port";
 import stripIndent from "strip-indent";
@@ -93,7 +93,7 @@ export async function createFixture(init: FixtureInit) {
 export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
   let startAppServer = async (): Promise<{
     port: number;
-    stop: () => Promise<void>;
+    stop: VoidFunction;
   }> => {
     return new Promise(async (accept) => {
       let port = await getPort();
@@ -110,13 +110,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
 
       let server = app.listen(port);
 
-      let stop = (): Promise<void> => {
-        return new Promise((res) => {
-          server.close(() => res());
-        });
-      };
-
-      accept({ stop, port });
+      accept({ stop: server.close.bind(server), port });
     });
   };
 
@@ -130,10 +124,10 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
       /**
        * Shuts down the fixture app, **you need to call this
        * at the end of a test** or `afterAll` if the fixture is initialized in a
-       * `beforeAll` block. Also make sure to `await app.close()` or else you'll
+       * `beforeAll` block. Also make sure to `app.close()` or else you'll
        * have memory leaks.
        */
-      close: async () => {
+      close: () => {
         return stop();
       },
     };

@@ -127,7 +127,7 @@ async function handleDataRequestRR(
     }
 
     return response;
-  } catch (error) {
+  } catch (error: unknown) {
     if (isResponse(error)) {
       error.headers.set("X-Remix-Catch", "yes");
       return error;
@@ -217,7 +217,7 @@ async function handleDocumentRequestRR(
     context = await staticHandler.query(request, {
       requestContext: loadContext,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     if (!request.signal.aborted && serverMode !== ServerMode.Test) {
       console.error(error);
     }
@@ -352,7 +352,7 @@ async function handleDocumentRequestRR(
     return await handleDocumentRequestFunction(
       ...handleDocumentRequestParameters
     );
-  } catch (error) {
+  } catch (error: unknown) {
     handleDocumentRequestParameters[1] = 500;
     appState.trackBoundaries = false;
     appState.error = await serializeError(error as Error);
@@ -389,7 +389,7 @@ async function handleResourceRequestRR(
       "Expected a Response to be returned from queryRoute"
     );
     return response;
-  } catch (error) {
+  } catch (error: unknown) {
     if (isResponse(error)) {
       // Note: Not functionally required but ensures that our response headers
       // match identically to what Remix returns

@@ -115,7 +115,9 @@ test.beforeAll(async () => {
   appFixture = await createAppFixture(fixture);
 });
 
-test.afterAll(() => appFixture.close());
+test.afterAll(() => {
+  appFixture.close();
+});
 
 test("should revalidate when cookie is set on redirect from loader", async ({
   page,

@@ -14,7 +14,7 @@ test.beforeAll(async () => {
         export async function action({ request }) {
           try {
             await request.formData()
-          } catch (err) {
+          } catch {
             return json("no pizza");
           }
           return json("pizza");

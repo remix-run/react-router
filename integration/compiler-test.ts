@@ -191,7 +191,9 @@ test.describe("compiler", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => appFixture.close());
+  test.afterAll(() => {
+    appFixture.close();
+  });
 
   test("removes server code with `*.server` files", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);

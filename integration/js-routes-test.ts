@@ -22,8 +22,8 @@ test.describe(".js route files", () => {
     );
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test("should render all .js routes", async ({ page }) => {

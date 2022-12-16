@@ -187,7 +187,7 @@ function encodeData(value: any): string {
 function decodeData(value: string): any {
   try {
     return JSON.parse(decodeURIComponent(myEscape(atob(value))));
-  } catch (error) {
+  } catch (error: unknown) {
     return {};
   }
 }

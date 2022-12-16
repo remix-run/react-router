@@ -46,8 +46,8 @@ test.describe("`useSubmit()` returned function", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
+  test.afterAll(() => {
+    appFixture.close();
   });
 
   test("submits the submitter's value appended to the form data", async ({

@@ -1,5 +1,20 @@
 # `@remix-run/dev`
 
+## 1.9.0
+
+### Minor Changes
+
+- Allow defining multiple routes for the same route module file ([#3970](https://github.com/remix-run/remix/pull/3970))
+- Added support and conventions for optional route segments ([#4706](https://github.com/remix-run/remix/pull/4706))
+
+### Patch Changes
+
+- The Remix compiler now supports new Typescript 4.9 syntax (like the `satisfies` keyword) ([#4754](https://github.com/remix-run/remix/pull/4754))
+- Optimize `parentRouteId` lookup in `defineConventionalRoutes`. ([#4800](https://github.com/remix-run/remix/pull/4800))
+- Fixed a bug in `.ts` -> `.js` conversion on Windows by using a relative unix-style path ([#4718](https://github.com/remix-run/remix/pull/4718))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.9.0`
+
 ## 1.8.2
 
 ### Patch Changes

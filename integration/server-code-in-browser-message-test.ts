@@ -49,7 +49,9 @@ test.beforeAll(async () => {
   appFixture = await createAppFixture(fixture);
 });
 
-test.afterAll(() => appFixture.close());
+test.afterAll(() => {
+  appFixture.close();
+});
 
 test.skip("should log relevant error message", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);

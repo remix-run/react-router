@@ -281,9 +281,9 @@ test.describe("ErrorBoundary", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
+  test.afterAll(() => {
     console.error = _consoleError;
-    await appFixture.close();
+    appFixture.close();
   });
 
   test("invalid request methods", async () => {

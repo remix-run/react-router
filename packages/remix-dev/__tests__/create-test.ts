@@ -665,8 +665,8 @@ describe("the create command", () => {
             "--typescript",
           ]);
           return res;
-        } catch (err) {
-          throw err;
+        } catch (error: unknown) {
+          throw error;
         }
       }).rejects.toMatchInlineSnapshot(
         `[Error: 🚨 The template could not be verified because you do not have access to the repository. Please double check the access rights of this repo and try again.]`
@@ -822,7 +822,7 @@ describe("the create command", () => {
     });
     it("uses the proxy from env var", async () => {
       let projectDir = await getProjectDir("template");
-      let err: Error | undefined;
+      let error: Error | undefined;
       let prevProxy = process.env.HTTPS_PROXY;
       try {
         process.env.HTTPS_PROXY = "http://127.0.0.1:33128";
@@ -834,12 +834,12 @@ describe("the create command", () => {
           "--no-install",
           "--typescript",
         ]);
-      } catch (e) {
-        err = e;
+      } catch (err) {
+        error = err;
       } finally {
         process.env.HTTPS_PROXY = prevProxy;
       }
-      expect(err?.message).toMatch("127.0.0.1:33");
+      expect(error?.message).toMatch("127.0.0.1:33");
     });
   });
 });

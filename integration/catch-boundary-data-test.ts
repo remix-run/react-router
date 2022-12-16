@@ -156,7 +156,9 @@ test.beforeAll(async () => {
   appFixture = await createAppFixture(fixture);
 });
 
-test.afterAll(async () => appFixture.close());
+test.afterAll(() => {
+  appFixture.close();
+});
 
 test("renders root boundary with data available", async () => {
   let res = await fixture.requestDocument(NO_BOUNDARY_LOADER);

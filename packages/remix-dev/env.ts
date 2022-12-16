@@ -6,7 +6,7 @@ export async function loadEnv(rootDirectory: string): Promise<void> {
   let envPath = path.join(rootDirectory, ".env");
   try {
     await fse.readFile(envPath);
-  } catch (e) {
+  } catch {
     return;
   }
 

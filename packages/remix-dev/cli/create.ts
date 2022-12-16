@@ -176,7 +176,7 @@ export async function createApp({
   let appPkg: any;
   try {
     appPkg = require(pkgJsonPath);
-  } catch (err) {
+  } catch {
     throw Error(
       "🚨 The provided template must be a Remix project with a `package.json` " +
         `file, but that file does not exist in ${pkgJsonPath}.`
@@ -244,12 +244,12 @@ async function extractLocalTarball(
       gunzip(),
       tar.extract(projectDir, { strip: 1 })
     );
-  } catch (err) {
+  } catch (error: unknown) {
     throw Error(
       "🚨 There was a problem extracting the file from the provided template.\n\n" +
         `  Template filepath: \`${filePath}\`\n` +
         `  Destination directory: \`${projectDir}\`\n` +
-        `  ${err}`
+        `  ${error}`
     );
   }
 }
