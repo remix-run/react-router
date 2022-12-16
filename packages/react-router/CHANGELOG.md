@@ -2,91 +2,31 @@
 
 ## 6.5.0
 
+This release introduces support for [Optional Route Segments](https://github.com/remix-run/react-router/issues/9546). Now, adding a `?` to the end of any path segment will make that entire segment optional. This works for both static segments and dynamic parameters.
+
+**Optional Params Examples**
+
+- `<Route path=":lang?/about>` will match:
+  - `/:lang/about`
+  - `/about`
+- `<Route path="/multistep/:widget1?/widget2?/widget3?">` will match:
+  - `/multistep`
+  - `/multistep/:widget1`
+  - `/multistep/:widget1/:widget2`
+  - `/multistep/:widget1/:widget2/:widget3`
+
+**Optional Static Segment Example**
+
+- `<Route path="/home?">` will match:
+  - `/`
+  - `/home`
+- `<Route path="/fr?/about">` will match:
+  - `/about`
+  - `/fr/about`
+
 ### Minor Changes
 
 - Allows optional routes and optional static segments ([#9650](https://github.com/remix-run/react-router/pull/9650))
-
-  **Optional params examples**
-
-  `:lang?/about` will get expanded matched with
-
-  ```
-  /:lang/about
-  /about
-  ```
-
-  `/multistep/:widget1?/widget2?/widget3?`
-  Will get expanded matched with:
-
-  ```
-  /multistep
-  /multistep/:widget1
-  /multistep/:widget1/:widget2
-  /multistep/:widget1/:widget2/:widget3
-  ```
-
-  **optional static segment example**
-
-  `/fr?/about` will get expanded and matched with:
-
-  ```
-  /about
-  /fr/about
-  ```
-
-### Patch Changes
-
-- Stop incorrectly matching on partial named parameters, i.e. `<Route path="prefix-:param">`, to align with how splat parameters work. If you were previously relying on this behavior then it's recommended to extract the static portion of the path at the `useParams` call site: ([#9506](https://github.com/remix-run/react-router/pull/9506))
-
-  ```jsx
-  // Old behavior at URL /prefix-123
-  <Route path="prefix-:id" element={<Comp /> }>
-
-  function Comp() {
-    let params = useParams(); // { id: '123' }
-    let id = params.id; // "123"
-    ...
-  }
-
-  // New behavior at URL /prefix-123
-  <Route path=":id" element={<Comp /> }>
-
-  function Comp() {
-    let params = useParams(); // { id: 'prefix-123' }
-    let id = params.id.replace(/^prefix-/, ''); // "123"
-    ...
-  }
-  ```
-
-- Updated dependencies:
-  - `@remix-run/router@1.1.0`
-
-## 6.5.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.1.0-pre.1`
-
-## 6.5.0-pre.0
-
-### Minor Changes
-
-- Support for optional path segments ([#9650](https://github.com/remix-run/react-router/pull/9650))
-  - You can now denote optional path segments with a `?` as the last character in a path segment
-  - Optional params examples
-    - `:lang?/about` will get expanded and match:
-      - `/:lang/about`
-      - `/about`
-    - `/multistep/:widget1?/widget2?/widget3?` will get expanded and match:
-      - `/multistep/:widget1/:widget2/:widget3`
-      - `/multistep/:widget1/:widget2`
-      - `/multistep/:widget1`
-      - `/multistep`
-  - Optional static segment example
-    - `/fr?/about` will get expanded and match:
-      - `/fr/about`
-      - `/about`
 
 ### Patch Changes
 
@@ -113,7 +53,7 @@ function Comp() {
 ```
 
 - Updated dependencies:
-  - `@remix-run/router@1.1.0-pre.0`
+  - `@remix-run/router@1.1.0`
 
 ## 6.4.5
 
