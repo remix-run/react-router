@@ -28,7 +28,7 @@
     "changeset": "changeset",
     "version": "changeset version",
     "postversion": "node scripts/postversion.mjs",
-    "version:experimental": "node scripts ./scripts/version experimental",
+    "version:experimental": "node ./scripts/version experimental",
     "watch": "rollup -c -w"
   },
   "jest": {
