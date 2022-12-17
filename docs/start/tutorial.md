@@ -878,7 +878,7 @@ export async function action({ request, params }) {
 
 👉 **Wire the action up to the route**
 
-```jsx filename=src/routes/main.jsx lines=[3,23]
+```jsx filename=src/main.jsx lines=[3,23]
 /* existing code */
 import EditContact, {
   action as editAction,
