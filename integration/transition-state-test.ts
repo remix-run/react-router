@@ -31,6 +31,7 @@ test.describe("rendering", () => {
           import { Outlet, Scripts, useTransition } from "@remix-run/react";
           export default function() {
             const transition = useTransition();
+
             const transitionsRef = useRef();
             const transitions = useMemo(() => {
               const savedTransitions = transitionsRef.current || [];
@@ -41,6 +42,7 @@ test.describe("rendering", () => {
 
             return (
               <html lang="en">
+                <head><title>Test</title></head>
                 <body>
                   <Outlet />
                     {transition.state != "idle" && (
@@ -254,9 +256,11 @@ test.describe("rendering", () => {
           search: "?redirected",
           hash: "",
           state: {
-            isRedirect: true,
-            setCookie: false,
-            type: "loader",
+            _isRedirect: true,
+            // These were private API for transition manager that are no longer
+            // needed with the new router so OK to disappear
+            // setCookie: false,
+            // type: "loader",
           },
           key: expect.any(String),
         },
@@ -342,9 +346,11 @@ test.describe("rendering", () => {
           search: "?redirected",
           hash: "",
           state: {
-            isRedirect: true,
-            setCookie: false,
-            type: "loaderSubmission",
+            _isRedirect: true,
+            // These were private API for transition manager that are no longer
+            // needed with the new router so OK to disappear
+            // setCookie: false,
+            // type: "loader",
           },
           key: expect.any(String),
         },
@@ -452,9 +458,11 @@ test.describe("rendering", () => {
           search: "?redirected",
           hash: "",
           state: {
-            isRedirect: true,
-            setCookie: false,
-            type: "action",
+            _isRedirect: true,
+            // These were private API for transition manager that are no longer
+            // needed with the new router so OK to disappear
+            // setCookie: false,
+            // type: "loader",
           },
           key: expect.any(String),
         },
@@ -491,9 +499,12 @@ test.describe("rendering", () => {
           search: "?redirected",
           hash: "",
           state: {
-            isRedirect: true,
-            setCookie: false,
-            type: "fetchAction",
+            _isRedirect: true,
+            _isFetchActionRedirect: true,
+            // These were private API for transition manager that are no longer
+            // needed with the new router so OK to disappear
+            // setCookie: false,
+            // type: "loader",
           },
           key: expect.any(String),
         },

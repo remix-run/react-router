@@ -176,7 +176,6 @@ const exportsByRenderer: Record<Renderer, Partial<ExportNames>> = {
       "NavLinkProps",
       "RemixBrowserProps",
       "RemixServerProps",
-      "ShouldReloadFunction",
       "SubmitFunction",
       "SubmitOptions",
       "ThrownResponse",

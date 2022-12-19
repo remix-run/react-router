@@ -145,6 +145,8 @@ function createRemixContext(
   let matches = matchRoutes(routes, currentLocation) || [];
 
   return {
+    // TODO: Check with Logan on how to handle the update heree
+    // @ts-expect-error
     actionData: initialActionData,
     appState: {
       trackBoundaries: true,
@@ -204,6 +206,8 @@ function createRouteModules(
       handle: route.handle,
       links: undefined,
       meta: undefined,
+      // TODO: Check with Logan on how to handle the update here
+      // @ts-expect-error
       unstable_shouldReload: undefined,
     };
     return modules;

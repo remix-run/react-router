@@ -61,6 +61,7 @@ test.describe("file-uploads", () => {
           };
 
           export default function Upload() {
+            let actionData = useActionData();
             return (
               <>
                 <Form method="post" encType="multipart/form-data">
@@ -69,7 +70,7 @@ test.describe("file-uploads", () => {
                   <input type="hidden" name="test" value="hidden" />
                   <button type="submit">Submit</button>
                 </Form>
-                <pre>{JSON.stringify(useActionData(), null, 2)}</pre>
+                {actionData ? <pre>{JSON.stringify(actionData, null, 2)}</pre> : null}
               </>
             );
           }
@@ -100,6 +101,7 @@ test.describe("file-uploads", () => {
     await app.goto("/file-upload");
     await app.uploadFile("#file", uploadFile);
     await app.clickSubmitButton("/file-upload");
+    await page.waitForSelector("pre");
     expect(await app.getHtml("pre")).toBe(`<pre>
 {
   "name": "underLimit.txt",
@@ -126,6 +128,7 @@ test.describe("file-uploads", () => {
     await app.goto("/file-upload");
     await app.uploadFile("#file", uploadFile);
     await app.clickSubmitButton("/file-upload");
+    await page.waitForSelector("pre");
     expect(await app.getHtml("pre")).toBe(`<pre>
 {
   "errorMessage": "Field \\"file\\" exceeded upload size of 10000 bytes."

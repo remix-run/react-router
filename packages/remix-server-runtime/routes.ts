@@ -88,8 +88,6 @@ export function createStaticHandlerDataRoutes(
               })
           : undefined,
         handle: route.module.handle,
-        // TODO: RRR - Implement!
-        shouldRevalidate: () => true,
       };
 
       return route.index

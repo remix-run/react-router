@@ -13,23 +13,27 @@ test.beforeAll(async () => {
       "app/routes/index.jsx": js`
         import { json } from "@remix-run/node";
         import { Form, useLoaderData, useActionData } from "@remix-run/react";
-        export async function loader({ request }) {
-          let text = (await request.text());
+
+        async function requestToJson(request) {
+          let body = null;
+
+          if (request.body) {
+            let fd = await request.formData();
+            body = Object.fromEntries(fd.entries());
+          }
+
           return json({
             method: request.method,
             url: request.url,
             headers: Object.fromEntries(request.headers.entries()),
-            text,
+            body,
           });
         }
-        export async function action({ request }) {
-          let text = (await request.text());
-          return json({
-            method: request.method,
-            url: request.url,
-            headers: Object.fromEntries(request.headers.entries()),
-            text,
-          });
+        export async function loader({ request }) {
+          return requestToJson(request);
+        }
+        export function action({ request }) {
+          return requestToJson(request);
         }
         export default function Index() {
           let loaderData = useLoaderData();
@@ -42,16 +46,24 @@ test.beforeAll(async () => {
                 Set Cookie
               </button>
               <Form method="get" reloadDocument>
-                <button type="submit" id="submit-get-ssr" name="type" value="ssr" />
+                <button type="submit" id="submit-get-ssr" name="type" value="ssr">
+                  SSR GET
+                </button>
               </Form>
               <Form method="get">
-                <button type="submit" id="submit-get-csr" name="type" value="csr" />
+                <button type="submit" id="submit-get-csr" name="type" value="csr">
+                  CSR GET
+                </button>
               </Form>
               <Form method="post" reloadDocument>
-                <button type="submit" id="submit-post-ssr" name="type" value="ssr" />
+                <button type="submit" id="submit-post-ssr" name="type" value="ssr">
+                  SSR POST
+                </button>
               </Form>
               <Form method="post">
-                <button type="submit" id="submit-post-csr" name="type" value="csr" />
+                <button type="submit" id="submit-post-csr" name="type" value="csr">
+                  CSR POST
+                </button>
               </Form>
               <pre id="loader-data">{JSON.stringify(loaderData)}</pre>
               {actionData ?
@@ -78,7 +90,7 @@ test("loader request on SSR GET requests", async ({ page }) => {
   expect(loaderData.method).toEqual("GET");
   expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
   expect(loaderData.headers.cookie).toEqual(undefined);
-  expect(loaderData.text).toEqual("");
+  expect(loaderData.body).toEqual(null);
 
   await app.clickElement("#submit-get-ssr");
 
@@ -86,7 +98,7 @@ test("loader request on SSR GET requests", async ({ page }) => {
   expect(loaderData.method).toEqual("GET");
   expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/\?type=ssr$/);
   expect(loaderData.headers.cookie).toEqual("cookie=nomnom");
-  expect(loaderData.text).toEqual("");
+  expect(loaderData.body).toEqual(null);
 });
 
 test("loader request on CSR GET requests", async ({ page }) => {
@@ -98,7 +110,7 @@ test("loader request on CSR GET requests", async ({ page }) => {
   expect(loaderData.method).toEqual("GET");
   expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
   expect(loaderData.headers.cookie).toEqual(undefined);
-  expect(loaderData.text).toEqual("");
+  expect(loaderData.body).toEqual(null);
 
   await app.clickElement("#submit-get-csr");
 
@@ -106,7 +118,7 @@ test("loader request on CSR GET requests", async ({ page }) => {
   expect(loaderData.method).toEqual("GET");
   expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/\?type=csr$/);
   expect(loaderData.headers.cookie).toEqual("cookie=nomnom");
-  expect(loaderData.text).toEqual("");
+  expect(loaderData.body).toEqual(null);
 });
 
 test("action + loader requests SSR POST requests", async ({ page }) => {
@@ -118,7 +130,7 @@ test("action + loader requests SSR POST requests", async ({ page }) => {
   expect(loaderData.method).toEqual("GET");
   expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
   expect(loaderData.headers.cookie).toEqual(undefined);
-  expect(loaderData.text).toEqual("");
+  expect(loaderData.body).toEqual(null);
 
   await app.clickElement("#submit-post-ssr");
 
@@ -126,13 +138,13 @@ test("action + loader requests SSR POST requests", async ({ page }) => {
   expect(actionData.method).toEqual("POST");
   expect(actionData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
   expect(actionData.headers.cookie).toEqual("cookie=nomnom");
-  expect(actionData.text).toEqual("type=ssr");
+  expect(actionData.body).toEqual({ type: "ssr" });
 
   loaderData = JSON.parse(await page.locator("#loader-data").innerHTML());
   expect(loaderData.method).toEqual("GET");
   expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
   expect(loaderData.headers.cookie).toEqual("cookie=nomnom");
-  expect(loaderData.text).toEqual("");
+  expect(loaderData.body).toEqual(null);
 });
 
 test("action + loader requests on CSR POST requests", async ({ page }) => {
@@ -144,7 +156,7 @@ test("action + loader requests on CSR POST requests", async ({ page }) => {
   expect(loaderData.method).toEqual("GET");
   expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
   expect(loaderData.headers.cookie).toEqual(undefined);
-  expect(loaderData.text).toEqual("");
+  expect(loaderData.body).toEqual(null);
 
   await app.clickElement("#submit-post-csr");
 
@@ -152,11 +164,11 @@ test("action + loader requests on CSR POST requests", async ({ page }) => {
   expect(actionData.method).toEqual("POST");
   expect(actionData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
   expect(actionData.headers.cookie).toEqual("cookie=nomnom");
-  expect(actionData.text).toEqual("type=csr");
+  expect(actionData.body).toEqual({ type: "csr" });
 
   loaderData = JSON.parse(await page.locator("#loader-data").innerHTML());
   expect(loaderData.method).toEqual("GET");
   expect(loaderData.url).toMatch(/^http:\/\/localhost:\d+\/$/);
   expect(loaderData.headers.cookie).toEqual("cookie=nomnom");
-  expect(loaderData.text).toEqual("");
+  expect(loaderData.body).toEqual(null);
 });
