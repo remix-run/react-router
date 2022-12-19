@@ -3,11 +3,11 @@ import * as esbuild from "esbuild";
 import * as fse from "fs-extra";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 
-import { type ReadChannel } from "../channel";
-import { type RemixConfig } from "../config";
-import { type AssetsManifest } from "./assets";
+import type { ReadChannel } from "../channel";
+import type { RemixConfig } from "../config";
+import type { AssetsManifest } from "./assets";
 import { loaders } from "./loaders";
-import { type CompileOptions } from "./options";
+import type { CompileOptions } from "./options";
 import { cssFilePlugin } from "./plugins/cssFilePlugin";
 import { deprecatedRemixPackagePlugin } from "./plugins/deprecatedRemixPackagePlugin";
 import { emptyModulesPlugin } from "./plugins/emptyModulesPlugin";

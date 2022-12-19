@@ -3,12 +3,13 @@ import { builtinModules as nodeBuiltins } from "module";
 import * as esbuild from "esbuild";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 
-import { type WriteChannel } from "../channel";
-import { type RemixConfig } from "../config";
-import { createAssetsManifest, type AssetsManifest } from "./assets";
+import type { WriteChannel } from "../channel";
+import type { RemixConfig } from "../config";
+import type { AssetsManifest } from "./assets";
+import { createAssetsManifest } from "./assets";
 import { getAppDependencies } from "./dependencies";
 import { loaders } from "./loaders";
-import { type CompileOptions } from "./options";
+import type { CompileOptions } from "./options";
 import { browserRouteModulesPlugin } from "./plugins/browserRouteModulesPlugin";
 import { cssFilePlugin } from "./plugins/cssFilePlugin";
 import { deprecatedRemixPackagePlugin } from "./plugins/deprecatedRemixPackagePlugin";

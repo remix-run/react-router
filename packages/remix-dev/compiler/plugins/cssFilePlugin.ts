@@ -3,7 +3,7 @@ import * as fse from "fs-extra";
 import esbuild from "esbuild";
 
 import invariant from "../../invariant";
-import { type CompileOptions } from "../options";
+import type { CompileOptions } from "../options";
 
 const isExtendedLengthPath = /^\\\\\?\\/;
 

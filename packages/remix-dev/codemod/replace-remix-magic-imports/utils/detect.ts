@@ -1,9 +1,10 @@
-import { type PackageJson } from "@npmcli/package-json";
+import type { PackageJson } from "@npmcli/package-json";
 
 import { CodemodError } from "../../utils/error";
 import * as Dependencies from "./dependencies";
 import * as Postinstall from "./postinstall";
-import { type Adapter, type Runtime, isAdapter, isRemixPackage } from "./remix";
+import type { Adapter, Runtime } from "./remix";
+import { isAdapter, isRemixPackage } from "./remix";
 
 const autoDetectPostinstallRuntime = (
   packageJson: PackageJson

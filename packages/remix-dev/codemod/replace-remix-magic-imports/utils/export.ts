@@ -1,4 +1,4 @@
-import { type Adapter, type Renderer, type Runtime } from "./remix";
+import type { Adapter, Renderer, Runtime } from "./remix";
 
 export type Export<Source extends string = string> = {
   source: Source;

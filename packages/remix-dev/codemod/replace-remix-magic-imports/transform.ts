@@ -1,22 +1,18 @@
-import { type NodePath } from "@babel/core";
+import type { NodePath } from "@babel/core";
 import * as t from "@babel/types";
 import _ from "lodash";
 
 import createTransform from "../createTransform";
 import type { BabelPlugin } from "../utils/babel";
 import { CodemodError } from "../utils/error";
+import type { Export } from "./utils/export";
 import {
-  type Export,
   getAdapterExports,
   getRendererExports,
   getRuntimeExports,
 } from "./utils/export";
-import {
-  isRemixPackage,
-  type Adapter,
-  type RemixPackage,
-  type Runtime,
-} from "./utils/remix";
+import type { Adapter, RemixPackage, Runtime } from "./utils/remix";
+import { isRemixPackage } from "./utils/remix";
 
 type Options = {
   runtime: Runtime;

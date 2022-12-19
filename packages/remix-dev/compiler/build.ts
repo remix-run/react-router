@@ -1,7 +1,7 @@
-import { type RemixConfig } from "../config";
+import type { RemixConfig } from "../config";
 import { warnOnce } from "./warnings";
 import { logCompileFailure } from "./onCompileFailure";
-import { type CompileOptions } from "./options";
+import type { CompileOptions } from "./options";
 import { compile, createRemixCompiler } from "./remixCompiler";
 
 export async function build(
