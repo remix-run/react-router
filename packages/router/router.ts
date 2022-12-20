@@ -772,17 +772,19 @@ export function createRouter(init: RouterInit): Router {
     unlistenHistory = init.history.listen(
       ({ action: historyAction, location, delta }) => {
         for (let [key, blocker] of state.blockers) {
-          if (blocker.state !== "proceeding" && blocker.fn()) {
+          if (blocker.state === "blocked") {
+            return;
+          }
+
+          if (blocker.state === "unblocked" && blocker.fn()) {
+            init.history.go(delta);
             setBlockerState(key, "blocked", {
-              onProceed() {
-                return navigate(location, {
-                  replace: historyAction === HistoryAction.Replace,
-                });
+              async onProceed() {
+                init.history.go(delta * -1);
               },
               onReset() {
-                if (delta !== 0) {
-                  init.history.go(delta);
-                }
+                // noop, we've already blocked and setting state back to
+                // 'unblocked' in `setBlockerState`
               },
             });
             return;
