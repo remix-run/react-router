@@ -1137,12 +1137,15 @@ export class DeferredData {
   private unlistenAbortSignal: () => void;
   private subscriber?: (aborted: boolean) => void = undefined;
   data: Record<string, unknown>;
+  responseInit?: ResponseInit;
 
-  constructor(data: Record<string, unknown>) {
+  constructor(data: Record<string, unknown>, responseInit?: ResponseInit) {
     invariant(
       data && typeof data === "object" && !Array.isArray(data),
       "defer() only accepts plain objects"
     );
+
+    this.responseInit = responseInit;
 
     // Set up an AbortController + Promise we can race against to exit early
     // cancellation
@@ -1288,9 +1291,16 @@ function unwrapTrackedPromise(value: any) {
   return value._data;
 }
 
-export function defer(data: Record<string, unknown>) {
-  return new DeferredData(data);
-}
+export type DeferFunction = (
+  data: Record<string, unknown>,
+  init?: number | ResponseInit
+) => DeferredData;
+
+export const defer: DeferFunction = (data, init = 200) => {
+  let responseInit = typeof init === "number" ? { status: init } : init;
+
+  return new DeferredData(data, responseInit);
+};
 
 export type RedirectFunction = (
   url: string,

@@ -308,6 +308,7 @@ export interface StaticHandlerContext {
   statusCode: number;
   loaderHeaders: Record<string, Headers>;
   actionHeaders: Record<string, Headers>;
+  activeDeferreds: Record<string, DeferredData> | null;
   _deepestRenderedBoundaryId?: string | null;
 }
 
@@ -1998,6 +1999,7 @@ export function createRouter(init: RouterInit): Router {
 //#region createStaticHandler
 ////////////////////////////////////////////////////////////////////////////////
 
+export const DEFERRED_SYMBOL = Symbol("deferred");
 export function createStaticHandler(
   routes: AgnosticRouteObject[],
   opts?: {
@@ -2057,6 +2059,7 @@ export function createStaticHandler(
         statusCode: error.status,
         loaderHeaders: {},
         actionHeaders: {},
+        activeDeferreds: null,
       };
     } else if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
@@ -2074,6 +2077,7 @@ export function createStaticHandler(
         statusCode: error.status,
         loaderHeaders: {},
         actionHeaders: {},
+        activeDeferreds: null,
       };
     }
 
@@ -2163,7 +2167,19 @@ export function createStaticHandler(
 
     // Pick off the right state value to return
     let routeData = [result.actionData, result.loaderData].find((v) => v);
-    return Object.values(routeData || {})[0];
+    let data = Object.values(routeData || {})[0];
+
+    if (
+      data === Object.values(result.loaderData || {})[0] &&
+      result.activeDeferreds &&
+      result.activeDeferreds[match.route.id]
+    ) {
+      Object.assign(data, {
+        [DEFERRED_SYMBOL]: result.activeDeferreds[match.route.id],
+      });
+    }
+
+    return data;
   }
 
   async function queryImpl(
@@ -2296,6 +2312,7 @@ export function createStaticHandler(
         statusCode: 200,
         loaderHeaders: {},
         actionHeaders: {},
+        activeDeferreds: null,
       };
     }
 
@@ -2391,6 +2408,7 @@ export function createStaticHandler(
         errors: pendingActionError || null,
         statusCode: 200,
         loaderHeaders: {},
+        activeDeferreds: null,
       };
     }
 
@@ -2414,22 +2432,18 @@ export function createStaticHandler(
       throw new Error(`${method}() call aborted`);
     }
 
-    let executedLoaders = new Set<string>();
-    results.forEach((result, i) => {
-      executedLoaders.add(matchesToLoad[i].route.id);
-      // Can't do anything with these without the Remix side of things, so just
-      // cancel them for now
-      if (isDeferredResult(result)) {
-        result.deferredData.cancel();
-      }
-    });
-
+    let activeDeferreds = new Map<string, DeferredData>();
     // Process and commit output from loaders
     let context = processRouteLoaderData(
       matches,
       matchesToLoad,
       results,
-      pendingActionError
+      pendingActionError,
+      activeDeferreds
+    );
+
+    let executedLoaders = new Set<string>(
+      matchesToLoad.map((match) => match.route.id)
     );
 
     // Add a null for any non-loader matches for proper revalidation on the client
@@ -2442,6 +2456,10 @@ export function createStaticHandler(
     return {
       ...context,
       matches,
+      activeDeferreds:
+        activeDeferreds.size > 0
+          ? Object.fromEntries(activeDeferreds.entries())
+          : null,
     };
   }
 
@@ -2962,7 +2980,17 @@ function processRouteLoaderData(
     } else if (isDeferredResult(result)) {
       activeDeferreds && activeDeferreds.set(id, result.deferredData);
       loaderData[id] = result.deferredData.data;
-      // TODO: Add statusCode/headers once we wire up streaming in Remix
+      let init = result.deferredData.responseInit;
+      if (init) {
+        // Error status codes always override success status codes, but if all
+        // loaders are successful we take the deepest status code.
+        if (init.status != null && init.status !== 200 && !foundError) {
+          statusCode = init.status;
+        }
+        if (init.headers) {
+          loaderHeaders[id] = new Headers(init.headers);
+        }
+      }
     } else {
       loaderData[id] = result.data;
       // Error status codes always override success status codes, but if all
