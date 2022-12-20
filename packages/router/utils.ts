@@ -31,6 +31,8 @@ export interface SuccessResult {
 export interface DeferredResult {
   type: ResultType.deferred;
   deferredData: DeferredData;
+  statusCode?: number;
+  headers?: Headers;
 }
 
 /**
@@ -1138,15 +1140,14 @@ export class DeferredData {
   private subscriber?: (aborted: boolean, settledKey?: string) => void =
     undefined;
   data: Record<string, unknown>;
-  responseInit?: ResponseInit;
+  statusCode: number;
+  headers: Headers;
 
   constructor(data: Record<string, unknown>, responseInit?: ResponseInit) {
     invariant(
       data && typeof data === "object" && !Array.isArray(data),
       "defer() only accepts plain objects"
     );
-
-    this.responseInit = responseInit;
 
     // Set up an AbortController + Promise we can race against to exit early
     // cancellation
@@ -1166,6 +1167,13 @@ export class DeferredData {
         }),
       {}
     );
+
+    this.statusCode =
+      responseInit && responseInit.status ? responseInit.status : 200;
+    this.headers =
+      responseInit && responseInit.status
+        ? new Headers(responseInit.headers)
+        : new Headers();
   }
 
   private trackPromise(
@@ -1297,7 +1305,7 @@ export type DeferFunction = (
   init?: number | ResponseInit
 ) => DeferredData;
 
-export const defer: DeferFunction = (data, init = 200) => {
+export const defer: DeferFunction = (data, init = {}) => {
   let responseInit = typeof init === "number" ? { status: init } : init;
 
   return new DeferredData(data, responseInit);

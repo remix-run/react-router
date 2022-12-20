@@ -1118,7 +1118,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isDeferredResult(result)) {
-      throw new Error("defer() is not supported in actions");
+      throw getInternalRouterError(400, { type: "defer-action" });
     }
 
     return {
@@ -1412,7 +1412,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isDeferredResult(actionResult)) {
-      invariant(false, "defer() is not supported in actions");
+      throw getInternalRouterError(400, { type: "defer-action" });
     }
 
     // Start the data load for current matches, or the next location if we're
@@ -1594,7 +1594,7 @@ export function createRouter(init: RouterInit): Router {
       router.basename
     );
 
-    // Deferred isn't supported or fetcher loads, await everything and treat it
+    // Deferred isn't supported for fetcher loads, await everything and treat it
     // as a normal load.  resolveDeferredData will return undefined if this
     // fetcher gets aborted, so we just leave result untouched and short circuit
     // below if that happens
@@ -2000,6 +2000,7 @@ export function createRouter(init: RouterInit): Router {
 ////////////////////////////////////////////////////////////////////////////////
 
 export const DEFERRED_SYMBOL = Symbol("deferred");
+
 export function createStaticHandler(
   routes: AgnosticRouteObject[],
   opts?: {
@@ -2292,7 +2293,14 @@ export function createStaticHandler(
     }
 
     if (isDeferredResult(result)) {
-      throw new Error("defer() is not supported in actions");
+      let error = getInternalRouterError(400, { type: "defer-action" });
+      if (isRouteRequest) {
+        throw error;
+      }
+      result = {
+        type: ResultType.error,
+        error,
+      };
     }
 
     if (isRouteRequest) {
@@ -2922,7 +2930,7 @@ function processRouteLoaderData(
   matchesToLoad: AgnosticDataRouteMatch[],
   results: DataResult[],
   pendingError: RouteData | undefined,
-  activeDeferreds?: Map<string, DeferredData>
+  activeDeferreds: Map<string, DeferredData>
 ): {
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"] | null;
@@ -2977,22 +2985,14 @@ function processRouteLoaderData(
       if (result.headers) {
         loaderHeaders[id] = result.headers;
       }
-    } else if (isDeferredResult(result)) {
-      activeDeferreds && activeDeferreds.set(id, result.deferredData);
-      loaderData[id] = result.deferredData.data;
-      let init = result.deferredData.responseInit;
-      if (init) {
-        // Error status codes always override success status codes, but if all
-        // loaders are successful we take the deepest status code.
-        if (init.status != null && init.status !== 200 && !foundError) {
-          statusCode = init.status;
-        }
-        if (init.headers) {
-          loaderHeaders[id] = new Headers(init.headers);
-        }
-      }
     } else {
-      loaderData[id] = result.data;
+      if (isDeferredResult(result)) {
+        activeDeferreds.set(id, result.deferredData);
+        loaderData[id] = result.deferredData.data;
+      } else {
+        loaderData[id] = result.data;
+      }
+
       // Error status codes always override success status codes, but if all
       // loaders are successful we take the deepest status code.
       if (
@@ -3067,11 +3067,11 @@ function processLoaderData(
     } else if (isRedirectResult(result)) {
       // Should never get here, redirects should get processed above, but we
       // keep this to type narrow to a success result in the else
-      throw new Error("Unhandled fetcher revalidation redirect");
+      invariant(false, "Unhandled fetcher revalidation redirect");
     } else if (isDeferredResult(result)) {
       // Should never get here, deferred data should be awaited for fetchers
       // in resolveDeferredResults
-      throw new Error("Unhandled fetcher deferred data");
+      invariant(false, "Unhandled fetcher deferred data");
     } else {
       let doneFetcher: FetcherStates["Idle"] = {
         state: "idle",
@@ -3162,10 +3162,12 @@ function getInternalRouterError(
     pathname,
     routeId,
     method,
+    type,
   }: {
     pathname?: string;
     routeId?: string;
     method?: string;
+    type?: "defer-action";
   } = {}
 ) {
   let statusText = "Unknown Server Error";
@@ -3178,6 +3180,8 @@ function getInternalRouterError(
         `You made a ${method} request to "${pathname}" but ` +
         `did not provide a \`loader\` for route "${routeId}", ` +
         `so there is no way to handle the request.`;
+    } else if (type === "defer-action") {
+      errorMessage = "defer() is not supported in actions";
     } else {
       errorMessage = "Cannot submit binary form data using GET";
     }
