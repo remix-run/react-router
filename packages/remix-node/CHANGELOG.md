@@ -1,5 +1,12 @@
 # `@remix-run/node`
 
+## 1.10.0-pre.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.10.0-pre.0`
+
 ## 1.9.0
 
 ### Patch Changes

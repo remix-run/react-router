@@ -1,5 +1,25 @@
 # `@remix-run/dev`
 
+## 1.10.0-pre.0
+
+### Patch Changes
+
+- Fix TS->JS conversion when creating a new Remix project via the CLI ([#4891](https://github.com/remix-run/remix/pull/4891))
+
+  The TS->JS migration was removed from the CLI codemod options, but still
+  used for TS->JS conversion when creating a new Remix project from the
+  CLI. The TS modules responsible for the TS->JS conversion were
+  incorrectly removed from the Rollup build, resulting in the
+  corresponding built JS modules being absent. That caused the CLI to
+  error when trying to perform TS->JS conversion. This changes
+  reintroduces the wiring to build the modules responsible for the TS->JS
+  conversion.
+
+- Resolve asset entry full path to support monorepo import of styles ([#4855](https://github.com/remix-run/remix/pull/4855))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.10.0-pre.0`
+  - `@remix-run/serve@1.10.0-pre.0`
+
 ## 1.9.0
 
 ### Minor Changes

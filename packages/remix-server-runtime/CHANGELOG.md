@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.10.0-pre.0
+
+### Minor Changes
+
+- Update Remix to use React Router 6.4+ data APIs ([#4900](https://github.com/remix-run/remix/pull/4900))
+
 ## 1.9.0
 
 ### Patch Changes
