@@ -30,6 +30,7 @@ export {
   AbortedDeferredError,
   ErrorResponse,
   defer,
+  DeferredData,
   generatePath,
   getToPathname,
   isRouteErrorResponse,

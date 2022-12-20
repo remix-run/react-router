@@ -1135,7 +1135,8 @@ export class DeferredData {
   private controller: AbortController;
   private abortPromise: Promise<void>;
   private unlistenAbortSignal: () => void;
-  private subscriber?: (aborted: boolean) => void = undefined;
+  private subscriber?: (aborted: boolean, settledKey?: string) => void =
+    undefined;
   data: Record<string, unknown>;
   responseInit?: ResponseInit;
 
@@ -1168,7 +1169,7 @@ export class DeferredData {
   }
 
   private trackPromise(
-    key: string | number,
+    key: string,
     value: Promise<unknown> | unknown
   ): TrackedPromise | unknown {
     if (!(value instanceof Promise)) {
@@ -1194,7 +1195,7 @@ export class DeferredData {
 
   private onSettle(
     promise: TrackedPromise,
-    key: string | number,
+    key: string,
     error: unknown,
     data?: unknown
   ): unknown {
@@ -1217,16 +1218,16 @@ export class DeferredData {
     const subscriber = this.subscriber;
     if (error) {
       Object.defineProperty(promise, "_error", { get: () => error });
-      subscriber && subscriber(false);
+      subscriber && subscriber(false, key);
       return Promise.reject(error);
     }
 
     Object.defineProperty(promise, "_data", { get: () => data });
-    subscriber && subscriber(false);
+    subscriber && subscriber(false, key);
     return data;
   }
 
-  subscribe(fn: (aborted: boolean) => void) {
+  subscribe(fn: (aborted: boolean, settledKey?: string) => void) {
     this.subscriber = fn;
   }
 
