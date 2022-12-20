@@ -13,7 +13,7 @@ const browserSafeRouteExports: { [name: string]: boolean } = {
   handle: true,
   links: true,
   meta: true,
-  unstable_shouldReload: true,
+  shouldRevalidate: true,
 };
 
 /**
