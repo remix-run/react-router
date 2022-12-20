@@ -198,7 +198,9 @@ type _PathParam<Path extends string> =
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
     Path extends `:${infer Param}`
-    ? Param
+    ? Param extends `${infer Optional}?`
+      ? Optional
+      : Param
     : // otherwise, there aren't any params present
       never;
 
@@ -629,27 +631,35 @@ export function generatePath<Path extends string>(
     path = path.replace(/\*$/, "/*") as Path;
   }
 
-  return path
-    .replace(/^:(\w+)/g, (_, key: PathParam<Path>) => {
-      invariant(params[key] != null, `Missing ":${key}" param`);
-      return params[key]!;
-    })
-    .replace(/\/:(\w+)/g, (_, key: PathParam<Path>) => {
-      invariant(params[key] != null, `Missing ":${key}" param`);
-      return `/${params[key]!}`;
-    })
-    .replace(/(\/?)\*/, (_, prefix, __, str) => {
+  let leadingSlash = originalPath.startsWith("/") ? "/" : "";
+
+  let replaced = path.split("/").map((segment) => {
+    // Splats
+    if (segment === "*") {
       const star = "*" as PathParam<Path>;
+      return params[star] || "";
+    }
 
-      if (params[star] == null) {
-        // If no splat was provided, trim the trailing slash _unless_ it's
-        // the entire path
-        return str === "/*" ? "/" : "";
-      }
+    let isOptional = segment.endsWith("?");
+    segment = segment.replace(/\?$/, "");
 
-      // Apply the splat
-      return `${prefix}${params[star]}`;
-    });
+    // Static segments
+    if (!segment.startsWith(":")) {
+      return segment;
+    }
+
+    // Dynamic params
+    let key = segment.replace(/^:/, "") as PathParam<Path>;
+    if (params[key] != null) {
+      return params[key];
+    } else if (!isOptional) {
+      invariant(false, `Missing ":${key}" param`);
+    } else {
+      return "";
+    }
+  });
+
+  return leadingSlash + replaced.filter((s) => s).join("/");
 }
 
 /**
