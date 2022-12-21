@@ -18,6 +18,7 @@ import {
   json,
   useActionData,
   useBlocker,
+  usePrompt,
 } from "react-router-dom";
 
 import type { Todos } from "./todos";
@@ -94,7 +95,13 @@ export async function homeLoader(): Promise<HomeLoaderData> {
 export function Home() {
   let data = useLoaderData() as HomeLoaderData;
   let [shouldBlockNavigation, setShouldBlockNavigation] = React.useState(false);
-  let blocker = useBlocker(shouldBlockNavigation);
+
+  let blocker = useBlocker(shouldBlockNavigation ? true : null);
+  //   usePrompt(
+  //     shouldBlockNavigation ? "Are you *really* sure you want to leave?" : null,
+  //     { beforeUnload: true }
+  //   );
+
   return (
     <>
       <h2>Home</h2>

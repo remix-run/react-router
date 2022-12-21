@@ -1091,11 +1091,17 @@ export function createRouter(init: RouterInit): Router {
         let { shouldBlock } = blocker.fn();
         if (shouldBlock()) {
           setBlockerState(key, "blocked", {
-            onProceed: () => navigate(to, opts),
+            async onProceed() {
+              // TODO: Tests fail if we don't wait a tick. Unsure why since
+              // navigate has its own async work to complete before blocker
+              // state is set. Investigate.
+              await Promise.resolve();
+              await navigate(to, opts);
+            },
           });
           return;
         } else if (blocker.state === "blocked") {
-          return blocker.proceed();
+          return await blocker.proceed();
         }
       }
     }
@@ -3691,3 +3697,7 @@ export function getInitialBlocker(
   };
 }
 //#endregion
+
+async function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
