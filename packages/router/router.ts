@@ -735,17 +735,15 @@ export function createRouter(init: RouterInit): Router {
   ): void {
     // Deduce if we're in a loading/actionReload state:
     // - We have committed actionData in the store
-    // - The current navigation was a submission
+    // - The current navigation was a mutation submission
     // - We're past the submitting state and into the loading state
-    // - The location we've finished loading is different from the submission
-    //   location, indicating we redirected from the action (avoids false
-    //   positives for loading/submissionRedirect when actionData returned
-    //   on a prior submission)
+    // - The location being loaded is not the result of a redirect
     let isActionReload =
       state.actionData != null &&
       state.navigation.formMethod != null &&
+      isMutationMethod(state.navigation.formMethod) &&
       state.navigation.state === "loading" &&
-      state.navigation.formAction?.split("?")[0] === location.pathname;
+      location.state?._isRedirect !== true;
 
     let actionData: RouteData | null;
     if (newState.actionData) {
