@@ -916,6 +916,10 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function createBlocker(key: string, fn: ShouldBlockFunction) {
+    if (state.blockers.has(key)) {
+      return state.blockers.get(key)!;
+    }
+
     let blocker: Blocker = {
       state: "unblocked",
       proceed: undefined,
@@ -923,7 +927,6 @@ export function createRouter(init: RouterInit): Router {
       fn,
     };
     state.blockers.set(key, blocker);
-    updateState({ blockers: state.blockers });
     return blocker;
   }
 
@@ -947,7 +950,6 @@ export function createRouter(init: RouterInit): Router {
 
   function deleteBlocker(key: string) {
     state.blockers.delete(key);
-    updateState({ blockers: state.blockers });
   }
 
   function setBlockerState(
@@ -956,7 +958,10 @@ export function createRouter(init: RouterInit): Router {
     opts?: SetBlockerOpts
   ) {
     let blocker = state.blockers.get(key);
-    if (!blocker) return;
+    if (!blocker) {
+      return;
+    }
+
     invariant(
       nextState === "proceeding" ||
         nextState === "blocked" ||
@@ -984,7 +989,8 @@ export function createRouter(init: RouterInit): Router {
       blocker.reset = undefined;
     }
 
-    updateState({ blockers: state.blockers });
+    state.blockers.set(key, blocker);
+    updateState({ blockers: new Map(state.blockers) });
     return blocker;
   }
 
