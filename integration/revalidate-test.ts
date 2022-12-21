@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
-import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import type { AppFixture } from "./helpers/create-fixture";
 import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
 test.describe("Revalidation", () => {
