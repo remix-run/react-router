@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.10.0-pre.1
+
+### Patch Changes
+
+- Lock into RR 6.6.0 ([#4935](https://github.com/remix-run/remix/pull/4935))
+
 ## 1.10.0-pre.0
 
 ### Minor Changes
