@@ -1,3 +1,6 @@
+/* eslint-disable jest/no-focused-tests */
+/* eslint-disable jest/no-done-callback */
+/* eslint-disable jest/no-disabled-tests */
 import type { Router } from "../index";
 import { createMemoryHistory, createRouter } from "../index";
 
@@ -91,14 +94,17 @@ describe("blocking", () => {
     });
 
     describe("proceeds from blocked state", () => {
-      it("sets blocker state to 'proceeding'", async () => {
+      it("sets blocker state to 'proceeding'", async (done) => {
         let blocker = router.createBlocker("KEY", () => ({
           shouldBlock: () => true,
         }));
         await router.navigate("/about");
         expect(blocker.state).toEqual("blocked");
 
-        await blocker.proceed?.();
+        blocker.proceed?.().then(() => {
+          expect(blocker.state).toEqual("unblocked");
+          done();
+        });
         expect(blocker.state).toEqual("proceeding");
       });
 
@@ -111,7 +117,7 @@ describe("blocking", () => {
           initialEntries[initialIndex]
         );
 
-        blocker.proceed?.();
+        await blocker.proceed?.();
         expect(router.state.location.pathname).toEqual("/about");
       });
     });
@@ -192,14 +198,17 @@ describe("blocking", () => {
     });
 
     describe("proceeds from blocked state", () => {
-      it("sets blocker state to 'proceeding'", async () => {
+      it("sets blocker state to 'proceeding'", async (done) => {
         let blocker = router.createBlocker("KEY", () => ({
           shouldBlock: () => true,
         }));
         await router.navigate("/about", { replace: true });
         expect(blocker.state).toEqual("blocked");
 
-        await blocker.proceed?.();
+        blocker.proceed?.().then(() => {
+          expect(blocker.state).toEqual("unblocked");
+          done();
+        });
         expect(blocker.state).toEqual("proceeding");
       });
 
@@ -212,7 +221,7 @@ describe("blocking", () => {
           initialEntries[initialIndex]
         );
 
-        blocker.proceed?.();
+        await blocker.proceed?.();
         expect(router.state.location.pathname).toEqual("/about");
       });
     });
@@ -300,14 +309,17 @@ describe("blocking", () => {
     });
 
     describe("proceeds from blocked state", () => {
-      it("sets blocker state to 'proceeding'", async () => {
+      it("sets blocker state to 'proceeding'", async (done) => {
         let blocker = router.createBlocker("KEY", () => ({
           shouldBlock: () => true,
         }));
         await router.navigate(-1);
         expect(blocker.state).toEqual("blocked");
 
-        await blocker.proceed?.();
+        blocker.proceed?.().then(() => {
+          expect(blocker.state).toEqual("unblocked");
+          done();
+        });
         expect(blocker.state).toEqual("proceeding");
       });
 
