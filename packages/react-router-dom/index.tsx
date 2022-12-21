@@ -978,9 +978,16 @@ export function useFormAction(
   return createPath(path);
 }
 
+export type ShouldBlockFunction = () => {
+  shouldBlock: boolean;
+  force?: boolean;
+};
+
 let blockerId = 0;
 
-export function useBlocker(shouldBlock: boolean | (() => boolean)) {
+export function useBlocker(
+  shouldBlock: boolean | (() => boolean) | ShouldBlockFunction
+) {
   let [blockerKey] = React.useState(() => String(++blockerId));
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
   let [blocker, setBlocker] = React.useState<Blocker>(() =>
@@ -989,16 +996,28 @@ export function useBlocker(shouldBlock: boolean | (() => boolean)) {
     })
   );
 
+  let fn: ShouldBlockFunction = React.useCallback(() => {
+    if (typeof shouldBlock === "function") {
+      let result = shouldBlock();
+      if (result && typeof result === "object") {
+        return {
+          shouldBlock: !!result.shouldBlock,
+          force: !!result.force,
+        };
+      }
+      return { shouldBlock: !!result };
+    } else {
+      return { shouldBlock: !!shouldBlock };
+    }
+  }, [shouldBlock]);
+
   React.useEffect(() => {
-    let blocker = router.createBlocker(
-      blockerKey,
-      typeof shouldBlock === "function" ? shouldBlock : () => !!shouldBlock
-    );
+    let blocker = router.createBlocker(blockerKey, fn);
     setBlocker(blocker);
     return () => {
       router.deleteBlocker(blockerKey);
     };
-  }, [blockerKey, shouldBlock, router]);
+  }, [blockerKey, fn, router]);
 
   return blocker;
 }
