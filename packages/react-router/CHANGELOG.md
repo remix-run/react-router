@@ -1,5 +1,13 @@
 # `react-router`
 
+## 6.6.0
+
+### Patch Changes
+
+- Prevent `useLoaderData` usage in `errorElement` ([#9735](https://github.com/remix-run/react-router/pull/9735))
+- Updated dependencies:
+  - `@remix-run/router@1.2.0`
+
 ## 6.6.0-pre.0
 
 ### Patch Changes
