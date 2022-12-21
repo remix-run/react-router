@@ -1133,7 +1133,7 @@ export interface TrackedPromise extends Promise<any> {
 export class AbortedDeferredError extends Error {}
 
 export class DeferredData {
-  private pendingKeys: Set<string | number> = new Set<string | number>();
+  private pendingKeysSet: Set<string> = new Set<string>();
   private controller: AbortController;
   private abortPromise: Promise<void>;
   private unlistenAbortSignal: () => void;
@@ -1142,6 +1142,7 @@ export class DeferredData {
   data: Record<string, unknown>;
   statusCode: number;
   headers: Headers;
+  deferredKeys: string[] = [];
 
   constructor(data: Record<string, unknown>, responseInit?: ResponseInit) {
     invariant(
@@ -1184,7 +1185,8 @@ export class DeferredData {
       return value;
     }
 
-    this.pendingKeys.add(key);
+    this.deferredKeys.push(key);
+    this.pendingKeysSet.add(key);
 
     // We store a little wrapper promise that will be extended with
     // _data/_error props upon resolve/reject
@@ -1216,7 +1218,7 @@ export class DeferredData {
       return Promise.reject(error);
     }
 
-    this.pendingKeys.delete(key);
+    this.pendingKeysSet.delete(key);
 
     if (this.done) {
       // Nothing left to abort!
@@ -1241,7 +1243,7 @@ export class DeferredData {
 
   cancel() {
     this.controller.abort();
-    this.pendingKeys.forEach((v, k) => this.pendingKeys.delete(k));
+    this.pendingKeysSet.forEach((v, k) => this.pendingKeysSet.delete(k));
     let subscriber = this.subscriber;
     subscriber && subscriber(true);
   }
@@ -1264,7 +1266,7 @@ export class DeferredData {
   }
 
   get done() {
-    return this.pendingKeys.size === 0;
+    return this.pendingKeysSet.size === 0;
   }
 
   get unwrappedData() {
@@ -1280,6 +1282,10 @@ export class DeferredData {
         }),
       {}
     );
+  }
+
+  get pendingKeys() {
+    return Array.from(this.pendingKeysSet);
   }
 }
 
