@@ -83,7 +83,7 @@ export interface StaticRouterProviderProps {
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function unstable_StaticRouterProvider({
+export function StaticRouterProvider({
   context,
   router,
   hydrate = true,
@@ -157,6 +157,12 @@ function serializeErrors(
     // deserializeErrors in react-router-dom/index.tsx :)
     if (isRouteErrorResponse(val)) {
       serialized[key] = { ...val, __type: "RouteErrorResponse" };
+    } else if (val instanceof Error) {
+      // Do not serialize stack traces from SSR for security reasons
+      serialized[key] = {
+        message: val.message,
+        __type: "Error",
+      };
     } else {
       serialized[key] = val;
     }
@@ -222,7 +228,7 @@ function generateManifest(
   return manifest;
 }
 
-export function unstable_createStaticRouter(
+export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext
 ): RemixRouter {

@@ -1,5 +1,13 @@
 # `react-router`
 
+## 6.6.0
+
+### Patch Changes
+
+- Prevent `useLoaderData` usage in `errorElement` ([#9735](https://github.com/remix-run/react-router/pull/9735))
+- Updated dependencies:
+  - `@remix-run/router@1.2.0`
+
 ## 6.5.0
 
 This release introduces support for [Optional Route Segments](https://github.com/remix-run/react-router/issues/9546). Now, adding a `?` to the end of any path segment will make that entire segment optional. This works for both static segments and dynamic parameters.

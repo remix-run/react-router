@@ -2105,6 +2105,178 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
     });
+
+    it("does not allow loaderData usage in self-caught error boundaries", async () => {
+      let errorSpy = jest.spyOn(console, "error");
+
+      let { container } = render(
+        <DataMemoryRouter>
+          <Route path="/" element={<Layout />}>
+            <Route
+              path="foo"
+              loader={() => Promise.reject(new Error("Kaboom!"))}
+              element={<h1>Foo</h1>}
+              errorElement={<FooError />}
+            />
+          </Route>
+        </DataMemoryRouter>
+      );
+
+      function Layout() {
+        let navigation = useNavigation();
+        return (
+          <div>
+            <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
+            <p>{navigation.state}</p>
+            <Outlet />
+          </div>
+        );
+      }
+
+      function FooError() {
+        let error = useRouteError();
+        let data = useLoaderData();
+        return (
+          <>
+            <p>
+              Foo Data:{data === undefined ? "undefined" : JSON.stringify(data)}
+            </p>
+            <p>Foo Error:{error.message}</p>
+          </>
+        );
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href=\\"/foo\\"
+            >
+              Link to Foo
+            </a>
+            <p>
+              idle
+            </p>
+          </div>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Foo"));
+      await waitFor(() => screen.getByText("Foo Error:Kaboom!"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href=\\"/foo\\"
+            >
+              Link to Foo
+            </a>
+            <p>
+              idle
+            </p>
+            <p>
+              Foo Data:
+              undefined
+            </p>
+            <p>
+              Foo Error:
+              Kaboom!
+            </p>
+          </div>
+        </div>"
+      `);
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        "You cannot `useLoaderData` in an errorElement (routeId: 0-0)"
+      );
+      errorSpy.mockRestore();
+    });
+
+    it("does not allow useLoaderData usage in bubbled error boundaries", async () => {
+      let errorSpy = jest.spyOn(console, "error");
+
+      let { container } = render(
+        <DataMemoryRouter
+          hydrationData={{
+            loaderData: {
+              "0": "ROOT",
+            },
+          }}
+        >
+          <Route
+            path="/"
+            element={<Layout />}
+            loader={() => "ROOT"}
+            errorElement={<LayoutError />}
+          >
+            <Route
+              path="foo"
+              loader={() => Promise.reject(new Error("Kaboom!"))}
+              element={<h1>Foo</h1>}
+            />
+          </Route>
+        </DataMemoryRouter>
+      );
+
+      function Layout() {
+        let navigation = useNavigation();
+        return (
+          <div>
+            <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
+            <p>{navigation.state}</p>
+            <Outlet />
+          </div>
+        );
+      }
+      function LayoutError() {
+        let data = useLoaderData();
+        let error = useRouteError();
+        return (
+          <>
+            <p>
+              Layout Data:
+              {data === undefined ? "undefined" : JSON.stringify(data)}
+            </p>
+            <p>Layout Error:{error.message}</p>
+          </>
+        );
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href=\\"/foo\\"
+            >
+              Link to Foo
+            </a>
+            <p>
+              idle
+            </p>
+          </div>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Foo"));
+      await waitFor(() => screen.getByText("Layout Error:Kaboom!"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Layout Data:
+            undefined
+          </p>
+          <p>
+            Layout Error:
+            Kaboom!
+          </p>
+        </div>"
+      `);
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        "You cannot `useLoaderData` in an errorElement (routeId: 0)"
+      );
+      errorSpy.mockRestore();
+    });
   });
 
   describe("defer", () => {
