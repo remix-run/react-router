@@ -1,5 +1,22 @@
 # `react-router-dom`
 
+## 6.6.0
+
+### Minor Changes
+
+- Add `useBeforeUnload()` hook ([#9664](https://github.com/remix-run/react-router/pull/9664))
+- Remove `unstable_` prefix from `createStaticHandler`/`createStaticRouter`/`StaticRouterProvider` ([#9738](https://github.com/remix-run/react-router/pull/9738))
+
+### Patch Changes
+
+- Proper hydration of `Error` objects from `StaticRouterProvider` ([#9664](https://github.com/remix-run/react-router/pull/9664))
+- Support uppercase `<Form method>` and `useSubmit` method values ([#9664](https://github.com/remix-run/react-router/pull/9664))
+- Skip initial scroll restoration for SSR apps with `hydrationData` ([#9664](https://github.com/remix-run/react-router/pull/9664))
+- Fix `<button formmethod>` form submission overriddes ([#9664](https://github.com/remix-run/react-router/pull/9664))
+- Updated dependencies:
+  - `@remix-run/router@1.2.0`
+  - `react-router@6.6.0`
+
 ## 6.5.0
 
 ### Patch Changes

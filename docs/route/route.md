@@ -276,6 +276,10 @@ When a route throws an exception while rendering, in a `loader` or in an `action
 
 Please see the [errorElement][errorelement] documentation for more details.
 
+## `handle`
+
+Any application-specific data. Please see the [useMatches][usematches] documentation for details and examples.
+
 [outlet]: ./outlet
 [remix]: https://remix.run
 [indexroute]: ../start/concepts#index-routes
@@ -289,3 +293,4 @@ Please see the [errorElement][errorelement] documentation for more details.
 [usesubmit]: ../hooks/use-submit
 [createroutesfromelements]: ../utils/create-routes-from-elements
 [createbrowserrouter]: ../routers/create-browser-router
+[usematches]: ../hooks/use-matches
