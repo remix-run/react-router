@@ -964,15 +964,15 @@ export function useFormAction(
   return createPath(path);
 }
 
-export type ShouldBlockFunction = () => {
-  shouldBlock: boolean;
-  force?: boolean;
+export type BlockerFunction = () => {
+  shouldBlock(): boolean;
+  unstable_skipStateUpdateOnPopNavigation?: boolean;
 };
 
 let blockerId = 0;
 
 export function useBlocker(
-  shouldBlock: boolean | (() => boolean) | ShouldBlockFunction
+  shouldBlock: boolean | (() => boolean) | BlockerFunction
 ) {
   let [blockerKey] = React.useState(() => String(++blockerId));
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
@@ -982,18 +982,23 @@ export function useBlocker(
     })
   );
 
-  let fn: ShouldBlockFunction = React.useCallback(() => {
+  let fn: BlockerFunction = React.useCallback(() => {
     if (typeof shouldBlock === "function") {
       let result = shouldBlock();
       if (result && typeof result === "object") {
+        let { shouldBlock } = result;
         return {
-          shouldBlock: !!result.shouldBlock,
-          force: !!result.force,
+          shouldBlock:
+            typeof shouldBlock === "function"
+              ? shouldBlock
+              : () => !!shouldBlock,
+          unstable_skipStateUpdateOnPopNavigation:
+            !!result.unstable_skipStateUpdateOnPopNavigation,
         };
       }
-      return { shouldBlock: !!result };
+      return { shouldBlock: () => !!result };
     } else {
-      return { shouldBlock: !!shouldBlock };
+      return { shouldBlock: () => !!shouldBlock };
     }
   }, [shouldBlock]);
 
@@ -1006,6 +1011,50 @@ export function useBlocker(
   }, [blockerKey, fn, router]);
 
   return blocker;
+}
+
+export function usePrompt(
+  message: string | null | false,
+  opts?: { beforeUnload: boolean }
+) {
+  let blocker = useBlocker(
+    React.useCallback(() => {
+      let shouldPrompt = !!message;
+      if (!shouldPrompt) {
+        return {
+          shouldBlock: () => false,
+          unstable_skipStateUpdateOnPopNavigation: true,
+        };
+      }
+      let shouldBlock = () => !window.confirm(message as string);
+      return { shouldBlock, unstable_skipStateUpdateOnPopNavigation: true };
+    }, [message])
+  );
+
+  let prevState = React.useRef(blocker.state);
+  React.useEffect(() => {
+    if (blocker.state === "blocked") {
+      blocker.reset();
+    }
+    prevState.current = blocker.state;
+  }, [blocker]);
+
+  // leaving the domain
+  //   let { beforeUnload } = opts || {};
+  //   React.useEffect(() => {
+  //     if (!beforeUnload) return;
+  //     let handleBeforeUnload = (evt: BeforeUnloadEvent) => {
+  //       if (blocker.fn()) {
+  //         evt.preventDefault();
+  //         evt.returnValue = message;
+  //         return (evt.returnValue = message);
+  //       }
+  //     };
+  //     window.addEventListener("beforeunload", handleBeforeUnload);
+  //     return () => {
+  //       window.removeEventListener("beforeunload", handleBeforeUnload);
+  //     };
+  //   }, [blocker, message, beforeUnload]);
 }
 
 function createFetcherForm(fetcherKey: string, routeId: string) {
