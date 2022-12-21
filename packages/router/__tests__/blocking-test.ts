@@ -14,7 +14,7 @@ describe("blocking", () => {
     router.initialize();
 
     let fn = () => ({
-      shouldBlock: true,
+      shouldBlock: () => true,
     });
     router.createBlocker("KEY", fn);
     let blocker = router.getBlocker("KEY");
@@ -36,7 +36,7 @@ describe("blocking", () => {
     });
     router.initialize();
 
-    router.createBlocker("KEY", () => ({ shouldBlock: true }));
+    router.createBlocker("KEY", () => ({ shouldBlock: () => true }));
     router.deleteBlocker("KEY");
     let blocker = router.getBlocker("KEY");
     expect(blocker).toBeUndefined();
@@ -59,14 +59,14 @@ describe("blocking", () => {
     describe("blocker returns false", () => {
       it("sets blocker state to 'unblocked'", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: false,
+          shouldBlock: () => false,
         }));
         await router.navigate("/about");
         expect(blocker.state).toEqual("unblocked");
       });
 
       it("navigates", async () => {
-        router.createBlocker("KEY", () => ({ shouldBlock: false }));
+        router.createBlocker("KEY", () => ({ shouldBlock: () => false }));
         await router.navigate("/about");
         expect(router.state.location.pathname).toBe("/about");
       });
@@ -75,14 +75,14 @@ describe("blocking", () => {
     describe("blocker returns true", () => {
       it("set blocker state to 'blocked'", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate("/about");
         expect(blocker.state).toEqual("blocked");
       });
 
       it("does not navigate", async () => {
-        router.createBlocker("KEY", () => ({ shouldBlock: true }));
+        router.createBlocker("KEY", () => ({ shouldBlock: () => true }));
         await router.navigate("/about");
         expect(router.state.location.pathname).toBe(
           initialEntries[initialIndex]
@@ -93,7 +93,7 @@ describe("blocking", () => {
     describe("proceeds from blocked state", () => {
       it("sets blocker state to 'proceeding'", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate("/about");
         expect(blocker.state).toEqual("blocked");
@@ -104,7 +104,7 @@ describe("blocking", () => {
 
       it("proceeds with blocked navigation", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate("/about");
         expect(router.state.location.pathname).toBe(
@@ -119,7 +119,7 @@ describe("blocking", () => {
     describe("resets from blocked state", () => {
       it("sets blocker state to 'unblocked'", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate("/about");
         expect(blocker.state).toEqual("blocked");
@@ -130,7 +130,7 @@ describe("blocking", () => {
 
       it("does not navigate", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate("/about");
         expect(router.state.location.pathname).toBe(
@@ -160,14 +160,14 @@ describe("blocking", () => {
     describe("blocker returns false", () => {
       it("sets blocker state to 'unblocked'", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: false,
+          shouldBlock: () => false,
         }));
         await router.navigate("/about", { replace: true });
         expect(blocker.state).toEqual("unblocked");
       });
 
       it("navigates", async () => {
-        router.createBlocker("KEY", () => ({ shouldBlock: false }));
+        router.createBlocker("KEY", () => ({ shouldBlock: () => false }));
         await router.navigate("/about", { replace: true });
         expect(router.state.location.pathname).toBe("/about");
       });
@@ -176,14 +176,14 @@ describe("blocking", () => {
     describe("blocker returns true", () => {
       it("set blocker state to 'blocked'", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate("/about", { replace: true });
         expect(blocker.state).toEqual("blocked");
       });
 
       it("does not navigate", async () => {
-        router.createBlocker("KEY", () => ({ shouldBlock: true }));
+        router.createBlocker("KEY", () => ({ shouldBlock: () => true }));
         await router.navigate("/about", { replace: true });
         expect(router.state.location.pathname).toBe(
           initialEntries[initialIndex]
@@ -194,7 +194,7 @@ describe("blocking", () => {
     describe("proceeds from blocked state", () => {
       it("sets blocker state to 'proceeding'", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate("/about", { replace: true });
         expect(blocker.state).toEqual("blocked");
@@ -205,7 +205,7 @@ describe("blocking", () => {
 
       it("proceeds with blocked navigation", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate("/about", { replace: true });
         expect(router.state.location.pathname).toBe(
@@ -220,7 +220,7 @@ describe("blocking", () => {
     describe("resets from blocked state", () => {
       it("sets blocker state to 'unblocked'", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate("/about", { replace: true });
         expect(blocker.state).toEqual("blocked");
@@ -231,7 +231,7 @@ describe("blocking", () => {
 
       it("does not navigate", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate("/about", { replace: true });
         expect(router.state.location.pathname).toBe(
@@ -266,14 +266,14 @@ describe("blocking", () => {
     describe("blocker returns false", () => {
       it("set blocker state to unblocked", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: false,
+          shouldBlock: () => false,
         }));
         await router.navigate(-1);
         expect(blocker.state).toEqual("unblocked");
       });
 
       it("should navigate", async () => {
-        router.createBlocker("KEY", () => ({ shouldBlock: false }));
+        router.createBlocker("KEY", () => ({ shouldBlock: () => false }));
         await router.navigate(-1);
         expect(router.state.location.pathname).toEqual(
           initialEntries[initialIndex - 1]
@@ -284,14 +284,14 @@ describe("blocking", () => {
     describe("blocker returns true", () => {
       it("set blocker state", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate(-1);
         expect(blocker.state).toEqual("blocked");
       });
 
       it("does not navigate", async () => {
-        router.createBlocker("KEY", () => ({ shouldBlock: true }));
+        router.createBlocker("KEY", () => ({ shouldBlock: () => true }));
         await router.navigate(-1);
         expect(router.state.location.pathname).toBe(
           initialEntries[initialIndex]
@@ -302,7 +302,7 @@ describe("blocking", () => {
     describe("proceeds from blocked state", () => {
       it("sets blocker state to 'proceeding'", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate(-1);
         expect(blocker.state).toEqual("blocked");
@@ -313,7 +313,7 @@ describe("blocking", () => {
 
       it("proceeds with blocked navigation", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate(-1);
         expect(router.state.location.pathname).toBe(
@@ -332,7 +332,7 @@ describe("blocking", () => {
 
       it("sets blocker state to 'unblocked'", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate(-1);
         expect(blocker.state).toEqual("blocked");
@@ -343,7 +343,7 @@ describe("blocking", () => {
 
       it("does not navigate", async () => {
         let blocker = router.createBlocker("KEY", () => ({
-          shouldBlock: true,
+          shouldBlock: () => true,
         }));
         await router.navigate(-1);
         expect(router.state.location.pathname).toBe(
