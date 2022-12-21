@@ -1,10 +1,7 @@
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import type { StaticHandlerContext } from "@remix-run/router";
-import {
-  json,
-  unstable_createStaticHandler as createStaticHandler,
-} from "@remix-run/router";
+import { json, createStaticHandler } from "@remix-run/router";
 import {
   Link,
   Outlet,
@@ -13,8 +10,8 @@ import {
   useMatches,
 } from "react-router-dom";
 import {
-  unstable_createStaticRouter as createStaticRouter,
-  unstable_StaticRouterProvider as StaticRouterProvider,
+  createStaticRouter,
+  StaticRouterProvider,
 } from "react-router-dom/server";
 
 beforeEach(() => {
@@ -321,6 +318,50 @@ describe("A <StaticRouterProvider>", () => {
     );
   });
 
+  it("serializes Error instances", async () => {
+    let routes = [
+      {
+        path: "/",
+        loader: () => {
+          throw new Error("oh no");
+        },
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+
+    // stack is stripped by default from SSR errors
+    let expectedJsonString = JSON.stringify(
+      JSON.stringify({
+        loaderData: {},
+        actionData: null,
+        errors: {
+          "0": {
+            message: "oh no",
+            __type: "Error",
+          },
+        },
+      })
+    );
+    expect(html).toMatch(
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+    );
+  });
+
   it("supports a nonce prop", async () => {
     let routes = [
       {
@@ -355,7 +396,10 @@ describe("A <StaticRouterProvider>", () => {
 
     let expectedJsonString = JSON.stringify(
       JSON.stringify({
-        loaderData: {},
+        loaderData: {
+          0: null,
+          "0-0": null,
+        },
         actionData: null,
         errors: null,
       })

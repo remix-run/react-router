@@ -65,7 +65,7 @@ Let's take a dive into how to accomplish this.
 
 Start by adding `<Await />` for your slow data requests where you'd rather render a fallback UI. Let's do that for our example above:
 
-```jsx lines=[1,5,10,20-33]
+```jsx lines=[3,9,13,24-40]
 import {
   Await,
   defer,
@@ -205,7 +205,7 @@ This may feel counter-intuitive at first, but stay with us, we really thought th
 
 When you decide you'd like to try the trade-offs of `defer`, we don't want you to have to change or remove those optimizations because we want you to be able to easily switch between deferring some data and not deferring it. So, we ensure that your existing optimistic states work the same way. If we didn't do this, then you could experience what we call "Popcorn UI" where submissions of data trigger the fallback loading state instead of the optimistic UI you'd worked hard on.
 
-So just keep this in mind: **Deferred is 100% only about the initial load of a route and it's params.**
+So just keep this in mind: **Deferred is 100% only about the initial load of a route and its params.**
 
 [link]: ../components/link
 [usefetcher]: ../hooks/use-fetcher

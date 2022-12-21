@@ -44,16 +44,19 @@ When the user clicks a checkbox, the submission goes to the action to change the
 function Task({ task }) {
   const { projectId, id } = task;
   const toggle = useFetcher();
-  const checked =
-    toggle.formData?.get("complete") || task.complete;
+  const checked = toggle.formData
+    ? toggle.formData.get("complete") === "on"
+    : task.complete;
 
   return (
     <toggle.Form
       method="put"
-      action={`/project/${projectId}/tasks/${id}`}
+      action={`/projects/${projectId}/tasks/${id}`}
     >
+      <input name="id" type="hidden" defaultValue={id} />
       <label>
         <input
+          name="complete"
           type="checkbox"
           checked={checked}
           onChange={(e) => toggle.submit(e.target.form)}
@@ -98,15 +101,15 @@ function ProjectTaskCount({ project }) {
   const fetchers = useFetchers();
 
   // Find this project's fetchers
-  let projectFetchers = fetchers.filter((fetcher) => {
+  const relevantFetchers = fetchers.filter((fetcher) => {
     return fetcher.formAction?.startsWith(
-      `/projects/${project.id}/task`
+      `/projects/${project.id}/tasks/`
     );
   });
 
   // Store in a map for easy lookup
   const myFetchers = new Map(
-    fetchers.map(({ formData }) => [
+    relevantFetchers.map(({ formData }) => [
       formData.get("id"),
       formData.get("complete") === "on",
     ])

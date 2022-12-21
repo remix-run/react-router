@@ -66,6 +66,7 @@ import {
 export type {
   FormEncType,
   FormMethod,
+  GetScrollRestorationKeyFunction,
   ParamKeyValuePair,
   SubmitOptions,
   URLSearchParamsInit,
@@ -254,6 +255,12 @@ function deserializeErrors(
         val.data,
         val.internal === true
       );
+    } else if (val && val.__type === "Error") {
+      let error = new Error(val.message);
+      // Wipe away the client-side stack trace.  Nothing to fill it in with
+      // because we don't serialize SSR stack traces for security reasons
+      error.stack = "";
+      serialized[key] = error;
     } else {
       serialized[key] = val;
     }
@@ -652,7 +659,15 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       let submitter = (event as unknown as HTMLSubmitEvent).nativeEvent
         .submitter as HTMLFormSubmitter | null;
 
-      submit(submitter || event.currentTarget, { method, replace, relative });
+      let submitMethod =
+        (submitter?.getAttribute("formmethod") as FormMethod | undefined) ||
+        method;
+
+      submit(submitter || event.currentTarget, {
+        method: submitMethod,
+        replace,
+        relative,
+      });
     };
 
     return (
@@ -671,7 +686,7 @@ if (__DEV__) {
   FormImpl.displayName = "FormImpl";
 }
 
-interface ScrollRestorationProps {
+export interface ScrollRestorationProps {
   getKey?: GetScrollRestorationKeyFunction;
   storageKey?: string;
 }
@@ -918,10 +933,9 @@ export function useFormAction(
   invariant(routeContext, "useFormAction must be used inside a RouteContext");
 
   let [match] = routeContext.matches.slice(-1);
-  let resolvedAction = action ?? ".";
   // Shallow clone path so we can modify it below, otherwise we modify the
   // object referenced by useMemo inside useResolvedPath
-  let path = { ...useResolvedPath(resolvedAction, { relative }) };
+  let path = { ...useResolvedPath(action ? action : ".", { relative }) };
 
   // Previously we set the default action to ".". The problem with this is that
   // `useResolvedPath(".")` excludes search params and the hash of the resolved
@@ -1208,62 +1222,77 @@ function useScrollRestoration({
   );
 
   // Read in any saved scroll locations
-  React.useLayoutEffect(() => {
-    try {
-      let sessionPositions = sessionStorage.getItem(
-        storageKey || SCROLL_RESTORATION_STORAGE_KEY
-      );
-      if (sessionPositions) {
-        savedScrollPositions = JSON.parse(sessionPositions);
+  if (typeof document !== "undefined") {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useLayoutEffect(() => {
+      try {
+        let sessionPositions = sessionStorage.getItem(
+          storageKey || SCROLL_RESTORATION_STORAGE_KEY
+        );
+        if (sessionPositions) {
+          savedScrollPositions = JSON.parse(sessionPositions);
+        }
+      } catch (e) {
+        // no-op, use default empty object
       }
-    } catch (e) {
-      // no-op, use default empty object
-    }
-  }, [storageKey]);
+    }, [storageKey]);
 
-  // Enable scroll restoration in the router
-  React.useLayoutEffect(() => {
-    let disableScrollRestoration = router?.enableScrollRestoration(
-      savedScrollPositions,
-      () => window.scrollY,
-      getKey
-    );
-    return () => disableScrollRestoration && disableScrollRestoration();
-  }, [router, getKey]);
+    // Enable scroll restoration in the router
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useLayoutEffect(() => {
+      let disableScrollRestoration = router?.enableScrollRestoration(
+        savedScrollPositions,
+        () => window.scrollY,
+        getKey
+      );
+      return () => disableScrollRestoration && disableScrollRestoration();
+    }, [router, getKey]);
 
-  // Restore scrolling when state.restoreScrollPosition changes
-  React.useLayoutEffect(() => {
-    // Explicit false means don't do anything (used for submissions)
-    if (restoreScrollPosition === false) {
-      return;
-    }
-
-    // been here before, scroll to it
-    if (typeof restoreScrollPosition === "number") {
-      window.scrollTo(0, restoreScrollPosition);
-      return;
-    }
-
-    // try to scroll to the hash
-    if (location.hash) {
-      let el = document.getElementById(location.hash.slice(1));
-      if (el) {
-        el.scrollIntoView();
+    // Restore scrolling when state.restoreScrollPosition changes
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useLayoutEffect(() => {
+      // Explicit false means don't do anything (used for submissions)
+      if (restoreScrollPosition === false) {
         return;
       }
-    }
 
-    // Opt out of scroll reset if this link requested it
-    if (preventScrollReset === true) {
-      return;
-    }
+      // been here before, scroll to it
+      if (typeof restoreScrollPosition === "number") {
+        window.scrollTo(0, restoreScrollPosition);
+        return;
+      }
 
-    // otherwise go to the top on new locations
-    window.scrollTo(0, 0);
-  }, [location, restoreScrollPosition, preventScrollReset]);
+      // try to scroll to the hash
+      if (location.hash) {
+        let el = document.getElementById(location.hash.slice(1));
+        if (el) {
+          el.scrollIntoView();
+          return;
+        }
+      }
+
+      // Opt out of scroll reset if this link requested it
+      if (preventScrollReset === true) {
+        return;
+      }
+
+      // otherwise go to the top on new locations
+      window.scrollTo(0, 0);
+    }, [location, restoreScrollPosition, preventScrollReset]);
+  }
 }
 
-function useBeforeUnload(callback: () => any): void {
+/**
+ * Setup a callback to be fired on the window's `beforeunload` event. This is
+ * useful for saving some data to `window.localStorage` just before the page
+ * refreshes.
+ *
+ * Note: The `callback` argument should be a function created with
+ * `React.useCallback()`.
+ */
+export function useBeforeUnload(
+  callback: (event: BeforeUnloadEvent) => any
+): void {
   React.useEffect(() => {
     window.addEventListener("beforeunload", callback);
     return () => {
@@ -1271,7 +1300,6 @@ function useBeforeUnload(callback: () => any): void {
     };
   }, [callback]);
 }
-
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1295,3 +1323,5 @@ function warning(cond: boolean, message: string): void {
   }
 }
 //#endregion
+
+export { useScrollRestoration as UNSAFE_useScrollRestoration };
