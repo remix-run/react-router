@@ -788,30 +788,42 @@ export function createRouter(init: RouterInit): Router {
     unlistenHistory = init.history.listen(
       ({ action: historyAction, location, delta }) => {
         for (let [key, blocker] of state.blockers) {
+          let {
+            shouldBlock,
+            unstable_skipStateUpdateOnPopNavigation: skipStateUpdate,
+          } = blocker.fn();
+
           // So this is a bit tricky to follow if navigation is blocked, so
           // let's try to walk through what's happening line-by-line:
           //
-          // If a POP navigation occurs while a navigation is blocked, we do
-          // nothing until the user either proceeds or resets. History will
-          // update our delta so that we can patch up the stack once navigation
-          // is unblocked.
+          // If a POP navigation occurs while a navigation is blocked, one of
+          // two things is happening:
+          //  1. Navigation was blocked and our URL is out-of-sync with our
+          //     router state. In this case we go back by the delta. This
+          //     triggers our listener again and then...
+          //  2. Navigation state is still blocked, so we update our little
+          //     state tracker and bail. The navigation blocker state is now
+          //     blocked until the user proceeds or resets.
           if (blocker.state === "blocked") {
+            if (blocked.get(key)) {
+              blocked.delete(key);
+            } else {
+              blocked.set(key, true);
+              init.history.go(delta);
+            }
             return;
           }
 
           // If we are in an unblocked state, it's either because:
           //  1. Navigation was never blocked
-          //  2. Navigation was blocked but we never updated the router state.
+          //  2. Navigation was blocked but we haven't yet updated the router
+          //     state.
+          //
           //     When a blocker is registered with a prompt (window.confirm) we
           //     never actually update the blocker state in response to POP
           //     navigations -- we either immediately navigate when the user
           //     accepts or revert the URL if they don't.
           if (blocker.state === "unblocked") {
-            let {
-              shouldBlock,
-              unstable_skipStateUpdateOnPopNavigation: skipStateUpdate,
-            } = blocker.fn();
-
             // If we've already blocked this navigation attempt but our router
             // state was never updated, we do nothing until the user either
             // proceeds or resets. We don't need to evaluate our shouldBlock
@@ -922,6 +934,14 @@ export function createRouter(init: RouterInit): Router {
         }
       : {};
 
+    let blockers = state.blockers;
+    for (let [key, blocker] of blockers) {
+      blocker.state = "unblocked";
+      blocker.proceed = undefined;
+      blocker.reset = undefined;
+      state.blockers.set(key, blocker);
+    }
+
     updateState({
       // Clear existing actionData on any completed navigation beyond the original
       // action, unless we're currently finishing the loading/actionReload state.
@@ -939,6 +959,7 @@ export function createRouter(init: RouterInit): Router {
         ? false
         : getSavedScrollPosition(location, newState.matches || state.matches),
       preventScrollReset: pendingPreventScrollReset,
+      blockers: new Map(state.blockers),
     });
 
     if (isUninterruptedRevalidation) {

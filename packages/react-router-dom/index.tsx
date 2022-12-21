@@ -1017,17 +1017,22 @@ export function usePrompt(
   message: string | null | false,
   opts?: { beforeUnload: boolean }
 ) {
+  //   let { beforeUnload } = opts ?? {};
   let blocker = useBlocker(
     React.useCallback(() => {
       let shouldPrompt = !!message;
+      let unstable_skipStateUpdateOnPopNavigation = true;
       if (!shouldPrompt) {
         return {
           shouldBlock: () => false,
-          unstable_skipStateUpdateOnPopNavigation: true,
+          unstable_skipStateUpdateOnPopNavigation,
         };
       }
       let shouldBlock = () => !window.confirm(message as string);
-      return { shouldBlock, unstable_skipStateUpdateOnPopNavigation: true };
+      return {
+        shouldBlock,
+        unstable_skipStateUpdateOnPopNavigation,
+      };
     }, [message])
   );
 
@@ -1040,13 +1045,11 @@ export function usePrompt(
   }, [blocker]);
 
   // leaving the domain
-  //   let { beforeUnload } = opts || {};
   //   React.useEffect(() => {
   //     if (!beforeUnload) return;
   //     let handleBeforeUnload = (evt: BeforeUnloadEvent) => {
-  //       if (blocker.fn()) {
-  //         evt.preventDefault();
-  //         evt.returnValue = message;
+  //       let { shouldBlock } = blocker.fn();
+  //       if (shouldBlock()) {
   //         return (evt.returnValue = message);
   //       }
   //     };
