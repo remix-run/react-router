@@ -1031,7 +1031,7 @@ export function usePrompt(
   message: string | null | false,
   opts?: { beforeUnload: boolean }
 ) {
-  //   let { beforeUnload } = opts ?? {};
+  let { beforeUnload } = opts ?? {};
   let blocker = useBlocker(
     React.useCallback(() => {
       let shouldPrompt = !!message;
@@ -1058,20 +1058,27 @@ export function usePrompt(
     prevState.current = blocker.state;
   }, [blocker]);
 
-  // leaving the domain
-  //   React.useEffect(() => {
-  //     if (!beforeUnload) return;
-  //     let handleBeforeUnload = (evt: BeforeUnloadEvent) => {
-  //       let { shouldBlock } = blocker.fn();
-  //       if (shouldBlock()) {
-  //         return (evt.returnValue = message);
-  //       }
-  //     };
-  //     window.addEventListener("beforeunload", handleBeforeUnload);
-  //     return () => {
-  //       window.removeEventListener("beforeunload", handleBeforeUnload);
-  //     };
-  //   }, [blocker, message, beforeUnload]);
+  // User is leaving the domain or refreshing the page. Here we have to rely on
+  // the `beforeunload` which is opt-in. Modern browsers will not display the
+  // custom message but will still block navigation when evt.returnValue is
+  // assigned.
+  React.useEffect(() => {
+    if (!beforeUnload) return;
+    let handleBeforeUnload = (evt: BeforeUnloadEvent) => {
+      let { shouldBlock } = blocker.fn();
+      if (shouldBlock()) {
+        return (evt.returnValue = message);
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload, {
+      capture: true,
+    });
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload, {
+        capture: true,
+      });
+    };
+  }, [blocker, message, beforeUnload]);
 }
 
 function createFetcherForm(fetcherKey: string, routeId: string) {
