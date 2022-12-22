@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.2.1-pre.0
+
+### Patch Changes
+
+- Include submission info in `shouldRevalidate` on action redirects ([#9777](https://github.com/remix-run/react-router/pull/9777))
+
 ## 1.2.0
 
 ### Minor Changes
