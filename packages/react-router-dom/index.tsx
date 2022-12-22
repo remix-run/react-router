@@ -25,8 +25,8 @@ import {
   UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router";
 import type {
+  BlockerFunction,
   BrowserHistory,
-  Blocker,
   Fetcher,
   FormEncType,
   FormMethod,
@@ -40,7 +40,6 @@ import {
   createRouter,
   createBrowserHistory,
   createHashHistory,
-  getInitialBlocker,
   invariant,
   joinPaths,
   ErrorResponse,
@@ -978,51 +977,23 @@ export function useFormAction(
   return createPath(path);
 }
 
-export type BlockerFunction = () => {
-  shouldBlock(): boolean;
-  unstable_skipStateUpdateOnPopNavigation?: boolean;
-};
-
-let blockerId = 0;
+let blockerKey = "blocker-singleton";
 
 export function useBlocker(
   shouldBlock: boolean | (() => boolean) | BlockerFunction
 ) {
-  let [blockerKey] = React.useState(() => String(++blockerId));
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
-  let [blocker, setBlocker] = React.useState<Blocker>(() =>
-    getInitialBlocker(() => {
-      throw Error("Navigation should not occur during render.");
-    })
-  );
 
-  let fn: BlockerFunction = React.useCallback(() => {
-    if (typeof shouldBlock === "function") {
-      let result = shouldBlock();
-      if (result && typeof result === "object") {
-        let { shouldBlock } = result;
-        return {
-          shouldBlock:
-            typeof shouldBlock === "function"
-              ? shouldBlock
-              : () => !!shouldBlock,
-          unstable_skipStateUpdateOnPopNavigation:
-            !!result.unstable_skipStateUpdateOnPopNavigation,
-        };
-      }
-      return { shouldBlock: () => !!result };
-    } else {
-      return { shouldBlock: () => !!shouldBlock };
-    }
+  let blockerFunction = React.useCallback<BlockerFunction>(() => {
+    return typeof shouldBlock === "function"
+      ? shouldBlock() === true
+      : shouldBlock === true;
   }, [shouldBlock]);
 
-  React.useEffect(() => {
-    let blocker = router.createBlocker(blockerKey, fn);
-    setBlocker(blocker);
-    return () => {
-      router.deleteBlocker(blockerKey);
-    };
-  }, [blockerKey, fn, router]);
+  let blocker = router.getBlocker(blockerKey, blockerFunction);
+
+  // Cleanup on unmount
+  React.useEffect(() => () => router.deleteBlocker(blockerKey), [router]);
 
   return blocker;
 }
@@ -1031,24 +1002,38 @@ export function usePrompt(
   message: string | null | false,
   opts?: { beforeUnload: boolean }
 ) {
-  let { beforeUnload } = opts ?? {};
-  let blocker = useBlocker(
-    React.useCallback(() => {
-      let shouldPrompt = !!message;
-      let unstable_skipStateUpdateOnPopNavigation = true;
-      if (!shouldPrompt) {
-        return {
-          shouldBlock: () => false,
-          unstable_skipStateUpdateOnPopNavigation,
-        };
-      }
-      let shouldBlock = () => !window.confirm(message as string);
-      return {
-        shouldBlock,
-        unstable_skipStateUpdateOnPopNavigation,
-      };
-    }, [message])
-  );
+  let { beforeUnload } = opts ? opts : { beforeUnload: false };
+  let blockerFunction = React.useCallback<BlockerFunction>(() => {
+    if (!message) {
+      return false;
+    }
+
+    // Here be dragons! This is not bulletproof (at least at the moment).  If
+    // you click the back button again while the global window.confirm prompt
+    // is open, it returns `false` (telling us to "block") but then _also_
+    // processes the back button click!
+
+    // So, consider:
+    //  - you have a stack of [/a, /b, /c] and you usePrompt() on /c
+    //  - user clicks back button trying to POP /c -> /b
+    //  - prompt shows up (URL shows /b but UI shows /c)
+    //  - user clicks back button _again_ (POP /b -> /a)
+    //    - this seems to queue up internally
+    //  - we get a `false` back from window.confirm() (block!)
+    //  - so we undo the _original_ POP /c -> /b and call history.go(1) to
+    //    instead POP forward /b -> /c and we also tell our router to ignore
+    //    the next history update
+    //  - and then it seems that the queued history trumps our history revert,
+    //    and so we receive the popstate event for the POP /b -> /a and then
+    //    we ignore it thinking it was our revert of POP /b -> /c
+    //
+    //  I think the solution here is to track more thn a boolean
+    //  ignoreNextHistoryUpdate and instead track the key we're reverting from
+    //  and the delta and compare that to any incoming popstate events.
+    return !window.confirm(message);
+  }, [message]);
+
+  let blocker = useBlocker(blockerFunction);
 
   let prevState = React.useRef(blocker.state);
   React.useEffect(() => {
@@ -1065,9 +1050,9 @@ export function usePrompt(
   React.useEffect(() => {
     if (!beforeUnload) return;
     let handleBeforeUnload = (evt: BeforeUnloadEvent) => {
-      let { shouldBlock } = blocker.fn();
-      if (shouldBlock()) {
-        return (evt.returnValue = message);
+      if (blockerFunction()) {
+        evt.returnValue = message;
+        return message;
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload, {
@@ -1078,7 +1063,7 @@ export function usePrompt(
         capture: true,
       });
     };
-  }, [blocker, message, beforeUnload]);
+  }, [blocker, message, beforeUnload, blockerFunction]);
 }
 
 function createFetcherForm(fetcherKey: string, routeId: string) {

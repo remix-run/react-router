@@ -96,11 +96,11 @@ export function Home() {
   let data = useLoaderData() as HomeLoaderData;
   let [shouldBlockNavigation, setShouldBlockNavigation] = React.useState(false);
 
-  let blocker = useBlocker(shouldBlockNavigation ? true : null);
-  //   usePrompt(
-  //     shouldBlockNavigation ? "Are you *really* sure you want to leave?" : null,
-  //     { beforeUnload: true }
-  //   );
+  let blocker = useBlocker(shouldBlockNavigation);
+  // usePrompt(
+  //   shouldBlockNavigation ? "Are you *really* sure you want to leave?" : null,
+  //   { beforeUnload: true }
+  // );
 
   return (
     <>

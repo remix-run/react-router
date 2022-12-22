@@ -193,18 +193,12 @@ export interface Router {
   dispose(): void;
 
   /**
-   * Create a new navigation blocker
-   *
-   * @param key A unique identifier for the blocker
-   */
-  createBlocker(key: string, fn: BlockerFunction): Blocker;
-
-  /**
    * Get a navigation blocker
    *
    * @param key The identifier for the blocker
+   * @param fn The blocker function implementation
    */
-  getBlocker(key: string, fn?: BlockerFunction): Blocker | undefined;
+  getBlocker(key: string, fn: BlockerFunction): Blocker;
 
   /**
    * Delete a navigation blocker
@@ -212,37 +206,6 @@ export interface Router {
    * @param key The identifier for the blocker
    */
   deleteBlocker(key: string): void;
-
-  /**
-   * @internal
-   * PRIVATE - DO NOT USE
-   *
-   * Update the state of a navigation blocker
-   *
-   * @param key The identifier for the blocker
-   * @param state The next state. Must be one of `"blocked"`, `"unblocked"`, or
-   * "proceeding"
-   */
-  setBlockerState(
-    key: string,
-    state: "blocked",
-    opts: SetBlockerOpts
-  ): Blocker | undefined;
-
-  /**
-   * @internal
-   * PRIVATE - DO NOT USE
-   *
-   * Update the state of a navigation blocker
-   *
-   * @param key The identifier for the blocker
-   * @param state The next state. Must be one of `"blocked"`, `"unblocked"`, or
-   * "proceeding"
-   */
-  setBlockerState(
-    key: string,
-    state: "unblocked" | "proceeding"
-  ): Blocker | undefined;
 
   /**
    * @internal
@@ -259,11 +222,6 @@ export interface Router {
    * Internal pending DeferredData instances accessed by unit tests
    */
   _internalActiveDeferreds: Map<string, DeferredData>;
-}
-
-interface SetBlockerOpts {
-  onProceed?(): Promise<void>;
-  onReset?(): void;
 }
 
 /**
@@ -527,26 +485,20 @@ export type Blocker =
   | {
       state: "blocked";
       reset(): void;
-      proceed(): Promise<void>;
-      fn: BlockerFunction;
+      proceed(): void;
     }
   | {
       state: "unblocked";
       reset: undefined;
       proceed: undefined;
-      fn: BlockerFunction;
     }
   | {
       state: "proceeding";
       reset: undefined;
       proceed: undefined;
-      fn: BlockerFunction;
     };
 
-export type BlockerFunction = () => {
-  shouldBlock(): boolean;
-  unstable_skipStateUpdateOnPopNavigation?: boolean;
-};
+export type BlockerFunction = () => boolean;
 
 interface ShortCircuitable {
   /**
@@ -647,6 +599,12 @@ export const IDLE_FETCHER: FetcherStates["Idle"] = {
   formAction: undefined,
   formEncType: undefined,
   formData: undefined,
+};
+
+export const IDLE_BLOCKER: Blocker = {
+  state: "unblocked",
+  proceed: undefined,
+  reset: undefined,
 };
 
 const isBrowser =
@@ -782,93 +740,55 @@ export function createRouter(init: RouterInit): Router {
   // cancel active deferreds for eliminated routes.
   let activeDeferreds = new Map<string, DeferredData>();
 
+  // Store blocker functions in a separate Map outside of router state since
+  // we don't need to update UI state if they change
+  let blockerFunctions = new Map<string, BlockerFunction>();
+
+  // Flag to ignore the next history update, so we can revert the URL change on
+  // a POP navigation that was blocked by the user without touching router state
+  let ignoreNextHistoryUpdate = false;
+
   // Initialize the router, all side effects should be kicked off from here.
   // Implemented as a Fluent API for ease of:
   //   let router = createRouter(init).initialize();
-
-  let blocked = new Map<string, boolean>();
-
   function initialize() {
     // If history informs us of a POP navigation, start the navigation but do not update
     // state.  We'll update our own state once the navigation completes
     unlistenHistory = init.history.listen(
       ({ action: historyAction, location, delta }) => {
-        for (let [key, blocker] of state.blockers) {
-          let {
-            shouldBlock,
-            unstable_skipStateUpdateOnPopNavigation: skipStateUpdate,
-          } = blocker.fn();
-
-          // So this is a bit tricky to follow if navigation is blocked, so
-          // let's try to walk through what's happening line-by-line:
-          //
-          // If a POP navigation occurs while a navigation is blocked, one of
-          // two things is happening:
-          //  1. Navigation was blocked and our URL is out-of-sync with our
-          //     router state. In this case we go back by the delta. This
-          //     triggers our listener again and then...
-          //  2. Navigation state is still blocked, so we update our little
-          //     state tracker and bail. The navigation blocker state is now
-          //     blocked until the user proceeds or resets.
-          if (blocker.state === "blocked") {
-            if (blocked.get(key)) {
-              blocked.delete(key);
-            } else {
-              blocked.set(key, true);
-              init.history.go(delta);
-            }
-            return;
-          }
-
-          // If we are in an unblocked state, it's either because:
-          //  1. Navigation was never blocked
-          //  2. Navigation was blocked but we haven't yet updated the router
-          //     state.
-          //
-          //     When a blocker is registered with a prompt (window.confirm) we
-          //     never actually update the blocker state in response to POP
-          //     navigations -- we either immediately navigate when the user
-          //     accepts or revert the URL if they don't.
-          if (blocker.state === "unblocked") {
-            // If we've already blocked this navigation attempt but our router
-            // state was never updated, we do nothing until the user either
-            // proceeds or resets. We don't need to evaluate our shouldBlock
-            // function again (if we do, window.confirm could trigger a second
-            // popup).
-            if (blocked.get(key)) {
-              blocked.delete(key);
-              return;
-            }
-
-            // At this point we are unblocked and we need to evaluate whether or
-            // not this navigation should be blocked...
-            if (shouldBlock()) {
-              // We can revert the URL with history.go(delta), but that will
-              // trigger our listener again so we need to mark this blocker's
-              // navigation as blocked so we don't here the next time around.
-              blocked.set(key, true);
-              init.history.go(delta);
-
-              // We only update router state if the blocker didn't opt out (as
-              // noted above, this is primarily for window.confirm cases and
-              // probably shouldn't be used in user code)
-              if (!skipStateUpdate) {
-                setBlockerState(key, "blocked", {
-                  async onProceed() {
-                    init.history.go(delta * -1);
-                  },
-                  onReset() {
-                    // noop, we've already blocked and state will be updated to
-                    // `unblocked`
-                  },
-                });
-              }
-              return;
-            }
-          }
+        // Ignore this event if it was just us resetting the URL from a
+        // blocked POP navigation
+        if (ignoreNextHistoryUpdate) {
+          ignoreNextHistoryUpdate = false;
+          return;
         }
 
-        // No blockers so we are GOOD TO GO 🎉🚀
+        let blockerKey = shouldBlockNavigation();
+        if (blockerKey) {
+          // Restore the URL to match the current UI, but don't update router state
+          ignoreNextHistoryUpdate = true;
+          init.history.go(delta * -1);
+
+          // Put the blocker into a blocked state
+          updateBlocker(blockerKey, {
+            state: "blocked",
+            proceed() {
+              updateBlocker(blockerKey!, {
+                state: "proceeding",
+                proceed: undefined,
+                reset: undefined,
+              });
+              // Re-do the same POP navigation we just blocked
+              init.history.go(delta);
+            },
+            reset() {
+              deleteBlocker(blockerKey!);
+              updateState({ blockers: new Map(router.state.blockers) });
+            },
+          });
+          return;
+        }
+
         return startNavigation(historyAction, location);
       }
     );
@@ -955,12 +875,10 @@ export function createRouter(init: RouterInit): Router {
         )
       : state.loaderData;
 
-    let blockers = state.blockers;
-    for (let [key, blocker] of blockers) {
-      blocker.state = "unblocked";
-      blocker.proceed = undefined;
-      blocker.reset = undefined;
-      state.blockers.set(key, blocker);
+    // Onl a successful navigation we can assume we got through all blockers
+    // so twe can start fresh
+    for (let [key] of blockerFunctions) {
+      deleteBlocker(key);
     }
 
     updateState({
@@ -999,113 +917,32 @@ export function createRouter(init: RouterInit): Router {
     cancelledFetcherLoads = [];
   }
 
-  function createBlocker(key: string, fn: BlockerFunction) {
-    if (state.blockers.has(key)) {
-      return state.blockers.get(key)!;
-    }
-
-    let blocker: Blocker = {
-      state: "unblocked",
-      proceed: undefined,
-      reset: undefined,
-      fn,
-    };
-    state.blockers.set(key, blocker);
-    return blocker;
-  }
-
-  function getBlocker(key: string, fn?: BlockerFunction) {
-    let blocker = state.blockers.get(key);
-    if (!blocker) return;
-
-    if (fn) {
-      if (typeof fn === "function") {
-        blocker.fn = fn;
-      } else {
-        warning(
-          false,
-          `A blocker function update was requested with a value that is not a function. This is not allowed, and the blocker's function will not be updated.`
-        );
-      }
-    }
-
-    return blocker;
-  }
-
-  function deleteBlocker(key: string) {
-    state.blockers.delete(key);
-  }
-
-  function setBlockerState(
-    key: string,
-    nextState: Blocker["state"],
-    opts?: SetBlockerOpts
-  ) {
-    let blocker = state.blockers.get(key);
-    if (!blocker) {
-      return;
-    }
-
-    invariant(
-      nextState === "proceeding" ||
-        nextState === "blocked" ||
-        nextState === "unblocked",
-      `Invalid blocker state: ${nextState}`
-    );
-
-    // If the blocker state changes we need to update the router state to notify
-    // subscribers. If not we can skit the update, but we still need to assign
-    // new references if a blocker callback or proceed/reset function was
-    // passed.
-    let stateChanged = blocker.state !== nextState;
-
-    blocker.state = nextState;
-    if (nextState === "blocked") {
-      let { onProceed, onReset } = opts || {};
-      blocker.proceed = async () => {
-        setBlockerState(key, "proceeding");
-        await onProceed?.();
-      };
-      blocker.reset = () => {
-        setBlockerState(key, "unblocked");
-        onReset?.();
-      };
-    } else {
-      blocker.proceed = undefined;
-      blocker.reset = undefined;
-    }
-
-    state.blockers.set(key, blocker);
-    if (stateChanged) {
-      updateState({ blockers: new Map(state.blockers) });
-    }
-    return blocker;
-  }
-
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
   // replace with an optional submission
   async function navigate(
     to: number | To,
     opts?: RouterNavigateOptions
   ): Promise<void> {
-    for (let [key, blocker] of state.blockers) {
-      if (blocker.state === "blocked" || blocker.state === "unblocked") {
-        let { shouldBlock } = blocker.fn();
-        if (shouldBlock()) {
-          setBlockerState(key, "blocked", {
-            async onProceed() {
-              // TODO: Tests fail if we don't wait a tick. Unsure why since
-              // navigate has its own async work to complete before blocker
-              // state is set. Investigate.
-              await Promise.resolve();
-              await navigate(to, opts);
-            },
+    let blockerKey = shouldBlockNavigation();
+    if (blockerKey) {
+      // Put the blocker into a blocked state
+      updateBlocker(blockerKey, {
+        state: "blocked",
+        proceed() {
+          updateBlocker(blockerKey!, {
+            state: "proceeding",
+            proceed: undefined,
+            reset: undefined,
           });
-          return;
-        } else if (blocker.state === "blocked") {
-          return await blocker.proceed();
-        }
-      }
+          // Send the same navigation through
+          navigate(to, opts);
+        },
+        reset() {
+          deleteBlocker(blockerKey!);
+          updateState({ blockers: new Map(state.blockers) });
+        },
+      });
+      return;
     }
 
     if (typeof to === "number") {
@@ -2190,6 +2027,61 @@ export function createRouter(init: RouterInit): Router {
     return yeetedKeys.length > 0;
   }
 
+  function getBlocker(key: string, fn: BlockerFunction) {
+    let blocker: Blocker = state.blockers.get(key) || IDLE_BLOCKER;
+
+    if (blockerFunctions.get(key) !== fn) {
+      blockerFunctions.set(key, fn);
+    }
+
+    return blocker;
+  }
+
+  function deleteBlocker(key: string) {
+    state.blockers.delete(key);
+    blockerFunctions.delete(key);
+  }
+
+  // Utility function to update blockers, ensuring valid state transitions
+  function updateBlocker(key: string, newBlocker: Blocker) {
+    let blocker = state.blockers.get(key) || IDLE_BLOCKER;
+
+    invariant(
+      (blocker.state === "unblocked" && newBlocker.state === "blocked") ||
+        (blocker.state === "blocked" && newBlocker.state === "blocked") ||
+        (blocker.state === "blocked" && newBlocker.state === "proceeding") ||
+        (blocker.state === "blocked" && newBlocker.state === "unblocked") ||
+        (blocker.state === "proceeding" && newBlocker.state === "unblocked"),
+      `Invalid blocker state transition: ${blocker.state} -> ${newBlocker.state}`
+    );
+
+    state.blockers.set(key, newBlocker);
+    updateState({ blockers: new Map(state.blockers) });
+  }
+
+  function shouldBlockNavigation(): string | undefined {
+    if (blockerFunctions.size === 0) {
+      return;
+    }
+
+    // We only allow a single blocker at the moment.  This will need to be
+    // updated if we enhance to support multiple blockers in the future
+    let [key, blockerFunction] = Array.from(blockerFunctions.entries())[0];
+    let blocker = state.blockers.get(key);
+
+    if (blocker && blocker.state === "proceeding") {
+      // If the blocker is currently proceeding, we don't need to re-check
+      // it and can let this navigation continue
+      return;
+    }
+
+    // At this point, we know we're unblocked/blocked so we need to check the
+    // user-provided blocker function
+    if (blockerFunction()) {
+      return key;
+    }
+  }
+
   function cancelActiveDeferreds(
     predicate?: (routeId: string) => boolean
   ): string[] {
@@ -2289,9 +2181,7 @@ export function createRouter(init: RouterInit): Router {
     getFetcher,
     deleteFetcher,
     dispose,
-    createBlocker,
     getBlocker,
-    setBlockerState,
     deleteBlocker,
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
@@ -3657,18 +3547,4 @@ function getTargetMatch(
   return pathMatches[pathMatches.length - 1];
 }
 
-export function getInitialBlocker(
-  fn: BlockerFunction
-): Blocker & { state: "unblocked" } {
-  return {
-    state: "unblocked",
-    fn,
-    proceed: undefined,
-    reset: undefined,
-  };
-}
 //#endregion
-
-async function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}

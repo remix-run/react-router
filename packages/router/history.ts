@@ -619,9 +619,10 @@ function getUrlBasedHistory(
     let nextIndex = getIndex();
 
     if (nextIndex != null) {
-      let delta = index - nextIndex;
+      let delta = nextIndex - index;
       action = nextAction;
       if (listener) {
+        index = nextIndex;
         listener({ action, location: history.location, delta });
       }
     } else {
