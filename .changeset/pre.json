@@ -9,6 +9,7 @@
     "@remix-run/router": "1.2.0"
   },
   "changesets": [
-    "fifty-kiwis-sniff"
+    "fifty-kiwis-sniff",
+    "new-news-remember"
   ]
 }

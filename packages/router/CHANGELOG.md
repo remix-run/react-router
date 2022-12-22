@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.2.1-pre.1
+
+### Patch Changes
+
+- Reset `actionData` on action redirect to current location ([#9772](https://github.com/remix-run/react-router/pull/9772))
+
 ## 1.2.1-pre.0
 
 ### Patch Changes
