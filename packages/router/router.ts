@@ -1092,7 +1092,7 @@ export function createRouter(init: RouterInit): Router {
         replace =
           result.location === state.location.pathname + state.location.search;
       }
-      await startRedirectNavigation(state, result, replace);
+      await startRedirectNavigation(state, result, { submission, replace });
       return { shortCircuited: true };
     }
 
@@ -1152,10 +1152,26 @@ export function createRouter(init: RouterInit): Router {
       loadingNavigation = navigation;
     }
 
+    // If this was a redirect from an action we don't have a "submission" but
+    // we have it on the loading navigation so use that if available
+    let activeSubmission = submission
+      ? submission
+      : loadingNavigation.formMethod &&
+        loadingNavigation.formAction &&
+        loadingNavigation.formData &&
+        loadingNavigation.formEncType
+      ? {
+          formMethod: loadingNavigation.formMethod,
+          formAction: loadingNavigation.formAction,
+          formData: loadingNavigation.formData,
+          formEncType: loadingNavigation.formEncType,
+        }
+      : undefined;
+
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
       state,
       matches,
-      submission,
+      activeSubmission,
       location,
       isRevalidationRequired,
       cancelledDeferredRoutes,
@@ -1244,7 +1260,7 @@ export function createRouter(init: RouterInit): Router {
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
     if (redirect) {
-      await startRedirectNavigation(state, redirect, replace);
+      await startRedirectNavigation(state, redirect, { replace });
       return { shortCircuited: true };
     }
 
@@ -1401,7 +1417,10 @@ export function createRouter(init: RouterInit): Router {
       state.fetchers.set(key, loadingFetcher);
       updateState({ fetchers: new Map(state.fetchers) });
 
-      return startRedirectNavigation(state, actionResult, false, true);
+      return startRedirectNavigation(state, actionResult, {
+        submission,
+        isFetchActionRedirect: true,
+      });
     }
 
     // Process any non-redirect errors thrown
@@ -1495,7 +1514,7 @@ export function createRouter(init: RouterInit): Router {
 
     let redirect = findRedirect(results);
     if (redirect) {
-      return startRedirectNavigation(state, redirect);
+      return startRedirectNavigation(state, redirect, { submission });
     }
 
     // Process and commit output from loaders
@@ -1673,8 +1692,15 @@ export function createRouter(init: RouterInit): Router {
   async function startRedirectNavigation(
     state: RouterState,
     redirect: RedirectResult,
-    replace?: boolean,
-    isFetchActionRedirect?: boolean
+    {
+      submission,
+      replace,
+      isFetchActionRedirect,
+    }: {
+      submission?: Submission;
+      replace?: boolean;
+      isFetchActionRedirect?: boolean;
+    } = {}
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
@@ -1714,24 +1740,30 @@ export function createRouter(init: RouterInit): Router {
     let redirectHistoryAction =
       replace === true ? HistoryAction.Replace : HistoryAction.Push;
 
+    // Use the incoming submission if provided, fallback on the active one in
+    // state.navigation
     let { formMethod, formAction, formEncType, formData } = state.navigation;
+    if (!submission && formMethod && formAction && formData && formEncType) {
+      submission = {
+        formMethod,
+        formAction,
+        formEncType,
+        formData,
+      };
+    }
 
     // If this was a 307/308 submission we want to preserve the HTTP method and
     // re-submit the GET/POST/PUT/PATCH/DELETE as a submission navigation to the
     // redirected location
     if (
       redirectPreserveMethodStatusCodes.has(redirect.status) &&
-      formMethod &&
-      isMutationMethod(formMethod) &&
-      formEncType &&
-      formData
+      submission &&
+      isMutationMethod(submission.formMethod)
     ) {
       await startNavigation(redirectHistoryAction, redirectLocation, {
         submission: {
-          formMethod,
+          ...submission,
           formAction: redirect.location,
-          formEncType,
-          formData,
         },
       });
     } else {
@@ -1741,10 +1773,10 @@ export function createRouter(init: RouterInit): Router {
         overrideNavigation: {
           state: "loading",
           location: redirectLocation,
-          formMethod: formMethod || undefined,
-          formAction: formAction || undefined,
-          formEncType: formEncType || undefined,
-          formData: formData || undefined,
+          formMethod: submission ? submission.formMethod : undefined,
+          formAction: submission ? submission.formAction : undefined,
+          formEncType: submission ? submission.formEncType : undefined,
+          formData: submission ? submission.formData : undefined,
         },
       });
     }

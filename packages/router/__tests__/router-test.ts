@@ -1671,6 +1671,112 @@ describe("a router", () => {
       router.dispose();
     });
 
+    it("includes submission on actions that return data", async () => {
+      let shouldRevalidate = jest.fn(() => true);
+
+      let history = createMemoryHistory({ initialEntries: ["/child"] });
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "/",
+            id: "root",
+            loader: () => "ROOT",
+            shouldRevalidate,
+            children: [
+              {
+                path: "child",
+                id: "child",
+                loader: () => "CHILD",
+                action: () => "ACTION",
+              },
+            ],
+          },
+        ],
+      });
+      router.initialize();
+
+      // Initial load - no existing data, should always call loader and should
+      // not give use ability to opt-out
+      await tick();
+      router.navigate("/child", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await tick();
+      expect(shouldRevalidate.mock.calls.length).toBe(1);
+      // @ts-expect-error
+      let arg = shouldRevalidate.mock.calls[0][0];
+      expect(arg).toMatchObject({
+        currentParams: {},
+        currentUrl: new URL("http://localhost/child"),
+        nextParams: {},
+        nextUrl: new URL("http://localhost/child"),
+        defaultShouldRevalidate: true,
+        formMethod: "post",
+        formAction: "/child",
+        formEncType: "application/x-www-form-urlencoded",
+        actionResult: "ACTION",
+      });
+      // @ts-expect-error
+      expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
+
+      router.dispose();
+    });
+
+    it("includes submission on actions that return redirects", async () => {
+      let shouldRevalidate = jest.fn(() => true);
+
+      let history = createMemoryHistory({ initialEntries: ["/child"] });
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "/",
+            id: "root",
+            loader: () => "ROOT",
+            shouldRevalidate,
+            children: [
+              {
+                path: "child",
+                id: "child",
+                loader: () => "CHILD",
+                action: () => redirect("/"),
+              },
+            ],
+          },
+        ],
+      });
+      router.initialize();
+
+      // Initial load - no existing data, should always call loader and should
+      // not give use ability to opt-out
+      await tick();
+      router.navigate("/child", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await tick();
+      expect(shouldRevalidate.mock.calls.length).toBe(1);
+      // @ts-expect-error
+      let arg = shouldRevalidate.mock.calls[0][0];
+      expect(arg).toMatchObject({
+        currentParams: {},
+        currentUrl: new URL("http://localhost/child"),
+        nextParams: {},
+        nextUrl: new URL("http://localhost/"),
+        defaultShouldRevalidate: true,
+        formMethod: "post",
+        formAction: "/child",
+        formEncType: "application/x-www-form-urlencoded",
+        actionResult: undefined,
+      });
+      // @ts-expect-error
+      expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
+
+      router.dispose();
+    });
+
     it("provides the default implementation to the route function", async () => {
       let rootLoader = jest.fn((args) => "ROOT");
 
@@ -1894,7 +2000,8 @@ describe("a router", () => {
         data: "FETCH",
       });
 
-      expect(shouldRevalidate.mock.calls[0][0]).toMatchInlineSnapshot(`
+      let arg = shouldRevalidate.mock.calls[0][0];
+      expect(arg).toMatchInlineSnapshot(`
         Object {
           "actionResult": "FETCH",
           "currentParams": Object {},
@@ -1908,6 +2015,68 @@ describe("a router", () => {
           "nextUrl": "http://localhost/",
         }
       `);
+      expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
+
+      router.dispose();
+    });
+
+    it("applies to fetcher submissions when action redirects", async () => {
+      let shouldRevalidate = jest.fn((args) => true);
+
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "",
+            id: "root",
+
+            children: [
+              {
+                path: "/",
+                id: "index",
+                loader: () => "INDEX",
+                shouldRevalidate,
+              },
+              {
+                path: "/fetch",
+                id: "fetch",
+                action: () => redirect("/"),
+              },
+            ],
+          },
+        ],
+      });
+      router.initialize();
+      await tick();
+
+      let key = "key";
+      router.fetch(key, "root", "/fetch", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+      await tick();
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: undefined,
+      });
+
+      let arg = shouldRevalidate.mock.calls[0][0];
+      expect(arg).toMatchInlineSnapshot(`
+        Object {
+          "actionResult": undefined,
+          "currentParams": Object {},
+          "currentUrl": "http://localhost/",
+          "defaultShouldRevalidate": true,
+          "formAction": "/fetch",
+          "formData": FormData {},
+          "formEncType": "application/x-www-form-urlencoded",
+          "formMethod": "post",
+          "nextParams": Object {},
+          "nextUrl": "http://localhost/",
+        }
+      `);
+      expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
 
       router.dispose();
     });
