@@ -8,5 +8,7 @@
     "react-router-native": "6.6.0",
     "@remix-run/router": "1.2.0"
   },
-  "changesets": []
+  "changesets": [
+    "fifty-kiwis-sniff"
+  ]
 }
