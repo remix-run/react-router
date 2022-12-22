@@ -2068,15 +2068,10 @@ describe("a router", () => {
           "currentParams": Object {},
           "currentUrl": "http://localhost/",
           "defaultShouldRevalidate": true,
-          "formAction": "/fetch",
-          "formData": FormData {},
-          "formEncType": "application/x-www-form-urlencoded",
-          "formMethod": "post",
           "nextParams": Object {},
           "nextUrl": "http://localhost/",
         }
       `);
-      expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
 
       router.dispose();
     });

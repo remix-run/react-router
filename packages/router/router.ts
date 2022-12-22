@@ -1416,7 +1416,6 @@ export function createRouter(init: RouterInit): Router {
       updateState({ fetchers: new Map(state.fetchers) });
 
       return startRedirectNavigation(state, actionResult, {
-        submission,
         isFetchActionRedirect: true,
       });
     }
@@ -1512,7 +1511,7 @@ export function createRouter(init: RouterInit): Router {
 
     let redirect = findRedirect(results);
     if (redirect) {
-      return startRedirectNavigation(state, redirect, { submission });
+      return startRedirectNavigation(state, redirect);
     }
 
     // Process and commit output from loaders
