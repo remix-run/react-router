@@ -3013,6 +3013,9 @@ describe("a router", () => {
 
       await A.actions.foo.resolve("FOO ACTION");
       expect(A.loaders.root.stub.mock.calls.length).toBe(1);
+      expect(t.router.state.actionData).toEqual({
+        foo: "FOO ACTION",
+      });
 
       let B = await A.loaders.foo.redirect("/bar");
       await A.loaders.root.reject("ROOT ERROR");
@@ -3020,6 +3023,7 @@ describe("a router", () => {
       await B.loaders.bar.resolve("BAR LOADER");
       expect(B.loaders.root.stub.mock.calls.length).toBe(1);
       expect(t.router.state).toMatchObject({
+        actionData: null,
         loaderData: {
           root: "ROOT LOADER 2",
           bar: "BAR LOADER",
@@ -3051,8 +3055,11 @@ describe("a router", () => {
       });
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
 
-      await A.actions.foo.resolve(null);
+      await A.actions.foo.resolve("FOO ACTION");
       expect(A.loaders.root.stub.mock.calls.length).toBe(1);
+      expect(t.router.state.actionData).toEqual({
+        foo: "FOO ACTION",
+      });
 
       await A.loaders.foo.resolve("A LOADER");
       expect(t.router.state.navigation.state).toBe("loading");
@@ -3063,6 +3070,9 @@ describe("a router", () => {
 
       await A.loaders.root.resolve("ROOT LOADER");
       expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual({
+        foo: "FOO ACTION", // kept around on action reload
+      });
       expect(t.router.state.loaderData).toEqual({
         foo: "A LOADER",
         root: "ROOT LOADER",
@@ -3235,6 +3245,45 @@ describe("a router", () => {
       expect(t.router.state.actionData).toBeNull();
       expect(t.router.state.loaderData).toEqual({
         other: "OTHER",
+      });
+    });
+
+    it("removes action data after action redirect to current location", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+            id: "index",
+            action: true,
+            loader: true,
+          },
+        ],
+      });
+      let A = await t.navigate("/", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "" }),
+      });
+      await A.actions.index.resolve({ error: "invalid" });
+      expect(t.router.state.actionData).toEqual({
+        index: { error: "invalid" },
+      });
+
+      let B = await t.navigate("/", {
+        formMethod: "post",
+        formData: createFormData({ gosh: "dang" }),
+      });
+
+      let C = await B.actions.index.redirectReturn("/");
+      expect(t.router.state.actionData).toEqual({
+        index: { error: "invalid" },
+      });
+      expect(t.router.state.loaderData).toEqual({});
+
+      await C.loaders.index.resolve("NEW");
+
+      expect(t.router.state.actionData).toBeNull();
+      expect(t.router.state.loaderData).toEqual({
+        index: "NEW",
       });
     });
 
