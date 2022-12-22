@@ -1137,8 +1137,8 @@ export class DeferredData {
   private controller: AbortController;
   private abortPromise: Promise<void>;
   private unlistenAbortSignal: () => void;
-  private subscriber?: (aborted: boolean, settledKey?: string) => void =
-    undefined;
+  private subscribers: Set<(aborted: boolean, settledKey?: string) => void> =
+    new Set();
   data: Record<string, unknown>;
   statusCode: number;
   headers: Headers;
@@ -1225,27 +1225,30 @@ export class DeferredData {
       this.unlistenAbortSignal();
     }
 
-    const subscriber = this.subscriber;
     if (error) {
       Object.defineProperty(promise, "_error", { get: () => error });
-      subscriber && subscriber(false, key);
+      this.emit(false, key);
       return Promise.reject(error);
     }
 
     Object.defineProperty(promise, "_data", { get: () => data });
-    subscriber && subscriber(false, key);
+    this.emit(false, key);
     return data;
   }
 
+  private emit(aborted: boolean, settledKey?: string) {
+    this.subscribers.forEach((subscriber) => subscriber(aborted, settledKey));
+  }
+
   subscribe(fn: (aborted: boolean, settledKey?: string) => void) {
-    this.subscriber = fn;
+    this.subscribers.add(fn);
+    return () => this.subscribers.delete(fn);
   }
 
   cancel() {
     this.controller.abort();
     this.pendingKeysSet.forEach((v, k) => this.pendingKeysSet.delete(k));
-    let subscriber = this.subscriber;
-    subscriber && subscriber(true);
+    this.emit(true);
   }
 
   async resolveData(signal: AbortSignal) {
