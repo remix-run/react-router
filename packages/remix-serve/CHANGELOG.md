@@ -1,5 +1,13 @@
 # `@remix-run/serve`
 
+## 1.10.0-pre.2
+
+### Patch Changes
+
+- re-export `V2_HtmlMetaDescriptor` and `V2_MetaFunction` from runtime packages ([#4943](https://github.com/remix-run/remix/pull/4943))
+- Updated dependencies:
+  - `@remix-run/express@1.10.0-pre.2`
+
 ## 1.10.0-pre.1
 
 ### Patch Changes
