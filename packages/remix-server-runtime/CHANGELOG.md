@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.10.0-pre.3
+
+### Patch Changes
+
+- `V2_MetaFunction` should return `V2_HtmlMetaDescriptor[]` ([#4947](https://github.com/remix-run/remix/pull/4947))
+
 ## 1.10.0-pre.2
 
 ### Patch Changes
