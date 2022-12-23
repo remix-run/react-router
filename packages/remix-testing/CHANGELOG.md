@@ -1,5 +1,14 @@
 # @remix-run/testing
 
+## 1.10.0-pre.4
+
+### Patch Changes
+
+- Bump react router version to latest ([#4952](https://github.com/remix-run/remix/pull/4952))
+- Updated dependencies:
+  - `@remix-run/react@1.10.0-pre.4`
+  - `@remix-run/node@1.10.0-pre.4`
+
 ## 1.10.0-pre.3
 
 ### Patch Changes
