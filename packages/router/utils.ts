@@ -1140,8 +1140,7 @@ export class DeferredData {
   private subscribers: Set<(aborted: boolean, settledKey?: string) => void> =
     new Set();
   data: Record<string, unknown>;
-  statusCode: number;
-  headers: Headers;
+  init?: ResponseInit;
   deferredKeys: string[] = [];
 
   constructor(data: Record<string, unknown>, responseInit?: ResponseInit) {
@@ -1169,12 +1168,7 @@ export class DeferredData {
       {}
     );
 
-    this.statusCode =
-      responseInit && responseInit.status ? responseInit.status : 200;
-    this.headers =
-      responseInit && responseInit.status
-        ? new Headers(responseInit.headers)
-        : new Headers();
+    this.init = responseInit;
   }
 
   private trackPromise(

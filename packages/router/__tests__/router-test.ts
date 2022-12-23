@@ -193,15 +193,16 @@ expect.extend({
           done
         )}/status=${status}/headers=${JSON.stringify(headers)}, ` +
         `instead got done=${String(deferredData.done)}/status=${
-          deferredData.statusCode
+          deferredData.init!.status || 200
         }/headers=${JSON.stringify(
-          Object.fromEntries(deferredData.headers.entries())
+          Object.fromEntries(new Headers(deferredData.init!.headers).entries())
         )}`,
       pass:
         deferredData.done === done &&
-        deferredData.statusCode === status &&
-        JSON.stringify(Object.fromEntries(deferredData.headers.entries())) ===
-          JSON.stringify(headers),
+        (deferredData.init!.status || 200) === status &&
+        JSON.stringify(
+          Object.fromEntries(new Headers(deferredData.init!.headers).entries())
+        ) === JSON.stringify(headers),
     };
   },
   // Custom matcher for asserting deferred promise results inside of `toEqual()`
