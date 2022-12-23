@@ -1999,7 +1999,7 @@ export function createRouter(init: RouterInit): Router {
 //#region createStaticHandler
 ////////////////////////////////////////////////////////////////////////////////
 
-export const DEFERRED_SYMBOL = Symbol("deferred");
+export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
 
 export function createStaticHandler(
   routes: AgnosticRouteObject[],
@@ -2176,7 +2176,7 @@ export function createStaticHandler(
       result.activeDeferreds[match.route.id]
     ) {
       Object.assign(data, {
-        [DEFERRED_SYMBOL]: result.activeDeferreds[match.route.id],
+        [UNSAFE_DEFERRED_SYMBOL]: result.activeDeferreds[match.route.id],
       });
     }
 

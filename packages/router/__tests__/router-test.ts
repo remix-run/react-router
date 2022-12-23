@@ -16,7 +16,7 @@ import {
   createRouter,
   createStaticHandler,
   defer,
-  DEFERRED_SYMBOL,
+  UNSAFE_DEFERRED_SYMBOL,
   ErrorResponse,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
@@ -12639,13 +12639,13 @@ describe("a router", () => {
             critical: "loader",
             lazy: expect.trackedPromise(),
           });
-          expect(result[DEFERRED_SYMBOL]).deferredData(false);
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(false);
           await new Promise((r) => setTimeout(r, 10));
           expect(result).toMatchObject({
             critical: "loader",
             lazy: expect.trackedPromise("lazy"),
           });
-          expect(result[DEFERRED_SYMBOL]).deferredData(true);
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true);
         });
 
         it("should return rejected DeferredData on symbol", async () => {
@@ -12656,13 +12656,13 @@ describe("a router", () => {
             critical: "loader",
             lazy: expect.trackedPromise(),
           });
-          expect(result[DEFERRED_SYMBOL]).deferredData(false);
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(false);
           await new Promise((r) => setTimeout(r, 10));
           expect(result).toMatchObject({
             critical: "loader",
             lazy: expect.trackedPromise(null, new Error("broken!")),
           });
-          expect(result[DEFERRED_SYMBOL]).deferredData(true);
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true);
         });
 
         it("should return DeferredData on symbol with status + headers", async () => {
@@ -12673,7 +12673,7 @@ describe("a router", () => {
             critical: "loader",
             lazy: expect.trackedPromise(),
           });
-          expect(result[DEFERRED_SYMBOL]).deferredData(false, 201, {
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(false, 201, {
             "x-custom": "yes",
           });
           await new Promise((r) => setTimeout(r, 10));
@@ -12681,7 +12681,7 @@ describe("a router", () => {
             critical: "loader",
             lazy: expect.trackedPromise("lazy"),
           });
-          expect(result[DEFERRED_SYMBOL]).deferredData(true, 201, {
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true, 201, {
             "x-custom": "yes",
           });
         });
