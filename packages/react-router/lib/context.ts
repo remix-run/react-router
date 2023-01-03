@@ -58,15 +58,9 @@ export interface RouteMatch<
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
-// Contexts for data routers
-export const DataStaticRouterContext =
-  React.createContext<StaticHandlerContext | null>(null);
-if (__DEV__) {
-  DataStaticRouterContext.displayName = "DataStaticRouterContext";
-}
-
 export interface DataRouterContextObject extends NavigationContextObject {
   router: Router;
+  staticContext?: StaticHandlerContext;
 }
 
 export const DataRouterContext =

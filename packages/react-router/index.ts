@@ -76,7 +76,6 @@ import type {
 import {
   DataRouterContext,
   DataRouterStateContext,
-  DataStaticRouterContext,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -239,6 +238,5 @@ export {
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
   enhanceManualRouteObjects as UNSAFE_enhanceManualRouteObjects,
 };
