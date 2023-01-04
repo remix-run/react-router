@@ -91,7 +91,7 @@ export function RouterProvider({
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
   // useId relies on the component tree structure to generate deterministic id's
-  // so we need to ensure it remains remains the same on the client even though
+  // so we need to ensure it remains the same on the client even though
   // we don't need the <script> tag
   return (
     <>
