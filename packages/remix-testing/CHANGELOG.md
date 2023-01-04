@@ -1,5 +1,14 @@
 # @remix-run/testing
 
+## 1.10.0-pre.6
+
+### Patch Changes
+
+- Bump RR versions ([#5005](https://github.com/remix-run/remix/pull/5005))
+- Updated dependencies:
+  - `@remix-run/react@1.10.0-pre.6`
+  - `@remix-run/node@1.10.0-pre.6`
+
 ## 1.10.0-pre.5
 
 ### Patch Changes
