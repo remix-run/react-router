@@ -6485,6 +6485,37 @@ describe("a router", () => {
       expect(t.router.state.preventScrollReset).toBe(false);
     });
 
+    it("does restore scroll on submissions that redirecting", async () => {
+      let t = setup({
+        routes: SCROLL_ROUTES,
+        initialEntries: ["/tasks"],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      expect(t.router.state.restoreScrollPosition).toBe(false);
+      expect(t.router.state.preventScrollReset).toBe(false);
+      let positions = { "/tasks": 100 };
+      let activeScrollPosition = 0;
+      t.router.enableScrollRestoration(
+        positions,
+        () => activeScrollPosition,
+        (l) => l.pathname
+      );
+
+      let nav1 = await t.navigate("/tasks", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      const nav2 = await nav1.actions.tasks.redirectReturn("/");
+      await nav2.loaders.index.resolve("INDEX");
+      expect(t.router.state.restoreScrollPosition).not.toBe(false);
+      expect(t.router.state.preventScrollReset).toBe(false);
+    });
+
     it("does not restore scroll on submissions", async () => {
       let t = setup({
         routes: SCROLL_ROUTES,
