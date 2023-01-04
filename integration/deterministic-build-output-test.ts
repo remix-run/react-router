@@ -3,7 +3,7 @@ import globby from "globby";
 import fs from "fs";
 import path from "path";
 
-import { createFixtureProject, js } from "./helpers/create-fixture";
+import { createFixtureProject, js, css } from "./helpers/create-fixture";
 
 test("builds deterministically under different paths", async () => {
   // This test validates various flavors of remix virtual modules to ensure
@@ -15,6 +15,8 @@ test("builds deterministically under different paths", async () => {
 
   // Virtual modules tested:
   //  * browserRouteModulesPlugin (implicitly tested by root route)
+  //  * cssEntryModulePlugin (implicitly tested by build)
+  //  * cssModulesPlugin (via app/routes/foo.tsx' CSS Modules import)
   //  * emptyModulesPlugin (via app/routes/foo.tsx' server import)
   //  * mdx (via app/routes/index.mdx)
   //  * serverAssetsManifestPlugin (implicitly tested by build)
@@ -22,12 +24,42 @@ test("builds deterministically under different paths", async () => {
   //  * serverRouteModulesPlugin (implicitly tested by build)
   let init = {
     files: {
+      "remix.config.js": js`
+        module.exports = {
+          future: {
+            unstable_cssModules: true,
+          },
+        };
+      `,
       "app/routes/index.mdx": "# hello world",
       "app/routes/foo.tsx": js`
         export * from "~/foo/bar.server";
-        export default () => "YAY";
+        import styles from "~/styles/foo.module.css";
+        export default () => <div className={styles.foo}>YAY</div>;
       `,
       "app/foo/bar.server.ts": "export const meta = () => []",
+      "app/styles/foo.module.css": css`
+        .foo {
+          background-image: url(~/images/foo.svg);
+          composes: bar from "~/styles/bar.module.css";
+          composes: baz from "./baz.module.css";
+        }
+      `,
+      "app/styles/bar.module.css": css`
+        .bar {
+          background-color: peachpuff;
+        }
+      `,
+      "app/styles/baz.module.css": css`
+        .baz {
+          color: coral;
+        }
+      `,
+      "app/images/foo.svg": `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="50" fill="coral" />
+        </svg>
+      `,
     },
   };
   let dir1 = await createFixtureProject(init);
@@ -35,11 +67,11 @@ test("builds deterministically under different paths", async () => {
 
   expect(dir1).not.toEqual(dir2);
 
-  let files1 = await globby(["build/index.js", "public/build/**/*.js"], {
+  let files1 = await globby(["build/index.js", "public/build/**/*.{js,css}"], {
     cwd: dir1,
   });
   files1 = files1.sort();
-  let files2 = await globby(["build/index.js", "public/build/**/*.js"], {
+  let files2 = await globby(["build/index.js", "public/build/**/*.{js,css}"], {
     cwd: dir2,
   });
   files2 = files2.sort();

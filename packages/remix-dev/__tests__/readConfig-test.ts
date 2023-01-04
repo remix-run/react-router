@@ -23,6 +23,7 @@ describe("readConfig", () => {
         relativeAssetsBuildDirectory: expect.any(String),
         tsconfigPath: expect.any(String),
         future: {
+          unstable_cssModules: expect.any(Boolean),
           v2_meta: expect.any(Boolean),
         },
       },
@@ -36,6 +37,7 @@ describe("readConfig", () => {
         "entryClientFile": "entry.client.tsx",
         "entryServerFile": "entry.server.tsx",
         "future": Object {
+          "unstable_cssModules": Any<Boolean>,
           "v2_meta": Any<Boolean>,
         },
         "mdx": undefined,

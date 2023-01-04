@@ -32,6 +32,7 @@ export type ServerModuleFormat = "esm" | "cjs";
 export type ServerPlatform = "node" | "neutral";
 
 interface FutureConfig {
+  unstable_cssModules: boolean;
   v2_meta: boolean;
 }
 
@@ -481,6 +482,7 @@ export async function readConfig(
   }
 
   let future = {
+    unstable_cssModules: appConfig.future?.unstable_cssModules === true,
     v2_meta: appConfig.future?.v2_meta === true,
   };
 

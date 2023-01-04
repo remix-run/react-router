@@ -45,6 +45,11 @@ export function serverBareModulesPlugin(
           return undefined;
         }
 
+        // Always bundle @remix-run/css-bundle
+        if (path === "@remix-run/css-bundle") {
+          return undefined;
+        }
+
         // To prevent `import xxx from "remix"` from ending up in the bundle
         // we "bundle" remix but the other modules where the code lives.
         if (path === "remix") {

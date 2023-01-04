@@ -8,6 +8,7 @@ import type { RemixConfig } from "../config";
 import type { AssetsManifest } from "./assets";
 import { loaders } from "./loaders";
 import type { CompileOptions } from "./options";
+import { cssModulesPlugin } from "./plugins/cssModulesPlugin";
 import { cssFilePlugin } from "./plugins/cssFilePlugin";
 import { deprecatedRemixPackagePlugin } from "./plugins/deprecatedRemixPackagePlugin";
 import { emptyModulesPlugin } from "./plugins/emptyModulesPlugin";
@@ -49,6 +50,15 @@ const createEsbuildConfig = (
 
   let plugins: esbuild.Plugin[] = [
     deprecatedRemixPackagePlugin(options.onWarning),
+    ...(config.future.unstable_cssModules
+      ? [
+          cssModulesPlugin({
+            mode: options.mode,
+            rootDirectory: config.rootDirectory,
+            outputCss: false,
+          }),
+        ]
+      : []),
     cssFilePlugin({
       mode: options.mode,
       rootDirectory: config.rootDirectory,
@@ -134,6 +144,11 @@ async function writeServerBuildResult(
       contents = contents.replace(new RegExp(pattern), `$1${filename}`);
       await fse.writeFile(file.path, contents);
     } else if (file.path.endsWith(".map")) {
+      // Don't write CSS source maps to server build output
+      if (file.path.endsWith(".css.map")) {
+        break;
+      }
+
       // remove route: prefix from source filenames so breakpoints work
       let contents = Buffer.from(file.contents).toString("utf-8");
       contents = contents.replace(/"route:/gm, '"');
@@ -143,6 +158,13 @@ async function writeServerBuildResult(
         config.assetsBuildDirectory,
         file.path.replace(path.dirname(config.serverBuildPath), "")
       );
+
+      // Don't write CSS bundle from server build to browser assets directory,
+      // especially since the file name doesn't contain a content hash
+      if (assetPath === path.join(config.assetsBuildDirectory, "index.css")) {
+        break;
+      }
+
       await fse.ensureDir(path.dirname(assetPath));
       await fse.writeFile(assetPath, file.contents);
     }

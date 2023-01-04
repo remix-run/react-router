@@ -6,6 +6,10 @@ declare module "*.avif" {
   let asset: string;
   export default asset;
 }
+declare module "*.module.css" {
+  let styles: { readonly [key: string]: string };
+  export default styles;
+}
 declare module "*.css" {
   let asset: string;
   export default asset;
