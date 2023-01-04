@@ -773,8 +773,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Don't restore on submission navigations when no redirection
     let preventScrollRestoration =
-      state.navigation.formData &&
-      location.pathname + location.search === state.navigation.formAction;
+      state.navigation.formData && location.state?._isRedirect !== true;
     updateState({
       ...newState, // matches, errors, fetchers go through as-is
       actionData,
