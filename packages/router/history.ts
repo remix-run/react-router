@@ -640,7 +640,7 @@ function getUrlBasedHistory(
         ? window.location.origin
         : window.location.href;
 
-    let href = createHref(window, to);
+    let href = typeof to === "string" ? to : createPath(to);
     invariant(
       base,
       `No window.location.(origin|href) available to create URL for href: ${href}`
