@@ -13,7 +13,7 @@ function hydrate() {
   });
 }
 
-if (requestIdleCallback) {
+if (typeof requestIdleCallback === "function") {
   requestIdleCallback(hydrate);
 } else {
   // Safari doesn't support requestIdleCallback
