@@ -8,5 +8,7 @@
     "react-router-native": "6.6.1",
     "@remix-run/router": "1.2.1"
   },
-  "changesets": []
+  "changesets": [
+    "three-ladybugs-clap"
+  ]
 }
