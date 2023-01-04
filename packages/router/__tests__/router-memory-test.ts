@@ -68,7 +68,7 @@ describe("a memory router", () => {
     });
 
     router.navigate("/a");
-    expect(loaderSpy.mock.calls[0][0].request.url).toBe("unknown://unknown/a");
+    expect(loaderSpy.mock.calls[0][0].request.url).toBe("http://localhost/a");
     router.dispose();
   });
 
@@ -97,10 +97,10 @@ describe("a memory router", () => {
 
     router.navigate("/a");
     expect(shouldRevalidateSpy.mock.calls[0][0].currentUrl.toString()).toBe(
-      "unknown://unknown/"
+      "http://localhost/"
     );
     expect(shouldRevalidateSpy.mock.calls[0][0].nextUrl.toString()).toBe(
-      "unknown://unknown/a"
+      "http://localhost/a"
     );
     router.dispose();
   });
