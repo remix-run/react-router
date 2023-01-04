@@ -23,7 +23,10 @@ test.describe("CSS Modules", () => {
         "remix.config.js": js`
           module.exports = {
             future: {
+              // Enable all CSS future flags to
+              // ensure features don't clash
               unstable_cssModules: true,
+              unstable_cssSideEffectImports: true,
             },
           };
         `,

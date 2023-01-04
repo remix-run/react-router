@@ -33,6 +33,7 @@ export type ServerPlatform = "node" | "neutral";
 
 interface FutureConfig {
   unstable_cssModules: boolean;
+  unstable_cssSideEffectImports: boolean;
   v2_meta: boolean;
 }
 
@@ -483,6 +484,8 @@ export async function readConfig(
 
   let future = {
     unstable_cssModules: appConfig.future?.unstable_cssModules === true,
+    unstable_cssSideEffectImports:
+      appConfig.future?.unstable_cssSideEffectImports === true,
     v2_meta: appConfig.future?.v2_meta === true,
   };
 

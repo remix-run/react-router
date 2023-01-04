@@ -9,6 +9,7 @@ import type { AssetsManifest } from "./assets";
 import { loaders } from "./loaders";
 import type { CompileOptions } from "./options";
 import { cssModulesPlugin } from "./plugins/cssModulesPlugin";
+import { cssSideEffectImportsPlugin } from "./plugins/cssSideEffectImportsPlugin";
 import { cssFilePlugin } from "./plugins/cssFilePlugin";
 import { deprecatedRemixPackagePlugin } from "./plugins/deprecatedRemixPackagePlugin";
 import { emptyModulesPlugin } from "./plugins/emptyModulesPlugin";
@@ -48,21 +49,17 @@ const createEsbuildConfig = (
   );
   let isDenoRuntime = config.serverBuildTarget === "deno";
 
+  let { mode } = options;
+  let { rootDirectory } = config;
   let plugins: esbuild.Plugin[] = [
     deprecatedRemixPackagePlugin(options.onWarning),
-    ...(config.future.unstable_cssModules
-      ? [
-          cssModulesPlugin({
-            mode: options.mode,
-            rootDirectory: config.rootDirectory,
-            outputCss: false,
-          }),
-        ]
-      : []),
-    cssFilePlugin({
-      mode: options.mode,
-      rootDirectory: config.rootDirectory,
-    }),
+    config.future.unstable_cssModules
+      ? cssModulesPlugin({ mode, rootDirectory, outputCss: false })
+      : null,
+    config.future.unstable_cssSideEffectImports
+      ? cssSideEffectImportsPlugin({ rootDirectory })
+      : null,
+    cssFilePlugin({ mode, rootDirectory }),
     urlImportsPlugin(),
     mdxPlugin(config),
     emptyModulesPlugin(config, /\.client(\.[jt]sx?)?$/),
@@ -70,7 +67,7 @@ const createEsbuildConfig = (
     serverEntryModulePlugin(config),
     serverAssetsManifestPlugin(assetsManifestChannel.read()),
     serverBareModulesPlugin(config, options.onWarning),
-  ];
+  ].filter(isNotNull);
 
   if (config.serverPlatform !== "node") {
     plugins.unshift(NodeModulesPolyfillPlugin());
@@ -192,3 +189,7 @@ export const createServerCompiler = (
     dispose: () => undefined,
   };
 };
+
+function isNotNull<Value>(value: Value): value is Exclude<Value, null> {
+  return value !== null;
+}

@@ -17,6 +17,7 @@ test("builds deterministically under different paths", async () => {
   //  * browserRouteModulesPlugin (implicitly tested by root route)
   //  * cssEntryModulePlugin (implicitly tested by build)
   //  * cssModulesPlugin (via app/routes/foo.tsx' CSS Modules import)
+  //  * cssSideEffectImportsPlugin (via app/routes/foo.tsx' CSS side-effect import)
   //  * emptyModulesPlugin (via app/routes/foo.tsx' server import)
   //  * mdx (via app/routes/index.mdx)
   //  * serverAssetsManifestPlugin (implicitly tested by build)
@@ -28,6 +29,7 @@ test("builds deterministically under different paths", async () => {
         module.exports = {
           future: {
             unstable_cssModules: true,
+            unstable_cssSideEffectImports: true,
           },
         };
       `,
@@ -35,6 +37,7 @@ test("builds deterministically under different paths", async () => {
       "app/routes/foo.tsx": js`
         export * from "~/foo/bar.server";
         import styles from "~/styles/foo.module.css";
+        import "~/styles/side-effect.css";
         export default () => <div className={styles.foo}>YAY</div>;
       `,
       "app/foo/bar.server.ts": "export const meta = () => []",
@@ -59,6 +62,11 @@ test("builds deterministically under different paths", async () => {
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
           <circle cx="50" cy="50" r="50" fill="coral" />
         </svg>
+      `,
+      "app/styles/side-effect.css": css`
+        .side-effect {
+          color: mintcream;
+        }
       `,
     },
   };

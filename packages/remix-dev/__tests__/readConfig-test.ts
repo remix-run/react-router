@@ -24,6 +24,7 @@ describe("readConfig", () => {
         tsconfigPath: expect.any(String),
         future: {
           unstable_cssModules: expect.any(Boolean),
+          unstable_cssSideEffectImports: expect.any(Boolean),
           v2_meta: expect.any(Boolean),
         },
       },
@@ -38,6 +39,7 @@ describe("readConfig", () => {
         "entryServerFile": "entry.server.tsx",
         "future": Object {
           "unstable_cssModules": Any<Boolean>,
+          "unstable_cssSideEffectImports": Any<Boolean>,
           "v2_meta": Any<Boolean>,
         },
         "mdx": undefined,
