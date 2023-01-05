@@ -23,6 +23,17 @@ export function CompatRoute(props: any) {
   );
 }
 
+// Copied with 💜 from https://github.com/bvaughn/react-resizable-panels/blob/main/packages/react-resizable-panels/src/hooks/useIsomorphicEffect.ts
+const canUseEffectHooks = !!(
+  typeof window !== "undefined" &&
+  typeof window.document !== "undefined" &&
+  typeof window.document.createElement !== "undefined"
+);
+
+const useIsomorphicLayoutEffect = canUseEffectHooks
+  ? React.useLayoutEffect
+  : () => {};
+
 export function CompatRouter({ children }: { children: React.ReactNode }) {
   let history = useHistory();
   let [state, setState] = React.useState(() => ({
@@ -30,7 +41,7 @@ export function CompatRouter({ children }: { children: React.ReactNode }) {
     action: history.action,
   }));
 
-  React.useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     history.listen((location: Location, action: Action) =>
       setState({ location, action })
     );
