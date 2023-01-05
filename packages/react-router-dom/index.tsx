@@ -40,7 +40,6 @@ import {
   createRouter,
   createBrowserHistory,
   createHashHistory,
-  getInitialBlocker,
   invariant,
   joinPaths,
   ErrorResponse,
@@ -716,6 +715,7 @@ enum DataRouterHook {
   UseScrollRestoration = "useScrollRestoration",
   UseSubmitImpl = "useSubmitImpl",
   UseFetcher = "useFetcher",
+  UseBlocker = "useBlocker",
 }
 
 enum DataRouterStateHook {
@@ -989,13 +989,7 @@ export function useBlocker(
   shouldBlock: boolean | (() => boolean) | BlockerFunction
 ) {
   let [blockerKey] = React.useState(() => String(++blockerId));
-  let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
-  let [blocker, setBlocker] = React.useState<Blocker>(() =>
-    getInitialBlocker(() => {
-      throw Error("Navigation should not occur during render.");
-    })
-  );
-
+  let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
   let fn: BlockerFunction = React.useCallback(() => {
     if (typeof shouldBlock === "function") {
       let result = shouldBlock();
@@ -1016,13 +1010,27 @@ export function useBlocker(
     }
   }, [shouldBlock]);
 
+  let [blocker, setBlocker] = React.useState<Blocker>(
+    router.createBlocker(blockerKey, fn)
+  );
+
+  const updateBlocker = React.useCallback(() => {
+    let blocker = router.getBlocker(blockerKey, fn);
+    if (blocker) {
+      setBlocker(blocker);
+    }
+  }, [router, blockerKey, fn]);
+
   React.useEffect(() => {
-    let blocker = router.createBlocker(blockerKey, fn);
-    setBlocker(blocker);
+    updateBlocker();
+  }, [updateBlocker]);
+
+  React.useEffect(() => {
     return () => {
       router.deleteBlocker(blockerKey);
     };
-  }, [blockerKey, fn, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return blocker;
 }
@@ -1031,24 +1039,22 @@ export function usePrompt(
   message: string | null | false,
   opts?: { beforeUnload: boolean }
 ) {
-  let { beforeUnload } = opts ?? {};
-  let blocker = useBlocker(
-    React.useCallback(() => {
-      let shouldPrompt = !!message;
-      let unstable_skipStateUpdateOnPopNavigation = true;
-      if (!shouldPrompt) {
-        return {
-          shouldBlock: () => false,
-          unstable_skipStateUpdateOnPopNavigation,
-        };
-      }
-      let shouldBlock = () => !window.confirm(message as string);
+  let { beforeUnload } = opts || {};
+  let promptCallback = React.useCallback(() => {
+    let shouldPrompt = !!message;
+    if (!shouldPrompt) {
       return {
-        shouldBlock,
-        unstable_skipStateUpdateOnPopNavigation,
+        shouldBlock: () => false,
+        unstable_skipStateUpdateOnPopNavigation: false,
       };
-    }, [message])
-  );
+    }
+    let shouldBlock = () => !window.confirm(message as string);
+    return {
+      shouldBlock,
+      unstable_skipStateUpdateOnPopNavigation: true,
+    };
+  }, [message]);
+  let blocker = useBlocker(promptCallback);
 
   let prevState = React.useRef(blocker.state);
   React.useEffect(() => {

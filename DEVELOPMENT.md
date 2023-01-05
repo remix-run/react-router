@@ -56,3 +56,12 @@ Experimental releases and hot-fixes do not need to be branched off of `dev`. Exp
 - Update version numbers and create a release tag: `yarn run version:experimental`
 - Push to GitHub: `git push origin --follow-tags`
 - Create a new release for the tag on GitHub to trigger the CI workflow that will publish the release to npm
+
+## Local Development
+
+### Iterating on changes locally
+
+- You can run one of the examples in `./examples`, or create a new one.
+- In the example, you will need to install it's dependencies with `yarn`
+- For an iterative development loop, in an example you can run `USE_SOURCE=true yarn dev`.
+- with `USE_SOURCE=true` enabled, you should be able to make changes to `packages` and immediatly observe your change in the example.

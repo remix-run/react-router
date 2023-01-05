@@ -13,7 +13,6 @@ import {
   invariant,
   isRouteErrorResponse,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
-  getInitialBlocker,
 } from "@remix-run/router";
 import type {
   DataRouteObject,
@@ -304,17 +303,13 @@ export function createStaticRouter(
       throw msg("dispose");
     },
     getBlocker() {
-      return getInitialBlocker(() => {
-        throw msg("getBlocker");
-      });
+      throw msg("getBlocker");
     },
     deleteBlocker() {
       throw msg("deleteBlocker");
     },
     createBlocker() {
-      return getInitialBlocker(() => {
-        throw msg("createBlocker");
-      });
+      throw msg("createBlocker");
     },
     setBlockerState() {
       throw msg("setBlockerState");

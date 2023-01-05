@@ -120,6 +120,11 @@ export interface History {
   readonly location: Location;
 
   /**
+   * state information about the history object.
+   */
+  readonly state: HistoryState;
+
+  /**
    * Returns a valid href for the given `to` value that may be used as
    * the value of an <a href> attribute.
    *
@@ -176,6 +181,7 @@ export interface History {
 type HistoryState = {
   usr: any;
   key?: string;
+  /* index for the history stack */
   idx: number;
 };
 
@@ -267,6 +273,9 @@ export function createMemoryHistory(
     },
     get location() {
       return getCurrentLocation();
+    },
+    get state() {
+      return getHistoryState(getCurrentLocation(), index);
     },
     createHref(to) {
       return typeof to === "string" ? to : createPath(to);
@@ -614,14 +623,15 @@ function getUrlBasedHistory(
     return state.idx;
   }
 
-  function handlePop() {
+  function handlePop(_event: PopStateEvent) {
     let nextAction = Action.Pop;
     let nextIndex = getIndex();
 
     if (nextIndex != null) {
-      let delta = index - nextIndex;
+      let delta = nextIndex - index;
       action = nextAction;
       if (listener) {
+        index = nextIndex;
         listener({ action, location: history.location, delta });
       }
     } else {
@@ -684,12 +694,16 @@ function getUrlBasedHistory(
     get location() {
       return getLocation(window, globalHistory);
     },
+    get state() {
+      return getHistoryState(history.location, getIndex());
+    },
     listen(fn: Listener) {
       if (listener) {
         throw new Error("A history only accepts one active listener");
       }
-      window.addEventListener(PopStateEventType, handlePop);
+
       listener = fn;
+      window.addEventListener(PopStateEventType, handlePop);
 
       return () => {
         window.removeEventListener(PopStateEventType, handlePop);

@@ -40,6 +40,11 @@ export function Layout() {
   let fetcherInProgress = fetchers.some((f) =>
     ["loading", "submitting"].includes(f.state)
   );
+  let [usePromptEnabled, setUsePromptEnabled] = React.useState(false);
+  usePrompt(
+    usePromptEnabled ? "Are you *really* sure you want to leave?" : null,
+    { beforeUnload: true }
+  );
   return (
     <>
       <nav>
@@ -58,6 +63,14 @@ export function Layout() {
         <Link to="/404">404 Link</Link>
         &nbsp;&nbsp;
         <button onClick={() => revalidate()}>Revalidate</button>
+        <label>
+          <input
+            type="checkbox"
+            checked={usePromptEnabled}
+            onChange={(e) => setUsePromptEnabled(e.target.checked)}
+          />
+          usePrompt
+        </label>
       </nav>
       <div style={{ position: "fixed", top: 0, right: 0 }}>
         {navigation.state !== "idle" && <p>Navigation in progress...</p>}
@@ -96,25 +109,20 @@ export function Home() {
   let data = useLoaderData() as HomeLoaderData;
   let [shouldBlockNavigation, setShouldBlockNavigation] = React.useState(false);
 
-  let blocker = useBlocker(shouldBlockNavigation ? true : null);
-  //   usePrompt(
-  //     shouldBlockNavigation ? "Are you *really* sure you want to leave?" : null,
-  //     { beforeUnload: true }
-  //   );
-
+  let blocker = useBlocker(shouldBlockNavigation ? true : false);
   return (
     <>
       <h2>Home</h2>
       <p>Last loaded at: {data.date}</p>
+      <label>
+        <input
+          type="checkbox"
+          checked={shouldBlockNavigation}
+          onChange={(e) => setShouldBlockNavigation(e.target.checked)}
+        />
+        useBlocker
+      </label>
       <div>
-        <label>
-          <input
-            type="checkbox"
-            checked={shouldBlockNavigation}
-            onChange={(e) => setShouldBlockNavigation(e.target.checked)}
-          />
-          Block navigation
-        </label>
         {blocker.state === "blocked" ? (
           <div>
             <p>Navigation is blocked.</p>

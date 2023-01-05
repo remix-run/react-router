@@ -582,6 +582,33 @@ interface HandleLoadersResult extends ShortCircuitable {
 }
 
 /**
+ * Track pending `shouldBlock` actions that may be
+ * suspended due to prompts
+ */
+interface ShouldBlockTracker {
+  /**
+   * Mark when the shouldBlock function call has completed
+   */
+  hasResolved: boolean;
+  /**
+   * tracks the resolution of the shouldBlock function call
+   */
+  shouldBlock: boolean;
+}
+
+/**
+ * tracks navigation information needed to revert or proceed
+ * with a navigation after all `shouldBlock` functions calls have
+ * been handled.
+ */
+interface BlockedHistoryInfo {
+  revertStackIndex: number;
+  targetLocation: Location;
+  shouldBlockNextNav: boolean;
+  shouldBlockTrackers: ShouldBlockTracker[];
+}
+
+/**
  * Tuple of [key, href, DataRouteMatch, DataRouteMatch[]] for a revalidating
  * fetcher.load()
  */
@@ -786,90 +813,236 @@ export function createRouter(init: RouterInit): Router {
   // Implemented as a Fluent API for ease of:
   //   let router = createRouter(init).initialize();
 
-  let blocked = new Map<string, boolean>();
+  // Map used to keep track of pending `shouldBlock` calls that may
+  // be suspended due to a prompt
+  let blocked = new Map<string, BlockedHistoryInfo>();
+
+  function handleShouldBlockTrackers(
+    blockedKey: string,
+    blockedInfo: BlockedHistoryInfo | undefined
+  ): boolean {
+    if (!blockedInfo || blockedInfo.shouldBlockTrackers.length === 0) {
+      return false;
+    }
+    if (
+      blockedInfo.shouldBlockTrackers.some(
+        (tracker) => tracker.hasResolved === false
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      blockedInfo.shouldBlockTrackers.some((tracker) => tracker.shouldBlock)
+    ) {
+      // if at least one shouldBlockTracker has shouldBlock as true,
+      // we mark to block the next navigation and navigate to our revertTarget
+      blockedInfo.shouldBlockNextNav = true;
+      blocked.set(blockedKey, blockedInfo);
+      let revertDelta = blockedInfo.revertStackIndex - init.history.state.idx;
+      init.history.go(revertDelta);
+      return false;
+    } else {
+      // All were OK, so we remove the blocker and tell navigation to proceed
+      blocked.delete(blockedKey);
+      return true;
+    }
+  }
+
+  /** Here be a nest of lightly-sleeping dragons. Please tread carefully.
+   * The complexity in this function comes from needing an answer to the question
+   * 'What happens when a user clicks the back-button when a prompt is already active?`
+   * This is undefined behavior, and each browser implements it differently.
+   * Some examples which may change at any time.
+   * FireFox: Stacks prompts on top of each-other, and waits for the user to interact with
+   *          each one before resolving them all.
+   * Chrome: cancels the previous prompt (e.g. shouldBlock is true), but has a bug where
+   *         if cancel fires a navigation event it gets dropped on the floor.
+   * Safari: cancels the previous prompt (e.g. shouldBlock is true), but does not have
+   *         the bug chrome as, so is able to fire a navigation event in cancel.
+   *
+   * This solution is an attempt to handle all observed cases, as well as unobserved ones.
+   * The general strategy is to try and put all the undefined behavior into a box where we
+   * don't need to worry about it, and instead just focus on using the information that is consistent
+   * no matter how the browser decides to handle the above scenario. Here is a solution.
+   *
+   * 1. when the first prompt opens, we know
+   *    a) where we want to go if it gets cancelled (current history stack location - delta)
+   *    b) the location we want to go to if it gets confirmed (location)
+   * 2. We are now in our black-box where any number of things can happen, we basically ignore
+   *    all the information in this box with the exception of keeping track of if prompts have been resovled or not.
+   * 3. All of the prompts have been resolved. the ONLY thing that we can be certain of it that at least one more
+   *    pop state will happen, but we can't trust it contains the right info (Chrome case), so instead we use the
+   *    information we cached in step 1.
+   **/
+  function handleBlockers(
+    _action: HistoryAction,
+    location: Location,
+    delta: number
+  ): {
+    shouldProceed: boolean;
+    targetLocation?: Location;
+  } {
+    let targetLocation = location;
+    for (let [key, blocker] of state.blockers) {
+      let {
+        shouldBlock,
+        unstable_skipStateUpdateOnPopNavigation: skipStateUpdate,
+      } = blocker.fn();
+
+      // If a POP navigation occurs while a navigation is blocked, one of
+      // two things is happening:
+      //  1. Navigation was blocked and our URL is out-of-sync with our
+      //     router state. In this case we revert to our revertStackIndex.
+      //     This triggers our listener again and then...
+      //  2. Navigation state is still blocked, so we clean up our little
+      //     state tracker and bail. The navigation blocker state is now
+      //     blocked until the user proceeds or resets.
+      if (blocker.state === "blocked") {
+        let blockedInfo = blocked.get(key);
+        if (blockedInfo && blockedInfo.shouldBlockNextNav) {
+          blocked.delete(key);
+        } else {
+          let revertStackIndex = init.history.state.idx - delta;
+          blocked.set(key, {
+            revertStackIndex: revertStackIndex,
+            targetLocation: location,
+            shouldBlockNextNav: true,
+            shouldBlockTrackers: [],
+          });
+          let revertDelta = revertStackIndex - init.history.state.idx;
+          init.history.go(revertDelta);
+        }
+        // We are blocked and do not need to proceed with navigation.
+        return { shouldProceed: false };
+      }
+
+      // If we are in an unblocked state, it's either because:
+      //  1. Navigation was never blocked
+      //  2. Navigation was blocked but we haven't yet updated the router
+      //     state.
+      if (blocker.state === "unblocked") {
+        // For each blocker, set up our tracker
+        let blockedInfo = blocked.get(key);
+        if (!blockedInfo) {
+          blockedInfo = {
+            revertStackIndex: init.history.state.idx - delta,
+            targetLocation: location,
+            shouldBlockNextNav: false,
+            shouldBlockTrackers: [],
+          };
+          blocked.set(key, blockedInfo);
+        }
+
+        // If we've already blocked this navigation attempt but our router
+        // state was never updated, we do nothing until the user either
+        // proceeds or resets. We don't need to evaluate our shouldBlock
+        // function again (if we do, window.confirm could trigger a second
+        // popup). This is very similar to the "blocked" logic.
+        if (blockedInfo && blockedInfo.shouldBlockNextNav) {
+          let revertDelta =
+            blockedInfo.revertStackIndex - init.history.state.idx;
+          // There are situations where we have another pop state but
+          // there isn't anywhere to go as we already ended up in the right place.
+          // In this situation, clean up our tracker and bail.
+          if (revertDelta === 0) {
+            blocked.delete(key);
+            return { shouldProceed: false };
+          } else {
+            init.history.go(revertDelta);
+          }
+        }
+        // At this point we are unblocked and we need to evaluate whether or
+        // not this navigation should be blocked...
+        let shouldBlockTrackerIndex = blockedInfo.shouldBlockTrackers.length;
+        // begin tracking what happens with shouldBlock
+        blockedInfo.shouldBlockTrackers.push({
+          hasResolved: false,
+          shouldBlock: false,
+        });
+        // update the location we are trying to navigate to after everything is resolved.
+        blockedInfo.targetLocation = location;
+        blocked.set(key, blockedInfo);
+        // The function-of-truth! here is where the black-box of potential states really begins.
+        if (shouldBlock()) {
+          blockedInfo = blocked.get(key);
+          if (
+            blockedInfo &&
+            blockedInfo.shouldBlockTrackers[shouldBlockTrackerIndex]
+          ) {
+            blockedInfo.shouldBlockTrackers[shouldBlockTrackerIndex] = {
+              hasResolved: true,
+              shouldBlock: true,
+            };
+            blocked.set(key, blockedInfo);
+          }
+
+          // We only update router state if the blocker didn't opt out (as
+          // noted above, this is primarily for window.confirm cases and
+          // probably shouldn't be used in user code)
+          if (!skipStateUpdate) {
+            setBlockerState(key, "blocked", {
+              async onProceed() {
+                init.history.go(delta);
+              },
+              onReset() {
+                // noop, we've already blocked and state will be updated to
+                // `unblocked`
+              },
+            });
+          }
+
+          let shouldProceed = handleShouldBlockTrackers(key, blockedInfo);
+          if (!shouldProceed) {
+            return { shouldProceed: false };
+          }
+        } else {
+          blockedInfo = blocked.get(key);
+          if (
+            blockedInfo &&
+            blockedInfo.shouldBlockTrackers[shouldBlockTrackerIndex]
+          ) {
+            blockedInfo.shouldBlockTrackers[shouldBlockTrackerIndex] = {
+              hasResolved: true,
+              shouldBlock: false,
+            };
+            blocked.set(key, blockedInfo);
+          }
+          let shouldProceed = handleShouldBlockTrackers(key, blockedInfo);
+          if (!shouldProceed) {
+            return { shouldProceed: false };
+          } else {
+            targetLocation = blockedInfo?.targetLocation || location;
+          }
+        }
+      }
+    }
+    // We got through all our blockers, so can safely clear the map.
+    blocked = new Map();
+    // Good to go - let the navigation function know it can proceed and where to go.
+    return {
+      shouldProceed: true,
+      targetLocation: targetLocation,
+    };
+  }
 
   function initialize() {
     // If history informs us of a POP navigation, start the navigation but do not update
     // state.  We'll update our own state once the navigation completes
     unlistenHistory = init.history.listen(
       ({ action: historyAction, location, delta }) => {
-        for (let [key, blocker] of state.blockers) {
-          let {
-            shouldBlock,
-            unstable_skipStateUpdateOnPopNavigation: skipStateUpdate,
-          } = blocker.fn();
-
-          // So this is a bit tricky to follow if navigation is blocked, so
-          // let's try to walk through what's happening line-by-line:
-          //
-          // If a POP navigation occurs while a navigation is blocked, one of
-          // two things is happening:
-          //  1. Navigation was blocked and our URL is out-of-sync with our
-          //     router state. In this case we go back by the delta. This
-          //     triggers our listener again and then...
-          //  2. Navigation state is still blocked, so we update our little
-          //     state tracker and bail. The navigation blocker state is now
-          //     blocked until the user proceeds or resets.
-          if (blocker.state === "blocked") {
-            if (blocked.get(key)) {
-              blocked.delete(key);
-            } else {
-              blocked.set(key, true);
-              init.history.go(delta);
-            }
-            return;
-          }
-
-          // If we are in an unblocked state, it's either because:
-          //  1. Navigation was never blocked
-          //  2. Navigation was blocked but we haven't yet updated the router
-          //     state.
-          //
-          //     When a blocker is registered with a prompt (window.confirm) we
-          //     never actually update the blocker state in response to POP
-          //     navigations -- we either immediately navigate when the user
-          //     accepts or revert the URL if they don't.
-          if (blocker.state === "unblocked") {
-            // If we've already blocked this navigation attempt but our router
-            // state was never updated, we do nothing until the user either
-            // proceeds or resets. We don't need to evaluate our shouldBlock
-            // function again (if we do, window.confirm could trigger a second
-            // popup).
-            if (blocked.get(key)) {
-              blocked.delete(key);
-              return;
-            }
-
-            // At this point we are unblocked and we need to evaluate whether or
-            // not this navigation should be blocked...
-            if (shouldBlock()) {
-              // We can revert the URL with history.go(delta), but that will
-              // trigger our listener again so we need to mark this blocker's
-              // navigation as blocked so we don't here the next time around.
-              blocked.set(key, true);
-              init.history.go(delta);
-
-              // We only update router state if the blocker didn't opt out (as
-              // noted above, this is primarily for window.confirm cases and
-              // probably shouldn't be used in user code)
-              if (!skipStateUpdate) {
-                setBlockerState(key, "blocked", {
-                  async onProceed() {
-                    init.history.go(delta * -1);
-                  },
-                  onReset() {
-                    // noop, we've already blocked and state will be updated to
-                    // `unblocked`
-                  },
-                });
-              }
-              return;
-            }
-          }
-        }
-
+        let handleBlockersResult = handleBlockers(
+          historyAction,
+          location,
+          delta
+        );
         // No blockers so we are GOOD TO GO 🎉🚀
-        return startNavigation(historyAction, location);
+        if (handleBlockersResult.shouldProceed) {
+          return startNavigation(
+            historyAction,
+            handleBlockersResult.targetLocation || location
+          );
+        }
       }
     );
 
@@ -953,12 +1126,10 @@ export function createRouter(init: RouterInit): Router {
         )
       : state.loaderData;
 
-    let blockers = state.blockers;
-    for (let [key, blocker] of blockers) {
-      blocker.state = "unblocked";
-      blocker.proceed = undefined;
-      blocker.reset = undefined;
-      state.blockers.set(key, blocker);
+    // On a successful navigation we can assume we got through all blockers
+    // so twe can start fresh
+    for (let [key] of state.blockers) {
+      deleteBlocker(key);
     }
 
     updateState({
@@ -3686,18 +3857,4 @@ function getTargetMatch(
   return pathMatches[pathMatches.length - 1];
 }
 
-export function getInitialBlocker(
-  fn: BlockerFunction
-): Blocker & { state: "unblocked" } {
-  return {
-    state: "unblocked",
-    fn,
-    proceed: undefined,
-    reset: undefined,
-  };
-}
 //#endregion
-
-async function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
