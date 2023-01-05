@@ -133,7 +133,7 @@ export function getRouteSegments(routeId: string) {
       );
     };
 
-    if (rawRouteSegment === "*") {
+    if (rawRouteSegment.includes("*")) {
       return notSupportedInRR(rawRouteSegment, "*");
     }
 

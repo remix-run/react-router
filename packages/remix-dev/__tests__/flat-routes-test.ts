@@ -109,6 +109,7 @@ describe("flatRoutes", () => {
     let invalidSplatFiles: string[] = [
       "routes/about.[*].tsx",
       "routes/about.*.tsx",
+      "routes/about.[.[.*].].tsx",
     ];
 
     for (let invalid of invalidSplatFiles) {
@@ -367,14 +368,6 @@ describe("flatRoutes", () => {
           id: "routes/about.[.]",
           parentId: "routes/about",
           path: ".",
-        },
-      ],
-      [
-        "routes/about.[.[.*].].tsx",
-        {
-          id: "routes/about.[.[.*].]",
-          parentId: "routes/about",
-          path: ".[.*/]",
         },
       ],
 
