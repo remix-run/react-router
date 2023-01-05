@@ -18,7 +18,7 @@ describe("defineRoutes", () => {
           "file": "routes/home.js",
           "id": "routes/home",
           "index": undefined,
-          "parentId": undefined,
+          "parentId": "root",
           "path": "/",
         },
         "routes/inbox": Object {
@@ -26,7 +26,7 @@ describe("defineRoutes", () => {
           "file": "routes/inbox.js",
           "id": "routes/inbox",
           "index": undefined,
-          "parentId": undefined,
+          "parentId": "root",
           "path": "inbox",
         },
         "routes/inbox/$messageId": Object {
@@ -73,7 +73,7 @@ describe("defineRoutes", () => {
           "file": "one.md",
           "id": "one",
           "index": undefined,
-          "parentId": undefined,
+          "parentId": "root",
           "path": "one",
         },
         "two": Object {
@@ -81,7 +81,7 @@ describe("defineRoutes", () => {
           "file": "two.md",
           "id": "two",
           "index": undefined,
-          "parentId": undefined,
+          "parentId": "root",
           "path": "two",
         },
       }
@@ -102,7 +102,7 @@ describe("defineRoutes", () => {
           "file": "routes/other-route.tsx",
           "id": "routes/other-route",
           "index": undefined,
-          "parentId": undefined,
+          "parentId": "root",
           "path": "/other",
         },
         "user": Object {
@@ -110,7 +110,7 @@ describe("defineRoutes", () => {
           "file": "routes/index.tsx",
           "id": "user",
           "index": undefined,
-          "parentId": undefined,
+          "parentId": "root",
           "path": "/user",
         },
         "user-by-id": Object {
@@ -118,7 +118,7 @@ describe("defineRoutes", () => {
           "file": "routes/index.tsx",
           "id": "user-by-id",
           "index": undefined,
-          "parentId": undefined,
+          "parentId": "root",
           "path": "/user/:id",
         },
       }

@@ -5,7 +5,7 @@ import minimatch from "minimatch";
 import type { RouteManifest, DefineRouteFunction } from "./routes";
 import { defineRoutes, createRouteId } from "./routes";
 
-const routeModuleExts = [".js", ".jsx", ".ts", ".tsx", ".md", ".mdx"];
+export const routeModuleExts = [".js", ".jsx", ".ts", ".tsx", ".md", ".mdx"];
 
 export function isRouteModuleFile(filename: string): boolean {
   return routeModuleExts.includes(path.extname(filename));
@@ -110,11 +110,12 @@ export function defineConventionalRoutes(
   return defineRoutes(defineNestedRoutes);
 }
 
-let escapeStart = "[";
-let escapeEnd = "]";
+export let paramPrefixChar = "$" as const;
+export let escapeStart = "[" as const;
+export let escapeEnd = "]" as const;
 
-let optionalStart = "(";
-let optionalEnd = ")";
+export let optionalStart = "(" as const;
+export let optionalEnd = ")" as const;
 
 // TODO: Cleanup and write some tests for this function
 export function createRoutePath(partialRouteId: string): string | undefined {
@@ -127,13 +128,13 @@ export function createRoutePath(partialRouteId: string): string | undefined {
   let skipSegment = false;
   for (let i = 0; i < partialRouteId.length; i++) {
     let char = partialRouteId.charAt(i);
-    let lastChar = i > 0 ? partialRouteId.charAt(i - 1) : undefined;
+    let prevChar = i > 0 ? partialRouteId.charAt(i - 1) : undefined;
     let nextChar =
       i < partialRouteId.length - 1 ? partialRouteId.charAt(i + 1) : undefined;
 
     function isNewEscapeSequence() {
       return (
-        !inEscapeSequence && char === escapeStart && lastChar !== escapeStart
+        !inEscapeSequence && char === escapeStart && prevChar !== escapeStart
       );
     }
 
@@ -145,17 +146,11 @@ export function createRoutePath(partialRouteId: string): string | undefined {
       return char === "_" && nextChar === "_" && !rawSegmentBuffer;
     }
 
-    function isSegmentSeparator(checkChar = char) {
-      return (
-        checkChar === "/" || checkChar === "." || checkChar === path.win32.sep
-      );
-    }
-
     function isNewOptionalSegment() {
       return (
         char === optionalStart &&
-        lastChar !== optionalStart &&
-        (isSegmentSeparator(lastChar) || lastChar === undefined) &&
+        prevChar !== optionalStart &&
+        (isSegmentSeparator(prevChar) || prevChar === undefined) &&
         !inOptionalSegment &&
         !inEscapeSequence
       );
@@ -172,7 +167,7 @@ export function createRoutePath(partialRouteId: string): string | undefined {
     }
 
     if (skipSegment) {
-      if (isSegmentSeparator()) {
+      if (isSegmentSeparator(char)) {
         skipSegment = false;
       }
       continue;
@@ -191,7 +186,7 @@ export function createRoutePath(partialRouteId: string): string | undefined {
     if (isNewOptionalSegment()) {
       inOptionalSegment++;
       optionalSegmentIndex = result.length;
-      result += "(";
+      result += optionalStart;
       continue;
     }
 
@@ -212,7 +207,7 @@ export function createRoutePath(partialRouteId: string): string | undefined {
       continue;
     }
 
-    if (isSegmentSeparator()) {
+    if (isSegmentSeparator(char)) {
       if (rawSegmentBuffer === "index" && result.endsWith("index")) {
         result = result.replace(/\/?index$/, "");
       } else {
@@ -232,8 +227,8 @@ export function createRoutePath(partialRouteId: string): string | undefined {
 
     rawSegmentBuffer += char;
 
-    if (char === "$") {
-      if (nextChar === ")") {
+    if (char === paramPrefixChar) {
+      if (nextChar === optionalEnd) {
         throw new Error(
           `Invalid route path: ${partialRouteId}. Splat route $ is already optional`
         );
@@ -251,11 +246,16 @@ export function createRoutePath(partialRouteId: string): string | undefined {
 
   if (rawSegmentBuffer === "index" && result.endsWith("index?")) {
     throw new Error(
-      `Invalid route path: ${partialRouteId}. Make index route optional by using [index]`
+      `Invalid route path: ${partialRouteId}. Make index route optional by using (index)`
     );
   }
 
   return result || undefined;
+}
+
+export function isSegmentSeparator(checkChar: string | undefined) {
+  if (!checkChar) return false;
+  return ["/", ".", path.win32.sep].includes(checkChar);
 }
 
 function getParentRouteIds(

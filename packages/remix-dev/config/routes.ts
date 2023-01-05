@@ -151,7 +151,7 @@ export function defineRoutes(
       parentId:
         parentRoutes.length > 0
           ? parentRoutes[parentRoutes.length - 1].id
-          : undefined,
+          : "root",
       file,
     };
 

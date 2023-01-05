@@ -26,6 +26,7 @@ describe("readConfig", () => {
           unstable_cssModules: expect.any(Boolean),
           unstable_cssSideEffectImports: expect.any(Boolean),
           v2_meta: expect.any(Boolean),
+          v2_routeConvention: expect.any(Boolean),
         },
       },
       `
@@ -41,6 +42,7 @@ describe("readConfig", () => {
           "unstable_cssModules": Any<Boolean>,
           "unstable_cssSideEffectImports": Any<Boolean>,
           "v2_meta": Any<Boolean>,
+          "v2_routeConvention": Any<Boolean>,
         },
         "mdx": undefined,
         "publicPath": "/build/",
