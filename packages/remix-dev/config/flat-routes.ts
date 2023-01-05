@@ -126,22 +126,23 @@ export function getRouteSegments(routeId: string) {
   let pushRouteSegment = (routeSegment: string) => {
     if (!routeSegment) return;
 
-    if (rawRouteSegment === "*") {
+    let notSupportedInRR = (segment: string, char: string) => {
       throw new Error(
-        `Route segment "${rawRouteSegment}" for "${routeId}" cannot contain "*"`
+        `Route segment "${segment}" for "${routeId}" cannot contain "${char}".\n` +
+          `If this is something you need, upvote this proposal for React Router https://github.com/remix-run/react-router/discussions/9822.`
       );
+    };
+
+    if (rawRouteSegment === "*") {
+      return notSupportedInRR(rawRouteSegment, "*");
     }
 
     if (rawRouteSegment.includes(":")) {
-      throw new Error(
-        `Route segment "${rawRouteSegment}" for "${routeId}" cannot contain ":"`
-      );
+      return notSupportedInRR(rawRouteSegment, ":");
     }
 
     if (rawRouteSegment.includes("/")) {
-      throw new Error(
-        `Route segment "${routeSegment}" for "${routeId}" cannot contain "/"`
-      );
+      return notSupportedInRR(routeSegment, "/");
     }
     routeSegments.push(routeSegment);
   };
