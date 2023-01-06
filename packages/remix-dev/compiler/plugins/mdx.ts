@@ -72,6 +72,7 @@ export function mdxPlugin(config: RemixConfig): esbuild.Plugin {
 export const filename = ${JSON.stringify(path.basename(args.path))};
 export const headers = typeof attributes !== "undefined" && attributes.headers;
 export const meta = typeof attributes !== "undefined" && attributes.meta;
+export const handle = typeof attributes !== "undefined" && attributes.handle;
           `;
 
           let compiled = await xdm.compile(fileContents, {
