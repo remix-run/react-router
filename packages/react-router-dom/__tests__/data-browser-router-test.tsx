@@ -2588,6 +2588,179 @@ function testDomRouter(
         expect(formData.get("a")).toBe("1");
         expect(formData.getAll("b")).toEqual(["2", "3"]);
       });
+
+      it("includes the correct submitter value(s) in tree order", async () => {
+        let actionSpy = jest.fn();
+        actionSpy.mockReturnValue({});
+        async function getPayload() {
+          let formData = await actionSpy.mock.calls[
+            actionSpy.mock.calls.length - 1
+          ][0].request.formData();
+          return new URLSearchParams(formData.entries()).toString();
+        }
+
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          return (
+            <>
+              <button name="tasks" value="outside" form="myform">
+                Outside
+              </button>
+              <Form id="myform" method="post">
+                <input type="text" name="tasks" defaultValue="first" />
+                <input type="text" name="tasks" defaultValue="second" />
+
+                <button name="tasks" value="">
+                  Add Task
+                </button>
+                <button value="">No Name</button>
+                <input type="image" name="tasks" alt="Add Task" />
+                <input type="image" alt="No Name" />
+
+                <input type="text" name="tasks" defaultValue="last" />
+              </Form>
+            </>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Add Task"));
+        expect(await getPayload()).toEqual(
+          "tasks=first&tasks=second&tasks=&tasks=last"
+        );
+
+        fireEvent.click(screen.getByText("No Name"));
+        expect(await getPayload()).toEqual(
+          "tasks=first&tasks=second&tasks=last"
+        );
+
+        fireEvent.click(screen.getByAltText("Add Task"));
+        expect(await getPayload()).toMatch(
+          /^tasks=first&tasks=second&tasks.x=\d+&tasks.y=\d+&tasks=last$/
+        );
+
+        fireEvent.click(screen.getByAltText("No Name"));
+        expect(await getPayload()).toMatch(
+          /^tasks=first&tasks=second&x=\d+&y=\d+&tasks=last$/
+        );
+
+        fireEvent.click(screen.getByText("Outside"));
+        expect(await getPayload()).toEqual(
+          "tasks=outside&tasks=first&tasks=second&tasks=last"
+        );
+      });
+
+      it("serializes form data correctly", async () => {
+        let actionSpy = jest.fn();
+        actionSpy.mockReturnValue({});
+        async function getPayload() {
+          let formData = await actionSpy.mock.calls[
+            actionSpy.mock.calls.length - 1
+          ][0].request.formData();
+          return new URLSearchParams(formData.entries()).toString();
+        }
+
+        // since we construct the form data set ourselves for <Form> submissions, test just
+        // about everything to ensure parity with <form> 😅
+        render(
+          <TestDataRouter window={getWindow("/")}>
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          </TestDataRouter>
+        );
+
+        function FormPage() {
+          return (
+            <>
+              <Form id="myform" method="post">
+                {/* the basics */}
+                <input type="text" name="text" defaultValue="hello" />
+                <input type="hidden" name="text" value="world" />
+                <textarea name="text" defaultValue="yay"></textarea>
+                <button name="go" value="go!">
+                  go!
+                </button>
+                {/* radios/checkboxes/selects */}
+                <input type="radio" name="rad" value="1" />
+                <input type="radio" name="rad" value="2" defaultChecked />
+                <input type="radio" name="rad" value="3" />
+                <input type="checkbox" name="checky" value="1" defaultChecked />
+                <input type="checkbox" name="checky" value="2" defaultChecked />
+                <input type="checkbox" name="checky" value="3" />
+                <select name="selecty" defaultValue="2">
+                  <option>1</option>
+                  <option>2</option>
+                </select>
+                <select name="selecty2" multiple defaultValue={["2", "3"]}>
+                  <option>1</option>
+                  <option>2</option>
+                  <option>3</option>
+                </select>
+                {/* charset inference */}
+                <input name="_charset_" type="hidden" />
+                {/* unnamed */}
+                <input defaultValue="skipped" />
+                {/* various disabled things */}
+                <input name="input-disabled" disabled defaultValue="skipped" />
+                <select
+                  name="select-with-disabled-selected-option"
+                  defaultValue="1"
+                >
+                  <option disabled>skipped</option>
+                </select>
+                <fieldset disabled>
+                  <input
+                    name="fieldset-disabled-input"
+                    defaultValue="skipped"
+                  />
+                  <legend>
+                    {/* this is considered enabled, per the spec */}
+                    <input
+                      name="fieldset-disabled-legend-input-enabled"
+                      defaultValue="1"
+                    />
+                  </legend>
+                </fieldset>
+                {/* various form ownweship permutations */}
+                <input name="text" defaultValue="1" />
+                <input name="text" form="myform" defaultValue="2" />
+                <input name="text" form="unrelated" defaultValue="skipped" />
+              </Form>
+              <form id="unrelated">
+                <input name="text" defaultValue="skipped" />
+                <input name="text" form="myform" defaultValue="3" />
+              </form>
+              <input name="text" defaultValue="skipped" />
+              <input name="text" form="myform" defaultValue="4" />
+            </>
+          );
+        }
+
+        fireEvent.click(screen.getByText("go!"));
+        expect(await getPayload()).toEqual(
+          new URLSearchParams([
+            ["text", "hello"],
+            ["text", "world"],
+            ["text", "yay"],
+            ["go", "go!"],
+            ["rad", "2"],
+            ["checky", "1"],
+            ["checky", "2"],
+            ["selecty", "2"],
+            ["selecty2", "2"],
+            ["selecty2", "3"],
+            ["_charset_", "UTF-8"],
+            ["fieldset-disabled-legend-input-enabled", "1"],
+            ["text", "1"],
+            ["text", "2"],
+            ["text", "3"],
+            ["text", "4"],
+          ]).toString()
+        );
+      });
     });
 
     describe("useFetcher(s)", () => {
