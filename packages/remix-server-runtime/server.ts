@@ -258,10 +258,6 @@ async function handleDocumentRequestRR(
       entryContext
     );
   } catch (error: unknown) {
-    if (serverMode !== ServerMode.Test) {
-      console.log("Error in entry.server handleDocumentRequest:", error);
-    }
-
     // Get a new StaticHandlerContext that contains the error at the right boundary
     context = getStaticContextFromError(
       staticHandler.dataRoutes,
