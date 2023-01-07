@@ -603,7 +603,7 @@ export function createRoutesFromChildren(
 }
 
 /**
- * Converts Route objects with a `module` property that import a module that
+ * Converts Route objects with a `module` property that imports a module that
  * conforms to the Remix route module convention to React Router's standard
  * route object. Properties directly set on the route object override exports
  * from the route module.
@@ -674,7 +674,7 @@ function isModuleRouteObject(
 function ModuleRoutePassthroughErrorBoundary() {
   let error = useRouteError();
   throw error;
-  // This is necessary for the
+  // This is necessary for the ErrorBoundary above to successfully type-check.
   // eslint-disable-next-line no-unreachable
   return null;
 }
