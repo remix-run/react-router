@@ -613,7 +613,12 @@ export function createModuleRoutes(
 ): RouteObject[] {
   return routes.map((route) => {
     if (!isModuleRouteObject(route)) {
-      return route;
+      return {
+        ...route,
+        children: route.children
+          ? createModuleRoutes(route.children)
+          : undefined,
+      } as ModuleRouteObject;
     }
     const { module: moduleFactory, children, ...restOfRoute } = route;
 
