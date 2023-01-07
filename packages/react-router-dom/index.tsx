@@ -129,6 +129,7 @@ export {
   createPath,
   createRoutesFromChildren,
   createRoutesFromElements,
+  createModuleRoutes,
   defer,
   isRouteErrorResponse,
   generatePath,

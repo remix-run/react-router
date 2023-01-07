@@ -88,6 +88,7 @@ export {
   UNSAFE_RouteContext,
   createPath,
   createRoutesFromChildren,
+  createModuleRoutes,
   createSearchParams,
   generatePath,
   matchPath,
