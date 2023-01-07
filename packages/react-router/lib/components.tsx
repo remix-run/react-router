@@ -623,19 +623,19 @@ export function createModuleRoutes(
       element = <Component />;
     }
 
-    let loader: RouteObject['loader'] = route.loader;
-    if (typeof loader !== 'function') {
+    let loader: RouteObject["loader"] = route.loader;
+    if (typeof loader !== "function") {
       loader = async (args) => {
         const mod = await moduleFactory();
-        return typeof mod.loader === 'function' ? mod.loader(args) : null;
+        return typeof mod.loader === "function" ? mod.loader(args) : null;
       };
     }
 
-    let action: RouteObject['action'] = route.loader;
-    if (typeof action !== 'function') {
+    let action: RouteObject["action"] = route.loader;
+    if (typeof action !== "function") {
       action = async (args) => {
         const mod = await moduleFactory();
-        return typeof mod.action === 'function' ? mod.action(args) : null;
+        return typeof mod.action === "function" ? mod.action(args) : null;
       };
     }
 
@@ -645,7 +645,7 @@ export function createModuleRoutes(
         const mod = await moduleFactory();
         return {
           default:
-            typeof mod.ErrorBoundary === 'function'
+            typeof mod.ErrorBoundary === "function"
               ? mod.ErrorBoundary
               : ModuleRoutePassthroughErrorBoundary,
         };
@@ -667,8 +667,8 @@ export function createModuleRoutes(
 
 function isModuleRouteObject(
   route: ModuleRouteObject | RouteObject
-): route is ModuleRouteObject {
-  return 'module' in route && typeof route.module === 'function';
+): route is ModuleRouteObject & Required<Pick<ModuleRouteObject, "module">> {
+  return "module" in route && typeof route.module === "function";
 }
 
 function ModuleRoutePassthroughErrorBoundary() {
@@ -680,24 +680,27 @@ function ModuleRoutePassthroughErrorBoundary() {
 }
 
 export interface ModuleNonIndexRouteObject extends NonIndexRouteObject {
-  module: ModuleRouteFactory;
+  module?: ModuleRouteFactory;
   children: (ModuleRouteObject | RouteObject)[];
 }
+
 export interface ModuleIndexRouteObject extends IndexRouteObject {
-  module: ModuleRouteFactory;
+  module?: ModuleRouteFactory;
   children?: undefined;
 }
 
-type ModuleRouteObject = ModuleNonIndexRouteObject | ModuleIndexRouteObject;
+export type ModuleRouteObject =
+  | ModuleNonIndexRouteObject
+  | ModuleIndexRouteObject;
 
-interface ModuleRouteModule {
+export interface ModuleRouteModule {
   default: React.ComponentType<any>;
-  loader?: RouteObject['loader'];
-  action?: RouteObject['action'];
+  loader?: RouteObject["loader"];
+  action?: RouteObject["action"];
   ErrorBoundary?: React.ComponentType<any>;
 }
 
-interface ModuleRouteFactory {
+export interface ModuleRouteFactory {
   (): Promise<ModuleRouteModule>;
 }
 
