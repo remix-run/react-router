@@ -640,7 +640,7 @@ export function createModuleRoutes(
     }
 
     let errorElement = route.errorElement;
-    if (errorElement) {
+    if (!errorElement) {
       let ErrorBoundary = React.lazy(async function () {
         const mod = await moduleFactory();
         return {
