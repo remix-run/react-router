@@ -4,7 +4,9 @@
  */
 import * as React from "react";
 import type {
+  IndexRouteObject,
   NavigateOptions,
+  NonIndexRouteObject,
   RelativeRoutingType,
   RouteObject,
   To,
@@ -18,6 +20,7 @@ import {
   useNavigate,
   useNavigation,
   useResolvedPath,
+  useRouteError,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
@@ -129,7 +132,6 @@ export {
   createPath,
   createRoutesFromChildren,
   createRoutesFromElements,
-  createModuleRoutes,
   defer,
   isRouteErrorResponse,
   generatePath,
@@ -1218,6 +1220,114 @@ function warning(cond: boolean, message: string): void {
     } catch (e) {}
   }
 }
+
+/**
+ * Converts Route objects with a `module` property that imports a module that
+ * conforms to the Remix route module convention to React Router's standard
+ * route object. Properties directly set on the route object override exports
+ * from the route module.
+ */
+export function createModuleRoutes(
+  routes: (ModuleRouteObject | RouteObject)[]
+): RouteObject[] {
+  return routes.map((route) => {
+    if (!isModuleRouteObject(route)) {
+      return {
+        ...route,
+        children: route.children
+          ? createModuleRoutes(route.children)
+          : undefined,
+      } as ModuleRouteObject;
+    }
+    const { module: moduleFactory, children, ...restOfRoute } = route;
+
+    let element;
+    if (!route.element) {
+      let Component = React.lazy(moduleFactory);
+      element = <Component />;
+    }
+
+    let loader: RouteObject["loader"] = route.loader;
+    if (typeof loader !== "function") {
+      loader = async (args) => {
+        const mod = await moduleFactory();
+        return typeof mod.loader === "function" ? mod.loader(args) : null;
+      };
+    }
+
+    let action: RouteObject["action"] = route.loader;
+    if (typeof action !== "function") {
+      action = async (args) => {
+        const mod = await moduleFactory();
+        return typeof mod.action === "function" ? mod.action(args) : null;
+      };
+    }
+
+    let errorElement = route.errorElement;
+    if (!errorElement) {
+      let ErrorBoundary = React.lazy(async function () {
+        const mod = await moduleFactory();
+        return {
+          default:
+            typeof mod.ErrorBoundary === "function"
+              ? mod.ErrorBoundary
+              : ModuleRoutePassthroughErrorBoundary,
+        };
+      });
+
+      errorElement = <ErrorBoundary />;
+    }
+
+    return {
+      ...restOfRoute,
+      element,
+      loader,
+      action,
+      errorElement,
+      children: children ? createModuleRoutes(children) : undefined,
+    } as RouteObject;
+  });
+}
+
+function isModuleRouteObject(
+  route: ModuleRouteObject | RouteObject
+): route is ModuleRouteObject & Required<Pick<ModuleRouteObject, "module">> {
+  return "module" in route && typeof route.module === "function";
+}
+
+function ModuleRoutePassthroughErrorBoundary() {
+  let error = useRouteError();
+  throw error;
+  // This is necessary for the ErrorBoundary above to successfully type-check.
+  // eslint-disable-next-line no-unreachable
+  return null;
+}
+
+export interface ModuleNonIndexRouteObject extends NonIndexRouteObject {
+  module?: ModuleRouteFactory;
+  children: (ModuleRouteObject | RouteObject)[];
+}
+
+export interface ModuleIndexRouteObject extends IndexRouteObject {
+  module?: ModuleRouteFactory;
+  children?: undefined;
+}
+
+export type ModuleRouteObject =
+  | ModuleNonIndexRouteObject
+  | ModuleIndexRouteObject;
+
+export interface ModuleRouteModule {
+  default: React.ComponentType<any>;
+  loader?: RouteObject["loader"];
+  action?: RouteObject["action"];
+  ErrorBoundary?: React.ComponentType<any>;
+}
+
+export interface ModuleRouteFactory {
+  (): Promise<ModuleRouteModule>;
+}
+
 //#endregion
 
 export { useScrollRestoration as UNSAFE_useScrollRestoration };

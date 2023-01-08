@@ -52,7 +52,6 @@ import type {
 import {
   enhanceManualRouteObjects,
   createRoutesFromChildren,
-  createModuleRoutes,
   renderMatches,
   Await,
   MemoryRouter,
@@ -168,7 +167,6 @@ export {
   createPath,
   createRoutesFromChildren,
   createRoutesFromChildren as createRoutesFromElements,
-  createModuleRoutes,
   defer,
   isRouteErrorResponse,
   generatePath,
