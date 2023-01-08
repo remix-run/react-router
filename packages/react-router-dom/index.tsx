@@ -1241,10 +1241,15 @@ export function createModuleRoutes(
     }
     const { module: moduleFactory, children, ...restOfRoute } = route;
 
+    let use: NonNullable<ModuleRouteObject["use"]> =
+      "use" in route && Array.isArray(route.use)
+        ? route.use
+        : ["default", "loader", "action", "ErrorBoundary"];
+
     let element: RouteObject["element"];
     if ("element" in route) {
       element = route.element;
-    } else {
+    } else if (use.includes("default")) {
       let Component = React.lazy(moduleFactory);
       element = <Component />;
     }
@@ -1252,7 +1257,7 @@ export function createModuleRoutes(
     let loader: RouteObject["loader"];
     if ("loader" in route) {
       loader = route.loader;
-    } else {
+    } else if (use.includes("loader")) {
       loader = async (args) => {
         const mod = await moduleFactory();
         return typeof mod.loader === "function" ? mod.loader(args) : null;
@@ -1313,11 +1318,13 @@ function ModuleRoutePassthroughErrorBoundary() {
 
 export interface ModuleNonIndexRouteObject extends NonIndexRouteObject {
   module?: ModuleRouteFactory;
+  use?: readonly (keyof ModuleRouteModule)[];
   children: (ModuleRouteObject | RouteObject)[];
 }
 
 export interface ModuleIndexRouteObject extends IndexRouteObject {
   module?: ModuleRouteFactory;
+  use?: readonly (keyof ModuleRouteModule)[];
   children?: undefined;
 }
 
