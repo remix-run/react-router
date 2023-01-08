@@ -1241,30 +1241,38 @@ export function createModuleRoutes(
     }
     const { module: moduleFactory, children, ...restOfRoute } = route;
 
-    let element;
-    if (!route.element) {
+    let element: RouteObject["element"];
+    if ("element" in route) {
+      element = route.element;
+    } else {
       let Component = React.lazy(moduleFactory);
       element = <Component />;
     }
 
-    let loader: RouteObject["loader"] = route.loader;
-    if (typeof loader !== "function") {
+    let loader: RouteObject["loader"];
+    if ("loader" in route) {
+      loader = route.loader;
+    } else {
       loader = async (args) => {
         const mod = await moduleFactory();
         return typeof mod.loader === "function" ? mod.loader(args) : null;
       };
     }
 
-    let action: RouteObject["action"] = route.loader;
-    if (typeof action !== "function") {
+    let action: RouteObject["action"];
+    if ("action" in route) {
+      action = route.action;
+    } else {
       action = async (args) => {
         const mod = await moduleFactory();
         return typeof mod.action === "function" ? mod.action(args) : null;
       };
     }
 
-    let errorElement = route.errorElement;
-    if (!errorElement) {
+    let errorElement: RouteObject["errorElement"];
+    if ("errorElement" in route) {
+      errorElement = route.errorElement;
+    } else {
       let ErrorBoundary = React.lazy(async function () {
         const mod = await moduleFactory();
         return {
