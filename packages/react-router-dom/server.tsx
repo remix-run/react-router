@@ -93,13 +93,17 @@ export function StaticRouterProvider({
     "You must provide `router` and `context` to <StaticRouterProvider>"
   );
 
-  let dataRouterContext = {
-    router,
-    navigator: getStatelessNavigator(),
-    static: true,
-    staticContext: context,
-    basename: context.basename || "/",
-  };
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  let dataRouterContext = React.useMemo(
+    () => ({
+      router,
+      navigator: getStatelessNavigator(),
+      static: true,
+      staticContext: context,
+      basename: context.basename || "/",
+    }),
+    [router, context]
+  );
 
   let hydrateScript = "";
 

@@ -85,7 +85,16 @@ export function RouterProvider({
     };
   }, [router]);
 
-  let basename = router.basename || "/";
+  let value = React.useMemo(
+    () => ({
+      router,
+      navigator,
+      static: false,
+      // Do we need this?
+      basename: router.basename || "/",
+    }),
+    [router, navigator]
+  );
 
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
@@ -95,15 +104,7 @@ export function RouterProvider({
   // we don't need the <script> tag
   return (
     <>
-      <DataRouterContext.Provider
-        value={{
-          router,
-          navigator,
-          static: false,
-          // Do we need this?
-          basename,
-        }}
-      >
+      <DataRouterContext.Provider value={value}>
         <DataRouterStateContext.Provider value={state}>
           <Router
             basename={router.basename}
@@ -330,7 +331,7 @@ export function Router({
     key = "default",
   } = locationProp;
 
-  let location = React.useMemo(() => {
+  let locationContext = React.useMemo(() => {
     let trailingPathname = stripBasename(pathname, basename);
 
     if (trailingPathname == null) {
@@ -338,31 +339,31 @@ export function Router({
     }
 
     return {
-      pathname: trailingPathname,
-      search,
-      hash,
-      state,
-      key,
+      location: {
+        pathname: trailingPathname,
+        search,
+        hash,
+        state,
+        key,
+      },
+      navigationType,
     };
-  }, [basename, pathname, search, hash, state, key]);
+  }, [basename, pathname, search, hash, state, key, navigationType]);
 
   warning(
-    location != null,
+    locationContext != null,
     `<Router basename="${basename}"> is not able to match the URL ` +
       `"${pathname}${search}${hash}" because it does not start with the ` +
       `basename, so the <Router> won't render anything.`
   );
 
-  if (location == null) {
+  if (locationContext == null) {
     return null;
   }
 
   return (
     <NavigationContext.Provider value={navigationContext}>
-      <LocationContext.Provider
-        children={children}
-        value={{ location, navigationType }}
-      />
+      <LocationContext.Provider children={children} value={locationContext} />
     </NavigationContext.Provider>
   );
 }

@@ -2,7 +2,8 @@
   "extends": ["react-app"],
   "rules": {
     "import/first": "off",
-    "@typescript-eslint/consistent-type-imports": "error"
+    "@typescript-eslint/consistent-type-imports": "error",
+    "react/jsx-no-constructed-context-values": "error"
   },
   "overrides": [
     {

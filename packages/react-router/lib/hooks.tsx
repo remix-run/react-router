@@ -424,24 +424,28 @@ export function useRoutes(
     dataRouterStateContext || undefined
   );
 
+  let { search, hash, state, key } = {
+    search: "",
+    hash: "",
+    state: null,
+    key: "default",
+    ...location,
+  };
+
+  let value = React.useMemo(
+    () => ({
+      location: { pathname, search, hash, state, key },
+      navigationType: NavigationType.Pop,
+    }),
+    [pathname, search, hash, state, key]
+  );
+
   // When a user passes in a `locationArg`, the associated routes need to
   // be wrapped in a new `LocationContext.Provider` in order for `useLocation`
   // to use the scoped location instead of the global location.
   if (locationArg && renderedMatches) {
     return (
-      <LocationContext.Provider
-        value={{
-          location: {
-            pathname: "/",
-            search: "",
-            hash: "",
-            state: null,
-            key: "default",
-            ...location,
-          },
-          navigationType: NavigationType.Pop,
-        }}
-      >
+      <LocationContext.Provider value={value}>
         {renderedMatches}
       </LocationContext.Provider>
     );
