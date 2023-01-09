@@ -1,12 +1,12 @@
 # `react-router-dom`
 
-## 6.6.2-pre.0
+## 6.6.2
 
 ### Patch Changes
 
 - Ensure `useId` consistency during SSR ([#9805](https://github.com/remix-run/react-router/pull/9805))
 - Updated dependencies:
-  - `react-router@6.6.2-pre.0`
+  - `react-router@6.6.2`
 
 ## 6.6.1
 
