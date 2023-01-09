@@ -25,6 +25,7 @@ import {
   UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router";
 import type {
+  Blocker,
   BlockerFunction,
   BrowserHistory,
   Fetcher,
@@ -63,6 +64,7 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type {
+  Blocker,
   FormEncType,
   FormMethod,
   GetScrollRestorationKeyFunction,
@@ -980,7 +982,10 @@ export function useFormAction(
 let blockerKey = "blocker-singleton";
 
 export function useBlocker(
-  shouldBlock: boolean | (() => boolean) | BlockerFunction
+  shouldBlock: boolean | (() => boolean) | BlockerFunction,
+  { beforeUnload }: { beforeUnload?: boolean | string } = {
+    beforeUnload: false,
+  }
 ) {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
 
@@ -994,6 +999,42 @@ export function useBlocker(
 
   // Cleanup on unmount
   React.useEffect(() => () => router.deleteBlocker(blockerKey), [router]);
+
+  // User is leaving the domain or refreshing the page. Here we have to rely on
+  // the `beforeunload` which is opt-in. Modern browsers will not display the
+  // custom message but will still block navigation when evt.returnValue is
+  // assigned.
+  React.useEffect(() => {
+    if (!beforeUnload) {
+      return;
+    }
+
+    let handleBeforeUnload = (evt: BeforeUnloadEvent) => {
+      if (blockerFunction()) {
+        // If we were previously blocked on an internal navigation - reset
+        // that once we show this prompt since proceed() is now stale and
+        // points to the previously blocked location).
+        // TODO: We could probably override proceed with a `window.location.href`
+        // assignment function using some local state...
+        if (blocker.state === "blocked") {
+          blocker.reset();
+        }
+        // TODO: allow customization for legacy browsers?
+        let message = "Are you sure you want to leave?";
+        evt.preventDefault(); // TODO: Is this still needed for older browsers?
+        evt.returnValue = message;
+        return message;
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload, {
+      capture: true,
+    });
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload, {
+        capture: true,
+      });
+    };
+  }, [blocker, beforeUnload, blockerFunction]);
 
   return blocker;
 }
