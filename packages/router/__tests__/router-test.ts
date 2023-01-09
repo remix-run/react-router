@@ -10673,6 +10673,8 @@ describe("a router", () => {
           "https://remix.run/blog",
           "//remix.run/blog",
           "app://whatever",
+          "mailto:hello@remix.run",
+          "web+remix:whatever",
         ];
 
         for (let url of urls) {
