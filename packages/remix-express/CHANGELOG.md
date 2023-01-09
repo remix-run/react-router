@@ -1,60 +1,11 @@
 # `@remix-run/express`
 
-## 1.10.0-pre.7
+## 1.10.0
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `@remix-run/node@1.10.0-pre.7`
-
-## 1.10.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.10.0-pre.6`
-
-## 1.10.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.10.0-pre.5`
-
-## 1.10.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.10.0-pre.4`
-
-## 1.10.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.10.0-pre.3`
-
-## 1.10.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.10.0-pre.2`
-
-## 1.10.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.10.0-pre.1`
-
-## 1.10.0-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.10.0-pre.0`
+  - `@remix-run/node@1.10.0`
 
 ## 1.9.0
 

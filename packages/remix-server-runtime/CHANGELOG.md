@@ -1,41 +1,18 @@
 # `@remix-run/server-runtime`
 
-## 1.10.0-pre.7
+## 1.10.0
 
-## 1.10.0-pre.6
+### Minor Changes
 
-## 1.10.0-pre.5
-
-## 1.10.0-pre.4
-
-### Patch Changes
-
-- Bump react router version to latest ([#4952](https://github.com/remix-run/remix/pull/4952))
-
-## 1.10.0-pre.3
-
-### Patch Changes
-
-- `V2_MetaFunction` should return `V2_HtmlMetaDescriptor[]` ([#4947](https://github.com/remix-run/remix/pull/4947))
-
-## 1.10.0-pre.2
+- Update Remix to use React Router 6.4+ data APIs ([#4900](https://github.com/remix-run/remix/pull/4900))
 
 ### Patch Changes
 
 - Bump to react-router 6.6.1 pre versions ([#4944](https://github.com/remix-run/remix/pull/4944))
 - re-export `V2_HtmlMetaDescriptor` and `V2_MetaFunction` from runtime packages ([#4943](https://github.com/remix-run/remix/pull/4943))
-
-## 1.10.0-pre.1
-
-### Patch Changes
-
+- Bump react router version to latest ([#4952](https://github.com/remix-run/remix/pull/4952))
+- `V2_MetaFunction` should return `V2_HtmlMetaDescriptor[]` ([#4947](https://github.com/remix-run/remix/pull/4947))
 - Lock into RR 6.6.0 ([#4935](https://github.com/remix-run/remix/pull/4935))
-
-## 1.10.0-pre.0
-
-### Minor Changes
-
-- Update Remix to use React Router 6.4+ data APIs ([#4900](https://github.com/remix-run/remix/pull/4900))
 
 ## 1.9.0
 

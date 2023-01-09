@@ -1,75 +1,18 @@
 # @remix-run/testing
 
-## 1.10.0-pre.7
+## 1.10.0
 
 ### Patch Changes
 
-- Updated dependencies:
-  - `@remix-run/react@1.10.0-pre.7`
-  - `@remix-run/node@1.10.0-pre.7`
-
-## 1.10.0-pre.6
-
-### Patch Changes
-
+- Lock into react-router 6.6.2 stable release ([#5035](https://github.com/remix-run/remix/pull/5035))
 - Bump RR versions ([#5005](https://github.com/remix-run/remix/pull/5005))
-- Updated dependencies:
-  - `@remix-run/react@1.10.0-pre.6`
-  - `@remix-run/node@1.10.0-pre.6`
-
-## 1.10.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/react@1.10.0-pre.5`
-  - `@remix-run/node@1.10.0-pre.5`
-
-## 1.10.0-pre.4
-
-### Patch Changes
-
-- Bump react router version to latest ([#4952](https://github.com/remix-run/remix/pull/4952))
-- Updated dependencies:
-  - `@remix-run/react@1.10.0-pre.4`
-  - `@remix-run/node@1.10.0-pre.4`
-
-## 1.10.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.10.0-pre.3`
-  - `@remix-run/react@1.10.0-pre.3`
-
-## 1.10.0-pre.2
-
-### Patch Changes
-
 - Bump to react-router 6.6.1 pre versions ([#4944](https://github.com/remix-run/remix/pull/4944))
+- Bump react router version to latest ([#4952](https://github.com/remix-run/remix/pull/4952))
+- remove internal `installGlobals` function now that `@remix-run/web-form-data` includes support for passing a `HTMLFormElement` ([#4755](https://github.com/remix-run/remix/pull/4755))
 - use react router apis directly ([#4915](https://github.com/remix-run/remix/pull/4915))
 - Updated dependencies:
-  - `@remix-run/react@1.10.0-pre.2`
-  - `@remix-run/node@1.10.0-pre.2`
-
-## 1.10.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/react@1.10.0-pre.1`
-  - `@remix-run/server-runtime@1.10.0-pre.1`
-  - `@remix-run/node@1.10.0-pre.1`
-
-## 1.10.0-pre.0
-
-### Patch Changes
-
-- remove internal `installGlobals` function now that `@remix-run/web-form-data` includes support for passing a `HTMLFormElement` ([#4755](https://github.com/remix-run/remix/pull/4755))
-- Updated dependencies:
-  - `@remix-run/react@1.10.0-pre.0`
-  - `@remix-run/server-runtime@1.10.0-pre.0`
-  - `@remix-run/node@1.10.0-pre.0`
+  - `@remix-run/react@1.10.0`
+  - `@remix-run/node@1.10.0`
 
 ## 1.9.0
 

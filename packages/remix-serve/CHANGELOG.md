@@ -1,62 +1,13 @@
 # `@remix-run/serve`
 
-## 1.10.0-pre.7
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.10.0-pre.7`
-
-## 1.10.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.10.0-pre.6`
-
-## 1.10.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.10.0-pre.5`
-
-## 1.10.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.10.0-pre.4`
-
-## 1.10.0-pre.3
-
-### Patch Changes
-
-- `V2_MetaFunction` should return `V2_HtmlMetaDescriptor[]` ([#4947](https://github.com/remix-run/remix/pull/4947))
-- Updated dependencies:
-  - `@remix-run/express@1.10.0-pre.3`
-
-## 1.10.0-pre.2
+## 1.10.0
 
 ### Patch Changes
 
 - re-export `V2_HtmlMetaDescriptor` and `V2_MetaFunction` from runtime packages ([#4943](https://github.com/remix-run/remix/pull/4943))
+- `V2_MetaFunction` should return `V2_HtmlMetaDescriptor[]` ([#4947](https://github.com/remix-run/remix/pull/4947))
 - Updated dependencies:
-  - `@remix-run/express@1.10.0-pre.2`
-
-## 1.10.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.10.0-pre.1`
-
-## 1.10.0-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.10.0-pre.0`
+  - `@remix-run/express@1.10.0`
 
 ## 1.9.0
 

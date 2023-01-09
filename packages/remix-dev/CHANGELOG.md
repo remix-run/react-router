@@ -1,55 +1,6 @@
 # `@remix-run/dev`
 
-## 1.10.0-pre.7
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.10.0-pre.7`
-
-## 1.10.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.10.0-pre.6`
-
-## 1.10.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.10.0-pre.5`
-
-## 1.10.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.10.0-pre.4`
-
-## 1.10.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.10.0-pre.3`
-
-## 1.10.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.10.0-pre.2`
-
-## 1.10.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.10.0-pre.1`
-
-## 1.10.0-pre.0
+## 1.10.0
 
 ### Patch Changes
 
@@ -65,9 +16,9 @@
   conversion.
 
 - Resolve asset entry full path to support monorepo import of styles ([#4855](https://github.com/remix-run/remix/pull/4855))
+
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.10.0-pre.0`
-  - `@remix-run/serve@1.10.0-pre.0`
+  - `@remix-run/server-runtime@1.10.0`
 
 ## 1.9.0
 
