@@ -38,7 +38,6 @@ import {
   RouteContext,
   RouteErrorContext,
   AwaitContext,
-  DataStaticRouterContext,
 } from "./context";
 
 /**
@@ -564,12 +563,17 @@ interface RenderedRouteProps {
 }
 
 function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
-  let dataStaticRouterContext = React.useContext(DataStaticRouterContext);
+  let dataRouterContext = React.useContext(DataRouterContext);
 
   // Track how deep we got in our render pass to emulate SSR componentDidCatch
   // in a DataStaticRouter
-  if (dataStaticRouterContext && match.route.errorElement) {
-    dataStaticRouterContext._deepestRenderedBoundaryId = match.route.id;
+  if (
+    dataRouterContext &&
+    dataRouterContext.static &&
+    dataRouterContext.staticContext &&
+    match.route.errorElement
+  ) {
+    dataRouterContext.staticContext._deepestRenderedBoundaryId = match.route.id;
   }
 
   return (
