@@ -148,12 +148,17 @@ test.describe("CSS side-effect imports", () => {
   });
   test("image URLs", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
+    let imgStatus: number | null = null;
+    app.page.on("response", (res) => {
+      if (res.url().endsWith(".svg")) imgStatus = res.status();
+    });
     await app.goto("/image-urls-test");
     let locator = await page.locator("[data-testid='image-urls']");
     let backgroundImage = await locator.evaluate(
       (element) => window.getComputedStyle(element).backgroundImage
     );
     expect(backgroundImage).toContain(".svg");
+    expect(imgStatus).toBe(200);
   });
 
   let rootRelativeImageUrlsFixture = () => ({
@@ -183,6 +188,10 @@ test.describe("CSS side-effect imports", () => {
   });
   test("root relative image URLs", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
+    let imgStatus: number | null = null;
+    app.page.on("response", (res) => {
+      if (res.url().endsWith(".svg")) imgStatus = res.status();
+    });
     await app.goto("/root-relative-image-urls-test");
     let locator = await page.locator(
       "[data-testid='root-relative-image-urls']"
@@ -191,6 +200,7 @@ test.describe("CSS side-effect imports", () => {
       (element) => window.getComputedStyle(element).backgroundImage
     );
     expect(backgroundImage).toContain(".svg");
+    expect(imgStatus).toBe(200);
   });
 
   let commonJsPackageFixture = () => ({

@@ -245,6 +245,12 @@ export const createBrowserCompiler = (
         options.mode !== "production" && map
           ? fse.writeFile(`${cssBundlePath}.map`, map.toString()) // Write our updated source map rather than esbuild's
           : null,
+        ...outputFiles
+          .filter((outputFile) => !/\.(css|js|map)$/.test(outputFile.path))
+          .map(async (asset) => {
+            await fse.ensureDir(path.dirname(asset.path));
+            await fse.writeFile(asset.path, asset.contents);
+          }),
       ]);
 
       // Return the CSS bundle path so we can use it to generate the manifest
