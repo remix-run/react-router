@@ -193,16 +193,20 @@ export interface Router {
   dispose(): void;
 
   /**
-   * Get a navigation blocker
+   * @internal
+   * PRIVATE - DO NOT USE
    *
+   * Get a navigation blocker
    * @param key The identifier for the blocker
    * @param fn The blocker function implementation
    */
   getBlocker(key: string, fn: BlockerFunction): Blocker;
 
   /**
-   * Delete a navigation blocker
+   * @internal
+   * PRIVATE - DO NOT USE
    *
+   * Delete a navigation blocker
    * @param key The identifier for the blocker
    */
   deleteBlocker(key: string): void;
@@ -498,7 +502,10 @@ export type Blocker =
       proceed: undefined;
     };
 
-export type BlockerFunction = () => boolean;
+export type BlockerFunction = (
+  location: Location,
+  action: HistoryAction
+) => boolean;
 
 interface ShortCircuitable {
   /**
@@ -740,6 +747,10 @@ export function createRouter(init: RouterInit): Router {
   // cancel active deferreds for eliminated routes.
   let activeDeferreds = new Map<string, DeferredData>();
 
+  // We ony support a single active blocker at the moment since we don't have
+  // any compelling use cases for multi-blocker yet
+  let activeBlocker: string | null = null;
+
   // Store blocker functions in a separate Map outside of router state since
   // we don't need to update UI state if they change
   let blockerFunctions = new Map<string, BlockerFunction>();
@@ -763,7 +774,7 @@ export function createRouter(init: RouterInit): Router {
           return;
         }
 
-        let blockerKey = shouldBlockNavigation();
+        let blockerKey = shouldBlockNavigation(historyAction, location);
         if (blockerKey) {
           // Restore the URL to match the current UI, but don't update router state
           ignoreNextHistoryUpdate = true;
@@ -809,6 +820,7 @@ export function createRouter(init: RouterInit): Router {
     subscribers.clear();
     pendingNavigationController && pendingNavigationController.abort();
     state.fetchers.forEach((_, key) => deleteFetcher(key));
+    state.blockers.forEach((_, key) => deleteBlocker(key));
   }
 
   // Subscribe to state updates for the router
@@ -873,8 +885,8 @@ export function createRouter(init: RouterInit): Router {
         )
       : state.loaderData;
 
-    // Onl a successful navigation we can assume we got through all blockers
-    // so twe can start fresh
+    // On a successful navigation we can assume we got through all blockers
+    // so we can start fresh
     for (let [key] of blockerFunctions) {
       deleteBlocker(key);
     }
@@ -921,28 +933,6 @@ export function createRouter(init: RouterInit): Router {
     to: number | To,
     opts?: RouterNavigateOptions
   ): Promise<void> {
-    let blockerKey = shouldBlockNavigation();
-    if (blockerKey) {
-      // Put the blocker into a blocked state
-      updateBlocker(blockerKey, {
-        state: "blocked",
-        proceed() {
-          updateBlocker(blockerKey!, {
-            state: "proceeding",
-            proceed: undefined,
-            reset: undefined,
-          });
-          // Send the same navigation through
-          navigate(to, opts);
-        },
-        reset() {
-          deleteBlocker(blockerKey!);
-          updateState({ blockers: new Map(state.blockers) });
-        },
-      });
-      return;
-    }
-
     if (typeof to === "number") {
       init.history.go(to);
       return;
@@ -986,6 +976,28 @@ export function createRouter(init: RouterInit): Router {
       opts && "preventScrollReset" in opts
         ? opts.preventScrollReset === true
         : undefined;
+
+    let blockerKey = shouldBlockNavigation(historyAction, location);
+    if (blockerKey) {
+      // Put the blocker into a blocked state
+      updateBlocker(blockerKey, {
+        state: "blocked",
+        proceed() {
+          updateBlocker(blockerKey!, {
+            state: "proceeding",
+            proceed: undefined,
+            reset: undefined,
+          });
+          // Send the same navigation through
+          navigate(to, opts);
+        },
+        reset() {
+          deleteBlocker(blockerKey!);
+          updateState({ blockers: new Map(state.blockers) });
+        },
+      });
+      return;
+    }
 
     return await startNavigation(historyAction, location, {
       submission,
@@ -2061,6 +2073,12 @@ export function createRouter(init: RouterInit): Router {
 
     if (blockerFunctions.get(key) !== fn) {
       blockerFunctions.set(key, fn);
+      if (activeBlocker == null) {
+        // This is now the active blocker
+        activeBlocker = key;
+      } else if (key !== activeBlocker) {
+        warning(false, "A router only supports one blocker at a time");
+      }
     }
 
     return blocker;
@@ -2069,6 +2087,9 @@ export function createRouter(init: RouterInit): Router {
   function deleteBlocker(key: string) {
     state.blockers.delete(key);
     blockerFunctions.delete(key);
+    if (activeBlocker === key) {
+      activeBlocker = null;
+    }
   }
 
   // Utility function to update blockers, ensuring valid state transitions
@@ -2088,15 +2109,22 @@ export function createRouter(init: RouterInit): Router {
     updateState({ blockers: new Map(state.blockers) });
   }
 
-  function shouldBlockNavigation(): string | undefined {
-    if (blockerFunctions.size === 0) {
+  function shouldBlockNavigation(
+    historyAction: HistoryAction,
+    location: Location
+  ): string | undefined {
+    if (activeBlocker == null) {
       return;
     }
 
     // We only allow a single blocker at the moment.  This will need to be
     // updated if we enhance to support multiple blockers in the future
-    let [key, blockerFunction] = Array.from(blockerFunctions.entries())[0];
-    let blocker = state.blockers.get(key);
+    let blockerFunction = blockerFunctions.get(activeBlocker);
+    invariant(
+      blockerFunction,
+      "Could not find a function for the active blocker"
+    );
+    let blocker = state.blockers.get(activeBlocker);
 
     if (blocker && blocker.state === "proceeding") {
       // If the blocker is currently proceeding, we don't need to re-check
@@ -2106,8 +2134,8 @@ export function createRouter(init: RouterInit): Router {
 
     // At this point, we know we're unblocked/blocked so we need to check the
     // user-provided blocker function
-    if (blockerFunction()) {
-      return key;
+    if (blockerFunction(location, historyAction)) {
+      return activeBlocker;
     }
   }
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Blocker, useLocation } from "react-router-dom";
+import { Blocker, useNavigate } from "react-router-dom";
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -10,6 +10,7 @@ import {
   Route,
   RouterProvider,
   useBlocker,
+  useLocation,
 } from "react-router-dom";
 
 let router = createBrowserRouter(
@@ -47,6 +48,7 @@ function Layout() {
     window.history.state?.idx
   );
   let location = useLocation();
+  let navigate = useNavigate();
 
   // Expose the underlying history index in the UI for debugging
   React.useEffect(() => {
@@ -69,6 +71,7 @@ function Layout() {
         <Link to="/four">Four</Link>&nbsp;&nbsp;
         <Link to="/five">Five</Link>&nbsp;&nbsp;
         <a href="https://remix.run">External link to Remix Docs</a>&nbsp;&nbsp;
+        <button onClick={() => navigate(-1)}>Back</button>&nbsp;&nbsp;
       </nav>
       <p>
         Current location (index): {location.pathname} ({historyIndex})
@@ -81,9 +84,9 @@ function Layout() {
 function ImportantForm() {
   let [value, setValue] = React.useState("");
   let isBlocked = value !== "";
-
-  let [beforeUnload, setBeforeUnload] = React.useState(false);
-  let blocker = useBlocker(() => isBlocked, { beforeUnload });
+  let blocker = useBlocker(isBlocked);
+  router.getBlocker("a", () => false);
+  router.getBlocker("b", () => false);
 
   // Reset the blocker if the user cleans the form
   React.useEffect(() => {
@@ -109,15 +112,6 @@ function ImportantForm() {
 
   return (
     <>
-      <label>
-        <input
-          type="checkbox"
-          checked={beforeUnload}
-          onChange={(e) => setBeforeUnload(e.target.checked)}
-        />
-        Block external links with <code>beforeunload</code> event listener?
-      </label>
-
       <p>
         Is the form dirty?{" "}
         {isBlocked ? (

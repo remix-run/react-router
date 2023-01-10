@@ -979,132 +979,28 @@ export function useFormAction(
   return createPath(path);
 }
 
+// useBlocker() is a singleton for now since we don't have any compelling use
+// cases for multi-blocker yet
 let blockerKey = "blocker-singleton";
 
-export function useBlocker(
-  shouldBlock: boolean | (() => boolean) | BlockerFunction,
-  { beforeUnload }: { beforeUnload?: boolean | string } = {
-    beforeUnload: false,
-  }
-) {
+export function useBlocker(shouldBlock: boolean | BlockerFunction) {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
 
-  let blockerFunction = React.useCallback<BlockerFunction>(() => {
-    return typeof shouldBlock === "function"
-      ? shouldBlock() === true
-      : shouldBlock === true;
-  }, [shouldBlock]);
+  let blockerFunction = React.useCallback<BlockerFunction>(
+    (location, action) => {
+      return typeof shouldBlock === "function"
+        ? shouldBlock(location, action) === true
+        : shouldBlock === true;
+    },
+    [shouldBlock]
+  );
 
   let blocker = router.getBlocker(blockerKey, blockerFunction);
 
   // Cleanup on unmount
   React.useEffect(() => () => router.deleteBlocker(blockerKey), [router]);
 
-  // User is leaving the domain or refreshing the page. Here we have to rely on
-  // the `beforeunload` which is opt-in. Modern browsers will not display the
-  // custom message but will still block navigation when evt.returnValue is
-  // assigned.
-  React.useEffect(() => {
-    if (!beforeUnload) {
-      return;
-    }
-
-    let handleBeforeUnload = (evt: BeforeUnloadEvent) => {
-      if (blockerFunction()) {
-        // If we were previously blocked on an internal navigation - reset
-        // that once we show this prompt since proceed() is now stale and
-        // points to the previously blocked location).
-        // TODO: We could probably override proceed with a `window.location.href`
-        // assignment function using some local state...
-        if (blocker.state === "blocked") {
-          blocker.reset();
-        }
-        // TODO: allow customization for legacy browsers?
-        let message = "Are you sure you want to leave?";
-        evt.preventDefault(); // TODO: Is this still needed for older browsers?
-        evt.returnValue = message;
-        return message;
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload, {
-      capture: true,
-    });
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload, {
-        capture: true,
-      });
-    };
-  }, [blocker, beforeUnload, blockerFunction]);
-
   return blocker;
-}
-
-export function usePrompt(
-  message: string | null | false,
-  opts?: { beforeUnload: boolean }
-) {
-  let { beforeUnload } = opts ? opts : { beforeUnload: false };
-  let blockerFunction = React.useCallback<BlockerFunction>(() => {
-    if (!message) {
-      return false;
-    }
-
-    // Here be dragons! This is not bulletproof (at least at the moment).  If
-    // you click the back button again while the global window.confirm prompt
-    // is open, it returns `false` (telling us to "block") but then _also_
-    // processes the back button click!
-
-    // So, consider:
-    //  - you have a stack of [/a, /b, /c] and you usePrompt() on /c
-    //  - user clicks back button trying to POP /c -> /b
-    //  - prompt shows up (URL shows /b but UI shows /c)
-    //  - user clicks back button _again_ (POP /b -> /a)
-    //    - this seems to queue up internally
-    //  - we get a `false` back from window.confirm() (block!)
-    //  - so we undo the _original_ POP /c -> /b and call history.go(1) to
-    //    instead POP forward /b -> /c and we also tell our router to ignore
-    //    the next history update
-    //  - and then it seems that the queued history trumps our history revert,
-    //    and so we receive the popstate event for the POP /b -> /a and then
-    //    we ignore it thinking it was our revert of POP /b -> /c
-    //
-    //  I think the solution here is to track more thn a boolean
-    //  ignoreNextHistoryUpdate and instead track the key we're reverting from
-    //  and the delta and compare that to any incoming popstate events.
-    return !window.confirm(message);
-  }, [message]);
-
-  let blocker = useBlocker(blockerFunction);
-
-  let prevState = React.useRef(blocker.state);
-  React.useEffect(() => {
-    if (blocker.state === "blocked") {
-      blocker.reset();
-    }
-    prevState.current = blocker.state;
-  }, [blocker]);
-
-  // User is leaving the domain or refreshing the page. Here we have to rely on
-  // the `beforeunload` which is opt-in. Modern browsers will not display the
-  // custom message but will still block navigation when evt.returnValue is
-  // assigned.
-  React.useEffect(() => {
-    if (!beforeUnload) return;
-    let handleBeforeUnload = (evt: BeforeUnloadEvent) => {
-      if (blockerFunction()) {
-        evt.returnValue = message;
-        return message;
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload, {
-      capture: true,
-    });
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload, {
-        capture: true,
-      });
-    };
-  }, [blocker, message, beforeUnload, blockerFunction]);
 }
 
 function createFetcherForm(fetcherKey: string, routeId: string) {
