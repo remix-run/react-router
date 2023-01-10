@@ -178,7 +178,7 @@ export interface V2_MetaFunction<
     params: Params;
     location: Location;
     matches: RouteMatchWithMeta<ClientRoute>[];
-  }): HtmlMetaDescriptor;
+  }): V2_HtmlMetaDescriptor[];
 }
 
 /**

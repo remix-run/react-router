@@ -43,6 +43,32 @@ test.describe("actions", () => {
           }
         `,
 
+        "app/routes/request-text.jsx": js`
+          import { Form, useActionData } from "@remix-run/react";
+
+          export let action = async ({ request }) => {
+            let text = await request.text();
+            return text;
+          };
+
+          export default function Actions() {
+            let data = useActionData()
+
+            return (
+              <Form method="post" id="form">
+                <p id="text">
+                  {data ? <span id="action-text">{data}</span> : "${WAITING_VALUE}"}
+                </p>
+                <p>
+                  <input name="a" defaultValue="1" />
+                  <input name="b" defaultValue="2" />
+                  <button type="submit" id="submit">Go</button>
+                </p>
+              </Form>
+            );
+          }
+        `,
+
         [`app/routes/${THROWS_REDIRECT}.jsx`]: js`
           import { redirect } from "@remix-run/node";
           import { Form } from "@remix-run/react";
@@ -113,6 +139,20 @@ test.describe("actions", () => {
     await page.click("button[type=submit]");
     await page.waitForSelector("#action-text");
     await page.waitForSelector(`#text:has-text("${SUBMITTED_VALUE}")`);
+  });
+
+  test("properly encodes form data for request.text() usage", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto(`/request-text`);
+    await page.waitForSelector(`#text:has-text("${WAITING_VALUE}")`);
+
+    await page.click("button[type=submit]");
+    await page.waitForSelector("#action-text");
+    expect(await app.getHtml("#action-text")).toBe(
+      '<span id="action-text">a=1&amp;b=2</span>'
+    );
   });
 
   test("redirects a thrown response on document requests", async () => {

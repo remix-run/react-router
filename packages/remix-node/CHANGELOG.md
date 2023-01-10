@@ -1,5 +1,13 @@
 # `@remix-run/node`
 
+## 1.10.0
+
+### Patch Changes
+
+- Export `V2_HtmlMetaDescriptor` and `V2_MetaFunction` types from runtime packages ([#4943](https://github.com/remix-run/remix/pull/4943))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.10.0`
+
 ## 1.9.0
 
 ### Patch Changes

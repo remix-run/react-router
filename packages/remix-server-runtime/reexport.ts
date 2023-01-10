@@ -40,11 +40,13 @@ export type {
   ErrorBoundaryComponent,
   HeadersFunction,
   HtmlMetaDescriptor,
+  V2_HtmlMetaDescriptor,
   LinksFunction,
   LoaderArgs,
   LoaderFunction,
   MetaDescriptor,
   MetaFunction,
+  V2_MetaFunction,
   RouteComponent,
   RouteHandle,
 } from "./routeModules";

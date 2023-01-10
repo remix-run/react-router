@@ -35,6 +35,10 @@ test.describe("fetcher states", () => {
               savedStates.push({
                 state: fetcher.state,
                 type: fetcher.type,
+                formMethod: fetcher.formMethod,
+                formAction: fetcher.formAction,
+                formData:fetcher.formData ? Object.fromEntries(fetcher.formData.entries()) : undefined,
+                formEncType: fetcher.formEncType,
                 submission: fetcher.submission ? {
                   ...fetcher.submission,
                   formData: Object.fromEntries(fetcher.submission.formData.entries()),
@@ -87,6 +91,10 @@ test.describe("fetcher states", () => {
                       JSON.stringify({
                         state: fetcher.state,
                         type: fetcher.type,
+                        formMethod: fetcher.formMethod,
+                        formAction: fetcher.formAction,
+                        formData: fetcher.formData,
+                        formEncType: fetcher.formEncType,
                         submission: fetcher.submission,
                         data: fetcher.data,
                       })
@@ -157,6 +165,10 @@ test.describe("fetcher states", () => {
       {
         state: "submitting",
         type: "actionSubmission",
+        formData: { key: "value" },
+        formAction: "/page",
+        formMethod: "POST",
+        formEncType: "application/x-www-form-urlencoded",
         submission: {
           formData: { key: "value" },
           action: "/page",
@@ -167,6 +179,10 @@ test.describe("fetcher states", () => {
       {
         state: "loading",
         type: "actionReload",
+        formData: { key: "value" },
+        formAction: "/page",
+        formMethod: "POST",
+        formEncType: "application/x-www-form-urlencoded",
         submission: {
           formData: { key: "value" },
           action: "/page",
@@ -197,6 +213,10 @@ test.describe("fetcher states", () => {
       {
         state: "submitting",
         type: "loaderSubmission",
+        formData: { key: "value" },
+        formAction: "/page",
+        formMethod: "GET",
+        formEncType: "application/x-www-form-urlencoded",
         submission: {
           formData: { key: "value" },
           // Note: This is a bug in Remix but we're going to keep it that way
@@ -227,6 +247,10 @@ test.describe("fetcher states", () => {
       {
         state: "submitting",
         type: "actionSubmission",
+        formData: { redirect: "yes" },
+        formAction: "/page",
+        formMethod: "POST",
+        formEncType: "application/x-www-form-urlencoded",
         submission: {
           formData: { redirect: "yes" },
           action: "/page",
@@ -237,6 +261,10 @@ test.describe("fetcher states", () => {
       {
         state: "loading",
         type: "actionRedirect",
+        formData: { redirect: "yes" },
+        formAction: "/page",
+        formMethod: "POST",
+        formEncType: "application/x-www-form-urlencoded",
         submission: {
           formData: { redirect: "yes" },
           action: "/page",

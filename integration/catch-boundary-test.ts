@@ -22,7 +22,12 @@ test.describe("CatchBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.jsx": js`
-          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+          import { json } from "@remix-run/node";
+          import { Links, Meta, Outlet, Scripts, useMatches } from "@remix-run/react";
+
+          export function loader() {
+            return json({ data: "ROOT LOADER" });
+          }
 
           export default function Root() {
             return (
@@ -40,11 +45,13 @@ test.describe("CatchBoundary", () => {
           }
 
           export function CatchBoundary() {
+            let matches = useMatches()
             return (
               <html>
                 <head />
                 <body>
                   <div id="root-boundary">${ROOT_BOUNDARY_TEXT}</div>
+                  <pre id="matches">{JSON.stringify(matches)}</pre>
                   <Scripts />
                 </body>
               </html>
@@ -209,7 +216,14 @@ test.describe("CatchBoundary", () => {
   test("non-matching urls on document requests", async () => {
     let res = await fixture.requestDocument(NOT_FOUND_HREF);
     expect(res.status).toBe(404);
-    expect(await res.text()).toMatch(ROOT_BOUNDARY_TEXT);
+    let html = await res.text();
+    expect(html).toMatch(ROOT_BOUNDARY_TEXT);
+
+    // There should be no loader data on the root route
+    let expected = JSON.stringify([
+      { id: "root", pathname: "", params: {} },
+    ]).replace(/"/g, "&quot;");
+    expect(html).toContain(`<pre id="matches">${expected}</pre>`);
   });
 
   test("non-matching urls on client transitions", async ({ page }) => {
@@ -217,6 +231,12 @@ test.describe("CatchBoundary", () => {
     await app.goto("/");
     await app.clickLink(NOT_FOUND_HREF, { wait: false });
     await page.waitForSelector("#root-boundary");
+
+    // Root loader data sticks around from previous load
+    let expected = JSON.stringify([
+      { id: "root", pathname: "", params: {}, data: { data: "ROOT LOADER" } },
+    ]);
+    expect(await app.getHtml("#matches")).toContain(expected);
   });
 
   test("own boundary, action, document request", async () => {
