@@ -1,4 +1,4 @@
-# @remix-run/testing
+# `@remix-run/testing`
 
 ## 1.10.0
 
