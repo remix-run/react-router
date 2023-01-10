@@ -299,7 +299,7 @@ test.describe("Forms", () => {
             let actionData = useActionData();
             return (
               <div onClick={(event) => event.stopPropagation()}>
-                <pre>{JSON.stringify(actionData)}</pre>
+                {actionData ? <pre id="action-data">{JSON.stringify(actionData)}</pre> : null}
                 <Form method="post">
                   <button type="submit" name="intent" value="add">Add</button>
                 </Form>
@@ -332,7 +332,8 @@ test.describe("Forms", () => {
                   <button>Submit</button>
                   <button formMethod={submitterFormMethod}>Submit with {submitterFormMethod}</button>
                 </Form>
-                <pre>{actionData || loaderData}</pre>
+                {actionData ? <pre id="action-method">{actionData}</pre> : null}
+                <pre id="loader-method">{loaderData}</pre>
               </>
             )
           }
@@ -524,14 +525,18 @@ test.describe("Forms", () => {
       await page.waitForSelector(`pre:has-text("${SQUID_INK_HOTDOG}")`);
     });
 
-    test("when clicking on a submit button as a descendant of an element that stops propagation on click, still passes the clicked submit button's `name` and `value` props to the request payload", async ({
-      page,
-    }) => {
-      let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/stop-propagation");
-      await app.clickSubmitButton("/stop-propagation", { wait: true });
-      expect(await app.getHtml()).toMatch('{"intent":"add"}');
-    });
+    test(
+      "when clicking on a submit button as a descendant of an element that " +
+        "stops propagation on click, still passes the clicked submit button's " +
+        "`name` and `value` props to the request payload",
+      async ({ page }) => {
+        let app = new PlaywrightFixture(appFixture, page);
+        await app.goto("/stop-propagation");
+        await app.clickSubmitButton("/stop-propagation", { wait: true });
+        await page.waitForSelector("#action-data");
+        expect(await app.getHtml()).toMatch('{"intent":"add"}');
+      }
+    );
 
     test.describe("<Form> action", () => {
       test.describe("in a static route", () => {
@@ -789,6 +794,7 @@ test.describe("Forms", () => {
           html = await app.getHtml();
           el = getElement(html, `#${INDEX_ROUTE_NO_ACTION_POST}`);
           expect(el.attr("action")).toBe("/blog?index&junk=1");
+          await page.waitForURL(/\/blog\?index&junk=1$/);
           expect(app.page.url()).toMatch(/\/blog\?index&junk=1$/);
         });
       });
@@ -946,9 +952,17 @@ test.describe("Forms", () => {
           );
 
           let app = new PlaywrightFixture(appFixture, page);
-          await app.goto(`/form-method?method=${method}`);
+          await app.goto(`/form-method?method=${method}`, true);
           await app.clickElement(`text=Submit`);
-          expect(await app.getHtml("pre")).toBe(`<pre>${method}</pre>`);
+          if (method !== "GET") {
+            await page.waitForSelector("#action-method");
+            expect(await app.getHtml("pre#action-method")).toBe(
+              `<pre id="action-method">${method}</pre>`
+            );
+          }
+          expect(await app.getHtml("pre#loader-method")).toBe(
+            `<pre id="loader-method">GET</pre>`
+          );
         });
       });
     });
@@ -963,10 +977,19 @@ test.describe("Forms", () => {
         }) => {
           let app = new PlaywrightFixture(appFixture, page);
           await app.goto(
-            `/form-method?method=${method}&submitterFormMethod=${overrideMethod}`
+            `/form-method?method=${method}&submitterFormMethod=${overrideMethod}`,
+            true
           );
           await app.clickElement(`text=Submit with ${overrideMethod}`);
-          expect(await app.getHtml("pre")).toBe(`<pre>${overrideMethod}</pre>`);
+          if (overrideMethod !== "GET") {
+            await page.waitForSelector("#action-method");
+            expect(await app.getHtml("pre#action-method")).toBe(
+              `<pre id="action-method">${overrideMethod}</pre>`
+            );
+          }
+          expect(await app.getHtml("pre#loader-method")).toBe(
+            `<pre id="loader-method">GET</pre>`
+          );
         });
       });
     });
@@ -1060,6 +1083,7 @@ test.describe("Forms", () => {
       // This submission should ignore the index route and the pathless layout
       // route above it and hit the action in routes/pathless-layout-parent.jsx
       await app.clickSubmitButton("/pathless-layout-parent");
+      await page.waitForSelector("text=Submitted - Yes");
       expect(await app.getHtml()).toMatch("Submitted - Yes");
     });
   }

@@ -1,4 +1,4 @@
-import { type Adapter, type Renderer, type Runtime } from "./remix";
+import type { Adapter, Renderer, Runtime } from "./remix";
 
 export type Export<Source extends string = string> = {
   source: Source;
@@ -176,7 +176,6 @@ const exportsByRenderer: Record<Renderer, Partial<ExportNames>> = {
       "NavLinkProps",
       "RemixBrowserProps",
       "RemixServerProps",
-      "ShouldReloadFunction",
       "SubmitFunction",
       "SubmitOptions",
       "ThrownResponse",

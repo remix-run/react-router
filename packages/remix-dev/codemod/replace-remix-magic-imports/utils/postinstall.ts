@@ -1,4 +1,5 @@
-import { type Runtime, isRuntime } from "./remix";
+import type { Runtime } from "./remix";
+import { isRuntime } from "./remix";
 
 const remixSetup = /\s*remix\s+setup(?:$|\s+)/;
 const remixSetupRuntime = /\s*remix\s+setup\s+(\w+)\s*/;

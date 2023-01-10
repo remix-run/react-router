@@ -1,5 +1,16 @@
 # `@remix-run/server-runtime`
 
+## 1.10.0
+
+### Minor Changes
+
+- Update Remix to use new data APIs introduced in React Router v6.4 ([#4900](https://github.com/remix-run/remix/pull/4900))
+
+### Patch Changes
+
+- Export `V2_HtmlMetaDescriptor` and `V2_MetaFunction` types from runtime packages ([#4943](https://github.com/remix-run/remix/pull/4943))
+- Fix `V2_MetaFunction` to return `V2_HtmlMetaDescriptor[]` type ([#4947](https://github.com/remix-run/remix/pull/4947))
+
 ## 1.9.0
 
 ### Patch Changes

@@ -4,7 +4,7 @@ import { blue, yellow } from "../colors";
 import * as git from "./utils/git";
 import * as log from "./utils/log";
 import { task } from "./utils/task";
-import { type Options } from "./codemod";
+import type { Options } from "./codemod";
 import replaceRemixMagicImports from "./replace-remix-magic-imports";
 import { CodemodError } from "./utils/error";
 

@@ -1,3 +1,6 @@
+import type { StaticHandlerContext } from "@remix-run/router";
+import { isRouteErrorResponse } from "@remix-run/router";
+
 /**
  * This thing probably warrants some explanation.
  *
@@ -40,17 +43,7 @@
  * line.
  */
 
-export interface AppState {
-  error?: SerializedError;
-  catch?: ThrownResponse;
-  catchBoundaryRouteId: string | null;
-  loaderBoundaryRouteId: string | null;
-  // `null` means the app layout threw before any routes rendered
-  renderBoundaryRouteId: string | null;
-  trackBoundaries: boolean;
-  trackCatchBoundaries: boolean;
-}
-
+// TODO Re-export as ErrorResponse?
 export interface ThrownResponse<T = any> {
   status: number;
   statusText: string;
@@ -69,4 +62,28 @@ export async function serializeError(error: Error): Promise<SerializedError> {
     message: error.message,
     stack: error.stack,
   };
+}
+
+export function serializeErrors(
+  errors: StaticHandlerContext["errors"]
+): StaticHandlerContext["errors"] {
+  if (!errors) return null;
+  let entries = Object.entries(errors);
+  let serialized: StaticHandlerContext["errors"] = {};
+  for (let [key, val] of entries) {
+    // Hey you!  If you change this, please change the corresponding logic in
+    // deserializeErrors in remix-react/errors.ts :)
+    if (isRouteErrorResponse(val)) {
+      serialized[key] = { ...val, __type: "RouteErrorResponse" };
+    } else if (val instanceof Error) {
+      serialized[key] = {
+        message: val.message,
+        stack: val.stack,
+        __type: "Error",
+      };
+    } else {
+      serialized[key] = val;
+    }
+  }
+  return serialized;
 }

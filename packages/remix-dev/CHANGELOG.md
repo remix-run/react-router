@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 1.10.0
+
+### Patch Changes
+
+- Fixed several issues with TypeScript to JavaScript conversion when running `create-remix` ([#4891](https://github.com/remix-run/remix/pull/4891))
+- Resolve asset entry full path to support monorepo import of styles ([#4855](https://github.com/remix-run/remix/pull/4855))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.10.0`
+
 ## 1.9.0
 
 ### Minor Changes

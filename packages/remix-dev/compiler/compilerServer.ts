@@ -3,11 +3,11 @@ import * as esbuild from "esbuild";
 import * as fse from "fs-extra";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 
-import { type ReadChannel } from "../channel";
-import { type RemixConfig } from "../config";
-import { type AssetsManifest } from "./assets";
+import type { ReadChannel } from "../channel";
+import type { RemixConfig } from "../config";
+import type { AssetsManifest } from "./assets";
 import { loaders } from "./loaders";
-import { type CompileOptions } from "./options";
+import type { CompileOptions } from "./options";
 import { cssFilePlugin } from "./plugins/cssFilePlugin";
 import { deprecatedRemixPackagePlugin } from "./plugins/deprecatedRemixPackagePlugin";
 import { emptyModulesPlugin } from "./plugins/emptyModulesPlugin";
@@ -49,7 +49,10 @@ const createEsbuildConfig = (
 
   let plugins: esbuild.Plugin[] = [
     deprecatedRemixPackagePlugin(options.onWarning),
-    cssFilePlugin(options),
+    cssFilePlugin({
+      mode: options.mode,
+      rootDirectory: config.rootDirectory,
+    }),
     urlImportsPlugin(),
     mdxPlugin(config),
     emptyModulesPlugin(config, /\.client(\.[jt]sx?)?$/),
