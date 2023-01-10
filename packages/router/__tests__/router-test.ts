@@ -6485,7 +6485,7 @@ describe("a router", () => {
       expect(t.router.state.preventScrollReset).toBe(false);
     });
 
-    it("does restore scroll on submissions that redirecting", async () => {
+    it("restores scroll on submissions that redirect to the same location", async () => {
       let t = setup({
         routes: SCROLL_ROUTES,
         initialEntries: ["/tasks"],
@@ -6498,7 +6498,42 @@ describe("a router", () => {
 
       expect(t.router.state.restoreScrollPosition).toBe(false);
       expect(t.router.state.preventScrollReset).toBe(false);
+      // We were previously on tasks at 100
       let positions = { "/tasks": 100 };
+      // But we've scrolled up to 50 to submit.  We'll save this overtop of
+      // the 100 when we start this submission navigation and then restore to
+      // 50 below
+      let activeScrollPosition = 50;
+      t.router.enableScrollRestoration(
+        positions,
+        () => activeScrollPosition,
+        (l) => l.pathname
+      );
+
+      let nav1 = await t.navigate("/tasks", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      const nav2 = await nav1.actions.tasks.redirectReturn("/tasks");
+      await nav2.loaders.tasks.resolve("TASKS");
+      expect(t.router.state.restoreScrollPosition).toBe(50);
+      expect(t.router.state.preventScrollReset).toBe(false);
+    });
+
+    it("restores scroll on submissions that redirect to new locations", async () => {
+      let t = setup({
+        routes: SCROLL_ROUTES,
+        initialEntries: ["/tasks"],
+        hydrationData: {
+          loaderData: {
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      expect(t.router.state.restoreScrollPosition).toBe(false);
+      expect(t.router.state.preventScrollReset).toBe(false);
+      let positions = { "/": 50, "/tasks": 100 };
       let activeScrollPosition = 0;
       t.router.enableScrollRestoration(
         positions,
@@ -6512,10 +6547,10 @@ describe("a router", () => {
       });
       const nav2 = await nav1.actions.tasks.redirectReturn("/");
       await nav2.loaders.index.resolve("INDEX");
-      expect(t.router.state.restoreScrollPosition).not.toBe(false);
+      expect(t.router.state.restoreScrollPosition).toBe(50);
       expect(t.router.state.preventScrollReset).toBe(false);
     });
-
+    
     it("does not restore scroll on submissions", async () => {
       let t = setup({
         routes: SCROLL_ROUTES,
