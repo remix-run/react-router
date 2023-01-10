@@ -144,6 +144,7 @@ describe("flatRoutes", () => {
         {
           id: "routes/_auth",
           parentId: "root",
+          path: undefined,
         },
       ],
       [
@@ -183,6 +184,7 @@ describe("flatRoutes", () => {
         {
           id: "routes/_landing",
           parentId: "root",
+          path: undefined,
         },
       ],
       [
@@ -191,6 +193,7 @@ describe("flatRoutes", () => {
           id: "routes/_landing._index",
           index: true,
           parentId: "routes/_landing",
+          path: undefined,
         },
       ],
       [
@@ -215,6 +218,7 @@ describe("flatRoutes", () => {
           id: "routes/about._index",
           index: true,
           parentId: "routes/about",
+          path: undefined,
         },
       ],
       [
@@ -293,9 +297,9 @@ describe("flatRoutes", () => {
         },
       ],
       [
-        "routes/app_.projects/$id.roadmap.tsx",
+        "routes/app_.projects.$id.roadmap.tsx",
         {
-          id: "routes/app_.projects/$id.roadmap",
+          id: "routes/app_.projects.$id.roadmap",
           parentId: "root",
           path: "app/projects/:id/roadmap",
         },
@@ -310,9 +314,9 @@ describe("flatRoutes", () => {
         },
       ],
       [
-        "routes/app.skip_/layout.tsx",
+        "routes/app.skip_.layout.tsx",
         {
-          id: "routes/app.skip_/layout",
+          id: "routes/app.skip_.layout",
           index: undefined,
           parentId: "routes/app",
           path: "skip/layout",
@@ -373,49 +377,49 @@ describe("flatRoutes", () => {
 
       // Optional route segments
       [
-        "routes/(nested)/_layout/($slug).tsx",
+        "routes/(nested)._layout.($slug).tsx",
         {
-          id: "routes/(nested)/_layout/($slug)",
+          id: "routes/(nested)._layout.($slug)",
           parentId: "root",
           path: "nested?/:slug?",
         },
       ],
       [
-        "routes/(routes)/$.tsx",
+        "routes/(routes).$.tsx",
         {
-          id: "routes/(routes)/$",
+          id: "routes/(routes).$",
           parentId: "root",
           path: "routes?/*",
         },
       ],
       [
-        "routes/(routes).(sub)/$.tsx",
+        "routes/(routes).(sub).$.tsx",
         {
-          id: "routes/(routes).(sub)/$",
+          id: "routes/(routes).(sub).$",
           parentId: "root",
           path: "routes?/sub?/*",
         },
       ],
       [
-        "routes/(routes)/($slug).tsx",
+        "routes/(routes).($slug).tsx",
         {
-          id: "routes/(routes)/($slug)",
+          id: "routes/(routes).($slug)",
           parentId: "root",
           path: "routes?/:slug?",
         },
       ],
       [
-        "routes/(routes).sub/($slug).tsx",
+        "routes/(routes).sub.($slug).tsx",
         {
-          id: "routes/(routes).sub/($slug)",
+          id: "routes/(routes).sub.($slug)",
           parentId: "root",
           path: "routes?/sub/:slug?",
         },
       ],
       [
-        "routes/(nested)/$.tsx",
+        "routes/(nested).$.tsx",
         {
-          id: "routes/(nested)/$",
+          id: "routes/(nested).$",
           parentId: "root",
           path: "nested?/*",
         },
@@ -461,9 +465,9 @@ describe("flatRoutes", () => {
         },
       ],
       [
-        "routes/_layout/($slug).tsx",
+        "routes/_layout.($slug).tsx",
         {
-          id: "routes/_layout/($slug)",
+          id: "routes/_layout.($slug)",
           parentId: "routes/_layout",
           path: ":slug?",
         },
@@ -479,9 +483,9 @@ describe("flatRoutes", () => {
         },
       ],
       [
-        "routes/([i]ndex)/([[]).([[]]).tsx",
+        "routes/([i]ndex).([[]).([[]]).tsx",
         {
-          id: "routes/([i]ndex)/([[]).([[]])",
+          id: "routes/([i]ndex).([[]).([[]])",
           parentId: "routes/([index])",
           path: "[?/[]?",
         },
@@ -519,41 +523,41 @@ describe("flatRoutes", () => {
         },
       ],
       [
-        "routes/(test)/(inde[x]).tsx",
+        "routes/(test).(inde[x]).tsx",
         {
-          id: "routes/(test)/(inde[x])",
+          id: "routes/(test).(inde[x])",
           parentId: "root",
           path: "test?/index?",
         },
       ],
       [
-        "routes/($[$dollabills]).([.]lol)/(what)/([$]).($up).tsx",
+        "routes/($[$dollabills]).([.]lol).(what).([$]).($up).tsx",
         {
-          id: "routes/($[$dollabills]).([.]lol)/(what)/([$]).($up)",
+          id: "routes/($[$dollabills]).([.]lol).(what).([$]).($up)",
           parentId: "root",
           path: ":$dollabills?/.lol?/what?/$?/:up?",
         },
       ],
       [
-        "routes/(posts)/($slug)/([image.jpg]).tsx",
+        "routes/(posts).($slug).([image.jpg]).tsx",
         {
-          id: "routes/(posts)/($slug)/([image.jpg])",
+          id: "routes/(posts).($slug).([image.jpg])",
           parentId: "root",
           path: "posts?/:slug?/image.jpg?",
         },
       ],
       [
-        "routes/(sub)/([sitemap.xml]).tsx",
+        "routes/(sub).([sitemap.xml]).tsx",
         {
-          id: "routes/(sub)/([sitemap.xml])",
+          id: "routes/(sub).([sitemap.xml])",
           parentId: "root",
           path: "sub?/sitemap.xml?",
         },
       ],
       [
-        "routes/(sub)/[(sitemap.xml)].tsx",
+        "routes/(sub).[(sitemap.xml)].tsx",
         {
-          id: "routes/(sub)/[(sitemap.xml)]",
+          id: "routes/(sub).[(sitemap.xml)]",
           parentId: "root",
           path: "sub?/(sitemap.xml)",
         },
@@ -573,6 +577,15 @@ describe("flatRoutes", () => {
           id: "routes/[]otherstuff]",
           parentId: "root",
           path: "otherstuff]",
+        },
+      ],
+      [
+        "routes/brand/_index.tsx",
+        {
+          id: "routes/brand/_index",
+          parentId: "root",
+          path: "brand",
+          index: true,
         },
       ],
       [
