@@ -10,6 +10,7 @@ import { loaders } from "./loaders";
 import type { CompileOptions } from "./options";
 import { cssModulesPlugin } from "./plugins/cssModulesPlugin";
 import { cssSideEffectImportsPlugin } from "./plugins/cssSideEffectImportsPlugin";
+import { vanillaExtractPlugin } from "./plugins/vanillaExtractPlugin";
 import { cssFilePlugin } from "./plugins/cssFilePlugin";
 import { deprecatedRemixPackagePlugin } from "./plugins/deprecatedRemixPackagePlugin";
 import { emptyModulesPlugin } from "./plugins/emptyModulesPlugin";
@@ -51,10 +52,15 @@ const createEsbuildConfig = (
 
   let { mode } = options;
   let { rootDirectory } = config;
+  let outputCss = false;
+
   let plugins: esbuild.Plugin[] = [
     deprecatedRemixPackagePlugin(options.onWarning),
     config.future.unstable_cssModules
-      ? cssModulesPlugin({ mode, rootDirectory, outputCss: false })
+      ? cssModulesPlugin({ mode, rootDirectory, outputCss })
+      : null,
+    config.future.unstable_vanillaExtract
+      ? vanillaExtractPlugin({ config, mode, outputCss })
       : null,
     config.future.unstable_cssSideEffectImports
       ? cssSideEffectImportsPlugin({ rootDirectory })

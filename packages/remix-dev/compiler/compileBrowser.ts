@@ -21,6 +21,7 @@ import { mdxPlugin } from "./plugins/mdx";
 import { urlImportsPlugin } from "./plugins/urlImportsPlugin";
 import { cssModulesPlugin } from "./plugins/cssModulesPlugin";
 import { cssSideEffectImportsPlugin } from "./plugins/cssSideEffectImportsPlugin";
+import { vanillaExtractPlugin } from "./plugins/vanillaExtractPlugin";
 import {
   cssBundleEntryModulePlugin,
   cssBundleEntryModuleId,
@@ -69,7 +70,8 @@ const writeAssetsManifest = async (
 
 const isCssBundlingEnabled = (config: RemixConfig) =>
   config.future.unstable_cssModules ||
-  config.future.unstable_cssSideEffectImports;
+  config.future.unstable_cssSideEffectImports ||
+  config.future.unstable_vanillaExtract;
 
 const createEsbuildConfig = (
   build: "app" | "css",
@@ -98,13 +100,18 @@ const createEsbuildConfig = (
 
   let { mode } = options;
   let { rootDirectory } = config;
+  let outputCss = isCssBuild;
+
   let plugins: esbuild.Plugin[] = [
     deprecatedRemixPackagePlugin(options.onWarning),
     isCssBundlingEnabled(config) && isCssBuild
       ? cssBundleEntryModulePlugin(config)
       : null,
     config.future.unstable_cssModules
-      ? cssModulesPlugin({ mode, rootDirectory, outputCss: isCssBuild })
+      ? cssModulesPlugin({ mode, rootDirectory, outputCss })
+      : null,
+    config.future.unstable_vanillaExtract
+      ? vanillaExtractPlugin({ config, mode, outputCss })
       : null,
     config.future.unstable_cssSideEffectImports
       ? cssSideEffectImportsPlugin({ rootDirectory })
@@ -122,7 +129,17 @@ const createEsbuildConfig = (
     outdir: config.assetsBuildDirectory,
     platform: "browser",
     format: "esm",
-    external: getExternals(config),
+    external: [
+      // This allows Vanilla Extract to bundle asset imports, e.g. `import href
+      // from './image.svg'` resolves to a string like "/build/_assets/XXXX.svg"
+      // which will then appear in the compiled CSS, e.g. `background:
+      // url("/build/_assets/XXXX.svg")`. If we don't mark this path as
+      // external, esbuild will try to bundle it again but won't find it.
+      config.future.unstable_vanillaExtract
+        ? `${config.publicPath}_assets/*`
+        : null,
+      ...getExternals(config),
+    ].filter(isNotNull),
     loader: loaders,
     bundle: true,
     logLevel: "silent",

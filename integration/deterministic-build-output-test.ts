@@ -23,6 +23,7 @@ test("builds deterministically under different paths", async () => {
   //  * serverAssetsManifestPlugin (implicitly tested by build)
   //  * serverEntryModulePlugin (implicitly tested by build)
   //  * serverRouteModulesPlugin (implicitly tested by build)
+  //  * vanillaExtractPlugin (via app/routes/foo.tsx' .css.ts file import)
   let init = {
     files: {
       "remix.config.js": js`
@@ -30,6 +31,7 @@ test("builds deterministically under different paths", async () => {
           future: {
             unstable_cssModules: true,
             unstable_cssSideEffectImports: true,
+            unstable_vanillaExtract: true,
           },
         };
       `,
@@ -37,8 +39,9 @@ test("builds deterministically under different paths", async () => {
       "app/routes/foo.tsx": js`
         export * from "~/foo/bar.server";
         import styles from "~/styles/foo.module.css";
+        import { vanilla } from "~/styles/vanilla.css";
         import "~/styles/side-effect.css";
-        export default () => <div className={styles.foo}>YAY</div>;
+        export default () => <div className={[styles.foo, vanilla].join(' ')}>YAY</div>;
       `,
       "app/foo/bar.server.ts": "export const meta = () => []",
       "app/styles/foo.module.css": css`
@@ -62,6 +65,28 @@ test("builds deterministically under different paths", async () => {
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
           <circle cx="50" cy="50" r="50" fill="coral" />
         </svg>
+      `,
+      "app/styles/vanilla.css.ts": css`
+        import { style } from "@vanilla-extract/css";
+        import { chocolate } from "./chocolate.css";
+        import imageUrl from "~/images/foo.svg";
+
+        export const vanilla = style([
+          chocolate,
+          {
+            backgroundImage: [
+              "url(" + imageUrl + ")",
+              "url(~/images/foo.svg)",
+            ],
+          }
+        ]);
+      `,
+      "app/styles/chocolate.css.ts": css`
+        import { style } from "@vanilla-extract/css";
+
+        export const chocolate = style({
+          color: "chocolate",
+        });
       `,
       "app/styles/side-effect.css": css`
         .side-effect {
