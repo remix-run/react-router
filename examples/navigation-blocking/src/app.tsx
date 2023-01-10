@@ -1,5 +1,5 @@
 import React from "react";
-import { Blocker, useNavigate } from "react-router-dom";
+import type { Blocker } from "react-router-dom";
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -48,7 +48,6 @@ function Layout() {
     window.history.state?.idx
   );
   let location = useLocation();
-  let navigate = useNavigate();
 
   // Expose the underlying history index in the UI for debugging
   React.useEffect(() => {
@@ -71,7 +70,6 @@ function Layout() {
         <Link to="/four">Four</Link>&nbsp;&nbsp;
         <Link to="/five">Five</Link>&nbsp;&nbsp;
         <a href="https://remix.run">External link to Remix Docs</a>&nbsp;&nbsp;
-        <button onClick={() => navigate(-1)}>Back</button>&nbsp;&nbsp;
       </nav>
       <p>
         Current location (index): {location.pathname} ({historyIndex})
