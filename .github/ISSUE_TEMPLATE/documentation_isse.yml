@@ -1,0 +1,21 @@
+name: 📚 Documentation Issue
+description: Something is wrong with the React Router docs
+title: "[Docs]: "
+labels:
+  - docs
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for contributing!
+
+        For documentation updates - we would happily accept PRs, so feel free to update and
+        open a PR to the `main` branch.  Otherwise let us know in this issue what you felt
+        was missing or incorrect.
+
+  - type: textarea
+    attributes:
+      label: Describe what's incorrect/missing in the documentation
+      description: A concise description of what you expected to see in the docs
+    validations:
+      required: true
