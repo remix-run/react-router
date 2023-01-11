@@ -138,6 +138,12 @@ export interface SubmitOptions {
    * hierarchy and want to instead route based on /-delimited URL segments
    */
   relative?: RelativeRoutingType;
+
+  /**
+   * In browser-based environments, prevent resetting scroll after this
+   * navigation when using the <ScrollRestoration> component
+   */
+  preventScrollReset?: boolean;
 }
 
 export function getFormSubmissionInfo(

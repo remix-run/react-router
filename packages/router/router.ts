@@ -371,6 +371,7 @@ type LinkNavigateOptions = {
 type SubmissionNavigateOptions = {
   replace?: boolean;
   state?: any;
+  preventScrollReset?: boolean;
   formMethod?: FormMethod;
   formEncType?: FormEncType;
   formData: FormData;
@@ -771,6 +772,14 @@ export function createRouter(init: RouterInit): Router {
         )
       : state.loaderData;
 
+    // Always respect the user flag.  Otherwise don't reset on mutation
+    // submission navigations unless they redirect
+    let preventScrollReset =
+      pendingPreventScrollReset === true ||
+      (state.navigation.formMethod != null &&
+        isMutationMethod(state.navigation.formMethod) &&
+        location.state?._isRedirect !== true);
+
     updateState({
       ...newState, // matches, errors, fetchers go through as-is
       actionData,
@@ -780,11 +789,11 @@ export function createRouter(init: RouterInit): Router {
       initialized: true,
       navigation: IDLE_NAVIGATION,
       revalidation: "idle",
-      // Don't restore on submission navigations
-      restoreScrollPosition: state.navigation.formData
-        ? false
-        : getSavedScrollPosition(location, newState.matches || state.matches),
-      preventScrollReset: pendingPreventScrollReset,
+      restoreScrollPosition: getSavedScrollPosition(
+        location,
+        newState.matches || state.matches
+      ),
+      preventScrollReset,
     });
 
     if (isUninterruptedRevalidation) {
@@ -1772,6 +1781,8 @@ export function createRouter(init: RouterInit): Router {
           ...submission,
           formAction: redirect.location,
         },
+        // Preserve this flag across redirects
+        preventScrollReset: pendingPreventScrollReset,
       });
     } else {
       // Otherwise, we kick off a new loading navigation, preserving the
@@ -1785,6 +1796,8 @@ export function createRouter(init: RouterInit): Router {
           formEncType: submission ? submission.formEncType : undefined,
           formData: submission ? submission.formData : undefined,
         },
+        // Preserve this flag across redirects
+        preventScrollReset: pendingPreventScrollReset,
       });
     }
   }

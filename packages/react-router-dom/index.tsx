@@ -594,6 +594,12 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   relative?: RelativeRoutingType;
 
   /**
+   * Prevent the scroll position from resetting to the top of the viewport on
+   * completion of the navigation when using the <ScrollRestoration> component
+   */
+  preventScrollReset?: boolean;
+
+  /**
    * A function to call when the form is submitted. If you call
    * `event.preventDefault()` then this form will not do anything.
    */
@@ -640,6 +646,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       fetcherKey,
       routeId,
       relative,
+      preventScrollReset,
       ...props
     },
     forwardedRef
@@ -664,6 +671,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         method: submitMethod,
         replace,
         relative,
+        preventScrollReset,
       });
     };
 
@@ -906,6 +914,7 @@ function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
       let href = url.pathname + url.search;
       let opts = {
         replace: options.replace,
+        preventScrollReset: options.preventScrollReset,
         formData,
         formMethod: method as FormMethod,
         formEncType: encType as FormEncType,
@@ -1000,8 +1009,9 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
   Form: ReturnType<typeof createFetcherForm>;
   submit: (
     target: SubmitTarget,
-    // Fetchers cannot replace because they are not navigation events
-    options?: Omit<SubmitOptions, "replace">
+    // Fetchers cannot replace/preventScrollReset because they are not
+    // navigation events
+    options?: Omit<SubmitOptions, "replace" | "preventScrollReset">
   ) => void;
   load: (href: string) => void;
 };
@@ -1165,7 +1175,7 @@ function useScrollRestoration({
         }
       }
 
-      // Opt out of scroll reset if this link requested it
+      // Don't reset if this navigation opted out
       if (preventScrollReset === true) {
         return;
       }
