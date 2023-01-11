@@ -631,35 +631,45 @@ export function generatePath<Path extends string>(
     path = path.replace(/\*$/, "/*") as Path;
   }
 
-  let leadingSlash = originalPath.startsWith("/") ? "/" : "";
+  return (
+    path
+      .replace(
+        /^:(\w+)(\??)/g,
+        (_, key: PathParam<Path>, optional: string | undefined) => {
+          let hasParam = params[key] != null;
+          if (optional === "?") {
+            return hasParam ? params[key] : "";
+          }
+          invariant(hasParam, `Missing ":${key}" param`);
+          return params[key]!;
+        }
+      )
+      .replace(
+        /\/:(\w+)(\??)/g,
+        (_, key: PathParam<Path>, optional: string | undefined) => {
+          let hasParam = params[key] != null;
+          if (optional === "?") {
+            return hasParam ? `/${params[key]}` : "";
+          }
+          invariant(hasParam, `Missing ":${key}" param`);
+          return `/${params[key]!}`;
+        }
+      )
+      // Remove any optional markers form optional static segments
+      .replace(/\?/g, "")
+      .replace(/(\/?)\*/, (_, prefix, __, str) => {
+        const star = "*" as PathParam<Path>;
 
-  let replaced = path.split("/").map((segment) => {
-    // Splats
-    if (segment === "*") {
-      const star = "*" as PathParam<Path>;
-      return params[star] || "";
-    }
+        if (params[star] == null) {
+          // If no splat was provided, trim the trailing slash _unless_ it's
+          // the entire path
+          return str === "/*" ? "/" : "";
+        }
 
-    let isOptional = segment.endsWith("?");
-    segment = segment.replace(/\?$/, "");
-
-    // Static segments
-    if (!segment.startsWith(":")) {
-      return segment;
-    }
-
-    // Dynamic params
-    let key = segment.replace(/^:/, "") as PathParam<Path>;
-    if (params[key] != null) {
-      return params[key];
-    } else if (!isOptional) {
-      invariant(false, `Missing ":${key}" param`);
-    } else {
-      return "";
-    }
-  });
-
-  return leadingSlash + replaced.filter((s) => s).join("/");
+        // Apply the splat
+        return `${prefix}${params[star]}`;
+      })
+  );
 }
 
 /**
