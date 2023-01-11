@@ -1,7 +1,3 @@
-/**
- * @jest-environment ./__tests__/custom-environment.js
- */
-
 import { JSDOM } from "jsdom";
 
 import type { HashHistory } from "@remix-run/router";

@@ -68,6 +68,7 @@
     "@types/semver": "^7.3.8",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
+    "abort-controller": "^3.0.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^26.6.3",
     "babel-plugin-dev-expression": "^0.2.2",

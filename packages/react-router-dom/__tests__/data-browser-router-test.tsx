@@ -4200,7 +4200,7 @@ function createDeferred() {
 
 function getWindowImpl(initialUrl: string, isHash = false): Window {
   // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "https://remix.run/" });
+  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
   dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
   return dom.window as unknown as Window;
 }
