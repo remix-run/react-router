@@ -1,4 +1,4 @@
-import { cleanupRef, cleanupTagName, isNightly } from "./utils";
+import { cleanupRef, cleanupTagName, isNightly, isStable } from "./utils";
 
 if (!process.env.DEFAULT_BRANCH) {
   throw new Error("DEFAULT_BRANCH is required");
@@ -32,3 +32,4 @@ export const NIGHTLY_BRANCH = process.env.NIGHTLY_BRANCH;
 export const PR_FILES_STARTS_WITH = ["packages/"];
 export const IS_NIGHTLY_RELEASE = isNightly(VERSION);
 export const AWAITING_RELEASE_LABEL = "awaiting release";
+export const IS_STABLE_RELEASE = isStable(VERSION);
