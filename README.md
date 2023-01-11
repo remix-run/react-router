@@ -2,7 +2,7 @@
 
 [npm-badge]: https://img.shields.io/npm/v/react-router-dom.svg?style=flat-square
 [npm]: https://www.npmjs.org/package/react-router-dom
-[build-badge]: https://img.shields.io/github/workflow/status/remix-run/react-router/test/dev?style=flat-square
+[build-badge]: https://img.shields.io/github/actions/workflow/status/remix-run/react-router/test.yml?branch=dev&style=square
 [build]: https://github.com/remix-run/react-router/actions/workflows/test.yml
 
 React Router is a lightweight, fully-featured routing library for the [React](https://reactjs.org) JavaScript library. React Router runs everywhere that React runs; on the web, on the server (using node.js), and on React Native.
