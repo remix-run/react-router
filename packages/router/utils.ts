@@ -234,7 +234,7 @@ export type ParamParseKey<Segment extends string> =
  * The parameters that were parsed from the URL path.
  */
 export type Params<Key extends string = string> = {
-  readonly [key in Key]: string | undefined;
+  readonly [key in Key]: string | null | undefined;
 };
 
 /**
