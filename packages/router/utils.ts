@@ -200,7 +200,9 @@ type _PathParam<Path extends string> =
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
     Path extends `:${infer Param}`
-    ? Param
+    ? Param extends `${infer Optional}?`
+      ? Optional
+      : Param
     : // otherwise, there aren't any params present
       never;
 
@@ -616,7 +618,7 @@ function matchRouteBranch<
 export function generatePath<Path extends string>(
   originalPath: Path,
   params: {
-    [key in PathParam<Path>]: string;
+    [key in PathParam<Path>]: string | null;
   } = {} as any
 ): string {
   let path = originalPath;
@@ -631,27 +633,49 @@ export function generatePath<Path extends string>(
     path = path.replace(/\*$/, "/*") as Path;
   }
 
-  return path
-    .replace(/^:(\w+)/g, (_, key: PathParam<Path>) => {
-      invariant(params[key] != null, `Missing ":${key}" param`);
-      return params[key]!;
-    })
-    .replace(/\/:(\w+)/g, (_, key: PathParam<Path>) => {
-      invariant(params[key] != null, `Missing ":${key}" param`);
-      return `/${params[key]!}`;
-    })
-    .replace(/(\/?)\*/, (_, prefix, __, str) => {
-      const star = "*" as PathParam<Path>;
+  return (
+    path
+      .replace(
+        /^:(\w+)(\??)/g,
+        (_, key: PathParam<Path>, optional: string | undefined) => {
+          let param = params[key];
+          if (optional === "?") {
+            return param == null ? "" : param;
+          }
+          if (param == null) {
+            invariant(false, `Missing ":${key}" param`);
+          }
+          return param;
+        }
+      )
+      .replace(
+        /\/:(\w+)(\??)/g,
+        (_, key: PathParam<Path>, optional: string | undefined) => {
+          let param = params[key];
+          if (optional === "?") {
+            return param == null ? "" : `/${param}`;
+          }
+          if (param == null) {
+            invariant(false, `Missing ":${key}" param`);
+          }
+          return `/${param}`;
+        }
+      )
+      // Remove any optional markers from optional static segments
+      .replace(/\?/g, "")
+      .replace(/(\/?)\*/, (_, prefix, __, str) => {
+        const star = "*" as PathParam<Path>;
 
-      if (params[star] == null) {
-        // If no splat was provided, trim the trailing slash _unless_ it's
-        // the entire path
-        return str === "/*" ? "/" : "";
-      }
+        if (params[star] == null) {
+          // If no splat was provided, trim the trailing slash _unless_ it's
+          // the entire path
+          return str === "/*" ? "/" : "";
+        }
 
-      // Apply the splat
-      return `${prefix}${params[star]}`;
-    });
+        // Apply the splat
+        return `${prefix}${params[star]}`;
+      })
+  );
 }
 
 /**
