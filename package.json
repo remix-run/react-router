@@ -25,6 +25,7 @@
     "release": "changeset publish",
     "size": "filesize",
     "test": "jest",
+    "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
     "changeset": "changeset",
     "version": "changeset version",
     "postversion": "node scripts/postversion.mjs",

@@ -1,42 +1,38 @@
 /* eslint-disable jest/no-focused-tests */
-/* eslint-disable jest/no-done-callback */
 
 import type { Router } from "../index";
 import { createMemoryHistory, createRouter } from "../index";
 
+const LOADER_LATENCY_MS = 100;
+const routes = [
+  { path: "/" },
+  {
+    path: "/about",
+    loader: () => sleep(LOADER_LATENCY_MS),
+  },
+  { path: "/contact" },
+  { path: "/help" },
+];
+
 describe("blocking", () => {
   let router: Router;
-  it("creates a blocker", () => {
+  it("initializes an 'unblocked' blocker", () => {
     router = createRouter({
       history: createMemoryHistory({
         initialEntries: ["/"],
         initialIndex: 0,
       }),
-      routes: [{ path: "/" }, { path: "/about" }],
+      routes,
     });
     router.initialize();
 
     let fn = () => true;
     router.getBlocker("KEY", fn);
-    expect(router.state.blockers.get("KEY")).toEqual({
+    expect(router.getBlocker("KEY", fn)).toEqual({
       state: "unblocked",
       proceed: undefined,
       reset: undefined,
     });
-  });
-
-  it("deletes a blocker", () => {
-    router = createRouter({
-      history: createMemoryHistory({
-        initialEntries: ["/"],
-        initialIndex: 0,
-      }),
-      routes: [{ path: "/" }, { path: "/about" }],
-    });
-    router.initialize();
-    router.getBlocker("KEY", () => true);
-    router.deleteBlocker("KEY");
-    expect(router.state.blockers.get("KEY")).toBeUndefined();
   });
 
   describe("on history push", () => {
@@ -48,88 +44,128 @@ describe("blocking", () => {
           initialEntries,
           initialIndex,
         }),
-        routes: [{ path: "/" }, { path: "/about" }],
+        routes,
       });
       router.initialize();
     });
 
     describe("blocker returns false", () => {
-      it("removes blocker after navigation", async () => {
-        router.getBlocker("KEY", () => false);
-        await router.navigate("/about");
-        expect(router.state.blockers.get("KEY")).toBeUndefined();
-      });
-
+      let fn = () => false;
       it("navigates", async () => {
-        router.getBlocker("KEY", () => false);
+        router.getBlocker("KEY", fn);
         await router.navigate("/about");
         expect(router.state.location.pathname).toBe("/about");
+      });
+
+      it("gets an 'unblocked' blocker after navigation starts", async () => {
+        router.getBlocker("KEY", fn);
+        router.navigate("/about");
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+        });
+      });
+
+      it("gets an 'unblocked' blocker after navigation completes", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate("/about");
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+        });
       });
     });
 
     describe("blocker returns true", () => {
-      it("set blocker state to 'blocked' after navigation", async () => {
-        router.getBlocker("KEY", () => true);
-        await router.navigate("/about");
-        expect(router.state.blockers.get("KEY")?.state).toEqual("blocked");
-      });
+      let fn = () => true;
 
       it("does not navigate", async () => {
-        router.getBlocker("KEY", () => true);
+        router.getBlocker("KEY", fn);
         await router.navigate("/about");
         expect(router.state.location.pathname).toBe(
           initialEntries[initialIndex]
         );
+      });
+
+      it("gets a 'blocked' blocker after navigation starts", async () => {
+        router.getBlocker("KEY", fn);
+        router.navigate("/about");
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "blocked",
+          proceed: expect.any(Function),
+          reset: expect.any(Function),
+        });
+      });
+
+      it("gets a 'blocked' blocker after navigation promise resolves", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate("/about");
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "blocked",
+          proceed: expect.any(Function),
+          reset: expect.any(Function),
+        });
       });
     });
 
     describe("proceeds from blocked state", () => {
-      // TODO: Unsure why this is failing
-      it.skip("sets blocker state to 'proceeding'", async (done) => {
-        let blocker = router.getBlocker("KEY", () => true);
+      let fn = () => true;
+      it("gets a 'proceeding' blocker after proceeding navigation starts", async () => {
+        router.getBlocker("KEY", fn);
         await router.navigate("/about");
-
-        expect(router.state.blockers.get("KEY")?.state).toEqual("blocked");
-
-        blocker = router.getBlocker("KEY");
-        blocker.proceed?.();
-
-        expect(router.state.blockers.get("KEY")?.state).toEqual("proceeding");
+        router.getBlocker("KEY", fn).proceed?.();
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "proceeding",
+          proceed: undefined,
+          reset: undefined,
+        });
       });
 
-      it.skip("proceeds with blocked navigation", async () => {
-        let blocker = router.getBlocker("KEY", () => true);
+      it("gets an 'unblocked' blocker after proceeding navigation completes", async () => {
+        router.getBlocker("KEY", fn);
         await router.navigate("/about");
-        expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
-        );
+        router.getBlocker("KEY", fn).proceed?.();
+        await sleep(LOADER_LATENCY_MS);
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+        });
+      });
 
-        // TODO: Proceed is sync and doesn't wait for the transition to
-        // complete, so I'm not sure how to test this.
-        blocker.proceed?.();
+      it("navigates after proceeding navigation completes", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate("/about");
+        router.getBlocker("KEY", fn).proceed?.();
+        await sleep(LOADER_LATENCY_MS);
         expect(router.state.location.pathname).toEqual("/about");
       });
     });
 
     describe("resets from blocked state", () => {
-      it.only("sets blocker state to 'unblocked'", async () => {
-        let blocker = router.getBlocker("KEY", () => true);
+      let fn = () => true;
+      it("gets an 'unblocked' blocker after resetting navigation", async () => {
+        router.getBlocker("KEY", fn);
         await router.navigate("/about");
-        expect(router.state.blockers.get("KEY")?.state).toEqual("blocked");
-
-        router.state.blockers.get("KEY")?.reset?.();
-        expect(router.state.blockers.get("KEY")?.state).toEqual("unblocked");
+        router.getBlocker("KEY", fn).reset?.();
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+        });
       });
 
-      it("does not navigate", async () => {
-        let blocker = router.getBlocker("KEY", () => true);
+      it("stays at current location after resetting", async () => {
+        router.getBlocker("KEY", fn);
+        let pathnameBeforeNavigation = router.state.location.pathname;
         await router.navigate("/about");
-        expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
-        );
+        router.getBlocker("KEY", fn).reset?.();
 
-        blocker.reset?.();
-        expect(router.state.location.pathname).toEqual("/");
+        // wait for '/about' loader so we catch failure if navigation proceeds
+        await sleep(LOADER_LATENCY_MS);
+        expect(router.state.location.pathname).toBe(pathnameBeforeNavigation);
       });
     });
   });
@@ -143,82 +179,137 @@ describe("blocking", () => {
           initialEntries,
           initialIndex,
         }),
-        routes: [{ path: "/" }, { path: "/about" }],
+        routes,
       });
       router.initialize();
     });
 
     describe("blocker returns false", () => {
-      it("sets blocker state to 'unblocked'", async () => {
-        let blocker = router.getBlocker("KEY", () => false);
-        await router.navigate("/about", { replace: true });
-        expect(blocker.state).toEqual("unblocked");
-      });
-
+      let fn = () => false;
       it("navigates", async () => {
-        router.getBlocker("KEY", () => false);
+        router.getBlocker("KEY", fn);
         await router.navigate("/about", { replace: true });
         expect(router.state.location.pathname).toBe("/about");
+      });
+
+      it("gets an 'unblocked' blocker after navigation starts", async () => {
+        router.getBlocker("KEY", fn);
+        router.navigate("/about", { replace: true });
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+        });
+      });
+
+      it("gets an 'unblocked' blocker after navigation completes", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate("/about", { replace: true });
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+        });
       });
     });
 
     describe("blocker returns true", () => {
-      it("set blocker state to 'blocked'", async () => {
-        let blocker = router.getBlocker("KEY", () => true);
-        await router.navigate("/about", { replace: true });
-        expect(blocker.state).toEqual("blocked");
-      });
+      let fn = () => true;
 
       it("does not navigate", async () => {
-        router.getBlocker("KEY", () => true);
+        router.getBlocker("KEY", fn);
         await router.navigate("/about", { replace: true });
         expect(router.state.location.pathname).toBe(
           initialEntries[initialIndex]
         );
+      });
+
+      it("gets a 'blocked' blocker after navigation starts", async () => {
+        router.getBlocker("KEY", fn);
+        router.navigate("/about", { replace: true });
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "blocked",
+          proceed: expect.any(Function),
+          reset: expect.any(Function),
+        });
+      });
+
+      it("gets a 'blocked' blocker after navigation promise resolves", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate("/about", { replace: true });
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "blocked",
+          proceed: expect.any(Function),
+          reset: expect.any(Function),
+        });
       });
     });
 
     describe("proceeds from blocked state", () => {
-      it("sets blocker state to 'proceeding'", async (done) => {
-        let blocker = router.getBlocker("KEY", () => true);
+      let fn = () => true;
+      it("gets a 'proceeding' blocker after proceeding navigation starts", async () => {
+        router.getBlocker("KEY", fn);
         await router.navigate("/about", { replace: true });
-        expect(blocker.state).toEqual("blocked");
-
-        blocker.proceed?.();
-        expect(blocker.state).toEqual("proceeding");
+        router.getBlocker("KEY", fn).proceed?.();
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "proceeding",
+          proceed: undefined,
+          reset: undefined,
+        });
       });
 
-      it("proceeds with blocked navigation", async () => {
-        let blocker = router.getBlocker("KEY", () => true);
+      it("gets an 'unblocked' blocker after proceeding navigation completes", async () => {
+        router.getBlocker("KEY", fn);
         await router.navigate("/about", { replace: true });
-        expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
-        );
+        router.getBlocker("KEY", fn).proceed?.();
+        await sleep(LOADER_LATENCY_MS);
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+        });
+      });
 
-        await blocker.proceed?.();
+      it("navigates after proceeding navigation completes", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate("/about", { replace: true });
+        router.getBlocker("KEY", fn).proceed?.();
+        await sleep(LOADER_LATENCY_MS);
         expect(router.state.location.pathname).toEqual("/about");
+      });
+
+      it("replaces the current history entry after proceeding completes", async () => {
+        router.getBlocker("KEY", fn);
+        let historyLengthBeforeNavigation = window.history.length;
+        await router.navigate("/about", { replace: true });
+        router.getBlocker("KEY", fn).proceed?.();
+        await sleep(LOADER_LATENCY_MS);
+        expect(window.history.length).toEqual(historyLengthBeforeNavigation);
       });
     });
 
     describe("resets from blocked state", () => {
-      it("sets blocker state to 'unblocked'", async () => {
-        let blocker = router.getBlocker("KEY", () => true);
+      let fn = () => true;
+      it("gets an 'unblocked' blocker after resetting navigation", async () => {
+        router.getBlocker("KEY", fn);
         await router.navigate("/about", { replace: true });
-        expect(blocker.state).toEqual("blocked");
-
-        blocker.reset?.();
-        expect(blocker.state).toEqual("unblocked");
+        router.getBlocker("KEY", fn).reset?.();
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+        });
       });
 
-      it("does not navigate", async () => {
-        let blocker = router.getBlocker("KEY", () => true);
+      it("stays at current location after resetting", async () => {
+        router.getBlocker("KEY", fn);
+        let pathnameBeforeNavigation = router.state.location.pathname;
         await router.navigate("/about", { replace: true });
-        expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
-        );
+        router.getBlocker("KEY", fn).reset?.();
 
-        blocker.reset?.();
-        expect(router.state.location.pathname).toEqual("/");
+        // wait for '/about' loader so we catch failure if navigation proceeds
+        await sleep(LOADER_LATENCY_MS);
+        expect(router.state.location.pathname).toBe(pathnameBeforeNavigation);
       });
     });
   });
@@ -232,25 +323,21 @@ describe("blocking", () => {
           initialEntries,
           initialIndex,
         }),
-        routes: [
-          { path: "/" },
-          { path: "/about" },
-          { path: "/contact" },
-          { path: "/help" },
-        ],
+        routes,
       });
       router.initialize();
     });
 
     describe("blocker returns false", () => {
+      let fn = () => false;
       it("set blocker state to unblocked", async () => {
-        let blocker = router.getBlocker("KEY", () => false);
+        router.getBlocker("KEY", fn);
         await router.navigate(-1);
-        expect(blocker.state).toEqual("unblocked");
+        expect(router.getBlockerState("KEY")).toEqual("unblocked");
       });
 
       it("should navigate", async () => {
-        router.getBlocker("KEY", () => false);
+        router.getBlocker("KEY", fn);
         await router.navigate(-1);
         expect(router.state.location.pathname).toEqual(
           initialEntries[initialIndex - 1]
@@ -259,69 +346,114 @@ describe("blocking", () => {
     });
 
     describe("blocker returns true", () => {
-      it("set blocker state", async () => {
-        let blocker = router.getBlocker("KEY", () => true);
-        await router.navigate(-1);
-        expect(blocker.state).toEqual("blocked");
-      });
+      let fn = () => true;
 
       it("does not navigate", async () => {
-        router.getBlocker("KEY", () => true);
+        router.getBlocker("KEY", fn);
         await router.navigate(-1);
         expect(router.state.location.pathname).toBe(
           initialEntries[initialIndex]
         );
+      });
+
+      it("gets a 'blocked' blocker after navigation starts", async () => {
+        router.getBlocker("KEY", fn);
+        router.navigate(-1);
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "blocked",
+          proceed: expect.any(Function),
+          reset: expect.any(Function),
+        });
+      });
+
+      it("gets a 'blocked' blocker after navigation promise resolves", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate(-1);
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "blocked",
+          proceed: expect.any(Function),
+          reset: expect.any(Function),
+        });
       });
     });
 
     describe("proceeds from blocked state", () => {
-      it("sets blocker state to 'proceeding'", async (done) => {
-        let blocker = router.getBlocker("KEY", () => true);
-        await router.navigate(-1);
-        expect(blocker.state).toEqual("blocked");
+      let fn = () => true;
 
-        blocker.proceed?.();
-        expect(blocker.state).toEqual("proceeding");
+      // we want to navigate so that `/about` is the previous entry in the
+      // stack here since it has a loader that won't resolve immediately
+      let initialEntries = ["/", "/about", "/contact"];
+      let initialIndex = 2;
+      beforeEach(() => {
+        router = createRouter({
+          history: createMemoryHistory({
+            initialEntries,
+            initialIndex,
+          }),
+          routes,
+        });
+        router.initialize();
       });
 
-      it("proceeds with blocked navigation", async () => {
-        let blocker = router.getBlocker("KEY", () => true);
+      it("gets a 'proceeding' blocker after proceeding navigation starts", async () => {
+        router.getBlocker("KEY", fn);
         await router.navigate(-1);
-        expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
-        );
+        router.getBlocker("KEY", fn).proceed?.();
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "proceeding",
+          proceed: undefined,
+          reset: undefined,
+        });
+      });
 
-        await blocker.proceed?.();
-        expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex - 1]
-        );
+      it("gets an 'unblocked' blocker after proceeding navigation completes", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate(-1);
+        router.getBlocker("KEY", fn).proceed?.();
+        await sleep(LOADER_LATENCY_MS);
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+        });
+      });
+
+      it("navigates after proceeding navigation completes", async () => {
+        router.getBlocker("KEY", fn);
+        await router.navigate(-1);
+        router.getBlocker("KEY", fn).proceed?.();
+        await sleep(LOADER_LATENCY_MS);
+        expect(router.state.location.pathname).toEqual("/about");
       });
     });
 
     describe("resets from blocked state", () => {
-      it.todo("patches the history stack");
-
-      it("sets blocker state to 'unblocked'", async () => {
-        let blocker = router.getBlocker("KEY", () => true);
+      let fn = () => true;
+      it("gets an 'unblocked' blocker after resetting navigation", async () => {
+        router.getBlocker("KEY", fn);
         await router.navigate(-1);
-        expect(blocker.state).toEqual("blocked");
-
-        blocker.reset?.();
-        expect(blocker.state).toEqual("unblocked");
+        router.getBlocker("KEY", fn).reset?.();
+        expect(router.getBlocker("KEY", fn)).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+        });
       });
 
-      it("does not navigate", async () => {
-        let blocker = router.getBlocker("KEY", () => true);
+      it("stays at current location after resetting", async () => {
+        router.getBlocker("KEY", fn);
+        let pathnameBeforeNavigation = router.state.location.pathname;
         await router.navigate(-1);
-        expect(router.state.location.pathname).toBe(
-          initialEntries[initialIndex]
-        );
+        router.getBlocker("KEY", fn).reset?.();
 
-        blocker.reset?.();
-        expect(router.state.location.pathname).toEqual(
-          initialEntries[initialIndex]
-        );
+        // wait for '/about' loader so we catch failure if navigation proceeds
+        await sleep(LOADER_LATENCY_MS);
+        expect(router.state.location.pathname).toBe(pathnameBeforeNavigation);
       });
     });
   });
 });
+
+function sleep(n: number = 500) {
+  return new Promise<void>((r) => setTimeout(r, n));
+}

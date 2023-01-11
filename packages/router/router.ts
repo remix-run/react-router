@@ -206,6 +206,15 @@ export interface Router {
    * @internal
    * PRIVATE - DO NOT USE
    *
+   * Get the state of a navigation blocker
+   * @param key The identifier for the blocker
+   */
+  getBlockerState(key: string): BlockerState;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Delete a navigation blocker
    * @param key The identifier for the blocker
    */
@@ -485,22 +494,27 @@ type FetcherStates<TData = any> = {
 export type Fetcher<TData = any> =
   FetcherStates<TData>[keyof FetcherStates<TData>];
 
-export type Blocker =
-  | {
-      state: "blocked";
-      reset(): void;
-      proceed(): void;
-    }
-  | {
-      state: "unblocked";
-      reset: undefined;
-      proceed: undefined;
-    }
-  | {
-      state: "proceeding";
-      reset: undefined;
-      proceed: undefined;
-    };
+export type BlockerBlocked = {
+  state: "blocked";
+  reset(): void;
+  proceed(): void;
+};
+
+export type BlockerUnblocked = {
+  state: "unblocked";
+  reset: undefined;
+  proceed: undefined;
+};
+
+export type BlockerProceeding = {
+  state: "proceeding";
+  reset: undefined;
+  proceed: undefined;
+};
+
+export type Blocker = BlockerUnblocked | BlockerBlocked | BlockerProceeding;
+
+export type BlockerState = Blocker["state"];
 
 export type BlockerFunction = (
   location: Location,
@@ -2084,6 +2098,12 @@ export function createRouter(init: RouterInit): Router {
     return blocker;
   }
 
+  function getBlockerState(key: string): BlockerState {
+    let blocker = state.blockers.get(key);
+    if (!blocker) return "unblocked";
+    return blocker.state;
+  }
+
   function deleteBlocker(key: string) {
     state.blockers.delete(key);
     blockerFunctions.delete(key);
@@ -2239,6 +2259,7 @@ export function createRouter(init: RouterInit): Router {
     deleteFetcher,
     dispose,
     getBlocker,
+    getBlockerState,
     deleteBlocker,
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
