@@ -1,4 +1,4 @@
-name: 🕊 Release
+name: 🦋 Changesets Release
 on:
   push:
     branches:
@@ -6,34 +6,34 @@ on:
       - "release-*"
       - "!release-experimental"
       - "!release-experimental-*"
-
-concurrency: ${{ github.workflow }}-${{ github.ref }}
-
-env:
-  CI: true
+      - "!release-manual"
+      - "!release-manual-*"
 
 jobs:
   release:
     name: 🦋 Changesets Release
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
-
+    outputs:
+      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
+      published: ${{ steps.changesets.outputs.published }}
     steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: ⎔ Setup Node
+      - name: ⎔ Setup node
         uses: actions/setup-node@v3
         with:
           node-version-file: ".nvmrc"
-          cache: yarn
+          cache: "yarn"
 
-      - name: 📥 Install dependencies
-        # even though this is called "npm-install" it does use yarn to install
-        # because we have a yarn.lock and caches efficiently.
-        uses: bahmutov/npm-install@v1
+      - name: 📥 Install deps
+        run: yarn --frozen-lockfile
 
       - name: 🔐 Setup npm auth
         run: |
@@ -52,16 +52,45 @@ jobs:
           version: yarn run version
           commit: "chore: Update version for release"
           title: "chore: Update version for release"
-          publish: yarn release
+          publish: yarn run release
           createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN_SO_OTHER_ACTIONS_RUN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  # comment:
-  #   needs: [release]
-  #   name: 📝 Comment on related issues and pull requests
-  #   if: github.repository == 'remix-run/react-router'
-  #   uses: remix-run/react-router/.github/workflows/release-comments.yml@main
-  #   with:
-  #     ref: ${{ github.ref }}
+  findPackage:
+    name: 🦋 Find Package
+    needs: [release]
+    runs-on: ubuntu-latest
+    if: github.repository == 'remix-run/react-router' && needs.release.outputs.published == 'true'
+    outputs:
+      package: ${{ steps.findPackage.outputs.package }}
+    steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: "npm"
+
+      - id: findPackage
+        run: |
+          package=$(node ./scripts/release/find-release-from-changeset.js)
+          echo "package=${package}" >> $GITHUB_OUTPUT
+        env:
+          packageVersionToFollow: "react-router"
+          publishedPackages: ${{ needs.release.outputs.publishedPackages }}
+
+  comment:
+    name: 📝 Comment on related issues and pull requests
+    if: github.repository == 'remix-run/react-router' && needs.findPackage.outputs.package != ''
+    needs: [release, findPackage]
+    uses: ./.github/workflows/release-comments.yml
+    with:
+      ref: refs/tags/${{ needs.findPackage.outputs.package }}
+      packageVersionToFollow: "react-router"

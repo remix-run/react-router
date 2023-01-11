@@ -7,9 +7,12 @@ import {
   DEFAULT_BRANCH,
   PACKAGE_VERSION_TO_FOLLOW,
   AWAITING_RELEASE_LABEL,
+  IS_NIGHTLY_RELEASE,
+  IS_STABLE_RELEASE,
 } from "./constants";
 import { gql, graphqlWithAuth, octokit } from "./octokit";
 import type { MinimalTag } from "./utils";
+import { isNightly, isStable } from "./utils";
 import { cleanupTagName } from "./utils";
 import { checkIfStringStartsWith } from "./utils";
 
@@ -140,34 +143,32 @@ function getPreviousTagFromCurrentTag(
 
       return { tag: tagName, date, isPrerelease };
     })
-    .filter((v: any): v is MinimalTag => typeof v !== "undefined");
+    .filter((v: any): v is MinimalTag => typeof v !== "undefined")
+    .filter((tag) => {
+      if (IS_STABLE_RELEASE) return isStable(tag.tag);
+      let isNightlyTag = isNightly(tag.tag);
+      if (IS_NIGHTLY_RELEASE) return isNightlyTag;
+      return !isNightlyTag;
+    })
+    .sort((a, b) => {
+      if (IS_NIGHTLY_RELEASE) {
+        return b.date.getTime() - a.date.getTime();
+      }
+
+      return semver.rcompare(a.tag, b.tag);
+    });
 
   let currentTagIndex = validTags.findIndex((tag) => tag.tag === currentTag);
   let currentTagInfo: MinimalTag | undefined = validTags.at(currentTagIndex);
   let previousTagInfo: MinimalTag | undefined;
 
   if (!currentTagInfo) {
-    throw new Error(`Could not find last tag ${currentTag}`);
-  }
-
-  // if the currentTag was a stable tag, then we want to find the previous stable tag
-  if (!currentTagInfo.isPrerelease) {
-    validTags = validTags
-      .filter((tag) => !tag.isPrerelease)
-      .sort((a, b) => semver.rcompare(a.tag, b.tag));
-
-    currentTagIndex = validTags.findIndex((tag) => tag.tag === currentTag);
-    currentTagInfo = validTags.at(currentTagIndex);
-    if (!currentTagInfo) {
-      throw new Error(`Could not find last stable tag ${currentTag}`);
-    }
+    throw new Error(`Could not find tag ${currentTag}`);
   }
 
   previousTagInfo = validTags.at(currentTagIndex + 1);
   if (!previousTagInfo) {
-    throw new Error(
-      `Could not find previous prerelease tag from ${currentTag}`
-    );
+    throw new Error(`Could not find previous tag from ${currentTag}`);
   }
 
   return {
@@ -232,21 +233,35 @@ interface GitHubGraphqlTag {
 interface GitHubGraphqlTagResponse {
   repository: {
     refs: {
+      pageInfo: {
+        hasNextPage: boolean;
+        endCursor: string;
+      };
       nodes: Array<GitHubGraphqlTag>;
     };
   };
 }
 
-async function getTags(owner: string, repo: string) {
+async function getTags(
+  owner: string,
+  repo: string,
+  endCursor?: string,
+  nodes: Array<GitHubGraphqlTag> = []
+): Promise<GitHubGraphqlTag[]> {
   let response: GitHubGraphqlTagResponse = await graphqlWithAuth(
     gql`
-      query GET_TAGS($owner: String!, $repo: String!) {
+      query GET_TAGS($owner: String!, $repo: String!, $endCursor: String) {
         repository(owner: $owner, name: $repo) {
           refs(
             refPrefix: "refs/tags/"
             first: 100
             orderBy: { field: TAG_COMMIT_DATE, direction: DESC }
+            after: $endCursor
           ) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
             nodes {
               name
               target {
@@ -267,15 +282,26 @@ async function getTags(owner: string, repo: string) {
         }
       }
     `,
-    { owner, repo }
+    { owner, repo, endCursor }
   );
 
-  return response.repository.refs.nodes.filter((node) => {
+  let filtered = response.repository.refs.nodes.filter((node) => {
     return (
       node.name.startsWith(PACKAGE_VERSION_TO_FOLLOW) ||
       node.name.startsWith("v0.0.0-nightly-")
     );
   });
+
+  if (response.repository.refs.pageInfo.hasNextPage) {
+    console.log("has next page", response.repository.refs.pageInfo.endCursor);
+
+    return getTags(owner, repo, response.repository.refs.pageInfo.endCursor, [
+      ...nodes,
+      ...filtered,
+    ]);
+  }
+
+  return [...nodes, ...filtered];
 }
 
 export async function getIssuesClosedByPullRequests(
