@@ -717,6 +717,7 @@ enum DataRouterHook {
   UseScrollRestoration = "useScrollRestoration",
   UseSubmitImpl = "useSubmitImpl",
   UseFetcher = "useFetcher",
+  UseBlocker = "useBlocker",
 }
 
 enum DataRouterStateHook {
@@ -984,7 +985,7 @@ export function useFormAction(
 let blockerKey = "blocker-singleton";
 
 export function useBlocker(shouldBlock: boolean | BlockerFunction) {
-  let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
+  let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
 
   let blockerFunction = React.useCallback<BlockerFunction>(
     (location, action) => {
