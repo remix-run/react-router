@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.3.0-pre.1
+
+### Patch Changes
+
+- Fix scroll reset if a submission redirects ([#9886](https://github.com/remix-run/react-router/pull/9886))
+
 ## 1.3.0-pre.0
 
 ### Minor Changes

@@ -1,5 +1,17 @@
 # `react-router-dom`
 
+## 6.7.0-pre.1
+
+### Minor Changes
+
+- Add `preventScrollReset` prop to `<Form>` ([#9886](https://github.com/remix-run/react-router/pull/9886))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.3.0-pre.1`
+  - `react-router@6.7.0-pre.1`
+
 ## 6.6.3-pre.0
 
 ### Patch Changes
