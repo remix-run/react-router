@@ -771,6 +771,12 @@ export function createRouter(init: RouterInit): Router {
         )
       : state.loaderData;
 
+    // Don't restore on submission navigations unless they redirect
+    let restoreScrollPosition =
+      state.navigation.formData && location.state?._isRedirect !== true
+        ? false
+        : getSavedScrollPosition(location, newState.matches || state.matches);
+
     updateState({
       ...newState, // matches, errors, fetchers go through as-is
       actionData,
@@ -780,10 +786,7 @@ export function createRouter(init: RouterInit): Router {
       initialized: true,
       navigation: IDLE_NAVIGATION,
       revalidation: "idle",
-      // Don't restore on submission navigations
-      restoreScrollPosition: state.navigation.formData
-        ? false
-        : getSavedScrollPosition(location, newState.matches || state.matches),
+      restoreScrollPosition,
       preventScrollReset: pendingPreventScrollReset,
     });
 
