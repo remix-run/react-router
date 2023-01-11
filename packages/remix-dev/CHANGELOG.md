@@ -1,5 +1,12 @@
 # `@remix-run/dev`
 
+## 1.10.1-pre.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.10.1-pre.1`
+
 ## 1.10.1-pre.0
 
 ### Patch Changes
