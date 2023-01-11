@@ -1,5 +1,3 @@
-import { convertRoutesToDataRoutes, getPathContributingMatches } from "./utils";
-
 export type {
   ActionFunction,
   ActionFunctionArgs,
@@ -58,6 +56,7 @@ export type {
   Path,
   To,
 } from "./history";
+
 export {
   Action,
   createBrowserHistory,
@@ -79,6 +78,7 @@ export * from "./router";
 
 /** @internal */
 export {
+  DeferredData as UNSAFE_DeferredData,
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
   getPathContributingMatches as UNSAFE_getPathContributingMatches,
-};
+} from "./utils";

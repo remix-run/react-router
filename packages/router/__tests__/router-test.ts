@@ -16,6 +16,7 @@ import {
   createRouter,
   createStaticHandler,
   defer,
+  UNSAFE_DEFERRED_SYMBOL,
   ErrorResponse,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
@@ -30,6 +31,7 @@ import type {
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
   AgnosticRouteObject,
+  DeferredData,
   TrackedPromise,
 } from "../utils";
 import {
@@ -157,8 +159,13 @@ function isRedirect(result: any) {
   );
 }
 
-interface CustomMatchers<R = unknown> {
+interface CustomMatchers<R = jest.Expect> {
   trackedPromise(data?: any, error?: any, aborted?: boolean): R;
+  deferredData(
+    done: boolean,
+    status?: number,
+    headers?: Record<string, string>
+  ): R;
 }
 
 declare global {
@@ -169,12 +176,40 @@ declare global {
   }
 }
 
-// Custom matcher for asserting deferred promise results inside of `toEqual()`
-//  - expect.trackedPromise()                  =>  pending promise
-//  - expect.trackedPromise(value)             =>  promise resolved with `value`
-//  - expect.trackedPromise(null, error)       =>  promise rejected with `error`
-//  - expect.trackedPromise(null, null, true)  =>  promise aborted
 expect.extend({
+  // Custom matcher for asserting deferred promise results for static handler
+  //  - expect(val).deferredData(false) => Unresolved promise
+  //  - expect(val).deferredData(false) => Resolved promise
+  //  - expect(val).deferredData(false, 201, { 'x-custom': 'yes' })
+  //      => Unresolved promise with status + headers
+  //  - expect(val).deferredData(true, 201, { 'x-custom': 'yes' })
+  //      => Resolved promise with status + headers
+  deferredData(received, done, status = 200, headers = {}) {
+    let deferredData = received as DeferredData;
+
+    return {
+      message: () =>
+        `expected done=${String(
+          done
+        )}/status=${status}/headers=${JSON.stringify(headers)}, ` +
+        `instead got done=${String(deferredData.done)}/status=${
+          deferredData.init!.status || 200
+        }/headers=${JSON.stringify(
+          Object.fromEntries(new Headers(deferredData.init!.headers).entries())
+        )}`,
+      pass:
+        deferredData.done === done &&
+        (deferredData.init!.status || 200) === status &&
+        JSON.stringify(
+          Object.fromEntries(new Headers(deferredData.init!.headers).entries())
+        ) === JSON.stringify(headers),
+    };
+  },
+  // Custom matcher for asserting deferred promise results inside of `toEqual()`
+  //  - expect.trackedPromise()                  =>  pending promise
+  //  - expect.trackedPromise(value)             =>  promise resolved with `value`
+  //  - expect.trackedPromise(null, error)       =>  promise rejected with `error`
+  //  - expect.trackedPromise(null, null, true)  =>  promise aborted
   trackedPromise(received, data, error, aborted = false) {
     let promise = received as TrackedPromise;
     let isTrackedPromise =
@@ -10948,14 +10983,32 @@ describe("a router", () => {
           {
             id: "deferred",
             path: "deferred",
-            loader: () =>
-              defer({
+            loader: ({ request }) => {
+              if (new URL(request.url).searchParams.has("reject")) {
+                return defer({
+                  critical: "loader",
+                  lazy: new Promise((_, r) =>
+                    setTimeout(() => r(new Error("broken!")), 10)
+                  ),
+                });
+              }
+              if (new URL(request.url).searchParams.has("status")) {
+                return defer(
+                  {
+                    critical: "loader",
+                    lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
+                  },
+                  { status: 201, headers: { "X-Custom": "yes" } }
+                );
+              }
+              return defer({
                 critical: "loader",
                 lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
-              }),
+              });
+            },
             action: () =>
               defer({
-                critical: "action",
+                critical: "critical",
                 lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
               }),
           },
@@ -11112,8 +11165,7 @@ describe("a router", () => {
         });
       });
 
-      // Note: this is only until we wire up the remix streaming
-      it("should abort deferred data on load navigations (for now)", async () => {
+      it("should support document load navigations returning deferred", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/deferred"));
         expect(context).toMatchObject({
@@ -11122,8 +11174,11 @@ describe("a router", () => {
             parent: "PARENT LOADER",
             deferred: {
               critical: "loader",
-              lazy: expect.trackedPromise(null, null, true),
+              lazy: expect.trackedPromise(),
             },
+          },
+          activeDeferreds: {
+            deferred: expect.deferredData(false),
           },
           errors: null,
           location: { pathname: "/parent/deferred" },
@@ -11131,10 +11186,17 @@ describe("a router", () => {
         });
 
         await new Promise((r) => setTimeout(r, 10));
-        expect(
-          (context as StaticHandlerContext).loaderData.deferred.lazy instanceof
-            Promise
-        ).toBe(true);
+
+        expect(context).toMatchObject({
+          loaderData: {
+            deferred: {
+              lazy: expect.trackedPromise("lazy"),
+            },
+          },
+          activeDeferreds: {
+            deferred: expect.deferredData(true),
+          },
+        });
       });
 
       it("should support document submit navigations", async () => {
@@ -11683,6 +11745,127 @@ describe("a router", () => {
         expect(arg(actionStub).context.sessionId).toBe("12345");
         expect(arg(rootStub).context.sessionId).toBe("12345");
         expect(arg(childStub).context.sessionId).toBe("12345");
+      });
+
+      describe("deferred", () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+
+        it("should return DeferredData on symbol", async () => {
+          let context = (await query(
+            createRequest("/parent/deferred")
+          )) as StaticHandlerContext;
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(false),
+            },
+          });
+          await new Promise((r) => setTimeout(r, 10));
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise("lazy"),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(true),
+            },
+          });
+        });
+
+        it("should return rejected DeferredData on symbol", async () => {
+          let context = (await query(
+            createRequest("/parent/deferred?reject")
+          )) as StaticHandlerContext;
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(false),
+            },
+          });
+          await new Promise((r) => setTimeout(r, 10));
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(undefined, new Error("broken!")),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(true),
+            },
+          });
+        });
+
+        it("should return DeferredData on symbol with status + headers", async () => {
+          let context = (await query(
+            createRequest("/parent/deferred?status")
+          )) as StaticHandlerContext;
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(false, 201, {
+                "x-custom": "yes",
+              }),
+            },
+          });
+          await new Promise((r) => setTimeout(r, 10));
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise("lazy"),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(true, 201, {
+                "x-custom": "yes",
+              }),
+            },
+          });
+        });
+
+        it("does not support deferred on submissions", async () => {
+          let context = (await query(
+            createSubmitRequest("/parent/deferred")
+          )) as StaticHandlerContext;
+          expect(context.actionData).toEqual(null);
+          expect(context.loaderData).toEqual({
+            parent: null,
+            deferred: null,
+          });
+          expect(context.activeDeferreds).toEqual(null);
+          expect(context.errors).toEqual({
+            parent: new ErrorResponse(
+              400,
+              "Bad Request",
+              new Error("defer() is not supported in actions"),
+              true
+            ),
+          });
+        });
       });
 
       describe("statusCode", () => {
@@ -12659,6 +12842,80 @@ describe("a router", () => {
           requestContext,
         });
         expect(arg(actionStub).context.sessionId).toBe("12345");
+      });
+
+      describe("deferred", () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+
+        it("should return DeferredData on symbol", async () => {
+          let result = await queryRoute(createRequest("/parent/deferred"));
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(false);
+          await new Promise((r) => setTimeout(r, 10));
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise("lazy"),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true);
+        });
+
+        it("should return rejected DeferredData on symbol", async () => {
+          let result = await queryRoute(
+            createRequest("/parent/deferred?reject")
+          );
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(false);
+          await new Promise((r) => setTimeout(r, 10));
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(null, new Error("broken!")),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true);
+        });
+
+        it("should return DeferredData on symbol with status + headers", async () => {
+          let result = await queryRoute(
+            createRequest("/parent/deferred?status")
+          );
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(false, 201, {
+            "x-custom": "yes",
+          });
+          await new Promise((r) => setTimeout(r, 10));
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise("lazy"),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true, 201, {
+            "x-custom": "yes",
+          });
+        });
+
+        it("does not support deferred on submissions", async () => {
+          try {
+            await queryRoute(createSubmitRequest("/parent/deferred"));
+            expect(false).toBe(true);
+          } catch (e) {
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(e).toEqual(
+              new ErrorResponse(
+                400,
+                "Bad Request",
+                new Error("defer() is not supported in actions"),
+                true
+              )
+            );
+          }
+        });
       });
 
       describe("Errors with Status Codes", () => {
