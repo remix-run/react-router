@@ -234,7 +234,7 @@ export type ParamParseKey<Segment extends string> =
  * The parameters that were parsed from the URL path.
  */
 export type Params<Key extends string = string> = {
-  readonly [key in Key]: string | null | undefined;
+  readonly [key in Key]: string | undefined;
 };
 
 /**
@@ -616,7 +616,7 @@ function matchRouteBranch<
 export function generatePath<Path extends string>(
   originalPath: Path,
   params: {
-    [key in PathParam<Path>]: string;
+    [key in PathParam<Path>]: string | null;
   } = {} as any
 ): string {
   let path = originalPath;
@@ -636,23 +636,27 @@ export function generatePath<Path extends string>(
       .replace(
         /^:(\w+)(\??)/g,
         (_, key: PathParam<Path>, optional: string | undefined) => {
-          let hasParam = params[key] != null;
+          let param = params[key];
           if (optional === "?") {
-            return hasParam ? params[key] : "";
+            return param == null ? "" : param;
           }
-          invariant(hasParam, `Missing ":${key}" param`);
-          return params[key]!;
+          if (param == null) {
+            invariant(false, `Missing ":${key}" param`);
+          }
+          return param;
         }
       )
       .replace(
         /\/:(\w+)(\??)/g,
         (_, key: PathParam<Path>, optional: string | undefined) => {
-          let hasParam = params[key] != null;
+          let param = params[key];
           if (optional === "?") {
-            return hasParam ? `/${params[key]}` : "";
+            return param == null ? "" : `/${param}`;
           }
-          invariant(hasParam, `Missing ":${key}" param`);
-          return `/${params[key]!}`;
+          if (param == null) {
+            invariant(false, `Missing ":${key}" param`);
+          }
+          return `/${param}`;
         }
       )
       // Remove any optional markers from optional static segments
