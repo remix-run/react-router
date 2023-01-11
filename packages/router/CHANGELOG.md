@@ -1,5 +1,17 @@
 # `@remix-run/router`
 
+## 1.3.0-pre.0
+
+### Minor Changes
+
+- Expose deferred information from createStaticHandler ([#9760](https://github.com/remix-run/react-router/pull/9760))
+
+### Patch Changes
+
+- Improved absolute redirect url detection in actions/loaders ([#9829](https://github.com/remix-run/react-router/pull/9829))
+- Fix URL creation with memory histories ([#9814](https://github.com/remix-run/react-router/pull/9814))
+- Fix `generatePath` when optional params are present ([#9764](https://github.com/remix-run/react-router/pull/9764))
+
 ## 1.2.1
 
 ### Patch Changes
