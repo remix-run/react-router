@@ -17,8 +17,6 @@ import {
   useRouteError,
   json,
   useActionData,
-  useBlocker,
-  usePrompt,
 } from "react-router-dom";
 
 import type { Todos } from "./todos";
@@ -94,37 +92,10 @@ export async function homeLoader(): Promise<HomeLoaderData> {
 
 export function Home() {
   let data = useLoaderData() as HomeLoaderData;
-  let [shouldBlockNavigation, setShouldBlockNavigation] = React.useState(false);
-
-  let blocker = useBlocker(shouldBlockNavigation);
-  // usePrompt(
-  //   shouldBlockNavigation ? "Are you *really* sure you want to leave?" : null,
-  //   { beforeUnload: true }
-  // );
-
   return (
     <>
       <h2>Home</h2>
       <p>Last loaded at: {data.date}</p>
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            checked={shouldBlockNavigation}
-            onChange={(e) => setShouldBlockNavigation(e.target.checked)}
-          />
-          Block navigation
-        </label>
-        {blocker.state === "blocked" ? (
-          <div>
-            <p>Navigation is blocked.</p>
-            <button onClick={blocker.proceed}>Proceed</button>
-            <button onClick={blocker.reset}>Reset</button>
-          </div>
-        ) : blocker.state === "proceeding" ? (
-          <p>Proceeding...</p>
-        ) : null}
-      </div>
     </>
   );
 }
