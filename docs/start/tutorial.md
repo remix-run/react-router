@@ -878,7 +878,7 @@ export async function action({ request, params }) {
 
 👉 **Wire the action up to the route**
 
-```jsx filename=src/routes/main.jsx lines=[3,23]
+```jsx filename=src/main.jsx lines=[3,23]
 /* existing code */
 import EditContact, {
   action as editAction,
@@ -1840,7 +1840,7 @@ Whenever you have an expected error case in a loader or action–like the data n
 
 👉 **Throw a 404 response in the loader**
 
-```jsx filename=src/routes/contact.jsx lines lines=[3-8]
+```jsx filename=src/routes/contact.jsx lines=[3-8]
 export async function loader({ params }) {
   const contact = await getContact(params.contactId);
   if (!contact) {

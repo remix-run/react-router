@@ -27,7 +27,6 @@ import {
   Router,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
-  UNSAFE_DataStaticRouterContext as DataStaticRouterContext,
   UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router-dom";
 
@@ -98,6 +97,7 @@ export function StaticRouterProvider({
     router,
     navigator: getStatelessNavigator(),
     static: true,
+    staticContext: context,
     basename: context.basename || "/",
   };
 
@@ -119,22 +119,18 @@ export function StaticRouterProvider({
 
   return (
     <>
-      <DataStaticRouterContext.Provider value={context}>
-        <DataRouterContext.Provider value={dataRouterContext}>
-          <DataRouterStateContext.Provider
-            value={dataRouterContext.router.state}
+      <DataRouterContext.Provider value={dataRouterContext}>
+        <DataRouterStateContext.Provider value={dataRouterContext.router.state}>
+          <Router
+            basename={dataRouterContext.basename}
+            location={dataRouterContext.router.state.location}
+            navigationType={dataRouterContext.router.state.historyAction}
+            navigator={dataRouterContext.navigator}
           >
-            <Router
-              basename={dataRouterContext.basename}
-              location={dataRouterContext.router.state.location}
-              navigationType={dataRouterContext.router.state.historyAction}
-              navigator={dataRouterContext.navigator}
-            >
-              <Routes />
-            </Router>
-          </DataRouterStateContext.Provider>
-        </DataRouterContext.Provider>
-      </DataStaticRouterContext.Provider>
+            <Routes />
+          </Router>
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>
       {hydrateScript ? (
         <script
           suppressHydrationWarning

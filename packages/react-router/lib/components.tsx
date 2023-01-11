@@ -87,27 +87,36 @@ export function RouterProvider({
 
   let basename = router.basename || "/";
 
+  // The fragment and {null} here are important!  We need them to keep React 18's
+  // useId happy when we are server-rendering since we may have a <script> here
+  // containing the hydrated server-side staticContext (from StaticRouterProvider).
+  // useId relies on the component tree structure to generate deterministic id's
+  // so we need to ensure it remains the same on the client even though
+  // we don't need the <script> tag
   return (
-    <DataRouterContext.Provider
-      value={{
-        router,
-        navigator,
-        static: false,
-        // Do we need this?
-        basename,
-      }}
-    >
-      <DataRouterStateContext.Provider value={state}>
-        <Router
-          basename={router.basename}
-          location={router.state.location}
-          navigationType={router.state.historyAction}
-          navigator={navigator}
-        >
-          {router.state.initialized ? <Routes /> : fallbackElement}
-        </Router>
-      </DataRouterStateContext.Provider>
-    </DataRouterContext.Provider>
+    <>
+      <DataRouterContext.Provider
+        value={{
+          router,
+          navigator,
+          static: false,
+          // Do we need this?
+          basename,
+        }}
+      >
+        <DataRouterStateContext.Provider value={state}>
+          <Router
+            basename={router.basename}
+            location={router.state.location}
+            navigationType={router.state.historyAction}
+            navigator={navigator}
+          >
+            {router.state.initialized ? <Routes /> : fallbackElement}
+          </Router>
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>
+      {null}
+    </>
   );
 }
 
