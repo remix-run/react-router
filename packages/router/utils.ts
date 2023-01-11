@@ -655,7 +655,7 @@ export function generatePath<Path extends string>(
           return `/${params[key]!}`;
         }
       )
-      // Remove any optional markers form optional static segments
+      // Remove any optional markers from optional static segments
       .replace(/\?/g, "")
       .replace(/(\/?)\*/, (_, prefix, __, str) => {
         const star = "*" as PathParam<Path>;
