@@ -1165,7 +1165,7 @@ function useScrollRestoration({
         }
       }
 
-      // Opt out of scroll reset if this link requested it
+      // Don't reset if this navigation opted out
       if (preventScrollReset === true) {
         return;
       }
