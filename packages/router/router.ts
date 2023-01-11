@@ -2167,20 +2167,19 @@ export function createStaticHandler(
     }
 
     // Pick off the right state value to return
-    let routeData = [result.actionData, result.loaderData].find((v) => v);
-    let data = Object.values(routeData || {})[0];
-
-    if (
-      data === Object.values(result.loaderData || {})[0] &&
-      result.activeDeferreds &&
-      result.activeDeferreds[match.route.id]
-    ) {
-      Object.assign(data, {
-        [UNSAFE_DEFERRED_SYMBOL]: result.activeDeferreds[match.route.id],
-      });
+    if (result.actionData) {
+      return Object.values(result.actionData)[0];
     }
 
-    return data;
+    if (result.loaderData) {
+      let data = Object.values(result.loaderData)[0];
+      if (result.activeDeferreds?.[match.route.id]) {
+        data[UNSAFE_DEFERRED_SYMBOL] = result.activeDeferreds[match.route.id];
+      }
+      return data;
+    }
+
+    return undefined;
   }
 
   async function queryImpl(
@@ -2440,8 +2439,8 @@ export function createStaticHandler(
       throw new Error(`${method}() call aborted`);
     }
 
-    let activeDeferreds = new Map<string, DeferredData>();
     // Process and commit output from loaders
+    let activeDeferreds = new Map<string, DeferredData>();
     let context = processRouteLoaderData(
       matches,
       matchesToLoad,
@@ -2450,11 +2449,10 @@ export function createStaticHandler(
       activeDeferreds
     );
 
+    // Add a null for any non-loader matches for proper revalidation on the client
     let executedLoaders = new Set<string>(
       matchesToLoad.map((match) => match.route.id)
     );
-
-    // Add a null for any non-loader matches for proper revalidation on the client
     matches.forEach((match) => {
       if (!executedLoaders.has(match.route.id)) {
         context.loaderData[match.route.id] = null;
