@@ -1,5 +1,14 @@
 # `react-router-dom`
 
+## 6.6.3-pre.0
+
+### Patch Changes
+
+- Streamline jsdom bug workaround in tests ([#9824](https://github.com/remix-run/react-router/pull/9824))
+- Updated dependencies:
+  - `@remix-run/router@1.3.0-pre.0`
+  - `react-router@6.6.3-pre.0`
+
 ## 6.6.2
 
 ### Patch Changes
