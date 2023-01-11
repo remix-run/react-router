@@ -8,7 +8,7 @@
 
 ### Patch Changes
 
-- Improved absolute redirect url detection in actions/loaders ([#9829](https://github.com/remix-run/react-router/pull/9829)) ([`b82ea4be`](https://github.com/remix-run/react-router/commit/b82ea4be3d7bc27357b049ccb7d4148f292dbccf))
+- Improved absolute redirect url detection in actions/loaders ([#9829](https://github.com/remix-run/react-router/pull/9829))
 - Fix URL creation with memory histories ([#9814](https://github.com/remix-run/react-router/pull/9814))
 - Fix `generatePath` when optional params are present ([#9764](https://github.com/remix-run/react-router/pull/9764))
 
