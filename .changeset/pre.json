@@ -8,5 +8,10 @@
     "react-router-native": "6.6.2",
     "@remix-run/router": "1.2.1"
   },
-  "changesets": []
+  "changesets": [
+    "eight-tomatoes-breathe",
+    "great-owls-juggle",
+    "happy-ladybugs-occur",
+    "slow-trees-notice"
+  ]
 }
