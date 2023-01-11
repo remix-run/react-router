@@ -9,9 +9,9 @@ body:
       value: |
         Thank you for contributing!
 
-        For documentation updates - we would happily accept PRs, so feel free
-        to update and open a PR to the `main` branch.  Otherwise let us know
-        in this issue what you felt was missing or incorrect.
+        For documentation updates - we would happily accept PRs, so feel free to update and
+        open a PR to the `main` branch.  Otherwise let us know in this issue what you felt
+        was missing or incorrect.
 
   - type: textarea
     attributes:

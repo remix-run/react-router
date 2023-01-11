@@ -2,11 +2,7 @@ blank_issues_enabled: false
 contact_links:
   - name: 💡 Feature Request
     url: https://github.com/remix-run/react-router/discussions/new?category=proposals
-    about:
-      If you've got an idea for a new feature in React Router, please open a new
-      Discussion with the `Proposals` label.  We'll review the most popular
-      proposals on a regular basis.  Read more about our Open Development process
-      [here](https://remix.run/blog/open-development).
+    about: If you've got an idea for a new feature in React Router, please open a new Discussion with the `Proposals` label
   - name: 🤔 Usage Question (Stack Overflow)
     url: https://stackoverflow.com/questions/tagged/react-router
     about: Open a question in Stack Overflow with the react-router label
@@ -15,6 +11,4 @@ contact_links:
     about: Open a Discussion in GitHub wih the `Q&A` label
   - name: 💬 Remix Discord Channel
     url: https://rmx.as/discord
-    about: Interact with other people using React Router and Remix 📀.  There's
-      plenty of channels for general discussions as well as a threaded `#help`
-      channel in here where you can ask for help with you issue.
+    about: Interact with other people using React Router and Remix 📀
