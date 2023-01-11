@@ -1,5 +1,5 @@
 name: 📚 Documentation Issue
-description: Something is wrong with the React Router docs.
+description: Something is wrong with the React Router docs
 title: "[Docs]: "
 labels:
   - docs
