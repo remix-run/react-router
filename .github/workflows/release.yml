@@ -9,11 +9,6 @@ on:
       - "!release-manual"
       - "!release-manual-*"
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
-
-env:
-  CI: true
-
 jobs:
   release:
     name: 🦋 Changesets Release
