@@ -66,9 +66,11 @@ createBrowserRouter(
       <Route
         path="dashboard"
         element={<Dashboard />}
-        loader={fetch("/api/dashboard.json", {
-          signal: request.signal,
-        })}
+        loader={({ request }) =>
+          fetch("/api/dashboard.json", {
+            signal: request.signal,
+          })
+        }
       />
       <Route element={<AuthLayout />}>
         <Route
@@ -155,7 +157,9 @@ function Task() {
 }
 
 function Random() {
-  const match = useMatch("/projects/:projectId/tasks/3");
+  const match = useMatch(
+    "/projects/:projectId/tasks/:taskId"
+  );
   match.params.projectId; // abc
   match.params.taskId; // 3
 }
@@ -171,7 +175,7 @@ See:
 
 ## Ranked Route Matching
 
-When matching URLs to routes, React Router will rank the routes according the number of segments, static segments, dynamic segments, splats, etc. and pick the _most specific_ match.
+When matching URLs to routes, React Router will rank the routes according to the number of segments, static segments, dynamic segments, splats, etc. and pick the _most specific_ match.
 
 For example, consider these two routes:
 
@@ -241,16 +245,16 @@ Consider the url https://example.com/home/project/123, which renders the followi
 
 If `<Project />` renders the following links, the hrefs of the links will resolve like so:
 
-| In `<Project>` @ `/home/project/123` | Resolved `<a href>`      |
-| ------------------------------------ | ------------------------ |
-| `<Link to="abc">`                    | `/home/projects/123/abc` |
-| `<Link to=".">`                      | `/home/projects/123`     |
-| `<Link to="..">`                     | `/home`                  |
-| `<Link to=".." relative="path">`     | `/home/projects`         |
+| In `<Project>` @ `/home/project/123` | Resolved `<a href>`     |
+| ------------------------------------ | ----------------------- |
+| `<Link to="abc">`                    | `/home/project/123/abc` |
+| `<Link to=".">`                      | `/home/project/123`     |
+| `<Link to="..">`                     | `/home`                 |
+| `<Link to=".." relative="path">`     | `/home/project`         |
 
 Note that the first `..` removes both segments of the `project/:projectId` route. By default, the `..` in relative links traverse the route hierarchy, not the URL segments. Adding `relative="path"` in the next example allows you to traverse the path segments instead.
 
-Relative links are always relative to the route path they are _rendered in_, not to the full URL. That means if the user navigates deeper with `<Link to="abc">` to `<Task />` at the URL `/home/projects/123/abc`, the hrefs in `<Project>` will not change (contrary to plain `<a href>`, a common problem with client side routers).
+Relative links are always relative to the route path they are _rendered in_, not to the full URL. That means if the user navigates deeper with `<Link to="abc">` to `<Task />` at the URL `/home/project/123/abc`, the hrefs in `<Project>` will not change (contrary to plain `<a href>`, a common problem with client side routers).
 
 ## Data Loading
 
@@ -379,7 +383,7 @@ See:
 
 Instead of waiting for the data for the next page, you can [`defer`][defer] data so the UI flips over to the next screen with placeholder UI immediately while the data loads.
 
-```jsx lines=[12,23-30,32-37,43]
+```jsx lines=[12,22-29,32-35,42]
 <Route
   path="issue/:issueId"
   element={<Issue />}
@@ -393,7 +397,6 @@ Instead of waiting for the data for the next page, you can [`defer`][defer] data
     // defer enables suspense for the un-awaited promises
     return defer({ issue, comments, history });
   }}
-  element={<Issue />}
 />;
 
 function Issue() {
@@ -407,7 +410,9 @@ function Issue() {
         {/* Await manages the deferred data (promise) */}
         <Await resolve={history}>
           {/* this calls back when the data is resolved */}
-          {(history) => <IssueHistory history={history} />}
+          {(resolvedHistory) => (
+            <IssueHistory history={resolvedHistory} />
+          )}
         </Await>
       </Suspense>
 
@@ -617,7 +622,7 @@ Consider a search field that updates a list as the user types:
                      ^ lose correct state
 ```
 
-Even though the query for `q?=ryan` went out later, it completed earlier. If not handled correctly, the results will briefly be the correct values for `?q=ryan` but then flip over the incorrect results for `?q=ry`. Throttling and debouncing are not enough (you can still interrupt the requests that get through). You need to cancellation.
+Even though the query for `q?=ryan` went out later, it completed earlier. If not handled correctly, the results will briefly be the correct values for `?q=ryan` but then flip over the incorrect results for `?q=ry`. Throttling and debouncing are not enough (you can still interrupt the requests that get through). You need cancellation.
 
 If you're using React Router's data conventions you avoid this problem completely and automatically.
 

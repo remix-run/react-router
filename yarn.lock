@@ -1139,16 +1139,7 @@
   dependencies:
     "@changesets/types" "^5.1.0"
 
-"@changesets/changelog-github@0.4.4":
-  version "0.4.4"
-  resolved "https://registry.yarnpkg.com/@changesets/changelog-github/-/changelog-github-0.4.4.tgz#a3d59b30ccc6bfa3f0b381cda7cd4017c5590a9a"
-  integrity sha512-htSILqCkyYtTB5/LoVKwx7GCJQGxAiBcYbfUKWiz/QoDARuM01owYtMXhV6/iytJZq/Dqqz3PjMZUNB4MphpbQ==
-  dependencies:
-    "@changesets/get-github-info" "^0.5.0"
-    "@changesets/types" "^5.0.0"
-    dotenv "^8.1.0"
-
-"@changesets/cli@^2.22.0":
+"@changesets/cli@^2.23.0":
   version "2.24.4"
   resolved "https://registry.yarnpkg.com/@changesets/cli/-/cli-2.24.4.tgz#35b200d49403342cb657b5a941d5c8ef32583eb1"
   integrity sha512-87JSwMv38zS3QW3062jXZYLsCNRtA08wa7vt3VnMmkGLfUMn2TTSfD+eSGVnKPJ/ycDCvAcCDnrv/B+gSX5KVA==
@@ -1218,7 +1209,7 @@
     fs-extra "^7.0.1"
     semver "^5.4.1"
 
-"@changesets/get-github-info@^0.5.0":
+"@changesets/get-github-info@^0.5.1":
   version "0.5.1"
   resolved "https://registry.yarnpkg.com/@changesets/get-github-info/-/get-github-info-0.5.1.tgz#5a20328b26f301b2193717abb32e73651e8811b7"
   integrity sha512-w2yl3AuG+hFuEEmT6j1zDlg7GQLM/J2UxTmk0uJBMdRqHni4zXGe/vUlPfLom5KfX3cRfHc0hzGvloDPjWFNZw==
@@ -1987,6 +1978,16 @@
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@react-native/polyfills/-/polyfills-2.0.0.tgz#4c40b74655c83982c8cf47530ee7dc13d957b6aa"
   integrity sha512-K0aGNn1TjalKj+65D7ycc1//H9roAQ51GJVk5ZJQFb2teECGmzd86bYDC0aYdbRf7gtovescq4Zt6FR0tgXiHQ==
+
+"@remix-run/changelog-github@^0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@remix-run/changelog-github/-/changelog-github-0.0.5.tgz#d0eecaea45102b35b1c8fd41bb74fd1c38f7f70f"
+  integrity sha512-43tqwUqWqirbv6D9uzo55ASPsCJ61Ein1k/M8qn+Qpros0MmbmuzjLVPmtaxfxfe2ANX0LefLvCD0pAgr1tp4g==
+  dependencies:
+    "@changesets/errors" "^0.1.4"
+    "@changesets/get-github-info" "^0.5.1"
+    "@changesets/types" "^5.0.0"
+    dotenv "^8.1.0"
 
 "@remix-run/web-blob@^3.0.4":
   version "3.0.4"

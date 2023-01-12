@@ -43,11 +43,11 @@
     "@babel/preset-modules": "^0.1.5",
     "@babel/preset-react": "^7.17.12",
     "@babel/preset-typescript": "^7.17.12",
-    "@changesets/changelog-github": "0.4.4",
-    "@changesets/cli": "^2.22.0",
+    "@changesets/cli": "^2.23.0",
     "@octokit/graphql": "^4.8.0",
     "@octokit/plugin-paginate-rest": "^2.17.0",
     "@octokit/rest": "^18.12.0",
+    "@remix-run/changelog-github": "^0.0.5",
     "@remix-run/web-fetch": "4.1.3",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-replace": "^4.0.0",
@@ -101,20 +101,20 @@
     "node": ">=14"
   },
   "filesize": {
-    "packages/router/dist/router.js": {
-      "none": "100 kB"
+    "packages/router/dist/router.umd.min.js": {
+      "none": "38 kB"
     },
     "packages/react-router/dist/react-router.production.min.js": {
       "none": "12.5 kB"
     },
     "packages/react-router/dist/umd/react-router.production.min.js": {
-      "none": "14.5 kB"
+      "none": "15 kB"
     },
     "packages/react-router-dom/dist/react-router-dom.production.min.js": {
-      "none": "10 kB"
+      "none": "11 kB"
     },
     "packages/react-router-dom/dist/umd/react-router-dom.production.min.js": {
-      "none": "16 kB"
+      "none": "16.5 kB"
     }
   }
 }

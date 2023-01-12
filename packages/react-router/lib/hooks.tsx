@@ -19,6 +19,7 @@ import {
   parsePath,
   resolveTo,
   warning,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
 } from "@remix-run/router";
 
 import type {
@@ -37,14 +38,13 @@ import {
   RouteContext,
   RouteErrorContext,
   AwaitContext,
-  DataStaticRouterContext,
 } from "./context";
 
 /**
  * Returns the full href for the given "to" value. This is useful for building
  * custom links that are also accessible and preserve right-click behavior.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-href
+ * @see https://reactrouter.com/hooks/use-href
  */
 export function useHref(
   to: To,
@@ -77,7 +77,7 @@ export function useHref(
 /**
  * Returns true if this component is a descendant of a <Router>.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-in-router-context
+ * @see https://reactrouter.com/hooks/use-in-router-context
  */
 export function useInRouterContext(): boolean {
   return React.useContext(LocationContext) != null;
@@ -91,7 +91,7 @@ export function useInRouterContext(): boolean {
  * "routing" in your app, and we'd like to know what your use case is. We may
  * be able to provide something higher-level to better suit your needs.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-location
+ * @see https://reactrouter.com/hooks/use-location
  */
 export function useLocation(): Location {
   invariant(
@@ -108,18 +108,18 @@ export function useLocation(): Location {
  * Returns the current navigation action which describes how the router came to
  * the current location, either by a pop, push, or replace on the history stack.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-navigation-type
+ * @see https://reactrouter.com/hooks/use-navigation-type
  */
 export function useNavigationType(): NavigationType {
   return React.useContext(LocationContext).navigationType;
 }
 
 /**
- * Returns true if the URL for the given "to" value matches the current URL.
+ * Returns a PathMatch object if the given pattern matches the current URL.
  * This is useful for components that need to know "active" state, e.g.
  * <NavLink>.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-match
+ * @see https://reactrouter.com/hooks/use-match
  */
 export function useMatch<
   ParamKey extends ParamParseKey<Path>,
@@ -148,40 +148,10 @@ export interface NavigateFunction {
 }
 
 /**
- * When processing relative navigation we want to ignore ancestor routes that
- * do not contribute to the path, such that index/pathless layout routes don't
- * interfere.
- *
- * For example, when moving a route element into an index route and/or a
- * pathless layout route, relative link behavior contained within should stay
- * the same.  Both of the following examples should link back to the root:
- *
- *   <Route path="/">
- *     <Route path="accounts" element={<Link to=".."}>
- *   </Route>
- *
- *   <Route path="/">
- *     <Route path="accounts">
- *       <Route element={<AccountsLayout />}>       // <-- Does not contribute
- *         <Route index element={<Link to=".."} />  // <-- Does not contribute
- *       </Route
- *     </Route>
- *   </Route>
- */
-function getPathContributingMatches(matches: RouteMatch[]) {
-  return matches.filter(
-    (match, index) =>
-      index === 0 ||
-      (!match.route.index &&
-        match.pathnameBase !== matches[index - 1].pathnameBase)
-  );
-}
-
-/**
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-navigate
+ * @see https://reactrouter.com/hooks/use-navigate
  */
 export function useNavigate(): NavigateFunction {
   invariant(
@@ -254,7 +224,7 @@ const OutletContext = React.createContext<unknown>(null);
 /**
  * Returns the context (if provided) for the child route at this level of the route
  * hierarchy.
- * @see https://reactrouter.com/docs/en/v6/hooks/use-outlet-context
+ * @see https://reactrouter.com/hooks/use-outlet-context
  */
 export function useOutletContext<Context = unknown>(): Context {
   return React.useContext(OutletContext) as Context;
@@ -264,7 +234,7 @@ export function useOutletContext<Context = unknown>(): Context {
  * Returns the element for the child route at this level of the route
  * hierarchy. Used internally by <Outlet> to render child routes.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-outlet
+ * @see https://reactrouter.com/hooks/use-outlet
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
   let outlet = React.useContext(RouteContext).outlet;
@@ -280,7 +250,7 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
  * Returns an object of key/value pairs of the dynamic params from the current
  * URL that were matched by the route path.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-params
+ * @see https://reactrouter.com/hooks/use-params
  */
 export function useParams<
   ParamsOrKey extends string | Record<string, string | undefined> = string
@@ -295,7 +265,7 @@ export function useParams<
 /**
  * Resolves the pathname of the given `to` value against the current location.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-resolved-path
+ * @see https://reactrouter.com/hooks/use-resolved-path
  */
 export function useResolvedPath(
   to: To,
@@ -326,7 +296,7 @@ export function useResolvedPath(
  * elements in the tree must render an <Outlet> to render their child route's
  * element.
  *
- * @see https://reactrouter.com/docs/en/v6/hooks/use-routes
+ * @see https://reactrouter.com/hooks/use-routes
  */
 export function useRoutes(
   routes: RouteObject[],
@@ -339,6 +309,7 @@ export function useRoutes(
     `useRoutes() may be used only in the context of a <Router> component.`
   );
 
+  let { navigator } = React.useContext(NavigationContext);
   let dataRouterStateContext = React.useContext(DataRouterStateContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
@@ -430,11 +401,23 @@ export function useRoutes(
       matches.map((match) =>
         Object.assign({}, match, {
           params: Object.assign({}, parentParams, match.params),
-          pathname: joinPaths([parentPathnameBase, match.pathname]),
+          pathname: joinPaths([
+            parentPathnameBase,
+            // Re-encode pathnames that were decoded inside matchRoutes
+            navigator.encodeLocation
+              ? navigator.encodeLocation(match.pathname).pathname
+              : match.pathname,
+          ]),
           pathnameBase:
             match.pathnameBase === "/"
               ? parentPathnameBase
-              : joinPaths([parentPathnameBase, match.pathnameBase]),
+              : joinPaths([
+                  parentPathnameBase,
+                  // Re-encode pathnames that were decoded inside matchRoutes
+                  navigator.encodeLocation
+                    ? navigator.encodeLocation(match.pathnameBase).pathname
+                    : match.pathnameBase,
+                ]),
         })
       ),
     parentMatches,
@@ -444,7 +427,7 @@ export function useRoutes(
   // When a user passes in a `locationArg`, the associated routes need to
   // be wrapped in a new `LocationContext.Provider` in order for `useLocation`
   // to use the scoped location instead of the global location.
-  if (locationArg) {
+  if (locationArg && renderedMatches) {
     return (
       <LocationContext.Provider
         value={{
@@ -498,6 +481,7 @@ type RenderErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
   error: any;
   component: React.ReactNode;
+  routeContext: RouteContextObject;
 }>;
 
 type RenderErrorBoundaryState = {
@@ -560,10 +544,12 @@ export class RenderErrorBoundary extends React.Component<
 
   render() {
     return this.state.error ? (
-      <RouteErrorContext.Provider
-        value={this.state.error}
-        children={this.props.component}
-      />
+      <RouteContext.Provider value={this.props.routeContext}>
+        <RouteErrorContext.Provider
+          value={this.state.error}
+          children={this.props.component}
+        />
+      </RouteContext.Provider>
     ) : (
       this.props.children
     );
@@ -577,12 +563,17 @@ interface RenderedRouteProps {
 }
 
 function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
-  let dataStaticRouterContext = React.useContext(DataStaticRouterContext);
+  let dataRouterContext = React.useContext(DataRouterContext);
 
   // Track how deep we got in our render pass to emulate SSR componentDidCatch
   // in a DataStaticRouter
-  if (dataStaticRouterContext && match.route.errorElement) {
-    dataStaticRouterContext._deepestRenderedBoundaryId = match.route.id;
+  if (
+    dataRouterContext &&
+    dataRouterContext.static &&
+    dataRouterContext.staticContext &&
+    match.route.errorElement
+  ) {
+    dataRouterContext.staticContext._deepestRenderedBoundaryId = match.route.id;
   }
 
   return (
@@ -631,14 +622,9 @@ export function _renderMatches(
     let errorElement = dataRouterState
       ? match.route.errorElement || <DefaultErrorElement />
       : null;
+    let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
     let getChildren = () => (
-      <RenderedRoute
-        match={match}
-        routeContext={{
-          outlet,
-          matches: parentMatches.concat(renderedMatches.slice(0, index + 1)),
-        }}
-      >
+      <RenderedRoute match={match} routeContext={{ outlet, matches }}>
         {error
           ? errorElement
           : match.route.element !== undefined
@@ -655,6 +641,7 @@ export function _renderMatches(
         component={errorElement}
         error={error}
         children={getChildren()}
+        routeContext={{ outlet: null, matches }}
       />
     ) : (
       getChildren()
@@ -663,6 +650,10 @@ export function _renderMatches(
 }
 
 enum DataRouterHook {
+  UseRevalidator = "useRevalidator",
+}
+
+enum DataRouterStateHook {
   UseLoaderData = "useLoaderData",
   UseActionData = "useActionData",
   UseRouteError = "useRouteError",
@@ -672,10 +663,38 @@ enum DataRouterHook {
   UseRevalidator = "useRevalidator",
 }
 
-function useDataRouterState(hookName: DataRouterHook) {
+function getDataRouterConsoleError(
+  hookName: DataRouterHook | DataRouterStateHook
+) {
+  return `${hookName} must be used within a data router.  See https://reactrouter.com/routers/picking-a-router.`;
+}
+
+function useDataRouterContext(hookName: DataRouterHook) {
+  let ctx = React.useContext(DataRouterContext);
+  invariant(ctx, getDataRouterConsoleError(hookName));
+  return ctx;
+}
+
+function useDataRouterState(hookName: DataRouterStateHook) {
   let state = React.useContext(DataRouterStateContext);
-  invariant(state, `${hookName} must be used within a DataRouterStateContext`);
+  invariant(state, getDataRouterConsoleError(hookName));
   return state;
+}
+
+function useRouteContext(hookName: DataRouterStateHook) {
+  let route = React.useContext(RouteContext);
+  invariant(route, getDataRouterConsoleError(hookName));
+  return route;
+}
+
+function useCurrentRouteId(hookName: DataRouterStateHook) {
+  let route = useRouteContext(hookName);
+  let thisRoute = route.matches[route.matches.length - 1];
+  invariant(
+    thisRoute.route.id,
+    `${hookName} can only be used on routes that contain a unique "id"`
+  );
+  return thisRoute.route.id;
 }
 
 /**
@@ -683,7 +702,7 @@ function useDataRouterState(hookName: DataRouterHook) {
  * no navigation is in progress
  */
 export function useNavigation() {
-  let state = useDataRouterState(DataRouterHook.UseNavigation);
+  let state = useDataRouterState(DataRouterStateHook.UseNavigation);
   return state.navigation;
 }
 
@@ -692,12 +711,8 @@ export function useNavigation() {
  * as the current state of any manual revalidations
  */
 export function useRevalidator() {
-  let dataRouterContext = React.useContext(DataRouterContext);
-  invariant(
-    dataRouterContext,
-    `useRevalidator must be used within a DataRouterContext`
-  );
-  let state = useDataRouterState(DataRouterHook.UseRevalidator);
+  let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
+  let state = useDataRouterState(DataRouterStateHook.UseRevalidator);
   return {
     revalidate: dataRouterContext.router.revalidate,
     state: state.revalidation,
@@ -709,7 +724,9 @@ export function useRevalidator() {
  * parent/child routes or the route "handle" property
  */
 export function useMatches() {
-  let { matches, loaderData } = useDataRouterState(DataRouterHook.UseMatches);
+  let { matches, loaderData } = useDataRouterState(
+    DataRouterStateHook.UseMatches
+  );
   return React.useMemo(
     () =>
       matches.map((match) => {
@@ -733,25 +750,23 @@ export function useMatches() {
  * Returns the loader data for the nearest ancestor Route loader
  */
 export function useLoaderData(): unknown {
-  let state = useDataRouterState(DataRouterHook.UseLoaderData);
+  let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
+  let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
 
-  let route = React.useContext(RouteContext);
-  invariant(route, `useLoaderData must be used inside a RouteContext`);
-
-  let thisRoute = route.matches[route.matches.length - 1];
-  invariant(
-    thisRoute.route.id,
-    `useLoaderData can only be used on routes that contain a unique "id"`
-  );
-
-  return state.loaderData[thisRoute.route.id];
+  if (state.errors && state.errors[routeId] != null) {
+    console.error(
+      `You cannot \`useLoaderData\` in an errorElement (routeId: ${routeId})`
+    );
+    return undefined;
+  }
+  return state.loaderData[routeId];
 }
 
 /**
  * Returns the loaderData for the given routeId
  */
 export function useRouteLoaderData(routeId: string): unknown {
-  let state = useDataRouterState(DataRouterHook.UseRouteLoaderData);
+  let state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
   return state.loaderData[routeId];
 }
 
@@ -759,7 +774,7 @@ export function useRouteLoaderData(routeId: string): unknown {
  * Returns the action data for the nearest ancestor Route action
  */
 export function useActionData(): unknown {
-  let state = useDataRouterState(DataRouterHook.UseActionData);
+  let state = useDataRouterState(DataRouterStateHook.UseActionData);
 
   let route = React.useContext(RouteContext);
   invariant(route, `useActionData must be used inside a RouteContext`);
@@ -774,9 +789,8 @@ export function useActionData(): unknown {
  */
 export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
-  let state = useDataRouterState(DataRouterHook.UseRouteError);
-  let route = React.useContext(RouteContext);
-  let thisRoute = route.matches[route.matches.length - 1];
+  let state = useDataRouterState(DataRouterStateHook.UseRouteError);
+  let routeId = useCurrentRouteId(DataRouterStateHook.UseRouteError);
 
   // If this was a render error, we put it in a RouteError context inside
   // of RenderErrorBoundary
@@ -784,14 +798,8 @@ export function useRouteError(): unknown {
     return error;
   }
 
-  invariant(route, `useRouteError must be used inside a RouteContext`);
-  invariant(
-    thisRoute.route.id,
-    `useRouteError can only be used on routes that contain a unique "id"`
-  );
-
   // Otherwise look for errors from our data router state
-  return state.errors?.[thisRoute.route.id];
+  return state.errors?.[routeId];
 }
 
 /**

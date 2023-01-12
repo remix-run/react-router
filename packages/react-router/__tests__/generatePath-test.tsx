@@ -13,6 +13,12 @@ describe("generatePath", () => {
       expect(generatePath("/courses/:id", { id: "routing" })).toBe(
         "/courses/routing"
       );
+      expect(
+        generatePath("/courses/:id/student/:studentId", {
+          id: "routing",
+          studentId: "matt",
+        })
+      ).toBe("/courses/routing/student/matt");
       expect(generatePath("/courses/*", { "*": "routing/grades" })).toBe(
         "/courses/routing/grades"
       );
@@ -51,6 +57,8 @@ describe("generatePath", () => {
   });
 
   it("only interpolates and does not add slashes", () => {
+    let consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+
     expect(generatePath("*")).toBe("");
     expect(generatePath("/*")).toBe("/");
 
@@ -63,10 +71,32 @@ describe("generatePath", () => {
     expect(generatePath("*", { "*": "bar" })).toBe("bar");
     expect(generatePath("/*", { "*": "bar" })).toBe("/bar");
 
-    expect(generatePath("foo:bar", { bar: "baz" })).toBe("foobaz");
-    expect(generatePath("/foo:bar", { bar: "baz" })).toBe("/foobaz");
+    // No support for partial dynamic params
+    expect(generatePath("foo:bar", { bar: "baz" })).toBe("foo:bar");
+    expect(generatePath("/foo:bar", { bar: "baz" })).toBe("/foo:bar");
 
-    expect(generatePath("foo*", { "*": "bar" })).toBe("foobar");
-    expect(generatePath("/foo*", { "*": "bar" })).toBe("/foobar");
+    // Partial splats are treated as independent path segments
+    expect(generatePath("foo*", { "*": "bar" })).toBe("foo/bar");
+    expect(generatePath("/foo*", { "*": "bar" })).toBe("/foo/bar");
+
+    // Ensure we warn on partial splat usages
+    expect(consoleWarn.mock.calls).toMatchInlineSnapshot(`
+      Array [
+        Array [
+          "Route path \\"foo*\\" will be treated as if it were \\"foo/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"foo/*\\".",
+        ],
+        Array [
+          "Route path \\"/foo*\\" will be treated as if it were \\"/foo/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"/foo/*\\".",
+        ],
+        Array [
+          "Route path \\"foo*\\" will be treated as if it were \\"foo/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"foo/*\\".",
+        ],
+        Array [
+          "Route path \\"/foo*\\" will be treated as if it were \\"/foo/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"/foo/*\\".",
+        ],
+      ]
+    `);
+
+    consoleWarn.mockRestore();
   });
 });

@@ -156,6 +156,10 @@ describe("matchPath", () => {
     it("fails to match a pathname where the segments do not match", () => {
       expect(matchPath({ path: "/users", end: false }, "/")).toBeNull();
       expect(matchPath({ path: "/users", end: false }, "/users2")).toBeNull();
+      expect(matchPath({ path: "/users", end: false }, "/users-2")).toBeNull();
+      expect(matchPath({ path: "/users", end: false }, "/users~2")).toBeNull();
+      expect(matchPath({ path: "/users", end: false }, "/users@2")).toBeNull();
+      expect(matchPath({ path: "/users", end: false }, "/users.2")).toBeNull();
       expect(
         matchPath({ path: "/users/mj", end: false }, "/users/mj2")
       ).toBeNull();

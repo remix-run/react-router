@@ -7,9 +7,11 @@ new: true
 
 In HTML/HTTP, data mutations and loads are modeled with navigation: `<a href>` and `<form action>`. Both cause a navigation in the browser. The React Router equivalents are [`<Link>`][link] and [`<Form>`][form].
 
-But sometimes you want to call a loader outside of navigation, or call an action (and get the data on the page to revalidate) without changing the URL. Or you need to have multiple mutations in-flight at the same time.
+But sometimes you want to call a [`loader`][loader] outside of navigation, or call an [`action`][action] (and get the data on the page to revalidate) without changing the URL. Or you need to have multiple mutations in-flight at the same time.
 
 Many interactions with the server aren't navigation events. This hook lets you plug your UI into your actions and loaders without navigating.
+
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
 
 This is useful when you need to:
 
@@ -220,6 +222,9 @@ Tells you the method of the form being submitted: get, post, put, patch, or dele
 fetcher.formMethod; // "post"
 ```
 
+[loader]: ../route/loader
+[action]: ../route/action
+[pickingarouter]: ../routers/picking-a-router
 [indexsearchparam]: ../guides/index-search-param
 [link]: ../components/link
 [form]: ../components/form

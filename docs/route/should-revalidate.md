@@ -7,6 +7,8 @@ new: true
 
 This function allows you opt-out of revalidation for a route's loader as an optimization.
 
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
 There are several instances where data is revalidated, keeping your UI in sync with your data automatically:
 
 - After an [`action`][action] is called from a [`<Form>`][form].
@@ -73,6 +75,8 @@ interface ShouldRevalidateFunction {
 [action]: ./action
 [form]: ../components/form
 [fetcher]: ../hooks/use-fetcher
+[usesubmit]: ../hooks/use-submit
 [loader]: ./loader
 [useloaderdata]: ../hooks/use-loader-data
 [params]: ./route#dynamic-segments
+[pickingarouter]: ../routers/picking-a-router

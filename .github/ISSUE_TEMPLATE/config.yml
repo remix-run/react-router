@@ -1,5 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 🤔 Support/Usage Question
-    url: https://stackoverflow.com/questions/tagged/react-router
-    about: This is a bug tracker, not a support system. For usage questions, please use Stack Overflow where there are a lot more people ready to help you out. Thanks!
+  - name: 💡 Feature Request
+    url: https://github.com/remix-run/react-router/discussions/new?category=proposals
+    about: If you've got an idea for a new feature in React Router, please open a new Discussion with the `Proposals` label
+  - name: 🤔 Usage Question (Github Discussions)
+    url: https://github.com/remix-run/remix/discussions/new?category=q-a
+    about: Open a Discussion in GitHub wih the `Q&A` label
+  - name: 💬 Remix Discord Channel
+    url: https://rmx.as/discord
+    about: Interact with other people using React Router and Remix 📀

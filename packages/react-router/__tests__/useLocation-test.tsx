@@ -61,4 +61,27 @@ describe("useLocation", () => {
       </div>
     `);
   });
+
+  it("preserves state from initialEntries", () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter
+          initialEntries={[
+            { pathname: "/example", state: { my: "state" }, key: "my-key" },
+          ]}
+        >
+          <Routes>
+            <Route path={"/example"} element={<ShowLocation />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <pre>
+        {"pathname":"/example","search":"","hash":"","state":{"my":"state"},"key":"my-key"}
+      </pre>
+    `);
+  });
 });

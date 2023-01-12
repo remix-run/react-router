@@ -5,7 +5,11 @@ new: true
 
 # `useSubmit`
 
-The imperative version of `<Form>` that let's you, the programmer, submit a form instead of the user. For example, submitting the form every time a value changes inside the form:
+The imperative version of `<Form>` that let's you, the programmer, submit a form instead of the user.
+
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
+For example, submitting the form every time a value changes inside the form:
 
 ```tsx [8]
 import { useSubmit, Form } from "react-router-dom";
@@ -87,3 +91,5 @@ submit(null, {
 // same as
 <Form action="/logout" method="post" />;
 ```
+
+[pickingarouter]: ../routers/picking-a-router

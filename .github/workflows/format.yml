@@ -1,4 +1,4 @@
-name: Format
+name: 👔 Format
 
 on:
   push:
@@ -12,26 +12,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
 
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.FORMAT_PAT }}
 
-      - name: Use Node.js
-        uses: actions/setup-node@v2
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
         with:
-          node-version: 14
+          cache: yarn
+          node-version-file: ".nvmrc"
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: 📥 Install deps
+        run: yarn --frozen-lockfile
 
-      - name: Format
-        run: npm run format --if-present
+      - name: 👔 Format
+        run: yarn format
 
-      - name: Commit
+      - name: 💪 Commit
         run: |
           git config --local user.email "hello@remix.run"
           git config --local user.name "Remix Run Bot"

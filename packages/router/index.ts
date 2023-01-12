@@ -1,10 +1,14 @@
-import { convertRoutesToDataRoutes } from "./utils";
+import { convertRoutesToDataRoutes, getPathContributingMatches } from "./utils";
 
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  AgnosticDataIndexRouteObject,
+  AgnosticDataNonIndexRouteObject,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
   TrackedPromise,
@@ -28,7 +32,6 @@ export {
   defer,
   generatePath,
   getToPathname,
-  invariant,
   isRouteErrorResponse,
   joinPaths,
   json,
@@ -55,13 +58,13 @@ export type {
   Path,
   To,
 } from "./history";
-
 export {
   Action,
   createBrowserHistory,
   createPath,
   createHashHistory,
   createMemoryHistory,
+  invariant,
   parsePath,
 } from "./history";
 
@@ -75,4 +78,7 @@ export * from "./router";
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @internal */
-export { convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes };
+export {
+  convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
+  getPathContributingMatches as UNSAFE_getPathContributingMatches,
+};

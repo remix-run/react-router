@@ -17,6 +17,7 @@ import type {
   Router as RemixRouter,
   ShouldRevalidateFunction,
   To,
+  InitialEntry,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -36,7 +37,6 @@ import {
 } from "@remix-run/router";
 
 import type {
-  DataMemoryRouterProps,
   AwaitProps,
   MemoryRouterProps,
   NavigateProps,
@@ -65,8 +65,10 @@ import {
 import type {
   DataRouteMatch,
   DataRouteObject,
+  IndexRouteObject,
   Navigator,
   NavigateOptions,
+  NonIndexRouteObject,
   RouteMatch,
   RouteObject,
   RelativeRoutingType,
@@ -74,7 +76,6 @@ import type {
 import {
   DataRouterContext,
   DataRouterStateContext,
-  DataStaticRouterContext,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -113,11 +114,11 @@ export type {
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
-  DataMemoryRouterProps,
   DataRouteMatch,
   DataRouteObject,
   Fetcher,
   Hash,
+  IndexRouteObject,
   IndexRouteProps,
   JsonFunction,
   LayoutRouteProps,
@@ -130,6 +131,7 @@ export type {
   NavigateProps,
   Navigation,
   Navigator,
+  NonIndexRouteObject,
   OutletProps,
   Params,
   ParamParseKey,
@@ -201,7 +203,7 @@ export function createMemoryRouter(
   opts?: {
     basename?: string;
     hydrationData?: HydrationState;
-    initialEntries?: string[];
+    initialEntries?: InitialEntry[];
     initialIndex?: number;
   }
 ): RemixRouter {
@@ -236,6 +238,5 @@ export {
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
   enhanceManualRouteObjects as UNSAFE_enhanceManualRouteObjects,
 };

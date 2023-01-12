@@ -6,7 +6,7 @@ new: true
 
 # Picking a Router
 
-While your app will only use a single router, several routers are available depending on the environment you're app is running in. This document should help you figure out which one to use.
+While your app will only use a single router, several routers are available depending on the environment your app is running in. This document should help you figure out which one to use.
 
 ## Using v6.4 Data APIs
 
@@ -31,6 +31,8 @@ The easiest way to quickly update to a v6.4 is to get the help from [`createRout
 ```jsx
 import {
   createBrowserRouter,
+  createRoutesFromElements,
+  Route,
   RouterProvider,
 } from "react-router-dom";
 
@@ -66,21 +68,27 @@ If you're not interested in the data APIs, you can continue to use [`<BrowserRou
 
 Testing components that use React Router APIs is easiest with [`createMemoryRouter`][creatememoryrouter] or [`<MemoryRouter>`][memoryrouter] instead of the routers you use in your app that require DOM history APIs.
 
+Some of the React Router APIs internally use `fetch`, which is only supported starting from Node.js v18. If your project uses v17 or lower, you should add a `fetch` polyfill manually. One way to do that, is to install [`whatwg-fetch`](https://www.npmjs.com/package/whatwg-fetch) and add it to your `jest.config.js` file like so:
+
+```js
+module.exports = {
+  setupFiles: ["whatwg-fetch"],
+  // ...rest of the config
+};
+```
+
 ## React Native
 
 You will use [`<NativeRouter>`][nativerouter] from React Native projects.
 
 The data APIs from v6.4 are currently not supported in React Native, but should be eventually.
 
-[databrowserrouter]: ./data-browser-router
-[staticrouter]: ./static-router
-[memoryrouter]: ./memory-router
-[nativerouter]: ./native-router
 [createbrowserrouter]: ./create-browser-router
 [createhashrouter]: ./create-hash-router
 [creatememoryrouter]: ./create-memory-router
-[browserrouter]: ../router-components/browser-router
-[hashrouter]: ../router-components/hash-router
-[memoryrouter]: ../router-components/memory-router
-[staticrouter]: ../router-components/static-router
 [createroutesfromelements]: ../utils/create-routes-from-elements
+[browserrouter]: ../router-components/browser-router
+[memoryrouter]: ../router-components/memory-router
+[hashrouter]: ../router-components/hash-router
+[nativerouter]: ../router-components/native-router
+[staticrouter]: ../router-components/static-router

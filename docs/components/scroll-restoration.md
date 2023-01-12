@@ -7,6 +7,8 @@ new: true
 
 This component will emulate the browser's scroll restoration on location changes after loaders have completed to ensure the scroll position is restored to the right spot, even across domains.
 
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
 You should only render one of these and it's recommended you render it in the root route of your app:
 
 ```tsx [1,7]
@@ -28,7 +30,7 @@ Optional prop that defines the key React Router should use to restore scroll pos
 
 ```tsx
 <ScrollRestoration
-  getKey={({ location, matches }) => {
+  getKey={(location, matches) => {
     // default behavior
     return location.key;
   }}
@@ -58,7 +60,7 @@ A solid product decision here is to keep the users scroll position on the home f
 
 ```tsx
 <ScrollRestoration
-  getKey={({ location, matches }) => {
+  getKey={(location, matches) => {
     return location.pathname;
   }}
 />
@@ -68,7 +70,7 @@ Or you may want to only use the pathname for some paths, and use the normal beha
 
 ```tsx
 <ScrollRestoration
-  getKey={({ location, matches }) => {
+  getKey={(location, matches) => {
     const paths = ["/home", "/notifications"];
     return paths.includes(location.pathname)
       ? // home and notifications restore by pathname
@@ -97,3 +99,4 @@ Server Rendering frameworks can prevent scroll flashing because they can send a 
 
 [remix]: https://remix.run
 [preventscrollreset]: ../components/link#preventscrollreset
+[pickingarouter]: ../routers/picking-a-router

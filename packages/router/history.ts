@@ -126,6 +126,15 @@ export interface History {
   createHref(to: To): string;
 
   /**
+   * Encode a location the same way window.history would do (no-op for memory
+   * history) so we ensure our PUSH/REPLACE navigations for data routers
+   * behave the same as POP
+   *
+   * @param to Unencoded path
+   */
+  encodeLocation(to: To): Path;
+
+  /**
    * Pushes a new location onto the history stack, increasing its length by one.
    * If there were any entries in the stack after the current one, they are
    * lost.
@@ -208,7 +217,11 @@ export function createMemoryHistory(
   let { initialEntries = ["/"], initialIndex, v5Compat = false } = options;
   let entries: Location[]; // Declare so we can access from createMemoryLocation
   entries = initialEntries.map((entry, index) =>
-    createMemoryLocation(entry, null, index === 0 ? "default" : undefined)
+    createMemoryLocation(
+      entry,
+      typeof entry === "string" ? null : entry.state,
+      index === 0 ? "default" : undefined
+    )
   );
   let index = clampIndex(
     initialIndex == null ? entries.length - 1 : initialIndex
@@ -254,6 +267,14 @@ export function createMemoryHistory(
     },
     createHref(to) {
       return typeof to === "string" ? to : createPath(to);
+    },
+    encodeLocation(to: To) {
+      let path = typeof to === "string" ? parsePath(to) : to;
+      return {
+        pathname: path.pathname || "",
+        search: path.search || "",
+        hash: path.hash || "",
+      };
     },
     push(to, state) {
       action = Action.Push;
@@ -325,8 +346,8 @@ export function createBrowserHistory(
       "",
       { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
-      globalHistory.state?.usr || null,
-      globalHistory.state?.key || "default"
+      (globalHistory.state && globalHistory.state.usr) || null,
+      (globalHistory.state && globalHistory.state.key) || "default"
     );
   }
 
@@ -386,8 +407,8 @@ export function createHashHistory(
       "",
       { pathname, search, hash },
       // state defaults to `null` because `window.history.state` does
-      globalHistory.state?.usr || null,
-      globalHistory.state?.key || "default"
+      (globalHistory.state && globalHistory.state.usr) || null,
+      (globalHistory.state && globalHistory.state.key) || "default"
     );
   }
 
@@ -425,6 +446,20 @@ export function createHashHistory(
 ////////////////////////////////////////////////////////////////////////////////
 //#region UTILS
 ////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @private
+ */
+export function invariant(value: boolean, message?: string): asserts value;
+export function invariant<T>(
+  value: T | null | undefined,
+  message?: string
+): asserts value is T;
+export function invariant(value: any, message?: string) {
+  if (value === false || value === null || typeof value === "undefined") {
+    throw new Error(message);
+  }
+}
 
 function warning(cond: any, message: string) {
   if (!cond) {
@@ -476,7 +511,7 @@ export function createLocation(
     // full Locations now and avoid the need to run through this flow at all
     // But that's a pretty big refactor to the current test suite so going to
     // keep as is for the time being and just let any incoming keys take precedence
-    key: (to as Location)?.key || key || createKey(),
+    key: (to && (to as Location).key) || key || createKey(),
   };
   return location;
 }
@@ -523,6 +558,24 @@ export function parsePath(path: string): Partial<Path> {
   return parsedPath;
 }
 
+export function createClientSideURL(location: Location | string): URL {
+  // window.location.origin is "null" (the literal string value) in Firefox
+  // under certain conditions, notably when serving from a local HTML file
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
+  let base =
+    typeof window !== "undefined" &&
+    typeof window.location !== "undefined" &&
+    window.location.origin !== "null"
+      ? window.location.origin
+      : window.location.href;
+  let href = typeof location === "string" ? location : createPath(location);
+  invariant(
+    base,
+    `No window.location.(origin|href) available to create URL for href: ${href}`
+  );
+  return new URL(href, base);
+}
+
 export interface UrlHistory extends History {}
 
 export type UrlHistoryOptions = {
@@ -551,7 +604,7 @@ function getUrlBasedHistory(
   function push(to: To, state?: any) {
     action = Action.Push;
     let location = createLocation(history.location, to, state);
-    validateLocation?.(location, to);
+    if (validateLocation) validateLocation(location, to);
 
     let historyState = getHistoryState(location);
     let url = history.createHref(location);
@@ -566,21 +619,21 @@ function getUrlBasedHistory(
     }
 
     if (v5Compat && listener) {
-      listener({ action, location });
+      listener({ action, location: history.location });
     }
   }
 
   function replace(to: To, state?: any) {
     action = Action.Replace;
     let location = createLocation(history.location, to, state);
-    validateLocation?.(location, to);
+    if (validateLocation) validateLocation(location, to);
 
     let historyState = getHistoryState(location);
     let url = history.createHref(location);
     globalHistory.replaceState(historyState, "", url);
 
     if (v5Compat && listener) {
-      listener({ action, location: location });
+      listener({ action, location: history.location });
     }
   }
 
@@ -605,6 +658,17 @@ function getUrlBasedHistory(
     },
     createHref(to) {
       return createHref(window, to);
+    },
+    encodeLocation(to) {
+      // Encode a Location the same way window.location would
+      let url = createClientSideURL(
+        typeof to === "string" ? to : createPath(to)
+      );
+      return {
+        pathname: url.pathname,
+        search: url.search,
+        hash: url.hash,
+      };
     },
     push,
     replace,

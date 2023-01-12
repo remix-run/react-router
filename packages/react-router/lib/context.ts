@@ -1,28 +1,55 @@
 import * as React from "react";
 import type {
-  TrackedPromise,
+  AgnosticRouteMatch,
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
   History,
   Location,
   Router,
   StaticHandlerContext,
   To,
-  AgnosticRouteObject,
-  AgnosticRouteMatch,
+  TrackedPromise,
 } from "@remix-run/router";
 import type { Action as NavigationType } from "@remix-run/router";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router
-export interface RouteObject extends AgnosticRouteObject {
+export interface IndexRouteObject {
+  caseSensitive?: AgnosticIndexRouteObject["caseSensitive"];
+  path?: AgnosticIndexRouteObject["path"];
+  id?: AgnosticIndexRouteObject["id"];
+  loader?: AgnosticIndexRouteObject["loader"];
+  action?: AgnosticIndexRouteObject["action"];
+  hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
+  shouldRevalidate?: AgnosticIndexRouteObject["shouldRevalidate"];
+  handle?: AgnosticIndexRouteObject["handle"];
+  index: true;
+  children?: undefined;
+  element?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
+}
+
+export interface NonIndexRouteObject {
+  caseSensitive?: AgnosticNonIndexRouteObject["caseSensitive"];
+  path?: AgnosticNonIndexRouteObject["path"];
+  id?: AgnosticNonIndexRouteObject["id"];
+  loader?: AgnosticNonIndexRouteObject["loader"];
+  action?: AgnosticNonIndexRouteObject["action"];
+  hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
+  shouldRevalidate?: AgnosticNonIndexRouteObject["shouldRevalidate"];
+  handle?: AgnosticNonIndexRouteObject["handle"];
+  index?: false;
   children?: RouteObject[];
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
 }
 
-export interface DataRouteObject extends RouteObject {
+export type RouteObject = IndexRouteObject | NonIndexRouteObject;
+
+export type DataRouteObject = RouteObject & {
   children?: DataRouteObject[];
   id: string;
-}
+};
 
 export interface RouteMatch<
   ParamKey extends string = string,
@@ -31,15 +58,9 @@ export interface RouteMatch<
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
-// Contexts for data routers
-export const DataStaticRouterContext =
-  React.createContext<StaticHandlerContext | null>(null);
-if (__DEV__) {
-  DataStaticRouterContext.displayName = "DataStaticRouterContext";
-}
-
 export interface DataRouterContextObject extends NavigationContextObject {
   router: Router;
+  staticContext?: StaticHandlerContext;
 }
 
 export const DataRouterContext =
@@ -80,6 +101,8 @@ export interface NavigateOptions {
  */
 export interface Navigator {
   createHref: History["createHref"];
+  // Optional for backwards-compat with Router/HistoryRouter usage (edge case)
+  encodeLocation?: History["encodeLocation"];
   go: History["go"];
   push(to: To, state?: any, opts?: NavigateOptions): void;
   replace(to: To, state?: any, opts?: NavigateOptions): void;

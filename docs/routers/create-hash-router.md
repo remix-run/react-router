@@ -11,7 +11,7 @@ This router is useful if you are unable to configure your web server to direct a
 
 Other than that, it is functionally the same as [`createBrowserRouter`][createbrowserrouter].
 
-```tsx lines=[3,7,11]
+```tsx lines=[4,11]
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import {

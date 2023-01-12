@@ -1,5 +1,5 @@
 import type { Location, Path, To } from "./history";
-import { parsePath } from "./history";
+import { invariant, parsePath } from "./history";
 
 /**
  * Map of routeId -> data returned from a loader/action/error
@@ -61,7 +61,9 @@ export type DataResult =
   | RedirectResult
   | ErrorResult;
 
-export type FormMethod = "get" | "post" | "put" | "patch" | "delete";
+export type MutationFormMethod = "post" | "put" | "patch" | "delete";
+export type FormMethod = "get" | MutationFormMethod;
+
 export type FormEncType =
   | "application/x-www-form-urlencoded"
   | "multipart/form-data";
@@ -72,7 +74,7 @@ export type FormEncType =
  * external consumption
  */
 export interface Submission {
-  formMethod: Exclude<FormMethod, "get">;
+  formMethod: FormMethod;
   formAction: string;
   formEncType: FormEncType;
   formData: FormData;
@@ -86,6 +88,7 @@ export interface Submission {
 interface DataFunctionArgs {
   request: Request;
   params: Params;
+  context?: any;
 }
 
 /**
@@ -135,13 +138,10 @@ export interface ShouldRevalidateFunction {
 }
 
 /**
- * A route object represents a logical route, with (optionally) its child
- * routes organized in a tree-like structure.
+ * Base RouteObject with common props shared by all types of routes
  */
-export interface AgnosticRouteObject {
+type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
-  children?: AgnosticRouteObject[];
-  index?: boolean;
   path?: string;
   id?: string;
   loader?: LoaderFunction;
@@ -149,15 +149,47 @@ export interface AgnosticRouteObject {
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
-}
+};
+
+/**
+ * Index routes must not have children
+ */
+export type AgnosticIndexRouteObject = AgnosticBaseRouteObject & {
+  children?: undefined;
+  index: true;
+};
+
+/**
+ * Non-index routes may have children, but cannot have index
+ */
+export type AgnosticNonIndexRouteObject = AgnosticBaseRouteObject & {
+  children?: AgnosticRouteObject[];
+  index?: false;
+};
+
+/**
+ * A route object represents a logical route, with (optionally) its child
+ * routes organized in a tree-like structure.
+ */
+export type AgnosticRouteObject =
+  | AgnosticIndexRouteObject
+  | AgnosticNonIndexRouteObject;
+
+export type AgnosticDataIndexRouteObject = AgnosticIndexRouteObject & {
+  id: string;
+};
+
+export type AgnosticDataNonIndexRouteObject = AgnosticNonIndexRouteObject & {
+  children?: AgnosticDataRouteObject[];
+  id: string;
+};
 
 /**
  * A data route object, which is just a RouteObject with a required unique ID
  */
-export interface AgnosticDataRouteObject extends AgnosticRouteObject {
-  children?: AgnosticDataRouteObject[];
-  id: string;
-}
+export type AgnosticDataRouteObject =
+  | AgnosticDataIndexRouteObject
+  | AgnosticDataNonIndexRouteObject;
 
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
@@ -165,7 +197,7 @@ type _PathParam<Path extends string> =
   Path extends `${infer L}/${infer R}`
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
-    Path extends `${string}:${infer Param}`
+    Path extends `:${infer Param}`
     ? Param
     : // otherwise, there aren't any params present
       never;
@@ -231,6 +263,12 @@ export interface AgnosticRouteMatch<
 export interface AgnosticDataRouteMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
 
+function isIndexRoute(
+  route: AgnosticRouteObject
+): route is AgnosticIndexRouteObject {
+  return route.index === true;
+}
+
 // Walk the route tree generating unique IDs where necessary so we are working
 // solely with AgnosticDataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
@@ -242,26 +280,36 @@ export function convertRoutesToDataRoutes(
     let treePath = [...parentPath, index];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
     invariant(
+      route.index !== true || !route.children,
+      `Cannot specify children on an index route`
+    );
+    invariant(
       !allIds.has(id),
       `Found a route id collision on id "${id}".  Route ` +
         "id's must be globally unique within Data Router usages"
     );
     allIds.add(id);
-    let dataRoute: AgnosticDataRouteObject = {
-      ...route,
-      id,
-      children: route.children
-        ? convertRoutesToDataRoutes(route.children, treePath, allIds)
-        : undefined,
-    };
-    return dataRoute;
+
+    if (isIndexRoute(route)) {
+      let indexRoute: AgnosticDataIndexRouteObject = { ...route, id };
+      return indexRoute;
+    } else {
+      let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
+        ...route,
+        id,
+        children: route.children
+          ? convertRoutesToDataRoutes(route.children, treePath, allIds)
+          : undefined,
+      };
+      return pathOrLayoutRoute;
+    }
   });
 }
 
 /**
  * Matches the given routes to a location and returns the match data.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/match-routes
+ * @see https://reactrouter.com/utils/match-routes
  */
 export function matchRoutes<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
@@ -284,7 +332,16 @@ export function matchRoutes<
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    matches = matchRouteBranch<string, RouteObjectType>(branches[i], pathname);
+    matches = matchRouteBranch<string, RouteObjectType>(
+      branches[i],
+      // Incoming pathnames are generally encoded from either window.location
+      // or from router.navigate, but we want to match against the unencoded
+      // paths in the route definitions.  Memory router locations won't be
+      // encoded here but there also shouldn't be anything to decode so this
+      // should be a safe operation.  This avoids needing matchRoutes to be
+      // history-aware.
+      safelyDecodeURI(pathname)
+    );
   }
 
   return matches;
@@ -315,9 +372,14 @@ function flattenRoutes<
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
   parentPath = ""
 ): RouteBranch<RouteObjectType>[] {
-  routes.forEach((route, index) => {
+  let flattenRoute = (
+    route: RouteObjectType,
+    index: number,
+    relativePath?: string
+  ) => {
     let meta: RouteMeta<RouteObjectType> = {
-      relativePath: route.path || "",
+      relativePath:
+        relativePath === undefined ? route.path || "" : relativePath,
       caseSensitive: route.caseSensitive === true,
       childrenIndex: index,
       route,
@@ -342,6 +404,8 @@ function flattenRoutes<
     // the "flattened" version.
     if (route.children && route.children.length > 0) {
       invariant(
+        // Our types know better, but runtime JS may not!
+        // @ts-expect-error
         route.index !== true,
         `Index routes must not have child routes. Please remove ` +
           `all child routes from route path "${path}".`
@@ -356,10 +420,83 @@ function flattenRoutes<
       return;
     }
 
-    branches.push({ path, score: computeScore(path, route.index), routesMeta });
+    branches.push({
+      path,
+      score: computeScore(path, route.index),
+      routesMeta,
+    });
+  };
+  routes.forEach((route, index) => {
+    // coarse-grain check for optional params
+    if (route.path === "" || !route.path?.includes("?")) {
+      flattenRoute(route, index);
+    } else {
+      for (let exploded of explodeOptionalSegments(route.path)) {
+        flattenRoute(route, index, exploded);
+      }
+    }
   });
 
   return branches;
+}
+
+/**
+ * Computes all combinations of optional path segments for a given path,
+ * excluding combinations that are ambiguous and of lower priority.
+ *
+ * For example, `/one/:two?/three/:four?/:five?` explodes to:
+ * - `/one/three`
+ * - `/one/:two/three`
+ * - `/one/three/:four`
+ * - `/one/three/:five`
+ * - `/one/:two/three/:four`
+ * - `/one/:two/three/:five`
+ * - `/one/three/:four/:five`
+ * - `/one/:two/three/:four/:five`
+ */
+function explodeOptionalSegments(path: string): string[] {
+  let segments = path.split("/");
+  if (segments.length === 0) return [];
+
+  let [first, ...rest] = segments;
+
+  // Optional path segments are denoted by a trailing `?`
+  let isOptional = first.endsWith("?");
+  // Compute the corresponding required segment: `foo?` -> `foo`
+  let required = first.replace(/\?$/, "");
+
+  if (rest.length === 0) {
+    // Intepret empty string as omitting an optional segment
+    // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
+    return isOptional ? [required, ""] : [required];
+  }
+
+  let restExploded = explodeOptionalSegments(rest.join("/"));
+
+  let result: string[] = [];
+
+  // All child paths with the prefix.  Do this for all children before the
+  // optional version for all children so we get consistent ordering where the
+  // parent optional aspect is preferred as required.  Otherwise, we can get
+  // child sections interspersed where deeper optional segments are higher than
+  // parent optional segments, where for example, /:two would explodes _earlier_
+  // then /:one.  By always including the parent as required _for all children_
+  // first, we avoid this issue
+  result.push(
+    ...restExploded.map((subpath) =>
+      subpath === "" ? required : [required, subpath].join("/")
+    )
+  );
+
+  // Then if this is an optional value, add all child versions without
+  if (isOptional) {
+    result.push(...restExploded);
+  }
+
+  // for absolute paths, ensure `/` instead of empty segment
+  return result.map((exploded) =>
+    path.startsWith("/") && exploded === "" ? "/" : exploded
+  );
 }
 
 function rankRouteBranches(branches: RouteBranch[]): void {
@@ -472,18 +609,34 @@ function matchRouteBranch<
 /**
  * Returns a path with params interpolated.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/generate-path
+ * @see https://reactrouter.com/utils/generate-path
  */
 export function generatePath<Path extends string>(
-  path: Path,
+  originalPath: Path,
   params: {
     [key in PathParam<Path>]: string;
   } = {} as any
 ): string {
+  let path = originalPath;
+  if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
+    warning(
+      false,
+      `Route path "${path}" will be treated as if it were ` +
+        `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
+        `always follow a \`/\` in the pattern. To get rid of this warning, ` +
+        `please change the route path to "${path.replace(/\*$/, "/*")}".`
+    );
+    path = path.replace(/\*$/, "/*") as Path;
+  }
+
   return path
-    .replace(/:(\w+)/g, (_, key: PathParam<Path>) => {
+    .replace(/^:(\w+)/g, (_, key: PathParam<Path>) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key]!;
+    })
+    .replace(/\/:(\w+)/g, (_, key: PathParam<Path>) => {
+      invariant(params[key] != null, `Missing ":${key}" param`);
+      return `/${params[key]!}`;
     })
     .replace(/(\/?)\*/, (_, prefix, __, str) => {
       const star = "*" as PathParam<Path>;
@@ -550,7 +703,7 @@ type Mutable<T> = {
  * Performs pattern matching on a URL pathname and returns information about
  * the match.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/match-path
+ * @see https://reactrouter.com/utils/match-path
  */
 export function matchPath<
   ParamKey extends ParamParseKey<Path>,
@@ -623,9 +776,9 @@ function compilePath(
       .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
       .replace(/^\/*/, "/") // Make sure it has a leading /
       .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
-      .replace(/:(\w+)/g, (_: string, paramName: string) => {
+      .replace(/\/:(\w+)/g, (_: string, paramName: string) => {
         paramNames.push(paramName);
-        return "([^\\/]+)";
+        return "/([^\\/]+)";
       });
 
   if (path.endsWith("*")) {
@@ -634,21 +787,40 @@ function compilePath(
       path === "*" || path === "/*"
         ? "(.*)$" // Already matched the initial /, just match the rest
         : "(?:\\/(.+)|\\/*)$"; // Don't include the / in params["*"]
+  } else if (end) {
+    // When matching to the end, ignore trailing slashes
+    regexpSource += "\\/*$";
+  } else if (path !== "" && path !== "/") {
+    // If our path is non-empty and contains anything beyond an initial slash,
+    // then we have _some_ form of path in our regex so we should expect to
+    // match only if we find the end of this path segment.  Look for an optional
+    // non-captured trailing slash (to match a portion of the URL) or the end
+    // of the path (if we've matched to the end).  We used to do this with a
+    // word boundary but that gives false positives on routes like
+    // /user-preferences since `-` counts as a word boundary.
+    regexpSource += "(?:(?=\\/|$))";
   } else {
-    regexpSource += end
-      ? "\\/*$" // When matching to the end, ignore trailing slashes
-      : // Otherwise, match a word boundary or a proceeding /. The word boundary restricts
-        // parent routes to matching only their own words and nothing more, e.g. parent
-        // route "/home" should not match "/home2".
-        // Additionally, allow paths starting with `.`, `-`, `~`, and url-encoded entities,
-        // but do not consume the character in the matched path so they can match against
-        // nested paths.
-        "(?:(?=[@.~-]|%[0-9A-F]{2})|\\b|\\/|$)";
+    // Nothing to match for "" or "/"
   }
 
   let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
 
   return [matcher, paramNames];
+}
+
+function safelyDecodeURI(value: string) {
+  try {
+    return decodeURI(value);
+  } catch (error) {
+    warning(
+      false,
+      `The URL path "${value}" could not be decoded because it is is a ` +
+        `malformed URL segment. This is probably due to a bad percent ` +
+        `encoding (${error}).`
+    );
+
+    return value;
+  }
 }
 
 function safelyDecodeURIComponent(value: string, paramName: string) {
@@ -696,20 +868,6 @@ export function stripBasename(
 /**
  * @private
  */
-export function invariant(value: boolean, message?: string): asserts value;
-export function invariant<T>(
-  value: T | null | undefined,
-  message?: string
-): asserts value is T;
-export function invariant(value: any, message?: string) {
-  if (value === false || value === null || typeof value === "undefined") {
-    throw new Error(message);
-  }
-}
-
-/**
- * @private
- */
 export function warning(cond: any, message: string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
@@ -730,7 +888,7 @@ export function warning(cond: any, message: string): void {
 /**
  * Returns a resolved path object relative to the given pathname.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/resolve-path
+ * @see https://reactrouter.com/utils/resolve-path
  */
 export function resolvePath(to: To, fromPathname = "/"): Path {
   let {
@@ -768,6 +926,54 @@ function resolvePathname(relativePath: string, fromPathname: string): string {
   return segments.length > 1 ? segments.join("/") : "/";
 }
 
+function getInvalidPathError(
+  char: string,
+  field: string,
+  dest: string,
+  path: Partial<Path>
+) {
+  return (
+    `Cannot include a '${char}' character in a manually specified ` +
+    `\`to.${field}\` field [${JSON.stringify(
+      path
+    )}].  Please separate it out to the ` +
+    `\`to.${dest}\` field. Alternatively you may provide the full path as ` +
+    `a string in <Link to="..."> and the router will parse it for you.`
+  );
+}
+
+/**
+ * @private
+ *
+ * When processing relative navigation we want to ignore ancestor routes that
+ * do not contribute to the path, such that index/pathless layout routes don't
+ * interfere.
+ *
+ * For example, when moving a route element into an index route and/or a
+ * pathless layout route, relative link behavior contained within should stay
+ * the same.  Both of the following examples should link back to the root:
+ *
+ *   <Route path="/">
+ *     <Route path="accounts" element={<Link to=".."}>
+ *   </Route>
+ *
+ *   <Route path="/">
+ *     <Route path="accounts">
+ *       <Route element={<AccountsLayout />}>       // <-- Does not contribute
+ *         <Route index element={<Link to=".."} />  // <-- Does not contribute
+ *       </Route
+ *     </Route>
+ *   </Route>
+ */
+export function getPathContributingMatches<
+  T extends AgnosticRouteMatch = AgnosticRouteMatch
+>(matches: T[]) {
+  return matches.filter(
+    (match, index) =>
+      index === 0 || (match.route.path && match.route.path.length > 0)
+  );
+}
+
 /**
  * @private
  */
@@ -777,7 +983,26 @@ export function resolveTo(
   locationPathname: string,
   isPathRelative = false
 ): Path {
-  let to = typeof toArg === "string" ? parsePath(toArg) : { ...toArg };
+  let to: Partial<Path>;
+  if (typeof toArg === "string") {
+    to = parsePath(toArg);
+  } else {
+    to = { ...toArg };
+
+    invariant(
+      !to.pathname || !to.pathname.includes("?"),
+      getInvalidPathError("?", "pathname", "search", to)
+    );
+    invariant(
+      !to.pathname || !to.pathname.includes("#"),
+      getInvalidPathError("#", "pathname", "hash", to)
+    );
+    invariant(
+      !to.search || !to.search.includes("#"),
+      getInvalidPathError("#", "search", "hash", to)
+    );
+  }
+
   let isEmptyPath = toArg === "" || to.pathname === "";
   let toPathname = isEmptyPath ? "/" : to.pathname;
 
@@ -986,14 +1211,15 @@ export class DeferredData {
       this.unlistenAbortSignal();
     }
 
+    const subscriber = this.subscriber;
     if (error) {
       Object.defineProperty(promise, "_error", { get: () => error });
-      this.subscriber?.(false);
+      subscriber && subscriber(false);
       return Promise.reject(error);
     }
 
     Object.defineProperty(promise, "_data", { get: () => data });
-    this.subscriber?.(false);
+    subscriber && subscriber(false);
     return data;
   }
 
@@ -1004,7 +1230,8 @@ export class DeferredData {
   cancel() {
     this.controller.abort();
     this.pendingKeys.forEach((v, k) => this.pendingKeys.delete(k));
-    this.subscriber?.(true);
+    let subscriber = this.subscriber;
+    subscriber && subscriber(true);
   }
 
   async resolveData(signal: AbortSignal) {
@@ -1099,11 +1326,24 @@ export class ErrorResponse {
   status: number;
   statusText: string;
   data: any;
+  error?: Error;
+  internal: boolean;
 
-  constructor(status: number, statusText: string | undefined, data: any) {
+  constructor(
+    status: number,
+    statusText: string | undefined,
+    data: any,
+    internal = false
+  ) {
     this.status = status;
     this.statusText = statusText || "";
-    this.data = data;
+    this.internal = internal;
+    if (data instanceof Error) {
+      this.data = data.toString();
+      this.error = data;
+    } else {
+      this.data = data;
+    }
   }
 }
 

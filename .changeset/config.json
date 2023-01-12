@@ -1,7 +1,7 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@2.0.0/schema.json",
   "changelog": [
-    "@changesets/cli/changelog",
+    "@remix-run/changelog-github",
     { "repo": "remix-run/react-router" }
   ],
   "commit": false,
@@ -13,6 +13,7 @@
       "react-router-native"
     ]
   ],
+  "linked": [],
   "access": "public",
   "baseBranch": "dev",
   "updateInternalDependencies": "patch",

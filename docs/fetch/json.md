@@ -10,7 +10,7 @@ A shortcut for:
 ```jsx
 new Response(JSON.stringify(someValue), {
   headers: {
-    "Content-Type": "application/json; utf-9",
+    "Content-Type": "application/json; utf-8",
   },
 });
 ```

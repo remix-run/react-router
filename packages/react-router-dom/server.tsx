@@ -1,5 +1,7 @@
 import * as React from "react";
 import type {
+  AgnosticDataRouteObject,
+  Path,
   RevalidationState,
   Router as RemixRouter,
   StaticHandlerContext,
@@ -9,9 +11,15 @@ import {
   IDLE_NAVIGATION,
   Action,
   invariant,
+  isRouteErrorResponse,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import type { Location, RouteObject, To } from "react-router-dom";
+import type {
+  DataRouteObject,
+  Location,
+  RouteObject,
+  To,
+} from "react-router-dom";
 import { Routes } from "react-router-dom";
 import {
   createPath,
@@ -19,7 +27,7 @@ import {
   Router,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
-  UNSAFE_DataStaticRouterContext as DataStaticRouterContext,
+  UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router-dom";
 
 export interface StaticRouterProps {
@@ -64,7 +72,6 @@ export function StaticRouter({
 }
 
 export interface StaticRouterProviderProps {
-  basename?: string;
   context: StaticHandlerContext;
   router: RemixRouter;
   hydrate?: boolean;
@@ -75,8 +82,7 @@ export interface StaticRouterProviderProps {
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function unstable_StaticRouterProvider({
-  basename,
+export function StaticRouterProvider({
   context,
   router,
   hydrate = true,
@@ -91,7 +97,8 @@ export function unstable_StaticRouterProvider({
     router,
     navigator: getStatelessNavigator(),
     static: true,
-    basename: basename || "/",
+    staticContext: context,
+    basename: context.basename || "/",
   };
 
   let hydrateScript = "";
@@ -100,7 +107,7 @@ export function unstable_StaticRouterProvider({
     let data = {
       loaderData: context.loaderData,
       actionData: context.actionData,
-      errors: context.errors,
+      errors: serializeErrors(context.errors),
     };
     // Use JSON.parse here instead of embedding a raw JS object here to speed
     // up parsing on the client.  Dual-stringify is needed to ensure all quotes
@@ -112,22 +119,18 @@ export function unstable_StaticRouterProvider({
 
   return (
     <>
-      <DataStaticRouterContext.Provider value={context}>
-        <DataRouterContext.Provider value={dataRouterContext}>
-          <DataRouterStateContext.Provider
-            value={dataRouterContext.router.state}
+      <DataRouterContext.Provider value={dataRouterContext}>
+        <DataRouterStateContext.Provider value={dataRouterContext.router.state}>
+          <Router
+            basename={dataRouterContext.basename}
+            location={dataRouterContext.router.state.location}
+            navigationType={dataRouterContext.router.state.historyAction}
+            navigator={dataRouterContext.navigator}
           >
-            <Router
-              basename={dataRouterContext.basename}
-              location={dataRouterContext.router.state.location}
-              navigationType={dataRouterContext.router.state.historyAction}
-              navigator={dataRouterContext.navigator}
-            >
-              <Routes />
-            </Router>
-          </DataRouterStateContext.Provider>
-        </DataRouterContext.Provider>
-      </DataStaticRouterContext.Provider>
+            <Routes />
+          </Router>
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>
       {hydrateScript ? (
         <script
           suppressHydrationWarning
@@ -139,11 +142,34 @@ export function unstable_StaticRouterProvider({
   );
 }
 
+function serializeErrors(
+  errors: StaticHandlerContext["errors"]
+): StaticHandlerContext["errors"] {
+  if (!errors) return null;
+  let entries = Object.entries(errors);
+  let serialized: StaticHandlerContext["errors"] = {};
+  for (let [key, val] of entries) {
+    // Hey you!  If you change this, please change the corresponding logic in
+    // deserializeErrors in react-router-dom/index.tsx :)
+    if (isRouteErrorResponse(val)) {
+      serialized[key] = { ...val, __type: "RouteErrorResponse" };
+    } else if (val instanceof Error) {
+      // Do not serialize stack traces from SSR for security reasons
+      serialized[key] = {
+        message: val.message,
+        __type: "Error",
+      };
+    } else {
+      serialized[key] = val;
+    }
+  }
+  return serialized;
+}
+
 function getStatelessNavigator() {
   return {
-    createHref(to: To) {
-      return typeof to === "string" ? to : createPath(to);
-    },
+    createHref,
+    encodeLocation,
     push(to: To) {
       throw new Error(
         `You cannot use navigator.push() on the server because it is a stateless ` +
@@ -181,23 +207,53 @@ function getStatelessNavigator() {
   };
 }
 
-export function unstable_createStaticRouter(
+// Temporary manifest generation - we should optimize this by combining the
+// tree-walks between convertRoutesToDataRoutes, enhanceManualRouteObjects,
+// and generateManifest.
+// Also look into getting rid of `route as AgnosticDataRouteObject` down below?
+function generateManifest(
+  routes: DataRouteObject[],
+  manifest: Map<string, DataRouteObject> = new Map<string, DataRouteObject>()
+): Map<string, RouteObject> {
+  routes.forEach((route) => {
+    manifest.set(route.id, route);
+    if (route.children) {
+      generateManifest(route.children, manifest);
+    }
+  });
+  return manifest;
+}
+
+export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext
 ): RemixRouter {
-  let dataRoutes = convertRoutesToDataRoutes(routes);
+  let dataRoutes = convertRoutesToDataRoutes(enhanceManualRouteObjects(routes));
+  let manifest = generateManifest(dataRoutes);
+
+  // Because our context matches may be from a framework-agnostic set of
+  // routes passed to createStaticHandler(), we update them here with our
+  // newly created/enhanced data routes
+  let matches = context.matches.map((match) => {
+    let route = manifest.get(match.route.id) || match.route;
+    return {
+      ...match,
+      route: route as AgnosticDataRouteObject,
+    };
+  });
+
   let msg = (method: string) =>
     `You cannot use router.${method}() on the server because it is a stateless environment`;
 
   return {
     get basename() {
-      return "/";
+      return context.basename;
     },
     get state() {
       return {
         historyAction: Action.Pop,
         location: context.location,
-        matches: context.matches,
+        matches,
         loaderData: context.loaderData,
         actionData: context.actionData,
         errors: context.errors,
@@ -230,9 +286,8 @@ export function unstable_createStaticRouter(
     revalidate() {
       throw msg("revalidate");
     },
-    createHref() {
-      throw msg("createHref");
-    },
+    createHref,
+    encodeLocation,
     getFetcher() {
       return IDLE_FETCHER;
     },
@@ -244,5 +299,19 @@ export function unstable_createStaticRouter(
     },
     _internalFetchControllers: new Map(),
     _internalActiveDeferreds: new Map(),
+  };
+}
+
+function createHref(to: To) {
+  return typeof to === "string" ? to : createPath(to);
+}
+
+function encodeLocation(to: To): Path {
+  // Locations should already be encoded on the server, so just return as-is
+  let path = typeof to === "string" ? parsePath(to) : to;
+  return {
+    pathname: path.pathname || "",
+    search: path.search || "",
+    hash: path.hash || "",
   };
 }
