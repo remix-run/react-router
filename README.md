@@ -11,7 +11,7 @@ If you're new to React Router, we recommend you start with [the tutorial](/docs/
 
 If you're migrating to v6 from v5 (or v4, which is the same as v5), check out [the migration guide](/docs/upgrading/v5.md). If you're migrating from Reach Router, check out [the migration guide for Reach Router](/docs/upgrading/reach.md). If you need to find the code for v5, [it is on the `v5` branch](https://github.com/remix-run/react-router/tree/v5).
 
-When v6 is stable we will publish the docs on our website.
+Documentation for v6 can be found [on our website](https://reactrouter.com/).
 
 ## Contributing
 
