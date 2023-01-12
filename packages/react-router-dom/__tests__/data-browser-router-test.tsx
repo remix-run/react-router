@@ -297,7 +297,7 @@ function testDomRouter(
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <pre>
-            {\\"status\\":404,\\"statusText\\":\\"Not Found\\",\\"internal\\":false,\\"data\\":{\\"not\\":\\"found\\"}}
+            {"status":404,"statusText":"Not Found","internal":false,"data":{"not":"found"}}
           </pre>
         </div>"
       `);
@@ -1617,8 +1617,8 @@ function testDomRouter(
               /path
             </p>
             <input
-              name=\\"a\\"
-              value=\\"1\\"
+              name="a"
+              value="1"
             />
             <button
               name="b"

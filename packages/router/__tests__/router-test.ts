@@ -2062,12 +2062,12 @@ describe("a router", () => {
 
       let arg = shouldRevalidate.mock.calls[0][0];
       expect(arg).toMatchInlineSnapshot(`
-        Object {
+        {
           "actionResult": undefined,
-          "currentParams": Object {},
+          "currentParams": {},
           "currentUrl": "http://localhost/",
           "defaultShouldRevalidate": true,
-          "nextParams": Object {},
+          "nextParams": {},
           "nextUrl": "http://localhost/",
         }
       `);
