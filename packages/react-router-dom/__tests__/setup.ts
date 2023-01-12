@@ -16,3 +16,7 @@ if (!globalThis.fetch) {
   // @ts-expect-error
   globalThis.Response = Response;
 }
+
+import { TextEncoder, TextDecoder } from "util";
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
