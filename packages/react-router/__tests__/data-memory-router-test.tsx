@@ -185,7 +185,7 @@ describe("<DataMemoryRouter>", () => {
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <a
-          href=\\"/my/base/path/thing\\"
+          href="/my/base/path/thing"
         >
           Link to thing
         </a>
@@ -197,7 +197,7 @@ describe("<DataMemoryRouter>", () => {
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <a
-          href=\\"/my/base/path/thing\\"
+          href="/my/base/path/thing"
         >
           Link to thing
         </a>
@@ -244,7 +244,7 @@ describe("<DataMemoryRouter>", () => {
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <a
-          href=\\"/my/base/path/parent/child\\"
+          href="/my/base/path/parent/child"
         >
           Link to child
         </a>
@@ -256,7 +256,7 @@ describe("<DataMemoryRouter>", () => {
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <a
-          href=\\"/my/base/path/parent/child\\"
+          href="/my/base/path/parent/child"
         >
           Link to child
         </a>
@@ -2150,7 +2150,7 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <a
-              href=\\"/foo\\"
+              href="/foo"
             >
               Link to Foo
             </a>
@@ -2167,7 +2167,7 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <a
-              href=\\"/foo\\"
+              href="/foo"
             >
               Link to Foo
             </a>
@@ -2246,7 +2246,7 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <a
-              href=\\"/foo\\"
+              href="/foo"
             >
               Link to Foo
             </a>
