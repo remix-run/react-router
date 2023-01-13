@@ -24,7 +24,7 @@ export type CreateCookieSessionStorageFunction = (
  * also has the limitation that serialized session data may not exceed the
  * browser's maximum cookie size. Trade-offs!
  *
- * @see https://remix.run/api/remix#createcookiesessionstorage
+ * @see https://remix.run/utils/sessions#createcookiesessionstorage
  */
 export const createCookieSessionStorageFactory =
   (createCookie: CreateCookieFunction): CreateCookieSessionStorageFunction =>

@@ -161,7 +161,7 @@ describe("Cookie session storage", () => {
 
       expect(spy.console).toHaveBeenCalledTimes(1);
       expect(spy.console).toHaveBeenCalledWith(
-        'The "__session" cookie is not signed, but session cookies should be signed to prevent tampering on the client before they are sent back to the server. See https://remix.run/api/remix#signing-cookies for more information.'
+        'The "__session" cookie is not signed, but session cookies should be signed to prevent tampering on the client before they are sent back to the server. See https://remix.run/utils/cookies#signing-cookies for more information.'
       );
     });
   });

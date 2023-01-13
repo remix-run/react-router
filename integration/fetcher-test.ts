@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
@@ -143,6 +143,57 @@ test.describe("useFetcher", () => {
             );
           }
         `,
+
+        "app/routes/fetcher-echo.jsx": js`
+        import { json } from "@remix-run/node";
+        import { useFetcher } from "@remix-run/react";
+
+          export async function action({ request }) {
+            await new Promise(r => setTimeout(r, 1000));
+            let value = (await request.formData()).get('value');
+            return json({ data: "ACTION " + value })
+          }
+
+          export async function loader({ request }) {
+            await new Promise(r => setTimeout(r, 1000));
+            let value = new URL(request.url).searchParams.get('value');
+            return json({ data: "LOADER " + value })
+          }
+
+          export default function Index() {
+            let fetcherValues = [];
+            if (typeof window !== 'undefined') {
+              if (!window.fetcherValues) {
+                window.fetcherValues = [];
+              }
+              fetcherValues = window.fetcherValues
+            }
+
+            let fetcher = useFetcher();
+
+            let currentValue = fetcher.state + '/' + fetcher.data?.data;
+            if (fetcherValues[fetcherValues.length - 1] !== currentValue) {
+              fetcherValues.push(currentValue)
+            }
+
+            return (
+              <>
+                <input id="fetcher-input" name="value" />
+                <button id="fetcher-load" onClick={() => {
+                  let value = document.getElementById('fetcher-input').value;
+                  fetcher.load('/fetcher-echo?value=' + value)
+                }}>Load</button>
+                <button id="fetcher-submit" onClick={() => {
+                  let value = document.getElementById('fetcher-input').value;
+                  fetcher.submit({ value }, { method: 'post', action: '/fetcher-echo' })
+                }}>Submit</button>
+
+                {fetcher.state === 'idle' ? <p id="fetcher-idle">IDLE</p> : null}
+                <pre>{JSON.stringify(fetcherValues)}</pre>
+              </>
+            );
+          }
+        `,
       },
     });
 
@@ -231,5 +282,72 @@ test.describe("useFetcher", () => {
 
     await app.clickElement("#submit-index-post");
     await page.waitForSelector(`pre:has-text("${PARENT_INDEX_ACTION}")`);
+  });
+
+  test("fetcher.load persists data through reloads", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/fetcher-echo", true);
+    expect(await app.getHtml("pre")).toMatch(
+      JSON.stringify(["idle/undefined"])
+    );
+
+    await page.fill("#fetcher-input", "1");
+    await app.clickElement("#fetcher-load");
+    await page.waitForSelector("#fetcher-idle");
+    expect(await app.getHtml("pre")).toMatch(
+      JSON.stringify(["idle/undefined", "loading/undefined", "idle/LOADER 1"])
+    );
+
+    await page.fill("#fetcher-input", "2");
+    await app.clickElement("#fetcher-load");
+    await page.waitForSelector("#fetcher-idle");
+    expect(await app.getHtml("pre")).toMatch(
+      JSON.stringify([
+        "idle/undefined",
+        "loading/undefined",
+        "idle/LOADER 1",
+        "loading/LOADER 1", // Preserves old data during reload
+        "idle/LOADER 2",
+      ])
+    );
+  });
+
+  test("fetcher.submit persists data through resubmissions", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/fetcher-echo", true);
+    expect(await app.getHtml("pre")).toMatch(
+      JSON.stringify(["idle/undefined"])
+    );
+
+    await page.fill("#fetcher-input", "1");
+    await app.clickElement("#fetcher-submit");
+    await page.waitForSelector("#fetcher-idle");
+    expect(await app.getHtml("pre")).toMatch(
+      JSON.stringify([
+        "idle/undefined",
+        "submitting/undefined",
+        "loading/ACTION 1",
+        "idle/ACTION 1",
+      ])
+    );
+
+    await page.fill("#fetcher-input", "2");
+    await app.clickElement("#fetcher-submit");
+    await page.waitForSelector("#fetcher-idle");
+    expect(await app.getHtml("pre")).toMatch(
+      JSON.stringify([
+        "idle/undefined",
+        "submitting/undefined",
+        "loading/ACTION 1",
+        "idle/ACTION 1",
+        "submitting/ACTION 1", // Preserves old data during resubmissions
+        "loading/ACTION 2",
+        "idle/ACTION 2",
+      ])
+    );
   });
 });

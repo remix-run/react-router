@@ -16,7 +16,7 @@ export type TypedResponse<T extends unknown = unknown> = Omit<
  * This is a shortcut for creating `application/json` responses. Converts `data`
  * to JSON and sets the `Content-Type` header.
  *
- * @see https://remix.run/api/remix#json
+ * @see https://remix.run/utils/json
  */
 export const json: JsonFunction = (data, init = {}) => {
   let responseInit = typeof init === "number" ? { status: init } : init;
@@ -41,7 +41,7 @@ export type RedirectFunction = (
  * A redirect response. Sets the status code and the `Location` header.
  * Defaults to "302 Found".
  *
- * @see https://remix.run/api/remix#redirect
+ * @see https://remix.run/utils/redirect
  */
 export const redirect: RedirectFunction = (url, init = 302) => {
   let responseInit = init;
