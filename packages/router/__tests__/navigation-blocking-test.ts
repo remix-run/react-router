@@ -1,5 +1,3 @@
-/* eslint-disable jest/no-focused-tests */
-
 import type { Router } from "../index";
 import { createMemoryHistory, createRouter } from "../index";
 
@@ -14,7 +12,7 @@ const routes = [
   { path: "/help" },
 ];
 
-describe("blocking", () => {
+describe("navigation blocking", () => {
   let router: Router;
   it("initializes an 'unblocked' blocker", () => {
     router = createRouter({
