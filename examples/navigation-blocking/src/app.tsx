@@ -1,8 +1,5 @@
 import React from "react";
-import type {
-  unstable_Blocker as Blocker,
-  unstable_BlockerFunction as BlockerFunction,
-} from "react-router-dom";
+import type { unstable_Blocker as Blocker } from "react-router-dom";
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -12,10 +9,8 @@ import {
   Outlet,
   Route,
   RouterProvider,
-  useBeforeUnload,
   unstable_useBlocker as useBlocker,
   useLocation,
-  useNavigate,
 } from "react-router-dom";
 
 let router = createBrowserRouter(
@@ -30,21 +25,11 @@ let router = createBrowserRouter(
         element={
           <>
             <h2>Three</h2>
-            <ImportantFormWithBlocker />
+            <ImportantForm />
           </>
         }
       />
-      <Route
-        path="four"
-        action={() => json({ ok: true })}
-        element={
-          <>
-            <h2>Four</h2>
-            <ImportantFormWithPrompt />
-          </>
-        }
-      />
-      <Route path="five" element={<h2>Five</h2>} />
+      <Route path="four" element={<h2>Four</h2>} />
     </Route>
   )
 );
@@ -83,7 +68,6 @@ function Layout() {
         <Link to="/three">Three (Form with blocker)</Link>&nbsp;&nbsp;
         <Link to="/four">Four (Form with prompt)</Link>&nbsp;&nbsp;
         <Link to="/five">Five</Link>&nbsp;&nbsp;
-        <a href="https://remix.run">External link to Remix Docs</a>&nbsp;&nbsp;
       </nav>
       <p>
         Current location (index): {location.pathname} ({historyIndex})
@@ -93,54 +77,7 @@ function Layout() {
   );
 }
 
-// You can abstract `useBlocker` to use the browser's `window.confirm` dialog to
-// determine whether or not the user should navigate within the current origin.
-// `useBlocker` can also be used in conjunction with `useBeforeUnload` to
-// prevent navigation away from the current origin.
-
-// IMPORTANT: There are edge cases with this behavior in which React Router
-// cannot reliably access the correct location in the history stack. In such
-// cases the user may attempt to stay on the page but the app navigates anyway,
-// or the app may stay on the correct page but the browser's history stack gets
-// out of whack. You should test your own implementation thoroughly to make sure
-// the tradeoffs are right for your users.
-function usePrompt(
-  message: string | null | undefined | false,
-  {
-    beforeUnload,
-  }: {
-    beforeUnload?: boolean;
-  } = {}
-) {
-  let blocker = useBlocker(
-    React.useCallback(
-      () => (typeof message === "string" ? !window.confirm(message) : false),
-      [message]
-    )
-  );
-  let prevState = React.useRef(blocker.state);
-  React.useEffect(() => {
-    if (blocker.state === "blocked") {
-      blocker.reset();
-    }
-    prevState.current = blocker.state;
-  }, [blocker]);
-
-  useBeforeUnload(
-    React.useCallback(
-      (event) => {
-        if (beforeUnload && typeof message === "string") {
-          event.preventDefault();
-          event.returnValue = message;
-        }
-      },
-      [message, beforeUnload]
-    ),
-    { capture: true }
-  );
-}
-
-function ImportantFormWithBlocker() {
+function ImportantForm() {
   let [value, setValue] = React.useState("");
   let isBlocked = value !== "";
   let blocker = useBlocker(isBlocked);
@@ -200,37 +137,4 @@ function ConfirmNavigation({ blocker }: { blocker: Blocker }) {
   }
 
   return <p style={{ color: "green" }}>Blocker is currently unblocked</p>;
-}
-
-function ImportantFormWithPrompt() {
-  let [value, setValue] = React.useState("");
-  let isBlocked = value !== "";
-  usePrompt(isBlocked && "Are you sure you want to leave there buddy?", {
-    beforeUnload: true,
-  });
-
-  return (
-    <>
-      <p>
-        Is the form dirty?{" "}
-        {isBlocked ? (
-          <span style={{ color: "red" }}>Yes</span>
-        ) : (
-          <span style={{ color: "green" }}>No</span>
-        )}
-      </p>
-
-      <Form method="post">
-        <label>
-          Enter some important data:
-          <input
-            name="data"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-          />
-        </label>
-        <button type="submit">Save</button>
-      </Form>
-    </>
-  );
 }
