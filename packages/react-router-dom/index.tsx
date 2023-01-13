@@ -409,6 +409,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
+    let toString = to.toString();
+    let isExternal = /^[a-z]+:/.test(toString);
     let href = useHref(to, { relative });
     let internalOnClick = useLinkClickHandler(to, {
       replace,
@@ -430,8 +432,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
-        href={href}
-        onClick={reloadDocument ? onClick : handleClick}
+        href={isExternal ? toString : href}
+        onClick={isExternal || reloadDocument ? onClick : handleClick}
         ref={ref}
         target={target}
       />
