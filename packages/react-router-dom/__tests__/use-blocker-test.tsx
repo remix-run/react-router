@@ -117,7 +117,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toEqual("About");
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after navigation starts", async () => {
@@ -128,6 +128,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -140,6 +141,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
     });
@@ -196,7 +198,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).not.toEqual("About");
+        expect(h1?.textContent).not.toBe("About");
       });
 
       it("gets a 'blocked' blocker after navigation starts", async () => {
@@ -207,6 +209,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
 
@@ -219,6 +222,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
     });
@@ -290,6 +294,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "proceeding",
           proceed: undefined,
           reset: undefined,
+          location: expect.any(Object),
         });
       });
 
@@ -305,6 +310,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -317,7 +323,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toEqual("About");
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
@@ -331,6 +337,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -344,7 +351,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toEqual("Home");
+        expect(h1?.textContent).toBe("Home");
       });
     });
   });
@@ -406,7 +413,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toEqual("About");
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after navigation starts", async () => {
@@ -417,6 +424,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -429,6 +437,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
     });
@@ -489,7 +498,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).not.toEqual("About");
+        expect(h1?.textContent).not.toBe("About");
       });
 
       it("gets a 'blocked' blocker after navigation starts", async () => {
@@ -500,6 +509,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
 
@@ -512,6 +522,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
     });
@@ -587,6 +598,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "proceeding",
           proceed: undefined,
           reset: undefined,
+          location: expect.any(Object),
         });
       });
 
@@ -602,6 +614,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -614,7 +627,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toEqual("About");
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
@@ -628,6 +641,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -641,7 +655,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toEqual("Home");
+        expect(h1?.textContent).toBe("Home");
       });
     });
   });
@@ -711,7 +725,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toEqual("About");
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after navigation starts", async () => {
@@ -722,6 +736,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -734,6 +749,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
     });
@@ -802,7 +818,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).not.toEqual("About");
+        expect(h1?.textContent).not.toBe("About");
       });
 
       it("gets a 'blocked' blocker after navigation starts", async () => {
@@ -813,6 +829,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
 
@@ -825,6 +842,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
     });
@@ -908,6 +926,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "proceeding",
           proceed: undefined,
           reset: undefined,
+          location: expect.any(Object),
         });
       });
 
@@ -923,6 +942,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -935,7 +955,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toEqual("About");
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
@@ -949,6 +969,7 @@ describe("navigation blocking with useBlocker", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -962,7 +983,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toEqual("Contact");
+        expect(h1?.textContent).toBe("Contact");
       });
     });
   });

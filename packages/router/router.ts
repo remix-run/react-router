@@ -494,32 +494,36 @@ type FetcherStates<TData = any> = {
 export type Fetcher<TData = any> =
   FetcherStates<TData>[keyof FetcherStates<TData>];
 
-export type BlockerBlocked = {
+export interface BlockerBlocked {
   state: "blocked";
   reset(): void;
   proceed(): void;
-};
+  location: Location;
+}
 
-export type BlockerUnblocked = {
+export interface BlockerUnblocked {
   state: "unblocked";
   reset: undefined;
   proceed: undefined;
-};
+  location: undefined;
+}
 
-export type BlockerProceeding = {
+export interface BlockerProceeding {
   state: "proceeding";
   reset: undefined;
   proceed: undefined;
-};
+  location: Location;
+}
 
 export type Blocker = BlockerUnblocked | BlockerBlocked | BlockerProceeding;
 
 export type BlockerState = Blocker["state"];
 
-export type BlockerFunction = (
-  location: Location,
-  action: HistoryAction
-) => boolean;
+export type BlockerFunction = (args: {
+  currentLocation: Location;
+  nextLocation: Location;
+  historyAction: HistoryAction;
+}) => boolean;
 
 interface ShortCircuitable {
   /**
@@ -622,10 +626,11 @@ export const IDLE_FETCHER: FetcherStates["Idle"] = {
   formData: undefined,
 };
 
-export const IDLE_BLOCKER: Blocker = {
+export const IDLE_BLOCKER: BlockerUnblocked = {
   state: "unblocked",
   proceed: undefined,
   reset: undefined,
+  location: undefined,
 };
 
 const isBrowser =
@@ -788,7 +793,11 @@ export function createRouter(init: RouterInit): Router {
           return;
         }
 
-        let blockerKey = shouldBlockNavigation(historyAction, location);
+        let blockerKey = shouldBlockNavigation({
+          currentLocation: state.location,
+          nextLocation: location,
+          historyAction,
+        });
         if (blockerKey) {
           // Restore the URL to match the current UI, but don't update router state
           ignoreNextHistoryUpdate = true;
@@ -797,11 +806,13 @@ export function createRouter(init: RouterInit): Router {
           // Put the blocker into a blocked state
           updateBlocker(blockerKey, {
             state: "blocked",
+            location,
             proceed() {
               updateBlocker(blockerKey!, {
                 state: "proceeding",
                 proceed: undefined,
                 reset: undefined,
+                location,
               });
               // Re-do the same POP navigation we just blocked
               init.history.go(delta);
@@ -954,16 +965,17 @@ export function createRouter(init: RouterInit): Router {
 
     let { path, submission, error } = normalizeNavigateOptions(to, opts);
 
-    let location = createLocation(state.location, path, opts && opts.state);
+    let currentLocation = state.location;
+    let nextLocation = createLocation(state.location, path, opts && opts.state);
 
     // When using navigate as a PUSH/REPLACE we aren't reading an already-encoded
     // URL from window.location, so we need to encode it here so the behavior
     // remains the same as POP and non-data-router usages.  new URL() does all
     // the same encoding we'd get from a history.pushState/window.location read
     // without having to touch history
-    location = {
-      ...location,
-      ...init.history.encodeLocation(location),
+    nextLocation = {
+      ...nextLocation,
+      ...init.history.encodeLocation(nextLocation),
     };
 
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
@@ -991,16 +1003,22 @@ export function createRouter(init: RouterInit): Router {
         ? opts.preventScrollReset === true
         : undefined;
 
-    let blockerKey = shouldBlockNavigation(historyAction, location);
+    let blockerKey = shouldBlockNavigation({
+      currentLocation,
+      nextLocation,
+      historyAction,
+    });
     if (blockerKey) {
       // Put the blocker into a blocked state
       updateBlocker(blockerKey, {
         state: "blocked",
+        location: nextLocation,
         proceed() {
           updateBlocker(blockerKey!, {
             state: "proceeding",
             proceed: undefined,
             reset: undefined,
+            location: nextLocation,
           });
           // Send the same navigation through
           navigate(to, opts);
@@ -1013,7 +1031,7 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    return await startNavigation(historyAction, location, {
+    return await startNavigation(historyAction, nextLocation, {
       submission,
       // Send through the formData serialization error if we have one so we can
       // render at the right error boundary after we match routes
@@ -2139,10 +2157,15 @@ export function createRouter(init: RouterInit): Router {
     updateState({ blockers: new Map(state.blockers) });
   }
 
-  function shouldBlockNavigation(
-    historyAction: HistoryAction,
-    location: Location
-  ): string | undefined {
+  function shouldBlockNavigation({
+    currentLocation,
+    nextLocation,
+    historyAction,
+  }: {
+    currentLocation: Location;
+    nextLocation: Location;
+    historyAction: HistoryAction;
+  }): string | undefined {
     if (activeBlocker == null) {
       return;
     }
@@ -2164,7 +2187,7 @@ export function createRouter(init: RouterInit): Router {
 
     // At this point, we know we're unblocked/blocked so we need to check the
     // user-provided blocker function
-    if (blockerFunction(location, historyAction)) {
+    if (blockerFunction({ currentLocation, nextLocation, historyAction })) {
       return activeBlocker;
     }
   }

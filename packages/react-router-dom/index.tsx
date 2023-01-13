@@ -65,6 +65,7 @@ import {
 
 export type {
   Blocker,
+  BlockerFunction,
   FormEncType,
   FormMethod,
   GetScrollRestorationKeyFunction,
@@ -987,9 +988,9 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction) {
   let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
 
   let blockerFunction = React.useCallback<BlockerFunction>(
-    (location, action) => {
+    (args) => {
       return typeof shouldBlock === "function"
-        ? shouldBlock(location, action) === true
+        ? shouldBlock(args) === true
         : shouldBlock === true;
     },
     [shouldBlock]
@@ -1213,14 +1214,17 @@ function useScrollRestoration({
  * `React.useCallback()`.
  */
 export function useBeforeUnload(
-  callback: (event: BeforeUnloadEvent) => any
+  callback: (event: BeforeUnloadEvent) => any,
+  options?: { capture?: boolean }
 ): void {
+  let { capture } = options || {};
   React.useEffect(() => {
-    window.addEventListener("beforeunload", callback);
+    let opts = capture != null ? { capture } : undefined;
+    window.addEventListener("beforeunload", callback, opts);
     return () => {
-      window.removeEventListener("beforeunload", callback);
+      window.removeEventListener("beforeunload", callback, opts);
     };
-  }, [callback]);
+  }, [callback, capture]);
 }
 //#endregion
 

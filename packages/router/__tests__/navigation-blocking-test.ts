@@ -30,6 +30,7 @@ describe("navigation blocking", () => {
       state: "unblocked",
       proceed: undefined,
       reset: undefined,
+      location: undefined,
     });
   });
 
@@ -62,6 +63,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -72,6 +74,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
     });
@@ -94,6 +97,7 @@ describe("navigation blocking", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
 
@@ -104,6 +108,7 @@ describe("navigation blocking", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
     });
@@ -118,6 +123,7 @@ describe("navigation blocking", () => {
           state: "proceeding",
           proceed: undefined,
           reset: undefined,
+          location: expect.any(Object),
         });
       });
 
@@ -130,6 +136,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -152,6 +159,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -197,6 +205,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -207,6 +216,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
     });
@@ -229,6 +239,7 @@ describe("navigation blocking", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
 
@@ -239,6 +250,7 @@ describe("navigation blocking", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
     });
@@ -253,6 +265,7 @@ describe("navigation blocking", () => {
           state: "proceeding",
           proceed: undefined,
           reset: undefined,
+          location: expect.any(Object),
         });
       });
 
@@ -265,6 +278,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -296,6 +310,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined
         });
       });
 
@@ -343,6 +358,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -353,6 +369,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
     });
@@ -375,6 +392,7 @@ describe("navigation blocking", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
 
@@ -385,6 +403,7 @@ describe("navigation blocking", () => {
           state: "blocked",
           proceed: expect.any(Function),
           reset: expect.any(Function),
+          location: expect.any(Object),
         });
       });
     });
@@ -415,6 +434,7 @@ describe("navigation blocking", () => {
           state: "proceeding",
           proceed: undefined,
           reset: undefined,
+          location: expect.any(Object),
         });
       });
 
@@ -427,6 +447,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
@@ -449,6 +470,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
+          location: undefined,
         });
       });
 
