@@ -1,5 +1,5 @@
 import React from "react";
-import type { Blocker } from "react-router-dom";
+import type { Blocker, BlockerFunction } from "react-router-dom";
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -9,8 +9,10 @@ import {
   Outlet,
   Route,
   RouterProvider,
+  useBeforeUnload,
   useBlocker,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 
 let router = createBrowserRouter(
@@ -25,11 +27,20 @@ let router = createBrowserRouter(
         element={
           <>
             <h2>Three</h2>
-            <ImportantForm />
+            <ImportantFormWithBlocker />
           </>
         }
       />
-      <Route path="four" element={<h2>Four</h2>} />
+      <Route
+        path="four"
+        action={() => json({ ok: true })}
+        element={
+          <>
+            <h2>Four</h2>
+            <ImportantFormWithPrompt />
+          </>
+        }
+      />
       <Route path="five" element={<h2>Five</h2>} />
     </Route>
   )
@@ -66,8 +77,8 @@ function Layout() {
         <Link to="/">Index</Link>&nbsp;&nbsp;
         <Link to="/one">One</Link>&nbsp;&nbsp;
         <Link to="/two">Two</Link>&nbsp;&nbsp;
-        <Link to="/three">Three (Form)</Link>&nbsp;&nbsp;
-        <Link to="/four">Four</Link>&nbsp;&nbsp;
+        <Link to="/three">Three (Form with blocker)</Link>&nbsp;&nbsp;
+        <Link to="/four">Four (Form with prompt)</Link>&nbsp;&nbsp;
         <Link to="/five">Five</Link>&nbsp;&nbsp;
         <a href="https://remix.run">External link to Remix Docs</a>&nbsp;&nbsp;
       </nav>
@@ -79,12 +90,61 @@ function Layout() {
   );
 }
 
-function ImportantForm() {
+// You can abstract `useBlocker` to use the browser's `window.confirm` dialog to
+// determine whether or not the user should navigate within the current origin.
+// `useBlocker` can also be used in conjunction with `useBeforeUnload` to
+// prevent navigation away from the current origin.
+
+// IMPORTANT: There are edge cases with this behavior in which React Router
+// cannot reliably access the correct location in the history stack. In such
+// cases the user may attempt to stay on the page but the app navigates anyway,
+// or the app may stay on the correct page but the browser's history stack gets
+// out of whack. You should test your own implementation thoroughly to make sure
+// the tradeoffs are right for your users.
+function usePrompt(
+  shouldPrompt: string | null | undefined | false,
+  opts: {
+    beforeUnload?: boolean;
+  } = {}
+) {
+  let { beforeUnload = false } = opts;
+  let navigate = useNavigate();
+  let blocker = useBlocker(!!shouldPrompt);
+  let previousBlockerState = React.useRef<Blocker["state"] | null>(null);
+  React.useEffect(() => {
+    // we only call this once when the blocker state changes. This ignores
+    // changes to shouldPrompt to prevent multiple dialogs from being queued up
+    if (blocker.state === previousBlockerState.current) return;
+
+    if (blocker.state === "blocked" && typeof shouldPrompt === "string") {
+      blocker.reset();
+      let shouldProceed = window.confirm(shouldPrompt);
+      if (shouldProceed) {
+        navigate(blocker.location);
+      }
+    }
+
+    previousBlockerState.current = blocker.state;
+  }, [blocker.state, blocker, shouldPrompt, navigate]);
+
+  useBeforeUnload(
+    React.useCallback(
+      (event) => {
+        if (beforeUnload && shouldPrompt) {
+          event.preventDefault();
+          event.returnValue = shouldPrompt;
+        }
+      },
+      [shouldPrompt, beforeUnload]
+    ),
+    { capture: true }
+  );
+}
+
+function ImportantFormWithBlocker() {
   let [value, setValue] = React.useState("");
   let isBlocked = value !== "";
   let blocker = useBlocker(isBlocked);
-  router.getBlocker("a", () => false);
-  router.getBlocker("b", () => false);
 
   // Reset the blocker if the user cleans the form
   React.useEffect(() => {
@@ -132,6 +192,39 @@ function ImportantForm() {
       </Form>
 
       {blockerUI[blocker.state]}
+    </>
+  );
+}
+
+function ImportantFormWithPrompt() {
+  let [value, setValue] = React.useState("");
+  let isBlocked = value !== "";
+  usePrompt(isBlocked && "Are you sure you want to leave?", {
+    beforeUnload: true,
+  });
+
+  return (
+    <>
+      <p>
+        Is the form dirty?{" "}
+        {isBlocked ? (
+          <span style={{ color: "red" }}>Yes</span>
+        ) : (
+          <span style={{ color: "green" }}>No</span>
+        )}
+      </p>
+
+      <Form method="post">
+        <label>
+          Enter some important data:
+          <input
+            name="data"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </label>
+        <button type="submit">Save</button>
+      </Form>
     </>
   );
 }
