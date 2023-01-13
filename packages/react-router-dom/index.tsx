@@ -990,8 +990,8 @@ function useBlocker(shouldBlock: boolean | BlockerFunction) {
   let blockerFunction = React.useCallback<BlockerFunction>(
     (args) => {
       return typeof shouldBlock === "function"
-        ? shouldBlock(args) === true
-        : shouldBlock === true;
+        ? !!shouldBlock(args)
+        : !!shouldBlock;
     },
     [shouldBlock]
   );
