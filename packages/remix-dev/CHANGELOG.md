@@ -1,19 +1,12 @@
 # `@remix-run/dev`
 
-## 1.10.1-pre.1
+## 1.10.1
 
 ### Patch Changes
 
+- Update babel config to transpile down to node 14 ([#5047](https://github.com/remix-run/remix/pull/5047))
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.10.1-pre.1`
-
-## 1.10.1-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/serve@1.10.1-pre.0`
-  - `@remix-run/server-runtime@1.10.1-pre.0`
+  - `@remix-run/server-runtime@1.10.1`
 
 ## 1.10.0
 
