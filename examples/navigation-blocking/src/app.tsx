@@ -152,21 +152,6 @@ function ImportantFormWithBlocker() {
     }
   }, [blocker, isBlocked]);
 
-  // Display our confirmation UI
-  const blockerUI: Record<Blocker["state"], React.ReactElement> = {
-    unblocked: <p style={{ color: "green" }}>Blocker is currently unblocked</p>,
-    blocked: (
-      <>
-        <p style={{ color: "red" }}>Blocked the last navigation</p>
-        <button onClick={() => blocker.proceed?.()}>Let me through</button>
-        <button onClick={() => blocker.reset?.()}>Keep me here</button>
-      </>
-    ),
-    proceeding: (
-      <p style={{ color: "orange" }}>Proceeding through blocked navigation</p>
-    ),
-  };
-
   return (
     <>
       <p>
@@ -190,9 +175,31 @@ function ImportantFormWithBlocker() {
         <button type="submit">Save</button>
       </Form>
 
-      {blockerUI[blocker.state]}
+      {blocker ? <ConfirmNavigation blocker={blocker} /> : null}
     </>
   );
+}
+
+function ConfirmNavigation({ blocker }: { blocker: Blocker }) {
+  if (blocker.state === "blocked") {
+    return (
+      <>
+        <p style={{ color: "red" }}>
+          Blocked the last navigation to {blocker.location.pathname}
+        </p>
+        <button onClick={() => blocker.proceed?.()}>Let me through</button>
+        <button onClick={() => blocker.reset?.()}>Keep me here</button>
+      </>
+    );
+  }
+
+  if (blocker.state === "proceeding") {
+    return (
+      <p style={{ color: "orange" }}>Proceeding through blocked navigation</p>
+    );
+  }
+
+  return <p style={{ color: "green" }}>Blocker is currently unblocked</p>;
 }
 
 function ImportantFormWithPrompt() {

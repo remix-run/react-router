@@ -82,6 +82,9 @@ export interface Update {
    */
   location: Location;
 
+  /**
+   * The delta between this location and the former location in the history stack
+   */
   delta: number;
 }
 
@@ -615,8 +618,8 @@ function getUrlBasedHistory(
     if (nextIndex != null) {
       let delta = nextIndex - index;
       action = nextAction;
+      index = nextIndex;
       if (listener) {
-        index = nextIndex;
         listener({ action, location: history.location, delta });
       }
     } else {
