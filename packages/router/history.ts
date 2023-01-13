@@ -128,6 +128,13 @@ export interface History {
   createHref(to: To): string;
 
   /**
+   * Returns a URL for the given `to` value
+   *
+   * @param to - The destination URL
+   */
+  createURL(to: To): URL;
+
+  /**
    * Encode a location the same way window.history would do (no-op for memory
    * history) so we ensure our PUSH/REPLACE navigations for data routers
    * behave the same as POP
@@ -258,6 +265,10 @@ export function createMemoryHistory(
     return location;
   }
 
+  function createHref(to: To) {
+    return typeof to === "string" ? to : createPath(to);
+  }
+
   let history: MemoryHistory = {
     get index() {
       return index;
@@ -268,8 +279,9 @@ export function createMemoryHistory(
     get location() {
       return getCurrentLocation();
     },
-    createHref(to) {
-      return typeof to === "string" ? to : createPath(to);
+    createHref,
+    createURL(to) {
+      return new URL(createHref(to), "http://localhost");
     },
     encodeLocation(to: To) {
       let path = typeof to === "string" ? parsePath(to) : to;
@@ -564,24 +576,6 @@ export function parsePath(path: string): Partial<Path> {
   return parsedPath;
 }
 
-export function createClientSideURL(location: Location | string): URL {
-  // window.location.origin is "null" (the literal string value) in Firefox
-  // under certain conditions, notably when serving from a local HTML file
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
-  let base =
-    typeof window !== "undefined" &&
-    typeof window.location !== "undefined" &&
-    window.location.origin !== "null"
-      ? window.location.origin
-      : window.location.href;
-  let href = typeof location === "string" ? location : createPath(location);
-  invariant(
-    base,
-    `No window.location.(origin|href) available to create URL for href: ${href}`
-  );
-  return new URL(href, base);
-}
-
 export interface UrlHistory extends History {}
 
 export type UrlHistoryOptions = {
@@ -678,6 +672,23 @@ function getUrlBasedHistory(
     }
   }
 
+  function createURL(to: To): URL {
+    // window.location.origin is "null" (the literal string value) in Firefox
+    // under certain conditions, notably when serving from a local HTML file
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
+    let base =
+      window.location.origin !== "null"
+        ? window.location.origin
+        : window.location.href;
+
+    let href = typeof to === "string" ? to : createPath(to);
+    invariant(
+      base,
+      `No window.location.(origin|href) available to create URL for href: ${href}`
+    );
+    return new URL(href, base);
+  }
+
   let history: History = {
     get action() {
       return action;
@@ -700,11 +711,10 @@ function getUrlBasedHistory(
     createHref(to) {
       return createHref(window, to);
     },
+    createURL,
     encodeLocation(to) {
       // Encode a Location the same way window.location would
-      let url = createClientSideURL(
-        typeof to === "string" ? to : createPath(to)
-      );
+      let url = createURL(to);
       return {
         pathname: url.pathname,
         search: url.search,

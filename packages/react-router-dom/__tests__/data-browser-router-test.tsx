@@ -1506,14 +1506,7 @@ function testDomRouter(
       function Comp() {
         let location = useLocation();
         return (
-          <Form
-            onSubmit={(e) => {
-              // jsdom doesn't handle submitter so we add it here
-              // See https://github.com/jsdom/jsdom/issues/3117
-              // @ts-expect-error
-              e.nativeEvent.submitter = e.currentTarget.querySelector("button");
-            }}
-          >
+          <Form>
             <p>{location.pathname + location.search}</p>
             <input name="a" defaultValue="1" />
             <button type="submit" name="b" value="2">
@@ -1587,15 +1580,7 @@ function testDomRouter(
         let location = useLocation();
         let data = useActionData() as string | undefined;
         return (
-          <Form
-            method="post"
-            onSubmit={(e) => {
-              // jsdom doesn't handle submitter so we add it here
-              // See https://github.com/jsdom/jsdom/issues/3117
-              // @ts-expect-error
-              e.nativeEvent.submitter = e.currentTarget.querySelector("button");
-            }}
-          >
+          <Form method="post">
             <p>{location.pathname + location.search}</p>
             {data && <p>{data}</p>}
             <input name="a" defaultValue="1" />
@@ -1683,16 +1668,7 @@ function testDomRouter(
         let navigation = useNavigation();
         return (
           <div>
-            <Form
-              method="post"
-              onSubmit={(e) => {
-                // jsdom doesn't handle submitter so we add it here
-                // See https://github.com/jsdom/jsdom/issues/3117
-                // @ts-expect-error
-                e.nativeEvent.submitter =
-                  e.currentTarget.querySelector("button");
-              }}
-            >
+            <Form method="post">
               <input name="test" value="value" />
               <button type="submit" formMethod="get">
                 Submit Form
@@ -2501,16 +2477,7 @@ function testDomRouter(
 
         function FormPage() {
           return (
-            <Form
-              method="post"
-              onSubmit={(e) => {
-                // jsdom doesn't handle submitter so we add it here
-                // See https://github.com/jsdom/jsdom/issues/3117
-                // @ts-expect-error
-                e.nativeEvent.submitter =
-                  e.currentTarget.querySelector("button");
-              }}
-            >
+            <Form method="post">
               <input name="a" defaultValue="1" />
               <input name="b" defaultValue="2" />
               <button name="c" value="3" type="submit">
@@ -2538,16 +2505,7 @@ function testDomRouter(
         function FormPage() {
           let submit = useSubmit();
           return (
-            <Form
-              method="post"
-              onSubmit={(e) => {
-                // jsdom doesn't handle submitter so we add it here
-                // See https://github.com/jsdom/jsdom/issues/3117
-                // @ts-expect-error
-                e.nativeEvent.submitter =
-                  e.currentTarget.querySelector("button");
-              }}
-            >
+            <Form method="post">
               <input name="a" defaultValue="1" />
               <input name="b" defaultValue="2" />
               <button
@@ -2581,16 +2539,7 @@ function testDomRouter(
 
         function FormPage() {
           return (
-            <Form
-              method="post"
-              onSubmit={(e) => {
-                // jsdom doesn't handle submitter so we add it here
-                // See https://github.com/jsdom/jsdom/issues/3117
-                // @ts-expect-error
-                e.nativeEvent.submitter =
-                  e.currentTarget.querySelector("button");
-              }}
-            >
+            <Form method="post">
               <input name="a" defaultValue="1" />
               <input name="b" defaultValue="2" />
               <button name="b" value="3" type="submit">
@@ -2617,16 +2566,7 @@ function testDomRouter(
         function FormPage() {
           let submit = useSubmit();
           return (
-            <Form
-              method="post"
-              onSubmit={(e) => {
-                // jsdom doesn't handle submitter so we add it here
-                // See https://github.com/jsdom/jsdom/issues/3117
-                // @ts-expect-error
-                e.nativeEvent.submitter =
-                  e.currentTarget.querySelector("button");
-              }}
-            >
+            <Form method="post">
               <input name="a" defaultValue="1" />
               <input name="b" defaultValue="2" />
               <button
@@ -3104,9 +3044,6 @@ function testDomRouter(
           </TestDataRouter>
         );
 
-        // Note: jsdom doesn't properly attach event.submitter for
-        // <button type="submit"> clicks, so we have to use an input to drive
-        // this.  See https://github.com/jsdom/jsdom/issues/3117
         function Comp() {
           let fetcher = useFetcher();
           return (
@@ -4263,7 +4200,7 @@ function createDeferred() {
 
 function getWindowImpl(initialUrl: string, isHash = false): Window {
   // Need to use our own custom DOM in order to get a working history
-  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "https://remix.run/" });
+  const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
   dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
   return dom.window as unknown as Window;
 }
