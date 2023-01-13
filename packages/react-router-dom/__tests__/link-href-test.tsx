@@ -111,6 +111,23 @@ describe("<Link> href", () => {
         "https://remix.run"
       );
     });
+
+    test('<Link to="//remix.run"> is treated as external link', () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox/messages"]}>
+            <Routes>
+              <Route path="inbox">
+                <Route path="messages" element={<Link to="//remix.run" />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual("//remix.run");
+    });
   });
 
   describe("in a dynamic route", () => {

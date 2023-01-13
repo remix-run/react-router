@@ -409,9 +409,9 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
-    let toString = to.toString();
-    let isExternal = /^[a-z]+:/.test(toString);
-    let href = useHref(to, { relative });
+    let toString = typeof to === "string" ? to : createPath(to);
+    let isExternal = toString.startsWith("//") || /^[a-z]+:/.test(toString);
+    let href = useHref(toString, { relative });
     let internalOnClick = useLinkClickHandler(to, {
       replace,
       state,
