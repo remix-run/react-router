@@ -310,7 +310,7 @@ describe("navigation blocking", () => {
           state: "unblocked",
           proceed: undefined,
           reset: undefined,
-          location: undefined
+          location: undefined,
         });
       });
 
