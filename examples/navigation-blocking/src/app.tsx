@@ -105,40 +105,36 @@ function Layout() {
 // out of whack. You should test your own implementation thoroughly to make sure
 // the tradeoffs are right for your users.
 function usePrompt(
-  shouldPrompt: string | null | undefined | false,
-  opts: {
+  message: string | null | undefined | false,
+  {
+    beforeUnload,
+  }: {
     beforeUnload?: boolean;
   } = {}
 ) {
-  let { beforeUnload = false } = opts;
-  let navigate = useNavigate();
-  let blocker = useBlocker(!!shouldPrompt);
-  let previousBlockerState = React.useRef<Blocker["state"] | null>(null);
+  let blocker = useBlocker(
+    React.useCallback(
+      () => (typeof message === "string" ? !window.confirm(message) : false),
+      [message]
+    )
+  );
+  let prevState = React.useRef(blocker.state);
   React.useEffect(() => {
-    // we only call this once when the blocker state changes. This ignores
-    // changes to shouldPrompt to prevent multiple dialogs from being queued up
-    if (blocker.state === previousBlockerState.current) return;
-
-    if (blocker.state === "blocked" && typeof shouldPrompt === "string") {
+    if (blocker.state === "blocked") {
       blocker.reset();
-      let shouldProceed = window.confirm(shouldPrompt);
-      if (shouldProceed) {
-        navigate(blocker.location);
-      }
     }
-
-    previousBlockerState.current = blocker.state;
-  }, [blocker.state, blocker, shouldPrompt, navigate]);
+    prevState.current = blocker.state;
+  }, [blocker]);
 
   useBeforeUnload(
     React.useCallback(
       (event) => {
-        if (beforeUnload && shouldPrompt) {
+        if (beforeUnload && typeof message === "string") {
           event.preventDefault();
-          event.returnValue = shouldPrompt;
+          event.returnValue = message;
         }
       },
-      [shouldPrompt, beforeUnload]
+      [message, beforeUnload]
     ),
     { capture: true }
   );
@@ -202,7 +198,7 @@ function ImportantFormWithBlocker() {
 function ImportantFormWithPrompt() {
   let [value, setValue] = React.useState("");
   let isBlocked = value !== "";
-  usePrompt(isBlocked && "Are you sure you want to leave?", {
+  usePrompt(isBlocked && "Are you sure you want to leave there buddy?", {
     beforeUnload: true,
   });
 
