@@ -1,5 +1,8 @@
 import React from "react";
-import type { Blocker, BlockerFunction } from "react-router-dom";
+import type {
+  unstable_Blocker as Blocker,
+  unstable_BlockerFunction as BlockerFunction,
+} from "react-router-dom";
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -10,7 +13,7 @@ import {
   Route,
   RouterProvider,
   useBeforeUnload,
-  useBlocker,
+  unstable_useBlocker as useBlocker,
   useLocation,
   useNavigate,
 } from "react-router-dom";

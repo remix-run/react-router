@@ -64,8 +64,8 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type {
-  Blocker,
-  BlockerFunction,
+  Blocker as unstable_Blocker,
+  BlockerFunction as unstable_BlockerFunction,
   FormEncType,
   FormMethod,
   GetScrollRestorationKeyFunction,
@@ -984,7 +984,7 @@ export function useFormAction(
 // cases for multi-blocker yet
 let blockerKey = "blocker-singleton";
 
-export function useBlocker(shouldBlock: boolean | BlockerFunction) {
+function useBlocker(shouldBlock: boolean | BlockerFunction) {
   let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
 
   let blockerFunction = React.useCallback<BlockerFunction>(
@@ -1003,6 +1003,8 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction) {
 
   return blocker;
 }
+
+export { useBlocker as unstable_useBlocker };
 
 function createFetcherForm(fetcherKey: string, routeId: string) {
   let FetcherForm = React.forwardRef<HTMLFormElement, FormProps>(
