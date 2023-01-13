@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.3.0-pre.2
+
+### Minor Changes
+
+- Added support for navigation blocking APIs ([#9709](https://github.com/remix-run/react-router/pull/9709))
+
 ## 1.3.0-pre.1
 
 ### Patch Changes
