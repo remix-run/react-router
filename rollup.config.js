@@ -2,9 +2,15 @@ const fs = require("fs");
 const path = require("path");
 
 module.exports = function rollup(options) {
-  return fs
-    .readdirSync("packages")
+  return [
+    "router",
+    "react-router",
+    "react-router-dom",
+    "react-router-dom-v5-compat",
+    "react-router-native",
+  ]
     .flatMap((dir) => {
+      // if (dir !== "router") return null;
       let configPath = path.join("packages", dir, "rollup.config.js");
       try {
         fs.readFileSync(configPath);

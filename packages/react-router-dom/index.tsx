@@ -76,6 +76,8 @@ export type {
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
+  unstable_Blocker,
+  unstable_BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
   Fetcher,
@@ -142,6 +144,7 @@ export {
   useActionData,
   useAsyncError,
   useAsyncValue,
+  unstable_useBlocker,
   useHref,
   useInRouterContext,
   useLoaderData,
@@ -1185,14 +1188,17 @@ function useScrollRestoration({
  * `React.useCallback()`.
  */
 export function useBeforeUnload(
-  callback: (event: BeforeUnloadEvent) => any
+  callback: (event: BeforeUnloadEvent) => any,
+  options?: { capture?: boolean }
 ): void {
+  let { capture } = options || {};
   React.useEffect(() => {
-    window.addEventListener("beforeunload", callback);
+    let opts = capture != null ? { capture } : undefined;
+    window.addEventListener("beforeunload", callback, opts);
     return () => {
-      window.removeEventListener("beforeunload", callback);
+      window.removeEventListener("beforeunload", callback, opts);
     };
-  }, [callback]);
+  }, [callback, capture]);
 }
 //#endregion
 
