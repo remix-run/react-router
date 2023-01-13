@@ -1,5 +1,10 @@
-import type { StaticHandler, StaticHandlerContext } from "@remix-run/router";
+import type {
+  UNSAFE_DeferredData as DeferredData,
+  StaticHandler,
+  StaticHandlerContext,
+} from "@remix-run/router";
 import {
+  UNSAFE_DEFERRED_SYMBOL as DEFERRED_SYMBOL,
   getStaticContextFromError,
   isRouteErrorResponse,
   createStaticHandler,
@@ -16,7 +21,12 @@ import { ServerMode, isServerMode } from "./mode";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRouteManifest } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
-import { json, isRedirectResponse, isResponse } from "./responses";
+import {
+  createDeferredReadableStream,
+  json,
+  isRedirectResponse,
+  isResponse,
+} from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
 
 export type RequestHandler = (
@@ -124,6 +134,16 @@ async function handleDataRequestRR(
         status: 204,
         headers,
       });
+    }
+
+    if (DEFERRED_SYMBOL in response) {
+      let deferredData = response[DEFERRED_SYMBOL] as DeferredData;
+      let body = createDeferredReadableStream(deferredData, request.signal);
+      let init = deferredData.init || {};
+      let headers = new Headers(init.headers);
+      headers.set("Content-Type", "text/remix-deferred");
+      init.headers = headers;
+      return new Response(body, init);
     }
 
     return response;

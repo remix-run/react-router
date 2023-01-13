@@ -38,7 +38,11 @@ function handleBotRequest(
     let didError = false;
 
     let { pipe, abort } = renderToPipeableStream(
-      <RemixServer context={remixContext} url={request.url} />,
+      <RemixServer
+        context={remixContext}
+        url={request.url}
+        abortDelay={ABORT_DELAY}
+      />,
       {
         onAllReady() {
           let body = new PassThrough();
@@ -79,7 +83,11 @@ function handleBrowserRequest(
     let didError = false;
 
     let { pipe, abort } = renderToPipeableStream(
-      <RemixServer context={remixContext} url={request.url} />,
+      <RemixServer
+        context={remixContext}
+        url={request.url}
+        abortDelay={ABORT_DELAY}
+      />,
       {
         onShellReady() {
           let body = new PassThrough();
