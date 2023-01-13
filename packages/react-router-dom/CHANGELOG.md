@@ -1,5 +1,12 @@
 # `react-router-dom`
 
+## 6.7.0-pre.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.7.0-pre.2`
+
 ## 6.7.0-pre.1
 
 ### Minor Changes

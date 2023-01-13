@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.7.0-pre.2
+
+### Patch Changes
+
+- update <Await> to accept ReactNode as children function return result ([#9896](https://github.com/remix-run/react-router/pull/9896))
+
 ## 6.7.0-pre.1
 
 ### Patch Changes
