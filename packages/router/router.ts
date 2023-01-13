@@ -1112,15 +1112,6 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // Short circuit if navigation is blocked
-    if (
-      Array.from(state.blockers).some(([_, blocker]) => {
-        return blocker.state === "blocked";
-      })
-    ) {
-      return;
-    }
-
     // Short circuit if it's only a hash change
     if (isHashChangeOnly(state.location, location)) {
       completeNavigation(location, { matches });
@@ -2127,6 +2118,8 @@ export function createRouter(init: RouterInit): Router {
   function updateBlocker(key: string, newBlocker: Blocker) {
     let blocker = state.blockers.get(key) || IDLE_BLOCKER;
 
+    // Poor mans state machine :)
+    // https://mermaid.live/edit#pako:eNqVkc9OwzAMxl8l8nnjAYrEtDIOHEBIgwvKJTReGy3_lDpIqO27k6awMG0XcrLlnz87nwdonESogKXXBuE79rq75XZO3-yHds0RJVuv70YrPlUrCEe2HfrORS3rubqZfuhtpg5C9wk5tZ4VKcRUq88q9Z8RS0-48cE1iHJkL0ugbHuFLus9L6spZy8nX9MP2CNdomVaposqu3fGayT8T8-jJQwhepo_UtpgBQaDEUom04dZhAN1aJBDlUKJBxE1ceB2Smj0Mln-IBW5AFU2dwUiktt_2Qaq2dBfaKdEup85UV7Yd-dKjlnkabl2Pvr0DTkTreM
     invariant(
       (blocker.state === "unblocked" && newBlocker.state === "blocked") ||
         (blocker.state === "blocked" && newBlocker.state === "blocked") ||
@@ -3673,5 +3666,4 @@ function getTargetMatch(
   let pathMatches = getPathContributingMatches(matches);
   return pathMatches[pathMatches.length - 1];
 }
-
 //#endregion
