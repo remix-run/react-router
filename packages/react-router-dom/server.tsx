@@ -263,6 +263,7 @@ export function createStaticRouter(
         preventScrollReset: false,
         revalidation: "idle" as RevalidationState,
         fetchers: new Map(),
+        blockers: new Map(),
       };
     },
     get routes() {
@@ -296,6 +297,12 @@ export function createStaticRouter(
     },
     dispose() {
       throw msg("dispose");
+    },
+    getBlocker() {
+      throw msg("getBlocker");
+    },
+    deleteBlocker() {
+      throw msg("deleteBlocker");
     },
     _internalFetchControllers: new Map(),
     _internalActiveDeferreds: new Map(),

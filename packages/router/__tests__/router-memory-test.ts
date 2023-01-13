@@ -48,6 +48,7 @@ describe("a memory router", () => {
       restoreScrollPosition: null,
       revalidation: "idle",
       fetchers: new Map(),
+      blockers: new Map(),
     });
     router.dispose();
   });

@@ -31,6 +31,7 @@ export default async function GoForward(history: History) {
   });
   expect(spy).toHaveBeenCalledWith({
     action: "POP",
+    delta: expect.any(Number),
     location: {
       hash: "",
       key: expect.any(String),
@@ -58,6 +59,7 @@ export default async function GoForward(history: History) {
   });
   expect(spy).toHaveBeenCalledWith({
     action: "POP",
+    delta: expect.any(Number),
     location: {
       hash: "",
       key: expect.any(String),

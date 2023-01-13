@@ -25,6 +25,7 @@
     "release": "changeset publish",
     "size": "filesize",
     "test": "jest",
+    "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
     "changeset": "changeset",
     "version": "changeset version",
     "postversion": "node scripts/postversion.mjs",
@@ -108,10 +109,10 @@
   },
   "filesize": {
     "packages/router/dist/router.umd.min.js": {
-      "none": "39 kB"
+      "none": "41 kB"
     },
     "packages/react-router/dist/react-router.production.min.js": {
-      "none": "12.5 kB"
+      "none": "13 kB"
     },
     "packages/react-router/dist/umd/react-router.production.min.js": {
       "none": "15 kB"

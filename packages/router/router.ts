@@ -32,6 +32,7 @@ import {
   joinPaths,
   matchRoutes,
   resolveTo,
+  warning,
 } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,14 +111,14 @@ export interface Router {
    * Navigate forward/backward in the history stack
    * @param to Delta to move in the history stack
    */
-  navigate(to: number): void;
+  navigate(to: number): Promise<void>;
 
   /**
    * Navigate to the given path
    * @param to Path to navigate to
    * @param opts Navigation options (method, submission, etc.)
    */
-  navigate(to: To, opts?: RouterNavigateOptions): void;
+  navigate(to: To, opts?: RouterNavigateOptions): Promise<void>;
 
   /**
    * @internal
@@ -189,6 +190,25 @@ export interface Router {
    * Cleanup listeners and abort any in-progress loads
    */
   dispose(): void;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Get a navigation blocker
+   * @param key The identifier for the blocker
+   * @param fn The blocker function implementation
+   */
+  getBlocker(key: string, fn: BlockerFunction): Blocker;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Delete a navigation blocker
+   * @param key The identifier for the blocker
+   */
+  deleteBlocker(key: string): void;
 
   /**
    * @internal
@@ -275,6 +295,11 @@ export interface RouterState {
    * Map of current fetchers
    */
   fetchers: Map<string, Fetcher>;
+
+  /**
+   * Map of current blockers
+   */
+  blockers: Map<string, Blocker>;
 }
 
 /**
@@ -461,6 +486,35 @@ type FetcherStates<TData = any> = {
 export type Fetcher<TData = any> =
   FetcherStates<TData>[keyof FetcherStates<TData>];
 
+interface BlockerBlocked {
+  state: "blocked";
+  reset(): void;
+  proceed(): void;
+  location: Location;
+}
+
+interface BlockerUnblocked {
+  state: "unblocked";
+  reset: undefined;
+  proceed: undefined;
+  location: undefined;
+}
+
+interface BlockerProceeding {
+  state: "proceeding";
+  reset: undefined;
+  proceed: undefined;
+  location: Location;
+}
+
+export type Blocker = BlockerUnblocked | BlockerBlocked | BlockerProceeding;
+
+export type BlockerFunction = (args: {
+  currentLocation: Location;
+  nextLocation: Location;
+  historyAction: HistoryAction;
+}) => boolean;
+
 interface ShortCircuitable {
   /**
    * startNavigation does not need to complete the navigation because we
@@ -562,6 +616,13 @@ export const IDLE_FETCHER: FetcherStates["Idle"] = {
   formData: undefined,
 };
 
+export const IDLE_BLOCKER: BlockerUnblocked = {
+  state: "unblocked",
+  proceed: undefined,
+  reset: undefined,
+  location: undefined,
+};
+
 const isBrowser =
   typeof window !== "undefined" &&
   typeof window.document !== "undefined" &&
@@ -637,49 +698,75 @@ export function createRouter(init: RouterInit): Router {
     actionData: (init.hydrationData && init.hydrationData.actionData) || null,
     errors: (init.hydrationData && init.hydrationData.errors) || initialErrors,
     fetchers: new Map(),
+    blockers: new Map(),
   };
 
   // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
   let pendingAction: HistoryAction = HistoryAction.Pop;
+
   // Should the current navigation prevent the scroll reset if scroll cannot
   // be restored?
   let pendingPreventScrollReset = false;
+
   // AbortController for the active navigation
   let pendingNavigationController: AbortController | null;
+
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
   let isUninterruptedRevalidation = false;
+
   // Use this internal flag to force revalidation of all loaders:
   //  - submissions (completed or interrupted)
   //  - useRevalidate()
   //  - X-Remix-Revalidate (from redirect)
   let isRevalidationRequired = false;
+
   // Use this internal array to capture routes that require revalidation due
   // to a cancelled deferred on action submission
   let cancelledDeferredRoutes: string[] = [];
+
   // Use this internal array to capture fetcher loads that were cancelled by an
   // action navigation and require revalidation
   let cancelledFetcherLoads: string[] = [];
+
   // AbortControllers for any in-flight fetchers
   let fetchControllers = new Map<string, AbortController>();
+
   // Track loads based on the order in which they started
   let incrementingLoadId = 0;
+
   // Track the outstanding pending navigation data load to be compared against
   // the globally incrementing load when a fetcher load lands after a completed
   // navigation
   let pendingNavigationLoadId = -1;
+
   // Fetchers that triggered data reloads as a result of their actions
   let fetchReloadIds = new Map<string, number>();
+
   // Fetchers that triggered redirect navigations from their actions
   let fetchRedirectIds = new Set<string>();
+
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, FetchLoadMatch>();
+
   // Store DeferredData instances for active route matches.  When a
   // route loader returns defer() we stick one in here.  Then, when a nested
   // promise resolves we update loaderData.  If a new navigation starts we
   // cancel active deferreds for eliminated routes.
   let activeDeferreds = new Map<string, DeferredData>();
+
+  // We ony support a single active blocker at the moment since we don't have
+  // any compelling use cases for multi-blocker yet
+  let activeBlocker: string | null = null;
+
+  // Store blocker functions in a separate Map outside of router state since
+  // we don't need to update UI state if they change
+  let blockerFunctions = new Map<string, BlockerFunction>();
+
+  // Flag to ignore the next history update, so we can revert the URL change on
+  // a POP navigation that was blocked by the user without touching router state
+  let ignoreNextHistoryUpdate = false;
 
   // Initialize the router, all side effects should be kicked off from here.
   // Implemented as a Fluent API for ease of:
@@ -688,8 +775,48 @@ export function createRouter(init: RouterInit): Router {
     // If history informs us of a POP navigation, start the navigation but do not update
     // state.  We'll update our own state once the navigation completes
     unlistenHistory = init.history.listen(
-      ({ action: historyAction, location }) =>
-        startNavigation(historyAction, location)
+      ({ action: historyAction, location, delta }) => {
+        // Ignore this event if it was just us resetting the URL from a
+        // blocked POP navigation
+        if (ignoreNextHistoryUpdate) {
+          ignoreNextHistoryUpdate = false;
+          return;
+        }
+
+        let blockerKey = shouldBlockNavigation({
+          currentLocation: state.location,
+          nextLocation: location,
+          historyAction,
+        });
+        if (blockerKey) {
+          // Restore the URL to match the current UI, but don't update router state
+          ignoreNextHistoryUpdate = true;
+          init.history.go(delta * -1);
+
+          // Put the blocker into a blocked state
+          updateBlocker(blockerKey, {
+            state: "blocked",
+            location,
+            proceed() {
+              updateBlocker(blockerKey!, {
+                state: "proceeding",
+                proceed: undefined,
+                reset: undefined,
+                location,
+              });
+              // Re-do the same POP navigation we just blocked
+              init.history.go(delta);
+            },
+            reset() {
+              deleteBlocker(blockerKey!);
+              updateState({ blockers: new Map(router.state.blockers) });
+            },
+          });
+          return;
+        }
+
+        return startNavigation(historyAction, location);
+      }
     );
 
     // Kick off initial data load if needed.  Use Pop to avoid modifying history
@@ -708,6 +835,7 @@ export function createRouter(init: RouterInit): Router {
     subscribers.clear();
     pendingNavigationController && pendingNavigationController.abort();
     state.fetchers.forEach((_, key) => deleteFetcher(key));
+    state.blockers.forEach((_, key) => deleteBlocker(key));
   }
 
   // Subscribe to state updates for the router
@@ -772,6 +900,12 @@ export function createRouter(init: RouterInit): Router {
         )
       : state.loaderData;
 
+    // On a successful navigation we can assume we got through all blockers
+    // so we can start fresh
+    for (let [key] of blockerFunctions) {
+      deleteBlocker(key);
+    }
+
     // Always respect the user flag.  Otherwise don't reset on mutation
     // submission navigations unless they redirect
     let preventScrollReset =
@@ -794,6 +928,7 @@ export function createRouter(init: RouterInit): Router {
         newState.matches || state.matches
       ),
       preventScrollReset,
+      blockers: new Map(state.blockers),
     });
 
     if (isUninterruptedRevalidation) {
@@ -828,16 +963,17 @@ export function createRouter(init: RouterInit): Router {
 
     let { path, submission, error } = normalizeNavigateOptions(to, opts);
 
-    let location = createLocation(state.location, path, opts && opts.state);
+    let currentLocation = state.location;
+    let nextLocation = createLocation(state.location, path, opts && opts.state);
 
     // When using navigate as a PUSH/REPLACE we aren't reading an already-encoded
     // URL from window.location, so we need to encode it here so the behavior
     // remains the same as POP and non-data-router usages.  new URL() does all
     // the same encoding we'd get from a history.pushState/window.location read
     // without having to touch history
-    location = {
-      ...location,
-      ...init.history.encodeLocation(location),
+    nextLocation = {
+      ...nextLocation,
+      ...init.history.encodeLocation(nextLocation),
     };
 
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
@@ -865,7 +1001,35 @@ export function createRouter(init: RouterInit): Router {
         ? opts.preventScrollReset === true
         : undefined;
 
-    return await startNavigation(historyAction, location, {
+    let blockerKey = shouldBlockNavigation({
+      currentLocation,
+      nextLocation,
+      historyAction,
+    });
+    if (blockerKey) {
+      // Put the blocker into a blocked state
+      updateBlocker(blockerKey, {
+        state: "blocked",
+        location: nextLocation,
+        proceed() {
+          updateBlocker(blockerKey!, {
+            state: "proceeding",
+            proceed: undefined,
+            reset: undefined,
+            location: nextLocation,
+          });
+          // Send the same navigation through
+          navigate(to, opts);
+        },
+        reset() {
+          deleteBlocker(blockerKey!);
+          updateState({ blockers: new Map(state.blockers) });
+        },
+      });
+      return;
+    }
+
+    return await startNavigation(historyAction, nextLocation, {
       submission,
       // Send through the formData serialization error if we have one so we can
       // render at the right error boundary after we match routes
@@ -1939,6 +2103,84 @@ export function createRouter(init: RouterInit): Router {
     return yeetedKeys.length > 0;
   }
 
+  function getBlocker(key: string, fn: BlockerFunction) {
+    let blocker: Blocker = state.blockers.get(key) || IDLE_BLOCKER;
+
+    if (blockerFunctions.get(key) !== fn) {
+      blockerFunctions.set(key, fn);
+      if (activeBlocker == null) {
+        // This is now the active blocker
+        activeBlocker = key;
+      } else if (key !== activeBlocker) {
+        warning(false, "A router only supports one blocker at a time");
+      }
+    }
+
+    return blocker;
+  }
+
+  function deleteBlocker(key: string) {
+    state.blockers.delete(key);
+    blockerFunctions.delete(key);
+    if (activeBlocker === key) {
+      activeBlocker = null;
+    }
+  }
+
+  // Utility function to update blockers, ensuring valid state transitions
+  function updateBlocker(key: string, newBlocker: Blocker) {
+    let blocker = state.blockers.get(key) || IDLE_BLOCKER;
+
+    // Poor mans state machine :)
+    // https://mermaid.live/edit#pako:eNqVkc9OwzAMxl8l8nnjAYrEtDIOHEBIgwvKJTReGy3_lDpIqO27k6awMG0XcrLlnz87nwdonESogKXXBuE79rq75XZO3-yHds0RJVuv70YrPlUrCEe2HfrORS3rubqZfuhtpg5C9wk5tZ4VKcRUq88q9Z8RS0-48cE1iHJkL0ugbHuFLus9L6spZy8nX9MP2CNdomVaposqu3fGayT8T8-jJQwhepo_UtpgBQaDEUom04dZhAN1aJBDlUKJBxE1ceB2Smj0Mln-IBW5AFU2dwUiktt_2Qaq2dBfaKdEup85UV7Yd-dKjlnkabl2Pvr0DTkTreM
+    invariant(
+      (blocker.state === "unblocked" && newBlocker.state === "blocked") ||
+        (blocker.state === "blocked" && newBlocker.state === "blocked") ||
+        (blocker.state === "blocked" && newBlocker.state === "proceeding") ||
+        (blocker.state === "blocked" && newBlocker.state === "unblocked") ||
+        (blocker.state === "proceeding" && newBlocker.state === "unblocked"),
+      `Invalid blocker state transition: ${blocker.state} -> ${newBlocker.state}`
+    );
+
+    state.blockers.set(key, newBlocker);
+    updateState({ blockers: new Map(state.blockers) });
+  }
+
+  function shouldBlockNavigation({
+    currentLocation,
+    nextLocation,
+    historyAction,
+  }: {
+    currentLocation: Location;
+    nextLocation: Location;
+    historyAction: HistoryAction;
+  }): string | undefined {
+    if (activeBlocker == null) {
+      return;
+    }
+
+    // We only allow a single blocker at the moment.  This will need to be
+    // updated if we enhance to support multiple blockers in the future
+    let blockerFunction = blockerFunctions.get(activeBlocker);
+    invariant(
+      blockerFunction,
+      "Could not find a function for the active blocker"
+    );
+    let blocker = state.blockers.get(activeBlocker);
+
+    if (blocker && blocker.state === "proceeding") {
+      // If the blocker is currently proceeding, we don't need to re-check
+      // it and can let this navigation continue
+      return;
+    }
+
+    // At this point, we know we're unblocked/blocked so we need to check the
+    // user-provided blocker function
+    if (blockerFunction({ currentLocation, nextLocation, historyAction })) {
+      return activeBlocker;
+    }
+  }
+
   function cancelActiveDeferreds(
     predicate?: (routeId: string) => boolean
   ): string[] {
@@ -2038,6 +2280,8 @@ export function createRouter(init: RouterInit): Router {
     getFetcher,
     deleteFetcher,
     dispose,
+    getBlocker,
+    deleteBlocker,
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
   };
