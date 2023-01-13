@@ -301,9 +301,6 @@ export function createStaticRouter(
     getBlocker() {
       throw msg("getBlocker");
     },
-    getBlockerState() {
-      throw msg("getBlockerState");
-    },
     deleteBlocker() {
       throw msg("deleteBlocker");
     },

@@ -25,8 +25,6 @@ import {
   UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router";
 import type {
-  Blocker,
-  BlockerFunction,
   BrowserHistory,
   Fetcher,
   FormEncType,
@@ -64,8 +62,6 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type {
-  Blocker as unstable_Blocker,
-  BlockerFunction as unstable_BlockerFunction,
   FormEncType,
   FormMethod,
   GetScrollRestorationKeyFunction,
@@ -80,6 +76,8 @@ export type {
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
+  unstable_Blocker,
+  unstable_BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
   Fetcher,
@@ -146,6 +144,7 @@ export {
   useActionData,
   useAsyncError,
   useAsyncValue,
+  unstable_useBlocker,
   useHref,
   useInRouterContext,
   useLoaderData,
@@ -717,7 +716,6 @@ enum DataRouterHook {
   UseScrollRestoration = "useScrollRestoration",
   UseSubmitImpl = "useSubmitImpl",
   UseFetcher = "useFetcher",
-  UseBlocker = "useBlocker",
 }
 
 enum DataRouterStateHook {
@@ -979,32 +977,6 @@ export function useFormAction(
 
   return createPath(path);
 }
-
-// useBlocker() is a singleton for now since we don't have any compelling use
-// cases for multi-blocker yet
-let blockerKey = "blocker-singleton";
-
-function useBlocker(shouldBlock: boolean | BlockerFunction) {
-  let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
-
-  let blockerFunction = React.useCallback<BlockerFunction>(
-    (args) => {
-      return typeof shouldBlock === "function"
-        ? !!shouldBlock(args)
-        : !!shouldBlock;
-    },
-    [shouldBlock]
-  );
-
-  let blocker = router.getBlocker(blockerKey, blockerFunction);
-
-  // Cleanup on unmount
-  React.useEffect(() => () => router.deleteBlocker(blockerKey), [router]);
-
-  return blocker;
-}
-
-export { useBlocker as unstable_useBlocker };
 
 function createFetcherForm(fetcherKey: string, routeId: string) {
   let FetcherForm = React.forwardRef<HTMLFormElement, FormProps>(

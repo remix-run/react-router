@@ -1,5 +1,7 @@
 import * as React from "react";
 import type {
+  Blocker,
+  BlockerFunction,
   Location,
   ParamParseKey,
   Params,
@@ -650,6 +652,7 @@ export function _renderMatches(
 }
 
 enum DataRouterHook {
+  UseBlocker = "useBlocker",
   UseRevalidator = "useRevalidator",
 }
 
@@ -816,6 +819,36 @@ export function useAsyncValue(): unknown {
 export function useAsyncError(): unknown {
   let value = React.useContext(AwaitContext);
   return value?._error;
+}
+
+// useBlocker() is a singleton for now since we don't have any compelling use
+// cases for multi-blocker yet
+let blockerKey = "blocker-singleton";
+
+/**
+ * Allow the application to block navigations within the SPA and present the
+ * user a confirmation dialog to confirm the navigation.  Mostly used to avoid
+ * using half-filled form data.  This does not handle hard-reloads or
+ * cross-origin navigations.
+ */
+export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
+  let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
+
+  let blockerFunction = React.useCallback<BlockerFunction>(
+    (args) => {
+      return typeof shouldBlock === "function"
+        ? !!shouldBlock(args)
+        : !!shouldBlock;
+    },
+    [shouldBlock]
+  );
+
+  let blocker = router.getBlocker(blockerKey, blockerFunction);
+
+  // Cleanup on unmount
+  React.useEffect(() => () => router.deleteBlocker(blockerKey), [router]);
+
+  return blocker;
 }
 
 const alreadyWarned: Record<string, boolean> = {};
