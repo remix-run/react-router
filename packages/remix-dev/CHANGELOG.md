@@ -1,5 +1,26 @@
 # `@remix-run/dev`
 
+## 1.11.0-pre.0
+
+### Minor Changes
+
+- Specify "file" as loader for .fbx, .glb, .gltf, .hdr, and .mov files. ([#5030](https://github.com/remix-run/remix/pull/5030))
+- Add unstable support for [Vanilla Extract](https://vanilla-extract.style) via the `future.unstable_vanillaExtract` feature flag ([#5040](https://github.com/remix-run/remix/pull/5040))
+- Add unstable support for CSS side-effect imports via the `future.unstable_cssSideEffectImports` feature flag ([#4919](https://github.com/remix-run/remix/pull/4919))
+- Add unstable support for CSS Modules via the `future.unstable_cssModules` feature flag ([#4852](https://github.com/remix-run/remix/pull/4852))
+
+### Patch Changes
+
+- update flat-routes invalid character error message to include link to React Router proposal ([#5013](https://github.com/remix-run/remix/pull/5013))
+- Bump peer dependency on `@remix-run/serve` to match current release ([`809f51955`](https://github.com/remix-run/remix/commit/809f519553d8d4a6fdc2f9a68ffc3710562a90cf))
+- Add flat routes convention ([#4880](https://github.com/remix-run/remix/pull/4880))
+- update flat route module check for file colocation ([#5034](https://github.com/remix-run/remix/pull/5034))
+- don't allow `*` to be anywhere in flat route segment ([#5014](https://github.com/remix-run/remix/pull/5014))
+- suport `handle` in md(x) frontmatter ([#4865](https://github.com/remix-run/remix/pull/4865))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.11.0-pre.0`
+  - `@remix-run/serve@1.11.0-pre.0`
+
 ## 1.10.1
 
 ### Patch Changes
