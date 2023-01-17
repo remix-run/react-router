@@ -391,6 +391,11 @@ export interface LinkProps
   to: To;
 }
 
+const isBrowser =
+  typeof window !== "undefined" &&
+  typeof window.document !== "undefined" &&
+  typeof window.document.createElement !== "undefined";
+
 /**
  * The public API for rendering a history-aware <a>.
  */
@@ -410,9 +415,10 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     ref
   ) {
     let location = typeof to === "string" ? to : createPath(to);
-    let isAbsolute = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(location);
+    let isAbsolute =
+      /^[a-z+]+:\/\//i.test(location) || location.startsWith("//");
 
-    if (isAbsolute) {
+    if (isBrowser && isAbsolute) {
       let currentUrl = new URL(window.location.href);
       let targetUrl = location.startsWith("//")
         ? new URL(currentUrl.protocol + location)
