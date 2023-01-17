@@ -2421,7 +2421,7 @@ export function createStaticHandler(
     let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
-    if (!isValidMethod(method) && method !== "head") {
+    if (!isValidMethod(method) && method !== "head" && method !== "options") {
       throw getInternalRouterError(405, { method });
     } else if (!matches) {
       throw getInternalRouterError(404, { pathname: location.pathname });
