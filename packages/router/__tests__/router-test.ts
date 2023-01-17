@@ -12518,6 +12518,14 @@ describe("a router", () => {
         expect(data).toBe("PARENT LOADER");
       });
 
+      it("should support OPTIONS requests", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let data = await queryRoute(
+          createRequest("/parent", { method: "OPTIONS" })
+        );
+        expect(data).toBe("PARENT LOADER");
+      });
+
       it("should support singular route load navigations (primitives)", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data;
@@ -13276,7 +13284,7 @@ describe("a router", () => {
 
         it("should handle unsupported methods with a 405 Response", async () => {
           try {
-            await queryRoute(createRequest("/", { method: "OPTIONS" }), {
+            await queryRoute(createRequest("/", { method: "TRACE" }), {
               routeId: "root",
             });
             expect(false).toBe(true);
@@ -13284,7 +13292,7 @@ describe("a router", () => {
             expect(isRouteErrorResponse(data)).toBe(true);
             expect(data.status).toBe(405);
             expect(data.error).toEqual(
-              new Error('Invalid request method "OPTIONS"')
+              new Error('Invalid request method "TRACE"')
             );
             expect(data.internal).toBe(true);
           }
