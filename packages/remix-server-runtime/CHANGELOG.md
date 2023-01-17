@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.11.0-pre.1
+
+### Patch Changes
+
+- Bump react router versions ([#5120](https://github.com/remix-run/remix/pull/5120))
+
 ## 1.11.0-pre.0
 
 ### Minor Changes
