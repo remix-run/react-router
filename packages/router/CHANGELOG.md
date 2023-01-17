@@ -23,7 +23,7 @@
 
 ### Minor Changes
 
-- Expose deferred information from createStaticHandler ([#9760](https://github.com/remix-run/react-router/pull/9760))
+- Expose deferred information from `createStaticHandler` ([#9760](https://github.com/remix-run/react-router/pull/9760))
 
 ### Patch Changes
 

@@ -2,4 +2,4 @@
 "@remix-run/router": minor
 ---
 
-Expose deferred information from createStaticHandler
+Expose deferred information from `createStaticHandler`

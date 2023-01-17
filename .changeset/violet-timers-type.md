@@ -1,4 +1,5 @@
 ---
+"react-router": minor
 "react-router-dom": minor
 ---
 
