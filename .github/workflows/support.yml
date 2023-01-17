@@ -16,7 +16,10 @@ jobs:
           issue-comment: >
             :wave: @{issue-author}, we use the issue tracker exclusively for bug reports
             and feature requests. However, this issue appears to be a support request.
+
             For usage questions, please use [Stack Overflow](https://stackoverflow.com/questions/tagged/react-router)
-            or [Reactiflux](https://discord.gg/6RyV8n8yyM) where there are a lot more people ready to help you out.
+            or [Discord](https://rmx.as/discord) where there are a lot more people ready to help you out, or 
+            [post a new question](https://github.com/remix-run/react-router/discussions/new?category=q-a) in the 
+            Discussions tab of this repository.
 
             Please feel free to clarify your issue if you think it was closed prematurely.
