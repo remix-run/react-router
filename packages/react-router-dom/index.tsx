@@ -409,9 +409,21 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
-    let toString = typeof to === "string" ? to : createPath(to);
-    let isExternal = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(toString);
-    let href = useHref(toString, { relative });
+    let location = typeof to === "string" ? to : createPath(to);
+    let isAbsolute = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(location);
+
+    if (isAbsolute) {
+      let currentUrl = new URL(window.location.href);
+      let targetUrl = location.startsWith("//")
+        ? new URL(currentUrl.protocol + location)
+        : new URL(location);
+      if (targetUrl.origin === currentUrl.origin) {
+        location = targetUrl.pathname + targetUrl.search + targetUrl.hash;
+      }
+    }
+
+    let href = useHref(location, { relative });
+
     let internalOnClick = useLinkClickHandler(to, {
       replace,
       state,
@@ -432,8 +444,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
-        href={isExternal ? toString : href}
-        onClick={isExternal || reloadDocument ? onClick : handleClick}
+        href={isAbsolute ? location : href}
+        onClick={reloadDocument ? onClick : handleClick}
         ref={ref}
         target={target}
       />
