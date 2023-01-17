@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.3.0-pre.3
+
+### Patch Changes
+
+- Support `OPTIONS` requests in `staticHandler.queryRoute` ([#9914](https://github.com/remix-run/react-router/pull/9914))
+
 ## 1.3.0-pre.2
 
 ### Minor Changes
