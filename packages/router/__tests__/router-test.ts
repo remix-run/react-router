@@ -6223,6 +6223,31 @@ describe("a router", () => {
       }
     });
 
+    it("properly handles same-origin absolute URLs", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let A = await t.navigate("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let B = await A.actions.child.redirectReturn(
+        "http://localhost/parent",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+      await B.loaders.parent.resolve("PARENT");
+      expect(t.router.state.location).toMatchObject({
+        hash: "",
+        pathname: "/parent",
+        search: "",
+        state: {
+          _isRedirect: true,
+        },
+      });
+    });
+
     describe("redirect status code handling", () => {
       it("should not treat 300 as a redirect", async () => {
         let t = setup({ routes: REDIRECT_ROUTES });
@@ -11293,6 +11318,20 @@ describe("a router", () => {
       },
     ];
 
+    // Regardless of if the URL is internal or external - all absolute URL
+    // responses should return untouched during SSR so the browser can handle
+    // them
+    let ABSOLUTE_URLS = [
+      "http://localhost/",
+      "https://localhost/about",
+      "http://remix.run/blog",
+      "https://remix.run/blog",
+      "//remix.run/blog",
+      "app://whatever",
+      "mailto:hello@remix.run",
+      "web+remix:whatever",
+    ];
+
     function createRequest(path: string, opts?: RequestInit) {
       return new Request(`http://localhost${path}`, {
         signal: new AbortController().signal,
@@ -11616,17 +11655,8 @@ describe("a router", () => {
         expect((response as Response).headers.get("Location")).toBe("/parent");
       });
 
-      it("should handle external redirect Responses", async () => {
-        let urls = [
-          "http://remix.run/blog",
-          "https://remix.run/blog",
-          "//remix.run/blog",
-          "app://whatever",
-          "mailto:hello@remix.run",
-          "web+remix:whatever",
-        ];
-
-        for (let url of urls) {
+      it("should handle absolute redirect Responses", async () => {
+        for (let url of ABSOLUTE_URLS) {
           let handler = createStaticHandler([
             {
               path: "/",
@@ -12962,15 +12992,8 @@ describe("a router", () => {
         expect((response as Response).headers.get("Location")).toBe("/parent");
       });
 
-      it("should handle external redirect Responses", async () => {
-        let urls = [
-          "http://remix.run/blog",
-          "https://remix.run/blog",
-          "//remix.run/blog",
-          "app://whatever",
-        ];
-
-        for (let url of urls) {
+      it("should handle absolute redirect Responses", async () => {
+        for (let url of ABSOLUTE_URLS) {
           let handler = createStaticHandler([
             {
               id: "root",

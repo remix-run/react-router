@@ -105,4 +105,76 @@ describe("a memory router", () => {
     );
     router.dispose();
   });
+
+  it("properly handles same-origin absolute URLs", async () => {
+    let router = createRouter({
+      routes: [
+        {
+          path: "/",
+          children: [
+            {
+              index: true,
+            },
+            {
+              path: "a",
+              loader: () =>
+                new Response(null, {
+                  status: 302,
+                  headers: {
+                    Location: "http://localhost/b",
+                  },
+                }),
+            },
+            {
+              path: "b",
+            },
+          ],
+        },
+      ],
+      history: createMemoryHistory(),
+    });
+
+    await router.navigate("/a");
+    expect(router.state.location).toMatchObject({
+      hash: "",
+      pathname: "/b",
+      search: "",
+    });
+  });
+
+  it("properly handles protocol-less same-origin absolute URLs", async () => {
+    let router = createRouter({
+      routes: [
+        {
+          path: "/",
+          children: [
+            {
+              index: true,
+            },
+            {
+              path: "a",
+              loader: () =>
+                new Response(null, {
+                  status: 302,
+                  headers: {
+                    Location: "//localhost/b",
+                  },
+                }),
+            },
+            {
+              path: "b",
+            },
+          ],
+        },
+      ],
+      history: createMemoryHistory(),
+    });
+
+    await router.navigate("/a");
+    expect(router.state.location).toMatchObject({
+      hash: "",
+      pathname: "/b",
+      search: "",
+    });
+  });
 });
