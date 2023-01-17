@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { createMemoryHistory, createRouter } from "../index";
+import { createMemoryHistory, createRouter, redirect } from "../index";
 
 // This suite of tests specifically runs in the node jest environment to catch
 // issues when window is not present
@@ -104,5 +104,77 @@ describe("a memory router", () => {
       "http://localhost/a"
     );
     router.dispose();
+  });
+
+  it("properly handles same-origin absolute URLs", async () => {
+    let router = createRouter({
+      routes: [
+        {
+          path: "/",
+          children: [
+            {
+              index: true,
+            },
+            {
+              path: "a",
+              loader: () =>
+                new Response(null, {
+                  status: 302,
+                  headers: {
+                    Location: "http://localhost/b",
+                  },
+                }),
+            },
+            {
+              path: "b",
+            },
+          ],
+        },
+      ],
+      history: createMemoryHistory(),
+    });
+
+    await router.navigate("/a");
+    expect(router.state.location).toMatchObject({
+      hash: "",
+      pathname: "/b",
+      search: "",
+    });
+  });
+
+  it("properly handles protocol-less same-origin absolute URLs", async () => {
+    let router = createRouter({
+      routes: [
+        {
+          path: "/",
+          children: [
+            {
+              index: true,
+            },
+            {
+              path: "a",
+              loader: () =>
+                new Response(null, {
+                  status: 302,
+                  headers: {
+                    Location: "//localhost/b",
+                  },
+                }),
+            },
+            {
+              path: "b",
+            },
+          ],
+        },
+      ],
+      history: createMemoryHistory(),
+    });
+
+    await router.navigate("/a");
+    expect(router.state.location).toMatchObject({
+      hash: "",
+      pathname: "/b",
+      search: "",
+    });
   });
 });

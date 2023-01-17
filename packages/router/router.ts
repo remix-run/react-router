@@ -1901,7 +1901,7 @@ export function createRouter(init: RouterInit): Router {
     );
 
     // Check if this an external redirect that goes to a new origin
-    if (typeof window?.location !== "undefined") {
+    if (isBrowser && typeof window?.location !== "undefined") {
       let newOrigin = init.history.createURL(redirect.location).origin;
       if (window.location.origin !== newOrigin) {
         if (replace) {
@@ -3115,6 +3115,17 @@ async function callLoaderOrAction(
         }
 
         location = createPath(resolvedLocation);
+      } else if (!isStaticRequest) {
+        // Strip off the protocol+origin for same-origin absolute redirects.
+        // If this is a static reques, we can let it go back to the browser
+        // as-is
+        let currentUrl = new URL(request.url);
+        let url = location.startsWith("//")
+          ? new URL(currentUrl.protocol + location)
+          : new URL(location);
+        if (url.origin === currentUrl.origin) {
+          location = url.pathname + url.search + url.hash;
+        }
       }
 
       // Don't process redirects in the router during static requests requests.
