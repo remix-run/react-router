@@ -1,10 +1,5 @@
 import * as React from "react";
-import type {
-  AgnosticDataRouteObject,
-  HydrationState,
-  InitialEntry,
-  Router,
-} from "@remix-run/router";
+import type { HydrationState, InitialEntry, Router } from "@remix-run/router";
 import { UNSAFE_RemixContext as RemixContext } from "@remix-run/react";
 import type {
   UNSAFE_FutureConfig as FutureConfig,
@@ -14,7 +9,7 @@ import type {
   UNSAFE_RouteModules as RouteModules,
   UNSAFE_RemixContextObject as RemixContextObject,
 } from "@remix-run/react";
-import type { RouteObject } from "react-router-dom";
+import type { DataRouteObject, RouteObject } from "react-router-dom";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 type RemixStubOptions = {
@@ -47,7 +42,7 @@ type RemixStubOptions = {
   remixConfigFuture?: Partial<FutureConfig>;
 };
 
-export function createRemixStub(routes: AgnosticDataRouteObject[]) {
+export function createRemixStub(routes: (RouteObject | DataRouteObject)[]) {
   return function RemixStub({
     initialEntries,
     initialIndex,
@@ -75,8 +70,8 @@ export function createRemixStub(routes: AgnosticDataRouteObject[]) {
           v2_meta: false,
           ...remixConfigFuture,
         },
-        manifest: createManifest(routes),
-        routeModules: createRouteModules(routes),
+        manifest: createManifest(routerRef.current.routes),
+        routeModules: createRouteModules(routerRef.current.routes),
       };
     }
 
@@ -88,7 +83,7 @@ export function createRemixStub(routes: AgnosticDataRouteObject[]) {
   };
 }
 
-function createManifest(routes: AgnosticDataRouteObject[]): AssetsManifest {
+function createManifest(routes: RouteObject[]): AssetsManifest {
   return {
     routes: createRouteManifest(routes),
     entry: { imports: [], module: "" },
@@ -130,6 +125,7 @@ function createRouteModules(
       meta: undefined,
       shouldRevalidate: undefined,
     };
+
     return modules;
   }, routeModules || {});
 }
