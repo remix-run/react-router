@@ -1,5 +1,10 @@
-import type { StaticHandler, StaticHandlerContext } from "@remix-run/router";
+import type {
+  UNSAFE_DeferredData as DeferredData,
+  StaticHandler,
+  StaticHandlerContext,
+} from "@remix-run/router";
 import {
+  UNSAFE_DEFERRED_SYMBOL as DEFERRED_SYMBOL,
   getStaticContextFromError,
   isRouteErrorResponse,
   createStaticHandler,
@@ -16,7 +21,12 @@ import { ServerMode, isServerMode } from "./mode";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRouteManifest } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
-import { json, isRedirectResponse, isResponse } from "./responses";
+import {
+  createDeferredReadableStream,
+  json,
+  isRedirectResponse,
+  isResponse,
+} from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
 
 export type RequestHandler = (
@@ -34,7 +44,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   mode
 ) => {
   let routes = createRoutes(build.routes);
-  let dataRoutes = createStaticHandlerDataRoutes(build.routes);
+  let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes);
 
@@ -124,6 +134,16 @@ async function handleDataRequestRR(
         status: 204,
         headers,
       });
+    }
+
+    if (DEFERRED_SYMBOL in response) {
+      let deferredData = response[DEFERRED_SYMBOL] as DeferredData;
+      let body = createDeferredReadableStream(deferredData, request.signal);
+      let init = deferredData.init || {};
+      let headers = new Headers(init.headers);
+      headers.set("Content-Type", "text/remix-deferred");
+      init.headers = headers;
+      return new Response(body, init);
     }
 
     return response;
@@ -230,7 +250,9 @@ async function handleDocumentRequestRR(
   }
 
   // Restructure context.errors to the right Catch/Error Boundary
-  differentiateCatchVersusErrorBoundaries(build, context);
+  if (build.future.v2_errorBoundary !== true) {
+    differentiateCatchVersusErrorBoundaries(build, context);
+  }
 
   let headers = getDocumentHeadersRR(build, context);
 
@@ -266,7 +288,9 @@ async function handleDocumentRequestRR(
     );
 
     // Restructure context.errors to the right Catch/Error Boundary
-    differentiateCatchVersusErrorBoundaries(build, context);
+    if (build.future.v2_errorBoundary !== true) {
+      differentiateCatchVersusErrorBoundaries(build, context);
+    }
 
     // Update entryContext for the second render pass
     entryContext = {

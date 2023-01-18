@@ -6,11 +6,19 @@ declare module "*.avif" {
   let asset: string;
   export default asset;
 }
+declare module "*.module.css" {
+  let styles: { readonly [key: string]: string };
+  export default styles;
+}
 declare module "*.css" {
   let asset: string;
   export default asset;
 }
 declare module "*.eot" {
+  let asset: string;
+  export default asset;
+}
+declare module "*.fbx" {
   let asset: string;
   export default asset;
 }
@@ -22,11 +30,23 @@ declare module "*.gif" {
   let asset: string;
   export default asset;
 }
+declare module "*.glb" {
+  let asset: string;
+  export default asset;
+}
+declare module "*.gltf" {
+  let asset: string;
+  export default asset;
+}
 declare module "*.gql" {
   let asset: string;
   export default asset;
 }
 declare module "*.graphql" {
+  let asset: string;
+  export default asset;
+}
+declare module "*.hdr" {
   let asset: string;
   export default asset;
 }
@@ -53,6 +73,10 @@ declare module "*.mdx" {
   export default Component;
 }
 declare module "*.mp3" {
+  let asset: string;
+  export default asset;
+}
+declare module "*.mov" {
   let asset: string;
   export default asset;
 }

@@ -55,6 +55,8 @@ test.describe("mdx", () => {
 meta:
   title: My First Post
   description: Isn't this awesome?
+handle:
+  someData: abc
 headers:
   Cache-Control: no-cache
 ---
@@ -62,10 +64,6 @@ headers:
 export const links = () => [
   { rel: "stylesheet", href: "app.css" }
 ]
-
-export const handle = {
-  someData: "abc"
-}
 
 import { useLoaderData } from '@remix-run/react';
 

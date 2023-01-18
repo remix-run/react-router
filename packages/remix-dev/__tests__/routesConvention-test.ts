@@ -113,8 +113,8 @@ describe("defineConventionalRoutes", () => {
       path.join(__dirname, "fixtures/replace-remix-magic-imports/app")
     );
     let keys = Object.keys(routes);
-    expect(keys.length).toBe(14);
-    expect(keys.filter((key) => routes[key].parentId).length).toBe(5);
+    expect(keys).toHaveLength(14);
+    expect(keys.filter((key) => routes[key].parentId).length).toBe(14);
     expect(keys.filter((key) => routes[key].index).length).toBe(4);
   });
 });

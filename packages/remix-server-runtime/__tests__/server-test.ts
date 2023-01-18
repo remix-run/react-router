@@ -55,6 +55,7 @@ describe("server", () => {
         },
       },
     },
+    future: {},
   } as unknown as ServerBuild;
 
   describe("createRequestHandler", () => {

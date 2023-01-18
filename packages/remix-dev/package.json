@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/dev",
-  "version": "1.10.1",
+  "version": "1.11.0",
   "description": "Dev tools and CLI for Remix",
   "homepage": "https://remix.run",
   "bugs": {
@@ -19,14 +19,18 @@
   },
   "dependencies": {
     "@babel/core": "^7.18.6",
+    "@babel/generator": "^7.18.6",
     "@babel/plugin-syntax-jsx": "^7.18.6",
     "@babel/plugin-syntax-typescript": "^7.20.0",
+    "@babel/parser": "^7.18.6",
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
+    "@babel/traverse": "^7.18.6",
     "@babel/types": "^7.20.2",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@npmcli/package-json": "^2.0.0",
-    "@remix-run/server-runtime": "1.10.1",
+    "@remix-run/server-runtime": "1.11.0",
+    "@vanilla-extract/integration": "^6.0.1",
     "arg": "^5.0.1",
     "cacache": "^15.0.5",
     "chalk": "^4.1.2",
@@ -46,9 +50,13 @@
     "json5": "^2.2.1",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
+    "lru-cache": "^7.14.1",
     "minimatch": "^3.0.4",
     "node-fetch": "^2.6.7",
     "ora": "^5.4.1",
+    "postcss": "^8.4.19",
+    "postcss-discard-duplicates": "^5.1.0",
+    "postcss-modules": "^6.0.0",
     "prettier": "2.7.1",
     "pretty-ms": "^7.0.1",
     "proxy-agent": "^5.0.0",
@@ -63,7 +71,7 @@
     "xdm": "^2.0.0"
   },
   "devDependencies": {
-    "@remix-run/serve": "1.10.1",
+    "@remix-run/serve": "1.11.0",
     "@types/cacache": "^15.0.0",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/inquirer": "^8.2.0",
@@ -74,6 +82,7 @@
     "@types/shelljs": "^0.8.11",
     "@types/tar-fs": "^2.0.1",
     "@types/ws": "^7.4.1",
+    "dedent": "^0.7.0",
     "esbuild-register": "^3.3.2",
     "msw": "^0.39.2",
     "shelljs": "^0.8.5",
@@ -82,7 +91,7 @@
     "type-fest": "^2.16.0"
   },
   "peerDependencies": {
-    "@remix-run/serve": "^1.10.1-pre.0"
+    "@remix-run/serve": "^1.11.0"
   },
   "peerDependenciesMeta": {
     "@remix-run/serve": {

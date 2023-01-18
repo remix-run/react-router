@@ -1,5 +1,10 @@
 import * as React from "react";
-import type { HydrationState, InitialEntry, Router } from "@remix-run/router";
+import type {
+  AgnosticDataRouteObject,
+  HydrationState,
+  InitialEntry,
+  Router,
+} from "@remix-run/router";
 import { UNSAFE_RemixContext as RemixContext } from "@remix-run/react";
 import type {
   UNSAFE_FutureConfig as FutureConfig,
@@ -42,7 +47,7 @@ type RemixStubOptions = {
   remixConfigFuture?: Partial<FutureConfig>;
 };
 
-export function createRemixStub(routes: RouteObject[]) {
+export function createRemixStub(routes: AgnosticDataRouteObject[]) {
   return function RemixStub({
     initialEntries,
     initialIndex,
@@ -63,6 +68,10 @@ export function createRemixStub(routes: RouteObject[]) {
     if (remixContextRef.current == null) {
       remixContextRef.current = {
         future: {
+          unstable_cssModules: false,
+          unstable_cssSideEffectImports: false,
+          unstable_vanillaExtract: false,
+          v2_errorBoundary: false,
           v2_meta: false,
           ...remixConfigFuture,
         },
@@ -79,7 +88,7 @@ export function createRemixStub(routes: RouteObject[]) {
   };
 }
 
-function createManifest(routes: RouteObject[]): AssetsManifest {
+function createManifest(routes: AgnosticDataRouteObject[]): AssetsManifest {
   return {
     routes: createRouteManifest(routes),
     entry: { imports: [], module: "" },

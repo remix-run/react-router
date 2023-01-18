@@ -14,6 +14,7 @@ type ValidateShape<T, Shape> =
         never
     : never;
 
+// TODO: Remove Promises from serialization
 export function createServerHandoffString<T>(serverHandoff: {
   // Don't allow StaticHandlerContext to be passed in verbatim, since then
   // we'd end up including duplicate info

@@ -80,6 +80,7 @@ export function mockServerBuild(
       },
       {}
     ),
+    future: {},
   };
 }
 

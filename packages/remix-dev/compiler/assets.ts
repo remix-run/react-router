@@ -31,12 +31,18 @@ export interface AssetsManifest {
       hasErrorBoundary: boolean;
     };
   };
+  cssBundleHref?: string;
 }
 
-export async function createAssetsManifest(
-  config: RemixConfig,
-  metafile: esbuild.Metafile
-): Promise<AssetsManifest> {
+export async function createAssetsManifest({
+  config,
+  metafile,
+  cssBundlePath,
+}: {
+  config: RemixConfig;
+  metafile: esbuild.Metafile;
+  cssBundlePath?: string;
+}): Promise<AssetsManifest> {
   function resolveUrl(outputPath: string): string {
     return createUrl(
       config.publicPath,
@@ -115,7 +121,9 @@ export async function createAssetsManifest(
   optimizeRoutes(routes, entry.imports);
   let version = getHash(JSON.stringify({ entry, routes })).slice(0, 8);
 
-  return { version, entry, routes };
+  let cssBundleHref = cssBundlePath ? resolveUrl(cssBundlePath) : undefined;
+
+  return { version, entry, routes, cssBundleHref };
 }
 
 type ImportsCache = { [routeId: string]: string[] };

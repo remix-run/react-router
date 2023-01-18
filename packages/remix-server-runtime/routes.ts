@@ -5,6 +5,7 @@ import type {
 } from "@remix-run/router";
 
 import { callRouteActionRR, callRouteLoaderRR } from "./data";
+import type { FutureConfig } from "./entry";
 import type { ServerRouteModule } from "./routeModules";
 
 export interface RouteManifest<Route> {
@@ -54,17 +55,21 @@ export function createRoutes(
 // createStaticHandler
 export function createStaticHandlerDataRoutes(
   manifest: ServerRouteManifest,
+  future: FutureConfig,
   parentId?: string
 ): AgnosticDataRouteObject[] {
   return Object.values(manifest)
     .filter((route) => route.parentId === parentId)
     .map((route) => {
+      let hasErrorBoundary =
+        future.v2_errorBoundary === true
+          ? route.id === "root" || route.module.ErrorBoundary != null
+          : route.id === "root" ||
+            route.module.CatchBoundary != null ||
+            route.module.ErrorBoundary != null;
       let commonRoute = {
         // Always include root due to default boundaries
-        hasErrorBoundary:
-          route.id === "root" ||
-          route.module.CatchBoundary != null ||
-          route.module.ErrorBoundary != null,
+        hasErrorBoundary,
         id: route.id,
         path: route.path,
         loader: route.module.loader
@@ -97,7 +102,7 @@ export function createStaticHandlerDataRoutes(
           }
         : {
             caseSensitive: route.caseSensitive,
-            children: createStaticHandlerDataRoutes(manifest, route.id),
+            children: createStaticHandlerDataRoutes(manifest, future, route.id),
             ...commonRoute,
           };
     });

@@ -9,6 +9,7 @@ import {
   serverBuildVirtualModule,
   assetsManifestVirtualModule,
 } from "../virtualModules";
+import { isCssSideEffectImportPath } from "./cssSideEffectImportsPlugin";
 import { createMatchPath } from "../utils/tsconfig";
 import { getPreferredPackageManager } from "../../cli/getPreferredPackageManager";
 
@@ -45,6 +46,11 @@ export function serverBareModulesPlugin(
           return undefined;
         }
 
+        // Always bundle @remix-run/css-bundle
+        if (path === "@remix-run/css-bundle") {
+          return undefined;
+        }
+
         // To prevent `import xxx from "remix"` from ending up in the bundle
         // we "bundle" remix but the other modules where the code lives.
         if (path === "remix") {
@@ -62,6 +68,11 @@ export function serverBareModulesPlugin(
 
         // Always bundle CSS files so we get immutable fingerprinted asset URLs.
         if (path.endsWith(".css")) {
+          return undefined;
+        }
+
+        // Always bundle CSS side-effect imports.
+        if (isCssSideEffectImportPath(path)) {
           return undefined;
         }
 
