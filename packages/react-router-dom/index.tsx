@@ -1231,13 +1231,10 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
 
   React.useEffect(() => {
     if (blocker.state === "blocked") {
-      console.log("calling window.confirm");
       let proceed = window.confirm(message);
       if (proceed) {
-        console.log("calling setTimeout before proceed");
         setTimeout(blocker.proceed, 0);
       } else {
-        console.log("resetting");
         blocker.reset();
       }
     }
