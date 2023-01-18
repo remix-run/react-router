@@ -396,6 +396,7 @@ type LinkNavigateOptions = {
 type SubmissionNavigateOptions = {
   replace?: boolean;
   state?: any;
+  preventScrollReset?: boolean;
   formMethod?: FormMethod;
   formEncType?: FormEncType;
   formData: FormData;
@@ -905,6 +906,14 @@ export function createRouter(init: RouterInit): Router {
       deleteBlocker(key);
     }
 
+    // Always respect the user flag.  Otherwise don't reset on mutation
+    // submission navigations unless they redirect
+    let preventScrollReset =
+      pendingPreventScrollReset === true ||
+      (state.navigation.formMethod != null &&
+        isMutationMethod(state.navigation.formMethod) &&
+        location.state?._isRedirect !== true);
+
     updateState({
       ...newState, // matches, errors, fetchers go through as-is
       actionData,
@@ -914,11 +923,11 @@ export function createRouter(init: RouterInit): Router {
       initialized: true,
       navigation: IDLE_NAVIGATION,
       revalidation: "idle",
-      // Don't restore on submission navigations
-      restoreScrollPosition: state.navigation.formData
-        ? false
-        : getSavedScrollPosition(location, newState.matches || state.matches),
-      preventScrollReset: pendingPreventScrollReset,
+      restoreScrollPosition: getSavedScrollPosition(
+        location,
+        newState.matches || state.matches
+      ),
+      preventScrollReset,
       blockers: new Map(state.blockers),
     });
 
@@ -1892,7 +1901,7 @@ export function createRouter(init: RouterInit): Router {
     );
 
     // Check if this an external redirect that goes to a new origin
-    if (typeof window?.location !== "undefined") {
+    if (isBrowser && typeof window?.location !== "undefined") {
       let newOrigin = init.history.createURL(redirect.location).origin;
       if (window.location.origin !== newOrigin) {
         if (replace) {
@@ -1936,6 +1945,8 @@ export function createRouter(init: RouterInit): Router {
           ...submission,
           formAction: redirect.location,
         },
+        // Preserve this flag across redirects
+        preventScrollReset: pendingPreventScrollReset,
       });
     } else {
       // Otherwise, we kick off a new loading navigation, preserving the
@@ -1949,6 +1960,8 @@ export function createRouter(init: RouterInit): Router {
           formEncType: submission ? submission.formEncType : undefined,
           formData: submission ? submission.formData : undefined,
         },
+        // Preserve this flag across redirects
+        preventScrollReset: pendingPreventScrollReset,
       });
     }
   }
@@ -2408,7 +2421,7 @@ export function createStaticHandler(
     let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
-    if (!isValidMethod(method) && method !== "head") {
+    if (!isValidMethod(method) && method !== "head" && method !== "options") {
       throw getInternalRouterError(405, { method });
     } else if (!matches) {
       throw getInternalRouterError(404, { pathname: location.pathname });
@@ -3076,8 +3089,7 @@ async function callLoaderOrAction(
         "Redirects returned/thrown from loaders/actions must have a Location header"
       );
 
-      let isAbsolute =
-        /^[a-z+]+:\/\//i.test(location) || location.startsWith("//");
+      let isAbsolute = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(location);
 
       // Support relative routing in internal redirects
       if (!isAbsolute) {
@@ -3103,6 +3115,17 @@ async function callLoaderOrAction(
         }
 
         location = createPath(resolvedLocation);
+      } else if (!isStaticRequest) {
+        // Strip off the protocol+origin for same-origin absolute redirects.
+        // If this is a static reques, we can let it go back to the browser
+        // as-is
+        let currentUrl = new URL(request.url);
+        let url = location.startsWith("//")
+          ? new URL(currentUrl.protocol + location)
+          : new URL(location);
+        if (url.origin === currentUrl.origin) {
+          location = url.pathname + url.search + url.hash;
+        }
       }
 
       // Don't process redirects in the router during static requests requests.

@@ -394,7 +394,7 @@ export function Routes({
 }
 
 export interface AwaitResolveRenderFunction {
-  (data: Awaited<any>): React.ReactElement;
+  (data: Awaited<any>): React.ReactNode;
 }
 
 export interface AwaitProps {
@@ -531,10 +531,8 @@ function ResolveAwait({
   children: React.ReactNode | AwaitResolveRenderFunction;
 }) {
   let data = useAsyncValue();
-  if (typeof children === "function") {
-    return children(data);
-  }
-  return <>{children}</>;
+  let toRender = typeof children === "function" ? children(data) : children;
+  return <>{toRender}</>;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

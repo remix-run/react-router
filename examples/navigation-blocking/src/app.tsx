@@ -30,6 +30,7 @@ let router = createBrowserRouter(
         }
       />
       <Route path="four" element={<h2>Four</h2>} />
+      <Route path="five" element={<h2>Five</h2>} />
     </Route>
   )
 );
@@ -66,7 +67,7 @@ function Layout() {
         <Link to="/one">One</Link>&nbsp;&nbsp;
         <Link to="/two">Two</Link>&nbsp;&nbsp;
         <Link to="/three">Three (Form with blocker)</Link>&nbsp;&nbsp;
-        <Link to="/four">Four (Form with prompt)</Link>&nbsp;&nbsp;
+        <Link to="/four">Four</Link>&nbsp;&nbsp;
         <Link to="/five">Five</Link>&nbsp;&nbsp;
       </nav>
       <p>
