@@ -414,23 +414,32 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
+    // `location` is the unaltered href we will render in the <a> tag for absolute URLs
     let location = typeof to === "string" ? to : createPath(to);
     let isAbsolute =
       /^[a-z+]+:\/\//i.test(location) || location.startsWith("//");
 
+    // Location to use in the click handler
+    let navigationLocation = location;
+    let isExternal = false;
     if (isBrowser && isAbsolute) {
       let currentUrl = new URL(window.location.href);
       let targetUrl = location.startsWith("//")
         ? new URL(currentUrl.protocol + location)
         : new URL(location);
       if (targetUrl.origin === currentUrl.origin) {
-        location = targetUrl.pathname + targetUrl.search + targetUrl.hash;
+        // Strip the protocol/origin for same-origin absolute URLs
+        navigationLocation =
+          targetUrl.pathname + targetUrl.search + targetUrl.hash;
+      } else {
+        isExternal = true;
       }
     }
 
-    let href = useHref(location, { relative });
+    // `href` is what we render in the <a> tag for relative URLs
+    let href = useHref(navigationLocation, { relative });
 
-    let internalOnClick = useLinkClickHandler(to, {
+    let internalOnClick = useLinkClickHandler(navigationLocation, {
       replace,
       state,
       target,
@@ -451,7 +460,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       <a
         {...rest}
         href={isAbsolute ? location : href}
-        onClick={reloadDocument ? onClick : handleClick}
+        onClick={isExternal || reloadDocument ? onClick : handleClick}
         ref={ref}
         target={target}
       />
