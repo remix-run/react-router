@@ -1,5 +1,13 @@
 # `react-router-dom`
 
+## 6.7.0-pre.5
+
+### Patch Changes
+
+- Add `unstable_usePrompt` ([#9932](https://github.com/remix-run/react-router/pull/9932))
+- Updated dependencies:
+  - `react-router@6.7.0-pre.5`
+
 ## 6.7.0-pre.4
 
 ### Patch Changes
