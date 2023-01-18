@@ -1,41 +1,17 @@
 # `react-router`
 
-## 6.7.0-pre.5
+## 6.7.0
 
-## 6.7.0-pre.4
+### Minor Changes
 
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.3.0-pre.3`
-
-## 6.7.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.3.0-pre.2`
-
-## 6.7.0-pre.2
-
-### Patch Changes
-
-- update `<Await>` to accept ReactNode as children function return result ([#9896](https://github.com/remix-run/react-router/pull/9896))
-
-## 6.7.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.3.0-pre.1`
-
-## 6.6.3-pre.0
+- Add `unstable_useBlocker` hook for blocking navigations within the app's location origin ([#9709](https://github.com/remix-run/react-router/pull/9709))
 
 ### Patch Changes
 
 - Fix `generatePath` when optional params are present ([#9764](https://github.com/remix-run/react-router/pull/9764))
+- Update `<Await>` to accept `ReactNode` as children function return result ([#9896](https://github.com/remix-run/react-router/pull/9896))
 - Updated dependencies:
-  - `@remix-run/router@1.3.0-pre.0`
+  - `@remix-run/router@1.3.0`
 
 ## 6.6.2
 
