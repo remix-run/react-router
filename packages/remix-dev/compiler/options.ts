@@ -22,6 +22,7 @@ type Target =
 
 export type CompileOptions = {
   mode: Mode;
+  liveReloadPort?: number;
   target: Target;
   sourcemap: boolean;
   onWarning?: (message: string, key: string) => void;

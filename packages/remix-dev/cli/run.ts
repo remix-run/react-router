@@ -132,11 +132,12 @@ const npxInterop = {
 
 async function dev(
   projectDir: string,
-  flags: { debug?: boolean; port?: number }
+  flags: { debug?: boolean; port?: number; appServerPort?: number }
 ) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
+
   if (flags.debug) inspector.open();
-  await commands.dev(projectDir, process.env.NODE_ENV, flags.port);
+  await commands.dev(projectDir, process.env.NODE_ENV, flags);
 }
 
 /**
@@ -154,6 +155,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
 
   let args = arg(
     {
+      "--app-server-port": Number,
       "--debug": Boolean,
       "--no-delete": Boolean,
       "--dry": Boolean,

@@ -20,6 +20,7 @@ export function createServerHandoffString<T>(serverHandoff: {
   // we'd end up including duplicate info
   state: ValidateShape<T, HydrationState>;
   future: FutureConfig;
+  dev?: { liveReloadPort: number };
 }): string {
   // Uses faster alternative of jsesc to escape data returned from the loaders.
   // This string is inserted directly into the HTML in the `<Scripts>` element.

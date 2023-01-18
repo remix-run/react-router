@@ -32,9 +32,17 @@ export type ServerBuildTarget =
 export type ServerModuleFormat = "esm" | "cjs";
 export type ServerPlatform = "node" | "neutral";
 
+type Dev = {
+  port?: number;
+  appServerPort?: number;
+  remixRequestHandlerPath?: string;
+  rebuildPollIntervalMs?: number;
+};
+
 interface FutureConfig {
   unstable_cssModules: boolean;
   unstable_cssSideEffectImports: boolean;
+  unstable_dev: false | Dev;
   unstable_vanillaExtract: boolean;
   v2_errorBoundary: boolean;
   v2_meta: boolean;
@@ -491,10 +499,11 @@ export async function readConfig(
     writeConfigDefaults(tsconfigPath);
   }
 
-  let future = {
+  let future: FutureConfig = {
     unstable_cssModules: appConfig.future?.unstable_cssModules === true,
     unstable_cssSideEffectImports:
       appConfig.future?.unstable_cssSideEffectImports === true,
+    unstable_dev: appConfig.future?.unstable_dev ?? false,
     unstable_vanillaExtract: appConfig.future?.unstable_vanillaExtract === true,
     v2_errorBoundary: appConfig.future?.v2_errorBoundary === true,
     v2_meta: appConfig.future?.v2_meta === true,

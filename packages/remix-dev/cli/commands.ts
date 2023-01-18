@@ -8,6 +8,7 @@ import * as esbuild from "esbuild";
 import * as colors from "../colors";
 import * as compiler from "../compiler";
 import * as devServer from "../devServer";
+import * as devServer2 from "../devServer2";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
@@ -194,10 +195,19 @@ export async function watch(
   });
 }
 
-export async function dev(remixRoot: string, modeArg?: string, port?: number) {
+export async function dev(
+  remixRoot: string,
+  modeArg?: string,
+  flags: { port?: number; appServerPort?: number } = {}
+) {
   let config = await readConfig(remixRoot);
   let mode = compiler.parseMode(modeArg ?? "", "development");
-  return devServer.serve(config, mode, port);
+
+  if (config.future.unstable_dev !== false) {
+    return devServer2.serve(config, flags);
+  }
+
+  return devServer.serve(config, mode, flags.port);
 }
 
 export async function codemod(

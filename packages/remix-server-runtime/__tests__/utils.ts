@@ -80,7 +80,9 @@ export function mockServerBuild(
       },
       {}
     ),
-    future: {},
+    future: {
+      unstable_dev: {},
+    },
   };
 }
 

@@ -70,7 +70,7 @@ const createEsbuildConfig = (
     mdxPlugin(config),
     emptyModulesPlugin(config, /\.client(\.[jt]sx?)?$/),
     serverRouteModulesPlugin(config),
-    serverEntryModulePlugin(config),
+    serverEntryModulePlugin(config, { liveReloadPort: options.liveReloadPort }),
     serverAssetsManifestPlugin(assetsManifestChannel.read()),
     serverBareModulesPlugin(config, options.onWarning),
   ].filter(isNotNull);

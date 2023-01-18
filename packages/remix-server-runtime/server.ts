@@ -50,6 +50,25 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
   return async function requestHandler(request, loadContext = {}) {
     let url = new URL(request.url);
+
+    // special __REMIX_ASSETS_MANIFEST endpoint for checking if app server serving up-to-date routes and assets
+    let { unstable_dev } = build.future;
+    if (
+      mode === "development" &&
+      unstable_dev !== false &&
+      url.pathname ===
+        (unstable_dev.remixRequestHandlerPath ?? "") +
+          "/__REMIX_ASSETS_MANIFEST"
+    ) {
+      if (request.method !== "GET") {
+        return new Response("Method not allowed", { status: 405 });
+      }
+      return new Response(JSON.stringify(build.assets), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     let matches = matchServerRoutes(routes, url.pathname);
 
     let response: Response;
@@ -267,6 +286,7 @@ async function handleDocumentRequestRR(
         errors: serializeErrors(context.errors),
       },
       future: build.future,
+      dev: build.dev,
     }),
     future: build.future,
   };

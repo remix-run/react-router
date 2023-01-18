@@ -12,7 +12,10 @@ import {
  * for you to consume the build in a custom server entry that is also fed through
  * the compiler.
  */
-export function serverEntryModulePlugin(config: RemixConfig): Plugin {
+export function serverEntryModulePlugin(
+  config: RemixConfig,
+  options: { liveReloadPort?: number } = {}
+): Plugin {
   let filter = serverBuildVirtualModule.filter;
 
   return {
@@ -50,6 +53,13 @@ ${Object.keys(config.routes)
   export const future = ${JSON.stringify(config.future)};
   export const publicPath = ${JSON.stringify(config.publicPath)};
   export const entry = { module: entryServer };
+  ${
+    options.liveReloadPort
+      ? `export const dev = ${JSON.stringify({
+          liveReloadPort: options.liveReloadPort,
+        })}`
+      : ""
+  }
   export const routes = {
     ${Object.keys(config.routes)
       .map((key, index) => {

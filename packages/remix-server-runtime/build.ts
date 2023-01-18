@@ -14,6 +14,7 @@ export interface ServerBuild {
   publicPath: string;
   assetsBuildDirectory: string;
   future: FutureConfig;
+  dev?: { liveReloadPort: number };
 }
 
 export interface HandleDocumentRequestFunction {

@@ -43,6 +43,7 @@ describe("readConfig", () => {
         "future": Object {
           "unstable_cssModules": Any<Boolean>,
           "unstable_cssSideEffectImports": Any<Boolean>,
+          "unstable_dev": false,
           "unstable_vanillaExtract": Any<Boolean>,
           "v2_errorBoundary": Any<Boolean>,
           "v2_meta": Any<Boolean>,
