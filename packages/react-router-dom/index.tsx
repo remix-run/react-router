@@ -394,6 +394,11 @@ export interface LinkProps
   to: To;
 }
 
+const isBrowser =
+  typeof window !== "undefined" &&
+  typeof window.document !== "undefined" &&
+  typeof window.document.createElement !== "undefined";
+
 /**
  * The public API for rendering a history-aware <a>.
  */
@@ -412,8 +417,32 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
-    let href = useHref(to, { relative });
-    let internalOnClick = useLinkClickHandler(to, {
+    // `location` is the unaltered href we will render in the <a> tag for absolute URLs
+    let location = typeof to === "string" ? to : createPath(to);
+    let isAbsolute =
+      /^[a-z+]+:\/\//i.test(location) || location.startsWith("//");
+
+    // Location to use in the click handler
+    let navigationLocation = location;
+    let isExternal = false;
+    if (isBrowser && isAbsolute) {
+      let currentUrl = new URL(window.location.href);
+      let targetUrl = location.startsWith("//")
+        ? new URL(currentUrl.protocol + location)
+        : new URL(location);
+      if (targetUrl.origin === currentUrl.origin) {
+        // Strip the protocol/origin for same-origin absolute URLs
+        navigationLocation =
+          targetUrl.pathname + targetUrl.search + targetUrl.hash;
+      } else {
+        isExternal = true;
+      }
+    }
+
+    // `href` is what we render in the <a> tag for relative URLs
+    let href = useHref(navigationLocation, { relative });
+
+    let internalOnClick = useLinkClickHandler(navigationLocation, {
       replace,
       state,
       target,
@@ -433,8 +462,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
-        href={href}
-        onClick={reloadDocument ? onClick : handleClick}
+        href={isAbsolute ? location : href}
+        onClick={isExternal || reloadDocument ? onClick : handleClick}
         ref={ref}
         target={target}
       />
