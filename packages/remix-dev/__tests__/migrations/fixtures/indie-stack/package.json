@@ -2,7 +2,7 @@
   "name": "indie-stack-template",
   "private": true,
   "scripts": {
-    "typecheck": "tsc && tsc cypress"
+    "typecheck": "tsc && tsc -p cypress"
   },
   "dependencies": {
     "@remix-run/node": "*",
