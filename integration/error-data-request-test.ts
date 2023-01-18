@@ -132,13 +132,13 @@ test.describe("ErrorBoundary", () => {
       `/loader-return-json`,
       "routes/loader-return-json",
       {
-        method: "OPTIONS",
+        method: "TRACE",
       }
     );
     expect(response.status).toBe(405);
     expect(response.headers.get("X-Remix-Error")).toBe("yes");
     expect(await response.text()).toMatch("Unexpected Server Error");
-    assertConsoleError('Error: Invalid request method "OPTIONS"');
+    assertConsoleError('Error: Invalid request method "TRACE"');
   });
 
   test("returns a 403 x-remix-error on a data fetch GET to a bad path", async () => {
