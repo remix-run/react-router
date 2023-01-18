@@ -1,5 +1,21 @@
 # `@remix-run/router`
 
+## 1.3.0
+
+### Minor Changes
+
+- Expose deferred information from `createStaticHandler` ([#9760](https://github.com/remix-run/react-router/pull/9760))
+- Added support for navigation blocking APIs ([#9709](https://github.com/remix-run/react-router/pull/9709))
+
+### Patch Changes
+
+- Improved absolute redirect url detection in actions/loaders ([#9829](https://github.com/remix-run/react-router/pull/9829)) ([`b82ea4be`](https://github.com/remix-run/react-router/commit/b82ea4be3d7bc27357b049ccb7d4148f292dbccf))
+- Fix URL creation with memory histories ([#9814](https://github.com/remix-run/react-router/pull/9814))
+- Fix `generatePath` when optional params are present ([#9764](https://github.com/remix-run/react-router/pull/9764))
+- Fix scroll reset if a submission redirects ([#9886](https://github.com/remix-run/react-router/pull/9886))
+- Fix 404 bug with same-origin absolute redirects ([#9913](https://github.com/remix-run/react-router/pull/9913))
+- Support `OPTIONS` requests in `staticHandler.queryRoute` ([#9914](https://github.com/remix-run/react-router/pull/9914))
+
 ## 1.3.0-pre.3
 
 ### Patch Changes
