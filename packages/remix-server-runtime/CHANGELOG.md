@@ -1,25 +1,18 @@
 # `@remix-run/server-runtime`
 
-## 1.11.0-pre.1
-
-### Patch Changes
-
-- Bump react router versions ([#5120](https://github.com/remix-run/remix/pull/5120))
-
-## 1.11.0-pre.0
+## 1.11.0
 
 ### Minor Changes
 
-- Add unstable support for [Vanilla Extract](https://vanilla-extract.style) via the `future.unstable_vanillaExtract` feature flag ([#5040](https://github.com/remix-run/remix/pull/5040))
-- Add unstable support for CSS side-effect imports via the `future.unstable_cssSideEffectImports` feature flag ([#4919](https://github.com/remix-run/remix/pull/4919))
-- Add unstable support for CSS Modules via the `future.unstable_cssModules` feature flag ([#4852](https://github.com/remix-run/remix/pull/4852))
+- Added support for [Vanilla Extract](https://vanilla-extract.style) via the `unstable_vanillaExtract` future flag. **IMPORTANT:** Features marked with `unstable` are … unstable. While we're confident in the use cases they solve, the API and implementation may change without a major version bump. ([#5040](https://github.com/remix-run/remix/pull/5040))
+- Add support for CSS side-effect imports via the `unstable_cssSideEffectImports` future flag. **IMPORTANT:** Features marked with `unstable` are … unstable. While we're confident in the use cases they solve, the API and implementation may change without a major version bump. ([#4919](https://github.com/remix-run/remix/pull/4919))
+- Add support for CSS Modules via the `unstable_cssModules` future flag. **IMPORTANT:** Features marked with `unstable` are … unstable. While we're confident in the use cases they solve, the API and implementation may change without a major version bump. ([#4852](https://github.com/remix-run/remix/pull/4852))
 
 ### Patch Changes
 
-- Add `future.v2_errorBoundary` flag to opt-into v2 `ErrorBoundary` behavior. This removes the separate `CatchBoundary` and `ErrorBoundary` and consolidates them into a single `ErrorBoundary` following the logic used by `errorElement` in React Router. You can then use `isRouteErrorResponse` to differentiate between thrown `Response`/`Error` instances. ([#4918](https://github.com/remix-run/remix/pull/4918))
+- Added the `v2_errorBoundary` future flag to opt into the next version of Remix's `ErrorBoundary` behavior. This removes the separate `CatchBoundary` and `ErrorBoundary` and consolidates them into a single `ErrorBoundary`, following the logic used by `errorElement` in React Router. You can then use `isRouteErrorResponse` to differentiate between thrown `Response`/`Error` instances. ([#4918](https://github.com/remix-run/remix/pull/4918))
 
   ```jsx
-  /* eslint-disable import/no-extraneous-dependencies */
   // Current (Remix v1 default)
   import { useCatch } from "@remix-run/react";
 
@@ -35,10 +28,7 @@
   export function ErrorBoundary({ error }) {
     return <p>{error.message}</p>;
   }
-  ```
 
-  ```jsx
-  /* eslint-disable import/no-extraneous-dependencies */
   // Using future.v2_errorBoundary
   import { isRouteErrorResponse, useRouteError } from "@remix-run/react";
 
@@ -55,19 +45,19 @@
   }
   ```
 
-- Introduces the `defer()` API from `@remix-run/router` with support for server-rendering and HTTP streaming. This utility allows you to defer values returned from loaders by passing promises instead of resolved values. This has been refered to as "promise over the wire". ([#4920](https://github.com/remix-run/remix/pull/4920))
+- Introduces the `defer()` API from `@remix-run/router` with support for server-rendering and HTTP streaming. This utility allows you to defer values returned from `loader` functions by returning promises instead of resolved values. This has been refered to as _"sending a promise over the wire"_. ([#4920](https://github.com/remix-run/remix/pull/4920))
 
   Informational Resources:
 
-  - https://gist.github.com/jacob-ebey/9bde9546c1aafaa6bc8c242054b1be26
-  - https://github.com/remix-run/remix/blob/main/decisions/0004-streaming-apis.md
+  - <https://gist.github.com/jacob-ebey/9bde9546c1aafaa6bc8c242054b1be26>
+  - <https://github.com/remix-run/remix/blob/main/decisions/0004-streaming-apis.md>
 
-  Documentation Resources (better docs specific to remix are in the works):
+  Documentation Resources (better docs specific to Remix are in the works):
 
-  - https://reactrouter.com/en/main/utils/defer
-  - https://reactrouter.com/en/main/components/await
-  - https://reactrouter.com/en/main/hooks/use-async-value
-  - https://reactrouter.com/en/main/hooks/use-async-error
+  - <https://reactrouter.com/en/main/utils/defer>
+  - <https://reactrouter.com/en/main/components/await>
+  - <https://reactrouter.com/en/main/hooks/use-async-value>
+  - <https://reactrouter.com/en/main/hooks/use-async-error>
 
 ## 1.10.1
 
