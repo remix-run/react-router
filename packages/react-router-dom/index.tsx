@@ -18,6 +18,7 @@ import {
   useNavigate,
   useNavigation,
   useResolvedPath,
+  unstable_useBlocker as useBlocker,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
@@ -1210,6 +1211,38 @@ export function useBeforeUnload(
     };
   }, [callback, capture]);
 }
+
+/**
+ * Wrapper around useBlocker to show a window.confirm prompt to users instead
+ * of building a custom UI with useBlocker.
+ *
+ * Warning: This has *a lot of rough edges* and behaves very differently (and
+ * very incorrectly in some cases) across browsers if user click addition
+ * back/forward navigations while the confirm is open.  Use at your own risk.
+ */
+function usePrompt({ when, message }: { when: boolean; message: string }) {
+  let blocker = useBlocker(when);
+
+  React.useEffect(() => {
+    if (blocker.state === "blocked" && !when) {
+      blocker.reset();
+    }
+  }, [blocker, when]);
+
+  React.useEffect(() => {
+    if (blocker.state === "blocked") {
+      let proceed = window.confirm(message);
+      if (proceed) {
+        setTimeout(blocker.proceed, 0);
+      } else {
+        blocker.reset();
+      }
+    }
+  }, [blocker, message]);
+}
+
+export { usePrompt as unstable_usePrompt };
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
