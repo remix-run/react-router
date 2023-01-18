@@ -16,6 +16,7 @@ import {
   createRouter,
   createStaticHandler,
   defer,
+  UNSAFE_DEFERRED_SYMBOL,
   ErrorResponse,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
@@ -30,6 +31,7 @@ import type {
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
   AgnosticRouteObject,
+  DeferredData,
   TrackedPromise,
 } from "../utils";
 import {
@@ -157,8 +159,13 @@ function isRedirect(result: any) {
   );
 }
 
-interface CustomMatchers<R = unknown> {
+interface CustomMatchers<R = jest.Expect> {
   trackedPromise(data?: any, error?: any, aborted?: boolean): R;
+  deferredData(
+    done: boolean,
+    status?: number,
+    headers?: Record<string, string>
+  ): R;
 }
 
 declare global {
@@ -169,12 +176,40 @@ declare global {
   }
 }
 
-// Custom matcher for asserting deferred promise results inside of `toEqual()`
-//  - expect.trackedPromise()                  =>  pending promise
-//  - expect.trackedPromise(value)             =>  promise resolved with `value`
-//  - expect.trackedPromise(null, error)       =>  promise rejected with `error`
-//  - expect.trackedPromise(null, null, true)  =>  promise aborted
 expect.extend({
+  // Custom matcher for asserting deferred promise results for static handler
+  //  - expect(val).deferredData(false) => Unresolved promise
+  //  - expect(val).deferredData(false) => Resolved promise
+  //  - expect(val).deferredData(false, 201, { 'x-custom': 'yes' })
+  //      => Unresolved promise with status + headers
+  //  - expect(val).deferredData(true, 201, { 'x-custom': 'yes' })
+  //      => Resolved promise with status + headers
+  deferredData(received, done, status = 200, headers = {}) {
+    let deferredData = received as DeferredData;
+
+    return {
+      message: () =>
+        `expected done=${String(
+          done
+        )}/status=${status}/headers=${JSON.stringify(headers)}, ` +
+        `instead got done=${String(deferredData.done)}/status=${
+          deferredData.init!.status || 200
+        }/headers=${JSON.stringify(
+          Object.fromEntries(new Headers(deferredData.init!.headers).entries())
+        )}`,
+      pass:
+        deferredData.done === done &&
+        (deferredData.init!.status || 200) === status &&
+        JSON.stringify(
+          Object.fromEntries(new Headers(deferredData.init!.headers).entries())
+        ) === JSON.stringify(headers),
+    };
+  },
+  // Custom matcher for asserting deferred promise results inside of `toEqual()`
+  //  - expect.trackedPromise()                  =>  pending promise
+  //  - expect.trackedPromise(value)             =>  promise resolved with `value`
+  //  - expect.trackedPromise(null, error)       =>  promise rejected with `error`
+  //  - expect.trackedPromise(null, null, true)  =>  promise aborted
   trackedPromise(received, data, error, aborted = false) {
     let promise = received as TrackedPromise;
     let isTrackedPromise =
@@ -922,6 +957,7 @@ describe("a router", () => {
         restoreScrollPosition: null,
         revalidation: "idle",
         fetchers: new Map(),
+        blockers: new Map(),
       });
     });
 
@@ -983,6 +1019,7 @@ describe("a router", () => {
         restoreScrollPosition: false,
         revalidation: "idle",
         fetchers: new Map(),
+        blockers: new Map(),
       });
     });
 
@@ -6186,6 +6223,31 @@ describe("a router", () => {
       }
     });
 
+    it("properly handles same-origin absolute URLs", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let A = await t.navigate("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let B = await A.actions.child.redirectReturn(
+        "http://localhost/parent",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+      await B.loaders.parent.resolve("PARENT");
+      expect(t.router.state.location).toMatchObject({
+        hash: "",
+        pathname: "/parent",
+        search: "",
+        state: {
+          _isRedirect: true,
+        },
+      });
+    });
+
     describe("redirect status code handling", () => {
       it("should not treat 300 as a redirect", async () => {
         let t = setup({ routes: REDIRECT_ROUTES });
@@ -6379,166 +6441,423 @@ describe("a router", () => {
       },
     ];
 
-    it("restores scroll on initial load (w/o hydrationData)", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/no-loader"],
+    describe("scroll restoration", () => {
+      it("restores scroll on initial load (w/o hydrationData)", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/no-loader"],
+        });
+
+        expect(t.router.state.restoreScrollPosition).toBe(null);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        // Assume initial location had a saved position
+        let positions = { default: 50 };
+        t.router.enableScrollRestoration(positions, () => 0);
+        expect(t.router.state.restoreScrollPosition).toBe(50);
       });
 
-      expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.preventScrollReset).toBe(false);
+      it("restores scroll on initial load (w/ hydrationData)", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: {
+            loaderData: {
+              index: "INDEX",
+            },
+          },
+        });
 
-      // Assume initial location had a saved position
-      let positions = { default: 50 };
-      t.router.enableScrollRestoration(positions, () => 0);
-      expect(t.router.state.restoreScrollPosition).toBe(50);
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        // Assume initial location had a saved position
+        let positions = { default: 50 };
+        t.router.enableScrollRestoration(positions, () => 0);
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+      });
+
+      it("restores scroll on navigations", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: {
+            loaderData: {
+              index: "INDEX_DATA",
+            },
+          },
+        });
+
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        let positions = {};
+
+        // Simulate scrolling to 100 on /
+        let activeScrollPosition = 100;
+        t.router.enableScrollRestoration(positions, () => activeScrollPosition);
+
+        // No restoration on first click to /tasks
+        let nav1 = await t.navigate("/tasks");
+        await nav1.loaders.tasks.resolve("TASKS");
+        expect(t.router.state.restoreScrollPosition).toBe(null);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        // Simulate scrolling down on /tasks
+        activeScrollPosition = 200;
+
+        // Restore on pop back to /
+        let nav2 = await t.navigate(-1);
+        expect(t.router.state.restoreScrollPosition).toBe(null);
+        await nav2.loaders.index.resolve("INDEX");
+        expect(t.router.state.restoreScrollPosition).toBe(100);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        // Restore on pop forward to /tasks
+        let nav3 = await t.navigate(1);
+        await nav3.loaders.tasks.resolve("TASKS");
+        expect(t.router.state.restoreScrollPosition).toBe(200);
+        expect(t.router.state.preventScrollReset).toBe(false);
+      });
+
+      it("restores scroll using custom key", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: {
+            loaderData: {
+              index: "INDEX_DATA",
+            },
+          },
+        });
+
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        let positions = { "/tasks": 100 };
+        let activeScrollPosition = 0;
+        t.router.enableScrollRestoration(
+          positions,
+          () => activeScrollPosition,
+          (l) => l.pathname
+        );
+
+        let nav1 = await t.navigate("/tasks");
+        await nav1.loaders.tasks.resolve("TASKS");
+        expect(t.router.state.restoreScrollPosition).toBe(100);
+        expect(t.router.state.preventScrollReset).toBe(false);
+      });
+
+      it("restores scroll on GET submissions", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/tasks"],
+          hydrationData: {
+            loaderData: {
+              tasks: "TASKS",
+            },
+          },
+        });
+
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+        expect(t.router.state.preventScrollReset).toBe(false);
+        // We were previously on tasks at 100
+        let positions = { "/tasks": 100 };
+        // But we've scrolled up to 50 to submit.  We'll save this overtop of
+        // the 100 when we start this submission navigation and then restore to
+        // 50 below
+        let activeScrollPosition = 50;
+        t.router.enableScrollRestoration(
+          positions,
+          () => activeScrollPosition,
+          (l) => l.pathname
+        );
+
+        let nav1 = await t.navigate("/tasks", {
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
+        });
+        await nav1.loaders.tasks.resolve("TASKS2");
+        expect(t.router.state.restoreScrollPosition).toBe(50);
+        expect(t.router.state.preventScrollReset).toBe(false);
+      });
+
+      it("restores scroll on POST submissions", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/tasks"],
+          hydrationData: {
+            loaderData: {
+              index: "INDEX_DATA",
+            },
+          },
+        });
+
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+        expect(t.router.state.preventScrollReset).toBe(false);
+        // We were previously on tasks at 100
+        let positions = { "/tasks": 100 };
+        // But we've scrolled up to 50 to submit.  We'll save this overtop of
+        // the 100 when we start this submission navigation and then restore to
+        // 50 below
+        let activeScrollPosition = 50;
+        t.router.enableScrollRestoration(
+          positions,
+          () => activeScrollPosition,
+          (l) => l.pathname
+        );
+
+        let nav1 = await t.navigate("/tasks", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        const nav2 = await nav1.actions.tasks.redirectReturn("/tasks");
+        await nav2.loaders.tasks.resolve("TASKS");
+        expect(t.router.state.restoreScrollPosition).toBe(50);
+        expect(t.router.state.preventScrollReset).toBe(false);
+      });
     });
 
-    it("restores scroll on initial load (w/ hydrationData)", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/"],
-        hydrationData: {
-          loaderData: {
-            index: "INDEX",
-          },
-        },
+    describe("scroll reset", () => {
+      describe("default behavior", () => {
+        it("resets on navigations", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks");
+          await nav1.loaders.tasks.resolve("TASKS");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(false);
+        });
+
+        it("resets on navigations that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks");
+          let nav2 = await nav1.loaders.tasks.redirectReturn("/");
+          await nav2.loaders.index.resolve("INDEX_DATA 2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(false);
+        });
+
+        it("does not reset on submission navigations", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+          });
+          await nav1.actions.tasks.resolve("ACTION");
+          await nav1.loaders.tasks.resolve("TASKS");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
+
+        it("resets on submission navigations that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+          });
+          let nav2 = await nav1.actions.tasks.redirectReturn("/");
+          await nav2.loaders.index.resolve("INDEX_DATA2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(false);
+        });
       });
 
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
+      describe("user-specified flag preventScrollReset flag", () => {
+        it("prevents scroll reset on navigations", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
 
-      // Assume initial location had a saved position
-      let positions = { default: 50 };
-      t.router.enableScrollRestoration(positions, () => 0);
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-    });
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
 
-    it("restores scroll on navigations", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/"],
-        hydrationData: {
-          loaderData: {
-            index: "INDEX_DATA",
-          },
-        },
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", { preventScrollReset: true });
+          await nav1.loaders.tasks.resolve("TASKS");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
+
+        it("prevents scroll reset on navigations that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", { preventScrollReset: true });
+          let nav2 = await nav1.loaders.tasks.redirectReturn("/");
+          await nav2.loaders.index.resolve("INDEX_DATA 2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
+
+        it("prevents scroll reset on submission navigations", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+            preventScrollReset: true,
+          });
+          await nav1.actions.tasks.resolve("ACTION");
+          await nav1.loaders.tasks.resolve("TASKS");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
+
+        it("prevents scroll reset on submission navigations that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+            preventScrollReset: true,
+          });
+          let nav2 = await nav1.actions.tasks.redirectReturn("/");
+          await nav2.loaders.index.resolve("INDEX_DATA2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
       });
-
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      let positions = {};
-
-      // Simulate scrolling to 100 on /
-      let activeScrollPosition = 100;
-      t.router.enableScrollRestoration(positions, () => activeScrollPosition);
-
-      // No restoration on first click to /tasks
-      let nav1 = await t.navigate("/tasks");
-      await nav1.loaders.tasks.resolve("TASKS");
-      expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      // Simulate scrolling down on /tasks
-      activeScrollPosition = 200;
-
-      // Restore on pop back to /
-      let nav2 = await t.navigate(-1);
-      expect(t.router.state.restoreScrollPosition).toBe(null);
-      await nav2.loaders.index.resolve("INDEX");
-      expect(t.router.state.restoreScrollPosition).toBe(100);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      // Restore on pop forward to /tasks
-      let nav3 = await t.navigate(1);
-      await nav3.loaders.tasks.resolve("TASKS");
-      expect(t.router.state.restoreScrollPosition).toBe(200);
-      expect(t.router.state.preventScrollReset).toBe(false);
-    });
-
-    it("restores scroll using custom key", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/"],
-        hydrationData: {
-          loaderData: {
-            index: "INDEX_DATA",
-          },
-        },
-      });
-
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      let positions = { "/tasks": 100 };
-      let activeScrollPosition = 0;
-      t.router.enableScrollRestoration(
-        positions,
-        () => activeScrollPosition,
-        (l) => l.pathname
-      );
-
-      let nav1 = await t.navigate("/tasks");
-      await nav1.loaders.tasks.resolve("TASKS");
-      expect(t.router.state.restoreScrollPosition).toBe(100);
-      expect(t.router.state.preventScrollReset).toBe(false);
-    });
-
-    it("does not restore scroll on submissions", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/"],
-        hydrationData: {
-          loaderData: {
-            index: "INDEX_DATA",
-          },
-        },
-      });
-
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      let positions = { "/tasks": 100 };
-      let activeScrollPosition = 0;
-      t.router.enableScrollRestoration(
-        positions,
-        () => activeScrollPosition,
-        (l) => l.pathname
-      );
-
-      let nav1 = await t.navigate("/tasks", {
-        formMethod: "post",
-        formData: createFormData({}),
-      });
-      await nav1.actions.tasks.resolve("ACTION");
-      await nav1.loaders.tasks.resolve("TASKS");
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
-    });
-
-    it("does not reset scroll", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/"],
-        hydrationData: {
-          loaderData: {
-            index: "INDEX_DATA",
-          },
-        },
-      });
-
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      let positions = {};
-      let activeScrollPosition = 0;
-      t.router.enableScrollRestoration(positions, () => activeScrollPosition);
-
-      let nav1 = await t.navigate("/tasks", { preventScrollReset: true });
-      await nav1.loaders.tasks.resolve("TASKS");
-      expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.preventScrollReset).toBe(true);
     });
   });
 
@@ -10948,14 +11267,32 @@ describe("a router", () => {
           {
             id: "deferred",
             path: "deferred",
-            loader: () =>
-              defer({
+            loader: ({ request }) => {
+              if (new URL(request.url).searchParams.has("reject")) {
+                return defer({
+                  critical: "loader",
+                  lazy: new Promise((_, r) =>
+                    setTimeout(() => r(new Error("broken!")), 10)
+                  ),
+                });
+              }
+              if (new URL(request.url).searchParams.has("status")) {
+                return defer(
+                  {
+                    critical: "loader",
+                    lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
+                  },
+                  { status: 201, headers: { "X-Custom": "yes" } }
+                );
+              }
+              return defer({
                 critical: "loader",
                 lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
-              }),
+              });
+            },
             action: () =>
               defer({
-                critical: "action",
+                critical: "critical",
                 lazy: new Promise((r) => setTimeout(() => r("lazy"), 10)),
               }),
           },
@@ -10979,6 +11316,20 @@ describe("a router", () => {
         path: "/redirect",
         loader: () => redirect("/"),
       },
+    ];
+
+    // Regardless of if the URL is internal or external - all absolute URL
+    // responses should return untouched during SSR so the browser can handle
+    // them
+    let ABSOLUTE_URLS = [
+      "http://localhost/",
+      "https://localhost/about",
+      "http://remix.run/blog",
+      "https://remix.run/blog",
+      "//remix.run/blog",
+      "app://whatever",
+      "mailto:hello@remix.run",
+      "web+remix:whatever",
     ];
 
     function createRequest(path: string, opts?: RequestInit) {
@@ -11112,8 +11463,7 @@ describe("a router", () => {
         });
       });
 
-      // Note: this is only until we wire up the remix streaming
-      it("should abort deferred data on load navigations (for now)", async () => {
+      it("should support document load navigations returning deferred", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let context = await query(createRequest("/parent/deferred"));
         expect(context).toMatchObject({
@@ -11122,8 +11472,11 @@ describe("a router", () => {
             parent: "PARENT LOADER",
             deferred: {
               critical: "loader",
-              lazy: expect.trackedPromise(null, null, true),
+              lazy: expect.trackedPromise(),
             },
+          },
+          activeDeferreds: {
+            deferred: expect.deferredData(false),
           },
           errors: null,
           location: { pathname: "/parent/deferred" },
@@ -11131,10 +11484,17 @@ describe("a router", () => {
         });
 
         await new Promise((r) => setTimeout(r, 10));
-        expect(
-          (context as StaticHandlerContext).loaderData.deferred.lazy instanceof
-            Promise
-        ).toBe(true);
+
+        expect(context).toMatchObject({
+          loaderData: {
+            deferred: {
+              lazy: expect.trackedPromise("lazy"),
+            },
+          },
+          activeDeferreds: {
+            deferred: expect.deferredData(true),
+          },
+        });
       });
 
       it("should support document submit navigations", async () => {
@@ -11295,15 +11655,8 @@ describe("a router", () => {
         expect((response as Response).headers.get("Location")).toBe("/parent");
       });
 
-      it("should handle external redirect Responses", async () => {
-        let urls = [
-          "http://remix.run/blog",
-          "https://remix.run/blog",
-          "//remix.run/blog",
-          "app://whatever",
-        ];
-
-        for (let url of urls) {
+      it("should handle absolute redirect Responses", async () => {
+        for (let url of ABSOLUTE_URLS) {
           let handler = createStaticHandler([
             {
               path: "/",
@@ -11683,6 +12036,127 @@ describe("a router", () => {
         expect(arg(actionStub).context.sessionId).toBe("12345");
         expect(arg(rootStub).context.sessionId).toBe("12345");
         expect(arg(childStub).context.sessionId).toBe("12345");
+      });
+
+      describe("deferred", () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+
+        it("should return DeferredData on symbol", async () => {
+          let context = (await query(
+            createRequest("/parent/deferred")
+          )) as StaticHandlerContext;
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(false),
+            },
+          });
+          await new Promise((r) => setTimeout(r, 10));
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise("lazy"),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(true),
+            },
+          });
+        });
+
+        it("should return rejected DeferredData on symbol", async () => {
+          let context = (await query(
+            createRequest("/parent/deferred?reject")
+          )) as StaticHandlerContext;
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(false),
+            },
+          });
+          await new Promise((r) => setTimeout(r, 10));
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(undefined, new Error("broken!")),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(true),
+            },
+          });
+        });
+
+        it("should return DeferredData on symbol with status + headers", async () => {
+          let context = (await query(
+            createRequest("/parent/deferred?status")
+          )) as StaticHandlerContext;
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(false, 201, {
+                "x-custom": "yes",
+              }),
+            },
+          });
+          await new Promise((r) => setTimeout(r, 10));
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise("lazy"),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(true, 201, {
+                "x-custom": "yes",
+              }),
+            },
+          });
+        });
+
+        it("does not support deferred on submissions", async () => {
+          let context = (await query(
+            createSubmitRequest("/parent/deferred")
+          )) as StaticHandlerContext;
+          expect(context.actionData).toEqual(null);
+          expect(context.loaderData).toEqual({
+            parent: null,
+            deferred: null,
+          });
+          expect(context.activeDeferreds).toEqual(null);
+          expect(context.errors).toEqual({
+            parent: new ErrorResponse(
+              400,
+              "Bad Request",
+              new Error("defer() is not supported in actions"),
+              true
+            ),
+          });
+        });
       });
 
       describe("statusCode", () => {
@@ -12070,6 +12544,14 @@ describe("a router", () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data = await queryRoute(
           createRequest("/parent", { method: "HEAD" })
+        );
+        expect(data).toBe("PARENT LOADER");
+      });
+
+      it("should support OPTIONS requests", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let data = await queryRoute(
+          createRequest("/parent", { method: "OPTIONS" })
         );
         expect(data).toBe("PARENT LOADER");
       });
@@ -12510,15 +12992,8 @@ describe("a router", () => {
         expect((response as Response).headers.get("Location")).toBe("/parent");
       });
 
-      it("should handle external redirect Responses", async () => {
-        let urls = [
-          "http://remix.run/blog",
-          "https://remix.run/blog",
-          "//remix.run/blog",
-          "app://whatever",
-        ];
-
-        for (let url of urls) {
+      it("should handle absolute redirect Responses", async () => {
+        for (let url of ABSOLUTE_URLS) {
           let handler = createStaticHandler([
             {
               id: "root",
@@ -12661,6 +13136,80 @@ describe("a router", () => {
         expect(arg(actionStub).context.sessionId).toBe("12345");
       });
 
+      describe("deferred", () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+
+        it("should return DeferredData on symbol", async () => {
+          let result = await queryRoute(createRequest("/parent/deferred"));
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(false);
+          await new Promise((r) => setTimeout(r, 10));
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise("lazy"),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true);
+        });
+
+        it("should return rejected DeferredData on symbol", async () => {
+          let result = await queryRoute(
+            createRequest("/parent/deferred?reject")
+          );
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(false);
+          await new Promise((r) => setTimeout(r, 10));
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(null, new Error("broken!")),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true);
+        });
+
+        it("should return DeferredData on symbol with status + headers", async () => {
+          let result = await queryRoute(
+            createRequest("/parent/deferred?status")
+          );
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(false, 201, {
+            "x-custom": "yes",
+          });
+          await new Promise((r) => setTimeout(r, 10));
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise("lazy"),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true, 201, {
+            "x-custom": "yes",
+          });
+        });
+
+        it("does not support deferred on submissions", async () => {
+          try {
+            await queryRoute(createSubmitRequest("/parent/deferred"));
+            expect(false).toBe(true);
+          } catch (e) {
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(e).toEqual(
+              new ErrorResponse(
+                400,
+                "Bad Request",
+                new Error("defer() is not supported in actions"),
+                true
+              )
+            );
+          }
+        });
+      });
+
       describe("Errors with Status Codes", () => {
         /* eslint-disable jest/no-conditional-expect */
         let { queryRoute } = createStaticHandler([
@@ -12758,7 +13307,7 @@ describe("a router", () => {
 
         it("should handle unsupported methods with a 405 Response", async () => {
           try {
-            await queryRoute(createRequest("/", { method: "OPTIONS" }), {
+            await queryRoute(createRequest("/", { method: "TRACE" }), {
               routeId: "root",
             });
             expect(false).toBe(true);
@@ -12766,7 +13315,7 @@ describe("a router", () => {
             expect(isRouteErrorResponse(data)).toBe(true);
             expect(data.status).toBe(405);
             expect(data.error).toEqual(
-              new Error('Invalid request method "OPTIONS"')
+              new Error('Invalid request method "TRACE"')
             );
             expect(data.internal).toBe(true);
           }

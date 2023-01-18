@@ -25,6 +25,7 @@ describe("generatePath", () => {
       expect(generatePath("*", { "*": "routing/grades" })).toBe(
         "routing/grades"
       );
+      expect(generatePath("/*", {})).toBe("/");
     });
   });
 
@@ -46,6 +47,60 @@ describe("generatePath", () => {
   describe("with a missing splat", () => {
     it("omits the splat and trims the trailing slash", () => {
       expect(generatePath("/courses/*", {})).toBe("/courses");
+    });
+  });
+
+  describe("with optional params", () => {
+    it("adds optional dynamic params where appropriate", () => {
+      let path = "/:one?/:two?/:three?";
+      expect(generatePath(path, { one: "uno" })).toBe("/uno");
+      expect(generatePath(path, { one: "uno", two: "dos" })).toBe("/uno/dos");
+      expect(
+        generatePath(path, {
+          one: "uno",
+          two: "dos",
+          three: "tres",
+        })
+      ).toBe("/uno/dos/tres");
+      expect(generatePath(path, { one: "uno", three: "tres" })).toBe(
+        "/uno/tres"
+      );
+      expect(generatePath(path, { two: "dos" })).toBe("/dos");
+      expect(generatePath(path, { two: "dos", three: "tres" })).toBe(
+        "/dos/tres"
+      );
+    });
+
+    it("strips optional aspects of static segments", () => {
+      expect(generatePath("/one?/two?/:three?", {})).toBe("/one/two");
+      expect(generatePath("/one?/two?/:three?", { three: "tres" })).toBe(
+        "/one/two/tres"
+      );
+    });
+
+    it("handles intermixed segments", () => {
+      let path = "/one?/:two?/three/:four/*";
+      expect(generatePath(path, { four: "cuatro" })).toBe("/one/three/cuatro");
+      expect(
+        generatePath(path, {
+          two: "dos",
+          four: "cuatro",
+        })
+      ).toBe("/one/dos/three/cuatro");
+      expect(
+        generatePath(path, {
+          two: "dos",
+          four: "cuatro",
+          "*": "splat",
+        })
+      ).toBe("/one/dos/three/cuatro/splat");
+      expect(
+        generatePath(path, {
+          two: "dos",
+          four: "cuatro",
+          "*": "splat/and/then/some",
+        })
+      ).toBe("/one/dos/three/cuatro/splat/and/then/some");
     });
   });
 

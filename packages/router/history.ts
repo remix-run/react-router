@@ -81,6 +81,11 @@ export interface Update {
    * The new location.
    */
   location: Location;
+
+  /**
+   * The delta between this location and the former location in the history stack
+   */
+  delta: number;
 }
 
 /**
@@ -124,6 +129,13 @@ export interface History {
    * @param to - The destination URL
    */
   createHref(to: To): string;
+
+  /**
+   * Returns a URL for the given `to` value
+   *
+   * @param to - The destination URL
+   */
+  createURL(to: To): URL;
 
   /**
    * Encode a location the same way window.history would do (no-op for memory
@@ -174,6 +186,7 @@ export interface History {
 type HistoryState = {
   usr: any;
   key?: string;
+  idx: number;
 };
 
 const PopStateEventType = "popstate";
@@ -255,6 +268,10 @@ export function createMemoryHistory(
     return location;
   }
 
+  function createHref(to: To) {
+    return typeof to === "string" ? to : createPath(to);
+  }
+
   let history: MemoryHistory = {
     get index() {
       return index;
@@ -265,8 +282,9 @@ export function createMemoryHistory(
     get location() {
       return getCurrentLocation();
     },
-    createHref(to) {
-      return typeof to === "string" ? to : createPath(to);
+    createHref,
+    createURL(to) {
+      return new URL(createHref(to), "http://localhost");
     },
     encodeLocation(to: To) {
       let path = typeof to === "string" ? parsePath(to) : to;
@@ -282,7 +300,7 @@ export function createMemoryHistory(
       index += 1;
       entries.splice(index, entries.length, nextLocation);
       if (v5Compat && listener) {
-        listener({ action, location: nextLocation });
+        listener({ action, location: nextLocation, delta: 1 });
       }
     },
     replace(to, state) {
@@ -290,14 +308,16 @@ export function createMemoryHistory(
       let nextLocation = createMemoryLocation(to, state);
       entries[index] = nextLocation;
       if (v5Compat && listener) {
-        listener({ action, location: nextLocation });
+        listener({ action, location: nextLocation, delta: 0 });
       }
     },
     go(delta) {
       action = Action.Pop;
-      index = clampIndex(index + delta);
+      let nextIndex = clampIndex(index + delta);
+      let nextLocation = entries[nextIndex];
+      index = nextIndex;
       if (listener) {
-        listener({ action, location: getCurrentLocation() });
+        listener({ action, location: nextLocation, delta });
       }
     },
     listen(fn: Listener) {
@@ -485,10 +505,11 @@ function createKey() {
 /**
  * For browser-based histories, we combine the state and key into an object
  */
-function getHistoryState(location: Location): HistoryState {
+function getHistoryState(location: Location, index: number): HistoryState {
   return {
     usr: location.state,
     key: location.key,
+    idx: index,
   };
 }
 
@@ -558,24 +579,6 @@ export function parsePath(path: string): Partial<Path> {
   return parsedPath;
 }
 
-export function createClientSideURL(location: Location | string): URL {
-  // window.location.origin is "null" (the literal string value) in Firefox
-  // under certain conditions, notably when serving from a local HTML file
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
-  let base =
-    typeof window !== "undefined" &&
-    typeof window.location !== "undefined" &&
-    window.location.origin !== "null"
-      ? window.location.origin
-      : window.location.href;
-  let href = typeof location === "string" ? location : createPath(location);
-  invariant(
-    base,
-    `No window.location.(origin|href) available to create URL for href: ${href}`
-  );
-  return new URL(href, base);
-}
-
 export interface UrlHistory extends History {}
 
 export type UrlHistoryOptions = {
@@ -594,10 +597,43 @@ function getUrlBasedHistory(
   let action = Action.Pop;
   let listener: Listener | null = null;
 
+  let index = getIndex()!;
+  // Index should only be null when we initialize. If not, it's because the
+  // user called history.pushState or history.replaceState directly, in which
+  // case we should log a warning as it will result in bugs.
+  if (index == null) {
+    index = 0;
+    globalHistory.replaceState({ ...globalHistory.state, idx: index }, "");
+  }
+
+  function getIndex(): number {
+    let state = globalHistory.state || { idx: null };
+    return state.idx;
+  }
+
   function handlePop() {
-    action = Action.Pop;
-    if (listener) {
-      listener({ action, location: history.location });
+    let nextAction = Action.Pop;
+    let nextIndex = getIndex();
+
+    if (nextIndex != null) {
+      let delta = nextIndex - index;
+      action = nextAction;
+      index = nextIndex;
+      if (listener) {
+        listener({ action, location: history.location, delta });
+      }
+    } else {
+      warning(
+        false,
+        // TODO: Write up a doc that explains our blocking strategy in detail
+        // and link to it here so people can understand better what is going on
+        // and how to avoid it.
+        `You are trying to block a POP navigation to a location that was not ` +
+          `created by @remix-run/router. The block will fail silently in ` +
+          `production, but in general you should do all navigation with the ` +
+          `router (instead of using window.history.pushState directly) ` +
+          `to avoid this situation.`
+      );
     }
   }
 
@@ -606,7 +642,8 @@ function getUrlBasedHistory(
     let location = createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
-    let historyState = getHistoryState(location);
+    index = getIndex() + 1;
+    let historyState = getHistoryState(location, index);
     let url = history.createHref(location);
 
     // try...catch because iOS limits us to 100 pushState calls :/
@@ -619,7 +656,7 @@ function getUrlBasedHistory(
     }
 
     if (v5Compat && listener) {
-      listener({ action, location: history.location });
+      listener({ action, location: history.location, delta: 1 });
     }
   }
 
@@ -628,13 +665,31 @@ function getUrlBasedHistory(
     let location = createLocation(history.location, to, state);
     if (validateLocation) validateLocation(location, to);
 
-    let historyState = getHistoryState(location);
+    index = getIndex();
+    let historyState = getHistoryState(location, index);
     let url = history.createHref(location);
     globalHistory.replaceState(historyState, "", url);
 
     if (v5Compat && listener) {
-      listener({ action, location: history.location });
+      listener({ action, location: history.location, delta: 0 });
     }
+  }
+
+  function createURL(to: To): URL {
+    // window.location.origin is "null" (the literal string value) in Firefox
+    // under certain conditions, notably when serving from a local HTML file
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=878297
+    let base =
+      window.location.origin !== "null"
+        ? window.location.origin
+        : window.location.href;
+
+    let href = typeof to === "string" ? to : createPath(to);
+    invariant(
+      base,
+      `No window.location.(origin|href) available to create URL for href: ${href}`
+    );
+    return new URL(href, base);
   }
 
   let history: History = {
@@ -659,11 +714,10 @@ function getUrlBasedHistory(
     createHref(to) {
       return createHref(window, to);
     },
+    createURL,
     encodeLocation(to) {
       // Encode a Location the same way window.location would
-      let url = createClientSideURL(
-        typeof to === "string" ? to : createPath(to)
-      );
+      let url = createURL(to);
       return {
         pathname: url.pathname,
         search: url.search,

@@ -25,6 +25,7 @@
     "release": "changeset publish",
     "size": "filesize",
     "test": "jest",
+    "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
     "changeset": "changeset",
     "version": "changeset version",
     "postversion": "node scripts/postversion.mjs",
@@ -68,6 +69,7 @@
     "@types/semver": "^7.3.8",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
+    "abort-controller": "^3.0.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^26.6.3",
     "babel-plugin-dev-expression": "^0.2.2",
@@ -107,19 +109,19 @@
   },
   "filesize": {
     "packages/router/dist/router.umd.min.js": {
-      "none": "38 kB"
+      "none": "41 kB"
     },
     "packages/react-router/dist/react-router.production.min.js": {
-      "none": "12.5 kB"
+      "none": "13 kB"
     },
     "packages/react-router/dist/umd/react-router.production.min.js": {
       "none": "15 kB"
     },
     "packages/react-router-dom/dist/react-router-dom.production.min.js": {
-      "none": "11 kB"
+      "none": "11.5 kB"
     },
     "packages/react-router-dom/dist/umd/react-router-dom.production.min.js": {
-      "none": "16.5 kB"
+      "none": "17 kB"
     }
   }
 }

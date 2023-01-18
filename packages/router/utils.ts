@@ -31,6 +31,8 @@ export interface SuccessResult {
 export interface DeferredResult {
   type: ResultType.deferred;
   deferredData: DeferredData;
+  statusCode?: number;
+  headers?: Headers;
 }
 
 /**
@@ -198,7 +200,9 @@ type _PathParam<Path extends string> =
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
     Path extends `:${infer Param}`
-    ? Param
+    ? Param extends `${infer Optional}?`
+      ? Optional
+      : Param
     : // otherwise, there aren't any params present
       never;
 
@@ -614,7 +618,7 @@ function matchRouteBranch<
 export function generatePath<Path extends string>(
   originalPath: Path,
   params: {
-    [key in PathParam<Path>]: string;
+    [key in PathParam<Path>]: string | null;
   } = {} as any
 ): string {
   let path = originalPath;
@@ -629,27 +633,49 @@ export function generatePath<Path extends string>(
     path = path.replace(/\*$/, "/*") as Path;
   }
 
-  return path
-    .replace(/^:(\w+)/g, (_, key: PathParam<Path>) => {
-      invariant(params[key] != null, `Missing ":${key}" param`);
-      return params[key]!;
-    })
-    .replace(/\/:(\w+)/g, (_, key: PathParam<Path>) => {
-      invariant(params[key] != null, `Missing ":${key}" param`);
-      return `/${params[key]!}`;
-    })
-    .replace(/(\/?)\*/, (_, prefix, __, str) => {
-      const star = "*" as PathParam<Path>;
+  return (
+    path
+      .replace(
+        /^:(\w+)(\??)/g,
+        (_, key: PathParam<Path>, optional: string | undefined) => {
+          let param = params[key];
+          if (optional === "?") {
+            return param == null ? "" : param;
+          }
+          if (param == null) {
+            invariant(false, `Missing ":${key}" param`);
+          }
+          return param;
+        }
+      )
+      .replace(
+        /\/:(\w+)(\??)/g,
+        (_, key: PathParam<Path>, optional: string | undefined) => {
+          let param = params[key];
+          if (optional === "?") {
+            return param == null ? "" : `/${param}`;
+          }
+          if (param == null) {
+            invariant(false, `Missing ":${key}" param`);
+          }
+          return `/${param}`;
+        }
+      )
+      // Remove any optional markers from optional static segments
+      .replace(/\?/g, "")
+      .replace(/(\/?)\*/, (_, prefix, __, str) => {
+        const star = "*" as PathParam<Path>;
 
-      if (params[star] == null) {
-        // If no splat was provided, trim the trailing slash _unless_ it's
-        // the entire path
-        return str === "/*" ? "/" : "";
-      }
+        if (params[star] == null) {
+          // If no splat was provided, trim the trailing slash _unless_ it's
+          // the entire path
+          return str === "/*" ? "/" : "";
+        }
 
-      // Apply the splat
-      return `${prefix}${params[star]}`;
-    });
+        // Apply the splat
+        return `${prefix}${params[star]}`;
+      })
+  );
 }
 
 /**
@@ -874,7 +900,7 @@ export function warning(cond: any, message: string): void {
     if (typeof console !== "undefined") console.warn(message);
 
     try {
-      // Welcome to debugging React Router!
+      // Welcome to debugging @remix-run/router!
       //
       // This error is thrown as a convenience so you can more easily
       // find the source for a warning that appears in the console by
@@ -1131,14 +1157,17 @@ export interface TrackedPromise extends Promise<any> {
 export class AbortedDeferredError extends Error {}
 
 export class DeferredData {
-  private pendingKeys: Set<string | number> = new Set<string | number>();
+  private pendingKeysSet: Set<string> = new Set<string>();
   private controller: AbortController;
   private abortPromise: Promise<void>;
   private unlistenAbortSignal: () => void;
-  private subscriber?: (aborted: boolean) => void = undefined;
+  private subscribers: Set<(aborted: boolean, settledKey?: string) => void> =
+    new Set();
   data: Record<string, unknown>;
+  init?: ResponseInit;
+  deferredKeys: string[] = [];
 
-  constructor(data: Record<string, unknown>) {
+  constructor(data: Record<string, unknown>, responseInit?: ResponseInit) {
     invariant(
       data && typeof data === "object" && !Array.isArray(data),
       "defer() only accepts plain objects"
@@ -1162,17 +1191,20 @@ export class DeferredData {
         }),
       {}
     );
+
+    this.init = responseInit;
   }
 
   private trackPromise(
-    key: string | number,
+    key: string,
     value: Promise<unknown> | unknown
   ): TrackedPromise | unknown {
     if (!(value instanceof Promise)) {
       return value;
     }
 
-    this.pendingKeys.add(key);
+    this.deferredKeys.push(key);
+    this.pendingKeysSet.add(key);
 
     // We store a little wrapper promise that will be extended with
     // _data/_error props upon resolve/reject
@@ -1191,7 +1223,7 @@ export class DeferredData {
 
   private onSettle(
     promise: TrackedPromise,
-    key: string | number,
+    key: string,
     error: unknown,
     data?: unknown
   ): unknown {
@@ -1204,34 +1236,37 @@ export class DeferredData {
       return Promise.reject(error);
     }
 
-    this.pendingKeys.delete(key);
+    this.pendingKeysSet.delete(key);
 
     if (this.done) {
       // Nothing left to abort!
       this.unlistenAbortSignal();
     }
 
-    const subscriber = this.subscriber;
     if (error) {
       Object.defineProperty(promise, "_error", { get: () => error });
-      subscriber && subscriber(false);
+      this.emit(false, key);
       return Promise.reject(error);
     }
 
     Object.defineProperty(promise, "_data", { get: () => data });
-    subscriber && subscriber(false);
+    this.emit(false, key);
     return data;
   }
 
-  subscribe(fn: (aborted: boolean) => void) {
-    this.subscriber = fn;
+  private emit(aborted: boolean, settledKey?: string) {
+    this.subscribers.forEach((subscriber) => subscriber(aborted, settledKey));
+  }
+
+  subscribe(fn: (aborted: boolean, settledKey?: string) => void) {
+    this.subscribers.add(fn);
+    return () => this.subscribers.delete(fn);
   }
 
   cancel() {
     this.controller.abort();
-    this.pendingKeys.forEach((v, k) => this.pendingKeys.delete(k));
-    let subscriber = this.subscriber;
-    subscriber && subscriber(true);
+    this.pendingKeysSet.forEach((v, k) => this.pendingKeysSet.delete(k));
+    this.emit(true);
   }
 
   async resolveData(signal: AbortSignal) {
@@ -1252,7 +1287,7 @@ export class DeferredData {
   }
 
   get done() {
-    return this.pendingKeys.size === 0;
+    return this.pendingKeysSet.size === 0;
   }
 
   get unwrappedData() {
@@ -1268,6 +1303,10 @@ export class DeferredData {
         }),
       {}
     );
+  }
+
+  get pendingKeys() {
+    return Array.from(this.pendingKeysSet);
   }
 }
 
@@ -1288,9 +1327,16 @@ function unwrapTrackedPromise(value: any) {
   return value._data;
 }
 
-export function defer(data: Record<string, unknown>) {
-  return new DeferredData(data);
-}
+export type DeferFunction = (
+  data: Record<string, unknown>,
+  init?: number | ResponseInit
+) => DeferredData;
+
+export const defer: DeferFunction = (data, init = {}) => {
+  let responseInit = typeof init === "number" ? { status: init } : init;
+
+  return new DeferredData(data, responseInit);
+};
 
 export type RedirectFunction = (
   url: string,
