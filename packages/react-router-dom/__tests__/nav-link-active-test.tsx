@@ -1,7 +1,3 @@
-/**
- * @jest-environment ./__tests__/custom-environment.js
- */
-
 import { render, fireEvent, waitFor, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { JSDOM } from "jsdom";

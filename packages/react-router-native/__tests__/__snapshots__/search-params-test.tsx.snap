@@ -13,10 +13,7 @@ exports[`useSearchParams reads and writes the search string (functional update) 
   </Text>
   <View>
     <TextInput
-      allowFontScaling={true}
       onChangeText={[Function]}
-      rejectResponderTermination={true}
-      underlineColorAndroid="transparent"
       value="Michael Jackson"
     />
   </View>
@@ -37,10 +34,7 @@ exports[`useSearchParams reads and writes the search string (functional update) 
   </Text>
   <View>
     <TextInput
-      allowFontScaling={true}
       onChangeText={[Function]}
-      rejectResponderTermination={true}
-      underlineColorAndroid="transparent"
       value="Michael Jackson"
     />
   </View>
@@ -56,10 +50,7 @@ exports[`useSearchParams reads and writes the search string 1`] = `
   </Text>
   <View>
     <TextInput
-      allowFontScaling={true}
       onChangeText={[Function]}
-      rejectResponderTermination={true}
-      underlineColorAndroid="transparent"
       value="Michael Jackson"
     />
   </View>
@@ -75,10 +66,7 @@ exports[`useSearchParams reads and writes the search string 2`] = `
   </Text>
   <View>
     <TextInput
-      allowFontScaling={true}
       onChangeText={[Function]}
-      rejectResponderTermination={true}
-      underlineColorAndroid="transparent"
       value="Ryan Florence"
     />
   </View>

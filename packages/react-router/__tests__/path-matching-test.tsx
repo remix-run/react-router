@@ -283,12 +283,12 @@ describe("path matching with splats", () => {
   test("does not support partial path matching with named parameters", () => {
     let routes = [{ path: "/prefix:id" }];
     expect(matchRoutes(routes, "/prefix:id")).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "params": Object {},
+      [
+        {
+          "params": {},
           "pathname": "/prefix:id",
           "pathnameBase": "/prefix:id",
-          "route": Object {
+          "route": {
             "path": "/prefix:id",
           },
         },
@@ -302,14 +302,14 @@ describe("path matching with splats", () => {
     let consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
     let routes = [{ path: "/prefix*" }];
     expect(matchRoutes(routes, "/prefix/abc")).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "params": Object {
+      [
+        {
+          "params": {
             "*": "abc",
           },
           "pathname": "/prefix/abc",
           "pathnameBase": "/prefix",
-          "route": Object {
+          "route": {
             "path": "/prefix*",
           },
         },
@@ -319,12 +319,12 @@ describe("path matching with splats", () => {
 
     // Should warn on each invocation of matchRoutes
     expect(consoleWarn.mock.calls).toMatchInlineSnapshot(`
-      Array [
-        Array [
-          "Route path \\"/prefix*\\" will be treated as if it were \\"/prefix/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"/prefix/*\\".",
+      [
+        [
+          "Route path "/prefix*" will be treated as if it were "/prefix/*" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to "/prefix/*".",
         ],
-        Array [
-          "Route path \\"/prefix*\\" will be treated as if it were \\"/prefix/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"/prefix/*\\".",
+        [
+          "Route path "/prefix*" will be treated as if it were "/prefix/*" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to "/prefix/*".",
         ],
       ]
     `);
