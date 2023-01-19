@@ -1,7 +1,3 @@
-/**
- * @jest-environment ./__tests__/custom-environment.js
- */
-
 import { JSDOM } from "jsdom";
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";

@@ -1,4 +1,9 @@
+import {
+  TextEncoder as NodeTextEncoder,
+  TextDecoder as NodeTextDecoder,
+} from "util";
 import { fetch, Request, Response } from "@remix-run/web-fetch";
+import { AbortController as NodeAbortController } from "abort-controller";
 
 import "./polyfills/SubmitEvent.submitter";
 
@@ -19,6 +24,13 @@ if (!globalThis.fetch) {
   globalThis.Response = Response;
 }
 
-import { TextEncoder, TextDecoder } from "util";
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
+if (!globalThis.AbortController) {
+  // @ts-expect-error
+  globalThis.AbortController = NodeAbortController;
+}
+
+if (!globalThis.TextEncoder || !globalThis.TextDecoder) {
+  globalThis.TextEncoder = NodeTextEncoder;
+  // @ts-expect-error
+  globalThis.TextDecoder = NodeTextDecoder;
+}

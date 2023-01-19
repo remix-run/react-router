@@ -1,7 +1,3 @@
-/**
- * @jest-environment ./__tests__/custom-environment.js
- */
-
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import type { StaticHandlerContext } from "@remix-run/router";
