@@ -158,7 +158,15 @@ The `blocker` received by the user would be either `unblocked`, `blocked`, or `p
 
 Other navigations and/or interruptions to proceeding navigations would reset the blocker back to an unblocked state.
 
-We will not provide a `usePrompt` implementation, however it would be somewhat trivial to implement that on top of `useBlocker` in userland.
+~We will not provide a `usePrompt` implementation, however it would be somewhat trivial to implement that on top of `useBlocker` in userland.~
+
+We decided in the end to include a `usePrompt` even though it's got more broken edge cases than `useBlocker`:
+
+- It's only a handful of lines of code
+- It's more similar to what we had in v5
+- We don't know for sure how many folks were using this in v5, since the github commenters are not a complete sample
+- It has a lower barrier to implement than a custom modal UI
+- We plan to document that it breaks in more cases, in weird ways, and even differently across browsers.
 
 ### Blocker State Diagram
 
