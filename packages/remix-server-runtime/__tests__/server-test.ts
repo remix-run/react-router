@@ -12,7 +12,7 @@ function spyConsole() {
   let spy: any = {};
 
   beforeAll(() => {
-    spy.console = jest.spyOn(console, "error").mockImplementation(() => { });
+    spy.console = jest.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterAll(() => {
@@ -123,8 +123,7 @@ describe("shared server runtime", () => {
           loader: resourceLoader,
           path: "resource",
         },
-        future: {
-        },
+        future: {},
       });
       let handler = createRequestHandler(build, ServerMode.Test);
 
@@ -1618,7 +1617,7 @@ describe("shared server runtime", () => {
       });
       let calledBefore = false;
       let ogHandleDocumentRequest = build.entry.module.default;
-      build.entry.module.default = jest.fn(function() {
+      build.entry.module.default = jest.fn(function () {
         if (!calledBefore) {
           throw new Error("thrown");
         }
@@ -1662,7 +1661,7 @@ describe("shared server runtime", () => {
         },
       });
       let lastThrownError;
-      build.entry.module.default = jest.fn(function() {
+      build.entry.module.default = jest.fn(function () {
         lastThrownError = new Error("rofl");
         throw lastThrownError;
       }) as any;
@@ -1704,7 +1703,7 @@ describe("shared server runtime", () => {
       let errorMessage =
         "thrown from handleDocumentRequest and expected to be logged in console only once";
       let lastThrownError;
-      build.entry.module.default = jest.fn(function() {
+      build.entry.module.default = jest.fn(function () {
         lastThrownError = new Error(errorMessage);
         throw lastThrownError;
       }) as any;
