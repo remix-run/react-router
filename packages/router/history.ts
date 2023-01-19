@@ -625,14 +625,10 @@ function getUrlBasedHistory(
     } else {
       warning(
         false,
-        // TODO: Write up a doc that explains our blocking strategy in detail
-        // and link to it here so people can understand better what is going on
-        // and how to avoid it.
-        `You are trying to block a POP navigation to a location that was not ` +
-          `created by @remix-run/router. The block will fail silently in ` +
-          `production, but in general you should do all navigation with the ` +
-          `router (instead of using window.history.pushState directly) ` +
-          `to avoid this situation.`
+        `You are trying to perform a POP navigation to a location that was not ` +
+          `created by @remix-run/router. This will fail silently in production.  ` +
+          `You should navigate via the router to avoid this situation (instead of ` +
+          `using window.history.pushState/window.location.hash).`
       );
     }
   }
