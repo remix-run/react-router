@@ -1143,8 +1143,8 @@ function useScrollRestoration({
     };
   }, []);
 
-  // Save positions on pagehide
-  usePagehide(
+  // Save positions on unload
+  useBeforeUnload(
     React.useCallback(() => {
       if (navigation.state === "idle") {
         let key = (getKey ? getKey(location, matches) : null) || location.key;
