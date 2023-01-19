@@ -2,4 +2,4 @@
 "react-router-dom": patch
 ---
 
-Modified to use pagehide instead of beforeunload to work in the environment of safari on ios
+Use `pagehide` instead of `beforeunload` for `<ScrollRestoration>`. This has better cross-browser support, specifically on Mobile Safari.
