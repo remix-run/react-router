@@ -136,18 +136,18 @@ describe("generatePath", () => {
 
     // Ensure we warn on partial splat usages
     expect(consoleWarn.mock.calls).toMatchInlineSnapshot(`
-      Array [
-        Array [
-          "Route path \\"foo*\\" will be treated as if it were \\"foo/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"foo/*\\".",
+      [
+        [
+          "Route path "foo*" will be treated as if it were "foo/*" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to "foo/*".",
         ],
-        Array [
-          "Route path \\"/foo*\\" will be treated as if it were \\"/foo/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"/foo/*\\".",
+        [
+          "Route path "/foo*" will be treated as if it were "/foo/*" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to "/foo/*".",
         ],
-        Array [
-          "Route path \\"foo*\\" will be treated as if it were \\"foo/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"foo/*\\".",
+        [
+          "Route path "foo*" will be treated as if it were "foo/*" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to "foo/*".",
         ],
-        Array [
-          "Route path \\"/foo*\\" will be treated as if it were \\"/foo/*\\" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to \\"/foo/*\\".",
+        [
+          "Route path "/foo*" will be treated as if it were "/foo/*" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to "/foo/*".",
         ],
       ]
     `);

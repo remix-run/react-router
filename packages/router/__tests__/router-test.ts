@@ -109,7 +109,7 @@ type FetcherHelpers = NavigationHelpers & {
 };
 
 async function tick() {
-  await new Promise((r) => setImmediate(r));
+  await new Promise((r) => setTimeout(r, 0));
 }
 
 function invariant(value: boolean, message?: string): asserts value;
@@ -440,7 +440,6 @@ function setup({
     }
 
     let routeHelpers: Helpers = {
-      // @ts-expect-error
       get signal() {
         return internalHelpers._signal;
       },
@@ -724,7 +723,7 @@ function setup({
       activeLoaderFetchId = navigationId;
     } else {
       // if a revalidation interrupts an action submission, we don't actually
-      // start a new new navigation so don't increment here
+      // start a new navigation so don't increment here
       navigationId =
         currentRouter.state.navigation.state === "submitting" &&
         currentRouter.state.navigation.formMethod !== "get"
@@ -1111,7 +1110,7 @@ describe("a router", () => {
           hydrationData: {},
         })
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Found a route id collision on id \\"child\\".  Route id's must be globally unique within Data Router usages"`
+        `"Found a route id collision on id "child".  Route id's must be globally unique within Data Router usages"`
       );
     });
 
@@ -1231,7 +1230,7 @@ describe("a router", () => {
       let A = await t.navigate("/foo");
       await A.loaders.foo.resolve("FOO");
       expect(t.router.state.loaderData).toMatchInlineSnapshot(`
-        Object {
+        {
           "foo": "FOO",
           "root": "ROOT",
         }
@@ -2039,16 +2038,16 @@ describe("a router", () => {
 
       let arg = shouldRevalidate.mock.calls[0][0];
       expect(arg).toMatchInlineSnapshot(`
-        Object {
+        {
           "actionResult": "FETCH",
-          "currentParams": Object {},
+          "currentParams": {},
           "currentUrl": "http://localhost/",
           "defaultShouldRevalidate": true,
           "formAction": "/fetch",
           "formData": FormData {},
           "formEncType": "application/x-www-form-urlencoded",
           "formMethod": "post",
-          "nextParams": Object {},
+          "nextParams": {},
           "nextUrl": "http://localhost/",
         }
       `);
@@ -2100,12 +2099,12 @@ describe("a router", () => {
 
       let arg = shouldRevalidate.mock.calls[0][0];
       expect(arg).toMatchInlineSnapshot(`
-        Object {
+        {
           "actionResult": undefined,
-          "currentParams": Object {},
+          "currentParams": {},
           "currentUrl": "http://localhost/",
           "defaultShouldRevalidate": true,
-          "nextParams": Object {},
+          "nextParams": {},
           "nextUrl": "http://localhost/",
         }
       `);
@@ -9230,16 +9229,16 @@ describe("a router", () => {
           data: 1,
         });
         expect(shouldRevalidate.mock.calls[0][0]).toMatchInlineSnapshot(`
-          Object {
+          {
             "actionResult": null,
-            "currentParams": Object {},
+            "currentParams": {},
             "currentUrl": "http://localhost/fetch",
             "defaultShouldRevalidate": true,
             "formAction": "/",
             "formData": FormData {},
             "formEncType": "application/x-www-form-urlencoded",
             "formMethod": "post",
-            "nextParams": Object {},
+            "nextParams": {},
             "nextUrl": "http://localhost/fetch",
           }
         `);

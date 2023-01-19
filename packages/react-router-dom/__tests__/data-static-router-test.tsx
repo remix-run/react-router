@@ -530,10 +530,10 @@ describe("A <StaticRouterProvider>", () => {
     let router = createStaticRouter(frameworkAwareRoutes, context);
 
     expect(router.routes).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "children": Array [
-            Object {
+      [
+        {
+          "children": [
+            {
               "children": undefined,
               "element": <h2>
                 Hi again!
@@ -559,14 +559,14 @@ describe("A <StaticRouterProvider>", () => {
       ]
     `);
     expect(router.state.matches).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "params": Object {},
+      [
+        {
+          "params": {},
           "pathname": "/the",
           "pathnameBase": "/the",
-          "route": Object {
-            "children": Array [
-              Object {
+          "route": {
+            "children": [
+              {
                 "children": undefined,
                 "element": <h2>
                   Hi again!
@@ -590,11 +590,11 @@ describe("A <StaticRouterProvider>", () => {
             "path": "the",
           },
         },
-        Object {
-          "params": Object {},
+        {
+          "params": {},
           "pathname": "/the/path",
           "pathnameBase": "/the/path",
-          "route": Object {
+          "route": {
             "children": undefined,
             "element": <h2>
               Hi again!
