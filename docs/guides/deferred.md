@@ -65,8 +65,12 @@ Let's take a dive into how to accomplish this.
 
 Start by adding `<Await />` for your slow data requests where you'd rather render a fallback UI. Let's do that for our example above:
 
-```jsx lines=[1,5,10,20-33]
-import { defer, useLoaderData } from "react-router-dom";
+```jsx lines=[3,9,13,24-40]
+import {
+  Await,
+  defer,
+  useLoaderData,
+} from "react-router-dom";
 import { getPackageLocation } from "./api/packages";
 
 async function loader({ params }) {
@@ -112,7 +116,7 @@ export default function PackageRoute() {
 
 If you're not jazzed about bringing back render props, you can use a hook, but you'll have to break things out into another component:
 
-```jsx lines=[21]
+```jsx lines=[11, 16, 23-31]
 export default function PackageRoute() {
   const data = useLoaderData();
 
@@ -201,10 +205,10 @@ This may feel counter-intuitive at first, but stay with us, we really thought th
 
 When you decide you'd like to try the trade-offs of `defer`, we don't want you to have to change or remove those optimizations because we want you to be able to easily switch between deferring some data and not deferring it. So, we ensure that your existing optimistic states work the same way. If we didn't do this, then you could experience what we call "Popcorn UI" where submissions of data trigger the fallback loading state instead of the optimistic UI you'd worked hard on.
 
-So just keep this in mind: **Deferred is 100% only about the initial load of a route and it's params.**
+So just keep this in mind: **Deferred is 100% only about the initial load of a route and its params.**
 
 [link]: ../components/link
 [usefetcher]: ../hooks/use-fetcher
-[defer response]: ../fetch/defer
+[defer response]: ../utils/defer
 [await]: ../components/await
-[useasyncvalue]: ../hooks/use-async-data
+[useasyncvalue]: ../hooks/use-async-value

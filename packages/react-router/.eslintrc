@@ -7,6 +7,7 @@
     "__DEV__": true
   },
   "rules": {
-    "strict": 0
+    "strict": 0,
+    "no-restricted-syntax": ["error", "LogicalExpression[operator='??']"]
   }
 }

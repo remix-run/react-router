@@ -6,7 +6,7 @@ new: true
 
 # Picking a Router
 
-While your app will only use a single router, several routers are available depending on the environment you're app is running in. This document should help you figure out which one to use.
+While your app will only use a single router, several routers are available depending on the environment your app is running in. This document should help you figure out which one to use.
 
 ## Using v6.4 Data APIs
 
@@ -67,6 +67,15 @@ If you're not interested in the data APIs, you can continue to use [`<BrowserRou
 ## Testing
 
 Testing components that use React Router APIs is easiest with [`createMemoryRouter`][creatememoryrouter] or [`<MemoryRouter>`][memoryrouter] instead of the routers you use in your app that require DOM history APIs.
+
+Some of the React Router APIs internally use `fetch`, which is only supported starting from Node.js v18. If your project uses v17 or lower, you should add a `fetch` polyfill manually. One way to do that, is to install [`whatwg-fetch`](https://www.npmjs.com/package/whatwg-fetch) and add it to your `jest.config.js` file like so:
+
+```js
+module.exports = {
+  setupFiles: ["whatwg-fetch"],
+  // ...rest of the config
+};
+```
 
 ## React Native
 

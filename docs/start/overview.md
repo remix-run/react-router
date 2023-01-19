@@ -157,7 +157,9 @@ function Task() {
 }
 
 function Random() {
-  const match = useMatch("/projects/:projectId/tasks/3");
+  const match = useMatch(
+    "/projects/:projectId/tasks/:taskId"
+  );
   match.params.projectId; // abc
   match.params.taskId; // 3
 }
@@ -173,7 +175,7 @@ See:
 
 ## Ranked Route Matching
 
-When matching URLs to routes, React Router will rank the routes according the number of segments, static segments, dynamic segments, splats, etc. and pick the _most specific_ match.
+When matching URLs to routes, React Router will rank the routes according to the number of segments, static segments, dynamic segments, splats, etc. and pick the _most specific_ match.
 
 For example, consider these two routes:
 

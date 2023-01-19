@@ -69,6 +69,7 @@ export function RouterProvider({
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
+      encodeLocation: router.encodeLocation,
       go: (n) => router.navigate(n),
       push: (to, state, opts) =>
         router.navigate(to, {
@@ -86,27 +87,36 @@ export function RouterProvider({
 
   let basename = router.basename || "/";
 
+  // The fragment and {null} here are important!  We need them to keep React 18's
+  // useId happy when we are server-rendering since we may have a <script> here
+  // containing the hydrated server-side staticContext (from StaticRouterProvider).
+  // useId relies on the component tree structure to generate deterministic id's
+  // so we need to ensure it remains the same on the client even though
+  // we don't need the <script> tag
   return (
-    <DataRouterContext.Provider
-      value={{
-        router,
-        navigator,
-        static: false,
-        // Do we need this?
-        basename,
-      }}
-    >
-      <DataRouterStateContext.Provider value={state}>
-        <Router
-          basename={router.basename}
-          location={router.state.location}
-          navigationType={router.state.historyAction}
-          navigator={navigator}
-        >
-          {router.state.initialized ? <Routes /> : fallbackElement}
-        </Router>
-      </DataRouterStateContext.Provider>
-    </DataRouterContext.Provider>
+    <>
+      <DataRouterContext.Provider
+        value={{
+          router,
+          navigator,
+          static: false,
+          // Do we need this?
+          basename,
+        }}
+      >
+        <DataRouterStateContext.Provider value={state}>
+          <Router
+            basename={router.basename}
+            location={router.state.location}
+            navigationType={router.state.historyAction}
+            navigator={navigator}
+          >
+            {router.state.initialized ? <Routes /> : fallbackElement}
+          </Router>
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>
+      {null}
+    </>
   );
 }
 
@@ -120,7 +130,7 @@ export interface MemoryRouterProps {
 /**
  * A <Router> that stores all entries in memory.
  *
- * @see https://reactrouter.com/docs/en/v6/routers/memory-router
+ * @see https://reactrouter.com/router-components/memory-router
  */
 export function MemoryRouter({
   basename,
@@ -170,7 +180,7 @@ export interface NavigateProps {
  * able to use hooks. In functional components, we recommend you use the
  * `useNavigate` hook instead.
  *
- * @see https://reactrouter.com/docs/en/v6/components/navigate
+ * @see https://reactrouter.com/components/navigate
  */
 export function Navigate({
   to,
@@ -215,7 +225,7 @@ export interface OutletProps {
 /**
  * Renders the child route's element, if there is one.
  *
- * @see https://reactrouter.com/docs/en/v6/components/outlet
+ * @see https://reactrouter.com/components/outlet
  */
 export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
@@ -258,7 +268,7 @@ export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 /**
  * Declares an element that should be rendered at a certain URL path.
  *
- * @see https://reactrouter.com/docs/en/v6/components/route
+ * @see https://reactrouter.com/components/route
  */
 export function Route(_props: RouteProps): React.ReactElement | null {
   invariant(
@@ -284,7 +294,7 @@ export interface RouterProps {
  * router that is more specific to your environment such as a <BrowserRouter>
  * in web browsers or a <StaticRouter> for server rendering.
  *
- * @see https://reactrouter.com/docs/en/v6/routers/router
+ * @see https://reactrouter.com/router-components/router
  */
 export function Router({
   basename: basenameProp = "/",
@@ -366,7 +376,7 @@ export interface RoutesProps {
  * A container for a nested tree of <Route> elements that renders the branch
  * that best matches the current location.
  *
- * @see https://reactrouter.com/docs/en/v6/components/routes
+ * @see https://reactrouter.com/components/routes
  */
 export function Routes({
   children,
@@ -384,7 +394,7 @@ export function Routes({
 }
 
 export interface AwaitResolveRenderFunction {
-  (data: Awaited<any>): React.ReactElement;
+  (data: Awaited<any>): React.ReactNode;
 }
 
 export interface AwaitProps {
@@ -521,10 +531,8 @@ function ResolveAwait({
   children: React.ReactNode | AwaitResolveRenderFunction;
 }) {
   let data = useAsyncValue();
-  if (typeof children === "function") {
-    return children(data);
-  }
-  return <>{children}</>;
+  let toRender = typeof children === "function" ? children(data) : children;
+  return <>{toRender}</>;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -536,7 +544,7 @@ function ResolveAwait({
  * either a `<Route>` element or an array of them. Used internally by
  * `<Routes>` to create a route config from its children.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/create-routes-from-children
+ * @see https://reactrouter.com/utils/create-routes-from-children
  */
 export function createRoutesFromChildren(
   children: React.ReactNode,

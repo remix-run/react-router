@@ -1,5 +1,5 @@
 import type { Location, Path, To } from "./history";
-import { parsePath } from "./history";
+import { invariant, parsePath } from "./history";
 
 /**
  * Map of routeId -> data returned from a loader/action/error
@@ -31,6 +31,8 @@ export interface SuccessResult {
 export interface DeferredResult {
   type: ResultType.deferred;
   deferredData: DeferredData;
+  statusCode?: number;
+  headers?: Headers;
 }
 
 /**
@@ -61,7 +63,9 @@ export type DataResult =
   | RedirectResult
   | ErrorResult;
 
-export type FormMethod = "get" | "post" | "put" | "patch" | "delete";
+export type MutationFormMethod = "post" | "put" | "patch" | "delete";
+export type FormMethod = "get" | MutationFormMethod;
+
 export type FormEncType =
   | "application/x-www-form-urlencoded"
   | "multipart/form-data";
@@ -72,7 +76,7 @@ export type FormEncType =
  * external consumption
  */
 export interface Submission {
-  formMethod: Exclude<FormMethod, "get">;
+  formMethod: FormMethod;
   formAction: string;
   formEncType: FormEncType;
   formData: FormData;
@@ -86,6 +90,7 @@ export interface Submission {
 interface DataFunctionArgs {
   request: Request;
   params: Params;
+  context?: any;
 }
 
 /**
@@ -194,8 +199,10 @@ type _PathParam<Path extends string> =
   Path extends `${infer L}/${infer R}`
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
-    Path extends `${string}:${infer Param}`
-    ? Param
+    Path extends `:${infer Param}`
+    ? Param extends `${infer Optional}?`
+      ? Optional
+      : Param
     : // otherwise, there aren't any params present
       never;
 
@@ -306,7 +313,7 @@ export function convertRoutesToDataRoutes(
 /**
  * Matches the given routes to a location and returns the match data.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/match-routes
+ * @see https://reactrouter.com/utils/match-routes
  */
 export function matchRoutes<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
@@ -331,9 +338,12 @@ export function matchRoutes<
   for (let i = 0; matches == null && i < branches.length; ++i) {
     matches = matchRouteBranch<string, RouteObjectType>(
       branches[i],
-      // incoming pathnames are always encoded from either window.location or
-      // from route.navigate, but we want to match against the unencoded paths
-      // in the route definitions
+      // Incoming pathnames are generally encoded from either window.location
+      // or from router.navigate, but we want to match against the unencoded
+      // paths in the route definitions.  Memory router locations won't be
+      // encoded here but there also shouldn't be anything to decode so this
+      // should be a safe operation.  This avoids needing matchRoutes to be
+      // history-aware.
       safelyDecodeURI(pathname)
     );
   }
@@ -366,9 +376,14 @@ function flattenRoutes<
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
   parentPath = ""
 ): RouteBranch<RouteObjectType>[] {
-  routes.forEach((route, index) => {
+  let flattenRoute = (
+    route: RouteObjectType,
+    index: number,
+    relativePath?: string
+  ) => {
     let meta: RouteMeta<RouteObjectType> = {
-      relativePath: route.path || "",
+      relativePath:
+        relativePath === undefined ? route.path || "" : relativePath,
       caseSensitive: route.caseSensitive === true,
       childrenIndex: index,
       route,
@@ -409,10 +424,83 @@ function flattenRoutes<
       return;
     }
 
-    branches.push({ path, score: computeScore(path, route.index), routesMeta });
+    branches.push({
+      path,
+      score: computeScore(path, route.index),
+      routesMeta,
+    });
+  };
+  routes.forEach((route, index) => {
+    // coarse-grain check for optional params
+    if (route.path === "" || !route.path?.includes("?")) {
+      flattenRoute(route, index);
+    } else {
+      for (let exploded of explodeOptionalSegments(route.path)) {
+        flattenRoute(route, index, exploded);
+      }
+    }
   });
 
   return branches;
+}
+
+/**
+ * Computes all combinations of optional path segments for a given path,
+ * excluding combinations that are ambiguous and of lower priority.
+ *
+ * For example, `/one/:two?/three/:four?/:five?` explodes to:
+ * - `/one/three`
+ * - `/one/:two/three`
+ * - `/one/three/:four`
+ * - `/one/three/:five`
+ * - `/one/:two/three/:four`
+ * - `/one/:two/three/:five`
+ * - `/one/three/:four/:five`
+ * - `/one/:two/three/:four/:five`
+ */
+function explodeOptionalSegments(path: string): string[] {
+  let segments = path.split("/");
+  if (segments.length === 0) return [];
+
+  let [first, ...rest] = segments;
+
+  // Optional path segments are denoted by a trailing `?`
+  let isOptional = first.endsWith("?");
+  // Compute the corresponding required segment: `foo?` -> `foo`
+  let required = first.replace(/\?$/, "");
+
+  if (rest.length === 0) {
+    // Intepret empty string as omitting an optional segment
+    // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
+    return isOptional ? [required, ""] : [required];
+  }
+
+  let restExploded = explodeOptionalSegments(rest.join("/"));
+
+  let result: string[] = [];
+
+  // All child paths with the prefix.  Do this for all children before the
+  // optional version for all children so we get consistent ordering where the
+  // parent optional aspect is preferred as required.  Otherwise, we can get
+  // child sections interspersed where deeper optional segments are higher than
+  // parent optional segments, where for example, /:two would explodes _earlier_
+  // then /:one.  By always including the parent as required _for all children_
+  // first, we avoid this issue
+  result.push(
+    ...restExploded.map((subpath) =>
+      subpath === "" ? required : [required, subpath].join("/")
+    )
+  );
+
+  // Then if this is an optional value, add all child versions without
+  if (isOptional) {
+    result.push(...restExploded);
+  }
+
+  // for absolute paths, ensure `/` instead of empty segment
+  return result.map((exploded) =>
+    path.startsWith("/") && exploded === "" ? "/" : exploded
+  );
 }
 
 function rankRouteBranches(branches: RouteBranch[]): void {
@@ -525,31 +613,69 @@ function matchRouteBranch<
 /**
  * Returns a path with params interpolated.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/generate-path
+ * @see https://reactrouter.com/utils/generate-path
  */
 export function generatePath<Path extends string>(
-  path: Path,
+  originalPath: Path,
   params: {
-    [key in PathParam<Path>]: string;
+    [key in PathParam<Path>]: string | null;
   } = {} as any
 ): string {
-  return path
-    .replace(/:(\w+)/g, (_, key: PathParam<Path>) => {
-      invariant(params[key] != null, `Missing ":${key}" param`);
-      return params[key]!;
-    })
-    .replace(/(\/?)\*/, (_, prefix, __, str) => {
-      const star = "*" as PathParam<Path>;
+  let path = originalPath;
+  if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
+    warning(
+      false,
+      `Route path "${path}" will be treated as if it were ` +
+        `"${path.replace(/\*$/, "/*")}" because the \`*\` character must ` +
+        `always follow a \`/\` in the pattern. To get rid of this warning, ` +
+        `please change the route path to "${path.replace(/\*$/, "/*")}".`
+    );
+    path = path.replace(/\*$/, "/*") as Path;
+  }
 
-      if (params[star] == null) {
-        // If no splat was provided, trim the trailing slash _unless_ it's
-        // the entire path
-        return str === "/*" ? "/" : "";
-      }
+  return (
+    path
+      .replace(
+        /^:(\w+)(\??)/g,
+        (_, key: PathParam<Path>, optional: string | undefined) => {
+          let param = params[key];
+          if (optional === "?") {
+            return param == null ? "" : param;
+          }
+          if (param == null) {
+            invariant(false, `Missing ":${key}" param`);
+          }
+          return param;
+        }
+      )
+      .replace(
+        /\/:(\w+)(\??)/g,
+        (_, key: PathParam<Path>, optional: string | undefined) => {
+          let param = params[key];
+          if (optional === "?") {
+            return param == null ? "" : `/${param}`;
+          }
+          if (param == null) {
+            invariant(false, `Missing ":${key}" param`);
+          }
+          return `/${param}`;
+        }
+      )
+      // Remove any optional markers from optional static segments
+      .replace(/\?/g, "")
+      .replace(/(\/?)\*/, (_, prefix, __, str) => {
+        const star = "*" as PathParam<Path>;
 
-      // Apply the splat
-      return `${prefix}${params[star]}`;
-    });
+        if (params[star] == null) {
+          // If no splat was provided, trim the trailing slash _unless_ it's
+          // the entire path
+          return str === "/*" ? "/" : "";
+        }
+
+        // Apply the splat
+        return `${prefix}${params[star]}`;
+      })
+  );
 }
 
 /**
@@ -603,7 +729,7 @@ type Mutable<T> = {
  * Performs pattern matching on a URL pathname and returns information about
  * the match.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/match-path
+ * @see https://reactrouter.com/utils/match-path
  */
 export function matchPath<
   ParamKey extends ParamParseKey<Path>,
@@ -676,9 +802,9 @@ function compilePath(
       .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
       .replace(/^\/*/, "/") // Make sure it has a leading /
       .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
-      .replace(/:(\w+)/g, (_: string, paramName: string) => {
+      .replace(/\/:(\w+)/g, (_: string, paramName: string) => {
         paramNames.push(paramName);
-        return "([^\\/]+)";
+        return "/([^\\/]+)";
       });
 
   if (path.endsWith("*")) {
@@ -768,27 +894,13 @@ export function stripBasename(
 /**
  * @private
  */
-export function invariant(value: boolean, message?: string): asserts value;
-export function invariant<T>(
-  value: T | null | undefined,
-  message?: string
-): asserts value is T;
-export function invariant(value: any, message?: string) {
-  if (value === false || value === null || typeof value === "undefined") {
-    throw new Error(message);
-  }
-}
-
-/**
- * @private
- */
 export function warning(cond: any, message: string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
     if (typeof console !== "undefined") console.warn(message);
 
     try {
-      // Welcome to debugging React Router!
+      // Welcome to debugging @remix-run/router!
       //
       // This error is thrown as a convenience so you can more easily
       // find the source for a warning that appears in the console by
@@ -802,7 +914,7 @@ export function warning(cond: any, message: string): void {
 /**
  * Returns a resolved path object relative to the given pathname.
  *
- * @see https://reactrouter.com/docs/en/v6/utils/resolve-path
+ * @see https://reactrouter.com/utils/resolve-path
  */
 export function resolvePath(to: To, fromPathname = "/"): Path {
   let {
@@ -1045,14 +1157,17 @@ export interface TrackedPromise extends Promise<any> {
 export class AbortedDeferredError extends Error {}
 
 export class DeferredData {
-  private pendingKeys: Set<string | number> = new Set<string | number>();
+  private pendingKeysSet: Set<string> = new Set<string>();
   private controller: AbortController;
   private abortPromise: Promise<void>;
   private unlistenAbortSignal: () => void;
-  private subscriber?: (aborted: boolean) => void = undefined;
+  private subscribers: Set<(aborted: boolean, settledKey?: string) => void> =
+    new Set();
   data: Record<string, unknown>;
+  init?: ResponseInit;
+  deferredKeys: string[] = [];
 
-  constructor(data: Record<string, unknown>) {
+  constructor(data: Record<string, unknown>, responseInit?: ResponseInit) {
     invariant(
       data && typeof data === "object" && !Array.isArray(data),
       "defer() only accepts plain objects"
@@ -1076,17 +1191,20 @@ export class DeferredData {
         }),
       {}
     );
+
+    this.init = responseInit;
   }
 
   private trackPromise(
-    key: string | number,
+    key: string,
     value: Promise<unknown> | unknown
   ): TrackedPromise | unknown {
     if (!(value instanceof Promise)) {
       return value;
     }
 
-    this.pendingKeys.add(key);
+    this.deferredKeys.push(key);
+    this.pendingKeysSet.add(key);
 
     // We store a little wrapper promise that will be extended with
     // _data/_error props upon resolve/reject
@@ -1105,7 +1223,7 @@ export class DeferredData {
 
   private onSettle(
     promise: TrackedPromise,
-    key: string | number,
+    key: string,
     error: unknown,
     data?: unknown
   ): unknown {
@@ -1118,34 +1236,37 @@ export class DeferredData {
       return Promise.reject(error);
     }
 
-    this.pendingKeys.delete(key);
+    this.pendingKeysSet.delete(key);
 
     if (this.done) {
       // Nothing left to abort!
       this.unlistenAbortSignal();
     }
 
-    const subscriber = this.subscriber;
     if (error) {
       Object.defineProperty(promise, "_error", { get: () => error });
-      subscriber && subscriber(false);
+      this.emit(false, key);
       return Promise.reject(error);
     }
 
     Object.defineProperty(promise, "_data", { get: () => data });
-    subscriber && subscriber(false);
+    this.emit(false, key);
     return data;
   }
 
-  subscribe(fn: (aborted: boolean) => void) {
-    this.subscriber = fn;
+  private emit(aborted: boolean, settledKey?: string) {
+    this.subscribers.forEach((subscriber) => subscriber(aborted, settledKey));
+  }
+
+  subscribe(fn: (aborted: boolean, settledKey?: string) => void) {
+    this.subscribers.add(fn);
+    return () => this.subscribers.delete(fn);
   }
 
   cancel() {
     this.controller.abort();
-    this.pendingKeys.forEach((v, k) => this.pendingKeys.delete(k));
-    let subscriber = this.subscriber;
-    subscriber && subscriber(true);
+    this.pendingKeysSet.forEach((v, k) => this.pendingKeysSet.delete(k));
+    this.emit(true);
   }
 
   async resolveData(signal: AbortSignal) {
@@ -1166,7 +1287,7 @@ export class DeferredData {
   }
 
   get done() {
-    return this.pendingKeys.size === 0;
+    return this.pendingKeysSet.size === 0;
   }
 
   get unwrappedData() {
@@ -1182,6 +1303,10 @@ export class DeferredData {
         }),
       {}
     );
+  }
+
+  get pendingKeys() {
+    return Array.from(this.pendingKeysSet);
   }
 }
 
@@ -1202,9 +1327,16 @@ function unwrapTrackedPromise(value: any) {
   return value._data;
 }
 
-export function defer(data: Record<string, unknown>) {
-  return new DeferredData(data);
-}
+export type DeferFunction = (
+  data: Record<string, unknown>,
+  init?: number | ResponseInit
+) => DeferredData;
+
+export const defer: DeferFunction = (data, init = {}) => {
+  let responseInit = typeof init === "number" ? { status: init } : init;
+
+  return new DeferredData(data, responseInit);
+};
 
 export type RedirectFunction = (
   url: string,
@@ -1240,18 +1372,37 @@ export class ErrorResponse {
   status: number;
   statusText: string;
   data: any;
+  error?: Error;
+  internal: boolean;
 
-  constructor(status: number, statusText: string | undefined, data: any) {
+  constructor(
+    status: number,
+    statusText: string | undefined,
+    data: any,
+    internal = false
+  ) {
     this.status = status;
     this.statusText = statusText || "";
-    this.data = data;
+    this.internal = internal;
+    if (data instanceof Error) {
+      this.data = data.toString();
+      this.error = data;
+    } else {
+      this.data = data;
+    }
   }
 }
 
 /**
  * Check if the given error is an ErrorResponse generated from a 4xx/5xx
- * Response throw from an action/loader
+ * Response thrown from an action/loader
  */
-export function isRouteErrorResponse(e: any): e is ErrorResponse {
-  return e instanceof ErrorResponse;
+export function isRouteErrorResponse(error: any): error is ErrorResponse {
+  return (
+    error != null &&
+    typeof error.status === "number" &&
+    typeof error.statusText === "string" &&
+    typeof error.internal === "boolean" &&
+    "data" in error
+  );
 }

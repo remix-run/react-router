@@ -1,7 +1,6 @@
-name: 🧪 Release (experimental)
+name: 🚀 Release (experimental)
 on:
-  release:
-    types: [published]
+  push:
     tags:
       - "v0.0.0-experimental*"
 
@@ -23,16 +22,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ⎔ Setup Node
+      - name: ⎔ Setup node
         uses: actions/setup-node@v3
         with:
-          node-version-file: ".nvmrc"
           cache: yarn
+          node-version-file: ".nvmrc"
 
       - name: 📥 Install deps
-        # even though this is called "npm-install" it does use yarn to install
-        # because we have a yarn.lock and caches efficiently.
-        uses: bahmutov/npm-install@v1
+        run: yarn --frozen-lockfile
 
       - name: 🏗 Build
         run: yarn build

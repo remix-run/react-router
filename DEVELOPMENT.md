@@ -37,6 +37,15 @@ You may need to make changes to a pre-release prior to publishing a final stable
 - Commit the unpublished changesets and push the the `release-*` branch to GitHub; wait for the release workflow to finish and the Changesets action to open its PR that will increment all versions to stable
 - Review the updated `CHANGELOG` files and make any adjustments necessary, then merge the PR
 - Once the PR is merged, the release workflow will publish the updated packages to npm
+- Once the release is published:
+  - merge the `release-*` branch into `main` and push it up to github
+  - merge the `release-*` branch into `dev` and push it up to github
+  - Convert the `react-router@6.x.y` tag to a Release on Github with the name `v6.x.y`
+  - Copy the relevant changelog entries from all packages into the Release Notes and adjust accordingly, matching the format used by prior releases
+
+### Hotfix releases
+
+Hotfix releases follow the same process as standard releases above, but the `release-*` branch should be branched off latest `main` instead of `dev`. Once the stable hotfix is published, the `release-*` branch should be merged back into both `main` and `dev` just like a normal release.
 
 ### Experimental releases
 

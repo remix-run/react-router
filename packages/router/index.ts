@@ -1,5 +1,3 @@
-import { convertRoutesToDataRoutes, getPathContributingMatches } from "./utils";
-
 export type {
   ActionFunction,
   ActionFunctionArgs,
@@ -32,7 +30,6 @@ export {
   defer,
   generatePath,
   getToPathname,
-  invariant,
   isRouteErrorResponse,
   joinPaths,
   json,
@@ -66,6 +63,7 @@ export {
   createPath,
   createHashHistory,
   createMemoryHistory,
+  invariant,
   parsePath,
 } from "./history";
 
@@ -80,6 +78,7 @@ export * from "./router";
 
 /** @internal */
 export {
+  DeferredData as UNSAFE_DeferredData,
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
   getPathContributingMatches as UNSAFE_getPathContributingMatches,
-};
+} from "./utils";

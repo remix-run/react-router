@@ -45,3 +45,5 @@ const user = useRouteLoaderData("root");
 ```
 
 The only data available is the routes that are currently rendered. If you ask for data from a route that is not currently rendered, the hook will return `undefined`.
+
+[pickingarouter]: ../routers/picking-a-router

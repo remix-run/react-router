@@ -13,12 +13,19 @@ describe("generatePath", () => {
       expect(generatePath("/courses/:id", { id: "routing" })).toBe(
         "/courses/routing"
       );
+      expect(
+        generatePath("/courses/:id/student/:studentId", {
+          id: "routing",
+          studentId: "matt",
+        })
+      ).toBe("/courses/routing/student/matt");
       expect(generatePath("/courses/*", { "*": "routing/grades" })).toBe(
         "/courses/routing/grades"
       );
       expect(generatePath("*", { "*": "routing/grades" })).toBe(
         "routing/grades"
       );
+      expect(generatePath("/*", {})).toBe("/");
     });
   });
 
@@ -43,6 +50,60 @@ describe("generatePath", () => {
     });
   });
 
+  describe("with optional params", () => {
+    it("adds optional dynamic params where appropriate", () => {
+      let path = "/:one?/:two?/:three?";
+      expect(generatePath(path, { one: "uno" })).toBe("/uno");
+      expect(generatePath(path, { one: "uno", two: "dos" })).toBe("/uno/dos");
+      expect(
+        generatePath(path, {
+          one: "uno",
+          two: "dos",
+          three: "tres",
+        })
+      ).toBe("/uno/dos/tres");
+      expect(generatePath(path, { one: "uno", three: "tres" })).toBe(
+        "/uno/tres"
+      );
+      expect(generatePath(path, { two: "dos" })).toBe("/dos");
+      expect(generatePath(path, { two: "dos", three: "tres" })).toBe(
+        "/dos/tres"
+      );
+    });
+
+    it("strips optional aspects of static segments", () => {
+      expect(generatePath("/one?/two?/:three?", {})).toBe("/one/two");
+      expect(generatePath("/one?/two?/:three?", { three: "tres" })).toBe(
+        "/one/two/tres"
+      );
+    });
+
+    it("handles intermixed segments", () => {
+      let path = "/one?/:two?/three/:four/*";
+      expect(generatePath(path, { four: "cuatro" })).toBe("/one/three/cuatro");
+      expect(
+        generatePath(path, {
+          two: "dos",
+          four: "cuatro",
+        })
+      ).toBe("/one/dos/three/cuatro");
+      expect(
+        generatePath(path, {
+          two: "dos",
+          four: "cuatro",
+          "*": "splat",
+        })
+      ).toBe("/one/dos/three/cuatro/splat");
+      expect(
+        generatePath(path, {
+          two: "dos",
+          four: "cuatro",
+          "*": "splat/and/then/some",
+        })
+      ).toBe("/one/dos/three/cuatro/splat/and/then/some");
+    });
+  });
+
   it("throws only on on missing named parameters, but not missing splat params", () => {
     expect(() => generatePath(":foo")).toThrow();
     expect(() => generatePath("/:foo")).toThrow();
@@ -51,6 +112,8 @@ describe("generatePath", () => {
   });
 
   it("only interpolates and does not add slashes", () => {
+    let consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+
     expect(generatePath("*")).toBe("");
     expect(generatePath("/*")).toBe("/");
 
@@ -63,10 +126,32 @@ describe("generatePath", () => {
     expect(generatePath("*", { "*": "bar" })).toBe("bar");
     expect(generatePath("/*", { "*": "bar" })).toBe("/bar");
 
-    expect(generatePath("foo:bar", { bar: "baz" })).toBe("foobaz");
-    expect(generatePath("/foo:bar", { bar: "baz" })).toBe("/foobaz");
+    // No support for partial dynamic params
+    expect(generatePath("foo:bar", { bar: "baz" })).toBe("foo:bar");
+    expect(generatePath("/foo:bar", { bar: "baz" })).toBe("/foo:bar");
 
-    expect(generatePath("foo*", { "*": "bar" })).toBe("foobar");
-    expect(generatePath("/foo*", { "*": "bar" })).toBe("/foobar");
+    // Partial splats are treated as independent path segments
+    expect(generatePath("foo*", { "*": "bar" })).toBe("foo/bar");
+    expect(generatePath("/foo*", { "*": "bar" })).toBe("/foo/bar");
+
+    // Ensure we warn on partial splat usages
+    expect(consoleWarn.mock.calls).toMatchInlineSnapshot(`
+      [
+        [
+          "Route path "foo*" will be treated as if it were "foo/*" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to "foo/*".",
+        ],
+        [
+          "Route path "/foo*" will be treated as if it were "/foo/*" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to "/foo/*".",
+        ],
+        [
+          "Route path "foo*" will be treated as if it were "foo/*" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to "foo/*".",
+        ],
+        [
+          "Route path "/foo*" will be treated as if it were "/foo/*" because the \`*\` character must always follow a \`/\` in the pattern. To get rid of this warning, please change the route path to "/foo/*".",
+        ],
+      ]
+    `);
+
+    consoleWarn.mockRestore();
   });
 });

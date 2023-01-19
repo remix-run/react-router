@@ -1,10 +1,10 @@
 import type * as express from "express";
-import { unstable_createStaticHandler as createStaticHandler } from "@remix-run/router";
+import { createStaticHandler } from "@remix-run/router";
 import * as React from "react";
 import ReactDOMServer from "react-dom/server";
 import {
-  unstable_createStaticRouter as createStaticRouter,
-  unstable_StaticRouterProvider as StaticRouterProvider,
+  createStaticRouter,
+  StaticRouterProvider,
 } from "react-router-dom/server";
 import { routes } from "./App";
 

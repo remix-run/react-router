@@ -1,6 +1,8 @@
 import type {
   ActionFunction,
   ActionFunctionArgs,
+  Blocker,
+  BlockerFunction,
   Fetcher,
   HydrationState,
   JsonFunction,
@@ -76,13 +78,13 @@ import type {
 import {
   DataRouterContext,
   DataRouterStateContext,
-  DataStaticRouterContext,
   LocationContext,
   NavigationContext,
   RouteContext,
 } from "./lib/context";
 import type { NavigateFunction } from "./lib/hooks";
 import {
+  useBlocker,
   useHref,
   useInRouterContext,
   useLocation,
@@ -115,6 +117,8 @@ export type {
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
+  Blocker as unstable_Blocker,
+  BlockerFunction as unstable_BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
   Fetcher,
@@ -180,6 +184,7 @@ export {
   useActionData,
   useAsyncError,
   useAsyncValue,
+  useBlocker as unstable_useBlocker,
   useHref,
   useInRouterContext,
   useLoaderData,
@@ -239,6 +244,5 @@ export {
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  DataStaticRouterContext as UNSAFE_DataStaticRouterContext,
   enhanceManualRouteObjects as UNSAFE_enhanceManualRouteObjects,
 };

@@ -75,7 +75,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home
         </p>,
@@ -94,7 +94,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home?key=value
         </p>,
@@ -132,7 +132,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home
         </p>,
@@ -151,9 +151,66 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home?key=value
+        </p>,
+        <button
+          onClick={[Function]}
+        >
+          click me
+        </button>,
+      ]
+    `);
+  });
+
+  it("navigates to the new location with empty query string when no query string is provided", () => {
+    function Home() {
+      let location = useLocation();
+      let navigate = useNavigate();
+
+      return (
+        <>
+          <p>{location.pathname + location.search}</p>
+          <button onClick={() => navigate("/home")}>click me</button>
+        </>
+      );
+    }
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/home?key=value"]}>
+          <Routes>
+            <Route path="home" element={<Home />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      [
+        <p>
+          /home?key=value
+        </p>,
+        <button
+          onClick={[Function]}
+        >
+          click me
+        </button>,
+      ]
+    `);
+
+    let button = renderer.root.findByType("button");
+
+    TestRenderer.act(() => {
+      button.props.onClick();
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      [
+        <p>
+          /home
         </p>,
         <button
           onClick={[Function]}
@@ -212,7 +269,7 @@ describe("useNavigate", () => {
         renderer.root.findAllByType("button")[0].props.onClick();
       })
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{\\"pathname\\":\\"/about/thing?search\\"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to=\\"...\\"> and the router will parse it for you."`
+      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
     );
 
     expect(() =>
@@ -220,7 +277,7 @@ describe("useNavigate", () => {
         renderer.root.findAllByType("button")[1].props.onClick();
       })
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '#' character in a manually specified \`to.pathname\` field [{\\"pathname\\":\\"/about/thing#hash\\"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to=\\"...\\"> and the router will parse it for you."`
+      `"Cannot include a '#' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
     );
 
     expect(() =>
@@ -228,7 +285,7 @@ describe("useNavigate", () => {
         renderer.root.findAllByType("button")[2].props.onClick();
       })
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{\\"pathname\\":\\"/about/thing?search#hash\\"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to=\\"...\\"> and the router will parse it for you."`
+      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search#hash"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
     );
 
     expect(() =>
@@ -236,7 +293,7 @@ describe("useNavigate", () => {
         renderer.root.findAllByType("button")[3].props.onClick();
       })
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '#' character in a manually specified \`to.search\` field [{\\"pathname\\":\\"/about/thing\\",\\"search\\":\\"?search#hash\\"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to=\\"...\\"> and the router will parse it for you."`
+      `"Cannot include a '#' character in a manually specified \`to.search\` field [{"pathname":"/about/thing","search":"?search#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
     );
   });
 

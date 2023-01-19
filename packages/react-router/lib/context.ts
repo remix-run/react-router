@@ -58,15 +58,9 @@ export interface RouteMatch<
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
-// Contexts for data routers
-export const DataStaticRouterContext =
-  React.createContext<StaticHandlerContext | null>(null);
-if (__DEV__) {
-  DataStaticRouterContext.displayName = "DataStaticRouterContext";
-}
-
 export interface DataRouterContextObject extends NavigationContextObject {
   router: Router;
+  staticContext?: StaticHandlerContext;
 }
 
 export const DataRouterContext =
@@ -107,6 +101,8 @@ export interface NavigateOptions {
  */
 export interface Navigator {
   createHref: History["createHref"];
+  // Optional for backwards-compat with Router/HistoryRouter usage (edge case)
+  encodeLocation?: History["encodeLocation"];
   go: History["go"];
   push(to: To, state?: any, opts?: NavigateOptions): void;
   replace(to: To, state?: any, opts?: NavigateOptions): void;
