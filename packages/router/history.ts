@@ -626,10 +626,9 @@ function getUrlBasedHistory(
       warning(
         false,
         `You are trying to perform a POP navigation to a location that was not ` +
-          `created by @remix-run/router. This won't work and will fail silently ` +
-          `in production.  In general, you should do all navigation with the ` +
-          `router to avoid this situation (instead of using window.history.pushState ` +
-          `or assigning directly to window.location.hash).`
+          `created by @remix-run/router. This will fail silently in production.  ` +
+          `You should navigate via the router to avoid this situation (instead of ` +
+          `using window.history.pushState/window.location.hash).`
       );
     }
   }
