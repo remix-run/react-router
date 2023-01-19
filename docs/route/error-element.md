@@ -64,7 +64,7 @@ Here's a "not found" case in a [loader][loader]:
     if (res.status === 404) {
       throw new Response("Not Found", { status: 404 });
     }
-    const home = res.json();
+    const home = await res.json();
     const descriptionHtml = parseMarkdown(
       data.descriptionMarkdown
     );

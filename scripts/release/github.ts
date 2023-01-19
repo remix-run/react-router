@@ -287,7 +287,7 @@ async function getTags(
 
   let filtered = response.repository.refs.nodes.filter((node) => {
     return (
-      node.name.startsWith(PACKAGE_VERSION_TO_FOLLOW) ||
+      node.name.startsWith(`${PACKAGE_VERSION_TO_FOLLOW}@`) ||
       node.name.startsWith("v0.0.0-nightly-")
     );
   });

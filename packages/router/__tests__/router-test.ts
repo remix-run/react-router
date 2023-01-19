@@ -109,7 +109,7 @@ type FetcherHelpers = NavigationHelpers & {
 };
 
 async function tick() {
-  await new Promise((r) => setImmediate(r));
+  await new Promise((r) => setTimeout(r, 0));
 }
 
 function invariant(value: boolean, message?: string): asserts value;
@@ -440,7 +440,6 @@ function setup({
     }
 
     let routeHelpers: Helpers = {
-      // @ts-expect-error
       get signal() {
         return internalHelpers._signal;
       },
@@ -724,7 +723,7 @@ function setup({
       activeLoaderFetchId = navigationId;
     } else {
       // if a revalidation interrupts an action submission, we don't actually
-      // start a new new navigation so don't increment here
+      // start a new navigation so don't increment here
       navigationId =
         currentRouter.state.navigation.state === "submitting" &&
         currentRouter.state.navigation.formMethod !== "get"
@@ -957,6 +956,7 @@ describe("a router", () => {
         restoreScrollPosition: null,
         revalidation: "idle",
         fetchers: new Map(),
+        blockers: new Map(),
       });
     });
 
@@ -1018,6 +1018,7 @@ describe("a router", () => {
         restoreScrollPosition: false,
         revalidation: "idle",
         fetchers: new Map(),
+        blockers: new Map(),
       });
     });
 
@@ -1109,7 +1110,7 @@ describe("a router", () => {
           hydrationData: {},
         })
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Found a route id collision on id \\"child\\".  Route id's must be globally unique within Data Router usages"`
+        `"Found a route id collision on id "child".  Route id's must be globally unique within Data Router usages"`
       );
     });
 
@@ -1229,7 +1230,7 @@ describe("a router", () => {
       let A = await t.navigate("/foo");
       await A.loaders.foo.resolve("FOO");
       expect(t.router.state.loaderData).toMatchInlineSnapshot(`
-        Object {
+        {
           "foo": "FOO",
           "root": "ROOT",
         }
@@ -2037,16 +2038,16 @@ describe("a router", () => {
 
       let arg = shouldRevalidate.mock.calls[0][0];
       expect(arg).toMatchInlineSnapshot(`
-        Object {
+        {
           "actionResult": "FETCH",
-          "currentParams": Object {},
+          "currentParams": {},
           "currentUrl": "http://localhost/",
           "defaultShouldRevalidate": true,
           "formAction": "/fetch",
           "formData": FormData {},
           "formEncType": "application/x-www-form-urlencoded",
           "formMethod": "post",
-          "nextParams": Object {},
+          "nextParams": {},
           "nextUrl": "http://localhost/",
         }
       `);
@@ -2098,12 +2099,12 @@ describe("a router", () => {
 
       let arg = shouldRevalidate.mock.calls[0][0];
       expect(arg).toMatchInlineSnapshot(`
-        Object {
+        {
           "actionResult": undefined,
-          "currentParams": Object {},
+          "currentParams": {},
           "currentUrl": "http://localhost/",
           "defaultShouldRevalidate": true,
-          "nextParams": Object {},
+          "nextParams": {},
           "nextUrl": "http://localhost/",
         }
       `);
@@ -6188,6 +6189,31 @@ describe("a router", () => {
       }
     });
 
+    it("properly handles same-origin absolute URLs", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES });
+
+      let A = await t.navigate("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let B = await A.actions.child.redirectReturn(
+        "http://localhost/parent",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+      await B.loaders.parent.resolve("PARENT");
+      expect(t.router.state.location).toMatchObject({
+        hash: "",
+        pathname: "/parent",
+        search: "",
+        state: {
+          _isRedirect: true,
+        },
+      });
+    });
+
     describe("redirect status code handling", () => {
       it("should not treat 300 as a redirect", async () => {
         let t = setup({ routes: REDIRECT_ROUTES });
@@ -6381,166 +6407,423 @@ describe("a router", () => {
       },
     ];
 
-    it("restores scroll on initial load (w/o hydrationData)", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/no-loader"],
+    describe("scroll restoration", () => {
+      it("restores scroll on initial load (w/o hydrationData)", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/no-loader"],
+        });
+
+        expect(t.router.state.restoreScrollPosition).toBe(null);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        // Assume initial location had a saved position
+        let positions = { default: 50 };
+        t.router.enableScrollRestoration(positions, () => 0);
+        expect(t.router.state.restoreScrollPosition).toBe(50);
       });
 
-      expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.preventScrollReset).toBe(false);
+      it("restores scroll on initial load (w/ hydrationData)", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: {
+            loaderData: {
+              index: "INDEX",
+            },
+          },
+        });
 
-      // Assume initial location had a saved position
-      let positions = { default: 50 };
-      t.router.enableScrollRestoration(positions, () => 0);
-      expect(t.router.state.restoreScrollPosition).toBe(50);
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        // Assume initial location had a saved position
+        let positions = { default: 50 };
+        t.router.enableScrollRestoration(positions, () => 0);
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+      });
+
+      it("restores scroll on navigations", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: {
+            loaderData: {
+              index: "INDEX_DATA",
+            },
+          },
+        });
+
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        let positions = {};
+
+        // Simulate scrolling to 100 on /
+        let activeScrollPosition = 100;
+        t.router.enableScrollRestoration(positions, () => activeScrollPosition);
+
+        // No restoration on first click to /tasks
+        let nav1 = await t.navigate("/tasks");
+        await nav1.loaders.tasks.resolve("TASKS");
+        expect(t.router.state.restoreScrollPosition).toBe(null);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        // Simulate scrolling down on /tasks
+        activeScrollPosition = 200;
+
+        // Restore on pop back to /
+        let nav2 = await t.navigate(-1);
+        expect(t.router.state.restoreScrollPosition).toBe(null);
+        await nav2.loaders.index.resolve("INDEX");
+        expect(t.router.state.restoreScrollPosition).toBe(100);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        // Restore on pop forward to /tasks
+        let nav3 = await t.navigate(1);
+        await nav3.loaders.tasks.resolve("TASKS");
+        expect(t.router.state.restoreScrollPosition).toBe(200);
+        expect(t.router.state.preventScrollReset).toBe(false);
+      });
+
+      it("restores scroll using custom key", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: {
+            loaderData: {
+              index: "INDEX_DATA",
+            },
+          },
+        });
+
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+        expect(t.router.state.preventScrollReset).toBe(false);
+
+        let positions = { "/tasks": 100 };
+        let activeScrollPosition = 0;
+        t.router.enableScrollRestoration(
+          positions,
+          () => activeScrollPosition,
+          (l) => l.pathname
+        );
+
+        let nav1 = await t.navigate("/tasks");
+        await nav1.loaders.tasks.resolve("TASKS");
+        expect(t.router.state.restoreScrollPosition).toBe(100);
+        expect(t.router.state.preventScrollReset).toBe(false);
+      });
+
+      it("restores scroll on GET submissions", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/tasks"],
+          hydrationData: {
+            loaderData: {
+              tasks: "TASKS",
+            },
+          },
+        });
+
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+        expect(t.router.state.preventScrollReset).toBe(false);
+        // We were previously on tasks at 100
+        let positions = { "/tasks": 100 };
+        // But we've scrolled up to 50 to submit.  We'll save this overtop of
+        // the 100 when we start this submission navigation and then restore to
+        // 50 below
+        let activeScrollPosition = 50;
+        t.router.enableScrollRestoration(
+          positions,
+          () => activeScrollPosition,
+          (l) => l.pathname
+        );
+
+        let nav1 = await t.navigate("/tasks", {
+          formMethod: "get",
+          formData: createFormData({ key: "value" }),
+        });
+        await nav1.loaders.tasks.resolve("TASKS2");
+        expect(t.router.state.restoreScrollPosition).toBe(50);
+        expect(t.router.state.preventScrollReset).toBe(false);
+      });
+
+      it("restores scroll on POST submissions", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          initialEntries: ["/tasks"],
+          hydrationData: {
+            loaderData: {
+              index: "INDEX_DATA",
+            },
+          },
+        });
+
+        expect(t.router.state.restoreScrollPosition).toBe(false);
+        expect(t.router.state.preventScrollReset).toBe(false);
+        // We were previously on tasks at 100
+        let positions = { "/tasks": 100 };
+        // But we've scrolled up to 50 to submit.  We'll save this overtop of
+        // the 100 when we start this submission navigation and then restore to
+        // 50 below
+        let activeScrollPosition = 50;
+        t.router.enableScrollRestoration(
+          positions,
+          () => activeScrollPosition,
+          (l) => l.pathname
+        );
+
+        let nav1 = await t.navigate("/tasks", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        const nav2 = await nav1.actions.tasks.redirectReturn("/tasks");
+        await nav2.loaders.tasks.resolve("TASKS");
+        expect(t.router.state.restoreScrollPosition).toBe(50);
+        expect(t.router.state.preventScrollReset).toBe(false);
+      });
     });
 
-    it("restores scroll on initial load (w/ hydrationData)", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/"],
-        hydrationData: {
-          loaderData: {
-            index: "INDEX",
-          },
-        },
+    describe("scroll reset", () => {
+      describe("default behavior", () => {
+        it("resets on navigations", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks");
+          await nav1.loaders.tasks.resolve("TASKS");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(false);
+        });
+
+        it("resets on navigations that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks");
+          let nav2 = await nav1.loaders.tasks.redirectReturn("/");
+          await nav2.loaders.index.resolve("INDEX_DATA 2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(false);
+        });
+
+        it("does not reset on submission navigations", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+          });
+          await nav1.actions.tasks.resolve("ACTION");
+          await nav1.loaders.tasks.resolve("TASKS");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
+
+        it("resets on submission navigations that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+          });
+          let nav2 = await nav1.actions.tasks.redirectReturn("/");
+          await nav2.loaders.index.resolve("INDEX_DATA2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(false);
+        });
       });
 
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
+      describe("user-specified flag preventScrollReset flag", () => {
+        it("prevents scroll reset on navigations", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
 
-      // Assume initial location had a saved position
-      let positions = { default: 50 };
-      t.router.enableScrollRestoration(positions, () => 0);
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-    });
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
 
-    it("restores scroll on navigations", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/"],
-        hydrationData: {
-          loaderData: {
-            index: "INDEX_DATA",
-          },
-        },
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", { preventScrollReset: true });
+          await nav1.loaders.tasks.resolve("TASKS");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
+
+        it("prevents scroll reset on navigations that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", { preventScrollReset: true });
+          let nav2 = await nav1.loaders.tasks.redirectReturn("/");
+          await nav2.loaders.index.resolve("INDEX_DATA 2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
+
+        it("prevents scroll reset on submission navigations", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+            preventScrollReset: true,
+          });
+          await nav1.actions.tasks.resolve("ACTION");
+          await nav1.loaders.tasks.resolve("TASKS");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
+
+        it("prevents scroll reset on submission navigations that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/"],
+            hydrationData: {
+              loaderData: {
+                index: "INDEX_DATA",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.navigate("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+            preventScrollReset: true,
+          });
+          let nav2 = await nav1.actions.tasks.redirectReturn("/");
+          await nav2.loaders.index.resolve("INDEX_DATA2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
       });
-
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      let positions = {};
-
-      // Simulate scrolling to 100 on /
-      let activeScrollPosition = 100;
-      t.router.enableScrollRestoration(positions, () => activeScrollPosition);
-
-      // No restoration on first click to /tasks
-      let nav1 = await t.navigate("/tasks");
-      await nav1.loaders.tasks.resolve("TASKS");
-      expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      // Simulate scrolling down on /tasks
-      activeScrollPosition = 200;
-
-      // Restore on pop back to /
-      let nav2 = await t.navigate(-1);
-      expect(t.router.state.restoreScrollPosition).toBe(null);
-      await nav2.loaders.index.resolve("INDEX");
-      expect(t.router.state.restoreScrollPosition).toBe(100);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      // Restore on pop forward to /tasks
-      let nav3 = await t.navigate(1);
-      await nav3.loaders.tasks.resolve("TASKS");
-      expect(t.router.state.restoreScrollPosition).toBe(200);
-      expect(t.router.state.preventScrollReset).toBe(false);
-    });
-
-    it("restores scroll using custom key", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/"],
-        hydrationData: {
-          loaderData: {
-            index: "INDEX_DATA",
-          },
-        },
-      });
-
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      let positions = { "/tasks": 100 };
-      let activeScrollPosition = 0;
-      t.router.enableScrollRestoration(
-        positions,
-        () => activeScrollPosition,
-        (l) => l.pathname
-      );
-
-      let nav1 = await t.navigate("/tasks");
-      await nav1.loaders.tasks.resolve("TASKS");
-      expect(t.router.state.restoreScrollPosition).toBe(100);
-      expect(t.router.state.preventScrollReset).toBe(false);
-    });
-
-    it("does not restore scroll on submissions", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/"],
-        hydrationData: {
-          loaderData: {
-            index: "INDEX_DATA",
-          },
-        },
-      });
-
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      let positions = { "/tasks": 100 };
-      let activeScrollPosition = 0;
-      t.router.enableScrollRestoration(
-        positions,
-        () => activeScrollPosition,
-        (l) => l.pathname
-      );
-
-      let nav1 = await t.navigate("/tasks", {
-        formMethod: "post",
-        formData: createFormData({}),
-      });
-      await nav1.actions.tasks.resolve("ACTION");
-      await nav1.loaders.tasks.resolve("TASKS");
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
-    });
-
-    it("does not reset scroll", async () => {
-      let t = setup({
-        routes: SCROLL_ROUTES,
-        initialEntries: ["/"],
-        hydrationData: {
-          loaderData: {
-            index: "INDEX_DATA",
-          },
-        },
-      });
-
-      expect(t.router.state.restoreScrollPosition).toBe(false);
-      expect(t.router.state.preventScrollReset).toBe(false);
-
-      let positions = {};
-      let activeScrollPosition = 0;
-      t.router.enableScrollRestoration(positions, () => activeScrollPosition);
-
-      let nav1 = await t.navigate("/tasks", { preventScrollReset: true });
-      await nav1.loaders.tasks.resolve("TASKS");
-      expect(t.router.state.restoreScrollPosition).toBe(null);
-      expect(t.router.state.preventScrollReset).toBe(true);
     });
   });
 
@@ -8913,16 +9196,16 @@ describe("a router", () => {
           data: 1,
         });
         expect(shouldRevalidate.mock.calls[0][0]).toMatchInlineSnapshot(`
-          Object {
+          {
             "actionResult": null,
-            "currentParams": Object {},
+            "currentParams": {},
             "currentUrl": "http://localhost/fetch",
             "defaultShouldRevalidate": true,
             "formAction": "/",
             "formData": FormData {},
             "formEncType": "application/x-www-form-urlencoded",
             "formMethod": "post",
-            "nextParams": Object {},
+            "nextParams": {},
             "nextUrl": "http://localhost/fetch",
           }
         `);
@@ -10989,6 +11272,20 @@ describe("a router", () => {
       },
     ];
 
+    // Regardless of if the URL is internal or external - all absolute URL
+    // responses should return untouched during SSR so the browser can handle
+    // them
+    let ABSOLUTE_URLS = [
+      "http://localhost/",
+      "https://localhost/about",
+      "http://remix.run/blog",
+      "https://remix.run/blog",
+      "//remix.run/blog",
+      "app://whatever",
+      "mailto:hello@remix.run",
+      "web+remix:whatever",
+    ];
+
     function createRequest(path: string, opts?: RequestInit) {
       return new Request(`http://localhost${path}`, {
         signal: new AbortController().signal,
@@ -11312,15 +11609,8 @@ describe("a router", () => {
         expect((response as Response).headers.get("Location")).toBe("/parent");
       });
 
-      it("should handle external redirect Responses", async () => {
-        let urls = [
-          "http://remix.run/blog",
-          "https://remix.run/blog",
-          "//remix.run/blog",
-          "app://whatever",
-        ];
-
-        for (let url of urls) {
+      it("should handle absolute redirect Responses", async () => {
+        for (let url of ABSOLUTE_URLS) {
           let handler = createStaticHandler([
             {
               path: "/",
@@ -12212,6 +12502,14 @@ describe("a router", () => {
         expect(data).toBe("PARENT LOADER");
       });
 
+      it("should support OPTIONS requests", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let data = await queryRoute(
+          createRequest("/parent", { method: "OPTIONS" })
+        );
+        expect(data).toBe("PARENT LOADER");
+      });
+
       it("should support singular route load navigations (primitives)", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let data;
@@ -12648,15 +12946,8 @@ describe("a router", () => {
         expect((response as Response).headers.get("Location")).toBe("/parent");
       });
 
-      it("should handle external redirect Responses", async () => {
-        let urls = [
-          "http://remix.run/blog",
-          "https://remix.run/blog",
-          "//remix.run/blog",
-          "app://whatever",
-        ];
-
-        for (let url of urls) {
+      it("should handle absolute redirect Responses", async () => {
+        for (let url of ABSOLUTE_URLS) {
           let handler = createStaticHandler([
             {
               id: "root",
@@ -12970,7 +13261,7 @@ describe("a router", () => {
 
         it("should handle unsupported methods with a 405 Response", async () => {
           try {
-            await queryRoute(createRequest("/", { method: "OPTIONS" }), {
+            await queryRoute(createRequest("/", { method: "TRACE" }), {
               routeId: "root",
             });
             expect(false).toBe(true);
@@ -12978,7 +13269,7 @@ describe("a router", () => {
             expect(isRouteErrorResponse(data)).toBe(true);
             expect(data.status).toBe(405);
             expect(data.error).toEqual(
-              new Error('Invalid request method "OPTIONS"')
+              new Error('Invalid request method "TRACE"')
             );
             expect(data.internal).toBe(true);
           }

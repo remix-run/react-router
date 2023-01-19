@@ -1,5 +1,21 @@
 # `react-router-dom`
 
+## 6.7.0
+
+### Minor Changes
+
+- Add `unstable_useBlocker` hook for blocking navigations within the app's location origin ([#9709](https://github.com/remix-run/react-router/pull/9709))
+- Add `unstable_usePrompt` hook for blocking navigations within the app's location origin ([#9932](https://github.com/remix-run/react-router/pull/9932))
+- Add `preventScrollReset` prop to `<Form>` ([#9886](https://github.com/remix-run/react-router/pull/9886))
+
+### Patch Changes
+
+- Added pass-through event listener options argument to `useBeforeUnload` ([#9709](https://github.com/remix-run/react-router/pull/9709))
+- Streamline jsdom bug workaround in tests ([#9824](https://github.com/remix-run/react-router/pull/9824))
+- Updated dependencies:
+  - `@remix-run/router@1.3.0`
+  - `react-router@6.7.0`
+
 ## 6.6.2
 
 ### Patch Changes

@@ -3,6 +3,8 @@ if (
   typeof SubmitEvent === "undefined" ||
   !SubmitEvent.prototype.hasOwnProperty("submitter")
 ) {
+  const setImmediate = (fn, ...args) => global.setTimeout(fn, 0, ...args);
+
   let maybeSubmitter;
   window.addEventListener(
     "click",

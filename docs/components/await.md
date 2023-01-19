@@ -140,7 +140,6 @@ function Book() {
         >
           <Reviews />
         </Await>
-        />
       </React.Suspense>
     </div>
   );
