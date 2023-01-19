@@ -1143,8 +1143,8 @@ function useScrollRestoration({
     };
   }, []);
 
-  // Save positions on unload
-  useBeforeUnload(
+  // Save positions on pagehide
+  usePageHide(
     React.useCallback(() => {
       if (navigation.state === "idle") {
         let key = (getKey ? getKey(location, matches) : null) || location.key;
@@ -1237,6 +1237,28 @@ export function useBeforeUnload(
     window.addEventListener("beforeunload", callback, opts);
     return () => {
       window.removeEventListener("beforeunload", callback, opts);
+    };
+  }, [callback, capture]);
+}
+
+/**
+ * Setup a callback to be fired on the window's `pagehide` event. This is
+ * useful for saving some data to `window.localStorage` just before the page
+ * refreshes.  This event is better supported than beforeunload across browsers.
+ *
+ * Note: The `callback` argument should be a function created with
+ * `React.useCallback()`.
+ */
+function usePageHide(
+  callback: (event: PageTransitionEvent) => any,
+  options?: { capture?: boolean }
+): void {
+  let { capture } = options || {};
+  React.useEffect(() => {
+    let opts = capture != null ? { capture } : undefined;
+    window.addEventListener("pagehide", callback, opts);
+    return () => {
+      window.removeEventListener("pagehide", callback, opts);
     };
   }, [callback, capture]);
 }
