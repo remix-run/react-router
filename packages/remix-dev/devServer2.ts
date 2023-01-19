@@ -45,36 +45,61 @@ let fetchAssetsManifest = async (
   }
 };
 
+let resolveDev = (
+  dev: RemixConfig["future"]["unstable_dev"],
+  flags: { port?: number; appServerPort?: number }
+) => {
+  if (dev === false)
+    throw Error("The new dev server requires 'unstable_dev' to be set");
+
+  let port = flags.port ?? (dev === true ? undefined : dev.port);
+  let appServerPort =
+    flags.appServerPort ?? (dev === true || dev.appServerPort == undefined)
+      ? 3000
+      : dev.appServerPort;
+  let remixRequestHandlerPath =
+    dev === true || dev.remixRequestHandlerPath === undefined
+      ? ""
+      : dev.remixRequestHandlerPath;
+  let rebuildPollIntervalMs =
+    dev === true || dev.rebuildPollIntervalMs === undefined
+      ? 50
+      : dev.rebuildPollIntervalMs;
+
+  return {
+    port,
+    appServerPort,
+    remixRequestHandlerPath,
+    rebuildPollIntervalMs,
+  };
+};
+
 export let serve = async (
   config: RemixConfig,
   flags: { port?: number; appServerPort?: number } = {}
 ) => {
   await loadEnv(config.rootDirectory);
 
-  let { unstable_dev } = config.future;
-  if (unstable_dev === false)
-    throw Error("The new dev server requires 'unstable_dev' to be set");
-  let { remixRequestHandlerPath, rebuildPollIntervalMs } = unstable_dev;
-  let appServerPort = flags.appServerPort ?? unstable_dev.appServerPort ?? 3000;
+  let dev = resolveDev(config.future.unstable_dev, flags);
 
   let host = getHost();
-  let appServerOrigin = `http://${host ?? "localhost"}:${appServerPort}`;
+  let appServerOrigin = `http://${host ?? "localhost"}:${dev.appServerPort}`;
 
   let waitForAppServer = async (buildHash: string) => {
     while (true) {
       // TODO AbortController signal to cancel responses?
       let assetsManifest = await fetchAssetsManifest(
         appServerOrigin,
-        remixRequestHandlerPath ?? ""
+        dev.remixRequestHandlerPath
       );
       if (assetsManifest?.version === buildHash) return;
 
-      await sleep(rebuildPollIntervalMs ?? 50);
+      await sleep(dev.rebuildPollIntervalMs);
     }
   };
 
   // watch and live reload on rebuilds
-  let port = await findPort(flags.port ?? unstable_dev.port);
+  let port = await findPort(dev.port);
   let socket = LiveReload.serve({ port });
   let dispose = await Compiler.watch(config, {
     mode: "development",

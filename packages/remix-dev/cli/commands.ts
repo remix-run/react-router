@@ -204,7 +204,8 @@ export async function dev(
   let mode = compiler.parseMode(modeArg ?? "", "development");
 
   if (config.future.unstable_dev !== false) {
-    return devServer2.serve(config, flags);
+    await devServer2.serve(config, flags);
+    return await new Promise(() => {});
   }
 
   return devServer.serve(config, mode, flags.port);

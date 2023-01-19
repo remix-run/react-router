@@ -42,7 +42,7 @@ type Dev = {
 interface FutureConfig {
   unstable_cssModules: boolean;
   unstable_cssSideEffectImports: boolean;
-  unstable_dev: false | Dev;
+  unstable_dev: boolean | Dev;
   unstable_vanillaExtract: boolean;
   v2_errorBoundary: boolean;
   v2_meta: boolean;
