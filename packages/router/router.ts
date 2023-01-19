@@ -21,6 +21,7 @@ import type {
   SuccessResult,
   AgnosticRouteMatch,
   MutationFormMethod,
+  ShouldRevalidateFunction,
 } from "./utils";
 import {
   DeferredData,
@@ -560,11 +561,12 @@ type RevalidatingFetcher = [
 ];
 
 /**
- * Tuple of [href, DataRouteMatch, DataRouteMatch[]] for an active
+ * Tuple of [routeId, href, DataRouteMatch, DataRouteMatch[]] for an active
  * fetcher.load()
  */
 type FetchLoadMatch = [
-  string,
+  string, // routeId
+  string, // href
   AgnosticDataRouteMatch,
   AgnosticDataRouteMatch[]
 ];
@@ -1514,7 +1516,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
-    fetchLoadMatches.set(key, [path, match, matches]);
+    fetchLoadMatches.set(key, [routeId, path, match, matches]);
     handleFetcherLoader(key, routeId, path, match, matches, submission);
   }
 
@@ -2892,45 +2894,79 @@ function getMatchesToLoad(
     ? Object.values(pendingActionData)[0]
     : undefined;
 
+  let currentUrl = history.createURL(state.location);
+  let nextUrl = history.createURL(location);
+
+  let defaultShouldRevalidate =
+    // Forced revalidation due to submission, useRevalidate, or X-Remix-Revalidate
+    isRevalidationRequired ||
+    // Clicked the same link, resubmitted a GET form
+    currentUrl.toString() === nextUrl.toString() ||
+    // Search params affect all loaders
+    currentUrl.search !== nextUrl.search;
+
   // Pick navigation matches that are net-new or qualify for revalidation
   let boundaryId = pendingError ? Object.keys(pendingError)[0] : undefined;
   let boundaryMatches = getLoaderMatchesUntilBoundary(matches, boundaryId);
-  let navigationMatches = boundaryMatches.filter(
-    (match, index) =>
-      match.route.loader != null &&
-      (isNewLoader(state.loaderData, state.matches[index], match) ||
-        // If this route had a pending deferred cancelled it must be revalidated
-        cancelledDeferredRoutes.some((id) => id === match.route.id) ||
-        shouldRevalidateLoader(
-          history,
-          state.location,
-          state.matches[index],
-          submission,
-          location,
-          match,
-          isRevalidationRequired,
-          actionResult
-        ))
-  );
+
+  let navigationMatches = boundaryMatches.filter((match, index) => {
+    if (match.route.loader == null) {
+      return false;
+    }
+
+    // Always call the loader on new route instances and pending defer cancellations
+    if (
+      isNewLoader(state.loaderData, state.matches[index], match) ||
+      cancelledDeferredRoutes.some((id) => id === match.route.id)
+    ) {
+      return true;
+    }
+
+    // This is the default implementation for when we revalidate.  If the route
+    // provides it's own implementation, then we give them full control but
+    // provide this value so they can leverage it if needed after they check
+    // their own specific use cases
+    let currentRouteMatch = state.matches[index];
+    let nextRouteMatch = match;
+
+    return shouldRevalidateLoader(match, {
+      currentUrl,
+      currentParams: currentRouteMatch.params,
+      nextUrl,
+      nextParams: nextRouteMatch.params,
+      ...submission,
+      actionResult,
+      defaultShouldRevalidate:
+        defaultShouldRevalidate ||
+        isNewRouteInstance(currentRouteMatch, nextRouteMatch),
+    });
+  });
 
   // Pick fetcher.loads that need to be revalidated
   let revalidatingFetchers: RevalidatingFetcher[] = [];
   fetchLoadMatches &&
-    fetchLoadMatches.forEach(([href, match, fetchMatches], key) => {
-      // This fetcher was cancelled from a prior action submission - force reload
-      if (cancelledFetcherLoads.includes(key)) {
+    fetchLoadMatches.forEach(([routeId, href, match, fetchMatches], key) => {
+      if (!matches.some((m) => m.route.id === routeId)) {
+        // This fetcher is not going to be present in the subsequent render so
+        // there's no need to revalidate it
+        return;
+      } else if (cancelledFetcherLoads.includes(key)) {
+        // This fetcher was cancelled from a prior action submission - force reload
         revalidatingFetchers.push([key, href, match, fetchMatches]);
-      } else if (isRevalidationRequired) {
-        let shouldRevalidate = shouldRevalidateLoader(
-          history,
-          href,
-          match,
-          submission,
-          href,
-          match,
-          isRevalidationRequired,
-          actionResult
-        );
+      } else {
+        // Revalidating fetchers are decoupled from the route matches since they
+        // hit a static href, so they _always_ check shouldRevalidate and the
+        // default is strictly if a revalidation is explicitly required (action
+        // submissions, useRevalidator, X-Remix-Revalidate).
+        let shouldRevalidate = shouldRevalidateLoader(match, {
+          currentUrl,
+          currentParams: state.matches[state.matches.length - 1].params,
+          nextUrl,
+          nextParams: matches[matches.length - 1].params,
+          ...submission,
+          actionResult,
+          defaultShouldRevalidate,
+        });
         if (shouldRevalidate) {
           revalidatingFetchers.push([key, href, match, fetchMatches]);
         }
@@ -2969,58 +3005,24 @@ function isNewRouteInstance(
     currentMatch.pathname !== match.pathname ||
     // splat param changed, which is not present in match.path
     // e.g. /files/images/avatar.jpg -> files/finances.xls
-    (currentPath &&
+    (currentPath != null &&
       currentPath.endsWith("*") &&
       currentMatch.params["*"] !== match.params["*"])
   );
 }
 
 function shouldRevalidateLoader(
-  history: History,
-  currentLocation: string | Location,
-  currentMatch: AgnosticDataRouteMatch,
-  submission: Submission | undefined,
-  location: string | Location,
-  match: AgnosticDataRouteMatch,
-  isRevalidationRequired: boolean,
-  actionResult: DataResult | undefined
+  loaderMatch: AgnosticDataRouteMatch,
+  arg: Parameters<ShouldRevalidateFunction>[0]
 ) {
-  let currentUrl = history.createURL(currentLocation);
-  let currentParams = currentMatch.params;
-  let nextUrl = history.createURL(location);
-  let nextParams = match.params;
-
-  // This is the default implementation as to when we revalidate.  If the route
-  // provides it's own implementation, then we give them full control but
-  // provide this value so they can leverage it if needed after they check
-  // their own specific use cases
-  // Note that fetchers always provide the same current/next locations so the
-  // URL-based checks here don't apply to fetcher shouldRevalidate calls
-  let defaultShouldRevalidate =
-    isNewRouteInstance(currentMatch, match) ||
-    // Clicked the same link, resubmitted a GET form
-    currentUrl.toString() === nextUrl.toString() ||
-    // Search params affect all loaders
-    currentUrl.search !== nextUrl.search ||
-    // Forced revalidation due to submission, useRevalidate, or X-Remix-Revalidate
-    isRevalidationRequired;
-
-  if (match.route.shouldRevalidate) {
-    let routeChoice = match.route.shouldRevalidate({
-      currentUrl,
-      currentParams,
-      nextUrl,
-      nextParams,
-      ...submission,
-      actionResult,
-      defaultShouldRevalidate,
-    });
+  if (loaderMatch.route.shouldRevalidate) {
+    let routeChoice = loaderMatch.route.shouldRevalidate(arg);
     if (typeof routeChoice === "boolean") {
       return routeChoice;
     }
   }
 
-  return defaultShouldRevalidate;
+  return arg.defaultShouldRevalidate;
 }
 
 async function callLoaderOrAction(
