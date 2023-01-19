@@ -4494,7 +4494,7 @@ describe("a router", () => {
       );
     });
 
-    it("returns a 400 error if binary data is attempted to be submitted using formMethod=GET", async () => {
+    it("url-encodes File names on GET submissions", async () => {
       let t = setup({
         routes: TASK_ROUTES,
         initialEntries: ["/"],
@@ -4511,26 +4511,17 @@ describe("a router", () => {
         "blob",
         new Blob(["<h1>Some html file contents</h1>"], {
           type: "text/html",
-        })
+        }),
+        "blob.html"
       );
 
-      await t.navigate("/tasks", {
+      let A = await t.navigate("/tasks", {
         formMethod: "get",
         formData: formData,
       });
-      expect(t.router.state.navigation.state).toBe("idle");
-      expect(t.router.state.location).toMatchObject({
-        pathname: "/tasks",
-        search: "",
-      });
-      expect(t.router.state.errors).toEqual({
-        tasks: new ErrorResponse(
-          400,
-          "Bad Request",
-          new Error("Cannot submit binary form data using GET"),
-          true
-        ),
-      });
+      let params = new URL(A.loaders.tasks.stub.mock.calls[0][0].request.url)
+        .searchParams;
+      expect(params.get("blob")).toEqual("blob.html");
     });
 
     it("returns a 405 error if attempting to submit with method=HEAD", async () => {
@@ -4608,61 +4599,6 @@ describe("a router", () => {
           405,
           "Method Not Allowed",
           new Error('Invalid request method "OPTIONS"'),
-          true
-        ),
-      });
-    });
-
-    it("runs loaders above the boundary for 400 errors if binary data is attempted to be submitted using formMethod=GET", async () => {
-      let t = setup({
-        routes: [
-          {
-            id: "index",
-            index: true,
-          },
-          {
-            id: "parent",
-            path: "parent",
-            loader: true,
-            children: [
-              {
-                id: "child",
-                path: "child",
-                loader: true,
-                hasErrorBoundary: true,
-              },
-            ],
-          },
-        ],
-        initialEntries: ["/"],
-      });
-
-      let formData = new FormData();
-      formData.append(
-        "blob",
-        new Blob(["<h1>Some html file contents</h1>"], {
-          type: "text/html",
-        })
-      );
-
-      let A = await t.navigate("/parent/child", {
-        formMethod: "get",
-        formData: formData,
-      });
-      expect(t.router.state.navigation.state).toBe("loading");
-      expect(t.router.state.errors).toEqual(null);
-
-      await A.loaders.parent.resolve("PARENT");
-      expect(A.loaders.child.stub).not.toHaveBeenCalled();
-      expect(t.router.state.navigation.state).toBe("idle");
-      expect(t.router.state.loaderData).toEqual({
-        parent: "PARENT",
-      });
-      expect(t.router.state.errors).toEqual({
-        child: new ErrorResponse(
-          400,
-          "Bad Request",
-          new Error("Cannot submit binary form data using GET"),
           true
         ),
       });
@@ -5709,6 +5645,37 @@ describe("a router", () => {
       ).toMatch(
         /^multipart\/form-data; boundary=NodeFetchFormDataBoundary[a-z0-9]+/
       );
+    });
+
+    it("url-encodes File names on x-www-form-urlencoded submissions", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            action: true,
+          },
+        ],
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+          },
+        },
+      });
+
+      let fd = new FormData();
+      fd.append("key", "value");
+      fd.append("file", new Blob(["1", "2", "3"]), "file.txt");
+
+      let A = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/x-www-form-urlencoded",
+        formData: fd,
+      });
+
+      let req = A.actions.root.stub.mock.calls[0][0].request.clone();
+      expect((await req.formData()).get("file")).toEqual("file.txt");
     });
 
     it("races actions and loaders against abort signals", async () => {
@@ -10192,6 +10159,7 @@ describe("a router", () => {
               {
                 id: "b",
                 path: "b",
+                loader: true,
               },
             ],
           },
@@ -10230,12 +10198,11 @@ describe("a router", () => {
       // Perform an invalid navigation to /parent/b which will be handled
       // using parent's error boundary.  Parent's deferred should be left alone
       // while A's should be cancelled since they will no longer be rendered
-      let formData = new FormData();
-      formData.append("file", new Blob(["1", "2"]), "file.txt");
-      await t.navigate("/parent/b", {
-        formMethod: "get",
-        formData,
-      });
+      let B = await t.navigate("/parent/b");
+      await B.loaders.b.reject(
+        new Response("broken", { status: 400, statusText: "Bad Request" })
+      );
+
       // Navigation completes immediately with an error at the boundary
       expect(t.router.state.loaderData).toEqual({
         parent: {
@@ -10244,12 +10211,7 @@ describe("a router", () => {
         },
       });
       expect(t.router.state.errors).toEqual({
-        parent: new ErrorResponse(
-          400,
-          "Bad Request",
-          new Error("Cannot submit binary form data using GET"),
-          true
-        ),
+        parent: new ErrorResponse(400, "Bad Request", "broken", false),
       });
 
       await parentDfd.resolve("Yep!");
@@ -10330,12 +10292,11 @@ describe("a router", () => {
       // Perform an invalid navigation to /b/child which should cancel all
       // pending deferred's since nothing is reused.  It should not call bChild's
       // loader since it's below the boundary but should call b's loader.
-      let formData = new FormData();
-      formData.append("file", new Blob(["1", "2"]), "file.txt");
-      let B = await t.navigate("/b/child", {
-        formMethod: "get",
-        formData,
-      });
+      let B = await t.navigate("/b/child");
+
+      await B.loaders.bChild.reject(
+        new Response("broken", { status: 400, statusText: "Bad Request" })
+      );
 
       // Both should be cancelled
       await aDfd.resolve("Nope!");
@@ -10356,14 +10317,8 @@ describe("a router", () => {
         b: "B LOADER",
       });
       expect(t.router.state.errors).toEqual({
-        bChild: new ErrorResponse(
-          400,
-          "Bad Request",
-          new Error("Cannot submit binary form data using GET"),
-          true
-        ),
+        bChild: new ErrorResponse(400, "Bad Request", "broken", false),
       });
-      expect(B.loaders.bChild.stub).not.toHaveBeenCalled();
     });
 
     it("does not cancel pending deferreds on hash change only navigations", async () => {

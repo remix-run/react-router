@@ -2845,25 +2845,14 @@ function normalizeNavigateOptions(
 
   // Flatten submission onto URLSearchParams for GET submissions
   let parsedPath = parsePath(path);
-  try {
-    let searchParams = convertFormDataToSearchParams(opts.formData);
-    // Since fetcher GET submissions only run a single loader (as opposed to
-    // navigation GET submissions which run all loaders), we need to preserve
-    // any incoming ?index params
-    if (
-      isFetcher &&
-      parsedPath.search &&
-      hasNakedIndexQuery(parsedPath.search)
-    ) {
-      searchParams.append("index", "");
-    }
-    parsedPath.search = `?${searchParams}`;
-  } catch (e) {
-    return {
-      path,
-      error: getInternalRouterError(400),
-    };
+  let searchParams = convertFormDataToSearchParams(opts.formData);
+  // Since fetcher GET submissions only run a single loader (as opposed to
+  // navigation GET submissions which run all loaders), we need to preserve
+  // any incoming ?index params
+  if (isFetcher && parsedPath.search && hasNakedIndexQuery(parsedPath.search)) {
+    searchParams.append("index", "");
   }
+  parsedPath.search = `?${searchParams}`;
 
   return { path: createPath(parsedPath), submission };
 }
@@ -3222,12 +3211,8 @@ function convertFormDataToSearchParams(formData: FormData): URLSearchParams {
   let searchParams = new URLSearchParams();
 
   for (let [key, value] of formData.entries()) {
-    invariant(
-      typeof value === "string",
-      'File inputs are not supported with encType "application/x-www-form-urlencoded", ' +
-        'please use "multipart/form-data" instead.'
-    );
-    searchParams.append(key, value);
+    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#converting-an-entry-list-to-a-list-of-name-value-pairs
+    searchParams.append(key, value instanceof File ? value.name : value);
   }
 
   return searchParams;
@@ -3490,8 +3475,6 @@ function getInternalRouterError(
         `so there is no way to handle the request.`;
     } else if (type === "defer-action") {
       errorMessage = "defer() is not supported in actions";
-    } else {
-      errorMessage = "Cannot submit binary form data using GET";
     }
   } else if (status === 403) {
     statusText = "Forbidden";
