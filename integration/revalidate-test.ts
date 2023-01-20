@@ -61,7 +61,6 @@ test.describe("Revalidation", () => {
             };
 
             export function shouldRevalidate({ nextUrl, formData }) {
-              debugger;
               if (nextUrl.searchParams.get('revalidate')?.split(',')?.includes('parent')) {
                 return true;
               }
