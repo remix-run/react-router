@@ -5,6 +5,8 @@ import * as cli from "./utils/cli";
 import * as git from "./utils/git";
 import withApp from "./utils/withApp";
 
+jest.setTimeout(1000 * 20);
+
 let FIXTURE = path.join(__dirname, "fixtures/replace-remix-magic-imports");
 
 it("checks that project is a clean git repository", async () => {

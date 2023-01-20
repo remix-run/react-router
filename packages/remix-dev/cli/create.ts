@@ -16,7 +16,7 @@ import * as colors from "../colors";
 import invariant from "../invariant";
 import packageJson from "../package.json";
 import { getPreferredPackageManager } from "./getPreferredPackageManager";
-import { convertToJavaScript } from "./migrate/migrations/convert-to-javascript";
+import * as useJavascript from "./useJavascript";
 
 const remixDevPackageVersion = packageJson.version;
 const defaultAgent = new ProxyAgent();
@@ -201,8 +201,8 @@ export async function createApp({
     !useTypeScript &&
     fse.existsSync(path.join(projectDir, "tsconfig.json"))
   ) {
-    let spinner = ora("Migrating template to JavaScript…").start();
-    await convertToJavaScript(projectDir, { interactive: false });
+    let spinner = ora("Converting template to JavaScript…").start();
+    await useJavascript.convert(projectDir);
     spinner.stop();
     spinner.clear();
   }

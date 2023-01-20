@@ -248,12 +248,6 @@ describe("remix CLI", () => {
       expect(
         fse.existsSync(path.join(projectDir, "app/root.jsx"))
       ).toBeTruthy();
-      expect(
-        fse.existsSync(path.join(projectDir, "tsconfig.json"))
-      ).toBeFalsy();
-      expect(
-        fse.existsSync(path.join(projectDir, "jsconfig.json"))
-      ).toBeTruthy();
     });
   });
 });

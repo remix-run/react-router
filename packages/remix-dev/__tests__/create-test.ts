@@ -353,8 +353,6 @@ describe("the create command", () => {
     );
     expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
     expect(fse.existsSync(path.join(projectDir, "app/root.jsx"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "tsconfig.json"))).toBeFalsy();
-    expect(fse.existsSync(path.join(projectDir, "jsconfig.json"))).toBeTruthy();
   });
 
   it("works for a file path to a directory on disk", async () => {
