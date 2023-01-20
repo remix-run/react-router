@@ -90,7 +90,26 @@ export interface Submission {
 interface DataFunctionArgs {
   request: Request;
   params: Params;
+  // TODO: Do we need to go with beforeRequestContext or something for back-compat
   context?: any;
+}
+
+/**
+ * Context object passed through beforeRequest functions and into action/loaders.
+ *
+ * Supports only key/value for now, eventually will be enhanced
+ */
+export interface BeforeRequestContext {
+  get(key: string): unknown;
+  set(key: string, value: unknown): void;
+}
+
+/**
+ * Arguments passed to beforeRequest functions
+ */
+export interface BeforeRequestFunctionArgs extends DataFunctionArgs {
+  context: BeforeRequestContext;
+  type: "action" | "loader";
 }
 
 /**
@@ -102,6 +121,13 @@ export interface LoaderFunctionArgs extends DataFunctionArgs {}
  * Arguments passed to action functions
  */
 export interface ActionFunctionArgs extends DataFunctionArgs {}
+
+/**
+ * Route loader function signature
+ */
+export interface BeforeRequestFunction {
+  (args: BeforeRequestFunctionArgs): Promise<void> | void;
+}
 
 /**
  * Route loader function signature
@@ -146,6 +172,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
+  beforeRequest?: BeforeRequestFunction;
   loader?: LoaderFunction;
   action?: ActionFunction;
   hasErrorBoundary?: boolean;

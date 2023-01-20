@@ -11480,6 +11480,467 @@ describe("a router", () => {
     });
   });
 
+  describe("beforeRequest", () => {
+    it("runs beforeRequest sequentially before loaders", async () => {
+      let calls: string[] = [];
+      currentRouter = createRouter({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            async beforeRequest() {
+              calls.push("beforeRequest start - root");
+              await tick();
+              calls.push("beforeRequest end   - root");
+            },
+            async loader() {
+              calls.push("loader start - root");
+              await tick();
+              calls.push("loader end   - root");
+              return null;
+            },
+            children: [
+              {
+                id: "child",
+                path: "child",
+                async beforeRequest() {
+                  calls.push("beforeRequest start - child");
+                  await tick();
+                  calls.push("beforeRequest end   - child");
+                },
+                async loader() {
+                  calls.push("loader start - child");
+                  await tick();
+                  calls.push("loader end   - child");
+                  return null;
+                },
+                children: [
+                  {
+                    id: "grandchild",
+                    path: "grandchild",
+                    async beforeRequest() {
+                      calls.push("beforeRequest start - grandchild");
+                      await tick();
+                      calls.push("beforeRequest end   - grandchild");
+                    },
+                    async loader() {
+                      calls.push("loader start - grandchild");
+                      await tick();
+                      calls.push("loader end   - grandchild");
+                      return null;
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        hydrationData: { loaderData: { root: "ROOT" } },
+      }).initialize();
+
+      // query param to force root loader
+      await currentRouter.navigate("/child/grandchild?key=value");
+
+      expect(currentRouter.state.location.pathname).toBe("/child/grandchild");
+      expect(calls).toMatchInlineSnapshot(`
+        [
+          "beforeRequest start - root",
+          "beforeRequest end   - root",
+          "beforeRequest start - child",
+          "beforeRequest end   - child",
+          "beforeRequest start - grandchild",
+          "beforeRequest end   - grandchild",
+          "loader start - root",
+          "loader start - child",
+          "loader start - grandchild",
+          "loader end   - root",
+          "loader end   - child",
+          "loader end   - grandchild",
+        ]
+      `);
+    });
+
+    it("passes context into loaders", async () => {
+      currentRouter = createRouter({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            async beforeRequest({ context }) {
+              let count = 1;
+              context.set("root", count);
+            },
+            async loader({ context }) {
+              return context.get("root");
+            },
+            children: [
+              {
+                id: "child",
+                path: "child",
+                async beforeRequest({ context }) {
+                  let count = (context.get("root") as number) + 1;
+                  context.set("child", count);
+                },
+                async loader({ context }) {
+                  return context.get("child");
+                },
+                children: [
+                  {
+                    id: "grandchild",
+                    path: "grandchild",
+                    async beforeRequest({ context }) {
+                      let count = (context.get("child") as number) + 1;
+                      context.set("grandchild", count);
+                    },
+                    async loader({ context }) {
+                      return context.get("grandchild");
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        hydrationData: { loaderData: { root: "ROOT" } },
+      }).initialize();
+
+      // query param to force root loader
+      await currentRouter.navigate("/child/grandchild?key=value");
+
+      expect(currentRouter.state.location.pathname).toBe("/child/grandchild");
+      expect(currentRouter.state.loaderData).toEqual({
+        root: 1,
+        child: 2,
+        grandchild: 3,
+      });
+    });
+
+    it("runs beforeRequest sequentially before an action", async () => {
+      let calls: string[] = [];
+      currentRouter = createRouter({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            async beforeRequest() {
+              calls.push("beforeRequest start - root");
+              await tick();
+              calls.push("beforeRequest end   - root");
+            },
+            async loader() {
+              calls.push("loader start - root");
+              await tick();
+              calls.push("loader end   - root");
+              return null;
+            },
+            children: [
+              {
+                id: "child",
+                path: "child",
+                async beforeRequest() {
+                  calls.push("beforeRequest start - child");
+                  await tick();
+                  calls.push("beforeRequest end   - child");
+                },
+                async loader() {
+                  calls.push("loader start - child");
+                  await tick();
+                  calls.push("loader end   - child");
+                  return null;
+                },
+                children: [
+                  {
+                    id: "grandchild",
+                    path: "grandchild",
+                    async beforeRequest() {
+                      calls.push("beforeRequest start - grandchild");
+                      await tick();
+                      calls.push("beforeRequest end   - grandchild");
+                    },
+                    async action() {
+                      calls.push("action start - grandchild");
+                      await tick();
+                      calls.push("action end   - grandchild");
+                      return null;
+                    },
+                    async loader() {
+                      calls.push("loader start - grandchild");
+                      await tick();
+                      calls.push("loader end   - grandchild");
+                      return null;
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        hydrationData: { loaderData: { root: "ROOT" } },
+      }).initialize();
+
+      await currentRouter.navigate("/child/grandchild", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+
+      expect(currentRouter.state.location.pathname).toBe("/child/grandchild");
+      expect(calls).toMatchInlineSnapshot(`
+        [
+          "beforeRequest start - root",
+          "beforeRequest end   - root",
+          "beforeRequest start - child",
+          "beforeRequest end   - child",
+          "beforeRequest start - grandchild",
+          "beforeRequest end   - grandchild",
+          "action start - grandchild",
+          "action end   - grandchild",
+          "beforeRequest start - root",
+          "beforeRequest end   - root",
+          "beforeRequest start - child",
+          "beforeRequest end   - child",
+          "beforeRequest start - grandchild",
+          "beforeRequest end   - grandchild",
+          "loader start - root",
+          "loader start - child",
+          "loader start - grandchild",
+          "loader end   - root",
+          "loader end   - child",
+          "loader end   - grandchild",
+        ]
+      `);
+    });
+
+    it("passes separate contexts into action and revalidating loaders", async () => {
+      currentRouter = createRouter({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            async beforeRequest({ type, context }) {
+              let count = type === "action" ? 11 : 1;
+              context.set(`root-${type}`, count);
+            },
+            async loader({ context }) {
+              return context.get(`root-loader`);
+            },
+            children: [
+              {
+                id: "child",
+                path: "child",
+                async beforeRequest({ type, context }) {
+                  let count = (context.get(`root-${type}`) as number) + 1;
+                  context.set(`child-${type}`, count);
+                },
+                async loader({ context }) {
+                  return context.get("child-loader");
+                },
+                children: [
+                  {
+                    id: "grandchild",
+                    path: "grandchild",
+                    async beforeRequest({ type, context }) {
+                      let count = (context.get(`child-${type}`) as number) + 1;
+                      context.set(`grandchild-${type}`, count);
+                    },
+                    async action({ context }) {
+                      return context.get(`grandchild-action`);
+                    },
+                    async loader({ context }) {
+                      return context.get("grandchild-loader");
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        hydrationData: { loaderData: { root: "ROOT" } },
+      }).initialize();
+
+      await currentRouter.navigate("/child/grandchild", {
+        formMethod: "post",
+        formData: createFormData({ key: "value" }),
+      });
+
+      expect(currentRouter.state.location.pathname).toBe("/child/grandchild");
+      expect(currentRouter.state.actionData).toEqual({
+        grandchild: 13,
+      });
+      expect(currentRouter.state.loaderData).toEqual({
+        root: 1,
+        child: 2,
+        grandchild: 3,
+      });
+    });
+
+    // TODO:
+    it.todo("runs beforeRequest sequentially before fetcher.load loader");
+    it.todo("passes context into fetcher.load loader");
+    it.todo("runs beforeRequest sequentially before fetcher.submit action");
+    it.todo(
+      "passes separate contexts into fetcher.submit action and revalidating loaders"
+    );
+
+    it("runs beforeRequests with maximum parallelization with with revalidating fetchers", async () => {
+      let calls: string[] = [];
+      currentRouter = createRouter({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            async beforeRequest() {
+              calls.push("beforeRequest start - root");
+              await tick();
+              calls.push("beforeRequest end   - root");
+            },
+            async loader() {
+              calls.push("loader start - root");
+              await tick();
+              calls.push("loader end   - root");
+              return null;
+            },
+            children: [
+              {
+                id: "child",
+                path: "child",
+                async beforeRequest() {
+                  calls.push("beforeRequest start - child");
+                  await tick();
+                  calls.push("beforeRequest end   - child");
+                },
+                async loader() {
+                  calls.push("loader start - child");
+                  await tick();
+                  calls.push("loader end   - child");
+                  return null;
+                },
+                children: [
+                  {
+                    id: "grandchild",
+                    path: "grandchild",
+                    async beforeRequest() {
+                      calls.push("beforeRequest start - grandchild");
+                      await tick();
+                      calls.push("beforeRequest end   - grandchild");
+                    },
+                    async loader() {
+                      calls.push("loader start - grandchild");
+                      await tick();
+                      calls.push("loader end   - grandchild");
+                      return null;
+                    },
+                  },
+                  {
+                    id: "fetch2",
+                    path: "fetch2",
+                    async beforeRequest() {
+                      calls.push("beforeRequest start - fetch2");
+                      await tick();
+                      calls.push("beforeRequest end   - fetch2");
+                    },
+                    async loader() {
+                      calls.push("loader start - fetch2");
+                      await tick();
+                      calls.push("loader end   - fetch2");
+                      return null;
+                    },
+                  },
+                ],
+              },
+              {
+                id: "fetch1",
+                path: "fetch1",
+                async beforeRequest() {
+                  calls.push("beforeRequest start - fetch1");
+                  await tick();
+                  calls.push("beforeRequest end   - fetch1");
+                },
+                async loader() {
+                  calls.push("loader start - fetch1");
+                  await tick();
+                  calls.push("loader end   - fetch1");
+                  return null;
+                },
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        hydrationData: { loaderData: { root: "ROOT" } },
+      }).initialize();
+
+      await currentRouter.fetch("1", "root", "/fetch1");
+      await tick();
+      await tick();
+      await tick();
+      expect(calls).toMatchInlineSnapshot(`
+        [
+          "beforeRequest start - root",
+          "beforeRequest end   - root",
+          "beforeRequest start - fetch1",
+          "beforeRequest end   - fetch1",
+          "loader start - fetch1",
+          "loader end   - fetch1",
+        ]
+      `);
+
+      calls = [];
+      await currentRouter.fetch("2", "root", "/child/fetch2");
+      await tick();
+      await tick();
+      await tick();
+      await tick();
+      expect(calls).toMatchInlineSnapshot(`
+        [
+          "beforeRequest start - root",
+          "beforeRequest end   - root",
+          "beforeRequest start - child",
+          "beforeRequest end   - child",
+          "beforeRequest start - fetch2",
+          "beforeRequest end   - fetch2",
+          "loader start - fetch2",
+          "loader end   - fetch2",
+        ]
+      `);
+
+      // query param to force root loader
+      calls = [];
+      await currentRouter.navigate("/child/grandchild?key=value");
+
+      expect(currentRouter.state.location.pathname).toBe("/child/grandchild");
+      expect(calls).toEqual([
+        // root runs sequentially
+        "beforeRequest start - root",
+        "beforeRequest end   - root",
+        // root unblocks child/fetch1 so they run in parallel
+        "beforeRequest start - child",
+        "beforeRequest start - fetch1",
+        "beforeRequest end   - child",
+        // child unblocks grandchild/fetch2 so they run in parallel
+        "beforeRequest start - grandchild",
+        "beforeRequest start - fetch2",
+        "beforeRequest end   - fetch1",
+        "beforeRequest end   - grandchild",
+        "beforeRequest end   - fetch2",
+        // all 5 loaders run in parallel
+        "loader start - root",
+        "loader start - child",
+        "loader start - grandchild",
+        "loader start - fetch1",
+        "loader start - fetch2",
+        "loader end   - root",
+        "loader end   - child",
+        "loader end   - grandchild",
+        "loader end   - fetch1",
+        "loader end   - fetch2",
+      ]);
+    });
+  });
+
   describe("ssr", () => {
     const SSR_ROUTES = [
       {
