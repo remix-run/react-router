@@ -4,6 +4,7 @@ import {
   createRoutePath,
   flatRoutesUniversal,
   getRouteSegments,
+  isIndexRoute,
 } from "../config/flat-routes";
 import type { ConfigRoute } from "../config/routes";
 
@@ -25,10 +26,10 @@ describe("flatRoutes", () => {
       ["nested/$slug", "/nested/:slug"],
       ["flat.$slug", "/flat/:slug"],
       ["flat.sub", "/flat/sub"],
-      ["nested/_index", "/nested"],
+      ["nested/index", "/nested"],
       ["flat._index", "/flat"],
       ["_index", undefined],
-      ["_layout/_index", undefined],
+      ["_layout/index", undefined],
       ["_layout/test", "/test"],
       ["_layout.test", "/test"],
       ["_layout/$slug", "/:slug"],
@@ -88,7 +89,8 @@ describe("flatRoutes", () => {
     for (let [input, expected] of tests) {
       it(`"${input}" -> "${expected}"`, () => {
         let routeSegments = getRouteSegments(input);
-        expect(createRoutePath(routeSegments)).toBe(expected);
+        let isIndex = isIndexRoute(input);
+        expect(createRoutePath(routeSegments, isIndex)).toBe(expected);
       });
     }
 
@@ -332,9 +334,9 @@ describe("flatRoutes", () => {
         },
       ],
       [
-        "routes/app_.skipall_/_index.tsx",
+        "routes/app_.skipall_/index.tsx",
         {
-          id: "routes/app_.skipall_/_index",
+          id: "routes/app_.skipall_/index",
           index: true,
           parentId: "root",
           path: "app/skipall",
@@ -580,9 +582,9 @@ describe("flatRoutes", () => {
         },
       ],
       [
-        "routes/brand/_index.tsx",
+        "routes/brand/index.tsx",
         {
-          id: "routes/brand/_index",
+          id: "routes/brand/index",
           parentId: "root",
           path: "brand",
           index: true,

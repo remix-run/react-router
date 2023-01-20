@@ -103,8 +103,11 @@ export function flatRoutesUniversal(
   return routes;
 }
 
-function isIndexRoute(routeId: string) {
-  return routeId.endsWith("_index");
+export function isIndexRoute(routeId: string) {
+  let isFlatFile = !routeId.includes(path.posix.sep);
+  return isFlatFile
+    ? routeId.endsWith("_index")
+    : /\/index$/.test(routeId);
 }
 
 type State =
@@ -262,7 +265,7 @@ function getRouteInfo(
   let routeIdWithoutRoutes = routeId.slice(routeDirectory.length + 1);
   let index = isIndexRoute(routeIdWithoutRoutes);
   let routeSegments = getRouteSegments(routeIdWithoutRoutes);
-  let routePath = createRoutePath(routeSegments);
+  let routePath = createRoutePath(routeSegments, index);
 
   return {
     id: routeIdWithoutRoutes,
@@ -274,8 +277,12 @@ function getRouteInfo(
   };
 }
 
-export function createRoutePath(routeSegments: string[]) {
+export function createRoutePath(routeSegments: string[], isIndex: boolean) {
   let result = "";
+
+  if (isIndex) {
+    routeSegments = routeSegments.slice(0, -1);
+  }
 
   for (let segment of routeSegments) {
     // skip pathless layout segments
