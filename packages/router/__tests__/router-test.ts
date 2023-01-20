@@ -670,7 +670,6 @@ function setup({
     routeIdOrOpts?: string | RouterFetchOptions,
     opts?: RouterFetchOptions
   ): Promise<FetcherHelpers> {
-    debugger;
     let navigationId = ++guid;
     let key = typeof keyOrOpts === "string" ? keyOrOpts : String(navigationId);
     let routeId =
