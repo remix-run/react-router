@@ -1,6 +1,7 @@
 {
   "name": "@remix-run/react-router",
   "private": true,
+  "packageManager": "yarn@1.22.19",
   "workspaces": {
     "packages": [
       "packages/react-router",
