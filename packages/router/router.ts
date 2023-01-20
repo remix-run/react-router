@@ -550,26 +550,22 @@ interface HandleLoadersResult extends ShortCircuitable {
 }
 
 /**
- * Tuple of [key, href, DataRouteMatch, DataRouteMatch[]] for a revalidating
- * fetcher.load()
+ * Cached info for active fetcher.load() instances so they can participate
+ * in revalidation
  */
-type RevalidatingFetcher = [
-  string,
-  string,
-  AgnosticDataRouteMatch,
-  AgnosticDataRouteMatch[]
-];
+interface FetchLoadMatch {
+  routeId: string;
+  path: string;
+  match: AgnosticDataRouteMatch;
+  matches: AgnosticDataRouteMatch[];
+}
 
 /**
- * Tuple of [routeId, href, DataRouteMatch, DataRouteMatch[]] for an active
- * fetcher.load()
+ * Identified fetcher.load() calls that need to be revalidated
  */
-type FetchLoadMatch = [
-  string, // routeId
-  string, // href
-  AgnosticDataRouteMatch,
-  AgnosticDataRouteMatch[]
-];
+interface RevalidatingFetcher extends FetchLoadMatch {
+  key: string;
+}
 
 /**
  * Wrapper object to allow us to throw any response out from callLoaderOrAction
@@ -1382,8 +1378,8 @@ export function createRouter(init: RouterInit): Router {
     // preserving any new action data or existing action data (in the case of
     // a revalidation interrupting an actionReload)
     if (!isUninterruptedRevalidation) {
-      revalidatingFetchers.forEach(([key]) => {
-        let fetcher = state.fetchers.get(key);
+      revalidatingFetchers.forEach((rf) => {
+        let fetcher = state.fetchers.get(rf.key);
         let revalidatingFetcher: FetcherStates["Loading"] = {
           state: "loading",
           data: fetcher && fetcher.data,
@@ -1393,7 +1389,7 @@ export function createRouter(init: RouterInit): Router {
           formData: undefined,
           " _hasFetcherDoneAnything ": true,
         };
-        state.fetchers.set(key, revalidatingFetcher);
+        state.fetchers.set(rf.key, revalidatingFetcher);
       });
       let actionData = pendingActionData || state.actionData;
       updateState({
@@ -1410,8 +1406,8 @@ export function createRouter(init: RouterInit): Router {
     }
 
     pendingNavigationLoadId = ++incrementingLoadId;
-    revalidatingFetchers.forEach(([key]) =>
-      fetchControllers.set(key, pendingNavigationController!)
+    revalidatingFetchers.forEach((rf) =>
+      fetchControllers.set(rf.key, pendingNavigationController!)
     );
 
     let { results, loaderResults, fetcherResults } =
@@ -1430,7 +1426,7 @@ export function createRouter(init: RouterInit): Router {
     // Clean up _after_ loaders have completed.  Don't clean up if we short
     // circuited because fetchControllers would have been aborted and
     // reassigned to new controllers for the next navigation
-    revalidatingFetchers.forEach(([key]) => fetchControllers.delete(key));
+    revalidatingFetchers.forEach((rf) => fetchControllers.delete(rf.key));
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
@@ -1516,7 +1512,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
-    fetchLoadMatches.set(key, [routeId, path, match, matches]);
+    fetchLoadMatches.set(key, { routeId, path, match, matches });
     handleFetcherLoader(key, routeId, path, match, matches, submission);
   }
 
@@ -1653,8 +1649,9 @@ export function createRouter(init: RouterInit): Router {
     // current fetcher which we want to keep in it's current loading state which
     // contains it's action submission info + action data
     revalidatingFetchers
-      .filter(([staleKey]) => staleKey !== key)
-      .forEach(([staleKey]) => {
+      .filter((rf) => rf.key !== key)
+      .forEach((rf) => {
+        let staleKey = rf.key;
         let existingFetcher = state.fetchers.get(staleKey);
         let revalidatingFetcher: FetcherStates["Loading"] = {
           state: "loading",
@@ -1686,9 +1683,7 @@ export function createRouter(init: RouterInit): Router {
 
     fetchReloadIds.delete(key);
     fetchControllers.delete(key);
-    revalidatingFetchers.forEach(([staleKey]) =>
-      fetchControllers.delete(staleKey)
-    );
+    revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
 
     let redirect = findRedirect(results);
     if (redirect) {
@@ -1982,12 +1977,12 @@ export function createRouter(init: RouterInit): Router {
       ...matchesToLoad.map((match) =>
         callLoaderOrAction("loader", request, match, matches, router.basename)
       ),
-      ...fetchersToLoad.map(([, href, match, fetchMatches]) =>
+      ...fetchersToLoad.map((f) =>
         callLoaderOrAction(
           "loader",
-          createClientSideRequest(init.history, href, request.signal),
-          match,
-          fetchMatches,
+          createClientSideRequest(init.history, f.path, request.signal),
+          f.match,
+          f.matches,
           router.basename
         )
       ),
@@ -2006,7 +2001,7 @@ export function createRouter(init: RouterInit): Router {
       ),
       resolveDeferredResults(
         currentMatches,
-        fetchersToLoad.map(([, , match]) => match),
+        fetchersToLoad.map((f) => f.match),
         fetcherResults,
         request.signal,
         true
@@ -2945,20 +2940,20 @@ function getMatchesToLoad(
   // Pick fetcher.loads that need to be revalidated
   let revalidatingFetchers: RevalidatingFetcher[] = [];
   fetchLoadMatches &&
-    fetchLoadMatches.forEach(([routeId, href, match, fetchMatches], key) => {
-      if (!matches.some((m) => m.route.id === routeId)) {
+    fetchLoadMatches.forEach((f, key) => {
+      if (!matches.some((m) => m.route.id === f.routeId)) {
         // This fetcher is not going to be present in the subsequent render so
         // there's no need to revalidate it
         return;
       } else if (cancelledFetcherLoads.includes(key)) {
         // This fetcher was cancelled from a prior action submission - force reload
-        revalidatingFetchers.push([key, href, match, fetchMatches]);
+        revalidatingFetchers.push({ key, ...f });
       } else {
         // Revalidating fetchers are decoupled from the route matches since they
         // hit a static href, so they _always_ check shouldRevalidate and the
         // default is strictly if a revalidation is explicitly required (action
         // submissions, useRevalidator, X-Remix-Revalidate).
-        let shouldRevalidate = shouldRevalidateLoader(match, {
+        let shouldRevalidate = shouldRevalidateLoader(f.match, {
           currentUrl,
           currentParams: state.matches[state.matches.length - 1].params,
           nextUrl,
@@ -2968,7 +2963,7 @@ function getMatchesToLoad(
           defaultShouldRevalidate,
         });
         if (shouldRevalidate) {
-          revalidatingFetchers.push([key, href, match, fetchMatches]);
+          revalidatingFetchers.push({ key, ...f });
         }
       }
     });
@@ -3342,7 +3337,7 @@ function processLoaderData(
 
   // Process results from our revalidating fetchers
   for (let index = 0; index < revalidatingFetchers.length; index++) {
-    let [key, , match] = revalidatingFetchers[index];
+    let { key, match } = revalidatingFetchers[index];
     invariant(
       fetcherResults !== undefined && fetcherResults[index] !== undefined,
       "Did not find corresponding fetcher result"
