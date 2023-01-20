@@ -21,6 +21,7 @@ function isEntryPoint(config: RemixConfig, file: string): boolean {
 }
 
 export type WatchOptions = Partial<CompileOptions> & {
+  reloadConfig?(root: string): Promise<RemixConfig>;
   onRebuildStart?(): void;
   onRebuildFinish?(durationMs: number, assetsManifest?: AssetsManifest): void;
   onFileCreated?(file: string): void;
@@ -36,6 +37,7 @@ export async function watch(
     liveReloadPort,
     target = "node14",
     sourcemap = true,
+    reloadConfig = readConfig,
     onWarning = warnOnce,
     onCompileFailure = logCompileFailure,
     onRebuildStart,
@@ -68,7 +70,7 @@ export async function watch(
     dispose(compiler);
 
     try {
-      config = await readConfig(config.rootDirectory);
+      config = await reloadConfig(config.rootDirectory);
     } catch (error: unknown) {
       onCompileFailure(error as Error);
       return;
@@ -113,7 +115,7 @@ export async function watch(
       onFileCreated?.(file);
 
       try {
-        config = await readConfig(config.rootDirectory);
+        config = await reloadConfig(config.rootDirectory);
       } catch (error: unknown) {
         onCompileFailure(error as Error);
         return;
