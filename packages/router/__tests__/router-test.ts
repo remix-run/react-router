@@ -24,6 +24,7 @@ import {
   matchRoutes,
   redirect,
   parsePath,
+  UNSAFE_convertRoutesToDataRoutes,
 } from "../index";
 
 // Private API
@@ -262,7 +263,7 @@ type SetupOpts = {
   basename?: string;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
-  hydrationData?: HydrationState;
+  hydrationData?: HydrationState | null;
 };
 
 function setup({
@@ -363,13 +364,39 @@ function setup({
     });
   }
 
+  let testRoutes = enhanceRoutes(routes);
   let history = createMemoryHistory({ initialEntries, initialIndex });
   jest.spyOn(history, "push");
   jest.spyOn(history, "replace");
+
+  // If the test didn't provide hydrationData for it's initial location - be a
+  // friendly test harness and tick something in there to avoid async fetches
+  // kicking off in our test.  Tests can opt out to test automatic initialization
+  // by providing null
+  if (typeof hydrationData === "undefined") {
+    let dataRoutes = UNSAFE_convertRoutesToDataRoutes(testRoutes);
+    let matches = matchRoutes(
+      dataRoutes,
+      initialEntries?.[initialIndex || 0] || "/"
+    );
+    hydrationData = {
+      loaderData: matches
+        ?.filter((m) => m.route.loader)
+        .reduce(
+          (acc, match) =>
+            Object.assign(acc, {
+              [match.route.id]:
+                match.route.id.toUpperCase() + " INITIAL LOADER DATA",
+            }),
+          {}
+        ),
+    };
+  }
+
   currentRouter = createRouter({
     basename,
     history,
-    routes: enhanceRoutes(routes),
+    routes: testRoutes,
     hydrationData,
   }).initialize();
 
@@ -761,11 +788,14 @@ function initializeTmTest(init?: {
   url?: string;
   hydrationData?: HydrationState;
 }) {
+  let hydrationData: HydrationState | undefined = init?.hydrationData
+    ? init.hydrationData
+    : init?.url != null
+    ? undefined
+    : { loaderData: { root: "ROOT", index: "INDEX" } };
   return setup({
     routes: TM_ROUTES,
-    hydrationData: init?.hydrationData || {
-      loaderData: { root: "ROOT", index: "INDEX" },
-    },
+    hydrationData,
     ...(init?.url ? { initialEntries: [init.url] } : {}),
   });
 }
@@ -1451,6 +1481,7 @@ describe("a router", () => {
       });
 
       let B = await A.loaders.bar.redirect("/baz");
+      expect(t.router.state.errors).toBe(null);
       expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location?.pathname).toBe("/baz");
       expect(t.router.state.loaderData).toMatchObject({
@@ -2576,10 +2607,9 @@ describe("a router", () => {
           ],
         });
         let nav = await t.navigate("/child");
-        await nav.loaders.parent.resolve("PARENT");
         await nav.loaders.child.resolve("CHILD");
         expect(t.router.state.loaderData).toEqual({
-          parent: "PARENT",
+          parent: "PARENT INITIAL LOADER DATA",
           child: "CHILD",
         });
         expect(t.router.state.errors).toEqual(null);
@@ -3358,7 +3388,9 @@ describe("a router", () => {
       expect(t.router.state.actionData).toEqual({
         index: { error: "invalid" },
       });
-      expect(t.router.state.loaderData).toEqual({});
+      expect(t.router.state.loaderData).toEqual({
+        index: "INDEX INITIAL LOADER DATA",
+      });
 
       await C.loaders.index.resolve("NEW");
 
@@ -3820,11 +3852,10 @@ describe("a router", () => {
         ],
       });
       let nav = await t.navigate("/child");
-      await nav.loaders.parent.resolve("PARENT");
       await nav.loaders.child.resolve("CHILD");
       expect(t.router.state.actionData).toEqual(null);
       expect(t.router.state.loaderData).toEqual({
-        parent: "PARENT",
+        parent: "PARENT INITIAL LOADER DATA",
         child: "CHILD",
       });
       expect(t.router.state.errors).toEqual(null);
@@ -3836,7 +3867,7 @@ describe("a router", () => {
       await nav2.actions.child.reject(new Error("Kaboom!"));
       expect(t.router.state.actionData).toEqual(null);
       expect(t.router.state.loaderData).toEqual({
-        parent: "PARENT",
+        parent: "PARENT INITIAL LOADER DATA",
       });
       expect(t.router.state.errors).toEqual({
         parent: new Error("Kaboom!"),
@@ -6476,6 +6507,7 @@ describe("a router", () => {
         let t = setup({
           routes: SCROLL_ROUTES,
           initialEntries: ["/no-loader"],
+          hydrationData: null,
         });
 
         expect(t.router.state.restoreScrollPosition).toBe(null);
@@ -8505,7 +8537,7 @@ describe("a router", () => {
 
           await A.loaders.root.resolve("A ROOT LOADER");
           await A.loaders.foo.resolve("A LOADER");
-          expect(t.router.state.loaderData.foo).toBeUndefined();
+          expect(t.router.state.loaderData.foo).toBe("FOO INITIAL LOADER DATA");
 
           let C = await t.fetch("/foo", key, {
             formMethod: "post",
@@ -8521,7 +8553,7 @@ describe("a router", () => {
 
           await B.loaders.root.resolve("B ROOT LOADER");
           await B.loaders.foo.resolve("B LOADER");
-          expect(t.router.state.loaderData.foo).toBeUndefined();
+          expect(t.router.state.loaderData.foo).toBe("FOO INITIAL LOADER DATA");
 
           await C.loaders.root.resolve("C ROOT LOADER");
           await C.loaders.foo.resolve("C LOADER");
@@ -8561,7 +8593,7 @@ describe("a router", () => {
 
           await Ak1.loaders.root.resolve("A ROOT LOADER");
           await Ak1.loaders.foo.resolve("A LOADER");
-          expect(t.router.state.loaderData.foo).toBeUndefined();
+          expect(t.router.state.loaderData.foo).toBe("FOO INITIAL LOADER DATA");
 
           await Bk2.loaders.root.resolve("B ROOT LOADER");
           await Bk2.loaders.foo.resolve("B LOADER");
