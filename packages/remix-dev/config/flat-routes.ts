@@ -105,9 +105,7 @@ export function flatRoutesUniversal(
 
 export function isIndexRoute(routeId: string) {
   let isFlatFile = !routeId.includes(path.posix.sep);
-  return isFlatFile
-    ? routeId.endsWith("_index")
-    : /\/index$/.test(routeId);
+  return isFlatFile ? routeId.endsWith("_index") : /\/index$/.test(routeId);
 }
 
 type State =
