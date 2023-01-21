@@ -9,7 +9,7 @@
     "generate:css": "tailwindcss -o ./app/styles/tailwind.css",
     "postinstall": "remix setup node",
     "start": "remix-serve build",
-    "typecheck": "tsc -b && tsc -b cypress"
+    "typecheck": "tsc && tsc -p cypress"
   },
   "prettier": {},
   "eslintIgnore": [
