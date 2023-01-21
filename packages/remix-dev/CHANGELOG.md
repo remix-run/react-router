@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 1.11.1
+
+### Patch Changes
+
+- Fixed a bug with `v2_routeConvention` that prevented `index` modules from being recognized for route paths ([`195291a3d`](https://github.com/remix-run/remix/commit/195291a3d8c0e098931199bcc26277a45cee0eb9))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.11.1`
+
 ## 1.11.0
 
 ### Minor Changes
