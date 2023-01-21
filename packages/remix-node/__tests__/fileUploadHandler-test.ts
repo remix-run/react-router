@@ -104,4 +104,18 @@ describe("NodeOnDiskFile", () => {
     expect(sliced.size).toBe(slicedRes.length);
     expect(await sliced.text()).toBe(slicedRes);
   });
+
+  it("returns the file path properly", async () => {
+    expect(file.getFilePath()).toEqual(filepath);
+  });
+
+  it("removes the file properly", async () => {
+    let newFilePath = `${filepath}-copy`;
+    fs.copyFileSync(filepath, newFilePath);
+
+    let copiedFile = (file = new NodeOnDiskFile(newFilePath, "text/plain"));
+    expect(fs.existsSync(copiedFile.getFilePath())).toBe(true);
+    await copiedFile.remove();
+    expect(fs.existsSync(copiedFile.getFilePath())).toBe(false);
+  });
 });
