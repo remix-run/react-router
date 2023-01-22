@@ -27,10 +27,10 @@ A `<BrowserRouter>` stores the current location in the browser's address bar usi
 
 ```tsx
 import * as React from "react";
-import { createRoot } from 'react-dom/client';
+import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
-const root = createRoot(document.getElementById('root'));
+const root = createRoot(document.getElementById("root"));
 
 root.render(
   <BrowserRouter>
