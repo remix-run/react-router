@@ -100,7 +100,10 @@ const defaultRuntimeExports: ExportNames = {
 
 const exportNamesByRuntime: Record<Runtime, Partial<ExportNames>> = {
   cloudflare: {
-    value: ["createCloudflareKVSessionStorage"],
+    value: [
+      "createCloudflareKVSessionStorage",
+      "createWorkersKVSessionStorage",
+    ],
   },
   node: {
     type: ["HeadersInit", "RequestInfo", "RequestInit", "ResponseInit"],

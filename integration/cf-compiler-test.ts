@@ -155,6 +155,7 @@ test.describe("cloudflare compiler", () => {
       "createMemorySessionStorage",
       "createSessionStorage",
       "createSession",
+      "createWorkersKVSessionStorage",
       "isCookie",
       "isSession",
       "json",

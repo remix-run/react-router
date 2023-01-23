@@ -61,7 +61,7 @@ it("replaces multi-kind, multi-specifier imports", async () => {
 
 it("replaces runtime-specific and adapter-specific imports", async () => {
   let code = [
-    'import { json, createCloudflareKVSessionStorage, createRequestHandler, createPagesFunctionHandler, Form } from "remix"',
+    'import { json, createWorkersKVSessionStorage, createRequestHandler, createPagesFunctionHandler, Form } from "remix"',
     'import type { ActionFunction, GetLoadContextFunction, createPagesFunctionHandlerParams, LinkProps } from "remix"',
   ].join("\n");
   let transform = replaceRemixMagicImports({
@@ -71,7 +71,7 @@ it("replaces runtime-specific and adapter-specific imports", async () => {
   let result = eol.normalize(transform(code, "fake.tsx"));
   expect(result).toBe(
     [
-      'import { type ActionFunction, createCloudflareKVSessionStorage, json } from "@remix-run/cloudflare";',
+      'import { type ActionFunction, createWorkersKVSessionStorage, json } from "@remix-run/cloudflare";',
       "", // recast adds a newline here https://github.com/benjamn/recast/issues/39
       "import {",
       "  type GetLoadContextFunction,",
