@@ -1,5 +1,5 @@
-import type { ComponentType } from "react";
 import type { Location, Params } from "@remix-run/router";
+import type { ComponentType } from "react";
 
 import type { AppLoadContext, AppData } from "./data";
 import type { LinkDescriptor } from "./links";
@@ -37,7 +37,7 @@ export interface ActionFunction {
 /**
  * A React component that is rendered when the server throws a Response.
  */
-export type CatchBoundaryComponent = ComponentType<{}>;
+export type CatchBoundaryComponent = ComponentType;
 
 /**
  * A React component that is rendered when there is an error on a route.
