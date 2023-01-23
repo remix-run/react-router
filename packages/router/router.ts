@@ -1507,6 +1507,8 @@ export function createRouter(init: RouterInit): Router {
     let { path, submission } = normalizeNavigateOptions(href, opts, true);
     let match = getTargetMatch(matches, path);
 
+    pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
+
     if (submission && isMutationMethod(submission.formMethod)) {
       handleFetcherAction(key, routeId, path, match, matches, submission);
       return;

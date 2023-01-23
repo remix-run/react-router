@@ -6702,6 +6702,37 @@ describe("a router", () => {
           expect(t.router.state.restoreScrollPosition).toBe(null);
           expect(t.router.state.preventScrollReset).toBe(false);
         });
+
+        it("resets on fetch submissions that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/tasks"],
+            hydrationData: {
+              loaderData: {
+                tasks: "TASKS",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.fetch("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+          });
+          let nav2 = await nav1.actions.tasks.redirectReturn("/tasks");
+          await nav2.loaders.tasks.resolve("TASKS 2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(false);
+        });
       });
 
       describe("user-specified flag preventScrollReset flag", () => {
@@ -6820,6 +6851,38 @@ describe("a router", () => {
           });
           let nav2 = await nav1.actions.tasks.redirectReturn("/");
           await nav2.loaders.index.resolve("INDEX_DATA2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
+
+        it("prevents scroll reset on fetch submissions that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/tasks"],
+            hydrationData: {
+              loaderData: {
+                tasks: "TASKS",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.fetch("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+            preventScrollReset: true,
+          });
+          let nav2 = await nav1.actions.tasks.redirectReturn("/tasks");
+          await nav2.loaders.tasks.resolve("TASKS 2");
           expect(t.router.state.restoreScrollPosition).toBe(null);
           expect(t.router.state.preventScrollReset).toBe(true);
         });
