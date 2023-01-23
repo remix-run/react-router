@@ -307,12 +307,12 @@ export async function readConfig(
   remixRoot?: string,
   serverMode = ServerMode.Production
 ): Promise<RemixConfig> {
-  if (!remixRoot) {
-    remixRoot = process.env.REMIX_ROOT || process.cwd();
-  }
-
   if (!isValidServerMode(serverMode)) {
     throw new Error(`Invalid server mode "${serverMode}"`);
+  }
+
+  if (!remixRoot) {
+    remixRoot = process.env.REMIX_ROOT || process.cwd();
   }
 
   let rootDirectory = path.resolve(remixRoot);
@@ -450,15 +450,13 @@ export async function readConfig(
       appDirectory,
       appConfig.ignoredRouteFiles
     );
-    for (let key of Object.keys(conventionalRoutes)) {
-      let route = conventionalRoutes[key];
+    for (let route of Object.values(conventionalRoutes)) {
       routes[route.id] = { ...route, parentId: route.parentId || "root" };
     }
   }
   if (appConfig.routes) {
     let manualRoutes = await appConfig.routes(defineRoutes);
-    for (let key of Object.keys(manualRoutes)) {
-      let route = manualRoutes[key];
+    for (let route of Object.values(manualRoutes)) {
       routes[route.id] = { ...route, parentId: route.parentId || "root" };
     }
   }

@@ -9,17 +9,3 @@ export async function writeFileSafe(
   await fsp.writeFile(file, contents);
   return file;
 }
-
-export async function writeFilesSafe(
-  files: { file: string; contents: string }[]
-): Promise<string[]> {
-  return Promise.all(
-    files.map(({ file, contents }) => writeFileSafe(file, contents))
-  );
-}
-
-export async function createTemporaryDirectory(
-  baseDir: string
-): Promise<string> {
-  return fsp.mkdtemp(path.join(baseDir, "remix-"));
-}
