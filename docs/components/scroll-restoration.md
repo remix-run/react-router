@@ -83,13 +83,14 @@ Or you may want to only use the pathname for some paths, and use the normal beha
 
 ## Preventing Scroll Reset
 
-When navigation creates new scroll keys, the scroll position is reset to the top of the page. You can prevent the "scroll to top" behavior from your links:
+When navigation creates new scroll keys, the scroll position is reset to the top of the page. You can prevent the "scroll to top" behavior from your links and forms:
 
 ```tsx
 <Link preventScrollReset={true} />
+<Form preventScrollReset={true} />
 ```
 
-See also: [`<Link preventScrollReset>`][preventscrollreset]
+See also: [`<Link preventScrollReset>`][preventscrollreset], [`<Form preventScrollReset>`][form-preventscrollreset]
 
 ## Scroll Flashing
 
@@ -99,4 +100,5 @@ Server Rendering frameworks can prevent scroll flashing because they can send a 
 
 [remix]: https://remix.run
 [preventscrollreset]: ../components/link#preventscrollreset
+[form-preventscrollreset]: ../components/form#preventscrollreset
 [pickingarouter]: ../routers/picking-a-router
