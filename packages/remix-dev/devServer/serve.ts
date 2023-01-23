@@ -66,33 +66,30 @@ export async function serve(
     )
   );
 
+  let dispose = await liveReload(config);
   let server: Server | undefined;
+  let onListen = () => {
+    let address =
+      process.env.HOST ||
+      Object.values(os.networkInterfaces())
+        .flat()
+        .find((ip) => String(ip?.family).includes("4") && !ip?.internal)
+        ?.address;
+
+    if (!address) {
+      console.log(`Remix App Server started at http://localhost:${port}`);
+    } else {
+      console.log(
+        `Remix App Server started at http://localhost:${port} (http://${address}:${port})`
+      );
+    }
+  };
   try {
-    await liveReload(config, {
-      onInitialBuild: () => {
-        let onListen = () => {
-          let address =
-            process.env.HOST ||
-            Object.values(os.networkInterfaces())
-              .flat()
-              .find((ip) => String(ip?.family).includes("4") && !ip?.internal)
-              ?.address;
-
-          if (!address) {
-            console.log(`Remix App Server started at http://localhost:${port}`);
-          } else {
-            console.log(
-              `Remix App Server started at http://localhost:${port} (http://${address}:${port})`
-            );
-          }
-        };
-
-        server = process.env.HOST
-          ? app.listen(port, process.env.HOST, onListen)
-          : app.listen(port, onListen);
-      },
-    });
+    server = process.env.HOST
+      ? app.listen(port, process.env.HOST, onListen)
+      : app.listen(port, onListen);
   } finally {
+    dispose();
     server?.close();
   }
 }

@@ -188,11 +188,12 @@ export async function watch(
       ? remixRootOrConfig
       : await readConfig(remixRootOrConfig);
 
-  return devServer.liveReload(config, {
+  devServer.liveReload(config, {
     mode,
     onInitialBuild: (durationMs) =>
       console.log(`💿 Built in ${prettyMs(durationMs)}`),
   });
+  return await new Promise(() => {});
 }
 
 export async function dev(

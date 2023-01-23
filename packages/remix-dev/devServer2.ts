@@ -1,3 +1,5 @@
+import exitHook from "exit-hook";
+import fs from "fs-extra";
 import getPort, { makeRange } from "get-port";
 import os from "os";
 import path from "node:path";
@@ -15,6 +17,11 @@ let info = (message: string) => console.info(`💿 ${message}`);
 let relativePath = (file: string) => path.relative(process.cwd(), file);
 
 let sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+let clean = (config: RemixConfig) => {
+  fs.emptyDirSync(config.relativeAssetsBuildDirectory);
+  fs.removeSync(config.serverBuildPath);
+};
 
 let getHost = () =>
   process.env.HOST ??
@@ -78,6 +85,7 @@ export let serve = async (
   config: RemixConfig,
   flags: { port?: number; appServerPort?: number } = {}
 ) => {
+  clean(config);
   await loadEnv(config.rootDirectory);
 
   let dev = resolveDev(config.future.unstable_dev, flags);
@@ -105,7 +113,10 @@ export let serve = async (
     mode: "development",
     liveReloadPort: port,
     onInitialBuild: (durationMs) => info(`Built in ${prettyMs(durationMs)}`),
-    onRebuildStart: () => socket.log("Rebuilding..."),
+    onRebuildStart: () => {
+      clean(config);
+      socket.log("Rebuilding...");
+    },
     onRebuildFinish: async (durationMs, assetsManifest) => {
       if (!assetsManifest) return;
       socket.log(`Rebuilt in ${prettyMs(durationMs)}`);
@@ -122,8 +133,8 @@ export let serve = async (
     onFileDeleted: (file) => socket.log(`File deleted: ${relativePath(file)}`),
   });
 
-  // TODO exit hook: clean up assetsBuildDirectory and serverBuildPath?
-
+  // clean up build directories when dev server exits
+  exitHook(() => clean(config));
   return async () => {
     await dispose();
     socket.close();

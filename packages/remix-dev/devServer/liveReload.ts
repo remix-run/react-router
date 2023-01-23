@@ -4,17 +4,22 @@ import path from "path";
 import prettyMs from "pretty-ms";
 import WebSocket from "ws";
 
-import { createChannel } from "../channel";
 import type { WatchOptions } from "../compiler";
 import { watch } from "../compiler";
 import type { RemixConfig } from "../config";
 
 const relativePath = (file: string) => path.relative(process.cwd(), file);
 
+let clean = (config: RemixConfig) => {
+  fse.emptyDirSync(config.assetsBuildDirectory);
+  fse.rmSync(config.serverBuildPath);
+};
+
 export async function liveReload(
   config: RemixConfig,
   options: WatchOptions = {}
 ) {
+  clean(config);
   let wss = new WebSocket.Server({ port: config.devServerPort });
   function broadcast(event: { type: string } & Record<string, unknown>) {
     setTimeout(() => {
@@ -36,6 +41,7 @@ export async function liveReload(
     mode: options.mode,
     onInitialBuild: options.onInitialBuild,
     onRebuildStart() {
+      clean(config);
       log("Rebuilding...");
     },
     onRebuildFinish(durationMs: number) {
@@ -53,14 +59,9 @@ export async function liveReload(
     },
   });
 
-  let channel = createChannel<void>();
-  exitHook(async () => {
-    // cleanup when process exits e.g. user hits CTRL-C
+  exitHook(() => clean(config));
+  return async () => {
     wss.close();
     await dispose();
-    fse.emptyDirSync(config.assetsBuildDirectory);
-    fse.rmSync(config.serverBuildPath);
-    channel.write();
-  });
-  return channel.read();
+  };
 }
