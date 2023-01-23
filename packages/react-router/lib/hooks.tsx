@@ -481,7 +481,7 @@ function DefaultErrorElement() {
 
   return (
     <>
-      <h2>Unhandled Error Thrown!</h2>
+      <h2>Unexpected Application Error!</h2>
       <h3 style={{ fontStyle: "italic" }}>{message}</h3>
       {stack ? <pre style={preStyles}>{stack}</pre> : null}
       {devInfo}
