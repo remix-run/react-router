@@ -1192,6 +1192,11 @@ export class DeferredData {
       {}
     );
 
+    if (this.done) {
+      // All incoming values were resolved
+      this.unlistenAbortSignal();
+    }
+
     this.init = responseInit;
   }
 
