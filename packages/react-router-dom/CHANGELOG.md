@@ -1,5 +1,22 @@
 # `react-router-dom`
 
+## 6.8.0-pre.1
+
+### Minor Changes
+
+- Support absolute URLs in `<Link to>`. If the URL is for the current origin, it will still do a client-side navigation. If the URL is for a different origin then it will do a fresh document request for the new origin. ([#9900](https://github.com/remix-run/react-router/pull/9900)) ([`94d3660d`](https://github.com/remix-run/react-router/commit/94d3660d916cebac341b80ee011c897ccc99c933))
+
+  ```tsx
+  <Link to="https://neworigin.com/some/path">
+  <Link to="//neworigin.com/some/path">
+  <Link to="https://www.currentorigin.com/path">
+  ```
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.8.0-pre.1`
+
 ## 6.7.1-pre.0
 
 ### Patch Changes
