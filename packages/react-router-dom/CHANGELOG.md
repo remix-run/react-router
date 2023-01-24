@@ -7,7 +7,7 @@
 - Fix bug with search params removal ([#9969](https://github.com/remix-run/react-router/pull/9969))
 - Respect `preventScrollReset` on `fetcher.Form` ([#9963](https://github.com/remix-run/react-router/pull/9963))
 - Use `pagehide` instead of `beforeunload` for `<ScrollRestoration>`. This has better cross-browser support, specifically on Mobile Safari. ([#9945](https://github.com/remix-run/react-router/pull/9945))
-- Allow using `<Link>` with external absolute URLs ([#9900](https://github.com/remix-run/react-router/pull/9900))
+- Allow using `<Link>` with absolute URLs ([#9900](https://github.com/remix-run/react-router/pull/9900))
 
   ```tsx
   <Link to="https://neworigin.com/some/path">

@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Allow using `<Link>` with external absolute URLs ([#9900](https://github.com/remix-run/react-router/pull/9900))
+- Allow using `<Link>` with absolute URLs ([#9900](https://github.com/remix-run/react-router/pull/9900))
 
   ```tsx
   <Link to="https://neworigin.com/some/path">
