@@ -132,12 +132,12 @@ The method will be available on [`request.method`][requestmethod] inside the rou
   }}
   action={async ({ request, params }) => {
     switch (request.method) {
-      case "put": {
+      case "PUT": {
         let formData = await request.formData();
         let name = formData.get("projectName");
         return fakeUpdateProject(name);
       }
-      case "delete": {
+      case "DELETE": {
         return fakeDeleteProject(params.id);
       }
       default: {
