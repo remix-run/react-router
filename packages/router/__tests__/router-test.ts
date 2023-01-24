@@ -1386,7 +1386,6 @@ describe("a router", () => {
     it('runs loaders on hash change only non-empty <Form method="get"> navigations', async () => {
       let t = initializeTmTest();
       expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
-      debugger;
       let A = await t.navigate("/#bar", {
         formData: createFormData({ key: "value" }),
       });
