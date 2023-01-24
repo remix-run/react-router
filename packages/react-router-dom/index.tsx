@@ -853,13 +853,17 @@ export function useSearchParams(
   );
 
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
+  let hasSetSearchParamsRef = React.useRef(false);
 
   let location = useLocation();
   let searchParams = React.useMemo(
     () =>
+      // Only merge in the defaults if we haven't yet called setSearchParams.
+      // Once we call that we want those to take precedence, otherwise you can't
+      // remove a param with setSearchParams({}) if it has an initial value
       getSearchParamsForLocation(
         location.search,
-        defaultSearchParamsRef.current
+        hasSetSearchParamsRef.current ? null : defaultSearchParamsRef.current
       ),
     [location.search]
   );
@@ -870,6 +874,7 @@ export function useSearchParams(
       const newSearchParams = createSearchParams(
         typeof nextInit === "function" ? nextInit(searchParams) : nextInit
       );
+      hasSetSearchParamsRef.current = true;
       navigate("?" + newSearchParams, navigateOptions);
     },
     [navigate, searchParams]

@@ -125,4 +125,40 @@ describe("useSearchParams", () => {
     );
     expect(node.innerHTML).toMatch(/The new query is "Ryan Florence"/);
   });
+
+  it("allows removal of search params when a default is provided", () => {
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams({
+        value: "initial",
+      });
+
+      return (
+        <div>
+          <p>The current value is "{searchParams.get("value")}".</p>
+          <button onClick={() => setSearchParams({})}>Click</button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search?value=initial"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+
+    let button = node.querySelector<HTMLInputElement>("button")!;
+    expect(button).toBeDefined();
+
+    expect(node.innerHTML).toMatch(/The current value is "initial"/);
+
+    act(() => {
+      button.dispatchEvent(new Event("click", { bubbles: true }));
+    });
+
+    expect(node.innerHTML).toMatch(/The current value is ""/);
+  });
 });
