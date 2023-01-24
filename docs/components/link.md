@@ -127,9 +127,12 @@ The `replace` property can be used if you'd like to replace the current entry in
 The `state` property can be used to set a stateful value for for the new location which is stored inside [history state][history-state]. This value can subsequently be accessed via `useLocation()`.
 
 ```tsx
-<Link to="new-path" state={{ some: "value" }} />;
+<Link to="new-path" state={{ some: "value" }} />
+```
 
-// You can access this state while on that location:
+You can access this state value while on that location:
+
+```ts
 let { state } = useLocation();
 ```
 
