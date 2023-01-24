@@ -8,5 +8,16 @@
     "react-router-native": "6.7.0",
     "@remix-run/router": "1.3.0"
   },
-  "changesets": []
+  "changesets": [
+    "afraid-ducks-know",
+    "chilly-stingrays-rhyme",
+    "little-taxis-bake",
+    "orange-insects-complain",
+    "silent-oranges-pay",
+    "silver-snails-destroy",
+    "small-squids-wash",
+    "spotty-cheetahs-live",
+    "sweet-swans-cry",
+    "twenty-badgers-notice"
+  ]
 }

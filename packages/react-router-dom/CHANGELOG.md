@@ -1,5 +1,23 @@
 # `react-router-dom`
 
+## 6.7.1-pre.0
+
+### Patch Changes
+
+- Fix bug with search params removal ([#9969](https://github.com/remix-run/react-router/pull/9969))
+- Respect `preventScrollReset` on `fetcher.Form` ([#9963](https://github.com/remix-run/react-router/pull/9963))
+- allow using `<Link>` with external URLs ([#9900](https://github.com/remix-run/react-router/pull/9900))
+
+  ```tsx
+  <Link to="//example.com/some/path">
+  <Link to="https://www.currentorigin.com/path">
+  ```
+
+- Use `pagehide` instead of `beforeunload` for `<ScrollRestoration>`. This has better cross-browser support, specifically on Mobile Safari. ([#9945](https://github.com/remix-run/react-router/pull/9945))
+- Updated dependencies:
+  - `@remix-run/router@1.3.1-pre.0`
+  - `react-router@6.7.1-pre.0`
+
 ## 6.7.0
 
 ### Minor Changes
