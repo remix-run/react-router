@@ -59,8 +59,8 @@ export type FileUploadHandlerOptions = {
   /**
    *
    * @param filename
-   * @param mimetype
-   * @param encoding
+   * @param contentType
+   * @param name
    */
   filter?(args: FileUploadHandlerFilterArgs): boolean | Promise<boolean>;
 };
