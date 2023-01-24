@@ -1037,13 +1037,7 @@ test.describe("Forms", () => {
 
     test("sends file names when submitting via url encoding", async ({
       page,
-      javaScriptEnabled,
     }) => {
-      test.fail(
-        Boolean(javaScriptEnabled),
-        "<Form> doesn't handle File entries correctly when url encoding #4342"
-      );
-
       let app = new PlaywrightFixture(appFixture, page);
       let myFile = fixture.projectDir + "/myfile.txt";
 
