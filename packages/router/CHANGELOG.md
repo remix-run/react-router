@@ -1,5 +1,16 @@
 # `@remix-run/router`
 
+## 1.3.1-pre.0
+
+### Patch Changes
+
+- Respect `preventScrollReset` on `fetcher.Form` ([#9963](https://github.com/remix-run/react-router/pull/9963))
+- Fix revalidating fetcher `shouldRevalidate` params ([#9948](https://github.com/remix-run/react-router/pull/9948))
+- Do not short circuit on hash change only mutation submissions ([#9944](https://github.com/remix-run/react-router/pull/9944))
+- Remove `instanceof` check from `isRouteErrorResponse` to avoid bundling issues on the server ([#9930](https://github.com/remix-run/react-router/pull/9930))
+- Detect no lazy data and remove abort controller for `defer` ([#9965](https://github.com/remix-run/react-router/pull/9965))
+- Send the name as the value when url-encoding `File` `FormData` entries ([#9867](https://github.com/remix-run/react-router/pull/9867))
+
 ## 1.3.0
 
 ### Minor Changes

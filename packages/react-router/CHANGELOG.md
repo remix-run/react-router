@@ -1,5 +1,20 @@
 # `react-router`
 
+## 6.7.1-pre.0
+
+### Patch Changes
+
+- Allow using `<Link>` with absolute URLs ([#9900](https://github.com/remix-run/react-router/pull/9900))
+
+  ```tsx
+  <Link to="https://neworigin.com/some/path">
+  <Link to="//neworigin.com/some/path">
+  <Link to="https://www.currentorigin.com/path">
+  ```
+
+- Updated dependencies:
+  - `@remix-run/router@1.3.1-pre.0`
+
 ## 6.7.0
 
 ### Minor Changes

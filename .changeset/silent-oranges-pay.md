@@ -3,9 +3,10 @@
 "react-router-dom": patch
 ---
 
-allow using `<Link>` with external URLs
+Allow using `<Link>` with absolute URLs
 
 ```tsx
-<Link to="//example.com/some/path">
+<Link to="https://neworigin.com/some/path">
+<Link to="//neworigin.com/some/path">
 <Link to="https://www.currentorigin.com/path">
 ```
