@@ -9,11 +9,11 @@
 - Use `pagehide` instead of `beforeunload` for `<ScrollRestoration>`. This has better cross-browser support, specifically on Mobile Safari. ([#9945](https://github.com/remix-run/react-router/pull/9945))
 - Allow using `<Link>` with external absolute URLs ([#9900](https://github.com/remix-run/react-router/pull/9900))
 
-```tsx
-<Link to="https://neworigin.com/some/path">
-<Link to="//neworigin.com/some/path">
-<Link to="https://www.currentorigin.com/path">
-```
+  ```tsx
+  <Link to="https://neworigin.com/some/path">
+  <Link to="//neworigin.com/some/path">
+  <Link to="https://www.currentorigin.com/path">
+  ```
 
 - Updated dependencies:
   - `@remix-run/router@1.3.1-pre.0`
