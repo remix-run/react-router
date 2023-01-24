@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Fix SSR `useLayoutEffect` `console.error` when using `CompatRouter` ([#9820](https://github.com/remix-run/react-router/pull/9820)) ([`4640b2a2`](https://github.com/remix-run/react-router/commit/4640b2a23e3f6a6654e2cc4d59e9c86d5e9b0777))
+- Fix SSR `useLayoutEffect` `console.error` when using `CompatRouter` ([#9820](https://github.com/remix-run/react-router/pull/9820))
 - Updated dependencies:
   - `react-router-dom@6.7.1-pre.0`
   - `react-router@6.7.1-pre.0`
