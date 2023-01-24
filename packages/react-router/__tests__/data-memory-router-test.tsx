@@ -1519,7 +1519,7 @@ describe("<DataMemoryRouter>", () => {
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <h2>
-            Unhandled Thrown Error!
+            Unexpected Application Error!
           </h2>
           <h3
             style="font-style: italic;"
@@ -1629,7 +1629,7 @@ describe("<DataMemoryRouter>", () => {
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <h2>
-            Unhandled Thrown Error!
+            Unexpected Application Error!
           </h2>
           <h3
             style="font-style: italic;"
@@ -1874,7 +1874,7 @@ describe("<DataMemoryRouter>", () => {
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <h2>
-            Unhandled Thrown Error!
+            Unexpected Application Error!
           </h2>
           <h3
             style="font-style: italic;"
@@ -2058,7 +2058,7 @@ describe("<DataMemoryRouter>", () => {
         "<div>
           <div>
             <h2>
-              Unhandled Thrown Error!
+              Unexpected Application Error!
             </h2>
             <h3
               style="font-style: italic;"
