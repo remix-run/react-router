@@ -819,63 +819,48 @@ const TASK_ROUTES: TestRouteObject[] = [
   },
 ];
 
-const TM_ROUTES = [
+const TM_ROUTES: TestRouteObject[] = [
   {
     path: "",
     id: "root",
-
-    module: "",
     hasErrorBoundary: true,
     loader: true,
     children: [
       {
         path: "/",
         id: "index",
-        hasLoader: true,
         loader: true,
         action: true,
-
-        module: "",
       },
       {
         path: "/foo",
         id: "foo",
         loader: true,
         action: true,
-
-        module: "",
       },
       {
         path: "/foo/bar",
         id: "foobar",
         loader: true,
         action: true,
-
-        module: "",
       },
       {
         path: "/bar",
         id: "bar",
         loader: true,
         action: true,
-
-        module: "",
       },
       {
         path: "/baz",
         id: "baz",
         loader: true,
         action: true,
-
-        module: "",
       },
       {
         path: "/p/:param",
         id: "param",
         loader: true,
         action: true,
-
-        module: "",
       },
     ],
   },
@@ -1380,12 +1365,66 @@ describe("a router", () => {
       });
     });
 
-    it("does not load anything on hash change only", async () => {
+    it("does not load anything on hash change only <Link> navigations", async () => {
       let t = initializeTmTest();
       expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
       let A = await t.navigate("/#bar");
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
       expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+    });
+
+    it('does not load anything on hash change only empty <Form method="get"> navigations', async () => {
+      let t = initializeTmTest();
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+      let A = await t.navigate("/#bar", {
+        formData: createFormData({}),
+      });
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+    });
+
+    it('runs loaders on hash change only non-empty <Form method="get"> navigations', async () => {
+      let t = initializeTmTest();
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+      let A = await t.navigate("/#bar", {
+        formData: createFormData({ key: "value" }),
+      });
+      await A.loaders.root.resolve("ROOT 2");
+      await A.loaders.index.resolve("INDEX 2");
+      expect(t.router.state.location.search).toBe("?key=value");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT 2",
+        index: "INDEX 2",
+      });
+    });
+
+    it('runs action/loaders on hash change only <Form method="post"> navigations', async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo#bar");
+      expect(t.router.state.navigation.state).toBe("loading");
+      await A.loaders.foo.resolve("A");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: "A",
+      });
+
+      // Submit while we have an active hash causing us to lose it
+      let B = await t.navigate("/foo", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.navigation.state).toBe("submitting");
+      await B.actions.foo.resolve("ACTION");
+      await B.loaders.root.resolve("ROOT 2");
+      await B.loaders.foo.resolve("B");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toMatchObject({
+        foo: "ACTION",
+      });
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT 2",
+        foo: "B",
+      });
     });
 
     it("sets all right states on hash change only", async () => {
@@ -2396,7 +2435,6 @@ describe("a router", () => {
             children: expect.any(Array),
             id: "root",
             loader: expect.any(Function),
-            module: "",
             path: "",
           },
         },
@@ -2473,7 +2511,6 @@ describe("a router", () => {
             children: expect.any(Array),
             id: "root",
             loader: expect.any(Function),
-            module: "",
             path: "",
           },
         },
