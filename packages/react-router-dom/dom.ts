@@ -88,15 +88,17 @@ export function createSearchParams(
 
 export function getSearchParamsForLocation(
   locationSearch: string,
-  defaultSearchParams: URLSearchParams
+  defaultSearchParams: URLSearchParams | null
 ) {
   let searchParams = createSearchParams(locationSearch);
 
-  for (let key of defaultSearchParams.keys()) {
-    if (!searchParams.has(key)) {
-      defaultSearchParams.getAll(key).forEach((value) => {
-        searchParams.append(key, value);
-      });
+  if (defaultSearchParams) {
+    for (let key of defaultSearchParams.keys()) {
+      if (!searchParams.has(key)) {
+        defaultSearchParams.getAll(key).forEach((value) => {
+          searchParams.append(key, value);
+        });
+      }
     }
   }
 
