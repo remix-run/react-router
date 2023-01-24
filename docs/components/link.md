@@ -21,6 +21,8 @@ interface LinkProps
   state?: any;
   to: To;
   reloadDocument?: boolean;
+  preventScrollReset?: boolean;
+  relative?: "route" | "path";
 }
 
 type To = string | Partial<Path>;
@@ -116,5 +118,26 @@ An example when you might want this behavior is a list of tabs that manipulate t
 
 ```
 
+## `replace`
+
+The `replace` property can be used if you'd like to replace the current entry in the history stack via [`history.replaceState`][history-replace-state] instead of the default usage of [`history.pushState`][history-push-state].
+
+## `state`
+
+The `state` property can be used to set a stateful value for the new location which is stored inside [history state][history-state]. This value can subsequently be accessed via `useLocation()`.
+
+```tsx
+<Link to="new-path" state={{ some: "value" }} />
+```
+
+You can access this state value while on the "new-path" route:
+
+```ts
+let { state } = useLocation();
+```
+
 [link-native]: ./link-native
 [scrollrestoration]: ./scroll-restoration
+[history-replace-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState
+[history-push-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/pushState
+[history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
