@@ -18,6 +18,10 @@ describe("useSearchParams", () => {
     return <View>{children}</View>;
   }
 
+  function Button({ children }: { children: React.ReactNode; onClick?: any }) {
+    return <View>{children}</View>;
+  }
+
   it("reads and writes the search string", () => {
     function SearchPage() {
       let [searchParams, setSearchParams] = useSearchParams({ q: "" });
@@ -108,6 +112,42 @@ describe("useSearchParams", () => {
 
     TestRenderer.act(() => {
       searchForm.props.onSubmit();
+    });
+
+    expect(renderer.toJSON()).toMatchSnapshot();
+  });
+
+  it("allows removal of search params when a default is provided", () => {
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams({
+        value: "initial",
+      });
+
+      return (
+        <View>
+          <Text>The current query is "{searchParams.get("value")}".</Text>
+          <Button onClick={() => setSearchParams({})}>Click</Button>
+        </View>
+      );
+    }
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <NativeRouter initialEntries={["/search?value=initial"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </NativeRouter>
+      );
+    });
+
+    expect(renderer.toJSON()).toMatchSnapshot();
+
+    let button = renderer.root.findByType(Button);
+
+    TestRenderer.act(() => {
+      button.props.onClick();
     });
 
     expect(renderer.toJSON()).toMatchSnapshot();

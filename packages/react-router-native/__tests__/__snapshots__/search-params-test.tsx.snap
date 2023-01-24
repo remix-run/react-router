@@ -1,5 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`useSearchParams allows removal of search params when a default is provided 1`] = `
+<View>
+  <Text>
+    The current query is "
+    initial
+    ".
+  </Text>
+  <View>
+    Click
+  </View>
+</View>
+`;
+
+exports[`useSearchParams allows removal of search params when a default is provided 2`] = `
+<View>
+  <Text>
+    The current query is "
+    ".
+  </Text>
+  <View>
+    Click
+  </View>
+</View>
+`;
+
 exports[`useSearchParams reads and writes the search string (functional update) 1`] = `
 <View>
   <Text>
