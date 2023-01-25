@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 1.12.0-pre.2
+
+### Patch Changes
+
+- server build should not be removed in `remix watch` and `remix dev` ([`848a98020`](https://github.com/remix-run/remix/commit/848a980206b6b99b7e1404f5926760e509faeee9))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.12.0-pre.2`
+
 ## 1.12.0-pre.1
 
 ### Patch Changes
