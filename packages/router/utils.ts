@@ -90,27 +90,27 @@ export interface Submission {
 interface DataFunctionArgs {
   request: Request;
   params: Params;
-  // TODO: Do we need to go with beforeRequestContext or something for back-compat
   context?: any;
+  // TODO: Make this undefined if there are no middlewares?
+  middleware: MiddlewareContext;
 }
 
 /**
- * Context object passed through beforeRequest functions and into action/loaders.
+ * Context object passed through middleware functions and into action/loaders.
  *
  * Supports only key/value for now, eventually will be enhanced
  */
-export interface BeforeRequestContext {
+export interface MiddlewareContext {
   get(key: string): unknown;
   set(key: string, value: unknown): void;
+  // TODO: Make this undefined in loader/actions?
+  next: () => DataFunctionReturnValue;
 }
 
 /**
- * Arguments passed to beforeRequest functions
+ * Arguments passed to middleware functions
  */
-export interface BeforeRequestFunctionArgs extends DataFunctionArgs {
-  context: BeforeRequestContext;
-  type: "action" | "loader";
-}
+export interface MiddlewareFunctionArgs extends DataFunctionArgs {}
 
 /**
  * Arguments passed to loader functions
@@ -125,22 +125,28 @@ export interface ActionFunctionArgs extends DataFunctionArgs {}
 /**
  * Route loader function signature
  */
-export interface BeforeRequestFunction {
-  (args: BeforeRequestFunctionArgs): Promise<void> | void;
+export interface MiddlewareFunction {
+  (args: MiddlewareFunctionArgs): Promise<void> | void;
 }
+
+type DataFunctionReturnValue =
+  | Promise<Response>
+  | Response
+  | Promise<any>
+  | any;
 
 /**
  * Route loader function signature
  */
 export interface LoaderFunction {
-  (args: LoaderFunctionArgs): Promise<Response> | Response | Promise<any> | any;
+  (args: LoaderFunctionArgs): DataFunctionReturnValue;
 }
 
 /**
  * Route action function signature
  */
 export interface ActionFunction {
-  (args: ActionFunctionArgs): Promise<Response> | Response | Promise<any> | any;
+  (args: ActionFunctionArgs): DataFunctionReturnValue;
 }
 
 /**
@@ -172,7 +178,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
-  beforeRequest?: BeforeRequestFunction;
+  middleware?: MiddlewareFunction;
   loader?: LoaderFunction;
   action?: ActionFunction;
   hasErrorBoundary?: boolean;

@@ -11,8 +11,7 @@ import type {
   AgnosticDataRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
-  BeforeRequestContext,
-  BeforeRequestFunctionArgs,
+  MiddlewareContext,
   DataResult,
   DeferredResult,
   ErrorResult,
@@ -24,6 +23,8 @@ import type {
   ShouldRevalidateFunction,
   Submission,
   SuccessResult,
+  LoaderFunction,
+  ActionFunction,
 } from "./utils";
 import {
   convertRoutesToDataRoutes,
@@ -1254,10 +1255,7 @@ export function createRouter(init: RouterInit): Router {
         }),
       };
     } else {
-      let context: BeforeRequestContext | undefined = undefined;
-      if (matches.some((m) => m.route.beforeRequest)) {
-        context = await callBeforeRequestMethods("action", request, matches);
-      }
+      let context: MiddlewareContext | undefined = undefined;
 
       result = await callLoaderOrAction(
         "action",
@@ -1808,11 +1806,6 @@ export function createRouter(init: RouterInit): Router {
     );
     fetchControllers.set(key, abortController);
 
-    let context: BeforeRequestContext | undefined = undefined;
-    if (matches.some((m) => m.route.beforeRequest)) {
-      context = await callBeforeRequestMethods("loader", fetchRequest, matches);
-    }
-
     let result: DataResult = await callLoaderOrAction(
       "loader",
       fetchRequest,
@@ -1999,149 +1992,6 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
-  /**
-   * beforeRequest logic
-   * - each route defines beforeRequest which receives a type
-   * - called top-down for all matches
-   * - called individually for action/loader pass - called twice on mutation submissions
-   * - sharing data via context in remix:
-   *   - beforeRequest in action/loader HTTP request - duplicate beforeRequest
-   *     invocations across parallel loaders
-   *   - beforeRequest in it's own HTTP request - context data would need to be
-   *     shared over the wire and re-sent as URL params in loader HTTP call
-   */
-
-  interface BeforeRequestTreeNode {
-    match: AgnosticDataRouteMatch;
-    children: BeforeRequestTreeNode[];
-  }
-
-  async function callBeforeRequestMethods(
-    type: "action" | "loader",
-    request: Request,
-    matches: AgnosticDataRouteMatch[],
-    fetchersToLoad?: RevalidatingFetcher[]
-  ) {
-    // Call beforeRequest sequentially for all matches
-    let store = new Map<string, unknown>();
-    let context: BeforeRequestContext = {
-      get(k) {
-        if (!store.has(k)) {
-          throw new Error(`No "${k}" key found in beforeRequest context`);
-        }
-        return store.get(k);
-      },
-      set(k, v) {
-        store.set(k, v);
-      },
-    };
-
-    // Create a tree of beforeRequest calls so we can call them with optimal
-    // parallelism.  This is only useful when we have revalidating fetchers
-    // since they'll almost always re-use _some_ portion of the revalidating
-    // navigation routes.
-    //
-    // Assume a routing tree of:
-    //          ROOT
-    //         /    \
-    //        A      D
-    //       / \    / \
-    //      B   C  E   F
-    //                  \
-    //                   G
-    //
-    // If we have fetcher.load("/A/B") and fetcher.load("/D/E") and we POST to
-    // /D/F/G, then we need to revalidate all of the following loaders:
-    //  - navigation: ROOT, D, F, G
-    //  - fetcher 1: ROOT, A, B
-    //  - fetcher 2: ROOT, D, E
-    //
-    // This algorithm creates us a tree, similar to our router tree, but
-    // containing only the matches we need to load in this pass.  That way we
-    // can run async chains down each path through the tree in parallel
-    let matchesArrays = [
-      matches,
-      ...(fetchersToLoad || []).map((f) => f.matches),
-    ];
-    let tree: BeforeRequestTreeNode[] = [];
-
-    // TODO: This can be cleaned up a bit
-    for (let i = 0; i < matchesArrays.length; i++) {
-      let pointer: BeforeRequestTreeNode | undefined;
-      for (let j = 0; j < matchesArrays[i].length; j++) {
-        let match = matchesArrays[i][j];
-        if (j === 0) {
-          pointer = tree.find((m) => m.match.route.id === match.route.id);
-          if (!pointer) {
-            pointer = { match, children: [] };
-            tree.push(pointer);
-          }
-        } else {
-          let newPointer = pointer?.children.find(
-            (m) => m.match.route.id === match.route.id
-          );
-          if (!newPointer) {
-            newPointer = { match, children: [] };
-            pointer?.children.push(newPointer);
-          }
-          pointer = newPointer;
-        }
-      }
-    }
-
-    async function runBeforeRequestOnTreeNode(node: BeforeRequestTreeNode) {
-      if (node.match.route.beforeRequest) {
-        await node.match.route.beforeRequest({
-          type,
-          request,
-          params: node.match.params,
-          context,
-        });
-      }
-      await Promise.all(
-        node.children.map((c) => runBeforeRequestOnTreeNode(c))
-      );
-    }
-
-    // Run beforeRequest methods asynchronously down the tree paths
-    await Promise.all(tree.map((n) => runBeforeRequestOnTreeNode(n)));
-
-    // FIXME: OLD NAIVE IMPLEMENTATION IN CASE I NEED IT BACK LOL
-    // for (let match of matches) {
-    //   if (!match.route.beforeRequest) {
-    //     continue;
-    //   }
-    //   await match.route.beforeRequest({
-    //     type,
-    //     request,
-    //     params: match.params,
-    //     context,
-    //   });
-    // }
-
-    // if (fetchersToLoad) {
-    //   for (let fetcher of fetchersToLoad) {
-    //     for (let match of fetcher.matches) {
-    //       if (!match.route.beforeRequest) {
-    //         continue;
-    //       }
-    //       if (matches.some((m) => m.route.id === match.route.id)) {
-    //         // Skip if we already called this with our navigation matches above
-    //         continue;
-    //       }
-    //       await match.route.beforeRequest({
-    //         type,
-    //         request,
-    //         params: match.params,
-    //         context,
-    //       });
-    //     }
-    //   }
-    // }
-
-    return context;
-  }
-
   async function callLoadersAndMaybeResolveData(
     currentMatches: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
@@ -2149,39 +1999,12 @@ export function createRouter(init: RouterInit): Router {
     fetchersToLoad: RevalidatingFetcher[],
     request: Request
   ) {
-    let context: BeforeRequestContext | undefined = undefined;
-
-    // Don't await to keep up on the synchronous path if there aren't any
-    // beforeRequest functions to call.
-    // TODO: This is mostly an issue in unit tests so maybe we can toss a tick
-    // in the harness?
-    if (
-      matches.some((m) => m.route.beforeRequest) ||
-      fetchersToLoad.some((f) => f.matches.some((m) => m.route.beforeRequest))
-    ) {
-      context = await callBeforeRequestMethods(
-        "loader",
-        request,
-        matches,
-        fetchersToLoad
-      );
-    }
-
     // Call all navigation loaders and revalidating fetcher loaders in parallel,
     // then slice off the results into separate arrays so we can handle them
     // accordingly
     let results = await Promise.all([
       ...matchesToLoad.map((match) =>
-        callLoaderOrAction(
-          "loader",
-          request,
-          match,
-          matches,
-          router.basename,
-          false,
-          false,
-          context
-        )
+        callLoaderOrAction("loader", request, match, matches, router.basename)
       ),
       ...fetchersToLoad.map((f) =>
         callLoaderOrAction(
@@ -3218,6 +3041,71 @@ function shouldRevalidateLoader(
   return arg.defaultShouldRevalidate;
 }
 
+async function callRoutePipeline(
+  request: Request,
+  match: AgnosticDataRouteMatch,
+  matches: AgnosticDataRouteMatch[],
+  handler: LoaderFunction | ActionFunction
+) {
+  let store = new Map<string, unknown>();
+  let context: MiddlewareContext = {
+    get(k) {
+      if (!store.has(k)) {
+        throw new Error(`No "${k}" key found in beforeRequest context`);
+      }
+      return store.get(k);
+    },
+    set(k, v) {
+      store.set(k, v);
+    },
+    next: () => {},
+  };
+
+  return callRouteSubPipeline(request, context, match, matches, handler);
+}
+
+function callRouteSubPipeline(
+  request: Request,
+  context: MiddlewareContext,
+  match: AgnosticDataRouteMatch,
+  matches: AgnosticDataRouteMatch[],
+  handler: LoaderFunction | ActionFunction
+): ReturnType<LoaderFunction> {
+  if (request.signal.aborted) {
+    throw new Error("Request aborted");
+  }
+
+  // We've still got matches, continue on the middleware train
+  if (matches.length > 0) {
+    let activeMatch = matches[0];
+
+    // The next function will "bubble" back up the middlewares
+    let next: MiddlewareContext["next"] = () => {
+      return callRouteSubPipeline(
+        request,
+        context,
+        match,
+        matches.slice(1),
+        handler
+      );
+    };
+
+    if (!activeMatch.route.middleware) {
+      return next();
+    }
+
+    context.next = next;
+    return activeMatch.route.middleware({
+      request,
+      params: activeMatch.params,
+      middleware: context,
+    });
+  }
+
+  // We reached the end of our middlewares, call the handler
+  return handler({ request, params: match.params, middleware: context });
+}
+
 async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
@@ -3245,7 +3133,7 @@ async function callLoaderOrAction(
     );
 
     result = await Promise.race([
-      handler({ request, params: match.params, context: requestContext }),
+      callRoutePipeline(request, match, matches, handler),
       abortPromise,
     ]);
 
