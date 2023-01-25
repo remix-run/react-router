@@ -5,6 +5,8 @@ import postcss from "postcss";
 import postcssModules from "postcss-modules";
 
 import type { CompileOptions } from "../options";
+import type { RemixConfig } from "../../config";
+import { loadPostcssPlugins } from "../utils/postcss";
 
 const pluginName = "css-modules-plugin";
 const namespace = `${pluginName}-ns`;
@@ -17,14 +19,20 @@ interface PluginData {
   compiledCss: string;
 }
 
-export const cssModulesPlugin = (options: {
+export const cssModulesPlugin = ({
+  config,
+  mode,
+  outputCss,
+}: {
+  config: RemixConfig;
   mode: CompileOptions["mode"];
-  rootDirectory: string;
   outputCss: boolean;
 }): Plugin => {
   return {
     name: pluginName,
     setup: async (build: PluginBuild) => {
+      let postcssPlugins = await loadPostcssPlugins({ config });
+
       build.onResolve(
         { filter: cssModulesFilter, namespace: "file" },
         async (args) => {
@@ -49,9 +57,10 @@ export const cssModulesPlugin = (options: {
         let exports: Record<string, string> = {};
 
         let { css: compiledCss } = await postcss([
+          ...postcssPlugins,
           postcssModules({
             generateScopedName:
-              options.mode === "production"
+              mode === "production"
                 ? "[hash:base64:5]"
                 : "[name]__[local]__[hash:base64:5]",
             getJSON: function (_, json) {
@@ -76,7 +85,7 @@ export const cssModulesPlugin = (options: {
         // object that maps local names to generated class names. The compiled
         // CSS file contents are passed to the virtual CSS file via pluginData.
         let contents = [
-          options.outputCss
+          outputCss
             ? `import "./${path.basename(absolutePath)}${compiledCssQuery}";`
             : null,
           `export default ${JSON.stringify(exports)};`,
@@ -102,7 +111,7 @@ export const cssModulesPlugin = (options: {
 
         return {
           namespace,
-          path: path.relative(options.rootDirectory, absolutePath),
+          path: path.relative(config.rootDirectory, absolutePath),
           pluginData,
         };
       });

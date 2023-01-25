@@ -99,7 +99,6 @@ const createEsbuildConfig = (
   }
 
   let { mode } = options;
-  let { rootDirectory } = config;
   let outputCss = isCssBuild;
 
   let plugins: esbuild.Plugin[] = [
@@ -108,15 +107,15 @@ const createEsbuildConfig = (
       ? cssBundleEntryModulePlugin(config)
       : null,
     config.future.unstable_cssModules
-      ? cssModulesPlugin({ mode, rootDirectory, outputCss })
+      ? cssModulesPlugin({ config, mode, outputCss })
       : null,
     config.future.unstable_vanillaExtract
       ? vanillaExtractPlugin({ config, mode, outputCss })
       : null,
     config.future.unstable_cssSideEffectImports
-      ? cssSideEffectImportsPlugin({ rootDirectory })
+      ? cssSideEffectImportsPlugin({ config, options })
       : null,
-    cssFilePlugin({ mode, rootDirectory }),
+    cssFilePlugin({ config, options }),
     urlImportsPlugin(),
     mdxPlugin(config),
     browserRouteModulesPlugin(config, /\?browser$/),
@@ -235,11 +234,6 @@ export const createBrowserCompiler = (
 
       let cssBundlePath = cssBundleFile.path;
 
-      // Get esbuild's existing CSS source map so we can pass it to PostCSS
-      let cssBundleSourceMap = outputFiles.find((outputFile) =>
-        isCssBundleFile(outputFile, ".css.map")
-      )?.text;
-
       let { css, map } = await postcss([
         // We need to discard duplicate rules since "composes"
         // in CSS Modules can result in duplicate styles
@@ -247,8 +241,10 @@ export const createBrowserCompiler = (
       ]).process(cssBundleFile.text, {
         from: cssBundlePath,
         to: cssBundlePath,
-        map: {
-          prev: cssBundleSourceMap,
+        map: options.sourcemap && {
+          prev: outputFiles.find((outputFile) =>
+            isCssBundleFile(outputFile, ".css.map")
+          )?.text,
           inline: false,
           annotation: false,
           sourcesContent: true,

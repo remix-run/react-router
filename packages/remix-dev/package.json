@@ -55,6 +55,7 @@
     "ora": "^5.4.1",
     "postcss": "^8.4.19",
     "postcss-discard-duplicates": "^5.1.0",
+    "postcss-load-config": "^4.0.1",
     "postcss-modules": "^6.0.0",
     "prettier": "2.7.1",
     "pretty-ms": "^7.0.1",

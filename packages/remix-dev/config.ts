@@ -43,6 +43,8 @@ interface FutureConfig {
   unstable_cssModules: boolean;
   unstable_cssSideEffectImports: boolean;
   unstable_dev: boolean | Dev;
+  unstable_postcss: boolean;
+  unstable_tailwind: boolean;
   unstable_vanillaExtract: boolean;
   v2_errorBoundary: boolean;
   v2_meta: boolean;
@@ -502,6 +504,8 @@ export async function readConfig(
     unstable_cssSideEffectImports:
       appConfig.future?.unstable_cssSideEffectImports === true,
     unstable_dev: appConfig.future?.unstable_dev ?? false,
+    unstable_postcss: appConfig.future?.unstable_postcss === true,
+    unstable_tailwind: appConfig.future?.unstable_tailwind === true,
     unstable_vanillaExtract: appConfig.future?.unstable_vanillaExtract === true,
     v2_errorBoundary: appConfig.future?.v2_errorBoundary === true,
     v2_meta: appConfig.future?.v2_meta === true,

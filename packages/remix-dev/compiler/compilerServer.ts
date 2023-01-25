@@ -51,21 +51,20 @@ const createEsbuildConfig = (
   let isDenoRuntime = config.serverBuildTarget === "deno";
 
   let { mode } = options;
-  let { rootDirectory } = config;
   let outputCss = false;
 
   let plugins: esbuild.Plugin[] = [
     deprecatedRemixPackagePlugin(options.onWarning),
     config.future.unstable_cssModules
-      ? cssModulesPlugin({ mode, rootDirectory, outputCss })
+      ? cssModulesPlugin({ config, mode, outputCss })
       : null,
     config.future.unstable_vanillaExtract
       ? vanillaExtractPlugin({ config, mode, outputCss })
       : null,
     config.future.unstable_cssSideEffectImports
-      ? cssSideEffectImportsPlugin({ rootDirectory })
+      ? cssSideEffectImportsPlugin({ config, options })
       : null,
-    cssFilePlugin({ mode, rootDirectory }),
+    cssFilePlugin({ config, options }),
     urlImportsPlugin(),
     mdxPlugin(config),
     emptyModulesPlugin(config, /\.client(\.[jt]sx?)?$/),

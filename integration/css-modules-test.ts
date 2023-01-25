@@ -27,6 +27,8 @@ test.describe("CSS Modules", () => {
               // ensure features don't clash
               unstable_cssModules: true,
               unstable_cssSideEffectImports: true,
+              unstable_postcss: true,
+              unstable_tailwind: true,
               unstable_vanillaExtract: true,
             },
           };
