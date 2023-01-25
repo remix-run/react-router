@@ -11481,6 +11481,75 @@ describe("a router", () => {
   });
 
   describe("beforeRequest", () => {
+    it.only("middleware next fn", async () => {
+      let calls: string[] = [];
+      currentRouter = createRouter({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            async middleware({ middleware }) {
+              calls.push("middleware start - root");
+              let res = await middleware.next();
+              calls.push("middleware end   - root");
+              return res;
+            },
+            children: [
+              {
+                id: "child",
+                path: "child",
+                async middleware({ middleware }) {
+                  calls.push("middleware start - child");
+                  let res = await middleware.next();
+                  calls.push("middleware end   - child");
+                  return res;
+                },
+                children: [
+                  {
+                    id: "grandchild",
+                    path: "grandchild",
+                    async middleware({ middleware }) {
+                      calls.push("middleware start - grandchild");
+                      let res = await middleware.next();
+                      calls.push("middleware end   - grandchild");
+                      return res;
+                    },
+                    async loader() {
+                      calls.push("loader start - grandchild");
+                      calls.push("loader end   - grandchild");
+                      return json({ test: "value" });
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory(),
+      }).initialize();
+
+      await currentRouter.navigate("/child/grandchild?key=value");
+
+      expect(currentRouter.state.location.pathname).toBe("/child/grandchild");
+      expect(currentRouter.state.loaderData).toEqual({
+        grandchild: {
+          test: "value",
+        },
+      });
+      expect(calls).toMatchInlineSnapshot(`
+        [
+          "middleware start - root",
+          "middleware start - child",
+          "middleware start - grandchild",
+          "loader start - grandchild",
+          "loader end   - grandchild",
+          "middleware end   - grandchild",
+          "middleware end   - child",
+          "middleware end   - root",
+        ]
+      `);
+    });
+
     it("runs beforeRequest sequentially before loaders", async () => {
       let calls: string[] = [];
       currentRouter = createRouter({
