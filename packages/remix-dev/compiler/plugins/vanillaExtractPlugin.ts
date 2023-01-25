@@ -38,12 +38,17 @@ export function vanillaExtractPlugin({
       });
       let { rootDirectory } = config;
 
+      // Resolve virtual CSS files first to avoid resolving the same
+      // file multiple times since this filter is more specific and
+      // doesn't require a file system lookup.
       build.onResolve({ filter: virtualCssFileFilter }, (args) => {
         return {
           path: args.path,
           namespace,
         };
       });
+
+      vanillaExtractSideEffectsPlugin.setup(build);
 
       build.onLoad(
         { filter: virtualCssFileFilter, namespace },
@@ -81,6 +86,7 @@ export function vanillaExtractPlugin({
           platform: "node",
           write: false,
           plugins: [
+            vanillaExtractSideEffectsPlugin,
             vanillaExtractTransformPlugin({ rootDirectory, identOption }),
           ],
           loader: loaders,
@@ -173,3 +179,41 @@ function vanillaExtractTransformPlugin({
     },
   };
 }
+
+/**
+ * This plugin marks all .css.ts/js files as having side effects. This is
+ * to ensure that all usages of `globalStyle` are included in the CSS bundle,
+ * even if a .css.ts/js file has no exports or is otherwise tree-shaken.
+ */
+const vanillaExtractSideEffectsPlugin: esbuild.Plugin = {
+  name: "vanilla-extract-side-effects-plugin",
+  setup(build) {
+    let preventInfiniteLoop = {};
+
+    build.onResolve(
+      { filter: /\.css(\.(j|t)sx?)?(\?.*)?$/, namespace: "file" },
+      async (args) => {
+        if (args.pluginData === preventInfiniteLoop) {
+          return null;
+        }
+
+        let resolvedPath = (
+          await build.resolve(args.path, {
+            resolveDir: args.resolveDir,
+            kind: args.kind,
+            pluginData: preventInfiniteLoop,
+          })
+        ).path;
+
+        if (!cssFileFilter.test(resolvedPath)) {
+          return null;
+        }
+
+        return {
+          path: resolvedPath,
+          sideEffects: true,
+        };
+      }
+    );
+  },
+};

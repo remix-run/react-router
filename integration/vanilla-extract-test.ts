@@ -49,6 +49,8 @@ test.describe("Vanilla Extract", () => {
         ...javaScriptFixture(),
         ...classCompositionFixture(),
         ...rootRelativeClassCompositionFixture(),
+        ...sideEffectImportsFixture(),
+        ...sideEffectImportsWithinChildCompilationFixture(),
         ...stableIdentifiersFixture(),
         ...imageUrlsViaCssUrlFixture(),
         ...imageUrlsViaRootRelativeCssUrlFixture(),
@@ -202,6 +204,71 @@ test.describe("Vanilla Extract", () => {
     await app.goto("/root-relative-class-composition-test");
     let locator = await page.locator(
       "[data-testid='root-relative-class-composition']"
+    );
+    let padding = await locator.evaluate(
+      (element) => window.getComputedStyle(element).padding
+    );
+    expect(padding).toBe(TEST_PADDING_VALUE);
+  });
+
+  let sideEffectImportsFixture = () => ({
+    "app/fixtures/side-effect-imports/styles.css.ts": js`
+      import { globalStyle } from "@vanilla-extract/css";
+      
+      globalStyle(".side-effect-imports", {
+        padding: ${JSON.stringify(TEST_PADDING_VALUE)}
+      });
+    `,
+    "app/routes/side-effect-imports-test.jsx": js`
+      import "../fixtures/side-effect-imports/styles.css";
+      
+      export default function() {
+        return (
+          <div data-testid="side-effect-imports" className="side-effect-imports">
+            Side-effect imports test
+          </div>
+        )
+      }
+    `,
+  });
+  test("side-effect imports", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/side-effect-imports-test");
+    let locator = await page.locator("[data-testid='side-effect-imports']");
+    let padding = await locator.evaluate(
+      (element) => window.getComputedStyle(element).padding
+    );
+    expect(padding).toBe(TEST_PADDING_VALUE);
+  });
+
+  let sideEffectImportsWithinChildCompilationFixture = () => ({
+    "app/fixtures/side-effect-imports-within-child-compilation/styles.css.ts": js`
+      import "./nested-side-effect.css";
+    `,
+    "app/fixtures/side-effect-imports-within-child-compilation/nested-side-effect.css.ts": js`
+      import { globalStyle } from "@vanilla-extract/css";
+      
+      globalStyle(".side-effect-imports-within-child-compilation", {
+        padding: ${JSON.stringify(TEST_PADDING_VALUE)}
+      });
+    `,
+    "app/routes/side-effect-imports-within-child-compilation-test.jsx": js`
+      import "../fixtures/side-effect-imports-within-child-compilation/styles.css";
+      
+      export default function() {
+        return (
+          <div data-testid="side-effect-imports-within-child-compilation" className="side-effect-imports-within-child-compilation">
+            Side-effect imports within child compilation test
+          </div>
+        )
+      }
+    `,
+  });
+  test("side-effect imports within child compilation", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/side-effect-imports-within-child-compilation-test");
+    let locator = await page.locator(
+      "[data-testid='side-effect-imports-within-child-compilation']"
     );
     let padding = await locator.evaluate(
       (element) => window.getComputedStyle(element).padding
