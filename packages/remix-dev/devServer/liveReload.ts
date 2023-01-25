@@ -12,7 +12,6 @@ const relativePath = (file: string) => path.relative(process.cwd(), file);
 
 let clean = (config: RemixConfig) => {
   fse.emptyDirSync(config.assetsBuildDirectory);
-  fse.rmSync(config.serverBuildPath);
 };
 
 export async function liveReload(

@@ -20,7 +20,6 @@ let sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 let clean = (config: RemixConfig) => {
   fs.emptyDirSync(config.relativeAssetsBuildDirectory);
-  fs.removeSync(config.serverBuildPath);
 };
 
 let getHost = () =>
