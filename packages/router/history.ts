@@ -85,7 +85,7 @@ export interface Update {
   /**
    * The delta between this location and the former location in the history stack
    */
-  delta: number;
+  delta: number | null;
 }
 
 /**
@@ -612,24 +612,12 @@ function getUrlBasedHistory(
   }
 
   function handlePop() {
-    let nextAction = Action.Pop;
+    action = Action.Pop;
     let nextIndex = getIndex();
-
-    if (nextIndex != null) {
-      let delta = nextIndex - index;
-      action = nextAction;
-      index = nextIndex;
-      if (listener) {
-        listener({ action, location: history.location, delta });
-      }
-    } else {
-      warning(
-        false,
-        `You are trying to perform a POP navigation to a location that was not ` +
-          `created by @remix-run/router. This will fail silently in production.  ` +
-          `You should navigate via the router to avoid this situation (instead of ` +
-          `using window.history.pushState/window.location.hash).`
-      );
+    let delta = nextIndex == null ? null : nextIndex - index;
+    index = nextIndex;
+    if (listener) {
+      listener({ action, location: history.location, delta });
     }
   }
 

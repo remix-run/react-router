@@ -781,12 +781,23 @@ export function createRouter(init: RouterInit): Router {
           return;
         }
 
+        warning(
+          activeBlocker != null && delta === null,
+          "You are trying to use a blocker on a POP navigation to a location " +
+            "that was not created by @remix-run/router. This will fail silently in " +
+            "production. This can happen if you are navigating outside the router " +
+            "via `window.history.pushState`/`window.location.hash` instead of using " +
+            "router navigation APIs.  This can also happen if you are using " +
+            "createHashRouter and the user manually changes the URL."
+        );
+
         let blockerKey = shouldBlockNavigation({
           currentLocation: state.location,
           nextLocation: location,
           historyAction,
         });
-        if (blockerKey) {
+
+        if (blockerKey && delta != null) {
           // Restore the URL to match the current UI, but don't update router state
           ignoreNextHistoryUpdate = true;
           init.history.go(delta * -1);
