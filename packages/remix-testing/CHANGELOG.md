@@ -1,5 +1,15 @@
 # `@remix-run/testing`
 
+## 1.12.0-pre.0
+
+### Patch Changes
+
+- Ensure all routes have IDs when using the `createRemixStub` testing helper ([#5128](https://github.com/remix-run/remix/pull/5128))
+- Bump react router versions ([#5242](https://github.com/remix-run/remix/pull/5242))
+- Updated dependencies:
+  - `@remix-run/node@1.12.0-pre.0`
+  - `@remix-run/react@1.12.0-pre.0`
+
 ## 1.11.1
 
 ### Patch Changes
