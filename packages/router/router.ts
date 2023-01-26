@@ -7,25 +7,26 @@ import {
   parsePath,
 } from "./history";
 import type {
+  ActionFunction,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
-  MiddlewareContext,
   DataResult,
   DeferredResult,
   ErrorResult,
   FormEncType,
   FormMethod,
+  LoaderFunction,
+  MiddlewareContext,
+  MiddlewareContextInstance,
   MutationFormMethod,
+  Params,
   RedirectResult,
   RouteData,
   ShouldRevalidateFunction,
   Submission,
   SuccessResult,
-  LoaderFunction,
-  ActionFunction,
-  Params,
 } from "./utils";
 import {
   convertRoutesToDataRoutes,
@@ -3049,15 +3050,22 @@ async function callRoutePipeline(
   requestContext: unknown,
   handler: LoaderFunction | ActionFunction
 ) {
-  let store = new Map<string, unknown>();
+  // Avoid memory leaks since we don't control the key
+  // TODO: Any way to type this so that .get/.set can infer the value type
+  // from the key?  This would avoid our `as T` below.
+  let store = new WeakMap();
   let middlewareContext: MiddlewareContext = {
-    get(k) {
+    get<T>(k: MiddlewareContextInstance<T>) {
       if (!store.has(k)) {
-        throw new Error("Unable to find a value in the middleware context");
+        let defaultValue = k.getDefaultValue();
+        if (defaultValue == null) {
+          throw new Error("Unable to find a value in the middleware context");
+        }
+        return defaultValue;
       }
-      return store.get(k);
+      return store.get(k) as T;
     },
-    set(k, v) {
+    set<T>(k: MiddlewareContextInstance<T>, v: T) {
       if (typeof v === "undefined") {
         throw new Error(
           "You cannot set an undefined value in the middleware context"
@@ -3165,8 +3173,15 @@ async function callLoaderOrAction(
       `Could not find the ${type} to run on the "${match.route.id}" route`
     );
 
+    // Only call the pipeline for the matches up to this specific match
+    let idx = matches.findIndex((m) => m.route.id === match.route.id);
     result = await Promise.race([
-      callRoutePipeline(request, matches, requestContext, handler),
+      callRoutePipeline(
+        request,
+        matches.slice(0, idx + 1),
+        requestContext,
+        handler
+      ),
       abortPromise,
     ]);
 
