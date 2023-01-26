@@ -1,5 +1,13 @@
 # `react-router-native`
 
+## 6.8.0
+
+### Patch Changes
+
+- Fix bug with search params removal ([#9969](https://github.com/remix-run/react-router/pull/9969))
+- Updated dependencies:
+  - `react-router@6.8.0`
+
 ## 6.8.0-pre.1
 
 ### Patch Changes
