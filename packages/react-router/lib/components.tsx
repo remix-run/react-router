@@ -56,14 +56,16 @@ export function RouterProvider({
   fallbackElement,
   router,
 }: RouterProviderProps): React.ReactElement {
+  let getState = React.useCallback(() => router.state, [router]);
+
   // Sync router state to our component state to force re-renders
   let state: RouterState = useSyncExternalStoreShim(
     router.subscribe,
-    () => router.state,
+    getState,
     // We have to provide this so React@18 doesn't complain during hydration,
     // but we pass our serialized hydration data into the router so state here
     // is already synced with what the server saw
-    () => router.state
+    getState
   );
 
   let navigator = React.useMemo((): Navigator => {
@@ -87,6 +89,14 @@ export function RouterProvider({
 
   let basename = router.basename || "/";
 
+  let dataRouterContext = React.useMemo(() => ({
+    router,
+    navigator,
+    static: false,
+    // Do we need this?
+    basename,
+  }), [router, navigator, basename]);
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -95,15 +105,7 @@ export function RouterProvider({
   // we don't need the <script> tag
   return (
     <>
-      <DataRouterContext.Provider
-        value={{
-          router,
-          navigator,
-          static: false,
-          // Do we need this?
-          basename,
-        }}
-      >
+      <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
           <Router
             basename={router.basename}
@@ -346,6 +348,11 @@ export function Router({
     };
   }, [basename, pathname, search, hash, state, key]);
 
+  let locationContext = React.useMemo(
+    () => ({ location: location!, navigationType }),
+    [location, navigationType]
+  );
+
   warning(
     location != null,
     `<Router basename="${basename}"> is not able to match the URL ` +
@@ -361,7 +368,7 @@ export function Router({
     <NavigationContext.Provider value={navigationContext}>
       <LocationContext.Provider
         children={children}
-        value={{ location, navigationType }}
+        value={locationContext}
       />
     </NavigationContext.Provider>
   );
