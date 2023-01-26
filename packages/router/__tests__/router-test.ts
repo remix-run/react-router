@@ -13,6 +13,7 @@ import type {
 } from "../index";
 import {
   createMemoryHistory,
+  createMiddlewareContext,
   createRouter,
   createStaticHandler,
   defer,
@@ -29,10 +30,12 @@ import {
 
 // Private API
 import type {
+  ActionFunctionArgs,
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
   AgnosticRouteObject,
   DeferredData,
+  LoaderFunctionArgs,
   TrackedPromise,
 } from "../utils";
 import {
@@ -11531,7 +11534,44 @@ describe("a router", () => {
   describe("middleware", () => {
     describe("ordering", () => {
       let calls: string[];
-      let MIDDLEWARE_ORDERING_ROUTES = [
+
+      let indentationContext = createMiddlewareContext("");
+
+      async function trackMiddlewareCall(
+        routeId: string,
+        { request, middleware }: ActionFunctionArgs | LoaderFunctionArgs
+      ) {
+        let indentation = middleware.get(indentationContext);
+        let type = request.method === "POST" ? "action" : "loader";
+        let fetchSuffix = request.url.includes("?from-fetch") ? " (fetch)" : "";
+
+        calls.push(
+          `${indentation}${routeId} ${type} middleware start${fetchSuffix}`
+        );
+        middleware.set(indentationContext, indentation + "  ");
+        await tick();
+        let res = await middleware.next();
+        calls.push(
+          `${indentation}${routeId} ${type} middleware end${fetchSuffix}`
+        );
+        return res;
+      }
+
+      async function trackHandlerCall(
+        routeId: string,
+        { request, middleware }: ActionFunctionArgs | LoaderFunctionArgs
+      ) {
+        let indentation = middleware.get(indentationContext);
+        let type = request.method === "POST" ? "action" : "loader";
+        let fetchSuffix = request.url.includes("?from-fetch") ? " (fetch)" : "";
+
+        calls.push(`${indentation}${routeId} ${type} start${fetchSuffix}`);
+        await tick();
+        calls.push(`${indentation}${routeId} ${type} end${fetchSuffix}`);
+        return routeId.toUpperCase() + " " + type.toUpperCase();
+      }
+
+      let MIDDLEWARE_ORDERING_ROUTES: AgnosticRouteObject[] = [
         {
           id: "root",
           path: "/",
@@ -11539,64 +11579,37 @@ describe("a router", () => {
         {
           id: "parent",
           path: "/parent",
-          async middleware({ middleware }) {
-            calls.push("middleware start - parent");
-            await tick();
-            let res = await middleware.next();
-            calls.push("middleware end   - parent");
-            return res;
+          middleware(args) {
+            return trackMiddlewareCall("parent", args);
           },
-          async action() {
-            calls.push("action start - parent");
-            await tick();
-            calls.push("action end   - parent");
-            return "PARENT ACTION";
+          action(args) {
+            return trackHandlerCall("parent", args);
           },
-          async loader() {
-            calls.push("loader start - parent");
-            await tick();
-            calls.push("loader end   - parent");
-            return "PARENT";
+          loader(args) {
+            return trackHandlerCall("parent", args);
           },
           children: [
             {
               id: "child",
               path: "child",
-              async middleware({ middleware }) {
-                calls.push("middleware start - child");
-                await tick();
-                let res = await middleware.next();
-                calls.push("middleware end   - child");
-                return res;
+              middleware(args) {
+                return trackMiddlewareCall("child", args);
               },
-              async loader() {
-                calls.push("loader start - child");
-                await tick();
-                calls.push("loader end   - child");
-                return "CHILD";
+              loader(args) {
+                return trackHandlerCall("child", args);
               },
               children: [
                 {
                   id: "grandchild",
                   path: "grandchild",
-                  async middleware({ middleware }) {
-                    calls.push("middleware start - grandchild");
-                    await tick();
-                    let res = await middleware.next();
-                    calls.push("middleware end   - grandchild");
-                    return res;
+                  middleware(args) {
+                    return trackMiddlewareCall("grandchild", args);
                   },
-                  async action() {
-                    calls.push("action start - grandchild");
-                    await tick();
-                    calls.push("action end   - grandchild");
-                    return "GRANDCHILD ACTION";
+                  action(args) {
+                    return trackHandlerCall("grandchild", args);
                   },
-                  async loader() {
-                    calls.push("loader start - grandchild");
-                    await tick();
-                    calls.push("loader end   - grandchild");
-                    return "GRANDCHILD";
+                  loader(args) {
+                    return trackHandlerCall("grandchild", args);
                   },
                 },
               ],
@@ -11619,14 +11632,14 @@ describe("a router", () => {
 
         expect(currentRouter.state.location.pathname).toBe("/parent");
         expect(currentRouter.state.loaderData).toEqual({
-          parent: "PARENT",
+          parent: "PARENT LOADER",
         });
         expect(calls).toMatchInlineSnapshot(`
           [
-            "middleware start - parent",
-            "loader start - parent",
-            "loader end   - parent",
-            "middleware end   - parent",
+            "parent loader middleware start",
+            "  parent loader start",
+            "  parent loader end",
+            "parent loader middleware end",
           ]
         `);
       });
@@ -11647,18 +11660,18 @@ describe("a router", () => {
           parent: "PARENT ACTION",
         });
         expect(currentRouter.state.loaderData).toEqual({
-          parent: "PARENT",
+          parent: "PARENT LOADER",
         });
         expect(calls).toMatchInlineSnapshot(`
           [
-            "middleware start - parent",
-            "action start - parent",
-            "action end   - parent",
-            "middleware end   - parent",
-            "middleware start - parent",
-            "loader start - parent",
-            "loader end   - parent",
-            "middleware end   - parent",
+            "parent action middleware start",
+            "  parent action start",
+            "  parent action end",
+            "parent action middleware end",
+            "parent loader middleware start",
+            "  parent loader start",
+            "  parent loader end",
+            "parent loader middleware end",
           ]
         `);
       });
@@ -11675,42 +11688,37 @@ describe("a router", () => {
           "/parent/child/grandchild"
         );
         expect(currentRouter.state.loaderData).toEqual({
-          parent: "PARENT",
-          child: "CHILD",
-          grandchild: "GRANDCHILD",
+          parent: "PARENT LOADER",
+          child: "CHILD LOADER",
+          grandchild: "GRANDCHILD LOADER",
         });
 
-        // 1. Middleware chains all start in parallel for each loader and run
-        //    sequentially down the matches
-        // 2. Then loaders all run in parallel
-        // 3. When a loader ends, it triggers the bubbling back up the
-        //    middleware chain
+        // - Middleware chains all start in parallel for each loader and run
+        //   sequentially down the matches
+        // - Loaders run slightly offset since they have different middleware
+        //   depths
+        // - When a loader ends, it triggers the bubbling back up the
+        //   middleware chain
         expect(calls).toMatchInlineSnapshot(`
           [
-            "middleware start - parent",
-            "middleware start - parent",
-            "middleware start - parent",
-            "middleware start - child",
-            "middleware start - child",
-            "middleware start - child",
-            "middleware start - grandchild",
-            "middleware start - grandchild",
-            "middleware start - grandchild",
-            "loader start - parent",
-            "loader start - child",
-            "loader start - grandchild",
-            "loader end   - parent",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
-            "loader end   - child",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
-            "loader end   - grandchild",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
+            "parent loader middleware start",
+            "parent loader middleware start",
+            "parent loader middleware start",
+            "  parent loader start",
+            "  child loader middleware start",
+            "  child loader middleware start",
+            "  parent loader end",
+            "parent loader middleware end",
+            "    child loader start",
+            "    grandchild loader middleware start",
+            "    child loader end",
+            "  child loader middleware end",
+            "parent loader middleware end",
+            "      grandchild loader start",
+            "      grandchild loader end",
+            "    grandchild loader middleware end",
+            "  child loader middleware end",
+            "parent loader middleware end",
           ]
         `);
       });
@@ -11733,53 +11741,48 @@ describe("a router", () => {
           grandchild: "GRANDCHILD ACTION",
         });
         expect(currentRouter.state.loaderData).toEqual({
-          parent: "PARENT",
-          child: "CHILD",
-          grandchild: "GRANDCHILD",
+          parent: "PARENT LOADER",
+          child: "CHILD LOADER",
+          grandchild: "GRANDCHILD LOADER",
         });
 
-        // 1. Middleware chain runs top-down for the action
-        // 2. Then the action runs
-        // 3. When the action ends, it bubbled back up the middleware chain
-        // 4. Middleware chains then start in parallel for each loader and run
-        //    top-down down the matches
-        // 5. Then loaders run in parallel
-        // 6. When a loader ends, it triggers the bubbling back up the
-        //    middleware chain
+        // - Middleware chain runs top-down for the action
+        // - Then the action runs
+        // - When the action ends, it bubbled back up the middleware chain
+        // - Middleware chains all start in parallel for each loader and run
+        //   sequentially down the matches
+        // - Loaders run slightly offset since they have different middleware
+        //   depths
+        // - When a loader ends, it triggers the bubbling back up the
+        //   middleware chain
         expect(calls).toMatchInlineSnapshot(`
           [
-            "middleware start - parent",
-            "middleware start - child",
-            "middleware start - grandchild",
-            "action start - grandchild",
-            "action end   - grandchild",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
-            "middleware start - parent",
-            "middleware start - parent",
-            "middleware start - parent",
-            "middleware start - child",
-            "middleware start - child",
-            "middleware start - child",
-            "middleware start - grandchild",
-            "middleware start - grandchild",
-            "middleware start - grandchild",
-            "loader start - parent",
-            "loader start - child",
-            "loader start - grandchild",
-            "loader end   - parent",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
-            "loader end   - child",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
-            "loader end   - grandchild",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
+            "parent action middleware start",
+            "  child action middleware start",
+            "    grandchild action middleware start",
+            "      grandchild action start",
+            "      grandchild action end",
+            "    grandchild action middleware end",
+            "  child action middleware end",
+            "parent action middleware end",
+            "parent loader middleware start",
+            "parent loader middleware start",
+            "parent loader middleware start",
+            "  parent loader start",
+            "  child loader middleware start",
+            "  child loader middleware start",
+            "  parent loader end",
+            "parent loader middleware end",
+            "    child loader start",
+            "    grandchild loader middleware start",
+            "    child loader end",
+            "  child loader middleware end",
+            "parent loader middleware end",
+            "      grandchild loader start",
+            "      grandchild loader end",
+            "    grandchild loader middleware end",
+            "  child loader middleware end",
+            "parent loader middleware end",
           ]
         `);
       });
@@ -11798,14 +11801,14 @@ describe("a router", () => {
 
         expect(calls).toMatchInlineSnapshot(`
           [
-            "middleware start - parent",
-            "middleware start - child",
-            "middleware start - grandchild",
-            "loader start - grandchild",
-            "loader end   - grandchild",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
+            "parent loader middleware start (fetch)",
+            "  child loader middleware start (fetch)",
+            "    grandchild loader middleware start (fetch)",
+            "      grandchild loader start (fetch)",
+            "      grandchild loader end (fetch)",
+            "    grandchild loader middleware end (fetch)",
+            "  child loader middleware end (fetch)",
+            "parent loader middleware end (fetch)",
           ]
         `);
       });
@@ -11828,14 +11831,14 @@ describe("a router", () => {
 
         expect(calls).toMatchInlineSnapshot(`
           [
-            "middleware start - parent",
-            "middleware start - child",
-            "middleware start - grandchild",
-            "action start - grandchild",
-            "action end   - grandchild",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
+            "parent action middleware start (fetch)",
+            "  child action middleware start (fetch)",
+            "    grandchild action middleware start (fetch)",
+            "      grandchild action start (fetch)",
+            "      grandchild action end (fetch)",
+            "    grandchild action middleware end (fetch)",
+            "  child action middleware end (fetch)",
+            "parent action middleware end (fetch)",
           ]
         `);
       });
@@ -11864,38 +11867,32 @@ describe("a router", () => {
 
         expect(calls).toMatchInlineSnapshot(`
           [
-            "middleware start - parent",
-            "middleware start - child",
-            "middleware start - grandchild",
-            "action start - grandchild",
-            "action end   - grandchild",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
-            "middleware start - parent",
-            "middleware start - parent",
-            "middleware start - parent",
-            "middleware start - child",
-            "middleware start - child",
-            "middleware start - child",
-            "middleware start - grandchild",
-            "middleware start - grandchild",
-            "middleware start - grandchild",
-            "loader start - parent",
-            "loader start - child",
-            "loader start - grandchild",
-            "loader end   - parent",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
-            "loader end   - child",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
-            "loader end   - grandchild",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
+            "parent action middleware start (fetch)",
+            "  child action middleware start (fetch)",
+            "    grandchild action middleware start (fetch)",
+            "      grandchild action start (fetch)",
+            "      grandchild action end (fetch)",
+            "    grandchild action middleware end (fetch)",
+            "  child action middleware end (fetch)",
+            "parent action middleware end (fetch)",
+            "parent loader middleware start",
+            "parent loader middleware start",
+            "parent loader middleware start",
+            "  parent loader start",
+            "  child loader middleware start",
+            "  child loader middleware start",
+            "  parent loader end",
+            "parent loader middleware end",
+            "    child loader start",
+            "    grandchild loader middleware start",
+            "    child loader end",
+            "  child loader middleware end",
+            "parent loader middleware end",
+            "      grandchild loader start",
+            "      grandchild loader end",
+            "    grandchild loader middleware end",
+            "  child loader middleware end",
+            "parent loader middleware end",
           ]
         `);
       });
@@ -11919,32 +11916,26 @@ describe("a router", () => {
           formData: createFormData(),
         });
 
-        await tick();
-        await tick();
-        await tick();
-        await tick();
-        await tick();
-
         expect(calls).toMatchInlineSnapshot(`
           [
-            "middleware start - parent",
-            "action start - parent",
-            "action end   - parent",
-            "middleware end   - parent",
-            "middleware start - parent",
-            "middleware start - parent",
-            "middleware start - parent",
-            "loader start - parent",
-            "loader start - parent",
-            "middleware start - child",
-            "loader end   - parent",
-            "middleware end   - parent",
-            "loader end   - parent",
-            "middleware end   - parent",
-            "loader start - child",
-            "loader end   - child",
-            "middleware end   - child",
-            "middleware end   - parent",
+            "parent action middleware start",
+            "  parent action start",
+            "  parent action end",
+            "parent action middleware end",
+            "parent loader middleware start",
+            "parent loader middleware start (fetch)",
+            "parent loader middleware start (fetch)",
+            "  parent loader start",
+            "  parent loader start (fetch)",
+            "  child loader middleware start (fetch)",
+            "  parent loader end",
+            "parent loader middleware end",
+            "  parent loader end (fetch)",
+            "parent loader middleware end (fetch)",
+            "    child loader start (fetch)",
+            "    child loader end (fetch)",
+            "  child loader middleware end (fetch)",
+            "parent loader middleware end (fetch)",
           ]
         `);
       });
@@ -11960,37 +11951,31 @@ describe("a router", () => {
         );
         expect(context.loaderData).toMatchInlineSnapshot(`
           {
-            "child": "CHILD",
-            "grandchild": "GRANDCHILD",
-            "parent": "PARENT",
+            "child": "CHILD LOADER",
+            "grandchild": "GRANDCHILD LOADER",
+            "parent": "PARENT LOADER",
           }
         `);
         expect(calls).toMatchInlineSnapshot(`
           [
-            "middleware start - parent",
-            "middleware start - parent",
-            "middleware start - parent",
-            "middleware start - child",
-            "middleware start - child",
-            "middleware start - child",
-            "middleware start - grandchild",
-            "middleware start - grandchild",
-            "middleware start - grandchild",
-            "loader start - parent",
-            "loader start - child",
-            "loader start - grandchild",
-            "loader end   - parent",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
-            "loader end   - child",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
-            "loader end   - grandchild",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
+            "parent loader middleware start",
+            "parent loader middleware start",
+            "parent loader middleware start",
+            "  parent loader start",
+            "  child loader middleware start",
+            "  child loader middleware start",
+            "  parent loader end",
+            "parent loader middleware end",
+            "    child loader start",
+            "    grandchild loader middleware start",
+            "    child loader end",
+            "  child loader middleware end",
+            "parent loader middleware end",
+            "      grandchild loader start",
+            "      grandchild loader end",
+            "    grandchild loader middleware end",
+            "  child loader middleware end",
+            "parent loader middleware end",
           ]
         `);
       });
@@ -12002,17 +11987,17 @@ describe("a router", () => {
           createRequest("/parent/child/grandchild")
         );
 
-        expect(result).toEqual("GRANDCHILD");
+        expect(result).toEqual("GRANDCHILD LOADER");
         expect(calls).toMatchInlineSnapshot(`
           [
-            "middleware start - parent",
-            "middleware start - child",
-            "middleware start - grandchild",
-            "loader start - grandchild",
-            "loader end   - grandchild",
-            "middleware end   - grandchild",
-            "middleware end   - child",
-            "middleware end   - parent",
+            "parent loader middleware start",
+            "  child loader middleware start",
+            "    grandchild loader middleware start",
+            "      grandchild loader start",
+            "      grandchild loader end",
+            "    grandchild loader middleware end",
+            "  child loader middleware end",
+            "parent loader middleware end",
           ]
         `);
       });
@@ -12028,30 +12013,22 @@ describe("a router", () => {
               id: "parent",
               path: "/parent",
               async middleware() {
-                calls.push("middleware start - parent");
-                await tick();
-                calls.push("middleware end   - parent");
+                calls.push("parent middleware");
               },
               async loader() {
-                calls.push("loader start - parent");
-                await tick();
-                calls.push("loader end   - parent");
-                return "PARENT";
+                calls.push("parent loader");
+                return "PARENT LOADER";
               },
               children: [
                 {
                   id: "child",
                   path: "child",
                   async middleware() {
-                    calls.push("middleware start - child");
-                    await tick();
-                    calls.push("middleware end   - child");
+                    calls.push("child middleware");
                   },
                   async loader() {
-                    calls.push("loader start - child");
-                    await tick();
-                    calls.push("loader end   - child");
-                    return "CHILD";
+                    calls.push("child loader");
+                    return "CHILD LOADER";
                   },
                 },
               ],
@@ -12063,23 +12040,16 @@ describe("a router", () => {
         await currentRouter.navigate("/parent/child");
 
         expect(currentRouter.state.loaderData).toEqual({
-          parent: "PARENT",
-          child: "CHILD",
+          parent: "PARENT LOADER",
+          child: "CHILD LOADER",
         });
         expect(calls).toMatchInlineSnapshot(`
           [
-            "middleware start - parent",
-            "middleware start - parent",
-            "middleware end   - parent",
-            "middleware start - child",
-            "middleware end   - parent",
-            "middleware start - child",
-            "middleware end   - child",
-            "loader start - parent",
-            "middleware end   - child",
-            "loader start - child",
-            "loader end   - parent",
-            "loader end   - child",
+            "parent middleware",
+            "parent middleware",
+            "parent loader",
+            "child middleware",
+            "child loader",
           ]
         `);
       });
@@ -12185,45 +12155,52 @@ describe("a router", () => {
     });
 
     describe("middleware context", () => {
-      let MIDDLEWARE_CONTEXT_ROUTES = [
+      let loaderCountContext = createMiddlewareContext(0);
+      let actionCountContext = createMiddlewareContext(100);
+
+      function incrementContextCount(request, middleware) {
+        if (request.method === "POST") {
+          let count = middleware.get(actionCountContext);
+          middleware.set(actionCountContext, count + 1);
+        } else {
+          let count = middleware.get(loaderCountContext);
+          middleware.set(loaderCountContext, count + 1);
+        }
+      }
+
+      let MIDDLEWARE_CONTEXT_ROUTES: AgnosticRouteObject[] = [
         { path: "/" },
         {
           id: "parent",
           path: "/parent",
           async middleware({ request, middleware }) {
-            let type = request.method === "POST" ? "action" : "loader";
-            let count = type === "action" ? 101 : 1;
-            middleware.set(`parent-${type}`, count);
+            incrementContextCount(request, middleware);
           },
           async loader({ middleware }) {
-            return middleware.get(`parent-loader`);
+            return middleware.get(loaderCountContext);
           },
           children: [
             {
               id: "child",
               path: "child",
               async middleware({ request, middleware }) {
-                let type = request.method === "POST" ? "action" : "loader";
-                let count = (middleware.get(`parent-${type}`) as number) + 1;
-                middleware.set(`child-${type}`, count);
+                incrementContextCount(request, middleware);
               },
               async loader({ middleware }) {
-                return middleware.get("child-loader");
+                return middleware.get(loaderCountContext);
               },
               children: [
                 {
                   id: "grandchild",
                   path: "grandchild",
                   async middleware({ request, middleware }) {
-                    let type = request.method === "POST" ? "action" : "loader";
-                    let count = (middleware.get(`child-${type}`) as number) + 1;
-                    middleware.set(`grandchild-${type}`, count);
+                    incrementContextCount(request, middleware);
                   },
                   async action({ middleware }) {
-                    return middleware.get(`grandchild-action`);
+                    return middleware.get(actionCountContext);
                   },
                   async loader({ middleware }) {
-                    return middleware.get("grandchild-loader");
+                    return middleware.get(loaderCountContext);
                   },
                 },
               ],
@@ -12306,6 +12283,8 @@ describe("a router", () => {
       });
 
       it("throws if no value is available via middleware.get()", async () => {
+        let theContext = createMiddlewareContext<number>();
+
         currentRouter = createRouter({
           routes: [
             {
@@ -12315,7 +12294,7 @@ describe("a router", () => {
               id: "broken",
               path: "broken",
               loader({ middleware }) {
-                return middleware.get("nope");
+                return middleware.get(theContext);
               },
             },
           ],
@@ -12333,6 +12312,8 @@ describe("a router", () => {
       });
 
       it("throws if you try to set an undefined value in middleware.set()", async () => {
+        let theContext = createMiddlewareContext<number>();
+
         currentRouter = createRouter({
           routes: [
             {
@@ -12342,7 +12323,7 @@ describe("a router", () => {
               id: "broken",
               path: "broken",
               middleware({ middleware }) {
-                return middleware.set("nope", undefined);
+                return middleware.set(theContext, undefined);
               },
               loader() {
                 return "DATA";
@@ -12363,6 +12344,11 @@ describe("a router", () => {
       });
 
       it("allows null/falsey values in middleware.set()", async () => {
+        let booleanContext = createMiddlewareContext<boolean>();
+        let numberContext = createMiddlewareContext<number>();
+        let stringContext = createMiddlewareContext<string>();
+        let whateverContext = createMiddlewareContext();
+
         currentRouter = createRouter({
           routes: [
             {
@@ -12372,15 +12358,17 @@ describe("a router", () => {
               id: "works",
               path: "works",
               middleware({ middleware }) {
-                middleware.set("a", null);
-                middleware.set("b", false);
-                middleware.set("c", "");
+                middleware.set(booleanContext, false);
+                middleware.set(numberContext, 0);
+                middleware.set(stringContext, "");
+                middleware.set(whateverContext, null);
               },
               loader({ middleware }) {
                 return {
-                  a: middleware.get("a"),
-                  b: middleware.get("b"),
-                  c: middleware.get("c"),
+                  boolean: middleware.get(booleanContext),
+                  number: middleware.get(numberContext),
+                  string: middleware.get(stringContext),
+                  whatever: middleware.get(whateverContext),
                 };
               },
             },
@@ -12394,9 +12382,10 @@ describe("a router", () => {
         expect(currentRouter.state.loaderData).toMatchInlineSnapshot(`
           {
             "works": {
-              "a": null,
-              "b": false,
-              "c": "",
+              "boolean": false,
+              "number": 0,
+              "string": "",
+              "whatever": null,
             },
           }
         `);

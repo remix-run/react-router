@@ -95,17 +95,6 @@ interface DataFunctionArgs {
 }
 
 /**
- * Context object passed through middleware functions and into action/loaders.
- *
- * Supports only key/value for now, eventually will be enhanced
- */
-export interface MiddlewareContext {
-  get(key: string): unknown;
-  set(key: string, value: unknown): void;
-  next: () => DataFunctionReturnValue;
-}
-
-/**
  * Arguments passed to middleware functions
  */
 export interface MiddlewareFunctionArgs extends DataFunctionArgs {}
@@ -1441,4 +1430,38 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
     typeof error.internal === "boolean" &&
     "data" in error
   );
+}
+
+/**
+ * Context object passed through middleware functions and into action/loaders.
+ *
+ * Supports only key/value for now, eventually will be enhanced
+ */
+export interface MiddlewareContext<T = unknown> {
+  get(key: MiddlewareContextInstance<T>): T;
+  set(key: MiddlewareContextInstance<T>, value: T): void;
+  next: () => DataFunctionReturnValue;
+}
+
+/**
+ * Generic class to "hold" a default middleware value and the generic type so
+ * we can enforce typings on middleware.get/set
+ */
+export class MiddlewareContextInstance<T> {
+  private defaultValue: T | null;
+
+  constructor(defaultValue?: T | null) {
+    this.defaultValue =
+      typeof defaultValue !== "undefined" ? defaultValue : null;
+  }
+
+  getDefaultValue() {
+    return this.defaultValue;
+  }
+}
+
+export function createMiddlewareContext<T extends unknown>(
+  defaultValue: T
+): MiddlewareContextInstance<T> {
+  return new MiddlewareContextInstance<T>(defaultValue);
 }

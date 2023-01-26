@@ -15,6 +15,9 @@ export type {
   JsonFunction,
   LoaderFunction,
   LoaderFunctionArgs,
+  MiddlewareContext,
+  MiddlewareFunction,
+  MiddlewareFunctionArgs,
   ParamParseKey,
   Params,
   PathMatch,
@@ -27,6 +30,7 @@ export type {
 export {
   AbortedDeferredError,
   ErrorResponse,
+  createMiddlewareContext,
   defer,
   generatePath,
   getToPathname,
