@@ -25,6 +25,9 @@ import type {
   SuccessResult,
   LoaderFunction,
   ActionFunction,
+  LoaderFunctionArgs,
+  ActionFunctionArgs,
+  Params,
 } from "./utils";
 import {
   convertRoutesToDataRoutes,
@@ -1255,17 +1258,12 @@ export function createRouter(init: RouterInit): Router {
         }),
       };
     } else {
-      let context: MiddlewareContext | undefined = undefined;
-
       result = await callLoaderOrAction(
         "action",
         request,
         actionMatch,
         matches,
-        router.basename,
-        false,
-        false,
-        context
+        router.basename
       );
 
       if (request.signal.aborted) {
@@ -3043,12 +3041,12 @@ function shouldRevalidateLoader(
 
 async function callRoutePipeline(
   request: Request,
-  match: AgnosticDataRouteMatch,
   matches: AgnosticDataRouteMatch[],
+  requestContext: unknown,
   handler: LoaderFunction | ActionFunction
 ) {
   let store = new Map<string, unknown>();
-  let context: MiddlewareContext = {
+  let middlewareContext: MiddlewareContext = {
     get(k) {
       if (!store.has(k)) {
         throw new Error(`No "${k}" key found in beforeRequest context`);
@@ -3061,49 +3059,75 @@ async function callRoutePipeline(
     next: () => {},
   };
 
-  return callRouteSubPipeline(request, context, match, matches, handler);
+  return callRouteSubPipeline(
+    request,
+    matches,
+    matches[0].params,
+    requestContext,
+    middlewareContext,
+    handler
+  );
 }
 
-function callRouteSubPipeline(
+async function callRouteSubPipeline(
   request: Request,
-  context: MiddlewareContext,
-  match: AgnosticDataRouteMatch,
   matches: AgnosticDataRouteMatch[],
+  params: Params<string>,
+  requestContext: unknown,
+  middlewareContext: MiddlewareContext,
   handler: LoaderFunction | ActionFunction
-): ReturnType<LoaderFunction> {
+): Promise<ReturnType<LoaderFunction>> {
   if (request.signal.aborted) {
     throw new Error("Request aborted");
   }
 
-  // We've still got matches, continue on the middleware train
-  if (matches.length > 0) {
-    let activeMatch = matches[0];
-
-    // The next function will "bubble" back up the middlewares
-    let next: MiddlewareContext["next"] = () => {
-      return callRouteSubPipeline(
-        request,
-        context,
-        match,
-        matches.slice(1),
-        handler
+  if (matches.length === 0) {
+    // We reached the end of our middlewares, call the handler
+    middlewareContext.next = () => {
+      throw new Error(
+        "You may only call `next()` once per middleware and you may not call " +
+          "it in an action or loader"
       );
     };
-
-    if (!activeMatch.route.middleware) {
-      return next();
-    }
-
-    context.next = next;
-    return activeMatch.route.middleware({
+    return handler({
       request,
-      params: activeMatch.params,
-      middleware: context,
+      params,
+      context: requestContext,
+      middleware: middlewareContext,
     });
   }
 
-  // We reached the end of our middlewares, call the handler
-  return handler({ request, params: match.params, middleware: context });
+  // We've still got matches, continue on the middleware train.  The `next()`
+  // function will "bubble" back up the middlewares after handlers have executed
+  let nextCalled = false;
+  let next: MiddlewareContext["next"] = () => {
+    nextCalled = true;
+    return callRouteSubPipeline(
+      request,
+      matches.slice(1),
+      params,
+      requestContext,
+      middlewareContext,
+      handler
+    );
+  };
+
+  if (!matches[0].route.middleware) {
+    return next();
+  }
+
+  middlewareContext.next = next;
+  let res = await matches[0].route.middleware({
+    request,
+    params,
+    middleware: middlewareContext,
+  });
+
+  if (nextCalled) {
+    return res;
+  } else {
+    return next();
+  }
 }
 
 async function callLoaderOrAction(
@@ -3127,13 +3151,13 @@ async function callLoaderOrAction(
 
   try {
     let handler = match.route[type];
-    invariant<Function>(
+    invariant(
       handler,
       `Could not find the ${type} to run on the "${match.route.id}" route`
     );
 
     result = await Promise.race([
-      callRoutePipeline(request, match, matches, handler),
+      callRoutePipeline(request, matches, requestContext, handler),
       abortPromise,
     ]);
 
