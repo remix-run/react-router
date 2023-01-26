@@ -136,6 +136,39 @@ function Product() {
 }
 ```
 
+### Optional Segments
+
+You can make a route segment optional by adding a `?` to the end of the segment.
+
+```tsx
+<Route
+  // this path will match URLs like
+  // - /categories
+  // - /en/categories
+  // - /fr/categories
+  path="/:lang?/categories"
+  // the matching param might be available to the loader
+  loader={({ params }) => {
+    console.log(params["*"]); // "one/two"
+  }}
+  // and the action
+  action={({ params }) => {}}
+  element={<Categories />}
+/>;
+
+// and the element through `useParams`
+function Categories() {
+  let params = useParams();
+  console.log(params.lang);
+}
+```
+
+You can have optional static segments, too:
+
+```jsx
+<Route path="/project/task?/:taskId" />
+```
+
 ### Splats
 
 Also known as "catchall" and "star" segments. If a route path pattern ends with `/*` then it will match any characters following the `/`, including other `/` characters.
