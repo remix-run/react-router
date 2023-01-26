@@ -25,8 +25,6 @@ import type {
   SuccessResult,
   LoaderFunction,
   ActionFunction,
-  LoaderFunctionArgs,
-  ActionFunctionArgs,
   Params,
 } from "./utils";
 import {
@@ -1528,14 +1526,20 @@ export function createRouter(init: RouterInit): Router {
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
-      handleFetcherAction(key, routeId, path, match, matches, submission);
-      return;
+      return handleFetcherAction(
+        key,
+        routeId,
+        path,
+        match,
+        matches,
+        submission
+      );
     }
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
     fetchLoadMatches.set(key, { routeId, path, match, matches });
-    handleFetcherLoader(key, routeId, path, match, matches, submission);
+    return handleFetcherLoader(key, routeId, path, match, matches, submission);
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -3049,11 +3053,16 @@ async function callRoutePipeline(
   let middlewareContext: MiddlewareContext = {
     get(k) {
       if (!store.has(k)) {
-        throw new Error(`No "${k}" key found in beforeRequest context`);
+        throw new Error("Unable to find a value in the middleware context");
       }
       return store.get(k);
     },
     set(k, v) {
+      if (typeof v === "undefined") {
+        throw new Error(
+          "You cannot set an undefined value in the middleware context"
+        );
+      }
       store.set(k, v);
     },
     next: () => {},
