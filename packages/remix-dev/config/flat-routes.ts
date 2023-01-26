@@ -25,7 +25,13 @@ export function flatRoutes(
     ignore: ignoredFilePatterns,
   });
 
-  return flatRoutesUniversal(appDirectory, routePaths);
+  // fast-glob will return posix paths even on windows
+  // convert posix to os specific paths
+  let routePathsForOS = routePaths.map((routePath) => {
+    return path.join(...routePath.split(path.posix.sep));
+  });
+
+  return flatRoutesUniversal(appDirectory, routePathsForOS);
 }
 
 interface RouteInfo extends ConfigRoute {
