@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Fix bug with search params removal ([#9969](https://github.com/remix-run/react-router/pull/9969))
+- Fix bug with search params removal via `useSearchParams` ([#9969](https://github.com/remix-run/react-router/pull/9969))
 - Updated dependencies:
   - `react-router@6.8.0`
 
