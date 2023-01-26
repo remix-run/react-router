@@ -1,6 +1,11 @@
 # `react-router`
 
-## 6.8.0-pre.1
+## 6.8.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.3.1`
 
 ## 6.7.1-pre.0
 
