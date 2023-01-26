@@ -91,7 +91,6 @@ interface DataFunctionArgs {
   request: Request;
   params: Params;
   context?: any;
-  // TODO: Make this undefined if there are no middlewares?
   middleware: MiddlewareContext;
 }
 
@@ -103,7 +102,6 @@ interface DataFunctionArgs {
 export interface MiddlewareContext {
   get(key: string): unknown;
   set(key: string, value: unknown): void;
-  // TODO: Make this undefined in loader/actions?
   next: () => DataFunctionReturnValue;
 }
 

@@ -397,7 +397,7 @@ function setup({
     basename,
     history,
     routes: testRoutes,
-    hydrationData,
+    ...(hydrationData ? { hydrationData } : {}),
   }).initialize();
 
   function getRouteHelpers(
@@ -455,7 +455,7 @@ function setup({
 
     let routeHelpers: Helpers = {
       get signal() {
-        return internalHelpers._signal;
+        return internalHelpers._signal as AbortSignal;
       },
       // Note: This spread has to come _after_ the above getter, otherwise
       // we lose the getter nature of it somewhere in the babel/typescript
@@ -799,6 +799,47 @@ function initializeTmTest(init?: {
     ...(init?.url ? { initialEntries: [init.url] } : {}),
   });
 }
+
+function createRequest(path: string, opts?: RequestInit) {
+  return new Request(`http://localhost${path}`, {
+    signal: new AbortController().signal,
+    ...opts,
+  });
+}
+
+function createSubmitRequest(path: string, opts?: RequestInit) {
+  let searchParams = new URLSearchParams();
+  searchParams.append("key", "value");
+
+  return createRequest(path, {
+    method: "post",
+    body: searchParams,
+    ...opts,
+  });
+}
+
+// Wrote this, then didn't need it, but it felt useful so I left it here
+// function callRouterAndWait(router: Router, cb: () => any) {
+//   let idleRouterPromise = new Promise((resolve, reject) => {
+//     let unsub = router.subscribe((state) => {
+//       if (
+//         state.navigation.state === "idle" &&
+//         Array.from(state.fetchers.values()).every((f) => f.state === "idle")
+//       ) {
+//         unsub();
+//         resolve(null);
+//       }
+//     });
+//   });
+//   cb();
+//   return Promise.race([
+//     idleRouterPromise,
+//     new Promise((_, r) =>
+//       setTimeout(() => r("callRouterAndWait Timeout"), 2000)
+//     ),
+//   ]);
+// }
+
 //#endregion
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5215,7 +5256,7 @@ describe("a router", () => {
       let nav = await t.navigate("/tasks");
       expect(nav.loaders.tasks.stub).toHaveBeenCalledWith({
         params: {},
-        request: new Request("http://localhost/tasks", {
+        request: createRequest("/tasks", {
           signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
         middleware: expect.any(Object),
@@ -5224,7 +5265,7 @@ describe("a router", () => {
       let nav2 = await t.navigate("/tasks/1");
       expect(nav2.loaders.tasksId.stub).toHaveBeenCalledWith({
         params: { id: "1" },
-        request: new Request("http://localhost/tasks/1", {
+        request: createRequest("/tasks/1", {
           signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
         }),
         middleware: expect.any(Object),
@@ -5233,7 +5274,7 @@ describe("a router", () => {
       let nav3 = await t.navigate("/tasks?foo=bar#hash");
       expect(nav3.loaders.tasks.stub).toHaveBeenCalledWith({
         params: {},
-        request: new Request("http://localhost/tasks?foo=bar", {
+        request: createRequest("/tasks?foo=bar", {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
         middleware: expect.any(Object),
@@ -5244,7 +5285,7 @@ describe("a router", () => {
       });
       expect(nav4.loaders.tasks.stub).toHaveBeenCalledWith({
         params: {},
-        request: new Request("http://localhost/tasks?foo=bar", {
+        request: createRequest("/tasks?foo=bar", {
           signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
         middleware: expect.any(Object),
@@ -8130,7 +8171,7 @@ describe("a router", () => {
         });
         expect(A.loaders.root.stub).toHaveBeenCalledWith({
           params: {},
-          request: new Request("http://localhost/foo", {
+          request: createRequest("/foo", {
             signal: A.loaders.root.stub.mock.calls[0][0].request.signal,
           }),
           middleware: expect.any(Object),
@@ -11489,98 +11530,95 @@ describe("a router", () => {
 
   describe("middleware", () => {
     describe("ordering", () => {
-      async function createMiddlewareRouterAndNavigate(
-        path: string,
-        opts?: RouterNavigateOptions
-      ) {
-        let calls: string[] = [];
-        currentRouter = createRouter({
-          routes: [
+      let calls: string[];
+      let MIDDLEWARE_ORDERING_ROUTES = [
+        {
+          id: "root",
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          async middleware({ middleware }) {
+            calls.push("middleware start - parent");
+            await tick();
+            let res = await middleware.next();
+            calls.push("middleware end   - parent");
+            return res;
+          },
+          async action() {
+            calls.push("action start - parent");
+            await tick();
+            calls.push("action end   - parent");
+            return "PARENT ACTION";
+          },
+          async loader() {
+            calls.push("loader start - parent");
+            await tick();
+            calls.push("loader end   - parent");
+            return "PARENT";
+          },
+          children: [
             {
-              id: "root",
-              path: "/",
-            },
-            {
-              id: "parent",
-              path: "/parent",
+              id: "child",
+              path: "child",
               async middleware({ middleware }) {
-                calls.push("middleware start - parent");
+                calls.push("middleware start - child");
                 await tick();
                 let res = await middleware.next();
-                calls.push("middleware end   - parent");
+                calls.push("middleware end   - child");
                 return res;
               },
-              async action() {
-                calls.push("action start - parent");
-                await tick();
-                calls.push("action end   - parent");
-                return "PARENT ACTION";
-              },
               async loader() {
-                calls.push("loader start - parent");
+                calls.push("loader start - child");
                 await tick();
-                calls.push("loader end   - parent");
-                return "PARENT";
+                calls.push("loader end   - child");
+                return "CHILD";
               },
               children: [
                 {
-                  id: "child",
-                  path: "child",
+                  id: "grandchild",
+                  path: "grandchild",
                   async middleware({ middleware }) {
-                    calls.push("middleware start - child");
+                    calls.push("middleware start - grandchild");
                     await tick();
                     let res = await middleware.next();
-                    calls.push("middleware end   - child");
+                    calls.push("middleware end   - grandchild");
                     return res;
                   },
-                  async loader() {
-                    calls.push("loader start - child");
+                  async action() {
+                    calls.push("action start - grandchild");
                     await tick();
-                    calls.push("loader end   - child");
-                    return "CHILD";
+                    calls.push("action end   - grandchild");
+                    return "GRANDCHILD ACTION";
                   },
-                  children: [
-                    {
-                      id: "grandchild",
-                      path: "grandchild",
-                      async middleware({ middleware }) {
-                        calls.push("middleware start - grandchild");
-                        await tick();
-                        let res = await middleware.next();
-                        calls.push("middleware end   - grandchild");
-                        return res;
-                      },
-                      async action() {
-                        calls.push("action start - grandchild");
-                        await tick();
-                        calls.push("action end   - grandchild");
-                        return "GRANDCHILD ACTION";
-                      },
-                      async loader() {
-                        calls.push("loader start - grandchild");
-                        await tick();
-                        calls.push("loader end   - grandchild");
-                        return "GRANDCHILD";
-                      },
-                    },
-                  ],
+                  async loader() {
+                    calls.push("loader start - grandchild");
+                    await tick();
+                    calls.push("loader end   - grandchild");
+                    return "GRANDCHILD";
+                  },
                 },
               ],
             },
           ],
+        },
+      ];
+
+      beforeEach(() => {
+        calls = [];
+      });
+
+      it("runs non-nested middleware before a loader", async () => {
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_ORDERING_ROUTES,
           history: createMemoryHistory(),
         }).initialize();
 
-        await currentRouter.navigate(path, opts);
-        return { router: currentRouter, calls };
-      }
+        await currentRouter.navigate("/parent");
 
-      it("runs non-nested middleware before a loader", async () => {
-        let { router, calls } = await createMiddlewareRouterAndNavigate(
-          "/parent"
-        );
-        expect(router.state.location.pathname).toBe("/parent");
-        expect(router.state.loaderData).toEqual({
+        expect(currentRouter.state.location.pathname).toBe("/parent");
+        expect(currentRouter.state.loaderData).toEqual({
           parent: "PARENT",
         });
         expect(calls).toMatchInlineSnapshot(`
@@ -11594,15 +11632,21 @@ describe("a router", () => {
       });
 
       it("runs non-nested middleware before an action", async () => {
-        let { router, calls } = await createMiddlewareRouterAndNavigate(
-          "/parent",
-          { formMethod: "post", formData: createFormData() }
-        );
-        expect(router.state.location.pathname).toBe("/parent");
-        expect(router.state.actionData).toEqual({
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_ORDERING_ROUTES,
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.navigate("/parent", {
+          formMethod: "post",
+          formData: createFormData(),
+        });
+
+        expect(currentRouter.state.location.pathname).toBe("/parent");
+        expect(currentRouter.state.actionData).toEqual({
           parent: "PARENT ACTION",
         });
-        expect(router.state.loaderData).toEqual({
+        expect(currentRouter.state.loaderData).toEqual({
           parent: "PARENT",
         });
         expect(calls).toMatchInlineSnapshot(`
@@ -11620,11 +11664,17 @@ describe("a router", () => {
       });
 
       it("runs nested middleware before a loader", async () => {
-        let { router, calls } = await createMiddlewareRouterAndNavigate(
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_ORDERING_ROUTES,
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.navigate("/parent/child/grandchild");
+
+        expect(currentRouter.state.location.pathname).toBe(
           "/parent/child/grandchild"
         );
-        expect(router.state.location.pathname).toBe("/parent/child/grandchild");
-        expect(router.state.loaderData).toEqual({
+        expect(currentRouter.state.loaderData).toEqual({
           parent: "PARENT",
           child: "CHILD",
           grandchild: "GRANDCHILD",
@@ -11666,15 +11716,23 @@ describe("a router", () => {
       });
 
       it("runs nested middleware before an action", async () => {
-        let { router, calls } = await createMiddlewareRouterAndNavigate(
-          "/parent/child/grandchild",
-          { formMethod: "post", formData: createFormData() }
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_ORDERING_ROUTES,
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.navigate("/parent/child/grandchild", {
+          formMethod: "post",
+          formData: createFormData(),
+        });
+
+        expect(currentRouter.state.location.pathname).toBe(
+          "/parent/child/grandchild"
         );
-        expect(router.state.location.pathname).toBe("/parent/child/grandchild");
-        expect(router.state.actionData).toEqual({
+        expect(currentRouter.state.actionData).toEqual({
           grandchild: "GRANDCHILD ACTION",
         });
-        expect(router.state.loaderData).toEqual({
+        expect(currentRouter.state.loaderData).toEqual({
           parent: "PARENT",
           child: "CHILD",
           grandchild: "GRANDCHILD",
@@ -11726,8 +11784,240 @@ describe("a router", () => {
         `);
       });
 
+      it("runs middleware before fetcher.load", async () => {
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_ORDERING_ROUTES,
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.fetch(
+          "key",
+          "root",
+          "/parent/child/grandchild?from-fetcher"
+        );
+
+        expect(calls).toMatchInlineSnapshot(`
+          [
+            "middleware start - parent",
+            "middleware start - child",
+            "middleware start - grandchild",
+            "loader start - grandchild",
+            "loader end   - grandchild",
+            "middleware end   - grandchild",
+            "middleware end   - child",
+            "middleware end   - parent",
+          ]
+        `);
+      });
+
+      it("runs middleware before fetcher.submit", async () => {
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_ORDERING_ROUTES,
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.fetch(
+          "key",
+          "root",
+          "/parent/child/grandchild?from-fetcher",
+          {
+            formMethod: "post",
+            formData: createFormData(),
+          }
+        );
+
+        expect(calls).toMatchInlineSnapshot(`
+          [
+            "middleware start - parent",
+            "middleware start - child",
+            "middleware start - grandchild",
+            "action start - grandchild",
+            "action end   - grandchild",
+            "middleware end   - grandchild",
+            "middleware end   - child",
+            "middleware end   - parent",
+          ]
+        `);
+      });
+
+      it("runs middleware before fetcher.submit and loader revalidations", async () => {
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_ORDERING_ROUTES,
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.navigate("/parent/child/grandchild");
+
+        // Blow away the calls from this navigation
+        while (calls.length) calls.pop();
+
+        // Now fetch submit which should call the revalidations
+        await currentRouter.fetch(
+          "key",
+          "root",
+          "/parent/child/grandchild?from-fetcher",
+          {
+            formMethod: "post",
+            formData: createFormData(),
+          }
+        );
+
+        expect(calls).toMatchInlineSnapshot(`
+          [
+            "middleware start - parent",
+            "middleware start - child",
+            "middleware start - grandchild",
+            "action start - grandchild",
+            "action end   - grandchild",
+            "middleware end   - grandchild",
+            "middleware end   - child",
+            "middleware end   - parent",
+            "middleware start - parent",
+            "middleware start - parent",
+            "middleware start - parent",
+            "middleware start - child",
+            "middleware start - child",
+            "middleware start - child",
+            "middleware start - grandchild",
+            "middleware start - grandchild",
+            "middleware start - grandchild",
+            "loader start - parent",
+            "loader start - child",
+            "loader start - grandchild",
+            "loader end   - parent",
+            "middleware end   - grandchild",
+            "middleware end   - child",
+            "middleware end   - parent",
+            "loader end   - child",
+            "middleware end   - grandchild",
+            "middleware end   - child",
+            "middleware end   - parent",
+            "loader end   - grandchild",
+            "middleware end   - grandchild",
+            "middleware end   - child",
+            "middleware end   - parent",
+          ]
+        `);
+      });
+
+      it("runs middleware before fetcher revalidations", async () => {
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_ORDERING_ROUTES,
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.navigate("/parent");
+        await currentRouter.fetch("a", "parent", "/parent?from-fetcher");
+        await currentRouter.fetch("b", "parent", "/parent/child?from-fetcher");
+
+        // Blow away the calls from the navigation + fetches
+        while (calls.length) calls.pop();
+
+        // Now submit which should call the revalidations
+        await currentRouter.navigate("/parent", {
+          formMethod: "post",
+          formData: createFormData(),
+        });
+
+        await tick();
+        await tick();
+        await tick();
+        await tick();
+        await tick();
+
+        expect(calls).toMatchInlineSnapshot(`
+          [
+            "middleware start - parent",
+            "action start - parent",
+            "action end   - parent",
+            "middleware end   - parent",
+            "middleware start - parent",
+            "middleware start - parent",
+            "middleware start - parent",
+            "loader start - parent",
+            "loader start - parent",
+            "middleware start - child",
+            "loader end   - parent",
+            "middleware end   - parent",
+            "loader end   - parent",
+            "middleware end   - parent",
+            "loader start - child",
+            "loader end   - child",
+            "middleware end   - child",
+            "middleware end   - parent",
+          ]
+        `);
+      });
+
+      it("runs middleware before staticHandler.query", async () => {
+        let { query } = createStaticHandler(MIDDLEWARE_ORDERING_ROUTES);
+
+        let context = await query(createRequest("/parent/child/grandchild"));
+
+        invariant(
+          !(context instanceof Response),
+          "Expected StaticHandlerContext"
+        );
+        expect(context.loaderData).toMatchInlineSnapshot(`
+          {
+            "child": "CHILD",
+            "grandchild": "GRANDCHILD",
+            "parent": "PARENT",
+          }
+        `);
+        expect(calls).toMatchInlineSnapshot(`
+          [
+            "middleware start - parent",
+            "middleware start - parent",
+            "middleware start - parent",
+            "middleware start - child",
+            "middleware start - child",
+            "middleware start - child",
+            "middleware start - grandchild",
+            "middleware start - grandchild",
+            "middleware start - grandchild",
+            "loader start - parent",
+            "loader start - child",
+            "loader start - grandchild",
+            "loader end   - parent",
+            "middleware end   - grandchild",
+            "middleware end   - child",
+            "middleware end   - parent",
+            "loader end   - child",
+            "middleware end   - grandchild",
+            "middleware end   - child",
+            "middleware end   - parent",
+            "loader end   - grandchild",
+            "middleware end   - grandchild",
+            "middleware end   - child",
+            "middleware end   - parent",
+          ]
+        `);
+      });
+
+      it("runs middleware before staticHandler.queryRoute", async () => {
+        let { queryRoute } = createStaticHandler(MIDDLEWARE_ORDERING_ROUTES);
+
+        let result = await queryRoute(
+          createRequest("/parent/child/grandchild")
+        );
+
+        expect(result).toEqual("GRANDCHILD");
+        expect(calls).toMatchInlineSnapshot(`
+          [
+            "middleware start - parent",
+            "middleware start - child",
+            "middleware start - grandchild",
+            "loader start - grandchild",
+            "loader end   - grandchild",
+            "middleware end   - grandchild",
+            "middleware end   - child",
+            "middleware end   - parent",
+          ]
+        `);
+      });
+
       it("does not require middlewares to call next()", async () => {
-        let calls: string[] = [];
         currentRouter = createRouter({
           routes: [
             {
@@ -11737,7 +12027,7 @@ describe("a router", () => {
             {
               id: "parent",
               path: "/parent",
-              async middleware({ middleware }) {
+              async middleware() {
                 calls.push("middleware start - parent");
                 await tick();
                 calls.push("middleware end   - parent");
@@ -11772,6 +12062,10 @@ describe("a router", () => {
 
         await currentRouter.navigate("/parent/child");
 
+        expect(currentRouter.state.loaderData).toEqual({
+          parent: "PARENT",
+          child: "CHILD",
+        });
         expect(calls).toMatchInlineSnapshot(`
           [
             "middleware start - parent",
@@ -11790,7 +12084,7 @@ describe("a router", () => {
         `);
       });
 
-      it("throws an error if next() is twice in a middleware", async () => {
+      it("throws an error if next() is called twice in a middleware", async () => {
         currentRouter = createRouter({
           routes: [
             {
@@ -11891,48 +12185,56 @@ describe("a router", () => {
     });
 
     describe("middleware context", () => {
-      it("passes context into loaders", async () => {
-        currentRouter = createRouter({
-          routes: [
-            { path: "/" },
+      let MIDDLEWARE_CONTEXT_ROUTES = [
+        { path: "/" },
+        {
+          id: "parent",
+          path: "/parent",
+          async middleware({ request, middleware }) {
+            let type = request.method === "POST" ? "action" : "loader";
+            let count = type === "action" ? 101 : 1;
+            middleware.set(`parent-${type}`, count);
+          },
+          async loader({ middleware }) {
+            return middleware.get(`parent-loader`);
+          },
+          children: [
             {
-              id: "parent",
-              path: "/parent",
-              async middleware({ middleware }) {
-                let count = 1;
-                middleware.set("parent", count);
+              id: "child",
+              path: "child",
+              async middleware({ request, middleware }) {
+                let type = request.method === "POST" ? "action" : "loader";
+                let count = (middleware.get(`parent-${type}`) as number) + 1;
+                middleware.set(`child-${type}`, count);
               },
               async loader({ middleware }) {
-                return middleware.get("parent");
+                return middleware.get("child-loader");
               },
               children: [
                 {
-                  id: "child",
-                  path: "child",
-                  async middleware({ middleware }) {
-                    let count = (middleware.get("parent") as number) + 1;
-                    middleware.set("child", count);
+                  id: "grandchild",
+                  path: "grandchild",
+                  async middleware({ request, middleware }) {
+                    let type = request.method === "POST" ? "action" : "loader";
+                    let count = (middleware.get(`child-${type}`) as number) + 1;
+                    middleware.set(`grandchild-${type}`, count);
+                  },
+                  async action({ middleware }) {
+                    return middleware.get(`grandchild-action`);
                   },
                   async loader({ middleware }) {
-                    return middleware.get("child");
+                    return middleware.get("grandchild-loader");
                   },
-                  children: [
-                    {
-                      id: "grandchild",
-                      path: "grandchild",
-                      async middleware({ middleware }) {
-                        let count = (middleware.get("child") as number) + 1;
-                        middleware.set("grandchild", count);
-                      },
-                      async loader({ middleware }) {
-                        return middleware.get("grandchild");
-                      },
-                    },
-                  ],
                 },
               ],
             },
           ],
+        },
+      ];
+
+      it("passes context into loaders", async () => {
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_CONTEXT_ROUTES,
           history: createMemoryHistory(),
         }).initialize();
 
@@ -11947,84 +12249,160 @@ describe("a router", () => {
           grandchild: 3,
         });
       });
-    });
 
-    it("passes separate contexts into action and revalidating loaders", async () => {
-      currentRouter = createRouter({
-        routes: [
-          {
-            id: "root",
-            path: "/",
-            async middleware({ request, middleware }) {
-              let type = request.method === "POST" ? "action" : "loader";
-              let count = type === "action" ? 11 : 1;
-              middleware.set(`root-${type}`, count);
+      it("passes separate contexts into action and revalidating loaders", async () => {
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_CONTEXT_ROUTES,
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.navigate("/parent/child/grandchild", {
+          formMethod: "post",
+          formData: createFormData(),
+        });
+
+        expect(currentRouter.state.location.pathname).toBe(
+          "/parent/child/grandchild"
+        );
+        expect(currentRouter.state.actionData).toEqual({
+          grandchild: 103,
+        });
+        expect(currentRouter.state.loaderData).toEqual({
+          parent: 1,
+          child: 2,
+          grandchild: 3,
+        });
+      });
+
+      it("passes context into fetcher.load loaders", async () => {
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_CONTEXT_ROUTES,
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.fetch("key", "root", "/parent/child/grandchild");
+
+        expect(currentRouter.state.fetchers.get("key")).toMatchObject({
+          state: "idle",
+          data: 3,
+        });
+      });
+
+      it("passes context into fetcher.submit actions", async () => {
+        currentRouter = createRouter({
+          routes: MIDDLEWARE_CONTEXT_ROUTES,
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.fetch("key", "root", "/parent/child/grandchild", {
+          formMethod: "post",
+          formData: createFormData(),
+        });
+
+        expect(currentRouter.state.fetchers.get("key")).toMatchObject({
+          state: "idle",
+          data: 103,
+        });
+      });
+
+      it("throws if no value is available via middleware.get()", async () => {
+        currentRouter = createRouter({
+          routes: [
+            {
+              path: "/",
             },
-            async loader({ middleware }) {
-              return middleware.get(`root-loader`);
-            },
-            children: [
-              {
-                id: "child",
-                path: "child",
-                async middleware({ request, middleware }) {
-                  let type = request.method === "POST" ? "action" : "loader";
-                  let count = (middleware.get(`root-${type}`) as number) + 1;
-                  middleware.set(`child-${type}`, count);
-                },
-                async loader({ middleware }) {
-                  return middleware.get("child-loader");
-                },
-                children: [
-                  {
-                    id: "grandchild",
-                    path: "grandchild",
-                    async middleware({ request, middleware }) {
-                      let type =
-                        request.method === "POST" ? "action" : "loader";
-                      let count =
-                        (middleware.get(`child-${type}`) as number) + 1;
-                      middleware.set(`grandchild-${type}`, count);
-                    },
-                    async action({ middleware }) {
-                      return middleware.get(`grandchild-action`);
-                    },
-                    async loader({ middleware }) {
-                      return middleware.get("grandchild-loader");
-                    },
-                  },
-                ],
+            {
+              id: "broken",
+              path: "broken",
+              loader({ middleware }) {
+                return middleware.get("nope");
               },
-            ],
-          },
-        ],
-        history: createMemoryHistory({ initialEntries: ["/"] }),
-        hydrationData: { loaderData: { root: "ROOT" } },
-      }).initialize();
+            },
+          ],
+          history: createMemoryHistory(),
+        }).initialize();
 
-      await currentRouter.navigate("/child/grandchild", {
-        formMethod: "post",
-        formData: createFormData({ key: "value" }),
+        await currentRouter.navigate("/broken");
+
+        expect(currentRouter.state.location.pathname).toBe("/broken");
+        expect(currentRouter.state.errors).toMatchInlineSnapshot(`
+          {
+            "broken": [Error: Unable to find a value in the middleware context],
+          }
+        `);
       });
 
-      expect(currentRouter.state.location.pathname).toBe("/child/grandchild");
-      expect(currentRouter.state.actionData).toEqual({
-        grandchild: 13,
+      it("throws if you try to set an undefined value in middleware.set()", async () => {
+        currentRouter = createRouter({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "broken",
+              path: "broken",
+              middleware({ middleware }) {
+                return middleware.set("nope", undefined);
+              },
+              loader() {
+                return "DATA";
+              },
+            },
+          ],
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.navigate("/broken");
+
+        expect(currentRouter.state.location.pathname).toBe("/broken");
+        expect(currentRouter.state.errors).toMatchInlineSnapshot(`
+          {
+            "broken": [Error: You cannot set an undefined value in the middleware context],
+          }
+        `);
       });
-      expect(currentRouter.state.loaderData).toEqual({
-        root: 1,
-        child: 2,
-        grandchild: 3,
+
+      it("allows null/falsey values in middleware.set()", async () => {
+        currentRouter = createRouter({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "works",
+              path: "works",
+              middleware({ middleware }) {
+                middleware.set("a", null);
+                middleware.set("b", false);
+                middleware.set("c", "");
+              },
+              loader({ middleware }) {
+                return {
+                  a: middleware.get("a"),
+                  b: middleware.get("b"),
+                  c: middleware.get("c"),
+                };
+              },
+            },
+          ],
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.navigate("/works");
+
+        expect(currentRouter.state.location.pathname).toBe("/works");
+        expect(currentRouter.state.loaderData).toMatchInlineSnapshot(`
+          {
+            "works": {
+              "a": null,
+              "b": false,
+              "c": "",
+            },
+          }
+        `);
+        expect(currentRouter.state.errors).toBe(null);
       });
     });
-
-    // TODO:
-    it.todo("runs middleware sequentially before fetcher.load loader");
-    it.todo("passes context into fetcher.load loader");
-    it.todo("runs middleware sequentially before fetcher.submit action");
-    it.todo(
-      "passes separate contexts into fetcher.submit action and revalidating loaders"
-    );
   });
 
   describe("ssr", () => {
@@ -12125,24 +12503,6 @@ describe("a router", () => {
       "mailto:hello@remix.run",
       "web+remix:whatever",
     ];
-
-    function createRequest(path: string, opts?: RequestInit) {
-      return new Request(`http://localhost${path}`, {
-        signal: new AbortController().signal,
-        ...opts,
-      });
-    }
-
-    function createSubmitRequest(path: string, opts?: RequestInit) {
-      let searchParams = new URLSearchParams();
-      searchParams.append("key", "value");
-
-      return createRequest(path, {
-        method: "post",
-        body: searchParams,
-        ...opts,
-      });
-    }
 
     describe("document requests", () => {
       it("should support document load navigations", async () => {
