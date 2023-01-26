@@ -221,7 +221,7 @@ export function useNavigate(): NavigateFunction {
   return navigate;
 }
 
-const OutletContext = React.createContext<unknown>(null);
+export const OutletContext = React.createContext<unknown>(null);
 
 /**
  * Returns the context (if provided) for the child route at this level of the route
