@@ -75,7 +75,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home
         </p>,
@@ -94,7 +94,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home?key=value
         </p>,
@@ -132,7 +132,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home
         </p>,
@@ -151,7 +151,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home?key=value
         </p>,
@@ -189,7 +189,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home?key=value
         </p>,
@@ -208,7 +208,7 @@ describe("useNavigate", () => {
     });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      Array [
+      [
         <p>
           /home
         </p>,
@@ -269,7 +269,7 @@ describe("useNavigate", () => {
         renderer.root.findAllByType("button")[0].props.onClick();
       })
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{\\"pathname\\":\\"/about/thing?search\\"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to=\\"...\\"> and the router will parse it for you."`
+      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
     );
 
     expect(() =>
@@ -277,7 +277,7 @@ describe("useNavigate", () => {
         renderer.root.findAllByType("button")[1].props.onClick();
       })
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '#' character in a manually specified \`to.pathname\` field [{\\"pathname\\":\\"/about/thing#hash\\"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to=\\"...\\"> and the router will parse it for you."`
+      `"Cannot include a '#' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
     );
 
     expect(() =>
@@ -285,7 +285,7 @@ describe("useNavigate", () => {
         renderer.root.findAllByType("button")[2].props.onClick();
       })
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{\\"pathname\\":\\"/about/thing?search#hash\\"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to=\\"...\\"> and the router will parse it for you."`
+      `"Cannot include a '?' character in a manually specified \`to.pathname\` field [{"pathname":"/about/thing?search#hash"}].  Please separate it out to the \`to.search\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
     );
 
     expect(() =>
@@ -293,7 +293,7 @@ describe("useNavigate", () => {
         renderer.root.findAllByType("button")[3].props.onClick();
       })
     ).toThrowErrorMatchingInlineSnapshot(
-      `"Cannot include a '#' character in a manually specified \`to.search\` field [{\\"pathname\\":\\"/about/thing\\",\\"search\\":\\"?search#hash\\"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to=\\"...\\"> and the router will parse it for you."`
+      `"Cannot include a '#' character in a manually specified \`to.search\` field [{"pathname":"/about/thing","search":"?search#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
     );
   });
 

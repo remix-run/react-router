@@ -215,6 +215,16 @@ See also:
 - [`useActionData`][useactiondata]
 - [`useSubmit`][usesubmit]
 
+## `preventScrollReset`
+
+If you are using [`<ScrollRestoration>`][scrollrestoration], this lets you prevent the scroll position from being reset to the top of the window when the form action redirects to a new location.
+
+```tsx
+<Form method="post" preventScrollReset={true} />
+```
+
+See also: [`<Link preventScrollReset>`][link-preventscrollreset]
+
 # Examples
 
 TODO: More examples
@@ -318,3 +328,5 @@ You can access those values from the `request.url`
 [formvalidation]: https://developer.mozilla.org/en-US/docs/Learn/Forms/Form_validation
 [indexsearchparam]: ../guides/index-search-param
 [pickingarouter]: ../routers/picking-a-router
+[scrollrestoration]: ./scroll-restoration
+[link-preventscrollreset]: ./link#preventscrollreset

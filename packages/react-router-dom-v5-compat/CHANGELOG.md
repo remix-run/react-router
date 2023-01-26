@@ -1,5 +1,14 @@
 # `react-router-dom-v5-compat`
 
+## 6.8.0
+
+### Patch Changes
+
+- Fix SSR `useLayoutEffect` `console.error` when using `CompatRouter` ([#9820](https://github.com/remix-run/react-router/pull/9820))
+- Updated dependencies:
+  - `react-router-dom@6.8.0`
+  - `react-router@6.8.0`
+
 ## 6.7.0
 
 ### Patch Changes

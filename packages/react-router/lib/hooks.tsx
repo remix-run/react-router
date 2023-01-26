@@ -463,18 +463,28 @@ function DefaultErrorElement() {
   let lightgrey = "rgba(200,200,200, 0.5)";
   let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
   let codeStyles = { padding: "2px 4px", backgroundColor: lightgrey };
+
+  let devInfo = null;
+  if (__DEV__) {
+    devInfo = (
+      <>
+        <p>💿 Hey developer 👋</p>
+        <p>
+          You can provide a way better UX than this when your app throws errors
+          by providing your own&nbsp;
+          <code style={codeStyles}>errorElement</code> props on&nbsp;
+          <code style={codeStyles}>&lt;Route&gt;</code>
+        </p>
+      </>
+    );
+  }
+
   return (
     <>
-      <h2>Unhandled Thrown Error!</h2>
+      <h2>Unexpected Application Error!</h2>
       <h3 style={{ fontStyle: "italic" }}>{message}</h3>
       {stack ? <pre style={preStyles}>{stack}</pre> : null}
-      <p>💿 Hey developer 👋</p>
-      <p>
-        You can provide a way better UX than this when your app throws errors by
-        providing your own&nbsp;
-        <code style={codeStyles}>errorElement</code> props on&nbsp;
-        <code style={codeStyles}>&lt;Route&gt;</code>
-      </p>
+      {devInfo}
     </>
   );
 }

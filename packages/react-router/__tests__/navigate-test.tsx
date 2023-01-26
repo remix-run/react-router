@@ -420,7 +420,7 @@ describe("<Navigate>", () => {
       }
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
-        Array [
+        [
           <h1>
             Contacts
           </h1>,

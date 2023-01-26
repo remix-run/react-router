@@ -288,16 +288,19 @@ export function useSearchParams(
   defaultInit?: URLSearchParamsInit
 ): [URLSearchParams, SetURLSearchParams] {
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
+  let hasSetSearchParamsRef = React.useRef(false);
 
   let location = useLocation();
   let searchParams = React.useMemo(() => {
     let searchParams = createSearchParams(location.search);
 
-    for (let key of defaultSearchParamsRef.current.keys()) {
-      if (!searchParams.has(key)) {
-        defaultSearchParamsRef.current.getAll(key).forEach((value) => {
-          searchParams.append(key, value);
-        });
+    if (!hasSetSearchParamsRef.current) {
+      for (let key of defaultSearchParamsRef.current.keys()) {
+        if (!searchParams.has(key)) {
+          defaultSearchParamsRef.current.getAll(key).forEach((value) => {
+            searchParams.append(key, value);
+          });
+        }
       }
     }
 
@@ -310,6 +313,7 @@ export function useSearchParams(
       const newSearchParams = createSearchParams(
         typeof nextInit === "function" ? nextInit(searchParams) : nextInit
       );
+      hasSetSearchParamsRef.current = true;
       navigate("?" + newSearchParams, navigateOpts);
     },
     [navigate, searchParams]

@@ -1,5 +1,27 @@
 # `react-router-dom`
 
+## 6.8.0
+
+### Minor Changes
+
+- Support absolute URLs in `<Link to>`. If the URL is for the current origin, it will still do a client-side navigation. If the URL is for a different origin then it will do a fresh document request for the new origin. ([#9900](https://github.com/remix-run/react-router/pull/9900))
+
+  ```tsx
+  <Link to="https://neworigin.com/some/path">    {/* Document request */}
+  <Link to="//neworigin.com/some/path">          {/* Document request */}
+  <Link to="https://www.currentorigin.com/path"> {/* Client-side navigation */}
+  ```
+
+### Patch Changes
+
+- Fix bug with search params removal via `useSearchParams` ([#9969](https://github.com/remix-run/react-router/pull/9969))
+- Respect `preventScrollReset` on `<fetcher.Form>` ([#9963](https://github.com/remix-run/react-router/pull/9963))
+- Fix navigation for hash routers on manual URL changes ([#9980](https://github.com/remix-run/react-router/pull/9980))
+- Use `pagehide` instead of `beforeunload` for `<ScrollRestoration>`. This has better cross-browser support, specifically on Mobile Safari. ([#9945](https://github.com/remix-run/react-router/pull/9945))
+- Updated dependencies:
+  - `@remix-run/router@1.3.1`
+  - `react-router@6.8.0`
+
 ## 6.7.0
 
 ### Minor Changes

@@ -109,7 +109,7 @@ type FetcherHelpers = NavigationHelpers & {
 };
 
 async function tick() {
-  await new Promise((r) => setImmediate(r));
+  await new Promise((r) => setTimeout(r, 0));
 }
 
 function invariant(value: boolean, message?: string): asserts value;
@@ -364,13 +364,12 @@ function setup({
   }
 
   let history = createMemoryHistory({ initialEntries, initialIndex });
-  let enhancedRoutes = enhanceRoutes(routes);
   jest.spyOn(history, "push");
   jest.spyOn(history, "replace");
   currentRouter = createRouter({
     basename,
     history,
-    routes: enhancedRoutes,
+    routes: enhanceRoutes(routes),
     hydrationData,
   }).initialize();
 
@@ -410,21 +409,9 @@ function setup({
       // Since a redirect kicks off and awaits a new navigation we can't shim
       // these _after_ the redirect, so we allow the caller to pass in loader
       // shims with the redirect
-      shims.forEach((routeId) => {
-        invariant(
-          !helpers.loaders[routeId],
-          "Can't overwrite existing helpers"
-        );
-        helpers.loaders[routeId] = getRouteHelpers(
-          routeId,
-          redirectNavigationId,
-          (routeId, helpers) =>
-            activeHelpers.set(
-              `navigation:${redirectNavigationId}:loader:${routeId}`,
-              helpers
-            )
-        );
-      });
+      shims.forEach((routeId) =>
+        shimHelper(helpers.loaders, "navigation", "loader", routeId)
+      );
 
       try {
         let redirectResponse = redirect(href, { status, headers });
@@ -440,7 +427,6 @@ function setup({
     }
 
     let routeHelpers: Helpers = {
-      // @ts-expect-error
       get signal() {
         return internalHelpers._signal;
       },
@@ -603,11 +589,13 @@ function setup({
   function navigate(n: number): Promise<NavigationHelpers>;
   function navigate(
     href: string,
-    opts?: RouterNavigateOptions
+    opts?: RouterNavigateOptions,
+    shims?: string[]
   ): Promise<NavigationHelpers>;
   async function navigate(
     href: number | string,
-    opts?: RouterNavigateOptions
+    opts?: RouterNavigateOptions,
+    shims?: string[]
   ): Promise<NavigationHelpers> {
     let navigationId = ++guid;
     let helpers: NavigationHelpers;
@@ -652,6 +640,9 @@ function setup({
       navHref = stripBasename(navHref, currentRouter.basename) as string;
     }
     helpers = getNavigationHelpers(navHref, navigationId);
+    shims?.forEach((routeId) =>
+      shimHelper(helpers.loaders, "navigation", "loader", routeId)
+    );
     currentRouter.navigate(href, opts);
     return helpers;
   }
@@ -684,7 +675,7 @@ function setup({
     let routeId =
       typeof routeIdOrOpts === "string"
         ? routeIdOrOpts
-        : String(enhancedRoutes[0].id);
+        : String(currentRouter?.routes[0].id);
     opts =
       typeof keyOrOpts === "object"
         ? keyOrOpts
@@ -724,7 +715,7 @@ function setup({
       activeLoaderFetchId = navigationId;
     } else {
       // if a revalidation interrupts an action submission, we don't actually
-      // start a new new navigation so don't increment here
+      // start a new navigation so don't increment here
       navigationId =
         currentRouter.state.navigation.state === "submitting" &&
         currentRouter.state.navigation.formMethod !== "get"
@@ -820,63 +811,48 @@ const TASK_ROUTES: TestRouteObject[] = [
   },
 ];
 
-const TM_ROUTES = [
+const TM_ROUTES: TestRouteObject[] = [
   {
     path: "",
     id: "root",
-
-    module: "",
     hasErrorBoundary: true,
     loader: true,
     children: [
       {
         path: "/",
         id: "index",
-        hasLoader: true,
         loader: true,
         action: true,
-
-        module: "",
       },
       {
         path: "/foo",
         id: "foo",
         loader: true,
         action: true,
-
-        module: "",
       },
       {
         path: "/foo/bar",
         id: "foobar",
         loader: true,
         action: true,
-
-        module: "",
       },
       {
         path: "/bar",
         id: "bar",
         loader: true,
         action: true,
-
-        module: "",
       },
       {
         path: "/baz",
         id: "baz",
         loader: true,
         action: true,
-
-        module: "",
       },
       {
         path: "/p/:param",
         id: "param",
         loader: true,
         action: true,
-
-        module: "",
       },
     ],
   },
@@ -1111,7 +1087,7 @@ describe("a router", () => {
           hydrationData: {},
         })
       ).toThrowErrorMatchingInlineSnapshot(
-        `"Found a route id collision on id \\"child\\".  Route id's must be globally unique within Data Router usages"`
+        `"Found a route id collision on id "child".  Route id's must be globally unique within Data Router usages"`
       );
     });
 
@@ -1231,7 +1207,7 @@ describe("a router", () => {
       let A = await t.navigate("/foo");
       await A.loaders.foo.resolve("FOO");
       expect(t.router.state.loaderData).toMatchInlineSnapshot(`
-        Object {
+        {
           "foo": "FOO",
           "root": "ROOT",
         }
@@ -1381,12 +1357,66 @@ describe("a router", () => {
       });
     });
 
-    it("does not load anything on hash change only", async () => {
+    it("does not load anything on hash change only <Link> navigations", async () => {
       let t = initializeTmTest();
       expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
       let A = await t.navigate("/#bar");
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
       expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+    });
+
+    it('does not load anything on hash change only empty <Form method="get"> navigations', async () => {
+      let t = initializeTmTest();
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+      let A = await t.navigate("/#bar", {
+        formData: createFormData({}),
+      });
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+    });
+
+    it('runs loaders on hash change only non-empty <Form method="get"> navigations', async () => {
+      let t = initializeTmTest();
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+      let A = await t.navigate("/#bar", {
+        formData: createFormData({ key: "value" }),
+      });
+      await A.loaders.root.resolve("ROOT 2");
+      await A.loaders.index.resolve("INDEX 2");
+      expect(t.router.state.location.search).toBe("?key=value");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT 2",
+        index: "INDEX 2",
+      });
+    });
+
+    it('runs action/loaders on hash change only <Form method="post"> navigations', async () => {
+      let t = initializeTmTest();
+      let A = await t.navigate("/foo#bar");
+      expect(t.router.state.navigation.state).toBe("loading");
+      await A.loaders.foo.resolve("A");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: "A",
+      });
+
+      // Submit while we have an active hash causing us to lose it
+      let B = await t.navigate("/foo", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.navigation.state).toBe("submitting");
+      await B.actions.foo.resolve("ACTION");
+      await B.loaders.root.resolve("ROOT 2");
+      await B.loaders.foo.resolve("B");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toMatchObject({
+        foo: "ACTION",
+      });
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT 2",
+        foo: "B",
+      });
     });
 
     it("sets all right states on hash change only", async () => {
@@ -1958,19 +1988,40 @@ describe("a router", () => {
       });
       expect(shouldRevalidate.mock.calls.length).toBe(0);
 
-      // Normal navigations should not trigger fetcher revalidations
+      // Normal navigations should trigger fetcher shouldRevalidate with
+      // defaultShouldRevalidate=false
       router.navigate("/child");
       await tick();
-      router.navigate("/");
-      await tick();
-      expect(shouldRevalidate.mock.calls.length).toBe(0);
+      expect(shouldRevalidate.mock.calls.length).toBe(1);
+      expect(shouldRevalidate.mock.calls[0][0]).toMatchObject({
+        currentParams: {},
+        currentUrl: new URL("http://localhost/"),
+        nextParams: {},
+        nextUrl: new URL("http://localhost/child"),
+        defaultShouldRevalidate: false,
+      });
       expect(router.state.fetchers.get(key)).toMatchObject({
         state: "idle",
         data: "FETCH 1",
       });
-      expect(shouldRevalidate.mock.calls.length).toBe(0);
 
-      // Post navigation should trigger shouldRevalidate, and loader should not re-run
+      router.navigate("/");
+      await tick();
+      expect(shouldRevalidate.mock.calls.length).toBe(2);
+      expect(shouldRevalidate.mock.calls[1][0]).toMatchObject({
+        currentParams: {},
+        currentUrl: new URL("http://localhost/child"),
+        nextParams: {},
+        nextUrl: new URL("http://localhost/"),
+        defaultShouldRevalidate: false,
+      });
+      expect(router.state.fetchers.get(key)).toMatchObject({
+        state: "idle",
+        data: "FETCH 1",
+      });
+
+      // Submission navigations should trigger fetcher shouldRevalidate with
+      // defaultShouldRevalidate=true
       router.navigate("/child", {
         formMethod: "post",
         formData: createFormData({}),
@@ -1980,12 +2031,12 @@ describe("a router", () => {
         state: "idle",
         data: "FETCH 1",
       });
-      expect(shouldRevalidate.mock.calls.length).toBe(1);
-      expect(shouldRevalidate.mock.calls[0][0]).toMatchObject({
+      expect(shouldRevalidate.mock.calls.length).toBe(3);
+      expect(shouldRevalidate.mock.calls[2][0]).toMatchObject({
         currentParams: {},
-        currentUrl: new URL("http://localhost/fetch"),
+        currentUrl: new URL("http://localhost/"),
         nextParams: {},
-        nextUrl: new URL("http://localhost/fetch"),
+        nextUrl: new URL("http://localhost/child"),
         formAction: "/child",
         formData: createFormData({}),
         formEncType: "application/x-www-form-urlencoded",
@@ -2039,16 +2090,16 @@ describe("a router", () => {
 
       let arg = shouldRevalidate.mock.calls[0][0];
       expect(arg).toMatchInlineSnapshot(`
-        Object {
+        {
           "actionResult": "FETCH",
-          "currentParams": Object {},
+          "currentParams": {},
           "currentUrl": "http://localhost/",
           "defaultShouldRevalidate": true,
           "formAction": "/fetch",
           "formData": FormData {},
           "formEncType": "application/x-www-form-urlencoded",
           "formMethod": "post",
-          "nextParams": Object {},
+          "nextParams": {},
           "nextUrl": "http://localhost/",
         }
       `);
@@ -2100,12 +2151,12 @@ describe("a router", () => {
 
       let arg = shouldRevalidate.mock.calls[0][0];
       expect(arg).toMatchInlineSnapshot(`
-        Object {
+        {
           "actionResult": undefined,
-          "currentParams": Object {},
+          "currentParams": {},
           "currentUrl": "http://localhost/",
           "defaultShouldRevalidate": true,
-          "nextParams": Object {},
+          "nextParams": {},
           "nextUrl": "http://localhost/",
         }
       `);
@@ -2397,7 +2448,6 @@ describe("a router", () => {
             children: expect.any(Array),
             id: "root",
             loader: expect.any(Function),
-            module: "",
             path: "",
           },
         },
@@ -2474,7 +2524,6 @@ describe("a router", () => {
             children: expect.any(Array),
             id: "root",
             loader: expect.any(Function),
-            module: "",
             path: "",
           },
         },
@@ -4495,7 +4544,7 @@ describe("a router", () => {
       );
     });
 
-    it("returns a 400 error if binary data is attempted to be submitted using formMethod=GET", async () => {
+    it("url-encodes File names on GET submissions", async () => {
       let t = setup({
         routes: TASK_ROUTES,
         initialEntries: ["/"],
@@ -4512,26 +4561,17 @@ describe("a router", () => {
         "blob",
         new Blob(["<h1>Some html file contents</h1>"], {
           type: "text/html",
-        })
+        }),
+        "blob.html"
       );
 
-      await t.navigate("/tasks", {
+      let A = await t.navigate("/tasks", {
         formMethod: "get",
         formData: formData,
       });
-      expect(t.router.state.navigation.state).toBe("idle");
-      expect(t.router.state.location).toMatchObject({
-        pathname: "/tasks",
-        search: "",
-      });
-      expect(t.router.state.errors).toEqual({
-        tasks: new ErrorResponse(
-          400,
-          "Bad Request",
-          new Error("Cannot submit binary form data using GET"),
-          true
-        ),
-      });
+      let params = new URL(A.loaders.tasks.stub.mock.calls[0][0].request.url)
+        .searchParams;
+      expect(params.get("blob")).toEqual("blob.html");
     });
 
     it("returns a 405 error if attempting to submit with method=HEAD", async () => {
@@ -4609,61 +4649,6 @@ describe("a router", () => {
           405,
           "Method Not Allowed",
           new Error('Invalid request method "OPTIONS"'),
-          true
-        ),
-      });
-    });
-
-    it("runs loaders above the boundary for 400 errors if binary data is attempted to be submitted using formMethod=GET", async () => {
-      let t = setup({
-        routes: [
-          {
-            id: "index",
-            index: true,
-          },
-          {
-            id: "parent",
-            path: "parent",
-            loader: true,
-            children: [
-              {
-                id: "child",
-                path: "child",
-                loader: true,
-                hasErrorBoundary: true,
-              },
-            ],
-          },
-        ],
-        initialEntries: ["/"],
-      });
-
-      let formData = new FormData();
-      formData.append(
-        "blob",
-        new Blob(["<h1>Some html file contents</h1>"], {
-          type: "text/html",
-        })
-      );
-
-      let A = await t.navigate("/parent/child", {
-        formMethod: "get",
-        formData: formData,
-      });
-      expect(t.router.state.navigation.state).toBe("loading");
-      expect(t.router.state.errors).toEqual(null);
-
-      await A.loaders.parent.resolve("PARENT");
-      expect(A.loaders.child.stub).not.toHaveBeenCalled();
-      expect(t.router.state.navigation.state).toBe("idle");
-      expect(t.router.state.loaderData).toEqual({
-        parent: "PARENT",
-      });
-      expect(t.router.state.errors).toEqual({
-        child: new ErrorResponse(
-          400,
-          "Bad Request",
-          new Error("Cannot submit binary form data using GET"),
           true
         ),
       });
@@ -5712,6 +5697,37 @@ describe("a router", () => {
       );
     });
 
+    it("url-encodes File names on x-www-form-urlencoded submissions", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            action: true,
+          },
+        ],
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+          },
+        },
+      });
+
+      let fd = new FormData();
+      fd.append("key", "value");
+      fd.append("file", new Blob(["1", "2", "3"]), "file.txt");
+
+      let A = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/x-www-form-urlencoded",
+        formData: fd,
+      });
+
+      let req = A.actions.root.stub.mock.calls[0][0].request.clone();
+      expect((await req.formData()).get("file")).toEqual("file.txt");
+    });
+
     it("races actions and loaders against abort signals", async () => {
       let loaderDfd = createDeferred();
       let actionDfd = createDeferred();
@@ -5957,9 +5973,19 @@ describe("a router", () => {
     it("supports relative routing in redirects (from parent fetch loader)", async () => {
       let t = setup({ routes: REDIRECT_ROUTES });
 
-      let fetch = await t.fetch("/parent");
+      let fetch = await t.fetch("/parent", "key");
 
-      await fetch.loaders.parent.redirectReturn("..");
+      let B = await fetch.loaders.parent.redirectReturn(
+        "..",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+
+      // We called fetcher.load('/parent') from the root route, so when we
+      // redirect back to the root it triggers a revalidation of the
+      // fetcher.load('/parent')
+      await B.loaders.parent.resolve("Revalidated");
       // No root loader so redirect lands immediately
       expect(t.router.state).toMatchObject({
         location: {
@@ -5968,6 +5994,10 @@ describe("a router", () => {
         navigation: IDLE_NAVIGATION,
         loaderData: {},
         errors: null,
+      });
+      expect(t.router.state.fetchers.get("key")).toMatchObject({
+        state: "idle",
+        data: "Revalidated",
       });
     });
 
@@ -6736,6 +6766,37 @@ describe("a router", () => {
           expect(t.router.state.restoreScrollPosition).toBe(null);
           expect(t.router.state.preventScrollReset).toBe(false);
         });
+
+        it("resets on fetch submissions that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/tasks"],
+            hydrationData: {
+              loaderData: {
+                tasks: "TASKS",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.fetch("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+          });
+          let nav2 = await nav1.actions.tasks.redirectReturn("/tasks");
+          await nav2.loaders.tasks.resolve("TASKS 2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(false);
+        });
       });
 
       describe("user-specified flag preventScrollReset flag", () => {
@@ -6854,6 +6915,38 @@ describe("a router", () => {
           });
           let nav2 = await nav1.actions.tasks.redirectReturn("/");
           await nav2.loaders.index.resolve("INDEX_DATA2");
+          expect(t.router.state.restoreScrollPosition).toBe(null);
+          expect(t.router.state.preventScrollReset).toBe(true);
+        });
+
+        it("prevents scroll reset on fetch submissions that redirect", async () => {
+          let t = setup({
+            routes: SCROLL_ROUTES,
+            initialEntries: ["/tasks"],
+            hydrationData: {
+              loaderData: {
+                tasks: "TASKS",
+              },
+            },
+          });
+
+          expect(t.router.state.restoreScrollPosition).toBe(false);
+          expect(t.router.state.preventScrollReset).toBe(false);
+
+          let positions = {};
+          let activeScrollPosition = 0;
+          t.router.enableScrollRestoration(
+            positions,
+            () => activeScrollPosition
+          );
+
+          let nav1 = await t.fetch("/tasks", {
+            formMethod: "post",
+            formData: createFormData({}),
+            preventScrollReset: true,
+          });
+          let nav2 = await nav1.actions.tasks.redirectReturn("/tasks");
+          await nav2.loaders.tasks.resolve("TASKS 2");
           expect(t.router.state.restoreScrollPosition).toBe(null);
           expect(t.router.state.preventScrollReset).toBe(true);
         });
@@ -9151,6 +9244,74 @@ describe("a router", () => {
         });
       });
 
+      it("revalidates fetchers on searchParams changes", async () => {
+        let key = "key";
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/tasks/1"],
+          hydrationData: {
+            loaderData: {
+              root: "ROOT",
+              taskId: "TASK 1",
+            },
+          },
+        });
+
+        let A = await t.fetch("/?index", key);
+        await A.loaders.index.resolve("FETCH 1");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "FETCH 1",
+        });
+
+        let B = await t.navigate("/tasks/1?key=value", undefined, ["index"]);
+        await B.loaders.root.resolve("ROOT 2");
+        await B.loaders.tasksId.resolve("TASK 2");
+        await B.loaders.index.resolve("FETCH 2");
+        expect(t.router.state.loaderData).toMatchObject({
+          root: "ROOT 2",
+          tasksId: "TASK 2",
+        });
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "FETCH 2",
+        });
+      });
+
+      it("revalidates fetchers on links to the current location", async () => {
+        let key = "key";
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/tasks/1"],
+          hydrationData: {
+            loaderData: {
+              root: "ROOT",
+              taskId: "TASK 1",
+            },
+          },
+        });
+
+        let A = await t.fetch("/?index", key);
+        await A.loaders.index.resolve("FETCH 1");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "FETCH 1",
+        });
+
+        let B = await t.navigate("/tasks/1", undefined, ["index"]);
+        await B.loaders.root.resolve("ROOT 2");
+        await B.loaders.tasksId.resolve("TASK 2");
+        await B.loaders.index.resolve("FETCH 2");
+        expect(t.router.state.loaderData).toMatchObject({
+          root: "ROOT 2",
+          tasksId: "TASK 2",
+        });
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "FETCH 2",
+        });
+      });
+
       it("does not revalidate idle fetchers when a loader navigation is performed", async () => {
         let key = "key";
         let t = setup({
@@ -9183,13 +9344,23 @@ describe("a router", () => {
         let count = 0;
         let shouldRevalidate = jest.fn((args) => false);
         let router = createRouter({
-          history: createMemoryHistory({ initialEntries: ["/"] }),
+          history: createMemoryHistory({ initialEntries: ["/one"] }),
           routes: [
             {
               id: "root",
               path: "/",
               loader: () => Promise.resolve(++count),
-              action: () => Promise.resolve(null),
+              children: [
+                {
+                  path: ":a",
+                  children: [
+                    {
+                      path: ":b",
+                      action: () => Promise.resolve(null),
+                    },
+                  ],
+                },
+              ],
             },
             {
               id: "fetch",
@@ -9217,7 +9388,7 @@ describe("a router", () => {
         });
 
         // Post to the current route
-        router.navigate("/", {
+        router.navigate("/two/three", {
           formMethod: "post",
           formData: createFormData({}),
         });
@@ -9230,17 +9401,22 @@ describe("a router", () => {
           data: 1,
         });
         expect(shouldRevalidate.mock.calls[0][0]).toMatchInlineSnapshot(`
-          Object {
+          {
             "actionResult": null,
-            "currentParams": Object {},
-            "currentUrl": "http://localhost/fetch",
+            "currentParams": {
+              "a": "one",
+            },
+            "currentUrl": "http://localhost/one",
             "defaultShouldRevalidate": true,
-            "formAction": "/",
+            "formAction": "/two/three",
             "formData": FormData {},
             "formEncType": "application/x-www-form-urlencoded",
             "formMethod": "post",
-            "nextParams": Object {},
-            "nextUrl": "http://localhost/fetch",
+            "nextParams": {
+              "a": "two",
+              "b": "three",
+            },
+            "nextUrl": "http://localhost/two/three",
           }
         `);
 
@@ -9357,41 +9533,92 @@ describe("a router", () => {
         });
       });
 
+      it("does not revalidate fetchers initiated from removed routes", async () => {
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
+        });
+
+        let key = "key";
+
+        // Trigger a fetch from the index route
+        let A = await t.fetch("/tasks/1", key, "index");
+        await A.loaders.tasksId.resolve("TASKS");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "TASKS",
+        });
+
+        // Navigate such that the index route will be removed
+        let B = await t.navigate("/tasks", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+
+        // Resolve the action
+        await B.actions.tasks.resolve("TASKS ACTION");
+
+        // Fetcher should remain in an idle state since it's calling route is
+        // being removed
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "TASKS",
+        });
+
+        // Resolve navigation loaders
+        await B.loaders.root.resolve("ROOT*");
+        await B.loaders.tasks.resolve("TASKS LOADER");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.location.pathname).toBe("/tasks");
+
+        // Fetcher never got called
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "TASKS",
+        });
+      });
+
       it("cancels in-flight fetcher.loads on action submission and forces reload", async () => {
         let t = setup({
           routes: [
             {
-              id: "index",
-              index: true,
-            },
-            {
-              id: "action",
-              path: "action",
-              action: true,
-            },
-            // fetch A will resolve before the action and will be able to opt-out
-            {
-              id: "fetchA",
-              path: "fetch-a",
-              loader: true,
-              shouldRevalidate: () => false,
-            },
-            // fetch B will resolve before the action but then issue a second
-            // load that gets cancelled.  It will not be able to opt out because
-            // of the cancellation
-            {
-              id: "fetchB",
-              path: "fetch-b",
-              loader: true,
-              shouldRevalidate: () => false,
-            },
-            // fetch C will not before the action, and will not be able to opt
-            // out because it has no data
-            {
-              id: "fetchC",
-              path: "fetch-c",
-              loader: true,
-              shouldRevalidate: () => false,
+              path: "/",
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                },
+                {
+                  id: "action",
+                  path: "action",
+                  action: true,
+                },
+                // fetch A will resolve before the action and will be able to opt-out
+                {
+                  id: "fetchA",
+                  path: "fetch-a",
+                  loader: true,
+                  shouldRevalidate: () => false,
+                },
+                // fetch B will resolve before the action but then issue a second
+                // load that gets cancelled.  It will not be able to opt out because
+                // of the cancellation
+                {
+                  id: "fetchB",
+                  path: "fetch-b",
+                  loader: true,
+                  shouldRevalidate: () => false,
+                },
+                // fetch C will not before the action, and will not be able to opt
+                // out because it has no data
+                {
+                  id: "fetchC",
+                  path: "fetch-c",
+                  loader: true,
+                  shouldRevalidate: () => false,
+                },
+              ],
             },
           ],
           initialEntries: ["/"],
@@ -10193,6 +10420,7 @@ describe("a router", () => {
               {
                 id: "b",
                 path: "b",
+                loader: true,
               },
             ],
           },
@@ -10231,12 +10459,11 @@ describe("a router", () => {
       // Perform an invalid navigation to /parent/b which will be handled
       // using parent's error boundary.  Parent's deferred should be left alone
       // while A's should be cancelled since they will no longer be rendered
-      let formData = new FormData();
-      formData.append("file", new Blob(["1", "2"]), "file.txt");
-      await t.navigate("/parent/b", {
-        formMethod: "get",
-        formData,
-      });
+      let B = await t.navigate("/parent/b");
+      await B.loaders.b.reject(
+        new Response("broken", { status: 400, statusText: "Bad Request" })
+      );
+
       // Navigation completes immediately with an error at the boundary
       expect(t.router.state.loaderData).toEqual({
         parent: {
@@ -10245,12 +10472,7 @@ describe("a router", () => {
         },
       });
       expect(t.router.state.errors).toEqual({
-        parent: new ErrorResponse(
-          400,
-          "Bad Request",
-          new Error("Cannot submit binary form data using GET"),
-          true
-        ),
+        parent: new ErrorResponse(400, "Bad Request", "broken", false),
       });
 
       await parentDfd.resolve("Yep!");
@@ -10331,12 +10553,11 @@ describe("a router", () => {
       // Perform an invalid navigation to /b/child which should cancel all
       // pending deferred's since nothing is reused.  It should not call bChild's
       // loader since it's below the boundary but should call b's loader.
-      let formData = new FormData();
-      formData.append("file", new Blob(["1", "2"]), "file.txt");
-      let B = await t.navigate("/b/child", {
-        formMethod: "get",
-        formData,
-      });
+      let B = await t.navigate("/b/child");
+
+      await B.loaders.bChild.reject(
+        new Response("broken", { status: 400, statusText: "Bad Request" })
+      );
 
       // Both should be cancelled
       await aDfd.resolve("Nope!");
@@ -10357,14 +10578,8 @@ describe("a router", () => {
         b: "B LOADER",
       });
       expect(t.router.state.errors).toEqual({
-        bChild: new ErrorResponse(
-          400,
-          "Bad Request",
-          new Error("Cannot submit binary form data using GET"),
-          true
-        ),
+        bChild: new ErrorResponse(400, "Bad Request", "broken", false),
       });
-      expect(B.loaders.bChild.stub).not.toHaveBeenCalled();
     });
 
     it("does not cancel pending deferreds on hash change only navigations", async () => {

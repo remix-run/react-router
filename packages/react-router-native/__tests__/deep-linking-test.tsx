@@ -1,5 +1,4 @@
 import * as React from "react";
-import { mocked } from "ts-jest/utils";
 import { Linking as _Linking, Text, View } from "react-native";
 import * as TestRenderer from "react-test-renderer";
 import {
@@ -11,7 +10,7 @@ import {
 import { MockEvent, mockPromiseThatResolvesImmediatelyWith } from "./utils";
 
 // Ensures TypeScript understands that Linking is a mock
-const Linking = mocked(_Linking);
+const Linking = jest.mocked(_Linking);
 
 describe("deep linking", () => {
   describe("when there is no initial URL", () => {
