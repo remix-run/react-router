@@ -5262,7 +5262,7 @@ describe("a router", () => {
         request: createRequest("/tasks", {
           signal: nav.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        middleware: expect.any(Object),
+        context: expect.any(Object),
       });
 
       let nav2 = await t.navigate("/tasks/1");
@@ -5271,7 +5271,7 @@ describe("a router", () => {
         request: createRequest("/tasks/1", {
           signal: nav2.loaders.tasksId.stub.mock.calls[0][0].request.signal,
         }),
-        middleware: expect.any(Object),
+        context: expect.any(Object),
       });
 
       let nav3 = await t.navigate("/tasks?foo=bar#hash");
@@ -5280,7 +5280,7 @@ describe("a router", () => {
         request: createRequest("/tasks?foo=bar", {
           signal: nav3.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        middleware: expect.any(Object),
+        context: expect.any(Object),
       });
 
       let nav4 = await t.navigate("/tasks#hash", {
@@ -5291,7 +5291,7 @@ describe("a router", () => {
         request: createRequest("/tasks?foo=bar", {
           signal: nav4.loaders.tasks.stub.mock.calls[0][0].request.signal,
         }),
-        middleware: expect.any(Object),
+        context: expect.any(Object),
       });
 
       expect(t.router.state.navigation.formAction).toBe("/tasks");
@@ -5688,7 +5688,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        middleware: expect.any(Object),
+        context: expect.any(Object),
       });
 
       // Assert request internals, cannot do a deep comparison above since some
@@ -5731,7 +5731,7 @@ describe("a router", () => {
       expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
         params: {},
         request: expect.any(Request),
-        middleware: expect.any(Object),
+        context: expect.any(Object),
       });
       // Assert request internals, cannot do a deep comparison above since some
       // internals aren't the same on separate creations
@@ -8177,7 +8177,7 @@ describe("a router", () => {
           request: createRequest("/foo", {
             signal: A.loaders.root.stub.mock.calls[0][0].request.signal,
           }),
-          middleware: expect.any(Object),
+          context: expect.any(Object),
         });
       });
     });
@@ -11539,18 +11539,18 @@ describe("a router", () => {
 
       async function trackMiddlewareCall(
         routeId: string,
-        { request, middleware }: ActionFunctionArgs | LoaderFunctionArgs
+        { request, context }: ActionFunctionArgs | LoaderFunctionArgs
       ) {
-        let indentation = middleware.get(indentationContext);
+        let indentation = context.get(indentationContext);
         let type = request.method === "POST" ? "action" : "loader";
         let fetchSuffix = request.url.includes("?from-fetch") ? " (fetch)" : "";
 
         calls.push(
           `${indentation}${routeId} ${type} middleware start${fetchSuffix}`
         );
-        middleware.set(indentationContext, indentation + "  ");
+        context.set(indentationContext, indentation + "  ");
         await tick();
-        let res = await middleware.next();
+        let res = await context.next();
         calls.push(
           `${indentation}${routeId} ${type} middleware end${fetchSuffix}`
         );
@@ -11559,9 +11559,9 @@ describe("a router", () => {
 
       async function trackHandlerCall(
         routeId: string,
-        { request, middleware }: ActionFunctionArgs | LoaderFunctionArgs
+        { request, context }: ActionFunctionArgs | LoaderFunctionArgs
       ) {
-        let indentation = middleware.get(indentationContext);
+        let indentation = context.get(indentationContext);
         let type = request.method === "POST" ? "action" : "loader";
         let fetchSuffix = request.url.includes("?from-fetch") ? " (fetch)" : "";
 
@@ -12077,11 +12077,11 @@ describe("a router", () => {
             {
               id: "parent",
               path: "/parent",
-              async middleware({ middleware }) {
-                await middleware.next();
-                await middleware.next();
+              async middleware({ context }) {
+                await context.next();
+                await context.next();
               },
-              async loader({ middleware }) {
+              async loader({ context }) {
                 return "PARENT";
               },
             },
@@ -12109,11 +12109,11 @@ describe("a router", () => {
             {
               id: "parent",
               path: "/parent",
-              async middleware({ middleware }) {
-                return middleware.next();
+              async middleware({ context }) {
+                return context.next();
               },
-              async loader({ middleware }) {
-                await middleware.next();
+              async loader({ context }) {
+                await context.next();
                 return "PARENT";
               },
             },
@@ -12141,11 +12141,11 @@ describe("a router", () => {
             {
               id: "parent",
               path: "/parent",
-              async middleware({ middleware }) {
-                return middleware.next();
+              async middleware({ context }) {
+                return context.next();
               },
-              async action({ middleware }) {
-                await middleware.next();
+              async action({ context }) {
+                await context.next();
                 return "PARENT ACTION";
               },
               async loader() {
@@ -12214,14 +12214,14 @@ describe("a router", () => {
             {
               id: "parent",
               path: "/parent",
-              loader({ request, middleware }) {
+              loader({ request, context }) {
                 let sp = new URL(request.url).searchParams;
                 if (sp.has("get")) {
-                  middleware.get(createMiddlewareContext(0));
+                  context.get(createMiddlewareContext(0));
                 } else if (sp.has("set")) {
-                  middleware.set(createMiddlewareContext(0), 1);
+                  context.set(createMiddlewareContext(0), 1);
                 } else if (sp.has("next")) {
-                  middleware.next();
+                  context.next();
                 }
 
                 return "PARENT LOADER";
@@ -12260,13 +12260,13 @@ describe("a router", () => {
       let loaderCountContext = createMiddlewareContext(0);
       let actionCountContext = createMiddlewareContext(100);
 
-      function incrementContextCount(request, middleware) {
+      function incrementContextCount({ request, context }) {
         if (request.method === "POST") {
-          let count = middleware.get(actionCountContext);
-          middleware.set(actionCountContext, count + 1);
+          let count = context.get(actionCountContext);
+          context.set(actionCountContext, count + 1);
         } else {
-          let count = middleware.get(loaderCountContext);
-          middleware.set(loaderCountContext, count + 1);
+          let count = context.get(loaderCountContext);
+          context.set(loaderCountContext, count + 1);
         }
       }
 
@@ -12275,34 +12275,28 @@ describe("a router", () => {
         {
           id: "parent",
           path: "/parent",
-          async middleware({ request, middleware }) {
-            incrementContextCount(request, middleware);
-          },
-          async loader({ middleware }) {
-            return middleware.get(loaderCountContext);
+          middleware: incrementContextCount,
+          async loader({ context }) {
+            return context.get(loaderCountContext);
           },
           children: [
             {
               id: "child",
               path: "child",
-              async middleware({ request, middleware }) {
-                incrementContextCount(request, middleware);
-              },
-              async loader({ middleware }) {
-                return middleware.get(loaderCountContext);
+              middleware: incrementContextCount,
+              async loader({ context }) {
+                return context.get(loaderCountContext);
               },
               children: [
                 {
                   id: "grandchild",
                   path: "grandchild",
-                  async middleware({ request, middleware }) {
-                    incrementContextCount(request, middleware);
+                  middleware: incrementContextCount,
+                  async action({ context }) {
+                    return context.get(actionCountContext);
                   },
-                  async action({ middleware }) {
-                    return middleware.get(actionCountContext);
-                  },
-                  async loader({ middleware }) {
-                    return middleware.get(loaderCountContext);
+                  async loader({ context }) {
+                    return context.get(loaderCountContext);
                   },
                 },
               ],
@@ -12388,7 +12382,7 @@ describe("a router", () => {
         });
       });
 
-      it("throws if no value is available via middleware.get()", async () => {
+      it("throws if no value is available via context.get()", async () => {
         let theContext = createMiddlewareContext<number>();
 
         currentRouter = createRouter({
@@ -12399,8 +12393,8 @@ describe("a router", () => {
             {
               id: "broken",
               path: "broken",
-              loader({ middleware }) {
-                return middleware.get(theContext);
+              loader({ context }) {
+                return context.get(theContext);
               },
             },
           ],
@@ -12418,7 +12412,7 @@ describe("a router", () => {
         `);
       });
 
-      it("throws if you try to set an undefined value in middleware.set()", async () => {
+      it("throws if you try to set an undefined value in context.set()", async () => {
         let theContext = createMiddlewareContext<number>();
 
         currentRouter = createRouter({
@@ -12429,8 +12423,8 @@ describe("a router", () => {
             {
               id: "broken",
               path: "broken",
-              middleware({ middleware }) {
-                return middleware.set(theContext, undefined);
+              middleware({ context }) {
+                return context.set(theContext, undefined);
               },
               loader() {
                 return "DATA";
@@ -12451,7 +12445,7 @@ describe("a router", () => {
         `);
       });
 
-      it("allows null/falsey values in middleware.set()", async () => {
+      it("allows null/falsey values in context.set()", async () => {
         let booleanContext = createMiddlewareContext<boolean>();
         let numberContext = createMiddlewareContext<number>();
         let stringContext = createMiddlewareContext<string>();
@@ -12465,18 +12459,18 @@ describe("a router", () => {
             {
               id: "works",
               path: "works",
-              middleware({ middleware }) {
-                middleware.set(booleanContext, false);
-                middleware.set(numberContext, 0);
-                middleware.set(stringContext, "");
-                middleware.set(whateverContext, null);
+              middleware({ context }) {
+                context.set(booleanContext, false);
+                context.set(numberContext, 0);
+                context.set(stringContext, "");
+                context.set(whateverContext, null);
               },
-              loader({ middleware }) {
+              loader({ context }) {
                 return {
-                  boolean: middleware.get(booleanContext),
-                  number: middleware.get(numberContext),
-                  string: middleware.get(stringContext),
-                  whatever: middleware.get(whateverContext),
+                  boolean: context.get(booleanContext),
+                  number: context.get(numberContext),
+                  string: context.get(stringContext),
+                  whatever: context.get(whateverContext),
                 };
               },
             },

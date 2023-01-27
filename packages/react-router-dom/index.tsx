@@ -76,6 +76,8 @@ export { createSearchParams };
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  ActionFunctionWithMiddleware,
+  ActionFunctionArgsWithMiddleware,
   AwaitProps,
   unstable_Blocker,
   unstable_BlockerFunction,
@@ -90,6 +92,8 @@ export type {
   LayoutRouteProps,
   LoaderFunction,
   LoaderFunctionArgs,
+  LoaderFunctionWithMiddleware,
+  LoaderFunctionArgsWithMiddleware,
   Location,
   MemoryRouterProps,
   MiddlewareContext,

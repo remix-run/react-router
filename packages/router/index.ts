@@ -1,6 +1,8 @@
 export type {
   ActionFunction,
   ActionFunctionArgs,
+  ActionFunctionWithMiddleware,
+  ActionFunctionArgsWithMiddleware,
   AgnosticDataIndexRouteObject,
   AgnosticDataNonIndexRouteObject,
   AgnosticDataRouteMatch,
@@ -15,6 +17,8 @@ export type {
   JsonFunction,
   LoaderFunction,
   LoaderFunctionArgs,
+  LoaderFunctionWithMiddleware,
+  LoaderFunctionArgsWithMiddleware,
   MiddlewareContext,
   MiddlewareFunction,
   MiddlewareFunctionArgs,
