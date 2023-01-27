@@ -88,7 +88,7 @@ export async function serve(
     server = process.env.HOST
       ? app.listen(port, process.env.HOST, onListen)
       : app.listen(port, onListen);
-  } finally {
+  } catch {
     dispose();
     server?.close();
   }
