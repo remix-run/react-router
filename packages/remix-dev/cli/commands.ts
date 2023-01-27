@@ -209,7 +209,8 @@ export async function dev(
     return await new Promise(() => {});
   }
 
-  return devServer.serve(config, mode, flags.port);
+  await devServer.serve(config, mode, flags.port);
+  return await new Promise(() => {});
 }
 
 export async function codemod(
