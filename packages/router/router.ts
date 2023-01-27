@@ -3082,19 +3082,13 @@ async function callRoutePipeline(
   handler: LoaderFunction | ActionFunction
 ) {
   // Avoid memory leaks since we don't control the key
-  // TODO: Any way to type this so that .get/.set can infer the value type
-  // from the key?  This would avoid our `as T` below.
   let store = new WeakMap();
   let middlewareContext: MiddlewareContext = {
     get<T>(k: MiddlewareContextInstance<T>) {
-      if (!store.has(k)) {
-        let defaultValue = k.getDefaultValue();
-        if (defaultValue == null) {
-          throw new Error("Unable to find a value in the middleware context");
-        }
-        return defaultValue;
+      if (store.has(k)) {
+        return store.get(k) as T;
       }
-      return store.get(k) as T;
+      return k.getDefaultValue();
     },
     set<T>(k: MiddlewareContextInstance<T>, v: T) {
       if (typeof v === "undefined") {
