@@ -105,15 +105,16 @@ type DataFunctionReturnValue =
 export interface LoaderFunctionArgs extends DataFunctionArgs {}
 
 /**
+ * Arguments passed to action functions
+ */
+export interface ActionFunctionArgs extends DataFunctionArgs {}
+
+/**
  * Route loader function signature
  */
 export interface LoaderFunction {
   (args: LoaderFunctionArgs): DataFunctionReturnValue;
 }
-/**
- * Arguments passed to action functions
- */
-export interface ActionFunctionArgs extends DataFunctionArgs {}
 
 /**
  * Route action function signature
