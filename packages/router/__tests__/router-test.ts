@@ -11626,6 +11626,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_ORDERING_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/parent");
@@ -11648,6 +11649,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_ORDERING_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/parent", {
@@ -11680,6 +11682,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_ORDERING_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/parent/child/grandchild");
@@ -11727,6 +11730,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_ORDERING_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/parent/child/grandchild", {
@@ -11791,6 +11795,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_ORDERING_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.fetch(
@@ -11817,6 +11822,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_ORDERING_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.fetch(
@@ -11847,6 +11853,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_ORDERING_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/parent/child/grandchild");
@@ -11901,6 +11908,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_ORDERING_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/parent");
@@ -11941,7 +11949,9 @@ describe("a router", () => {
       });
 
       it("runs middleware before staticHandler.query", async () => {
-        let { query } = createStaticHandler(MIDDLEWARE_ORDERING_ROUTES);
+        let { query } = createStaticHandler(MIDDLEWARE_ORDERING_ROUTES, {
+          future: { unstable_middleware: true },
+        });
 
         let context = await query(createRequest("/parent/child/grandchild"));
 
@@ -11981,7 +11991,9 @@ describe("a router", () => {
       });
 
       it("runs middleware before staticHandler.queryRoute", async () => {
-        let { queryRoute } = createStaticHandler(MIDDLEWARE_ORDERING_ROUTES);
+        let { queryRoute } = createStaticHandler(MIDDLEWARE_ORDERING_ROUTES, {
+          future: { unstable_middleware: true },
+        });
 
         let result = await queryRoute(
           createRequest("/parent/child/grandchild")
@@ -12035,6 +12047,7 @@ describe("a router", () => {
             },
           ],
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/parent/child");
@@ -12074,6 +12087,7 @@ describe("a router", () => {
             },
           ],
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter?.navigate("/parent");
@@ -12105,6 +12119,7 @@ describe("a router", () => {
             },
           ],
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter?.navigate("/parent");
@@ -12139,6 +12154,7 @@ describe("a router", () => {
             },
           ],
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter?.navigate("/parent", {
@@ -12151,6 +12167,92 @@ describe("a router", () => {
             "You may only call `next()` once per middleware and you may not call it in an action or loader"
           ),
         });
+      });
+
+      it("does not run middleware if flag is not enabled", async () => {
+        currentRouter = createRouter({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              middleware() {
+                throw new Error("Nope!");
+              },
+              loader() {
+                calls.push("parent loader");
+                return "PARENT LOADER";
+              },
+            },
+          ],
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.navigate("/parent");
+
+        expect(currentRouter.state.location.pathname).toBe("/parent");
+        expect(currentRouter.state.loaderData).toEqual({
+          parent: "PARENT LOADER",
+        });
+        expect(calls).toMatchInlineSnapshot(`
+          [
+            "parent loader",
+          ]
+        `);
+      });
+
+      it("throws if middleware get methods are called when flag is not enabled", async () => {
+        currentRouter = createRouter({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              loader({ request, middleware }) {
+                let sp = new URL(request.url).searchParams;
+                if (sp.has("get")) {
+                  middleware.get(createMiddlewareContext(0));
+                } else if (sp.has("set")) {
+                  middleware.set(createMiddlewareContext(0), 1);
+                } else if (sp.has("next")) {
+                  middleware.next();
+                }
+
+                return "PARENT LOADER";
+              },
+            },
+          ],
+          history: createMemoryHistory(),
+        }).initialize();
+
+        await currentRouter.navigate("/parent?get");
+        expect(currentRouter.state.errors).toMatchInlineSnapshot(`
+          {
+            "parent": [Error: Middleware not enabled (\`future.unstable_middleware\`)],
+          }
+        `);
+
+        await currentRouter.navigate("/");
+        await currentRouter.navigate("/parent?set");
+        expect(currentRouter.state.errors).toMatchInlineSnapshot(`
+          {
+            "parent": [Error: Middleware not enabled (\`future.unstable_middleware\`)],
+          }
+        `);
+
+        await currentRouter.navigate("/");
+        await currentRouter.navigate("/parent?next");
+        expect(currentRouter.state.errors).toMatchInlineSnapshot(`
+          {
+            "parent": [Error: Middleware not enabled (\`future.unstable_middleware\`)],
+          }
+        `);
       });
     });
 
@@ -12213,6 +12315,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_CONTEXT_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/parent/child/grandchild");
@@ -12231,6 +12334,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_CONTEXT_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/parent/child/grandchild", {
@@ -12255,6 +12359,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_CONTEXT_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.fetch("key", "root", "/parent/child/grandchild");
@@ -12269,6 +12374,7 @@ describe("a router", () => {
         currentRouter = createRouter({
           routes: MIDDLEWARE_CONTEXT_ROUTES,
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.fetch("key", "root", "/parent/child/grandchild", {
@@ -12299,6 +12405,7 @@ describe("a router", () => {
             },
           ],
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/broken");
@@ -12331,6 +12438,7 @@ describe("a router", () => {
             },
           ],
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/broken");
@@ -12374,6 +12482,7 @@ describe("a router", () => {
             },
           ],
           history: createMemoryHistory(),
+          future: { unstable_middleware: true },
         }).initialize();
 
         await currentRouter.navigate("/works");
