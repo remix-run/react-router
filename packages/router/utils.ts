@@ -1448,20 +1448,28 @@ export interface MiddlewareContext<T = unknown> {
  * we can enforce typings on middleware.get/set
  */
 export class MiddlewareContextInstance<T> {
-  private defaultValue: T | null;
+  private defaultValue: T | undefined;
 
-  constructor(defaultValue?: T | null) {
-    this.defaultValue =
-      typeof defaultValue !== "undefined" ? defaultValue : null;
+  constructor(defaultValue?: T) {
+    if (typeof defaultValue !== "undefined") {
+      this.defaultValue = defaultValue;
+    }
   }
 
-  getDefaultValue() {
+  getDefaultValue(): T {
+    if (typeof this.defaultValue === "undefined") {
+      throw new Error("Unable to find a value in the middleware context");
+    }
     return this.defaultValue;
   }
 }
 
+/**
+ * Create a middleware context that can be used as a "key" to set/get middleware
+ * values in a strongly-typed fashion
+ */
 export function createMiddlewareContext<T extends unknown>(
-  defaultValue: T
+  defaultValue?: T
 ): MiddlewareContextInstance<T> {
   return new MiddlewareContextInstance<T>(defaultValue);
 }
