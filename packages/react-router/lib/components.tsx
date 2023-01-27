@@ -235,6 +235,7 @@ export interface PathRouteProps {
   caseSensitive?: NonIndexRouteObject["caseSensitive"];
   path?: NonIndexRouteObject["path"];
   id?: NonIndexRouteObject["id"];
+  middleware?: NonIndexRouteObject["middleware"];
   loader?: NonIndexRouteObject["loader"];
   action?: NonIndexRouteObject["action"];
   hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
@@ -252,6 +253,7 @@ export interface IndexRouteProps {
   caseSensitive?: IndexRouteObject["caseSensitive"];
   path?: IndexRouteObject["path"];
   id?: IndexRouteObject["id"];
+  middleware?: IndexRouteObject["middleware"];
   loader?: IndexRouteObject["loader"];
   action?: IndexRouteObject["action"];
   hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];

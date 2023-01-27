@@ -91,29 +91,6 @@ interface DataFunctionArgs {
   request: Request;
   params: Params;
   context?: any;
-  middleware: MiddlewareContext;
-}
-
-/**
- * Arguments passed to middleware functions
- */
-export interface MiddlewareFunctionArgs extends DataFunctionArgs {}
-
-/**
- * Arguments passed to loader functions
- */
-export interface LoaderFunctionArgs extends DataFunctionArgs {}
-
-/**
- * Arguments passed to action functions
- */
-export interface ActionFunctionArgs extends DataFunctionArgs {}
-
-/**
- * Route loader function signature
- */
-export interface MiddlewareFunction {
-  (args: MiddlewareFunctionArgs): Promise<void> | void;
 }
 
 type DataFunctionReturnValue =
@@ -123,17 +100,76 @@ type DataFunctionReturnValue =
   | any;
 
 /**
+ * Arguments passed to loader functions
+ */
+export interface LoaderFunctionArgs extends DataFunctionArgs {}
+
+/**
  * Route loader function signature
  */
 export interface LoaderFunction {
   (args: LoaderFunctionArgs): DataFunctionReturnValue;
 }
+/**
+ * Arguments passed to action functions
+ */
+export interface ActionFunctionArgs extends DataFunctionArgs {}
 
 /**
  * Route action function signature
  */
 export interface ActionFunction {
   (args: ActionFunctionArgs): DataFunctionReturnValue;
+}
+
+/**
+ * @private
+ * Arguments passed to route loader/action functions when middleware is enabled.
+ */
+interface DataFunctionArgsWithMiddleware {
+  request: Request;
+  params: Params;
+  context: MiddlewareContext;
+  requestContext: any;
+}
+
+/**
+ * Arguments passed to middleware functions when middleware is enabled
+ */
+export interface MiddlewareFunctionArgs
+  extends DataFunctionArgsWithMiddleware {}
+
+/**
+ * Route loader function signature when middleware is enabled
+ */
+export interface MiddlewareFunction {
+  (args: MiddlewareFunctionArgs): DataFunctionReturnValue;
+}
+
+/**
+ * Arguments passed to loader functions when middleware is enabled
+ */
+export interface LoaderFunctionArgsWithMiddleware
+  extends DataFunctionArgsWithMiddleware {}
+
+/**
+ * Route loader function signature when middleware is enabled
+ */
+export interface LoaderFunctionWithMiddleware {
+  (args: LoaderFunctionArgsWithMiddleware): DataFunctionReturnValue;
+}
+
+/**
+ * Arguments passed to action functions when middleware is enabled
+ */
+export interface ActionFunctionArgsWithMiddleware
+  extends DataFunctionArgsWithMiddleware {}
+
+/**
+ * Route action function signature when middleware is enabled
+ */
+export interface ActionFunctionWithMiddleware {
+  (args: ActionFunctionArgsWithMiddleware): DataFunctionReturnValue;
 }
 
 /**
@@ -166,8 +202,8 @@ type AgnosticBaseRouteObject = {
   path?: string;
   id?: string;
   middleware?: MiddlewareFunction;
-  loader?: LoaderFunction;
-  action?: ActionFunction;
+  loader?: LoaderFunction | LoaderFunctionWithMiddleware;
+  action?: ActionFunction | ActionFunctionWithMiddleware;
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
