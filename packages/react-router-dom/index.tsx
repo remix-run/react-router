@@ -420,8 +420,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   ) {
     // `location` is the unaltered href we will render in the <a> tag for absolute URLs
     let location = typeof to === "string" ? to : createPath(to);
-    let isAbsolute =
-      /^[a-z+]+:\/\//i.test(location) || location.startsWith("//");
+    let isAbsolute = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(location);
 
     // Location to use in the click handler
     let navigationLocation = location;
