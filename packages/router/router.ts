@@ -316,6 +316,13 @@ export type HydrationState = Partial<
 >;
 
 /**
+ * Future flags to toggle on new feature behavior
+ */
+export interface FutureConfig {
+  unstable_middleware: boolean;
+}
+
+/**
  * Initialization options for createRouter
  */
 export interface RouterInit {
@@ -323,6 +330,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   hydrationData?: HydrationState;
+  future?: FutureConfig;
 }
 
 /**
@@ -582,6 +590,7 @@ interface QueryRouteResponse {
   response: Response;
 }
 
+const defaultFutureConfig: FutureConfig = { unstable_middleware: false };
 const validMutationMethodsArr: MutationFormMethod[] = [
   "post",
   "put",
@@ -649,6 +658,8 @@ export function createRouter(init: RouterInit): Router {
   );
 
   let dataRoutes = convertRoutesToDataRoutes(init.routes);
+  let future: FutureConfig = { ...defaultFutureConfig, ...init.future };
+
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
@@ -1262,7 +1273,8 @@ export function createRouter(init: RouterInit): Router {
         request,
         actionMatch,
         matches,
-        router.basename
+        router.basename,
+        future.unstable_middleware
       );
 
       if (request.signal.aborted) {
@@ -1592,7 +1604,8 @@ export function createRouter(init: RouterInit): Router {
       fetchRequest,
       match,
       requestMatches,
-      router.basename
+      router.basename,
+      future.unstable_middleware
     );
 
     if (fetchRequest.signal.aborted) {
@@ -1814,7 +1827,8 @@ export function createRouter(init: RouterInit): Router {
       fetchRequest,
       match,
       matches,
-      router.basename
+      router.basename,
+      future.unstable_middleware
     );
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
@@ -2007,7 +2021,14 @@ export function createRouter(init: RouterInit): Router {
     // accordingly
     let results = await Promise.all([
       ...matchesToLoad.map((match) =>
-        callLoaderOrAction("loader", request, match, matches, router.basename)
+        callLoaderOrAction(
+          "loader",
+          request,
+          match,
+          matches,
+          router.basename,
+          future.unstable_middleware
+        )
       ),
       ...fetchersToLoad.map((f) =>
         callLoaderOrAction(
@@ -2015,7 +2036,8 @@ export function createRouter(init: RouterInit): Router {
           createClientSideRequest(init.history, f.path, request.signal),
           f.match,
           f.matches,
-          router.basename
+          router.basename,
+          future.unstable_middleware
         )
       ),
     ]);
@@ -2317,11 +2339,14 @@ export function createRouter(init: RouterInit): Router {
 
 export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
 
+export interface StaticHandlerInit {
+  basename?: string;
+  future?: FutureConfig;
+}
+
 export function createStaticHandler(
   routes: AgnosticRouteObject[],
-  opts?: {
-    basename?: string;
-  }
+  init?: StaticHandlerInit
 ): StaticHandler {
   invariant(
     routes.length > 0,
@@ -2329,7 +2354,11 @@ export function createStaticHandler(
   );
 
   let dataRoutes = convertRoutesToDataRoutes(routes);
-  let basename = (opts ? opts.basename : null) || "/";
+  let basename = (init ? init.basename : null) || "/";
+  let future: FutureConfig = {
+    ...defaultFutureConfig,
+    ...(init && init.future ? init.future : null),
+  };
 
   /**
    * The query() method is intended for document requests, in which we want to
@@ -2583,6 +2612,7 @@ export function createStaticHandler(
         actionMatch,
         matches,
         basename,
+        future.unstable_middleware,
         true,
         isRouteRequest,
         requestContext
@@ -2743,6 +2773,7 @@ export function createStaticHandler(
           match,
           matches,
           basename,
+          future.unstable_middleware,
           true,
           isRouteRequest,
           requestContext
@@ -3147,12 +3178,23 @@ async function callRouteSubPipeline(
   }
 }
 
+function disabledMiddlewareFn() {
+  throw new Error("Middleware not enabled (`future.unstable_middleware`)");
+}
+
+const disabledMiddlewareContext: MiddlewareContext = {
+  get: disabledMiddlewareFn,
+  set: disabledMiddlewareFn,
+  next: disabledMiddlewareFn,
+};
+
 async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
   match: AgnosticDataRouteMatch,
   matches: AgnosticDataRouteMatch[],
   basename = "/",
+  enableMiddleware: boolean,
   isStaticRequest: boolean = false,
   isRouteRequest: boolean = false,
   requestContext?: unknown
@@ -3176,12 +3218,19 @@ async function callLoaderOrAction(
     // Only call the pipeline for the matches up to this specific match
     let idx = matches.findIndex((m) => m.route.id === match.route.id);
     result = await Promise.race([
-      callRoutePipeline(
-        request,
-        matches.slice(0, idx + 1),
-        requestContext,
-        handler
-      ),
+      enableMiddleware
+        ? callRoutePipeline(
+            request,
+            matches.slice(0, idx + 1),
+            requestContext,
+            handler
+          )
+        : handler({
+            request,
+            params: match.params,
+            context: requestContext,
+            middleware: disabledMiddlewareContext,
+          }),
       abortPromise,
     ]);
 
