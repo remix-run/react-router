@@ -214,6 +214,26 @@ export interface Router {
   /**
    * @internal
    * PRIVATE - DO NOT USE
+   */
+  addRoute(route: AgnosticDataRouteObject, parentId?: string): void;
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   */
+  updateRoute(id: string, route: AgnosticDataRouteObject): void;
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   */
+  deleteRoute(id: string): void;
+  /**
+   * TODO: DELETE THIS FOR ABOVE GRANULAR METHODS
+   */
+  setNewRoutes(routes: AgnosticRouteObject[]): void;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
    *
    * Internal fetch AbortControllers accessed by unit tests
    */
@@ -644,6 +664,7 @@ export function createRouter(init: RouterInit): Router {
   );
 
   let dataRoutes = convertRoutesToDataRoutes(init.routes);
+  let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
@@ -921,6 +942,11 @@ export function createRouter(init: RouterInit): Router {
         isMutationMethod(state.navigation.formMethod) &&
         location.state?._isRedirect !== true);
 
+    if (inFlightDataRoutes) {
+      dataRoutes = inFlightDataRoutes;
+      inFlightDataRoutes = undefined;
+    }
+
     updateState({
       ...newState, // matches, errors, fetchers go through as-is
       actionData,
@@ -1108,14 +1134,15 @@ export function createRouter(init: RouterInit): Router {
     saveScrollPosition(state.location, state.matches);
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
 
+    let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
-    let matches = matchRoutes(dataRoutes, location, init.basename);
+    let matches = matchRoutes(routesToUse, location, init.basename);
 
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
-        getShortCircuitMatches(dataRoutes);
+        getShortCircuitMatches(routesToUse);
       // Cancel all pending deferred on 404s since we don't keep any routes
       cancelActiveDeferreds();
       completeNavigation(location, {
@@ -1506,7 +1533,8 @@ export function createRouter(init: RouterInit): Router {
 
     if (fetchControllers.has(key)) abortFetcher(key);
 
-    let matches = matchRoutes(dataRoutes, href, init.basename);
+    let routesToUse = inFlightDataRoutes || dataRoutes;
+    let matches = matchRoutes(routesToUse, href, init.basename);
     if (!matches) {
       setFetcherError(
         key,
@@ -1629,9 +1657,10 @@ export function createRouter(init: RouterInit): Router {
       nextLocation,
       abortController.signal
     );
+    let routesToUse = inFlightDataRoutes || dataRoutes;
     let matches =
       state.navigation.state !== "idle"
-        ? matchRoutes(dataRoutes, state.navigation.location, init.basename)
+        ? matchRoutes(routesToUse, state.navigation.location, init.basename)
         : state.matches;
 
     invariant(matches, "Didn't find any matches after fetcher action");
@@ -2266,6 +2295,23 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
+  function addRoute(newRoute: AgnosticDataRouteObject, parentId?: string) {
+    //TODO: implement me
+  }
+
+  function updateRoute(id: string, newRoute: AgnosticDataRouteObject) {
+    //TODO: implement me
+  }
+
+  function deleteRoute(id: string) {
+    //TODO: implement me
+  }
+
+  function setNewRoutes(newRoutes: AgnosticDataRouteObject[]) {
+    inFlightDataRoutes = newRoutes;
+    revalidate();
+  }
+
   router = {
     get basename() {
       return init.basename;
@@ -2293,6 +2339,12 @@ export function createRouter(init: RouterInit): Router {
     deleteBlocker,
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
+    addRoute,
+    updateRoute,
+    deleteRoute,
+    // TODO: Remove setRoutes, it's temporary to avoid dealing with
+    // updating the tree while validating the update algorithm.
+    setNewRoutes,
   };
 
   return router;

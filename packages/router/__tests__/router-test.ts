@@ -263,6 +263,7 @@ type SetupOpts = {
   initialEntries?: InitialEntry[];
   initialIndex?: number;
   hydrationData?: HydrationState;
+  ref?: TMApiRef;
 };
 
 function setup({
@@ -271,6 +272,7 @@ function setup({
   initialEntries,
   initialIndex,
   hydrationData,
+  ref,
 }: SetupOpts) {
   let guid = 0;
   // Global "active" helpers, keyed by navType:guid:loaderOrAction:routeId.
@@ -361,6 +363,9 @@ function setup({
       }
       return enhancedRoute;
     });
+  }
+  if (ref) {
+    ref.enhanceRoutes = enhanceRoutes;
   }
 
   let history = createMemoryHistory({ initialEntries, initialIndex });
@@ -757,9 +762,14 @@ function setup({
   };
 }
 
+type TMApiRef = {
+  enhanceRoutes(routes: TestRouteObject[]): AgnosticRouteObject[];
+};
+
 function initializeTmTest(init?: {
   url?: string;
   hydrationData?: HydrationState;
+  ref?: TMApiRef;
 }) {
   return setup({
     routes: TM_ROUTES,
@@ -767,6 +777,7 @@ function initializeTmTest(init?: {
       loaderData: { root: "ROOT", index: "INDEX" },
     },
     ...(init?.url ? { initialEntries: [init.url] } : {}),
+    ref: init?.ref,
   });
 }
 //#endregion
@@ -13542,6 +13553,61 @@ describe("a router", () => {
 
         /* eslint-enable jest/no-conditional-expect */
       });
+    });
+  });
+
+  describe("routes updates", () => {
+    it("should retain existing routes until revalidation completes", async () => {
+      let ref = {} as TMApiRef;
+      let t = initializeTmTest({ ref });
+      let ogRoutes = t.router.routes;
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve(null);
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: null,
+      });
+
+      let newRoutes = ref.enhanceRoutes([
+        {
+          path: "",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: true,
+          children: [
+            {
+              path: "/",
+              id: "index",
+              loader: true,
+              action: true,
+            },
+            {
+              path: "/foo",
+              id: "foo",
+              loader: false,
+              action: true,
+            },
+          ],
+        },
+      ]);
+      t.router.setNewRoutes(newRoutes);
+
+      expect(t.router.state.revalidation).toBe("loading");
+      expect(t.router.routes).toBe(ogRoutes);
+
+      // Get a new revalidation helper that should use the updated routes
+      let R = await t.revalidate();
+      // Should still be og roues on new revalidation as one started by update
+      // has not yet completed
+      expect(t.router.routes).toBe(ogRoutes);
+      // Resolve any loaders that should have ran
+      await R.loaders.root.resolve("ROOT*");
+      // Don't resolve "foo" because it was removed
+      // Revalidation should be complete
+      expect(t.router.state.revalidation).toBe("idle");
+      // Routes should be updated
+      expect(t.router.routes).not.toBe(ogRoutes);
+      expect(t.router.routes).toBe(newRoutes);
     });
   });
 });
