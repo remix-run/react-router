@@ -207,6 +207,38 @@ When you decide you'd like to try the trade-offs of `defer`, we don't want you t
 
 So just keep this in mind: **Deferred is 100% only about the initial load of a route and its params.**
 
+### Why don't Response objects returned by the loader work anymore?
+
+When you use `defer`, you're telling React Router to load the page immediately, without the deferred data. The page is already loaded before the Response object is returned.
+
+If you want your page to redirect based upon your deferred data, you'll need to return something to tell the page itself to do the redirect:
+
+```jsx lines=[6-12, 14-16]
+// Let's assume getPackageLocation returns { status: 401 } if the user's session on the server logged out.
+
+function PackageLocation() {
+  const packageLocation = useAsyncValue();
+
+  const navigate = useNavigate();
+  const isLoggedOut = packageLocation.status === 401;
+  useLayoutEffect(() => {
+    if (isLoggedOut) {
+      navigate('/login');
+    }
+  }, [navigate, isLoggedOut]);
+
+  return isLoggedOut
+    ? 'Rerouting...'
+    : (
+      <p>
+        Your package is at {packageLocation.latitude} lat and{" "}
+        {packageLocation.longitude} long.
+      </p>
+    );
+}
+
+```
+
 [link]: ../components/link
 [usefetcher]: ../hooks/use-fetcher
 [defer response]: ../utils/defer
