@@ -603,7 +603,7 @@ function getUrlBasedHistory(
   // case we should log a warning as it will result in bugs.
   if (index == null) {
     index = 0;
-    globalHistory.replaceState({ ...globalHistory.state, idx: index }, "");
+    globalHistory.replaceState({ ...globalHistory.state, idx: index }, "", window.location.href);
   }
 
   function getIndex(): number {
