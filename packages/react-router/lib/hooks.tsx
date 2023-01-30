@@ -657,6 +657,7 @@ enum DataRouterHook {
 }
 
 enum DataRouterStateHook {
+  UseBlocker = "useBlocker",
   UseLoaderData = "useLoaderData",
   UseActionData = "useActionData",
   UseRouteError = "useRouteError",
@@ -833,6 +834,9 @@ let blockerKey = "blocker-singleton";
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
+
+  // Subscribe to router state changes so the latest blocker is returned
+  useDataRouterState(DataRouterStateHook.UseBlocker);
 
   let blockerFunction = React.useCallback<BlockerFunction>(
     (args) => {
