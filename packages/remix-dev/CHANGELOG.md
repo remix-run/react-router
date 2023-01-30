@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 1.12.0-pre.3
+
+### Patch Changes
+
+- Fixed issues with `v2_routeConvention` on Windows so that new and renamed files are properly included ([#5266](https://github.com/remix-run/remix/pull/5266))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.12.0-pre.3`
+
 ## 1.12.0-pre.2
 
 ### Patch Changes

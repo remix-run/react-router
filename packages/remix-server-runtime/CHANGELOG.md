@@ -1,5 +1,7 @@
 # `@remix-run/server-runtime`
 
+## 1.12.0-pre.3
+
 ## 1.12.0-pre.2
 
 ## 1.12.0-pre.1
