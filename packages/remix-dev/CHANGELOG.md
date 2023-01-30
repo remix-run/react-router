@@ -1,5 +1,19 @@
 # `@remix-run/dev`
 
+## 1.12.0
+
+### Minor Changes
+
+- Added a new development server available in the Remix config under the `unstable_dev` flag. [See the release notes](https://github.com/remix-run/remix/releases/tag/remix%401.12.0) for a full description. ([#5133](https://github.com/remix-run/remix/pull/5133))
+
+### Patch Changes
+
+- Fixed issues with `v2_routeConvention` on Windows so that new and renamed files are properly included ([#5266](https://github.com/remix-run/remix/pull/5266))
+- Server build should not be removed in `remix watch` and `remix dev` ([#5228](https://github.com/remix-run/remix/pull/5228))
+- The dev server will now clean up build directories whenever a rebuild starts ([#5223](https://github.com/remix-run/remix/pull/5223))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.12.0`
+
 ## 1.11.1
 
 ### Patch Changes

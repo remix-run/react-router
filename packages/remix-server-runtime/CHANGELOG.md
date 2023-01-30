@@ -1,5 +1,16 @@
 # `@remix-run/server-runtime`
 
+## 1.12.0
+
+### Minor Changes
+
+- Added a new development server available in the Remix config under the `unstable_dev` flag. [See the release notes](https://github.com/remix-run/remix/releases/tag/remix%401.12.0) for a full description. ([#5133](https://github.com/remix-run/remix/pull/5133))
+- Removed `react` & `react-dom` from `peerDependencies` ([#4801](https://github.com/remix-run/remix/pull/4801))
+
+### Patch Changes
+
+- Bump React Router dependencies to the latest version. [See the release notes for more details.](https://github.com/remix-run/react-router/releases/tag/react-router%406.8.0) ([#5242](https://github.com/remix-run/remix/pull/5242))
+
 ## 1.11.1
 
 ## 1.11.0

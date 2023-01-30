@@ -1,5 +1,16 @@
 # `@remix-run/serve`
 
+## 1.12.0
+
+### Minor Changes
+
+- Added a new development server available in the Remix config under the `unstable_dev` flag. [See the release notes](https://github.com/remix-run/remix/releases/tag/remix%401.12.0) for a full description. ([#5133](https://github.com/remix-run/remix/pull/5133))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/express@1.12.0`
+
 ## 1.11.1
 
 ### Patch Changes
