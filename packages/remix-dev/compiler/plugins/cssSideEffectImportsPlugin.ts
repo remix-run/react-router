@@ -121,11 +121,13 @@ export const cssSideEffectImportsPlugin = ({
   };
 };
 
+const additionalLanguageFeatures: ParserOptions["plugins"] = ["decorators"];
+
 const babelPluginsForLoader: Record<Loader, ParserOptions["plugins"]> = {
-  js: [],
-  jsx: ["jsx"],
-  ts: ["typescript"],
-  tsx: ["typescript", "jsx"],
+  js: [...additionalLanguageFeatures],
+  jsx: ["jsx", ...additionalLanguageFeatures],
+  ts: ["typescript", ...additionalLanguageFeatures],
+  tsx: ["typescript", "jsx", ...additionalLanguageFeatures],
 };
 
 const cache = new LRUCache<string, string>({ max: 1000 });

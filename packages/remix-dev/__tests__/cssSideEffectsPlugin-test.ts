@@ -222,4 +222,255 @@ describe("addSuffixToCssSideEffectImports", () => {
       `);
     });
   });
+
+  describe("parser support for language features", () => {
+    function languageFeaturesFixture(options: { ts: boolean; jsx: boolean }) {
+      let tsLanguageFeatures = dedent`
+        // TS
+        const exampleSatisfies = 'satisfies' satisfies string;
+        enum ExampleEnum {
+          Foo,
+          Bar,
+          Baz,
+        }
+      `;
+
+      let jsxLanguageFeatures = dedent`
+        // JSX
+        const ExampleComponent = () => <div>JSX element</div>;
+      `;
+
+      let jsLanguageFeatures = dedent`
+        // JS
+        const topLevelAwait = await Promise.resolve('top level await');        
+        function classDecorator(target) {
+          return target;
+        }        
+        function methodDecorator(target) {
+          return target;
+        }
+        @classDecorator
+        class ExampleClass {
+          #privateField;
+          #privateFieldWithInitializer = 'private field with initializer';
+          #privateMethod() {
+            return 'private method';
+          }
+          @methodDecorator
+          decoratedMethod() {
+            return 'decorated method';
+          }
+        }        
+        const numericSeparator = 1_000_000;
+        const nullishCoalescing = null ?? 'nullish coalescing';
+        const optionalChaining = (['optional', 'chaining'])?.join?.(' ');
+        let optionalCatchBinding;
+        try {
+          optionalCatchBinding = error();
+        } catch {
+          optionalCatchBinding = 'optional catch binding';
+        }
+        export async function* asyncGenerator() {
+          yield await Promise.resolve('async generator');
+        }
+      `;
+
+      return [
+        'require("./foo.css")',
+        ...(options.ts ? [tsLanguageFeatures] : []),
+        ...(options.jsx ? [jsxLanguageFeatures] : []),
+        jsLanguageFeatures,
+      ].join("\n\n");
+    }
+
+    test("JS language features", () => {
+      let code = languageFeaturesFixture({ ts: false, jsx: false });
+
+      expect(addSuffixToCssSideEffectImports("js", code))
+        .toMatchInlineSnapshot(`
+        "require(\\"./foo.css?__remix_sideEffect__\\");
+
+        // JS
+        const topLevelAwait = await Promise.resolve('top level await');
+        function classDecorator(target) {
+          return target;
+        }
+        function methodDecorator(target) {
+          return target;
+        }
+        @classDecorator class
+        ExampleClass {
+          #privateField;
+          #privateFieldWithInitializer = 'private field with initializer';
+          #privateMethod() {
+            return 'private method';
+          }
+          @methodDecorator
+          decoratedMethod() {
+            return 'decorated method';
+          }
+        }
+        const numericSeparator = 1_000_000;
+        const nullishCoalescing = null ?? 'nullish coalescing';
+        const optionalChaining = ['optional', 'chaining']?.join?.(' ');
+        let optionalCatchBinding;
+        try {
+          optionalCatchBinding = error();
+        } catch {
+          optionalCatchBinding = 'optional catch binding';
+        }
+        export async function* asyncGenerator() {
+          yield await Promise.resolve('async generator');
+        }"
+      `);
+    });
+
+    test("JSX language features", () => {
+      let code = languageFeaturesFixture({ ts: false, jsx: true });
+
+      expect(addSuffixToCssSideEffectImports("jsx", code))
+        .toMatchInlineSnapshot(`
+        "require(\\"./foo.css?__remix_sideEffect__\\");
+
+        // JSX
+        const ExampleComponent = () => <div>JSX element</div>;
+
+        // JS
+        const topLevelAwait = await Promise.resolve('top level await');
+        function classDecorator(target) {
+          return target;
+        }
+        function methodDecorator(target) {
+          return target;
+        }
+        @classDecorator class
+        ExampleClass {
+          #privateField;
+          #privateFieldWithInitializer = 'private field with initializer';
+          #privateMethod() {
+            return 'private method';
+          }
+          @methodDecorator
+          decoratedMethod() {
+            return 'decorated method';
+          }
+        }
+        const numericSeparator = 1_000_000;
+        const nullishCoalescing = null ?? 'nullish coalescing';
+        const optionalChaining = ['optional', 'chaining']?.join?.(' ');
+        let optionalCatchBinding;
+        try {
+          optionalCatchBinding = error();
+        } catch {
+          optionalCatchBinding = 'optional catch binding';
+        }
+        export async function* asyncGenerator() {
+          yield await Promise.resolve('async generator');
+        }"
+      `);
+    });
+
+    test("TS language features", () => {
+      let code = languageFeaturesFixture({ ts: true, jsx: false });
+
+      expect(addSuffixToCssSideEffectImports("tsx", code))
+        .toMatchInlineSnapshot(`
+        "require(\\"./foo.css?__remix_sideEffect__\\");
+
+        // TS
+        const exampleSatisfies = ('satisfies' satisfies string);
+        enum ExampleEnum {
+          Foo,
+          Bar,
+          Baz,
+        }
+
+        // JS
+        const topLevelAwait = await Promise.resolve('top level await');
+        function classDecorator(target) {
+          return target;
+        }
+        function methodDecorator(target) {
+          return target;
+        }
+        @classDecorator class
+        ExampleClass {
+          #privateField;
+          #privateFieldWithInitializer = 'private field with initializer';
+          #privateMethod() {
+            return 'private method';
+          }
+          @methodDecorator
+          decoratedMethod() {
+            return 'decorated method';
+          }
+        }
+        const numericSeparator = 1_000_000;
+        const nullishCoalescing = null ?? 'nullish coalescing';
+        const optionalChaining = ['optional', 'chaining']?.join?.(' ');
+        let optionalCatchBinding;
+        try {
+          optionalCatchBinding = error();
+        } catch {
+          optionalCatchBinding = 'optional catch binding';
+        }
+        export async function* asyncGenerator() {
+          yield await Promise.resolve('async generator');
+        }"
+      `);
+    });
+
+    test("TSX language features", () => {
+      let code = languageFeaturesFixture({ ts: true, jsx: true });
+
+      expect(addSuffixToCssSideEffectImports("tsx", code))
+        .toMatchInlineSnapshot(`
+        "require(\\"./foo.css?__remix_sideEffect__\\");
+
+        // TS
+        const exampleSatisfies = ('satisfies' satisfies string);
+        enum ExampleEnum {
+          Foo,
+          Bar,
+          Baz,
+        }
+
+        // JSX
+        const ExampleComponent = () => <div>JSX element</div>;
+
+        // JS
+        const topLevelAwait = await Promise.resolve('top level await');
+        function classDecorator(target) {
+          return target;
+        }
+        function methodDecorator(target) {
+          return target;
+        }
+        @classDecorator class
+        ExampleClass {
+          #privateField;
+          #privateFieldWithInitializer = 'private field with initializer';
+          #privateMethod() {
+            return 'private method';
+          }
+          @methodDecorator
+          decoratedMethod() {
+            return 'decorated method';
+          }
+        }
+        const numericSeparator = 1_000_000;
+        const nullishCoalescing = null ?? 'nullish coalescing';
+        const optionalChaining = ['optional', 'chaining']?.join?.(' ');
+        let optionalCatchBinding;
+        try {
+          optionalCatchBinding = error();
+        } catch {
+          optionalCatchBinding = 'optional catch binding';
+        }
+        export async function* asyncGenerator() {
+          yield await Promise.resolve('async generator');
+        }"
+      `);
+    });
+  });
 });
