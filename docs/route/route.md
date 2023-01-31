@@ -232,8 +232,8 @@ Determines if the route is an index route. Index routes render into their parent
 
 ```jsx [2]
 <Route path="/teams" element={<Teams />}>
-<Route index element={<TeamsIndex />} />
-<Route path=":teamId" element={<Team />} />
+  <Route index element={<TeamsIndex />} />
+  <Route path=":teamId" element={<Team />} />
 </Route>
 ```
 
@@ -260,15 +260,15 @@ The route loader is called before the route renders and provides data for the el
 
 ```tsx [3-5]
 <Route
-path="/teams/:teamId"
-loader={({ params }) => {
-  return fetchTeam(params.teamId);
-}}
+  path="/teams/:teamId"
+  loader={({ params }) => {
+    return fetchTeam(params.teamId);
+  }}
 />;
 
 function Team() {
-let team = useLoaderData();
-// ...
+  let team = useLoaderData();
+  // ...
 }
 ```
 
@@ -282,11 +282,11 @@ The route action is called when a submission is sent to the route from a [Form][
 
 ```tsx [3-5]
 <Route
-path="/teams/:teamId"
-action={({ request }) => {
-  const formData = await request.formData();
-  return updateTeam(formData);
-}}
+  path="/teams/:teamId"
+  action={({ request }) => {
+    const formData = await request.formData();
+    return updateTeam(formData);
+  }}
 />
 ```
 
@@ -308,17 +308,17 @@ When a route throws an exception while rendering, in a `loader` or in an `action
 
 ```tsx
 <Route
-path="/for-sale"
-// if this throws an error while rendering
-element={<Properties />}
-// or this while loading properties
-loader={() => loadProperties()}
-// or this while creating a property
-action={async ({ request }) =>
-  createProperty(await request.formData())
-}
-// then this element will render
-errorElement={<ErrorBoundary />}
+  path="/for-sale"
+  // if this throws an error while rendering
+  element={<Properties />}
+  // or this while loading properties
+  loader={() => loadProperties()}
+  // or this while creating a property
+  action={async ({ request }) =>
+    createProperty(await request.formData())
+  }
+  // then this element will render
+  errorElement={<ErrorBoundary />}
 />
 ```
 
