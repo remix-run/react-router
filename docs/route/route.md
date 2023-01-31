@@ -208,23 +208,19 @@ let { org, "*": splat } = params;
 Omitting the path makes this route a "layout route". It participates in UI nesting, but it does not add any segments to the URL.
 
 ```tsx
-  <MemoryRouter initialEntries={["/"]}>
-    <Routes>
-      <Route
-        element={
-          <div>
-            <h1>Layout</h1>
-            <Outlet />
-          </div>
-        }
-      >
-        <Route path="/home" element={<h1>Home</h1>} />
-      </Route>
-      <Route index element={<h1>Index</h1>} />
-    </Routes>
-  </MemoryRouter>
+<Route
+  element={
+    <div>
+      <h1>Layout</h1>
+      <Outlet />
+    </div>
+  }
+>
+  <Route path="/" element={<h2>Home</h2>} />
+  <Route path="/about" element={<h2>About</h2>} />
+</Route>
 ```
-In this example, if you go to '/', `<h1>Layout</h1>` will not appear. But if you go to '/home', `<h1>Layout</h1>` will appear.
+In this example, `<h1>Layout</h1>` will be rendered along with each child route's `element` prop, via the layout route's [Outlet][outlet].
 
 ## `index`
 
