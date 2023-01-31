@@ -220,6 +220,7 @@ Omitting the path makes this route a "layout route". It participates in UI nesti
   <Route path="/about" element={<h2>About</h2>} />
 </Route>
 ```
+
 In this example, `<h1>Layout</h1>` will be rendered along with each child route's `element` prop, via the layout route's [Outlet][outlet].
 
 ## `index`
