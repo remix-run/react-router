@@ -131,7 +131,7 @@ interface DataFunctionArgsWithMiddleware {
   request: Request;
   params: Params;
   context: MiddlewareContext;
-  requestContext: any;
+  requestContext?: any;
 }
 
 /**
@@ -1474,9 +1474,9 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
  *
  * Supports only key/value for now, eventually will be enhanced
  */
-export interface MiddlewareContext<T = unknown> {
-  get(key: MiddlewareContextInstance<T>): T;
-  set(key: MiddlewareContextInstance<T>, value: T): void;
+export interface MiddlewareContext {
+  get<T>(key: MiddlewareContextInstance<T>): T;
+  set<T>(key: MiddlewareContextInstance<T>, value: T): void;
   next: () => DataFunctionReturnValue;
 }
 
