@@ -1298,7 +1298,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-export default function Edit() {
+export default function EditContact() {
   const contact = useLoaderData();
   const navigate = useNavigate();
 
