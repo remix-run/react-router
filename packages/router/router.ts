@@ -654,6 +654,18 @@ const isServer = !isBrowser;
 //#region createRouter
 ////////////////////////////////////////////////////////////////////////////////
 
+let cloneDataRoutes = (
+  routes: AgnosticDataRouteObject[]
+): AgnosticDataRouteObject[] => {
+  return routes.map((route) => {
+    if (route.children === undefined) return route;
+    return {
+      ...route,
+      children: cloneDataRoutes(route.children),
+    };
+  });
+};
+
 /**
  * Create a router and listen to history POP navigations
  */
@@ -2295,16 +2307,72 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
+  // TODO: visitNode/visitParent helper?
   function addRoute(newRoute: AgnosticDataRouteObject, parentId?: string) {
-    //TODO: implement me
+    if (inFlightDataRoutes === undefined) {
+      inFlightDataRoutes = cloneDataRoutes(dataRoutes);
+    }
+
+    let root: AgnosticDataRouteObject = {
+      id: Symbol("root").toString(),
+      children: inFlightDataRoutes,
+    };
+    let recurse = (node: AgnosticDataRouteObject) => {
+      if (node.id === parentId) {
+        if (node.children === undefined) {
+          node.children = [];
+        }
+        node.children.push(newRoute);
+        return;
+      }
+      node.children?.forEach(recurse);
+    };
+    recurse(root);
   }
 
   function updateRoute(id: string, newRoute: AgnosticDataRouteObject) {
-    //TODO: implement me
+    if (inFlightDataRoutes === undefined) {
+      inFlightDataRoutes = cloneDataRoutes(dataRoutes);
+    }
+
+    let root: AgnosticDataRouteObject = {
+      id: Symbol("root").toString(),
+      children: inFlightDataRoutes,
+    };
+    let recurse = (node: AgnosticDataRouteObject) => {
+      if (node.children === undefined) return;
+      let index = node.children.findIndex((child) => child.id === id);
+      if (index >= 0) {
+        node.children[index] = newRoute;
+        return;
+      }
+      node.children.forEach(recurse);
+    };
+    recurse(root);
   }
 
   function deleteRoute(id: string) {
-    //TODO: implement me
+    if (inFlightDataRoutes === undefined) {
+      inFlightDataRoutes = cloneDataRoutes(dataRoutes);
+    }
+
+    let root: AgnosticDataRouteObject = {
+      id: Symbol("root").toString(),
+      children: inFlightDataRoutes,
+    };
+    let recurse = (node: AgnosticDataRouteObject) => {
+      if (node.children === undefined) return;
+      let index = node.children.findIndex((child) => child.id === id);
+      if (index >= 0) {
+        node.children.splice(index, 1);
+        if (node.children.length === 0) {
+          node.children = undefined;
+        }
+        return;
+      }
+      node.children.forEach(recurse);
+    };
+    recurse(root);
   }
 
   function setNewRoutes(newRoutes: AgnosticDataRouteObject[]) {
