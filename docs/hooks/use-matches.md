@@ -56,7 +56,7 @@ The proverbial use case here is adding breadcrumbs to a parent layout that uses 
       // here we use "crumb" and return some elements,
       // this is what we'll render in the breadcrumbs
       // for this route
-      crumb: () => <Link to="/message">Messages</Link>,
+      crumb: () => <Link to="/messages">Messages</Link>,
     }}
   >
     <Route
