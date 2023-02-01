@@ -594,7 +594,7 @@ We'll create new contacts by exporting an `action` in our root route, wiring it 
 
 👉 **Create the action and change `<form>` to `<Form>`**
 
-```jsx filename=src/routes/root.jsx lines=[5,7,9-11,22-25]
+```jsx filename=src/routes/root.jsx lines=[5,7,9-12,24-26]
 import {
   Outlet,
   Link,
