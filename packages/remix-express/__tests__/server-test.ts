@@ -64,6 +64,30 @@ describe("express createRequestHandler", () => {
       expect(res.headers["x-powered-by"]).toBe("Express");
     });
 
+    it("handles root // URLs", async () => {
+      mockedCreateRequestHandler.mockImplementation(() => async (req) => {
+        return new Response("URL: " + new URL(req.url).pathname);
+      });
+
+      let request = supertest(createApp());
+      let res = await request.get("//");
+
+      expect(res.status).toBe(200);
+      expect(res.text).toBe("URL: //");
+    });
+
+    it("handles nested // URLs", async () => {
+      mockedCreateRequestHandler.mockImplementation(() => async (req) => {
+        return new Response("URL: " + new URL(req.url).pathname);
+      });
+
+      let request = supertest(createApp());
+      let res = await request.get("//foo//bar");
+
+      expect(res.status).toBe(200);
+      expect(res.text).toBe("URL: //foo//bar");
+    });
+
     it("handles null body", async () => {
       mockedCreateRequestHandler.mockImplementation(() => async () => {
         return new Response(null, { status: 200 });
