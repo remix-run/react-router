@@ -131,7 +131,6 @@ interface DataFunctionArgsWithMiddleware {
   request: Request;
   params: Params;
   context: MiddlewareContext;
-  requestContext?: any;
 }
 
 /**
@@ -1475,9 +1474,26 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
  * Supports only key/value for now, eventually will be enhanced
  */
 export interface MiddlewareContext {
+  /**
+   * Retrieve a value from context
+   */
   get<T>(key: MiddlewareContextInstance<T>): T;
+  /**
+   * Set a value from context
+   */
   set<T>(key: MiddlewareContextInstance<T>, value: T): void;
+  /**
+   * Call any child middlewares and the destination loader/action
+   */
   next: () => DataFunctionReturnValue;
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Return the entries - needed so we can copy values from the serverMiddleware
+   * context into route-specific contexts
+   */
+  entries(): IterableIterator<[MiddlewareContextInstance<unknown>, unknown]>;
 }
 
 /**
@@ -1509,4 +1525,35 @@ export function createMiddlewareContext<T extends unknown>(
   defaultValue?: T
 ): MiddlewareContextInstance<T> {
   return new MiddlewareContextInstance<T>(defaultValue);
+}
+
+/**
+ * @internal
+ * PRIVATE - DO NOT USE
+ *
+ * Create a middleware "context" to store values and provide a next() hook
+ */
+export function createMiddlewareStore(
+  initialMiddlewareContext?: MiddlewareContext
+) {
+  let store = new Map(initialMiddlewareContext?.entries());
+  let middlewareContext: MiddlewareContext = {
+    get<T>(k: MiddlewareContextInstance<T>) {
+      if (store.has(k)) {
+        return store.get(k) as T;
+      }
+      return k.getDefaultValue();
+    },
+    set<T>(k: MiddlewareContextInstance<T>, v: T) {
+      if (typeof v === "undefined") {
+        throw new Error(
+          "You cannot set an undefined value in the middleware context"
+        );
+      }
+      store.set(k, v);
+    },
+    next: () => {},
+    entries: () => store.entries(),
+  };
+  return middlewareContext;
 }

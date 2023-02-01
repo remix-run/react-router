@@ -8,8 +8,6 @@ import {
 } from "./history";
 import type {
   ActionFunction,
-  ActionFunctionArgs,
-  ActionFunctionArgsWithMiddleware,
   ActionFunctionWithMiddleware,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
@@ -21,11 +19,8 @@ import type {
   FormEncType,
   FormMethod,
   LoaderFunction,
-  LoaderFunctionArgs,
-  LoaderFunctionArgsWithMiddleware,
   LoaderFunctionWithMiddleware,
   MiddlewareContext,
-  MiddlewareContextInstance,
   MutationFormMethod,
   Params,
   RedirectResult,
@@ -36,6 +31,7 @@ import type {
 } from "./utils";
 import {
   convertRoutesToDataRoutes,
+  createMiddlewareStore,
   DeferredData,
   ErrorResponse,
   getPathContributingMatches,
@@ -356,6 +352,15 @@ export interface StaticHandlerContext {
   _deepestRenderedBoundaryId?: string | null;
 }
 
+interface StaticHandlerQueryOpts {
+  requestContext?: unknown;
+  middlewareContext?: MiddlewareContext;
+}
+
+interface StaticHandlerQueryRouteOpts extends StaticHandlerQueryOpts {
+  routeId?: string;
+}
+
 /**
  * A StaticHandler instance manages a singular SSR navigation/fetch event
  */
@@ -363,11 +368,11 @@ export interface StaticHandler {
   dataRoutes: AgnosticDataRouteObject[];
   query(
     request: Request,
-    opts?: { requestContext?: unknown }
+    opts?: StaticHandlerQueryOpts
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
     request: Request,
-    opts?: { routeId?: string; requestContext?: unknown }
+    opts?: StaticHandlerQueryRouteOpts
   ): Promise<any>;
 }
 
@@ -2387,7 +2392,7 @@ export function createStaticHandler(
    */
   async function query(
     request: Request,
-    { requestContext }: { requestContext?: unknown } = {}
+    { requestContext, middlewareContext }: StaticHandlerQueryOpts = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
@@ -2433,7 +2438,13 @@ export function createStaticHandler(
       };
     }
 
-    let result = await queryImpl(request, location, matches, requestContext);
+    let result = await queryImpl(
+      request,
+      location,
+      matches,
+      requestContext,
+      middlewareContext
+    );
     if (isResponse(result)) {
       return result;
     }
@@ -2469,7 +2480,8 @@ export function createStaticHandler(
     {
       routeId,
       requestContext,
-    }: { requestContext?: unknown; routeId?: string } = {}
+      middlewareContext,
+    }: StaticHandlerQueryRouteOpts = {}
   ): Promise<any> {
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
@@ -2502,6 +2514,7 @@ export function createStaticHandler(
       location,
       matches,
       requestContext,
+      middlewareContext,
       match
     );
     if (isResponse(result)) {
@@ -2538,6 +2551,7 @@ export function createStaticHandler(
     location: Location,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
+    middlewareContext?: MiddlewareContext,
     routeMatch?: AgnosticDataRouteMatch
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
@@ -2552,6 +2566,7 @@ export function createStaticHandler(
           matches,
           routeMatch || getTargetMatch(matches, location),
           requestContext,
+          middlewareContext,
           routeMatch != null
         );
         return result;
@@ -2561,6 +2576,7 @@ export function createStaticHandler(
         request,
         matches,
         requestContext,
+        middlewareContext,
         routeMatch
       );
       return isResponse(result)
@@ -2594,6 +2610,7 @@ export function createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     requestContext: unknown,
+    middlewareContext: MiddlewareContext | undefined,
     isRouteRequest: boolean
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
@@ -2621,7 +2638,8 @@ export function createStaticHandler(
         future.unstable_middleware,
         true,
         isRouteRequest,
-        requestContext
+        requestContext,
+        middlewareContext
       );
 
       if (request.signal.aborted) {
@@ -2683,6 +2701,7 @@ export function createStaticHandler(
         request,
         matches,
         requestContext,
+        middlewareContext,
         undefined,
         {
           [boundaryMatch.route.id]: result.error,
@@ -2708,7 +2727,12 @@ export function createStaticHandler(
       redirect: request.redirect,
       signal: request.signal,
     });
-    let context = await loadRouteData(loaderRequest, matches, requestContext);
+    let context = await loadRouteData(
+      loaderRequest,
+      matches,
+      requestContext,
+      middlewareContext
+    );
 
     return {
       ...context,
@@ -2727,6 +2751,7 @@ export function createStaticHandler(
     request: Request,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
+    middlewareContext: MiddlewareContext | undefined,
     routeMatch?: AgnosticDataRouteMatch,
     pendingActionError?: RouteData
   ): Promise<
@@ -2782,7 +2807,8 @@ export function createStaticHandler(
           future.unstable_middleware,
           true,
           isRouteRequest,
-          requestContext
+          requestContext,
+          middlewareContext
         )
       ),
     ]);
@@ -3081,51 +3107,10 @@ function shouldRevalidateLoader(
   return arg.defaultShouldRevalidate;
 }
 
-async function callRoutePipeline(
-  request: Request,
-  matches: AgnosticDataRouteMatch[],
-  requestContext: unknown,
-  handler:
-    | LoaderFunction
-    | ActionFunction
-    | LoaderFunctionWithMiddleware
-    | ActionFunctionWithMiddleware
-) {
-  // Avoid memory leaks since we don't control the key
-  let store = new WeakMap();
-  let middlewareContext: MiddlewareContext = {
-    get<T>(k: MiddlewareContextInstance<T>) {
-      if (store.has(k)) {
-        return store.get(k) as T;
-      }
-      return k.getDefaultValue();
-    },
-    set<T>(k: MiddlewareContextInstance<T>, v: T) {
-      if (typeof v === "undefined") {
-        throw new Error(
-          "You cannot set an undefined value in the middleware context"
-        );
-      }
-      store.set(k, v);
-    },
-    next: () => {},
-  };
-
-  return callRouteSubPipeline(
-    request,
-    matches,
-    matches[0].params,
-    requestContext,
-    middlewareContext,
-    handler
-  );
-}
-
 async function callRouteSubPipeline(
   request: Request,
   matches: AgnosticDataRouteMatch[],
   params: Params<string>,
-  requestContext: unknown,
   middlewareContext: MiddlewareContext,
   handler:
     | LoaderFunction
@@ -3149,7 +3134,6 @@ async function callRouteSubPipeline(
       request,
       params,
       context: middlewareContext,
-      requestContext,
     });
   }
 
@@ -3162,7 +3146,6 @@ async function callRouteSubPipeline(
       request,
       matches.slice(1),
       params,
-      requestContext,
       middlewareContext,
       handler
     );
@@ -3177,7 +3160,6 @@ async function callRouteSubPipeline(
     request,
     params,
     context: middlewareContext,
-    requestContext,
   });
 
   if (nextCalled) {
@@ -3209,7 +3191,8 @@ async function callLoaderOrAction(
   enableMiddleware: boolean,
   isStaticRequest: boolean = false,
   isRouteRequest: boolean = false,
-  requestContext?: unknown
+  requestContext?: unknown,
+  middlewareContext?: MiddlewareContext
 ): Promise<DataResult> {
   let resultType;
   let result;
@@ -3229,18 +3212,23 @@ async function callLoaderOrAction(
 
     // Only call the pipeline for the matches up to this specific match
     let idx = matches.findIndex((m) => m.route.id === match.route.id);
-    let dataPromise = enableMiddleware
-      ? callRoutePipeline(
-          request,
-          matches.slice(0, idx + 1),
-          requestContext,
-          handler
-        )
-      : (handler as LoaderFunction | ActionFunction)({
-          request,
-          params: match.params,
-          context: requestContext || disabledMiddlewareContext,
-        });
+    let dataPromise;
+
+    if (enableMiddleware) {
+      dataPromise = callRouteSubPipeline(
+        request,
+        matches.slice(0, idx + 1),
+        matches[0].params,
+        createMiddlewareStore(middlewareContext),
+        handler
+      );
+    } else {
+      dataPromise = (handler as LoaderFunction | ActionFunction)({
+        request,
+        params: match.params,
+        context: requestContext || disabledMiddlewareContext,
+      });
+    }
 
     result = await Promise.race([dataPromise, abortPromise]);
 
