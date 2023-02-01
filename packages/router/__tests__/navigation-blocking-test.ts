@@ -14,6 +14,16 @@ const routes = [
 
 describe("navigation blocking", () => {
   let router: Router;
+  let warnSpy;
+
+  beforeEach(() => {
+    warnSpy = jest.spyOn(console, "warn");
+  });
+
+  afterEach(() => {
+    warnSpy.mockReset();
+  });
+
   it("initializes an 'unblocked' blocker", () => {
     router = createRouter({
       history: createMemoryHistory({

@@ -40,6 +40,7 @@ import type {
 } from "../utils";
 import {
   AbortedDeferredError,
+  createMiddlewareStore,
   isRouteErrorResponse,
   stripBasename,
 } from "../utils";
@@ -12234,7 +12235,7 @@ describe("a router", () => {
         await currentRouter.navigate("/parent?get");
         expect(currentRouter.state.errors).toMatchInlineSnapshot(`
           {
-            "parent": [Error: Middleware not enabled (\`future.unstable_middleware\`)],
+            "parent": [Error: Middleware must be enabled via the \`future.unstable_middleware\` flag)],
           }
         `);
 
@@ -12242,7 +12243,7 @@ describe("a router", () => {
         await currentRouter.navigate("/parent?set");
         expect(currentRouter.state.errors).toMatchInlineSnapshot(`
           {
-            "parent": [Error: Middleware not enabled (\`future.unstable_middleware\`)],
+            "parent": [Error: Middleware must be enabled via the \`future.unstable_middleware\` flag)],
           }
         `);
 
@@ -12250,7 +12251,7 @@ describe("a router", () => {
         await currentRouter.navigate("/parent?next");
         expect(currentRouter.state.errors).toMatchInlineSnapshot(`
           {
-            "parent": [Error: Middleware not enabled (\`future.unstable_middleware\`)],
+            "parent": [Error: Middleware must be enabled via the \`future.unstable_middleware\` flag)],
           }
         `);
       });
@@ -12380,6 +12381,70 @@ describe("a router", () => {
           state: "idle",
           data: 103,
         });
+      });
+
+      it("passes context into staticHandler.query", async () => {
+        let { query } = createStaticHandler(MIDDLEWARE_CONTEXT_ROUTES, {
+          future: { unstable_middleware: true },
+        });
+
+        let ctx = await query(createRequest("/parent/child/grandchild"));
+
+        if (ctx instanceof Response) {
+          throw new Error("Unexpected Response");
+        }
+
+        expect(ctx.location.pathname).toBe("/parent/child/grandchild");
+        expect(ctx.loaderData).toEqual({
+          parent: 1,
+          child: 2,
+          grandchild: 3,
+        });
+      });
+
+      it("passes context into staticHandler.queryRoute", async () => {
+        let { queryRoute } = createStaticHandler(MIDDLEWARE_CONTEXT_ROUTES, {
+          future: { unstable_middleware: true },
+        });
+
+        let res = await queryRoute(createRequest("/parent/child/grandchild"));
+        expect(res).toBe(3);
+      });
+
+      it("prefills context in staticHandler.query", async () => {
+        let { query } = createStaticHandler(MIDDLEWARE_CONTEXT_ROUTES, {
+          future: { unstable_middleware: true },
+        });
+
+        let middlewareContext = createMiddlewareStore();
+        middlewareContext.set(loaderCountContext, 50);
+        let ctx = await query(createRequest("/parent/child/grandchild"), {
+          middlewareContext,
+        });
+
+        if (ctx instanceof Response) {
+          throw new Error("Unexpected Response");
+        }
+
+        expect(ctx.location.pathname).toBe("/parent/child/grandchild");
+        expect(ctx.loaderData).toEqual({
+          parent: 51,
+          child: 52,
+          grandchild: 53,
+        });
+      });
+
+      it("prefills context in staticHandler.queryRoute", async () => {
+        let { queryRoute } = createStaticHandler(MIDDLEWARE_CONTEXT_ROUTES, {
+          future: { unstable_middleware: true },
+        });
+
+        let middlewareContext = createMiddlewareStore();
+        middlewareContext.set(loaderCountContext, 50);
+        let res = await queryRoute(createRequest("/parent/child/grandchild"), {
+          middlewareContext,
+        });
+        expect(res).toBe(53);
       });
 
       it("throws if no value is available via context.get()", async () => {

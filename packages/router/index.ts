@@ -89,4 +89,5 @@ export {
   DeferredData as UNSAFE_DeferredData,
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
   getPathContributingMatches as UNSAFE_getPathContributingMatches,
+  createMiddlewareStore as UNSAFE_createMiddlewareStore,
 } from "./utils";
