@@ -1,7 +1,5 @@
 /** @type {import('@remix-run/dev').AppConfig} */
 module.exports = {
-  serverBuildTarget: "deno",
-  server: "./server.ts",
   /*
   If live reload causes page to re-render without changes (live reload is too fast),
   increase the dev server broadcast delay.
@@ -10,6 +8,12 @@ module.exports = {
   */
   devServerBroadcastDelay: 300,
   ignoredRouteFiles: ["**/.*"],
+  server: "./server.ts",
+  serverConditions: ["deno", "worker"],
+  serverDependenciesToBundle: "all",
+  serverMainFields: ["module", "main"],
+  serverModuleFormat: "esm",
+  serverPlatform: "neutral",
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
