@@ -756,10 +756,6 @@ export function createRouter(init: RouterInit): Router {
   // cancel active deferreds for eliminated routes.
   let activeDeferreds = new Map<string, DeferredData>();
 
-  // We ony support a single active blocker at the moment since we don't have
-  // any compelling use cases for multi-blocker yet
-  let activeBlocker: string | null = null;
-
   // Store blocker functions in a separate Map outside of router state since
   // we don't need to update UI state if they change
   let blockerFunctions = new Map<string, BlockerFunction>();
@@ -784,7 +780,7 @@ export function createRouter(init: RouterInit): Router {
         }
 
         warning(
-          activeBlocker != null && delta === null,
+          blockerFunctions.size === 0 || delta != null,
           "You are trying to use a blocker on a POP navigation to a location " +
             "that was not created by @remix-run/router. This will fail silently in " +
             "production. This can happen if you are navigating outside the router " +
@@ -2129,12 +2125,6 @@ export function createRouter(init: RouterInit): Router {
 
     if (blockerFunctions.get(key) !== fn) {
       blockerFunctions.set(key, fn);
-      if (activeBlocker == null) {
-        // This is now the active blocker
-        activeBlocker = key;
-      } else if (key !== activeBlocker) {
-        warning(false, "A router only supports one blocker at a time");
-      }
     }
 
     return blocker;
@@ -2143,9 +2133,6 @@ export function createRouter(init: RouterInit): Router {
   function deleteBlocker(key: string) {
     state.blockers.delete(key);
     blockerFunctions.delete(key);
-    if (activeBlocker === key) {
-      activeBlocker = null;
-    }
   }
 
   // Utility function to update blockers, ensuring valid state transitions
@@ -2176,18 +2163,19 @@ export function createRouter(init: RouterInit): Router {
     nextLocation: Location;
     historyAction: HistoryAction;
   }): string | undefined {
-    if (activeBlocker == null) {
+    if (blockerFunctions.size === 0) {
       return;
     }
 
-    // We only allow a single blocker at the moment.  This will need to be
-    // updated if we enhance to support multiple blockers in the future
-    let blockerFunction = blockerFunctions.get(activeBlocker);
-    invariant(
-      blockerFunction,
-      "Could not find a function for the active blocker"
-    );
-    let blocker = state.blockers.get(activeBlocker);
+    // We ony support a single active blocker at the moment since we don't have
+    // any compelling use cases for multi-blocker yet
+    if (blockerFunctions.size > 1) {
+      warning(false, "A router only supports one blocker at a time");
+    }
+
+    let entries = Array.from(blockerFunctions.entries());
+    let [blockerKey, blockerFunction] = entries[entries.length - 1];
+    let blocker = state.blockers.get(blockerKey);
 
     if (blocker && blocker.state === "proceeding") {
       // If the blocker is currently proceeding, we don't need to re-check
@@ -2198,7 +2186,7 @@ export function createRouter(init: RouterInit): Router {
     // At this point, we know we're unblocked/blocked so we need to check the
     // user-provided blocker function
     if (blockerFunction({ currentLocation, nextLocation, historyAction })) {
-      return activeBlocker;
+      return blockerKey;
     }
   }
 
