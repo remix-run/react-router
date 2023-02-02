@@ -1203,6 +1203,11 @@ function useScrollRestoration({
         return;
       }
 
+      // don't reset or try to scroll to a hash if this navigation opted out
+      if (preventScrollReset === true) {
+        return;
+      }
+
       // try to scroll to the hash
       if (location.hash) {
         let el = document.getElementById(location.hash.slice(1));
@@ -1210,11 +1215,6 @@ function useScrollRestoration({
           el.scrollIntoView();
           return;
         }
-      }
-
-      // Don't reset if this navigation opted out
-      if (preventScrollReset === true) {
-        return;
       }
 
       // otherwise go to the top on new locations
