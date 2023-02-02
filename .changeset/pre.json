@@ -8,5 +8,10 @@
     "react-router-native": "6.8.0",
     "@remix-run/router": "1.3.1"
   },
-  "changesets": []
+  "changesets": [
+    "afraid-scissors-rhyme",
+    "healthy-moons-compete",
+    "thirty-frogs-wave",
+    "violet-apes-pay"
+  ]
 }
