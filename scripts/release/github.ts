@@ -3,7 +3,7 @@ import * as semver from "semver";
 
 import {
   PR_FILES_STARTS_WITH,
-  NIGHTLY_BRANCH,
+  RELEASE_BRANCH,
   DEFAULT_BRANCH,
   PACKAGE_VERSION_TO_FOLLOW,
   AWAITING_RELEASE_LABEL,
@@ -54,15 +54,15 @@ export async function prsMergedSinceLastTag({
   let prs: Awaited<ReturnType<typeof getMergedPRsBetweenTags>> = [];
 
   // if both the current and previous tags are prereleases
-  // we can just get the PRs for the "dev" branch
-  // but if one of them is stable, we should wind up all of them from both the main and dev branches
+  // we can just get the PRs for the `release` branch
+  // but if one of them is stable, we should wind up all of them from both the main and `release` branches
   if (currentTag.isPrerelease && previousTag.isPrerelease) {
     prs = await getMergedPRsBetweenTags(
       owner,
       repo,
       previousTag,
       currentTag,
-      NIGHTLY_BRANCH
+      RELEASE_BRANCH
     );
   } else {
     let [nightly, stable] = await Promise.all([
@@ -71,7 +71,7 @@ export async function prsMergedSinceLastTag({
         repo,
         previousTag,
         currentTag,
-        NIGHTLY_BRANCH
+        RELEASE_BRANCH
       ),
       getMergedPRsBetweenTags(
         owner,
