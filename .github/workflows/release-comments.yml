@@ -6,7 +6,10 @@ on:
       ref:
         required: true
         type: string
-      packageVersionToFollow:
+      package_version_to_follow:
+        required: true
+        type: string
+      release_branch:
         required: true
         type: string
 
@@ -38,5 +41,5 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.ref }}
           DEFAULT_BRANCH: "main"
-          NIGHTLY_BRANCH: "dev"
-          PACKAGE_VERSION_TO_FOLLOW: ${{ inputs.packageVersionToFollow }}
+          RELEASE_BRANCH: ${{ inputs.release_branch }}
+          PACKAGE_VERSION_TO_FOLLOW: ${{ inputs.package_version_to_follow }}

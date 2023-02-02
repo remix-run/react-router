@@ -15,7 +15,7 @@ jobs:
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     outputs:
-      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
+      published_packages: ${{ steps.changesets.outputs.published_packages }}
       published: ${{ steps.changesets.outputs.published }}
     steps:
       - name: 🛑 Cancel Previous Runs
@@ -58,13 +58,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN_SO_OTHER_ACTIONS_RUN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  findPackage:
+  find_package_version:
     name: 🦋 Find Package
     needs: [release]
     runs-on: ubuntu-latest
     if: github.repository == 'remix-run/react-router' && needs.release.outputs.published == 'true'
     outputs:
-      package: ${{ steps.findPackage.outputs.package }}
+      package_version: ${{ steps.find_package_version.outputs.package_version }}
     steps:
       - name: 🛑 Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.11.0
@@ -78,19 +78,20 @@ jobs:
           node-version: 16
           cache: "npm"
 
-      - id: findPackage
+      - id: find_package_version
         run: |
-          package=$(node ./scripts/release/find-release-from-changeset.js)
-          echo "package=${package}" >> $GITHUB_OUTPUT
+          package_version=$(node ./scripts/release/find-release-from-changeset.js)
+          echo "package_version=${package_version}" >> $GITHUB_OUTPUT
         env:
-          packageVersionToFollow: "react-router"
-          publishedPackages: ${{ needs.release.outputs.publishedPackages }}
+          package_version_to_follow: "react-router"
+          published_packages: ${{ needs.release.outputs.published_packages }}
 
   comment:
     name: 📝 Comment on related issues and pull requests
-    if: github.repository == 'remix-run/react-router' && needs.findPackage.outputs.package != ''
-    needs: [release, findPackage]
+    if: github.repository == 'remix-run/react-router' && needs.find_package_version.outputs.packageVersion != ''
+    needs: [release, find_package_version]
     uses: ./.github/workflows/release-comments.yml
     with:
-      ref: refs/tags/${{ needs.findPackage.outputs.package }}
-      packageVersionToFollow: "react-router"
+      ref: refs/tags/remix@${{ needs.find_package_version.outputs.packageVersion }}
+      package_version_to_follow: "react-router"
+      release_branch: ${{ github.ref_name }}
