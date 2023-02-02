@@ -27,12 +27,11 @@ function findReleaseFromChangeset(publishedPackages, packageVersionToFollow) {
     );
   }
 
-  let result = `${found.name}@${found.version}`;
-  console.log(result);
-  return result;
+  console.log(found.version);
+  return found.version;
 }
 
 findReleaseFromChangeset(
-  process.env.publishedPackages,
-  process.env.packageVersionToFollow
+  process.env.published_packages,
+  process.env.package_version_to_follow
 );

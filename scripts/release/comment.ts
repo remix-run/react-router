@@ -5,6 +5,7 @@ import {
   PR_FILES_STARTS_WITH,
   IS_STABLE_RELEASE,
   AWAITING_RELEASE_LABEL,
+  DRY_RUN,
 } from "./constants";
 import {
   closeIssue,
@@ -41,19 +42,21 @@ async function commentOnIssuesAndPrsAboutRelease() {
   for (let pr of merged) {
     console.log(`commenting on pr ${getGitHubUrl("pull", pr.number)}`);
 
-    promises.push(
-      commentOnPullRequest({
-        owner: OWNER,
-        repo: REPO,
-        pr: pr.number,
-        version: VERSION,
-      })
-    );
+    if (!DRY_RUN) {
+      promises.push(
+        commentOnPullRequest({
+          owner: OWNER,
+          repo: REPO,
+          pr: pr.number,
+          version: VERSION,
+        })
+      );
+    }
 
     let prLabels = pr.labels.map((label) => label.name);
     let prIsAwaitingRelease = prLabels.includes(AWAITING_RELEASE_LABEL);
 
-    if (IS_STABLE_RELEASE && prIsAwaitingRelease) {
+    if (IS_STABLE_RELEASE && prIsAwaitingRelease && !DRY_RUN) {
       promises.push(
         removeLabel({ owner: OWNER, repo: REPO, issue: pr.number })
       );
@@ -75,20 +78,24 @@ async function commentOnIssuesAndPrsAboutRelease() {
       let issueUrl = getGitHubUrl("issue", issue.number);
       console.log(`commenting on issue ${issueUrl}`);
 
-      promises.push(
-        commentOnIssue({
-          owner: OWNER,
-          repo: REPO,
-          issue: issue.number,
-          version: VERSION,
-        })
-      );
+      if (!DRY_RUN) {
+        promises.push(
+          commentOnIssue({
+            owner: OWNER,
+            repo: REPO,
+            issue: issue.number,
+            version: VERSION,
+          })
+        );
+      }
 
       if (IS_STABLE_RELEASE) {
         console.log(`closing issue ${issueUrl}`);
-        promises.push(
-          closeIssue({ owner: OWNER, repo: REPO, issue: issue.number })
-        );
+        if (!DRY_RUN) {
+          promises.push(
+            closeIssue({ owner: OWNER, repo: REPO, issue: issue.number })
+          );
+        }
       }
     }
   }
