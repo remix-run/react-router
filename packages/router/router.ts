@@ -621,6 +621,8 @@ export const IDLE_BLOCKER: BlockerUnblocked = {
   location: undefined,
 };
 
+const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+
 const isBrowser =
   typeof window !== "undefined" &&
   typeof window.document !== "undefined" &&
@@ -1915,8 +1917,12 @@ export function createRouter(init: RouterInit): Router {
       "Expected a location on the redirect navigation"
     );
 
-    // Check if this an external redirect that goes to a new origin
-    if (isBrowser && typeof window?.location !== "undefined") {
+    // Check if this an absolute external redirect that goes to a new origin
+    if (
+      ABSOLUTE_URL_REGEX.test(redirect.location) &&
+      isBrowser &&
+      typeof window?.location !== "undefined"
+    ) {
       let newOrigin = init.history.createURL(redirect.location).origin;
       if (window.location.origin !== newOrigin) {
         if (replace) {
@@ -3093,10 +3099,8 @@ async function callLoaderOrAction(
         "Redirects returned/thrown from loaders/actions must have a Location header"
       );
 
-      let isAbsolute = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(location);
-
       // Support relative routing in internal redirects
-      if (!isAbsolute) {
+      if (!ABSOLUTE_URL_REGEX.test(location)) {
         let activeMatches = matches.slice(0, matches.indexOf(match) + 1);
         let routePathnames = getPathContributingMatches(activeMatches).map(
           (match) => match.pathnameBase
