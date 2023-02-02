@@ -151,6 +151,11 @@ type AgnosticBaseRouteObject = {
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
+  lazy?: () => Promise<{
+    loader?: AgnosticBaseRouteObject["loader"];
+    action?: AgnosticBaseRouteObject["action"];
+    shouldRevalidate?: AgnosticBaseRouteObject["shouldRevalidate"];
+  }>;
 };
 
 /**
@@ -192,6 +197,8 @@ export type AgnosticDataNonIndexRouteObject = AgnosticNonIndexRouteObject & {
 export type AgnosticDataRouteObject =
   | AgnosticDataIndexRouteObject
   | AgnosticDataNonIndexRouteObject;
+
+export type RouteManifest = Record<string, AgnosticDataRouteObject | undefined>;
 
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
@@ -278,7 +285,7 @@ function isIndexRoute(
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
   parentPath: number[] = [],
-  allIds: Set<string> = new Set<string>()
+  manifest: RouteManifest = {}
 ): AgnosticDataRouteObject[] {
   return routes.map((route, index) => {
     let treePath = [...parentPath, index];
@@ -288,23 +295,31 @@ export function convertRoutesToDataRoutes(
       `Cannot specify children on an index route`
     );
     invariant(
-      !allIds.has(id),
+      !manifest[id],
       `Found a route id collision on id "${id}".  Route ` +
         "id's must be globally unique within Data Router usages"
     );
-    allIds.add(id);
 
     if (isIndexRoute(route)) {
       let indexRoute: AgnosticDataIndexRouteObject = { ...route, id };
+      manifest[id] = indexRoute;
       return indexRoute;
     } else {
       let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
         ...route,
         id,
-        children: route.children
-          ? convertRoutesToDataRoutes(route.children, treePath, allIds)
-          : undefined,
+        children: undefined,
       };
+      manifest[id] = pathOrLayoutRoute;
+
+      if (route.children) {
+        pathOrLayoutRoute.children = convertRoutesToDataRoutes(
+          route.children,
+          treePath,
+          manifest
+        );
+      }
+
       return pathOrLayoutRoute;
     }
   });

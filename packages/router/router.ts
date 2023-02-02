@@ -22,6 +22,7 @@ import type {
   AgnosticRouteMatch,
   MutationFormMethod,
   ShouldRevalidateFunction,
+  RouteManifest,
 } from "./utils";
 import {
   DeferredData,
@@ -641,7 +642,10 @@ export function createRouter(init: RouterInit): Router {
     "You must provide a non-empty routes array to createRouter"
   );
 
-  let dataRoutes = convertRoutesToDataRoutes(init.routes);
+  // Routes keyed by ID
+  let manifest: RouteManifest = {};
+  // Routes in tree format for matching
+  let dataRoutes = convertRoutesToDataRoutes(init.routes, undefined, manifest);
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
@@ -1426,6 +1430,11 @@ export function createRouter(init: RouterInit): Router {
       fetchControllers.set(rf.key, pendingNavigationController!)
     );
 
+    let lazyMatches = matchesToLoad.filter((m) => m.route.lazy);
+    if (lazyMatches.length > 0) {
+      await loadLazyRouteModules(request, lazyMatches);
+    }
+
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
         state.matches,
@@ -1979,6 +1988,41 @@ export function createRouter(init: RouterInit): Router {
         preventScrollReset: pendingPreventScrollReset,
       });
     }
+  }
+
+  /**
+   * Execute route.lazy() methods to lazily load route modules (loader, action,
+   * shouldRevalidate) and update the routeManifest in place which shares objects
+   * with dataRoutes so those get updated as well.
+   */
+  async function loadLazyRouteModules(
+    request: Request,
+    lazyMatches: AgnosticDataRouteMatch[]
+  ) {
+    await Promise.all(
+      lazyMatches.map(async (match) => {
+        let mod = await match.route.lazy!();
+        if (request.signal.aborted) {
+          return;
+        }
+
+        let routeToUpdate = manifest[match.route.id];
+        invariant(routeToUpdate, "No route found in manifest");
+
+        routeToUpdate.lazy = undefined;
+
+        routeToUpdate.loader =
+          routeToUpdate.loader || mod.loader || (() => null);
+
+        routeToUpdate.action =
+          routeToUpdate.action || mod.action || (() => null);
+
+        routeToUpdate.shouldRevalidate =
+          routeToUpdate.shouldRevalidate ||
+          mod.shouldRevalidate ||
+          (({ defaultShouldRevalidate }) => defaultShouldRevalidate);
+      })
+    );
   }
 
   async function callLoadersAndMaybeResolveData(
@@ -2923,6 +2967,10 @@ function getMatchesToLoad(
   let boundaryMatches = getLoaderMatchesUntilBoundary(matches, boundaryId);
 
   let navigationMatches = boundaryMatches.filter((match, index) => {
+    if (typeof match.route.lazy === "function") {
+      // We haven't loaded this route yet so we don't know if it's got a loader!
+      return true;
+    }
     if (match.route.loader == null) {
       return false;
     }

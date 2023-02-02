@@ -11448,6 +11448,43 @@ describe("a router", () => {
     });
   });
 
+  describe("lazily loaded route modules", () => {
+    it("fetches lazy route modules on navigation", async () => {
+      let router = createRouter({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "lazy",
+            path: "/lazy",
+            lazy: async () => {
+              await new Promise((r) => setTimeout(r, 100));
+              return {
+                async loader() {
+                  await new Promise((r) => setTimeout(r, 100));
+                  return "LAZY";
+                },
+              };
+            },
+          },
+        ],
+        history: createMemoryHistory(),
+      }).initialize();
+
+      router.navigate("/lazy");
+      expect(router.state.location.pathname).toBe("/");
+      expect(router.state.navigation.state).toBe("loading");
+      await new Promise((r) => setTimeout(r, 250));
+      expect(router.state.location.pathname).toBe("/lazy");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.loaderData).toEqual({
+        lazy: "LAZY",
+      });
+      router.dispose();
+    });
+  });
+
   describe("ssr", () => {
     const SSR_ROUTES = [
       {
