@@ -4,6 +4,7 @@ import type {
   LoaderFunctionArgs,
 } from "@remix-run/router";
 
+import type { AppLoadContext } from "./data";
 import { callRouteActionRR, callRouteLoaderRR } from "./data";
 import type { FutureConfig } from "./entry";
 import type { ServerRouteModule } from "./routeModules";
@@ -39,16 +40,34 @@ export interface ServerRoute extends Route {
   module: ServerRouteModule;
 }
 
+function groupRoutesByParentId(manifest: ServerRouteManifest) {
+  let routes: Record<string, Omit<ServerRoute, "children">[]> = {};
+
+  Object.values(manifest).forEach((route) => {
+    let parentId = route.parentId || "";
+    if (!routes[parentId]) {
+      routes[parentId] = [];
+    }
+    routes[parentId].push(route);
+  });
+
+  return routes;
+}
+
+// Create a map of routes by parentId to use recursively instead of
+// repeatedly filtering the manifest.
 export function createRoutes(
   manifest: ServerRouteManifest,
-  parentId?: string
+  parentId: string = "",
+  routesByParentId: Record<
+    string,
+    Omit<ServerRoute, "children">[]
+  > = groupRoutesByParentId(manifest)
 ): ServerRoute[] {
-  return Object.entries(manifest)
-    .filter(([, route]) => route.parentId === parentId)
-    .map(([id, route]) => ({
-      ...route,
-      children: createRoutes(manifest, id),
-    }));
+  return (routesByParentId[parentId] || []).map((route) => ({
+    ...route,
+    children: createRoutes(manifest, route.id, routesByParentId),
+  }));
 }
 
 // Convert the Remix ServerManifest into DataRouteObject's for use with
@@ -56,54 +75,61 @@ export function createRoutes(
 export function createStaticHandlerDataRoutes(
   manifest: ServerRouteManifest,
   future: FutureConfig,
-  parentId?: string
+  parentId: string = "",
+  routesByParentId: Record<
+    string,
+    Omit<ServerRoute, "children">[]
+  > = groupRoutesByParentId(manifest)
 ): AgnosticDataRouteObject[] {
-  return Object.values(manifest)
-    .filter((route) => route.parentId === parentId)
-    .map((route) => {
-      let hasErrorBoundary =
-        future.v2_errorBoundary === true
-          ? route.id === "root" || route.module.ErrorBoundary != null
-          : route.id === "root" ||
-            route.module.CatchBoundary != null ||
-            route.module.ErrorBoundary != null;
-      let commonRoute = {
-        // Always include root due to default boundaries
-        hasErrorBoundary,
-        id: route.id,
-        path: route.path,
-        loader: route.module.loader
-          ? (args: LoaderFunctionArgs) =>
-              callRouteLoaderRR({
-                request: args.request,
-                params: args.params,
-                loadContext: args.context,
-                loader: route.module.loader!,
-                routeId: route.id,
-              })
-          : undefined,
-        action: route.module.action
-          ? (args: ActionFunctionArgs) =>
-              callRouteActionRR({
-                request: args.request,
-                params: args.params,
-                loadContext: args.context,
-                action: route.module.action!,
-                routeId: route.id,
-              })
-          : undefined,
-        handle: route.module.handle,
-      };
+  return (routesByParentId[parentId] || []).map((route) => {
+    let hasErrorBoundary =
+      future.v2_errorBoundary === true
+        ? route.id === "root" || route.module.ErrorBoundary != null
+        : route.id === "root" ||
+          route.module.CatchBoundary != null ||
+          route.module.ErrorBoundary != null;
+    let commonRoute = {
+      // Always include root due to default boundaries
+      hasErrorBoundary,
+      id: route.id,
+      path: route.path,
+      loader: route.module.loader
+        ? (args: LoaderFunctionArgs) =>
+            callRouteLoaderRR({
+              request: args.request,
+              params: args.params,
+              loadContext: args.context,
+              loader: route.module.loader!,
+              routeId: route.id,
+            })
+        : undefined,
+      action: route.module.action
+        ? (args: ActionFunctionArgs) =>
+            callRouteActionRR({
+              request: args.request,
+              params: args.params,
+              loadContext: args.context,
+              action: route.module.action!,
+              routeId: route.id,
+            })
+        : undefined,
+      handle: route.module.handle,
+    };
 
-      return route.index
-        ? {
-            index: true,
-            ...commonRoute,
-          }
-        : {
-            caseSensitive: route.caseSensitive,
-            children: createStaticHandlerDataRoutes(manifest, future, route.id),
-            ...commonRoute,
-          };
-    });
+    return route.index
+      ? {
+          index: true,
+          ...commonRoute,
+        }
+      : {
+          caseSensitive: route.caseSensitive,
+          children: createStaticHandlerDataRoutes(
+            manifest,
+            future,
+            route.id,
+            routesByParentId
+          ),
+          ...commonRoute,
+        };
+  });
 }
