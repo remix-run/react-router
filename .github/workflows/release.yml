@@ -15,7 +15,7 @@ jobs:
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     outputs:
-      published_packages: ${{ steps.changesets.outputs.published_packages }}
+      published_packages: ${{ steps.changesets.outputs.publishedPackages }}
       published: ${{ steps.changesets.outputs.published }}
     steps:
       - name: 🛑 Cancel Previous Runs
@@ -83,8 +83,8 @@ jobs:
           package_version=$(node ./scripts/release/find-release-from-changeset.js)
           echo "package_version=${package_version}" >> $GITHUB_OUTPUT
         env:
-          package_version_to_follow: "react-router"
-          published_packages: ${{ needs.release.outputs.published_packages }}
+          PACKAGE_VERSION_TO_FOLLOW: "react-router"
+          PUBLISHED_PACKAGES: ${{ needs.release.outputs.published_packages }}
 
   comment:
     name: 📝 Comment on related issues and pull requests
@@ -92,6 +92,6 @@ jobs:
     needs: [release, find_package_version]
     uses: ./.github/workflows/release-comments.yml
     with:
-      ref: refs/tags/remix@${{ needs.find_package_version.outputs.packageVersion }}
+      ref: refs/tags/react-router@${{ needs.find_package_version.outputs.packageVersion }}
       package_version_to_follow: "react-router"
       release_branch: ${{ github.ref_name }}
