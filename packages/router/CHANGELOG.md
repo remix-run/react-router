@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Remove inaccurate console warning for POP navigations ([`f6b5dae2`](https://github.com/remix-run/react-router/commit/f6b5dae287f989846c675ff3921220628af19b86))
+- Remove inaccurate console warning for POP navigations ([#10030](https://github.com/remix-run/react-router/pull/10030))
 - Only check for differing origin on absolute URL redirects ([#10033](https://github.com/remix-run/react-router/pull/10033))
 
 ## 1.3.1

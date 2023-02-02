@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Remove inaccurate console warning for POP navigations ([`f6b5dae2`](https://github.com/remix-run/react-router/commit/f6b5dae287f989846c675ff3921220628af19b86))
+- Remove inaccurate console warning for POP navigations ([#10030](https://github.com/remix-run/react-router/pull/10030))
 - Updated dependencies:
   - `@remix-run/router@1.3.2-pre.0`
 
