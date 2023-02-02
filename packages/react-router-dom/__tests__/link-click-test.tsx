@@ -96,7 +96,7 @@ describe("A <Link> click", () => {
     expect(h1?.textContent).toEqual("About");
   });
 
-  describe("when ab external absolute URL is specified", () => {
+  describe("when an external absolute URL is specified", () => {
     it("does not prevent default", () => {
       function Home() {
         return (
