@@ -834,7 +834,7 @@ function compilePath(
   return [matcher, paramNames];
 }
 
-function safelyDecodeURI(value: string) {
+export function safelyDecodeURI(value: string) {
   try {
     return decodeURI(value);
   } catch (error) {

@@ -195,3 +195,32 @@ exports[`route matching using a route config object renders the right elements a
   Not Found
 </p>
 `;
+
+exports[`route matching using nested <Routes> with <Route> elements renders the right elements at /route%20with%20space 1`] = `
+<div>
+  <h1>
+    Splat route
+  </h1>
+  <div>
+    <h1>
+      Route with space
+    </h1>
+  </div>
+</div>
+`;
+
+exports[`route matching using nested <Routes> with <Route> elements renders the right elements at /route%20with%20space/nested 1`] = `
+<div>
+  <h1>
+    Splat route
+  </h1>
+  <div>
+    <h1>
+      Route with space
+    </h1>
+    <p>
+      Nested route with space
+    </p>
+  </div>
+</div>
+`;

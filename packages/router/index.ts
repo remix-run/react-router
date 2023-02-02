@@ -26,8 +26,8 @@ export type {
 
 export {
   AbortedDeferredError,
-  ErrorResponse,
   defer,
+  ErrorResponse,
   generatePath,
   getToPathname,
   isRouteErrorResponse,
@@ -39,6 +39,7 @@ export {
   redirect,
   resolvePath,
   resolveTo,
+  safelyDecodeURI,
   stripBasename,
   warning,
 } from "./utils";

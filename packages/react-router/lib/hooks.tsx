@@ -20,8 +20,9 @@ import {
   matchRoutes,
   parsePath,
   resolveTo,
-  warning,
+  safelyDecodeURI,
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
+  warning,
 } from "@remix-run/router";
 
 import type {
@@ -380,7 +381,7 @@ export function useRoutes(
   let remainingPathname =
     parentPathnameBase === "/"
       ? pathname
-      : pathname.slice(parentPathnameBase.length) || "/";
+      : safelyDecodeURI(pathname).slice(parentPathnameBase.length) || "/";
 
   let matches = matchRoutes(routes, { pathname: remainingPathname });
 

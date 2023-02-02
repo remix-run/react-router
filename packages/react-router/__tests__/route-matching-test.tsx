@@ -11,8 +11,11 @@ import {
 } from "react-router";
 
 describe("route matching", () => {
-  function describeRouteMatching(routes: React.ReactNode) {
-    let testPaths = [
+  function describeRouteMatching(
+    routes: React.ReactNode,
+    testPaths?: string[]
+  ) {
+    let defaultTestPaths = [
       "/courses",
       "/courses/routing",
       "/courses/routing/grades",
@@ -24,7 +27,7 @@ describe("route matching", () => {
       "/not-found",
     ];
 
-    testPaths.forEach((path) => {
+    (testPaths || defaultTestPaths).forEach((path) => {
       it(`renders the right elements at ${path}`, () => {
         let renderer: TestRenderer.ReactTestRenderer;
         TestRenderer.act(() => {
@@ -97,6 +100,47 @@ describe("route matching", () => {
 
     describeRouteMatching(routes);
   });
+
+  describe("using nested <Routes> with <Route> elements", () => {
+    let routes = (
+      <Routes>
+        <Route path="*" element={<SplatRoute />} />
+      </Routes>
+    );
+
+    const testPaths = [
+      encodeURI("/route with space"),
+      encodeURI("/route with space/nested"),
+    ];
+
+    describeRouteMatching(routes, testPaths);
+  });
+
+  function SplatRoute() {
+    return (
+      <div>
+        <h1>Splat route</h1>
+        <Routes>
+          <Route path="/route with space/*" element={<RouteWithSpace />} />
+        </Routes>
+      </div>
+    );
+  }
+
+  function RouteWithSpace() {
+    return (
+      <div>
+        <h1>Route with space</h1>
+        <Routes>
+          <Route path="nested" element={<NestedRouteWithSpace />} />
+        </Routes>
+      </div>
+    );
+  }
+
+  function NestedRouteWithSpace() {
+    return <p>Nested route with space</p>;
+  }
 
   function Courses() {
     return (
