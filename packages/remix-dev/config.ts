@@ -77,23 +77,6 @@ export interface AppConfig {
   ) => Promise<ReturnType<DefineRoutesFunction>>;
 
   /**
-   * The path to the server build, relative to `remix.config.js`. Defaults to
-   * "build".
-   *
-   * @deprecated Use {@link ServerConfig.serverBuildPath} instead.
-   */
-  serverBuildDirectory?: string;
-
-  /**
-   * The path to the server build file, relative to `remix.config.js`. This file
-   * should end in a `.js` extension and should be deployed to your server.
-   *
-   * If omitted, the default build path will be based on your
-   * {@link ServerConfig.serverBuildTarget}.
-   */
-  serverBuildPath?: string;
-
-  /**
    * The path to the browser build, relative to `remix.config.js`. Defaults to
    * "public/build".
    */
@@ -103,7 +86,7 @@ export interface AppConfig {
    * The path to the browser build, relative to remix.config.js. Defaults to
    * "public/build".
    *
-   * @deprecated Use `{@link ServerConfig.assetsBuildDirectory}` instead
+   * @deprecated Use `{@link AppConfig.assetsBuildDirectory}` instead
    */
   browserBuildDirectory?: string;
 
@@ -130,25 +113,6 @@ export interface AppConfig {
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 
   /**
-   * The output format of the server build. Defaults to "cjs".
-   *
-   * @deprecated Use {@link ServerConfig.serverBuildTarget} instead.
-   */
-  serverModuleFormat?: ServerModuleFormat;
-
-  /**
-   * The platform the server build is targeting. Defaults to "node".
-   *
-   * @deprecated Use {@link ServerConfig.serverBuildTarget} instead.
-   */
-  serverPlatform?: ServerPlatform;
-
-  /**
-   * The target of the server build. Defaults to "node-cjs".
-   */
-  serverBuildTarget?: ServerBuildTarget;
-
-  /**
    * A server entrypoint, relative to the root directory that becomes your
    * server's main module. If specified, Remix will compile this file along with
    * your application into a single file to be deployed to your server. This
@@ -157,18 +121,71 @@ export interface AppConfig {
   server?: string;
 
   /**
-   * A list of filenames or a glob patterns to match files in the `app/routes`
-   * directory that Remix will ignore. Matching files will not be recognized as
-   * routes.
+   * The path to the server build, relative to `remix.config.js`. Defaults to
+   * "build".
+   *
+   * @deprecated Use {@link AppConfig.serverBuildPath} instead.
    */
-  ignoredRouteFiles?: string[];
+  serverBuildDirectory?: string;
+
+  /**
+   * The path to the server build file, relative to `remix.config.js`. This file
+   * should end in a `.js` extension and should be deployed to your server.
+   */
+  serverBuildPath?: string;
+
+  /**
+   * The target of the server build. Defaults to "node-cjs".
+   *
+   * @deprecated Use a combination of `{@link AppConfig.publicPath}`, `{@link AppConfig.serverBuildPath}`, `{@link AppConfig.serverConditions}`, `{@link AppConfig.serverDependenciesToBundle}`, `{@link AppConfig.serverMainFields}`, `{@link AppConfig.serverMinify}`, `{@link AppConfig.serverModuleFormat}` and/or `{@link AppConfig.serverPlatform}` instead.
+   */
+  serverBuildTarget?: ServerBuildTarget;
+
+  /**
+   * The order of conditions to use when resolving server dependencies'
+   * `exports` field in `package.json`.
+   *
+   * For more information, see: https://esbuild.github.io/api/#conditions
+   */
+  serverConditions?: string[];
 
   /**
    * A list of patterns that determined if a module is transpiled and included
    * in the server bundle. This can be useful when consuming ESM only packages
    * in a CJS build.
    */
-  serverDependenciesToBundle?: Array<string | RegExp>;
+  serverDependenciesToBundle?: "all" | Array<string | RegExp>;
+
+  /**
+   * The order of main fields to use when resolving server dependencies.
+   * Defaults to `["main", "module"]`.
+   *
+   * For more information, see: https://esbuild.github.io/api/#main-fields
+   */
+  serverMainFields?: string[];
+
+  /**
+   * Whether to minify the server build in production or not.
+   * Defaults to `false`.
+   */
+  serverMinify?: boolean;
+
+  /**
+   * The output format of the server build. Defaults to "cjs".
+   */
+  serverModuleFormat?: ServerModuleFormat;
+
+  /**
+   * The platform the server build is targeting. Defaults to "node".
+   */
+  serverPlatform?: ServerPlatform;
+
+  /**
+   * A list of filenames or a glob patterns to match files in the `app/routes`
+   * directory that Remix will ignore. Matching files will not be recognized as
+   * routes.
+   */
+  ignoredRouteFiles?: string[];
 
   /**
    * A function for defining custom directories to watch while running `remix dev`, in addition to `appDirectory`.
@@ -216,12 +233,6 @@ export interface RemixConfig {
   routes: RouteManifest;
 
   /**
-   * The path to the server build file. This file should end in a `.js`. Defaults
-   * are based on {@link ServerConfig.serverBuildTarget}.
-   */
-  serverBuildPath: string;
-
-  /**
    * The absolute path to the assets build directory.
    */
   assetsBuildDirectory: string;
@@ -235,11 +246,6 @@ export interface RemixConfig {
    * The URL prefix of the public build with a trailing slash.
    */
   publicPath: string;
-
-  /**
-   * The mode to use to run the server.
-   */
-  serverMode: ServerMode;
 
   /**
    * The port number to use for the dev (asset) server.
@@ -257,6 +263,63 @@ export interface RemixConfig {
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 
   /**
+   * The path to the server build file. This file should end in a `.js`.
+   */
+  serverBuildPath: string;
+
+  /**
+   * The target of the server build. Defaults to "node-cjs".
+   *
+   * @deprecated Use a combination of `{@link AppConfig.publicPath}`, `{@link AppConfig.serverBuildPath}`, `{@link AppConfig.serverConditions}`, `{@link AppConfig.serverDependenciesToBundle}`, `{@link AppConfig.serverMainFields}`, `{@link AppConfig.serverMinify}`, `{@link AppConfig.serverModuleFormat}` and/or `{@link AppConfig.serverPlatform}` instead.   */
+  serverBuildTarget?: ServerBuildTarget;
+
+  /**
+   * The default entry module for the server build if a {@see AppConfig.server}
+   * is not provided.
+   */
+  serverBuildTargetEntryModule: string;
+
+  /**
+   * The order of conditions to use when resolving server dependencies'
+   * `exports` field in `package.json`.
+   *
+   * For more information, see: https://esbuild.github.io/api/#conditions
+   */
+  serverConditions?: string[];
+
+  /**
+   * A list of patterns that determined if a module is transpiled and included
+   * in the server bundle. This can be useful when consuming ESM only packages
+   * in a CJS build.
+   */
+  serverDependenciesToBundle: "all" | Array<string | RegExp>;
+
+  /**
+   * A server entrypoint relative to the root directory that becomes your
+   * server's main module.
+   */
+  serverEntryPoint?: string;
+
+  /**
+   * The order of main fields to use when resolving server dependencies.
+   * Defaults to `["main", "module"]`.
+   *
+   * For more information, see: https://esbuild.github.io/api/#main-fields
+   */
+  serverMainFields: string[];
+
+  /**
+   * Whether to minify the server build in production or not.
+   * Defaults to `false`.
+   */
+  serverMinify: boolean;
+
+  /**
+   * The mode to use to run the server.
+   */
+  serverMode: ServerMode;
+
+  /**
    * The output format of the server build. Defaults to "cjs".
    */
   serverModuleFormat: ServerModuleFormat;
@@ -265,28 +328,6 @@ export interface RemixConfig {
    * The platform the server build is targeting. Defaults to "node".
    */
   serverPlatform: ServerPlatform;
-
-  /**
-   * The target of the server build.
-   */
-  serverBuildTarget?: ServerBuildTarget;
-
-  /**
-   * The default entry module for the server build if a {@see RemixConfig.customServer} is not provided.
-   */
-  serverBuildTargetEntryModule: string;
-
-  /**
-   * A server entrypoint relative to the root directory that becomes your server's main module.
-   */
-  serverEntryPoint?: string;
-
-  /**
-   * A list of patterns that determined if a module is transpiled and included
-   * in the server bundle. This can be useful when consuming ESM only packages
-   * in a CJS build.
-   */
-  serverDependenciesToBundle: Array<string | RegExp>;
 
   /**
    * A list of directories to watch.
@@ -342,20 +383,41 @@ export async function readConfig(
     }
   }
 
-  let customServerEntryPoint = appConfig.server;
-  let serverBuildTarget: ServerBuildTarget | undefined =
-    appConfig.serverBuildTarget;
-  let serverModuleFormat: ServerModuleFormat =
-    appConfig.serverModuleFormat || "cjs";
-  let serverPlatform: ServerPlatform = appConfig.serverPlatform || "node";
-  switch (appConfig.serverBuildTarget) {
-    case "cloudflare-pages":
-    case "cloudflare-workers":
-    case "deno":
-      serverModuleFormat = "esm";
-      serverPlatform = "neutral";
-      break;
+  let isCloudflareRuntime = ["cloudflare-pages", "cloudflare-workers"].includes(
+    appConfig.serverBuildTarget ?? ""
+  );
+  let isDenoRuntime = appConfig.serverBuildTarget === "deno";
+
+  let serverBuildPath = resolveServerBuildPath(rootDirectory, appConfig);
+  let serverBuildTarget = appConfig.serverBuildTarget;
+  let serverBuildTargetEntryModule = `export * from ${JSON.stringify(
+    serverBuildVirtualModule.id
+  )};`;
+  let serverConditions = appConfig.serverConditions;
+  let serverDependenciesToBundle = appConfig.serverDependenciesToBundle || [];
+  let serverEntryPoint = appConfig.server;
+  let serverMainFields = appConfig.serverMainFields;
+  let serverMinify = appConfig.serverMinify;
+  let serverModuleFormat = appConfig.serverModuleFormat || "cjs";
+  let serverPlatform = appConfig.serverPlatform || "node";
+  if (isCloudflareRuntime) {
+    serverConditions ??= ["worker"];
+    serverDependenciesToBundle = "all";
+    serverMainFields ??= ["browser", "module", "main"];
+    serverMinify ??= true;
+    serverModuleFormat = "esm";
+    serverPlatform = "neutral";
   }
+  if (isDenoRuntime) {
+    serverConditions ??= ["deno", "worker"];
+    serverDependenciesToBundle = "all";
+    serverMainFields ??= ["module", "main"];
+    serverModuleFormat = "esm";
+    serverPlatform = "neutral";
+  }
+  serverMainFields ??=
+    serverModuleFormat === "esm" ? ["module", "main"] : ["main", "module"];
+  serverMinify ??= false;
 
   let mdx = appConfig.mdx;
 
@@ -379,35 +441,6 @@ export async function readConfig(
     throw new Error(`Missing "entry.server" file in ${appDirectory}`);
   }
 
-  let serverBuildPath = "build/index.js";
-  switch (serverBuildTarget) {
-    case "arc":
-      serverBuildPath = "server/index.js";
-      break;
-    case "cloudflare-pages":
-      serverBuildPath = "functions/[[path]].js";
-      break;
-    case "netlify":
-      serverBuildPath = ".netlify/functions-internal/server.js";
-      break;
-    case "vercel":
-      serverBuildPath = "api/index.js";
-      break;
-  }
-  serverBuildPath = path.resolve(rootDirectory, serverBuildPath);
-
-  // retain deprecated behavior for now
-  if (appConfig.serverBuildDirectory) {
-    serverBuildPath = path.resolve(
-      rootDirectory,
-      path.join(appConfig.serverBuildDirectory, "index.js")
-    );
-  }
-
-  if (appConfig.serverBuildPath) {
-    serverBuildPath = path.resolve(rootDirectory, appConfig.serverBuildPath);
-  }
-
   let assetsBuildDirectory =
     appConfig.assetsBuildDirectory ||
     appConfig.browserBuildDirectory ||
@@ -425,13 +458,8 @@ export async function readConfig(
   process.env.REMIX_DEV_SERVER_WS_PORT = `${devServerPort}`;
   let devServerBroadcastDelay = appConfig.devServerBroadcastDelay || 0;
 
-  let defaultPublicPath = "/build/";
-  switch (serverBuildTarget) {
-    case "arc":
-      defaultPublicPath = "/_static/build/";
-      break;
-  }
-
+  let defaultPublicPath =
+    appConfig.serverBuildTarget === "arc" ? "/_static/build/" : "/build/";
   let publicPath = addTrailingSlash(appConfig.publicPath || defaultPublicPath);
 
   let rootRouteFile = findEntry(appDirectory, "root");
@@ -477,12 +505,6 @@ export async function readConfig(
     );
   }
 
-  let serverBuildTargetEntryModule = `export * from ${JSON.stringify(
-    serverBuildVirtualModule.id
-  )};`;
-
-  let serverDependenciesToBundle = appConfig.serverDependenciesToBundle || [];
-
   // When tsconfigPath is undefined, the default "tsconfig.json" is not
   // found in the root directory.
   let tsconfigPath: string | undefined;
@@ -525,13 +547,16 @@ export async function readConfig(
     rootDirectory,
     routes,
     serverBuildPath,
+    serverBuildTarget,
+    serverBuildTargetEntryModule,
+    serverConditions,
+    serverDependenciesToBundle,
+    serverEntryPoint,
+    serverMainFields,
+    serverMinify,
     serverMode,
     serverModuleFormat,
     serverPlatform,
-    serverBuildTarget,
-    serverBuildTargetEntryModule,
-    serverEntryPoint: customServerEntryPoint,
-    serverDependenciesToBundle,
     mdx,
     watchPaths,
     tsconfigPath,
@@ -564,3 +589,36 @@ function findConfig(dir: string, basename: string): string | undefined {
 
   return undefined;
 }
+
+const resolveServerBuildPath = (
+  rootDirectory: string,
+  appConfig: AppConfig
+) => {
+  let serverBuildPath = "build/index.js";
+
+  switch (appConfig.serverBuildTarget) {
+    case "arc":
+      serverBuildPath = "server/index.js";
+      break;
+    case "cloudflare-pages":
+      serverBuildPath = "functions/[[path]].js";
+      break;
+    case "netlify":
+      serverBuildPath = ".netlify/functions-internal/server.js";
+      break;
+    case "vercel":
+      serverBuildPath = "api/index.js";
+      break;
+  }
+
+  // retain deprecated behavior for now
+  if (appConfig.serverBuildDirectory) {
+    serverBuildPath = path.join(appConfig.serverBuildDirectory, "index.js");
+  }
+
+  if (appConfig.serverBuildPath) {
+    serverBuildPath = appConfig.serverBuildPath;
+  }
+
+  return path.resolve(rootDirectory, serverBuildPath);
+};

@@ -45,11 +45,6 @@ const createEsbuildConfig = (
     };
   }
 
-  let isCloudflareRuntime = ["cloudflare-pages", "cloudflare-workers"].includes(
-    config.serverBuildTarget ?? ""
-  );
-  let isDenoRuntime = config.serverBuildTarget === "deno";
-
   let { mode } = options;
   let outputCss = false;
 
@@ -83,11 +78,7 @@ const createEsbuildConfig = (
     stdin,
     entryPoints,
     outfile: config.serverBuildPath,
-    conditions: isCloudflareRuntime
-      ? ["worker"]
-      : isDenoRuntime
-      ? ["deno", "worker"]
-      : undefined,
+    conditions: config.serverConditions,
     platform: config.serverPlatform,
     format: config.serverModuleFormat,
     treeShaking: true,
@@ -99,12 +90,8 @@ const createEsbuildConfig = (
     // PR makes dev mode behave closer to production in terms of dead
     // code elimination / tree shaking is concerned.
     minifySyntax: true,
-    minify: options.mode === "production" && isCloudflareRuntime,
-    mainFields: isCloudflareRuntime
-      ? ["browser", "module", "main"]
-      : config.serverModuleFormat === "esm"
-      ? ["module", "main"]
-      : ["main", "module"],
+    minify: options.mode === "production" && config.serverMinify,
+    mainFields: config.serverMainFields,
     target: options.target,
     loader: loaders,
     bundle: true,
