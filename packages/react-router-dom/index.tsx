@@ -418,8 +418,9 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
-    let isExternal = false;
+    // Rendered into <a href> for absolute URLs
     let absoluteHref;
+    let isExternal = false;
 
     if (
       isBrowser &&
@@ -439,7 +440,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       }
     }
 
-    // `href` is what we render in the <a> tag for relative URLs
+    // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
 
     let internalOnClick = useLinkClickHandler(to, {
