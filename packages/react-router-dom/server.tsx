@@ -7,6 +7,7 @@ import type {
   StaticHandlerContext,
 } from "@remix-run/router";
 import {
+  IDLE_BLOCKER,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
   Action,
@@ -299,7 +300,7 @@ export function createStaticRouter(
       throw msg("dispose");
     },
     getBlocker() {
-      throw msg("getBlocker");
+      return IDLE_BLOCKER;
     },
     deleteBlocker() {
       throw msg("deleteBlocker");
