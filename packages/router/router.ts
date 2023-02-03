@@ -683,7 +683,11 @@ export function createRouter(init: RouterInit): Router {
   }
 
   let initialized =
-    !initialMatches.some((m) => m.route.loader) || init.hydrationData != null;
+    // All initialMatches need to be loaded before we're ready.  If we have lazy
+    // functions around still then we'll need to run them in initialize()
+    !initialMatches.some((m) => m.route.lazy) &&
+    // And we have to either have no loaders or have been provided hydrationData
+    (!initialMatches.some((m) => m.route.loader) || init.hydrationData != null);
 
   let router: Router;
   let state: RouterState = {
@@ -832,10 +836,31 @@ export function createRouter(init: RouterInit): Router {
       }
     );
 
-    // Kick off initial data load if needed.  Use Pop to avoid modifying history
-    if (!state.initialized) {
-      startNavigation(HistoryAction.Pop, state.location);
+    if (state.initialized) {
+      return router;
     }
+
+    let lazyMatches = state.matches.filter((m) => m.route.lazy);
+
+    if (lazyMatches.length === 0) {
+      // Kick off initial data load if needed.  Use Pop to avoid modifying history
+      startNavigation(HistoryAction.Pop, state.location);
+      return router;
+    }
+
+    // Load lazy modules, then kick off initial data load if needed
+    loadLazyRouteModules(lazyMatches, manifest).then(() => {
+      let initialized =
+        !state.matches.some((m) => m.route.loader) ||
+        init.hydrationData != null;
+      if (initialized) {
+        // We already have required loaderData so we can just set initialized
+        updateState({ initialized: true });
+      } else {
+        // We still need to kick off initial data loads
+        startNavigation(HistoryAction.Pop, state.location);
+      }
+    });
 
     return router;
   }
@@ -1248,6 +1273,10 @@ export function createRouter(init: RouterInit): Router {
     let result: DataResult;
     let actionMatch = getTargetMatch(matches, location);
 
+    if (actionMatch.route.lazy) {
+      await loadLazyRouteModules([actionMatch], manifest, request.signal);
+    }
+
     if (!actionMatch.route.action) {
       result = {
         type: ResultType.error,
@@ -1430,9 +1459,9 @@ export function createRouter(init: RouterInit): Router {
       fetchControllers.set(rf.key, pendingNavigationController!)
     );
 
-    let lazyMatches = matchesToLoad.filter((m) => m.route.lazy);
+    let lazyMatches = matches.filter((m) => m.route.lazy);
     if (lazyMatches.length > 0) {
-      await loadLazyRouteModules(request, lazyMatches);
+      await loadLazyRouteModules(lazyMatches, manifest, request.signal);
     }
 
     let { results, loaderResults, fetcherResults } =
@@ -1556,7 +1585,7 @@ export function createRouter(init: RouterInit): Router {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
 
-    if (!match.route.action) {
+    if (!match.route.lazy && !match.route.action) {
       let error = getInternalRouterError(405, {
         method: submission.formMethod,
         pathname: path,
@@ -1586,6 +1615,20 @@ export function createRouter(init: RouterInit): Router {
       submission
     );
     fetchControllers.set(key, abortController);
+
+    if (match.route.lazy) {
+      await loadLazyRouteModules([match], manifest, fetchRequest.signal);
+
+      if (!match.route.action) {
+        let error = getInternalRouterError(405, {
+          method: submission.formMethod,
+          pathname: path,
+          routeId: routeId,
+        });
+        setFetcherError(key, routeId, error);
+        return;
+      }
+    }
 
     let actionResult = await callLoaderOrAction(
       "action",
@@ -1694,6 +1737,15 @@ export function createRouter(init: RouterInit): Router {
       });
 
     updateState({ fetchers: new Map(state.fetchers) });
+
+    let lazyMatches = matches.filter((m) => m.route.lazy);
+    if (match.route.lazy) {
+      await loadLazyRouteModules(
+        lazyMatches,
+        manifest,
+        revalidationRequest.signal
+      );
+    }
 
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
@@ -1808,6 +1860,11 @@ export function createRouter(init: RouterInit): Router {
       abortController.signal
     );
     fetchControllers.set(key, abortController);
+
+    if (match.route.lazy) {
+      await loadLazyRouteModules([match], manifest, fetchRequest.signal);
+    }
+
     let result: DataResult = await callLoaderOrAction(
       "loader",
       fetchRequest,
@@ -1988,41 +2045,6 @@ export function createRouter(init: RouterInit): Router {
         preventScrollReset: pendingPreventScrollReset,
       });
     }
-  }
-
-  /**
-   * Execute route.lazy() methods to lazily load route modules (loader, action,
-   * shouldRevalidate) and update the routeManifest in place which shares objects
-   * with dataRoutes so those get updated as well.
-   */
-  async function loadLazyRouteModules(
-    request: Request,
-    lazyMatches: AgnosticDataRouteMatch[]
-  ) {
-    await Promise.all(
-      lazyMatches.map(async (match) => {
-        let mod = await match.route.lazy!();
-        if (request.signal.aborted) {
-          return;
-        }
-
-        let routeToUpdate = manifest[match.route.id];
-        invariant(routeToUpdate, "No route found in manifest");
-
-        routeToUpdate.lazy = undefined;
-
-        routeToUpdate.loader =
-          routeToUpdate.loader || mod.loader || (() => null);
-
-        routeToUpdate.action =
-          routeToUpdate.action || mod.action || (() => null);
-
-        routeToUpdate.shouldRevalidate =
-          routeToUpdate.shouldRevalidate ||
-          mod.shouldRevalidate ||
-          (({ defaultShouldRevalidate }) => defaultShouldRevalidate);
-      })
-    );
   }
 
   async function callLoadersAndMaybeResolveData(
@@ -2366,7 +2388,8 @@ export function createStaticHandler(
     "You must provide a non-empty routes array to createStaticHandler"
   );
 
-  let dataRoutes = convertRoutesToDataRoutes(routes);
+  let manifest: RouteManifest = {};
+  let dataRoutes = convertRoutesToDataRoutes(routes, undefined, manifest);
   let basename = (opts ? opts.basename : null) || "/";
 
   /**
@@ -2547,6 +2570,11 @@ export function createStaticHandler(
       request.signal,
       "query()/queryRoute() requests must contain an AbortController signal"
     );
+
+    let lazyMatches = matches.filter((m) => m.route.lazy);
+    if (lazyMatches.length > 0) {
+      await loadLazyRouteModules(lazyMatches, manifest, request.signal);
+    }
 
     try {
       if (isMutationMethod(request.method.toLowerCase())) {
@@ -2967,7 +2995,7 @@ function getMatchesToLoad(
   let boundaryMatches = getLoaderMatchesUntilBoundary(matches, boundaryId);
 
   let navigationMatches = boundaryMatches.filter((match, index) => {
-    if (typeof match.route.lazy === "function") {
+    if (match.route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
       return true;
     }
@@ -3084,6 +3112,74 @@ function shouldRevalidateLoader(
   }
 
   return arg.defaultShouldRevalidate;
+}
+
+/**
+ * Execute route.lazy() methods to lazily load route modules (loader, action,
+ * shouldRevalidate) and update the routeManifest in place which shares objects
+ * with dataRoutes so those get updated as well.
+ */
+async function loadLazyRouteModules(
+  lazyMatches: AgnosticDataRouteMatch[],
+  manifest: RouteManifest,
+  signal?: AbortSignal
+) {
+  await Promise.all(
+    lazyMatches.map(async (match) => {
+      let mod = await match.route.lazy!();
+
+      // Keep this since I think there are edge cases if we allow it to mutate
+      // after being aborted.  There could be a race condition between the loads
+      // if we interrupted ourself and we wouldn't want the former load to win
+      // over the latter load in case they were new promises returning updated
+      // stuff.  Maybe we could prefer mod.loader over route.loader though ?
+      if (signal && signal.aborted) {
+        return;
+      }
+
+      let routeToUpdate = manifest[match.route.id];
+      invariant(routeToUpdate, "No route found in manifest");
+
+      routeToUpdate.lazy = undefined;
+
+      // For now, we update in place.  We think this is ok since there's no way
+      // we could yet be sitting on this route since we can't get there without
+      // resolving through here first.  This is different than the HMR "update"
+      // use-case where we may actively be on the route being updated.  The main
+      // concern boils down to "does this mutation affect any ongoing navigations
+      // or any current state.matches values?".  If not, I think it's safe to
+      // mutate in place.  It's also worth noting that this is a more targeted
+      // update that cannot touch things like path/index/children so it cannot
+      // affect the routes we've already matched.
+
+      // Keys we cannot change from within a lazy() function.  We spread all
+      // other keys onto the route.  Either they're meaningful to the router,
+      // or they'll get ignored.  This is required for now since we have no
+      // idea about element/errorElement in here.  If we want to get very
+      // explicit and fix the types here we may need to allow the framework-layer
+      // to pass in an `updateRoute` function or tell us specific keys to look
+      // for :/
+      let immutableKeys = new Set<keyof AgnosticRouteObject>([
+        "caseSensitive",
+        "path",
+        "id",
+        "index",
+        "children",
+      ]);
+      Object.keys(mod).forEach((k) => {
+        //@ts-expect-error
+        if (!immutableKeys.has(k)) {
+          //@ts-expect-error
+          routeToUpdate[k] = mod[k];
+          // This feels wrong :/
+          if (k === "errorElement") {
+            //@ts-expect-error
+            routeToUpdate.hasErrorBoundary = mod[k] != null;
+          }
+        }
+      });
+    })
+  );
 }
 
 async function callLoaderOrAction(

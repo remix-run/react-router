@@ -44,9 +44,39 @@ let router = createBrowserRouter(
         loader={deferredLoader}
         element={<DeferredPage />}
       />
+      <Route
+        path="lazy"
+        lazy={async () => {
+          console.log("loading lazy");
+          await sleep(1000);
+          console.log("done loading lazy");
+          let {
+            default: Component,
+            loader,
+            action,
+            ErrorBoundary,
+            shouldRevalidate,
+          } = await import("./lazy");
+
+          return {
+            element: <Component />,
+            loader,
+            action,
+            shouldRevalidate,
+            ...(ErrorBoundary
+              ? {
+                  errorElement: <ErrorBoundary />,
+                  hasErrorBoundary: true,
+                }
+              : {}),
+          };
+        }}
+      />
     </Route>
   )
 );
+
+window.router = router;
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => router.dispose());
@@ -68,6 +98,7 @@ export function Fallback() {
 export function Layout() {
   let navigation = useNavigation();
   let revalidator = useRevalidator();
+  let lazyFetcher = useFetcher();
   let fetchers = useFetchers();
   let fetcherInProgress = fetchers.some((f) =>
     ["loading", "submitting"].includes(f.state)
@@ -95,12 +126,44 @@ export function Layout() {
             <Link to="/deferred">Deferred</Link>
           </li>
           <li>
+            <Link to="/lazy">Lazy</Link>
+          </li>{" "}
+          <li>
             <Link to="/404">404 Link</Link>
+          </li>
+          <li>
+            <Form method="post" action="/lazy">
+              <button type="submit">Post to /lazy</button>
+            </Form>
           </li>
           <li>
             <button onClick={() => revalidator.revalidate()}>
               Revalidate Data
             </button>
+          </li>
+          <li>
+            <button onClick={() => lazyFetcher.load("/lazy")}>
+              Load /lazy via fetcher
+            </button>
+            &nbsp;&nbsp;
+            <span>
+              fetcher state/data: {lazyFetcher.state}/
+              {JSON.stringify(lazyFetcher.data)}
+            </span>
+          </li>
+          <li>
+            <button
+              onClick={() =>
+                lazyFetcher.submit({}, { method: "post", action: "/lazy" })
+              }
+            >
+              Submit to /lazy via fetcher
+            </button>
+            &nbsp;&nbsp;
+            <span>
+              fetcher state/data: {lazyFetcher.state}/
+              {JSON.stringify(lazyFetcher.data)}
+            </span>
           </li>
         </ul>
       </nav>

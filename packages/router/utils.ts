@@ -154,7 +154,9 @@ type AgnosticBaseRouteObject = {
   lazy?: () => Promise<{
     loader?: AgnosticBaseRouteObject["loader"];
     action?: AgnosticBaseRouteObject["action"];
+    hasErrorBoundary?: AgnosticBaseRouteObject["hasErrorBoundary"];
     shouldRevalidate?: AgnosticBaseRouteObject["shouldRevalidate"];
+    handle?: AgnosticBaseRouteObject["handle"];
   }>;
 };
 

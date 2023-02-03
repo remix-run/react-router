@@ -1,10 +1,10 @@
 import * as React from "react";
 import type {
-  AgnosticDataRouteObject,
   Path,
   RevalidationState,
   Router as RemixRouter,
   StaticHandlerContext,
+  UNSAFE_RouteManifest,
 } from "@remix-run/router";
 import {
   IDLE_FETCHER,
@@ -14,12 +14,7 @@ import {
   isRouteErrorResponse,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import type {
-  DataRouteObject,
-  Location,
-  RouteObject,
-  To,
-} from "react-router-dom";
+import type { Location, RouteObject, To } from "react-router-dom";
 import { Routes } from "react-router-dom";
 import {
   createPath,
@@ -207,38 +202,25 @@ function getStatelessNavigator() {
   };
 }
 
-// Temporary manifest generation - we should optimize this by combining the
-// tree-walks between convertRoutesToDataRoutes, enhanceManualRouteObjects,
-// and generateManifest.
-// Also look into getting rid of `route as AgnosticDataRouteObject` down below?
-function generateManifest(
-  routes: DataRouteObject[],
-  manifest: Map<string, DataRouteObject> = new Map<string, DataRouteObject>()
-): Map<string, RouteObject> {
-  routes.forEach((route) => {
-    manifest.set(route.id, route);
-    if (route.children) {
-      generateManifest(route.children, manifest);
-    }
-  });
-  return manifest;
-}
-
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext
 ): RemixRouter {
-  let dataRoutes = convertRoutesToDataRoutes(enhanceManualRouteObjects(routes));
-  let manifest = generateManifest(dataRoutes);
+  let manifest: UNSAFE_RouteManifest = {};
+  let dataRoutes = convertRoutesToDataRoutes(
+    enhanceManualRouteObjects(routes),
+    undefined,
+    manifest
+  );
 
   // Because our context matches may be from a framework-agnostic set of
   // routes passed to createStaticHandler(), we update them here with our
   // newly created/enhanced data routes
   let matches = context.matches.map((match) => {
-    let route = manifest.get(match.route.id) || match.route;
+    let route = manifest[match.route.id] || match.route;
     return {
       ...match,
-      route: route as AgnosticDataRouteObject,
+      route,
     };
   });
 

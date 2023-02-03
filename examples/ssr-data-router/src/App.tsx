@@ -21,6 +21,34 @@ export const routes = [
         element: <Dashboard />,
       },
       {
+        path: "lazy",
+        async lazy() {
+          console.log("start lazy()");
+          await sleep(1000);
+          console.log("end lazy()");
+          let {
+            default: Component,
+            loader,
+            action,
+            ErrorBoundary,
+            shouldRevalidate,
+          } = await import("./lazy");
+
+          return {
+            element: <Component />,
+            loader,
+            action,
+            shouldRevalidate,
+            ...(ErrorBoundary
+              ? {
+                  errorElement: <ErrorBoundary />,
+                  hasErrorBoundary: true,
+                }
+              : {}),
+          };
+        },
+      },
+      {
         path: "redirect",
         loader: redirectLoader,
       },
@@ -71,6 +99,9 @@ function Layout() {
             <Link to="/dashboard">Dashboard</Link>
           </li>
           <li>
+            <Link to="/lazy">Lazy</Link>
+          </li>
+          <li>
             <Link to="/redirect">Redirect to Home</Link>
           </li>
           <li>
@@ -86,7 +117,7 @@ function Layout() {
   );
 }
 
-const sleep = () => new Promise((r) => setTimeout(r, 500));
+const sleep = (n = 500) => new Promise((r) => setTimeout(r, n));
 const rand = () => Math.round(Math.random() * 100);
 
 async function homeLoader() {

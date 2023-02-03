@@ -593,6 +593,7 @@ export function createRoutesFromChildren(
       hasErrorBoundary: element.props.errorElement != null,
       shouldRevalidate: element.props.shouldRevalidate,
       handle: element.props.handle,
+      lazy: element.props.lazy,
     };
 
     if (element.props.children) {
