@@ -88,10 +88,10 @@ jobs:
 
   comment:
     name: 📝 Comment on related issues and pull requests
-    if: github.repository == 'remix-run/react-router' && needs.find_package_version.outputs.packageVersion != ''
+    if: github.repository == 'remix-run/react-router' && needs.find_package_version.outputs.package_version != ''
     needs: [release, find_package_version]
     uses: ./.github/workflows/release-comments.yml
     with:
-      ref: refs/tags/react-router@${{ needs.find_package_version.outputs.packageVersion }}
+      ref: refs/tags/react-router@${{ needs.find_package_version.outputs.package_version }}
       package_version_to_follow: "react-router"
       release_branch: ${{ github.ref_name }}
