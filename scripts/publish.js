@@ -73,7 +73,7 @@ async function run() {
       ? "experimental"
       : semver.prerelease(version) == null
       ? "latest"
-      : "next";
+      : "pre";
 
     console.log();
     console.log(`  Publishing version ${version} to npm with tag "${tag}"`);
