@@ -1,7 +1,13 @@
 import path from "node:path";
 import fg from "fast-glob";
 
-import type { ConfigRoute, DefineRouteFunction, RouteManifest } from "./routes";
+import type {
+  ConfigRoute,
+  DefineRouteFunction,
+  DefineRouteOptions,
+  RouteManifest,
+} from "./routes";
+import { normalizeSlashes } from "./routes";
 import { createRouteId, defineRoutes } from "./routes";
 import {
   escapeEnd,
@@ -23,12 +29,13 @@ export function flatRoutes(
     absolute: true,
     cwd: path.join(appDirectory, "routes"),
     ignore: ignoredFilePatterns,
+    onlyFiles: true,
   });
 
   // fast-glob will return posix paths even on windows
   // convert posix to os specific paths
   let routePathsForOS = routePaths.map((routePath) => {
-    return path.join(...routePath.split(path.posix.sep));
+    return path.normalize(routePath);
   });
 
   return flatRoutesUniversal(appDirectory, routePathsForOS);
@@ -51,39 +58,47 @@ export function flatRoutesUniversal(
   prefix: string = "routes"
 ): RouteManifest {
   let routeMap = getRouteMap(appDirectory, routePaths, prefix);
-
   let uniqueRoutes = new Map<string, string>();
+  let routes = Array.from(routeMap.values());
 
   function defineNestedRoutes(
     defineRoute: DefineRouteFunction,
     parentId?: string
   ): void {
-    let childRoutes = Array.from(routeMap.values()).filter(
-      (routeInfo) => routeInfo.parentId === parentId
-    );
+    let childRoutes = routes.filter((routeInfo) => {
+      return routeInfo.parentId === parentId;
+    });
     let parentRoute = parentId ? routeMap.get(parentId) : undefined;
     let parentRoutePath = parentRoute?.path ?? "/";
     for (let childRoute of childRoutes) {
       let routePath = childRoute.path?.slice(parentRoutePath.length) ?? "";
       // remove leading slash
       routePath = routePath.replace(/^\//, "");
+
       let index = childRoute.index;
       let fullPath = childRoute.path;
 
       let uniqueRouteId = (fullPath || "") + (index ? "?index" : "");
+
       if (uniqueRouteId) {
         let conflict = uniqueRoutes.get(uniqueRouteId);
         if (conflict) {
           throw new Error(
-            `Path ${JSON.stringify(fullPath)} defined by route ${JSON.stringify(
-              childRoute.id
-            )} conflicts with route ${JSON.stringify(conflict)}`
+            `Path ${JSON.stringify(fullPath)} defined by route ` +
+              `${JSON.stringify(childRoute.id)} ` +
+              `conflicts with route ${JSON.stringify(conflict)}`
           );
         }
         uniqueRoutes.set(uniqueRouteId, childRoute.id);
       }
+
+      let childRouteOptions: DefineRouteOptions = {
+        id: path.posix.join(prefix, childRoute.id),
+        index: childRoute.index ? true : undefined,
+      };
+
       if (index) {
-        let invalidChildRoutes = Object.values(routeMap).filter(
+        let invalidChildRoutes = routes.filter(
           (routeInfo) => routeInfo.parentId === childRoute.id
         );
 
@@ -93,25 +108,20 @@ export function flatRoutesUniversal(
           );
         }
 
-        defineRoute(routePath, routeMap.get(childRoute.id!)!.file, {
-          index: true,
-        });
+        defineRoute(routePath, childRoute.file, childRouteOptions);
       } else {
-        defineRoute(routePath, routeMap.get(childRoute.id!)!.file, () => {
+        defineRoute(routePath, childRoute.file, childRouteOptions, () => {
           defineNestedRoutes(defineRoute, childRoute.id);
         });
       }
     }
   }
 
-  let routes = defineRoutes(defineNestedRoutes);
-
-  return routes;
+  return defineRoutes(defineNestedRoutes);
 }
 
 export function isIndexRoute(routeId: string) {
-  let isFlatFile = !routeId.includes(path.posix.sep);
-  return isFlatFile ? routeId.endsWith("_index") : /\/index$/.test(routeId);
+  return routeId.endsWith("_index");
 }
 
 type State =
@@ -126,12 +136,25 @@ type State =
 
 export function getRouteSegments(routeId: string) {
   let routeSegments: string[] = [];
+  let rawRouteSegments: string[] = [];
   let index = 0;
   let routeSegment = "";
   let rawRouteSegment = "";
   let state: State = "NORMAL";
-  let pushRouteSegment = (routeSegment: string) => {
-    if (!routeSegment) return;
+  let hasFolder = routeId.includes(path.posix.sep);
+
+  /**
+   * @see https://github.com/remix-run/remix/pull/5160#issuecomment-1402157424
+   */
+  if (hasFolder && (routeId.endsWith("/index") || routeId.endsWith("/route"))) {
+    let last = routeId.lastIndexOf(path.posix.sep);
+    if (last >= 0) {
+      routeId = routeId.substring(0, last);
+    }
+  }
+
+  let pushRouteSegment = (segment: string, rawSegment: string) => {
+    if (!segment) return;
 
     let notSupportedInRR = (segment: string, char: string) => {
       throw new Error(
@@ -140,18 +163,20 @@ export function getRouteSegments(routeId: string) {
       );
     };
 
-    if (rawRouteSegment.includes("*")) {
-      return notSupportedInRR(rawRouteSegment, "*");
+    if (rawSegment.includes("*")) {
+      return notSupportedInRR(rawSegment, "*");
     }
 
-    if (rawRouteSegment.includes(":")) {
-      return notSupportedInRR(rawRouteSegment, ":");
+    if (rawSegment.includes(":")) {
+      return notSupportedInRR(rawSegment, ":");
     }
 
-    if (rawRouteSegment.includes("/")) {
-      return notSupportedInRR(routeSegment, "/");
+    if (rawSegment.includes("/")) {
+      return notSupportedInRR(segment, "/");
     }
-    routeSegments.push(routeSegment);
+
+    routeSegments.push(segment);
+    rawRouteSegments.push(rawSegment);
   };
 
   while (index < routeId.length) {
@@ -161,7 +186,7 @@ export function getRouteSegments(routeId: string) {
     switch (state) {
       case "NORMAL": {
         if (isSegmentSeparator(char)) {
-          pushRouteSegment(routeSegment);
+          pushRouteSegment(routeSegment, rawRouteSegment);
           routeSegment = "";
           rawRouteSegment = "";
           state = "NORMAL";
@@ -169,10 +194,12 @@ export function getRouteSegments(routeId: string) {
         }
         if (char === escapeStart) {
           state = "ESCAPE";
+          rawRouteSegment += char;
           break;
         }
         if (char === optionalStart) {
           state = "OPTIONAL";
+          rawRouteSegment += char;
           break;
         }
         if (!routeSegment && char == paramPrefixChar) {
@@ -193,6 +220,7 @@ export function getRouteSegments(routeId: string) {
       case "ESCAPE": {
         if (char === escapeEnd) {
           state = "NORMAL";
+          rawRouteSegment += char;
           break;
         }
 
@@ -203,13 +231,14 @@ export function getRouteSegments(routeId: string) {
       case "OPTIONAL": {
         if (char === optionalEnd) {
           routeSegment += "?";
-          rawRouteSegment += "?";
+          rawRouteSegment += char;
           state = "NORMAL";
           break;
         }
 
         if (char === escapeStart) {
           state = "OPTIONAL_ESCAPE";
+          rawRouteSegment += char;
           break;
         }
 
@@ -231,6 +260,7 @@ export function getRouteSegments(routeId: string) {
       case "OPTIONAL_ESCAPE": {
         if (char === escapeEnd) {
           state = "OPTIONAL";
+          rawRouteSegment += char;
           break;
         }
 
@@ -242,8 +272,8 @@ export function getRouteSegments(routeId: string) {
   }
 
   // process remaining segment
-  pushRouteSegment(routeSegment);
-  return routeSegments;
+  pushRouteSegment(routeSegment, rawRouteSegment);
+  return [routeSegments, rawRouteSegments];
 }
 
 function findParentRouteId(
@@ -265,11 +295,13 @@ function getRouteInfo(
   filePath: string
 ): RouteInfo {
   let filePathWithoutApp = filePath.slice(appDirectory.length + 1);
-  let routeId = createRouteId(filePathWithoutApp);
+  let routeId = createFlatRouteId(filePathWithoutApp);
   let routeIdWithoutRoutes = routeId.slice(routeDirectory.length + 1);
   let index = isIndexRoute(routeIdWithoutRoutes);
-  let routeSegments = getRouteSegments(routeIdWithoutRoutes);
-  let routePath = createRoutePath(routeSegments, index);
+  let [routeSegments, rawRouteSegments] =
+    getRouteSegments(routeIdWithoutRoutes);
+
+  let routePath = createRoutePath(routeSegments, rawRouteSegments, index);
 
   return {
     id: routeIdWithoutRoutes,
@@ -281,21 +313,28 @@ function getRouteInfo(
   };
 }
 
-export function createRoutePath(routeSegments: string[], isIndex: boolean) {
+export function createRoutePath(
+  routeSegments: string[],
+  rawRouteSegments: string[],
+  isIndex: boolean
+) {
   let result = "";
 
   if (isIndex) {
     routeSegments = routeSegments.slice(0, -1);
   }
 
-  for (let segment of routeSegments) {
+  for (let index = 0; index < routeSegments.length; index++) {
+    let segment = routeSegments[index];
+    let rawSegment = rawRouteSegments[index];
+
     // skip pathless layout segments
-    if (segment.startsWith("_")) {
+    if (segment.startsWith("_") && rawSegment.startsWith("_")) {
       continue;
     }
 
     // remove trailing slash
-    if (segment.endsWith("_")) {
+    if (segment.endsWith("_") && rawSegment.endsWith("_")) {
       segment = segment.slice(0, -1);
     }
 
@@ -308,8 +347,8 @@ export function createRoutePath(routeSegments: string[], isIndex: boolean) {
 function getRouteMap(
   appDirectory: string,
   routePaths: string[],
-  prefix: string = "routes"
-) {
+  prefix: string
+): Readonly<Map<string, RouteInfo>> {
   let routeMap = new Map<string, RouteInfo>();
   let nameMap = new Map<string, RouteInfo>();
 
@@ -332,12 +371,20 @@ function getRouteMap(
   return routeMap;
 }
 
-function isRouteModuleFile(filepath: string) {
+function isRouteModuleFile(filePath: string) {
   // flat files only need correct extension
-  let isFlatFile = !filepath.includes(path.sep);
-  if (isFlatFile) {
-    return routeModuleExts.includes(path.extname(filepath));
-  }
+  let normalizedFilePath = normalizeSlashes(filePath);
+  let isFlatFile = !filePath.includes(path.posix.sep);
+  let hasExt = routeModuleExts.includes(path.extname(filePath));
+  if (isFlatFile) return hasExt;
+  let basename = normalizedFilePath.slice(0, -path.extname(filePath).length);
+  return basename.endsWith(`/route`) || basename.endsWith(`/index`);
+}
 
-  return isIndexRoute(createRouteId(filepath));
+function createFlatRouteId(filePath: string) {
+  let routeId = createRouteId(filePath);
+  if (routeId.includes(path.posix.sep) && routeId.endsWith("/index")) {
+    routeId = routeId.split(path.posix.sep).slice(0, -1).join(path.posix.sep);
+  }
+  return routeId;
 }
