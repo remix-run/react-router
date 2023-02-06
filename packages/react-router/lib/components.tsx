@@ -589,6 +589,7 @@ export function createRoutesFromChildren(
       element: element.props.element,
       index: element.props.index,
       path: element.props.path,
+      middleware: element.props.middleware,
       loader: element.props.loader,
       action: element.props.action,
       errorElement: element.props.errorElement,

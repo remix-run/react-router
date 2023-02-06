@@ -30,6 +30,7 @@ import type {
   Fetcher,
   FormEncType,
   FormMethod,
+  FutureConfig,
   GetScrollRestorationKeyFunction,
   HashHistory,
   History,
@@ -210,12 +211,14 @@ export function createBrowserRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
+    future?: Partial<FutureConfig>;
     hydrationData?: HydrationState;
     window?: Window;
   }
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
+    future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes: enhanceManualRouteObjects(routes),
@@ -226,12 +229,14 @@ export function createHashRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
+    future?: Partial<FutureConfig>;
     hydrationData?: HydrationState;
     window?: Window;
   }
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
+    future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes: enhanceManualRouteObjects(routes),

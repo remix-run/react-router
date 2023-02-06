@@ -332,7 +332,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   hydrationData?: HydrationState;
-  future?: FutureConfig;
+  future?: Partial<FutureConfig>;
 }
 
 /**
