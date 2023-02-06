@@ -7,18 +7,18 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "@reach/visually-hidden": "0.16.0",
+    "@reach/visually-hidden": "0.18.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.3.0"
+    "react-router-dom": "^6.8.0"
   },
   "devDependencies": {
-    "@rollup/plugin-replace": "^3.0.0",
-    "@types/node": "^16.10.3",
-    "@types/react": "^18.0.15",
-    "@types/react-dom": "^18.0.6",
-    "@vitejs/plugin-react": "^1.0.2",
-    "typescript": "^4.4.3",
-    "vite": "^2.6.3"
+    "@rollup/plugin-replace": "^5.0.2",
+    "@types/node": "^18.11.18",
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@vitejs/plugin-react": "^3.0.1",
+    "typescript": "^4.9.5",
+    "vite": "^4.0.4"
   }
 }

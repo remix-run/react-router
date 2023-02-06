@@ -1,5 +1,15 @@
 # `react-router-dom`
 
+## 6.8.1
+
+### Patch Changes
+
+- Improved absolute url detection in `Link` component (now also supports `mailto:` urls) ([#9994](https://github.com/remix-run/react-router/pull/9994))
+- Fix partial object (search or hash only) pathnames losing current path value ([#10029](https://github.com/remix-run/react-router/pull/10029))
+- Updated dependencies:
+  - `react-router@6.8.1`
+  - `@remix-run/router@1.3.2`
+
 ## 6.8.0
 
 ### Minor Changes
