@@ -418,32 +418,32 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
-    // `location` is the unaltered href we will render in the <a> tag for absolute URLs
-    let location = typeof to === "string" ? to : createPath(to);
-    let isAbsolute =
-      /^[a-z+]+:\/\//i.test(location) || location.startsWith("//");
-
-    // Location to use in the click handler
-    let navigationLocation = location;
+    // Rendered into <a href> for absolute URLs
+    let absoluteHref;
     let isExternal = false;
-    if (isBrowser && isAbsolute) {
+
+    if (
+      isBrowser &&
+      typeof to === "string" &&
+      /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(to)
+    ) {
+      absoluteHref = to;
       let currentUrl = new URL(window.location.href);
-      let targetUrl = location.startsWith("//")
-        ? new URL(currentUrl.protocol + location)
-        : new URL(location);
+      let targetUrl = to.startsWith("//")
+        ? new URL(currentUrl.protocol + to)
+        : new URL(to);
       if (targetUrl.origin === currentUrl.origin) {
         // Strip the protocol/origin for same-origin absolute URLs
-        navigationLocation =
-          targetUrl.pathname + targetUrl.search + targetUrl.hash;
+        to = targetUrl.pathname + targetUrl.search + targetUrl.hash;
       } else {
         isExternal = true;
       }
     }
 
-    // `href` is what we render in the <a> tag for relative URLs
-    let href = useHref(navigationLocation, { relative });
+    // Rendered into <a href> for relative URLs
+    let href = useHref(to, { relative });
 
-    let internalOnClick = useLinkClickHandler(navigationLocation, {
+    let internalOnClick = useLinkClickHandler(to, {
       replace,
       state,
       target,
@@ -463,7 +463,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
-        href={isAbsolute ? location : href}
+        href={absoluteHref || href}
         onClick={isExternal || reloadDocument ? onClick : handleClick}
         ref={ref}
         target={target}

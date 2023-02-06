@@ -128,6 +128,116 @@ describe("<Link> href", () => {
 
       expect(renderer.root.findByType("a").props.href).toEqual("//remix.run");
     });
+
+    test('<Link to="mailto:remix@example.com"> is treated as external link', () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox/messages"]}>
+            <Routes>
+              <Route path="inbox">
+                <Route
+                  path="messages"
+                  element={<Link to="mailto:remix@example.com" />}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "mailto:remix@example.com"
+      );
+    });
+
+    test('<Link to="web+remix://somepath"> is treated as external link', () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox/messages"]}>
+            <Routes>
+              <Route path="inbox">
+                <Route
+                  path="messages"
+                  element={<Link to="web+remix://somepath" />}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "web+remix://somepath"
+      );
+    });
+
+    test('<Link to="http://localhost/inbox"> is treated as an absolute link', () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox/messages"]}>
+            <Routes>
+              <Route path="inbox">
+                <Route
+                  path="messages"
+                  element={<Link to="http://localhost/inbox" />}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "http://localhost/inbox"
+      );
+    });
+
+    test("<Link to=\"{ search: 'key=value'\"> is handled with the current pathname", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox/messages"]}>
+            <Routes>
+              <Route path="inbox">
+                <Route
+                  path="messages"
+                  element={<Link to={{ search: "key=value" }} />}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "/inbox/messages?key=value"
+      );
+    });
+
+    test("<Link to=\"{ hash: 'hash'\"> is handled with the current pathname", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/inbox/messages"]}>
+            <Routes>
+              <Route path="inbox">
+                <Route
+                  path="messages"
+                  element={<Link to={{ hash: "hash" }} />}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.root.findByType("a").props.href).toEqual(
+        "/inbox/messages#hash"
+      );
+    });
   });
 
   describe("in a dynamic route", () => {

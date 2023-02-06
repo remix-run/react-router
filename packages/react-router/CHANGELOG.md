@@ -1,5 +1,13 @@
 # `react-router`
 
+## 6.8.1
+
+### Patch Changes
+
+- Remove inaccurate console warning for POP navigations and update active blocker logic ([#10030](https://github.com/remix-run/react-router/pull/10030))
+- Updated dependencies:
+  - `@remix-run/router@1.3.2`
+
 ## 6.8.0
 
 ### Patch Changes
