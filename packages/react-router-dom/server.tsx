@@ -4,6 +4,7 @@ import type {
   RevalidationState,
   Router as RemixRouter,
   StaticHandlerContext,
+  CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   UNSAFE_RouteManifest,
 } from "@remix-run/router";
 import {
@@ -12,7 +13,7 @@ import {
   Action,
   invariant,
   isRouteErrorResponse,
-  createStaticHandler as createStaticRemixHandler,
+  createStaticHandler as routerCreateStaticHandler,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
 import type { Location, RouteObject, To } from "react-router-dom";
@@ -205,14 +206,15 @@ function getStatelessNavigator() {
 let hasErrorBoundary = (route: RouteObject) => Boolean(route.errorElement);
 
 type CreateStaticHandlerOptions = Omit<
-  NonNullable<Parameters<typeof createStaticRemixHandler>[1]>,
+  RouterCreateStaticHandlerOptions,
   "hasErrorBoundary"
 >;
+
 export function createStaticHandler(
   routes: RouteObject[],
-  opts: CreateStaticHandlerOptions
+  opts?: CreateStaticHandlerOptions
 ) {
-  return createStaticRemixHandler(routes, {
+  return routerCreateStaticHandler(routes, {
     ...opts,
     hasErrorBoundary,
   });

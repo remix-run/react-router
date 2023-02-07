@@ -14,6 +14,7 @@ import type {
   ErrorResult,
   FormEncType,
   FormMethod,
+  HasErrorBoundaryFunction,
   RedirectResult,
   RouteData,
   AgnosticRouteObject,
@@ -319,7 +320,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   hydrationData?: HydrationState;
-  hasErrorBoundary?: (route: AgnosticRouteObject) => boolean;
+  hasErrorBoundary?: HasErrorBoundaryFunction;
 }
 
 /**
@@ -2409,12 +2410,14 @@ export function createRouter(init: RouterInit): Router {
 
 export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
 
+export interface CreateStaticHandlerOptions {
+  basename?: string;
+  hasErrorBoundary?: HasErrorBoundaryFunction;
+}
+
 export function createStaticHandler(
   routes: AgnosticRouteObject[],
-  opts?: {
-    basename?: string;
-    hasErrorBoundary?: (route: AgnosticRouteObject) => boolean;
-  }
+  opts?: CreateStaticHandlerOptions
 ): StaticHandler {
   invariant(
     routes.length > 0,
@@ -3176,7 +3179,7 @@ const immutableKeys = new Set<keyof AgnosticRouteObject>([
  */
 async function loadLazyRouteModules(
   lazyMatches: AgnosticDataRouteMatch[],
-  hasErrorBoundary: (route: AgnosticDataRouteObject) => boolean,
+  hasErrorBoundary: HasErrorBoundaryFunction,
   manifest: RouteManifest,
   signal?: AbortSignal
 ) {
@@ -3212,7 +3215,8 @@ async function loadLazyRouteModules(
         }
       }
 
-      // Mutate the route with the provided updates
+      // Mutate the route with the provided updates.  Do this first so we pass
+      // the updated version to hasErrorBoundary
       Object.assign(routeToUpdate, routeUpdates);
 
       // Mutate the `hasErrorBoundary` property on the route based on the route
