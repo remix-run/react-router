@@ -24,8 +24,9 @@
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
     "changeset": "changeset",
     "version": "changeset version",
+    "publish": "node scripts/publish.js",
     "postversion": "node scripts/postversion.mjs",
-    "version:experimental": "node scripts ./scripts/version experimental",
+    "version:experimental": "node ./scripts/version experimental",
     "watch": "rollup -c -w"
   },
   "jest": {
