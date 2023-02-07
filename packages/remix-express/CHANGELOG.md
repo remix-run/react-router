@@ -1,5 +1,13 @@
 # `@remix-run/express`
 
+## 1.13.0-pre.0
+
+### Patch Changes
+
+- Fix Fetch Request creation for incoming URLs with double slashes ([#5336](https://github.com/remix-run/remix/pull/5336))
+- Updated dependencies:
+  - `@remix-run/node@1.13.0-pre.0`
+
 ## 1.12.0
 
 ### Patch Changes

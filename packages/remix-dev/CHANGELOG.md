@@ -1,5 +1,41 @@
 # `@remix-run/dev`
 
+## 1.13.0-pre.0
+
+### Minor Changes
+
+- Deprecate remix config `serverBuildTarget` in favor of a more flexible combination of the existing [publicPath](https://remix.run/file-conventions/remix-config#publicpath), [serverBuildPath](https://remix.run/file-conventions/remix-config#serverbuildpath), [serverDependenciesToBundle](https://remix.run/file-conventions/remix-config#serverdependenciestobundle) along with net new [serverMainFields](https://remix.run/file-conventions/remix-config#servermainfields), [serverConditions](https://remix.run/file-conventions/remix-config#serverconditions), [serverMinify](https://remix.run/file-conventions/remix-config#serverminify), and the un-deprecated [serverModuleFormat](https://remix.run/file-conventions/remix-config#servermoduleformat) and [serverPlatform](https://remix.run/file-conventions/remix-config#serverplatform) options. ([#5354](https://github.com/remix-run/remix/pull/5354))
+- Add unstable built-in support for PostCSS via the `future.unstable_postcss` feature flag ([#5229](https://github.com/remix-run/remix/pull/5229))
+- Add unstable built-in support for Tailwind via the `future.unstable_tailwind` feature flag ([#5229](https://github.com/remix-run/remix/pull/5229))
+
+### Patch Changes
+
+- allow tailwind.config.cjs when using `future.unstable_tailwind` ([#5358](https://github.com/remix-run/remix/pull/5358))
+- Mark Vanilla Extract files as side effects to ensure that files only containing global styles aren't tree-shaken ([#5246](https://github.com/remix-run/remix/pull/5246))
+- Support decorators in files using CSS side-effect imports ([#5305](https://github.com/remix-run/remix/pull/5305))
+- flat route fixes and enhancements ([#5228](https://github.com/remix-run/remix/pull/5228))
+
+  `app._index.tsx` and `app/index.tsx` are different routes. The first is an index route for the second, and will be rendered into the parent outlet. The second is the parent route itself.
+
+  `index.tsx` no longer has any semantic meaning for "index routes", but rather the node module resolution convention of "index modules".
+
+  `routes/app.tsx` and `routes/app/index.tsx` _are the same route_. You just moved it to a folder and made an `index.tsx` because that's how node module resolution looks for the module at `routes/app`.
+
+  If you want an index route, you use `_index`
+
+  | file name                     | route path          | layout                                     |
+  | ----------------------------- | ------------------- | ------------------------------------------ |
+  | `routes/index.tsx`            | `/index`            | root                                       |
+  | `routes/_index.tsx`           | `/`                 | root                                       |
+  | `routes/app.tsx`              | `/app`              | root                                       |
+  | `routes/app/index.tsx`        | same route as above | root                                       |
+  | `routes/app._index.tsx`       | `/app`              | `routes/app.tsx` or `routes/app/index.tsx` |
+  | `routes/app._index/index.tsx` | same route as above | `routes/app.tsx` or `routes/app/index.tsx` |
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.13.0-pre.0`
+  - `@remix-run/serve@1.13.0-pre.0`
+
 ## 1.12.0
 
 ### Minor Changes
