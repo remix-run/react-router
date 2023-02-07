@@ -65,7 +65,7 @@ Let's take a dive into how to accomplish this.
 
 Start by adding `<Await />` for your slow data requests where you'd rather render a fallback UI. Let's do that for our example above:
 
-```jsx lines=[3,9,13,24-40]
+```jsx lines=[3,9,13-15,24-40]
 import {
   Await,
   defer,
