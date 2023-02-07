@@ -359,7 +359,7 @@ export async function readConfig(
   }
 
   let rootDirectory = path.resolve(remixRoot);
-  let configFile = findConfig(rootDirectory, "remix.config");
+  let configFile = findConfig(rootDirectory, "remix.config", configExts);
 
   let appConfig: AppConfig = {};
   if (configFile) {
@@ -581,9 +581,14 @@ function findEntry(dir: string, basename: string): string | undefined {
 
 const configExts = [".js", ".cjs", ".mjs"];
 
-function findConfig(dir: string, basename: string): string | undefined {
-  for (let ext of configExts) {
-    let file = path.resolve(dir, basename + ext);
+export function findConfig(
+  dir: string,
+  basename: string,
+  extensions: string[]
+): string | undefined {
+  for (let ext of extensions) {
+    let name = basename + ext;
+    let file = path.join(dir, name);
     if (fse.existsSync(file)) return file;
   }
 

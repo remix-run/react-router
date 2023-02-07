@@ -4,6 +4,7 @@ import type { AcceptedPlugin, Processor } from "postcss";
 import postcss from "postcss";
 
 import type { RemixConfig } from "../../config";
+import { findConfig } from "../../config";
 
 interface Options {
   config: RemixConfig;
@@ -119,13 +120,18 @@ async function loadTailwindPlugin(
 
   try {
     // First ensure they have a Tailwind config
-    require.resolve("./tailwind.config", { paths: [rootDirectory] });
+    // tailwind doesn't support esm config files yet
+    let tailwindConfigExtensions = [".js", ".cjs"];
+    let tailwindConfig = findConfig(
+      rootDirectory,
+      "tailwind.config",
+      tailwindConfigExtensions
+    );
+    if (!tailwindConfig) throw new Error("No Tailwind config found");
 
     // Load Tailwind from the project directory
-    tailwindPath = require.resolve("tailwindcss", {
-      paths: [rootDirectory],
-    });
-  } catch (err) {
+    tailwindPath = require.resolve("tailwindcss", { paths: [rootDirectory] });
+  } catch {
     // If they don't have a Tailwind config or Tailwind installed, just ignore it.
     return null;
   }
