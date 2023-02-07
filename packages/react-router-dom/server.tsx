@@ -7,12 +7,12 @@ import type {
   StaticHandlerContext,
 } from "@remix-run/router";
 import {
+  Action,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
-  Action,
-  UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
+  UNSAFE_invariant as invariant,
 } from "@remix-run/router";
 import type {
   DataRouteObject,
@@ -20,11 +20,11 @@ import type {
   RouteObject,
   To,
 } from "react-router-dom";
-import { Routes } from "react-router-dom";
 import {
   createPath,
   parsePath,
   Router,
+  Routes,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,

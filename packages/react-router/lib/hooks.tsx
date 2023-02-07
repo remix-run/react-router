@@ -13,33 +13,33 @@ import type {
 } from "@remix-run/router";
 import {
   Action as NavigationType,
-  UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   joinPaths,
   matchPath,
   matchRoutes,
   parsePath,
   resolveTo,
-  warning,
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
+  UNSAFE_invariant as invariant,
+  warning,
 } from "@remix-run/router";
 
 import type {
+  DataRouteMatch,
   NavigateOptions,
+  RelativeRoutingType,
   RouteContextObject,
   RouteMatch,
   RouteObject,
-  DataRouteMatch,
-  RelativeRoutingType,
 } from "./context";
 import {
+  AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
   LocationContext,
   NavigationContext,
   RouteContext,
   RouteErrorContext,
-  AwaitContext,
 } from "./context";
 
 /**

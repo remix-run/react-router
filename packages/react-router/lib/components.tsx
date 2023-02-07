@@ -1,39 +1,39 @@
-import * as React from "react";
 import type {
-  TrackedPromise,
   InitialEntry,
   Location,
   MemoryHistory,
   Router as RemixRouter,
   RouterState,
   To,
+  TrackedPromise,
 } from "@remix-run/router";
 import {
-  Action as NavigationType,
   AbortedDeferredError,
+  Action as NavigationType,
   createMemoryHistory,
-  UNSAFE_invariant as invariant,
   parsePath,
   stripBasename,
+  UNSAFE_invariant as invariant,
   warning,
 } from "@remix-run/router";
+import * as React from "react";
 import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
 import type {
   DataRouteObject,
   IndexRouteObject,
-  RouteMatch,
-  RouteObject,
   Navigator,
   NonIndexRouteObject,
   RelativeRoutingType,
+  RouteMatch,
+  RouteObject,
 } from "./context";
 import {
-  LocationContext,
-  NavigationContext,
+  AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
-  AwaitContext,
+  LocationContext,
+  NavigationContext,
 } from "./context";
 import {
   useAsyncValue,

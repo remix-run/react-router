@@ -1,8 +1,9 @@
 import * as React from "react";
 import type {
-  AgnosticRouteMatch,
+  Action as NavigationType,
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
+  AgnosticRouteMatch,
   History,
   Location,
   Router,
@@ -10,7 +11,6 @@ import type {
   To,
   TrackedPromise,
 } from "@remix-run/router";
-import type { Action as NavigationType } from "@remix-run/router";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router
