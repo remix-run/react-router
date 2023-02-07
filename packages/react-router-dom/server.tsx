@@ -5,7 +5,6 @@ import type {
   Router as RemixRouter,
   StaticHandlerContext,
   UNSAFE_RouteManifest,
-  UNSAFE_RouteMapper,
 } from "@remix-run/router";
 import {
   IDLE_FETCHER,
@@ -13,6 +12,7 @@ import {
   Action,
   invariant,
   isRouteErrorResponse,
+  createStaticHandler as createStaticRemixHandler,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
 import type { Location, RouteObject, To } from "react-router-dom";
@@ -202,15 +202,30 @@ function getStatelessNavigator() {
   };
 }
 
+let hasErrorBoundary = (route: RouteObject) => Boolean(route.errorElement);
+
+type CreateStaticHandlerOptions = Omit<
+  NonNullable<Parameters<typeof createStaticRemixHandler>[1]>,
+  "hasErrorBoundary"
+>;
+export function createStaticHandler(
+  routes: RouteObject[],
+  opts: CreateStaticHandlerOptions
+) {
+  return createStaticRemixHandler(routes, {
+    ...opts,
+    hasErrorBoundary,
+  });
+}
+
 export function createStaticRouter(
   routes: RouteObject[],
-  context: StaticHandlerContext,
-  routeMapper?: RouteMapper = () => ({})
+  context: StaticHandlerContext
 ): RemixRouter {
   let manifest: UNSAFE_RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
-    routeMapper,
+    hasErrorBoundary,
     undefined,
     manifest
   );

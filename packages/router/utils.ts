@@ -282,13 +282,11 @@ function isIndexRoute(
   return route.index === true;
 }
 
-export type RouteMapper = (route: AgnosticRouteObject) => Record<string, any>;
-
 // Walk the route tree generating unique IDs where necessary so we are working
 // solely with AgnosticDataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
-  routeMapper: RouteMapper = () => ({}),
+  hasErrorBoundary: (route: AgnosticRouteObject) => boolean,
   parentPath: number[] = [],
   manifest: RouteManifest = {}
 ): AgnosticDataRouteObject[] {
@@ -308,7 +306,7 @@ export function convertRoutesToDataRoutes(
     if (isIndexRoute(route)) {
       let indexRoute: AgnosticDataIndexRouteObject = {
         ...route,
-        ...routeMapper(route),
+        hasErrorBoundary: hasErrorBoundary(route),
         id,
       };
       manifest[id] = indexRoute;
@@ -316,8 +314,8 @@ export function convertRoutesToDataRoutes(
     } else {
       let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
         ...route,
-        ...routeMapper(route),
         id,
+        hasErrorBoundary: hasErrorBoundary(route),
         children: undefined,
       };
       manifest[id] = pathOrLayoutRoute;
@@ -325,7 +323,7 @@ export function convertRoutesToDataRoutes(
       if (route.children) {
         pathOrLayoutRoute.children = convertRoutesToDataRoutes(
           route.children,
-          routeMapper,
+          hasErrorBoundary,
           treePath,
           manifest
         );

@@ -1,8 +1,8 @@
 import type * as express from "express";
-import { createStaticHandler } from "@remix-run/router";
 import * as React from "react";
 import ReactDOMServer from "react-dom/server";
 import {
+  createStaticHandler,
   createStaticRouter,
   StaticRouterProvider,
 } from "react-router-dom/server";

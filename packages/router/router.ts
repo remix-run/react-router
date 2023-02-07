@@ -23,7 +23,6 @@ import type {
   MutationFormMethod,
   ShouldRevalidateFunction,
   RouteManifest,
-  RouteMapper,
 } from "./utils";
 import {
   DeferredData,
@@ -320,7 +319,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   hydrationData?: HydrationState;
-  routeMapper?: RouteMapper;
+  hasErrorBoundary?: (route: AgnosticRouteObject) => boolean;
 }
 
 /**
@@ -629,20 +628,10 @@ const isBrowser =
   typeof window.document !== "undefined" &&
   typeof window.document.createElement !== "undefined";
 const isServer = !isBrowser;
-//#endregion
 
-export function mapRouteObjects(
-  routes: AgnosticRouteObject[],
-  mapper: (route: AgnosticRouteObject) => Record<string, any>
-): AgnosticRouteObject[] {
-  return routes.map((route) => {
-    let routeClone = { ...route, ...mapper({ ...route }) };
-    if (routeClone.children) {
-      routeClone.children = mapRouteObjects(routeClone.children, mapper);
-    }
-    return routeClone;
-  });
-}
+const defaultHasErrorBoundary = (route: AgnosticRouteObject) =>
+  Boolean(route.hasErrorBoundary);
+//#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region createRouter
@@ -657,12 +646,14 @@ export function createRouter(init: RouterInit): Router {
     "You must provide a non-empty routes array to createRouter"
   );
 
+  let hasErrorBoundary = init.hasErrorBoundary || defaultHasErrorBoundary;
+
   // Routes keyed by ID
   let manifest: RouteManifest = {};
   // Routes in tree format for matching
   let dataRoutes = convertRoutesToDataRoutes(
     init.routes,
-    init.routeMapper,
+    hasErrorBoundary,
     undefined,
     manifest
   );
@@ -690,8 +681,6 @@ export function createRouter(init: RouterInit): Router {
     init.basename
   );
   let initialErrors: RouteData | null = null;
-
-  let routeMapper = init.routeMapper || (() => ({}));
 
   if (initialMatches == null) {
     // If we do not match a user-provided-route, fall back to the root
@@ -871,7 +860,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Load lazy modules, then kick off initial data load if needed
-    loadLazyRouteModules(lazyMatches, routeMapper, manifest).then(() => {
+    loadLazyRouteModules(lazyMatches, hasErrorBoundary, manifest).then(() => {
       let initialized =
         !state.matches.some((m) => m.route.loader) ||
         init.hydrationData != null;
@@ -1298,7 +1287,7 @@ export function createRouter(init: RouterInit): Router {
     if (actionMatch.route.lazy) {
       await loadLazyRouteModules(
         [actionMatch],
-        routeMapper,
+        hasErrorBoundary,
         manifest,
         request.signal
       );
@@ -1490,7 +1479,7 @@ export function createRouter(init: RouterInit): Router {
     if (lazyMatches.length > 0) {
       await loadLazyRouteModules(
         lazyMatches,
-        routeMapper,
+        hasErrorBoundary,
         manifest,
         request.signal
       );
@@ -1651,7 +1640,7 @@ export function createRouter(init: RouterInit): Router {
     if (match.route.lazy) {
       await loadLazyRouteModules(
         [match],
-        routeMapper,
+        hasErrorBoundary,
         manifest,
         fetchRequest.signal
       );
@@ -1779,7 +1768,7 @@ export function createRouter(init: RouterInit): Router {
     if (match.route.lazy) {
       await loadLazyRouteModules(
         lazyMatches,
-        routeMapper,
+        hasErrorBoundary,
         manifest,
         revalidationRequest.signal
       );
@@ -1902,7 +1891,7 @@ export function createRouter(init: RouterInit): Router {
     if (match.route.lazy) {
       await loadLazyRouteModules(
         [match],
-        routeMapper,
+        hasErrorBoundary,
         manifest,
         fetchRequest.signal
       );
@@ -2424,7 +2413,7 @@ export function createStaticHandler(
   routes: AgnosticRouteObject[],
   opts?: {
     basename?: string;
-    routeMapper?: RouteMapper;
+    hasErrorBoundary?: (route: AgnosticRouteObject) => boolean;
   }
 ): StaticHandler {
   invariant(
@@ -2433,10 +2422,10 @@ export function createStaticHandler(
   );
 
   let manifest: RouteManifest = {};
-  let routeMapper = opts?.routeMapper || (() => ({}));
+  let hasErrorBoundary = opts?.hasErrorBoundary || defaultHasErrorBoundary;
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
-    routeMapper,
+    hasErrorBoundary,
     undefined,
     manifest
   );
@@ -2625,7 +2614,7 @@ export function createStaticHandler(
     if (lazyMatches.length > 0) {
       await loadLazyRouteModules(
         lazyMatches,
-        routeMapper,
+        hasErrorBoundary,
         manifest,
         request.signal
       );
@@ -3169,6 +3158,17 @@ function shouldRevalidateLoader(
   return arg.defaultShouldRevalidate;
 }
 
+// Keys we cannot change from within a lazy() function.  We spread all
+// other keys onto the route.  Either they're meaningful to the router,
+// or they'll get ignored.
+const immutableKeys = new Set<keyof AgnosticRouteObject>([
+  "caseSensitive",
+  "path",
+  "id",
+  "index",
+  "children",
+]);
+
 /**
  * Execute route.lazy() methods to lazily load route modules (loader, action,
  * shouldRevalidate) and update the routeManifest in place which shares objects
@@ -3176,7 +3176,7 @@ function shouldRevalidateLoader(
  */
 async function loadLazyRouteModules(
   lazyMatches: AgnosticDataRouteMatch[],
-  routeMapper: RouteMapper,
+  hasErrorBoundary: (route: AgnosticDataRouteObject) => boolean,
   manifest: RouteManifest,
   signal?: AbortSignal
 ) {
@@ -3205,43 +3205,26 @@ async function loadLazyRouteModules(
       // mutate in place.  It's also worth noting that this is a more targeted
       // update that cannot touch things like path/index/children so it cannot
       // affect the routes we've already matched.
+      let routeUpdates: Record<string, any> = {};
+      for (let k in mod) {
+        if (!immutableKeys.has(k as keyof AgnosticRouteObject)) {
+          routeUpdates[k] = mod[k as keyof typeof mod];
+        }
+      }
 
-      // Keys we cannot change from within a lazy() function.  We spread all
-      // other keys onto the route.  Either they're meaningful to the router,
-      // or they'll get ignored.  This is required for now since we have no
-      // idea about element/errorElement in here.  If we want to get very
-      // explicit and fix the types here we may need to allow the framework-layer
-      // to pass in an `updateRoute` function or tell us specific keys to look
-      // for :/
-      // let immutableKeys = new Set<keyof AgnosticRouteObject>([
-      //   "caseSensitive",
-      //   "path",
-      //   "id",
-      //   "index",
-      //   "children",
-      // ]);
-      // for (let k of immutableKeys) {
-      //   if (!immutableKeys.has(k)) {
-      //     // @ts-expect-error
-      //     routeToUpdate[k] = mod[k];
+      // Mutate the route with the provided updates
+      Object.assign(routeToUpdate, routeUpdates);
 
-      console.log("object assign to route with mapper!!!");
-      Object.assign(
-        routeToUpdate,
-        mod,
-        routeMapper({ ...routeToUpdate, ...mod }),
-        { lazy: undefined }
-      );
-
-      console.log("routeToUpdate!!!", routeToUpdate);
-
-      // // This feels wrong :/
-      // if (k === "errorElement") {
-      //   //@ts-expect-error
-      //   routeToUpdate.hasErrorBoundary = mod[k] != null;
-      // }
-      //   }
-      // }
+      // Mutate the `hasErrorBoundary` property on the route based on the route
+      // updates and remove the `lazy` function so we don't resolve the lazy
+      // route again.
+      Object.assign(routeToUpdate, {
+        // To keep things framework agnostic, we use the provided
+        // `hasErrorBoundary` function to set the `hasErrorBoundary` route
+        // property since the logic will differ between frameworks.
+        hasErrorBoundary: hasErrorBoundary({ ...routeToUpdate }),
+        lazy: undefined,
+      });
     })
   );
 }

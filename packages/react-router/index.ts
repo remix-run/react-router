@@ -220,9 +220,7 @@ export function createMemoryRouter(
     }),
     hydrationData: opts?.hydrationData,
     routes,
-    routeMapper: (route: RouteObject): RouteObject => ({
-      hasErrorBoundary: Boolean(route.errorElement),
-    }),
+    hasErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
   }).initialize();
 }
 

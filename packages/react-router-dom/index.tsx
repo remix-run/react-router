@@ -208,9 +208,7 @@ export function createBrowserRouter(
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    routeMapper: (route: RouteObject): RouteObject => ({
-      hasErrorBoundary: Boolean(route.errorElement),
-    }),
+    hasErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
   }).initialize();
 }
 
@@ -227,9 +225,7 @@ export function createHashRouter(
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    routeMapper: (route: RouteObject): RouteObject => ({
-      hasErrorBoundary: Boolean(route.errorElement),
-    }),
+    hasErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
   }).initialize();
 }
 
