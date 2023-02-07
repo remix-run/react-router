@@ -23,7 +23,6 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
-  UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -185,7 +184,6 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
-  UNSAFE_enhanceManualRouteObjects,
 } from "react-router";
 //#endregion
 
@@ -209,7 +207,10 @@ export function createBrowserRouter(
     basename: opts?.basename,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
-    routes: enhanceManualRouteObjects(routes),
+    routes,
+    routeMapper: (route: RouteObject): RouteObject => ({
+      hasErrorBoundary: Boolean(route.errorElement),
+    }),
   }).initialize();
 }
 
@@ -225,7 +226,10 @@ export function createHashRouter(
     basename: opts?.basename,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
-    routes: enhanceManualRouteObjects(routes),
+    routes,
+    routeMapper: (route: RouteObject): RouteObject => ({
+      hasErrorBoundary: Boolean(route.errorElement),
+    }),
   }).initialize();
 }
 

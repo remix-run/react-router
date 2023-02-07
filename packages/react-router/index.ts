@@ -52,7 +52,6 @@ import type {
   RouterProviderProps,
 } from "./lib/components";
 import {
-  enhanceManualRouteObjects,
   createRoutesFromChildren,
   renderMatches,
   Await,
@@ -220,7 +219,10 @@ export function createMemoryRouter(
       initialIndex: opts?.initialIndex,
     }),
     hydrationData: opts?.hydrationData,
-    routes: enhanceManualRouteObjects(routes),
+    routes,
+    routeMapper: (route: RouteObject): RouteObject => ({
+      hasErrorBoundary: Boolean(route.errorElement),
+    }),
   }).initialize();
 }
 
@@ -244,5 +246,4 @@ export {
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  enhanceManualRouteObjects as UNSAFE_enhanceManualRouteObjects,
 };

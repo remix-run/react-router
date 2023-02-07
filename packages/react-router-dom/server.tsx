@@ -5,6 +5,7 @@ import type {
   Router as RemixRouter,
   StaticHandlerContext,
   UNSAFE_RouteManifest,
+  UNSAFE_RouteMapper,
 } from "@remix-run/router";
 import {
   IDLE_FETCHER,
@@ -22,7 +23,6 @@ import {
   Router,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
-  UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router-dom";
 
 export interface StaticRouterProps {
@@ -204,11 +204,13 @@ function getStatelessNavigator() {
 
 export function createStaticRouter(
   routes: RouteObject[],
-  context: StaticHandlerContext
+  context: StaticHandlerContext,
+  routeMapper?: RouteMapper = () => ({})
 ): RemixRouter {
   let manifest: UNSAFE_RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
-    enhanceManualRouteObjects(routes),
+    routes,
+    routeMapper,
     undefined,
     manifest
   );

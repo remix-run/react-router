@@ -23,6 +23,7 @@ import type {
   MutationFormMethod,
   ShouldRevalidateFunction,
   RouteManifest,
+  RouteMapper,
 } from "./utils";
 import {
   DeferredData,
@@ -319,6 +320,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   hydrationData?: HydrationState;
+  routeMapper?: RouteMapper;
 }
 
 /**
@@ -629,6 +631,19 @@ const isBrowser =
 const isServer = !isBrowser;
 //#endregion
 
+export function mapRouteObjects(
+  routes: AgnosticRouteObject[],
+  mapper: (route: AgnosticRouteObject) => Record<string, any>
+): AgnosticRouteObject[] {
+  return routes.map((route) => {
+    let routeClone = { ...route, ...mapper({ ...route }) };
+    if (routeClone.children) {
+      routeClone.children = mapRouteObjects(routeClone.children, mapper);
+    }
+    return routeClone;
+  });
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //#region createRouter
 ////////////////////////////////////////////////////////////////////////////////
@@ -645,7 +660,12 @@ export function createRouter(init: RouterInit): Router {
   // Routes keyed by ID
   let manifest: RouteManifest = {};
   // Routes in tree format for matching
-  let dataRoutes = convertRoutesToDataRoutes(init.routes, undefined, manifest);
+  let dataRoutes = convertRoutesToDataRoutes(
+    init.routes,
+    init.routeMapper,
+    undefined,
+    manifest
+  );
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
@@ -670,6 +690,8 @@ export function createRouter(init: RouterInit): Router {
     init.basename
   );
   let initialErrors: RouteData | null = null;
+
+  let routeMapper = init.routeMapper || (() => ({}));
 
   if (initialMatches == null) {
     // If we do not match a user-provided-route, fall back to the root
@@ -849,7 +871,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Load lazy modules, then kick off initial data load if needed
-    loadLazyRouteModules(lazyMatches, manifest).then(() => {
+    loadLazyRouteModules(lazyMatches, routeMapper, manifest).then(() => {
       let initialized =
         !state.matches.some((m) => m.route.loader) ||
         init.hydrationData != null;
@@ -1274,7 +1296,12 @@ export function createRouter(init: RouterInit): Router {
     let actionMatch = getTargetMatch(matches, location);
 
     if (actionMatch.route.lazy) {
-      await loadLazyRouteModules([actionMatch], manifest, request.signal);
+      await loadLazyRouteModules(
+        [actionMatch],
+        routeMapper,
+        manifest,
+        request.signal
+      );
     }
 
     if (!actionMatch.route.action) {
@@ -1461,7 +1488,12 @@ export function createRouter(init: RouterInit): Router {
 
     let lazyMatches = matches.filter((m) => m.route.lazy);
     if (lazyMatches.length > 0) {
-      await loadLazyRouteModules(lazyMatches, manifest, request.signal);
+      await loadLazyRouteModules(
+        lazyMatches,
+        routeMapper,
+        manifest,
+        request.signal
+      );
     }
 
     let { results, loaderResults, fetcherResults } =
@@ -1617,7 +1649,12 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     if (match.route.lazy) {
-      await loadLazyRouteModules([match], manifest, fetchRequest.signal);
+      await loadLazyRouteModules(
+        [match],
+        routeMapper,
+        manifest,
+        fetchRequest.signal
+      );
 
       if (!match.route.action) {
         let error = getInternalRouterError(405, {
@@ -1742,6 +1779,7 @@ export function createRouter(init: RouterInit): Router {
     if (match.route.lazy) {
       await loadLazyRouteModules(
         lazyMatches,
+        routeMapper,
         manifest,
         revalidationRequest.signal
       );
@@ -1862,7 +1900,12 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     if (match.route.lazy) {
-      await loadLazyRouteModules([match], manifest, fetchRequest.signal);
+      await loadLazyRouteModules(
+        [match],
+        routeMapper,
+        manifest,
+        fetchRequest.signal
+      );
     }
 
     let result: DataResult = await callLoaderOrAction(
@@ -2381,6 +2424,7 @@ export function createStaticHandler(
   routes: AgnosticRouteObject[],
   opts?: {
     basename?: string;
+    routeMapper?: RouteMapper;
   }
 ): StaticHandler {
   invariant(
@@ -2389,7 +2433,13 @@ export function createStaticHandler(
   );
 
   let manifest: RouteManifest = {};
-  let dataRoutes = convertRoutesToDataRoutes(routes, undefined, manifest);
+  let routeMapper = opts?.routeMapper || (() => ({}));
+  let dataRoutes = convertRoutesToDataRoutes(
+    routes,
+    routeMapper,
+    undefined,
+    manifest
+  );
   let basename = (opts ? opts.basename : null) || "/";
 
   /**
@@ -2573,7 +2623,12 @@ export function createStaticHandler(
 
     let lazyMatches = matches.filter((m) => m.route.lazy);
     if (lazyMatches.length > 0) {
-      await loadLazyRouteModules(lazyMatches, manifest, request.signal);
+      await loadLazyRouteModules(
+        lazyMatches,
+        routeMapper,
+        manifest,
+        request.signal
+      );
     }
 
     try {
@@ -3121,6 +3176,7 @@ function shouldRevalidateLoader(
  */
 async function loadLazyRouteModules(
   lazyMatches: AgnosticDataRouteMatch[],
+  routeMapper: RouteMapper,
   manifest: RouteManifest,
   signal?: AbortSignal
 ) {
@@ -3140,8 +3196,6 @@ async function loadLazyRouteModules(
       let routeToUpdate = manifest[match.route.id];
       invariant(routeToUpdate, "No route found in manifest");
 
-      routeToUpdate.lazy = undefined;
-
       // For now, we update in place.  We think this is ok since there's no way
       // we could yet be sitting on this route since we can't get there without
       // resolving through here first.  This is different than the HMR "update"
@@ -3159,25 +3213,35 @@ async function loadLazyRouteModules(
       // explicit and fix the types here we may need to allow the framework-layer
       // to pass in an `updateRoute` function or tell us specific keys to look
       // for :/
-      let immutableKeys = new Set<keyof AgnosticRouteObject>([
-        "caseSensitive",
-        "path",
-        "id",
-        "index",
-        "children",
-      ]);
-      Object.keys(mod).forEach((k) => {
-        //@ts-expect-error
-        if (!immutableKeys.has(k)) {
-          //@ts-expect-error
-          routeToUpdate[k] = mod[k];
-          // This feels wrong :/
-          if (k === "errorElement") {
-            //@ts-expect-error
-            routeToUpdate.hasErrorBoundary = mod[k] != null;
-          }
-        }
-      });
+      // let immutableKeys = new Set<keyof AgnosticRouteObject>([
+      //   "caseSensitive",
+      //   "path",
+      //   "id",
+      //   "index",
+      //   "children",
+      // ]);
+      // for (let k of immutableKeys) {
+      //   if (!immutableKeys.has(k)) {
+      //     // @ts-expect-error
+      //     routeToUpdate[k] = mod[k];
+
+      console.log("object assign to route with mapper!!!");
+      Object.assign(
+        routeToUpdate,
+        mod,
+        routeMapper({ ...routeToUpdate, ...mod }),
+        { lazy: undefined }
+      );
+
+      console.log("routeToUpdate!!!", routeToUpdate);
+
+      // // This feels wrong :/
+      // if (k === "errorElement") {
+      //   //@ts-expect-error
+      //   routeToUpdate.hasErrorBoundary = mod[k] != null;
+      // }
+      //   }
+      // }
     })
   );
 }

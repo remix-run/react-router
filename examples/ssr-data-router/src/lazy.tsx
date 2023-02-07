@@ -36,7 +36,7 @@ export const action: ActionFunction = async ({ request }) => {
   return submissionCount;
 };
 
-export function ErrorBoundary() {
+function ErrorBoundary() {
   return (
     <>
       <h2>Lazy error boundary</h2>
@@ -45,11 +45,13 @@ export function ErrorBoundary() {
   );
 }
 
+export const errorElement = <ErrorBoundary />;
+
 export const shouldRevalidate: ShouldRevalidateFunction = (args) => {
   return Boolean(args.formAction);
 };
 
-export default function LazyPage() {
+function LazyPage() {
   let data = useLoaderData() as LazyLoaderData;
 
   return (
@@ -68,3 +70,5 @@ export default function LazyPage() {
     </>
   );
 }
+
+export const element = <LazyPage />;

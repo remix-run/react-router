@@ -77,7 +77,10 @@ export * from "./router";
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @internal */
-export type { RouteManifest as UNSAFE_RouteManifest } from "./utils";
+export type {
+  RouteManifest as UNSAFE_RouteManifest,
+  RouteMapper as UNSAFE_RouteMapper,
+} from "./utils";
 export {
   DeferredData as UNSAFE_DeferredData,
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,

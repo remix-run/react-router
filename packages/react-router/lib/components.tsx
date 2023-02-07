@@ -617,23 +617,3 @@ export function renderMatches(
 ): React.ReactElement | null {
   return _renderMatches(matches);
 }
-
-/**
- * @private
- * Walk the route tree and add hasErrorBoundary if it's not provided, so that
- * users providing manual route arrays can just specify errorElement
- */
-export function enhanceManualRouteObjects(
-  routes: RouteObject[]
-): RouteObject[] {
-  return routes.map((route) => {
-    let routeClone = { ...route };
-    if (routeClone.hasErrorBoundary == null) {
-      routeClone.hasErrorBoundary = routeClone.errorElement != null;
-    }
-    if (routeClone.children) {
-      routeClone.children = enhanceManualRouteObjects(routeClone.children);
-    }
-    return routeClone;
-  });
-}

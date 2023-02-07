@@ -50,26 +50,7 @@ let router = createBrowserRouter(
           console.log("loading lazy");
           await sleep(1000);
           console.log("done loading lazy");
-          let {
-            default: Component,
-            loader,
-            action,
-            ErrorBoundary,
-            shouldRevalidate,
-          } = await import("./lazy");
-
-          return {
-            element: <Component />,
-            loader,
-            action,
-            shouldRevalidate,
-            ...(ErrorBoundary
-              ? {
-                  errorElement: <ErrorBoundary />,
-                  hasErrorBoundary: true,
-                }
-              : {}),
-          };
+          return await import("./lazy");
         }}
       />
     </Route>

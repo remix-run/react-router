@@ -26,26 +26,7 @@ export const routes = [
           console.log("start lazy()");
           await sleep(1000);
           console.log("end lazy()");
-          let {
-            default: Component,
-            loader,
-            action,
-            ErrorBoundary,
-            shouldRevalidate,
-          } = await import("./lazy");
-
-          return {
-            element: <Component />,
-            loader,
-            action,
-            shouldRevalidate,
-            ...(ErrorBoundary
-              ? {
-                  errorElement: <ErrorBoundary />,
-                  hasErrorBoundary: true,
-                }
-              : {}),
-          };
+          return await import("./lazy");
         },
       },
       {
