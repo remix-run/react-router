@@ -11512,12 +11512,15 @@ describe("a router", () => {
   describe("lazily loaded route modules", () => {
     const LAZY_ROUTES: TestRouteObject[] = [
       {
+        id: "root",
         path: "/",
-      },
-      {
-        id: "lazy",
-        path: "/lazy",
-        lazy: true,
+        children: [
+          {
+            id: "lazy",
+            path: "/lazy",
+            lazy: true,
+          },
+        ],
       },
     ];
 
@@ -11535,12 +11538,60 @@ describe("a router", () => {
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("loading");
 
-      await dfd.resolve("LAZY");
+      await dfd.resolve("LAZY LOADER");
 
       expect(t.router.state.location.pathname).toBe("/lazy");
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.loaderData).toEqual({
-        lazy: "LAZY",
+        lazy: "LAZY LOADER",
+      });
+    });
+
+    it("handles loader errors in lazy route modules on loading navigation", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let A = await t.navigate("/lazy");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+
+      let dfd = createDeferred();
+      A.lazy.lazy.resolve({
+        loader: () => dfd.promise,
+        hasErrorBoundary: true,
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+
+      await dfd.reject(new Error("LAZY LOADER ERROR"));
+
+      expect(t.router.state.location.pathname).toBe("/lazy");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.errors).toEqual({
+        lazy: new Error("LAZY LOADER ERROR"),
+      });
+    });
+
+    it("handles bubbling of loader errors in lazy route modules on loading navigation when hasErrorBoundary is resolved as false", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let A = await t.navigate("/lazy");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+
+      let dfd = createDeferred();
+      A.lazy.lazy.resolve({
+        loader: () => dfd.promise,
+        hasErrorBoundary: false,
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+
+      await dfd.reject(new Error("LAZY LOADER ERROR"));
+
+      expect(t.router.state.location.pathname).toBe("/lazy");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.errors).toEqual({
+        root: new Error("LAZY LOADER ERROR"),
       });
     });
 
@@ -11571,14 +11622,68 @@ describe("a router", () => {
       });
       expect(t.router.state.loaderData).toEqual({});
 
-      await loaderDfd.resolve("LAZY");
+      await loaderDfd.resolve("LAZY LOADER");
       expect(t.router.state.location.pathname).toBe("/lazy");
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.actionData).toEqual({
         lazy: "LAZY ACTION",
       });
       expect(t.router.state.loaderData).toEqual({
-        lazy: "LAZY",
+        lazy: "LAZY LOADER",
+      });
+    });
+
+    it("handles action errors in lazy route modules on submission navigation", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let A = await t.navigate("/lazy", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      let actionDfd = createDeferred();
+      A.lazy.lazy.resolve({
+        action: () => actionDfd.promise,
+        hasErrorBoundary: true,
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      await actionDfd.reject(new Error("LAZY ACTION ERROR"));
+      expect(t.router.state.location.pathname).toBe("/lazy");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual(null);
+      expect(t.router.state.errors).toEqual({
+        lazy: new Error("LAZY ACTION ERROR"),
+      });
+    });
+
+    it("handles bubbling of action errors in lazy route modules on submission navigation when hasErrorBoundary is resolved as false", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let A = await t.navigate("/lazy", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      let actionDfd = createDeferred();
+      A.lazy.lazy.resolve({
+        action: () => actionDfd.promise,
+        hasErrorBoundary: false,
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      await actionDfd.reject(new Error("LAZY ACTION ERROR"));
+      expect(t.router.state.location.pathname).toBe("/lazy");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual(null);
+      expect(t.router.state.errors).toEqual({
+        root: new Error("LAZY ACTION ERROR"),
       });
     });
 
@@ -11595,9 +11700,29 @@ describe("a router", () => {
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
-      await loaderDfd.resolve("LAZY");
+      await loaderDfd.resolve("LAZY LOADER");
       expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-      expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY");
+      expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY LOADER");
+    });
+
+    it("handles errors in lazy route modules on fetcher.load", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let key = "key";
+      let A = await t.fetch("/lazy", key);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      let loaderDfd = createDeferred();
+      await A.lazy.lazy.resolve({
+        loader: () => loaderDfd.promise,
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      await loaderDfd.reject(new Error("LAZY LOADER ERROR"));
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.router.state.errors).toEqual({
+        root: new Error("LAZY LOADER ERROR"),
+      });
     });
 
     it("fetches lazy route modules on fetcher.submit", async () => {
@@ -11616,10 +11741,34 @@ describe("a router", () => {
       });
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
 
-      await actionDfd.resolve("ACTION");
+      await actionDfd.resolve("LAZY ACTION");
       await tick();
       expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-      expect(t.router.state.fetchers.get(key)?.data).toBe("ACTION");
+      expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY ACTION");
+    });
+
+    it("handles errors in lazy route modules on fetcher.submit", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let key = "key";
+      let A = await t.fetch("/lazy", key, {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      let actionDfd = createDeferred();
+      await A.lazy.lazy.resolve({
+        action: () => actionDfd.promise,
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      await actionDfd.reject(new Error("LAZY ACTION ERROR"));
+      await tick();
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.router.state.errors).toEqual({
+        root: new Error("LAZY ACTION ERROR"),
+      });
     });
 
     it("fetches lazy route modules on staticHandler.query()", async () => {
@@ -11646,6 +11795,79 @@ describe("a router", () => {
       expect(context.loaderData).toEqual({ lazy: { value: "LAZY" } });
     });
 
+    it("handles loader errors in lazy route modules on staticHandler.query()", async () => {
+      let { query } = createStaticHandler([
+        {
+          id: "root",
+          path: "/",
+          children: [
+            {
+              id: "lazy",
+              path: "/lazy",
+              lazy: async () => {
+                await tick();
+                return {
+                  async loader() {
+                    throw new Error("LAZY LOADER ERROR");
+                  },
+                  hasErrorBoundary: true,
+                };
+              },
+            },
+          ],
+        },
+      ]);
+
+      let context = await query(createRequest("/lazy"));
+      invariant(
+        !(context instanceof Response),
+        "Expected a StaticContext instance"
+      );
+      expect(context.loaderData).toEqual({
+        root: null,
+        lazy: undefined, // TODO: Check that this is correct. Should it be null? Does it matter?
+      });
+      expect(context.errors).toEqual({
+        lazy: new Error("LAZY LOADER ERROR"),
+      });
+    });
+
+    it("handles bubbling of loader errors in lazy route modules on staticHandler.query() when hasErrorBoundary is resolved as false", async () => {
+      let { query } = createStaticHandler([
+        {
+          id: "root",
+          path: "/",
+          children: [
+            {
+              id: "lazy",
+              path: "/lazy",
+              lazy: async () => {
+                await tick();
+                return {
+                  async loader() {
+                    throw new Error("LAZY LOADER ERROR");
+                  },
+                  hasErrorBoundary: false,
+                };
+              },
+            },
+          ],
+        },
+      ]);
+
+      let context = await query(createRequest("/lazy"));
+      invariant(
+        !(context instanceof Response),
+        "Expected a StaticContext instance"
+      );
+      expect(context.loaderData).toEqual({
+        root: null,
+      });
+      expect(context.errors).toEqual({
+        root: new Error("LAZY LOADER ERROR"),
+      });
+    });
+
     it("fetches lazy route modules on staticHandler.queryRoute()", async () => {
       let { queryRoute } = createStaticHandler([
         {
@@ -11665,6 +11887,32 @@ describe("a router", () => {
       let response = await queryRoute(createRequest("/lazy"));
       let data = await response.json();
       expect(data).toEqual({ value: "LAZY" });
+    });
+
+    it("handles loader errors in lazy route modules on staticHandler.queryRoute()", async () => {
+      let { queryRoute } = createStaticHandler([
+        {
+          id: "lazy",
+          path: "/lazy",
+          lazy: async () => {
+            await tick();
+            return {
+              async loader() {
+                throw new Error("LAZY LOADER ERROR");
+              },
+            };
+          },
+        },
+      ]);
+
+      let e;
+      try {
+        await queryRoute(createRequest("/lazy"));
+      } catch (_e) {
+        e = _e;
+      }
+
+      expect(e).toMatchInlineSnapshot(`[Error: LAZY LOADER ERROR]`);
     });
   });
 
