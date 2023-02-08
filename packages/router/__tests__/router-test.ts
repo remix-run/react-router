@@ -51,6 +51,7 @@ type TestIndexRouteObject = Pick<
   AgnosticIndexRouteObject,
   "id" | "index" | "path" | "shouldRevalidate"
 > & {
+  lazy?: boolean;
   loader?: boolean;
   action?: boolean;
   hasErrorBoundary?: boolean;
@@ -60,6 +61,7 @@ type TestNonIndexRouteObject = Pick<
   AgnosticNonIndexRouteObject,
   "id" | "index" | "path" | "shouldRevalidate"
 > & {
+  lazy?: boolean;
   loader?: boolean;
   action?: boolean;
   hasErrorBoundary?: boolean;
@@ -99,6 +101,7 @@ type Helpers = InternalHelpers & {
 // control and assertions over the loaders/actions
 type NavigationHelpers = {
   navigationId: number;
+  lazy: Record<string, Helpers>;
   loaders: Record<string, Helpers>;
   actions: Record<string, Helpers>;
 };
@@ -296,10 +299,34 @@ function setup({
     return _routes.map((r) => {
       let enhancedRoute: AgnosticRouteObject = {
         ...r,
+        lazy: undefined,
         loader: undefined,
         action: undefined,
         children: undefined,
       };
+      if (r.lazy) {
+        // @ts-expect-error
+        enhancedRoute.lazy = (args) => {
+          debugger;
+          const sortedIds = [
+            activeLoaderNavigationId,
+            activeActionNavigationId,
+            activeLoaderFetchId,
+            activeActionFetchId,
+          ].sort();
+          let helperKey = sortedIds
+            .map((id) => `${id}:lazy:${r.id}`)
+            .find((k) => activeHelpers.has(k));
+          invariant(helperKey != null, `No helperKey found`);
+          let helpers = activeHelpers.get(helperKey);
+          invariant(helpers, `No helpers found for: ${helperKey}`);
+          helpers.stub(args);
+          return helpers.dfd.promise.then((def) => {
+            activeHelpers.delete(helperKey!);
+            return def;
+          });
+        };
+      }
       if (r.loader) {
         enhancedRoute.loader = (args) => {
           let navigationId =
@@ -428,7 +455,7 @@ function setup({
 
     let routeHelpers: Helpers = {
       get signal() {
-        return internalHelpers._signal;
+        return internalHelpers._signal!;
       },
       // Note: This spread has to come _after_ the above getter, otherwise
       // we lose the getter nature of it somewhere in the babel/typescript
@@ -479,6 +506,12 @@ function setup({
     let matches = matchRoutes(currentRouter.routes, href);
 
     // Generate helpers for all route matches that contain loaders
+    let lazyHelpers = getHelpers(
+      (matches || []).filter((m) => m.route.lazy),
+      navigationId,
+      (routeId, helpers) =>
+        activeHelpers.set(`${navigationId}:lazy:${routeId}`, helpers)
+    );
     let loaderHelpers = getHelpers(
       (matches || []).filter((m) => m.route.loader),
       navigationId,
@@ -500,6 +533,7 @@ function setup({
 
     return {
       navigationId,
+      lazy: lazyHelpers,
       loaders: loaderHelpers,
       actions: actionHelpers,
     };
@@ -531,6 +565,7 @@ function setup({
           invariant(currentRouter, "No currentRouter available");
           return currentRouter.getFetcher(key);
         },
+        lazy: {},
         loaders: {},
         actions: {},
       };
@@ -559,6 +594,12 @@ function setup({
     }
 
     // Generate helpers for all route matches that contain loaders
+    let lazyHelpers = getHelpers(
+      match.route.lazy ? [match] : [],
+      navigationId,
+      (routeId, helpers) =>
+        activeHelpers.set(`${navigationId}:lazy:${routeId}`, helpers)
+    );
     let loaderHelpers = getHelpers(
       activeLoaderMatches.filter((m) => m.route.loader),
       navigationId,
@@ -579,6 +620,7 @@ function setup({
         invariant(currentRouter, "No currentRouter available");
         return currentRouter.getFetcher(key);
       },
+      lazy: lazyHelpers,
       loaders: loaderHelpers,
       actions: actionHelpers,
     };
@@ -769,6 +811,25 @@ function initializeTmTest(init?: {
     ...(init?.url ? { initialEntries: [init.url] } : {}),
   });
 }
+
+function createRequest(path: string, opts?: RequestInit) {
+  return new Request(`http://localhost${path}`, {
+    signal: new AbortController().signal,
+    ...opts,
+  });
+}
+
+function createSubmitRequest(path: string, opts?: RequestInit) {
+  let searchParams = new URLSearchParams();
+  searchParams.append("key", "value");
+
+  return createRequest(path, {
+    method: "post",
+    body: searchParams,
+    ...opts,
+  });
+}
+
 //#endregion
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -11449,39 +11510,161 @@ describe("a router", () => {
   });
 
   describe("lazily loaded route modules", () => {
-    it("fetches lazy route modules on navigation", async () => {
-      let router = createRouter({
-        routes: [
-          {
-            path: "/",
-          },
-          {
-            id: "lazy",
-            path: "/lazy",
-            lazy: async () => {
-              await new Promise((r) => setTimeout(r, 100));
-              return {
-                async loader() {
-                  await new Promise((r) => setTimeout(r, 100));
-                  return "LAZY";
-                },
-              };
-            },
-          },
-        ],
-        history: createMemoryHistory(),
-      }).initialize();
+    const LAZY_ROUTES: TestRouteObject[] = [
+      {
+        path: "/",
+      },
+      {
+        id: "lazy",
+        path: "/lazy",
+        lazy: true,
+      },
+    ];
 
-      router.navigate("/lazy");
-      expect(router.state.location.pathname).toBe("/");
-      expect(router.state.navigation.state).toBe("loading");
-      await new Promise((r) => setTimeout(r, 250));
-      expect(router.state.location.pathname).toBe("/lazy");
-      expect(router.state.navigation.state).toBe("idle");
-      expect(router.state.loaderData).toEqual({
+    it("fetches lazy route modules on loading navigation", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let A = await t.navigate("/lazy");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+
+      let dfd = createDeferred();
+      A.lazy.lazy.resolve({
+        loader: () => dfd.promise,
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+
+      await dfd.resolve("LAZY");
+
+      expect(t.router.state.location.pathname).toBe("/lazy");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.loaderData).toEqual({
         lazy: "LAZY",
       });
-      router.dispose();
+    });
+
+    it("fetches lazy route modules on submission navigation", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let A = await t.navigate("/lazy", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      let actionDfd = createDeferred();
+      let loaderDfd = createDeferred();
+      A.lazy.lazy.resolve({
+        action: () => actionDfd.promise,
+        loader: () => loaderDfd.promise,
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      await actionDfd.resolve("LAZY ACTION");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.actionData).toEqual({
+        lazy: "LAZY ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({});
+
+      await loaderDfd.resolve("LAZY");
+      expect(t.router.state.location.pathname).toBe("/lazy");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual({
+        lazy: "LAZY ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({
+        lazy: "LAZY",
+      });
+    });
+
+    it("fetches lazy route modules on fetcher.load", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let key = "key";
+      let A = await t.fetch("/lazy", key);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      let loaderDfd = createDeferred();
+      await A.lazy.lazy.resolve({
+        loader: () => loaderDfd.promise,
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      await loaderDfd.resolve("LAZY");
+      expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+      expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY");
+    });
+
+    it("fetches lazy route modules on fetcher.submit", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let key = "key";
+      let A = await t.fetch("/lazy", key, {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      let actionDfd = createDeferred();
+      await A.lazy.lazy.resolve({
+        action: () => actionDfd.promise,
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      await actionDfd.resolve("ACTION");
+      await tick();
+      expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+      expect(t.router.state.fetchers.get(key)?.data).toBe("ACTION");
+    });
+
+    it("fetches lazy route modules on staticHandler.query()", async () => {
+      let { query } = createStaticHandler([
+        {
+          id: "lazy",
+          path: "/lazy",
+          lazy: async () => {
+            await tick();
+            return {
+              async loader() {
+                return json({ value: "LAZY" });
+              },
+            };
+          },
+        },
+      ]);
+
+      let context = await query(createRequest("/lazy"));
+      invariant(
+        !(context instanceof Response),
+        "Expected a StaticContext instance"
+      );
+      expect(context.loaderData).toEqual({ lazy: { value: "LAZY" } });
+    });
+
+    it("fetches lazy route modules on staticHandler.queryRoute()", async () => {
+      let { queryRoute } = createStaticHandler([
+        {
+          id: "lazy",
+          path: "/lazy",
+          lazy: async () => {
+            await tick();
+            return {
+              async loader() {
+                return json({ value: "LAZY" });
+              },
+            };
+          },
+        },
+      ]);
+
+      let response = await queryRoute(createRequest("/lazy"));
+      let data = await response.json();
+      expect(data).toEqual({ value: "LAZY" });
     });
   });
 
@@ -11583,24 +11766,6 @@ describe("a router", () => {
       "mailto:hello@remix.run",
       "web+remix:whatever",
     ];
-
-    function createRequest(path: string, opts?: RequestInit) {
-      return new Request(`http://localhost${path}`, {
-        signal: new AbortController().signal,
-        ...opts,
-      });
-    }
-
-    function createSubmitRequest(path: string, opts?: RequestInit) {
-      let searchParams = new URLSearchParams();
-      searchParams.append("key", "value");
-
-      return createRequest(path, {
-        method: "post",
-        body: searchParams,
-        ...opts,
-      });
-    }
 
     describe("document requests", () => {
       it("should support document load navigations", async () => {
