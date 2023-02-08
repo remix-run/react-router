@@ -1469,9 +1469,26 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
 }
 
 /**
+ * Internal route-aware context object used to ensure parent loaders can't
+ * access child middleware values in document requests
+ */
+export interface InternalMiddlewareContext {
+  /**
+   * Retrieve a value from context
+   */
+  get<T>(idx: number, key: MiddlewareContextInstance<T>): T;
+  /**
+   * Set a value from context
+   */
+  set<T>(idx: number, key: MiddlewareContextInstance<T>, value: T): void;
+  /**
+   * Call any child middlewares and the destination loader/action
+   */
+  next: () => DataFunctionReturnValue;
+}
+
+/**
  * Context object passed through middleware functions and into action/loaders.
- *
- * Supports only key/value for now, eventually will be enhanced
  */
 export interface MiddlewareContext {
   /**
@@ -1486,14 +1503,6 @@ export interface MiddlewareContext {
    * Call any child middlewares and the destination loader/action
    */
   next: () => DataFunctionReturnValue;
-  /**
-   * @internal
-   * PRIVATE - DO NOT USE
-   *
-   * Return the entries - needed so we can copy values from the serverMiddleware
-   * context into route-specific contexts
-   */
-  entries(): IterableIterator<[MiddlewareContextInstance<unknown>, unknown]>;
 }
 
 /**
@@ -1533,27 +1542,63 @@ export function createMiddlewareContext<T extends unknown>(
  *
  * Create a middleware "context" to store values and provide a next() hook
  */
-export function createMiddlewareStore(
-  initialMiddlewareContext?: MiddlewareContext
-) {
-  let store = new Map(initialMiddlewareContext?.entries());
-  let middlewareContext: MiddlewareContext = {
-    get<T>(k: MiddlewareContextInstance<T>) {
+export function createMiddlewareStore() {
+  let store = new Map();
+  let middlewareContext: InternalMiddlewareContext = {
+    get<T>(idx: number, k: MiddlewareContextInstance<T>) {
       if (store.has(k)) {
-        return store.get(k) as T;
+        let arr = store.get(k) as [number, T][];
+        let i = arr.length - 1;
+        while (i >= 0) {
+          if (arr[i][0] <= idx) {
+            let v = arr[i][1];
+            return v;
+          }
+          i--;
+        }
       }
       return k.getDefaultValue();
     },
-    set<T>(k: MiddlewareContextInstance<T>, v: T) {
+    set<T>(idx: number, k: MiddlewareContextInstance<T>, v: T) {
       if (typeof v === "undefined") {
         throw new Error(
           "You cannot set an undefined value in the middleware context"
         );
       }
-      store.set(k, v);
+      /*
+       Document requests make this a bit tricky.  Since we want call middlewares
+       on a per-Request/Response basis, we only want to call them one time on
+       document request even though we have multiple loaders to call in parallel.
+       That means the execution looks something like on an /a/b/c document request
+       where A*, B*, B* are the middlewares:
+
+                           A loader
+         A* -> B* -> C* -> B loader -> HTML Response -> C* -> B* -> A*
+                           C loader
+
+       However, we don't want to expose the results of B's middleware context.set()
+       calls to A's loader since it's a child of A.  So we actually track context
+       get/set calls by the match index.  We associate a set value with an index,
+       and find the value at or above our own index when calling get above.
+      */
+      let arr: [number, T][] = store.get(k) || [];
+      arr.push([idx, v]);
+      store.set(k, arr);
     },
     next: () => {},
-    entries: () => store.entries(),
   };
   return middlewareContext;
+}
+
+export function getRouteAwareMiddlewareContext(
+  context: InternalMiddlewareContext,
+  idx: number,
+  next: MiddlewareContext["next"]
+) {
+  let routeAwareContext: MiddlewareContext = {
+    get: (k) => context.get(idx, k),
+    set: (k, v) => context.set(idx, k, v),
+    next,
+  };
+  return routeAwareContext;
 }

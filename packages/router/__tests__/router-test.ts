@@ -41,6 +41,7 @@ import type {
 import {
   AbortedDeferredError,
   createMiddlewareStore,
+  getRouteAwareMiddlewareContext,
   isRouteErrorResponse,
   stripBasename,
 } from "../utils";
@@ -11954,13 +11955,21 @@ describe("a router", () => {
           future: { unstable_middleware: true },
         });
 
-        let context = await query(createRequest("/parent/child/grandchild"));
+        let context = await query(createRequest("/parent/child/grandchild"), {
+          render: (context) => {
+            invariant(
+              !(context instanceof Response),
+              "Expected StaticHandlerContext"
+            );
+            return Promise.resolve(json(context.loaderData));
+          },
+        });
 
         invariant(
-          !(context instanceof Response),
-          "Expected StaticHandlerContext"
+          context instanceof Response,
+          "Expected Response from query() with render()"
         );
-        expect(context.loaderData).toMatchInlineSnapshot(`
+        expect(await context.json()).toMatchInlineSnapshot(`
           {
             "child": "CHILD LOADER",
             "grandchild": "GRANDCHILD LOADER",
@@ -11970,19 +11979,13 @@ describe("a router", () => {
         expect(calls).toMatchInlineSnapshot(`
           [
             "parent loader middleware start",
-            "parent loader middleware start",
-            "parent loader middleware start",
-            "  parent loader start",
             "  child loader middleware start",
-            "  child loader middleware start",
-            "  parent loader end",
-            "parent loader middleware end",
-            "    child loader start",
             "    grandchild loader middleware start",
-            "    child loader end",
-            "  child loader middleware end",
-            "parent loader middleware end",
+            "  parent loader start",
+            "    child loader start",
             "      grandchild loader start",
+            "  parent loader end",
+            "    child loader end",
             "      grandchild loader end",
             "    grandchild loader middleware end",
             "  child loader middleware end",
@@ -12094,9 +12097,7 @@ describe("a router", () => {
         await currentRouter?.navigate("/parent");
         expect(currentRouter.state.location.pathname).toBe("/parent");
         expect(currentRouter.state.errors).toEqual({
-          parent: new Error(
-            "You may only call `next()` once per middleware and you may not call it in an action or loader"
-          ),
+          parent: new Error("You may only call `next()` once per middleware"),
         });
       });
 
@@ -12127,7 +12128,7 @@ describe("a router", () => {
         expect(currentRouter.state.location.pathname).toBe("/parent");
         expect(currentRouter.state.errors).toEqual({
           parent: new Error(
-            "You may only call `next()` once per middleware and you may not call it in an action or loader"
+            "You can not call context.next() in a loader or action"
           ),
         });
       });
@@ -12165,7 +12166,7 @@ describe("a router", () => {
         expect(currentRouter.state.location.pathname).toBe("/parent");
         expect(currentRouter.state.errors).toEqual({
           parent: new Error(
-            "You may only call `next()` once per middleware and you may not call it in an action or loader"
+            "You can not call context.next() in a loader or action"
           ),
         });
       });
@@ -12388,14 +12389,17 @@ describe("a router", () => {
           future: { unstable_middleware: true },
         });
 
-        let ctx = await query(createRequest("/parent/child/grandchild"));
+        let ctx = await query(createRequest("/parent/child/grandchild"), {
+          render: (context) => {
+            return Promise.resolve(
+              json((context as StaticHandlerContext).loaderData)
+            );
+          },
+        });
 
-        if (ctx instanceof Response) {
-          throw new Error("Unexpected Response");
-        }
+        invariant(ctx instanceof Response, "Expected Response");
 
-        expect(ctx.location.pathname).toBe("/parent/child/grandchild");
-        expect(ctx.loaderData).toEqual({
+        expect(await ctx.json()).toEqual({
           parent: 1,
           child: 2,
           grandchild: 3,
@@ -12417,17 +12421,24 @@ describe("a router", () => {
         });
 
         let middlewareContext = createMiddlewareStore();
-        middlewareContext.set(loaderCountContext, 50);
+        let routeMiddlewareContext = getRouteAwareMiddlewareContext(
+          middlewareContext,
+          -1,
+          () => {}
+        );
+        routeMiddlewareContext.set(loaderCountContext, 50);
         let ctx = await query(createRequest("/parent/child/grandchild"), {
           middlewareContext,
+          render: (context) => {
+            return Promise.resolve(
+              json((context as StaticHandlerContext).loaderData)
+            );
+          },
         });
 
-        if (ctx instanceof Response) {
-          throw new Error("Unexpected Response");
-        }
+        invariant(ctx instanceof Response, "Expected Response");
 
-        expect(ctx.location.pathname).toBe("/parent/child/grandchild");
-        expect(ctx.loaderData).toEqual({
+        expect(await ctx.json()).toEqual({
           parent: 51,
           child: 52,
           grandchild: 53,
@@ -12440,7 +12451,12 @@ describe("a router", () => {
         });
 
         let middlewareContext = createMiddlewareStore();
-        middlewareContext.set(loaderCountContext, 50);
+        let routeMiddlewareContext = getRouteAwareMiddlewareContext(
+          middlewareContext,
+          -1,
+          () => {}
+        );
+        routeMiddlewareContext.set(loaderCountContext, 50);
         let res = await queryRoute(createRequest("/parent/child/grandchild"), {
           middlewareContext,
         });

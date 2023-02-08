@@ -18,6 +18,7 @@ import type {
   ErrorResult,
   FormEncType,
   FormMethod,
+  InternalMiddlewareContext,
   LoaderFunction,
   LoaderFunctionWithMiddleware,
   MiddlewareContext,
@@ -35,6 +36,7 @@ import {
   DeferredData,
   ErrorResponse,
   getPathContributingMatches,
+  getRouteAwareMiddlewareContext,
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,
@@ -354,7 +356,8 @@ export interface StaticHandlerContext {
 
 interface StaticHandlerQueryOpts {
   requestContext?: unknown;
-  middlewareContext?: MiddlewareContext;
+  middlewareContext?: InternalMiddlewareContext;
+  render?: (context: StaticHandlerContext | Response) => Promise<Response>;
 }
 
 interface StaticHandlerQueryRouteOpts extends StaticHandlerQueryOpts {
@@ -2392,7 +2395,7 @@ export function createStaticHandler(
    */
   async function query(
     request: Request,
-    { requestContext, middlewareContext }: StaticHandlerQueryOpts = {}
+    { requestContext, middlewareContext, render }: StaticHandlerQueryOpts = {}
   ): Promise<StaticHandlerContext | Response> {
     invariant(
       request.signal,
@@ -2443,21 +2446,67 @@ export function createStaticHandler(
       };
     }
 
+    // Since this is a document request, we run middlewares once here for the Request
+    // so we don't duplicate middleware executions for parallel loaders
+    if (future.unstable_middleware) {
+      invariant(
+        render != null,
+        "Using middleware with staticHandler.query() requires passing a render() function"
+      );
+      let ctx = middlewareContext || createMiddlewareStore();
+      let result = await callRouteSubPipeline(
+        request,
+        matches,
+        0,
+        matches[0].params,
+        ctx,
+        async () => {
+          let staticContext = await runQueryHandlers(
+            request,
+            location,
+            matches!,
+            undefined,
+            ctx
+          );
+          let response = await render(staticContext);
+          return response;
+        }
+      );
+      return result;
+    } else {
+      let result = runQueryHandlers(
+        request,
+        location,
+        matches!,
+        requestContext,
+        undefined
+      );
+      return result;
+    }
+  }
+
+  async function runQueryHandlers(
+    request: Request,
+    location: Location,
+    matches: AgnosticDataRouteMatch[],
+    requestContext?: unknown,
+    middlewareContext?: InternalMiddlewareContext
+  ): Promise<StaticHandlerContext | Response> {
     let result: Omit<StaticHandlerContext, "location" | "basename">;
 
     try {
       if (isMutationMethod(request.method.toLowerCase())) {
         result = await handleQueryAction(
           request,
-          matches,
-          getTargetMatch(matches, location),
+          matches!,
+          getTargetMatch(matches!, location),
           requestContext,
           middlewareContext
         );
       } else {
         let loaderResult = await handleQueryLoaders(
           request,
-          matches,
+          matches!,
           requestContext,
           middlewareContext
         );
@@ -2582,7 +2631,7 @@ export function createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     requestContext: unknown,
-    middlewareContext: MiddlewareContext | undefined
+    middlewareContext: InternalMiddlewareContext | undefined
   ): Promise<Omit<StaticHandlerContext, "location" | "basename">> {
     let result: DataResult;
 
@@ -2602,7 +2651,7 @@ export function createStaticHandler(
         actionMatch,
         matches,
         basename,
-        future.unstable_middleware,
+        false,
         true,
         false,
         requestContext,
@@ -2692,7 +2741,7 @@ export function createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     requestContext: unknown,
-    middlewareContext: MiddlewareContext | undefined
+    middlewareContext: InternalMiddlewareContext | undefined
   ): Promise<any> {
     if (!actionMatch.route.action) {
       throw getInternalRouterError(405, {
@@ -2749,7 +2798,7 @@ export function createStaticHandler(
     request: Request,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
-    middlewareContext: MiddlewareContext | undefined,
+    middlewareContext: InternalMiddlewareContext | undefined,
     pendingActionError?: RouteData
   ): Promise<
     Omit<
@@ -2787,7 +2836,7 @@ export function createStaticHandler(
           match,
           matches,
           basename,
-          future.unstable_middleware,
+          false,
           true,
           false,
           requestContext,
@@ -2834,7 +2883,7 @@ export function createStaticHandler(
     request: Request,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
-    middlewareContext: MiddlewareContext | undefined,
+    middlewareContext: InternalMiddlewareContext | undefined,
     routeMatch: AgnosticDataRouteMatch
   ): Promise<
     Omit<
@@ -2935,6 +2984,8 @@ export function createStaticHandler(
 ////////////////////////////////////////////////////////////////////////////////
 
 function handleStaticError(e: unknown) {
+  // TODO: Can this move to queryRoute()?
+
   // If the user threw/returned a Response in callLoaderOrAction, we throw
   // it to bail out and then return or throw here based on whether the user
   // returned or threw
@@ -3201,8 +3252,9 @@ function shouldRevalidateLoader(
 async function callRouteSubPipeline(
   request: Request,
   matches: AgnosticDataRouteMatch[],
+  idx: number,
   params: Params<string>,
-  middlewareContext: MiddlewareContext,
+  middlewareContext: InternalMiddlewareContext,
   handler:
     | LoaderFunction
     | ActionFunction
@@ -3213,44 +3265,47 @@ async function callRouteSubPipeline(
     throw new Error("Request aborted");
   }
 
-  if (matches.length === 0) {
+  let match = matches[idx];
+
+  if (!match) {
     // We reached the end of our middlewares, call the handler
-    middlewareContext.next = () => {
-      throw new Error(
-        "You may only call `next()` once per middleware and you may not call " +
-          "it in an action or loader"
-      );
-    };
     return handler({
       request,
       params,
-      context: middlewareContext,
+      context: getRouteAwareMiddlewareContext(middlewareContext, idx, () => {
+        throw new Error(
+          "You can not call context.next() in a loader or action"
+        );
+      }),
     });
   }
 
   // We've still got matches, continue on the middleware train.  The `next()`
   // function will "bubble" back up the middlewares after handlers have executed
   let nextCalled = false;
-  let next: MiddlewareContext["next"] = () => {
+  let next: InternalMiddlewareContext["next"] = () => {
+    if (nextCalled) {
+      throw new Error("You may only call `next()` once per middleware");
+    }
     nextCalled = true;
     return callRouteSubPipeline(
       request,
-      matches.slice(1),
+      matches,
+      idx + 1,
       params,
       middlewareContext,
       handler
     );
   };
 
-  if (!matches[0].route.middleware) {
+  if (!match.route.middleware) {
     return next();
   }
 
-  middlewareContext.next = next;
-  let res = await matches[0].route.middleware({
+  let res = await match.route.middleware({
     request,
     params,
-    context: middlewareContext,
+    context: getRouteAwareMiddlewareContext(middlewareContext, idx, next),
   });
 
   if (nextCalled) {
@@ -3283,7 +3338,7 @@ async function callLoaderOrAction(
   isStaticRequest: boolean = false,
   isRouteRequest: boolean = false,
   requestContext?: unknown,
-  middlewareContext?: MiddlewareContext
+  middlewareContext?: InternalMiddlewareContext
 ): Promise<DataResult> {
   let resultType;
   let result;
@@ -3309,15 +3364,22 @@ async function callLoaderOrAction(
       dataPromise = callRouteSubPipeline(
         request,
         matches.slice(0, idx + 1),
+        0,
         matches[0].params,
-        createMiddlewareStore(middlewareContext),
+        middlewareContext || createMiddlewareStore(),
         handler
       );
     } else {
       dataPromise = (handler as LoaderFunction | ActionFunction)({
         request,
         params: match.params,
-        context: requestContext || disabledMiddlewareContext,
+        context: middlewareContext
+          ? getRouteAwareMiddlewareContext(middlewareContext, idx, () => {
+              throw new Error(
+                "You can not call context.next() in a loader or action"
+              );
+            })
+          : requestContext || disabledMiddlewareContext,
       });
     }
 
