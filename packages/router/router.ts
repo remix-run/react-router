@@ -2394,6 +2394,11 @@ export function createStaticHandler(
     request: Request,
     { requestContext, middlewareContext }: StaticHandlerQueryOpts = {}
   ): Promise<StaticHandlerContext | Response> {
+    invariant(
+      request.signal,
+      "query()/queryRoute() requests must contain an AbortController signal"
+    );
+
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
     let location = createLocation("", createPath(url), null, "default");
@@ -2438,15 +2443,33 @@ export function createStaticHandler(
       };
     }
 
-    let result = await queryImpl(
-      request,
-      location,
-      matches,
-      requestContext,
-      middlewareContext
-    );
-    if (isResponse(result)) {
-      return result;
+    let result: Omit<StaticHandlerContext, "location" | "basename">;
+
+    try {
+      if (isMutationMethod(request.method.toLowerCase())) {
+        result = await submit(
+          request,
+          matches,
+          getTargetMatch(matches, location),
+          requestContext,
+          middlewareContext,
+          false
+        );
+      } else {
+        let loaderResult = await loadRouteData(
+          request,
+          matches,
+          requestContext,
+          middlewareContext
+        );
+        result = {
+          ...loaderResult,
+          actionData: null,
+          actionHeaders: {},
+        };
+      }
+    } catch (e) {
+      return handleStaticError(e);
     }
 
     // When returning StaticHandlerContext, we patch back in the location here
@@ -2483,6 +2506,11 @@ export function createStaticHandler(
       middlewareContext,
     }: StaticHandlerQueryRouteOpts = {}
   ): Promise<any> {
+    invariant(
+      request.signal,
+      "query()/queryRoute() requests must contain an AbortController signal"
+    );
+
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
     let location = createLocation("", createPath(url), null, "default");
@@ -2509,16 +2537,35 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    let result = await queryImpl(
-      request,
-      location,
-      matches,
-      requestContext,
-      middlewareContext,
-      match
-    );
-    if (isResponse(result)) {
-      return result;
+    let result: Omit<StaticHandlerContext, "location" | "basename">;
+
+    try {
+      if (isMutationMethod(request.method.toLowerCase())) {
+        result = await submit(
+          request,
+          matches,
+          match,
+          requestContext,
+          middlewareContext,
+          true
+        );
+      } else {
+        let loadersResult = await loadRouteData(
+          request,
+          matches,
+          requestContext,
+          middlewareContext,
+          match
+        );
+
+        result = {
+          ...loadersResult,
+          actionData: null,
+          actionHeaders: {},
+        };
+      }
+    } catch (e) {
+      return handleStaticError(e);
     }
 
     let error = result.errors ? Object.values(result.errors)[0] : undefined;
@@ -2546,65 +2593,6 @@ export function createStaticHandler(
     return undefined;
   }
 
-  async function queryImpl(
-    request: Request,
-    location: Location,
-    matches: AgnosticDataRouteMatch[],
-    requestContext: unknown,
-    middlewareContext?: MiddlewareContext,
-    routeMatch?: AgnosticDataRouteMatch
-  ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
-    invariant(
-      request.signal,
-      "query()/queryRoute() requests must contain an AbortController signal"
-    );
-
-    try {
-      if (isMutationMethod(request.method.toLowerCase())) {
-        let result = await submit(
-          request,
-          matches,
-          routeMatch || getTargetMatch(matches, location),
-          requestContext,
-          middlewareContext,
-          routeMatch != null
-        );
-        return result;
-      }
-
-      let result = await loadRouteData(
-        request,
-        matches,
-        requestContext,
-        middlewareContext,
-        routeMatch
-      );
-      return isResponse(result)
-        ? result
-        : {
-            ...result,
-            actionData: null,
-            actionHeaders: {},
-          };
-    } catch (e) {
-      // If the user threw/returned a Response in callLoaderOrAction, we throw
-      // it to bail out and then return or throw here based on whether the user
-      // returned or threw
-      if (isQueryRouteResponse(e)) {
-        if (e.type === ResultType.error && !isRedirectResponse(e.response)) {
-          throw e.response;
-        }
-        return e.response;
-      }
-      // Redirects are always returned since they don't propagate to catch
-      // boundaries
-      if (isRedirectResponse(e)) {
-        return e;
-      }
-      throw e;
-    }
-  }
-
   async function submit(
     request: Request,
     matches: AgnosticDataRouteMatch[],
@@ -2612,7 +2600,7 @@ export function createStaticHandler(
     requestContext: unknown,
     middlewareContext: MiddlewareContext | undefined,
     isRouteRequest: boolean
-  ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
+  ): Promise<Omit<StaticHandlerContext, "location" | "basename">> {
     let result: DataResult;
 
     if (!actionMatch.route.action) {
@@ -2755,11 +2743,10 @@ export function createStaticHandler(
     routeMatch?: AgnosticDataRouteMatch,
     pendingActionError?: RouteData
   ): Promise<
-    | Omit<
-        StaticHandlerContext,
-        "location" | "basename" | "actionData" | "actionHeaders"
-      >
-    | Response
+    Omit<
+      StaticHandlerContext,
+      "location" | "basename" | "actionData" | "actionHeaders"
+    >
   > {
     let isRouteRequest = routeMatch != null;
 
@@ -2860,6 +2847,24 @@ export function createStaticHandler(
 ////////////////////////////////////////////////////////////////////////////////
 //#region Helpers
 ////////////////////////////////////////////////////////////////////////////////
+
+function handleStaticError(e: unknown) {
+  // If the user threw/returned a Response in callLoaderOrAction, we throw
+  // it to bail out and then return or throw here based on whether the user
+  // returned or threw
+  if (isQueryRouteResponse(e)) {
+    if (e.type === ResultType.error && !isRedirectResponse(e.response)) {
+      throw e.response;
+    }
+    return e.response;
+  }
+  // Redirects are always returned since they don't propagate to catch
+  // boundaries
+  if (isRedirectResponse(e)) {
+    return e;
+  }
+  throw e;
+}
 
 /**
  * Given an existing StaticHandlerContext and an error thrown at render time,
