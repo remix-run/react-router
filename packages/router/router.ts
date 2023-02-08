@@ -1915,12 +1915,16 @@ export function createRouter(init: RouterInit): Router {
 
     // Check if this an absolute external redirect that goes to a new origin
     if (
-      ABSOLUTE_URL_REGEX.test(redirect.location) &&
+      (ABSOLUTE_URL_REGEX.test(redirect.location) || (init.basename !== undefined && init.basename !== "/")) &&
       isBrowser &&
       typeof window?.location !== "undefined"
     ) {
       let newOrigin = init.history.createURL(redirect.location).origin;
-      if (window.location.origin !== newOrigin) {
+
+      // Only the last trailing slash is replaced
+      const BASENAME_URL_REGEX = new RegExp("^" + init.basename?.replace(/\/$/, '') + "([/|?.*|?.#]|$)", 'i');
+
+      if (window.location.origin !== newOrigin || !BASENAME_URL_REGEX.test(redirect.location)) {
         if (replace) {
           window.location.replace(redirect.location);
         } else {
