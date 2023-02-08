@@ -11951,19 +11951,23 @@ describe("a router", () => {
       });
 
       it("runs middleware before staticHandler.query", async () => {
-        let { query } = createStaticHandler(MIDDLEWARE_ORDERING_ROUTES, {
-          future: { unstable_middleware: true },
-        });
+        let { queryAndRender } = createStaticHandler(
+          MIDDLEWARE_ORDERING_ROUTES,
+          {
+            future: { unstable_middleware: true },
+          }
+        );
 
-        let context = await query(createRequest("/parent/child/grandchild"), {
-          render: (context) => {
+        let context = await queryAndRender(
+          createRequest("/parent/child/grandchild"),
+          (context) => {
             invariant(
               !(context instanceof Response),
               "Expected StaticHandlerContext"
             );
             return Promise.resolve(json(context.loaderData));
-          },
-        });
+          }
+        );
 
         invariant(
           context instanceof Response,
@@ -12385,17 +12389,21 @@ describe("a router", () => {
       });
 
       it("passes context into staticHandler.query", async () => {
-        let { query } = createStaticHandler(MIDDLEWARE_CONTEXT_ROUTES, {
-          future: { unstable_middleware: true },
-        });
+        let { queryAndRender } = createStaticHandler(
+          MIDDLEWARE_CONTEXT_ROUTES,
+          {
+            future: { unstable_middleware: true },
+          }
+        );
 
-        let ctx = await query(createRequest("/parent/child/grandchild"), {
-          render: (context) => {
+        let ctx = await queryAndRender(
+          createRequest("/parent/child/grandchild"),
+          (context) => {
             return Promise.resolve(
               json((context as StaticHandlerContext).loaderData)
             );
-          },
-        });
+          }
+        );
 
         invariant(ctx instanceof Response, "Expected Response");
 
@@ -12416,9 +12424,12 @@ describe("a router", () => {
       });
 
       it("prefills context in staticHandler.query", async () => {
-        let { query } = createStaticHandler(MIDDLEWARE_CONTEXT_ROUTES, {
-          future: { unstable_middleware: true },
-        });
+        let { queryAndRender } = createStaticHandler(
+          MIDDLEWARE_CONTEXT_ROUTES,
+          {
+            future: { unstable_middleware: true },
+          }
+        );
 
         let middlewareContext = createMiddlewareStore();
         let routeMiddlewareContext = getRouteAwareMiddlewareContext(
@@ -12427,14 +12438,15 @@ describe("a router", () => {
           () => {}
         );
         routeMiddlewareContext.set(loaderCountContext, 50);
-        let ctx = await query(createRequest("/parent/child/grandchild"), {
-          middlewareContext,
-          render: (context) => {
+        let ctx = await queryAndRender(
+          createRequest("/parent/child/grandchild"),
+          (context) => {
             return Promise.resolve(
               json((context as StaticHandlerContext).loaderData)
             );
           },
-        });
+          { middlewareContext }
+        );
 
         invariant(ctx instanceof Response, "Expected Response");
 

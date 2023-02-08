@@ -356,11 +356,15 @@ export interface StaticHandlerContext {
 
 interface StaticHandlerQueryOpts {
   requestContext?: unknown;
-  middlewareContext?: InternalMiddlewareContext;
-  render?: (context: StaticHandlerContext | Response) => Promise<Response>;
 }
 
-interface StaticHandlerQueryRouteOpts extends StaticHandlerQueryOpts {
+interface StaticHandlerQueryAndRenderOpts {
+  middlewareContext?: InternalMiddlewareContext;
+}
+
+interface StaticHandlerQueryRouteOpts {
+  requestContext?: unknown;
+  middlewareContext?: InternalMiddlewareContext;
   routeId?: string;
 }
 
@@ -373,6 +377,11 @@ export interface StaticHandler {
     request: Request,
     opts?: StaticHandlerQueryOpts
   ): Promise<StaticHandlerContext | Response>;
+  queryAndRender(
+    request: Request,
+    render: (context: StaticHandlerContext | Response) => Promise<Response>,
+    opts?: StaticHandlerQueryAndRenderOpts
+  ): Promise<Response>;
   queryRoute(
     request: Request,
     opts?: StaticHandlerQueryRouteOpts
@@ -2395,13 +2404,98 @@ export function createStaticHandler(
    */
   async function query(
     request: Request,
-    { requestContext, middlewareContext, render }: StaticHandlerQueryOpts = {}
+    { requestContext }: StaticHandlerQueryOpts = {}
   ): Promise<StaticHandlerContext | Response> {
     invariant(
       request.signal,
       "query() requests must contain an AbortController signal"
     );
+    invariant(
+      !future.unstable_middleware,
+      "staticHandler.query() cannot be used with middleware"
+    );
 
+    let queryInit = initQueryRequest(request);
+
+    if ("shortCircuitContext" in queryInit) {
+      return queryInit.shortCircuitContext;
+    }
+
+    let { location, matches } = queryInit;
+
+    return runQueryHandlers(
+      request,
+      location,
+      matches,
+      requestContext,
+      undefined
+    );
+  }
+
+  /**
+   * The queryAndRender() method is a small extension to query() in which we
+   * also accept a render() callback allowing our calling context to transform
+   * the staticHandlerContext int oa singular HTML Response we can bubble back
+   * up our middleware chain.
+   */
+  async function queryAndRender(
+    request: Request,
+    render: (context: StaticHandlerContext | Response) => Promise<Response>,
+    { middlewareContext }: StaticHandlerQueryAndRenderOpts = {}
+  ): Promise<Response> {
+    invariant(
+      request.signal,
+      "query() requests must contain an AbortController signal"
+    );
+
+    let queryInit = initQueryRequest(request);
+
+    if ("shortCircuitContext" in queryInit) {
+      return render(queryInit.shortCircuitContext);
+    }
+
+    let { location, matches } = queryInit;
+
+    if (!future.unstable_middleware) {
+      let result = await runQueryHandlers(request, location, matches);
+      return render(result);
+    }
+
+    // Since this is a document request, we run middlewares once here for the Request
+    // so we don't duplicate middleware executions for parallel loaders
+    invariant(
+      render != null,
+      "Using middleware with staticHandler.query() requires passing a render() function"
+    );
+    let ctx = middlewareContext || createMiddlewareStore();
+    let result = await callRouteSubPipeline(
+      request,
+      matches,
+      0,
+      matches[0].params,
+      ctx,
+      async () => {
+        let staticContext = await runQueryHandlers(
+          request,
+          location,
+          matches,
+          undefined,
+          ctx
+        );
+        let response = await render(staticContext);
+        return response;
+      }
+    );
+    return result;
+  }
+
+  // Initialize an incoming query() or queryAndRender() call, potentially
+  // short circuiting if there's nothing to do
+  function initQueryRequest(
+    request: Request
+  ):
+    | { shortCircuitContext: StaticHandlerContext }
+    | { location: Location; matches: AgnosticDataRouteMatch[] } {
     let url = new URL(request.url);
     let method = request.method.toLowerCase();
     let location = createLocation("", createPath(url), null, "default");
@@ -2413,78 +2507,49 @@ export function createStaticHandler(
       let { matches: methodNotAllowedMatches, route } =
         getShortCircuitMatches(dataRoutes);
       return {
-        basename,
-        location,
-        matches: methodNotAllowedMatches,
-        loaderData: {},
-        actionData: null,
-        errors: {
-          [route.id]: error,
+        shortCircuitContext: {
+          basename,
+          location,
+          matches: methodNotAllowedMatches,
+          loaderData: {},
+          actionData: null,
+          errors: {
+            [route.id]: error,
+          },
+          statusCode: error.status,
+          loaderHeaders: {},
+          actionHeaders: {},
+          activeDeferreds: null,
         },
-        statusCode: error.status,
-        loaderHeaders: {},
-        actionHeaders: {},
-        activeDeferreds: null,
       };
-    } else if (!matches) {
+    }
+
+    if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
         getShortCircuitMatches(dataRoutes);
       return {
-        basename,
-        location,
-        matches: notFoundMatches,
-        loaderData: {},
-        actionData: null,
-        errors: {
-          [route.id]: error,
+        shortCircuitContext: {
+          basename,
+          location,
+          matches: notFoundMatches,
+          loaderData: {},
+          actionData: null,
+          errors: {
+            [route.id]: error,
+          },
+          statusCode: error.status,
+          loaderHeaders: {},
+          actionHeaders: {},
+          activeDeferreds: null,
         },
-        statusCode: error.status,
-        loaderHeaders: {},
-        actionHeaders: {},
-        activeDeferreds: null,
       };
     }
 
-    // Since this is a document request, we run middlewares once here for the Request
-    // so we don't duplicate middleware executions for parallel loaders
-    if (future.unstable_middleware) {
-      invariant(
-        render != null,
-        "Using middleware with staticHandler.query() requires passing a render() function"
-      );
-      let ctx = middlewareContext || createMiddlewareStore();
-      let result = await callRouteSubPipeline(
-        request,
-        matches,
-        0,
-        matches[0].params,
-        ctx,
-        async () => {
-          let staticContext = await runQueryHandlers(
-            request,
-            location,
-            matches!,
-            undefined,
-            ctx
-          );
-          let response = await render(staticContext);
-          return response;
-        }
-      );
-      return result;
-    } else {
-      let result = runQueryHandlers(
-        request,
-        location,
-        matches!,
-        requestContext,
-        undefined
-      );
-      return result;
-    }
+    return { location, matches };
   }
 
+  // Run the appropriate handlers for a query() or queryAndRender() call
   async function runQueryHandlers(
     request: Request,
     location: Location,
@@ -2973,6 +3038,7 @@ export function createStaticHandler(
   return {
     dataRoutes,
     query,
+    queryAndRender,
     queryRoute,
   };
 }
