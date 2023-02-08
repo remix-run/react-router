@@ -321,6 +321,7 @@ export interface RouterInit {
   history: History;
   hydrationData?: HydrationState;
   hasErrorBoundary?: HasErrorBoundaryFunction;
+  onInitialize?: (args: { router: Router }) => void;
 }
 
 /**
@@ -847,6 +848,25 @@ export function createRouter(init: RouterInit): Router {
         return startNavigation(historyAction, location);
       }
     );
+
+    if (init.onInitialize) {
+      if (state.initialized) {
+        // We delay calling the onInitialize function until the next tick so
+        // this function has a chance to return the router instance, otherwise
+        // consumers will get an error if they try to use the returned router
+        // instance in their callback. Note that we also provide the router
+        // instance to the callback as a convenience and to avoid this ambiguity
+        // in the consumer code.
+        Promise.resolve().then(() => init.onInitialize!({ router }));
+      } else {
+        let unsubscribe = subscribe((updatedState) => {
+          if (updatedState.initialized) {
+            unsubscribe();
+            init.onInitialize!({ router });
+          }
+        });
+      }
+    }
 
     if (state.initialized) {
       return router;

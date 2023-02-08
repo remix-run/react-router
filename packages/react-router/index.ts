@@ -210,6 +210,7 @@ export function createMemoryRouter(
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
+    onInitialize?: (args: { router: RemixRouter }) => void;
   }
 ): RemixRouter {
   return createRouter({
@@ -221,6 +222,7 @@ export function createMemoryRouter(
     hydrationData: opts?.hydrationData,
     routes,
     hasErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
+    onInitialize: opts?.onInitialize,
   }).initialize();
 }
 
