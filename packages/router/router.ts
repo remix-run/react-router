@@ -2396,7 +2396,7 @@ export function createStaticHandler(
   ): Promise<StaticHandlerContext | Response> {
     invariant(
       request.signal,
-      "query()/queryRoute() requests must contain an AbortController signal"
+      "query() requests must contain an AbortController signal"
     );
 
     let url = new URL(request.url);
@@ -2447,16 +2447,15 @@ export function createStaticHandler(
 
     try {
       if (isMutationMethod(request.method.toLowerCase())) {
-        result = await submit(
+        result = await handleQueryAction(
           request,
           matches,
           getTargetMatch(matches, location),
           requestContext,
-          middlewareContext,
-          false
+          middlewareContext
         );
       } else {
-        let loaderResult = await loadRouteData(
+        let loaderResult = await handleQueryLoaders(
           request,
           matches,
           requestContext,
@@ -2508,7 +2507,7 @@ export function createStaticHandler(
   ): Promise<any> {
     invariant(
       request.signal,
-      "query()/queryRoute() requests must contain an AbortController signal"
+      "queryRoute() requests must contain an AbortController signal"
     );
 
     let url = new URL(request.url);
@@ -2537,84 +2536,64 @@ export function createStaticHandler(
       throw getInternalRouterError(404, { pathname: location.pathname });
     }
 
-    let result: Omit<StaticHandlerContext, "location" | "basename">;
-
     try {
       if (isMutationMethod(request.method.toLowerCase())) {
-        result = await submit(
+        let result = await handleQueryRouteAction(
           request,
           matches,
           match,
           requestContext,
-          middlewareContext,
-          true
+          middlewareContext
         );
-      } else {
-        let loadersResult = await loadRouteData(
-          request,
-          matches,
-          requestContext,
-          middlewareContext,
-          match
-        );
+        return result;
+      }
 
-        result = {
-          ...loadersResult,
-          actionData: null,
-          actionHeaders: {},
-        };
+      let result = await handleQueryRouteLoaders(
+        request,
+        matches,
+        requestContext,
+        middlewareContext,
+        match
+      );
+
+      let error = result.errors ? Object.values(result.errors)[0] : undefined;
+      if (error !== undefined) {
+        // If we got back result.errors, that means the loader/action threw
+        // _something_ that wasn't a Response, but it's not guaranteed/required
+        // to be an `instanceof Error` either, so we have to use throw here to
+        // preserve the "error" state outside of queryImpl.
+        throw error;
+      }
+
+      if (result.loaderData) {
+        let data = Object.values(result.loaderData)[0];
+        if (result.activeDeferreds?.[match.route.id]) {
+          data[UNSAFE_DEFERRED_SYMBOL] = result.activeDeferreds[match.route.id];
+        }
+        return data;
       }
     } catch (e) {
       return handleStaticError(e);
     }
-
-    let error = result.errors ? Object.values(result.errors)[0] : undefined;
-    if (error !== undefined) {
-      // If we got back result.errors, that means the loader/action threw
-      // _something_ that wasn't a Response, but it's not guaranteed/required
-      // to be an `instanceof Error` either, so we have to use throw here to
-      // preserve the "error" state outside of queryImpl.
-      throw error;
-    }
-
-    // Pick off the right state value to return
-    if (result.actionData) {
-      return Object.values(result.actionData)[0];
-    }
-
-    if (result.loaderData) {
-      let data = Object.values(result.loaderData)[0];
-      if (result.activeDeferreds?.[match.route.id]) {
-        data[UNSAFE_DEFERRED_SYMBOL] = result.activeDeferreds[match.route.id];
-      }
-      return data;
-    }
-
-    return undefined;
   }
 
-  async function submit(
+  async function handleQueryAction(
     request: Request,
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     requestContext: unknown,
-    middlewareContext: MiddlewareContext | undefined,
-    isRouteRequest: boolean
+    middlewareContext: MiddlewareContext | undefined
   ): Promise<Omit<StaticHandlerContext, "location" | "basename">> {
     let result: DataResult;
 
     if (!actionMatch.route.action) {
-      let error = getInternalRouterError(405, {
-        method: request.method,
-        pathname: new URL(request.url).pathname,
-        routeId: actionMatch.route.id,
-      });
-      if (isRouteRequest) {
-        throw error;
-      }
       result = {
         type: ResultType.error,
-        error,
+        error: getInternalRouterError(405, {
+          method: request.method,
+          pathname: new URL(request.url).pathname,
+          routeId: actionMatch.route.id,
+        }),
       };
     } else {
       result = await callLoaderOrAction(
@@ -2625,14 +2604,13 @@ export function createStaticHandler(
         basename,
         future.unstable_middleware,
         true,
-        isRouteRequest,
+        false,
         requestContext,
         middlewareContext
       );
 
       if (request.signal.aborted) {
-        let method = isRouteRequest ? "queryRoute" : "query";
-        throw new Error(`${method}() call aborted`);
+        throw new Error(`query() call aborted`);
       }
     }
 
@@ -2650,34 +2628,9 @@ export function createStaticHandler(
     }
 
     if (isDeferredResult(result)) {
-      let error = getInternalRouterError(400, { type: "defer-action" });
-      if (isRouteRequest) {
-        throw error;
-      }
       result = {
         type: ResultType.error,
-        error,
-      };
-    }
-
-    if (isRouteRequest) {
-      // Note: This should only be non-Response values if we get here, since
-      // isRouteRequest should throw any Response received in callLoaderOrAction
-      if (isErrorResult(result)) {
-        throw result.error;
-      }
-
-      return {
-        matches: [actionMatch],
-        loaderData: {},
-        actionData: { [actionMatch.route.id]: result.data },
-        errors: null,
-        // Note: statusCode + headers are unused here since queryRoute will
-        // return the raw Response or value
-        statusCode: 200,
-        loaderHeaders: {},
-        actionHeaders: {},
-        activeDeferreds: null,
+        error: getInternalRouterError(400, { type: "defer-action" }),
       };
     }
 
@@ -2685,12 +2638,11 @@ export function createStaticHandler(
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
-      let context = await loadRouteData(
+      let context = await handleQueryLoaders(
         request,
         matches,
         requestContext,
         middlewareContext,
-        undefined,
         {
           [boundaryMatch.route.id]: result.error,
         }
@@ -2715,7 +2667,7 @@ export function createStaticHandler(
       redirect: request.redirect,
       signal: request.signal,
     });
-    let context = await loadRouteData(
+    let context = await handleQueryLoaders(
       loaderRequest,
       matches,
       requestContext,
@@ -2735,12 +2687,69 @@ export function createStaticHandler(
     };
   }
 
-  async function loadRouteData(
+  async function handleQueryRouteAction(
+    request: Request,
+    matches: AgnosticDataRouteMatch[],
+    actionMatch: AgnosticDataRouteMatch,
+    requestContext: unknown,
+    middlewareContext: MiddlewareContext | undefined
+  ): Promise<any> {
+    if (!actionMatch.route.action) {
+      throw getInternalRouterError(405, {
+        method: request.method,
+        pathname: new URL(request.url).pathname,
+        routeId: actionMatch.route.id,
+      });
+    }
+
+    let result = await callLoaderOrAction(
+      "action",
+      request,
+      actionMatch,
+      matches,
+      basename,
+      future.unstable_middleware,
+      true,
+      true,
+      requestContext,
+      middlewareContext
+    );
+
+    if (request.signal.aborted) {
+      throw new Error(`queryRoute() call aborted`);
+    }
+
+    if (isRedirectResult(result)) {
+      // Uhhhh - this should never happen, we should always throw these from
+      // callLoaderOrAction, but the type narrowing here keeps TS happy and we
+      // can get back on the "throw all redirect responses" train here should
+      // this ever happen :/
+      throw new Response(null, {
+        status: result.status,
+        headers: {
+          Location: result.location,
+        },
+      });
+    }
+
+    if (isDeferredResult(result)) {
+      throw getInternalRouterError(400, { type: "defer-action" });
+    }
+
+    // Note: This should only be non-Response values if we get here, since
+    // isRouteRequest should throw any Response received in callLoaderOrAction
+    if (isErrorResult(result)) {
+      throw result.error;
+    }
+
+    return result.data;
+  }
+
+  async function handleQueryLoaders(
     request: Request,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
     middlewareContext: MiddlewareContext | undefined,
-    routeMatch?: AgnosticDataRouteMatch,
     pendingActionError?: RouteData
   ): Promise<
     Omit<
@@ -2748,23 +2757,10 @@ export function createStaticHandler(
       "location" | "basename" | "actionData" | "actionHeaders"
     >
   > {
-    let isRouteRequest = routeMatch != null;
-
-    // Short circuit if we have no loaders to run (queryRoute())
-    if (isRouteRequest && !routeMatch?.route.loader) {
-      throw getInternalRouterError(400, {
-        method: request.method,
-        pathname: new URL(request.url).pathname,
-        routeId: routeMatch?.route.id,
-      });
-    }
-
-    let requestMatches = routeMatch
-      ? [routeMatch]
-      : getLoaderMatchesUntilBoundary(
-          matches,
-          Object.keys(pendingActionError || {})[0]
-        );
+    let requestMatches = getLoaderMatchesUntilBoundary(
+      matches,
+      Object.keys(pendingActionError || {})[0]
+    );
     let matchesToLoad = requestMatches.filter((m) => m.route.loader);
 
     // Short circuit if we have no loaders to run (query())
@@ -2793,7 +2789,7 @@ export function createStaticHandler(
           basename,
           future.unstable_middleware,
           true,
-          isRouteRequest,
+          false,
           requestContext,
           middlewareContext
         )
@@ -2801,8 +2797,7 @@ export function createStaticHandler(
     ]);
 
     if (request.signal.aborted) {
-      let method = isRouteRequest ? "queryRoute" : "query";
-      throw new Error(`${method}() call aborted`);
+      throw new Error(`query() call aborted`);
     }
 
     // Process and commit output from loaders
@@ -2812,6 +2807,97 @@ export function createStaticHandler(
       matchesToLoad,
       results,
       pendingActionError,
+      activeDeferreds
+    );
+
+    // Add a null for any non-loader matches for proper revalidation on the client
+    let executedLoaders = new Set<string>(
+      matchesToLoad.map((match) => match.route.id)
+    );
+    matches.forEach((match) => {
+      if (!executedLoaders.has(match.route.id)) {
+        context.loaderData[match.route.id] = null;
+      }
+    });
+
+    return {
+      ...context,
+      matches,
+      activeDeferreds:
+        activeDeferreds.size > 0
+          ? Object.fromEntries(activeDeferreds.entries())
+          : null,
+    };
+  }
+
+  async function handleQueryRouteLoaders(
+    request: Request,
+    matches: AgnosticDataRouteMatch[],
+    requestContext: unknown,
+    middlewareContext: MiddlewareContext | undefined,
+    routeMatch: AgnosticDataRouteMatch
+  ): Promise<
+    Omit<
+      StaticHandlerContext,
+      "location" | "basename" | "actionData" | "actionHeaders"
+    >
+  > {
+    // Short circuit if we have no loaders to run (queryRoute())
+    if (!routeMatch?.route.loader) {
+      throw getInternalRouterError(400, {
+        method: request.method,
+        pathname: new URL(request.url).pathname,
+        routeId: routeMatch?.route.id,
+      });
+    }
+
+    let requestMatches = [routeMatch];
+    let matchesToLoad = requestMatches.filter((m) => m.route.loader);
+
+    // Short circuit if we have no loaders to run (query())
+    if (matchesToLoad.length === 0) {
+      return {
+        matches,
+        // Add a null for all matched routes for proper revalidation on the client
+        loaderData: matches.reduce(
+          (acc, m) => Object.assign(acc, { [m.route.id]: null }),
+          {}
+        ),
+        errors: null,
+        statusCode: 200,
+        loaderHeaders: {},
+        activeDeferreds: null,
+      };
+    }
+
+    let results = await Promise.all([
+      ...matchesToLoad.map((match) =>
+        callLoaderOrAction(
+          "loader",
+          request,
+          match,
+          matches,
+          basename,
+          future.unstable_middleware,
+          true,
+          true,
+          requestContext,
+          middlewareContext
+        )
+      ),
+    ]);
+
+    if (request.signal.aborted) {
+      throw new Error(`queryRoute() call aborted`);
+    }
+
+    // Process and commit output from loaders
+    let activeDeferreds = new Map<string, DeferredData>();
+    let context = processRouteLoaderData(
+      matches,
+      matchesToLoad,
+      results,
+      undefined,
       activeDeferreds
     );
 

@@ -13179,7 +13179,7 @@ describe("a router", () => {
           e = _e;
         }
         expect(e).toMatchInlineSnapshot(
-          `[Error: query()/queryRoute() requests must contain an AbortController signal]`
+          `[Error: query() requests must contain an AbortController signal]`
         );
       });
 
@@ -14411,7 +14411,7 @@ describe("a router", () => {
           e = _e;
         }
         expect(e).toMatchInlineSnapshot(
-          `[Error: query()/queryRoute() requests must contain an AbortController signal]`
+          `[Error: queryRoute() requests must contain an AbortController signal]`
         );
       });
 
