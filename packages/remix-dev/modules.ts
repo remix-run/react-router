@@ -112,6 +112,10 @@ declare module "*.png" {
   let asset: string;
   export default asset;
 }
+declare module "*.psd" {
+  let asset: string;
+  export default asset;
+}
 declare module "*.sql" {
   let asset: string;
   export default asset;
