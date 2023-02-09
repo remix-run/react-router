@@ -28,7 +28,6 @@ import {
 
 // Private API
 import type {
-  AgnosticDataRouteMatch,
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
   AgnosticRouteObject,
