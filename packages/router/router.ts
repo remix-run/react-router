@@ -1306,7 +1306,15 @@ export function createRouter(init: RouterInit): Router {
     let actionMatch = getTargetMatch(matches, location);
 
     if (actionMatch.route.lazy) {
-      await loadLazyRouteModules([actionMatch], hasErrorBoundary, manifest);
+      await loadLazyRouteModules(
+        [actionMatch],
+        hasErrorBoundary,
+        manifest,
+        request.signal
+      );
+      if (request.signal.aborted) {
+        return { shortCircuited: true };
+      }
     }
 
     if (!actionMatch.route.action) {
@@ -1499,6 +1507,9 @@ export function createRouter(init: RouterInit): Router {
         manifest,
         request.signal
       );
+      if (request.signal.aborted) {
+        return { shortCircuited: true };
+      }
     }
 
     let { results, loaderResults, fetcherResults } =
@@ -1654,7 +1665,15 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     if (match.route.lazy) {
-      await loadLazyRouteModules([match], hasErrorBoundary, manifest);
+      await loadLazyRouteModules(
+        [match],
+        hasErrorBoundary,
+        manifest,
+        fetchRequest.signal
+      );
+      if (fetchRequest.signal.aborted) {
+        return;
+      }
 
       if (!match.route.action) {
         let error = getInternalRouterError(405, {
@@ -1783,6 +1802,9 @@ export function createRouter(init: RouterInit): Router {
         manifest,
         revalidationRequest.signal
       );
+      if (revalidationRequest.signal.aborted) {
+        return;
+      }
     }
 
     let { results, loaderResults, fetcherResults } =
@@ -1906,6 +1928,9 @@ export function createRouter(init: RouterInit): Router {
         manifest,
         fetchRequest.signal
       );
+      if (fetchRequest.signal.aborted) {
+        return;
+      }
     }
 
     let result: DataResult = await callLoaderOrAction(
@@ -2631,6 +2656,10 @@ export function createStaticHandler(
         manifest,
         request.signal
       );
+      if (request.signal.aborted) {
+        let method = routeMatch != null ? "queryRoute" : "query";
+        throw new Error(`${method}() call aborted`);
+      }
     }
 
     try {
