@@ -6,7 +6,7 @@
 
 **Introducing Lazy Route Modules!**
 
-In order to keep your application bundles small and provide first-class code-splitting support, we've introduced a new `lazy()` route property. This is an `async` function that returns with the non-route-matching portions of your route definition (`loader`, `element`, `errorElement`, etc.). You cannot define your route-matching properties through `lazy()` (`path`, `index`, `children`) since we only run the `lazy()` functions to after we've matched known routes. `lazy()` is executed as part of the `submitting` or `loading` phase of a navigation or fetcher call and will be aborted in the same manner is the navigation or fetch is interrupted.
+In order to keep your application bundles small and provide first-class code-splitting support, we've introduced a new `lazy()` route property. This is an `async` function that returns with the non-route-matching portions of your route definition (`loader`, `element`, `errorElement`, etc.). You cannot define your route-matching properties through `lazy()` (`path`, `index`, `children`) since we only run the `lazy()` functions after we've matched known routes. `lazy()` is executed as part of the `submitting` or `loading` phase of a navigation or fetcher call and will be aborted in the same manner if the navigation or fetch is interrupted.
 
 ```jsx
 // In this example, we assume most folks land on the homepage so we include that
