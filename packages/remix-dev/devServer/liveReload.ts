@@ -11,7 +11,11 @@ import type { RemixConfig } from "../config";
 const relativePath = (file: string) => path.relative(process.cwd(), file);
 
 let clean = (config: RemixConfig) => {
-  fse.emptyDirSync(config.assetsBuildDirectory);
+  try {
+    fse.emptyDirSync(config.assetsBuildDirectory);
+  } catch {
+    // ignore failed clean up attempts
+  }
 };
 
 export async function liveReload(

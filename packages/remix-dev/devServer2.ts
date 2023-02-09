@@ -19,7 +19,11 @@ let relativePath = (file: string) => path.relative(process.cwd(), file);
 let sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 let clean = (config: RemixConfig) => {
-  fs.emptyDirSync(config.relativeAssetsBuildDirectory);
+  try {
+    fs.emptyDirSync(config.relativeAssetsBuildDirectory);
+  } catch {
+    // ignore failed clean up attempts
+  }
 };
 
 let getHost = () =>
