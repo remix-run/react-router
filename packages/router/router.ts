@@ -214,22 +214,11 @@ export interface Router {
   /**
    * @internal
    * PRIVATE - DO NOT USE
+   *
+   * HMR needs to pass in-flight route updates to React Router
+   * TODO: Replace this with granular route update APIs (addRoute, updateRoute, deleteRoute)
    */
-  addRoute(route: AgnosticDataRouteObject, parentId?: string): void;
-  /**
-   * @internal
-   * PRIVATE - DO NOT USE
-   */
-  updateRoute(id: string, route: AgnosticDataRouteObject): void;
-  /**
-   * @internal
-   * PRIVATE - DO NOT USE
-   */
-  deleteRoute(id: string): void;
-  /**
-   * TODO: DELETE THIS FOR ABOVE GRANULAR METHODS
-   */
-  setNewRoutes(routes: AgnosticRouteObject[]): void;
+  _internalSetRoutesAndRevalidate(routes: AgnosticRouteObject[]): void;
 
   /**
    * @internal
@@ -653,18 +642,6 @@ const isServer = !isBrowser;
 ////////////////////////////////////////////////////////////////////////////////
 //#region createRouter
 ////////////////////////////////////////////////////////////////////////////////
-
-let cloneDataRoutes = (
-  routes: AgnosticDataRouteObject[]
-): AgnosticDataRouteObject[] => {
-  return routes.map((route) => {
-    if (route.children === undefined) return route;
-    return {
-      ...route,
-      children: cloneDataRoutes(route.children),
-    };
-  });
-};
 
 /**
  * Create a router and listen to history POP navigations
@@ -2307,75 +2284,9 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
-  // TODO: visitNode/visitParent helper?
-  function addRoute(newRoute: AgnosticDataRouteObject, parentId?: string) {
-    if (inFlightDataRoutes === undefined) {
-      inFlightDataRoutes = cloneDataRoutes(dataRoutes);
-    }
-
-    let root: AgnosticDataRouteObject = {
-      id: Symbol("root").toString(),
-      children: inFlightDataRoutes,
-    };
-    let recurse = (node: AgnosticDataRouteObject) => {
-      if (node.id === parentId) {
-        if (node.children === undefined) {
-          node.children = [];
-        }
-        node.children.push(newRoute);
-        return;
-      }
-      node.children?.forEach(recurse);
-    };
-    recurse(root);
-  }
-
-  function updateRoute(id: string, newRoute: AgnosticDataRouteObject) {
-    if (inFlightDataRoutes === undefined) {
-      inFlightDataRoutes = cloneDataRoutes(dataRoutes);
-    }
-
-    let root: AgnosticDataRouteObject = {
-      id: Symbol("root").toString(),
-      children: inFlightDataRoutes,
-    };
-    let recurse = (node: AgnosticDataRouteObject) => {
-      if (node.children === undefined) return;
-      let index = node.children.findIndex((child) => child.id === id);
-      if (index >= 0) {
-        node.children[index] = newRoute;
-        return;
-      }
-      node.children.forEach(recurse);
-    };
-    recurse(root);
-  }
-
-  function deleteRoute(id: string) {
-    if (inFlightDataRoutes === undefined) {
-      inFlightDataRoutes = cloneDataRoutes(dataRoutes);
-    }
-
-    let root: AgnosticDataRouteObject = {
-      id: Symbol("root").toString(),
-      children: inFlightDataRoutes,
-    };
-    let recurse = (node: AgnosticDataRouteObject) => {
-      if (node.children === undefined) return;
-      let index = node.children.findIndex((child) => child.id === id);
-      if (index >= 0) {
-        node.children.splice(index, 1);
-        if (node.children.length === 0) {
-          node.children = undefined;
-        }
-        return;
-      }
-      node.children.forEach(recurse);
-    };
-    recurse(root);
-  }
-
-  function setNewRoutes(newRoutes: AgnosticDataRouteObject[]) {
+  function _internalSetRoutesAndRevalidate(
+    newRoutes: AgnosticDataRouteObject[]
+  ) {
     inFlightDataRoutes = newRoutes;
     revalidate();
   }
@@ -2407,12 +2318,9 @@ export function createRouter(init: RouterInit): Router {
     deleteBlocker,
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
-    addRoute,
-    updateRoute,
-    deleteRoute,
     // TODO: Remove setRoutes, it's temporary to avoid dealing with
     // updating the tree while validating the update algorithm.
-    setNewRoutes,
+    _internalSetRoutesAndRevalidate,
   };
 
   return router;
