@@ -85,9 +85,11 @@ export * from "./router";
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @internal */
+export type { InternalMiddlewareContext as UNSAFE_InternalMiddlewareContext } from "./utils";
 export {
   DeferredData as UNSAFE_DeferredData,
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
   getPathContributingMatches as UNSAFE_getPathContributingMatches,
   createMiddlewareStore as UNSAFE_createMiddlewareStore,
+  getRouteAwareMiddlewareContext as UNSAFE_getRouteAwareMiddlewareContext,
 } from "./utils";
