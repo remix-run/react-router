@@ -28,6 +28,7 @@ import {
 
 // Private API
 import type {
+  AgnosticDataRouteMatch,
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
   AgnosticRouteObject,
@@ -160,6 +161,29 @@ function isRedirect(result: any) {
   return (
     result instanceof Response && result.status >= 300 && result.status <= 399
   );
+}
+
+function findRouteById(
+  routes: AgnosticDataRouteObject[],
+  id: string
+): AgnosticDataRouteObject {
+  let foundRoute: AgnosticDataRouteObject | null = null;
+  for (const route of routes) {
+    if (route.id === id) {
+      foundRoute = route;
+      break;
+    }
+    if (route.children) {
+      foundRoute = findRouteById(route.children, id);
+      if (foundRoute) {
+        break;
+      }
+    }
+  }
+
+  invariant(foundRoute, `Route not found with id "${id}".`);
+
+  return foundRoute;
 }
 
 interface CustomMatchers<R = jest.Expect> {
@@ -11547,6 +11571,31 @@ describe("a router", () => {
       });
     });
 
+    it("cancels lazy route loading on loading navigation when navigating away before lazy promise resolves", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let A = await t.navigate("/lazy");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+
+      await t.navigate("/");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("idle");
+
+      let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
+      A.lazy.lazy.resolve({
+        loader: lazyLoaderStub,
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(lazyLoaderStub).not.toHaveBeenCalled();
+
+      // Ensure the lazy route object update is cancelled
+      let lazyRoute = findRouteById(t.router.routes, "lazy");
+      expect(typeof lazyRoute.lazy).toBe("function");
+      expect(lazyRoute.loader).toBeUndefined();
+    });
+
     it("handles loader errors in lazy route modules on loading navigation", async () => {
       let t = setup({ routes: LAZY_ROUTES });
 
@@ -11633,6 +11682,90 @@ describe("a router", () => {
       });
     });
 
+    it("resolves lazy route modules on submission navigation when navigating away before lazy promise resolves", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let A = await t.navigate("/lazy", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      await t.navigate("/");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("idle");
+
+      let lazyActionStub = jest.fn(() => "LAZY ACTION");
+      let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
+      await A.lazy.lazy.resolve({
+        action: lazyActionStub,
+        loader: lazyLoaderStub,
+      });
+
+      let lazyRoute = findRouteById(t.router.routes, "lazy");
+      expect(lazyRoute.action).toBe(lazyActionStub);
+      expect(lazyRoute.loader).toBe(lazyLoaderStub);
+      expect(lazyRoute.lazy).toBeUndefined();
+
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(lazyActionStub).toHaveBeenCalledTimes(1);
+      expect(lazyLoaderStub).not.toHaveBeenCalled();
+    });
+
+    it("caches lazy route modules on submission navigation when submitting multiple times", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let A = await t.navigate("/lazy", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      let B = await t.navigate("/lazy", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      let loaderDfdA = createDeferred();
+      let actionDfdA = createDeferred();
+      let lazyLoaderStubA = jest.fn(() => loaderDfdA.promise);
+      let lazyActionStubA = jest.fn(() => actionDfdA.promise);
+      await A.lazy.lazy.resolve({
+        action: lazyActionStubA,
+        loader: lazyLoaderStubA,
+      });
+
+      let loaderDfdB = createDeferred();
+      let actionDfdB = createDeferred();
+      let lazyLoaderStubB = jest.fn(() => loaderDfdB.promise);
+      let lazyActionStubB = jest.fn(() => actionDfdB.promise);
+      await B.lazy.lazy.resolve({
+        action: lazyActionStubB,
+        loader: lazyLoaderStubB,
+      });
+
+      await actionDfdA.resolve("LAZY ACTION A");
+      await loaderDfdA.resolve("LAZY LOADER A");
+      await actionDfdB.resolve("LAZY ACTION B");
+      await loaderDfdB.resolve("LAZY LOADER B");
+
+      expect(t.router.state.location.pathname).toBe("/lazy");
+      expect(t.router.state.navigation.state).toBe("idle");
+
+      expect(t.router.state.actionData).toEqual({ lazy: "LAZY ACTION A" });
+      expect(t.router.state.loaderData).toEqual({ lazy: "LAZY LOADER A" });
+
+      expect(lazyActionStubA).toHaveBeenCalledTimes(2);
+      expect(lazyLoaderStubA).toHaveBeenCalledTimes(1);
+      expect(lazyLoaderStubB).not.toHaveBeenCalled();
+      expect(lazyActionStubB).not.toHaveBeenCalled();
+    });
+
     it("handles action errors in lazy route modules on submission navigation", async () => {
       let t = setup({ routes: LAZY_ROUTES });
 
@@ -11705,6 +11838,38 @@ describe("a router", () => {
       expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY LOADER");
     });
 
+    it("cancels lazy route module loading on fetcher.load if fetcher is called multiple times", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let key = "key";
+      let A = await t.fetch("/lazy", key);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      let B = await t.fetch("/lazy", key);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      let loaderDfdA = createDeferred();
+      let lazyLoaderStubA = jest.fn(() => loaderDfdA.promise);
+      await A.lazy.lazy.resolve({
+        loader: lazyLoaderStubA,
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      let loaderDfdB = createDeferred();
+      let lazyLoaderStubB = jest.fn(() => loaderDfdB.promise);
+      await B.lazy.lazy.resolve({
+        loader: lazyLoaderStubB,
+      });
+
+      await loaderDfdA.resolve("LAZY LOADER A");
+      await loaderDfdB.resolve("LAZY LOADER B");
+
+      expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+      expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY LOADER B");
+      expect(lazyLoaderStubA).not.toHaveBeenCalled();
+      expect(lazyLoaderStubB).toHaveBeenCalledTimes(1);
+    });
+
     it("handles errors in lazy route modules on fetcher.load", async () => {
       let t = setup({ routes: LAZY_ROUTES });
 
@@ -11742,9 +11907,47 @@ describe("a router", () => {
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
 
       await actionDfd.resolve("LAZY ACTION");
-      await tick();
       expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
       expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY ACTION");
+    });
+
+    it("caches lazy route modules on fetcher.submit if fetcher is called multiple times", async () => {
+      let t = setup({ routes: LAZY_ROUTES });
+
+      let key = "key";
+      let A = await t.fetch("/lazy", key, {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      let B = await t.fetch("/lazy", key, {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      let actionDfdA = createDeferred();
+      let lazyActionStubA = jest.fn(() => actionDfdA.promise);
+      await A.lazy.lazy.resolve({
+        action: lazyActionStubA,
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      let actionDfdB = createDeferred();
+      let lazyActionStubB = jest.fn(() => actionDfdB.promise);
+      await B.lazy.lazy.resolve({
+        action: () => lazyActionStubB,
+      });
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      await actionDfdA.resolve("LAZY ACTION A");
+      await actionDfdB.resolve("LAZY ACTION B");
+
+      expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+      expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY ACTION A");
+      expect(lazyActionStubA).toHaveBeenCalledTimes(2);
+      expect(lazyActionStubB).not.toHaveBeenCalled();
     });
 
     it("handles errors in lazy route modules on fetcher.submit", async () => {

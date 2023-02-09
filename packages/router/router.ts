@@ -1306,12 +1306,7 @@ export function createRouter(init: RouterInit): Router {
     let actionMatch = getTargetMatch(matches, location);
 
     if (actionMatch.route.lazy) {
-      await loadLazyRouteModules(
-        [actionMatch],
-        hasErrorBoundary,
-        manifest,
-        request.signal
-      );
+      await loadLazyRouteModules([actionMatch], hasErrorBoundary, manifest);
     }
 
     if (!actionMatch.route.action) {
@@ -1659,12 +1654,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     if (match.route.lazy) {
-      await loadLazyRouteModules(
-        [match],
-        hasErrorBoundary,
-        manifest,
-        fetchRequest.signal
-      );
+      await loadLazyRouteModules([match], hasErrorBoundary, manifest);
 
       if (!match.route.action) {
         let error = getInternalRouterError(405, {
@@ -3206,6 +3196,13 @@ async function loadLazyRouteModules(
   await Promise.all(
     lazyMatches.map(async (match) => {
       let mod = await match.route.lazy!();
+
+      // If the lazy route function has already been executed and removed from
+      // the route object by another call while we were waiting for the promise
+      // to resolve then we don't want to resolve the same route again.
+      if (!match.route.lazy) {
+        return;
+      }
 
       // Keep this since I think there are edge cases if we allow it to mutate
       // after being aborted.  There could be a race condition between the loads
