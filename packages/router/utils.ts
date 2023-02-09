@@ -217,7 +217,7 @@ type _PathParam<Path extends string> =
  */
 type PathParam<Path extends string> =
   // check if path is just a wildcard
-  Path extends "*"
+  Path extends "*" | "/*"
     ? "*"
     : // look for wildcard at the end of the path
     Path extends `${infer Rest}/*`
