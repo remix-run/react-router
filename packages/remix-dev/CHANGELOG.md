@@ -1,5 +1,18 @@
 # `@remix-run/dev`
 
+## 1.13.0-pre.2
+
+### Patch Changes
+
+- Ignore failed clean up attempts for dev server, ([#5412](https://github.com/remix-run/remix/pull/5412))
+  since cleanups are purely optimizations.
+  Worst-case, the next rebuild triggers a cleanup.
+
+  Do the same for `unstable_dev`.
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.13.0-pre.2`
+
 ## 1.13.0-pre.1
 
 ### Patch Changes
