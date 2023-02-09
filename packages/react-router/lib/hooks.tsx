@@ -831,9 +831,7 @@ export function useAsyncError(): unknown {
   return value?._error;
 }
 
-// useBlocker() is a singleton for now since we don't have any compelling use
-// cases for multi-blocker yet
-let blockerKey = "blocker-singleton";
+let blockerId = 0;
 
 /**
  * Allow the application to block navigations within the SPA and present the
@@ -843,6 +841,7 @@ let blockerKey = "blocker-singleton";
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
+  let [blockerKey] = React.useState(() => String(++blockerId));
 
   let blockerFunction = React.useCallback<BlockerFunction>(
     (args) => {
@@ -856,7 +855,10 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let blocker = router.getBlocker(blockerKey, blockerFunction);
 
   // Cleanup on unmount
-  React.useEffect(() => () => router.deleteBlocker(blockerKey), [router]);
+  React.useEffect(
+    () => () => router.deleteBlocker(blockerKey),
+    [router, blockerKey]
+  );
 
   return blocker;
 }

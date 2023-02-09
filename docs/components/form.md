@@ -57,7 +57,7 @@ function ProjectsPage() {
   >
     <Route
       path=":projectId"
-      element={<ProjectPage />}
+      element={<ProjectsPage />}
       action={ProjectsPage.action}
     />
   </Route>
