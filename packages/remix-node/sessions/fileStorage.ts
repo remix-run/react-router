@@ -4,6 +4,7 @@ import * as path from "path";
 import type {
   SessionStorage,
   SessionIdStorageStrategy,
+  SessionData,
 } from "@remix-run/server-runtime";
 
 import { createSessionStorage } from "../implementations";
@@ -29,10 +30,10 @@ interface FileSessionStorageOptions {
  *
  * @see https://remix.run/utils/sessions#createfilesessionstorage-node
  */
-export function createFileSessionStorage({
+export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
   cookie,
   dir,
-}: FileSessionStorageOptions): SessionStorage {
+}: FileSessionStorageOptions): SessionStorage<Data, FlashData> {
   return createSessionStorage({
     cookie,
     async createData(data, expires) {

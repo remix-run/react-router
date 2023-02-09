@@ -44,6 +44,7 @@ export type {
   DataFunctionArgs,
   EntryContext,
   ErrorBoundaryComponent,
+  FlashSessionData,
   HandleDataRequestFunction,
   HandleDocumentRequestFunction,
   HeadersFunction,

@@ -60,4 +60,5 @@ export type {
   SessionData,
   SessionIdStorageStrategy,
   SessionStorage,
+  FlashSessionData,
 } from "./sessions";
