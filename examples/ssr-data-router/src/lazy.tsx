@@ -13,9 +13,7 @@ interface LazyLoaderData {
 let submissionCount = 0;
 
 export const loader = async (): Promise<LazyLoaderData> => {
-  console.log("lazy loader start");
-  await new Promise((r) => setTimeout(r, 1000));
-  console.log("lazy loader end");
+  await new Promise((r) => setTimeout(r, 500));
   return {
     date: new Date().toISOString(),
     submissionCount,
@@ -23,9 +21,7 @@ export const loader = async (): Promise<LazyLoaderData> => {
 };
 
 export const action: ActionFunction = async ({ request }) => {
-  console.log("lazy action start");
-  await new Promise((r) => setTimeout(r, 1000));
-  console.log("lazy action end");
+  await new Promise((r) => setTimeout(r, 500));
 
   let body = await request.formData();
   if (body.get("error")) {

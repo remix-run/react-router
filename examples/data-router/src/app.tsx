@@ -44,20 +44,10 @@ let router = createBrowserRouter(
         loader={deferredLoader}
         element={<DeferredPage />}
       />
-      <Route
-        path="lazy"
-        lazy={async () => {
-          console.log("loading lazy");
-          await sleep(1000);
-          console.log("done loading lazy");
-          return await import("./lazy");
-        }}
-      />
+      <Route path="lazy" lazy={() => import("./lazy")} />
     </Route>
   )
 );
-
-window.router = router;
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => router.dispose());

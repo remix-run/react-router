@@ -1,7 +1,8 @@
 import * as React from "react";
+import type { RouteObject } from "react-router-dom";
 import { Outlet, Link, useLoaderData, redirect } from "react-router-dom";
 
-export const routes = [
+export const routes: RouteObject[] = [
   {
     path: "/",
     element: <Layout />,
@@ -22,12 +23,7 @@ export const routes = [
       },
       {
         path: "lazy",
-        async lazy() {
-          console.log("start lazy()");
-          await sleep(1000);
-          console.log("end lazy()");
-          return await import("./lazy");
-        },
+        lazy: () => import("./lazy"),
       },
       {
         path: "redirect",
