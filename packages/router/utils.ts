@@ -148,6 +148,14 @@ export interface HasErrorBoundaryFunction {
 }
 
 /**
+ * lazy() function to load a route definition, which can add non-matching
+ * related properties to a route
+ */
+export interface LazyRouteFunction<R extends AgnosticRouteObject> {
+  (): Promise<Omit<R, "caseSensitive" | "path" | "id" | "index" | "children">>;
+}
+
+/**
  * Base RouteObject with common props shared by all types of routes
  */
 type AgnosticBaseRouteObject = {
@@ -159,13 +167,7 @@ type AgnosticBaseRouteObject = {
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
-  lazy?: () => Promise<{
-    loader?: AgnosticBaseRouteObject["loader"];
-    action?: AgnosticBaseRouteObject["action"];
-    hasErrorBoundary?: AgnosticBaseRouteObject["hasErrorBoundary"];
-    shouldRevalidate?: AgnosticBaseRouteObject["shouldRevalidate"];
-    handle?: AgnosticBaseRouteObject["handle"];
-  }>;
+  lazy?: LazyRouteFunction<AgnosticBaseRouteObject>;
 };
 
 /**

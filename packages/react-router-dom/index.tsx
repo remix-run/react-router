@@ -85,6 +85,7 @@ export type {
   IndexRouteObject,
   IndexRouteProps,
   JsonFunction,
+  LazyRouteFunction,
   LayoutRouteProps,
   LoaderFunction,
   LoaderFunctionArgs,

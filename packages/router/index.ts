@@ -9,6 +9,7 @@ export type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
+  LazyRouteFunction,
   TrackedPromise,
   FormEncType,
   FormMethod,

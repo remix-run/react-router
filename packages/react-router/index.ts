@@ -20,6 +20,7 @@ import type {
   ShouldRevalidateFunction,
   To,
   InitialEntry,
+  LazyRouteFunction,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -125,6 +126,7 @@ export type {
   IndexRouteObject,
   IndexRouteProps,
   JsonFunction,
+  LazyRouteFunction,
   LayoutRouteProps,
   LoaderFunction,
   LoaderFunctionArgs,

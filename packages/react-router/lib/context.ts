@@ -9,6 +9,7 @@ import type {
   StaticHandlerContext,
   To,
   TrackedPromise,
+  LazyRouteFunction,
 } from "@remix-run/router";
 import type { Action as NavigationType } from "@remix-run/router";
 
@@ -27,15 +28,7 @@ export interface IndexRouteObject {
   children?: undefined;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
-  lazy?: () => Promise<{
-    loader?: AgnosticIndexRouteObject["loader"];
-    action?: AgnosticIndexRouteObject["action"];
-    hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
-    shouldRevalidate?: AgnosticIndexRouteObject["shouldRevalidate"];
-    handle?: AgnosticIndexRouteObject["handle"];
-    element?: React.ReactNode | null;
-    errorElement?: React.ReactNode | null;
-  }>;
+  lazy?: LazyRouteFunction<AgnosticIndexRouteObject>;
 }
 
 export interface NonIndexRouteObject {
@@ -51,15 +44,7 @@ export interface NonIndexRouteObject {
   children?: RouteObject[];
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
-  lazy?: () => Promise<{
-    loader?: AgnosticNonIndexRouteObject["loader"];
-    action?: AgnosticNonIndexRouteObject["action"];
-    hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
-    shouldRevalidate?: AgnosticNonIndexRouteObject["shouldRevalidate"];
-    handle?: AgnosticNonIndexRouteObject["handle"];
-    element?: React.ReactNode | null;
-    errorElement?: React.ReactNode | null;
-  }>;
+  lazy?: LazyRouteFunction<AgnosticNonIndexRouteObject>;
 }
 
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;

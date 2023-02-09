@@ -7,6 +7,7 @@ import type {
   Router as RemixRouter,
   RouterState,
   To,
+  LazyRouteFunction,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
@@ -235,6 +236,7 @@ export interface PathRouteProps {
   caseSensitive?: NonIndexRouteObject["caseSensitive"];
   path?: NonIndexRouteObject["path"];
   id?: NonIndexRouteObject["id"];
+  lazy?: LazyRouteFunction<NonIndexRouteObject>;
   loader?: NonIndexRouteObject["loader"];
   action?: NonIndexRouteObject["action"];
   hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
@@ -252,6 +254,7 @@ export interface IndexRouteProps {
   caseSensitive?: IndexRouteObject["caseSensitive"];
   path?: IndexRouteObject["path"];
   id?: IndexRouteObject["id"];
+  lazy?: LazyRouteFunction<IndexRouteObject>;
   loader?: IndexRouteObject["loader"];
   action?: IndexRouteObject["action"];
   hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
