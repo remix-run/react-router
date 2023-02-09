@@ -218,7 +218,7 @@ export interface Router {
    * HMR needs to pass in-flight route updates to React Router
    * TODO: Replace this with granular route update APIs (addRoute, updateRoute, deleteRoute)
    */
-  _internalSetRoutesAndRevalidate(routes: AgnosticRouteObject[]): void;
+  _internalSetRoutes(routes: AgnosticRouteObject[]): void;
 
   /**
    * @internal
@@ -2284,11 +2284,8 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
-  function _internalSetRoutesAndRevalidate(
-    newRoutes: AgnosticDataRouteObject[]
-  ) {
+  function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
     inFlightDataRoutes = newRoutes;
-    revalidate();
   }
 
   router = {
@@ -2320,7 +2317,7 @@ export function createRouter(init: RouterInit): Router {
     _internalActiveDeferreds: activeDeferreds,
     // TODO: Remove setRoutes, it's temporary to avoid dealing with
     // updating the tree while validating the update algorithm.
-    _internalSetRoutesAndRevalidate,
+    _internalSetRoutes,
   };
 
   return router;
