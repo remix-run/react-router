@@ -300,6 +300,14 @@ describe("matchPath *", () => {
       pathnameBase: "/",
     });
   });
+
+  it("resolves params containing '*' correctly", () => {
+    expect(matchPath("/users/:name/*", "/users/foo*/splat")).toMatchObject({
+      params: { name: "foo*", "*": "splat" },
+      pathname: "/users/foo*/splat",
+      pathnameBase: "/users/foo*",
+    });
+  });
 });
 
 describe("matchPath warnings", () => {
