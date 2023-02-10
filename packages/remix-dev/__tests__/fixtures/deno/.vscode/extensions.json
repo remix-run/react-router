@@ -1,0 +1,3 @@
+{
+  "recommendations": ["denoland.vscode-deno"]
+}

@@ -182,7 +182,14 @@ describe("remix CLI", () => {
 
             $ remix routes
             $ remix routes my-app
-            $ remix routes --json"
+            $ remix routes --json
+
+          Reveal the used entry point:
+
+            $ remix reveal entry.client
+            $ remix reveal entry.server
+            $ remix reveal entry.client --no-typescript
+            $ remix reveal entry.server --no-typescript"
       `);
     });
   });

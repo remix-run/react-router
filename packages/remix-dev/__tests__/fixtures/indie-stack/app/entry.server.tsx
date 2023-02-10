@@ -13,12 +13,14 @@ export default function handleRequest(
   remixContext: EntryContext
 ) {
   return new Promise((resolve, reject) => {
-    let didError = false;
-
     let { pipe, abort } = renderToPipeableStream(
-      <RemixServer context={remixContext} url={request.url} />,
+      <RemixServer
+        context={remixContext}
+        url={request.url}
+        abortDelay={ABORT_DELAY}
+      />,
       {
-        onShellReady: () => {
+        onShellReady() {
           let body = new PassThrough();
 
           responseHeaders.set("Content-Type", "text/html");
@@ -26,18 +28,17 @@ export default function handleRequest(
           resolve(
             new Response(body, {
               headers: responseHeaders,
-              status: didError ? 500 : responseStatusCode,
+              status: responseStatusCode,
             })
           );
 
           pipe(body);
         },
-        onShellError: (err) => {
-          reject(err);
+        onShellError(error) {
+          reject(error);
         },
-        onError: (error) => {
-          didError = true;
-
+        onError(error) {
+          responseStatusCode = 500;
           console.error(error);
         },
       }

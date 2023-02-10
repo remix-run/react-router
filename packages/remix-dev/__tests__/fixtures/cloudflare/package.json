@@ -1,0 +1,36 @@
+{
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "build": "remix build",
+    "dev:remix": "remix watch",
+    "dev:wrangler": "cross-env NODE_ENV=development npm run wrangler",
+    "dev": "remix build && run-p \"dev:*\"",
+    "start": "cross-env NODE_ENV=production npm run wrangler",
+    "typecheck": "tsc",
+    "wrangler": "wrangler pages dev ./public"
+  },
+  "dependencies": {
+    "@remix-run/cloudflare": "^1.12.0",
+    "@remix-run/cloudflare-pages": "^1.12.0",
+    "@remix-run/react": "^1.12.0",
+    "cross-env": "^7.0.3",
+    "isbot": "^3.6.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^3.18.0",
+    "@remix-run/dev": "^1.12.0",
+    "@remix-run/eslint-config": "^1.12.0",
+    "@types/react": "^18.0.25",
+    "@types/react-dom": "^18.0.8",
+    "eslint": "^8.27.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^4.8.4",
+    "wrangler": "^2.2.1"
+  },
+  "engines": {
+    "node": ">=16.13"
+  }
+}

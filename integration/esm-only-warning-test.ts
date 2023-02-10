@@ -24,6 +24,7 @@ test.beforeAll(async () => {
           "@remix-run/node": "0.0.0-local-version",
           "@remix-run/react": "0.0.0-local-version",
           "@remix-run/serve": "0.0.0-local-version",
+          isbot: "0.0.0-local-version",
           react: "0.0.0-local-version",
           "react-dom": "0.0.0-local-version",
           "esm-only-no-exports": "0.0.0-local-version",

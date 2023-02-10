@@ -51,8 +51,8 @@ module.exports = function rollup() {
             { src: `${sourceDir}/package.json`, dest: [outputDir, outputDist] },
             { src: `${sourceDir}/README.md`, dest: outputDir },
             {
-              src: `${sourceDir}/compiler/shims`,
-              dest: [`${outputDir}/compiler`, `${outputDist}/compiler`],
+              src: `${sourceDir}/config/defaults`,
+              dest: [`${outputDir}/config`, `${outputDist}/config`],
             },
           ],
         }),

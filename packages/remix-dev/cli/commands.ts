@@ -4,6 +4,7 @@ import * as fse from "fs-extra";
 import ora from "ora";
 import prettyMs from "pretty-ms";
 import * as esbuild from "esbuild";
+import NPMCliPackageJson from "@npmcli/package-json";
 
 import * as colors from "../colors";
 import * as compiler from "../compiler";
@@ -19,6 +20,7 @@ import { setupRemix, isSetupPlatform, SetupPlatform } from "./setup";
 import runCodemod from "../codemod";
 import { CodemodError } from "../codemod/utils/error";
 import { TaskError } from "../codemod/utils/task";
+import { transpile as convertFileToJS } from "./useJavascript";
 
 export async function create({
   appTemplate,
@@ -54,6 +56,7 @@ export async function create({
 type InitFlags = {
   deleteScript?: boolean;
 };
+
 export async function init(
   projectDir: string,
   { deleteScript = true }: InitFlags = {}
@@ -246,4 +249,160 @@ export async function codemod(
     }
     throw error;
   }
+}
+
+let clientEntries = ["entry.client.tsx", "entry.client.js", "entry.client.jsx"];
+let serverEntries = ["entry.server.tsx", "entry.server.js", "entry.server.jsx"];
+let entries = ["entry.client", "entry.server"];
+
+// @ts-expect-error available in node 12+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat#browser_compatibility
+let listFormat = new Intl.ListFormat("en", {
+  style: "long",
+  type: "conjunction",
+});
+
+export async function generateEntry(
+  entry: string,
+  remixRoot: string,
+  useTypeScript: boolean = true
+) {
+  let config = await readConfig(remixRoot);
+
+  // if no entry passed, attempt to create both
+  if (!entry) {
+    await generateEntry("entry.client", remixRoot, useTypeScript);
+    await generateEntry("entry.server", remixRoot, useTypeScript);
+    return;
+  }
+
+  if (!entries.includes(entry)) {
+    let entriesArray = Array.from(entries);
+    let list = listFormat.format(entriesArray);
+
+    console.error(
+      colors.error(`Invalid entry file. Valid entry files are ${list}`)
+    );
+    return;
+  }
+
+  let pkgJson = await NPMCliPackageJson.load(config.rootDirectory);
+  let deps = pkgJson.content.dependencies ?? {};
+
+  let serverRuntime = deps["@remix-run/deno"]
+    ? "deno"
+    : deps["@remix-run/cloudflare"]
+    ? "cloudflare"
+    : deps["@remix-run/node"]
+    ? "node"
+    : undefined;
+
+  if (!serverRuntime) {
+    let serverRuntimes = [
+      "@remix-run/deno",
+      "@remix-run/cloudflare",
+      "@remix-run/node",
+    ];
+    let formattedList = listFormat.format(serverRuntimes);
+    console.error(
+      colors.error(
+        `Could not determine server runtime. Please install one of the following: ${formattedList}`
+      )
+    );
+    return;
+  }
+
+  let clientRuntime = deps["@remix-run/react"] ? "react" : undefined;
+
+  if (!clientRuntime) {
+    console.error(
+      colors.error(
+        `Could not determine runtime. Please install the following: @remix-run/react`
+      )
+    );
+    return;
+  }
+
+  let defaultsDirectory = path.resolve(__dirname, "..", "config", "defaults");
+  let defaultEntryClient = path.resolve(
+    defaultsDirectory,
+    `entry.client.${clientRuntime}.tsx`
+  );
+  let defaultEntryServer = path.resolve(
+    defaultsDirectory,
+    `entry.server.${serverRuntime}.tsx`
+  );
+
+  let isServerEntry = entry === "entry.server";
+
+  let contents = isServerEntry
+    ? await createServerEntry(
+        config.rootDirectory,
+        config.appDirectory,
+        defaultEntryServer
+      )
+    : await createClientEntry(
+        config.rootDirectory,
+        config.appDirectory,
+        defaultEntryClient
+      );
+
+  let outputExtension = useTypeScript ? "tsx" : "jsx";
+  let outputEntry = `${entry}.${outputExtension}`;
+  let outputFile = path.resolve(config.appDirectory, outputEntry);
+
+  if (!useTypeScript) {
+    let javascript = convertFileToJS(contents, {
+      cwd: config.rootDirectory,
+      filename: isServerEntry ? defaultEntryServer : defaultEntryClient,
+    });
+    await fse.writeFile(outputFile, javascript, "utf-8");
+  } else {
+    await fse.writeFile(outputFile, contents, "utf-8");
+  }
+
+  console.log(
+    colors.blue(
+      `Entry file ${entry} created at ${path.relative(
+        config.rootDirectory,
+        outputFile
+      )}.`
+    )
+  );
+}
+
+async function checkForEntry(
+  rootDirectory: string,
+  appDirectory: string,
+  entries: string[]
+) {
+  for (let entry of entries) {
+    let entryPath = path.resolve(appDirectory, entry);
+    let exists = await fse.pathExists(entryPath);
+    if (exists) {
+      let relative = path.relative(rootDirectory, entryPath);
+      console.error(colors.error(`Entry file ${relative} already exists.`));
+      return process.exit(1);
+    }
+  }
+}
+
+async function createServerEntry(
+  rootDirectory: string,
+  appDirectory: string,
+  inputFile: string
+) {
+  await checkForEntry(rootDirectory, appDirectory, serverEntries);
+  let contents = await fse.readFile(inputFile, "utf-8");
+  return contents;
+}
+
+async function createClientEntry(
+  rootDirectory: string,
+  appDirectory: string,
+  inputFile: string
+) {
+  await checkForEntry(rootDirectory, appDirectory, clientEntries);
+  let contents = await fse.readFile(inputFile, "utf-8");
+  return contents;
 }

@@ -35,9 +35,7 @@ function handleBotRequest(
   remixContext: EntryContext
 ) {
   return new Promise((resolve, reject) => {
-    let didError = false;
-
-    let { pipe, abort } = renderToPipeableStream(
+    const { pipe, abort } = renderToPipeableStream(
       <RemixServer
         context={remixContext}
         url={request.url}
@@ -45,14 +43,14 @@ function handleBotRequest(
       />,
       {
         onAllReady() {
-          let body = new PassThrough();
+          const body = new PassThrough();
 
           responseHeaders.set("Content-Type", "text/html");
 
           resolve(
             new Response(body, {
               headers: responseHeaders,
-              status: didError ? 500 : responseStatusCode,
+              status: responseStatusCode,
             })
           );
 
@@ -62,8 +60,7 @@ function handleBotRequest(
           reject(error);
         },
         onError(error: unknown) {
-          didError = true;
-
+          responseStatusCode = 500;
           console.error(error);
         },
       }
@@ -80,9 +77,7 @@ function handleBrowserRequest(
   remixContext: EntryContext
 ) {
   return new Promise((resolve, reject) => {
-    let didError = false;
-
-    let { pipe, abort } = renderToPipeableStream(
+    const { pipe, abort } = renderToPipeableStream(
       <RemixServer
         context={remixContext}
         url={request.url}
@@ -90,26 +85,25 @@ function handleBrowserRequest(
       />,
       {
         onShellReady() {
-          let body = new PassThrough();
+          const body = new PassThrough();
 
           responseHeaders.set("Content-Type", "text/html");
 
           resolve(
             new Response(body, {
               headers: responseHeaders,
-              status: didError ? 500 : responseStatusCode,
+              status: responseStatusCode,
             })
           );
 
           pipe(body);
         },
-        onShellError(err: unknown) {
-          reject(err);
+        onShellError(error: unknown) {
+          reject(error);
         },
         onError(error: unknown) {
-          didError = true;
-
           console.error(error);
+          responseStatusCode = 500;
         },
       }
     );

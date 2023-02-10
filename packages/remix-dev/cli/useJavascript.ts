@@ -41,13 +41,13 @@ export let convert = async (projectDir: string) => {
   }
 };
 
-let transpile = (
+export function transpile(
   tsx: string,
   options: {
     cwd?: string;
     filename?: string;
   } = {}
-): string => {
+): string {
   let mjs = babel.transformSync(tsx, {
     compact: false,
     cwd: options.cwd,
@@ -63,4 +63,4 @@ let transpile = (
    * Use Prettier for nicer formatting.
    */
   return prettier.format(mjs.code, { parser: "babel" });
-};
+}

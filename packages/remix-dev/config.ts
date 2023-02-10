@@ -1,7 +1,9 @@
-import * as path from "path";
-import { pathToFileURL } from "url";
-import * as fse from "fs-extra";
+import { execSync } from "node:child_process";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import fse from "fs-extra";
 import getPort from "get-port";
+import NPMCliPackageJson from "@npmcli/package-json";
 
 import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
 import { defineRoutes } from "./config/routes";
@@ -10,6 +12,7 @@ import { ServerMode, isValidServerMode } from "./config/serverModes";
 import { serverBuildVirtualModule } from "./compiler/virtualModules";
 import { writeConfigDefaults } from "./compiler/utils/tsconfig/write-config-defaults";
 import { flatRoutes } from "./config/flat-routes";
+import { getPreferredPackageManager } from "./cli/getPreferredPackageManager";
 
 export interface RemixMdxConfig {
   rehypePlugins?: any[];
@@ -223,9 +226,19 @@ export interface RemixConfig {
   entryClientFile: string;
 
   /**
+   * The absolute path to the entry.client file.
+   */
+  entryClientFilePath: string;
+
+  /**
    * The path to the entry.server file, relative to `config.appDirectory`.
    */
   entryServerFile: string;
+
+  /**
+   * The absolute path to the entry.server file.
+   */
+  entryServerFilePath: string;
 
   /**
    * An object of all available routes, keyed by route id.
@@ -431,15 +444,88 @@ export async function readConfig(
     appConfig.cacheDirectory || ".cache"
   );
 
-  let entryClientFile = findEntry(appDirectory, "entry.client");
-  if (!entryClientFile) {
-    throw new Error(`Missing "entry.client" file in ${appDirectory}`);
+  let defaultsDirectory = path.resolve(__dirname, "config", "defaults");
+
+  let userEntryClientFile = findEntry(appDirectory, "entry.client");
+  let userEntryServerFile = findEntry(appDirectory, "entry.server");
+
+  let entryServerFile: string;
+  let entryClientFile: string;
+
+  let pkgJson = await NPMCliPackageJson.load(remixRoot);
+  let deps = pkgJson.content.dependencies ?? {};
+
+  if (userEntryServerFile) {
+    entryServerFile = userEntryServerFile;
+  } else {
+    if (!deps["isbot"]) {
+      console.log(`adding "isbot" to your package.json`);
+
+      pkgJson.update({
+        dependencies: {
+          ...pkgJson.content.dependencies,
+          isbot: "latest",
+        },
+      });
+
+      await pkgJson.save();
+
+      console.log(
+        "adding `isbot` to detect bots, you should commit this change"
+      );
+
+      let packageManager = getPreferredPackageManager();
+
+      execSync(`${packageManager} install`, {
+        cwd: remixRoot,
+        stdio: "inherit",
+      });
+    }
+
+    let serverRuntime = deps["@remix-run/deno"]
+      ? "deno"
+      : deps["@remix-run/cloudflare"]
+      ? "cloudflare"
+      : deps["@remix-run/node"]
+      ? "node"
+      : undefined;
+
+    if (!serverRuntime) {
+      let serverRuntimes = [
+        "@remix-run/deno",
+        "@remix-run/cloudflare",
+        "@remix-run/node",
+      ];
+      let formattedList = listFormat.format(serverRuntimes);
+      throw new Error(
+        `Could not determine server runtime. Please install one of the following: ${formattedList}`
+      );
+    }
+
+    entryServerFile = `entry.server.${serverRuntime}.tsx`;
   }
 
-  let entryServerFile = findEntry(appDirectory, "entry.server");
-  if (!entryServerFile) {
-    throw new Error(`Missing "entry.server" file in ${appDirectory}`);
+  if (userEntryClientFile) {
+    entryClientFile = userEntryClientFile;
+  } else {
+    let clientRuntime = deps["@remix-run/react"] ? "react" : undefined;
+
+    if (!clientRuntime) {
+      throw new Error(
+        `Could not determine runtime. Please install the following: @remix-run/react`
+      );
+    }
+
+    entryClientFile = `entry.client.${clientRuntime}.tsx`;
   }
+
+  let entryClientFilePath = userEntryClientFile
+    ? path.resolve(appDirectory, userEntryClientFile)
+    : path.resolve(defaultsDirectory, entryClientFile);
+
+  let entryServerFilePath = userEntryServerFile
+    ? path.resolve(appDirectory, userEntryServerFile)
+    : path.resolve(defaultsDirectory, entryServerFile);
 
   let assetsBuildDirectory =
     appConfig.assetsBuildDirectory ||
@@ -455,7 +541,7 @@ export async function readConfig(
     Number(process.env.REMIX_DEV_SERVER_WS_PORT) ||
     (await getPort({ port: Number(appConfig.devServerPort) || 8002 }));
   // set env variable so un-bundled servers can use it
-  process.env.REMIX_DEV_SERVER_WS_PORT = `${devServerPort}`;
+  process.env.REMIX_DEV_SERVER_WS_PORT = String(devServerPort);
   let devServerBroadcastDelay = appConfig.devServerBroadcastDelay || 0;
 
   let defaultPublicPath =
@@ -538,7 +624,9 @@ export async function readConfig(
     appDirectory,
     cacheDirectory,
     entryClientFile,
+    entryClientFilePath,
     entryServerFile,
+    entryServerFilePath,
     devServerPort,
     devServerBroadcastDelay,
     assetsBuildDirectory: absoluteAssetsBuildDirectory,
@@ -627,3 +715,10 @@ const resolveServerBuildPath = (
 
   return path.resolve(rootDirectory, serverBuildPath);
 };
+
+// @ts-expect-error available in node 12+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat#browser_compatibility
+let listFormat = new Intl.ListFormat("en", {
+  style: "long",
+  type: "conjunction",
+});

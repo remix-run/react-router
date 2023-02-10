@@ -1,5 +1,7 @@
 name = "remix-cloudflare-workers"
 type = "javascript"
+compatibility_date = "2022-04-05"
+compatibility_flags = ["streams_enable_constructors"]
 
 zone_id = ""
 account_id = ""

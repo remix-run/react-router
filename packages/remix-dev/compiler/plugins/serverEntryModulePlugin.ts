@@ -33,7 +33,7 @@ export function serverEntryModulePlugin(
           resolveDir: config.appDirectory,
           loader: "js",
           contents: `
-import * as entryServer from ${JSON.stringify(`./${config.entryServerFile}`)};
+import * as entryServer from ${JSON.stringify(config.entryServerFilePath)};
 ${Object.keys(config.routes)
   .map((key, index) => {
     // IMPORTANT: Any values exported from this generated module must also be

@@ -58,10 +58,6 @@ export async function createAssetsManifest({
       .map((im) => resolveUrl(im.path));
   }
 
-  let entryClientFile = path.resolve(
-    config.appDirectory,
-    config.entryClientFile
-  );
   let routesByFile: Map<string, Route[]> = Object.keys(config.routes).reduce(
     (map, key) => {
       let route = config.routes[key];
@@ -81,7 +77,7 @@ export async function createAssetsManifest({
     let output = metafile.outputs[key];
     if (!output.entryPoint) continue;
 
-    if (path.resolve(output.entryPoint) === entryClientFile) {
+    if (path.resolve(output.entryPoint) === config.entryClientFilePath) {
       entry = {
         module: resolveUrl(key),
         imports: resolveImports(output.imports),

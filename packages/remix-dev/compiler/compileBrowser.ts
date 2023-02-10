@@ -87,7 +87,7 @@ const createEsbuildConfig = (
     };
   } else {
     entryPoints = {
-      "entry.client": path.resolve(config.appDirectory, config.entryClientFile),
+      "entry.client": config.entryClientFilePath,
     };
 
     for (let id of Object.keys(config.routes)) {

@@ -42,6 +42,7 @@ test.beforeAll(async () => {
         dependencies: {
           "@remix-run/deno": "0.0.0-local-version",
           "@remix-run/react": "0.0.0-local-version",
+          isbot: "0.0.0-local-version",
           react: "0.0.0-local-version",
           "react-dom": "0.0.0-local-version",
           component: "0.0.0-local-version",
