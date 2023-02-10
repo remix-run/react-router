@@ -31,6 +31,8 @@ import {
   UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router-dom";
 
+import { htmlEscapeJsonString } from "./htmlescape";
+
 export interface StaticRouterProps {
   basename?: string;
   children?: React.ReactNode;
@@ -114,7 +116,7 @@ export function StaticRouterProvider({
     // up parsing on the client.  Dual-stringify is needed to ensure all quotes
     // are properly escaped in the resulting string.  See:
     //   https://v8.dev/blog/cost-of-javascript-2019#json
-    let json = JSON.stringify(JSON.stringify(data));
+    let json = htmlEscapeJsonString(JSON.stringify(JSON.stringify(data)));
     hydrateScript = `window.__staticRouterHydrationData = JSON.parse(${json});`;
   }
 
