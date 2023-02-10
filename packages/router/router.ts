@@ -24,6 +24,7 @@ import type {
   MutationFormMethod,
   ShouldRevalidateFunction,
   RouteManifest,
+  ImmutableRouteKey,
 } from "./utils";
 import {
   DeferredData,
@@ -31,6 +32,7 @@ import {
   ResultType,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
+  immutableRouteKeys,
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,
@@ -3164,17 +3166,6 @@ function shouldRevalidateLoader(
   return arg.defaultShouldRevalidate;
 }
 
-// Keys we cannot change from within a lazy() function.  We spread all
-// other keys onto the route.  Either they're meaningful to the router,
-// or they'll get ignored.
-const immutableKeys = new Set<keyof AgnosticRouteObject>([
-  "caseSensitive",
-  "path",
-  "id",
-  "index",
-  "children",
-]);
-
 /**
  * Execute route.lazy() methods to lazily load route modules (loader, action,
  * shouldRevalidate) and update the routeManifest in place which shares objects
@@ -3210,7 +3201,7 @@ async function loadLazyRouteModules(
       // affect the routes we've already matched.
       let routeUpdates: Record<string, any> = {};
       for (let k in mod) {
-        if (!immutableKeys.has(k as keyof AgnosticRouteObject)) {
+        if (!immutableRouteKeys.has(k as ImmutableRouteKey)) {
           routeUpdates[k] = mod[k as keyof typeof mod];
         }
       }
