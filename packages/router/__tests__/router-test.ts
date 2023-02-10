@@ -13590,7 +13590,7 @@ describe("a router", () => {
           ],
         },
       ]);
-      t.router.setNewRoutes(newRoutes);
+      t.router._internalSetRoutes(newRoutes);
 
       expect(t.router.state.revalidation).toBe("loading");
       expect(t.router.routes).toBe(ogRoutes);
