@@ -327,7 +327,6 @@ Please see the [errorElement][errorelement] documentation for more details.
 
 Any application-specific data. Please see the [useMatches][usematches] documentation for details and examples.
 
-[outlet]: ./outlet
 [remix]: https://remix.run
 [indexroute]: ../start/concepts#index-routes
 [outlet]: ../components/outlet
