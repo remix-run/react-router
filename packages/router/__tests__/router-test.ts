@@ -12350,6 +12350,10 @@ describe("a router", () => {
                 "x-custom": "yes",
               }),
             },
+            statusCode: 201,
+            loaderHeaders: {
+              deferred: new Headers({ "x-custom": "yes" }),
+            }
           });
         });
 
