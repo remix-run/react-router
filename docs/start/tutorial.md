@@ -1141,7 +1141,7 @@ touch src/routes/destroy.jsx
 
 ```jsx filename=src/routes/destroy.jsx
 import { redirect } from "react-router-dom";
-import { deleteContact } from "../contacts";
+import { deleteContact } from "../contact";
 
 export async function action({ params }) {
   await deleteContact(params.contactId);
