@@ -1304,12 +1304,7 @@ export function createRouter(init: RouterInit): Router {
     let actionMatch = getTargetMatch(matches, location);
 
     if (actionMatch.route.lazy) {
-      await loadLazyRouteModules(
-        [actionMatch],
-        hasErrorBoundary,
-        manifest,
-        request.signal
-      );
+      await loadLazyRouteModules([actionMatch], hasErrorBoundary, manifest);
       if (request.signal.aborted) {
         return { shortCircuited: true };
       }
@@ -1499,12 +1494,7 @@ export function createRouter(init: RouterInit): Router {
 
     let lazyMatches = matches.filter((m) => m.route.lazy);
     if (lazyMatches.length > 0) {
-      await loadLazyRouteModules(
-        lazyMatches,
-        hasErrorBoundary,
-        manifest,
-        request.signal
-      );
+      await loadLazyRouteModules(lazyMatches, hasErrorBoundary, manifest);
       if (request.signal.aborted) {
         return { shortCircuited: true };
       }
@@ -1663,12 +1653,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     if (match.route.lazy) {
-      await loadLazyRouteModules(
-        [match],
-        hasErrorBoundary,
-        manifest,
-        fetchRequest.signal
-      );
+      await loadLazyRouteModules([match], hasErrorBoundary, manifest);
       if (fetchRequest.signal.aborted) {
         return;
       }
@@ -1794,12 +1779,7 @@ export function createRouter(init: RouterInit): Router {
 
     let lazyMatches = matches.filter((m) => m.route.lazy);
     if (match.route.lazy) {
-      await loadLazyRouteModules(
-        lazyMatches,
-        hasErrorBoundary,
-        manifest,
-        revalidationRequest.signal
-      );
+      await loadLazyRouteModules(lazyMatches, hasErrorBoundary, manifest);
       if (revalidationRequest.signal.aborted) {
         return;
       }
@@ -1920,12 +1900,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     if (match.route.lazy) {
-      await loadLazyRouteModules(
-        [match],
-        hasErrorBoundary,
-        manifest,
-        fetchRequest.signal
-      );
+      await loadLazyRouteModules([match], hasErrorBoundary, manifest);
       if (fetchRequest.signal.aborted) {
         return;
       }
@@ -2644,12 +2619,7 @@ export function createStaticHandler(
 
     let lazyMatches = matches.filter((m) => m.route.lazy);
     if (lazyMatches.length > 0) {
-      await loadLazyRouteModules(
-        lazyMatches,
-        hasErrorBoundary,
-        manifest,
-        request.signal
-      );
+      await loadLazyRouteModules(lazyMatches, hasErrorBoundary, manifest);
       if (request.signal.aborted) {
         let method = routeMatch != null ? "queryRoute" : "query";
         throw new Error(`${method}() call aborted`);
@@ -3213,8 +3183,7 @@ const immutableKeys = new Set<keyof AgnosticRouteObject>([
 async function loadLazyRouteModules(
   lazyMatches: AgnosticDataRouteMatch[],
   hasErrorBoundary: HasErrorBoundaryFunction,
-  manifest: RouteManifest,
-  signal?: AbortSignal
+  manifest: RouteManifest
 ) {
   await Promise.all(
     lazyMatches.map(async (match) => {
@@ -3224,15 +3193,6 @@ async function loadLazyRouteModules(
       // the route object by another call while we were waiting for the promise
       // to resolve then we don't want to resolve the same route again.
       if (!match.route.lazy) {
-        return;
-      }
-
-      // Keep this since I think there are edge cases if we allow it to mutate
-      // after being aborted.  There could be a race condition between the loads
-      // if we interrupted ourself and we wouldn't want the former load to win
-      // over the latter load in case they were new promises returning updated
-      // stuff.  Maybe we could prefer mod.loader over route.loader though ?
-      if (signal && signal.aborted) {
         return;
       }
 
