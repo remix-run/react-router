@@ -98,7 +98,7 @@ export function Layout() {
           </li>
           <li>
             <Link to="/lazy">Lazy</Link>
-          </li>{" "}
+          </li>
           <li>
             <Link to="/404">404 Link</Link>
           </li>
