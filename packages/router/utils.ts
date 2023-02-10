@@ -147,6 +147,11 @@ export interface HasErrorBoundaryFunction {
   (route: AgnosticRouteObject): boolean;
 }
 
+/**
+ * Keys we cannot change from within a lazy() function. We spread all other keys
+ * onto the route. Either they're meaningful to the router, or they'll get
+ * ignored.
+ */
 export type ImmutableRouteKey =
   | "caseSensitive"
   | "path"
@@ -154,11 +159,6 @@ export type ImmutableRouteKey =
   | "index"
   | "children";
 
-/**
- * Keys we cannot change from within a lazy() function. We spread all other keys
- * onto the route. Either they're meaningful to the router, or they'll get
- * ignored.
- */
 export const immutableRouteKeys = new Set<ImmutableRouteKey>([
   "caseSensitive",
   "path",
