@@ -30,8 +30,7 @@ function getBuildDirectories(packageName, folderName) {
 
   if (process.env.LOCAL_BUILD_DIRECTORY) {
     try {
-      let nodeModulesDir = path.join(
-        process.cwd(),
+      let nodeModulesDir = path.resolve(
         process.env.LOCAL_BUILD_DIRECTORY,
         "node_modules"
       );
