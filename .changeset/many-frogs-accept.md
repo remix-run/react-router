@@ -52,3 +52,5 @@ function ErrorBoundary() {
 
 export const errorElement = <ErrorBoundary />;
 ```
+
+🙌 Huge thanks to @rossipedia for the [Initial Proposal](https://github.com/remix-run/react-router/discussions/9826) and [POC Implementation](https://github.com/remix-run/react-router/pull/9830).
