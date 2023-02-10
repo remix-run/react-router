@@ -2,7 +2,11 @@
 "@remix-run/router": minor
 ---
 
-Adds support for "middleware" on routes to give you a common place to run before and after your loaders and actions in a single location higher up in the routing tree. The API we landed on is inspired by the middleware API in [Fresh](https://fresh.deno.dev/docs/concepts/middleware) since it supports the concept of nested routes and also allows you to run logic on the response _after_ the fact.
+**Introducing Route Middleware**
+
+**Proposal**: #9564
+
+Adds support for middleware on routes to give you a common place to run before and after your loaders and actions in a single location higher up in the routing tree. The API we landed on is inspired by the middleware API in [Fresh](https://fresh.deno.dev/docs/concepts/middleware) since it supports the concept of nested routes and also allows you to run logic on the response _after_ the fact.
 
 This feature is behind a `future.unstable_middleware` flag at the moment, but major API changes are not expected and we believe it's ready for production usage. This flag allows us to make small "breaking" changes if users run into unforeseen issues.
 
@@ -17,13 +21,14 @@ import {
 import { getSession, commitSession } from "../session";
 import { getPosts } from "../posts";
 
-// Create strongly-typed contexts to use for your middleware data
+// 👉 Create strongly-typed contexts to use as keys for your middleware data
 let userCtx = createMiddlewareContext<User>(null);
 let sessionCtx = createMiddlewareContext<Session>(null);
 
 const routes = [
   {
     path: "/",
+    // 👉 Define middleware on your routes
     middleware: rootMiddleware,
     children: [
       {
@@ -36,6 +41,7 @@ const routes = [
 
 const router = createBrowserRouter(routes, {
   future: {
+    // 👉 Enable middleware for your router instance
     unstable_middleware: true,
   },
 });
@@ -44,16 +50,17 @@ function App() {
   return <RouterProvider router={router} />;
 }
 
+// Middlewares receive a context object with get/set/next methods
 async function rootMiddleware({ request, context }) {
   // 🔥 Load common information in one spot in your middleware and make it
   // available to child middleware/loaders/actions
   let session = await getSession(request.headers.get("Cookie"));
   let user = await getUser(session);
-  middleware.set(userCtx, user);
-  middleware.set(sessionCtx, session);
+  context.set(userCtx, user);
+  context.set(sessionCtx, session);
 
   // Call child middleware/loaders/actions
-  let response = await middleware.next();
+  let response = await context.next();
 
   // 🔥 Assign common response headers on the way out
   response.headers.append("Set-Cookie", await commitSession(session));
@@ -70,4 +77,4 @@ async function childLoader({ context }) {
 }
 ```
 
-⚠️ Please note that middleware is executed on a per-`loader`/`action` basis because they can alter the `Response` from the target `loader`/`action`. This means that if you have 3 `loader`'s being called in parallel on a navigation or revalidation, they will _each_ run any existing root middleware. If these duplicate middleware calls are problematic then you will need to de-dup any problematic logic manually.
+⚠️ Please note that middleware is executed on a per-`loader`/`action` basis because even though they may operate on the same Request, they operate on individual `Response` instances from the target `loader`/`action`. This means that if you have 3 `loader`'s being called in parallel on a navigation or revalidation, they will _each_ run any existing ancestor middleware. If these duplicate middleware calls are problematic then you will may need to de-dup middleware side effects manually.
