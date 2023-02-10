@@ -12353,7 +12353,7 @@ describe("a router", () => {
             statusCode: 201,
             loaderHeaders: {
               deferred: new Headers({ "x-custom": "yes" }),
-            }
+            },
           });
         });
 
