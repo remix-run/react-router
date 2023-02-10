@@ -77,6 +77,7 @@ interface RouteObject {
   errorElement?: React.ReactNode | null;
   handle?: RouteObject["handle"];
   shouldRevalidate?: ShouldRevalidateFunction;
+  lazy?: LazyRouteFunction<RouteObject>;
 }
 ```
 
@@ -327,6 +328,56 @@ Please see the [errorElement][errorelement] documentation for more details.
 
 Any application-specific data. Please see the [useMatches][usematches] documentation for details and examples.
 
+## `lazy`
+
+In order to keep your application bundles small and support code-splitting of your routes, each route can provide an async function that resolves the non-route-matching portions of your route definition (`loader`, `action`, `element`, `errorElement`, etc.).
+
+Lazy routes are resolved on initial load and during the `loading` or `submitting` phase of a navigation or fetcher call. You cannot lazily define route-matching properties (`path`, `index`, `children`) since we only execute your lazy route functions after we've matched known routes.
+
+Each `lazy` function will typically return the result of a dynamic import.
+
+```jsx
+let routes = createRoutesFromElements(
+  <Route path="/" element={<Layout />}>
+    <Route path="a" lazy={() => import("./a")} />
+    <Route path="b" lazy={() => import("./b")} />
+  </Route>
+);
+```
+
+Then in your lazy route modules, export the properties you want defined for the route:
+
+```jsx
+export function loader({ request }) {
+  let data = fetchData(request);
+  return json(data);
+}
+
+function Component() {
+  let data = useLoaderData();
+
+  return (
+    <>
+      <h1>You made it!</h1>
+      <p>{data}</p>
+    </>
+  );
+}
+
+export const element = <Component />;
+
+function ErrorBoundary() {
+  return <h1>Something went wrong</h1>;
+}
+
+export const errorElement = <ErrorBoundary />;
+```
+
+<docs-warning>If you are not using a data router like [`createBrowserRouter`][createbrowserrouter], this will do nothing</docs-warning>
+
+Please see the [lazy][lazy] documentation for more details.
+
+
 [outlet]: ./outlet
 [remix]: https://remix.run
 [indexroute]: ../start/concepts#index-routes
@@ -341,3 +392,4 @@ Any application-specific data. Please see the [useMatches][usematches] documenta
 [createroutesfromelements]: ../utils/create-routes-from-elements
 [createbrowserrouter]: ../routers/create-browser-router
 [usematches]: ../hooks/use-matches
+[lazy]: ./lazy

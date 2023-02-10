@@ -1,24 +1,21 @@
 ---
-"react-router": minor
-"react-router-dom": minor
-"@remix-run/router": minor
+title: lazy
+new: true
 ---
 
-**Introducing Lazy Route Modules!**
+# `lazy`
 
-In order to keep your application bundles small and support code-splitting of your routes, we've introduced a new `lazy()` route property. This is an async function that resolves the non-route-matching portions of your route definition (`loader`, `action`, `element`, `errorElement`, etc.).
+In order to keep your application bundles small and support code-splitting of your routes, each route can provide an async function that resolves the non-route-matching portions of your route definition (`loader`, `action`, `element`, `errorElement`, etc.).
 
 Lazy routes are resolved on initial load and during the `loading` or `submitting` phase of a navigation or fetcher call. You cannot lazily define route-matching properties (`path`, `index`, `children`) since we only execute your lazy route functions after we've matched known routes.
 
-Your `lazy` functions will typically return the result of a dynamic import.
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
+
+Each `lazy` function will typically return the result of a dynamic import.
 
 ```jsx
-// In this example, we assume most folks land on the homepage so we include that
-// in our critical-path bundle, but then we lazily load modules for /a and /b so
-// they don't load until the user navigates to those routes
 let routes = createRoutesFromElements(
   <Route path="/" element={<Layout />}>
-    <Route index element={<Home />} />
     <Route path="a" lazy={() => import("./a")} />
     <Route path="b" lazy={() => import("./b")} />
   </Route>
@@ -52,3 +49,5 @@ function ErrorBoundary() {
 
 export const errorElement = <ErrorBoundary />;
 ```
+
+[pickingarouter]: ../routers/picking-a-router
