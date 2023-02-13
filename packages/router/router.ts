@@ -1307,9 +1307,6 @@ export function createRouter(init: RouterInit): Router {
 
     if (actionMatch.route.lazy) {
       await loadLazyRouteModules([actionMatch], hasErrorBoundary, manifest);
-      if (request.signal.aborted) {
-        return { shortCircuited: true };
-      }
     }
 
     if (!actionMatch.route.action) {
@@ -1656,9 +1653,6 @@ export function createRouter(init: RouterInit): Router {
 
     if (match.route.lazy) {
       await loadLazyRouteModules([match], hasErrorBoundary, manifest);
-      if (fetchRequest.signal.aborted) {
-        return;
-      }
 
       if (!match.route.action) {
         let error = getInternalRouterError(405, {

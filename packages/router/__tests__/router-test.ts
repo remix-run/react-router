@@ -11854,7 +11854,7 @@ describe("a router", () => {
       consoleWarn.mockReset();
     });
 
-    it("fetches lazy route modules on submission navigation when navigating away before lazy promise resolves", async () => {
+    it("fetches lazy route modules and allows action to run on submission navigation when navigating away before lazy promise resolves", async () => {
       let t = setup({ routes: LAZY_ROUTES });
 
       let A = await t.navigate("/lazy", {
@@ -11876,14 +11876,14 @@ describe("a router", () => {
       });
 
       let lazyRoute = findRouteById(t.router.routes, "lazy");
-      expect(lazyActionStub).not.toHaveBeenCalled();
+      expect(lazyActionStub).toHaveBeenCalledTimes(1);
       expect(lazyLoaderStub).not.toHaveBeenCalled();
       expect(lazyRoute.lazy).toBeUndefined();
       expect(lazyRoute.action).toBe(lazyActionStub);
       expect(lazyRoute.loader).toBe(lazyLoaderStub);
     });
 
-    it("fetches lazy route modules on submission navigation and keeps the first resolved value when submitting multiple times", async () => {
+    it("fetches lazy route modules and allows action to run on submission navigation and keeps the first resolved value when submitting multiple times", async () => {
       let t = setup({ routes: LAZY_ROUTES });
 
       let A = await t.navigate("/lazy", {
@@ -11933,7 +11933,7 @@ describe("a router", () => {
 
       expect(lazyActionStubA).not.toHaveBeenCalled();
       expect(lazyLoaderStubA).not.toHaveBeenCalled();
-      expect(lazyActionStubB).toHaveBeenCalledTimes(1);
+      expect(lazyActionStubB).toHaveBeenCalledTimes(2);
       expect(lazyLoaderStubB).toHaveBeenCalledTimes(1);
     });
 
@@ -12084,7 +12084,7 @@ describe("a router", () => {
       expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY ACTION");
     });
 
-    it("fetches lazy route modules on fetcher.submit and stores the first resolved value if fetcher is called multiple times", async () => {
+    it("fetches lazy route modules and allows action to run on fetcher.submit and stores the first resolved value if fetcher is called multiple times", async () => {
       let t = setup({ routes: LAZY_ROUTES });
 
       let key = "key";
@@ -12122,7 +12122,7 @@ describe("a router", () => {
       expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
       expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY ACTION B");
       expect(lazyActionStubA).not.toHaveBeenCalled();
-      expect(lazyActionStubB).toHaveBeenCalledTimes(1);
+      expect(lazyActionStubB).toHaveBeenCalledTimes(2);
     });
 
     it("handles errors in lazy route modules on fetcher.submit", async () => {
