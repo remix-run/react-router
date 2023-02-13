@@ -673,10 +673,11 @@ function matchRouteBranch<
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
-  params: {
-    [key in PathParam<Path>]: string | null;
-  } = {} as any
+  ...routeParams: PathParam<Path> extends never
+    ? [undefined?]
+    : [{ [key in PathParam<Path>]: string | null }]
 ): string {
+  const params = routeParams[0] || ({} as any);
   let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
     warning(
