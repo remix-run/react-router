@@ -242,7 +242,7 @@ type _PathParam<Path extends string> =
     : // find params after `:`
     Path extends `:${infer Param}`
     ? Param extends `${infer Optional}?`
-      ? Optional
+      ? `${Optional}?`
       : Param
     : // otherwise, there aren't any params present
       never;
@@ -265,6 +265,22 @@ type PathParam<Path extends string> =
     ? "*" | _PathParam<Rest>
     : // look for params in the absence of wildcards
       _PathParam<Path>;
+
+type Optional<Path extends string> = {
+  [key in PathParam<Path> as key extends `${infer K}?`
+    ? K
+    : key extends "*"
+    ? "*"
+    : never]?: string;
+};
+
+type Required<Path extends string> = {
+  [key in PathParam<Path> as key extends `${infer _}?`
+    ? never
+    : key extends "*"
+    ? never
+    : key]: string;
+};
 
 // Attempt to parse the given string segment. If it fails, then just return the
 // plain string type as a default fallback. Otherwise return the union of the
@@ -673,9 +689,9 @@ function matchRouteBranch<
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
-  ...routeParams: PathParam<Path> extends never
-    ? [undefined?]
-    : [{ [key in PathParam<Path>]: string | null }]
+  ...routeParams: keyof Required<Path> extends never
+    ? [Optional<Path>?]
+    : [Optional<Path> & Required<Path>]
 ): string {
   const params = routeParams[0] || ({} as any);
   let path: string = originalPath;
