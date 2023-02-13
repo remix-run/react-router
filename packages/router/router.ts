@@ -636,7 +636,7 @@ const isBrowser =
 const isServer = !isBrowser;
 
 const defaultHasErrorBoundary = (route: AgnosticRouteObject) =>
-  route.hasErrorBoundary;
+  Boolean(route.hasErrorBoundary);
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3201,9 +3201,12 @@ async function loadLazyRouteModules(
       // affect the routes we've already matched.
       let routeUpdates: Record<string, any> = {};
       for (let lazyRouteProperty in lazyRoute) {
+        let staticRouteValue =
+          routeToUpdate[lazyRouteProperty as keyof typeof routeToUpdate];
+
         let isPropertyStaticallyDefined =
-          routeToUpdate[lazyRouteProperty as keyof typeof routeToUpdate] !==
-          undefined;
+          staticRouteValue !== undefined &&
+          lazyRouteProperty !== "hasErrorBoundary"; // This property isn't static since it should always be updated based on the route updates
 
         if (__DEV__) {
           warning(
