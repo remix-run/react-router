@@ -332,8 +332,6 @@ Any application-specific data. Please see the [useMatches][usematches] documenta
 
 In order to keep your application bundles small and support code-splitting of your routes, each route can provide an async function that resolves the non-route-matching portions of your route definition (`loader`, `action`, `element`, `errorElement`, etc.).
 
-Lazy routes are resolved on initial load and during the `loading` or `submitting` phase of a navigation or fetcher call. You cannot lazily define route-matching properties (`path`, `index`, `children`) since we only execute your lazy route functions after we've matched known routes.
-
 Each `lazy` function will typically return the result of a dynamic import.
 
 ```jsx
@@ -365,12 +363,6 @@ function Component() {
 }
 
 export const element = <Component />;
-
-function ErrorBoundary() {
-  return <h1>Something went wrong</h1>;
-}
-
-export const errorElement = <ErrorBoundary />;
 ```
 
 <docs-warning>If you are not using a data router like [`createBrowserRouter`][createbrowserrouter], this will do nothing</docs-warning>
