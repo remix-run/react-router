@@ -11572,6 +11572,50 @@ describe("a router", () => {
       });
     });
 
+    it("keeps existing loader on loading navigation if static loader is already defined", async () => {
+      let consoleWarn = jest.spyOn(console, "warn");
+      let t = setup({
+        routes: [
+          {
+            id: "lazy",
+            path: "/lazy",
+            loader: true,
+            lazy: true,
+          },
+        ],
+      });
+
+      let A = await t.navigate("/lazy");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+
+      let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
+      await A.lazy.lazy.resolve({
+        loader: lazyLoaderStub,
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+
+      await A.loaders.lazy.resolve("STATIC LOADER");
+      expect(t.router.state.location.pathname).toBe("/lazy");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.loaderData).toEqual({
+        lazy: "STATIC LOADER",
+      });
+
+      let lazyRoute = findRouteById(t.router.routes, "lazy");
+      expect(lazyRoute.lazy).toBeUndefined();
+      expect(lazyRoute.loader).toEqual(expect.any(Function));
+      expect(lazyRoute.loader).not.toBe(lazyLoaderStub);
+      expect(lazyLoaderStub).not.toHaveBeenCalled();
+
+      expect(consoleWarn).toHaveBeenCalledTimes(1);
+      expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
+        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`
+      );
+      consoleWarn.mockReset();
+    });
+
     it("fetches lazy route modules on loading navigation when navigating away before lazy promise resolves", async () => {
       let t = setup({ routes: LAZY_ROUTES });
 
@@ -11681,6 +11725,133 @@ describe("a router", () => {
       expect(t.router.state.loaderData).toEqual({
         lazy: "LAZY LOADER",
       });
+    });
+
+    it("keeps existing action on submission navigation if static action is already defined", async () => {
+      let consoleWarn = jest.spyOn(console, "warn");
+      let t = setup({
+        routes: [
+          {
+            id: "lazy",
+            path: "/lazy",
+            action: true,
+            lazy: true,
+          },
+        ],
+      });
+
+      let A = await t.navigate("/lazy", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      let lazyActionStub = jest.fn(() => "LAZY ACTION");
+      let loaderDfd = createDeferred();
+      await A.lazy.lazy.resolve({
+        action: lazyActionStub,
+        loader: () => loaderDfd.promise,
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      await A.actions.lazy.resolve("STATIC ACTION");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.actionData).toEqual({
+        lazy: "STATIC ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({});
+
+      await loaderDfd.resolve("LAZY LOADER");
+      expect(t.router.state.location.pathname).toBe("/lazy");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual({
+        lazy: "STATIC ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({
+        lazy: "LAZY LOADER",
+      });
+
+      let lazyRoute = findRouteById(t.router.routes, "lazy");
+      expect(lazyRoute.lazy).toBeUndefined();
+      expect(lazyRoute.action).toEqual(expect.any(Function));
+      expect(lazyRoute.action).not.toBe(lazyActionStub);
+      expect(lazyActionStub).not.toHaveBeenCalled();
+
+      expect(consoleWarn).toHaveBeenCalledTimes(1);
+      expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
+        `"Route "lazy" has a static property "action" defined but its lazy function is also returning a value for this property. The lazy route property "action" will be ignored."`
+      );
+      consoleWarn.mockReset();
+    });
+
+    it("keeps existing action and loader on submission navigation if static action and loader are already defined", async () => {
+      let consoleWarn = jest.spyOn(console, "warn");
+      let t = setup({
+        routes: [
+          {
+            id: "lazy",
+            path: "/lazy",
+            action: true,
+            loader: true,
+            lazy: true,
+          },
+        ],
+      });
+
+      let A = await t.navigate("/lazy", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      let lazyActionStub = jest.fn(() => "LAZY ACTION");
+      let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
+      await A.lazy.lazy.resolve({
+        action: lazyActionStub,
+        loader: lazyLoaderStub,
+      });
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("submitting");
+
+      await A.actions.lazy.resolve("STATIC ACTION");
+      expect(t.router.state.location.pathname).toBe("/");
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.actionData).toEqual({
+        lazy: "STATIC ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({});
+
+      await A.loaders.lazy.resolve("STATIC LOADER");
+      expect(t.router.state.location.pathname).toBe("/lazy");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.actionData).toEqual({
+        lazy: "STATIC ACTION",
+      });
+      expect(t.router.state.loaderData).toEqual({
+        lazy: "STATIC LOADER",
+      });
+
+      let lazyRoute = findRouteById(t.router.routes, "lazy");
+      expect(lazyRoute.lazy).toBeUndefined();
+      expect(lazyRoute.action).toEqual(expect.any(Function));
+      expect(lazyRoute.loader).toEqual(expect.any(Function));
+      expect(lazyRoute.action).not.toBe(lazyActionStub);
+      expect(lazyRoute.loader).not.toBe(lazyLoaderStub);
+      expect(lazyActionStub).not.toHaveBeenCalled();
+      expect(lazyLoaderStub).not.toHaveBeenCalled();
+
+      expect(consoleWarn).toHaveBeenCalledTimes(2);
+      expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
+        `"Route "lazy" has a static property "action" defined but its lazy function is also returning a value for this property. The lazy route property "action" will be ignored."`
+      );
+      expect(consoleWarn.mock.calls[1][0]).toMatchInlineSnapshot(
+        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`
+      );
+      consoleWarn.mockReset();
     });
 
     it("fetches lazy route modules on submission navigation when navigating away before lazy promise resolves", async () => {
@@ -11987,7 +12158,7 @@ describe("a router", () => {
             await tick();
             return {
               async loader() {
-                return json({ value: "LAZY" });
+                return json({ value: "LAZY LOADER" });
               },
             };
           },
@@ -11999,7 +12170,46 @@ describe("a router", () => {
         !(context instanceof Response),
         "Expected a StaticContext instance"
       );
-      expect(context.loaderData).toEqual({ lazy: { value: "LAZY" } });
+      expect(context.loaderData).toEqual({ lazy: { value: "LAZY LOADER" } });
+    });
+
+    it("keeps existing loader when using staticHandler.query() if static loader is already defined", async () => {
+      let consoleWarn = jest.spyOn(console, "warn");
+      let lazyLoaderStub = jest.fn(async () => {
+        await tick();
+        return json({ value: "LAZY LOADER" });
+      });
+
+      let { query } = createStaticHandler([
+        {
+          id: "lazy",
+          path: "/lazy",
+          loader: async () => {
+            await tick();
+            return json({ value: "STATIC LOADER" });
+          },
+          lazy: async () => {
+            await tick();
+            return {
+              loader: lazyLoaderStub,
+            };
+          },
+        },
+      ]);
+
+      let context = await query(createRequest("/lazy"));
+      invariant(
+        !(context instanceof Response),
+        "Expected a StaticContext instance"
+      );
+      expect(context.loaderData).toEqual({ lazy: { value: "STATIC LOADER" } });
+      expect(lazyLoaderStub).not.toHaveBeenCalled();
+
+      expect(consoleWarn).toHaveBeenCalledTimes(1);
+      expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
+        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`
+      );
+      consoleWarn.mockReset();
     });
 
     it("handles loader errors in lazy route modules on staticHandler.query()", async () => {
@@ -12083,7 +12293,7 @@ describe("a router", () => {
             await tick();
             return {
               async loader() {
-                return json({ value: "LAZY" });
+                return json({ value: "LAZY LOADER" });
               },
             };
           },
@@ -12092,7 +12302,46 @@ describe("a router", () => {
 
       let response = await queryRoute(createRequest("/lazy"));
       let data = await response.json();
-      expect(data).toEqual({ value: "LAZY" });
+      expect(data).toEqual({ value: "LAZY LOADER" });
+    });
+
+    it("keeps existing loader when using staticHandler.queryRoute() if static loader is already defined ", async () => {
+      let consoleWarn = jest.spyOn(console, "warn");
+      let lazyLoaderStub = jest.fn(async () => {
+        await tick();
+        return json({ value: "LAZY LOADER" });
+      });
+
+      let { query } = createStaticHandler([
+        {
+          id: "lazy",
+          path: "/lazy",
+          loader: async () => {
+            await tick();
+            return json({ value: "STATIC LOADER" });
+          },
+          lazy: async () => {
+            await tick();
+            return {
+              loader: lazyLoaderStub,
+            };
+          },
+        },
+      ]);
+
+      let context = await query(createRequest("/lazy"));
+      invariant(
+        !(context instanceof Response),
+        "Expected a StaticContext instance"
+      );
+      expect(context.loaderData).toEqual({ lazy: { value: "STATIC LOADER" } });
+      expect(lazyLoaderStub).not.toHaveBeenCalled();
+
+      expect(consoleWarn).toHaveBeenCalledTimes(1);
+      expect(consoleWarn.mock.calls[0][0]).toMatchInlineSnapshot(
+        `"Route "lazy" has a static property "loader" defined but its lazy function is also returning a value for this property. The lazy route property "loader" will be ignored."`
+      );
+      consoleWarn.mockReset();
     });
 
     it("handles loader errors in lazy route modules on staticHandler.queryRoute()", async () => {

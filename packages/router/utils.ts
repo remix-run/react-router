@@ -144,7 +144,7 @@ export interface ShouldRevalidateFunction {
  * from the framework-aware `errorElement` prop
  */
 export interface HasErrorBoundaryFunction {
-  (route: AgnosticRouteObject): boolean;
+  (route: AgnosticRouteObject): boolean | undefined;
 }
 
 /**

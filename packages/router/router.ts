@@ -636,7 +636,7 @@ const isBrowser =
 const isServer = !isBrowser;
 
 const defaultHasErrorBoundary = (route: AgnosticRouteObject) =>
-  Boolean(route.hasErrorBoundary);
+  route.hasErrorBoundary;
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3178,7 +3178,7 @@ async function loadLazyRouteModules(
 ) {
   await Promise.all(
     lazyMatches.map(async (match) => {
-      let mod = await match.route.lazy!();
+      let lazyRoute = await match.route.lazy!();
 
       // If the lazy route function has already been executed and removed from
       // the route object by another call while we were waiting for the promise
@@ -3200,9 +3200,24 @@ async function loadLazyRouteModules(
       // update that cannot touch things like path/index/children so it cannot
       // affect the routes we've already matched.
       let routeUpdates: Record<string, any> = {};
-      for (let k in mod) {
-        if (!immutableRouteKeys.has(k as ImmutableRouteKey)) {
-          routeUpdates[k] = mod[k as keyof typeof mod];
+      for (let lazyRouteProperty in lazyRoute) {
+        let isPropertyStaticallyDefined =
+          routeToUpdate[lazyRouteProperty as keyof typeof routeToUpdate] !==
+          undefined;
+
+        if (__DEV__) {
+          warning(
+            !isPropertyStaticallyDefined,
+            `Route "${routeToUpdate.id}" has a static property "${lazyRouteProperty}" defined but its lazy function is also returning a value for this property. The lazy route property "${lazyRouteProperty}" will be ignored.`
+          );
+        }
+
+        if (
+          !isPropertyStaticallyDefined &&
+          !immutableRouteKeys.has(lazyRouteProperty as ImmutableRouteKey)
+        ) {
+          routeUpdates[lazyRouteProperty] =
+            lazyRoute[lazyRouteProperty as keyof typeof lazyRoute];
         }
       }
 
