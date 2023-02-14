@@ -360,7 +360,7 @@ Now that we've got a component, let's hook it up to a new route.
 
 👉 **Import the contact component and create a new route**
 
-```js filename=main.jsx lines=[2,10-13]
+```js filename=src/main.jsx lines=[2,10-13]
 /* existing imports */
 import Contact from "./routes/contact";
 
@@ -948,7 +948,7 @@ export async function action({ request, params }) {
 
 Since we have a handful of form fields, we used [`Object.fromEntries`][fromentries] to collect them all into an object, which is exactly what our `updateContact` function wants.
 
-```jsx
+```jsx lines=[2,3]
 const updates = Object.fromEntries(formData);
 updates.first; // "Some"
 updates.last; // "Name"
@@ -977,7 +977,7 @@ Now that we know how to redirect, let's update the action that creates new conta
 
 👉 **Redirect to the new record's edit page**
 
-```jsx filename=src/routes/root.jsx lines=[6,11-12]
+```jsx filename=src/routes/root.jsx lines=[6,12]
 import {
   Outlet,
   Link,
@@ -1100,7 +1100,7 @@ In our case, we add a `"loading"` class to the main part of the app if we're not
 
 <img class="tutorial" loading="lazy" src="/_docs/tutorial/16.webp" />
 
-Note that our data model (`src/contact.js`) has a clientside cache, so navigating to the same contact is fast the second time. This behavior is _not_ React Router, it will re-load data for changing routes no matter if you've been there before or not. It does, however, avoid calling the loaders for _unchanging_ routes (like the list) during a navigation.
+Note that our data model (`src/contacts.js`) has a clientside cache, so navigating to the same contact is fast the second time. This behavior is _not_ React Router, it will re-load data for changing routes no matter if you've been there before or not. It does, however, avoid calling the loaders for _unchanging_ routes (like the list) during a navigation.
 
 ## Deleting Records
 
@@ -1732,7 +1732,7 @@ Might want to take a look at that form while we're here. As always, our form has
 
 👉 **Create the action**
 
-```jsx filename=src/routes/contact.jsx lines=[2,4-10]
+```jsx filename=src/routes/contact.jsx lines=[2,4-9]
 // existing code
 import { getContact, updateContact } from "../contacts";
 
@@ -1841,7 +1841,7 @@ Whenever you have an expected error case in a loader or action–like the data n
 
 👉 **Throw a 404 response in the loader**
 
-```jsx filename=src/routes/contact.jsx lines=[3-8]
+```jsx filename=src/routes/contact.jsx lines=[2-9]
 export async function loader({ params }) {
   const contact = await getContact(params.contactId);
   if (!contact) {
