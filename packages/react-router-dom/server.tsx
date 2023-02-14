@@ -67,6 +67,8 @@ export function StaticRouter({
   );
 }
 
+export { StaticHandlerContext };
+
 export interface StaticRouterProviderProps {
   context: StaticHandlerContext;
   router: RemixRouter;
@@ -272,6 +274,9 @@ export function createStaticRouter(
     },
     initialize() {
       throw msg("initialize");
+    },
+    ready() {
+      throw msg("ready");
     },
     subscribe() {
       throw msg("subscribe");

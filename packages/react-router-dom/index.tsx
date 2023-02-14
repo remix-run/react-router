@@ -202,7 +202,6 @@ export function createBrowserRouter(
     basename?: string;
     hydrationData?: HydrationState;
     window?: Window;
-    onInitialize?: (args: { router: RemixRouter }) => void;
   }
 ): RemixRouter {
   return createRouter({
@@ -211,7 +210,6 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     hasErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
-    onInitialize: opts?.onInitialize,
   }).initialize();
 }
 
@@ -221,7 +219,6 @@ export function createHashRouter(
     basename?: string;
     hydrationData?: HydrationState;
     window?: Window;
-    onInitialize?: (args: { router: RemixRouter }) => void;
   }
 ): RemixRouter {
   return createRouter({
@@ -230,7 +227,6 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     hasErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
-    onInitialize: opts?.onInitialize,
   }).initialize();
 }
 

@@ -153,6 +153,7 @@ export interface HasErrorBoundaryFunction {
  * ignored.
  */
 export type ImmutableRouteKey =
+  | "lazy"
   | "caseSensitive"
   | "path"
   | "id"
@@ -160,6 +161,7 @@ export type ImmutableRouteKey =
   | "children";
 
 export const immutableRouteKeys = new Set<ImmutableRouteKey>([
+  "lazy",
   "caseSensitive",
   "path",
   "id",

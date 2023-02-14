@@ -4276,6 +4276,70 @@ function testDomRouter(
         `);
       });
 
+      it("renders hydration errors on lazy leaf elements", async () => {
+        let router = await createTestRouter(
+          createRoutesFromElements(
+            <Route path="/" element={<Comp />}>
+              <Route
+                path="child"
+                lazy={async () => ({
+                  element: <Comp />,
+                  errorElement: <ErrorBoundary />,
+                })}
+              />
+            </Route>
+          ),
+          {
+            window: getWindow("/child"),
+            hydrationData: {
+              loaderData: {
+                "0": "parent data",
+              },
+              actionData: {
+                "0": "parent action",
+              },
+              errors: {
+                "0-0": new Error("Kaboom 💥"),
+              },
+            },
+          }
+        ).ready();
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Comp() {
+          let data = useLoaderData();
+          let actionData = useActionData();
+          let navigation = useNavigation();
+          return (
+            <div>
+              {data}
+              {actionData}
+              {navigation.state}
+              <Outlet />
+            </div>
+          );
+        }
+
+        function ErrorBoundary() {
+          let error = useRouteError();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              parent data
+              parent action
+              idle
+              <p>
+                Kaboom 💥
+              </p>
+            </div>
+          </div>"
+        `);
+      });
+
       it("renders hydration errors on parent elements", async () => {
         let { container } = render(
           <TestDataRouter
@@ -4293,6 +4357,61 @@ function testDomRouter(
             </Route>
           </TestDataRouter>
         );
+
+        function Comp() {
+          let data = useLoaderData();
+          let actionData = useActionData();
+          let navigation = useNavigation();
+          return (
+            <div>
+              {data}
+              {actionData}
+              {navigation.state}
+              <Outlet />
+            </div>
+          );
+        }
+
+        function ErrorBoundary() {
+          let error = useRouteError();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom 💥
+            </p>
+          </div>"
+        `);
+      });
+
+      it("renders hydration errors on lazy parent elements", async () => {
+        let router = await createTestRouter(
+          createRoutesFromElements(
+            <Route
+              path="/"
+              lazy={async () => ({
+                element: <Comp />,
+                errorElement: <ErrorBoundary />,
+              })}
+            >
+              <Route path="child" element={<Comp />} />
+            </Route>
+          ),
+          {
+            window: getWindow("/child"),
+            hydrationData: {
+              loaderData: {},
+              actionData: null,
+              errors: {
+                "0": new Error("Kaboom 💥"),
+              },
+            },
+          }
+        ).ready();
+
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let data = useLoaderData();
@@ -4589,6 +4708,91 @@ function testDomRouter(
         `);
 
         fireEvent.click(screen.getByText("Link to Bar"));
+        barDefer.reject(new Error("Kaboom!"));
+        await waitFor(() => screen.getByText("idle"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              idle
+            </p>
+            <p>
+              Bar Error:
+              Kaboom!
+            </p>
+          </div>"
+        `);
+      });
+
+      // This test ensures that when manual routes are used, we add hasErrorBoundary
+      it("renders navigation errors on lazy leaf elements (when using manual route objects)", async () => {
+        let lazyDefer = createDeferred();
+        let barDefer = createDeferred();
+
+        let routes = [
+          {
+            path: "/",
+            element: <Layout />,
+            children: [
+              {
+                path: "foo",
+                element: <h1>Foo</h1>,
+              },
+              {
+                path: "bar",
+                lazy: async () => lazyDefer.promise,
+              },
+            ],
+          },
+        ];
+
+        router = createTestRouter(routes, { window: getWindow("/foo") });
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Layout() {
+          let navigation = useNavigation();
+          return (
+            <div>
+              <Link to="/bar">Link to Bar</Link>
+              <div id="output">
+                <p>{navigation.state}</p>
+                <Outlet />
+              </div>
+            </div>
+          );
+        }
+
+        function Bar() {
+          let data = useLoaderData();
+          return <h1>Bar:{data?.message}</h1>;
+        }
+        function BarError() {
+          let error = useRouteError();
+          return <p>Bar Error:{error.message}</p>;
+        }
+
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>"
+        `);
+
+        fireEvent.click(screen.getByText("Link to Bar"));
+        await lazyDefer.resolve({
+          loader: () => barDefer.promise,
+          element: <Bar />,
+          errorElement: <BarError />,
+        });
         barDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")))

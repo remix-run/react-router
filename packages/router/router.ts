@@ -83,6 +83,18 @@ export interface Router {
   initialize(): Router;
 
   /**
+   * Returns a promise that resolves when the router has been initialized
+   * including any lazy-loaded route properties.  This is useful on the client
+   * after server-side rendering to ensure that the routes are ready to render
+   * since all elements and error boundaries have been resolved.
+   *
+   * TODO: Rename this and/or initialize()?  If we make initialize() async then
+   * the public router creation functions will become async too which is a
+   * breaking change.
+   */
+  ready(): Promise<Router>;
+
+  /**
    * @internal
    * PRIVATE - DO NOT USE
    *
@@ -323,7 +335,6 @@ export interface RouterInit {
   history: History;
   hydrationData?: HydrationState;
   hasErrorBoundary?: HasErrorBoundaryFunction;
-  onInitialize?: (args: { router: Router }) => void;
 }
 
 /**
@@ -849,25 +860,6 @@ export function createRouter(init: RouterInit): Router {
       }
     );
 
-    if (init.onInitialize) {
-      if (state.initialized) {
-        // We delay calling the onInitialize function until the next tick so
-        // this function has a chance to return the router instance, otherwise
-        // consumers will get an error if they try to use the returned router
-        // instance in their callback. Note that we also provide the router
-        // instance to the callback as a convenience and to avoid this ambiguity
-        // in the consumer code.
-        Promise.resolve().then(() => init.onInitialize!({ router }));
-      } else {
-        let unsubscribe = subscribe((updatedState) => {
-          if (updatedState.initialized) {
-            unsubscribe();
-            init.onInitialize!({ router });
-          }
-        });
-      }
-    }
-
     if (state.initialized) {
       return router;
     }
@@ -895,6 +887,32 @@ export function createRouter(init: RouterInit): Router {
     });
 
     return router;
+  }
+
+  // Returns a promise that resolves when the router has been initialized
+  // including any lazy-loaded route properties.  This is useful on the client
+  // after server-side rendering to ensure that the routes are ready to render
+  // since all elements and error boundaries have been resolved.
+  //
+  // Implemented as a Fluent API for ease of: let router = await
+  //   createRouter(init).initialize().ready();
+  //
+  // TODO: Rename this and/or initialize()?  If we make initialize() async then
+  // the public router creation functions will become async too which is a
+  // breaking change.
+  function ready(): Promise<Router> {
+    return new Promise((resolve) => {
+      if (state.initialized) {
+        resolve(router);
+      } else {
+        let unsubscribe = subscribe((updatedState) => {
+          if (updatedState.initialized) {
+            unsubscribe();
+            resolve(router);
+          }
+        });
+      }
+    });
   }
 
   // Clean up a router and it's side effects
@@ -2382,6 +2400,7 @@ export function createRouter(init: RouterInit): Router {
       return dataRoutes;
     },
     initialize,
+    ready,
     subscribe,
     enableScrollRestoration,
     navigate,
@@ -3202,12 +3221,10 @@ async function loadLazyRouteModules(
           staticRouteValue !== undefined &&
           lazyRouteProperty !== "hasErrorBoundary"; // This property isn't static since it should always be updated based on the route updates
 
-        if (__DEV__) {
-          warning(
-            !isPropertyStaticallyDefined,
-            `Route "${routeToUpdate.id}" has a static property "${lazyRouteProperty}" defined but its lazy function is also returning a value for this property. The lazy route property "${lazyRouteProperty}" will be ignored.`
-          );
-        }
+        warning(
+          !isPropertyStaticallyDefined,
+          `Route "${routeToUpdate.id}" has a static property "${lazyRouteProperty}" defined but its lazy function is also returning a value for this property. The lazy route property "${lazyRouteProperty}" will be ignored.`
+        );
 
         if (
           !isPropertyStaticallyDefined &&
