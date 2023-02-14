@@ -699,7 +699,8 @@ import { Form, useLoaderData } from "react-router-dom";
 import { getContact } from "../contacts";
 
 export async function loader({ params }) {
-  return getContact(params.contactId);
+  const contact = await getContact(params.contactId);
+  return { contact };
 }
 
 export default function Contact() {
