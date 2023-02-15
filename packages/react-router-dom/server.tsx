@@ -11,7 +11,7 @@ import {
   IDLE_FETCHER,
   IDLE_NAVIGATION,
   Action,
-  invariant,
+  UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
