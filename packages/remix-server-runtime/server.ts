@@ -55,7 +55,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     let { unstable_dev } = build.future;
     if (
       mode === "development" &&
-      unstable_dev !== false &&
+      typeof unstable_dev !== "boolean" &&
       url.pathname ===
         (unstable_dev.remixRequestHandlerPath ?? "") +
           "/__REMIX_ASSETS_MANIFEST"
