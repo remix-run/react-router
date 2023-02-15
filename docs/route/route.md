@@ -149,7 +149,7 @@ You can make a route segment optional by adding a `?` to the end of the segment.
   path="/:lang?/categories"
   // the matching param might be available to the loader
   loader={({ params }) => {
-    console.log(params["*"]); // "one/two"
+    console.log(params["lang"]); // "en"
   }}
   // and the action
   action={({ params }) => {}}
