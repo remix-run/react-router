@@ -3183,7 +3183,12 @@ async function callLoaderOrAction(
   }
 
   if (result instanceof DeferredData) {
-    return { type: ResultType.deferred, deferredData: result };
+    return {
+      type: ResultType.deferred,
+      deferredData: result,
+      statusCode: result.init?.status,
+      headers: result.init?.headers && new Headers(result.init.headers),
+    };
   }
 
   return { type: ResultType.data, data: result };
