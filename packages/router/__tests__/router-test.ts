@@ -12588,6 +12588,97 @@ describe("a router", () => {
         expect(currentRouter.state.errors).toBe(null);
       });
     });
+
+    describe("short circuiting", () => {
+      it("short circuits a pipeline if you throw a Redirect from a middleware", async () => {
+        let middleware = jest.fn(({ request }) => {
+          if (request.url.endsWith("/a")) {
+            throw redirect("/b");
+          }
+        });
+        let aLoader = jest.fn((arg) => "❌");
+        let bLoader = jest.fn((arg) => "✅");
+
+        currentRouter = createRouter({
+          routes: [
+            {
+              path: "/",
+              middleware,
+              children: [
+                {
+                  path: "a",
+                  loader: aLoader,
+                },
+                {
+                  path: "b",
+                  loader: bLoader,
+                },
+              ],
+            },
+          ],
+          history: createMemoryHistory(),
+          future: { unstable_middleware: true },
+        }).initialize();
+
+        await currentRouter.navigate("/a");
+
+        expect(currentRouter.state.location.pathname).toBe("/b");
+
+        expect(middleware).toHaveBeenCalledTimes(2);
+        expect(middleware.mock.calls[0][0].request.url).toEqual(
+          "http://localhost/a"
+        );
+        expect(middleware.mock.calls[1][0].request.url).toEqual(
+          "http://localhost/b"
+        );
+
+        expect(aLoader).toHaveBeenCalledTimes(0);
+        expect(bLoader).toHaveBeenCalledTimes(1);
+        expect(bLoader.mock.calls[0][0].request.url).toEqual(
+          "http://localhost/b"
+        );
+      });
+
+      it("short circuits a pipeline if you throw an Error from a middleware", async () => {
+        let middleware = jest.fn(({ request }) => {
+          if (request.url.endsWith("/a")) {
+            throw new Error("💥");
+          }
+        });
+        let aLoader = jest.fn((arg) => "✅");
+
+        currentRouter = createRouter({
+          routes: [
+            {
+              path: "/",
+              middleware,
+              children: [
+                {
+                  path: "a",
+                  loader: aLoader,
+                },
+              ],
+            },
+          ],
+          history: createMemoryHistory(),
+          future: { unstable_middleware: true },
+        }).initialize();
+
+        await currentRouter.navigate("/a");
+
+        expect(currentRouter.state.location.pathname).toBe("/a");
+        expect(currentRouter.state.loaderData).toEqual({});
+        expect(currentRouter.state.errors).toEqual({
+          "0": new Error("💥"),
+        });
+
+        expect(middleware).toHaveBeenCalledTimes(1);
+        expect(middleware.mock.calls[0][0].request.url).toEqual(
+          "http://localhost/a"
+        );
+        expect(aLoader).toHaveBeenCalledTimes(0);
+      });
+    });
   });
 
   describe("ssr", () => {
