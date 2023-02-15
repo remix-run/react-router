@@ -291,6 +291,56 @@ The route action is called when a submission is sent to the route from a [Form][
 
 Please see the [action][action] documentation for more details.
 
+## `middleware`
+
+React Router tries to avoid network waterfalls by running loaders in parallel. This can cause some code duplication for logic required across multiple loaders (or actions) such as validating a user session. Middleware is designed to give you a single location to put this type of logic that is shared amongst many loaders/actions. Middleware can be defined on any route and is run _both_ top-down _before_ a loader/action call and then bottom-up _after_ the call.
+
+For example:
+
+```tsx [2,6-26,32]
+// Context allow strong types on middleware-provided values
+let userContext = createMiddlewareContext<User>();
+
+<Route
+  path="account"
+  middleware={async ({ request, context }) => {
+    let user = getUser(request);
+    if (!user) {
+      // Require login for all child routes of /account
+      throw redirect("/login");
+    }
+
+    // Provide user object to all child routes
+    context.set(userContext, user);
+
+    // Continue the Remix request chain running all child middlewares sequentially,
+    // followed by all matched loaders in parallel.  The response from the underlying
+    // loader is then bubbles back up the middleware chain via the return value.
+    let response = await context.next();
+
+    // Set common outgoing headers on all responses
+    response.headers.set("X-Custom", "Stuff");
+
+    // Return the altered response
+    return response;
+  }}
+>
+  <Route
+    path="profile"
+    loader={async ({ context }) => {
+      // Guaranteed to have a user if this loader runs!
+      let user = context.get(userContext);
+      let data = await getProfile(user);
+      return json(data);
+    }}
+  />
+</Route>;
+```
+
+<docs-warning>If you are not using a data router like [`createBrowserRouter`][createbrowserrouter], this will do nothing</docs-warning>
+
+Please see the [middleware][middleware] documentation for more details.
+
 ## `element`
 
 The element to render when the route matches the URL.
@@ -334,6 +384,7 @@ Any application-specific data. Please see the [useMatches][usematches] documenta
 [useloaderdata]: ../hooks/use-loader-data
 [loader]: ./loader
 [action]: ./action
+[middleware]: ./middleware
 [errorelement]: ./error-element
 [form]: ../components/form
 [fetcher]: ../hooks/use-fetcher
