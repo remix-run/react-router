@@ -4,6 +4,28 @@
  */
 import * as React from "react";
 import type {
+  NavigateOptions,
+  RelativeRoutingType,
+  RouteObject,
+  To,
+} from "react-router";
+import {
+  Router,
+  createPath,
+  useHref,
+  useLocation,
+  useMatches,
+  useNavigate,
+  useNavigation,
+  useResolvedPath,
+  unstable_useBlocker as useBlocker,
+  UNSAFE_DataRouterContext as DataRouterContext,
+  UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  UNSAFE_NavigationContext as NavigationContext,
+  UNSAFE_RouteContext as RouteContext,
+  UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
+} from "react-router";
+import type {
   BrowserHistory,
   Fetcher,
   FormEncType,
@@ -15,39 +37,17 @@ import type {
   Router as RemixRouter,
 } from "@remix-run/router";
 import {
+  createRouter,
   createBrowserHistory,
   createHashHistory,
-  createRouter,
-  ErrorResponse,
-  joinPaths,
   UNSAFE_invariant as invariant,
+  joinPaths,
+  ErrorResponse,
 } from "@remix-run/router";
-import type {
-  NavigateOptions,
-  RelativeRoutingType,
-  RouteObject,
-  To,
-} from "react-router";
-import {
-  createPath,
-  Router,
-  UNSAFE_DataRouterContext as DataRouterContext,
-  UNSAFE_DataRouterStateContext as DataRouterStateContext,
-  UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
-  UNSAFE_NavigationContext as NavigationContext,
-  UNSAFE_RouteContext as RouteContext,
-  unstable_useBlocker as useBlocker,
-  useHref,
-  useLocation,
-  useMatches,
-  useNavigate,
-  useNavigation,
-  useResolvedPath,
-} from "react-router";
 
 import type {
-  ParamKeyValuePair,
   SubmitOptions,
+  ParamKeyValuePair,
   URLSearchParamsInit,
 } from "./dom";
 import {

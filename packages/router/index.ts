@@ -1,25 +1,4 @@
 export type {
-  BrowserHistory,
-  BrowserHistoryOptions,
-  HashHistory,
-  HashHistoryOptions,
-  History,
-  InitialEntry,
-  Location,
-  MemoryHistory,
-  MemoryHistoryOptions,
-  Path,
-  To,
-} from "./history";
-export {
-  Action,
-  createBrowserHistory,
-  createHashHistory,
-  createMemoryHistory,
-  createPath,
-  parsePath,
-} from "./history";
-export type {
   ActionFunction,
   ActionFunctionArgs,
   AgnosticDataIndexRouteObject,
@@ -30,6 +9,7 @@ export type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
+  TrackedPromise,
   FormEncType,
   FormMethod,
   JsonFunction,
@@ -42,12 +22,12 @@ export type {
   RedirectFunction,
   ShouldRevalidateFunction,
   Submission,
-  TrackedPromise,
 } from "./utils";
+
 export {
   AbortedDeferredError,
-  defer,
   ErrorResponse,
+  defer,
   generatePath,
   getToPathname,
   isRouteErrorResponse,
@@ -62,6 +42,30 @@ export {
   stripBasename,
   warning,
 } from "./utils";
+
+export type {
+  BrowserHistory,
+  BrowserHistoryOptions,
+  HashHistory,
+  HashHistoryOptions,
+  History,
+  InitialEntry,
+  Location,
+  MemoryHistory,
+  MemoryHistoryOptions,
+  Path,
+  To,
+} from "./history";
+
+export {
+  Action,
+  createBrowserHistory,
+  createPath,
+  createHashHistory,
+  createMemoryHistory,
+  parsePath,
+} from "./history";
+
 export * from "./router";
 
 ///////////////////////////////////////////////////////////////////////////////
