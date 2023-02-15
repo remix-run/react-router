@@ -1,36 +1,18 @@
 # `@remix-run/testing`
 
-## 1.13.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.13.0-pre.2`
-  - `@remix-run/react@1.13.0-pre.2`
-
-## 1.13.0-pre.1
-
-### Patch Changes
-
-- Update the the [latest `react-router` versions](https://github.com/remix-run/react-router/releases/tag/react-router%406.8.1) ([#5389](https://github.com/remix-run/remix/pull/5389))
-  - `react-router-dom@6.8.1`
-  - `@remix-run/router@1.3.2`
-- Updated dependencies:
-  - `@remix-run/react@1.13.0-pre.1`
-  - `@remix-run/node@1.13.0-pre.1`
-
-## 1.13.0-pre.0
+## 1.13.0
 
 ### Minor Changes
 
-- Add unstable built-in support for PostCSS via the `future.unstable_postcss` feature flag ([#5229](https://github.com/remix-run/remix/pull/5229))
-- Add unstable built-in support for Tailwind via the `future.unstable_tailwind` feature flag ([#5229](https://github.com/remix-run/remix/pull/5229))
+- Add built-in support for PostCSS via the `future.unstable_postcss` feature flag ([#5229](https://github.com/remix-run/remix/pull/5229))
+- Add built-in support for Tailwind via the `future.unstable_tailwind` feature flag ([#5229](https://github.com/remix-run/remix/pull/5229))
 
 ### Patch Changes
 
+- Bump React Router dependencies to the latest version. [See the release notes for more details.](https://github.com/remix-run/react-router/releases/tag/react-router%406.8.1) ([#5389](https://github.com/remix-run/remix/pull/5389))
 - Updated dependencies:
-  - `@remix-run/react@1.13.0-pre.0`
-  - `@remix-run/node@1.13.0-pre.0`
+  - `@remix-run/react@1.13.0`
+  - `@remix-run/node@1.13.0`
 
 ## 1.12.0
 
