@@ -76,5 +76,3 @@ async function childLoader({ context }) {
   return redirect(`/posts/${post.id}`);
 }
 ```
-
-⚠️ Please note that middleware is executed on a per-`loader`/`action` basis because even though they may operate on the same Request, they operate on individual `Response` instances from the target `loader`/`action`. This means that if you have 3 `loader`'s being called in parallel on a navigation or revalidation, they will _each_ run any existing ancestor middleware. If these duplicate middleware calls are problematic then you will may need to de-dup middleware side effects manually.
