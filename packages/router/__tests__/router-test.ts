@@ -13591,6 +13591,7 @@ describe("a router", () => {
         },
       ]);
       t.router._internalSetRoutes(newRoutes);
+      t.router.revalidate();
 
       expect(t.router.state.revalidation).toBe("loading");
       expect(t.router.routes).toBe(ogRoutes);
