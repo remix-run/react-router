@@ -2,7 +2,6 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import fse from "fs-extra";
-import stripAnsi from "strip-ansi";
 
 import { run } from "../cli/run";
 
@@ -20,37 +19,30 @@ afterAll(async () => {
   await fse.remove(TEMP_DIR);
 });
 
-let output: string;
 let originalLog = console.log;
 let originalWarn = console.warn;
 let originalError = console.error;
 
 beforeEach(async () => {
-  output = "";
-  function hijackLog(message: unknown = "", ...rest: Array<unknown>) {
-    // if you need to debug stuff, then use:
-    // console.log('debug:', 'whatever you need to say');
-    if (typeof message === "string" && message.startsWith("debug:")) {
-      return originalLog(message, ...rest);
-    }
-    let messageString =
-      typeof message === "string" ? message : JSON.stringify(message, null, 2);
-    if (rest[0]) {
-      throw new Error(
-        "Our tests are not set up to handle multiple arguments to console.log."
-      );
-    }
-    output += "\n" + stripAnsi(messageString).replace(TEMP_DIR, "<TEMP_DIR>");
-  }
-  console.log = hijackLog;
-  console.warn = hijackLog;
-  console.error = hijackLog;
+  console.log = jest.fn();
+  console.warn = jest.fn();
+  console.error = jest.fn();
 });
 
 afterEach(() => {
   console.log = originalLog;
   console.warn = originalWarn;
   console.error = originalError;
+});
+
+// keep the console clear
+jest.mock("ora", () => {
+  return jest.fn(() => ({
+    start: jest.fn(() => ({
+      stop: jest.fn(),
+      clear: jest.fn(),
+    })),
+  }));
 });
 
 describe("the reveal command", () => {
