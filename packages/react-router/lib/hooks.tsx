@@ -392,7 +392,10 @@ export function useRoutes(
 
     warning(
       matches == null ||
-        matches[matches.length - 1].route.element !== undefined,
+        matches[matches.length - 1].route.element !== undefined ||
+        // If the route is lazy and has failed to resolve, which means the lazy
+        // function is still present, it's possible to not have an element.
+        matches[matches.length - 1].route.lazy !== undefined,
       `Matched leaf route at location "${location.pathname}${location.search}${location.hash}" does not have an element. ` +
         `This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.`
     );
