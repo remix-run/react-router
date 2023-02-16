@@ -263,7 +263,6 @@ type SetupOpts = {
   initialEntries?: InitialEntry[];
   initialIndex?: number;
   hydrationData?: HydrationState;
-  ref?: TMApiRef;
 };
 
 function setup({
@@ -272,7 +271,6 @@ function setup({
   initialEntries,
   initialIndex,
   hydrationData,
-  ref,
 }: SetupOpts) {
   let guid = 0;
   // Global "active" helpers, keyed by navType:guid:loaderOrAction:routeId.
@@ -296,11 +294,12 @@ function setup({
   // active navigation loader/action
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
-      let enhancedRoute: AgnosticRouteObject = {
+      let enhancedRoute: AgnosticDataRouteObject = {
         ...r,
         loader: undefined,
         action: undefined,
         children: undefined,
+        id: r.id || `route-${guid++}`,
       };
       if (r.loader) {
         enhancedRoute.loader = (args) => {
@@ -363,9 +362,6 @@ function setup({
       }
       return enhancedRoute;
     });
-  }
-  if (ref) {
-    ref.enhanceRoutes = enhanceRoutes;
   }
 
   let history = createMemoryHistory({ initialEntries, initialIndex });
@@ -473,6 +469,12 @@ function setup({
     );
   }
 
+  let inFlightRoutes: AgnosticDataRouteObject[] | undefined;
+  function _internalSetRoutes(routes: AgnosticDataRouteObject[]) {
+    inFlightRoutes = routes;
+    currentRouter?._internalSetRoutes(routes);
+  }
+
   function getNavigationHelpers(
     href: string,
     navigationId: number
@@ -481,7 +483,7 @@ function setup({
       currentRouter?.routes,
       "No currentRouter.routes available in getNavigationHelpers"
     );
-    let matches = matchRoutes(currentRouter.routes, href);
+    let matches = matchRoutes(inFlightRoutes || currentRouter.routes, href);
 
     // Generate helpers for all route matches that contain loaders
     let loaderHelpers = getHelpers(
@@ -520,7 +522,7 @@ function setup({
       currentRouter?.routes,
       "No currentRouter.routes available in getFetcherHelpers"
     );
-    let matches = matchRoutes(currentRouter.routes, href);
+    let matches = matchRoutes(inFlightRoutes || currentRouter.routes, href);
     invariant(currentRouter, "No currentRouter available");
     let search = parsePath(href).search || "";
     let hasNakedIndexQuery = new URLSearchParams(search)
@@ -553,7 +555,7 @@ function setup({
     if (opts?.formMethod === "post") {
       if (currentRouter.state.navigation?.location) {
         let matches = matchRoutes(
-          currentRouter.routes,
+          inFlightRoutes || currentRouter.routes,
           currentRouter.state.navigation.location
         );
         invariant(matches, "No matches found for fetcher");
@@ -759,17 +761,14 @@ function setup({
     fetch,
     revalidate,
     shimHelper,
+    enhanceRoutes,
+    _internalSetRoutes,
   };
 }
-
-type TMApiRef = {
-  enhanceRoutes(routes: TestRouteObject[]): AgnosticRouteObject[];
-};
 
 function initializeTmTest(init?: {
   url?: string;
   hydrationData?: HydrationState;
-  ref?: TMApiRef;
 }) {
   return setup({
     routes: TM_ROUTES,
@@ -777,7 +776,6 @@ function initializeTmTest(init?: {
       loaderData: { root: "ROOT", index: "INDEX" },
     },
     ...(init?.url ? { initialEntries: [init.url] } : {}),
-    ref: init?.ref,
   });
 }
 //#endregion
@@ -863,6 +861,12 @@ const TM_ROUTES: TestRouteObject[] = [
         path: "/p/:param",
         id: "param",
         loader: true,
+        action: true,
+      },
+      {
+        path: "/no-loader",
+        id: "no-loader",
+        loader: false,
         action: true,
       },
     ],
@@ -13557,18 +13561,17 @@ describe("a router", () => {
   });
 
   describe("routes updates", () => {
-    it("should retain existing routes until revalidation completes", async () => {
-      let ref = {} as TMApiRef;
-      let t = initializeTmTest({ ref });
+    it("should retain existing routes until revalidation completes on loader removal", async () => {
+      let t = initializeTmTest();
       let ogRoutes = t.router.routes;
       let A = await t.navigate("/foo");
-      await A.loaders.foo.resolve(null);
+      await A.loaders.foo.resolve("foo");
       expect(t.router.state.loaderData).toMatchObject({
         root: "ROOT",
-        foo: null,
+        foo: "foo",
       });
 
-      let newRoutes = ref.enhanceRoutes([
+      let newRoutes = t.enhanceRoutes([
         {
           path: "",
           id: "root",
@@ -13590,14 +13593,13 @@ describe("a router", () => {
           ],
         },
       ]);
-      t.router._internalSetRoutes(newRoutes);
-      t.router.revalidate();
+      t._internalSetRoutes(newRoutes);
+      // Get a new revalidation helper that should use the updated routes
+      let R = await t.revalidate();
 
       expect(t.router.state.revalidation).toBe("loading");
       expect(t.router.routes).toBe(ogRoutes);
 
-      // Get a new revalidation helper that should use the updated routes
-      let R = await t.revalidate();
       // Should still be og roues on new revalidation as one started by update
       // has not yet completed
       expect(t.router.routes).toBe(ogRoutes);
@@ -13609,6 +13611,114 @@ describe("a router", () => {
       // Routes should be updated
       expect(t.router.routes).not.toBe(ogRoutes);
       expect(t.router.routes).toBe(newRoutes);
+      // Loader data should be updated
+      expect(t.router.state.loaderData.root).toBe("ROOT*");
+      expect(t.router.state.loaderData.foo).toBe(undefined);
+    });
+
+    it("should retain existing routes until revalidation completes on loader addition", async () => {
+      let t = initializeTmTest();
+      let ogRoutes = t.router.routes;
+      await t.navigate("/no-loader");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+      });
+
+      let newRoutes = t.enhanceRoutes([
+        {
+          path: "",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: true,
+          children: [
+            {
+              path: "/no-loader",
+              id: "no-loader",
+              loader: true,
+              action: true,
+            },
+          ],
+        },
+      ]);
+      t._internalSetRoutes(newRoutes);
+      // Get a new revalidation helper that should use the updated routes
+      let R = await t.revalidate();
+
+      expect(t.router.state.revalidation).toBe("loading");
+      expect(t.router.routes).toBe(ogRoutes);
+
+      // Should still be og roues on new revalidation as one started by update
+      // has not yet completed
+      expect(t.router.routes).toBe(ogRoutes);
+      // Resolve any loaders that should have ran
+      await R.loaders.root.resolve("ROOT*");
+      await R.loaders["no-loader"].resolve("NO_LOADER*");
+      // Don't resolve "foo" because it was removed
+      // Revalidation should be complete
+      expect(t.router.state.revalidation).toBe("idle");
+      // Routes should be updated
+      expect(t.router.routes).not.toBe(ogRoutes);
+      expect(t.router.routes).toBe(newRoutes);
+      // Loader data should be updated
+      expect(t.router.state.loaderData.root).toBe("ROOT*");
+      expect(t.router.state.loaderData["no-loader"]).toBe("NO_LOADER*");
+    });
+
+    it("should retain existing routes until interrupting navigation completes", async () => {
+      let t = initializeTmTest();
+      let ogRoutes = t.router.routes;
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("foo");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: "foo",
+      });
+
+      let newRoutes = t.enhanceRoutes([
+        {
+          path: "",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: true,
+          children: [
+            {
+              path: "/",
+              id: "index",
+              loader: false,
+              action: true,
+            },
+            {
+              path: "/foo",
+              id: "foo",
+              loader: false,
+              action: true,
+            },
+          ],
+        },
+      ]);
+      t._internalSetRoutes(newRoutes);
+      // Get a new revalidation helper that should use the updated routes
+      await t.revalidate();
+
+      let R = await t.navigate("/?revalidate");
+
+      expect(t.router.state.revalidation).toBe("loading");
+      expect(t.router.routes).toBe(ogRoutes);
+
+      // Should still be og roues on new revalidation as one started by update
+      // has not yet completed
+      expect(t.router.routes).toBe(ogRoutes);
+      // Resolve any loaders that should have ran
+      await R.loaders.root.resolve("ROOT*");
+      // Don't resolve "foo" because it was removed
+      // Revalidation should be complete
+      expect(t.router.state.revalidation).toBe("idle");
+      // Routes should be updated
+      expect(t.router.routes).not.toBe(ogRoutes);
+      expect(t.router.routes).toBe(newRoutes);
+      // Loader data should be updated
+      expect(t.router.state.loaderData.root).toBe("ROOT*");
+      expect(t.router.state.loaderData.foo).toBe(undefined);
     });
   });
 });

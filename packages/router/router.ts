@@ -3436,7 +3436,7 @@ function mergeLoaderData(
         // incoming object with an undefined value, which is how we unset a prior
         // loaderData if we encounter a loader error
       }
-    } else if (loaderData[id] !== undefined) {
+    } else if (loaderData[id] !== undefined && match.route.loader) {
       mergedLoaderData[id] = loaderData[id];
     }
 
