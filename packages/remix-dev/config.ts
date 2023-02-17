@@ -459,7 +459,9 @@ export async function readConfig(
     entryServerFile = userEntryServerFile;
   } else {
     if (!deps["isbot"]) {
-      console.log(`adding "isbot" to your package.json`);
+      console.log(
+        "adding `isbot` to your package.json, you should commit this change"
+      );
 
       pkgJson.update({
         dependencies: {
@@ -469,10 +471,6 @@ export async function readConfig(
       });
 
       await pkgJson.save();
-
-      console.log(
-        "adding `isbot` to detect bots, you should commit this change"
-      );
 
       let packageManager = getPreferredPackageManager();
 
