@@ -12282,14 +12282,14 @@ describe("a router", () => {
         },
       ]);
 
-      let err;
-      try {
-        await query(createRequest("/lazy"));
-      } catch (_err) {
-        err = _err;
-      }
-
-      expect(err?.message).toBe("LAZY FUNCTION ERROR");
+      let context = await query(createRequest("/lazy"));
+      invariant(
+        !(context instanceof Response),
+        "Expected a StaticContext instance"
+      );
+      expect(context.errors).toEqual({
+        root: new Error("LAZY FUNCTION ERROR"),
+      });
     });
 
     it("keeps existing loader when using staticHandler.query() if static loader is already defined", async () => {
