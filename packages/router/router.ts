@@ -3437,6 +3437,8 @@ function mergeLoaderData(
         // loaderData if we encounter a loader error
       }
     } else if (loaderData[id] !== undefined && match.route.loader) {
+      // Preserve existing keys not included in newLoaderData and where a loader
+      // wasn't removed by HMR
       mergedLoaderData[id] = loaderData[id];
     }
 

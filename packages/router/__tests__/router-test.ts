@@ -865,7 +865,7 @@ const TM_ROUTES: TestRouteObject[] = [
       },
       {
         path: "/no-loader",
-        id: "no-loader",
+        id: "noLoader",
         loader: false,
         action: true,
       },
@@ -13594,26 +13594,27 @@ describe("a router", () => {
         },
       ]);
       t._internalSetRoutes(newRoutes);
+
       // Get a new revalidation helper that should use the updated routes
       let R = await t.revalidate();
-
       expect(t.router.state.revalidation).toBe("loading");
+
+      // Should still expose be the og routes until revalidation completes
       expect(t.router.routes).toBe(ogRoutes);
 
-      // Should still be og roues on new revalidation as one started by update
-      // has not yet completed
-      expect(t.router.routes).toBe(ogRoutes);
-      // Resolve any loaders that should have ran
+      // Resolve any loaders that should have ran (foo's loader has been removed)
       await R.loaders.root.resolve("ROOT*");
-      // Don't resolve "foo" because it was removed
-      // Revalidation should be complete
       expect(t.router.state.revalidation).toBe("idle");
+
       // Routes should be updated
       expect(t.router.routes).not.toBe(ogRoutes);
       expect(t.router.routes).toBe(newRoutes);
-      // Loader data should be updated
-      expect(t.router.state.loaderData.root).toBe("ROOT*");
-      expect(t.router.state.loaderData.foo).toBe(undefined);
+
+      // Loader data should be updated and foo removed
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+      });
+      expect(t.router.state.errors).toEqual(null);
     });
 
     it("should retain existing routes until revalidation completes on loader addition", async () => {
@@ -13633,7 +13634,7 @@ describe("a router", () => {
           children: [
             {
               path: "/no-loader",
-              id: "no-loader",
+              id: "noLoader",
               loader: true,
               action: true,
             },
@@ -13643,25 +13644,27 @@ describe("a router", () => {
       t._internalSetRoutes(newRoutes);
       // Get a new revalidation helper that should use the updated routes
       let R = await t.revalidate();
-
       expect(t.router.state.revalidation).toBe("loading");
       expect(t.router.routes).toBe(ogRoutes);
 
-      // Should still be og roues on new revalidation as one started by update
-      // has not yet completed
+      // Should still expose be the og routes until revalidation completes
       expect(t.router.routes).toBe(ogRoutes);
+
       // Resolve any loaders that should have ran
       await R.loaders.root.resolve("ROOT*");
-      await R.loaders["no-loader"].resolve("NO_LOADER*");
-      // Don't resolve "foo" because it was removed
-      // Revalidation should be complete
+      await R.loaders.noLoader.resolve("NO_LOADER*");
       expect(t.router.state.revalidation).toBe("idle");
+
       // Routes should be updated
       expect(t.router.routes).not.toBe(ogRoutes);
       expect(t.router.routes).toBe(newRoutes);
+
       // Loader data should be updated
-      expect(t.router.state.loaderData.root).toBe("ROOT*");
-      expect(t.router.state.loaderData["no-loader"]).toBe("NO_LOADER*");
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+        noLoader: "NO_LOADER*",
+      });
+      expect(t.router.state.errors).toEqual(null);
     });
 
     it("should retain existing routes until interrupting navigation completes", async () => {
@@ -13697,28 +13700,158 @@ describe("a router", () => {
         },
       ]);
       t._internalSetRoutes(newRoutes);
-      // Get a new revalidation helper that should use the updated routes
-      await t.revalidate();
 
-      let R = await t.navigate("/?revalidate");
+      // Revalidate and interrupt with a navigation
+      let R = await t.revalidate();
+      let N = await t.navigate("/?revalidate");
 
+      expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.revalidation).toBe("loading");
+
+      // Should still expose be the og routes until navigation completes
       expect(t.router.routes).toBe(ogRoutes);
 
-      // Should still be og roues on new revalidation as one started by update
-      // has not yet completed
-      expect(t.router.routes).toBe(ogRoutes);
-      // Resolve any loaders that should have ran
-      await R.loaders.root.resolve("ROOT*");
-      // Don't resolve "foo" because it was removed
-      // Revalidation should be complete
+      // Revalidation cancelled so this shouldn't make it through
+      await R.loaders.root.resolve("ROOT STALE");
+
+      // Resolve any loaders that should have ran (foo's loader has been removed)
+      await N.loaders.root.resolve("ROOT*");
+      expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.revalidation).toBe("idle");
+
       // Routes should be updated
       expect(t.router.routes).not.toBe(ogRoutes);
       expect(t.router.routes).toBe(newRoutes);
+
       // Loader data should be updated
-      expect(t.router.state.loaderData.root).toBe("ROOT*");
-      expect(t.router.state.loaderData.foo).toBe(undefined);
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+      });
+      expect(t.router.state.errors).toEqual(null);
+    });
+
+    it("should retain existing routes until interrupted navigation completes", async () => {
+      let t = initializeTmTest();
+      let ogRoutes = t.router.routes;
+
+      let N = await t.navigate("/foo");
+
+      let newRoutes = t.enhanceRoutes([
+        {
+          path: "",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: true,
+          children: [
+            {
+              path: "/",
+              id: "index",
+              loader: false,
+              action: true,
+            },
+            {
+              path: "/foo",
+              id: "foo",
+              loader: false,
+              action: true,
+            },
+          ],
+        },
+      ]);
+      t._internalSetRoutes(newRoutes);
+
+      // Interrupt /foo navigation with a revalidation
+      let R = await t.revalidate();
+
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.revalidation).toBe("loading");
+
+      // Should still expose be the og routes until navigation completes
+      expect(t.router.routes).toBe(ogRoutes);
+
+      // NAvigation interrupted so this shouldn't make it through
+      await N.loaders.root.resolve("ROOT STALE");
+
+      // Resolve any loaders that should have ran (foo's loader has been removed)
+      await R.loaders.root.resolve("ROOT*");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.revalidation).toBe("idle");
+
+      // Routes should be updated
+      expect(t.router.routes).not.toBe(ogRoutes);
+      expect(t.router.routes).toBe(newRoutes);
+
+      // Loader data should be updated
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+      });
+      expect(t.router.state.errors).toEqual(null);
+    });
+
+    it("should retain existing routes until revalidation completes on loader removal (fetch)", async () => {
+      let t = initializeTmTest();
+      let ogRoutes = t.router.routes;
+
+      let key = "key";
+      let F1 = await t.fetch("/foo", key, "root");
+      await F1.loaders.foo.resolve("FOO");
+      expect(t.router.state.fetchers.get("key")?.data).toBe("FOO");
+
+      let newRoutes = t.enhanceRoutes([
+        {
+          path: "",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: true,
+          children: [
+            {
+              path: "/",
+              id: "index",
+              loader: false,
+              action: true,
+            },
+            {
+              path: "/foo",
+              id: "foo",
+              loader: false,
+              action: true,
+            },
+          ],
+        },
+      ]);
+      t._internalSetRoutes(newRoutes);
+
+      // Interrupt /foo navigation with a revalidation
+      let R = await t.revalidate();
+
+      expect(t.router.state.revalidation).toBe("loading");
+
+      // Should still expose be the og routes until navigation completes
+      expect(t.router.routes).toBe(ogRoutes);
+
+      // Resolve any loaders that should have ran (foo's loader has been removed)
+      await R.loaders.root.resolve("ROOT*");
+      expect(t.router.state.revalidation).toBe("idle");
+
+      // Routes should be updated
+      expect(t.router.routes).not.toBe(ogRoutes);
+      expect(t.router.routes).toBe(newRoutes);
+
+      // Loader data should be updated
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+      });
+      // Fetcher should have been revalidated
+      expect(t.router.state.fetchers.get("key")?.data).toBe(undefined);
+
+      // FIXME: Figure out the behavior here.  If we have a previous fetcher.load
+      // and the loader is removed - how should we handle that.  Let it throw into
+      // the error boundary?  Right now we try to call the stale loader cached
+      // on the FetchLoadMatch so we may need to walk through those and null
+      // them out?
+      expect(t.router.state.errors).toEqual({
+        root: new Error("No helpers found for: navigation:2:loader:foo"),
+      });
     });
   });
 });
