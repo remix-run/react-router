@@ -8,10 +8,11 @@ import type {
   UNSAFE_RouteManifest,
 } from "@remix-run/router";
 import {
+  IDLE_BLOCKER,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
   Action,
-  invariant,
+  UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   createStaticHandler as routerCreateStaticHandler,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
@@ -111,7 +112,7 @@ export function StaticRouterProvider({
     // up parsing on the client.  Dual-stringify is needed to ensure all quotes
     // are properly escaped in the resulting string.  See:
     //   https://v8.dev/blog/cost-of-javascript-2019#json
-    let json = JSON.stringify(JSON.stringify(data));
+    let json = htmlEscape(JSON.stringify(JSON.stringify(data)));
     hydrateScript = `window.__staticRouterHydrationData = JSON.parse(${json});`;
   }
 
@@ -305,7 +306,7 @@ export function createStaticRouter(
       throw msg("dispose");
     },
     getBlocker() {
-      throw msg("getBlocker");
+      return IDLE_BLOCKER;
     },
     deleteBlocker() {
       throw msg("deleteBlocker");
@@ -327,4 +328,20 @@ function encodeLocation(to: To): Path {
     search: path.search || "",
     hash: path.hash || "",
   };
+}
+
+// This utility is based on https://github.com/zertosh/htmlescape
+// License: https://github.com/zertosh/htmlescape/blob/0527ca7156a524d256101bb310a9f970f63078ad/LICENSE
+const ESCAPE_LOOKUP: { [match: string]: string } = {
+  "&": "\\u0026",
+  ">": "\\u003e",
+  "<": "\\u003c",
+  "\u2028": "\\u2028",
+  "\u2029": "\\u2029",
+};
+
+const ESCAPE_REGEX = /[&><\u2028\u2029]/g;
+
+function htmlEscape(str: string): string {
+  return str.replace(ESCAPE_REGEX, (match) => ESCAPE_LOOKUP[match]);
 }

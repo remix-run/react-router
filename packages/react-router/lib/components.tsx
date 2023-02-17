@@ -13,7 +13,7 @@ import {
   Action as NavigationType,
   AbortedDeferredError,
   createMemoryHistory,
-  invariant,
+  UNSAFE_invariant as invariant,
   parsePath,
   stripBasename,
   warning,
