@@ -4,7 +4,6 @@ import type {
   LoaderFunctionArgs,
 } from "@remix-run/router";
 
-import type { AppLoadContext } from "./data";
 import { callRouteActionRR, callRouteLoaderRR } from "./data";
 import type { FutureConfig } from "./entry";
 import type { ServerRouteModule } from "./routeModules";
