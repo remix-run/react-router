@@ -873,18 +873,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Load lazy modules, then kick off initial data load if needed
-    loadLazyRouteModules(
-      lazyMatches,
-      state.matches,
-      hasErrorBoundary,
-      manifest
-    ).then(({ errors }) => {
-      if (errors) {
-        // TODO: Find a different approach? I don't this will work if we still
-        // need to call router loaders load since it'll override the errors.
-        updateState({ errors });
-      }
-
+    loadLazyRouteModules(lazyMatches, hasErrorBoundary, manifest).then(() => {
       let initialized =
         !state.matches.some((m) => m.route.loader) ||
         init.hydrationData != null;
@@ -1333,24 +1322,12 @@ export function createRouter(init: RouterInit): Router {
     // Call our action and get the result
     let result: DataResult;
     let actionMatch = getTargetMatch(matches, location);
-    let lazyErrors: RouteData | null = null;
 
     if (actionMatch.route.lazy) {
-      let { errors } = await loadLazyRouteModules(
-        [actionMatch],
-        matches,
-        hasErrorBoundary,
-        manifest
-      );
-      lazyErrors = errors;
+      await loadLazyRouteModules([actionMatch], hasErrorBoundary, manifest);
     }
 
-    if (lazyErrors) {
-      result = {
-        type: ResultType.error,
-        error: Object.values(lazyErrors)[0],
-      };
-    } else if (!actionMatch.route.action) {
+    if (!actionMatch.route.action) {
       result = {
         type: ResultType.error,
         error: getInternalRouterError(405, {
@@ -1533,29 +1510,11 @@ export function createRouter(init: RouterInit): Router {
     );
 
     let lazyMatches = matches.filter((m) => m.route.lazy);
-    let routeIdsToSkipLoading: string[] | null = null;
-    let lazyErrors: RouteData | null = null;
     if (lazyMatches.length > 0) {
-      let lazyResult = await loadLazyRouteModules(
-        lazyMatches,
-        matches,
-        hasErrorBoundary,
-        manifest
-      );
-
-      lazyErrors = lazyResult.errors;
-      routeIdsToSkipLoading = lazyResult.routeIdsToSkipLoading;
-
+      await loadLazyRouteModules(lazyMatches, hasErrorBoundary, manifest);
       if (request.signal.aborted) {
         return { shortCircuited: true };
       }
-    }
-
-    // Avoid running loaders for lazy routes that errored
-    if (routeIdsToSkipLoading) {
-      matchesToLoad = matchesToLoad.filter(
-        (m) => !routeIdsToSkipLoading!.includes(m.route.id)
-      );
     }
 
     let { results, loaderResults, fetcherResults } =
@@ -1584,7 +1543,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Process and commit output from loaders
-    let { loaderData, errors: loaderErrors } = processLoaderData(
+    let { loaderData, errors } = processLoaderData(
       state,
       matches,
       matchesToLoad,
@@ -1594,9 +1553,6 @@ export function createRouter(init: RouterInit): Router {
       fetcherResults,
       activeDeferreds
     );
-
-    let hasErrors = lazyErrors || loaderErrors;
-    let errors = hasErrors ? { ...lazyErrors, ...loaderErrors } : null;
 
     // Wire up subscribers to update loaderData as promises settle
     activeDeferreds.forEach((deferredData, routeId) => {
@@ -1714,17 +1670,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     if (match.route.lazy) {
-      let { errors } = await loadLazyRouteModules(
-        [match],
-        state.matches,
-        hasErrorBoundary,
-        manifest
-      );
-
-      if (errors) {
-        setFetcherError(key, routeId, Object.values(errors)[0]);
-        return;
-      }
+      await loadLazyRouteModules([match], hasErrorBoundary, manifest);
 
       if (!match.route.action) {
         let error = getInternalRouterError(405, {
@@ -1847,16 +1793,7 @@ export function createRouter(init: RouterInit): Router {
 
     let lazyMatches = matches.filter((m) => m.route.lazy);
     if (match.route.lazy) {
-      // TODO: Add tests for matched loaders that fire after a fetcher action
-      let { errors } = await loadLazyRouteModules(
-        lazyMatches,
-        matches,
-        hasErrorBoundary,
-        manifest
-      );
-      if (errors) {
-        throw new Error("TODO: Handle lazy errors in handleFetcherAction");
-      }
+      await loadLazyRouteModules(lazyMatches, hasErrorBoundary, manifest);
       if (revalidationRequest.signal.aborted) {
         return;
       }
@@ -1976,39 +1913,20 @@ export function createRouter(init: RouterInit): Router {
     );
     fetchControllers.set(key, abortController);
 
-    let lazyErrorResult: ErrorResult | null = null;
     if (match.route.lazy) {
-      let { errors } = await loadLazyRouteModules(
-        [match],
-        matches,
-        hasErrorBoundary,
-        manifest
-      );
-
+      await loadLazyRouteModules([match], hasErrorBoundary, manifest);
       if (fetchRequest.signal.aborted) {
         return;
       }
-
-      if (errors) {
-        lazyErrorResult = {
-          type: ResultType.error,
-          error: Object.values(errors)[0],
-        };
-      }
     }
 
-    let result: DataResult;
-    if (lazyErrorResult) {
-      result = lazyErrorResult;
-    } else {
-      result = await callLoaderOrAction(
-        "loader",
-        fetchRequest,
-        match,
-        matches,
-        router.basename
-      );
-    }
+    let result: DataResult = await callLoaderOrAction(
+      "loader",
+      fetchRequest,
+      match,
+      matches,
+      router.basename
+    );
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
     // as a normal load.  resolveDeferredData will return undefined if this
@@ -2716,18 +2634,7 @@ export function createStaticHandler(
 
     let lazyMatches = matches.filter((m) => m.route.lazy);
     if (lazyMatches.length > 0) {
-      let { errors } = await loadLazyRouteModules(
-        lazyMatches,
-        matches,
-        hasErrorBoundary,
-        manifest
-      );
-      if (errors) {
-        // TODO: Confirm this is the right approach. The assumption here is that
-        // since this is running on the server and all route modules should be
-        // available, errors here are not recoverable.
-        throw Object.values(errors)[0];
-      }
+      await loadLazyRouteModules(lazyMatches, hasErrorBoundary, manifest);
       if (request.signal.aborted) {
         let method = routeMatch != null ? "queryRoute" : "query";
         throw new Error(`${method}() call aborted`);
@@ -3279,32 +3186,12 @@ function shouldRevalidateLoader(
  */
 async function loadLazyRouteModules(
   lazyMatches: AgnosticDataRouteMatch[],
-  matches: AgnosticDataRouteMatch[],
   hasErrorBoundary: HasErrorBoundaryFunction,
   manifest: RouteManifest
-): Promise<{
-  errors: RouteData | null;
-  routeIdsToSkipLoading: string[] | null;
-}> {
-  let errors: RouteData | null = null;
-  let routeIdsToSkipLoading: string[] | null = null;
-  await Promise.allSettled(
+) {
+  await Promise.all(
     lazyMatches.map(async (match) => {
-      let lazyRoute;
-      try {
-        lazyRoute = await match.route.lazy!();
-      } catch (error) {
-        errors = errors || {};
-        let boundaryMatch = findNearestBoundary(matches, match.route.id).route;
-        errors[boundaryMatch.id] = error;
-
-        routeIdsToSkipLoading = routeIdsToSkipLoading || [];
-        // TODO: Also skip any routes between the lazy route and its nearest
-        // boundary, and ensure that this is tested
-        routeIdsToSkipLoading.push(match.route.id);
-
-        return;
-      }
+      let lazyRoute = await match.route.lazy!();
 
       // If the lazy route function has already been executed and removed from
       // the route object by another call while we were waiting for the promise
@@ -3364,8 +3251,6 @@ async function loadLazyRouteModules(
       });
     })
   );
-
-  return { errors, routeIdsToSkipLoading };
 }
 
 async function callLoaderOrAction(
