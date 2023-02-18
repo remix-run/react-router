@@ -400,6 +400,8 @@ const isBrowser =
   typeof window.document !== "undefined" &&
   typeof window.document.createElement !== "undefined";
 
+const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+
 /**
  * The public API for rendering a history-aware <a>.
  */
@@ -422,12 +424,14 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     let absoluteHref;
     let isExternal = false;
 
-    if (
-      isBrowser &&
-      typeof to === "string" &&
-      /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(to)
-    ) {
+    const isAbsoluteUrl = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
+
+    // set the absoluteHref if the to is an absolute url
+    if (isAbsoluteUrl) {
       absoluteHref = to;
+    }
+    
+    if (isBrowser && isAbsoluteUrl) {
       let currentUrl = new URL(window.location.href);
       let targetUrl = to.startsWith("//")
         ? new URL(currentUrl.protocol + to)
