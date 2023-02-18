@@ -1850,7 +1850,7 @@ export async function loader({ params }) {
       statusText: "Not Found",
     });
   }
-  return contact;
+  return { contact };
 }
 ```
 
