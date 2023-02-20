@@ -15,6 +15,7 @@ const loader = async () => {
   if (!user) {
     return redirect("/login");
   }
+  return null;
 };
 ```
 
