@@ -1,5 +1,5 @@
 ---
-"@remix-run/router": minor
+"@remix-run/router": patch
 ---
 
-Remix document response now respects headers and status code set in defer()
+Ensure status code and headers are maintained for `defer` loader responses in `createStaticHandler`'s `query()` method
