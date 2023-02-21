@@ -231,6 +231,15 @@ export interface Router {
    * @internal
    * PRIVATE - DO NOT USE
    *
+   * HMR needs to pass in-flight route updates to React Router
+   * TODO: Replace this with granular route update APIs (addRoute, updateRoute, deleteRoute)
+   */
+  _internalSetRoutes(routes: AgnosticRouteObject[]): void;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Internal fetch AbortControllers accessed by unit tests
    */
   _internalFetchControllers: Map<string, AbortController>;
@@ -573,8 +582,6 @@ interface HandleLoadersResult extends ShortCircuitable {
 interface FetchLoadMatch {
   routeId: string;
   path: string;
-  match: AgnosticDataRouteMatch;
-  matches: AgnosticDataRouteMatch[];
 }
 
 /**
@@ -582,6 +589,8 @@ interface FetchLoadMatch {
  */
 interface RevalidatingFetcher extends FetchLoadMatch {
   key: string;
+  match: AgnosticDataRouteMatch | null;
+  matches: AgnosticDataRouteMatch[] | null;
 }
 
 /**
@@ -674,6 +683,7 @@ export function createRouter(init: RouterInit): Router {
     undefined,
     manifest
   );
+  let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
@@ -1005,6 +1015,11 @@ export function createRouter(init: RouterInit): Router {
         isMutationMethod(state.navigation.formMethod) &&
         location.state?._isRedirect !== true);
 
+    if (inFlightDataRoutes) {
+      dataRoutes = inFlightDataRoutes;
+      inFlightDataRoutes = undefined;
+    }
+
     updateState({
       ...newState, // matches, errors, fetchers go through as-is
       actionData,
@@ -1192,14 +1207,15 @@ export function createRouter(init: RouterInit): Router {
     saveScrollPosition(state.location, state.matches);
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
 
+    let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
-    let matches = matchRoutes(dataRoutes, location, init.basename);
+    let matches = matchRoutes(routesToUse, location, init.basename);
 
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
-        getShortCircuitMatches(dataRoutes);
+        getShortCircuitMatches(routesToUse);
       // Cancel all pending deferred on 404s since we don't keep any routes
       cancelActiveDeferreds();
       completeNavigation(location, {
@@ -1438,6 +1454,7 @@ export function createRouter(init: RouterInit): Router {
         }
       : undefined;
 
+    let routesToUse = inFlightDataRoutes || dataRoutes;
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
       init.history,
       state,
@@ -1447,9 +1464,11 @@ export function createRouter(init: RouterInit): Router {
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
+      fetchLoadMatches,
+      routesToUse,
+      init.basename,
       pendingActionData,
-      pendingError,
-      fetchLoadMatches
+      pendingError
     );
 
     // Cancel pending deferreds for no-longer-matched routes or routes we're
@@ -1592,7 +1611,8 @@ export function createRouter(init: RouterInit): Router {
 
     if (fetchControllers.has(key)) abortFetcher(key);
 
-    let matches = matchRoutes(dataRoutes, href, init.basename);
+    let routesToUse = inFlightDataRoutes || dataRoutes;
+    let matches = matchRoutes(routesToUse, href, init.basename);
     if (!matches) {
       setFetcherError(
         key,
@@ -1614,7 +1634,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
-    fetchLoadMatches.set(key, { routeId, path, match, matches });
+    fetchLoadMatches.set(key, { routeId, path });
     handleFetcherLoader(key, routeId, path, match, matches, submission);
   }
 
@@ -1717,9 +1737,10 @@ export function createRouter(init: RouterInit): Router {
       nextLocation,
       abortController.signal
     );
+    let routesToUse = inFlightDataRoutes || dataRoutes;
     let matches =
       state.navigation.state !== "idle"
-        ? matchRoutes(dataRoutes, state.navigation.location, init.basename)
+        ? matchRoutes(routesToUse, state.navigation.location, init.basename)
         : state.matches;
 
     invariant(matches, "Didn't find any matches after fetcher action");
@@ -1744,9 +1765,11 @@ export function createRouter(init: RouterInit): Router {
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
+      fetchLoadMatches,
+      routesToUse,
+      init.basename,
       { [match.route.id]: actionResult.data },
-      undefined, // No need to send through errors since we short circuit above
-      fetchLoadMatches
+      undefined // No need to send through errors since we short circuit above
     );
 
     // Put all revalidating fetchers into the loading state, except for the
@@ -2096,17 +2119,25 @@ export function createRouter(init: RouterInit): Router {
           router.basename
         )
       ),
-      ...fetchersToLoad.map((f) =>
-        callLoaderOrAction(
-          "loader",
-          createClientSideRequest(init.history, f.path, request.signal),
-          f.match,
-          f.matches,
-          manifest,
-          hasErrorBoundary,
-          router.basename
-        )
-      ),
+      ...fetchersToLoad.map((f) => {
+        if (f.matches && f.match) {
+          return callLoaderOrAction(
+            "loader",
+            createClientSideRequest(init.history, f.path, request.signal),
+            f.match,
+            f.matches,
+            manifest,
+            hasErrorBoundary,
+            router.basename
+          );
+        } else {
+          let error: ErrorResult = {
+            type: ResultType.error,
+            error: getInternalRouterError(404, { pathname: f.path }),
+          };
+          return error;
+        }
+      }),
     ]);
     let loaderResults = results.slice(0, matchesToLoad.length);
     let fetcherResults = results.slice(matchesToLoad.length);
@@ -2367,6 +2398,10 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
+  function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
+    inFlightDataRoutes = newRoutes;
+  }
+
   router = {
     get basename() {
       return init.basename;
@@ -2395,6 +2430,9 @@ export function createRouter(init: RouterInit): Router {
     deleteBlocker,
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
+    // TODO: Remove setRoutes, it's temporary to avoid dealing with
+    // updating the tree while validating the update algorithm.
+    _internalSetRoutes,
   };
 
   return router;
@@ -3013,9 +3051,11 @@ function getMatchesToLoad(
   isRevalidationRequired: boolean,
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
+  fetchLoadMatches: Map<string, FetchLoadMatch>,
+  routesToUse: AgnosticDataRouteObject[],
+  basename: string | undefined,
   pendingActionData?: RouteData,
-  pendingError?: RouteData,
-  fetchLoadMatches?: Map<string, FetchLoadMatch>
+  pendingError?: RouteData
 ): [AgnosticDataRouteMatch[], RevalidatingFetcher[]] {
   let actionResult = pendingError
     ? Object.values(pendingError)[0]
@@ -3077,34 +3117,55 @@ function getMatchesToLoad(
 
   // Pick fetcher.loads that need to be revalidated
   let revalidatingFetchers: RevalidatingFetcher[] = [];
-  fetchLoadMatches &&
-    fetchLoadMatches.forEach((f, key) => {
-      if (!matches.some((m) => m.route.id === f.routeId)) {
-        // This fetcher is not going to be present in the subsequent render so
-        // there's no need to revalidate it
-        return;
-      } else if (cancelledFetcherLoads.includes(key)) {
-        // This fetcher was cancelled from a prior action submission - force reload
-        revalidatingFetchers.push({ key, ...f });
-      } else {
-        // Revalidating fetchers are decoupled from the route matches since they
-        // hit a static href, so they _always_ check shouldRevalidate and the
-        // default is strictly if a revalidation is explicitly required (action
-        // submissions, useRevalidator, X-Remix-Revalidate).
-        let shouldRevalidate = shouldRevalidateLoader(f.match, {
-          currentUrl,
-          currentParams: state.matches[state.matches.length - 1].params,
-          nextUrl,
-          nextParams: matches[matches.length - 1].params,
-          ...submission,
-          actionResult,
-          defaultShouldRevalidate,
-        });
-        if (shouldRevalidate) {
-          revalidatingFetchers.push({ key, ...f });
-        }
-      }
+  fetchLoadMatches.forEach((f, key) => {
+    // Don't revalidate if fetcher won't be present in the subsequent render
+    if (!matches.some((m) => m.route.id === f.routeId)) {
+      return;
+    }
+
+    let fetcherMatches = matchRoutes(routesToUse, f.path, basename);
+
+    // If the fetcher path no longer matches, push it in with null matches so
+    // we can trigger a 404 in callLoadersAndMaybeResolveData
+    if (!fetcherMatches) {
+      revalidatingFetchers.push({ key, ...f, matches: null, match: null });
+      return;
+    }
+
+    let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
+
+    if (cancelledFetcherLoads.includes(key)) {
+      revalidatingFetchers.push({
+        key,
+        matches: fetcherMatches,
+        match: fetcherMatch,
+        ...f,
+      });
+      return;
+    }
+
+    // Revalidating fetchers are decoupled from the route matches since they
+    // hit a static href, so they _always_ check shouldRevalidate and the
+    // default is strictly if a revalidation is explicitly required (action
+    // submissions, useRevalidator, X-Remix-Revalidate).
+    let shouldRevalidate = shouldRevalidateLoader(fetcherMatch, {
+      currentUrl,
+      currentParams: state.matches[state.matches.length - 1].params,
+      nextUrl,
+      nextParams: matches[matches.length - 1].params,
+      ...submission,
+      actionResult,
+      defaultShouldRevalidate,
     });
+    if (shouldRevalidate) {
+      revalidatingFetchers.push({
+        key,
+        matches: fetcherMatches,
+        match: fetcherMatch,
+        ...f,
+      });
+    }
+  });
 
   return [navigationMatches, revalidatingFetchers];
 }
@@ -3600,7 +3661,7 @@ function processLoaderData(
 
     // Process fetcher non-redirect errors
     if (isErrorResult(result)) {
-      let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
+      let boundaryMatch = findNearestBoundary(state.matches, match?.route.id);
       if (!(errors && errors[boundaryMatch.route.id])) {
         errors = {
           ...errors,
@@ -3650,7 +3711,9 @@ function mergeLoaderData(
         // incoming object with an undefined value, which is how we unset a prior
         // loaderData if we encounter a loader error
       }
-    } else if (loaderData[id] !== undefined) {
+    } else if (loaderData[id] !== undefined && match.route.loader) {
+      // Preserve existing keys not included in newLoaderData and where a loader
+      // wasn't removed by HMR
       mergedLoaderData[id] = loaderData[id];
     }
 
@@ -3824,7 +3887,7 @@ function isMutationMethod(method?: string): method is MutationFormMethod {
 
 async function resolveDeferredResults(
   currentMatches: AgnosticDataRouteMatch[],
-  matchesToLoad: AgnosticDataRouteMatch[],
+  matchesToLoad: (AgnosticDataRouteMatch | null)[],
   results: DataResult[],
   signal: AbortSignal,
   isFetcher: boolean,
@@ -3833,8 +3896,15 @@ async function resolveDeferredResults(
   for (let index = 0; index < results.length; index++) {
     let result = results[index];
     let match = matchesToLoad[index];
+    // If we don't have a match, then we can have a deferred result to do
+    // anything with.  This is for revalidating fetchers where the route was
+    // removed during HMR
+    if (!match) {
+      continue;
+    }
+
     let currentMatch = currentMatches.find(
-      (m) => m.route.id === match.route.id
+      (m) => m.route.id === match!.route.id
     );
     let isRevalidatingLoader =
       currentMatch != null &&
