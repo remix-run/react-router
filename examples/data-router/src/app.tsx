@@ -44,7 +44,6 @@ let router = createBrowserRouter(
         loader={deferredLoader}
         element={<DeferredPage />}
       />
-      <Route path="lazy" lazy={() => import("./lazy")} />
     </Route>
   )
 );
@@ -69,11 +68,11 @@ export function Fallback() {
 export function Layout() {
   let navigation = useNavigation();
   let revalidator = useRevalidator();
-  let lazyFetcher = useFetcher();
   let fetchers = useFetchers();
   let fetcherInProgress = fetchers.some((f) =>
     ["loading", "submitting"].includes(f.state)
   );
+
   return (
     <>
       <h1>Data Router Example</h1>
@@ -97,44 +96,12 @@ export function Layout() {
             <Link to="/deferred">Deferred</Link>
           </li>
           <li>
-            <Link to="/lazy">Lazy</Link>
-          </li>
-          <li>
             <Link to="/404">404 Link</Link>
-          </li>
-          <li>
-            <Form method="post" action="/lazy">
-              <button type="submit">Post to /lazy</button>
-            </Form>
           </li>
           <li>
             <button onClick={() => revalidator.revalidate()}>
               Revalidate Data
             </button>
-          </li>
-          <li>
-            <button onClick={() => lazyFetcher.load("/lazy")}>
-              Load /lazy via fetcher
-            </button>
-            &nbsp;&nbsp;
-            <span>
-              fetcher state/data: {lazyFetcher.state}/
-              {JSON.stringify(lazyFetcher.data)}
-            </span>
-          </li>
-          <li>
-            <button
-              onClick={() =>
-                lazyFetcher.submit({}, { method: "post", action: "/lazy" })
-              }
-            >
-              Submit to /lazy via fetcher
-            </button>
-            &nbsp;&nbsp;
-            <span>
-              fetcher state/data: {lazyFetcher.state}/
-              {JSON.stringify(lazyFetcher.data)}
-            </span>
           </li>
         </ul>
       </nav>
