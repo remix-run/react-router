@@ -3251,13 +3251,7 @@ async function callLoaderOrAction(
   let resultType;
   let result;
 
-  // Setup a promise we can race against so that abort signals short circuit
-  let reject: () => void;
-  let abortPromise = new Promise((_, r) => (reject = r));
-  // Ensure we don't have any unhandled exceptions on rejection
-  abortPromise.catch(() => {});
-  let onReject = () => reject();
-  request.signal.addEventListener("abort", onReject);
+  let onReject: (() => void) | undefined;
 
   try {
     // Load any lazy route modules as part of the loader/action phase
@@ -3283,6 +3277,12 @@ async function callLoaderOrAction(
         result = undefined;
       }
     } else {
+      // Setup a promise we can race against so that abort signals short circuit
+      let reject: () => void;
+      let abortPromise = new Promise((_, r) => (reject = r));
+      onReject = () => reject();
+      request.signal.addEventListener("abort", onReject);
+
       if (!request.signal.aborted || type === "action") {
         // Still kick off actions if we got interrupted to maintain consistency
         // with un-abortable behavior of action execution on non-lazy routes
@@ -3310,7 +3310,9 @@ async function callLoaderOrAction(
     resultType = ResultType.error;
     result = e;
   } finally {
-    request.signal.removeEventListener("abort", onReject);
+    if (onReject) {
+      request.signal.removeEventListener("abort", onReject);
+    }
   }
 
   if (isResponse(result)) {
