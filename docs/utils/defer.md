@@ -8,7 +8,7 @@ new: true
 This utility allows you to defer values returned from loaders by passing promises instead of resolved values.
 
 ```jsx
-function loader() {
+async function loader() {
   let product = await getProduct();
   let reviews = getProductReviews();
   return defer({ product, reviews });
