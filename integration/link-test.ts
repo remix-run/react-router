@@ -530,4 +530,33 @@ test.describe("route module link export", () => {
       expect(await locator.getAttribute("imagesizes")).toBe("100vw");
     });
   });
+
+  test.describe("script imports", () => {
+    test("are added to the document", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      let scripts = await page.$$("script");
+      expect(scripts.length).toEqual(2);
+      expect(await scripts[0].innerText()).toContain("__remixContext");
+      let moduleScript = scripts[1];
+      expect(await moduleScript.getAttribute("type")).toBe("module");
+      let moduleScriptText = await moduleScript.innerText();
+      expect(
+        Array.from(moduleScriptText.matchAll(/import "\/build\/manifest-/g)),
+        "invalid build manifest"
+      ).toHaveLength(1);
+      expect(
+        Array.from(moduleScriptText.matchAll(/import \* as route0 from "/g)),
+        "invalid route0"
+      ).toHaveLength(1);
+      expect(
+        Array.from(moduleScriptText.matchAll(/import \* as route1 from "/g)),
+        "invalid route1"
+      ).toHaveLength(1);
+      expect(
+        Array.from(moduleScriptText.matchAll(/import \* as route2 from "/g)),
+        "too many routes"
+      ).toHaveLength(0);
+    });
+  });
 });
