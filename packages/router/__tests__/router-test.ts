@@ -294,11 +294,12 @@ function setup({
   // active navigation loader/action
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
-      let enhancedRoute: AgnosticRouteObject = {
+      let enhancedRoute: AgnosticDataRouteObject = {
         ...r,
         loader: undefined,
         action: undefined,
         children: undefined,
+        id: r.id || `route-${guid++}`,
       };
       if (r.loader) {
         enhancedRoute.loader = (args) => {
@@ -468,6 +469,12 @@ function setup({
     );
   }
 
+  let inFlightRoutes: AgnosticDataRouteObject[] | undefined;
+  function _internalSetRoutes(routes: AgnosticDataRouteObject[]) {
+    inFlightRoutes = routes;
+    currentRouter?._internalSetRoutes(routes);
+  }
+
   function getNavigationHelpers(
     href: string,
     navigationId: number
@@ -476,7 +483,7 @@ function setup({
       currentRouter?.routes,
       "No currentRouter.routes available in getNavigationHelpers"
     );
-    let matches = matchRoutes(currentRouter.routes, href);
+    let matches = matchRoutes(inFlightRoutes || currentRouter.routes, href);
 
     // Generate helpers for all route matches that contain loaders
     let loaderHelpers = getHelpers(
@@ -515,7 +522,7 @@ function setup({
       currentRouter?.routes,
       "No currentRouter.routes available in getFetcherHelpers"
     );
-    let matches = matchRoutes(currentRouter.routes, href);
+    let matches = matchRoutes(inFlightRoutes || currentRouter.routes, href);
     invariant(currentRouter, "No currentRouter available");
     let search = parsePath(href).search || "";
     let hasNakedIndexQuery = new URLSearchParams(search)
@@ -548,7 +555,7 @@ function setup({
     if (opts?.formMethod === "post") {
       if (currentRouter.state.navigation?.location) {
         let matches = matchRoutes(
-          currentRouter.routes,
+          inFlightRoutes || currentRouter.routes,
           currentRouter.state.navigation.location
         );
         invariant(matches, "No matches found for fetcher");
@@ -754,6 +761,8 @@ function setup({
     fetch,
     revalidate,
     shimHelper,
+    enhanceRoutes,
+    _internalSetRoutes,
   };
 }
 
@@ -852,6 +861,12 @@ const TM_ROUTES: TestRouteObject[] = [
         path: "/p/:param",
         id: "param",
         loader: true,
+        action: true,
+      },
+      {
+        path: "/no-loader",
+        id: "noLoader",
+        loader: false,
         action: true,
       },
     ],
@@ -13541,6 +13556,414 @@ describe("a router", () => {
         });
 
         /* eslint-enable jest/no-conditional-expect */
+      });
+    });
+  });
+
+  describe("routes updates", () => {
+    it("should retain existing routes until revalidation completes on loader removal", async () => {
+      let t = initializeTmTest();
+      let ogRoutes = t.router.routes;
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("foo");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: "foo",
+      });
+
+      let newRoutes = t.enhanceRoutes([
+        {
+          path: "",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: true,
+          children: [
+            {
+              path: "/",
+              id: "index",
+              loader: true,
+              action: true,
+            },
+            {
+              path: "/foo",
+              id: "foo",
+              loader: false,
+              action: true,
+            },
+          ],
+        },
+      ]);
+      t._internalSetRoutes(newRoutes);
+
+      // Get a new revalidation helper that should use the updated routes
+      let R = await t.revalidate();
+      expect(t.router.state.revalidation).toBe("loading");
+
+      // Should still expose be the og routes until revalidation completes
+      expect(t.router.routes).toBe(ogRoutes);
+
+      // Resolve any loaders that should have ran (foo's loader has been removed)
+      await R.loaders.root.resolve("ROOT*");
+      expect(t.router.state.revalidation).toBe("idle");
+
+      // Routes should be updated
+      expect(t.router.routes).not.toBe(ogRoutes);
+      expect(t.router.routes).toBe(newRoutes);
+
+      // Loader data should be updated and foo removed
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+      });
+      expect(t.router.state.errors).toEqual(null);
+    });
+
+    it("should retain existing routes until revalidation completes on loader addition", async () => {
+      let t = initializeTmTest();
+      let ogRoutes = t.router.routes;
+      await t.navigate("/no-loader");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+      });
+
+      let newRoutes = t.enhanceRoutes([
+        {
+          path: "",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: true,
+          children: [
+            {
+              path: "/no-loader",
+              id: "noLoader",
+              loader: true,
+              action: true,
+            },
+          ],
+        },
+      ]);
+      t._internalSetRoutes(newRoutes);
+      // Get a new revalidation helper that should use the updated routes
+      let R = await t.revalidate();
+      expect(t.router.state.revalidation).toBe("loading");
+      expect(t.router.routes).toBe(ogRoutes);
+
+      // Should still expose be the og routes until revalidation completes
+      expect(t.router.routes).toBe(ogRoutes);
+
+      // Resolve any loaders that should have ran
+      await R.loaders.root.resolve("ROOT*");
+      await R.loaders.noLoader.resolve("NO_LOADER*");
+      expect(t.router.state.revalidation).toBe("idle");
+
+      // Routes should be updated
+      expect(t.router.routes).not.toBe(ogRoutes);
+      expect(t.router.routes).toBe(newRoutes);
+
+      // Loader data should be updated
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+        noLoader: "NO_LOADER*",
+      });
+      expect(t.router.state.errors).toEqual(null);
+    });
+
+    it("should retain existing routes until interrupting navigation completes", async () => {
+      let t = initializeTmTest();
+      let ogRoutes = t.router.routes;
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve("foo");
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: "foo",
+      });
+
+      let newRoutes = t.enhanceRoutes([
+        {
+          path: "",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: true,
+          children: [
+            {
+              path: "/",
+              id: "index",
+              loader: false,
+              action: true,
+            },
+            {
+              path: "/foo",
+              id: "foo",
+              loader: false,
+              action: true,
+            },
+          ],
+        },
+      ]);
+      t._internalSetRoutes(newRoutes);
+
+      // Revalidate and interrupt with a navigation
+      let R = await t.revalidate();
+      let N = await t.navigate("/?revalidate");
+
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.revalidation).toBe("loading");
+
+      // Should still expose be the og routes until navigation completes
+      expect(t.router.routes).toBe(ogRoutes);
+
+      // Revalidation cancelled so this shouldn't make it through
+      await R.loaders.root.resolve("ROOT STALE");
+
+      // Resolve any loaders that should have ran (foo's loader has been removed)
+      await N.loaders.root.resolve("ROOT*");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.revalidation).toBe("idle");
+
+      // Routes should be updated
+      expect(t.router.routes).not.toBe(ogRoutes);
+      expect(t.router.routes).toBe(newRoutes);
+
+      // Loader data should be updated
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+      });
+      expect(t.router.state.errors).toEqual(null);
+    });
+
+    it("should retain existing routes until interrupted navigation completes", async () => {
+      let t = initializeTmTest();
+      let ogRoutes = t.router.routes;
+
+      let N = await t.navigate("/foo");
+
+      let newRoutes = t.enhanceRoutes([
+        {
+          path: "",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: true,
+          children: [
+            {
+              path: "/",
+              id: "index",
+              loader: false,
+              action: true,
+            },
+            {
+              path: "/foo",
+              id: "foo",
+              loader: false,
+              action: true,
+            },
+          ],
+        },
+      ]);
+      t._internalSetRoutes(newRoutes);
+
+      // Interrupt /foo navigation with a revalidation
+      let R = await t.revalidate();
+
+      expect(t.router.state.navigation.state).toBe("loading");
+      expect(t.router.state.revalidation).toBe("loading");
+
+      // Should still expose be the og routes until navigation completes
+      expect(t.router.routes).toBe(ogRoutes);
+
+      // NAvigation interrupted so this shouldn't make it through
+      await N.loaders.root.resolve("ROOT STALE");
+
+      // Resolve any loaders that should have ran (foo's loader has been removed)
+      await R.loaders.root.resolve("ROOT*");
+      expect(t.router.state.navigation.state).toBe("idle");
+      expect(t.router.state.revalidation).toBe("idle");
+
+      // Routes should be updated
+      expect(t.router.routes).not.toBe(ogRoutes);
+      expect(t.router.routes).toBe(newRoutes);
+
+      // Loader data should be updated
+      expect(t.router.state.loaderData).toEqual({
+        root: "ROOT*",
+      });
+      expect(t.router.state.errors).toEqual(null);
+    });
+
+    it("should retain existing routes until revalidation completes on loader removal (fetch)", async () => {
+      let rootDfd = createDeferred();
+      let fooDfd = createDeferred();
+      let ogRoutes: AgnosticDataRouteObject[] = [
+        {
+          path: "/",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: () => rootDfd.promise,
+          children: [
+            {
+              index: true,
+              id: "index",
+            },
+            {
+              path: "foo",
+              id: "foo",
+              loader: () => fooDfd.promise,
+              children: undefined,
+            },
+          ],
+        },
+      ];
+      currentRouter = createRouter({
+        routes: ogRoutes,
+        history: createMemoryHistory(),
+        hydrationData: {
+          loaderData: {
+            root: "ROOT INITIAL",
+          },
+        },
+      });
+      currentRouter.initialize();
+
+      let key = "key";
+      currentRouter.fetch(key, "root", "/foo");
+      await fooDfd.resolve("FOO");
+      expect(currentRouter.state.fetchers.get("key")?.data).toBe("FOO");
+
+      let rootDfd2 = createDeferred();
+      let newRoutes: AgnosticDataRouteObject[] = [
+        {
+          path: "/",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: () => rootDfd2.promise,
+          children: [
+            {
+              index: true,
+              id: "index",
+            },
+            {
+              path: "foo",
+              id: "foo",
+              children: undefined,
+            },
+          ],
+        },
+      ];
+
+      currentRouter._internalSetRoutes(newRoutes);
+
+      // Interrupt /foo navigation with a revalidation
+      currentRouter.revalidate();
+
+      expect(currentRouter.state.revalidation).toBe("loading");
+
+      // Should still expose be the og routes until navigation completes
+      expect(currentRouter.routes).toEqual(ogRoutes);
+
+      // Resolve any loaders that should have ran (foo's loader has been removed)
+      await rootDfd2.resolve("ROOT*");
+      expect(currentRouter.state.revalidation).toBe("idle");
+
+      // Routes should be updated
+      expect(currentRouter.routes).not.toEqual(ogRoutes);
+      expect(currentRouter.routes).toBe(newRoutes);
+
+      // Loader data should be updated
+      expect(currentRouter.state.loaderData).toEqual({
+        root: "ROOT*",
+      });
+      // Fetcher should have been revalidated but thrown an errow since the
+      // loader was removed
+      expect(currentRouter.state.fetchers.get("key")?.data).toBe(undefined);
+      expect(currentRouter.state.errors).toEqual({
+        root: new Error('Could not find the loader to run on the "foo" route'),
+      });
+    });
+
+    it("should retain existing routes until revalidation completes on route removal (fetch)", async () => {
+      let rootDfd = createDeferred();
+      let fooDfd = createDeferred();
+      let ogRoutes: AgnosticDataRouteObject[] = [
+        {
+          path: "/",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: () => rootDfd.promise,
+          children: [
+            {
+              index: true,
+              id: "index",
+            },
+            {
+              path: "foo",
+              id: "foo",
+              loader: () => fooDfd.promise,
+              children: undefined,
+            },
+          ],
+        },
+      ];
+      currentRouter = createRouter({
+        routes: ogRoutes,
+        history: createMemoryHistory(),
+        hydrationData: {
+          loaderData: {
+            root: "ROOT INITIAL",
+          },
+        },
+      });
+      currentRouter.initialize();
+
+      let key = "key";
+      currentRouter.fetch(key, "root", "/foo");
+      await fooDfd.resolve("FOO");
+      expect(currentRouter.state.fetchers.get("key")?.data).toBe("FOO");
+
+      let rootDfd2 = createDeferred();
+      let newRoutes: AgnosticDataRouteObject[] = [
+        {
+          path: "/",
+          id: "root",
+          hasErrorBoundary: true,
+          loader: () => rootDfd2.promise,
+          children: [
+            {
+              index: true,
+              id: "index",
+            },
+          ],
+        },
+      ];
+
+      currentRouter._internalSetRoutes(newRoutes);
+
+      // Interrupt /foo navigation with a revalidation
+      currentRouter.revalidate();
+
+      expect(currentRouter.state.revalidation).toBe("loading");
+
+      // Should still expose be the og routes until navigation completes
+      expect(currentRouter.routes).toEqual(ogRoutes);
+
+      // Resolve any loaders that should have ran (foo's loader has been removed)
+      await rootDfd2.resolve("ROOT*");
+      expect(currentRouter.state.revalidation).toBe("idle");
+
+      // Routes should be updated
+      expect(currentRouter.routes).not.toEqual(ogRoutes);
+      expect(currentRouter.routes).toBe(newRoutes);
+
+      // Loader data should be updated
+      expect(currentRouter.state.loaderData).toEqual({
+        root: "ROOT*",
+      });
+      // Fetcher should have been revalidated but theown a 404 wince the route was removed
+      expect(currentRouter.state.fetchers.get("key")?.data).toBe(undefined);
+      expect(currentRouter.state.errors).toEqual({
+        root: new ErrorResponse(
+          404,
+          "Not Found",
+          new Error('No route matches URL "/foo"'),
+          true
+        ),
       });
     });
   });

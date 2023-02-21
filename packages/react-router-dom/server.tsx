@@ -307,6 +307,9 @@ export function createStaticRouter(
     },
     _internalFetchControllers: new Map(),
     _internalActiveDeferreds: new Map(),
+    _internalSetRoutes() {
+      throw msg("_internalSetRoutes");
+    },
   };
 }
 
