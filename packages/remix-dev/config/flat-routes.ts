@@ -58,7 +58,6 @@ export function flatRoutesUniversal(
   prefix: string = "routes"
 ): RouteManifest {
   let routeMap = getRouteMap(appDirectory, routePaths, prefix);
-  let uniqueRoutes = new Map<string, string>();
   let routes = Array.from(routeMap.values());
 
   function defineNestedRoutes(
@@ -75,29 +74,12 @@ export function flatRoutesUniversal(
       // remove leading slash
       routePath = routePath.replace(/^\//, "");
 
-      let index = childRoute.index;
-      let fullPath = childRoute.path;
-
-      let uniqueRouteId = (fullPath || "") + (index ? "?index" : "");
-
-      if (uniqueRouteId) {
-        let conflict = uniqueRoutes.get(uniqueRouteId);
-        if (conflict) {
-          throw new Error(
-            `Path ${JSON.stringify(fullPath)} defined by route ` +
-              `${JSON.stringify(childRoute.id)} ` +
-              `conflicts with route ${JSON.stringify(conflict)}`
-          );
-        }
-        uniqueRoutes.set(uniqueRouteId, childRoute.id);
-      }
-
       let childRouteOptions: DefineRouteOptions = {
         id: path.posix.join(prefix, childRoute.id),
         index: childRoute.index ? true : undefined,
       };
 
-      if (index) {
+      if (childRoute.index) {
         let invalidChildRoutes = routes.filter(
           (routeInfo) => routeInfo.parentId === childRoute.id
         );
@@ -141,17 +123,6 @@ export function getRouteSegments(routeId: string) {
   let routeSegment = "";
   let rawRouteSegment = "";
   let state: State = "NORMAL";
-  let hasFolder = routeId.includes(path.posix.sep);
-
-  /**
-   * @see https://github.com/remix-run/remix/pull/5160#issuecomment-1402157424
-   */
-  if (hasFolder && (routeId.endsWith("/index") || routeId.endsWith("/route"))) {
-    let last = routeId.lastIndexOf(path.posix.sep);
-    if (last >= 0) {
-      routeId = routeId.substring(0, last);
-    }
-  }
 
   let pushRouteSegment = (segment: string, rawSegment: string) => {
     if (!segment) return;
@@ -289,7 +260,7 @@ function findParentRouteId(
   return undefined;
 }
 
-function getRouteInfo(
+export function getRouteInfo(
   appDirectory: string,
   routeDirectory: string,
   filePath: string
@@ -351,21 +322,91 @@ function getRouteMap(
 ): Readonly<Map<string, RouteInfo>> {
   let routeMap = new Map<string, RouteInfo>();
   let nameMap = new Map<string, RouteInfo>();
+  let uniqueRoutes = new Map<string, RouteInfo>();
+  let conflicts = new Map<string, RouteInfo[]>();
 
   for (let routePath of routePaths) {
     let routesDirectory = path.join(appDirectory, prefix);
     let pathWithoutAppRoutes = routePath.slice(routesDirectory.length + 1);
     if (isRouteModuleFile(pathWithoutAppRoutes)) {
       let routeInfo = getRouteInfo(appDirectory, prefix, routePath);
+
+      let uniqueRouteId =
+        (routeInfo.path || "") + (routeInfo.index ? "?index" : "");
+
+      if (uniqueRouteId) {
+        let conflict = uniqueRoutes.get(uniqueRouteId);
+        // collect conflicts for later reporting
+        if (conflict) {
+          let currentConflicts = conflicts.get(routeInfo.path || "/");
+          if (!currentConflicts) {
+            conflicts.set(routeInfo.path || "/", [conflict, routeInfo]);
+          } else {
+            currentConflicts.push(routeInfo);
+            conflicts.set(routeInfo.path || "/", currentConflicts);
+          }
+
+          continue;
+        }
+        uniqueRoutes.set(uniqueRouteId, routeInfo);
+      }
+
       routeMap.set(routeInfo.id, routeInfo);
       nameMap.set(routeInfo.name, routeInfo);
     }
   }
 
-  // update parentIds for all routes
-  for (let routeInfo of routeMap.values()) {
-    let parentId = findParentRouteId(routeInfo, nameMap);
-    routeInfo.parentId = parentId;
+  let routes = Array.from(routeMap.values()).sort((a, b) => {
+    return b.segments.length - a.segments.length;
+  });
+
+  for (let i = 0; i < routes.length; i++) {
+    let routeInfo = routes[i];
+    // update parentIds for all routes
+    routeInfo.parentId = findParentRouteId(routeInfo, nameMap);
+
+    // remove routes that conflict with other routes
+    let nextRouteInfo = routes[i + 1];
+    if (!nextRouteInfo) continue;
+
+    let segments = routeInfo.segments;
+    let nextSegments = nextRouteInfo.segments;
+    // if segment count is different, there can't be a conflict
+    if (segments.length !== nextSegments.length) continue;
+
+    for (let k = 0; k < segments.length; k++) {
+      let segment = segments[k];
+      let nextSegment = nextSegments[k];
+
+      // if segments are different, but they're both dynamic, there's a conflict
+      if (
+        segment !== nextSegment &&
+        segment.startsWith(":") &&
+        nextSegment.startsWith(":")
+      ) {
+        let currentConflicts = conflicts.get(routeInfo.path || "/");
+        // collect conflicts for later reporting, marking the next route as the conflicting route
+        if (!currentConflicts) {
+          conflicts.set(routeInfo.path || "/", [routeInfo, nextRouteInfo]);
+        } else {
+          currentConflicts.push(nextRouteInfo);
+          conflicts.set(routeInfo.path || "/", currentConflicts);
+        }
+
+        // remove conflicting route
+        routeMap.delete(nextRouteInfo.id);
+
+        continue;
+      }
+    }
+  }
+
+  // report conflicts
+  if (conflicts.size > 0) {
+    for (let [path, routes] of conflicts.entries()) {
+      let filePaths = routes.map((r) => r.file);
+      console.error(getRouteConflictErrorMessage(path, filePaths));
+    }
   }
 
   return routeMap;
@@ -381,10 +422,48 @@ function isRouteModuleFile(filePath: string) {
   return basename.endsWith(`/route`) || basename.endsWith(`/index`);
 }
 
-function createFlatRouteId(filePath: string) {
+/**
+ * @see https://github.com/remix-run/remix/pull/5160#issuecomment-1402157424
+ * normalize routeId
+ * remove `/index` and `/route` suffixes
+ * they should be treated like if they weren't folders
+ * e.g. `/dashboard` and `/dashboard/index` should be the same route
+ * e.g. `/dashboard` and `/dashboard/route` should be the same route
+ */
+function isRouteInFolder(routeId: string) {
+  return (
+    (routeId.endsWith("/index") || routeId.endsWith("/route")) &&
+    routeId.includes(path.posix.sep)
+  );
+}
+
+export function createFlatRouteId(filePath: string) {
   let routeId = createRouteId(filePath);
-  if (routeId.includes(path.posix.sep) && routeId.endsWith("/index")) {
-    routeId = routeId.split(path.posix.sep).slice(0, -1).join(path.posix.sep);
+
+  if (isRouteInFolder(routeId)) {
+    let last = routeId.lastIndexOf(path.posix.sep);
+    if (last >= 0) {
+      routeId = routeId.substring(0, last);
+    }
   }
   return routeId;
+}
+
+export function normalizePath(filePath: string) {
+  return filePath.split("/").join(path.sep);
+}
+
+export function getRouteConflictErrorMessage(
+  pathname: string,
+  routes: string[]
+) {
+  let [taken, ...others] = routes;
+
+  return (
+    `⚠️ Route Path Collision: "${pathname}"\n\n` +
+    `The following routes all define the same URL, only the first one will be used\n\n` +
+    `🟢 ${normalizePath(taken)}\n` +
+    others.map((route) => `⭕️️ ${normalizePath(route)}`).join("\n") +
+    "\n"
+  );
 }

@@ -1,10 +1,11 @@
 import path from "node:path";
 
 import {
-  createRoutePath,
   flatRoutesUniversal,
+  getRouteConflictErrorMessage,
+  getRouteInfo,
   getRouteSegments,
-  isIndexRoute,
+  normalizePath,
 } from "../config/flat-routes";
 import type { ConfigRoute } from "../config/routes";
 
@@ -88,11 +89,9 @@ describe("flatRoutes", () => {
 
     for (let [input, expected] of tests) {
       it(`"${input}" -> "${expected}"`, () => {
-        let isIndex = isIndexRoute(input);
-        let [routeSegments, rawRouteSegments] = getRouteSegments(input);
-        expect(createRoutePath(routeSegments, rawRouteSegments, isIndex)).toBe(
-          expected
-        );
+        let fullRoutePath = path.join(APP_DIR, "routes", `${input}.tsx`);
+        let routeInfo = getRouteInfo(APP_DIR, "routes", fullRoutePath);
+        expect(routeInfo.path).toBe(expected);
       });
     }
 
@@ -276,7 +275,7 @@ describe("flatRoutes", () => {
       [
         "routes/folder/route.tsx",
         {
-          id: "routes/folder/route",
+          id: "routes/folder",
           parentId: "root",
           path: "folder",
         },
@@ -601,7 +600,7 @@ describe("flatRoutes", () => {
     ];
 
     let files: [string, ConfigRoute][] = testFiles.map(([file, route]) => {
-      let filepath = file.split("/").join(path.sep);
+      let filepath = normalizePath(file);
       return [filepath, { ...route, file: filepath }];
     });
 
@@ -618,5 +617,74 @@ describe("flatRoutes", () => {
         expect(routes).toContainEqual(route);
       });
     }
+  });
+
+  describe("warns when there's a route collision", () => {
+    let consoleError = jest
+      .spyOn(global.console, "error")
+      .mockImplementation(() => {});
+
+    afterEach(consoleError.mockReset);
+
+    test("index files", () => {
+      // we'll add file manually before running the tests
+      let testFiles = [
+        "routes/_dashboard._index.tsx",
+        "routes/_landing._index.tsx",
+        "routes/_index.tsx",
+      ];
+
+      let routeManifest = flatRoutesUniversal(
+        APP_DIR,
+        testFiles.map((file) => path.join(APP_DIR, normalizePath(file)))
+      );
+
+      let routes = Object.values(routeManifest);
+
+      // we had a collision as /route and /index are the same
+      expect(routes).toHaveLength(1);
+      expect(consoleError).toHaveBeenCalledWith(
+        getRouteConflictErrorMessage("/", testFiles)
+      );
+    });
+
+    test("folder/route.tsx matching folder.tsx", () => {
+      // we'll add file manually before running the tests
+      let testFiles = ["routes/dashboard.tsx", "routes/dashboard/route.tsx"];
+
+      let routeManifest = flatRoutesUniversal(
+        APP_DIR,
+        testFiles.map((file) => path.join(APP_DIR, normalizePath(file)))
+      );
+
+      let routes = Object.values(routeManifest);
+
+      // we had a collision as /route and /index are the same
+      expect(routes).toHaveLength(1);
+      expect(consoleError).toHaveBeenCalledWith(
+        getRouteConflictErrorMessage("/dashboard", testFiles)
+      );
+    });
+
+    test("same path, different param name", () => {
+      // we'll add file manually before running the tests
+      let testFiles = [
+        "routes/products.$pid.tsx",
+        "routes/products.$productId.tsx",
+      ];
+
+      let routeManifest = flatRoutesUniversal(
+        APP_DIR,
+        testFiles.map((file) => path.join(APP_DIR, normalizePath(file)))
+      );
+
+      let routes = Object.values(routeManifest);
+
+      // we had a collision as /route and /index are the same
+      expect(routes).toHaveLength(1);
+      expect(consoleError).toHaveBeenCalledWith(
+        getRouteConflictErrorMessage("/products/:pid", testFiles)
+      );
+    });
   });
 });
