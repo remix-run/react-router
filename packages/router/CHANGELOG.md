@@ -1,5 +1,13 @@
 # `@remix-run/router`
 
+## 1.3.3-pre.0
+
+### Patch Changes
+
+- Change `invariant` to an `UNSAFE_` export since it's only intended for internal use ([#10066](https://github.com/remix-run/react-router/pull/10066))
+- Ensure status code and headers are maintained for `defer` loader responses in `createStaticHandler`'s `query()` method ([#10077](https://github.com/remix-run/react-router/pull/10077))
+- Add internal API for custom HMR implementations ([#9996](https://github.com/remix-run/react-router/pull/9996))
+
 ## 1.3.2
 
 ### Patch Changes

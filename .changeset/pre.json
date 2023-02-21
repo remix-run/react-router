@@ -8,5 +8,11 @@
     "react-router-native": "6.8.1",
     "@remix-run/router": "1.3.2"
   },
-  "changesets": []
+  "changesets": [
+    "fluffy-forks-attack",
+    "long-jokes-wait",
+    "nasty-carrots-breathe",
+    "quick-yaks-join",
+    "witty-melons-sip"
+  ]
 }
