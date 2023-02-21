@@ -25,8 +25,8 @@ let routes = createRoutesFromElements(
 Then in your lazy route modules, export the properties you want defined for the route:
 
 ```jsx
-export function loader({ request }) {
-  let data = fetchData(request);
+export async function loader({ request }) {
+  let data = await fetchData(request);
   return json(data);
 }
 
@@ -44,7 +44,14 @@ function Component() {
 export const element = <Component />;
 
 function ErrorBoundary() {
-  return <h1>Something went wrong</h1>;
+  let error = useRouteError();
+  return isRouteErrorResponse(error) ? (
+    <h1>
+      {error.status} {error.statusText}
+    </h1>
+  ) : (
+    <h1>{error.message || error}</h1>
+  );
 }
 
 export const errorElement = <ErrorBoundary />;

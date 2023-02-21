@@ -346,8 +346,8 @@ let routes = createRoutesFromElements(
 Then in your lazy route modules, export the properties you want defined for the route:
 
 ```jsx
-export function loader({ request }) {
-  let data = fetchData(request);
+export async function loader({ request }) {
+  let data = await fetchData(request);
   return json(data);
 }
 
@@ -368,7 +368,6 @@ export const element = <Component />;
 <docs-warning>If you are not using a data router like [`createBrowserRouter`][createbrowserrouter], this will do nothing</docs-warning>
 
 Please see the [lazy][lazy] documentation for more details.
-
 
 [outlet]: ./outlet
 [remix]: https://remix.run

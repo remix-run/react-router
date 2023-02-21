@@ -4,9 +4,6 @@ module.exports = {
   transform: {
     "\\.[jt]sx?$": "./jest-transformer.js",
   },
-  globals: {
-    __DEV__: true,
-  },
   setupFiles: ["./__tests__/setup.ts"],
   moduleNameMapper: {
     "^@remix-run/router$": "<rootDir>/index.ts",
