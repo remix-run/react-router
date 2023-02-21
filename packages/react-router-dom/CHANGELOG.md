@@ -1,5 +1,15 @@
 # `react-router-dom`
 
+## 6.8.2-pre.0
+
+### Patch Changes
+
+- Fix `useBlocker` to return `IDLE_BLOCKER` during SSR ([#10046](https://github.com/remix-run/react-router/pull/10046))
+- Properly escape HTML characters in `StaticRouterProvider` serialized hydration data ([#10068](https://github.com/remix-run/react-router/pull/10068))
+- Updated dependencies:
+  - `@remix-run/router@1.3.3-pre.0`
+  - `react-router@6.8.2-pre.0`
+
 ## 6.8.1
 
 ### Patch Changes
