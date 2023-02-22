@@ -630,6 +630,10 @@ function setup({
           let popHref = history.createHref(history.location);
           if (currentRouter?.basename) {
             popHref = stripBasename(popHref, currentRouter.basename) as string;
+            invariant(
+              popHref,
+              "href passed to navigate should start with basename"
+            );
           }
           helpers = getNavigationHelpers(popHref, navigationId);
           unsubscribe();
@@ -645,6 +649,10 @@ function setup({
     let navHref = href;
     if (currentRouter.basename) {
       navHref = stripBasename(navHref, currentRouter.basename) as string;
+      invariant(
+        navHref,
+        "href passed to t.navigate() should start with basename"
+      );
     }
     helpers = getNavigationHelpers(navHref, navigationId);
     shims?.forEach((routeId) =>
@@ -6291,6 +6299,56 @@ describe("a router", () => {
           _isRedirect: true,
         },
       });
+    });
+
+    it("properly handles same-origin absolute URLs when using a basename", async () => {
+      let t = setup({ routes: REDIRECT_ROUTES, basename: "/base" });
+
+      let A = await t.navigate("/base/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let B = await A.actions.child.redirectReturn(
+        "http://localhost/base/parent",
+        undefined,
+        undefined,
+        ["parent"]
+      );
+      await B.loaders.parent.resolve("PARENT");
+      expect(t.router.state.location).toMatchObject({
+        hash: "",
+        pathname: "/base/parent",
+        search: "",
+        state: {
+          _isRedirect: true,
+        },
+      });
+    });
+
+    it("treats same-origin absolute URLs as external if they don't match the basename", async () => {
+      // This is gross, don't blame me, blame SO :)
+      // https://stackoverflow.com/a/60697570
+      let oldLocation = window.location;
+      const location = new URL(window.location.href) as unknown as Location;
+      location.assign = jest.fn();
+      location.replace = jest.fn();
+      delete (window as any).location;
+      window.location = location as unknown as Location;
+
+      let t = setup({ routes: REDIRECT_ROUTES, basename: "/base" });
+
+      let A = await t.navigate("/base/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let url = "http://localhost/not/the/same/basename";
+      await A.actions.child.redirectReturn(url);
+      expect(window.location.assign).toHaveBeenCalledWith(url);
+      expect(window.location.replace).not.toHaveBeenCalled();
+
+      window.location = oldLocation;
     });
 
     describe("redirect status code handling", () => {
