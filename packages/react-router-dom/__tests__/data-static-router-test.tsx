@@ -269,6 +269,37 @@ describe("A <StaticRouterProvider>", () => {
     );
   });
 
+  it("escapes HTML tags in serialized hydration data", async () => {
+    let routes = [
+      {
+        path: "/",
+        loader: () => ({
+          key: "uh </script> oh",
+        }),
+        element: <h1>👋</h1>,
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+    expect(html).toMatchInlineSnapshot(
+      `"<h1>👋</h1><script>window.__staticRouterHydrationData = JSON.parse("{\\"loaderData\\":{\\"0\\":{\\"key\\":\\"uh \\u003c/script\\u003e oh\\"}},\\"actionData\\":null,\\"errors\\":null}");</script>"`
+    );
+  });
+
   it("serializes ErrorResponse instances", async () => {
     let routes = [
       {

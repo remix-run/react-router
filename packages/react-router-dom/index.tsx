@@ -40,7 +40,7 @@ import {
   createRouter,
   createBrowserHistory,
   createHashHistory,
-  invariant,
+  UNSAFE_invariant as invariant,
   joinPaths,
   ErrorResponse,
 } from "@remix-run/router";

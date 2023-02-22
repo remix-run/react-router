@@ -13,7 +13,7 @@ import type {
 } from "@remix-run/router";
 import {
   Action as NavigationType,
-  invariant,
+  UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   joinPaths,
   matchPath,
