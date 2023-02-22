@@ -762,7 +762,7 @@ export function useMatches() {
 /**
  * Returns the loader data for the nearest ancestor Route loader
  */
-export function useLoaderData(): unknown {
+export function useLoaderData<T = unknown>(): T {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
 
