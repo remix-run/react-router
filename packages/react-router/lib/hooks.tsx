@@ -863,7 +863,7 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   );
 
   // Prefer the blocker from state since DataRouterContext is memoized so this
-  // ensures we update the latest on blocker state updates
+  // ensures we update on blocker state updates
   return state.blockers.get(blockerKey) || blocker;
 }
 
