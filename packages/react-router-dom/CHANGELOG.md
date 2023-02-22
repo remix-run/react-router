@@ -1,5 +1,13 @@
 # `react-router-dom`
 
+## 6.8.2-pre.1
+
+### Patch Changes
+
+- Fix SSR of absolute Link urls ([#10112](https://github.com/remix-run/react-router/pull/10112))
+- Updated dependencies:
+  - `react-router@6.8.2-pre.1`
+
 ## 6.8.2-pre.0
 
 ### Patch Changes
