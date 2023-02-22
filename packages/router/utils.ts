@@ -1192,6 +1192,11 @@ export class DeferredData {
       {}
     );
 
+    if (this.done) {
+      // All incoming values were resolved
+      this.unlistenAbortSignal();
+    }
+
     this.init = responseInit;
   }
 
@@ -1395,8 +1400,14 @@ export class ErrorResponse {
 
 /**
  * Check if the given error is an ErrorResponse generated from a 4xx/5xx
- * Response throw from an action/loader
+ * Response thrown from an action/loader
  */
-export function isRouteErrorResponse(e: any): e is ErrorResponse {
-  return e instanceof ErrorResponse;
+export function isRouteErrorResponse(error: any): error is ErrorResponse {
+  return (
+    error != null &&
+    typeof error.status === "number" &&
+    typeof error.statusText === "string" &&
+    typeof error.internal === "boolean" &&
+    "data" in error
+  );
 }

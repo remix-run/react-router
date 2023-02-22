@@ -13,7 +13,7 @@ import type {
 } from "@remix-run/router";
 import {
   Action as NavigationType,
-  invariant,
+  UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   joinPaths,
   matchPath,
@@ -463,18 +463,28 @@ function DefaultErrorElement() {
   let lightgrey = "rgba(200,200,200, 0.5)";
   let preStyles = { padding: "0.5rem", backgroundColor: lightgrey };
   let codeStyles = { padding: "2px 4px", backgroundColor: lightgrey };
+
+  let devInfo = null;
+  if (__DEV__) {
+    devInfo = (
+      <>
+        <p>💿 Hey developer 👋</p>
+        <p>
+          You can provide a way better UX than this when your app throws errors
+          by providing your own&nbsp;
+          <code style={codeStyles}>errorElement</code> props on&nbsp;
+          <code style={codeStyles}>&lt;Route&gt;</code>
+        </p>
+      </>
+    );
+  }
+
   return (
     <>
-      <h2>Unhandled Thrown Error!</h2>
+      <h2>Unexpected Application Error!</h2>
       <h3 style={{ fontStyle: "italic" }}>{message}</h3>
       {stack ? <pre style={preStyles}>{stack}</pre> : null}
-      <p>💿 Hey developer 👋</p>
-      <p>
-        You can provide a way better UX than this when your app throws errors by
-        providing your own&nbsp;
-        <code style={codeStyles}>errorElement</code> props on&nbsp;
-        <code style={codeStyles}>&lt;Route&gt;</code>
-      </p>
+      {devInfo}
     </>
   );
 }
@@ -822,9 +832,7 @@ export function useAsyncError(): unknown {
   return value?._error;
 }
 
-// useBlocker() is a singleton for now since we don't have any compelling use
-// cases for multi-blocker yet
-let blockerKey = "blocker-singleton";
+let blockerId = 0;
 
 /**
  * Allow the application to block navigations within the SPA and present the
@@ -834,6 +842,7 @@ let blockerKey = "blocker-singleton";
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
+  let [blockerKey] = React.useState(() => String(++blockerId));
 
   // Subscribe to router state changes so the latest blocker is returned
   useDataRouterState(DataRouterStateHook.UseBlocker);
@@ -850,7 +859,10 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let blocker = router.getBlocker(blockerKey, blockerFunction);
 
   // Cleanup on unmount
-  React.useEffect(() => () => router.deleteBlocker(blockerKey), [router]);
+  React.useEffect(
+    () => () => router.deleteBlocker(blockerKey),
+    [router, blockerKey]
+  );
 
   return blocker;
 }

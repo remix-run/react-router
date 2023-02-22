@@ -40,7 +40,7 @@ import {
   createRouter,
   createBrowserHistory,
   createHashHistory,
-  invariant,
+  UNSAFE_invariant as invariant,
   joinPaths,
   ErrorResponse,
 } from "@remix-run/router";
@@ -395,6 +395,11 @@ export interface LinkProps
   to: To;
 }
 
+const isBrowser =
+  typeof window !== "undefined" &&
+  typeof window.document !== "undefined" &&
+  typeof window.document.createElement !== "undefined";
+
 /**
  * The public API for rendering a history-aware <a>.
  */
@@ -413,7 +418,31 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
+    // Rendered into <a href> for absolute URLs
+    let absoluteHref;
+    let isExternal = false;
+
+    if (
+      isBrowser &&
+      typeof to === "string" &&
+      /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(to)
+    ) {
+      absoluteHref = to;
+      let currentUrl = new URL(window.location.href);
+      let targetUrl = to.startsWith("//")
+        ? new URL(currentUrl.protocol + to)
+        : new URL(to);
+      if (targetUrl.origin === currentUrl.origin) {
+        // Strip the protocol/origin for same-origin absolute URLs
+        to = targetUrl.pathname + targetUrl.search + targetUrl.hash;
+      } else {
+        isExternal = true;
+      }
+    }
+
+    // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
+
     let internalOnClick = useLinkClickHandler(to, {
       replace,
       state,
@@ -434,8 +463,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
-        href={href}
-        onClick={reloadDocument ? onClick : handleClick}
+        href={absoluteHref || href}
+        onClick={isExternal || reloadDocument ? onClick : handleClick}
         ref={ref}
         target={target}
       />
@@ -824,13 +853,17 @@ export function useSearchParams(
   );
 
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
+  let hasSetSearchParamsRef = React.useRef(false);
 
   let location = useLocation();
   let searchParams = React.useMemo(
     () =>
+      // Only merge in the defaults if we haven't yet called setSearchParams.
+      // Once we call that we want those to take precedence, otherwise you can't
+      // remove a param with setSearchParams({}) if it has an initial value
       getSearchParamsForLocation(
         location.search,
-        defaultSearchParamsRef.current
+        hasSetSearchParamsRef.current ? null : defaultSearchParamsRef.current
       ),
     [location.search]
   );
@@ -841,6 +874,7 @@ export function useSearchParams(
       const newSearchParams = createSearchParams(
         typeof nextInit === "function" ? nextInit(searchParams) : nextInit
       );
+      hasSetSearchParamsRef.current = true;
       navigate("?" + newSearchParams, navigateOptions);
     },
     [navigate, searchParams]
@@ -1114,8 +1148,8 @@ function useScrollRestoration({
     };
   }, []);
 
-  // Save positions on unload
-  useBeforeUnload(
+  // Save positions on pagehide
+  usePageHide(
     React.useCallback(() => {
       if (navigation.state === "idle") {
         let key = (getKey ? getKey(location, matches) : null) || location.key;
@@ -1208,6 +1242,28 @@ export function useBeforeUnload(
     window.addEventListener("beforeunload", callback, opts);
     return () => {
       window.removeEventListener("beforeunload", callback, opts);
+    };
+  }, [callback, capture]);
+}
+
+/**
+ * Setup a callback to be fired on the window's `pagehide` event. This is
+ * useful for saving some data to `window.localStorage` just before the page
+ * refreshes.  This event is better supported than beforeunload across browsers.
+ *
+ * Note: The `callback` argument should be a function created with
+ * `React.useCallback()`.
+ */
+function usePageHide(
+  callback: (event: PageTransitionEvent) => any,
+  options?: { capture?: boolean }
+): void {
+  let { capture } = options || {};
+  React.useEffect(() => {
+    let opts = capture != null ? { capture } : undefined;
+    window.addEventListener("pagehide", callback, opts);
+    return () => {
+      window.removeEventListener("pagehide", callback, opts);
     };
   }, [callback, capture]);
 }

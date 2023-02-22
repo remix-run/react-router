@@ -771,7 +771,7 @@ describe("special character tests", () => {
         );
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
         );
       });
 
@@ -792,7 +792,7 @@ describe("special character tests", () => {
         );
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
         );
       });
 
@@ -804,7 +804,7 @@ describe("special character tests", () => {
         let ctx = render(<RouterProvider router={router} />);
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
         );
       });
 
@@ -822,7 +822,7 @@ describe("special character tests", () => {
         let ctx = render(<RouterProvider router={router} />);
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
         );
       });
     });
@@ -852,7 +852,7 @@ describe("special character tests", () => {
 
         expect(testWindow.location.pathname).toBe("/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
         );
       });
 
@@ -877,7 +877,7 @@ describe("special character tests", () => {
 
         expect(testWindow.location.pathname).toBe("/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
         );
       });
 
@@ -892,7 +892,7 @@ describe("special character tests", () => {
 
         expect(testWindow.location.pathname).toBe("/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
         );
       });
 
@@ -917,7 +917,7 @@ describe("special character tests", () => {
 
         expect(testWindow.location.pathname).toBe("/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
         );
       });
     });
@@ -948,7 +948,7 @@ describe("special character tests", () => {
         expect(testWindow.location.pathname).toBe("/");
         expect(testWindow.location.hash).toBe("#/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
         );
       });
 
@@ -974,7 +974,7 @@ describe("special character tests", () => {
         expect(testWindow.location.pathname).toBe("/");
         expect(testWindow.location.hash).toBe("#/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
         );
       });
 
@@ -990,7 +990,7 @@ describe("special character tests", () => {
         expect(testWindow.location.pathname).toBe("/");
         expect(testWindow.location.hash).toBe("#/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
         );
       });
 
@@ -1016,7 +1016,7 @@ describe("special character tests", () => {
         expect(testWindow.location.pathname).toBe("/");
         expect(testWindow.location.hash).toBe("#/with%20space");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{\\"pathname\\":\\"/with%20space\\",\\"search\\":\\"\\",\\"hash\\":\\"\\"}</pre>"`
+          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
         );
       });
     });

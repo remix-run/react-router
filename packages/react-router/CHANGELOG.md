@@ -1,5 +1,27 @@
 # `react-router`
 
+## 6.8.1
+
+### Patch Changes
+
+- Remove inaccurate console warning for POP navigations and update active blocker logic ([#10030](https://github.com/remix-run/react-router/pull/10030))
+- Updated dependencies:
+  - `@remix-run/router@1.3.2`
+
+## 6.8.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.3.1`
+
+## 6.7.1-pre.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.3.1-pre.0`
+
 ## 6.7.0
 
 ### Minor Changes
@@ -14,12 +36,6 @@
   - `@remix-run/router@1.3.0`
 
 ## 6.6.2
-
-### Patch Changes
-
-- Ensure `useId` consistency during SSR ([#9805](https://github.com/remix-run/react-router/pull/9805))
-
-## 6.6.2-pre.0
 
 ### Patch Changes
 

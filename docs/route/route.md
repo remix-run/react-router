@@ -205,9 +205,23 @@ let { org, "*": splat } = params;
 
 ### Layout Routes
 
-<docs-info>TODO: expand with example</docs-info>
-
 Omitting the path makes this route a "layout route". It participates in UI nesting, but it does not add any segments to the URL.
+
+```tsx
+<Route
+  element={
+    <div>
+      <h1>Layout</h1>
+      <Outlet />
+    </div>
+  }
+>
+  <Route path="/" element={<h2>Home</h2>} />
+  <Route path="/about" element={<h2>About</h2>} />
+</Route>
+```
+
+In this example, `<h1>Layout</h1>` will be rendered along with each child route's `element` prop, via the layout route's [Outlet][outlet].
 
 ## `index`
 
