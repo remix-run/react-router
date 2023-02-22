@@ -33,6 +33,7 @@ import {
   joinPaths,
   matchRoutes,
   resolveTo,
+  stripBasename,
   warning,
 } from "./utils";
 
@@ -1935,19 +1936,17 @@ export function createRouter(init: RouterInit): Router {
       redirectLocation,
       "Expected a location on the redirect navigation"
     );
-
     // Check if this an absolute external redirect that goes to a new origin
     if (
-      (ABSOLUTE_URL_REGEX.test(redirect.location) || (init.basename !== undefined && init.basename !== "/")) &&
+      ABSOLUTE_URL_REGEX.test(redirect.location) &&
       isBrowser &&
       typeof window?.location !== "undefined"
     ) {
-      let newOrigin = init.history.createURL(redirect.location).origin;
+      let url = init.history.createURL(redirect.location);
+      let isDifferentBasename =
+        stripBasename(url.pathname, init.basename || "/") == null;
 
-      // Only the last trailing slash is replaced
-      const BASENAME_URL_REGEX = new RegExp("^" + init.basename?.replace(/\/$/, '') + "([/|?.*|?.#]|$)", 'i');
-
-      if (window.location.origin !== newOrigin || !BASENAME_URL_REGEX.test(redirect.location)) {
+      if (window.location.origin !== url.origin || isDifferentBasename) {
         if (replace) {
           window.location.replace(redirect.location);
         } else {
@@ -3177,14 +3176,15 @@ async function callLoaderOrAction(
 
         location = createPath(resolvedLocation);
       } else if (!isStaticRequest) {
-        // Strip off the protocol+origin for same-origin absolute redirects.
-        // If this is a static reques, we can let it go back to the browser
-        // as-is
+        // Strip off the protocol+origin for same-origin + same-basename absolute
+        // redirects. If this is a static request, we can let it go back to the
+        // browser as-is
         let currentUrl = new URL(request.url);
         let url = location.startsWith("//")
           ? new URL(currentUrl.protocol + location)
           : new URL(location);
-        if (url.origin === currentUrl.origin) {
+        let isSameBasename = stripBasename(url.pathname, basename) != null;
+        if (url.origin === currentUrl.origin && isSameBasename) {
           location = url.pathname + url.search + url.hash;
         }
       }
