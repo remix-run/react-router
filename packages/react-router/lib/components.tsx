@@ -89,13 +89,15 @@ export function RouterProvider({
 
   let basename = router.basename || "/";
 
-  let dataRouterContext = React.useMemo(() => ({
-    router,
-    navigator,
-    static: false,
-    // Do we need this?
-    basename,
-  }), [router, navigator, basename]);
+  let dataRouterContext = React.useMemo(
+    () => ({
+      router,
+      navigator,
+      static: false,
+      basename,
+    }),
+    [router, navigator, basename]
+  );
 
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
@@ -366,10 +368,7 @@ export function Router({
 
   return (
     <NavigationContext.Provider value={navigationContext}>
-      <LocationContext.Provider
-        children={children}
-        value={locationContext}
-      />
+      <LocationContext.Provider children={children} value={locationContext} />
     </NavigationContext.Provider>
   );
 }

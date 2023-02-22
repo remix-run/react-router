@@ -842,10 +842,8 @@ let blockerId = 0;
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
+  let state = useDataRouterState(DataRouterStateHook.UseBlocker);
   let [blockerKey] = React.useState(() => String(++blockerId));
-
-  // Subscribe to router state changes so the latest blocker is returned
-  useDataRouterState(DataRouterStateHook.UseBlocker);
 
   let blockerFunction = React.useCallback<BlockerFunction>(
     (args) => {
@@ -864,7 +862,9 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
     [router, blockerKey]
   );
 
-  return blocker;
+  // Prefer the blocker from state since DataRouterContext is memoized so this
+  // ensures we update the latest on blocker state updates
+  return state.blockers.get(blockerKey) || blocker;
 }
 
 const alreadyWarned: Record<string, boolean> = {};
