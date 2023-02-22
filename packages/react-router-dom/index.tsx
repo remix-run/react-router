@@ -424,24 +424,22 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     let absoluteHref;
     let isExternal = false;
 
-    // set the absoluteHref if the to is an absolute url
-    // making sure StaticRouter renders correct href
     if (typeof to === "string" && ABSOLUTE_URL_REGEX.test(to)) {
+      // Render the absolute href server- and client-side
       absoluteHref = to;
-    }
-    
-    // If in browser, we can check if to url can be stripped
-    // only when the origin is the same as the current url
-    if (isBrowser && typeof to === "string" && ABSOLUTE_URL_REGEX.test(to)) {
-      let currentUrl = new URL(window.location.href);
-      let targetUrl = to.startsWith("//")
-        ? new URL(currentUrl.protocol + to)
-        : new URL(to);
-      if (targetUrl.origin === currentUrl.origin) {
-        // Strip the protocol/origin for same-origin absolute URLs
-        to = targetUrl.pathname + targetUrl.search + targetUrl.hash;
-      } else {
-        isExternal = true;
+
+      // Only check for external origins client-side
+      if (isBrowser) {
+        let currentUrl = new URL(window.location.href);
+        let targetUrl = to.startsWith("//")
+          ? new URL(currentUrl.protocol + to)
+          : new URL(to);
+        if (targetUrl.origin === currentUrl.origin) {
+          // Strip the protocol/origin for same-origin absolute URLs
+          to = targetUrl.pathname + targetUrl.search + targetUrl.hash;
+        } else {
+          isExternal = true;
+        }
       }
     }
 
