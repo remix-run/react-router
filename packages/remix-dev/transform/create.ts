@@ -5,12 +5,13 @@ import babelPluginSyntaxJsx from "@babel/plugin-syntax-jsx";
 // @ts-expect-error TODO
 import babelPluginSyntaxTypescript from "@babel/plugin-syntax-typescript";
 
-import babelRecastPlugin from "./utils/babelPluginRecast";
-import type { BabelPlugin } from "./utils/babel";
+import { plugin as babelRecastPlugin } from "./plugins/recast";
+import type { Plugin } from "./plugin";
 
 type Transform = (code: string, filepath: string) => string;
 
-export default (plugin: BabelPlugin): Transform =>
+export let create =
+  (plugin: Plugin): Transform =>
   (code, filepath) => {
     let result = transformSync(code, {
       babelrc: false,
@@ -19,7 +20,7 @@ export default (plugin: BabelPlugin): Transform =>
       plugins: [babelPluginSyntaxTypescript, babelRecastPlugin, plugin],
       overrides: [
         {
-          test: /\.tsx$/,
+          test: /\.[jt]sx?$/,
           plugins: [
             babelPluginSyntaxJsx,
             [babelPluginSyntaxTypescript, { isTSX: true }],

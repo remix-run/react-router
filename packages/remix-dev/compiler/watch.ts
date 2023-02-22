@@ -4,9 +4,9 @@ import * as path from "path";
 
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
-import type { AssetsManifest } from "./assets";
 import { logCompileFailure } from "./onCompileFailure";
 import type { CompileOptions } from "./options";
+import type { CompileResult } from "./remixCompiler";
 import { compile, createRemixCompiler, dispose } from "./remixCompiler";
 import { warnOnce } from "./warnings";
 
@@ -23,11 +23,11 @@ function isEntryPoint(config: RemixConfig, file: string): boolean {
 export type WatchOptions = Partial<CompileOptions> & {
   reloadConfig?(root: string): Promise<RemixConfig>;
   onRebuildStart?(): void;
-  onRebuildFinish?(durationMs: number, assetsManifest?: AssetsManifest): void;
+  onRebuildFinish?(durationMs: number, result?: CompileResult): void;
   onFileCreated?(file: string): void;
   onFileChanged?(file: string): void;
   onFileDeleted?(file: string): void;
-  onInitialBuild?(durationMs: number): void;
+  onInitialBuild?(durationMs: number, result?: CompileResult): void;
 };
 
 export async function watch(
@@ -61,8 +61,8 @@ export async function watch(
   let compiler = createRemixCompiler(config, options);
 
   // initial build
-  await compile(compiler, { onCompileFailure });
-  onInitialBuild?.(Date.now() - start);
+  let result = await compile(compiler, { onCompileFailure });
+  onInitialBuild?.(Date.now() - start, result);
 
   let restart = debounce(async () => {
     onRebuildStart?.();
@@ -77,15 +77,17 @@ export async function watch(
     }
 
     compiler = createRemixCompiler(config, options);
-    let assetsManifest = await compile(compiler, { onCompileFailure });
-    onRebuildFinish?.(Date.now() - start, assetsManifest);
+    let result = await compile(compiler, { onCompileFailure });
+    onRebuildFinish?.(Date.now() - start, result);
   }, 500);
 
   let rebuild = debounce(async () => {
     onRebuildStart?.();
     let start = Date.now();
-    let assetsManifest = await compile(compiler, { onCompileFailure });
-    onRebuildFinish?.(Date.now() - start, assetsManifest);
+    let result = await compile(compiler, {
+      onCompileFailure,
+    });
+    onRebuildFinish?.(Date.now() - start, result);
   }, 100);
 
   let toWatch = [config.appDirectory];

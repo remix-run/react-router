@@ -4,7 +4,7 @@ export type CompileFailure = Error | esbuild.BuildFailure;
 export type OnCompileFailure = (failure: CompileFailure) => void;
 
 export const logCompileFailure: OnCompileFailure = (failure) => {
-  if ("warnings" in failure || "errors" in failure) {
+  if ("warnings" in failure) {
     if (failure.warnings) {
       let messages = esbuild.formatMessagesSync(failure.warnings, {
         kind: "warning",
@@ -12,7 +12,8 @@ export const logCompileFailure: OnCompileFailure = (failure) => {
       });
       console.warn(...messages);
     }
-
+  }
+  if ("errors" in failure) {
     if (failure.errors) {
       let messages = esbuild.formatMessagesSync(failure.errors, {
         kind: "error",

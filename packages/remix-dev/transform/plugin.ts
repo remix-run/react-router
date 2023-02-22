@@ -7,7 +7,7 @@ import type { File } from "@babel/types";
  *
  * Adapted from [@codemod/core](https://github.com/codemod-js/codemod/blob/5a9fc6968409613eefd87e646408c08b6dad0c40/packages/core/src/BabelPluginTypes.ts)
  */
-export interface PluginObj<S = File> extends Partial<Babel.PluginObj<S>> {
+type PluginObj<S = File> = Partial<Babel.PluginObj<S>> & {
   parserOverride?(
     code: string,
     options: Babel.ParserOptions,
@@ -20,8 +20,6 @@ export interface PluginObj<S = File> extends Partial<Babel.PluginObj<S>> {
     code: string,
     generate: (ast: File, options: Babel.GeneratorOptions) => string
   ): { code: string; map?: object };
-}
+};
 
-type RawBabelPlugin = (babel: typeof Babel) => PluginObj;
-type RawBabelPluginWithOptions = [RawBabelPlugin, object];
-export type BabelPlugin = RawBabelPlugin | RawBabelPluginWithOptions;
+export type Plugin = (babel: typeof Babel) => PluginObj;

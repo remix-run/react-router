@@ -28,10 +28,13 @@ import {
 } from "./plugins/cssBundleEntryModulePlugin";
 import { writeFileSafe } from "./utils/fs";
 import invariant from "../invariant";
+import { hmrPlugin } from "./plugins/hmrPlugin";
 
 export type BrowserCompiler = {
   // produce ./public/build/
-  compile: (manifestChannel: WriteChannel<AssetsManifest>) => Promise<void>;
+  compile: (
+    manifestChannel: WriteChannel<AssetsManifest>
+  ) => Promise<esbuild.Metafile>;
   dispose: () => void;
 };
 
@@ -76,10 +79,11 @@ const isCssBundlingEnabled = (config: RemixConfig) =>
 const createEsbuildConfig = (
   build: "app" | "css",
   config: RemixConfig,
-  options: CompileOptions
+  options: CompileOptions,
+  onLoader: (filename: string, code: string) => void
 ): esbuild.BuildOptions | esbuild.BuildIncremental => {
   let isCssBuild = build === "css";
-  let entryPoints: esbuild.BuildOptions["entryPoints"];
+  let entryPoints: Record<string, string>;
 
   if (isCssBuild) {
     entryPoints = {
@@ -118,10 +122,30 @@ const createEsbuildConfig = (
     cssFilePlugin({ config, options }),
     urlImportsPlugin(),
     mdxPlugin(config),
-    browserRouteModulesPlugin(config, /\?browser$/),
+    browserRouteModulesPlugin(config, /\?browser$/, onLoader, mode),
     emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/),
     NodeModulesPolyfillPlugin(),
   ].filter(isNotNull);
+
+  if (mode === "development" && config.future.unstable_dev) {
+    // TODO prebundle deps instead of chunking just these ones
+    let isolateChunks = [
+      "react",
+      "react/jsx-dev-runtime",
+      "react/jsx-runtime",
+      "react-dom",
+      "react-dom/client",
+      "react-refresh/runtime",
+      "@remix-run/react",
+      "remix:hmr",
+    ];
+    entryPoints = {
+      ...entryPoints,
+      ...Object.fromEntries(isolateChunks.map((imprt) => [imprt, imprt])),
+    };
+
+    plugins.push(hmrPlugin({ remixConfig: config }));
+  }
 
   return {
     entryPoints,
@@ -164,6 +188,9 @@ const createEsbuildConfig = (
     jsx: "automatic",
     jsxDev: options.mode !== "production",
     plugins,
+    supported: {
+      "import-meta": true,
+    },
   };
 };
 
@@ -174,11 +201,18 @@ export const createBrowserCompiler = (
   let appCompiler: esbuild.BuildIncremental;
   let cssCompiler: esbuild.BuildIncremental;
 
+  let hmrRoutes: Record<string, { loaderHash: string }> = {};
+  let onLoader = (filename: string, code: string) => {
+    let key = path.relative(remixConfig.rootDirectory, filename);
+    hmrRoutes[key] = { loaderHash: code };
+  };
+
   let compile = async (manifestChannel: WriteChannel<AssetsManifest>) => {
+    hmrRoutes = {};
     let appBuildTask = async () => {
       appCompiler = await (!appCompiler
         ? esbuild.build({
-            ...createEsbuildConfig("app", remixConfig, options),
+            ...createEsbuildConfig("app", remixConfig, options, onLoader),
             metafile: true,
             incremental: true,
           })
@@ -188,6 +222,7 @@ export const createBrowserCompiler = (
         appCompiler.metafile,
         "Expected app compiler metafile to be defined. This is likely a bug in Remix. Please open an issue at https://github.com/remix-run/remix/issues/new"
       );
+      return appCompiler.metafile;
     };
 
     let cssBuildTask = async () => {
@@ -199,7 +234,7 @@ export const createBrowserCompiler = (
       //  so we need to assert that it's an incremental build
       cssCompiler = (await (!cssCompiler
         ? esbuild.build({
-            ...createEsbuildConfig("css", remixConfig, options),
+            ...createEsbuildConfig("css", remixConfig, options, onLoader),
             metafile: true,
             incremental: true,
             write: false,
@@ -270,15 +305,39 @@ export const createBrowserCompiler = (
       return cssBundlePath;
     };
 
-    let [cssBundlePath] = await Promise.all([cssBuildTask(), appBuildTask()]);
+    let [cssBundlePath, metafile] = await Promise.all([
+      cssBuildTask(),
+      appBuildTask(),
+    ]);
+
+    let hmr: AssetsManifest["hmr"] | undefined = undefined;
+    if (options.mode === "development" && remixConfig.future.unstable_dev) {
+      let hmrRuntimeOutput = Object.entries(metafile.outputs).find(
+        ([_, output]) => output.inputs["hmr-runtime:remix:hmr"]
+      )?.[0];
+      invariant(hmrRuntimeOutput, "Expected to find HMR runtime in outputs");
+      let hmrRuntime =
+        remixConfig.publicPath +
+        path.relative(
+          remixConfig.assetsBuildDirectory,
+          path.resolve(hmrRuntimeOutput)
+        );
+      hmr = {
+        runtime: hmrRuntime,
+        routes: hmrRoutes,
+        timestamp: Date.now(),
+      };
+    }
 
     let manifest = await createAssetsManifest({
       config: remixConfig,
       metafile: appCompiler.metafile!,
       cssBundlePath,
+      hmr,
     });
-    manifestChannel.write(manifest);
     await writeAssetsManifest(remixConfig, manifest);
+    manifestChannel.write(manifest);
+    return metafile;
   };
 
   return {

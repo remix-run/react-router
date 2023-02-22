@@ -2,8 +2,7 @@ import type { NodePath } from "@babel/core";
 import * as t from "@babel/types";
 import _ from "lodash";
 
-import createTransform from "../createTransform";
-import type { BabelPlugin } from "../utils/babel";
+import * as Transform from "../../transform";
 import { CodemodError } from "../utils/error";
 import type { Export } from "./utils/export";
 import {
@@ -155,9 +154,8 @@ const groupImportsBySource = <Source extends string = string>(
   return grouped;
 };
 
-const plugin =
-  (options: Options): BabelPlugin =>
-  (babel) => {
+export default (options: Options) =>
+  Transform.create((babel) => {
     let { types: t } = babel;
     return {
       visitor: {
@@ -220,6 +218,4 @@ const plugin =
         },
       },
     };
-  };
-
-export default (options: Options) => createTransform(plugin(options));
+  });

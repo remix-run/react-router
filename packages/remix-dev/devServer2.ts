@@ -11,6 +11,7 @@ import * as Compiler from "./compiler";
 import { type RemixConfig } from "./config";
 import { loadEnv } from "./env";
 import * as LiveReload from "./liveReload";
+import * as HMR from "./hmr";
 
 let info = (message: string) => console.info(`💿 ${message}`);
 
@@ -63,6 +64,7 @@ let resolveDev = (
     throw Error("The new dev server requires 'unstable_dev' to be set");
 
   let port = flags.port ?? (dev === true ? undefined : dev.port);
+
   let appServerPort =
     flags.appServerPort ?? (dev === true || dev.appServerPort == undefined)
       ? 3000
@@ -112,24 +114,38 @@ export let serve = async (
   // watch and live reload on rebuilds
   let port = await findPort(dev.port);
   let socket = LiveReload.serve({ port });
+  let prevResult: Compiler.CompileResult | undefined = undefined;
   let dispose = await Compiler.watch(config, {
     mode: "development",
     liveReloadPort: port,
-    onInitialBuild: (durationMs) => info(`Built in ${prettyMs(durationMs)}`),
+    onInitialBuild: (durationMs, result) => {
+      info(`Built in ${prettyMs(durationMs)}`);
+      prevResult = result;
+    },
     onRebuildStart: () => {
       clean(config);
       socket.log("Rebuilding...");
     },
-    onRebuildFinish: async (durationMs, assetsManifest) => {
-      if (!assetsManifest) return;
+    onRebuildFinish: async (durationMs, result) => {
+      if (!result) return;
+      let { assetsManifest } = result;
       socket.log(`Rebuilt in ${prettyMs(durationMs)}`);
 
       info(`Waiting for ${appServerOrigin}...`);
       let start = Date.now();
       await waitForAppServer(assetsManifest.version);
       info(`${appServerOrigin} ready in ${prettyMs(Date.now() - start)}`);
+      await new Promise((resolve) => {
+        setTimeout(resolve, -1);
+      });
 
-      socket.reload();
+      if (assetsManifest.hmr && prevResult) {
+        let updates = HMR.updates(config, result, prevResult);
+        socket.hmr(assetsManifest, updates);
+      } else {
+        socket.reload();
+      }
+      prevResult = result;
     },
     onFileCreated: (file) => socket.log(`File created: ${relativePath(file)}`),
     onFileChanged: (file) => socket.log(`File changed: ${relativePath(file)}`),
