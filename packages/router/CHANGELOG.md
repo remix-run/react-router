@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.3.3-pre.1
+
+### Patch Changes
+
+- Correctly perform a "hard" redirect for same-origin absolute URLs outside of the router basename ([#10076](https://github.com/remix-run/react-router/pull/10076))
+
 ## 1.3.3-pre.0
 
 ### Patch Changes
