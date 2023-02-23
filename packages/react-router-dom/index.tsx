@@ -428,6 +428,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     let isExternal = false;
 
     if (typeof to === "string" && ABSOLUTE_URL_REGEX.test(to)) {
+      debugger;
       // Render the absolute href server- and client-side
       absoluteHref = to;
 
@@ -437,12 +438,11 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
         let targetUrl = to.startsWith("//")
           ? new URL(currentUrl.protocol + to)
           : new URL(to);
-        let isSameBasename =
-          stripBasename(targetUrl.pathname, basename) != null;
+        let path = stripBasename(targetUrl.pathname, basename);
 
-        if (targetUrl.origin === currentUrl.origin && isSameBasename) {
-          // Strip the protocol/origin for same-origin absolute URLs
-          to = targetUrl.pathname + targetUrl.search + targetUrl.hash;
+        if (targetUrl.origin === currentUrl.origin && path != null) {
+          // Strip the protocol/origin/basename for same-origin absolute URLs
+          to = path + targetUrl.search + targetUrl.hash;
         } else {
           isExternal = true;
         }

@@ -283,4 +283,47 @@ describe("Link push and replace", () => {
       `);
     });
   });
+
+  describe("to an absolute same-origin/same-basename URL, when it is clicked", () => {
+    it("performs a push", () => {
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to="http://localhost/base/about">About</Link>
+          </div>
+        );
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/base/home"]} basename="/base">
+            <Routes>
+              <Route path="home" element={<Home />} />
+              <Route path="about" element={<ShowNavigationType />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+
+      TestRenderer.act(() => {
+        anchor.props.onClick(
+          new MouseEvent("click", {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+          })
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <p>
+          PUSH
+        </p>
+      `);
+    });
+  });
 });
