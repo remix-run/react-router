@@ -428,7 +428,6 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     let isExternal = false;
 
     if (typeof to === "string" && ABSOLUTE_URL_REGEX.test(to)) {
-      debugger;
       // Render the absolute href server- and client-side
       absoluteHref = to;
 
