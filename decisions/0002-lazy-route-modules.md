@@ -49,29 +49,139 @@ Given what we learned from the original POC, we felt we could do this a bit lean
 - We can also load once and update the internal route definition so subsequent navigations don't have a repeated `lazy()` call
 - We don't have issue with knowing whether or not an `errorElement` exists since we will have updated the route prior to updating any UI state
 
-This proved to work out quite well as we id our own POC so we went with this approach in the end. Now, any time we enter a `submitting`/`loading` state we first check for a `route.lazy` definition and resolve that promise first and update the internal route definition with the result.
+This proved to work out quite well as we did our own POC so we went with this approach in the end. Now, any time we enter a `submitting`/`loading` state we first check for a `route.lazy` definition and resolve that promise first and update the internal route definition with the result.
 
-- If an error is thrown by `lazy()` we catch that in the same logic as iof the error was thrown by the action/loader and bubble it to the nearest `errorElement`
-- If a `lazy` call is interrupted, we fall into the same interruption handling that actions and loaders already use
-- We also restrict which route keys can be updated, preventing users from changing route-matching fields such as `path`/`index`/`children` as those must be defined up front and are considered immutable
-
-Initially we considered doing an automatic Remix-style-exports mapping so you could export an `ErrorBoundary` from your route file and we'd transform that to `errorElement`, but we chose to avoid that since it's (1) Remix specific and introduces more non-framework-agnostic concepts since `errorElement` isn't actually a field known to the `@remix-run/router` layer. Instead we chose to keep lazy to known route properties and folks are free to define their own mappings in user-land:
+The resulting API looks like this, assuming you want to load your homepage in the main bundle, but lazily load the code for the `/about` route:
 
 ```jsx
-function remixStyleExports(loadModule) {
-  let { loader, default as Component, ErrorBoundary } = await loadModule();
-  return {
-    loader,
-    element: <Component />,
-    errorElement: <ErrorBoundary />,
-  };
-}
-
-const routes = [{
-  path: '/',
-  lazy: () => remixStyleExports(() => import("./route")),
-}]
+// app.jsx
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+      {
+        path: "about",
+        lazy: () => import("./about"),
+      },
+    ],
+  },
+]);
 ```
+
+And then your `about.jsx` file would export the properties to be lazily defined on the route:
+
+```jsx
+// about.jsx
+export function loader() { ... }
+
+export const element = <Component />
+
+function Component() { ... }
+```
+
+## Choices
+
+Here's a few choices we made along the way:
+
+### Static Route Properties
+
+A route has 3 types of fields defined on it:
+
+- Path matching fields: `path`, `index`, `caseSensitive` and `children`
+  - While not strictly used for matching, `id` is also considered static since it is needed up-front to uniquely identify all defined routes
+- Data loading fields: `loader`, `action`, `hasErrorBoundary`, `shouldRevalidate`
+- Rendering fields: `handle` and the framework-aware `element`/`errorElement`
+
+The `route.lazy()` method is focused on lazy-loading the data loading and rendering fields, but cannot update the path matching fields because we have to path match _first_ before we can even identify which matched routes include a `lazy()` function. Therefore, we do not allow path matching route keys to be updated by `lazy()`, and will log a warning if you return one of those fields from your lazy() method.
+
+### Addition of route `Component` and `ErrorBoundary` fields
+
+In React Router v6, routes define `element` properties because it allows static prop passing as well as fitting nicely in the JSX render-tree-defined route trees:
+
+```jsx
+<BrowserRouter>
+  <Routes>
+    <Route path="/" element={<Homepage prop="value" />} />
+  </Routes>
+</BrowserRouter>
+```
+
+However, in a React Router 6.4+ landscape when using `RouterProvider`, routes are defined statically up-front to enable data-loading, so using element feels arguably a bit awkward outside of a JSX tree:
+
+```js
+const routes = [
+  {
+    path: "/",
+    element: <Homepage prop="value" />,
+  },
+];
+```
+
+It also means that you cannot easily use hooks inline, and have to add a level of indirection to access hooks.
+
+This gets a bit more awkward with the introduction of `lazy()` since your file now has to export a root-level JSX element:
+
+```jsx
+// home.jsx
+export const element = <Homepage />
+
+function Homepage() { ... }
+```
+
+In reality, what we want in this "static route definition" landscape is just the component for the Route:
+
+```js
+const routes = [
+  {
+    path: "/",
+    Component: Homepage,
+  },
+];
+```
+
+This has a number of advantages in that we can now use inline component functions to access hooks, provide props, etc. And we also simplify the exports of a `lazy()` route module:
+
+```jsx
+const routes = [
+  {
+    path: "/",
+    // You can include just the component
+    Component: Homepage,
+  },
+  {
+    path: "/a",
+    // Or you can inline your component and pass props
+    Component: () => <Homepage prop="value" />,
+  },
+  {
+    path: "/b",
+    // And even use use hooks without indirection 💥
+    Component: () => {
+      let data = useLoaderData();
+      return <Homepage data={data} />;
+    },
+  },
+];
+```
+
+So in the end, the work for `lazy()` introduced support for `route.Component` and `route.ErrorBoundary`, which can be statically or lazily defined. `element`/`errorElement` will be considered deprecated in data routers and may go away in version 7.
+
+### Interruptions
+
+Previously when a link was clicked or a form was submitted, since we had the `action`/`loader` defined statically up-front, they were immediately executed and therew was no chance for an interruption _before calling the handler_. Now that we've introduced the concept of `lazy()` there is a period of time prior to executing the handler where the user could interrupt the navigation by clicking to a new location. In order to keep behavior consistent with lazily-loaded routes and statically defined routes, if a `lazy()` function is interrupted React Router _will still call the returned handler_. As always, the user can leverage `request.signal.aborted` inside the handler to short-circuit on interruption if desired.
+
+This is important because `lazy()` is only ever run once in an application session. Once lazy has completed it updates the route in place, and all subsequent navigations to that route use the now-statically-defined properties. Without this behavior, routes would behave differently on the _first_ navigation versus _subsequent_ navigations which could introduce subtle and hard-to-track-down bugs.
+
+Additionally, since `lazy()` functions are intended to return a static definition of route `loader`/`element`/etc. - if multiple navigations happen to the same route in parallel, the first `lazy()` call to resolve will "win" and update the route, and the returned values from any other `lazy()` executions will be ignored. This should not be much of an issue in practice though as modern bundlers latch onto the same promise for repeated calls to `import()` so in those cases the first call will still "win".
+
+### Error Handling
+
+If an error is thrown by `lazy()` we catch that in the same logic as iof the error was thrown by the `action`/`loader` and bubble it to the nearest `errorElement`.
 
 ## Consequences
 
@@ -118,6 +228,10 @@ At the moment this is implemented in a new `ready()` API that we're still decidi
 ```js
 let router = await createBrowserRouter(routes).ready();
 ```
+
+## Future Optimizations
+
+Right now, `lazy()` and `loader()` execution are called sequentially _even if the loader is statically defined_. Eventually we will likely detect the statically-defined `loader` and call it in parallel with `lazy` (since lazy wil be unable to update the loader anyway!). This will provide the ability to obtain the most-optimal parallelization of loading your component in parallel with your loader fetches.
 
 [manually-code-split]: https://www.infoxicator.com/en/react-router-6-4-code-splitting
 [proposal]: https://github.com/remix-run/react-router/discussions/9826
