@@ -392,7 +392,7 @@ export interface LinkProps
   state?: any;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
-  to: To;
+  to: To | number;
 }
 
 const isBrowser =
