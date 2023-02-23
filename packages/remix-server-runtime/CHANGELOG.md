@@ -1,5 +1,30 @@
 # `@remix-run/server-runtime`
 
+## 1.14.0-pre.0
+
+### Minor Changes
+
+- Hot Module Replacement and Hot Data Revalidation ([#5259](https://github.com/remix-run/remix/pull/5259))
+
+  - Requires `unstable_dev` future flag to be enabled
+  - HMR provided through React Refresh
+
+  Features:
+
+  - HMR for component and style changes
+  - HDR when loaders for current route change
+
+  Known limitations for MVP:
+
+  - Only implemented for React via React Refresh
+  - No `import.meta.hot` API exposed yet
+  - Revalidates _all_ loaders on route when loader changes are detected
+  - Loader changes do not account for imported dependencies changing
+
+### Patch Changes
+
+- sync `FutureConfig` interface between packages ([#5398](https://github.com/remix-run/remix/pull/5398))
+
 ## 1.13.0
 
 ### Minor Changes
