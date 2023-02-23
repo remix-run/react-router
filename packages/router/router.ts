@@ -3235,9 +3235,9 @@ async function loadLazyRouteModule(
 
   let lazyRoute = await route.lazy();
 
-  // If the lazy route function has already been executed and removed from
-  // the route object by another call while we were waiting for the promise
-  // to resolve then we don't want to resolve the same route again.
+  // If the lazy route function was executed and removed by another parallel
+  // call then we can return - first lazy() to finish wins because the return
+  // value of lazy is expected to be static
   if (!route.lazy) {
     return;
   }
@@ -3245,15 +3245,14 @@ async function loadLazyRouteModule(
   let routeToUpdate = manifest[route.id];
   invariant(routeToUpdate, "No route found in manifest");
 
-  // For now, we update in place.  We think this is ok since there's no way
-  // we could yet be sitting on this route since we can't get there without
-  // resolving through here first.  This is different than the HMR "update"
-  // use-case where we may actively be on the route being updated.  The main
-  // concern boils down to "does this mutation affect any ongoing navigations
-  // or any current state.matches values?".  If not, I think it's safe to
-  // mutate in place.  It's also worth noting that this is a more targeted
-  // update that cannot touch things like path/index/children so it cannot
-  // affect the routes we've already matched.
+  // Update the route in place.  This should be safe because there's no way
+  // we could yet be sitting on this route as we can't get there without
+  // resolving lazy() first.
+  //
+  // This is different than the HMR "update" use-case where we may actively be
+  // on the route being updated.  The main concern boils down to "does this
+  // mutation affect any ongoing navigations or any current state.matches
+  // values?".  If not, it should be safe to update in place.
   let routeUpdates: Record<string, any> = {};
   for (let lazyRouteProperty in lazyRoute) {
     let staticRouteValue =
