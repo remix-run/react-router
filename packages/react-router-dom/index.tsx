@@ -42,6 +42,7 @@ import {
   createHashHistory,
   UNSAFE_invariant as invariant,
   joinPaths,
+  stripBasename,
   ErrorResponse,
 } from "@remix-run/router";
 
@@ -420,6 +421,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
+    let { basename } = React.useContext(NavigationContext);
+
     // Rendered into <a href> for absolute URLs
     let absoluteHref;
     let isExternal = false;
@@ -434,9 +437,11 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
         let targetUrl = to.startsWith("//")
           ? new URL(currentUrl.protocol + to)
           : new URL(to);
-        if (targetUrl.origin === currentUrl.origin) {
-          // Strip the protocol/origin for same-origin absolute URLs
-          to = targetUrl.pathname + targetUrl.search + targetUrl.hash;
+        let path = stripBasename(targetUrl.pathname, basename);
+
+        if (targetUrl.origin === currentUrl.origin && path != null) {
+          // Strip the protocol/origin/basename for same-origin absolute URLs
+          to = path + targetUrl.search + targetUrl.hash;
         } else {
           isExternal = true;
         }
