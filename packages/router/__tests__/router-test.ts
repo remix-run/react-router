@@ -11665,7 +11665,7 @@ describe("a router", () => {
       });
       expect(t.router.state.location.pathname).toBe("/");
       expect(t.router.state.navigation.state).toBe("idle");
-      expect(lazyLoaderStub).not.toHaveBeenCalled();
+      expect(lazyLoaderStub).toHaveBeenCalledTimes(1);
 
       // Ensure the lazy route object update still happened
       let lazyRoute = findRouteById(t.router.routes, "lazy");
@@ -12130,7 +12130,7 @@ describe("a router", () => {
       expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
       expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY LOADER B");
       expect(lazyLoaderStubA).not.toHaveBeenCalled();
-      expect(lazyLoaderStubB).toHaveBeenCalledTimes(1);
+      expect(lazyLoaderStubB).toHaveBeenCalledTimes(2);
     });
 
     it("handles loader errors in lazy route modules on fetcher.load", async () => {

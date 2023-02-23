@@ -3344,21 +3344,16 @@ async function callLoaderOrAction(
       onReject = () => reject();
       request.signal.addEventListener("abort", onReject);
 
-      if (!request.signal.aborted || type === "action") {
-        // Still kick off actions if we got interrupted to maintain consistency
-        // with un-abortable behavior of action execution on non-lazy routes
-        result = await Promise.race([
-          handler({
-            request,
-            params: match.params,
-            context: requestContext,
-          }),
-          abortPromise,
-        ]);
-      } else {
-        // No need to run loaders if we got aborted during lazy()
-        result = await abortPromise;
-      }
+      // Still kick off handlers if we got interrupted to maintain consistency
+      // with un-abortable behavior of handler execution on non-lazy routes
+      result = await Promise.race([
+        handler({
+          request,
+          params: match.params,
+          context: requestContext,
+        }),
+        abortPromise,
+      ]);
 
       invariant(
         result !== undefined,
