@@ -9,6 +9,7 @@
     "@remix-run/router": "1.3.2"
   },
   "changesets": [
+    "big-olives-doubt",
     "fluffy-forks-attack",
     "long-jokes-wait",
     "lovely-cheetahs-sip",
