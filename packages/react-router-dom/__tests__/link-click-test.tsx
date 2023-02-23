@@ -171,7 +171,7 @@ describe("A <Link> click", () => {
   });
 
   describe("when a same-origin/different-basename absolute URL is specified", () => {
-    it.only("does not prevent default", () => {
+    it("does not prevent default", () => {
       function Home() {
         return (
           <div>
