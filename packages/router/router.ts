@@ -14,7 +14,7 @@ import type {
   ErrorResult,
   FormEncType,
   FormMethod,
-  HasErrorBoundaryFunction,
+  DetectErrorBoundaryFunction,
   RedirectResult,
   RouteData,
   AgnosticRouteObject,
@@ -343,7 +343,7 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   hydrationData?: HydrationState;
-  hasErrorBoundary?: HasErrorBoundaryFunction;
+  detectErrorBoundary?: DetectErrorBoundaryFunction;
 }
 
 /**
@@ -655,7 +655,7 @@ const isBrowser =
   typeof window.document.createElement !== "undefined";
 const isServer = !isBrowser;
 
-const defaultHasErrorBoundary = (route: AgnosticRouteObject) =>
+const defaultDetectErrorBoundary = (route: AgnosticRouteObject) =>
   Boolean(route.hasErrorBoundary);
 //#endregion
 
@@ -672,14 +672,15 @@ export function createRouter(init: RouterInit): Router {
     "You must provide a non-empty routes array to createRouter"
   );
 
-  let hasErrorBoundary = init.hasErrorBoundary || defaultHasErrorBoundary;
+  let detectErrorBoundary =
+    init.detectErrorBoundary || defaultDetectErrorBoundary;
 
   // Routes keyed by ID
   let manifest: RouteManifest = {};
   // Routes in tree format for matching
   let dataRoutes = convertRoutesToDataRoutes(
     init.routes,
-    hasErrorBoundary,
+    detectErrorBoundary,
     undefined,
     manifest
   );
@@ -884,7 +885,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Load lazy modules, then kick off initial data load if needed
     let lazyPromises = lazyMatches.map((m) =>
-      loadLazyRouteModule(m.route, hasErrorBoundary, manifest)
+      loadLazyRouteModule(m.route, detectErrorBoundary, manifest)
     );
     Promise.all(lazyPromises).then(() => {
       let initialized =
@@ -1358,7 +1359,7 @@ export function createRouter(init: RouterInit): Router {
         actionMatch,
         matches,
         manifest,
-        hasErrorBoundary,
+        detectErrorBoundary,
         router.basename
       );
 
@@ -1688,7 +1689,7 @@ export function createRouter(init: RouterInit): Router {
       match,
       requestMatches,
       manifest,
-      hasErrorBoundary,
+      detectErrorBoundary,
       router.basename
     );
 
@@ -1915,7 +1916,7 @@ export function createRouter(init: RouterInit): Router {
       match,
       matches,
       manifest,
-      hasErrorBoundary,
+      detectErrorBoundary,
       router.basename
     );
 
@@ -2115,7 +2116,7 @@ export function createRouter(init: RouterInit): Router {
           match,
           matches,
           manifest,
-          hasErrorBoundary,
+          detectErrorBoundary,
           router.basename
         )
       ),
@@ -2127,7 +2128,7 @@ export function createRouter(init: RouterInit): Router {
             f.match,
             f.matches,
             manifest,
-            hasErrorBoundary,
+            detectErrorBoundary,
             router.basename
           );
         } else {
@@ -2447,7 +2448,7 @@ export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
 
 export interface CreateStaticHandlerOptions {
   basename?: string;
-  hasErrorBoundary?: HasErrorBoundaryFunction;
+  detectErrorBoundary?: DetectErrorBoundaryFunction;
 }
 
 export function createStaticHandler(
@@ -2460,10 +2461,11 @@ export function createStaticHandler(
   );
 
   let manifest: RouteManifest = {};
-  let hasErrorBoundary = opts?.hasErrorBoundary || defaultHasErrorBoundary;
+  let detectErrorBoundary =
+    opts?.detectErrorBoundary || defaultDetectErrorBoundary;
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
-    hasErrorBoundary,
+    detectErrorBoundary,
     undefined,
     manifest
   );
@@ -2721,7 +2723,7 @@ export function createStaticHandler(
         actionMatch,
         matches,
         manifest,
-        hasErrorBoundary,
+        detectErrorBoundary,
         basename,
         true,
         isRouteRequest,
@@ -2889,7 +2891,7 @@ export function createStaticHandler(
           match,
           matches,
           manifest,
-          hasErrorBoundary,
+          detectErrorBoundary,
           basename,
           true,
           isRouteRequest,
@@ -3226,7 +3228,7 @@ function shouldRevalidateLoader(
  */
 async function loadLazyRouteModule(
   route: AgnosticDataRouteObject,
-  hasErrorBoundary: HasErrorBoundaryFunction,
+  detectErrorBoundary: DetectErrorBoundaryFunction,
   manifest: RouteManifest
 ) {
   if (!route.lazy) {
@@ -3281,7 +3283,7 @@ async function loadLazyRouteModule(
   }
 
   // Mutate the route with the provided updates.  Do this first so we pass
-  // the updated version to hasErrorBoundary
+  // the updated version to detectErrorBoundary
   Object.assign(routeToUpdate, routeUpdates);
 
   // Mutate the `hasErrorBoundary` property on the route based on the route
@@ -3289,9 +3291,9 @@ async function loadLazyRouteModule(
   // route again.
   Object.assign(routeToUpdate, {
     // To keep things framework agnostic, we use the provided
-    // `hasErrorBoundary` function to set the `hasErrorBoundary` route
+    // `detectErrorBoundary` function to set the `hasErrorBoundary` route
     // property since the logic will differ between frameworks.
-    hasErrorBoundary: hasErrorBoundary({ ...routeToUpdate }),
+    hasErrorBoundary: detectErrorBoundary({ ...routeToUpdate }),
     lazy: undefined,
   });
 }
@@ -3302,7 +3304,7 @@ async function callLoaderOrAction(
   match: AgnosticDataRouteMatch,
   matches: AgnosticDataRouteMatch[],
   manifest: RouteManifest,
-  hasErrorBoundary: HasErrorBoundaryFunction,
+  detectErrorBoundary: DetectErrorBoundaryFunction,
   basename = "/",
   isStaticRequest: boolean = false,
   isRouteRequest: boolean = false,
@@ -3316,7 +3318,7 @@ async function callLoaderOrAction(
   try {
     // Load any lazy route modules as part of the loader/action phase
     if (match.route.lazy) {
-      await loadLazyRouteModule(match.route, hasErrorBoundary, manifest);
+      await loadLazyRouteModule(match.route, detectErrorBoundary, manifest);
     } else {
       invariant<Function>(
         match.route[type],

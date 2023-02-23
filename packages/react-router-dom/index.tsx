@@ -209,7 +209,7 @@ export function createBrowserRouter(
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    hasErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
+    detectErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
   }).initialize();
 }
 
@@ -226,7 +226,9 @@ export function createHashRouter(
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    hasErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
+    // Note: this check also occurs in createRoutesFromChildren so update
+    // there if you change this
+    detectErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
   }).initialize();
 }
 

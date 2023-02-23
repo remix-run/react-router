@@ -206,11 +206,11 @@ function getStatelessNavigator() {
   };
 }
 
-let hasErrorBoundary = (route: RouteObject) => Boolean(route.errorElement);
+let detectErrorBoundary = (route: RouteObject) => Boolean(route.errorElement);
 
 type CreateStaticHandlerOptions = Omit<
   RouterCreateStaticHandlerOptions,
-  "hasErrorBoundary"
+  "detectErrorBoundary"
 >;
 
 export function createStaticHandler(
@@ -219,7 +219,7 @@ export function createStaticHandler(
 ) {
   return routerCreateStaticHandler(routes, {
     ...opts,
-    hasErrorBoundary,
+    detectErrorBoundary,
   });
 }
 
@@ -230,7 +230,7 @@ export function createStaticRouter(
   let manifest: UNSAFE_RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
-    hasErrorBoundary,
+    detectErrorBoundary,
     undefined,
     manifest
   );
