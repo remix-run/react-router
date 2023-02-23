@@ -16,7 +16,7 @@ import {
   UNSAFE_invariant as invariant,
   parsePath,
   stripBasename,
-  warning,
+  UNSAFE_warning as warning,
 } from "@remix-run/router";
 import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
@@ -246,6 +246,8 @@ export interface PathRouteProps {
   children?: React.ReactNode;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
+  Component?: React.FunctionComponent | null;
+  ErrorBoundary?: React.FunctionComponent | null;
 }
 
 export interface LayoutRouteProps extends PathRouteProps {}
@@ -264,6 +266,8 @@ export interface IndexRouteProps {
   children?: undefined;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
+  Component?: React.FunctionComponent | null;
+  ErrorBoundary?: React.FunctionComponent | null;
 }
 
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
@@ -588,12 +592,16 @@ export function createRoutesFromChildren(
       id: element.props.id || treePath.join("-"),
       caseSensitive: element.props.caseSensitive,
       element: element.props.element,
+      Component: element.props.Component,
       index: element.props.index,
       path: element.props.path,
       loader: element.props.loader,
       action: element.props.action,
       errorElement: element.props.errorElement,
-      hasErrorBoundary: element.props.errorElement != null,
+      ErrorBoundary: element.props.ErrorBoundary,
+      hasErrorBoundary:
+        element.props.ErrorBoundary != null ||
+        element.props.errorElement != null,
       shouldRevalidate: element.props.shouldRevalidate,
       handle: element.props.handle,
       lazy: element.props.lazy,

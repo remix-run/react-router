@@ -37,6 +37,7 @@ import {
   parsePath,
   redirect,
   resolvePath,
+  UNSAFE_warning as warning,
 } from "@remix-run/router";
 
 import type {
@@ -205,6 +206,29 @@ export {
   useRoutes,
 };
 
+function detectErrorBoundary(route: RouteObject) {
+  if (__DEV__) {
+    if (route.Component && route.element) {
+      warning(
+        false,
+        "You should not include `Component` and `element` on your route - " +
+          "`element` will be ignored."
+      );
+    }
+    if (route.ErrorBoundary && route.errorElement) {
+      warning(
+        false,
+        "You should not include `ErrorBoundary` and `errorElement` on your route - " +
+          "`errorElement` will be ignored."
+      );
+    }
+  }
+
+  // Note: this check also occurs in createRoutesFromChildren so update
+  // there if you change this
+  return Boolean(route.ErrorBoundary) || Boolean(route.errorElement);
+}
+
 export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
@@ -222,7 +246,7 @@ export function createMemoryRouter(
     }),
     hydrationData: opts?.hydrationData,
     routes,
-    detectErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
+    detectErrorBoundary,
   }).initialize();
 }
 
@@ -246,4 +270,5 @@ export {
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
+  detectErrorBoundary as UNSAFE_detectErrorBoundary,
 };

@@ -23,6 +23,7 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
+  UNSAFE_detectErrorBoundary as detectErrorBoundary,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -39,9 +40,10 @@ import {
   createRouter,
   createBrowserHistory,
   createHashHistory,
-  UNSAFE_invariant as invariant,
   joinPaths,
   ErrorResponse,
+  UNSAFE_invariant as invariant,
+  UNSAFE_warning as warning,
 } from "@remix-run/router";
 
 import type {
@@ -209,7 +211,7 @@ export function createBrowserRouter(
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    detectErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
+    detectErrorBoundary,
   }).initialize();
 }
 
@@ -226,9 +228,7 @@ export function createHashRouter(
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    // Note: this check also occurs in createRoutesFromChildren so update
-    // there if you change this
-    detectErrorBoundary: (route: RouteObject) => Boolean(route.errorElement),
+    detectErrorBoundary,
   }).initialize();
 }
 
@@ -1227,6 +1227,8 @@ function useScrollRestoration({
   }
 }
 
+export { useScrollRestoration as UNSAFE_useScrollRestoration };
+
 /**
  * Setup a callback to be fired on the window's `beforeunload` event. This is
  * useful for saving some data to `window.localStorage` just before the page
@@ -1303,27 +1305,3 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
 export { usePrompt as unstable_usePrompt };
 
 //#endregion
-
-////////////////////////////////////////////////////////////////////////////////
-//#region Utils
-////////////////////////////////////////////////////////////////////////////////
-
-function warning(cond: boolean, message: string): void {
-  if (!cond) {
-    // eslint-disable-next-line no-console
-    if (typeof console !== "undefined") console.warn(message);
-
-    try {
-      // Welcome to debugging React Router!
-      //
-      // This error is thrown as a convenience so you can more easily
-      // find the source for a warning that appears in the console by
-      // enabling "pause on exceptions" in your JavaScript debugger.
-      throw new Error(message);
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
-  }
-}
-//#endregion
-
-export { useScrollRestoration as UNSAFE_useScrollRestoration };

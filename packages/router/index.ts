@@ -41,7 +41,6 @@ export {
   resolvePath,
   resolveTo,
   stripBasename,
-  warning,
 } from "./utils";
 
 export type {
@@ -84,4 +83,7 @@ export {
   getPathContributingMatches as UNSAFE_getPathContributingMatches,
 } from "./utils";
 
-export { invariant as UNSAFE_invariant } from "./history";
+export {
+  invariant as UNSAFE_invariant,
+  warning as UNSAFE_warning,
+} from "./history";

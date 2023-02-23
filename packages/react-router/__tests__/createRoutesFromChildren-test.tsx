@@ -17,10 +17,14 @@ describe("creating routes from JSX", () => {
     ).toMatchInlineSnapshot(`
       [
         {
+          "Component": undefined,
+          "ErrorBoundary": undefined,
           "action": undefined,
           "caseSensitive": undefined,
           "children": [
             {
+              "Component": undefined,
+              "ErrorBoundary": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -37,6 +41,8 @@ describe("creating routes from JSX", () => {
               "shouldRevalidate": undefined,
             },
             {
+              "Component": undefined,
+              "ErrorBoundary": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -53,10 +59,14 @@ describe("creating routes from JSX", () => {
               "shouldRevalidate": undefined,
             },
             {
+              "Component": undefined,
+              "ErrorBoundary": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "children": [
                 {
+                  "Component": undefined,
+                  "ErrorBoundary": undefined,
                   "action": undefined,
                   "caseSensitive": undefined,
                   "element": <h1>
@@ -73,6 +83,8 @@ describe("creating routes from JSX", () => {
                   "shouldRevalidate": undefined,
                 },
                 {
+                  "Component": undefined,
+                  "ErrorBoundary": undefined,
                   "action": undefined,
                   "caseSensitive": undefined,
                   "element": <h1>
@@ -139,10 +151,14 @@ describe("creating routes from JSX", () => {
     ).toMatchInlineSnapshot(`
       [
         {
+          "Component": undefined,
+          "ErrorBoundary": undefined,
           "action": undefined,
           "caseSensitive": undefined,
           "children": [
             {
+              "Component": undefined,
+              "ErrorBoundary": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -159,10 +175,14 @@ describe("creating routes from JSX", () => {
               "shouldRevalidate": [Function],
             },
             {
+              "Component": undefined,
+              "ErrorBoundary": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "children": [
                 {
+                  "Component": undefined,
+                  "ErrorBoundary": undefined,
                   "action": [Function],
                   "caseSensitive": undefined,
                   "element": <h1>

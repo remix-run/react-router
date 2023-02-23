@@ -1533,9 +1533,9 @@ describe("<DataMemoryRouter>", () => {
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
-              errorElement
+              ErrorBoundary
             </code>
-             props on 
+             prop on 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
@@ -1648,9 +1648,9 @@ describe("<DataMemoryRouter>", () => {
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
-              errorElement
+              ErrorBoundary
             </code>
-             props on 
+             prop on 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
@@ -1893,9 +1893,9 @@ describe("<DataMemoryRouter>", () => {
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
-              errorElement
+              ErrorBoundary
             </code>
-             props on 
+             prop on 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
@@ -2077,9 +2077,9 @@ describe("<DataMemoryRouter>", () => {
               <code
                 style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
               >
-                errorElement
+                ErrorBoundary
               </code>
-               props on 
+               prop on 
               <code
                 style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
               >

@@ -5,6 +5,7 @@ import {
   createPath,
   invariant,
   parsePath,
+  warning,
 } from "./history";
 import type {
   DataResult,
@@ -37,7 +38,6 @@ import {
   joinPaths,
   matchRoutes,
   resolveTo,
-  warning,
 } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////

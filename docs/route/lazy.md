@@ -7,7 +7,7 @@ new: true
 
 In order to keep your application bundles small and support code-splitting of your routes, each route can provide an async function that resolves the non-route-matching portions of your route definition (`loader`, `action`, `element`, `errorElement`, etc.).
 
-Lazy routes are resolved on initial load and during the `loading` or `submitting` phase of a navigation or fetcher call. You cannot lazily define route-matching properties (`path`, `index`, `children`) since we only execute your lazy route functions after we've matched known routes.
+Lazy routes are resolved on initial load and during the `loading` or `submitting` phase of a navigation or fetcher call. You cannot lazily define route-matching properties (`path`, `index`, `children`, `caseSensitive`) since we only execute your lazy route functions after we've matched known routes.
 
 <docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
 
@@ -30,7 +30,7 @@ export async function loader({ request }) {
   return json(data);
 }
 
-function Component() {
+export function Component() {
   let data = useLoaderData();
 
   return (
@@ -41,9 +41,10 @@ function Component() {
   );
 }
 
-export const element = <Component />;
+// If you want to customize the component display name in react dev tools:
+Component.displayName = "SampleLazyRoute";
 
-function ErrorBoundary() {
+export function ErrorBoundary() {
   let error = useRouteError();
   return isRouteErrorResponse(error) ? (
     <h1>
@@ -54,7 +55,8 @@ function ErrorBoundary() {
   );
 }
 
-export const errorElement = <ErrorBoundary />;
+// If you want to customize the component display name in react dev tools:
+ErrorBoundary.displayName = "SampleErrorBoundary";
 ```
 
 [pickingarouter]: ../routers/picking-a-router

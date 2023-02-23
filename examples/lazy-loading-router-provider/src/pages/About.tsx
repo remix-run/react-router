@@ -6,7 +6,7 @@ export async function loader() {
   return "I came from the About.tsx loader function!";
 }
 
-function AboutPage() {
+export function Component() {
   let data = useLoaderData() as string;
 
   return (
@@ -17,4 +17,4 @@ function AboutPage() {
   );
 }
 
-export const element = <AboutPage />;
+Component.displayName = "AboutPage";
