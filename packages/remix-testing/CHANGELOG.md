@@ -1,5 +1,14 @@
 # `@remix-run/testing`
 
+## 1.14.0-pre.1
+
+### Patch Changes
+
+- Bump to latest router versions ([`09873cb02`](https://github.com/remix-run/remix/commit/09873cb029e384954aa83e7d78c4bc40f1a16e26))
+- Updated dependencies:
+  - `@remix-run/react@1.14.0-pre.1`
+  - `@remix-run/node@1.14.0-pre.1`
+
 ## 1.14.0-pre.0
 
 ### Patch Changes
