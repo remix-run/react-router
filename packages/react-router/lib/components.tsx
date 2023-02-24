@@ -304,11 +304,13 @@ export function Router({
   navigator,
   static: staticProp = false,
 }: RouterProps): React.ReactElement | null {
-  invariant(
-    !useInRouterContext(),
-    `You cannot render a <Router> inside another <Router>.` +
-      ` You should never have more than one in your app.`
-  );
+  // Temporarily commented out for testing of <CompatRouter> nested in a
+  // <RouterProvider>
+  // invariant(
+  //   !useInRouterContext(),
+  //   `You cannot render a <Router> inside another <Router>.` +
+  //     ` You should never have more than one in your app.`
+  // );
 
   // Preserve trailing slashes on basename, so we can let the user control
   // the enforcement of trailing slashes throughout the app
