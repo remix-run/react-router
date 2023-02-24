@@ -694,7 +694,7 @@ These params are most often used to find a record by ID. Let's try it out.
 
 👉 **Add a loader to the contact page and access data with `useLoaderData`**
 
-```jsx filename=src/routes/contact.jsx lines=[1,2,4-6,9]
+```jsx filename=src/routes/contact.jsx lines=[1,2,4-6,10]
 import { Form, useLoaderData } from "react-router-dom";
 import { getContact } from "../contacts";
 
