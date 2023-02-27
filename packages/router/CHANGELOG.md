@@ -1,17 +1,12 @@
 # `@remix-run/router`
 
-## 1.3.3-pre.1
+## 1.3.3
 
 ### Patch Changes
 
-- Correctly perform a "hard" redirect for same-origin absolute URLs outside of the router basename ([#10076](https://github.com/remix-run/react-router/pull/10076))
-
-## 1.3.3-pre.0
-
-### Patch Changes
-
-- Change `invariant` to an `UNSAFE_` export since it's only intended for internal use ([#10066](https://github.com/remix-run/react-router/pull/10066))
+- Correctly perform a hard redirect for same-origin absolute URLs outside of the router `basename` ([#10076](https://github.com/remix-run/react-router/pull/10076))
 - Ensure status code and headers are maintained for `defer` loader responses in `createStaticHandler`'s `query()` method ([#10077](https://github.com/remix-run/react-router/pull/10077))
+- Change `invariant` to an `UNSAFE_invariant` export since it's only intended for internal use ([#10066](https://github.com/remix-run/react-router/pull/10066))
 - Add internal API for custom HMR implementations ([#9996](https://github.com/remix-run/react-router/pull/9996))
 
 ## 1.3.2
