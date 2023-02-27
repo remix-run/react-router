@@ -48,37 +48,27 @@ test.beforeAll(async () => {
     ////////////////////////////////////////////////////////////////////////////
     files: {
       "app/routes/index.jsx": js`
-        import { redirect } from "@remix-run/node";
-        import { Form } from "@remix-run/react";
-        
-        export const action = async () => {
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        
-          return redirect("/test");
-        };
-        
-        export default function Index() {
-          return (
-            <div>
-              <h1>Scroll down to test</h1>
-        
-              <Form method="post" action="/?index" style={{ marginTop: "150vh" }}>
-                <h1>Test here</h1>
-                <button type="submit">test</button>
-              </Form>
-            </div>
-          );
-        }      
-      `,
+        import { json } from "@remix-run/node";
+        import { useLoaderData, Link } from "@remix-run/react";
 
-      "app/routes/test.jsx": js`
+        export function loader() {
+          return json("pizza");
+        }
+
         export default function Index() {
+          let data = useLoaderData();
           return (
             <div>
-              <h1>This is the top</h1>
-              <h1 style={{ marginTop: "150vh" }}>This is the bottom</h1>
+              {data}
+              <Link to="/burgers">Other Route</Link>
             </div>
           )
+        }
+      `,
+
+      "app/routes/burgers.jsx": js`
+        export default function Index() {
+          return <div>cheeseburger</div>;
         }
       `,
     },
@@ -97,22 +87,16 @@ test.afterAll(() => {
 // add a good description for what you expect Remix to do 👇🏽
 ////////////////////////////////////////////////////////////////////////////////
 
-test("page scroll should be at the top on the new page", async ({ page }) => {
+test("[description of what you expect it to do]", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
   // You can test any request your app might get using `fixture`.
   let response = await fixture.requestDocument("/");
-  expect(await response.text()).toMatch("Scroll down to test");
+  expect(await response.text()).toMatch("pizza");
 
   // If you need to test interactivity use the `app`
   await app.goto("/");
-  // scroll to the bottom
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  await app.clickSubmitButton("/?index");
-
-  expect(await app.getHtml()).toMatch("This is the bottom");
-
-  let newScrollY = await page.evaluate(() => window.scrollY);
-  expect(newScrollY).toBe(0);
+  await app.clickLink("/burgers");
+  expect(await app.getHtml()).toMatch("cheeseburger");
 
   // If you're not sure what's going on, you can "poke" the app, it'll
   // automatically open up in your browser for 20 seconds, so be quick!
