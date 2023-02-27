@@ -1,6 +1,7 @@
 import type * as express from "express";
 import * as React from "react";
 import ReactDOMServer from "react-dom/server";
+import { resolveLazyRoutes } from "@remix-run/router";
 import {
   createStaticHandler,
   createStaticRouter,
@@ -8,7 +9,11 @@ import {
 } from "react-router-dom/server";
 import { routes } from "./App";
 
+// Eagerly resolve all lazy routes on the server
+let loadedRoutesPromise = resolveLazyRoutes(routes);
+
 export async function render(request: express.Request) {
+  await loadedRoutesPromise;
   let { query, dataRoutes } = createStaticHandler(routes);
   let remixRequest = createFetchRequest(request);
   let context = await query(remixRequest);

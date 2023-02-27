@@ -2,12 +2,12 @@
   "name": "ssr-data-router",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development node server.js",
+    "dev": "cross-env NODE_ENV=development node server.mjs",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build --outDir dist/client --ssrManifest",
     "build:server": "vite build --ssr src/entry.server.tsx --outDir dist/server",
-    "start": "cross-env NODE_ENV=production node server.js",
-    "debug": "node --inspect-brk server.js"
+    "start": "cross-env NODE_ENV=production node server.mjs",
+    "debug": "node --inspect-brk server.mjs"
   },
   "dependencies": {
     "@remix-run/node": "^1.12.0",

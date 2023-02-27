@@ -1,7 +1,10 @@
-let path = require("path");
-let fsp = require("fs/promises");
-let express = require("express");
-let { installGlobals } = require("@remix-run/node");
+import * as path from "path";
+import * as fsp from "fs/promises";
+import express from "express";
+import { installGlobals } from "@remix-run/node";
+import compression from "compression";
+import * as url from "url";
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 // Polyfill Web Fetch API
 installGlobals();
@@ -21,36 +24,37 @@ async function createServer() {
   let vite;
 
   if (!isProduction) {
-    vite = await require("vite").createServer({
+    let mod = await import("vite");
+    vite = await mod.createServer({
       root,
       server: { middlewareMode: "ssr" },
     });
 
     app.use(vite.middlewares);
   } else {
-    app.use(require("compression")());
+    app.use(compression());
     app.use(express.static(resolve("dist/client")));
+  }
+
+  let render;
+  let template;
+
+  if (isProduction) {
+    template = await fsp.readFile(resolve("dist/client/index.html"), "utf8");
+    render = (await import("./dist/server/entry.server.mjs")).render;
   }
 
   app.use("*", async (req, res) => {
     let url = req.originalUrl;
 
     try {
-      let template;
-      let render;
-
       if (!isProduction) {
+        console.log("dev!");
         template = await fsp.readFile(resolve("index.html"), "utf8");
         template = await vite.transformIndexHtml(url, template);
         render = await vite
           .ssrLoadModule("src/entry.server.tsx")
           .then((m) => m.render);
-      } else {
-        template = await fsp.readFile(
-          resolve("dist/client/index.html"),
-          "utf8"
-        );
-        render = require(resolve("dist/server/entry.server.js")).render;
       }
 
       try {

@@ -11,6 +11,7 @@ import {
 import "@testing-library/jest-dom";
 
 import type { Router, RouterInit } from "@remix-run/router";
+import { resolveLazyRoutes } from "@remix-run/router";
 import {
   Form,
   Link,
@@ -4277,7 +4278,7 @@ function testDomRouter(
       });
 
       it("renders hydration errors on lazy leaf elements", async () => {
-        let router = await createTestRouter(
+        let router = createTestRouter(
           createRoutesFromElements(
             <Route path="/" element={<Comp />}>
               <Route
@@ -4303,7 +4304,80 @@ function testDomRouter(
               },
             },
           }
-        ).ready();
+        );
+
+        // Wait for lazy() to load
+        await new Promise((resolve) => {
+          let unsubscribe = router.subscribe((updatedState) => {
+            if (updatedState.initialized) {
+              unsubscribe();
+              resolve(router);
+            }
+          });
+        });
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Comp() {
+          let data = useLoaderData();
+          let actionData = useActionData();
+          let navigation = useNavigation();
+          return (
+            <div>
+              {data}
+              {actionData}
+              {navigation.state}
+              <Outlet />
+            </div>
+          );
+        }
+
+        function ErrorBoundary() {
+          let error = useRouteError();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              parent data
+              parent action
+              idle
+              <p>
+                Kaboom 💥
+              </p>
+            </div>
+          </div>"
+        `);
+      });
+
+      it("renders hydration errors on lazy leaf elements with preloading", async () => {
+        let routes = createRoutesFromElements(
+          <Route path="/" element={<Comp />}>
+            <Route
+              path="child"
+              lazy={async () => ({
+                element: <Comp />,
+                errorElement: <ErrorBoundary />,
+              })}
+            />
+          </Route>
+        );
+        let loadedRoutes = await resolveLazyRoutes(routes, "/child");
+        let router = createTestRouter(loadedRoutes, {
+          window: getWindow("/child"),
+          hydrationData: {
+            loaderData: {
+              "0": "parent data",
+            },
+            actionData: {
+              "0": "parent action",
+            },
+            errors: {
+              "0-0": new Error("Kaboom 💥"),
+            },
+          },
+        });
 
         let { container } = render(<RouterProvider router={router} />);
 
@@ -4387,7 +4461,7 @@ function testDomRouter(
       });
 
       it("renders hydration errors on lazy parent elements", async () => {
-        let router = await createTestRouter(
+        let router = createTestRouter(
           createRoutesFromElements(
             <Route
               path="/"
@@ -4409,7 +4483,17 @@ function testDomRouter(
               },
             },
           }
-        ).ready();
+        );
+
+        // Wait for lazy() to load
+        await new Promise((resolve) => {
+          let unsubscribe = router.subscribe((updatedState) => {
+            if (updatedState.initialized) {
+              unsubscribe();
+              resolve(router);
+            }
+          });
+        });
 
         let { container } = render(<RouterProvider router={router} />);
 

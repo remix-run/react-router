@@ -83,18 +83,6 @@ export interface Router {
   initialize(): Router;
 
   /**
-   * Returns a promise that resolves when the router has been initialized
-   * including any lazy-loaded route properties.  This is useful on the client
-   * after server-side rendering to ensure that the routes are ready to render
-   * since all elements and error boundaries have been resolved.
-   *
-   * TODO: Rename this and/or initialize()?  If we make initialize() async then
-   * the public router creation functions will become async too which is a
-   * breaking change.
-   */
-  ready(): Promise<Router>;
-
-  /**
    * @internal
    * PRIVATE - DO NOT USE
    *
@@ -901,32 +889,6 @@ export function createRouter(init: RouterInit): Router {
     });
 
     return router;
-  }
-
-  // Returns a promise that resolves when the router has been initialized
-  // including any lazy-loaded route properties.  This is useful on the client
-  // after server-side rendering to ensure that the routes are ready to render
-  // since all elements and error boundaries have been resolved.
-  //
-  // Implemented as a Fluent API for ease of: let router = await
-  //   createRouter(init).initialize().ready();
-  //
-  // TODO: Rename this and/or initialize()?  If we make initialize() async then
-  // the public router creation functions will become async too which is a
-  // breaking change.
-  function ready(): Promise<Router> {
-    return new Promise((resolve) => {
-      if (state.initialized) {
-        resolve(router);
-      } else {
-        let unsubscribe = subscribe((updatedState) => {
-          if (updatedState.initialized) {
-            unsubscribe();
-            resolve(router);
-          }
-        });
-      }
-    });
   }
 
   // Clean up a router and it's side effects
@@ -2414,7 +2376,6 @@ export function createRouter(init: RouterInit): Router {
       return dataRoutes;
     },
     initialize,
-    ready,
     subscribe,
     enableScrollRestoration,
     navigate,
@@ -3227,9 +3188,9 @@ function shouldRevalidateLoader(
  * with dataRoutes so those get updated as well.
  */
 async function loadLazyRouteModule(
-  route: AgnosticDataRouteObject,
-  detectErrorBoundary: DetectErrorBoundaryFunction,
-  manifest: RouteManifest
+  route: AgnosticRouteObject,
+  detectErrorBoundary?: DetectErrorBoundaryFunction,
+  manifest?: RouteManifest
 ) {
   if (!route.lazy) {
     return;
@@ -3244,8 +3205,11 @@ async function loadLazyRouteModule(
     return;
   }
 
-  let routeToUpdate = manifest[route.id];
-  invariant(routeToUpdate, "No route found in manifest");
+  let routeToUpdate = route;
+
+  if (typeof route.id === "string" && manifest && manifest[route.id]) {
+    routeToUpdate = manifest[route.id] as AgnosticRouteObject;
+  }
 
   // Update the route in place.  This should be safe because there's no way
   // we could yet be sitting on this route as we can't get there without
@@ -3290,11 +3254,13 @@ async function loadLazyRouteModule(
   // updates and remove the `lazy` function so we don't resolve the lazy
   // route again.
   Object.assign(routeToUpdate, {
+    lazy: undefined,
     // To keep things framework agnostic, we use the provided
     // `detectErrorBoundary` function to set the `hasErrorBoundary` route
     // property since the logic will differ between frameworks.
-    hasErrorBoundary: detectErrorBoundary({ ...routeToUpdate }),
-    lazy: undefined,
+    ...(detectErrorBoundary
+      ? { hasErrorBoundary: detectErrorBoundary({ ...routeToUpdate }) }
+      : null),
   });
 }
 
@@ -3988,5 +3954,40 @@ function getTargetMatch(
   // pathless layout routes)
   let pathMatches = getPathContributingMatches(matches);
   return pathMatches[pathMatches.length - 1];
+}
+
+// Utility function for users to preemptively run lazy() functions on their
+// routes before SSR or hydration
+export async function resolveLazyRoutes(
+  routes: AgnosticRouteObject[],
+  locationArg?: Partial<Location> | string,
+  basename = "/"
+): Promise<AgnosticRouteObject[]> {
+  async function recurse(
+    routes: AgnosticRouteObject[]
+  ): Promise<AgnosticRouteObject[]> {
+    for (let route of routes) {
+      if (route.children) {
+        await recurse(route.children);
+      }
+      if (route.lazy) {
+        await loadLazyRouteModule(route);
+      }
+    }
+    return routes;
+  }
+
+  if (locationArg) {
+    let matches = matchRoutes(routes, locationArg, basename);
+    if (matches) {
+      let matchedRoutes = matches.map((m) => m.route);
+      await recurse(matchedRoutes);
+      return routes;
+    } else {
+      return routes;
+    }
+  } else {
+    return recurse(routes);
+  }
 }
 //#endregion
