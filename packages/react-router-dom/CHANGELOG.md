@@ -4,47 +4,13 @@
 
 ### Patch Changes
 
-- Treat absolute/same-origin/different-basename <Link to> values as external ([#10135](https://github.com/remix-run/react-router/pull/10135))
+- Treat same-origin absolute URLs in `<Link to>` as external if they are outside of the router `basename` ([#10135](https://github.com/remix-run/react-router/pull/10135))
 - Fix `useBlocker` to return `IDLE_BLOCKER` during SSR ([#10046](https://github.com/remix-run/react-router/pull/10046))
-- Fix SSR of absolute Link urls ([#10112](https://github.com/remix-run/react-router/pull/10112))
+- Fix SSR of absolute `<Link to>` urls ([#10112](https://github.com/remix-run/react-router/pull/10112))
 - Properly escape HTML characters in `StaticRouterProvider` serialized hydration data ([#10068](https://github.com/remix-run/react-router/pull/10068))
 - Updated dependencies:
   - `@remix-run/router@1.3.3`
   - `react-router@6.8.2`
-
-## 6.8.2-pre.3
-
-### Patch Changes
-
-- Treat absolute/same-origin/different-basename <Link to> values as external ([#10135](https://github.com/remix-run/react-router/pull/10135))
-- Updated dependencies:
-  - `react-router@6.8.2-pre.3`
-
-## 6.8.2-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.3.3-pre.1`
-  - `react-router@6.8.2-pre.2`
-
-## 6.8.2-pre.1
-
-### Patch Changes
-
-- Fix SSR of absolute Link urls ([#10112](https://github.com/remix-run/react-router/pull/10112))
-- Updated dependencies:
-  - `react-router@6.8.2-pre.1`
-
-## 6.8.2-pre.0
-
-### Patch Changes
-
-- Fix `useBlocker` to return `IDLE_BLOCKER` during SSR ([#10046](https://github.com/remix-run/react-router/pull/10046))
-- Properly escape HTML characters in `StaticRouterProvider` serialized hydration data ([#10068](https://github.com/remix-run/react-router/pull/10068))
-- Updated dependencies:
-  - `@remix-run/router@1.3.3-pre.0`
-  - `react-router@6.8.2-pre.0`
 
 ## 6.8.1
 
