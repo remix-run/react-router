@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import type { StaticHandlerContext } from "@remix-run/router";
@@ -640,6 +644,44 @@ describe("A <StaticRouterProvider>", () => {
         },
       ]
     `);
+  });
+
+  it("renders absolute links correctly", async () => {
+    let routes = [
+      {
+        path: "/",
+        element: (
+          <>
+            <Link to="/the/path">relative path</Link>
+            <Link to="http://localhost/the/path">absolute same-origin url</Link>
+            <Link to="https://remix.run">absolute different-origin url</Link>
+            <Link to="mailto:foo@baz.com">absolute mailto: url</Link>
+          </>
+        ),
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+    expect(html).toMatch(
+      '<a href="/the/path">relative path</a>' +
+        '<a href="http://localhost/the/path">absolute same-origin url</a>' +
+        '<a href="https://remix.run">absolute different-origin url</a>' +
+        '<a href="mailto:foo@baz.com">absolute mailto: url</a>'
+    );
   });
 
   describe("boundary tracking", () => {

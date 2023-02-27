@@ -138,7 +138,6 @@ describe("A <Link> click", () => {
           <div>
             <h1>Home</h1>
             <Link
-              reloadDocument
               to="https://remix.run"
               onClick={(e) => {
                 handlerCalled = true;
@@ -157,6 +156,78 @@ describe("A <Link> click", () => {
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<h1>About</h1>} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      act(() => {
+        click(node.querySelector("a"));
+      });
+
+      expect(handlerCalled).toBe(true);
+      expect(defaultPrevented).toBe(false);
+    });
+  });
+
+  describe("when a same-origin/different-basename absolute URL is specified", () => {
+    it("does not prevent default", () => {
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to="http://localhost/not/base">About</Link>
+          </div>
+        );
+      }
+
+      act(() => {
+        ReactDOM.createRoot(node).render(
+          <MemoryRouter initialEntries={["/base/home"]} basename="/base">
+            <Routes>
+              <Route path="home" element={<Home />} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = node.querySelector("a");
+      expect(anchor).not.toBeNull();
+
+      let event: MouseEvent;
+      act(() => {
+        event = click(anchor);
+      });
+
+      expect(event.defaultPrevented).toBe(false);
+    });
+
+    it("calls provided listener", () => {
+      let handlerCalled;
+      let defaultPrevented;
+
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link
+              to="http://localhost/not/base"
+              onClick={(e) => {
+                handlerCalled = true;
+                defaultPrevented = e.defaultPrevented;
+              }}
+            >
+              About
+            </Link>
+          </div>
+        );
+      }
+
+      act(() => {
+        ReactDOM.createRoot(node).render(
+          <MemoryRouter initialEntries={["/base/home"]} basename="/base">
+            <Routes>
+              <Route path="home" element={<Home />} />
             </Routes>
           </MemoryRouter>
         );

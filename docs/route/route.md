@@ -149,7 +149,7 @@ You can make a route segment optional by adding a `?` to the end of the segment.
   path="/:lang?/categories"
   // the matching param might be available to the loader
   loader={({ params }) => {
-    console.log(params["*"]); // "one/two"
+    console.log(params["lang"]); // "en"
   }}
   // and the action
   action={({ params }) => {}}
@@ -327,7 +327,6 @@ Please see the [errorElement][errorelement] documentation for more details.
 
 Any application-specific data. Please see the [useMatches][usematches] documentation for details and examples.
 
-[outlet]: ./outlet
 [remix]: https://remix.run
 [indexroute]: ../start/concepts#index-routes
 [outlet]: ../components/outlet
