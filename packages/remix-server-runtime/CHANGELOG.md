@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.14.0-pre.2
+
+### Patch Changes
+
+- Bump to `@remix-run/router@1.3.3` and `react-router-dom@8.6.2` ([#5594](https://github.com/remix-run/remix/pull/5594))
+
 ## 1.14.0-pre.1
 
 ### Patch Changes
