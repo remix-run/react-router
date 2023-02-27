@@ -63,7 +63,6 @@ export {
   createPath,
   createHashHistory,
   createMemoryHistory,
-  invariant,
   parsePath,
 } from "./history";
 
@@ -82,3 +81,5 @@ export {
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
   getPathContributingMatches as UNSAFE_getPathContributingMatches,
 } from "./utils";
+
+export { invariant as UNSAFE_invariant } from "./history";

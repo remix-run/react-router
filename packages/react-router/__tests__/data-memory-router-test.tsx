@@ -821,7 +821,6 @@ describe("<DataMemoryRouter>", () => {
         initialEntries={["/foo"]}
         hydrationData={{
           loaderData: {
-            layout: null,
             foo: "FOO",
           },
         }}
@@ -861,7 +860,7 @@ describe("<DataMemoryRouter>", () => {
     }
 
     expect(spy).toHaveBeenCalledWith({
-      layout: null,
+      layout: undefined,
       foo: "FOO",
       bar: undefined,
       child: undefined,
@@ -896,7 +895,7 @@ describe("<DataMemoryRouter>", () => {
       </div>"
     `);
     expect(spy).toHaveBeenCalledWith({
-      layout: null,
+      layout: undefined,
       foo: undefined,
       bar: undefined,
       child: "CHILD",

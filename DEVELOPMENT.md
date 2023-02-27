@@ -63,4 +63,4 @@ Experimental releases and hot-fixes do not need to be branched off of `dev`. Exp
 - Make whatever changes you need and commit them: `git add . && git commit "experimental changes!"`
 - Update version numbers and create a release tag: `yarn run version:experimental`
 - Push to GitHub: `git push origin --follow-tags`
-- Create a new release for the tag on GitHub to trigger the CI workflow that will publish the release to npm
+- The CI workflow should automatically trigger from the experimental tag to publish the release to npm

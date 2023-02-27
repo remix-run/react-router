@@ -40,8 +40,9 @@ import {
   createRouter,
   createBrowserHistory,
   createHashHistory,
-  invariant,
+  UNSAFE_invariant as invariant,
   joinPaths,
+  stripBasename,
   ErrorResponse,
 } from "@remix-run/router";
 
@@ -400,6 +401,8 @@ const isBrowser =
   typeof window.document !== "undefined" &&
   typeof window.document.createElement !== "undefined";
 
+const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+
 /**
  * The public API for rendering a history-aware <a>.
  */
@@ -418,25 +421,30 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
+    let { basename } = React.useContext(NavigationContext);
+
     // Rendered into <a href> for absolute URLs
     let absoluteHref;
     let isExternal = false;
 
-    if (
-      isBrowser &&
-      typeof to === "string" &&
-      /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(to)
-    ) {
+    if (typeof to === "string" && ABSOLUTE_URL_REGEX.test(to)) {
+      // Render the absolute href server- and client-side
       absoluteHref = to;
-      let currentUrl = new URL(window.location.href);
-      let targetUrl = to.startsWith("//")
-        ? new URL(currentUrl.protocol + to)
-        : new URL(to);
-      if (targetUrl.origin === currentUrl.origin) {
-        // Strip the protocol/origin for same-origin absolute URLs
-        to = targetUrl.pathname + targetUrl.search + targetUrl.hash;
-      } else {
-        isExternal = true;
+
+      // Only check for external origins client-side
+      if (isBrowser) {
+        let currentUrl = new URL(window.location.href);
+        let targetUrl = to.startsWith("//")
+          ? new URL(currentUrl.protocol + to)
+          : new URL(to);
+        let path = stripBasename(targetUrl.pathname, basename);
+
+        if (targetUrl.origin === currentUrl.origin && path != null) {
+          // Strip the protocol/origin/basename for same-origin absolute URLs
+          to = path + targetUrl.search + targetUrl.hash;
+        } else {
+          isExternal = true;
+        }
       }
     }
 
