@@ -8,38 +8,6 @@
   - `react-router-dom@6.8.2`
   - `react-router@6.8.2`
 
-## 6.8.2-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router-dom@6.8.2-pre.3`
-  - `react-router@6.8.2-pre.3`
-
-## 6.8.2-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@6.8.2-pre.2`
-  - `react-router-dom@6.8.2-pre.2`
-
-## 6.8.2-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router-dom@6.8.2-pre.1`
-  - `react-router@6.8.2-pre.1`
-
-## 6.8.2-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router-dom@6.8.2-pre.0`
-  - `react-router@6.8.2-pre.0`
-
 ## 6.8.1
 
 ### Patch Changes
