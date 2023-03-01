@@ -1,86 +1,53 @@
 # `@remix-run/dev`
 
-## 1.14.0-pre.2
-
-### Patch Changes
-
-- chore(remix-dev): remove broken param collision check ([#5560](https://github.com/remix-run/remix/pull/5560))
-- Restore bug-report-test.ts (Can be removed from final release notes) ([#5590](https://github.com/remix-run/remix/pull/5590))
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.14.0-pre.2`
-
-## 1.14.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.14.0-pre.1`
-
-## 1.14.0-pre.0
+## 1.14.0
 
 ### Minor Changes
 
-- make `entry.client` and `entry.server` files optional ([#4600](https://github.com/remix-run/remix/pull/4600))
-
-  we'll use a bundled version of each unless you provide your own
-
 - Hot Module Replacement and Hot Data Revalidation ([#5259](https://github.com/remix-run/remix/pull/5259))
-
   - Requires `unstable_dev` future flag to be enabled
   - HMR provided through React Refresh
-
-  Features:
-
-  - HMR for component and style changes
-  - HDR when loaders for current route change
-
-  Known limitations for MVP:
-
-  - Only implemented for React via React Refresh
-  - No `import.meta.hot` API exposed yet
-  - Revalidates _all_ loaders on route when loader changes are detected
-  - Loader changes do not account for imported dependencies changing
+  - Features:
+    - HMR for component and style changes
+    - HDR when loaders for current route change
+  - Known limitations for MVP:
+    - Only implemented for React via React Refresh
+    - No `import.meta.hot` API exposed yet
+    - Revalidates _all_ loaders on route when loader changes are detected
+    - Loader changes do not account for imported dependencies changing
+- Make `entry.client` and `entry.server` files optional ([#4600](https://github.com/remix-run/remix/pull/4600))
+  - we'll use a bundled version of each unless you provide your own
 
 ### Patch Changes
 
-- fixes flat route inconsistencies where `route.{ext}` wasn't always being treated like `index.{ext}` when used in a folder ([#5459](https://github.com/remix-run/remix/pull/5459))
+- Fixes flat route inconsistencies where `route.{ext}` wasn't always being treated like `index.{ext}` when used in a folder ([#5459](https://github.com/remix-run/remix/pull/5459))
 
-  route conflict no longer throw errors and instead display a helpful warning that we're using the first one we found.
+  - Route conflict no longer throw errors and instead display a helpful warning that we're using the first one we found.
 
-  ```log
-  ⚠️ Route Path Collision: "/products/:pid"
+    ```log
+    ⚠️ Route Path Collision: "/dashboard"
 
-  The following routes all define the same URL, only the first one will be used
+    The following routes all define the same URL, only the first one will be used
 
-  🟢️️ routes/products.$pid.tsx
-  ⭕️️ routes/products.$productId.tsx
-  ```
+    🟢️️ routes/dashboard/route.tsx
+    ⭕️️ routes/dashboard.tsx
+    ```
 
-  ```log
-  ⚠️ Route Path Collision: "/dashboard"
+    ```log
+    ⚠️ Route Path Collision: "/"
 
-  The following routes all define the same URL, only the first one will be used
+    The following routes all define the same URL, only the first one will be used
 
-  🟢️️ routes/dashboard/route.tsx
-  ⭕️️ routes/dashboard.tsx
-  ```
-
-  ```log
-  ⚠️ Route Path Collision: "/"
-
-  The following routes all define the same URL, only the first one will be used
-
-  🟢️️ routes/_landing._index.tsx
-  ⭕️️ routes/_dashboard._index.tsx
-  ⭕️ routes/_index.tsx
-  ```
+    🟢️️ routes/_landing._index.tsx
+    ⭕️️ routes/_dashboard._index.tsx
+    ⭕️ routes/_index.tsx
+    ```
 
 - Log errors thrown during initial build in development. ([#5441](https://github.com/remix-run/remix/pull/5441))
-- sync `FutureConfig` interface between packages ([#5398](https://github.com/remix-run/remix/pull/5398))
+- Sync `FutureConfig` interface between packages ([#5398](https://github.com/remix-run/remix/pull/5398))
 - Add file loader for importing `.csv` files ([#3920](https://github.com/remix-run/remix/pull/3920))
 - Updated dependencies:
-  - `@remix-run/serve@1.14.0-pre.0`
-  - `@remix-run/server-runtime@1.14.0-pre.0`
+  - `@remix-run/server-runtime@1.14.0`
 
 ## 1.13.0
 
