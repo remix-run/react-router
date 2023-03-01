@@ -154,6 +154,8 @@ function LoginPage() {
 
     let formData = new FormData(event.currentTarget);
     let username = formData.get("username") as string;
+    
+    if(!username) alert('please enter a username');
 
     auth.signin(username, () => {
       // Send them back to the page they tried to visit when they were
