@@ -198,7 +198,7 @@ let router = createBrowserRouter(routes, {
   hydrationData: window.__hydrationData,
 });
 
-// ⚠️ At this point, the router has the data but not the route definition!
+// ⚠️ What if we're not initialized here!
 
 ReactDOM.hydrateRoot(
   document.getElementById("app")!,
@@ -208,7 +208,7 @@ ReactDOM.hydrateRoot(
 
 In the above example, we've server-rendered our `/` route and therefore we _don't_ want to render a `fallbackElement` since we already have the SSR'd content, and the router doesn't need to "initialize" because we've provided the data in `hydrationData`. However, if we're hydrating into a route that includes `lazy`, then we _do_ need to initialize that lazy route.
 
-The real solution for this is to do what Remix does and know your matched routes and preload their modules ahead of time and hydrate with synchronous route definitions. This is a non-trivial process through so it's not expected that every DIY SSR use-case will handle it. Instead, the router will not be initialized until any initially matched lazy routes are loaded, and therefore we can delay the hydration or our `RouterProvider` by waiting for `state.initialized`:
+The real solution for this is to do what Remix does and know your matched routes and preload their modules ahead of time and hydrate with synchronous route definitions. This is a non-trivial process through so it's not expected that every DIY SSR use-case will handle it. Instead, the router will not be initialized until any initially matched lazy routes are loaded, and therefore we need to delay the hydration or our `RouterProvider`:
 
 ```jsx
 if (!router.state.initialized) {
@@ -223,21 +223,11 @@ if (!router.state.initialized) {
 }
 ```
 
-We've also introduced a `resolveLazyRoutes` utility to help you load lazy route modules ahead of hydration:
+At the moment this is implemented in a new `ready()` API that we're still deciding if we'll keep or not:
 
-```jsx
-// Resolve routes in place and create the router/hydrate after
-resolveLazyRoutes(routes, window.location).then(() => {
-  let router = createBrowserRouter(routes);
-
-  ReactDOM.hydrateRoot(
-    document.getElementById("app")!,
-    <RouterProvider router={router} />
-  );
-});
+```js
+let router = await createBrowserRouter(routes).ready();
 ```
-
-The second parameter to `resolveLazyRoutes` is optional and will resolve _all_ routes if no location is passed. This can be useful to resolve lazy routes during SSR on server boot-up.
 
 ## Future Optimizations
 
