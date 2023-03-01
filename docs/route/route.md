@@ -62,6 +62,8 @@ const router = createBrowserRouter(
 
 Neither style is discouraged and behavior is identical. For the majority of this doc we will use the JSX style because that's what most people are accustomed to in the context of React Router.
 
+<docs-info>If you do not wish to specify a React element (i.e., `element={<MyComponent />}`) you may specify an `Component` instead (i.e., `Component={MyComponent}`) and React Router will call `createElement` for you internally.</docs-info>
+
 ## Type declaration
 
 ```tsx
@@ -74,7 +76,9 @@ interface RouteObject {
   loader?: LoaderFunction;
   action?: ActionFunction;
   element?: React.ReactNode | null;
+  Component?: React.FunctionComponent | null;
   errorElement?: React.ReactNode | null;
+  ErrorBoundary?: React.FunctionComponent | null;
   handle?: RouteObject["handle"];
   shouldRevalidate?: ShouldRevalidateFunction;
   lazy?: LazyRouteFunction<RouteObject>;
