@@ -334,7 +334,7 @@ Any application-specific data. Please see the [useMatches][usematches] documenta
 
 ## `lazy`
 
-In order to keep your application bundles small and support code-splitting of your routes, each route can provide an async function that resolves the non-route-matching portions of your route definition (`loader`, `action`, `element`, `errorElement`, etc.).
+In order to keep your application bundles small and support code-splitting of your routes, each route can provide an async function that resolves the non-route-matching portions of your route definition (`loader`, `action`, `Component`/`element`, `ErrorBoundary`/`errorElement`, etc.).
 
 Each `lazy` function will typically return the result of a dynamic import.
 
@@ -355,7 +355,7 @@ export async function loader({ request }) {
   return json(data);
 }
 
-function Component() {
+export function Component() {
   let data = useLoaderData();
 
   return (
@@ -365,8 +365,6 @@ function Component() {
     </>
   );
 }
-
-export const element = <Component />;
 ```
 
 <docs-warning>If you are not using a data router like [`createBrowserRouter`][createbrowserrouter], this will do nothing</docs-warning>
