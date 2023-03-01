@@ -8,11 +8,11 @@ Status: accepted
 
 In a data-aware React Router application (`<RouterProvider>`), the router needs to be aware of the route tree ahead of time so it can match routes and execute loaders/actions _prior_ to rendering the destination route. This is different than in non-data-aware React Router applications (`<BrowserRouter>`) where you could nest `<Routes>` sub-tree anywhere in your application, and compose together `<React.Suspense>` and `React.lazy()` to dynamically load "new" portions of your routing tree as the user navigated through the application. The downside of this approach in `BrowserRouter` is that it's a render-then-fetch cycle which produces network waterfalls and nested spinners, two things that we're aiming to eliminate in `RouterProvider` applications.
 
-There were ways to [manually code-split][manually-code-split] in a `RouterProvider` application but they can be a bit verbose and tedious to do manually. As a result of this DX, we received a [Remix Route Modules Proposal][proposal] from community along with a [POC implementation][poc] (thanks `@rossipedia` 🙌).
+There were ways to [manually code-split][manually-code-split] in a `RouterProvider` application but they can be a bit verbose and tedious to do manually. As a result of this DX, we received a [Remix Route Modules Proposal][proposal] from the community along with a [POC implementation][poc] (thanks `@rossipedia` 🙌).
 
 ## Original POC
 
-The original POC idea was to implement this in user-land where `element`/`errorElement` would be transformed into `React.Lazy()` calls and `loader`/`action` would load the module and then execute the `loader`/`action`:
+The original POC idea was to implement this in user-land where `element`/`errorElement` would be transformed into `React.lazy()` calls and `loader`/`action` would load the module and then execute the `loader`/`action`:
 
 ```js
 // Assuming route.module is a function returning a Remix-style route module

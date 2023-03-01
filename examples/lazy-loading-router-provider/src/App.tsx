@@ -18,20 +18,22 @@ const router = createBrowserRouter([
       },
       {
         path: "about",
+        // Single route in lazy file
         lazy: () => import("./pages/About"),
       },
       {
         path: "dashboard",
         async lazy() {
+          // Multiple routes in lazy file
           let { DashboardLayout } = await import("./pages/Dashboard");
-          return { element: <DashboardLayout /> };
+          return { Component: DashboardLayout };
         },
         children: [
           {
             index: true,
             async lazy() {
               let { DashboardIndex } = await import("./pages/Dashboard");
-              return { element: <DashboardIndex /> };
+              return { Component: DashboardIndex };
             },
           },
           {
@@ -42,7 +44,7 @@ const router = createBrowserRouter([
               );
               return {
                 loader: dashboardMessagesLoader,
-                element: <DashboardMessages />,
+                Component: DashboardMessages,
               };
             },
           },
