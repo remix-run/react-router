@@ -147,7 +147,7 @@ test.describe("redirects", () => {
         [`app/routes/loader/external.js`]: js`
           import { redirect } from "@remix-run/node";
           export const loader = () => {
-            return redirect("https://www.google.com/");
+            return redirect("https://remix.run/");
           }
         `,
       },
@@ -197,6 +197,6 @@ test.describe("redirects", () => {
     let app = new PlaywrightFixture(appFixture, page);
 
     await app.waitForNetworkAfter(() => app.goto("/loader/external"));
-    expect(app.page.url()).toBe("https://www.google.com/");
+    expect(app.page.url()).toBe("https://remix.run/");
   });
 });
