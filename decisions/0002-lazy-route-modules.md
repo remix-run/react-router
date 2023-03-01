@@ -198,7 +198,7 @@ let router = createBrowserRouter(routes, {
   hydrationData: window.__hydrationData,
 });
 
-// ⚠️ What if we're not initialized here!
+// ⚠️ At this point, the router has the data but not the route definition!
 
 ReactDOM.hydrateRoot(
   document.getElementById("app")!,
@@ -208,25 +208,43 @@ ReactDOM.hydrateRoot(
 
 In the above example, we've server-rendered our `/` route and therefore we _don't_ want to render a `fallbackElement` since we already have the SSR'd content, and the router doesn't need to "initialize" because we've provided the data in `hydrationData`. However, if we're hydrating into a route that includes `lazy`, then we _do_ need to initialize that lazy route.
 
-The real solution for this is to do what Remix does and know your matched routes and preload their modules ahead of time and hydrate with synchronous route definitions. This is a non-trivial process through so it's not expected that every DIY SSR use-case will handle it. Instead, the router will not be initialized until any initially matched lazy routes are loaded, and therefore we need to delay the hydration or our `RouterProvider`:
+The real solution for this is to do what Remix does and know your matched routes and preload their modules ahead of time and hydrate with synchronous route definitions. This is a non-trivial process through so it's not expected that every DIY SSR use-case will handle it. Instead, the router will not be initialized until any initially matched lazy routes are loaded, and therefore we need to delay the hydration or our `RouterProvider`. We can do this in one of two ways:
+
+**Option 1 - preemptively load lazy initial matches:**
+
+```jsx
+// Determine if any of the initial routes are lazy
+let lazyMatches = matchRoutes(routes, window.location)?.filter(
+  (m) => m.route.lazy
+);
+
+// Load the lazy matches and update the routes before creating your router
+// so we can hydrate the SSR-rendered content synchronously
+if (lazyMatches && lazyMatches?.length > 0) {
+  await Promise.all(
+    lazyMatches.map(async (m) => {
+      let routeModule = await m.route.lazy!();
+      Object.assign(m.route, { ...routeModule, lazy: undefined });
+    })
+  );
+}
+
+createRouterAndHydrate();
+```
+
+**Option 2 - Wait for router to load lazy initial matches and set `state.initialized=true`:**
 
 ```jsx
 if (!router.state.initialized) {
   let unsub = router.subscribe((state) => {
     if (state.initialized) {
       unsub();
-      hydrate();
+      createRouterAndHydrate();
     }
   });
 } else {
-  hydrate();
+  createRouterAndHydrate();
 }
-```
-
-At the moment this is implemented in a new `ready()` API that we're still deciding if we'll keep or not:
-
-```js
-let router = await createBrowserRouter(routes).ready();
 ```
 
 ## Future Optimizations

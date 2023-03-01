@@ -83,18 +83,6 @@ export interface Router {
   initialize(): Router;
 
   /**
-   * Returns a promise that resolves when the router has been initialized
-   * including any lazy-loaded route properties.  This is useful on the client
-   * after server-side rendering to ensure that the routes are ready to render
-   * since all elements and error boundaries have been resolved.
-   *
-   * TODO: Rename this and/or initialize()?  If we make initialize() async then
-   * the public router creation functions will become async too which is a
-   * breaking change.
-   */
-  ready(): Promise<Router>;
-
-  /**
    * @internal
    * PRIVATE - DO NOT USE
    *
@@ -901,32 +889,6 @@ export function createRouter(init: RouterInit): Router {
     });
 
     return router;
-  }
-
-  // Returns a promise that resolves when the router has been initialized
-  // including any lazy-loaded route properties.  This is useful on the client
-  // after server-side rendering to ensure that the routes are ready to render
-  // since all elements and error boundaries have been resolved.
-  //
-  // Implemented as a Fluent API for ease of: let router = await
-  //   createRouter(init).initialize().ready();
-  //
-  // TODO: Rename this and/or initialize()?  If we make initialize() async then
-  // the public router creation functions will become async too which is a
-  // breaking change.
-  function ready(): Promise<Router> {
-    return new Promise((resolve) => {
-      if (state.initialized) {
-        resolve(router);
-      } else {
-        let unsubscribe = subscribe((updatedState) => {
-          if (updatedState.initialized) {
-            unsubscribe();
-            resolve(router);
-          }
-        });
-      }
-    });
   }
 
   // Clean up a router and it's side effects
@@ -2414,7 +2376,6 @@ export function createRouter(init: RouterInit): Router {
       return dataRoutes;
     },
     initialize,
-    ready,
     subscribe,
     enableScrollRestoration,
     navigate,

@@ -20,6 +20,7 @@ import {
   createBrowserRouter,
   createHashRouter,
   isRouteErrorResponse,
+  matchRoutes,
   useLoaderData,
   useActionData,
   useRouteError,
@@ -87,6 +88,17 @@ function testDomRouter(
       window,
     });
     return <RouterProvider router={router} fallbackElement={fallbackElement} />;
+  }
+
+  async function waitForRouterInitialize(router) {
+    return await new Promise((resolve) => {
+      let unsubscribe = router.subscribe((updatedState) => {
+        if (updatedState.initialized) {
+          unsubscribe();
+          resolve(router);
+        }
+      });
+    });
   }
 
   describe(`Router: ${name}`, () => {
@@ -4277,7 +4289,7 @@ function testDomRouter(
       });
 
       it("renders hydration errors on lazy leaf elements", async () => {
-        let router = await createTestRouter(
+        let router = createTestRouter(
           createRoutesFromElements(
             <Route path="/" element={<Comp />}>
               <Route
@@ -4303,7 +4315,85 @@ function testDomRouter(
               },
             },
           }
-        ).ready();
+        );
+
+        await waitForRouterInitialize(router);
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Comp() {
+          let data = useLoaderData();
+          let actionData = useActionData();
+          let navigation = useNavigation();
+          return (
+            <div>
+              {data}
+              {actionData}
+              {navigation.state}
+              <Outlet />
+            </div>
+          );
+        }
+
+        function ErrorBoundary() {
+          let error = useRouteError();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              parent data
+              parent action
+              idle
+              <p>
+                Kaboom 💥
+              </p>
+            </div>
+          </div>"
+        `);
+      });
+
+      it("renders hydration errors on lazy leaf elements with preloading", async () => {
+        let routes = createRoutesFromElements(
+          <Route path="/" element={<Comp />}>
+            <Route
+              path="child"
+              lazy={async () => ({
+                element: <Comp />,
+                errorElement: <ErrorBoundary />,
+              })}
+            />
+          </Route>
+        );
+
+        let lazyMatches = matchRoutes(routes, { pathname: "/child" })?.filter(
+          (m) => m.route.lazy
+        );
+
+        if (lazyMatches && lazyMatches?.length > 0) {
+          await Promise.all(
+            lazyMatches.map(async (m) => {
+              let routeModule = await m.route.lazy!();
+              Object.assign(m.route, { ...routeModule, lazy: undefined });
+            })
+          );
+        }
+
+        let router = createTestRouter(routes, {
+          window: getWindow("/child"),
+          hydrationData: {
+            loaderData: {
+              "0": "parent data",
+            },
+            actionData: {
+              "0": "parent action",
+            },
+            errors: {
+              "0-0": new Error("Kaboom 💥"),
+            },
+          },
+        });
 
         let { container } = render(<RouterProvider router={router} />);
 
@@ -4387,7 +4477,7 @@ function testDomRouter(
       });
 
       it("renders hydration errors on lazy parent elements", async () => {
-        let router = await createTestRouter(
+        let router = createTestRouter(
           createRoutesFromElements(
             <Route
               path="/"
@@ -4409,7 +4499,17 @@ function testDomRouter(
               },
             },
           }
-        ).ready();
+        );
+
+        // Wait for lazy() to load
+        await new Promise((resolve) => {
+          let unsubscribe = router.subscribe((updatedState) => {
+            if (updatedState.initialized) {
+              unsubscribe();
+              resolve(router);
+            }
+          });
+        });
 
         let { container } = render(<RouterProvider router={router} />);
 
