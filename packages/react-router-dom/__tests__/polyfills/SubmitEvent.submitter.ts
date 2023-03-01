@@ -1,7 +1,8 @@
 // Polyfill jsdom SubmitEvent.submitter, until https://github.com/jsdom/jsdom/pull/3481 is merged
 if (
-  typeof SubmitEvent === "undefined" ||
-  !SubmitEvent.prototype.hasOwnProperty("submitter")
+  typeof window !== "undefined" &&
+  (typeof SubmitEvent === "undefined" ||
+    !SubmitEvent.prototype.hasOwnProperty("submitter"))
 ) {
   const setImmediate = (fn, ...args) => global.setTimeout(fn, 0, ...args);
 
