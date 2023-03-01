@@ -664,6 +664,8 @@ And the resulting element tree rendered will be:
 </PageLayout>
 ```
 
+Do not forget to add an `<Outlet>` to your layout where you would like the children to be rendered. Using `{children}` will not work as expected.
+
 The `PageLayout` route is admittedly weird. We call it a [layout route](#layout-route) because it doesn't participate in the matching at all (though its children do). It only exists to make wrapping multiple child routes in the same layout simpler. If we didn't allow this then you'd have to handle layouts in two different ways: sometimes your routes do it for you, sometimes you do it manually with lots of layout component repetition throughout your app:
 
 <docs-error>You can do it like this, but we recommend using a layout route</docs-error>
