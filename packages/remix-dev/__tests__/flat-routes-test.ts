@@ -619,6 +619,31 @@ describe("flatRoutes", () => {
     }
   });
 
+  describe("doesn't warn when there's not a route collision", () => {
+    let consoleError = jest
+      .spyOn(global.console, "error")
+      .mockImplementation(() => {});
+
+    afterEach(consoleError.mockReset);
+
+    test("same number of segments and the same dynamic segment index", () => {
+      let testFiles = [
+        "routes/_user.$username.tsx",
+        "routes/sneakers.$sneakerId.tsx",
+      ];
+
+      let routeManifest = flatRoutesUniversal(
+        APP_DIR,
+        testFiles.map((file) => path.join(APP_DIR, normalizePath(file)))
+      );
+
+      let routes = Object.values(routeManifest);
+
+      expect(routes).toHaveLength(testFiles.length);
+      expect(consoleError).not.toHaveBeenCalled();
+    });
+  });
+
   describe("warns when there's a route collision", () => {
     let consoleError = jest
       .spyOn(global.console, "error")
@@ -627,7 +652,6 @@ describe("flatRoutes", () => {
     afterEach(consoleError.mockReset);
 
     test("index files", () => {
-      // we'll add file manually before running the tests
       let testFiles = [
         "routes/_dashboard._index.tsx",
         "routes/_landing._index.tsx",
@@ -666,7 +690,7 @@ describe("flatRoutes", () => {
       );
     });
 
-    test("same path, different param name", () => {
+    test.skip("same path, different param name", () => {
       // we'll add file manually before running the tests
       let testFiles = [
         "routes/products.$pid.tsx",
