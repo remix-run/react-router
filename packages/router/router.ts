@@ -3320,8 +3320,9 @@ async function callLoaderOrAction(
             routeId: match.route.id,
           });
         } else {
-          // lazy() route has no loader to run
-          result = undefined;
+          // lazy() route has no loader to run.  Short circuit here so we don't
+          // hit the invariant below that errors on returning undefined.
+          return { type: ResultType.data, data: undefined };
         }
       }
     } else {
