@@ -11786,6 +11786,9 @@ describe("a router", () => {
         let A = await t.navigate("/lazy");
         expect(t.router.state.location.pathname).toBe("/");
         expect(t.router.state.navigation.state).toBe("loading");
+        // Execute in parallel
+        expect(A.loaders.lazy.stub).toHaveBeenCalled();
+        expect(A.lazy.lazy.stub).toHaveBeenCalled();
 
         let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
         await A.lazy.lazy.resolve({
@@ -11833,6 +11836,9 @@ describe("a router", () => {
         });
         expect(t.router.state.location.pathname).toBe("/");
         expect(t.router.state.navigation.state).toBe("submitting");
+        // Execute in parallel
+        expect(A.actions.lazy.stub).toHaveBeenCalled();
+        expect(A.lazy.lazy.stub).toHaveBeenCalled();
 
         let lazyActionStub = jest.fn(() => "LAZY ACTION");
         let loaderDfd = createDeferred();

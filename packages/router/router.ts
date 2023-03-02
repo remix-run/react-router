@@ -26,6 +26,8 @@ import type {
   ShouldRevalidateFunction,
   RouteManifest,
   ImmutableRouteKey,
+  ActionFunction,
+  LoaderFunction,
 } from "./utils";
 import {
   DeferredData,
@@ -3276,57 +3278,67 @@ async function callLoaderOrAction(
 ): Promise<DataResult> {
   let resultType;
   let result;
-
   let onReject: (() => void) | undefined;
 
-  try {
-    // Load any lazy route modules as part of the loader/action phase
-    if (match.route.lazy) {
-      await loadLazyRouteModule(match.route, detectErrorBoundary, manifest);
-    } else {
-      invariant<Function>(
-        match.route[type],
-        `Could not find the ${type} to run on the "${match.route.id}" route`
-      );
-    }
+  let runHandler = (handler: ActionFunction | LoaderFunction) => {
+    // Setup a promise we can race against so that abort signals short circuit
+    let reject: () => void;
+    let abortPromise = new Promise((_, r) => (reject = r));
+    onReject = () => reject();
+    request.signal.addEventListener("abort", onReject);
+    return Promise.race([
+      handler({ request, params: match.params, context: requestContext }),
+      abortPromise,
+    ]);
+  };
 
+  try {
     let handler = match.route[type];
-    if (!handler) {
-      if (type === "action") {
-        throw getInternalRouterError(405, {
-          method: request.method,
-          pathname: new URL(request.url).pathname,
-          routeId: match.route.id,
-        });
+
+    if (match.route.lazy) {
+      if (handler) {
+        // Run statically defined handler in parallel with lazy()
+        let values = await Promise.all([
+          runHandler(handler),
+          loadLazyRouteModule(match.route, detectErrorBoundary, manifest),
+        ]);
+        result = values[0];
       } else {
-        // lazy() route has no loader to run
-        result = undefined;
+        // Load lazy route module, then run any returned handler
+        await loadLazyRouteModule(match.route, detectErrorBoundary, manifest);
+
+        handler = match.route[type];
+        if (handler) {
+          // Handler still run even if we got interrupted to maintain consistency
+          // with un-abortable behavior of handler execution on non-lazy or
+          // previously-lazy-loaded routes
+          result = await runHandler(handler);
+        } else if (type === "action") {
+          throw getInternalRouterError(405, {
+            method: request.method,
+            pathname: new URL(request.url).pathname,
+            routeId: match.route.id,
+          });
+        } else {
+          // lazy() route has no loader to run
+          result = undefined;
+        }
       }
     } else {
-      // Setup a promise we can race against so that abort signals short circuit
-      let reject: () => void;
-      let abortPromise = new Promise((_, r) => (reject = r));
-      onReject = () => reject();
-      request.signal.addEventListener("abort", onReject);
-
-      // Still kick off handlers if we got interrupted to maintain consistency
-      // with un-abortable behavior of handler execution on non-lazy routes
-      result = await Promise.race([
-        handler({
-          request,
-          params: match.params,
-          context: requestContext,
-        }),
-        abortPromise,
-      ]);
-
-      invariant(
-        result !== undefined,
-        `You defined ${type === "action" ? "an action" : "a loader"} ` +
-          `for route "${match.route.id}" but didn't return anything from your ` +
-          `\`${type}\` function. Please return a value or \`null\`.`
+      invariant<Function>(
+        handler,
+        `Could not find the ${type} to run on the "${match.route.id}" route`
       );
+
+      result = await runHandler(handler);
     }
+
+    invariant(
+      result !== undefined,
+      `You defined ${type === "action" ? "an action" : "a loader"} for route ` +
+        `"${match.route.id}" but didn't return anything from your \`${type}\` ` +
+        `function. Please return a value or \`null\`.`
+    );
   } catch (e) {
     resultType = ResultType.error;
     result = e;
