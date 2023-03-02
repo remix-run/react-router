@@ -8,7 +8,7 @@ import {
   useParams,
 } from "react-router-dom";
 import type { LinkProps } from "react-router-dom";
-import VisuallyHidden from "@reach/visually-hidden";
+import { VisuallyHidden } from "@reach/visually-hidden";
 
 import { brands, filterByBrand, getSneakerById, SNEAKERS } from "./snkrs";
 
