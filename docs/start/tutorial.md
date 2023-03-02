@@ -757,7 +757,7 @@ Nothing we haven't seen before, feel free to copy/paste:
 import { Form, useLoaderData } from "react-router-dom";
 
 export default function EditContact() {
-  const contact = useLoaderData();
+  const { contact } = useLoaderData();
 
   return (
     <Form method="post" id="contact-form">
