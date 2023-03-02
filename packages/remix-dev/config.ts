@@ -13,6 +13,7 @@ import { serverBuildVirtualModule } from "./compiler/virtualModules";
 import { writeConfigDefaults } from "./compiler/utils/tsconfig/write-config-defaults";
 import { flatRoutes } from "./config/flat-routes";
 import { getPreferredPackageManager } from "./cli/getPreferredPackageManager";
+import { warnOnce } from "./compiler/warnings";
 
 export interface RemixMdxConfig {
   rehypePlugins?: any[];
@@ -396,6 +397,10 @@ export async function readConfig(
     }
   }
 
+  if (appConfig.serverBuildTarget) {
+    warnOnce(serverBuildTargetWarning, "v2_serverBuildTarget");
+  }
+
   let isCloudflareRuntime = ["cloudflare-pages", "cloudflare-workers"].includes(
     appConfig.serverBuildTarget ?? ""
   );
@@ -720,3 +725,5 @@ let listFormat = new Intl.ListFormat("en", {
   style: "long",
   type: "conjunction",
 });
+
+export let serverBuildTargetWarning = `The "serverBuildTarget" config option is deprecated. Use a combination of "publicPath", "serverBuildPath", "serverConditions", "serverDependenciesToBundle", "serverMainFields", "serverMinify", "serverModuleFormat" and/or "serverPlatform" instead.`;
