@@ -211,14 +211,14 @@ function detectErrorBoundary(route: RouteObject) {
     if (route.Component && route.element) {
       warning(
         false,
-        "You should not include `Component` and `element` on your route - " +
+        "You should not include both `Component` and `element` on your route - " +
           "`element` will be ignored."
       );
     }
     if (route.ErrorBoundary && route.errorElement) {
       warning(
         false,
-        "You should not include `ErrorBoundary` and `errorElement` on your route - " +
+        "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
           "`errorElement` will be ignored."
       );
     }
