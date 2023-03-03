@@ -88,16 +88,24 @@ function Component() { ... }
 
 Here's a few choices we made along the way:
 
-### Static Route Properties
+### Immutable Route Properties
 
 A route has 3 types of fields defined on it:
 
-- Path matching fields: `path`, `index`, `caseSensitive` and `children`
+- Path matching properties: `path`, `index`, `caseSensitive` and `children`
   - While not strictly used for matching, `id` is also considered static since it is needed up-front to uniquely identify all defined routes
-- Data loading fields: `loader`, `action`, `hasErrorBoundary`, `shouldRevalidate`
-- Rendering fields: `handle` and the framework-aware `element`/`errorElement`
+- Data loading properties: `loader`, `action`, `hasErrorBoundary`, `shouldRevalidate`
+- Rendering properties: `handle` and the framework-aware `element`/`errorElement`
 
-The `route.lazy()` method is focused on lazy-loading the data loading and rendering fields, but cannot update the path matching fields because we have to path match _first_ before we can even identify which matched routes include a `lazy()` function. Therefore, we do not allow path matching route keys to be updated by `lazy()`, and will log a warning if you return one of those fields from your lazy() method.
+The `route.lazy()` method is focused on lazy-loading the data loading and rendering properties, but cannot update the path matching properties because we have to path match _first_ before we can even identify which matched routes include a `lazy()` function. Therefore, we do not allow path matching route keys to be updated by `lazy()`, and will log a warning if you return one of those properties from your lazy() method.
+
+## Static Route Properties
+
+Similar to how you cannot override any immutable path-matching properties, you also cannot override any statically defined data-loading or rendering properties (and will log the a console warning if you attempt to). This allows you to statically define aspects that you don't need (or wish) to lazy load. Two potential use-cases her might be:
+
+1. Using a small statically-defined `loader`/`action` which just hits an API endpoint to load/submit data.
+   - In fact this is an interesting option we've optimized React Router to detect this and call any statically defined loader/action handlers in parallel with `lazy` (since `lazy` will be unable to update the `loader`/`action` anyway!). This will provide the ability to obtain the most-optimal parallelization of loading your component in parallel with your data fetches.
+2. Re-using a common statically-defined `ErrorBoundary` across multiple routes
 
 ### Addition of route `Component` and `ErrorBoundary` fields
 
@@ -208,9 +216,9 @@ ReactDOM.hydrateRoot(
 
 In the above example, we've server-rendered our `/` route and therefore we _don't_ want to render a `fallbackElement` since we already have the SSR'd content, and the router doesn't need to "initialize" because we've provided the data in `hydrationData`. However, if we're hydrating into a route that includes `lazy`, then we _do_ need to initialize that lazy route.
 
-The real solution for this is to do what Remix does and know your matched routes and preload their modules ahead of time and hydrate with synchronous route definitions. This is a non-trivial process through so it's not expected that every DIY SSR use-case will handle it. Instead, the router will not be initialized until any initially matched lazy routes are loaded, and therefore we need to delay the hydration or our `RouterProvider`. We can do this in one of two ways:
+The real solution for this is to do what Remix does and know your matched routes and preload their modules ahead of time and hydrate with synchronous route definitions. This is a non-trivial process through so it's not expected that every DIY SSR use-case will handle it. Instead, the router will not be initialized until any initially matched lazy routes are loaded, and therefore we need to delay the hydration or our `RouterProvider`.
 
-**Option 1 - preemptively load lazy initial matches:**
+The recommended way to do this is to manually match routes against the initial location and load/update any lazy routes before creating your router:
 
 ```jsx
 // Determine if any of the initial routes are lazy
@@ -220,7 +228,7 @@ let lazyMatches = matchRoutes(routes, window.location)?.filter(
 
 // Load the lazy matches and update the routes before creating your router
 // so we can hydrate the SSR-rendered content synchronously
-if (lazyMatches && lazyMatches?.length > 0) {
+if (lazyMatches && lazyMatches.length > 0) {
   await Promise.all(
     lazyMatches.map(async (m) => {
       let routeModule = await m.route.lazy!();
@@ -229,27 +237,13 @@ if (lazyMatches && lazyMatches?.length > 0) {
   );
 }
 
-createRouterAndHydrate();
+// Create router and hydrate
+let router = createBrowserRouter(routes)
+ReactDOM.hydrateRoot(
+  document.getElementById("app")!,
+  <RouterProvider router={router} fallbackElement={null} />
+);
 ```
-
-**Option 2 - Wait for router to load lazy initial matches and set `state.initialized=true`:**
-
-```jsx
-if (!router.state.initialized) {
-  let unsub = router.subscribe((state) => {
-    if (state.initialized) {
-      unsub();
-      createRouterAndHydrate();
-    }
-  });
-} else {
-  createRouterAndHydrate();
-}
-```
-
-## Future Optimizations
-
-Right now, `lazy()` and `loader()` execution are called sequentially _even if the loader is statically defined_. Eventually we will likely detect the statically-defined `loader` and call it in parallel with `lazy` (since lazy wil be unable to update the loader anyway!). This will provide the ability to obtain the most-optimal parallelization of loading your component in parallel with your loader fetches.
 
 [manually-code-split]: https://www.infoxicator.com/en/react-router-6-4-code-splitting
 [proposal]: https://github.com/remix-run/react-router/discussions/9826

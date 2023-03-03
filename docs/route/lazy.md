@@ -41,7 +41,7 @@ export function Component() {
   );
 }
 
-// If you want to customize the component display name in react dev tools:
+// If you want to customize the component display name in React dev tools:
 Component.displayName = "SampleLazyRoute";
 
 export function ErrorBoundary() {
@@ -55,7 +55,7 @@ export function ErrorBoundary() {
   );
 }
 
-// If you want to customize the component display name in react dev tools:
+// If you want to customize the component display name in React dev tools:
 ErrorBoundary.displayName = "SampleErrorBoundary";
 ```
 
