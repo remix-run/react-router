@@ -1,4 +1,5 @@
 ---
+"@remix-run/router": patch
 "react-router": patch
 ---
 
