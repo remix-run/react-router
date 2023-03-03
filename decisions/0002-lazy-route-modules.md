@@ -181,13 +181,13 @@ Additionally, since `lazy()` functions are intended to return a static definitio
 
 ### Error Handling
 
-If an error is thrown by `lazy()` we catch that in the same logic as iof the error was thrown by the `action`/`loader` and bubble it to the nearest `errorElement`.
+If an error is thrown by `lazy()` we catch that in the same logic as if the error was thrown by the `action`/`loader` and bubble it to the nearest `errorElement`.
 
 ## Consequences
 
-Not so much as a consequence, but more of limitation - we still require the routing tree up front-for the most efficient data-loading. This means that we can't _yet_ support quite the same nested `<Routes>` use-cases as before (particularly with respect to microfrontends), but we have ideas for how to solve tht as an extension of this concept in the future.
+Not so much as a consequence, but more of limitation - we still require the routing tree up-front for the most efficient data-loading. This means that we can't _yet_ support quite the same nested `<Routes>` use-cases as before (particularly with respect to microfrontends), but we have ideas for how to solve that as an extension of this concept in the future.
 
-Another slightly edge-case concept we discovered is that in DIY SSR applications using `createStaticHandler` and `StaticRouterProvider`, it's possible to server-render a lazy route and send up it's hydration data. But then we may _not_ have those routes loaded in our client-side hydration:
+Another slightly edge-case concept we discovered is that in DIY SSR applications using `createStaticHandler` and `StaticRouterProvider`, it's possible to server-render a lazy route and send up its hydration data. But then we may _not_ have those routes loaded in our client-side hydration:
 
 ```jsx
 const routes = [{
