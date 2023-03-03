@@ -217,7 +217,7 @@ type _PathParam<Path extends string> =
  */
 type PathParam<Path extends string> =
   // check if path is just a wildcard
-  Path extends "*"
+  Path extends "*" | "/*"
     ? "*"
     : // look for wildcard at the end of the path
     Path extends `${infer Rest}/*`
@@ -621,7 +621,7 @@ export function generatePath<Path extends string>(
     [key in PathParam<Path>]: string | null;
   } = {} as any
 ): string {
-  let path = originalPath;
+  let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
     warning(
       false,
@@ -633,49 +633,46 @@ export function generatePath<Path extends string>(
     path = path.replace(/\*$/, "/*") as Path;
   }
 
-  return (
-    path
-      .replace(
-        /^:(\w+)(\??)/g,
-        (_, key: PathParam<Path>, optional: string | undefined) => {
-          let param = params[key];
-          if (optional === "?") {
-            return param == null ? "" : param;
-          }
-          if (param == null) {
-            invariant(false, `Missing ":${key}" param`);
-          }
-          return param;
-        }
-      )
-      .replace(
-        /\/:(\w+)(\??)/g,
-        (_, key: PathParam<Path>, optional: string | undefined) => {
-          let param = params[key];
-          if (optional === "?") {
-            return param == null ? "" : `/${param}`;
-          }
-          if (param == null) {
-            invariant(false, `Missing ":${key}" param`);
-          }
-          return `/${param}`;
-        }
-      )
-      // Remove any optional markers from optional static segments
-      .replace(/\?/g, "")
-      .replace(/(\/?)\*/, (_, prefix, __, str) => {
-        const star = "*" as PathParam<Path>;
+  // ensure `/` is added at the beginning if the path is absolute
+  const prefix = path.startsWith("/") ? "/" : "";
 
-        if (params[star] == null) {
-          // If no splat was provided, trim the trailing slash _unless_ it's
-          // the entire path
-          return str === "/*" ? "/" : "";
-        }
+  const segments = path
+    .split(/\/+/)
+    .map((segment, index, array) => {
+      const isLastSegment = index === array.length - 1;
+
+      // only apply the splat if it's the last segment
+      if (isLastSegment && segment === "*") {
+        const star = "*" as PathParam<Path>;
+        const starParam = params[star];
 
         // Apply the splat
-        return `${prefix}${params[star]}`;
-      })
-  );
+        return starParam;
+      }
+
+      const keyMatch = segment.match(/^:(\w+)(\??)$/);
+      if (keyMatch) {
+        const [, key, optional] = keyMatch;
+        let param = params[key as PathParam<Path>];
+
+        if (optional === "?") {
+          return param == null ? "" : param;
+        }
+
+        if (param == null) {
+          invariant(false, `Missing ":${key}" param`);
+        }
+
+        return param;
+      }
+
+      // Remove any optional markers from optional static segments
+      return segment.replace(/\?$/g, "");
+    })
+    // Remove empty segments
+    .filter((segment) => !!segment);
+
+  return prefix + segments.join("/");
 }
 
 /**
