@@ -667,6 +667,7 @@ enum DataRouterHook {
 }
 
 enum DataRouterStateHook {
+  UseBlocker = "useBlocker",
   UseLoaderData = "useLoaderData",
   UseActionData = "useActionData",
   UseRouteError = "useRouteError",
@@ -841,6 +842,7 @@ let blockerId = 0;
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
+  let state = useDataRouterState(DataRouterStateHook.UseBlocker);
   let [blockerKey] = React.useState(() => String(++blockerId));
 
   let blockerFunction = React.useCallback<BlockerFunction>(
@@ -860,7 +862,9 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
     [router, blockerKey]
   );
 
-  return blocker;
+  // Prefer the blocker from state since DataRouterContext is memoized so this
+  // ensures we update on blocker state updates
+  return state.blockers.get(blockerKey) || blocker;
 }
 
 const alreadyWarned: Record<string, boolean> = {};
