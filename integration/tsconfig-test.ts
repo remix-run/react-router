@@ -91,6 +91,26 @@ test("shouldn't change suggested config if set", async () => {
   expect(tsconfig).toEqual(config);
 });
 
+test("shouldn't change suggested config for moduleResolution: bundler", async () => {
+  let config = {
+    ...DEFAULT_CONFIG,
+    compilerOptions: {
+      ...DEFAULT_CONFIG.compilerOptions,
+      strict: false,
+      moduleResolution: "bundler",
+    },
+  };
+
+  let fixture = await createFixture({
+    files: {
+      "tsconfig.json": json(config),
+    },
+  });
+
+  let tsconfig = await getTsConfig(fixture.projectDir);
+  expect(tsconfig).toEqual(config);
+});
+
 test("allows for `extends` in tsconfig", async () => {
   let config = {
     extends: "./tsconfig.base.json",

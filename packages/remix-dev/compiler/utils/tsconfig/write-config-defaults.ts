@@ -126,7 +126,7 @@ export function writeConfigDefaults(configPath: string) {
   }
 
   if (
-    !["node", "node16", "nodenext"].includes(
+    !["node", "node16", "nodenext", "bundler"].includes(
       fullConfig.compilerOptions.moduleResolution.toLowerCase()
     )
   ) {
