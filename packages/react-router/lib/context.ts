@@ -28,8 +28,8 @@ export interface IndexRouteObject {
   children?: undefined;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
-  Component?: React.FunctionComponent | null;
-  ErrorBoundary?: React.FunctionComponent | null;
+  Component?: React.ComponentType | null;
+  ErrorBoundary?: React.ComponentType | null;
   lazy?: LazyRouteFunction<IndexRouteObject>;
 }
 
@@ -46,8 +46,8 @@ export interface NonIndexRouteObject {
   children?: RouteObject[];
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
-  Component?: React.FunctionComponent | null;
-  ErrorBoundary?: React.FunctionComponent | null;
+  Component?: React.ComponentType | null;
+  ErrorBoundary?: React.ComponentType | null;
   lazy?: LazyRouteFunction<NonIndexRouteObject>;
 }
 

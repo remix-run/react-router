@@ -246,8 +246,8 @@ export interface PathRouteProps {
   children?: React.ReactNode;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
-  Component?: React.FunctionComponent | null;
-  ErrorBoundary?: React.FunctionComponent | null;
+  Component?: React.ComponentType | null;
+  ErrorBoundary?: React.ComponentType | null;
 }
 
 export interface LayoutRouteProps extends PathRouteProps {}
@@ -266,8 +266,8 @@ export interface IndexRouteProps {
   children?: undefined;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
-  Component?: React.FunctionComponent | null;
-  ErrorBoundary?: React.FunctionComponent | null;
+  Component?: React.ComponentType | null;
+  ErrorBoundary?: React.ComponentType | null;
 }
 
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
