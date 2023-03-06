@@ -14,6 +14,7 @@ let fixture = (options: { port: number; appServerPort: number }) => ({
       appServerPort: options.appServerPort,
     },
     unstable_tailwind: true,
+    v2_routeConvention: true,
   },
   files: {
     "package.json": `
@@ -124,7 +125,7 @@ let fixture = (options: { port: number; appServerPort: number }) => ({
           );
         }
       `,
-    "app/routes/index.tsx": `
+    "app/routes/_index.tsx": `
         import { useLoaderData } from "@remix-run/react";
         export default function Index() {
           const t = useLoaderData();
@@ -235,7 +236,7 @@ test("HMR", async ({ page }) => {
     await counter.click();
     await page.waitForSelector(`#root-counter:has-text("inc 1")`);
 
-    let indexPath = path.join(projectDir, "app", "routes", "index.tsx");
+    let indexPath = path.join(projectDir, "app", "routes", "_index.tsx");
     let originalIndex = fs.readFileSync(indexPath, "utf8");
     let counterPath = path.join(projectDir, "app", "components", "counter.tsx");
     let originalCounter = fs.readFileSync(counterPath, "utf8");

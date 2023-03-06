@@ -5,6 +5,7 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
 import { createFixtureProject } from "./helpers/create-fixture";
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
+import { flatRoutesWarning } from "../packages/remix-dev/config";
 
 let fixture: Fixture;
 let appFixture: AppFixture;
@@ -145,6 +146,51 @@ test.describe("flat routes", () => {
 </div>`);
     });
   }
+});
+
+test.describe("warns when v1 routesConvention is used", () => {
+  let buildStdio = new PassThrough();
+  let buildOutput: string;
+
+  let originalConsoleLog = console.log;
+  let originalConsoleWarn = console.warn;
+  let originalConsoleError = console.error;
+
+  test.beforeAll(async () => {
+    console.log = () => {};
+    console.warn = () => {};
+    console.error = () => {};
+    await createFixtureProject({
+      buildStdio,
+      files: {
+        "routes/index.tsx": js`
+          export default function () {
+            return <p>routes/index</p>;
+          }
+        `,
+      },
+    });
+
+    let chunks: Buffer[] = [];
+    buildOutput = await new Promise<string>((resolve, reject) => {
+      buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      buildStdio.on("error", (err) => reject(err));
+      buildStdio.on("end", () =>
+        resolve(Buffer.concat(chunks).toString("utf8"))
+      );
+    });
+  });
+
+  test.afterAll(() => {
+    console.log = originalConsoleLog;
+    console.warn = originalConsoleWarn;
+    console.error = originalConsoleError;
+  });
+
+  test("warns about conflicting routes", () => {
+    console.log(buildOutput);
+    expect(buildOutput).toContain(flatRoutesWarning);
+  });
 });
 
 test.describe("emits warnings for route conflicts", async () => {
