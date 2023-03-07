@@ -479,7 +479,6 @@ type FetcherStates<TData = any> = {
     formEncType: undefined;
     formData: undefined;
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
   Loading: {
     state: "loading";
@@ -488,7 +487,6 @@ type FetcherStates<TData = any> = {
     formEncType: FormEncType | undefined;
     formData: FormData | undefined;
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
   Submitting: {
     state: "submitting";
@@ -497,7 +495,6 @@ type FetcherStates<TData = any> = {
     formEncType: FormEncType;
     formData: FormData;
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
 };
 
@@ -1472,7 +1469,6 @@ export function createRouter(init: RouterInit): Router {
           formAction: undefined,
           formEncType: undefined,
           formData: undefined,
-          " _hasFetcherDoneAnything ": true,
         };
         state.fetchers.set(rf.key, revalidatingFetcher);
       });
@@ -1633,7 +1629,6 @@ export function createRouter(init: RouterInit): Router {
       state: "submitting",
       ...submission,
       data: existingFetcher && existingFetcher.data,
-      " _hasFetcherDoneAnything ": true,
     };
     state.fetchers.set(key, fetcher);
     updateState({ fetchers: new Map(state.fetchers) });
@@ -1674,14 +1669,11 @@ export function createRouter(init: RouterInit): Router {
         state: "loading",
         ...submission,
         data: undefined,
-        " _hasFetcherDoneAnything ": true,
       };
       state.fetchers.set(key, loadingFetcher);
       updateState({ fetchers: new Map(state.fetchers) });
 
-      return startRedirectNavigation(state, actionResult, {
-        isFetchActionRedirect: true,
-      });
+      return startRedirectNavigation(state, actionResult);
     }
 
     // Process any non-redirect errors thrown
@@ -1718,7 +1710,6 @@ export function createRouter(init: RouterInit): Router {
       state: "loading",
       data: actionResult.data,
       ...submission,
-      " _hasFetcherDoneAnything ": true,
     };
     state.fetchers.set(key, loadFetcher);
 
@@ -1753,7 +1744,6 @@ export function createRouter(init: RouterInit): Router {
           formAction: undefined,
           formEncType: undefined,
           formData: undefined,
-          " _hasFetcherDoneAnything ": true,
         };
         state.fetchers.set(staleKey, revalidatingFetcher);
         fetchControllers.set(staleKey, abortController);
@@ -1802,7 +1792,6 @@ export function createRouter(init: RouterInit): Router {
       formAction: undefined,
       formEncType: undefined,
       formData: undefined,
-      " _hasFetcherDoneAnything ": true,
     };
     state.fetchers.set(key, doneFetcher);
 
@@ -1861,7 +1850,6 @@ export function createRouter(init: RouterInit): Router {
       formData: undefined,
       ...submission,
       data: existingFetcher && existingFetcher.data,
-      " _hasFetcherDoneAnything ": true,
     };
     state.fetchers.set(key, loadingFetcher);
     updateState({ fetchers: new Map(state.fetchers) });
@@ -1937,7 +1925,6 @@ export function createRouter(init: RouterInit): Router {
       formAction: undefined,
       formEncType: undefined,
       formData: undefined,
-      " _hasFetcherDoneAnything ": true,
     };
     state.fetchers.set(key, doneFetcher);
     updateState({ fetchers: new Map(state.fetchers) });
@@ -1968,26 +1955,18 @@ export function createRouter(init: RouterInit): Router {
     {
       submission,
       replace,
-      isFetchActionRedirect,
     }: {
       submission?: Submission;
       replace?: boolean;
-      isFetchActionRedirect?: boolean;
     } = {}
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
     }
 
-    let redirectLocation = createLocation(
-      state.location,
-      redirect.location,
-      // TODO: This can be removed once we get rid of useTransition in Remix v2
-      {
-        _isRedirect: true,
-        ...(isFetchActionRedirect ? { _isFetchActionRedirect: true } : {}),
-      }
-    );
+    let redirectLocation = createLocation(state.location, redirect.location, {
+      _isRedirect: true,
+    });
     invariant(
       redirectLocation,
       "Expected a location on the redirect navigation"
@@ -2184,7 +2163,6 @@ export function createRouter(init: RouterInit): Router {
         formAction: undefined,
         formEncType: undefined,
         formData: undefined,
-        " _hasFetcherDoneAnything ": true,
       };
       state.fetchers.set(key, doneFetcher);
     }
@@ -3659,7 +3637,6 @@ function processLoaderData(
         formAction: undefined,
         formEncType: undefined,
         formData: undefined,
-        " _hasFetcherDoneAnything ": true,
       };
       state.fetchers.set(key, doneFetcher);
     }
