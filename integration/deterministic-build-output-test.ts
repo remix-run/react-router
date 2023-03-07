@@ -19,24 +19,21 @@ test("builds deterministically under different paths", async () => {
   //  * cssModulesPlugin (via app/routes/foo.tsx' CSS Modules import)
   //  * cssSideEffectImportsPlugin (via app/routes/foo.tsx' CSS side-effect import)
   //  * emptyModulesPlugin (via app/routes/foo.tsx' server import)
-  //  * mdx (via app/routes/index.mdx)
+  //  * mdx (via app/routes/_index.mdx)
   //  * serverAssetsManifestPlugin (implicitly tested by build)
   //  * serverEntryModulePlugin (implicitly tested by build)
   //  * serverRouteModulesPlugin (implicitly tested by build)
   //  * vanillaExtractPlugin (via app/routes/foo.tsx' .css.ts file import)
   let init = {
+    future: {
+      unstable_cssModules: true,
+      unstable_cssSideEffectImports: true,
+      unstable_postcss: true,
+      unstable_vanillaExtract: true,
+      v2_routeConvention: true,
+    },
     files: {
-      "remix.config.js": js`
-        module.exports = {
-          future: {
-            unstable_cssModules: true,
-            unstable_cssSideEffectImports: true,
-            unstable_postcss: true,
-            unstable_vanillaExtract: true,
-          },
-        };
-      `,
-      "app/routes/index.mdx": "# hello world",
+      "app/routes/_index.mdx": "# hello world",
       "app/routes/foo.tsx": js`
         export * from "~/foo/bar.server";
         import styles from "~/styles/foo.module.css";

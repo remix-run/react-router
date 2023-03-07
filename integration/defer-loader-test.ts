@@ -9,8 +9,9 @@ let appFixture: AppFixture;
 
 test.beforeAll(async () => {
   fixture = await createFixture({
+    future: { v2_routeConvention: true },
     files: {
-      "app/routes/index.jsx": js`
+      "app/routes/_index.jsx": js`
         import { useLoaderData, Link } from "@remix-run/react";
         export default function Index() {
           return (

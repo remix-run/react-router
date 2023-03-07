@@ -17,6 +17,7 @@ test.describe("useFetcher", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      future: { v2_routeConvention: true },
       files: {
         "app/routes/resource-route-action-only.ts": js`
           import { json } from "@remix-run/node";
@@ -56,7 +57,7 @@ test.describe("useFetcher", () => {
           }
         `,
 
-        "app/routes/index.jsx": js`
+        "app/routes/_index.jsx": js`
           import { useFetcher } from "@remix-run/react";
           export default function Index() {
             let fetcher = useFetcher();
@@ -101,7 +102,7 @@ test.describe("useFetcher", () => {
           }
         `,
 
-        "app/routes/parent/index.jsx": js`
+        "app/routes/parent._index.jsx": js`
           import { useFetcher } from "@remix-run/react";
 
           export function action() {

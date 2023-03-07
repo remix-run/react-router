@@ -13,15 +13,24 @@ test.describe("ErrorBoundary", () => {
   let ROOT_BOUNDARY_TEXT = "ROOT_BOUNDARY_TEXT";
   let OWN_BOUNDARY_TEXT = "OWN_BOUNDARY_TEXT";
 
-  let HAS_BOUNDARY_LOADER = "/yes/loader";
-  let HAS_BOUNDARY_ACTION = "/yes/action";
-  let HAS_BOUNDARY_RENDER = "/yes/render";
-  let HAS_BOUNDARY_NO_LOADER_OR_ACTION = "/yes/no-loader-or-action";
+  let HAS_BOUNDARY_LOADER = "/yes/loader" as const;
+  let HAS_BOUNDARY_LOADER_FILE = "/yes.loader" as const;
+  let HAS_BOUNDARY_ACTION = "/yes/action" as const;
+  let HAS_BOUNDARY_ACTION_FILE = "/yes.action" as const;
+  let HAS_BOUNDARY_RENDER = "/yes/render" as const;
+  let HAS_BOUNDARY_RENDER_FILE = "/yes.render" as const;
+  let HAS_BOUNDARY_NO_LOADER_OR_ACTION = "/yes/no-loader-or-action" as const;
+  let HAS_BOUNDARY_NO_LOADER_OR_ACTION_FILE =
+    "/yes.no-loader-or-action" as const;
 
-  let NO_BOUNDARY_ACTION = "/no/action";
-  let NO_BOUNDARY_LOADER = "/no/loader";
-  let NO_BOUNDARY_RENDER = "/no/render";
-  let NO_BOUNDARY_NO_LOADER_OR_ACTION = "/no/no-loader-or-action";
+  let NO_BOUNDARY_ACTION = "/no/action" as const;
+  let NO_BOUNDARY_ACTION_FILE = "/no.action" as const;
+  let NO_BOUNDARY_LOADER = "/no/loader" as const;
+  let NO_BOUNDARY_LOADER_FILE = "/no.loader" as const;
+  let NO_BOUNDARY_RENDER = "/no/render" as const;
+  let NO_BOUNDARY_RENDER_FILE = "/no.render" as const;
+  let NO_BOUNDARY_NO_LOADER_OR_ACTION = "/no/no-loader-or-action" as const;
+  let NO_BOUNDARY_NO_LOADER_OR_ACTION_FILE = "/no.no-loader-or-action" as const;
 
   let NOT_FOUND_HREF = "/not/found";
 
@@ -32,6 +41,7 @@ test.describe("ErrorBoundary", () => {
     _consoleError = console.error;
     console.error = () => {};
     fixture = await createFixture({
+      future: { v2_routeConvention: true },
       files: {
         "app/root.jsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
@@ -68,7 +78,7 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        "app/routes/index.jsx": js`
+        "app/routes/_index.jsx": js`
           import { Link, Form } from "@remix-run/react";
           export default function () {
             return (
@@ -107,7 +117,7 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        [`app/routes${HAS_BOUNDARY_ACTION}.jsx`]: js`
+        [`app/routes${HAS_BOUNDARY_ACTION_FILE}.jsx`]: js`
           import { Form } from "@remix-run/react";
           export async function action() {
             throw new Error("Kaboom!")
@@ -126,7 +136,7 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        [`app/routes${NO_BOUNDARY_ACTION}.jsx`]: js`
+        [`app/routes${NO_BOUNDARY_ACTION_FILE}.jsx`]: js`
           import { Form } from "@remix-run/react";
           export function action() {
             throw new Error("Kaboom!")
@@ -142,7 +152,7 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        [`app/routes${HAS_BOUNDARY_LOADER}.jsx`]: js`
+        [`app/routes${HAS_BOUNDARY_LOADER_FILE}.jsx`]: js`
           export function loader() {
             throw new Error("Kaboom!")
           }
@@ -154,7 +164,7 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        [`app/routes${NO_BOUNDARY_LOADER}.jsx`]: js`
+        [`app/routes${NO_BOUNDARY_LOADER_FILE}.jsx`]: js`
           export function loader() {
             throw new Error("Kaboom!")
           }
@@ -163,14 +173,14 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        [`app/routes${NO_BOUNDARY_RENDER}.jsx`]: js`
+        [`app/routes${NO_BOUNDARY_RENDER_FILE}.jsx`]: js`
           export default function () {
             throw new Error("Kaboom!")
             return <div/>
           }
         `,
 
-        [`app/routes${HAS_BOUNDARY_RENDER}.jsx`]: js`
+        [`app/routes${HAS_BOUNDARY_RENDER_FILE}.jsx`]: js`
           export default function () {
             throw new Error("Kaboom!")
             return <div/>
@@ -181,7 +191,7 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        [`app/routes${HAS_BOUNDARY_NO_LOADER_OR_ACTION}.jsx`]: js`
+        [`app/routes${HAS_BOUNDARY_NO_LOADER_OR_ACTION_FILE}.jsx`]: js`
           export function ErrorBoundary() {
             return <div id="boundary-no-loader-or-action">${OWN_BOUNDARY_TEXT}</div>
           }
@@ -190,7 +200,7 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        [`app/routes${NO_BOUNDARY_NO_LOADER_OR_ACTION}.jsx`]: js`
+        [`app/routes${NO_BOUNDARY_NO_LOADER_OR_ACTION_FILE}.jsx`]: js`
           export default function Index() {
             return <div/>
           }
@@ -248,7 +258,7 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        "app/routes/action/child-error.jsx": js`
+        "app/routes/action.child-error.jsx": js`
           import { Form, useLoaderData } from "@remix-run/react";
 
           export function loader() {
@@ -474,13 +484,16 @@ test.describe("ErrorBoundary", () => {
   });
 
   test.describe("if no error boundary exists in the app", () => {
-    let NO_ROOT_BOUNDARY_LOADER = "/loader-bad";
-    let NO_ROOT_BOUNDARY_ACTION = "/action-bad";
-    let NO_ROOT_BOUNDARY_LOADER_RETURN = "/loader-no-return";
-    let NO_ROOT_BOUNDARY_ACTION_RETURN = "/action-no-return";
+    let NO_ROOT_BOUNDARY_LOADER = "/loader-bad" as const;
+    let NO_ROOT_BOUNDARY_ACTION = "/action-bad" as const;
+    let NO_ROOT_BOUNDARY_LOADER_RETURN = "/loader-no-return" as const;
+    let NO_ROOT_BOUNDARY_ACTION_RETURN = "/action-no-return" as const;
 
     test.beforeAll(async () => {
       fixture = await createFixture({
+        future: {
+          v2_routeConvention: true,
+        },
         files: {
           "app/root.jsx": js`
             import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
@@ -501,7 +514,7 @@ test.describe("ErrorBoundary", () => {
             }
           `,
 
-          "app/routes/index.jsx": js`
+          "app/routes/_index.jsx": js`
             import { Link, Form } from "@remix-run/react";
 
             export default function () {
@@ -646,6 +659,7 @@ test.describe("loaderData in ErrorBoundary", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      future: { v2_routeConvention: true },
       files: {
         "app/root.jsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
@@ -697,7 +711,7 @@ test.describe("loaderData in ErrorBoundary", () => {
           }
         `,
 
-        "app/routes/parent/child-with-boundary.jsx": js`
+        "app/routes/parent.child-with-boundary.jsx": js`
           import { Form, useLoaderData } from "@remix-run/react";
 
           export function loader() {
@@ -731,7 +745,7 @@ test.describe("loaderData in ErrorBoundary", () => {
           }
         `,
 
-        "app/routes/parent/child-without-boundary.jsx": js`
+        "app/routes/parent.child-without-boundary.jsx": js`
           import { Form, useLoaderData } from "@remix-run/react";
 
           export function loader() {
@@ -824,7 +838,7 @@ test.describe("loaderData in ErrorBoundary", () => {
       // network error but firefox does not
       //   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
       let msg =
-        "You cannot `useLoaderData` in an errorElement (routeId: routes/parent/child-with-boundary)";
+        "You cannot `useLoaderData` in an errorElement (routeId: routes/parent.child-with-boundary)";
       if (javaScriptEnabled) {
         expect(consoleErrors.filter((m) => m === msg)).toEqual([msg]);
       } else {
@@ -946,7 +960,7 @@ test.describe("Default ErrorBoundary", () => {
         ${errorBoundaryCode}
       `,
 
-      "app/routes/index.jsx": js`
+      "app/routes/_index.jsx": js`
         import { Link } from "@remix-run/react";
         export default function () {
           return (
@@ -983,20 +997,21 @@ test.describe("Default ErrorBoundary", () => {
 
   test.afterAll(async () => {
     console.error = _consoleError;
-    await appFixture.close();
+    appFixture.close();
   });
 
   test.describe("When the root route does not have a boundary", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
+        future: {
+          v2_routeConvention: true,
+        },
         files: getFiles({ includeRootErrorBoundary: false }),
       });
       appFixture = await createAppFixture(fixture, ServerMode.Development);
     });
 
-    test.afterAll(async () => {
-      await appFixture.close();
-    });
+    test.afterAll(() => appFixture.close());
 
     test.describe("document requests", () => {
       test("renders default boundary on loader errors", async () => {
@@ -1059,14 +1074,15 @@ test.describe("Default ErrorBoundary", () => {
   test.describe("When the root route has a boundary", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
+        future: {
+          v2_routeConvention: true,
+        },
         files: getFiles({ includeRootErrorBoundary: true }),
       });
       appFixture = await createAppFixture(fixture, ServerMode.Development);
     });
 
-    test.afterAll(async () => {
-      await appFixture.close();
-    });
+    test.afterAll(() => appFixture.close());
 
     test.describe("document requests", () => {
       test("renders root boundary on loader errors", async () => {
@@ -1124,6 +1140,9 @@ test.describe("Default ErrorBoundary", () => {
   test.describe("When the root route has a boundary but it also throws 😦", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
+        future: {
+          v2_routeConvention: true,
+        },
         files: getFiles({
           includeRootErrorBoundary: true,
           rootErrorBoundaryThrows: true,
@@ -1132,9 +1151,7 @@ test.describe("Default ErrorBoundary", () => {
       appFixture = await createAppFixture(fixture, ServerMode.Development);
     });
 
-    test.afterAll(async () => {
-      await appFixture.close();
-    });
+    test.afterAll(() => appFixture.close());
 
     test.describe("document requests", () => {
       test("tries to render root boundary on loader errors but bubbles to default boundary", async () => {

@@ -7,12 +7,13 @@ let fixture: Fixture;
 
 test.beforeAll(async () => {
   fixture = await createFixture({
+    future: { v2_routeConvention: true },
     files: {
       "app/components/my-lib/index.ts": js`
         export const pizza = "this is a pizza";
       `,
 
-      "app/routes/index.tsx": js`
+      "app/routes/_index.tsx": js`
         import { pizza } from "@mylib";
         import { json } from "@remix-run/node";
         import { useLoaderData, Link } from "@remix-run/react";

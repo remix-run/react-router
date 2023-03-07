@@ -5,7 +5,7 @@ import path from "node:path";
 import type { Readable } from "node:stream";
 import getPort, { makeRange } from "get-port";
 
-import { createFixtureProject } from "./helpers/create-fixture";
+import { createFixtureProject, css, js, json } from "./helpers/create-fixture";
 
 let fixture = (options: { port: number; appServerPort: number }) => ({
   future: {
@@ -17,147 +17,152 @@ let fixture = (options: { port: number; appServerPort: number }) => ({
     v2_routeConvention: true,
   },
   files: {
-    "package.json": `
-        {
-          "private": true,
-          "sideEffects": false,
-          "scripts": {
-            "dev:remix": "cross-env NODE_ENV=development node ./node_modules/@remix-run/dev/dist/cli.js dev",
-            "dev:app": "cross-env NODE_ENV=development nodemon --watch build/ ./server.js"
-          },
-          "dependencies": {
-            "@remix-run/node": "0.0.0-local-version",
-            "@remix-run/react": "0.0.0-local-version",
-            "cross-env": "0.0.0-local-version",
-            "express": "0.0.0-local-version",
-            "isbot": "0.0.0-local-version",
-            "nodemon": "0.0.0-local-version",
-            "react": "0.0.0-local-version",
-            "react-dom": "0.0.0-local-version",
-            "tailwindcss": "0.0.0-local-version"
-          },
-          "devDependencies": {
-            "@remix-run/dev": "0.0.0-local-version",
-            "@types/react": "0.0.0-local-version",
-            "@types/react-dom": "0.0.0-local-version",
-            "typescript": "0.0.0-local-version"
-          },
-          "engines": {
-            "node": ">=14"
-          }
-        }
-      `,
-    "server.js": `
-        let path = require("path");
-        let express = require("express");
-        let { createRequestHandler } = require("@remix-run/express");
+    "package.json": json({
+      private: true,
+      sideEffects: false,
+      scripts: {
+        "dev:remix": `cross-env NODE_ENV=development node ./node_modules/@remix-run/dev/dist/cli.js dev`,
+        "dev:app": `cross-env NODE_ENV=development nodemon --watch build/ ./server.js`,
+      },
+      dependencies: {
+        "@remix-run/node": "0.0.0-local-version",
+        "@remix-run/react": "0.0.0-local-version",
+        "cross-env": "0.0.0-local-version",
+        express: "0.0.0-local-version",
+        isbot: "0.0.0-local-version",
+        nodemon: "0.0.0-local-version",
+        react: "0.0.0-local-version",
+        "react-dom": "0.0.0-local-version",
+        tailwindcss: "0.0.0-local-version",
+      },
+      devDependencies: {
+        "@remix-run/dev": "0.0.0-local-version",
+        "@types/react": "0.0.0-local-version",
+        "@types/react-dom": "0.0.0-local-version",
+        typescript: "0.0.0-local-version",
+      },
+      engines: {
+        node: ">=14",
+      },
+    }),
 
-        const app = express();
-        app.use(express.static("public", { immutable: true, maxAge: "1y" }));
+    "server.js": js`
+      let path = require("path");
+      let express = require("express");
+      let { createRequestHandler } = require("@remix-run/express");
 
-        const MODE = process.env.NODE_ENV;
-        const BUILD_DIR = path.join(process.cwd(), "build");
+      const app = express();
+      app.use(express.static("public", { immutable: true, maxAge: "1y" }));
 
-        app.all(
-          "*",
-          createRequestHandler({
-            build: require(BUILD_DIR),
-            mode: MODE,
-          })
+      const MODE = process.env.NODE_ENV;
+      const BUILD_DIR = path.join(process.cwd(), "build");
+
+      app.all(
+        "*",
+        createRequestHandler({
+          build: require(BUILD_DIR),
+          mode: MODE,
+        })
+      );
+
+      let port = ${options.appServerPort};
+      app.listen(port, () => {
+        require(BUILD_DIR);
+        console.log('✅ app ready: http://localhost:' + port);
+      });
+    `,
+
+    "tailwind.config.js": js`
+      /** @type {import('tailwindcss').Config} */
+      module.exports = {
+        content: ["./app/**/*.{ts,tsx,jsx,js}"],
+        theme: {
+          extend: {},
+        },
+        plugins: [],
+      };
+    `,
+
+    "app/tailwind.css": css`
+      @tailwind base;
+      @tailwind components;
+      @tailwind utilities;
+    `,
+
+    "app/root.tsx": js`
+      import type { LinksFunction } from "@remix-run/node";
+      import { Link, Links, LiveReload, Meta, Outlet, Scripts } from "@remix-run/react";
+
+      import Counter from "./components/counter";
+      import styles from "./tailwind.css";
+
+      export const links: LinksFunction = () => [
+        { rel: "stylesheet", href: styles },
+      ];
+
+      export default function Root() {
+        return (
+          <html lang="en" className="h-full">
+            <head>
+              <Meta />
+              <Links />
+            </head>
+            <body className="h-full">
+              <header>
+                <label htmlFor="root-input">Root Input</label>
+                <input id="root-input" />
+                <Counter id="root-counter" />
+                <nav>
+                  <ul>
+                    <li><Link to="/">Home</Link></li>
+                    <li><Link to="/about">About</Link></li>
+                  </ul>
+                </nav>
+              </header>
+              <Outlet />
+              <Scripts />
+              <LiveReload />
+            </body>
+          </html>
         );
+      }
+    `,
 
-        let port = ${options.appServerPort};
-        app.listen(port, () => {
-          require(BUILD_DIR);
-          console.log('✅ app ready: http://localhost:' + port);
-        });
-      `,
-    "tailwind.config.js": `
-        /** @type {import('tailwindcss').Config} */
-        module.exports = {
-          content: ["./app/**/*.{ts,tsx,jsx,js}"],
-          theme: {
-            extend: {},
-          },
-          plugins: [],
-        };
-      `,
-    "app/tailwind.css": `
-        @tailwind base;
-        @tailwind components;
-        @tailwind utilities;
-      `,
-    "app/root.tsx": `
-        import type { LinksFunction } from "@remix-run/node";
-        import { Link, Links, LiveReload, Meta, Outlet, Scripts } from "@remix-run/react";
+    "app/routes/_index.tsx": js`
+      import { useLoaderData } from "@remix-run/react";
+      export default function Index() {
+        const t = useLoaderData();
+        return (
+          <main>
+            <h1>Index Title</h1>
+          </main>
+        )
+      }
+    `,
 
-        import Counter from "./components/counter";
-        import styles from "./tailwind.css";
+    "app/routes/about.tsx": js`
+      import Counter from "../components/counter";
+      export default function About() {
+        return (
+          <main>
+            <h1>About Title</h1>
+            <Counter id="about-counter" />
+          </main>
+        )
+      }
+    `,
 
-        export const links: LinksFunction = () => [
-          { rel: "stylesheet", href: styles },
-        ];
-
-        export default function Root() {
-          return (
-            <html lang="en" className="h-full">
-              <head>
-                <Meta />
-                <Links />
-              </head>
-              <body className="h-full">
-                <header>
-                  <label htmlFor="root-input">Root Input</label>
-                  <input id="root-input" />
-                  <Counter id="root-counter" />
-                  <nav>
-                    <ul>
-                      <li><Link to="/">Home</Link></li>
-                      <li><Link to="/about">About</Link></li>
-                    </ul>
-                  </nav>
-                </header>
-                <Outlet />
-                <Scripts />
-                <LiveReload />
-              </body>
-            </html>
-          );
-        }
-      `,
-    "app/routes/_index.tsx": `
-        import { useLoaderData } from "@remix-run/react";
-        export default function Index() {
-          const t = useLoaderData();
-          return (
-            <main>
-              <h1>Index Title</h1>
-            </main>
-          )
-        }
-      `,
-    "app/routes/about.tsx": `
-        import Counter from "../components/counter";
-        export default function About() {
-          return (
-            <main>
-              <h1>About Title</h1>
-              <Counter id="about-counter" />
-            </main>
-          )
-        }
-      `,
-    "app/components/counter.tsx": `
-        import * as React from "react";
-        export default function Counter({ id }) {
-          let [count, setCount] = React.useState(0);
-          return (
-            <p>
-              <button id={id} onClick={() => setCount(count + 1)}>inc {count}</button>
-            </p>
-          );
-        }
-      `,
+    "app/components/counter.tsx": js`
+      import * as React from "react";
+      export default function Counter({ id }) {
+        let [count, setCount] = React.useState(0);
+        return (
+          <p>
+            <button id={id} onClick={() => setCount(count + 1)}>inc {count}</button>
+          </p>
+        );
+      }
+    `,
   },
 });
 

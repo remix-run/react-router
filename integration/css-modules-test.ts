@@ -19,20 +19,17 @@ test.describe("CSS Modules", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      future: {
+        v2_routeConvention: true,
+        // Enable all CSS future flags to
+        // ensure features don't clash
+        unstable_cssModules: true,
+        unstable_cssSideEffectImports: true,
+        unstable_postcss: true,
+        unstable_tailwind: true,
+        unstable_vanillaExtract: true,
+      },
       files: {
-        "remix.config.js": js`
-          module.exports = {
-            future: {
-              // Enable all CSS future flags to
-              // ensure features don't clash
-              unstable_cssModules: true,
-              unstable_cssSideEffectImports: true,
-              unstable_postcss: true,
-              unstable_tailwind: true,
-              unstable_vanillaExtract: true,
-            },
-          };
-        `,
         "app/root.jsx": js`
           import { Links, Outlet } from "@remix-run/react";
           import { cssBundleHref } from "@remix-run/css-bundle";
@@ -72,9 +69,7 @@ test.describe("CSS Modules", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
-  });
+  test.afterAll(() => appFixture.close());
 
   let basicStylesFixture = () => ({
     "app/routes/basic-styles-test.jsx": js`
@@ -550,7 +545,7 @@ test.describe("CSS Modules", () => {
       import { RemixBrowser } from "@remix-run/react";
       import { startTransition, StrictMode } from "react";
       import { hydrateRoot } from "react-dom/client";
-      import "./entry.client.module.css";      
+      import "./entry.client.module.css";
       const hydrate = () => {
         startTransition(() => {
           hydrateRoot(
@@ -560,14 +555,14 @@ test.describe("CSS Modules", () => {
             </StrictMode>
           );
         });
-      };      
+      };
       if (window.requestIdleCallback) {
         window.requestIdleCallback(hydrate);
       } else {
         // Safari doesn't support requestIdleCallback
         // https://caniuse.com/requestidlecallback
         window.setTimeout(hydrate, 1);
-      }        
+      }
     `,
     "app/entry.client.module.css": css`
       :global(.clientEntry) {

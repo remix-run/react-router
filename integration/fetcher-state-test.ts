@@ -19,6 +19,7 @@ test.describe("fetcher states", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      future: { v2_routeConvention: true },
       files: {
         "app/root.jsx": js`
           import { useMemo, useRef } from "react";
@@ -141,9 +142,7 @@ test.describe("fetcher states", () => {
     appFixture = await createAppFixture(fixture, ServerMode.Development);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
-  });
+  test.afterAll(() => appFixture.close());
 
   test("represents a initial fetcher", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);

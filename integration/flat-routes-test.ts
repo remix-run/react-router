@@ -162,6 +162,7 @@ test.describe("warns when v1 routesConvention is used", () => {
     console.error = () => {};
     await createFixtureProject({
       buildStdio,
+      future: { v2_routeConvention: false },
       files: {
         "routes/index.tsx": js`
           export default function () {

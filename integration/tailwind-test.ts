@@ -17,20 +17,17 @@ test.describe("Tailwind", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      future: {
+        v2_routeConvention: true,
+        // Enable all CSS future flags to
+        // ensure features don't clash
+        unstable_cssModules: true,
+        unstable_cssSideEffectImports: true,
+        unstable_postcss: true,
+        unstable_tailwind: true,
+        unstable_vanillaExtract: true,
+      },
       files: {
-        "remix.config.js": js`
-          module.exports = {
-            future: {
-              // Enable all CSS future flags to
-              // ensure features don't clash
-              unstable_cssModules: true,
-              unstable_cssSideEffectImports: true,
-              unstable_postcss: true,
-              unstable_tailwind: true,
-              unstable_vanillaExtract: true,
-            },
-          };
-        `,
         "tailwind.config.js": js`
           module.exports = {
             content: ["./app/**/*.{ts,tsx,jsx,js}"],
@@ -80,9 +77,7 @@ test.describe("Tailwind", () => {
     appFixture = await createAppFixture(fixture);
   });
 
-  test.afterAll(async () => {
-    await appFixture.close();
-  });
+  test.afterAll(() => appFixture.close());
 
   let basicUsageFixture = () => ({
     "app/routes/basic-usage-test.jsx": js`
@@ -108,7 +103,7 @@ test.describe("Tailwind", () => {
   let regularStylesSheetsFixture = () => ({
     "app/routes/regular-style-sheets-test.jsx": js`
       import { Test, links as testLinks } from "~/test-components/regular-style-sheets";
-    
+
       export function links() {
         return [...testLinks()];
       }

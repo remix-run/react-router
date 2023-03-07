@@ -9,6 +9,7 @@ let appFixture: AppFixture;
 
 test.beforeAll(async () => {
   fixture = await createFixture({
+    future: { v2_routeConvention: true },
     files: {
       "app/entry.server.jsx": js`
         import * as React from "react";
@@ -32,7 +33,7 @@ test.beforeAll(async () => {
           });
         }
       `,
-      "app/routes/index.jsx": js`
+      "app/routes/_index.jsx": js`
         export default function Index() {
           return <h1>Hello World</h1>
         }

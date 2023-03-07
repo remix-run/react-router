@@ -15,9 +15,10 @@ test.describe("mdx", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      future: { v2_routeConvention: true },
       files: {
         "app/root.jsx": js`
-        import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
             return (
@@ -51,7 +52,7 @@ test.describe("mdx", () => {
           }
         `,
 
-        "app/routes/blog/post.mdx": mdx`---
+        "app/routes/blog.post.mdx": mdx`---
 meta:
   title: My First Post
   description: Isn't this awesome?

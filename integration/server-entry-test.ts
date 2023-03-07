@@ -11,6 +11,7 @@ test.describe("Server Entry", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      future: { v2_routeConvention: true },
       files: {
         "app/entry.server.jsx": js`
           export default function handleRequest() {
@@ -23,7 +24,7 @@ test.describe("Server Entry", () => {
           }
         `,
 
-        "app/routes/index.jsx": js`
+        "app/routes/_index.jsx": js`
           export function loader() {
             return ""
           }
@@ -36,7 +37,7 @@ test.describe("Server Entry", () => {
   });
 
   test("can manipulate a data response", async () => {
-    let response = await fixture.requestData("/", "routes/index");
+    let response = await fixture.requestData("/", "routes/_index");
     expect(response.headers.get(DATA_HEADER_NAME)).toBe(DATA_HEADER_VALUE);
   });
 });

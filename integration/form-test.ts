@@ -49,6 +49,7 @@ test.describe("Forms", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      future: { v2_routeConvention: true },
       files: {
         "app/routes/get-submission.jsx": js`
           import { useLoaderData, Form } from "@remix-run/react";
@@ -184,7 +185,7 @@ test.describe("Forms", () => {
           }
         `,
 
-        "app/routes/blog/index.jsx": js`
+        "app/routes/blog._index.jsx": js`
           import { Form } from "@remix-run/react";
           export function action() {
             return { ok: true };
@@ -218,7 +219,7 @@ test.describe("Forms", () => {
           }
         `,
 
-        "app/routes/blog/$postId.jsx": js`
+        "app/routes/blog.$postId.jsx": js`
           import { Form } from "@remix-run/react";
           export default function() {
             return (
@@ -255,13 +256,13 @@ test.describe("Forms", () => {
           }
         `,
 
-        "app/routes/projects/index.jsx": js`
+        "app/routes/projects._index.jsx": js`
           export default function() {
             return <h2>All projects</h2>
           }
         `,
 
-        "app/routes/projects/$.jsx": js`
+        "app/routes/projects.$.jsx": js`
           import { Form } from "@remix-run/react";
           export default function() {
             return (
@@ -431,7 +432,7 @@ test.describe("Forms", () => {
           }
         `,
 
-        "app/routes/pathless-layout-parent/__pathless.jsx": js`
+        "app/routes/pathless-layout-parent._pathless.nested.jsx": js`
           import { Outlet } from '@remix-run/react';
 
           export default function () {
@@ -444,7 +445,7 @@ test.describe("Forms", () => {
           }
         `,
 
-        "app/routes/pathless-layout-parent/__pathless/index.jsx": js`
+        "app/routes/pathless-layout-parent._pathless.nested._index.jsx": js`
           export default function () {
             return <h3>Pathless Layout Index</h3>
           }
@@ -1064,7 +1065,7 @@ test.describe("Forms", () => {
       page,
     }) => {
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/pathless-layout-parent");
+      await app.goto("/pathless-layout-parent/nested");
       let html = await app.getHtml();
       expect(html).toMatch("Pathless Layout Parent");
       expect(html).toMatch("Pathless Layout ");

@@ -9,6 +9,7 @@ let appFixture: AppFixture;
 
 test.beforeAll(async () => {
   fixture = await createFixture({
+    future: { v2_routeConvention: true },
     files: {
       "app/routes/layout-action.jsx": js`
         import { json } from "@remix-run/node";
@@ -35,7 +36,7 @@ test.beforeAll(async () => {
         }
       `,
 
-      "app/routes/layout-action/index.jsx": js`
+      "app/routes/layout-action._index.jsx": js`
         import { json } from "@remix-run/node";
         import {
           useFetcher,
@@ -66,7 +67,7 @@ test.beforeAll(async () => {
         }
       `,
 
-      "app/routes/layout-action/$param.jsx": js`
+      "app/routes/layout-action.$param.jsx": js`
         import { json } from "@remix-run/node";
         import {
           useFetcher,
@@ -122,7 +123,7 @@ test.beforeAll(async () => {
         }
       `,
 
-      "app/routes/layout-loader/index.jsx": js`
+      "app/routes/layout-loader._index.jsx": js`
         import { json } from "@remix-run/node";
         import {
           useFetcher,
@@ -149,7 +150,7 @@ test.beforeAll(async () => {
         }
       `,
 
-      "app/routes/layout-loader/$param.jsx": js`
+      "app/routes/layout-loader.$param.jsx": js`
         import { json } from "@remix-run/node";
         import {
           useFetcher,

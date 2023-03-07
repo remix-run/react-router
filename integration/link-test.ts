@@ -32,6 +32,7 @@ test.describe("route module link export", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      future: { v2_routeConvention: true },
       files: {
         "app/favicon.ico": js``,
 
@@ -191,7 +192,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/index.jsx": js`
+        "app/routes/_index.jsx": js`
           import { useEffect } from "react";
           import { Link } from "@remix-run/react";
 
@@ -355,7 +356,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/gists/$username.jsx": js`
+        "app/routes/gists.$username.jsx": js`
           import { json, redirect } from "@remix-run/node";
           import { Link, useLoaderData, useParams } from "@remix-run/react";
           export async function loader({ params }) {
@@ -411,7 +412,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/gists/index.jsx": js`
+        "app/routes/gists._index.jsx": js`
           import { useLoaderData } from "@remix-run/react";
           export async function loader() {
             return ${JSON.stringify(fakeGists)};
@@ -452,7 +453,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/resources/theme-css.jsx": js`
+        "app/routes/resources.theme-css.jsx": js`
           import { redirect } from "@remix-run/node";
           export async function loader({ request }) {
             return new Response(":root { --nc-tx-1: #ffffff; --nc-tx-2: #eeeeee; }",

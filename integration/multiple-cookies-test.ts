@@ -10,8 +10,11 @@ test.describe("pathless layout routes", () => {
   test.beforeAll(async () => {
     appFixture = await createAppFixture(
       await createFixture({
+        future: {
+          v2_routeConvention: true,
+        },
         files: {
-          "app/routes/index.jsx": js`
+          "app/routes/_index.jsx": js`
             import { redirect, json } from "@remix-run/node";
             import { Form, useActionData } from "@remix-run/react";
 
