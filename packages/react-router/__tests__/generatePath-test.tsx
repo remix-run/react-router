@@ -56,6 +56,7 @@ describe("generatePath", () => {
   describe("with missing params", () => {
     it("throws an error", () => {
       expect(() => {
+        // @ts-expect-error - we're testing invalid usage
         generatePath("/:lang/login", {});
       }).toThrow(/Missing ":lang" param/);
     });
@@ -122,7 +123,9 @@ describe("generatePath", () => {
   });
 
   it("throws only on on missing named parameters, but not missing splat params", () => {
+    // @ts-expect-error - we're testing invalid usage
     expect(() => generatePath(":foo")).toThrow();
+    // @ts-expect-error - we're testing invalid usage
     expect(() => generatePath("/:foo")).toThrow();
     expect(() => generatePath("*")).not.toThrow();
     expect(() => generatePath("/*")).not.toThrow();

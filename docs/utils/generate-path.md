@@ -10,9 +10,9 @@ title: generatePath
 ```tsx
 declare function generatePath<Path extends string>(
   path: Path,
-  params?: {
-    [key in PathParams<Path>]: string;
-  }
+  ...routeParams: keyof Required<Path> extends never
+    ? [Optional<Path>?]
+    : [Optional<Path> & Required<Path>]
 ): string;
 ```
 

@@ -241,9 +241,7 @@ type _PathParam<Path extends string> =
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
     Path extends `:${infer Param}`
-    ? Param extends `${infer Optional}?`
-      ? `${Optional}?`
-      : Param
+    ? Param
     : // otherwise, there aren't any params present
       never;
 
@@ -287,7 +285,9 @@ type Required<Path extends string> = {
 // parsed string literals that were referenced as dynamic segments in the route.
 export type ParamParseKey<Segment extends string> =
   // if could not find path params, fallback to `string`
-  [PathParam<Segment>] extends [never] ? string : PathParam<Segment>;
+  [keyof Required<Segment> & Optional<Segment>] extends [never]
+    ? string
+    : keyof Required<Segment> & Optional<Segment>;
 
 /**
  * The parameters that were parsed from the URL path.
