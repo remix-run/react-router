@@ -51,18 +51,18 @@ Given what we learned from the original POC, we felt we could do this a bit lean
 
 This proved to work out quite well as we did our own POC so we went with this approach in the end. Now, any time we enter a `submitting`/`loading` state we first check for a `route.lazy` definition and resolve that promise first and update the internal route definition with the result.
 
-The resulting API looks like this, assuming you want to load your homepage in the main bundle, but lazily load the code for the `/about` route:
+The resulting API looks like this, assuming you want to load your homepage in the main bundle, but lazily load the code for the `/about` route. Note we're using the new `Component` API introduced along with this work.
 
 ```jsx
 // app.jsx
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout />,
+    Component: Layout,
     children: [
       {
         index: true,
-        element: <Home />,
+        Component: Home,
       },
       {
         path: "about",
@@ -79,9 +79,7 @@ And then your `about.jsx` file would export the properties to be lazily defined 
 // about.jsx
 export function loader() { ... }
 
-export const element = <Component />
-
-function Component() { ... }
+export function Component() { ... }
 ```
 
 ## Choices
@@ -95,7 +93,7 @@ A route has 3 types of fields defined on it:
 - Path matching properties: `path`, `index`, `caseSensitive` and `children`
   - While not strictly used for matching, `id` is also considered static since it is needed up-front to uniquely identify all defined routes
 - Data loading properties: `loader`, `action`, `hasErrorBoundary`, `shouldRevalidate`
-- Rendering properties: `handle` and the framework-aware `element`/`errorElement`
+- Rendering properties: `handle` and the framework-aware `element`/`errorElement`/`Component`/`ErrorBoundary`
 
 The `route.lazy()` method is focused on lazy-loading the data loading and rendering properties, but cannot update the path matching properties because we have to path match _first_ before we can even identify which matched routes include a `lazy()` function. Therefore, we do not allow path matching route keys to be updated by `lazy()`, and will log a warning if you return one of those properties from your lazy() method.
 
@@ -177,7 +175,7 @@ const routes = [
 ];
 ```
 
-So in the end, the work for `lazy()` introduced support for `route.Component` and `route.ErrorBoundary`, which can be statically or lazily defined. `element`/`errorElement` will be considered deprecated in data routers and may go away in version 7.
+So in the end, the work for `lazy()` introduced support for `route.Component` and `route.ErrorBoundary`, which can be statically or lazily defined. They will take precedence over `element`/`errorElement` if both happen to be defined, but for now both are acceptable ways to define routes. We think we'll be expanding the `Component` API in the future for stronger type-safety since we can pass it inferred-type `loaderData` etc. so in the future that _may_ become the preferred API.
 
 ### Interruptions
 

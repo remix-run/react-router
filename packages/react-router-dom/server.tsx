@@ -5,7 +5,7 @@ import type {
   Router as RemixRouter,
   StaticHandlerContext,
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
-  UNSAFE_RouteManifest,
+  UNSAFE_RouteManifest as RouteManifest,
 } from "@remix-run/router";
 import {
   IDLE_BLOCKER,
@@ -227,7 +227,7 @@ export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext
 ): RemixRouter {
-  let manifest: UNSAFE_RouteManifest = {};
+  let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
     detectErrorBoundary,

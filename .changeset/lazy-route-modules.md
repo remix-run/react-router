@@ -6,7 +6,7 @@
 
 **Introducing Lazy Route Modules!**
 
-In order to keep your application bundles small and support code-splitting of your routes, we've introduced a new `lazy()` route property. This is an async function that resolves the non-route-matching portions of your route definition (`loader`, `action`, `element`, `errorElement`, etc.). Additionally we've added support for route `Component` and `ErrorBoundary` fields that take precedence over `element`/`errorElement` and make a bit more sense in a statically-defined router as well as when using `route.lazy()`.
+In order to keep your application bundles small and support code-splitting of your routes, we've introduced a new `lazy()` route property. This is an async function that resolves the non-route-matching portions of your route definition (`loader`, `action`, `element`/`Component`, `errorElement`/`ErrorBoundary`, `shouldRevalidate`, `handle`).
 
 Lazy routes are resolved on initial load and during the `loading` or `submitting` phase of a navigation or fetcher call. You cannot lazily define route-matching properties (`path`, `index`, `children`) since we only execute your lazy route functions after we've matched known routes.
 
@@ -33,7 +33,7 @@ export async function loader({ request }) {
   return json(data);
 }
 
-// Export a `Component` directly instead of needing to create a React element from it
+// Export a `Component` directly instead of needing to create a React Element from it
 export function Component() {
   let data = useLoaderData();
 
@@ -45,6 +45,7 @@ export function Component() {
   );
 }
 
+// Export an `ErrorBoundary` directly instead of needing to create a React Element from it
 export function ErrorBoundary() {
   let error = useRouteError();
   return isRouteErrorResponse(error) ? (
