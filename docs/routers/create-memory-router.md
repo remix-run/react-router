@@ -5,7 +5,7 @@ new: true
 
 # `createMemoryRouter`
 
-Instead of using the browsers history a memory router manages it's own history stack in memory. It's primarily useful for testing and component development tools like Storybook, but can also be used for running React Router in any non-browser environment.
+Instead of using the browser's history, a memory router manages its own history stack in memory. It's primarily useful for testing and component development tools like Storybook, but can also be used for running React Router in any non-browser environment.
 
 ```jsx lines=[2-3,24-27]
 import {

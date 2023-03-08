@@ -207,6 +207,43 @@ When you decide you'd like to try the trade-offs of `defer`, we don't want you t
 
 So just keep this in mind: **Deferred is 100% only about the initial load of a route and its params.**
 
+### Why don't Response objects returned by the loader work anymore?
+
+When you use `defer`, you're telling React Router to load the page immediately, without the deferred data. The page is already loaded before the `Response` object is returned so responses are not automatically processed in the same way as if you had done `return fetch(url)`.
+
+Therefore, you will need to handle your own `Response` processing and resolve your deferred Promise with data, not a `Response` instance.
+
+```jsx
+async function loader({ request, params }) {
+  return defer({
+    // Broken! Resolves with a Response
+    // broken: fetch(url),
+
+    // Fixed! Resolves with the response data
+    data: fetch(url).then((res) => res.json()),
+  });
+}
+```
+
+Or consider the scenario where our deferred data could return a redirect `Response`. You can detect the redirect and send the status code and location back as data, and then you could perform a client-side redirect in your component via `useEffect` and `useNavigate`.
+
+```jsx
+async function loader({ request, params }) {
+  let data = fetch(url).then((res) => {
+    if (res.status == 301) {
+      return {
+        isRedirect: true,
+        status: res.status,
+        location: res.headers.get("Location"),
+      };
+    }
+    return res.json();
+  });
+
+  return defer({ data });
+}
+```
+
 [link]: ../components/link
 [usefetcher]: ../hooks/use-fetcher
 [defer response]: ../utils/defer
