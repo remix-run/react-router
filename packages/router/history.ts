@@ -481,7 +481,7 @@ export function invariant(value: any, message?: string) {
   }
 }
 
-function warning(cond: any, message: string) {
+export function warning(cond: any, message: string) {
   if (!cond) {
     // eslint-disable-next-line no-console
     if (typeof console !== "undefined") console.warn(message);

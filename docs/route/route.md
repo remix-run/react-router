@@ -62,6 +62,8 @@ const router = createBrowserRouter(
 
 Neither style is discouraged and behavior is identical. For the majority of this doc we will use the JSX style because that's what most people are accustomed to in the context of React Router.
 
+<docs-info>If you do not wish to specify a React element (i.e., `element={<MyComponent />}`) you may specify a `Component` instead (i.e., `Component={MyComponent}`) and React Router will call `createElement` for you internally.</docs-info>
+
 ## Type declaration
 
 ```tsx
@@ -74,9 +76,12 @@ interface RouteObject {
   loader?: LoaderFunction;
   action?: ActionFunction;
   element?: React.ReactNode | null;
+  Component?: React.ComponentType | null;
   errorElement?: React.ReactNode | null;
+  ErrorBoundary?: React.ComponentType | null;
   handle?: RouteObject["handle"];
   shouldRevalidate?: ShouldRevalidateFunction;
+  lazy?: LazyRouteFunction<RouteObject>;
 }
 ```
 
@@ -327,6 +332,45 @@ Please see the [errorElement][errorelement] documentation for more details.
 
 Any application-specific data. Please see the [useMatches][usematches] documentation for details and examples.
 
+## `lazy`
+
+In order to keep your application bundles small and support code-splitting of your routes, each route can provide an async function that resolves the non-route-matching portions of your route definition (`loader`, `action`, `Component`/`element`, `ErrorBoundary`/`errorElement`, etc.).
+
+Each `lazy` function will typically return the result of a dynamic import.
+
+```jsx
+let routes = createRoutesFromElements(
+  <Route path="/" element={<Layout />}>
+    <Route path="a" lazy={() => import("./a")} />
+    <Route path="b" lazy={() => import("./b")} />
+  </Route>
+);
+```
+
+Then in your lazy route modules, export the properties you want defined for the route:
+
+```jsx
+export async function loader({ request }) {
+  let data = await fetchData(request);
+  return json(data);
+}
+
+export function Component() {
+  let data = useLoaderData();
+
+  return (
+    <>
+      <h1>You made it!</h1>
+      <p>{data}</p>
+    </>
+  );
+}
+```
+
+<docs-warning>If you are not using a data router like [`createBrowserRouter`][createbrowserrouter], this will do nothing</docs-warning>
+
+Please see the [lazy][lazy] documentation for more details.
+
 [remix]: https://remix.run
 [indexroute]: ../start/concepts#index-routes
 [outlet]: ../components/outlet
@@ -340,3 +384,4 @@ Any application-specific data. Please see the [useMatches][usematches] documenta
 [createroutesfromelements]: ../utils/create-routes-from-elements
 [createbrowserrouter]: ../routers/create-browser-router
 [usematches]: ../hooks/use-matches
+[lazy]: ./lazy

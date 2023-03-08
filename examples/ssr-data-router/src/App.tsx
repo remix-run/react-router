@@ -1,7 +1,8 @@
 import * as React from "react";
+import type { RouteObject } from "react-router-dom";
 import { Outlet, Link, useLoaderData, redirect } from "react-router-dom";
 
-export const routes = [
+export const routes: RouteObject[] = [
   {
     path: "/",
     element: <Layout />,
@@ -19,6 +20,10 @@ export const routes = [
         path: "dashboard",
         loader: dashboardLoader,
         element: <Dashboard />,
+      },
+      {
+        path: "lazy",
+        lazy: () => import("./lazy"),
       },
       {
         path: "redirect",
@@ -71,6 +76,9 @@ function Layout() {
             <Link to="/dashboard">Dashboard</Link>
           </li>
           <li>
+            <Link to="/lazy">Lazy</Link>
+          </li>
+          <li>
             <Link to="/redirect">Redirect to Home</Link>
           </li>
           <li>
@@ -86,7 +94,7 @@ function Layout() {
   );
 }
 
-const sleep = () => new Promise((r) => setTimeout(r, 500));
+const sleep = (n = 500) => new Promise((r) => setTimeout(r, n));
 const rand = () => Math.round(Math.random() * 100);
 
 async function homeLoader() {

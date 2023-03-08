@@ -79,10 +79,26 @@ describe("<DataMemoryRouter>", () => {
     router = null;
   });
 
-  it("renders the first route that matches the URL", () => {
+  it("renders the first route that matches the URL (element)", () => {
     let { container } = render(
       <DataMemoryRouter initialEntries={["/"]} hydrationData={{}}>
         <Route path="/" element={<h1>Home</h1>} />
+      </DataMemoryRouter>
+    );
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Home
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("renders the first route that matches the URL (Component)", () => {
+    let { container } = render(
+      <DataMemoryRouter initialEntries={["/"]} hydrationData={{}}>
+        <Route path="/" Component={() => <h1>Home</h1>} />
       </DataMemoryRouter>
     );
 
@@ -1045,7 +1061,7 @@ describe("<DataMemoryRouter>", () => {
   });
 
   describe("errors", () => {
-    it("renders hydration errors on leaf elements", async () => {
+    it("renders hydration errors on leaf elements using errorElement", async () => {
       let { container } = render(
         <DataMemoryRouter
           initialEntries={["/child"]}
@@ -1088,6 +1104,60 @@ describe("<DataMemoryRouter>", () => {
       function ErrorBoundary() {
         let error = useRouteError();
         return <p>{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            parent data
+            parent action
+            idle
+            <p>
+              Kaboom 💥
+            </p>
+          </div>
+        </div>"
+      `);
+    });
+
+    it("renders hydration errors on leaf elements using ErrorBoundary", async () => {
+      let { container } = render(
+        <DataMemoryRouter
+          initialEntries={["/child"]}
+          hydrationData={{
+            loaderData: {
+              "0": "parent data",
+            },
+            actionData: {
+              "0": "parent action",
+            },
+            errors: {
+              "0-0": new Error("Kaboom 💥"),
+            },
+          }}
+        >
+          <Route path="/" element={<Comp />}>
+            <Route
+              path="child"
+              element={<Comp />}
+              ErrorBoundary={() => <p>{useRouteError()?.message}</p>}
+            />
+          </Route>
+        </DataMemoryRouter>
+      );
+
+      function Comp() {
+        let data = useLoaderData();
+        let actionData = useActionData();
+        let navigation = useNavigation();
+        return (
+          <div>
+            {data}
+            {actionData}
+            {navigation.state}
+            <Outlet />
+          </div>
+        );
       }
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -1150,7 +1220,7 @@ describe("<DataMemoryRouter>", () => {
       `);
     });
 
-    it("renders navigation errors on leaf elements", async () => {
+    it("renders navigation errors on leaf elements using errorElement", async () => {
       let fooDefer = createDeferred();
       let barDefer = createDeferred();
 
@@ -1177,6 +1247,146 @@ describe("<DataMemoryRouter>", () => {
               loader={() => barDefer.promise}
               element={<Bar />}
               errorElement={<BarError />}
+            />
+          </Route>
+        </DataMemoryRouter>
+      );
+
+      function Layout() {
+        let navigation = useNavigation();
+        return (
+          <div>
+            <MemoryNavigate to="/foo">Link to Foo</MemoryNavigate>
+            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <p>{navigation.state}</p>
+            <Outlet />
+          </div>
+        );
+      }
+
+      function Foo() {
+        let data = useLoaderData();
+        return <h1>Foo:{data?.message}</h1>;
+      }
+      function FooError() {
+        let error = useRouteError();
+        return <p>Foo Error:{error.message}</p>;
+      }
+      function Bar() {
+        let data = useLoaderData();
+        return <h1>Bar:{data?.message}</h1>;
+      }
+      function BarError() {
+        let error = useRouteError();
+        return <p>Bar Error:{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href="/foo"
+            >
+              Link to Foo
+            </a>
+            <a
+              href="/bar"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo:
+              hydrated from foo
+            </h1>
+          </div>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      barDefer.reject(new Error("Kaboom!"));
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href="/foo"
+            >
+              Link to Foo
+            </a>
+            <a
+              href="/bar"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <p>
+              Bar Error:
+              Kaboom!
+            </p>
+          </div>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Foo"));
+      fooDefer.reject(new Error("Kaboom!"));
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href="/foo"
+            >
+              Link to Foo
+            </a>
+            <a
+              href="/bar"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <p>
+              Foo Error:
+              Kaboom!
+            </p>
+          </div>
+        </div>"
+      `);
+    });
+
+    it("renders navigation errors on leaf elements using ErrorBoundary", async () => {
+      let fooDefer = createDeferred();
+      let barDefer = createDeferred();
+
+      let { container } = render(
+        <DataMemoryRouter
+          initialEntries={["/foo"]}
+          hydrationData={{
+            loaderData: {
+              "0-0": {
+                message: "hydrated from foo",
+              },
+            },
+          }}
+        >
+          <Route path="/" element={<Layout />}>
+            <Route
+              path="foo"
+              loader={() => fooDefer.promise}
+              element={<Foo />}
+              ErrorBoundary={FooError}
+            />
+            <Route
+              path="bar"
+              loader={() => barDefer.promise}
+              element={<Bar />}
+              ErrorBoundary={BarError}
             />
           </Route>
         </DataMemoryRouter>
@@ -1533,9 +1743,9 @@ describe("<DataMemoryRouter>", () => {
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
-              errorElement
+              ErrorBoundary
             </code>
-             props on 
+             prop on 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
@@ -1648,9 +1858,9 @@ describe("<DataMemoryRouter>", () => {
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
-              errorElement
+              ErrorBoundary
             </code>
-             props on 
+             prop on 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
@@ -1893,9 +2103,9 @@ describe("<DataMemoryRouter>", () => {
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
-              errorElement
+              ErrorBoundary
             </code>
-             props on 
+             prop on 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
@@ -2077,9 +2287,9 @@ describe("<DataMemoryRouter>", () => {
               <code
                 style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
               >
-                errorElement
+                ErrorBoundary
               </code>
-               props on 
+               prop on 
               <code
                 style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
               >

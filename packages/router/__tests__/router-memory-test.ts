@@ -35,6 +35,7 @@ describe("a memory router", () => {
           pathnameBase: "/",
           route: {
             id: "0",
+            hasErrorBoundary: false,
             path: "/",
           },
         },

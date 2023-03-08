@@ -20,6 +20,7 @@ import {
   createBrowserRouter,
   createHashRouter,
   isRouteErrorResponse,
+  matchRoutes,
   useLoaderData,
   useActionData,
   useRouteError,
@@ -87,6 +88,17 @@ function testDomRouter(
       window,
     });
     return <RouterProvider router={router} fallbackElement={fallbackElement} />;
+  }
+
+  async function waitForRouterInitialize(router) {
+    return await new Promise((resolve) => {
+      let unsubscribe = router.subscribe((updatedState) => {
+        if (updatedState.initialized) {
+          unsubscribe();
+          resolve(router);
+        }
+      });
+    });
   }
 
   describe(`Router: ${name}`, () => {
@@ -391,7 +403,62 @@ function testDomRouter(
       `);
     });
 
-    it("does not render fallbackElement if no data fetch is required", async () => {
+    it("renders fallbackElement while first data fetch and lazy route load happens", async () => {
+      let fooDefer = createDeferred();
+      let { container } = render(
+        <TestDataRouter
+          window={getWindow("/foo")}
+          fallbackElement={<FallbackElement />}
+        >
+          <Route path="/" element={<Outlet />}>
+            <Route
+              path="foo"
+              lazy={async () => {
+                return {
+                  loader: () => fooDefer.promise,
+                  element: <Foo />,
+                };
+              }}
+            />
+            <Route path="bar" element={<Bar />} />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function FallbackElement() {
+        return <p>Loading...</p>;
+      }
+
+      function Foo() {
+        let data = useLoaderData();
+        return <h1>Foo:{data?.message}</h1>;
+      }
+
+      function Bar() {
+        return <h1>Bar Heading</h1>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      fooDefer.resolve({ message: "From Lazy Foo Loader" });
+      await waitFor(() => screen.getByText("Foo:From Lazy Foo Loader"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <h1>
+            Foo:
+            From Lazy Foo Loader
+          </h1>
+        </div>"
+      `);
+    });
+
+    it("does not render fallbackElement if no data fetch or lazy loading is required", async () => {
       let fooDefer = createDeferred();
       let { container } = render(
         <TestDataRouter
@@ -557,6 +624,91 @@ function testDomRouter(
               path="bar"
               loader={() => barDefer.promise}
               element={<Bar />}
+            />
+          </Route>
+        </TestDataRouter>
+      );
+
+      function Layout() {
+        let navigation = useNavigation();
+        return (
+          <div>
+            <Link to="/bar">Link to Bar</Link>
+            <div id="output">
+              <p>{navigation.state}</p>
+              <Outlet />
+            </div>
+          </div>
+        );
+      }
+
+      function Foo() {
+        return <h1>Foo</h1>;
+      }
+      function Bar() {
+        let data = useLoaderData();
+        return <h1>{data?.message}</h1>;
+      }
+
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>"
+        `);
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              loading
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>"
+        `);
+
+      barDefer.resolve({ message: "Bar Loader" });
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Bar Loader
+            </h1>
+          </div>"
+        `);
+    });
+
+    it("executes lazy route loaders on navigation", async () => {
+      let barDefer = createDeferred();
+
+      let { container } = render(
+        <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<Foo />} />
+            <Route
+              path="bar"
+              lazy={async () => ({
+                loader: () => barDefer.promise,
+                element: <Bar />,
+              })}
             />
           </Route>
         </TestDataRouter>
@@ -825,6 +977,111 @@ function testDomRouter(
       `);
     });
 
+    it("executes lazy route actions/loaders on useSubmit navigations", async () => {
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
+
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route
+            path="/"
+            lazy={async () => ({
+              action: () => actionDefer.promise,
+              loader: () => loaderDefer.promise,
+              element: <Home />,
+            })}
+          />
+        </TestDataRouter>
+      );
+
+      function Home() {
+        let data = useLoaderData();
+        let actionData = useActionData();
+        let navigation = useNavigation();
+        let submit = useSubmit();
+        let formRef = React.useRef();
+        return (
+          <div>
+            <form method="post" action="/" ref={formRef}>
+              <input name="test" value="value" />
+            </form>
+            <button onClick={() => submit(formRef.current)}>Submit Form</button>
+            <div id="output">
+              <p>{navigation.state}</p>
+              <p>{data}</p>
+              <p>{actionData}</p>
+            </div>
+            <Outlet />
+          </div>
+        );
+      }
+
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p />
+          <p />
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      await waitFor(() => screen.getByText("submitting"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            submitting
+          </p>
+          <p />
+          <p />
+        </div>"
+      `);
+
+      actionDefer.resolve("Action Data");
+      await waitFor(() => screen.getByText("loading"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            loading
+          </p>
+          <p />
+          <p>
+            Action Data
+          </p>
+        </div>"
+      `);
+
+      loaderDefer.resolve("Loader Data");
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Loader Data
+          </p>
+          <p>
+            Action Data
+          </p>
+        </div>"
+      `);
+    });
+
     it("executes route loaders on <Form method=get> navigations", async () => {
       let loaderDefer = createDeferred();
       let actionDefer = createDeferred();
@@ -912,6 +1169,96 @@ function testDomRouter(
       `);
     });
 
+    it("executes lazy route loaders on <Form method=get> navigations", async () => {
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
+
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route
+            path="/"
+            lazy={async () => ({
+              action: () => actionDefer.promise,
+              loader: async ({ request }) => {
+                let resolvedValue = await loaderDefer.promise;
+                let urlParam = new URL(
+                  `https://remix.run${request.url}`
+                ).searchParams.get("test");
+                return `${resolvedValue}:${urlParam}`;
+              },
+              element: <Home />,
+            })}
+          />
+        </TestDataRouter>
+      );
+
+      function Home() {
+        let data = useLoaderData();
+        let actionData = useActionData();
+        let navigation = useNavigation();
+        return (
+          <div>
+            <Form method="get">
+              <input name="test" value="value" />
+              <button type="submit">Submit Form</button>
+            </Form>
+            <div id="output">
+              <p>{navigation.state}</p>
+              <p>{data}</p>
+              <p>{actionData}</p>
+            </div>
+            <Outlet />
+          </div>
+        );
+      }
+
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p />
+          <p />
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      await waitFor(() => screen.getByText("loading"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            loading
+          </p>
+          <p />
+          <p />
+        </div>"
+      `);
+
+      loaderDefer.resolve("Loader Data");
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Loader Data:value
+          </p>
+          <p />
+        </div>"
+      `);
+    });
+
     it("executes route actions/loaders on <Form method=post> navigations", async () => {
       let loaderDefer = createDeferred();
       let actionDefer = createDeferred();
@@ -951,6 +1298,113 @@ function testDomRouter(
         );
       }
 
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p />
+          <p />
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      await waitFor(() => screen.getByText("submitting"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            submitting
+          </p>
+          <p />
+          <p />
+        </div>"
+      `);
+
+      actionDefer.resolve("Action Data");
+      await waitFor(() => screen.getByText("loading"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            loading
+          </p>
+          <p />
+          <p>
+            Action Data:value
+          </p>
+        </div>"
+      `);
+
+      loaderDefer.resolve("Loader Data");
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Loader Data
+          </p>
+          <p>
+            Action Data:value
+          </p>
+        </div>"
+      `);
+    });
+
+    it("executes lazy route actions/loaders on <Form method=post> navigations", async () => {
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
+
+      let { container } = render(
+        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+          <Route
+            path="/"
+            lazy={async () => ({
+              action: async ({ request }) => {
+                let resolvedValue = await actionDefer.promise;
+                let formData = await request.formData();
+                return `${resolvedValue}:${formData.get("test")}`;
+              },
+              loader: () => loaderDefer.promise,
+              element: <Home />,
+            })}
+          />
+        </TestDataRouter>
+      );
+
+      function Home() {
+        let data = useLoaderData();
+        let actionData = useActionData();
+        let navigation = useNavigation();
+        return (
+          <div>
+            <Form method="post">
+              <input name="test" value="value" />
+              <button type="submit">Submit Form</button>
+            </Form>
+            <div id="output">
+              <p>{navigation.state}</p>
+              <p>{data}</p>
+              <p>{actionData}</p>
+            </div>
+            <Outlet />
+          </div>
+        );
+      }
+
+      await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container.querySelector("#output")))
         .toMatchInlineSnapshot(`
         "<div
@@ -3834,6 +4288,148 @@ function testDomRouter(
         `);
       });
 
+      it("renders hydration errors on lazy leaf elements", async () => {
+        let router = createTestRouter(
+          createRoutesFromElements(
+            <Route path="/" element={<Comp />}>
+              <Route
+                path="child"
+                lazy={async () => ({
+                  element: <Comp />,
+                  errorElement: <ErrorBoundary />,
+                })}
+              />
+            </Route>
+          ),
+          {
+            window: getWindow("/child"),
+            hydrationData: {
+              loaderData: {
+                "0": "parent data",
+              },
+              actionData: {
+                "0": "parent action",
+              },
+              errors: {
+                "0-0": new Error("Kaboom 💥"),
+              },
+            },
+          }
+        );
+
+        await waitForRouterInitialize(router);
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Comp() {
+          let data = useLoaderData();
+          let actionData = useActionData();
+          let navigation = useNavigation();
+          return (
+            <div>
+              {data}
+              {actionData}
+              {navigation.state}
+              <Outlet />
+            </div>
+          );
+        }
+
+        function ErrorBoundary() {
+          let error = useRouteError();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              parent data
+              parent action
+              idle
+              <p>
+                Kaboom 💥
+              </p>
+            </div>
+          </div>"
+        `);
+      });
+
+      it("renders hydration errors on lazy leaf elements with preloading", async () => {
+        let routes = createRoutesFromElements(
+          <Route path="/" element={<Comp />}>
+            <Route
+              path="child"
+              lazy={async () => ({
+                element: <Comp />,
+                errorElement: <ErrorBoundary />,
+              })}
+            />
+          </Route>
+        );
+
+        let lazyMatches = matchRoutes(routes, { pathname: "/child" })?.filter(
+          (m) => m.route.lazy
+        );
+
+        if (lazyMatches && lazyMatches?.length > 0) {
+          await Promise.all(
+            lazyMatches.map(async (m) => {
+              let routeModule = await m.route.lazy!();
+              Object.assign(m.route, { ...routeModule, lazy: undefined });
+            })
+          );
+        }
+
+        let router = createTestRouter(routes, {
+          window: getWindow("/child"),
+          hydrationData: {
+            loaderData: {
+              "0": "parent data",
+            },
+            actionData: {
+              "0": "parent action",
+            },
+            errors: {
+              "0-0": new Error("Kaboom 💥"),
+            },
+          },
+        });
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Comp() {
+          let data = useLoaderData();
+          let actionData = useActionData();
+          let navigation = useNavigation();
+          return (
+            <div>
+              {data}
+              {actionData}
+              {navigation.state}
+              <Outlet />
+            </div>
+          );
+        }
+
+        function ErrorBoundary() {
+          let error = useRouteError();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              parent data
+              parent action
+              idle
+              <p>
+                Kaboom 💥
+              </p>
+            </div>
+          </div>"
+        `);
+      });
+
       it("renders hydration errors on parent elements", async () => {
         let { container } = render(
           <TestDataRouter
@@ -3851,6 +4447,71 @@ function testDomRouter(
             </Route>
           </TestDataRouter>
         );
+
+        function Comp() {
+          let data = useLoaderData();
+          let actionData = useActionData();
+          let navigation = useNavigation();
+          return (
+            <div>
+              {data}
+              {actionData}
+              {navigation.state}
+              <Outlet />
+            </div>
+          );
+        }
+
+        function ErrorBoundary() {
+          let error = useRouteError();
+          return <p>{error.message}</p>;
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom 💥
+            </p>
+          </div>"
+        `);
+      });
+
+      it("renders hydration errors on lazy parent elements", async () => {
+        let router = createTestRouter(
+          createRoutesFromElements(
+            <Route
+              path="/"
+              lazy={async () => ({
+                element: <Comp />,
+                errorElement: <ErrorBoundary />,
+              })}
+            >
+              <Route path="child" element={<Comp />} />
+            </Route>
+          ),
+          {
+            window: getWindow("/child"),
+            hydrationData: {
+              loaderData: {},
+              actionData: null,
+              errors: {
+                "0": new Error("Kaboom 💥"),
+              },
+            },
+          }
+        );
+
+        // Wait for lazy() to load
+        await new Promise((resolve) => {
+          let unsubscribe = router.subscribe((updatedState) => {
+            if (updatedState.initialized) {
+              unsubscribe();
+              resolve(router);
+            }
+          });
+        });
+
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let data = useLoaderData();
@@ -4147,6 +4808,91 @@ function testDomRouter(
         `);
 
         fireEvent.click(screen.getByText("Link to Bar"));
+        barDefer.reject(new Error("Kaboom!"));
+        await waitFor(() => screen.getByText("idle"));
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              idle
+            </p>
+            <p>
+              Bar Error:
+              Kaboom!
+            </p>
+          </div>"
+        `);
+      });
+
+      // This test ensures that when manual routes are used, we add hasErrorBoundary
+      it("renders navigation errors on lazy leaf elements (when using manual route objects)", async () => {
+        let lazyDefer = createDeferred();
+        let barDefer = createDeferred();
+
+        let routes = [
+          {
+            path: "/",
+            element: <Layout />,
+            children: [
+              {
+                path: "foo",
+                element: <h1>Foo</h1>,
+              },
+              {
+                path: "bar",
+                lazy: async () => lazyDefer.promise,
+              },
+            ],
+          },
+        ];
+
+        router = createTestRouter(routes, { window: getWindow("/foo") });
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Layout() {
+          let navigation = useNavigation();
+          return (
+            <div>
+              <Link to="/bar">Link to Bar</Link>
+              <div id="output">
+                <p>{navigation.state}</p>
+                <Outlet />
+              </div>
+            </div>
+          );
+        }
+
+        function Bar() {
+          let data = useLoaderData();
+          return <h1>Bar:{data?.message}</h1>;
+        }
+        function BarError() {
+          let error = useRouteError();
+          return <p>Bar Error:{error.message}</p>;
+        }
+
+        expect(getHtml(container.querySelector("#output")))
+          .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>"
+        `);
+
+        fireEvent.click(screen.getByText("Link to Bar"));
+        await lazyDefer.resolve({
+          loader: () => barDefer.promise,
+          element: <Bar />,
+          errorElement: <BarError />,
+        });
         barDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
         expect(getHtml(container.querySelector("#output")))

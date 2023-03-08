@@ -20,8 +20,8 @@ import {
   matchRoutes,
   parsePath,
   resolveTo,
-  warning,
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
+  UNSAFE_warning as warning,
 } from "@remix-run/router";
 
 import type {
@@ -392,9 +392,11 @@ export function useRoutes(
 
     warning(
       matches == null ||
-        matches[matches.length - 1].route.element !== undefined,
-      `Matched leaf route at location "${location.pathname}${location.search}${location.hash}" does not have an element. ` +
-        `This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.`
+        matches[matches.length - 1].route.element !== undefined ||
+        matches[matches.length - 1].route.Component !== undefined,
+      `Matched leaf route at location "${location.pathname}${location.search}${location.hash}" ` +
+        `does not have an element or Component. This means it will render an <Outlet /> with a ` +
+        `null value by default resulting in an "empty" page.`
     );
   }
 
@@ -452,7 +454,7 @@ export function useRoutes(
   return renderedMatches;
 }
 
-function DefaultErrorElement() {
+function DefaultErrorComponent() {
   let error = useRouteError();
   let message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
@@ -472,7 +474,7 @@ function DefaultErrorElement() {
         <p>
           You can provide a way better UX than this when your app throws errors
           by providing your own&nbsp;
-          <code style={codeStyles}>errorElement</code> props on&nbsp;
+          <code style={codeStyles}>ErrorBoundary</code> prop on&nbsp;
           <code style={codeStyles}>&lt;Route&gt;</code>
         </p>
       </>
@@ -583,7 +585,7 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
     dataRouterContext &&
     dataRouterContext.static &&
     dataRouterContext.staticContext &&
-    match.route.errorElement
+    (match.route.errorElement || match.route.ErrorBoundary)
   ) {
     dataRouterContext.staticContext._deepestRenderedBoundaryId = match.route.id;
   }
@@ -631,23 +633,39 @@ export function _renderMatches(
   return renderedMatches.reduceRight((outlet, match, index) => {
     let error = match.route.id ? errors?.[match.route.id] : null;
     // Only data routers handle errors
-    let errorElement = dataRouterState
-      ? match.route.errorElement || <DefaultErrorElement />
-      : null;
+    let errorElement: React.ReactNode | null = null;
+    if (dataRouterState) {
+      if (match.route.ErrorBoundary) {
+        errorElement = <match.route.ErrorBoundary />;
+      } else if (match.route.errorElement) {
+        errorElement = match.route.errorElement;
+      } else {
+        errorElement = <DefaultErrorComponent />;
+      }
+    }
     let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
-    let getChildren = () => (
-      <RenderedRoute match={match} routeContext={{ outlet, matches }}>
-        {error
-          ? errorElement
-          : match.route.element !== undefined
-          ? match.route.element
-          : outlet}
-      </RenderedRoute>
-    );
+    let getChildren = () => {
+      let children: React.ReactNode = outlet;
+      if (error) {
+        children = errorElement;
+      } else if (match.route.Component) {
+        children = <match.route.Component />;
+      } else if (match.route.element) {
+        children = match.route.element;
+      }
+      return (
+        <RenderedRoute
+          match={match}
+          routeContext={{ outlet, matches }}
+          children={children}
+        />
+      );
+    };
     // Only wrap in an error boundary within data router usages when we have an
-    // errorElement on this route.  Otherwise let it bubble up to an ancestor
-    // errorElement
-    return dataRouterState && (match.route.errorElement || index === 0) ? (
+    // ErrorBoundary/errorElement on this route.  Otherwise let it bubble up to
+    // an ancestor ErrorBoundary/errorElement
+    return dataRouterState &&
+      (match.route.ErrorBoundary || match.route.errorElement || index === 0) ? (
       <RenderErrorBoundary
         location={dataRouterState.location}
         component={errorElement}
@@ -799,7 +817,7 @@ export function useActionData(): unknown {
 /**
  * Returns the nearest ancestor Route error, which could be a loader/action
  * error or a render error.  This is intended to be called from your
- * errorElement to display a proper error message.
+ * ErrorBoundary/errorElement to display a proper error message.
  */
 export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);

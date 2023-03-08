@@ -7,6 +7,7 @@ import type {
   Router as RemixRouter,
   RouterState,
   To,
+  LazyRouteFunction,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
@@ -15,7 +16,7 @@ import {
   UNSAFE_invariant as invariant,
   parsePath,
   stripBasename,
-  warning,
+  UNSAFE_warning as warning,
 } from "@remix-run/router";
 import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
@@ -239,6 +240,7 @@ export interface PathRouteProps {
   caseSensitive?: NonIndexRouteObject["caseSensitive"];
   path?: NonIndexRouteObject["path"];
   id?: NonIndexRouteObject["id"];
+  lazy?: LazyRouteFunction<NonIndexRouteObject>;
   loader?: NonIndexRouteObject["loader"];
   action?: NonIndexRouteObject["action"];
   hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
@@ -248,6 +250,8 @@ export interface PathRouteProps {
   children?: React.ReactNode;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
+  Component?: React.ComponentType | null;
+  ErrorBoundary?: React.ComponentType | null;
 }
 
 export interface LayoutRouteProps extends PathRouteProps {}
@@ -256,6 +260,7 @@ export interface IndexRouteProps {
   caseSensitive?: IndexRouteObject["caseSensitive"];
   path?: IndexRouteObject["path"];
   id?: IndexRouteObject["id"];
+  lazy?: LazyRouteFunction<IndexRouteObject>;
   loader?: IndexRouteObject["loader"];
   action?: IndexRouteObject["action"];
   hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
@@ -265,6 +270,8 @@ export interface IndexRouteProps {
   children?: undefined;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
+  Component?: React.ComponentType | null;
+  ErrorBoundary?: React.ComponentType | null;
 }
 
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
@@ -589,14 +596,19 @@ export function createRoutesFromChildren(
       id: element.props.id || treePath.join("-"),
       caseSensitive: element.props.caseSensitive,
       element: element.props.element,
+      Component: element.props.Component,
       index: element.props.index,
       path: element.props.path,
       loader: element.props.loader,
       action: element.props.action,
       errorElement: element.props.errorElement,
-      hasErrorBoundary: element.props.errorElement != null,
+      ErrorBoundary: element.props.ErrorBoundary,
+      hasErrorBoundary:
+        element.props.ErrorBoundary != null ||
+        element.props.errorElement != null,
       shouldRevalidate: element.props.shouldRevalidate,
       handle: element.props.handle,
+      lazy: element.props.lazy,
     };
 
     if (element.props.children) {
@@ -619,24 +631,4 @@ export function renderMatches(
   matches: RouteMatch[] | null
 ): React.ReactElement | null {
   return _renderMatches(matches);
-}
-
-/**
- * @private
- * Walk the route tree and add hasErrorBoundary if it's not provided, so that
- * users providing manual route arrays can just specify errorElement
- */
-export function enhanceManualRouteObjects(
-  routes: RouteObject[]
-): RouteObject[] {
-  return routes.map((route) => {
-    let routeClone = { ...route };
-    if (routeClone.hasErrorBoundary == null) {
-      routeClone.hasErrorBoundary = routeClone.errorElement != null;
-    }
-    if (routeClone.children) {
-      routeClone.children = enhanceManualRouteObjects(routeClone.children);
-    }
-    return routeClone;
-  });
 }

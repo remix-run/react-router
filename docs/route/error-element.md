@@ -7,6 +7,8 @@ new: true
 
 When exceptions are thrown in [loaders][loader], [actions][action], or component rendering, instead of the normal render path for your Routes (`<Route element>`), the error path will be rendered (`<Route errorElement>`) and the error made available with [`useRouteError`][userouteerror].
 
+<docs-info>If you do not wish to specify a React element (i.e., `errorElement={<MyErrorBoundary />}`) you may specify an `ErrorBoundary` component instead (i.e., `ErrorBoundary={MyErrorBoundary}`) and React Router will call `createElement` for you internally.</docs-info>
+
 <docs-error>This feature only works if using a data router like [`createBrowserRouter`][createbrowserrouter]</docs-error>
 
 ```tsx
