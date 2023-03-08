@@ -22,6 +22,15 @@
   "unpkg": "./dist/umd/react-router-dom.production.min.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/react-router-dom.production.min.js",
+      "umd": "./ddist/umd/react-router.production.min.js",
+      "import": "./dist/index.mjs",
+      "require": "./dist/main.js"
+    }
+  },
   "dependencies": {
     "@remix-run/router": "1.3.3",
     "react-router": "6.8.2"

@@ -20,8 +20,17 @@
   "sideEffects": false,
   "main": "./dist/main.js",
   "unpkg": "./dist/umd/react-router.production.min.js",
-  "module": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/react-router.production.min.js",
+      "umd": "./ddist/umd/react-router.production.min.js",
+      "import": "./dist/index.mjs",
+      "require": "./dist/main.js"
+    }
+  },
   "dependencies": {
     "@remix-run/router": "1.3.3"
   },
