@@ -176,7 +176,6 @@ export {
   useSubmit,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
-  UNSAFE_enhanceManualRouteObjects,
   UNSAFE_useScrollRestoration,
 } from "./react-router-dom";
 
