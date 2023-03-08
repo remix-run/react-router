@@ -33,7 +33,7 @@ const elementRoutes = createRoutesFromElements(
   <Route path='/' element={<Home />} errorElement={<HomeError /> } />
 );
 
-const elementRoutes = createRoutesFromElements(
+const componentRoutes = createRoutesFromElements(
   <Route path='/' Component={Home} ErrorBoundary={HomeError} />
 );
 
