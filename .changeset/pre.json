@@ -8,5 +8,11 @@
     "react-router-native": "6.8.2",
     "@remix-run/router": "1.3.3"
   },
-  "changesets": []
+  "changesets": [
+    "compat-data-router-exports",
+    "component-and-error-boundary",
+    "fix-generate-path",
+    "improve-context-memoization",
+    "lazy-route-modules"
+  ]
 }
