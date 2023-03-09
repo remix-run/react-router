@@ -1,5 +1,12 @@
 # `@remix-run/express`
 
+## 1.14.1-pre.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/node@1.14.1-pre.0`
+
 ## 1.14.0
 
 ### Patch Changes
