@@ -8160,7 +8160,6 @@ describe("a router", () => {
           formEncType: undefined,
           formData: undefined,
           data: undefined,
-          " _hasFetcherDoneAnything ": true,
         });
 
         await dfd.resolve("DATA");
@@ -8170,7 +8169,6 @@ describe("a router", () => {
           formEncType: undefined,
           formData: undefined,
           data: "DATA",
-          " _hasFetcherDoneAnything ": true,
         });
 
         expect(router._internalFetchControllers.size).toBe(0);
@@ -8663,7 +8661,6 @@ describe("a router", () => {
           formAction: undefined,
           formEncType: undefined,
           formData: undefined,
-          " _hasFetcherDoneAnything ": true,
         });
         expect(t.router.state.historyAction).toBe("PUSH");
         expect(t.router.state.location.pathname).toBe("/bar");
