@@ -1756,7 +1756,6 @@ export function createRouter(init: RouterInit): Router {
 
       return startRedirectNavigation(state, actionResult, {
         submission,
-        isFetchActionRedirect: true,
       });
     }
 
@@ -2060,26 +2059,18 @@ export function createRouter(init: RouterInit): Router {
     {
       submission,
       replace,
-      isFetchActionRedirect,
     }: {
       submission?: Submission;
       replace?: boolean;
-      isFetchActionRedirect?: boolean;
     } = {}
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
     }
 
-    let redirectLocation = createLocation(
-      state.location,
-      redirect.location,
-      // TODO: This can be removed once we get rid of useTransition in Remix v2
-      {
-        _isRedirect: true,
-        ...(isFetchActionRedirect ? { _isFetchActionRedirect: true } : {}),
-      }
-    );
+    let redirectLocation = createLocation(state.location, redirect.location, {
+      _isRedirect: true,
+    });
     invariant(
       redirectLocation,
       "Expected a location on the redirect navigation"
