@@ -967,12 +967,28 @@ export function createRouter(init: RouterInit): Router {
     subscribers.forEach((subscriber) => subscriber(state));
   }
 
+  function completeNavigation(
+    location: Location,
+    newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>
+  ) {
+    // @ts-expect-error
+    if (typeof document !== "undefined" && document.startViewTransition) {
+      // TODO: Do we need a flushSync here?
+      // @ts-expect-error
+      document.startViewTransition(() =>
+        completeNavigationForRealz(location, newState)
+      );
+    } else {
+      completeNavigationForRealz(location, newState);
+    }
+  }
+
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
   // and setting state.[historyAction/location/matches] to the new route.
   // - Location is a required param
   // - Navigation will always be set to IDLE_NAVIGATION
   // - Can pass any other state in newState
-  function completeNavigation(
+  function completeNavigationForRealz(
     location: Location,
     newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>
   ): void {
