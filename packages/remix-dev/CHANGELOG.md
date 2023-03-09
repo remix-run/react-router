@@ -1,5 +1,16 @@
 # `@remix-run/dev`
 
+## 1.14.1
+
+### Patch Changes
+
+- Add types for importing `*.ico` files ([#5430](https://github.com/remix-run/remix/pull/5430))
+- Allow `moduleResolution: "bundler"` in tsconfig.json ([#5576](https://github.com/remix-run/remix/pull/5576))
+- Fix issue with x-route imports creating multiple entries in the module graph ([#5721](https://github.com/remix-run/remix/pull/5721))
+- Add `serverBuildTarget` deprecation warning ([#5624](https://github.com/remix-run/remix/pull/5624))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.14.1`
+
 ## 1.14.0
 
 ### Minor Changes
@@ -44,8 +55,11 @@
     ```
 
 - Log errors thrown during initial build in development. ([#5441](https://github.com/remix-run/remix/pull/5441))
+
 - Sync `FutureConfig` interface between packages ([#5398](https://github.com/remix-run/remix/pull/5398))
+
 - Add file loader for importing `.csv` files ([#3920](https://github.com/remix-run/remix/pull/3920))
+
 - Updated dependencies:
   - `@remix-run/server-runtime@1.14.0`
 
