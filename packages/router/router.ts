@@ -526,7 +526,6 @@ type FetcherStates<TData = any> = {
     formData: undefined;
     json: undefined;
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
   Loading: {
     state: "loading";
@@ -537,7 +536,6 @@ type FetcherStates<TData = any> = {
     formData: Submission["formData"] | undefined;
     json: Submission["json"] | undefined;
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
   Submitting: {
     state: "submitting";
@@ -548,7 +546,6 @@ type FetcherStates<TData = any> = {
     formData: Submission["formData"];
     json: Submission["json"];
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
 };
 
@@ -4458,7 +4455,6 @@ function getLoadingFetcher(
       json: submission.json,
       text: submission.text,
       data,
-      " _hasFetcherDoneAnything ": true,
     };
     return fetcher;
   } else {
@@ -4471,7 +4467,6 @@ function getLoadingFetcher(
       json: undefined,
       text: undefined,
       data,
-      " _hasFetcherDoneAnything ": true,
     };
     return fetcher;
   }
@@ -4490,7 +4485,6 @@ function getSubmittingFetcher(
     json: submission.json,
     text: submission.text,
     data: existingFetcher ? existingFetcher.data : undefined,
-    " _hasFetcherDoneAnything ": true,
   };
   return fetcher;
 }
@@ -4505,7 +4499,6 @@ function getDoneFetcher(data: Fetcher["data"]): FetcherStates["Idle"] {
     json: undefined,
     text: undefined,
     data,
-    " _hasFetcherDoneAnything ": true,
   };
   return fetcher;
 }
