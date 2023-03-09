@@ -54,6 +54,10 @@ declare module "*.hdr" {
   let asset: string;
   export default asset;
 }
+declare module "*.ico" {
+  let asset: string;
+  export default asset;
+}
 declare module "*.jpeg" {
   let asset: string;
   export default asset;
