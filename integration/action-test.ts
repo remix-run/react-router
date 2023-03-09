@@ -17,7 +17,10 @@ test.describe("actions", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: { v2_routeConvention: true },
+      future: {
+        v2_routeConvention: true,
+        v2_errorBoundary: true,
+      },
       files: {
         "app/routes/urlencoded.jsx": js`
           import { Form, useActionData } from "@remix-run/react";

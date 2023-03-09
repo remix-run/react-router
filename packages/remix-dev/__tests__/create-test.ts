@@ -8,7 +8,7 @@ import stripAnsi from "strip-ansi";
 
 import { run } from "../cli/run";
 import { server } from "./msw";
-import { flatRoutesWarning } from "../config";
+import { errorBoundaryWarning, flatRoutesWarning } from "../config";
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterAll(() => server.close());
@@ -348,7 +348,9 @@ describe("the create command", () => {
       "--no-typescript",
     ]);
     expect(output.trim()).toBe(
-      flatRoutesWarning +
+      errorBoundaryWarning +
+        "\n" +
+        flatRoutesWarning +
         "\n\n" +
         getOptOutOfInstallMessage() +
         "\n\n" +
