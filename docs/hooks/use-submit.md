@@ -5,7 +5,7 @@ new: true
 
 # `useSubmit`
 
-The imperative version of `<Form>` that let's you, the programmer, submit a form instead of the user.
+The imperative version of `<Form>` that lets you, the programmer, submit a form instead of the user.
 
 <docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
 

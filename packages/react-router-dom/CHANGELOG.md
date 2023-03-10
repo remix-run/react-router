@@ -1,5 +1,109 @@
 # `react-router-dom`
 
+## 6.9.0
+
+### Minor Changes
+
+- React Router now supports an alternative way to define your route `element` and `errorElement` fields as React Components instead of React Elements. You can instead pass a React Component to the new `Component` and `ErrorBoundary` fields if you choose. There is no functional difference between the two, so use whichever approach you prefer 😀. You shouldn't be defining both, but if you do `Component`/`ErrorBoundary` will "win". ([#10045](https://github.com/remix-run/react-router/pull/10045))
+
+  **Example JSON Syntax**
+
+  ```jsx
+  // Both of these work the same:
+  const elementRoutes = [{
+    path: '/',
+    element: <Home />,
+    errorElement: <HomeError />,
+  }]
+
+  const componentRoutes = [{
+    path: '/',
+    Component: Home,
+    ErrorBoundary: HomeError,
+  }]
+
+  function Home() { ... }
+  function HomeError() { ... }
+  ```
+
+  **Example JSX Syntax**
+
+  ```jsx
+  // Both of these work the same:
+  const elementRoutes = createRoutesFromElements(
+    <Route path='/' element={<Home />} errorElement={<HomeError /> } />
+  );
+
+  const componentRoutes = createRoutesFromElements(
+    <Route path='/' Component={Home} ErrorBoundary={HomeError} />
+  );
+
+  function Home() { ... }
+  function HomeError() { ... }
+  ```
+
+- **Introducing Lazy Route Modules!** ([#10045](https://github.com/remix-run/react-router/pull/10045))
+
+  In order to keep your application bundles small and support code-splitting of your routes, we've introduced a new `lazy()` route property. This is an async function that resolves the non-route-matching portions of your route definition (`loader`, `action`, `element`/`Component`, `errorElement`/`ErrorBoundary`, `shouldRevalidate`, `handle`).
+
+  Lazy routes are resolved on initial load and during the `loading` or `submitting` phase of a navigation or fetcher call. You cannot lazily define route-matching properties (`path`, `index`, `children`) since we only execute your lazy route functions after we've matched known routes.
+
+  Your `lazy` functions will typically return the result of a dynamic import.
+
+  ```jsx
+  // In this example, we assume most folks land on the homepage so we include that
+  // in our critical-path bundle, but then we lazily load modules for /a and /b so
+  // they don't load until the user navigates to those routes
+  let routes = createRoutesFromElements(
+    <Route path="/" element={<Layout />}>
+      <Route index element={<Home />} />
+      <Route path="a" lazy={() => import("./a")} />
+      <Route path="b" lazy={() => import("./b")} />
+    </Route>
+  );
+  ```
+
+  Then in your lazy route modules, export the properties you want defined for the route:
+
+  ```jsx
+  export async function loader({ request }) {
+    let data = await fetchData(request);
+    return json(data);
+  }
+
+  // Export a `Component` directly instead of needing to create a React Element from it
+  export function Component() {
+    let data = useLoaderData();
+
+    return (
+      <>
+        <h1>You made it!</h1>
+        <p>{data}</p>
+      </>
+    );
+  }
+
+  // Export an `ErrorBoundary` directly instead of needing to create a React Element from it
+  export function ErrorBoundary() {
+    let error = useRouteError();
+    return isRouteErrorResponse(error) ? (
+      <h1>
+        {error.status} {error.statusText}
+      </h1>
+    ) : (
+      <h1>{error.message || error}</h1>
+    );
+  }
+  ```
+
+  An example of this in action can be found in the [`examples/lazy-loading-router-provider`](https://github.com/remix-run/react-router/tree/main/examples/lazy-loading-router-provider) directory of the repository.
+
+  🙌 Huge thanks to @rossipedia for the [Initial Proposal](https://github.com/remix-run/react-router/discussions/9826) and [POC Implementation](https://github.com/remix-run/react-router/pull/9830).
+
+- Updated dependencies:
+  - `react-router@6.9.0`
+  - `@remix-run/router@1.4.0`
+
 ## 6.8.2
 
 ### Patch Changes

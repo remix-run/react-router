@@ -694,7 +694,7 @@ These params are most often used to find a record by ID. Let's try it out.
 
 👉 **Add a loader to the contact page and access data with `useLoaderData`**
 
-```jsx filename=src/routes/contact.jsx lines=[1,2,4-6,9]
+```jsx filename=src/routes/contact.jsx lines=[1,2,4-6,10]
 import { Form, useLoaderData } from "react-router-dom";
 import { getContact } from "../contacts";
 
@@ -1790,7 +1790,7 @@ There is one key difference though, it's not a navigation--the URL doesn't chang
 
 ## Optimistic UI
 
-You probably noticed the app felt kind of unresponsive when we clicked the the favorite button from the last section. Once again, we added some network latency because you're going to have it in the real world!
+You probably noticed the app felt kind of unresponsive when we clicked the favorite button from the last section. Once again, we added some network latency because you're going to have it in the real world!
 
 To give the user some feedback, we could put the star into a loading state with [`fetcher.state`][fetcherstate] (a lot like `navigation.state` from before), but we can do something even better this time. We can use a strategy called "optimistic UI"
 
