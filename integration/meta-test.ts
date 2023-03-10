@@ -443,9 +443,9 @@ test.describe("v2_meta", () => {
         `,
 
         "app/routes/_index.jsx": js`
-          export const meta = ({ data, matches }) => [
-            ...matches.map((match) => match.meta),
-          ];
+          export const meta = ({ data, matches }) =>
+            matches.flatMap((match) => match.meta);
+
           export default function Index() {
             return <div>This is the index file</div>;
           }
@@ -461,6 +461,59 @@ test.describe("v2_meta", () => {
           export const meta = () => [];
           export default function EmptyMetaFunction() {
             return <div>No meta here!</div>;
+          }
+        `,
+
+        "app/routes/authors.$authorId.jsx": js`
+          import { json } from "@remix-run/node";
+
+          export async function loader({ params }) {
+            return json({
+              author: {
+                id: params.authorId,
+                name: "Sonny Day",
+                address: {
+                  streetAddress: "123 Sunset Cliffs Blvd",
+                  city: "San Diego",
+                  state: "CA",
+                  zip: "92107",
+                },
+                emails: [
+                  "sonnyday@fancymail.com",
+                  "surfergal@veryprofessional.org",
+                ],
+              },
+            });
+          }
+
+          export function meta({ data }) {
+            let { author } = data;
+            return [
+              { title: data.name + " Profile" },
+              {
+                tagName: "link",
+                rel: "canonical",
+                href: "https://website.com/authors/" + author.id,
+              },
+              {
+                "script:ld+json": {
+                  "@context": "http://schema.org",
+                  "@type": "Person",
+                  "name": author.name,
+                  "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": author.address.streetAddress,
+                    "addressLocality": author.address.city,
+                    "addressRegion": author.address.state,
+                    "postalCode": author.address.zip,
+                  },
+                  "email": author.emails,
+                },
+              },
+            ];
+          }
+          export default function AuthorBio() {
+            return <div>Bio here!</div>;
           }
         `,
 
@@ -530,5 +583,37 @@ test.describe("v2_meta", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     expect(await app.getHtml('meta[property="og:image"]')).toBeTruthy();
+  });
+
+  test("{ 'script:ld+json': {} } adds a <script type='application/ld+json' />", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/authors/1");
+    let scriptTag = await app.getHtml('script[type="application/ld+json"]');
+    let scriptContents = scriptTag
+      .replace('<script type="application/ld+json">', "")
+      .replace("</script>", "")
+      .trim();
+
+    expect(JSON.parse(scriptContents)).toEqual({
+      "@context": "http://schema.org",
+      "@type": "Person",
+      name: "Sonny Day",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "123 Sunset Cliffs Blvd",
+        addressLocality: "San Diego",
+        addressRegion: "CA",
+        postalCode: "92107",
+      },
+      email: ["sonnyday@fancymail.com", "surfergal@veryprofessional.org"],
+    });
+  });
+
+  test("{ tagName: 'link' } adds a <link />", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/authors/1");
+    expect(await app.getHtml('link[rel="canonical"]')).toBeTruthy();
   });
 });

@@ -221,7 +221,16 @@ export type V2_HtmlMetaDescriptor =
   | { name: string; content: string }
   | { property: string; content: string }
   | { httpEquiv: string; content: string }
-  | { [name: string]: string };
+  | { "script:ld+json": LdJsonObject }
+  | { tagName: "meta" | "link"; [name: string]: string }
+  | { [name: string]: unknown };
+
+type LdJsonObject = { [Key in string]: LdJsonValue } & {
+  [Key in string]?: LdJsonValue | undefined;
+};
+type LdJsonArray = LdJsonValue[] | readonly LdJsonValue[];
+type LdJsonPrimitive = string | number | boolean | null;
+type LdJsonValue = LdJsonPrimitive | LdJsonObject | LdJsonArray;
 
 /**
  * A React component that is rendered for a route.
