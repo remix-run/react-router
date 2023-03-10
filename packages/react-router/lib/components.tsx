@@ -7,6 +7,7 @@ import type {
   Router as RemixRouter,
   RouterState,
   To,
+  LazyRouteFunction,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
@@ -15,7 +16,7 @@ import {
   UNSAFE_invariant as invariant,
   parsePath,
   stripBasename,
-  warning,
+  UNSAFE_warning as warning,
 } from "@remix-run/router";
 import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
@@ -56,14 +57,16 @@ export function RouterProvider({
   fallbackElement,
   router,
 }: RouterProviderProps): React.ReactElement {
+  let getState = React.useCallback(() => router.state, [router]);
+
   // Sync router state to our component state to force re-renders
   let state: RouterState = useSyncExternalStoreShim(
     router.subscribe,
-    () => router.state,
+    getState,
     // We have to provide this so React@18 doesn't complain during hydration,
     // but we pass our serialized hydration data into the router so state here
     // is already synced with what the server saw
-    () => router.state
+    getState
   );
 
   let navigator = React.useMemo((): Navigator => {
@@ -87,6 +90,16 @@ export function RouterProvider({
 
   let basename = router.basename || "/";
 
+  let dataRouterContext = React.useMemo(
+    () => ({
+      router,
+      navigator,
+      static: false,
+      basename,
+    }),
+    [router, navigator, basename]
+  );
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -95,15 +108,7 @@ export function RouterProvider({
   // we don't need the <script> tag
   return (
     <>
-      <DataRouterContext.Provider
-        value={{
-          router,
-          navigator,
-          static: false,
-          // Do we need this?
-          basename,
-        }}
-      >
+      <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
           <Router
             basename={router.basename}
@@ -235,6 +240,7 @@ export interface PathRouteProps {
   caseSensitive?: NonIndexRouteObject["caseSensitive"];
   path?: NonIndexRouteObject["path"];
   id?: NonIndexRouteObject["id"];
+  lazy?: LazyRouteFunction<NonIndexRouteObject>;
   loader?: NonIndexRouteObject["loader"];
   action?: NonIndexRouteObject["action"];
   hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
@@ -244,6 +250,8 @@ export interface PathRouteProps {
   children?: React.ReactNode;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
+  Component?: React.ComponentType | null;
+  ErrorBoundary?: React.ComponentType | null;
 }
 
 export interface LayoutRouteProps extends PathRouteProps {}
@@ -252,6 +260,7 @@ export interface IndexRouteProps {
   caseSensitive?: IndexRouteObject["caseSensitive"];
   path?: IndexRouteObject["path"];
   id?: IndexRouteObject["id"];
+  lazy?: LazyRouteFunction<IndexRouteObject>;
   loader?: IndexRouteObject["loader"];
   action?: IndexRouteObject["action"];
   hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
@@ -261,6 +270,8 @@ export interface IndexRouteProps {
   children?: undefined;
   element?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
+  Component?: React.ComponentType | null;
+  ErrorBoundary?: React.ComponentType | null;
 }
 
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
@@ -330,7 +341,7 @@ export function Router({
     key = "default",
   } = locationProp;
 
-  let location = React.useMemo(() => {
+  let locationContext = React.useMemo(() => {
     let trailingPathname = stripBasename(pathname, basename);
 
     if (trailingPathname == null) {
@@ -338,31 +349,31 @@ export function Router({
     }
 
     return {
-      pathname: trailingPathname,
-      search,
-      hash,
-      state,
-      key,
+      location: {
+        pathname: trailingPathname,
+        search,
+        hash,
+        state,
+        key,
+      },
+      navigationType,
     };
-  }, [basename, pathname, search, hash, state, key]);
+  }, [basename, pathname, search, hash, state, key, navigationType]);
 
   warning(
-    location != null,
+    locationContext != null,
     `<Router basename="${basename}"> is not able to match the URL ` +
       `"${pathname}${search}${hash}" because it does not start with the ` +
       `basename, so the <Router> won't render anything.`
   );
 
-  if (location == null) {
+  if (locationContext == null) {
     return null;
   }
 
   return (
     <NavigationContext.Provider value={navigationContext}>
-      <LocationContext.Provider
-        children={children}
-        value={{ location, navigationType }}
-      />
+      <LocationContext.Provider children={children} value={locationContext} />
     </NavigationContext.Provider>
   );
 }
@@ -585,14 +596,19 @@ export function createRoutesFromChildren(
       id: element.props.id || treePath.join("-"),
       caseSensitive: element.props.caseSensitive,
       element: element.props.element,
+      Component: element.props.Component,
       index: element.props.index,
       path: element.props.path,
       loader: element.props.loader,
       action: element.props.action,
       errorElement: element.props.errorElement,
-      hasErrorBoundary: element.props.errorElement != null,
+      ErrorBoundary: element.props.ErrorBoundary,
+      hasErrorBoundary:
+        element.props.ErrorBoundary != null ||
+        element.props.errorElement != null,
       shouldRevalidate: element.props.shouldRevalidate,
       handle: element.props.handle,
+      lazy: element.props.lazy,
     };
 
     if (element.props.children) {
@@ -615,24 +631,4 @@ export function renderMatches(
   matches: RouteMatch[] | null
 ): React.ReactElement | null {
   return _renderMatches(matches);
-}
-
-/**
- * @private
- * Walk the route tree and add hasErrorBoundary if it's not provided, so that
- * users providing manual route arrays can just specify errorElement
- */
-export function enhanceManualRouteObjects(
-  routes: RouteObject[]
-): RouteObject[] {
-  return routes.map((route) => {
-    let routeClone = { ...route };
-    if (routeClone.hasErrorBoundary == null) {
-      routeClone.hasErrorBoundary = routeClone.errorElement != null;
-    }
-    if (routeClone.children) {
-      routeClone.children = enhanceManualRouteObjects(routeClone.children);
-    }
-    return routeClone;
-  });
 }

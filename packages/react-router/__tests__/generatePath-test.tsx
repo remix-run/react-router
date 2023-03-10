@@ -27,6 +27,23 @@ describe("generatePath", () => {
       );
       expect(generatePath("/*", {})).toBe("/");
     });
+    it("handles * in parameter values", () => {
+      expect(generatePath("/courses/:name", { name: "foo*" })).toBe(
+        "/courses/foo*"
+      );
+      expect(generatePath("/courses/:name", { name: "*foo" })).toBe(
+        "/courses/*foo"
+      );
+      expect(generatePath("/courses/:name", { name: "*f*oo*" })).toBe(
+        "/courses/*f*oo*"
+      );
+      expect(
+        generatePath("/courses/:name", {
+          name: "foo*",
+          "*": "splat_should_not_be_added",
+        })
+      ).toBe("/courses/foo*");
+    });
   });
 
   describe("with extraneous params", () => {

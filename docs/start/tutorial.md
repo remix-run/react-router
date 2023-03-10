@@ -1300,7 +1300,7 @@ import {
 } from "react-router-dom";
 
 export default function EditContact() {
-  const contact = useLoaderData();
+  const { contact } = useLoaderData();
   const navigate = useNavigate();
 
   return (

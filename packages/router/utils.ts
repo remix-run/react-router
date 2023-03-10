@@ -1,5 +1,5 @@
 import type { Location, Path, To } from "./history";
-import { invariant, parsePath } from "./history";
+import { warning, invariant, parsePath } from "./history";
 
 /**
  * Map of routeId -> data returned from a loader/action/error
@@ -140,6 +140,44 @@ export interface ShouldRevalidateFunction {
 }
 
 /**
+ * Function provided by the framework-aware layers to set `hasErrorBoundary`
+ * from the framework-aware `errorElement` prop
+ */
+export interface DetectErrorBoundaryFunction {
+  (route: AgnosticRouteObject): boolean;
+}
+
+/**
+ * Keys we cannot change from within a lazy() function. We spread all other keys
+ * onto the route. Either they're meaningful to the router, or they'll get
+ * ignored.
+ */
+export type ImmutableRouteKey =
+  | "lazy"
+  | "caseSensitive"
+  | "path"
+  | "id"
+  | "index"
+  | "children";
+
+export const immutableRouteKeys = new Set<ImmutableRouteKey>([
+  "lazy",
+  "caseSensitive",
+  "path",
+  "id",
+  "index",
+  "children",
+]);
+
+/**
+ * lazy() function to load a route definition, which can add non-matching
+ * related properties to a route
+ */
+export interface LazyRouteFunction<R extends AgnosticRouteObject> {
+  (): Promise<Omit<R, ImmutableRouteKey>>;
+}
+
+/**
  * Base RouteObject with common props shared by all types of routes
  */
 type AgnosticBaseRouteObject = {
@@ -151,6 +189,7 @@ type AgnosticBaseRouteObject = {
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
+  lazy?: LazyRouteFunction<AgnosticBaseRouteObject>;
 };
 
 /**
@@ -193,6 +232,8 @@ export type AgnosticDataRouteObject =
   | AgnosticDataIndexRouteObject
   | AgnosticDataNonIndexRouteObject;
 
+export type RouteManifest = Record<string, AgnosticDataRouteObject | undefined>;
+
 // Recursive helper for finding path parameters in the absence of wildcards
 type _PathParam<Path extends string> =
   // split path into individual path segments
@@ -217,7 +258,7 @@ type _PathParam<Path extends string> =
  */
 type PathParam<Path extends string> =
   // check if path is just a wildcard
-  Path extends "*"
+  Path extends "*" | "/*"
     ? "*"
     : // look for wildcard at the end of the path
     Path extends `${infer Rest}/*`
@@ -277,8 +318,9 @@ function isIndexRoute(
 // solely with AgnosticDataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
+  detectErrorBoundary: DetectErrorBoundaryFunction,
   parentPath: number[] = [],
-  allIds: Set<string> = new Set<string>()
+  manifest: RouteManifest = {}
 ): AgnosticDataRouteObject[] {
   return routes.map((route, index) => {
     let treePath = [...parentPath, index];
@@ -288,23 +330,37 @@ export function convertRoutesToDataRoutes(
       `Cannot specify children on an index route`
     );
     invariant(
-      !allIds.has(id),
+      !manifest[id],
       `Found a route id collision on id "${id}".  Route ` +
         "id's must be globally unique within Data Router usages"
     );
-    allIds.add(id);
 
     if (isIndexRoute(route)) {
-      let indexRoute: AgnosticDataIndexRouteObject = { ...route, id };
+      let indexRoute: AgnosticDataIndexRouteObject = {
+        ...route,
+        hasErrorBoundary: detectErrorBoundary(route),
+        id,
+      };
+      manifest[id] = indexRoute;
       return indexRoute;
     } else {
       let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
         ...route,
         id,
-        children: route.children
-          ? convertRoutesToDataRoutes(route.children, treePath, allIds)
-          : undefined,
+        hasErrorBoundary: detectErrorBoundary(route),
+        children: undefined,
       };
+      manifest[id] = pathOrLayoutRoute;
+
+      if (route.children) {
+        pathOrLayoutRoute.children = convertRoutesToDataRoutes(
+          route.children,
+          detectErrorBoundary,
+          treePath,
+          manifest
+        );
+      }
+
       return pathOrLayoutRoute;
     }
   });
@@ -621,7 +677,7 @@ export function generatePath<Path extends string>(
     [key in PathParam<Path>]: string | null;
   } = {} as any
 ): string {
-  let path = originalPath;
+  let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
     warning(
       false,
@@ -633,49 +689,46 @@ export function generatePath<Path extends string>(
     path = path.replace(/\*$/, "/*") as Path;
   }
 
-  return (
-    path
-      .replace(
-        /^:(\w+)(\??)/g,
-        (_, key: PathParam<Path>, optional: string | undefined) => {
-          let param = params[key];
-          if (optional === "?") {
-            return param == null ? "" : param;
-          }
-          if (param == null) {
-            invariant(false, `Missing ":${key}" param`);
-          }
-          return param;
-        }
-      )
-      .replace(
-        /\/:(\w+)(\??)/g,
-        (_, key: PathParam<Path>, optional: string | undefined) => {
-          let param = params[key];
-          if (optional === "?") {
-            return param == null ? "" : `/${param}`;
-          }
-          if (param == null) {
-            invariant(false, `Missing ":${key}" param`);
-          }
-          return `/${param}`;
-        }
-      )
-      // Remove any optional markers from optional static segments
-      .replace(/\?/g, "")
-      .replace(/(\/?)\*/, (_, prefix, __, str) => {
-        const star = "*" as PathParam<Path>;
+  // ensure `/` is added at the beginning if the path is absolute
+  const prefix = path.startsWith("/") ? "/" : "";
 
-        if (params[star] == null) {
-          // If no splat was provided, trim the trailing slash _unless_ it's
-          // the entire path
-          return str === "/*" ? "/" : "";
-        }
+  const segments = path
+    .split(/\/+/)
+    .map((segment, index, array) => {
+      const isLastSegment = index === array.length - 1;
+
+      // only apply the splat if it's the last segment
+      if (isLastSegment && segment === "*") {
+        const star = "*" as PathParam<Path>;
+        const starParam = params[star];
 
         // Apply the splat
-        return `${prefix}${params[star]}`;
-      })
-  );
+        return starParam;
+      }
+
+      const keyMatch = segment.match(/^:(\w+)(\??)$/);
+      if (keyMatch) {
+        const [, key, optional] = keyMatch;
+        let param = params[key as PathParam<Path>];
+
+        if (optional === "?") {
+          return param == null ? "" : param;
+        }
+
+        if (param == null) {
+          invariant(false, `Missing ":${key}" param`);
+        }
+
+        return param;
+      }
+
+      // Remove any optional markers from optional static segments
+      return segment.replace(/\?$/g, "");
+    })
+    // Remove empty segments
+    .filter((segment) => !!segment);
+
+  return prefix + segments.join("/");
 }
 
 /**
@@ -889,26 +942,6 @@ export function stripBasename(
   }
 
   return pathname.slice(startIndex) || "/";
-}
-
-/**
- * @private
- */
-export function warning(cond: any, message: string): void {
-  if (!cond) {
-    // eslint-disable-next-line no-console
-    if (typeof console !== "undefined") console.warn(message);
-
-    try {
-      // Welcome to debugging @remix-run/router!
-      //
-      // This error is thrown as a convenience so you can more easily
-      // find the source for a warning that appears in the console by
-      // enabling "pause on exceptions" in your JavaScript debugger.
-      throw new Error(message);
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
-  }
 }
 
 /**

@@ -4,8 +4,7 @@
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
-import type { StaticHandlerContext } from "@remix-run/router";
-import { json, createStaticHandler } from "@remix-run/router";
+import { json } from "@remix-run/router";
 import {
   Link,
   Outlet,
@@ -13,7 +12,9 @@ import {
   useLocation,
   useMatches,
 } from "react-router-dom";
+import type { StaticHandlerContext } from "react-router-dom/server";
 import {
+  createStaticHandler,
   createStaticRouter,
   StaticRouterProvider,
 } from "react-router-dom/server";
@@ -90,6 +91,153 @@ describe("A <StaticRouterProvider>", () => {
       <React.StrictMode>
         <StaticRouterProvider
           router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+    expect(html).toMatch("<h1>👋</h1>");
+    expect(html).toMatch('<a href="/the/other/path">');
+
+    // @ts-expect-error
+    expect(hooksData1.location).toEqual({
+      pathname: "/the/path",
+      search: "?the=query",
+      hash: "#the-hash",
+      state: null,
+      key: expect.any(String),
+    });
+    // @ts-expect-error
+    expect(hooksData1.loaderData).toEqual({
+      key1: "value1",
+    });
+    // @ts-expect-error
+    expect(hooksData1.matches).toEqual([
+      {
+        data: {
+          key1: "value1",
+        },
+        handle: "1",
+        id: "0",
+        params: {},
+        pathname: "/the",
+      },
+      {
+        data: {
+          key2: "value2",
+        },
+        handle: "2",
+        id: "0-0",
+        params: {},
+        pathname: "/the/path",
+      },
+    ]);
+
+    // @ts-expect-error
+    expect(hooksData2.location).toEqual({
+      pathname: "/the/path",
+      search: "?the=query",
+      hash: "#the-hash",
+      state: null,
+      key: expect.any(String),
+    });
+    // @ts-expect-error
+    expect(hooksData2.loaderData).toEqual({
+      key2: "value2",
+    });
+    // @ts-expect-error
+    expect(hooksData2.matches).toEqual([
+      {
+        data: {
+          key1: "value1",
+        },
+        handle: "1",
+        id: "0",
+        params: {},
+        pathname: "/the",
+      },
+      {
+        data: {
+          key2: "value2",
+        },
+        handle: "2",
+        id: "0-0",
+        params: {},
+        pathname: "/the/path",
+      },
+    ]);
+  });
+
+  it("renders an initialized router with lazy routes", async () => {
+    let hooksData1: {
+      location: ReturnType<typeof useLocation>;
+      loaderData: ReturnType<typeof useLoaderData>;
+      matches: ReturnType<typeof useMatches>;
+    };
+    let hooksData2: {
+      location: ReturnType<typeof useLocation>;
+      loaderData: ReturnType<typeof useLoaderData>;
+      matches: ReturnType<typeof useMatches>;
+    };
+
+    function HooksChecker1() {
+      hooksData1 = {
+        location: useLocation(),
+        loaderData: useLoaderData(),
+        matches: useMatches(),
+      };
+      return <Outlet />;
+    }
+
+    function HooksChecker2() {
+      hooksData2 = {
+        location: useLocation(),
+        loaderData: useLoaderData(),
+        matches: useMatches(),
+      };
+      return (
+        <>
+          <h1>👋</h1>
+          <Link to="/the/other/path">Other</Link>
+        </>
+      );
+    }
+
+    let routes = [
+      {
+        path: "the",
+        lazy: async () => ({
+          loader: () => ({
+            key1: "value1",
+          }),
+          element: <HooksChecker1 />,
+          handle: "1",
+        }),
+        children: [
+          {
+            path: "path",
+            lazy: async () => ({
+              loader: () => ({
+                key2: "value2",
+              }),
+              element: <HooksChecker2 />,
+              handle: "2",
+            }),
+          },
+        ],
+      },
+    ];
+    let { query, dataRoutes } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/the/path?the=query#the-hash", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(dataRoutes, context)}
           context={context}
         />
       </React.StrictMode>
@@ -273,6 +421,64 @@ describe("A <StaticRouterProvider>", () => {
     );
   });
 
+  it("renders hydration data from lazy routes by default", async () => {
+    let routes = [
+      {
+        // provide unique id here but not below, to ensure we add where needed
+        id: "the",
+        path: "the",
+        lazy: async () => ({
+          loader: () => ({
+            key1: "value1",
+          }),
+          element: <Outlet />,
+        }),
+        children: [
+          {
+            path: "path",
+            lazy: async () => ({
+              loader: () => ({
+                key2: "value2",
+              }),
+              element: <h1>👋</h1>,
+            }),
+          },
+        ],
+      },
+    ];
+    let { query, dataRoutes } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/the/path", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(dataRoutes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+    expect(html).toMatch("<h1>👋</h1>");
+
+    let expectedJsonString = JSON.stringify(
+      JSON.stringify({
+        loaderData: {
+          the: { key1: "value1" },
+          "0-0": { key2: "value2" },
+        },
+        actionData: null,
+        errors: null,
+      })
+    );
+    expect(html).toMatch(
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+    );
+  });
+
   it("escapes HTML tags in serialized hydration data", async () => {
     let routes = [
       {
@@ -353,6 +559,57 @@ describe("A <StaticRouterProvider>", () => {
     );
   });
 
+  it("serializes ErrorResponse instances from lazy routes", async () => {
+    let routes = [
+      {
+        path: "/",
+        lazy: async () => ({
+          loader: () => {
+            throw json(
+              { not: "found" },
+              { status: 404, statusText: "Not Found" }
+            );
+          },
+        }),
+      },
+    ];
+    let { query, dataRoutes } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(dataRoutes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+
+    let expectedJsonString = JSON.stringify(
+      JSON.stringify({
+        loaderData: {},
+        actionData: null,
+        errors: {
+          "0": {
+            status: 404,
+            statusText: "Not Found",
+            internal: false,
+            data: { not: "found" },
+            __type: "RouteErrorResponse",
+          },
+        },
+      })
+    );
+    expect(html).toMatch(
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+    );
+  });
+
   it("serializes Error instances", async () => {
     let routes = [
       {
@@ -374,6 +631,52 @@ describe("A <StaticRouterProvider>", () => {
       <React.StrictMode>
         <StaticRouterProvider
           router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+
+    // stack is stripped by default from SSR errors
+    let expectedJsonString = JSON.stringify(
+      JSON.stringify({
+        loaderData: {},
+        actionData: null,
+        errors: {
+          "0": {
+            message: "oh no",
+            __type: "Error",
+          },
+        },
+      })
+    );
+    expect(html).toMatch(
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+    );
+  });
+
+  it("serializes Error instances from lazy routes", async () => {
+    let routes = [
+      {
+        path: "/",
+        lazy: async () => ({
+          loader: () => {
+            throw new Error("oh no");
+          },
+        }),
+      },
+    ];
+    let { query, dataRoutes } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(dataRoutes, context)}
           context={context}
         />
       </React.StrictMode>
@@ -720,6 +1023,46 @@ describe("A <StaticRouterProvider>", () => {
       expect(context._deepestRenderedBoundaryId).toBe("0-0");
     });
 
+    it("tracks the deepest boundary during render with lazy routes", async () => {
+      let routes = [
+        {
+          path: "/",
+          lazy: async () => ({
+            element: <Outlet />,
+            errorElement: <p>Error</p>,
+          }),
+          children: [
+            {
+              index: true,
+              lazy: async () => ({
+                element: <h1>👋</h1>,
+                errorElement: <p>Error</p>,
+              }),
+            },
+          ],
+        },
+      ];
+
+      let { query, dataRoutes } = createStaticHandler(routes);
+      let context = (await query(
+        new Request("http://localhost/", {
+          signal: new AbortController().signal,
+        })
+      )) as StaticHandlerContext;
+
+      let html = ReactDOMServer.renderToStaticMarkup(
+        <React.StrictMode>
+          <StaticRouterProvider
+            router={createStaticRouter(dataRoutes, context)}
+            context={context}
+            hydrate={false}
+          />
+        </React.StrictMode>
+      );
+      expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
+      expect(context._deepestRenderedBoundaryId).toBe("0-0");
+    });
+
     it("tracks only boundaries that expose an errorElement", async () => {
       let routes = [
         {
@@ -745,6 +1088,43 @@ describe("A <StaticRouterProvider>", () => {
         <React.StrictMode>
           <StaticRouterProvider
             router={createStaticRouter(routes, context)}
+            context={context}
+            hydrate={false}
+          />
+        </React.StrictMode>
+      );
+      expect(html).toMatchInlineSnapshot(`"<h1>👋</h1>"`);
+      expect(context._deepestRenderedBoundaryId).toBe("0");
+    });
+
+    it("tracks only boundaries that expose an errorElement with lazy routes", async () => {
+      let routes = [
+        {
+          path: "/",
+          lazy: async () => ({
+            element: <Outlet />,
+            errorElement: <p>Error</p>,
+          }),
+          children: [
+            {
+              index: true,
+              element: <h1>👋</h1>,
+            },
+          ],
+        },
+      ];
+
+      let { query, dataRoutes } = createStaticHandler(routes);
+      let context = (await query(
+        new Request("http://localhost/", {
+          signal: new AbortController().signal,
+        })
+      )) as StaticHandlerContext;
+
+      let html = ReactDOMServer.renderToStaticMarkup(
+        <React.StrictMode>
+          <StaticRouterProvider
+            router={createStaticRouter(dataRoutes, context)}
             context={context}
             hydrate={false}
           />

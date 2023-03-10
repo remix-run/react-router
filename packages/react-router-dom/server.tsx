@@ -1,10 +1,11 @@
 import * as React from "react";
 import type {
-  AgnosticDataRouteObject,
   Path,
   RevalidationState,
   Router as RemixRouter,
   StaticHandlerContext,
+  CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
+  UNSAFE_RouteManifest as RouteManifest,
 } from "@remix-run/router";
 import {
   IDLE_BLOCKER,
@@ -13,14 +14,10 @@ import {
   Action,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
+  createStaticHandler as routerCreateStaticHandler,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import type {
-  DataRouteObject,
-  Location,
-  RouteObject,
-  To,
-} from "react-router-dom";
+import type { Location, RouteObject, To } from "react-router-dom";
 import { Routes } from "react-router-dom";
 import {
   createPath,
@@ -28,7 +25,6 @@ import {
   Router,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
-  UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
 } from "react-router-dom";
 
 export interface StaticRouterProps {
@@ -71,6 +67,8 @@ export function StaticRouter({
     />
   );
 }
+
+export { StaticHandlerContext };
 
 export interface StaticRouterProviderProps {
   context: StaticHandlerContext;
@@ -208,38 +206,43 @@ function getStatelessNavigator() {
   };
 }
 
-// Temporary manifest generation - we should optimize this by combining the
-// tree-walks between convertRoutesToDataRoutes, enhanceManualRouteObjects,
-// and generateManifest.
-// Also look into getting rid of `route as AgnosticDataRouteObject` down below?
-function generateManifest(
-  routes: DataRouteObject[],
-  manifest: Map<string, DataRouteObject> = new Map<string, DataRouteObject>()
-): Map<string, RouteObject> {
-  routes.forEach((route) => {
-    manifest.set(route.id, route);
-    if (route.children) {
-      generateManifest(route.children, manifest);
-    }
+let detectErrorBoundary = (route: RouteObject) => Boolean(route.errorElement);
+
+type CreateStaticHandlerOptions = Omit<
+  RouterCreateStaticHandlerOptions,
+  "detectErrorBoundary"
+>;
+
+export function createStaticHandler(
+  routes: RouteObject[],
+  opts?: CreateStaticHandlerOptions
+) {
+  return routerCreateStaticHandler(routes, {
+    ...opts,
+    detectErrorBoundary,
   });
-  return manifest;
 }
 
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext
 ): RemixRouter {
-  let dataRoutes = convertRoutesToDataRoutes(enhanceManualRouteObjects(routes));
-  let manifest = generateManifest(dataRoutes);
+  let manifest: RouteManifest = {};
+  let dataRoutes = convertRoutesToDataRoutes(
+    routes,
+    detectErrorBoundary,
+    undefined,
+    manifest
+  );
 
   // Because our context matches may be from a framework-agnostic set of
   // routes passed to createStaticHandler(), we update them here with our
   // newly created/enhanced data routes
   let matches = context.matches.map((match) => {
-    let route = manifest.get(match.route.id) || match.route;
+    let route = manifest[match.route.id] || match.route;
     return {
       ...match,
-      route: route as AgnosticDataRouteObject,
+      route,
     };
   });
 

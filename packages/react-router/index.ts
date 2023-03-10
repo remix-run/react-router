@@ -20,6 +20,7 @@ import type {
   ShouldRevalidateFunction,
   To,
   InitialEntry,
+  LazyRouteFunction,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -36,6 +37,7 @@ import {
   parsePath,
   redirect,
   resolvePath,
+  UNSAFE_warning as warning,
 } from "@remix-run/router";
 
 import type {
@@ -52,7 +54,6 @@ import type {
   RouterProviderProps,
 } from "./lib/components";
 import {
-  enhanceManualRouteObjects,
   createRoutesFromChildren,
   renderMatches,
   Await,
@@ -126,6 +127,7 @@ export type {
   IndexRouteObject,
   IndexRouteProps,
   JsonFunction,
+  LazyRouteFunction,
   LayoutRouteProps,
   LoaderFunction,
   LoaderFunctionArgs,
@@ -204,6 +206,29 @@ export {
   useRoutes,
 };
 
+function detectErrorBoundary(route: RouteObject) {
+  if (__DEV__) {
+    if (route.Component && route.element) {
+      warning(
+        false,
+        "You should not include both `Component` and `element` on your route - " +
+          "`element` will be ignored."
+      );
+    }
+    if (route.ErrorBoundary && route.errorElement) {
+      warning(
+        false,
+        "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
+          "`errorElement` will be ignored."
+      );
+    }
+  }
+
+  // Note: this check also occurs in createRoutesFromChildren so update
+  // there if you change this
+  return Boolean(route.ErrorBoundary) || Boolean(route.errorElement);
+}
+
 export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
@@ -220,7 +245,8 @@ export function createMemoryRouter(
       initialIndex: opts?.initialIndex,
     }),
     hydrationData: opts?.hydrationData,
-    routes: enhanceManualRouteObjects(routes),
+    routes,
+    detectErrorBoundary,
   }).initialize();
 }
 
@@ -244,5 +270,5 @@ export {
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  enhanceManualRouteObjects as UNSAFE_enhanceManualRouteObjects,
+  detectErrorBoundary as UNSAFE_detectErrorBoundary,
 };

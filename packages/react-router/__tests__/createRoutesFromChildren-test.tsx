@@ -17,10 +17,14 @@ describe("creating routes from JSX", () => {
     ).toMatchInlineSnapshot(`
       [
         {
+          "Component": undefined,
+          "ErrorBoundary": undefined,
           "action": undefined,
           "caseSensitive": undefined,
           "children": [
             {
+              "Component": undefined,
+              "ErrorBoundary": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -31,11 +35,14 @@ describe("creating routes from JSX", () => {
               "hasErrorBoundary": false,
               "id": "0-0",
               "index": undefined,
+              "lazy": undefined,
               "loader": undefined,
               "path": "home",
               "shouldRevalidate": undefined,
             },
             {
+              "Component": undefined,
+              "ErrorBoundary": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -46,15 +53,20 @@ describe("creating routes from JSX", () => {
               "hasErrorBoundary": false,
               "id": "0-1",
               "index": undefined,
+              "lazy": undefined,
               "loader": undefined,
               "path": "about",
               "shouldRevalidate": undefined,
             },
             {
+              "Component": undefined,
+              "ErrorBoundary": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "children": [
                 {
+                  "Component": undefined,
+                  "ErrorBoundary": undefined,
                   "action": undefined,
                   "caseSensitive": undefined,
                   "element": <h1>
@@ -65,11 +77,14 @@ describe("creating routes from JSX", () => {
                   "hasErrorBoundary": false,
                   "id": "0-2-0",
                   "index": true,
+                  "lazy": undefined,
                   "loader": undefined,
                   "path": undefined,
                   "shouldRevalidate": undefined,
                 },
                 {
+                  "Component": undefined,
+                  "ErrorBoundary": undefined,
                   "action": undefined,
                   "caseSensitive": undefined,
                   "element": <h1>
@@ -80,6 +95,7 @@ describe("creating routes from JSX", () => {
                   "hasErrorBoundary": false,
                   "id": "0-2-1",
                   "index": undefined,
+                  "lazy": undefined,
                   "loader": undefined,
                   "path": ":id",
                   "shouldRevalidate": undefined,
@@ -91,6 +107,7 @@ describe("creating routes from JSX", () => {
               "hasErrorBoundary": false,
               "id": "0-2",
               "index": undefined,
+              "lazy": undefined,
               "loader": undefined,
               "path": "users",
               "shouldRevalidate": undefined,
@@ -102,6 +119,7 @@ describe("creating routes from JSX", () => {
           "hasErrorBoundary": false,
           "id": "0",
           "index": undefined,
+          "lazy": undefined,
           "loader": undefined,
           "path": "/",
           "shouldRevalidate": undefined,
@@ -133,10 +151,14 @@ describe("creating routes from JSX", () => {
     ).toMatchInlineSnapshot(`
       [
         {
+          "Component": undefined,
+          "ErrorBoundary": undefined,
           "action": undefined,
           "caseSensitive": undefined,
           "children": [
             {
+              "Component": undefined,
+              "ErrorBoundary": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "element": <h1>
@@ -147,15 +169,20 @@ describe("creating routes from JSX", () => {
               "hasErrorBoundary": false,
               "id": "0-0",
               "index": undefined,
+              "lazy": undefined,
               "loader": [Function],
               "path": "home",
               "shouldRevalidate": [Function],
             },
             {
+              "Component": undefined,
+              "ErrorBoundary": undefined,
               "action": undefined,
               "caseSensitive": undefined,
               "children": [
                 {
+                  "Component": undefined,
+                  "ErrorBoundary": undefined,
                   "action": [Function],
                   "caseSensitive": undefined,
                   "element": <h1>
@@ -166,6 +193,7 @@ describe("creating routes from JSX", () => {
                   "hasErrorBoundary": false,
                   "id": "0-1-0",
                   "index": true,
+                  "lazy": undefined,
                   "loader": undefined,
                   "path": undefined,
                   "shouldRevalidate": undefined,
@@ -177,6 +205,7 @@ describe("creating routes from JSX", () => {
               "hasErrorBoundary": false,
               "id": "0-1",
               "index": undefined,
+              "lazy": undefined,
               "loader": undefined,
               "path": "users",
               "shouldRevalidate": undefined,
@@ -190,6 +219,7 @@ describe("creating routes from JSX", () => {
           "hasErrorBoundary": true,
           "id": "0",
           "index": undefined,
+          "lazy": undefined,
           "loader": undefined,
           "path": "/",
           "shouldRevalidate": undefined,

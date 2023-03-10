@@ -1,15 +1,15 @@
 import type * as express from "express";
-import { createStaticHandler } from "@remix-run/router";
 import * as React from "react";
 import ReactDOMServer from "react-dom/server";
 import {
+  createStaticHandler,
   createStaticRouter,
   StaticRouterProvider,
 } from "react-router-dom/server";
 import { routes } from "./App";
 
 export async function render(request: express.Request) {
-  let { query } = createStaticHandler(routes);
+  let { query, dataRoutes } = createStaticHandler(routes);
   let remixRequest = createFetchRequest(request);
   let context = await query(remixRequest);
 
@@ -17,7 +17,7 @@ export async function render(request: express.Request) {
     throw context;
   }
 
-  let router = createStaticRouter(routes, context);
+  let router = createStaticRouter(dataRoutes, context);
   return ReactDOMServer.renderToString(
     <React.StrictMode>
       <StaticRouterProvider

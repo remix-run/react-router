@@ -23,7 +23,7 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
-  UNSAFE_enhanceManualRouteObjects as enhanceManualRouteObjects,
+  UNSAFE_detectErrorBoundary as detectErrorBoundary,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -40,10 +40,11 @@ import {
   createRouter,
   createBrowserHistory,
   createHashHistory,
-  UNSAFE_invariant as invariant,
   joinPaths,
   stripBasename,
   ErrorResponse,
+  UNSAFE_invariant as invariant,
+  UNSAFE_warning as warning,
 } from "@remix-run/router";
 
 import type {
@@ -87,6 +88,7 @@ export type {
   IndexRouteObject,
   IndexRouteProps,
   JsonFunction,
+  LazyRouteFunction,
   LayoutRouteProps,
   LoaderFunction,
   LoaderFunctionArgs,
@@ -186,7 +188,6 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
-  UNSAFE_enhanceManualRouteObjects,
 } from "react-router";
 //#endregion
 
@@ -210,7 +211,8 @@ export function createBrowserRouter(
     basename: opts?.basename,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
-    routes: enhanceManualRouteObjects(routes),
+    routes,
+    detectErrorBoundary,
   }).initialize();
 }
 
@@ -226,7 +228,8 @@ export function createHashRouter(
     basename: opts?.basename,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
-    routes: enhanceManualRouteObjects(routes),
+    routes,
+    detectErrorBoundary,
   }).initialize();
 }
 
@@ -1232,6 +1235,8 @@ function useScrollRestoration({
   }
 }
 
+export { useScrollRestoration as UNSAFE_useScrollRestoration };
+
 /**
  * Setup a callback to be fired on the window's `beforeunload` event. This is
  * useful for saving some data to `window.localStorage` just before the page
@@ -1308,27 +1313,3 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
 export { usePrompt as unstable_usePrompt };
 
 //#endregion
-
-////////////////////////////////////////////////////////////////////////////////
-//#region Utils
-////////////////////////////////////////////////////////////////////////////////
-
-function warning(cond: boolean, message: string): void {
-  if (!cond) {
-    // eslint-disable-next-line no-console
-    if (typeof console !== "undefined") console.warn(message);
-
-    try {
-      // Welcome to debugging React Router!
-      //
-      // This error is thrown as a convenience so you can more easily
-      // find the source for a warning that appears in the console by
-      // enabling "pause on exceptions" in your JavaScript debugger.
-      throw new Error(message);
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
-  }
-}
-//#endregion
-
-export { useScrollRestoration as UNSAFE_useScrollRestoration };

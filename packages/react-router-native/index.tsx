@@ -32,6 +32,7 @@ export type {
   IndexRouteObject,
   IndexRouteProps,
   JsonFunction,
+  LazyRouteFunction,
   LayoutRouteProps,
   LoaderFunction,
   LoaderFunctionArgs,
@@ -131,7 +132,6 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
-  UNSAFE_enhanceManualRouteObjects,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////
