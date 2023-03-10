@@ -64,7 +64,7 @@
 
 ### Patch Changes
 
-- Fix `generatePath` incorrectly applying parameters in some cases ([`bc6fefa1`](https://github.com/remix-run/react-router/commit/bc6fefa19019ce9f5250c8b5af9b8c5d3390e9d1))
+- Fix `generatePath` incorrectly applying parameters in some cases ([#10078](https://github.com/remix-run/react-router/pull/10078))
 
 ## 1.3.3
 
