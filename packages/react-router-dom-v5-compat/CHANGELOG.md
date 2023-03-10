@@ -1,13 +1,16 @@
 # `react-router-dom-v5-compat`
 
-## 6.9.0-pre.0
+## 6.9.0
+
+### Minor Changes
+
+- Updated dependencies:
+  - `react-router@6.9.0`
+  - `react-router-dom@6.9.0`
 
 ### Patch Changes
 
 - Add missed data router API re-exports ([#10171](https://github.com/remix-run/react-router/pull/10171))
-- Updated dependencies:
-  - `react-router@6.9.0-pre.0`
-  - `react-router-dom@6.9.0-pre.0`
 
 ## 6.8.2
 

@@ -1,6 +1,6 @@
 # `react-router`
 
-## 6.9.0-pre.0
+## 6.9.0
 
 ### Minor Changes
 
@@ -100,12 +100,13 @@
 
   🙌 Huge thanks to @rossipedia for the [Initial Proposal](https://github.com/remix-run/react-router/discussions/9826) and [POC Implementation](https://github.com/remix-run/react-router/pull/9830).
 
+- Updated dependencies:
+  - `@remix-run/router@1.4.0`
+
 ### Patch Changes
 
 - Fix `generatePath` incorrectly applying parameters in some cases ([`bc6fefa1`](https://github.com/remix-run/react-router/commit/bc6fefa19019ce9f5250c8b5af9b8c5d3390e9d1))
 - Improve memoization for context providers to avoid unnecessary re-renders ([`bc6fefa1`](https://github.com/remix-run/react-router/commit/bc6fefa19019ce9f5250c8b5af9b8c5d3390e9d1))
-- Updated dependencies:
-  - `@remix-run/router@1.4.0-pre.0`
 
 ## 6.8.2
 

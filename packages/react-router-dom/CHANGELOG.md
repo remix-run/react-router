@@ -1,6 +1,6 @@
 # `react-router-dom`
 
-## 6.9.0-pre.0
+## 6.9.0
 
 ### Minor Changes
 
@@ -100,11 +100,9 @@
 
   🙌 Huge thanks to @rossipedia for the [Initial Proposal](https://github.com/remix-run/react-router/discussions/9826) and [POC Implementation](https://github.com/remix-run/react-router/pull/9830).
 
-### Patch Changes
-
 - Updated dependencies:
-  - `react-router@6.9.0-pre.0`
-  - `@remix-run/router@1.4.0-pre.0`
+  - `react-router@6.9.0`
+  - `@remix-run/router@1.4.0`
 
 ## 6.8.2
 
