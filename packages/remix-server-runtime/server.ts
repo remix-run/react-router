@@ -182,9 +182,7 @@ async function handleDataRequestRR(
       errorInstance = error.error || errorInstance;
     }
 
-    if (serverMode !== ServerMode.Test && !request.signal.aborted) {
-      console.error(errorInstance);
-    }
+    logServerErrorIfNotAborted(errorInstance, request, serverMode);
 
     if (
       serverMode === ServerMode.Development &&
@@ -259,10 +257,7 @@ async function handleDocumentRequestRR(
       requestContext: loadContext,
     });
   } catch (error: unknown) {
-    if (!request.signal.aborted && serverMode !== ServerMode.Test) {
-      console.error(error);
-    }
-
+    logServerErrorIfNotAborted(error, request, serverMode);
     return new Response(null, { status: 500 });
   }
 
@@ -336,6 +331,7 @@ async function handleDocumentRequestRR(
         entryContext
       );
     } catch (error: any) {
+      logServerErrorIfNotAborted(error, request, serverMode);
       return returnLastResortErrorResponse(error, serverMode);
     }
   }
@@ -369,6 +365,7 @@ async function handleResourceRequestRR(
       error.headers.set("X-Remix-Catch", "yes");
       return error;
     }
+    logServerErrorIfNotAborted(error, request, serverMode);
     return returnLastResortErrorResponse(error, serverMode);
   }
 }
@@ -382,11 +379,17 @@ async function errorBoundaryError(error: Error, status: number) {
   });
 }
 
-function returnLastResortErrorResponse(error: any, serverMode?: ServerMode) {
-  if (serverMode !== ServerMode.Test) {
+function logServerErrorIfNotAborted(
+  error: unknown,
+  request: Request,
+  serverMode: ServerMode
+) {
+  if (serverMode !== ServerMode.Test && !request.signal.aborted) {
     console.error(error);
   }
+}
 
+function returnLastResortErrorResponse(error: any, serverMode?: ServerMode) {
   let message = "Unexpected Server Error";
 
   if (serverMode !== ServerMode.Production) {
