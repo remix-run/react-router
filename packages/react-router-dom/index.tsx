@@ -386,8 +386,7 @@ if (__DEV__) {
 
 export { HistoryRouter as unstable_HistoryRouter };
 
-export interface LinkProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+interface LinkOwnProps {
   reloadDocument?: boolean;
   replace?: boolean;
   state?: any;
@@ -395,6 +394,10 @@ export interface LinkProps
   relative?: RelativeRoutingType;
   to: To;
 }
+
+export interface LinkProps
+  extends LinkOwnProps,
+    Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {}
 
 const isBrowser =
   typeof window !== "undefined" &&
@@ -484,8 +487,58 @@ if (__DEV__) {
   Link.displayName = "Link";
 }
 
+export interface UseNavLinkProps extends LinkOwnProps {
+  caseSensitive?: boolean;
+  end?: boolean;
+}
+
+export const useNavLink = ({
+  caseSensitive = false,
+  end = false,
+  to,
+  ...rest
+}: UseNavLinkProps) => {
+  let path = useResolvedPath(to, { relative: rest.relative });
+  let location = useLocation();
+  let routerState = React.useContext(DataRouterStateContext);
+  let { navigator } = React.useContext(NavigationContext);
+
+  let toPathname = navigator.encodeLocation
+    ? navigator.encodeLocation(path).pathname
+    : path.pathname;
+  let locationPathname = location.pathname;
+  let nextLocationPathname =
+    routerState && routerState.navigation && routerState.navigation.location
+      ? routerState.navigation.location.pathname
+      : null;
+
+  if (!caseSensitive) {
+    locationPathname = locationPathname.toLowerCase();
+    nextLocationPathname = nextLocationPathname
+      ? nextLocationPathname.toLowerCase()
+      : null;
+    toPathname = toPathname.toLowerCase();
+  }
+
+  let isActive =
+    locationPathname === toPathname ||
+    (!end &&
+      locationPathname.startsWith(toPathname) &&
+      locationPathname.charAt(toPathname.length) === "/");
+
+  let isPending =
+    nextLocationPathname != null &&
+    (nextLocationPathname === toPathname ||
+      (!end &&
+        nextLocationPathname.startsWith(toPathname) &&
+        nextLocationPathname.charAt(toPathname.length) === "/"));
+
+  return { isActive, isPending };
+};
+
 export interface NavLinkProps
-  extends Omit<LinkProps, "className" | "style" | "children"> {
+  extends UseNavLinkProps,
+    Omit<LinkProps, "className" | "style" | "children"> {
   children?:
     | React.ReactNode
     | ((props: { isActive: boolean; isPending: boolean }) => React.ReactNode);
@@ -522,40 +575,12 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     },
     ref
   ) {
-    let path = useResolvedPath(to, { relative: rest.relative });
-    let location = useLocation();
-    let routerState = React.useContext(DataRouterStateContext);
-    let { navigator } = React.useContext(NavigationContext);
-
-    let toPathname = navigator.encodeLocation
-      ? navigator.encodeLocation(path).pathname
-      : path.pathname;
-    let locationPathname = location.pathname;
-    let nextLocationPathname =
-      routerState && routerState.navigation && routerState.navigation.location
-        ? routerState.navigation.location.pathname
-        : null;
-
-    if (!caseSensitive) {
-      locationPathname = locationPathname.toLowerCase();
-      nextLocationPathname = nextLocationPathname
-        ? nextLocationPathname.toLowerCase()
-        : null;
-      toPathname = toPathname.toLowerCase();
-    }
-
-    let isActive =
-      locationPathname === toPathname ||
-      (!end &&
-        locationPathname.startsWith(toPathname) &&
-        locationPathname.charAt(toPathname.length) === "/");
-
-    let isPending =
-      nextLocationPathname != null &&
-      (nextLocationPathname === toPathname ||
-        (!end &&
-          nextLocationPathname.startsWith(toPathname) &&
-          nextLocationPathname.charAt(toPathname.length) === "/"));
+    const { isActive, isPending } = useNavLink({
+      to,
+      caseSensitive,
+      end,
+      ...rest,
+    });
 
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
