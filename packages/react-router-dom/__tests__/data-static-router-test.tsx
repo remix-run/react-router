@@ -831,11 +831,11 @@ describe("A <StaticRouterProvider>", () => {
     let frameworkAgnosticRoutes = [
       {
         path: "the",
-        hasErrorElement: true,
+        hasErrorBoundary: true,
         children: [
           {
             path: "path",
-            hasErrorElement: true,
+            hasErrorBoundary: true,
           },
         ],
       },
@@ -949,6 +949,118 @@ describe("A <StaticRouterProvider>", () => {
     `);
   });
 
+  it("handles framework agnostic static handler routes (using ErrorBoundary)", async () => {
+    let frameworkAgnosticRoutes = [
+      {
+        path: "the",
+        hasErrorBoundary: true,
+        children: [
+          {
+            path: "path",
+            hasErrorBoundary: true,
+          },
+        ],
+      },
+    ];
+    let { query } = createStaticHandler(frameworkAgnosticRoutes);
+
+    let context = (await query(
+      new Request("http://localhost/the/path", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let frameworkAwareRoutes = [
+      {
+        path: "the",
+        element: <h1>Hi!</h1>,
+        ErrorBoundary: () => <h1>Error!</h1>,
+        children: [
+          {
+            path: "path",
+            element: <h2>Hi again!</h2>,
+            ErrorBoundary: () => <h2>Error again!</h2>,
+          },
+        ],
+      },
+    ];
+
+    // This should add route ids + hasErrorBoundary, and also update the
+    // context.matches to include the full framework-aware routes
+    let router = createStaticRouter(frameworkAwareRoutes, context);
+
+    expect(router.routes).toMatchInlineSnapshot(`
+      [
+        {
+          "ErrorBoundary": [Function],
+          "children": [
+            {
+              "ErrorBoundary": [Function],
+              "children": undefined,
+              "element": <h2>
+                Hi again!
+              </h2>,
+              "hasErrorBoundary": true,
+              "id": "0-0",
+              "path": "path",
+            },
+          ],
+          "element": <h1>
+            Hi!
+          </h1>,
+          "hasErrorBoundary": true,
+          "id": "0",
+          "path": "the",
+        },
+      ]
+    `);
+    expect(router.state.matches).toMatchInlineSnapshot(`
+      [
+        {
+          "params": {},
+          "pathname": "/the",
+          "pathnameBase": "/the",
+          "route": {
+            "ErrorBoundary": [Function],
+            "children": [
+              {
+                "ErrorBoundary": [Function],
+                "children": undefined,
+                "element": <h2>
+                  Hi again!
+                </h2>,
+                "hasErrorBoundary": true,
+                "id": "0-0",
+                "path": "path",
+              },
+            ],
+            "element": <h1>
+              Hi!
+            </h1>,
+            "hasErrorBoundary": true,
+            "id": "0",
+            "path": "the",
+          },
+        },
+        {
+          "params": {},
+          "pathname": "/the/path",
+          "pathnameBase": "/the/path",
+          "route": {
+            "ErrorBoundary": [Function],
+            "children": undefined,
+            "element": <h2>
+              Hi again!
+            </h2>,
+            "hasErrorBoundary": true,
+            "id": "0-0",
+            "path": "path",
+          },
+        },
+      ]
+    `);
+  });
+
   it("renders absolute links correctly", async () => {
     let routes = [
       {
@@ -993,7 +1105,7 @@ describe("A <StaticRouterProvider>", () => {
         {
           path: "/",
           element: <Outlet />,
-          errorElement: <p>Error</p>,
+          ErrorBoundary: () => <p>Error</p>,
           children: [
             {
               index: true,
@@ -1036,7 +1148,7 @@ describe("A <StaticRouterProvider>", () => {
               index: true,
               lazy: async () => ({
                 element: <h1>👋</h1>,
-                errorElement: <p>Error</p>,
+                ErrorBoundary: () => <p>Error</p>,
               }),
             },
           ],
