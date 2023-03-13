@@ -672,6 +672,20 @@ describe("flatRoutes", () => {
       );
     });
 
+    test("nested index files", () => {
+      let testFiles = ["routes/_index/index.tsx", "routes/_index/utils.ts"];
+
+      let routeManifest = flatRoutesUniversal(
+        APP_DIR,
+        testFiles.map((file) => path.join(APP_DIR, normalizePath(file)))
+      );
+
+      let routes = Object.values(routeManifest);
+
+      expect(routes).toHaveLength(1);
+      expect(consoleError).not.toHaveBeenCalled();
+    });
+
     test("folder/route.tsx matching folder.tsx", () => {
       // we'll add file manually before running the tests
       let testFiles = ["routes/dashboard.tsx", "routes/dashboard/route.tsx"];

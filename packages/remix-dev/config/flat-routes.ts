@@ -379,7 +379,7 @@ function getRouteMap(
 function isRouteModuleFile(filePath: string) {
   // flat files only need correct extension
   let normalizedFilePath = normalizeSlashes(filePath);
-  let isFlatFile = !filePath.includes(path.posix.sep);
+  let isFlatFile = !normalizedFilePath.includes(path.posix.sep);
   let hasExt = routeModuleExts.includes(path.extname(filePath));
   if (isFlatFile) return hasExt;
   let basename = normalizedFilePath.slice(0, -path.extname(filePath).length);
