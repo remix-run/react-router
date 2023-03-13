@@ -9,7 +9,7 @@ import {
   prettyDOM,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-
+import type { ErrorResponse } from "@remix-run/router";
 import type { RouteObject } from "react-router-dom";
 import {
   Form,
@@ -267,7 +267,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Boundary() {
-        let error = useRouteError();
+        let error = useRouteError() as unknown;
         return isRouteErrorResponse(error) ? (
           <pre>{JSON.stringify(error)}</pre>
         ) : (
@@ -303,7 +303,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Boundary() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return error instanceof Error ? (
           <>
             <pre>{error.toString()}</pre>
@@ -352,8 +352,8 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData();
-        return <h1>Foo:{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>Foo:{data.message}</h1>;
       }
 
       function Bar() {
@@ -410,8 +410,8 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData();
-        return <h1>Foo:{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>Foo:{data.message}</h1>;
       }
 
       function Bar() {
@@ -464,8 +464,8 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData();
-        return <h1>Foo:{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>Foo:{data.message}</h1>;
       }
 
       function Bar() {
@@ -505,8 +505,8 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData();
-        return <h1>Foo:{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>Foo:{data.message}</h1>;
       }
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -635,8 +635,8 @@ function testDomRouter(
         return <h1>Foo</h1>;
       }
       function Bar() {
-        let data = useLoaderData();
-        return <h1>{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>{data.message}</h1>;
       }
 
       expect(getHtml(container.querySelector("#output")!))
@@ -724,8 +724,8 @@ function testDomRouter(
         return <h1>Foo</h1>;
       }
       function Bar() {
-        let data = useLoaderData();
-        return <h1>{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>{data.message}</h1>;
       }
 
       expect(getHtml(container.querySelector("#output")!))
@@ -802,7 +802,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Link to Bar"));
       await waitFor(() => screen.getByText("Bar Heading"));
-      expect(getHtml(container.querySelector("#preventScrollReset")))
+      expect(getHtml(container.querySelector("#preventScrollReset")!))
         .toMatchInlineSnapshot(`
         "<p
           id="preventScrollReset"
@@ -813,7 +813,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Link to Foo"));
       await waitFor(() => screen.getByText("Foo Heading"));
-      expect(getHtml(container.querySelector("#preventScrollReset")))
+      expect(getHtml(container.querySelector("#preventScrollReset")!))
         .toMatchInlineSnapshot(`
         "<p
           id="preventScrollReset"
@@ -851,7 +851,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Link to Bar"));
       await waitFor(() => screen.getByText("Bar Heading"));
-      expect(getHtml(container.querySelector("#preventScrollReset")))
+      expect(getHtml(container.querySelector("#preventScrollReset")!))
         .toMatchInlineSnapshot(`
         "<p
           id="preventScrollReset"
@@ -862,7 +862,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Link to Foo"));
       await waitFor(() => screen.getByText("Foo Heading"));
-      expect(getHtml(container.querySelector("#preventScrollReset")))
+      expect(getHtml(container.querySelector("#preventScrollReset")!))
         .toMatchInlineSnapshot(`
         "<p
           id="preventScrollReset"
@@ -893,17 +893,19 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         let submit = useSubmit();
-        let formRef = React.useRef();
+        let formRef = React.useRef<HTMLFormElement>(null);
         return (
           <div>
             <form method="post" action="/" ref={formRef}>
               <input name="test" value="value" />
             </form>
-            <button onClick={() => submit(formRef.current)}>Submit Form</button>
+            <button onClick={() => submit(formRef.current!)}>
+              Submit Form
+            </button>
             <div id="output">
               <p>{navigation.state}</p>
               <p>{data}</p>
@@ -1002,11 +1004,11 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         let submit = useSubmit();
-        let formRef = React.useRef();
+        let formRef = React.useRef<HTMLFormElement>(null);
         return (
           <div>
             <form method="post" action="/" ref={formRef}>
@@ -1116,8 +1118,8 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
@@ -1210,8 +1212,8 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
@@ -1301,8 +1303,8 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
@@ -1412,8 +1414,8 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
@@ -1562,7 +1564,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1575,7 +1577,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit Form"));
       await waitFor(() => screen.getByText("Page 1"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1588,7 +1590,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go back"));
       await waitFor(() => screen.getByText("index"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1633,7 +1635,7 @@ function testDomRouter(
       }
 
       function FormPage() {
-        let data = useActionData();
+        let data = useActionData() as string | undefined;
         return (
           <Form method="post">
             <p>Form Page</p>
@@ -1644,7 +1646,7 @@ function testDomRouter(
         );
       }
 
-      let html = () => getHtml(container.querySelector(".output"));
+      let html = () => getHtml(container.querySelector(".output")!);
 
       // Start on index page
       expect(html()).toMatch("Index Page");
@@ -1701,7 +1703,7 @@ function testDomRouter(
       }
 
       function FormPage() {
-        let data = useActionData();
+        let data = useActionData() as string | undefined;
         return (
           <Form method="post">
             <p>Form Page</p>
@@ -1712,7 +1714,7 @@ function testDomRouter(
         );
       }
 
-      let html = () => getHtml(container.querySelector(".output"));
+      let html = () => getHtml(container.querySelector(".output")!);
 
       // Start on index page
       expect(html()).toMatch("Index Page");
@@ -1766,7 +1768,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1779,7 +1781,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit"));
       await waitFor(() => screen.getByText("Page 1"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1792,7 +1794,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go back"));
       await waitFor(() => screen.getByText("index"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1848,7 +1850,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1861,7 +1863,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go to 1"));
       await waitFor(() => screen.getByText("Page 1"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1874,7 +1876,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit"));
       await waitFor(() => screen.getByText("Page 2"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1887,7 +1889,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go back"));
       await waitFor(() => screen.getByText("Page 1"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1922,7 +1924,7 @@ function testDomRouter(
       function Layout() {
         let navigate = useNavigate();
         let submit = useSubmit();
-        let actionData = useActionData();
+        let actionData = useActionData() as string | undefined;
         let formData = new FormData();
         formData.append("test", "value");
         return (
@@ -1944,7 +1946,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1957,7 +1959,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go to 1"));
       await waitFor(() => screen.getByText("Page 1"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1970,7 +1972,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit"));
       await waitFor(() => screen.getByText("action"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1986,7 +1988,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go back"));
       await waitFor(() => screen.getByText("index"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -2178,7 +2180,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
+        let data = useLoaderData() as string;
         let navigation = useNavigation();
         return (
           <div>
@@ -2265,12 +2267,12 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
-            <Form method="POST">
+            <Form method="post">
               <input name="test" value="value" />
               <button type="submit">Submit Form</button>
             </Form>
@@ -3399,7 +3401,7 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -3468,7 +3470,7 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -3545,7 +3547,7 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -3722,7 +3724,7 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -3790,7 +3792,7 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4154,7 +4156,7 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let { status, statusText } = useRouteError();
+          let { status, statusText } = useRouteError() as ErrorResponse;
           return <p>contextual error:{`${status} ${statusText}`}</p>;
         }
 
@@ -4209,7 +4211,8 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          return <p>contextual error:{useRouteError().message}</p>;
+          let error = useRouteError() as Error;
+          return <p>contextual error:{error.message}</p>;
         }
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -4274,7 +4277,8 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          return <p>contextual error:{useRouteError().message}</p>;
+          let error = useRouteError() as Error;
+          return <p>contextual error:{error.message}</p>;
         }
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -4334,7 +4338,8 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          return <p>contextual error:{useRouteError().message}</p>;
+          let error = useRouteError() as Error;
+          return <p>contextual error:{error.message}</p>;
         }
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -4402,16 +4407,16 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              {data}
-              {actionData}
-              {navigation.state}
+              <>{data}</>
+              <>{actionData}</>
+              <>{navigation.state}</>
               <Outlet />
             </div>
           );
         }
 
         function ErrorBoundary() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4468,16 +4473,16 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              {data}
-              {actionData}
-              {navigation.state}
+              <>{data}</>
+              <>{actionData}</>
+              <>{navigation.state}</>
               <Outlet />
             </div>
           );
         }
 
         function ErrorBoundary() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4544,16 +4549,16 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              {data}
-              {actionData}
-              {navigation.state}
+              <>{data}</>
+              <>{actionData}</>
+              <>{navigation.state}</>
               <Outlet />
             </div>
           );
         }
 
         function ErrorBoundary() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4597,16 +4602,16 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              {data}
-              {actionData}
-              {navigation.state}
+              <>{data}</>
+              <>{actionData}</>
+              <>{navigation.state}</>
               <Outlet />
             </div>
           );
         }
 
         function ErrorBoundary() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4662,16 +4667,16 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              {data}
-              {actionData}
-              {navigation.state}
+              <>{data}</>
+              <>{actionData}</>
+              <>{navigation.state}</>
               <Outlet />
             </div>
           );
         }
 
         function ErrorBoundary() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4733,19 +4738,19 @@ function testDomRouter(
         }
 
         function Foo() {
-          let data = useLoaderData();
-          return <h1>Foo:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Foo:{data.message}</h1>;
         }
         function FooError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Foo Error:{error.message}</p>;
         }
         function Bar() {
-          let data = useLoaderData();
-          return <h1>Bar:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Bar:{data.message}</h1>;
         }
         function BarError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Bar Error:{error.message}</p>;
         }
 
@@ -4848,20 +4853,20 @@ function testDomRouter(
           );
         }
         function LayoutError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Layout Error:{error.message}</p>;
         }
         function Foo() {
-          let data = useLoaderData();
-          return <h1>Foo:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Foo:{data.message}</h1>;
         }
         function FooError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Foo Error:{error.message}</p>;
         }
         function Bar() {
-          let data = useLoaderData();
-          return <h1>Bar:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Bar:{data.message}</h1>;
         }
 
         expect(getHtml(container.querySelector("#output")!))
@@ -4932,11 +4937,11 @@ function testDomRouter(
         }
 
         function Bar() {
-          let data = useLoaderData();
-          return <h1>Bar:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Bar:{data.message}</h1>;
         }
         function BarError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Bar Error:{error.message}</p>;
         }
 
@@ -4989,7 +4994,7 @@ function testDomRouter(
               },
               {
                 path: "bar",
-                lazy: async () => lazyDefer.promise,
+                lazy: async () => lazyDefer.promise as Promise<RouteObject>,
               },
             ],
           },
@@ -5012,11 +5017,11 @@ function testDomRouter(
         }
 
         function Bar() {
-          let data = useLoaderData();
-          return <h1>Bar:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Bar:{data.message}</h1>;
         }
         function BarError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Bar Error:{error.message}</p>;
         }
 
@@ -5095,7 +5100,7 @@ function getWindowImpl(initialUrl: string, isHash = false): Window {
 }
 
 function getHtml(container: HTMLElement) {
-  return prettyDOM(container, null, {
+  return prettyDOM(container, undefined, {
     highlight: false,
     theme: {
       comment: null,
